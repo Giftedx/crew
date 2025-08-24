@@ -1,0 +1,521 @@
+# system_config.yaml.template
+# Enhanced CrewAI System Configuration Template
+
+system:
+  version: '2.0.0'
+  environment: 'development'  # development, staging, production
+  debug: true
+  created_at: '2024-01-15T00:00:00Z'
+
+paths:
+  base_dir: "F:/yt-auto/crewaiv2/CrewAI_Content_System"
+  downloads_dir: "F:/yt-auto/crewaiv2/CrewAI_Content_System/Downloads"
+  config_dir: "F:/yt-auto/crewaiv2/CrewAI_Content_System/Config"
+  logs_dir: "F:/yt-auto/crewaiv2/CrewAI_Content_System/Logs"
+  processing_dir: "F:/yt-auto/crewaiv2/CrewAI_Content_System/Processing"
+  ytdlp_config: "F:/yt-auto/crewaiv2/yt-dlp/config/crewai-system.conf"
+  google_credentials: "F:/yt-auto/crewaiv2/CrewAI_Content_System/Config/google-credentials.json"
+
+monitoring:
+  youtube_channels: []  # Add your YouTube channel URLs here
+  instagram_accounts: []  # Add Instagram usernames here
+  monitoring_interval: 300  # 5 minutes
+  webhook_url: "https://your-domain.com/youtube-webhook"
+  enable_pubsubhubbub: true
+  enable_fallback_polling: true
+
+processing:
+  enable_transcription: true
+  enable_speaker_analysis: true
+  enable_fact_checking: true
+  enable_social_media_analysis: true
+  max_concurrent_downloads: 3
+  processing_timeout: 1800  # 30 minutes
+  quality_settings:
+    video: 'bestvideo[height<=1080][ext=mp4]+bestaudio[ext=m4a]'
+    audio: 'bestaudio[ext=m4a]'
+    fallback: 'best[ext=mp4]/best'
+
+storage:
+  google_drive_enabled: true
+  google_sheets_enabled: true
+  vector_database_enabled: true
+  qdrant_url: ""  # Add your Qdrant URL
+  qdrant_api_key: ""  # Add your Qdrant API key
+  backup_enabled: true
+  retention_days: 30
+
+discord:
+  channels: []  # Configure in discord_channels.yaml
+  default_strategy: "auto"
+  enable_file_uploads: true
+  enable_embeds: true
+  max_file_size: 104857600  # 100MB
+
+apis:
+  openai_api_key: ""
+  serply_api_key: ""
+  exa_api_key: ""
+  scrapegraph_api_key: ""
+  browserbase_api_key: ""
+  browserbase_project_id: ""
+  rocket_api_key: ""
+  huggingface_token: ""
+  google_api_key: ""
+
+rate_limits:
+  youtube_api:
+    requests: 10000
+    window: 86400  # 24 hours
+  instagram_requests:
+    requests: 200
+    window: 3600   # 1 hour
+  drive_api_writes:
+    requests: 3
+    window: 1      # 1 second
+  discord_webhook:
+    requests: 5
+    window: 2      # 2 seconds
+
+error_handling:
+  max_retries: 3
+  backoff_strategy: 'exponential'
+  circuit_breaker_threshold: 5
+  enable_fallbacks: true
+
+---
+
+# channels.yaml.template
+# Content Sources Configuration
+
+youtube_channels:
+  # Add YouTube channel URLs here
+  # Examples:
+  # - "https://www.youtube.com/channel/UCBa659QWEk1AI4Tg--mrJ2A"  # Tom Scott
+  # - "https://www.youtube.com/c/veritasium"                       # Veritasium
+  # - "https://www.youtube.com/@3blue1brown"                       # 3Blue1Brown
+
+instagram_accounts:
+  # Add Instagram usernames here (without @)
+  # Examples:
+  # - "natgeo"
+  # - "nasa"
+  # - "bbcearth"
+
+monitoring_settings:
+  check_interval: 300  # seconds
+  max_videos_per_check: 10
+  max_stories_per_account: 20
+  enable_notifications: true
+  
+content_filters:
+  min_duration: 60      # seconds - ignore very short videos
+  max_duration: 7200    # seconds - 2 hours max
+  skip_shorts: false    # set to true to skip YouTube Shorts
+  skip_lives: false     # set to true to skip live streams
+  
+  # Keywords to prioritize (higher priority for download)
+  priority_keywords:
+    - "tutorial"
+    - "analysis" 
+    - "review"
+    - "explanation"
+  
+  # Keywords to avoid
+  exclude_keywords:
+    - "clickbait"
+    - "drama"
+
+---
+
+# discord_channels.yaml.template
+# Discord Integration Configuration
+
+channels:
+  - name: "youtube-content"
+    id: "YOUR_YOUTUBE_CHANNEL_ID"  # Discord channel ID
+    webhook_url: "YOUR_WEBHOOK_URL_HERE"
+    description: "YouTube video notifications and embeds"
+    max_file_size: 104857600  # 100MB
+    allowed_types: ["video/*", "image/*"]
+    posting_strategy: "auto"  # auto, embed_only, file_only, hybrid
+    
+  - name: "instagram-content"
+    id: "YOUR_INSTAGRAM_CHANNEL_ID"
+    webhook_url: "YOUR_WEBHOOK_URL_HERE"
+    description: "Instagram stories and posts"
+    max_file_size: 52428800   # 50MB
+    allowed_types: ["video/*", "image/*"]
+    posting_strategy: "auto"
+    
+  - name: "analysis-results"
+    id: "YOUR_ANALYSIS_CHANNEL_ID"
+    webhook_url: "YOUR_WEBHOOK_URL_HERE"
+    description: "Content analysis and transcription results"
+    max_file_size: 10485760   # 10MB (text-heavy content)
+    allowed_types: ["text/*", "application/json"]
+    posting_strategy: "embed_only"
+    
+  - name: "fact-checks"
+    id: "YOUR_FACTCHECK_CHANNEL_ID"
+    webhook_url: "YOUR_WEBHOOK_URL_HERE"
+    description: "Fact-checking results and truth scores"
+    max_file_size: 5242880    # 5MB
+    allowed_types: ["text/*"]
+    posting_strategy: "embed_only"
+    
+  - name: "social-media-intel"
+    id: "YOUR_SOCIAL_CHANNEL_ID"
+    webhook_url: "YOUR_WEBHOOK_URL_HERE"
+    description: "Social media monitoring results"
+    max_file_size: 10485760   # 10MB
+    posting_strategy: "embed_only"
+    
+  - name: "system-alerts"
+    id: "YOUR_ALERTS_CHANNEL_ID"
+    webhook_url: "YOUR_WEBHOOK_URL_HERE"
+    description: "System status and error notifications"
+    max_file_size: 1048576    # 1MB
+    posting_strategy: "embed_only"
+    alert_levels: ["warning", "error", "critical"]
+
+# Default settings for all channels
+defaults:
+  posting_strategy: "auto"
+  max_file_size: 104857600  # 100MB
+  retry_failed_posts: true
+  rate_limit_delay: 2       # seconds between posts
+  
+# Routing rules - map content types to channels
+routing:
+  youtube_videos: "youtube-content"
+  instagram_stories: "instagram-content" 
+  instagram_posts: "instagram-content"
+  transcripts: "analysis-results"
+  speaker_analysis: "analysis-results"
+  fact_checks: "fact-checks"
+  truth_scores: "fact-checks"
+  social_media_posts: "social-media-intel"
+  system_errors: "system-alerts"
+  system_warnings: "system-alerts"
+
+# Notification settings
+notifications:
+  mention_roles:
+    critical_errors: "@here"   # Mention everyone for critical errors
+    new_content: ""            # No mentions for regular content
+    fact_checks: "@Moderators" # Mention moderators for fact-checks
+  
+  quiet_hours:
+    enabled: true
+    start_time: "22:00"  # 10 PM
+    end_time: "08:00"    # 8 AM
+    timezone: "UTC"
+    suppress_levels: ["info", "success"]  # Only urgent alerts during quiet hours
+
+---
+
+# requirements.txt
+# Core CrewAI dependencies
+crewai>=0.150.0,<1.0.0
+crewai-tools>=0.150.0
+
+# AI and ML libraries
+openai>=1.0.0
+openai-whisper>=20231117
+torch>=2.0.0
+torchvision>=0.15.0
+torchaudio>=2.0.0
+transformers>=4.30.0
+pyannote.audio>=3.1.0
+
+# Natural Language Processing
+nltk>=3.8.0
+spacy>=3.6.0
+textblob>=0.18.0
+
+# Web scraping and automation
+requests>=2.31.0
+beautifulsoup4>=4.12.0
+selenium>=4.15.0
+newspaper3k>=0.2.8
+scrapy>=2.11.0
+
+# Social media APIs
+praw>=7.7.0  # Reddit API
+instaloader>=4.9.0
+tweepy>=4.14.0
+
+# Video/Audio processing
+yt-dlp>=2023.10.0
+moviepy>=1.0.3
+opencv-python>=4.8.0
+ffmpeg-python>=0.2.0
+pillow>=10.0.0
+
+# Google APIs
+google-auth>=2.23.0
+google-auth-oauthlib>=1.1.0
+google-auth-httplib2>=0.1.1
+google-api-python-client>=2.100.0
+google-cloud-storage>=2.10.0
+
+# Discord integration
+discord.py>=2.3.0
+discord-webhook>=1.3.0
+
+# Database and storage
+qdrant-client>=1.6.0
+chromadb>=0.4.0
+faiss-cpu>=1.7.4
+redis>=5.0.0
+
+# Data processing and analysis
+pandas>=2.1.0
+numpy>=1.24.0
+scipy>=1.11.0
+matplotlib>=3.7.0
+seaborn>=0.12.0
+plotly>=5.17.0
+
+# Configuration and utilities
+pydantic>=2.4.0
+python-dotenv>=1.0.0
+pyyaml>=6.0.1
+click>=8.1.0
+rich>=13.5.0
+typer>=0.9.0
+
+# Testing and development
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+black>=23.0.0
+flake8>=6.0.0
+mypy>=1.5.0
+
+# Monitoring and logging
+prometheus-client>=0.18.0
+structlog>=23.1.0
+loguru>=0.7.0
+psutil>=5.9.0
+
+# Security
+cryptography>=41.0.0
+keyring>=24.2.0
+
+# Optional: Enhanced features
+# Uncomment if you want these features
+
+# Advanced AI models (large downloads)
+# sentence-transformers>=2.2.0
+# bark>=1.0.0
+
+# Additional social media platforms
+# tiktok-api>=5.2.0
+# linkedin-api>=2.0.0
+
+# Advanced data processing
+# dask>=2023.9.0
+# ray>=2.7.0
+
+# Enterprise features
+# apache-airflow>=2.7.0  # For advanced workflow management
+# celery>=5.3.0          # For distributed task processing
+
+---
+
+# requirements-optional.txt
+# Optional dependencies for enhanced features
+# Install with: pip install -r requirements-optional.txt
+
+# Advanced AI and ML models
+sentence-transformers>=2.2.0
+bark>=1.0.0
+stable-ts>=2.12.0
+faster-whisper>=0.9.0
+
+# Enhanced social media capabilities
+tiktok-api>=5.2.0
+linkedin-api>=2.0.0
+facebook-sdk>=3.1.0
+
+# Advanced data processing
+dask>=2023.9.0
+ray>=2.7.0
+apache-beam>=2.50.0
+
+# Enterprise workflow management
+apache-airflow>=2.7.0
+celery>=5.3.0
+flower>=2.0.0
+
+# Advanced monitoring
+grafana-api>=1.0.3
+prometheus-api-client>=0.5.3
+alertmanager-api>=0.0.17
+
+# Development and debugging
+jupyter>=1.0.0
+ipython>=8.15.0
+memory-profiler>=0.61.0
+py-spy>=0.3.14
+
+# Additional file format support
+python-magic>=0.4.27
+chardet>=5.2.0
+openpyxl>=3.1.0
+python-docx>=0.8.11
+
+---
+
+# .env.template
+# Environment Variables Template
+# Copy this file to .env and fill in your actual values
+# NEVER commit .env to version control!
+
+# ================================
+# ESSENTIAL API KEYS
+# ================================
+
+# OpenAI API Key (REQUIRED)
+# Get from: https://platform.openai.com/api-keys
+OPENAI_API_KEY=your_openai_api_key_here
+
+# Serply API Key (REQUIRED for fact-checking)
+# Get from: https://serply.io/
+SERPLY_API_KEY=your_serply_api_key_here
+
+# EXA API Key (REQUIRED for advanced search)
+# Get from: https://exa.ai/
+EXA_API_KEY=your_exa_api_key_here
+
+# ================================
+# DISCORD INTEGRATION
+# ================================
+
+# Primary Discord webhook URL
+DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_WEBHOOK_TOKEN
+
+# ================================
+# GOOGLE SERVICES
+# ================================
+
+# Google API Key (for various Google services)
+GOOGLE_API_KEY=your_google_api_key_here
+
+# Google Drive/Sheets credentials are loaded from google-credentials.json file
+# Place the JSON file in: Config/google-credentials.json
+
+# ================================
+# OPTIONAL API KEYS
+# ================================
+
+# ScrapGraph API (Enhanced web scraping)
+SCRAPEGRAPH_API_KEY=your_scrapegraph_api_key_here
+
+# Browserbase (Web automation)
+BROWSERBASE_API_KEY=your_browserbase_api_key_here
+BROWSERBASE_PROJECT_ID=your_browserbase_project_id_here
+
+# RocketAPI (Instagram enhanced access)
+ROCKET_API_KEY=your_rocket_api_key_here
+
+# HuggingFace Token (AI models)
+HUGGINGFACE_TOKEN=your_huggingface_token_here
+
+# ================================
+# SOCIAL MEDIA CREDENTIALS
+# ================================
+
+# Reddit API (for Reddit intelligence gathering)
+REDDIT_CLIENT_ID=your_reddit_client_id_here
+REDDIT_CLIENT_SECRET=your_reddit_client_secret_here
+
+# Instagram credentials (for Instaloader)
+INSTAGRAM_USERNAME=your_instagram_username
+INSTAGRAM_PASSWORD=your_instagram_password
+
+# Twitter/X API (if available)
+TWITTER_API_KEY=your_twitter_api_key_here
+TWITTER_API_SECRET=your_twitter_api_secret_here
+TWITTER_ACCESS_TOKEN=your_twitter_access_token_here
+TWITTER_ACCESS_TOKEN_SECRET=your_twitter_access_token_secret_here
+
+# ================================
+# DATABASE CONNECTIONS
+# ================================
+
+# Qdrant Vector Database
+QDRANT_URL=https://your-cluster.qdrant.io:6333
+QDRANT_API_KEY=your_qdrant_api_key_here
+
+# Redis (optional, for caching)
+REDIS_URL=redis://localhost:6379
+
+# ================================
+# SYSTEM CONFIGURATION
+# ================================
+
+# Environment setting
+ENVIRONMENT=development  # development, staging, production
+
+# Debug mode
+DEBUG=true
+
+# Log level
+LOG_LEVEL=INFO  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+
+# System paths (override config file if needed)
+# CREWAI_BASE_DIR=/custom/path/to/system
+# CREWAI_DOWNLOADS_DIR=/custom/downloads/path
+
+# ================================
+# WEBHOOK SETTINGS
+# ================================
+
+# Public URL for PubSubHubbub webhook (YouTube real-time notifications)
+WEBHOOK_PUBLIC_URL=https://your-domain.com/youtube-webhook
+
+# Webhook server port
+WEBHOOK_PORT=8080
+
+# ================================
+# PERFORMANCE SETTINGS
+# ================================
+
+# Maximum concurrent downloads
+MAX_CONCURRENT_DOWNLOADS=3
+
+# Processing timeout (seconds)
+PROCESSING_TIMEOUT=1800
+
+# Memory limit for transcription (MB)
+TRANSCRIPTION_MEMORY_LIMIT=4096
+
+# ================================
+# NOTIFICATION SETTINGS
+# ================================
+
+# Slack webhook for system alerts (optional)
+SLACK_WEBHOOK_URL=https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK
+
+# Email settings for alerts (optional)
+SMTP_SERVER=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USERNAME=your_email@gmail.com
+SMTP_PASSWORD=your_app_password
+ALERT_EMAIL=alerts@yourdomain.com
+
+# ================================
+# SECURITY SETTINGS
+# ================================
+
+# Encryption key for sensitive data
+ENCRYPTION_KEY=your_32_character_encryption_key_here
+
+# JWT secret for API authentication
+JWT_SECRET=your_jwt_secret_here
+
+# API rate limiting
+ENABLE_RATE_LIMITING=true
+RATE_LIMIT_REQUESTS_PER_MINUTE=60
