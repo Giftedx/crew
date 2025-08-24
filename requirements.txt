@@ -1,0 +1,15 @@
+crewai
+crewai_tools
+flask
+google-api-python-client
+google-auth-httplib2
+google-auth-oauthlib
+instagrapi
+requests
+yt-dlp
+pyktok
+opencv-python
+moviepy
+openai-whisper
+pyannote.audio
+nltk

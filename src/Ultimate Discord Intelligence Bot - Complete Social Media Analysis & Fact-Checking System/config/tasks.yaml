@@ -1,0 +1,296 @@
+---
+monitor_youtube_channels:
+  description: Monitor the specified YouTube channels in {channel_urls} for new video
+    uploads. Use PubSubHubbub protocol concepts to efficiently detect new content.
+    For each new video found, extract the video ID, title, and upload timestamp. Create
+    a list of new videos that need to be downloaded.
+  expected_output: A structured list of new YouTube videos with their video IDs, titles,
+    upload timestamps, and download URLs for each channel being monitored
+  agent: youtube_channel_monitor
+monitor_instagram_accounts:
+  description: Monitor the specified Instagram accounts in {instagram_accounts} for
+    new stories and livestreams. Check for active stories, story highlights, and any
+    ongoing livestreams. Extract content URLs, timestamps, and metadata for all available
+    content that needs to be preserved.
+  expected_output: A comprehensive list of Instagram stories and livestreams with
+    their URLs, timestamps, account information, and content metadata for download
+  agent: instagram_content_downloader
+coordinate_real_time_processing:
+  description: Manage real-time triggers for immediate content processing, coordinate
+    live monitoring tasks, and ensure time-sensitive content is processed with minimal
+    delay. Handle webhook events and streaming data flows efficiently.
+  expected_output: 'Real-time processing report including: trigger event logs, processing
+    latency metrics, live content processing confirmations, webhook handling status,
+    and coordination efficiency metrics for immediate content analysis.'
+  agent: real_time_processing_coordinator
+  context:
+  - monitor_youtube_channels
+  - monitor_instagram_accounts
+execute_downloads_and_file_management:
+  description: Using the content lists from both YouTube and Instagram monitoring,
+    execute the actual downloads using yt-dlp and other appropriate tools via command
+    line. Create proper directory structure on F:/ drive organized by platform and
+    channel/account name. Execute commands like 'yt-dlp -o "F:/YouTube/{channel_name}/%(title)s.%(ext)s"
+    [video_url]' for YouTube videos and equivalent commands for Instagram content.
+    Verify successful downloads and organize files appropriately.
+  expected_output: A detailed download report showing successfully downloaded files,
+    their locations on F:/ drive, any failed downloads with error reasons, and the
+    complete directory structure created
+  agent: file_system_manager
+  context:
+  - monitor_youtube_channels
+  - monitor_instagram_accounts
+  - coordinate_real_time_processing
+upload_content_to_cloud_storage:
+  description: Take the downloaded video files from the F:/ drive and upload them
+    to Google Drive. Create organized folder structure mirroring the local organization
+    (YouTube/[channel_name] and Instagram/[account_name]). For each uploaded file,
+    generate shareable links with proper permissions that allow direct streaming within
+    Discord. Convert Google Drive links to embed-compatible URLs using the format
+    'https://drive.google.com/file/d/[FILE_ID]/preview' to enable in-Discord playback.
+  expected_output: 'A detailed upload report containing: successfully uploaded files
+    with their Google Drive file IDs, embed-compatible URLs for Discord streaming,
+    organized folder structure in Google Drive, any upload failures with error details,
+    and verification that links work for Discord embedding'
+  agent: cloud_storage_manager
+  context:
+  - execute_downloads_and_file_management
+generate_audio_transcripts:
+  description: Process all downloaded video files to generate ultra-accurate transcripts
+    with speaker identification, timestamps, and contextual markers. Use advanced
+    speech recognition to capture every spoken word, identify different speakers,
+    and maintain conversation flow. Include emotional context markers and background
+    audio notes where relevant.
+  expected_output: Complete transcripts for each video with speaker identification,
+    precise timestamps, conversation flow markers, and contextual annotations. Output
+    format should include speaker labels (Host, Guest, Co-Host, etc.), timestamp intervals,
+    and high-accuracy text transcription
+  agent: content_transcription_specialist
+  context:
+  - execute_downloads_and_file_management
+determine_discord_channel_routing:
+  description: Analyze the source information for each uploaded video (YouTube channel
+    names and Instagram account names) and determine the appropriate Discord channel
+    for posting. Create a mapping that associates each video with its target Discord
+    channel based on predefined routing rules. Consider factors like content type,
+    source platform, and channel naming conventions to ensure proper distribution.
+  expected_output: 'A channel routing map specifying: which Discord channel each video
+    should be posted to, reasoning for channel selection based on source platform/account
+    name, any content categorization applied, and a prioritized posting order if multiple
+    videos target the same channel'
+  agent: discord_channel_router
+  context:
+  - upload_content_to_cloud_storage
+analyze_speaker_profiles:
+  description: Analyze transcripts to identify and profile all speakers, including
+    voice patterns, speaking roles, and recurring participants. Create detailed speaker
+    profiles with their typical discussion topics, speaking patterns, and relationship
+    dynamics. Track which speakers appear across multiple videos and their evolving
+    roles.
+  expected_output: Comprehensive speaker database with voice signatures, role classifications
+    (host/co-host/guest/staff), topic associations, speaking pattern analysis, and
+    cross-video appearance tracking. Include personality profiles and conversational
+    dynamics between speakers
+  agent: speaker_analysis_expert
+  context:
+  - generate_audio_transcripts
+extract_topics_and_opinions:
+  description: Analyze all transcripts to extract topics, opinions, claims, arguments,
+    and viewpoints expressed by each speaker. Build comprehensive knowledge base of
+    positions taken on various subjects, track opinion evolution over time, and identify
+    key themes and recurring talking points. Create detailed argument mappings and
+    position tracking.
+  expected_output: Structured database of topics discussed, individual speaker positions
+    and opinions, argument classifications, claim statements with context, recurring
+    themes identification, and opinion evolution tracking. Include sentiment analysis
+    and argument strength assessments
+  agent: content_intelligence_analyst
+  context:
+  - generate_audio_transcripts
+  - analyze_speaker_profiles
+discover_social_media_ecosystem:
+  description: Identify and catalog comprehensive social media presence for individuals
+    and topics mentioned in monitored content. Search for official accounts, fan communities,
+    criticism/snark subreddits, and related discussion spaces across Reddit, Twitter/X,
+    and other platforms. Create detailed mapping of the complete social media ecosystem
+    surrounding each content creator and topic.
+  expected_output: 'Comprehensive directory of social media accounts and communities
+    including: official Twitter/X accounts, verified social profiles, fan subreddits,
+    criticism/snark communities, topic-related discussion spaces, account activity
+    levels, follower counts, and community engagement metrics. Include categorization
+    by platform, relationship type, and community sentiment.'
+  agent: social_media_discovery_specialist
+  context:
+  - analyze_speaker_profiles
+monitor_cross_platform_discussions:
+  description: Monitor Reddit, X/Twitter, YouTube, TikTok, Instagram, Threads, and
+    other social platforms for discussions related to the content creators and topics
+    identified in the transcripts. Collect relevant data about public discourse, trending
+    topics, and cross-platform conversations that relate to the analyzed content.
+  expected_output: Comprehensive social media intelligence report including trending
+    topics, public discourse patterns, cross-platform discussion threads, viral content
+    related to monitored creators, and social sentiment analysis. Include platform-specific
+    engagement metrics and conversation mapping
+  agent: multi_platform_social_monitor
+  context:
+  - extract_topics_and_opinions
+extract_reddit_intelligence:
+  description: Monitor and extract discussions, posts, comments, and threads from
+    identified subreddits. Gather community sentiment, trending topics, recurring
+    themes, and detailed discussions related to monitored individuals and topics.
+    Track upvote patterns, comment sentiment, and community reactions to establish
+    comprehensive Reddit intelligence.
+  expected_output: 'Detailed Reddit intelligence report including: extracted posts
+    and comments with timestamps, upvote/downvote patterns, community sentiment analysis,
+    trending discussion topics, recurring themes and talking points, moderator actions,
+    and user engagement patterns. Include thread summaries and key discussion points
+    with source links.'
+  agent: reddit_intelligence_gatherer
+  context:
+  - discover_social_media_ecosystem
+analyze_social_media_content:
+  description: Process and analyze collected social media content from Twitter/X,
+    Reddit, and other platforms. Perform sentiment analysis, identify trending topics,
+    track relationship dynamics, and extract meaningful insights about individuals
+    and topics. Map connections between different platforms and discussion themes.
+  expected_output: 'Comprehensive social media analysis report including: sentiment
+    trends across platforms, key topic evolution, relationship mapping between individuals
+    and communities, viral content identification, engagement pattern analysis, cross-platform
+    discussion correlation, and actionable insights for enhancing content understanding.'
+  agent: social_media_content_analyzer
+  context:
+  - extract_reddit_intelligence
+  - monitor_cross_platform_discussions
+enhanced_fact_check_with_social_media_intelligence:
+  description: Conduct comprehensive fact-checking that combines traditional scholarly
+    research with social media intelligence. Verify claims against academic sources
+    while also incorporating community discussions, social media evidence, and cross-platform
+    verification. Use Reddit discussions and Twitter/X conversations to understand
+    how misinformation spreads and provide enhanced context for fact-checking results.
+  expected_output: 'Enhanced fact-checking report combining traditional research with
+    social media intelligence including: verified claims with academic sources, social
+    media context and community perspectives, misinformation spread patterns across
+    platforms, enhanced accuracy assessments with social evidence, and comprehensive
+    correction recommendations with both scholarly and community-based context.'
+  agent: social_media_enhanced_fact_checker
+  context:
+  - analyze_social_media_content
+  - extract_topics_and_opinions
+calculate_truth_scores:
+  description: Track accuracy of statements for each speaker, maintain comprehensive
+    truth vs lie tallies, and calculate trustworthiness scores using sophisticated
+    algorithms. Account for statement severity, context, intent, and frequency to
+    generate fair and nuanced accuracy metrics for each individual speaker.
+  expected_output: Individual trustworthiness profiles with truth/lie tallies, weighted
+    accuracy scores accounting for claim severity and context, trending accuracy analysis
+    over time, comparative trustworthiness rankings, and detailed accuracy breakdowns
+    by topic and claim type
+  agent: truth_scoring_algorithm_specialist
+  context:
+  - enhanced_fact_check_with_social_media_intelligence
+  - analyze_speaker_profiles
+generate_steelman_arguments:
+  description: Create the strongest possible version of opposing arguments to claims
+    and positions identified in the content. Analyze the true intentions behind statements,
+    trace origins of talking points, and identify influence from other groups or ideologies.
+    Present fair and rigorous counter-arguments that strengthen discourse quality.
+  expected_output: Steelman argument database with strongest opposing viewpoints to
+    identified claims, analysis of statement origins and influences, ideological tracing
+    of talking points, intention analysis for speakers, and comprehensive counter-argument
+    presentations with philosophical foundations
+  agent: steelman_argument_generator
+  context:
+  - extract_topics_and_opinions
+  - enhanced_fact_check_with_social_media_intelligence
+integrate_cross_platform_intelligence:
+  description: Synthesize and integrate data from all social media sources, Reddit
+    discussions, original content analysis, transcripts, and fact-checking results
+    to create enhanced knowledge profiles. Update agent knowledge bases with comprehensive
+    contextual understanding from all monitored sources.
+  expected_output: 'Enhanced knowledge database with integrated cross-platform intelligence
+    including: updated speaker profiles with social media context, comprehensive topic
+    analysis with community perspectives, relationship networks between individuals
+    and communities, enhanced fact-checking context with social media evidence, and
+    improved agent capabilities with expanded contextual understanding.'
+  agent: cross_platform_data_integrator
+  context:
+  - analyze_social_media_content
+  - enhanced_fact_check_with_social_media_intelligence
+  - calculate_truth_scores
+coordinate_comprehensive_analysis:
+  description: Coordinate and synchronize all analysis processes to ensure comprehensive
+    content understanding. Verify that transcription, speaker analysis, topic extraction,
+    social media intelligence, and fact-checking are all properly integrated and working
+    together. Ensure data consistency and completeness across all analytical workflows.
+  expected_output: 'Comprehensive analysis coordination report including: verification
+    of all analysis processes completion, data consistency checks across all workflows,
+    integrated analysis summary combining all intelligence sources, quality assurance
+    validation for all analytical outputs, and coordination status for enhanced knowledge
+    integration.'
+  agent: content_analysis_coordinator
+  context:
+  - generate_steelman_arguments
+  - calculate_truth_scores
+  - integrate_cross_platform_intelligence
+manage_vector_database_operations:
+  description: Store processed transcripts, analysis results, and intelligence data
+    in vector database for semantic search capabilities. Create embeddings for all
+    content, maintain data consistency, and optimize retrieval performance for Q&A
+    system queries.
+  expected_output: 'Vector database status report including: successfully stored embeddings
+    with IDs, search index optimization results, data consistency validation, retrieval
+    performance metrics, and database health status for efficient Q&A system operations.'
+  agent: vector_database_manager
+  context:
+  - coordinate_comprehensive_analysis
+monitor_system_health_and_send_alerts:
+  description: Continuously monitor all workflow components, track errors and performance
+    metrics, send notifications about system status, and maintain comprehensive logs
+    of all operations for troubleshooting and optimization.
+  expected_output: 'System health report including: error tracking logs, performance
+    metrics, notification delivery confirmations, system status dashboard updates,
+    and alerts sent for any critical issues requiring attention.'
+  agent: system_monitoring_alert_manager
+  context:
+  - manage_vector_database_operations
+organize_knowledge_database:
+  description: Structure all collected data, transcripts, fact-checks, speaker profiles,
+    and analysis into organized, searchable format within Discord channels and cloud
+    storage. Create comprehensive catalog with logical categorization, efficient search
+    capabilities, and intuitive navigation systems for all processed information.
+  expected_output: Fully organized knowledge database with categorized Discord channels,
+    searchable content indexes, structured file systems in cloud storage, topic hierarchies,
+    speaker directories, and efficient retrieval systems. Include user-friendly navigation
+    and comprehensive content cataloging
+  agent: knowledge_database_organizer
+  context:
+  - coordinate_comprehensive_analysis
+  - manage_vector_database_operations
+post_to_discord_channels:
+  description: Using the channel routing information and embed-compatible URLs, post
+    videos to the designated Discord channels. Use web automation to navigate to Discord,
+    access the correct channels, and post the embed links with appropriate context.
+    Ensure each post includes video title, source information, and properly formatted
+    embed link that allows direct playback within Discord. Handle any rate limiting
+    or posting errors gracefully.
+  expected_output: 'A posting report detailing: successfully posted messages with
+    Discord message IDs, confirmation that embeds are working and videos play in Discord,
+    any failed posts with error reasons, posting timestamps, and verification that
+    all content reached the correct channels without errors'
+  agent: discord_bot_manager
+  context:
+  - determine_discord_channel_routing
+  - organize_knowledge_database
+manage_discord_q_a_system:
+  description: Operate Discord Q&A channels and thread system, answer user questions
+    using the comprehensive knowledge database, prevent duplicate work by directing
+    users to existing threads, and maintain organized thread structures. Create facts
+    vs fiction channels with established debunked lies and trustworthiness scores.
+  expected_output: Fully functional Discord Q&A system with organized threads, comprehensive
+    user question responses, duplicate prevention mechanisms, facts vs fiction channels
+    with verified debunked claims, trustworthiness score displays, and efficient thread
+    management for optimal user experience
+  agent: discord_q_a_thread_manager
+  context:
+  - post_to_discord_channels
+  - monitor_system_health_and_send_alerts
