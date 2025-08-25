@@ -118,12 +118,12 @@ class YouTubeMonitor:
 
 ## yt-dlp integration for YouTube downloads
 
-### Optimized configuration for F:/ drive
+### Example cross-platform configuration
 
 ```ini
-# F:/yt-dlp/config/crewai-system.conf
-# Output to F:/ drive with organized structure
--o F:/Downloads/YouTube/%(uploader)s/%(upload_date>%Y)s/%(title)s [%(id)s].%(ext)s
+# ${CREWAI_YTDLP_CONFIG}
+# Output to downloads directory with organized structure
+-o ${CREWAI_DOWNLOADS_DIR}/YouTube/%(uploader)s/%(upload_date>%Y)s/%(title)s [%(id)s].%(ext)s
 
 # Quality optimization for Discord sharing
 -f bestvideo[height<=1080][ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best
@@ -148,10 +148,10 @@ class YouTubeMonitor:
 --retries 10
 
 # Archive management
---download-archive F:/yt-dlp/archives/crewai_downloads.txt
+--download-archive ${CREWAI_YTDLP_ARCHIVE}
 
 # Temp processing directory
--P temp:F:/Downloads/temp
+-P temp:${CREWAI_TEMP_DIR}
 ```
 
 ### CrewAI-compatible download implementation
@@ -168,11 +168,11 @@ class YouTubeDownloadTool(BaseTool):
     def _run(self, video_url: str, quality: str = "1080p") -> str:
         """Download YouTube video using yt-dlp with CrewAI integration"""
         
-        config_file = "F:/yt-dlp/config/crewai-system.conf"
+        config_file = os.environ.get("CREWAI_YTDLP_CONFIG")
         
         # Construct command with quality-specific settings
         command = [
-            "F:/yt-dlp/yt-dlp.exe",
+            "yt-dlp",
             "--config-locations", config_file,
             "--print", "%(id)s|%(title)s|%(uploader)s|%(duration)s|%(filesize_approx)s",
             video_url
@@ -198,7 +198,7 @@ class YouTubeDownloadTool(BaseTool):
                     'uploader': download_info[2],
                     'duration': download_info[3],
                     'file_size': download_info[4],
-                    'local_path': f"F:/Downloads/YouTube/{download_info[2]}/",
+                    'local_path': f"{os.environ.get('CREWAI_DOWNLOADS_DIR', './Downloads')}/YouTube/{download_info[2]}/",
                     'download_command': ' '.join(command)
                 })
             else:
@@ -268,7 +268,7 @@ class InstagramContentManager:
             for story in profile.get_stories():
                 for item in story.get_items():
                     # Download with organized naming
-                    target_dir = f"F:/Downloads/Instagram/Stories/{username}"
+                    target_dir = f"{os.environ.get('CREWAI_DOWNLOADS_DIR', './Downloads')}/Instagram/Stories/{username}"
                     self.instaloader_client.download_storyitem(
                         item, target_dir
                     )
@@ -300,7 +300,7 @@ class InstagramContentManager:
                 # Trigger PyInstaLive recording
                 subprocess.Popen([
                     'pyinstalive', '-d', username, 
-                    '--output', f'F:/Downloads/Instagram/Lives/{username}'
+                    '--output', f'{os.environ.get("CREWAI_DOWNLOADS_DIR", "./Downloads")}/Instagram/Lives/{username}'
                 ])
                 
                 return {
@@ -659,7 +659,7 @@ class ContentMonitoringCrew:
                 1. Parse the content manifest from monitoring
                 2. Download YouTube videos using optimized yt-dlp configurations
                 3. Download Instagram content using appropriate tools
-                4. Organize files in structured directories on F:/ drive
+                4. Organize files in structured directories in the base directory
                 5. Generate download reports with file locations and metadata
                 """,
                 agent=self.agents['downloader'],
@@ -842,10 +842,10 @@ class ResilientYouTubeDownloadTool(BaseTool):
 
 ## File organization best practices
 
-### Structured directory system for F:/ drive
+### Structured directory system for base directory
 
 ```
-F:/
+${CREWAI_BASE_DIR}/
 ├── CrewAI_Content_System/
 │   ├── Downloads/
 │   │   ├── YouTube/

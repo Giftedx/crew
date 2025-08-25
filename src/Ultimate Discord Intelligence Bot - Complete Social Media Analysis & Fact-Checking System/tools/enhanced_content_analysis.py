@@ -783,7 +783,9 @@ class EnhancedContentAnalysisTool(BaseTool):
         
         try:
             # Create analysis directory
-            analysis_dir = Path("F:/yt-auto/crewaiv2/CrewAI_Content_System/Analysis")
+            from ..settings import PROCESSING_DIR
+
+            analysis_dir = PROCESSING_DIR / "Analysis"
             analysis_dir.mkdir(parents=True, exist_ok=True)
             
             # Save full results
@@ -844,7 +846,7 @@ if __name__ == "__main__":
     analysis_tool = EnhancedContentAnalysisTool(model_size="base", device="auto")
     
     # Test file path (replace with actual file)
-    test_file = "F:/yt-auto/crewaiv2/test_video.mp4"
+    test_file = str(Path.home() / "test_video.mp4")
     
     if Path(test_file).exists():
         print("Starting content analysis...")

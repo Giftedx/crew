@@ -1,7 +1,10 @@
+import os
+
 from crewai_tools import BaseTool
 from instagrapi import Client
 from instagrapi.exceptions import LoginRequired
-import os
+
+from ..settings import DOWNLOADS_DIR
 
 class InstagramContentTool(BaseTool):
     name: str = "Instagram Content Tool"
@@ -46,9 +49,9 @@ class InstagramContentTool(BaseTool):
             
             stories_downloaded = []
             for story in stories:
-                target_dir = f"F:/yt-auto/crewaiv2/CrewAI_Content_System/Downloads/Instagram/Stories/{username}"
+                target_dir = DOWNLOADS_DIR / "Instagram" / "Stories" / username
                 os.makedirs(target_dir, exist_ok=True)
-                self.client.story_download(story.pk, folder=target_dir)
+                self.client.story_download(story.pk, folder=str(target_dir))
                 
                 stories_downloaded.append({
                     'story_id': story.pk,

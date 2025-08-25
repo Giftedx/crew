@@ -3,6 +3,8 @@ import cv2
 from moviepy.editor import VideoFileClip
 import os
 
+from ..settings import PROCESSING_DIR
+
 class VideoAnalysisTool(BaseTool):
     name: str = "Video Analysis Tool"
     description: str = "Analyze video content to extract metadata, generate summaries, and transcribe audio."
@@ -46,7 +48,7 @@ class VideoAnalysisTool(BaseTool):
             total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
             frame_indices = [int(i) for i in range(0, total_frames, total_frames // num_frames)]
             
-            summary_path = f"F:/yt-auto/crewaiv2/CrewAI_Content_System/Processing/Summaries/{os.path.basename(video_path)}"
+            summary_path = PROCESSING_DIR / "Summaries" / os.path.basename(video_path)
             os.makedirs(summary_path, exist_ok=True)
             
             saved_frames = []

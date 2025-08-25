@@ -18,6 +18,22 @@ Next, navigate to your project directory and install the dependencies:
 ```bash
 crewai install
 ```
+
+Copy `.env.example` to `.env` and fill in the required secrets:
+
+```bash
+cp .env.example .env
+# edit .env and add your API keys
+```
+
+All paths and credentials are configured through environment variables so the project
+works across Linux, macOS and Windows without modification.
+Key variables include `CREWAI_BASE_DIR` (defaulting to a `CrewAI_Content_System`
+folder in your home directory) and optional overrides like `CREWAI_DOWNLOADS_DIR`
+or `CREWAI_YTDLP_CONFIG` when custom locations are required.
+For audio transcription you can choose the Whisper model size by setting
+`WHISPER_MODEL` (defaults to `base`). The text analysis component relies on NLTK
+corpora which are downloaded automatically on first use.
 ### Customizing
 
 **Add your `OPENAI_API_KEY` into the `.env` file**
@@ -33,6 +49,12 @@ To kickstart your crew of AI agents and begin task execution, run this from the 
 
 ```bash
 $ crewai run
+```
+
+To execute the end-to-end content pipeline for a single YouTube URL:
+
+```bash
+python src/Ultimate\ Discord\ Intelligence\ Bot\ -\ Complete\ Social\ Media\ Analysis\ \&\ Fact-Checking\ System/pipeline.py <video_url>
 ```
 
 This command initializes the ultimate_discord_intelligence_bot___complete_social_media_analysis_fact_checking_system Crew, assembling the agents and assigning them tasks as defined in your configuration.
