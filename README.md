@@ -32,24 +32,45 @@ Key variables include `CREWAI_BASE_DIR` (defaulting to a `crew_data` folder in y
 home directory) and optional overrides like `CREWAI_DOWNLOADS_DIR` or
 `CREWAI_YTDLP_CONFIG` for custom locations. The repository ships with a default
 yt-dlp configuration under `yt-dlp/config/crewai-system.conf` and supports
-downloading from YouTube, Twitch, Kick and X/Twitter. The pipeline automatically
+downloading from YouTube, Twitch, Kick, Instagram and X/Twitter. The pipeline automatically
 selects the appropriate downloader based on the URL. When providing a Discord
 webhook via `DISCORD_WEBHOOK` ensure it is a public HTTPS URL; local or private
 IP addresses are rejected for safety. A separate `DISCORD_PRIVATE_WEBHOOK` can
 be supplied to the internal `Discord Private Alert Tool` for system health
-notifications. Pair this with the `System Status Tool` to include CPU load and
-disk usage metrics in those alerts.
+notifications. Pair this with the `System Status Tool` and the `monitor_system`
+task to include CPU load and disk usage metrics in those alerts.
 The accompanying `Multi-Platform Monitor Tool` keeps an in-memory record of
 seen items and reports only fresh content so downloads are triggered once per
-upload.
+upload. Dedicated monitors for X and Discord expose structured metadata for new
+posts, paving the way for richer context gathering.
 To broaden analysis beyond video content, the repository ships lightweight
 tools for gathering social-media chatter and scoring factual accuracy. The
 `Social Media Monitor Tool` aggregates Reddit, X and Discord posts matching a
 keyword, while the `Truth Scoring Tool` converts fact-check verdicts into a
-numerical trustworthiness score.
+numerical trustworthiness score.  Building on those verdicts, the
+`Trustworthiness Tracker Tool` maintains per-person counts of truthful and
+false statements to derive long-term reliability profiles that feed the
+overall scoreboard.  For clip context
+checks, the `Transcript Index Tool` slices transcripts into timestamped
+chunks so the `Context Verification Tool` can compare quoted clips against the
+surrounding transcript.  Claims can be probed via the lightweight `Fact Check
+Tool`, and cumulative lie or misquote counts are persisted by the
+`Leaderboard Tool`.  A `Steelman Argument Tool` combines supporting snippets to
+produce the strongest possible version of a claim for deep-dive reasoning.
+These pieces power the informal H3/Hasan debate analysis
+flow: VODs are indexed, clip context verified, claims fact-checked and a
+scoreboard of lies, misquotes and misinfo is exposed through Discord commands
+like `/analyze`, `/context`, `/claim`, `/leaderboard`, `/timeline` and `/ask`.
+Two partisan defenders – Traitor AB for Ethan and Old Dan for Hasan – generate
+short, casual closing statements for each analysis.  The `/timeline` command
+surfaces a chronological list of analysed clips for a video while `/ask`
+queries the stored vector memory to surface relevant transcript or analysis
+snippets for quick Q&A.  A `/profile` command summarises per-person trust
+metrics and recent events collected throughout debates.
 For long-term memory the pipeline can connect to a Qdrant vector database using
-`QDRANT_URL` and optional `QDRANT_API_KEY`; transcripts and analysis results are
-stored with lightweight embeddings for later retrieval.
+`QDRANT_URL` and optional `QDRANT_API_KEY`.  Raw transcripts are written to a
+`transcripts` collection while distilled analysis summaries land in an
+`analysis` collection, keeping sources and reasoning separate for retrieval.
 For audio transcription you can choose the Whisper model size by setting
 `WHISPER_MODEL` (defaults to `base`). The text analysis component relies on NLTK
 corpora which are downloaded automatically on first use.
@@ -84,9 +105,9 @@ Both approaches download the video, upload it to Google Drive, analyse the
 transcript, gather cross-platform discussions, flag basic logical fallacies,
 synthesise perspectives, score claim truthfulness and post a summary to
 Discord.
-Additionally, transcripts and analysis metadata are stored in a Qdrant
-collection so future agents can perform retrieval-augmented generation over the
-processed content.
+Additionally, transcripts and analysis metadata are stored in dedicated Qdrant
+collections so future agents can perform retrieval-augmented generation over
+the processed content.
 
 ## Understanding Your Crew
 

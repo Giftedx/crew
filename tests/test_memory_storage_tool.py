@@ -10,8 +10,8 @@ def test_memory_storage_tool_upsert_called():
     client.upsert.return_value = None
 
     tool = MemoryStorageTool(client=client, embedding_fn=lambda t: [0.1])
-    result = tool.run("hello", {"meta": 1})
+    result = tool.run("hello", {"meta": 1}, collection="analysis")
 
     assert result["status"] == "success"
-    client.recreate_collection.assert_called_once()
+    assert client.recreate_collection.call_count == 2
     client.upsert.assert_called_once()

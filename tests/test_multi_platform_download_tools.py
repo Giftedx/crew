@@ -6,12 +6,13 @@ from ultimate_discord_intelligence_bot.tools.yt_dlp_download_tool import (
     TwitchDownloadTool,
     KickDownloadTool,
     TwitterDownloadTool,
+    InstagramDownloadTool,
 )
 
 
 @pytest.mark.parametrize(
     "tool_cls",
-    [TwitchDownloadTool, KickDownloadTool, TwitterDownloadTool],
+    [TwitchDownloadTool, KickDownloadTool, TwitterDownloadTool, InstagramDownloadTool],
 )
 def test_downloader_reports_platform(monkeypatch, tool_cls):
     def fake_run(cmd, capture_output, text, timeout, env):

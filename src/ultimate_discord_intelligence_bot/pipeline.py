@@ -1,5 +1,6 @@
 import asyncio
 import logging
+from functools import partial
 from typing import Dict, Optional
 from urllib.parse import urlparse
 
@@ -63,7 +64,13 @@ class ContentPipeline:
         raise ValueError(f"Unsupported platform for url: {url}")
 
     async def _run_with_retries(
-        self, func, *args, step: str, attempts: int = 3, delay: float = 2.0
+        self,
+        func,
+        *args,
+        step: str,
+        attempts: int = 3,
+        delay: float = 2.0,
+        **kwargs,
     ) -> StepResult:
         """Run a blocking function in the default executor with retries.
 
@@ -75,7 +82,8 @@ class ContentPipeline:
         result = StepResult.fail("unknown")
         for attempt in range(attempts):
             try:
-                raw = await loop.run_in_executor(None, func, *args)
+                call = partial(func, *args, **kwargs)
+                raw = await loop.run_in_executor(None, call)
                 result = StepResult.from_dict(raw)
             except Exception as exc:  # pragma: no cover - rare
                 logger.exception("%s attempt %s raised: %s", step, attempt + 1, exc)
@@ -138,6 +146,19 @@ class ContentPipeline:
             err["step"] = "transcription"
             return err
 
+        # persist raw transcript in its own collection
+        await self._run_with_retries(
+            self.memory.run,
+            transcription.data.get("transcript", ""),
+            {
+                "video_id": download_info.data["video_id"],
+                "title": download_info.data["title"],
+                "platform": download_info.data.get("platform", "unknown"),
+            },
+            step="memory",
+            collection="transcripts",
+        )
+
         logger.info("Analyzing transcript")
         analysis = await self._run_with_retries(
             self.analyzer.run, transcription.data["transcript"], step="analysis"
@@ -180,12 +201,14 @@ class ContentPipeline:
             "platform": download_info.data.get("platform", "unknown"),
             "sentiment": analysis.data.get("sentiment"),
             "keywords": analysis.data.get("keywords"),
+            "summary": perspective.data.get("summary"),
         }
         memory = await self._run_with_retries(
             self.memory.run,
-            transcription.data["transcript"],
+            perspective.data.get("summary", ""),
             memory_payload,
             step="memory",
+            collection="analysis",
         )
         if not memory.success:
             logger.error("Memory storage failed: %s", memory.error)

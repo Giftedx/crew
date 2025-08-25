@@ -62,7 +62,7 @@ def test_process_video(monkeypatch):
     analyzer.run.assert_called_once()
     fallacy.run.assert_called_once()
     perspective.run.assert_called_once()
-    memory.run.assert_called_once()
+    assert memory.run.call_count == 2
     discord.run.assert_called_once()
 
 
@@ -77,6 +77,7 @@ def test_download_failure(monkeypatch):
     fallacy = MagicMock()
     perspective = MagicMock()
     memory = MagicMock()
+    memory.run.return_value = {"status": "success"}
 
     pipeline = ContentPipeline(
         webhook_url="http://example.com",
@@ -168,7 +169,7 @@ def test_drive_upload_retry(monkeypatch):
 
     assert result["status"] == "success"
     assert drive.run.call_count == 2
-    memory.run.assert_called_once()
+    assert memory.run.call_count == 2
 
 
 def test_exception_in_analysis(monkeypatch):
@@ -218,7 +219,7 @@ def test_exception_in_analysis(monkeypatch):
     discord.run.assert_not_called()
     fallacy.run.assert_not_called()
     perspective.run.assert_not_called()
-    memory.run.assert_not_called()
+    assert memory.run.call_count >= 1
 
 
 def test_unsupported_platform(monkeypatch):

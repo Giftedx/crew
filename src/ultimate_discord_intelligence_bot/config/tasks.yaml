@@ -22,8 +22,8 @@ identify_new_content:
 
 monitor_system:
   description: >-
-    Post an alert to the private Discord channel with the provided message.
-  expected_output: Confirmation that the alert was posted.
+    Gather basic system metrics and post them to the private Discord channel.
+  expected_output: Confirmation that the alert and metrics were posted.
   agent: system_alert_manager
 
 gather_cross_platform_intelligence:
@@ -42,6 +42,57 @@ fact_check_content:
 
 score_truthfulness:
   description: >-
-    Convert a list of fact-check verdicts into a numerical trust score.
-  expected_output: A score between 0 and 1 representing truthfulness.
+    Convert a list of fact-check verdicts about {person} into a numerical
+    trust score and update their historical profile.
+  expected_output: Updated profile with counts of truths and lies plus a score
+    between 0 and 1.
   agent: truth_scoring_specialist
+
+steelman_argument:
+  description: >-
+    Generate the strongest possible argument for {claim} using evidence snippets.
+  expected_output: Steelman argument text.
+  agent: steelman_argument_generator
+
+analyze_claim:
+  description: >-
+    Run the debate analysis pipeline on {url} at timestamp {ts} for {person}.
+    Produce context, fact-check results and score updates.
+  expected_output: Analysis report with defender blurbs and scoreboard deltas.
+  agent: content_manager
+
+get_context:
+  description: >-
+    Retrieve transcript context around {ts} in {video_id}.
+  expected_output: Surrounding transcript text.
+  agent: content_manager
+
+fact_check_claim:
+  description: >-
+    Fact-check the statement {claim} and return a verdict with evidence.
+  expected_output: Verdict and supporting citations.
+  agent: enhanced_fact_checker
+
+update_leaderboard:
+  description: >-
+    Update the lie, misquote and misinfo counts for {person}.
+  expected_output: Confirmation scores were persisted.
+  agent: truth_scoring_specialist
+
+answer_question:
+  description: >-
+    Retrieve relevant memory snippets to answer {question}.
+  expected_output: List of context snippets.
+  agent: discord_qa_manager
+
+get_timeline:
+  description: >-
+    Retrieve timeline events for {video_id}.
+  expected_output: Chronological list of events with sources.
+  agent: content_manager
+
+get_profile:
+  description: >-
+    Retrieve stored profile information for {person}.
+  expected_output: Profile with trust metrics and event history.
+  agent: character_profile_manager

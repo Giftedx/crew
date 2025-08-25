@@ -1,0 +1,55 @@
+"""Track per-person truthfulness history and compute trust scores."""
+
+from __future__ import annotations
+
+import json
+from pathlib import Path
+from threading import Lock
+from typing import Dict
+
+from crewai_tools import BaseTool
+
+
+class TrustworthinessTrackerTool(BaseTool):
+    """Maintain counts of truthful and false statements for each person."""
+
+    name: str = "Trustworthiness Tracker Tool"
+    description: str = (
+        "Updates and returns per-person trust scores based on fact-check verdicts."
+    )
+
+    def __init__(self, storage_path: str | Path | None = None):
+        super().__init__()
+        self.storage_path = Path(storage_path or "trustworthiness.json")
+        self._lock = Lock()
+        if not self.storage_path.exists():
+            self._save({})
+
+    def _load(self) -> Dict[str, Dict[str, int]]:
+        try:
+            with self.storage_path.open("r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            return {}
+
+    def _save(self, data: Dict[str, Dict[str, int]]) -> None:
+        with self.storage_path.open("w", encoding="utf-8") as f:
+            json.dump(data, f)
+
+    def _run(self, person: str, verdict: bool) -> dict:
+        with self._lock:
+            data = self._load()
+            record = data.get(person, {"truths": 0, "lies": 0})
+            if verdict:
+                record["truths"] += 1
+            else:
+                record["lies"] += 1
+            total = record["truths"] + record["lies"]
+            score = record["truths"] / total if total else 0.0
+            record["score"] = score
+            data[person] = record
+            self._save(data)
+        return {"status": "success", "person": person, **record}
+
+    def run(self, *args, **kwargs):  # pragma: no cover - thin wrapper
+        return self._run(*args, **kwargs)
