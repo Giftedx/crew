@@ -96,3 +96,9 @@ get_profile:
     Retrieve stored profile information for {person}.
   expected_output: Profile with trust metrics and event history.
   agent: character_profile_manager
+
+synthesize_personality:
+  description: >-
+    Analyse historical events and trust metrics to summarise {person}'s personality.
+  expected_output: Concise personality profile.
+  agent: personality_synthesis_manager

@@ -48,21 +48,22 @@ Follow this checklist whenever adding agents, tasks, tools, or workflows:
 - Comprehensive documentation and tests for all new components.
 
 ## Progress Tracker
-### Completed
-- Debate analysis pipeline and Discord command tool.
-- Transcript indexing, context verification, fact checking, and scoreboard persistence.
-- Trustworthiness tracker and character profile manager.
-- Timeline tool and vector search-based Discord Q&A.
-- System alert manager for Discord-only monitoring.
-- Cross-platform intelligence gatherer agent.
-- Steelman argument generator.
-- Twitch, Kick, Twitter, Instagram downloaders and X/Discord monitor tools.
-- Qdrant collections separated for transcripts and analyses.
-- Enhanced fact-checking backends (Serply, EXA, Perplexity, WolframAlpha).
-- Expanded logical fallacy detection.
-- Environment variables documented for new search backends.
-- Full workflow tests for new ingestion sources.
+The checklist below tracks major components of the system and their status.
 
-### To Do
+- [x] Debate analysis pipeline and Discord command tool.
+- [x] Transcript indexing, context verification, fact checking, and scoreboard persistence.
+- [x] Trustworthiness tracker and character profile manager.
+- [x] Timeline tool and vector search-based Discord Q&A.
+- [x] System alert manager for Discord-only monitoring.
+- [x] Cross-platform intelligence gatherer agent.
+- [x] Steelman argument generator.
+- [x] Twitch, Kick, Twitter, Instagram downloaders and X/Discord monitor tools.
+- [x] Qdrant collections separated for transcripts and analyses.
+- [x] Enhanced fact-checking backends (Serply, EXA, Perplexity, WolframAlpha).
+- [x] Expanded logical fallacy detection.
+- [x] Environment variables documented for new search backends.
+- [x] Full workflow tests for new ingestion sources.
+- [x] Personality Synthesis Manager agent.
+- [x] Additional monitoring and alerting enhancements.
 
-*Update this file whenever significant goals are finished or new tasks arise.*
+*Update this checklist whenever significant goals are finished or new tasks arise.*
