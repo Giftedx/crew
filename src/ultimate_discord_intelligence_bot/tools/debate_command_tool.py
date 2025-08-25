@@ -1,0 +1,81 @@
+"""Discord-facing commands for debate analysis."""
+from __future__ import annotations
+
+from typing import Callable
+
+from crewai_tools import BaseTool
+
+from ..debate_analysis_pipeline import DebateAnalysisPipeline
+
+
+class DebateCommandTool(BaseTool):
+    """Expose debate analysis features through simple commands."""
+
+    name: str = "Debate Command Tool"
+    description: str = "Run debate analysis, context lookup and leaderboard ops."
+
+    def __init__(
+        self,
+        pipeline: DebateAnalysisPipeline | None = None,
+        ethan_defender: Callable[[str], str] | None = None,
+        hasan_defender: Callable[[str], str] | None = None,
+    ):
+        super().__init__()
+        self.pipeline = pipeline or DebateAnalysisPipeline(
+            ethan_defender=ethan_defender, hasan_defender=hasan_defender
+        )
+        self.index = self.pipeline.index_tool
+        self.fact_checker = self.pipeline.fact_checker
+        self.leaderboard = self.pipeline.leaderboard
+        self.timeline = self.pipeline.timeline
+        self.trust_tracker = self.pipeline.trust_tracker
+        self.profile_tool = self.pipeline.profile_tool
+
+    def _run(self, command: str, **kwargs):
+        if command == "analyze":
+            return self.pipeline.analyze(
+                kwargs["url"],
+                kwargs.get("ts", 0.0),
+                kwargs.get("clip_text", ""),
+                kwargs.get("person", "unknown"),
+                transcript=kwargs.get("transcript"),
+            )
+        if command == "context":
+            context = self.index.get_context(kwargs["video_id"], kwargs.get("ts", 0.0))
+            return {"status": "success", "context": context}
+        if command == "claim":
+            result = self.fact_checker.run(kwargs["claim"])
+            if person := kwargs.get("person"):
+                verdict = result.get("verdict")
+                lies = 1 if verdict == "false" else 0
+                misinfo = 1 if result.get("evidence") else 0
+                self.leaderboard.update_scores(person, lies, 0, misinfo)
+                self.trust_tracker.run(person, verdict != "false")
+                self.profile_tool.record_event(
+                    person,
+                    {
+                        "video_id": "claim",
+                        "ts": 0,
+                        "clip": kwargs["claim"],
+                        "fact_verdict": verdict,
+                        "context_verdict": "n/a",
+                        "evidence": result.get("evidence", []),
+                    },
+                )
+            return result
+        if command == "leaderboard":
+            return {"status": "success", "results": self.leaderboard.get_top(kwargs.get("n", 10))}
+        if command == "timeline":
+            return {
+                "status": "success",
+                "events": self.timeline.get_timeline(kwargs["video_id"]),
+            }
+        if command == "profile":
+            return {
+                "status": "success",
+                "profile": self.profile_tool.get_profile(kwargs["person"]),
+            }
+        return {"status": "error", "error": "unknown command"}
+
+    def run(self, *args, **kwargs):  # pragma: no cover - thin wrapper
+        return self._run(*args, **kwargs)

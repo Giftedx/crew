@@ -122,3 +122,9 @@ class TwitterDownloadTool(YtDlpDownloadTool):
     description = "Download videos from X/Twitter"
     platform = "Twitter"
 
+
+class InstagramDownloadTool(YtDlpDownloadTool):
+    name = "Instagram Download Tool"
+    description = "Download Instagram reels or posts"
+    platform = "Instagram"
+

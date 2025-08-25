@@ -49,30 +49,32 @@ class MemoryStorageTool(BaseTool):
             url = os.getenv("QDRANT_URL", "http://localhost:6333")
             api_key = os.getenv("QDRANT_API_KEY")
             self.client = QdrantClient(url=url, api_key=api_key)
-        self._ensure_collection()
+        self._ensure_collection(self.collection)
 
-    def _ensure_collection(self) -> None:  # pragma: no cover - setup
+    def _ensure_collection(self, name: str) -> None:  # pragma: no cover - setup
         try:
-            self.client.get_collection(self.collection)
+            self.client.get_collection(name)
         except Exception:
             self.client.recreate_collection(
-                self.collection,
+                name,
                 vectors_config=VectorParams(size=1, distance=Distance.COSINE),
             )
 
-    def _run(self, text: str, metadata: Dict) -> Dict:
+    def _run(self, text: str, metadata: Dict, collection: str | None = None) -> Dict:
+        target = collection or self.collection
         try:
+            self._ensure_collection(target)
             vector = self.embedding_fn(text)
             point = PointStruct(
                 id=str(uuid.uuid4()),
                 vector=vector,
                 payload={**metadata, "text": text},
             )
-            self.client.upsert(collection_name=self.collection, points=[point])
+            self.client.upsert(collection_name=target, points=[point])
             return {"status": "success"}
         except Exception as exc:  # pragma: no cover - network errors
             return {"status": "error", "error": str(exc)}
 
     # Explicit run wrapper for pipeline compatibility
-    def run(self, *args, **kwargs):  # pragma: no cover - thin wrapper
-        return self._run(*args, **kwargs)
+    def run(self, text: str, metadata: Dict, collection: str | None = None):  # pragma: no cover - thin wrapper
+        return self._run(text, metadata, collection=collection)

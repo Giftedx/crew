@@ -9,12 +9,22 @@ from .tools.perspective_synthesizer_tool import PerspectiveSynthesizerTool
 from .tools.social_media_monitor_tool import SocialMediaMonitorTool
 from .tools.multi_platform_monitor_tool import MultiPlatformMonitorTool
 from .tools.truth_scoring_tool import TruthScoringTool
+from .tools.trustworthiness_tracker_tool import TrustworthinessTrackerTool
+from .tools.fact_check_tool import FactCheckTool
+from .tools.leaderboard_tool import LeaderboardTool
+from .tools.debate_command_tool import DebateCommandTool
+from .tools.discord_qa_tool import DiscordQATool
+from .tools.steelman_argument_tool import SteelmanArgumentTool
 from .tools.yt_dlp_download_tool import (
     YouTubeDownloadTool,
     TwitchDownloadTool,
     KickDownloadTool,
     TwitterDownloadTool,
+    InstagramDownloadTool,
 )
+from .tools.character_profile_tool import CharacterProfileTool
+from .tools.x_monitor_tool import XMonitorTool
+from .tools.discord_monitor_tool import DiscordMonitorTool
 from .settings import DISCORD_PRIVATE_WEBHOOK
 
 
@@ -26,7 +36,7 @@ class UltimateDiscordIntelligenceBotCrew:
     def content_manager(self) -> Agent:
         return Agent(
             config=self.agents_config["content_manager"],
-            tools=[PipelineTool()],
+            tools=[PipelineTool(), DebateCommandTool()],
         )
 
     @agent
@@ -38,6 +48,7 @@ class UltimateDiscordIntelligenceBotCrew:
                 TwitchDownloadTool(),
                 KickDownloadTool(),
                 TwitterDownloadTool(),
+                InstagramDownloadTool(),
             ],
         )
 
@@ -60,21 +71,50 @@ class UltimateDiscordIntelligenceBotCrew:
     def cross_platform_intelligence_gatherer(self) -> Agent:
         return Agent(
             config=self.agents_config["cross_platform_intelligence_gatherer"],
-            tools=[SocialMediaMonitorTool()],
+            tools=[SocialMediaMonitorTool(), XMonitorTool(), DiscordMonitorTool()],
         )
 
     @agent
     def enhanced_fact_checker(self) -> Agent:
         return Agent(
             config=self.agents_config["enhanced_fact_checker"],
-            tools=[LogicalFallacyTool(), PerspectiveSynthesizerTool()],
+            tools=[LogicalFallacyTool(), PerspectiveSynthesizerTool(), FactCheckTool()],
         )
 
     @agent
     def truth_scoring_specialist(self) -> Agent:
         return Agent(
             config=self.agents_config["truth_scoring_specialist"],
-            tools=[TruthScoringTool()],
+            tools=[TruthScoringTool(), TrustworthinessTrackerTool(), LeaderboardTool()],
+        )
+
+    @agent
+    def steelman_argument_generator(self) -> Agent:
+        return Agent(
+            config=self.agents_config["steelman_argument_generator"],
+            tools=[SteelmanArgumentTool()],
+        )
+
+    @agent
+    def discord_qa_manager(self) -> Agent:
+        return Agent(
+            config=self.agents_config["discord_qa_manager"],
+            tools=[DiscordQATool()],
+        )
+
+    @agent
+    def ethan_defender(self) -> Agent:
+        return Agent(config=self.agents_config["ethan_defender"])
+
+    @agent
+    def hasan_defender(self) -> Agent:
+        return Agent(config=self.agents_config["hasan_defender"])
+
+    @agent
+    def character_profile_manager(self) -> Agent:
+        return Agent(
+            config=self.agents_config["character_profile_manager"],
+            tools=[CharacterProfileTool()],
         )
 
 
@@ -105,6 +145,38 @@ class UltimateDiscordIntelligenceBotCrew:
     @task
     def score_truthfulness(self) -> Task:
         return Task(config=self.tasks_config["score_truthfulness"])
+
+    @task
+    def steelman_argument(self) -> Task:
+        return Task(config=self.tasks_config["steelman_argument"])
+
+    @task
+    def analyze_claim(self) -> Task:
+        return Task(config=self.tasks_config["analyze_claim"])
+
+    @task
+    def get_context(self) -> Task:
+        return Task(config=self.tasks_config["get_context"])
+
+    @task
+    def fact_check_claim(self) -> Task:
+        return Task(config=self.tasks_config["fact_check_claim"])
+
+    @task
+    def update_leaderboard(self) -> Task:
+        return Task(config=self.tasks_config["update_leaderboard"])
+
+    @task
+    def answer_question(self) -> Task:
+        return Task(config=self.tasks_config["answer_question"])
+
+    @task
+    def get_timeline(self) -> Task:
+        return Task(config=self.tasks_config["get_timeline"])
+
+    @task
+    def get_profile(self) -> Task:
+        return Task(config=self.tasks_config["get_profile"])
 
     @crew
     def crew(self) -> Crew:
