@@ -8,13 +8,13 @@ system:
   created_at: '2024-01-15T00:00:00Z'
 
 paths:
-  base_dir: "F:/yt-auto/crewaiv2/CrewAI_Content_System"
-  downloads_dir: "F:/yt-auto/crewaiv2/CrewAI_Content_System/Downloads"
-  config_dir: "F:/yt-auto/crewaiv2/CrewAI_Content_System/Config"
-  logs_dir: "F:/yt-auto/crewaiv2/CrewAI_Content_System/Logs"
-  processing_dir: "F:/yt-auto/crewaiv2/CrewAI_Content_System/Processing"
-  ytdlp_config: "F:/yt-auto/crewaiv2/yt-dlp/config/crewai-system.conf"
-  google_credentials: "F:/yt-auto/crewaiv2/CrewAI_Content_System/Config/google-credentials.json"
+  base_dir: "${CREWAI_BASE_DIR}"
+  downloads_dir: "${CREWAI_DOWNLOADS_DIR:-${CREWAI_BASE_DIR}/Downloads}"
+  config_dir: "${CREWAI_CONFIG_DIR:-${CREWAI_BASE_DIR}/Config}"
+  logs_dir: "${CREWAI_LOGS_DIR:-${CREWAI_BASE_DIR}/Logs}"
+  processing_dir: "${CREWAI_PROCESSING_DIR:-${CREWAI_BASE_DIR}/Processing}"
+  ytdlp_config: "${CREWAI_YTDLP_CONFIG:-${CREWAI_BASE_DIR}/../yt-dlp/config/crewai-system.conf}"
+  google_credentials: "${GOOGLE_CREDENTIALS:-${CREWAI_CONFIG_DIR}/google-credentials.json}"
 
 monitoring:
   youtube_channels: []  # Add your YouTube channel URLs here

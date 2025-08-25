@@ -4,11 +4,14 @@ import subprocess
 import asyncio
 import logging
 from datetime import datetime
-from typing import Dict, List, Optional, Union
-from crewai_tools import BaseTool
 from pathlib import Path
+from typing import Dict, List, Optional, Union
+
 import requests
 import time
+
+from crewai_tools import BaseTool
+from ..settings import DOWNLOADS_DIR, CONFIG_DIR
 
 class InstagramContentManager:
     """
@@ -20,7 +23,7 @@ class InstagramContentManager:
         self.instaloader_client = self._setup_instaloader()
         self.rocketapi_client = self._setup_rocketapi()
         self.pyinstalive_monitor = self._setup_livestream_monitor()
-        self.download_directory = Path("F:/yt-auto/crewaiv2/CrewAI_Content_System/Downloads/Instagram")
+        self.download_directory = DOWNLOADS_DIR / "Instagram"
         self.download_directory.mkdir(parents=True, exist_ok=True)
     
     def _setup_instaloader(self):
@@ -40,7 +43,7 @@ class InstagramContentManager:
             )
             
             # Load session to avoid repeated logins
-            session_file = "F:/yt-auto/crewaiv2/CrewAI_Content_System/Config/instagram_session"
+            session_file = str(CONFIG_DIR / "instagram_session")
             try:
                 L.load_session_from_file('instagram_username', session_file)
                 logging.info("Loaded Instagram session from file")

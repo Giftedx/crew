@@ -12,7 +12,7 @@ Processing Model: Sequential workflow with parallel intelligence gathering and c
     Agent ID: 6839700c-382c-4376-a05e-7a7dbb139c89
     Model: OpenAI GPT-4o-mini
     LLM Connection: 244655
-    Goal: Monitor specific YouTube channels for new videos using {channel_urls} by scraping channel pages to detect new uploads and coordinate their download to the F:/ drive using yt-dlp via command line execution
+    Goal: Monitor specific YouTube channels for new videos using {channel_urls} by scraping channel pages to detect new uploads and coordinate their download to a configurable local storage directory using yt-dlp via command line execution
     Backstory: Specialized monitoring agent with expertise in web scraping and YouTube's content structure. Understands how to efficiently track new video uploads across multiple channels by analyzing channel pages and RSS feeds. Can execute command-line tools like yt-dlp for video downloading and has experience with automated content management workflows.
     Tools:
         ScrapeWebsiteTool (ID: f859a4bb-1d4c-4063-b448-5e6a4b08a498)
@@ -30,7 +30,7 @@ Processing Model: Sequential workflow with parallel intelligence gathering and c
     Agent ID: 921b62eb-7a82-4fea-9922-4e549c811790
     Model: OpenAI GPT-4o-mini
     LLM Connection: 244655
-    Goal: Monitor and download Instagram stories and livestreams from specified accounts using {instagram_accounts} and store them on the F:/ drive
+    Goal: Monitor and download Instagram stories and livestreams from specified accounts using {instagram_accounts} and store them in the local storage directory
     Backstory: Instagram content specialist with deep knowledge of Instagram's API and content delivery mechanisms. Understands how to capture ephemeral content like stories and livestreams before they expire. Expertise includes working with social media monitoring systems and implementing automated content preservation workflows.
     Tools:
         ScrapegraphScrapeTool (ID: 625f4107-730e-451f-8210-96b287f170dc)
@@ -48,7 +48,7 @@ Processing Model: Sequential workflow with parallel intelligence gathering and c
     Agent ID: e96e0cdb-eeac-4d5b-9fa0-9d58423e9ab6
     Model: OpenAI GPT-4o-mini
     LLM Connection: 244655
-    Goal: Manage file organization, storage on the F:/ drive, and execute command-line operations for yt-dlp and other download tools with proper directory structure for {channel_urls} and {instagram_accounts}
+    Goal: Manage file organization, storage in the local storage directory, and execute command-line operations for yt-dlp and other download tools with proper directory structure for {channel_urls} and {instagram_accounts}
     Backstory: System administrator with extensive experience in file system management and automation. Specializes in organizing media files, managing storage systems, and executing command-line operations efficiently. Expertise includes implementing robust directory structures, handling file naming conventions, and ensuring proper storage allocation for automated download systems.
     Tools:
         FileReadTool (ID: 40024817-f015-4554-9bcd-c297c89bdfa4)
@@ -550,11 +550,11 @@ Task 4: Execute Downloads and File Management
     Agent: File System Manager (e96e0cdb-eeac-4d5b-9fa0-9d58423e9ab6)
     Context Dependencies: ["Monitor YouTube Channels", "Monitor Instagram Accounts", "Coordinate Real-time Processing"]
     Async Execution: False
-    Description: Using the content lists from both YouTube and Instagram monitoring, execute the actual downloads using yt-dlp and other appropriate tools via command line. Create proper directory structure on F:/ drive organized by platform and channel/account name. Execute commands like 'yt-dlp -o "F:/YouTube/{channel_name}/%(title)s.%(ext)s" [video_url]' for YouTube videos and equivalent commands for Instagram content. Verify successful downloads and organize files appropriately.
-    Expected Output: A detailed download report showing successfully downloaded files, their locations on F:/ drive, any failed downloads with error reasons, and the complete directory structure created
+    Description: Using the content lists from both YouTube and Instagram monitoring, execute the actual downloads using yt-dlp and other appropriate tools via command line. Create proper directory structure in the base directory organized by platform and channel/account name. Execute commands like 'yt-dlp -o "${BASE_DIR}/YouTube/{channel_name}/%(title)s.%(ext)s" [video_url]' for YouTube videos and equivalent commands for Instagram content. Verify successful downloads and organize files appropriately.
+    Expected Output: A detailed download report showing successfully downloaded files, their locations in the base directory, any failed downloads with error reasons, and the complete directory structure created
     Key Operations:
         Command-line yt-dlp execution
-        Directory structure creation: F:/YouTube/[channel_name]/ and F:/Instagram/[account_name]/
+        Directory structure creation: ${BASE_DIR}/YouTube/[channel_name]/ and ${BASE_DIR}/Instagram/[account_name]/
         File naming convention enforcement
         Download verification and error handling
         Storage optimization and cleanup
@@ -565,7 +565,7 @@ Task 5: Upload Content to Cloud Storage
     Agent: Cloud Storage Manager (49ce4aa5-d4b0-4033-8803-9b113645ce7d)
     Context Dependencies: ["Execute Downloads and File Management"]
     Async Execution: False
-    Description: Take the downloaded video files from the F:/ drive and upload them to Google Drive. Create organized folder structure mirroring the local organization (YouTube/[channel_name] and Instagram/[account_name]). For each uploaded file, generate shareable links with proper permissions that allow direct streaming within Discord. Convert Google Drive links to embed-compatible URLs using the format 'https://drive.google.com/file/d/[FILE_ID]/preview' to enable in-Discord playback.
+    Description: Take the downloaded video files from the base directory and upload them to Google Drive. Create organized folder structure mirroring the local organization (YouTube/[channel_name] and Instagram/[account_name]). For each uploaded file, generate shareable links with proper permissions that allow direct streaming within Discord. Convert Google Drive links to embed-compatible URLs using the format 'https://drive.google.com/file/d/[FILE_ID]/preview' to enable in-Discord playback.
     Expected Output: A detailed upload report containing: successfully uploaded files with their Google Drive file IDs, embed-compatible URLs for Discord streaming, organized folder structure in Google Drive, any upload failures with error details, and verification that links work for Discord embedding
     Key Operations:
         Google Drive API integration
@@ -1112,9 +1112,9 @@ Vector Database
 
 📊 DATA FLOW ARCHITECTURE
 🗂️ DATA STORAGE STRUCTURE
-💾 Local Storage (F:/ Drive)
+💾 Local Storage (Base Directory)
 
-F:/
+${BASE_DIR}/
 ├── YouTube/
 │   ├── [Channel_Name_1]/
 │   │   ├── [Video_Title_1].mp4
@@ -1334,7 +1334,7 @@ Data Integrity
 💻 SYSTEM REQUIREMENTS
 Hardware Specifications
 
-    Storage: Minimum 1TB available on F:/ drive (expandable)
+    Storage: Minimum 1TB available in the base directory (expandable)
     Processing: Multi-core CPU for parallel content processing
     Memory: Minimum 16GB RAM for large file handling
     Network: High-bandwidth internet for content downloading and cloud sync

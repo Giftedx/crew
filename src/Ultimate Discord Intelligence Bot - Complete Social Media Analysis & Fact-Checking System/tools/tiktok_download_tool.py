@@ -1,6 +1,9 @@
+import os
+
 from crewai_tools import BaseTool
 import pyktok as pyk
-import os
+
+from ..settings import DOWNLOADS_DIR
 
 class TikTokDownloadTool(BaseTool):
     name: str = "TikTok Download Tool"
@@ -15,7 +18,7 @@ class TikTokDownloadTool(BaseTool):
     def _run(self, video_url: str) -> dict:
         """Download a TikTok video and its metadata."""
         try:
-            target_dir = "F:/yt-auto/crewaiv2/CrewAI_Content_System/Downloads/TikTok"
+            target_dir = DOWNLOADS_DIR / "TikTok"
             os.makedirs(target_dir, exist_ok=True)
             
             # pyktok.save_tiktok downloads the video and saves the metadata to a CSV file.
@@ -27,7 +30,7 @@ class TikTokDownloadTool(BaseTool):
             return {
                 'status': 'success',
                 'video_url': video_url,
-                'local_path': target_dir
+                'local_path': str(target_dir)
             }
             
         except Exception as e:

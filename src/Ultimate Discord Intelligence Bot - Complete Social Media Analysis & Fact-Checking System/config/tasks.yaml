@@ -29,12 +29,12 @@ coordinate_real_time_processing:
 execute_downloads_and_file_management:
   description: Using the content lists from both YouTube and Instagram monitoring,
     execute the actual downloads using yt-dlp and other appropriate tools via command
-    line. Create proper directory structure on F:/ drive organized by platform and
-    channel/account name. Execute commands like 'yt-dlp -o "F:/YouTube/{channel_name}/%(title)s.%(ext)s"
+    line. Create proper directory structure in the local storage directory organized by platform and
+    channel/account name. Execute commands like 'yt-dlp -o "${CREWAI_DOWNLOADS_DIR}/YouTube/{channel_name}/%(title)s.%(ext)s"
     [video_url]' for YouTube videos and equivalent commands for Instagram content.
     Verify successful downloads and organize files appropriately.
   expected_output: A detailed download report showing successfully downloaded files,
-    their locations on F:/ drive, any failed downloads with error reasons, and the
+    their locations in the local storage directory, any failed downloads with error reasons, and the
     complete directory structure created
   agent: file_system_manager
   context:
@@ -42,7 +42,7 @@ execute_downloads_and_file_management:
   - monitor_instagram_accounts
   - coordinate_real_time_processing
 upload_content_to_cloud_storage:
-  description: Take the downloaded video files from the F:/ drive and upload them
+  description: Take the downloaded video files from the local storage directory and upload them
     to Google Drive. Create organized folder structure mirroring the local organization
     (YouTube/[channel_name] and Instagram/[account_name]). For each uploaded file,
     generate shareable links with proper permissions that allow direct streaming within

@@ -5,19 +5,30 @@ import logging
 from pathlib import Path
 from typing import Dict, List, Optional, Any
 from datetime import datetime
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
 import asyncio
+
+from ..settings import (
+    BASE_DIR,
+    CONFIG_DIR,
+    DOWNLOADS_DIR,
+    GOOGLE_CREDENTIALS,
+    LOGS_DIR,
+    PROCESSING_DIR,
+    YTDLP_CONFIG,
+)
 
 @dataclass
 class SystemPaths:
     """System paths configuration"""
-    base_dir: str = "F:/yt-auto/crewaiv2/CrewAI_Content_System"
-    downloads_dir: str = "F:/yt-auto/crewaiv2/CrewAI_Content_System/Downloads"
-    config_dir: str = "F:/yt-auto/crewaiv2/CrewAI_Content_System/Config"
-    logs_dir: str = "F:/yt-auto/crewaiv2/CrewAI_Content_System/Logs"
-    processing_dir: str = "F:/yt-auto/crewaiv2/CrewAI_Content_System/Processing"
-    ytdlp_config: str = "F:/yt-auto/crewaiv2/yt-dlp/config/crewai-system.conf"
-    google_credentials: str = "F:/yt-auto/crewaiv2/CrewAI_Content_System/Config/google-credentials.json"
+
+    base_dir: str = str(BASE_DIR)
+    downloads_dir: str = str(DOWNLOADS_DIR)
+    config_dir: str = str(CONFIG_DIR)
+    logs_dir: str = str(LOGS_DIR)
+    processing_dir: str = str(PROCESSING_DIR)
+    ytdlp_config: str = str(YTDLP_CONFIG)
+    google_credentials: str = str(GOOGLE_CREDENTIALS)
 
 @dataclass
 class MonitoringConfig:
@@ -77,7 +88,7 @@ class EnhancedSystemConfig:
     """Enhanced system configuration manager"""
     
     def __init__(self, config_file: str = None):
-        self.config_file = config_file or "F:/yt-auto/crewaiv2/CrewAI_Content_System/Config/system_config.yaml"
+        self.config_file = config_file or str(CONFIG_DIR / "system_config.yaml")
         self.config = self._load_or_create_config()
         self._setup_logging()
         self._validate_config()

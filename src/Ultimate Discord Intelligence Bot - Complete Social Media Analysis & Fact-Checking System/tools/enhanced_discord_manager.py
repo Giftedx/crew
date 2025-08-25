@@ -577,7 +577,9 @@ def load_discord_channels_config(config_path: str = None) -> List[Dict]:
     """Load Discord channels configuration from file"""
     
     if config_path is None:
-        config_path = "F:/yt-auto/crewaiv2/CrewAI_Content_System/Config/discord_channels.yaml"
+        from ..settings import CONFIG_DIR
+
+        config_path = str(CONFIG_DIR / "discord_channels.yaml")
     
     try:
         import yaml

@@ -204,8 +204,10 @@ class EnhancedYouTubeDownloadTool(BaseTool):
     @resilience.retry_with_backoff(max_retries=5, strategy='exponential')
     def _run(self, video_url: str, quality: str = "1080p") -> str:
         """Download YouTube video using yt-dlp with enhanced CrewAI integration"""
-        
-        config_file = "F:/yt-auto/crewaiv2/yt-dlp/config/crewai-system.conf"
+
+        from ..settings import DOWNLOADS_DIR, YTDLP_CONFIG
+
+        config_file = str(YTDLP_CONFIG)
         
         # Construct command with quality-specific settings
         command = [
@@ -289,7 +291,7 @@ class EnhancedYouTubeDownloadTool(BaseTool):
                         'uploader': download_info[2],
                         'duration': download_info[3],
                         'file_size': download_info[4],
-                        'local_path': f"F:/yt-auto/crewaiv2/CrewAI_Content_System/Downloads/YouTube/{download_info[2]}/",
+                        'local_path': str(DOWNLOADS_DIR / 'YouTube' / download_info[2]),
                         'download_command': ' '.join(command)
                     })
             

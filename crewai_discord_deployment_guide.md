@@ -21,7 +21,7 @@
 **Minimum:**
 - CPU: 4-core processor (Intel i5 or AMD Ryzen 5 equivalent)
 - RAM: 16GB (32GB recommended for large-scale processing)
-- Storage: 1TB+ available space on F:/ drive (or equivalent)
+- Storage: 1TB+ available space on your chosen storage drive
 - Network: High-speed internet connection (100Mbps+ recommended)
 
 **Recommended (Production):**
@@ -49,12 +49,12 @@
 ### 1. Create Directory Structure
 
 ```powershell
-# Create base directories on F:/ drive (Windows)
-New-Item -ItemType Directory -Path "F:\yt-auto\crewaiv2\CrewAI_Content_System" -Force
-New-Item -ItemType Directory -Path "F:\yt-auto\crewaiv2\yt-dlp\config" -Force
+# Create base directories (Windows example)
+New-Item -ItemType Directory -Path "$env:CREWAI_BASE_DIR" -Force
+New-Item -ItemType Directory -Path "$env:CREWAI_BASE_DIR\..\yt-dlp\config" -Force
 
 # On Linux/macOS, adjust paths accordingly
-mkdir -p /opt/crewai-system/{downloads,config,logs}
+mkdir -p "$CREWAI_BASE_DIR" "$CREWAI_BASE_DIR/../yt-dlp/config"
 ```
 
 ### 2. Install System Dependencies
@@ -92,7 +92,7 @@ brew install python@3.10 ffmpeg git chromium node
 pip install --upgrade yt-dlp
 
 # Or download standalone executable (Windows)
-curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe -o F:\yt-dlp\yt-dlp.exe
+curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe -o "$env:CREWAI_BASE_DIR\..\yt-dlp\yt-dlp.exe"
 ```
 
 ## 📦 Installation Process
@@ -156,13 +156,13 @@ Edit `config/system_config.yaml`:
 
 ```yaml
 paths:
-  base_dir: "F:/yt-auto/crewaiv2/CrewAI_Content_System"  # Adjust for your system
-  downloads_dir: "F:/yt-auto/crewaiv2/CrewAI_Content_System/Downloads"
-  config_dir: "F:/yt-auto/crewaiv2/CrewAI_Content_System/Config"
-  logs_dir: "F:/yt-auto/crewaiv2/CrewAI_Content_System/Logs"
-  processing_dir: "F:/yt-auto/crewaiv2/CrewAI_Content_System/Processing"
-  ytdlp_config: "F:/yt-auto/crewaiv2/yt-dlp/config/crewai-system.conf"
-  google_credentials: "F:/yt-auto/crewaiv2/CrewAI_Content_System/Config/google-credentials.json"
+  base_dir: "${CREWAI_BASE_DIR}"  # Adjust for your system
+  downloads_dir: "${CREWAI_DOWNLOADS_DIR:-${CREWAI_BASE_DIR}/Downloads}"
+  config_dir: "${CREWAI_CONFIG_DIR:-${CREWAI_BASE_DIR}/Config}"
+  logs_dir: "${CREWAI_LOGS_DIR:-${CREWAI_BASE_DIR}/Logs}"
+  processing_dir: "${CREWAI_PROCESSING_DIR:-${CREWAI_BASE_DIR}/Processing}"
+  ytdlp_config: "${CREWAI_YTDLP_CONFIG}"
+  google_credentials: "${GOOGLE_CREDENTIALS}"
 ```
 
 ### 3. Configure Content Sources
@@ -305,7 +305,7 @@ storage:
 
 The system will automatically create:
 ```
-F:/yt-auto/crewaiv2/CrewAI_Content_System/
+${CREWAI_BASE_DIR}/
 ├── Downloads/
 │   ├── YouTube/
 │   │   └── [Creator_Name]/[Year]/[Month]/
@@ -703,7 +703,7 @@ print('Credentials valid')
 pip install --upgrade yt-dlp
 
 # Use different user agent
-echo '--user-agent "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"' >> F:/yt-dlp/config/crewai-system.conf
+echo '--user-agent "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"' >> "$CREWAI_YTDLP_CONFIG"
 ```
 
 #### 5. "High memory usage"

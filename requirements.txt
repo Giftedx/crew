@@ -13,3 +13,5 @@ moviepy
 openai-whisper
 pyannote.audio
 nltk
+python-dotenv
+pytest

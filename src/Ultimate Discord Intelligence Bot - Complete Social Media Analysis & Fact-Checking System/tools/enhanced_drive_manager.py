@@ -2,7 +2,7 @@ import os
 import json
 import time
 import logging
-from typing import Dict, Optional, List
+from typing import Dict, List, Optional
 from pathlib import Path
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
@@ -14,11 +14,13 @@ import mimetypes
 import io
 import hashlib
 
+from ..settings import GOOGLE_CREDENTIALS
+
 class EnhancedDriveManager:
     """Enhanced Google Drive manager with resumable uploads and Discord-compatible links"""
     
     def __init__(self, credentials_path: str = None):
-        self.credentials_path = credentials_path or "F:/yt-auto/crewaiv2/CrewAI_Content_System/Config/google-credentials.json"
+        self.credentials_path = credentials_path or str(GOOGLE_CREDENTIALS)
         self.service = self._setup_service()
         self.base_folder_id, self.subfolders = self._setup_folder_structure()
         self.upload_cache = {}  # Cache for tracking uploads
@@ -562,7 +564,7 @@ if __name__ == "__main__":
     drive_manager = EnhancedDriveManager()
     
     # Test file upload (replace with actual file path)
-    test_file = "F:/yt-auto/crewaiv2/test_video.mp4"
+    test_file = str((Path.home() / "test_video.mp4"))
     if os.path.exists(test_file):
         metadata = {
             'platform': 'youtube',
