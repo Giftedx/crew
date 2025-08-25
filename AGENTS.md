@@ -57,7 +57,7 @@ The checklist below tracks major components of the system and their status.
 - [x] System alert manager for Discord-only monitoring.
 - [x] Cross-platform intelligence gatherer agent.
 - [x] Steelman argument generator.
-- [x] Twitch, Kick, Twitter, Instagram downloaders and X/Discord monitor tools.
+- [x] Twitch, Kick, Twitter, Instagram, TikTok downloaders and X/Discord monitor tools.
 - [x] Qdrant collections separated for transcripts and analyses.
 - [x] Enhanced fact-checking backends (Serply, EXA, Perplexity, WolframAlpha).
 - [x] Expanded logical fallacy detection.

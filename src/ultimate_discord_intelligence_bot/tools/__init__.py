@@ -8,6 +8,7 @@ from .yt_dlp_download_tool import (
     KickDownloadTool,
     TwitterDownloadTool,
     InstagramDownloadTool,
+    TikTokDownloadTool,
 )
 from .audio_transcription_tool import AudioTranscriptionTool
 from .discord_post_tool import DiscordPostTool
@@ -42,6 +43,7 @@ __all__ = [
     "KickDownloadTool",
     "TwitterDownloadTool",
     "InstagramDownloadTool",
+    "TikTokDownloadTool",
     "AudioTranscriptionTool",
     "DiscordPostTool",
     "DriveUploadTool",
