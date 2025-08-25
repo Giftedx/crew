@@ -37,7 +37,16 @@ selects the appropriate downloader based on the URL. When providing a Discord
 webhook via `DISCORD_WEBHOOK` ensure it is a public HTTPS URL; local or private
 IP addresses are rejected for safety. A separate `DISCORD_PRIVATE_WEBHOOK` can
 be supplied to the internal `Discord Private Alert Tool` for system health
-notifications.
+notifications. Pair this with the `System Status Tool` to include CPU load and
+disk usage metrics in those alerts.
+The accompanying `Multi-Platform Monitor Tool` keeps an in-memory record of
+seen items and reports only fresh content so downloads are triggered once per
+upload.
+To broaden analysis beyond video content, the repository ships lightweight
+tools for gathering social-media chatter and scoring factual accuracy. The
+`Social Media Monitor Tool` aggregates Reddit, X and Discord posts matching a
+keyword, while the `Truth Scoring Tool` converts fact-check verdicts into a
+numerical trustworthiness score.
 For long-term memory the pipeline can connect to a Qdrant vector database using
 `QDRANT_URL` and optional `QDRANT_API_KEY`; transcripts and analysis results are
 stored with lightweight embeddings for later retrieval.
@@ -72,8 +81,9 @@ python src/ultimate_discord_intelligence_bot/pipeline.py <video_url>
 ```
 
 Both approaches download the video, upload it to Google Drive, analyse the
-transcript, flag basic logical fallacies, synthesise perspectives and post a
-summary to Discord.
+transcript, gather cross-platform discussions, flag basic logical fallacies,
+synthesise perspectives, score claim truthfulness and post a summary to
+Discord.
 Additionally, transcripts and analysis metadata are stored in a Qdrant
 collection so future agents can perform retrieval-augmented generation over the
 processed content.
@@ -81,6 +91,10 @@ processed content.
 ## Understanding Your Crew
 
 The Ultimate Discord Intelligence Bot crew is composed of multiple AI agents, each with unique roles, goals, and tools. These agents collaborate on a series of tasks, defined in `config/tasks.yaml`, leveraging their collective skills to achieve complex objectives. The `config/agents.yaml` file outlines the capabilities and configurations of each agent in your crew.
+
+## Future Work
+
+- Introduce a **Personality Synthesis Manager** agent that learns from user interactions in Q&A threads to adapt the bot's conversational style over time.
 
 ## Support
 

@@ -1,0 +1,37 @@
+"""Track new content across multiple platforms."""
+
+from __future__ import annotations
+
+from typing import Dict, Iterable, List
+
+from crewai_tools import BaseTool
+
+
+class MultiPlatformMonitorTool(BaseTool):
+    """Return unseen content items.
+
+    The tool keeps an in-memory set of identifiers for items it has already
+    observed. Subsequent calls filter out previously seen entries.
+    """
+
+    name = "Multi-Platform Monitor"
+    description = (
+        "Identify new content items across platforms, filtering out those already"
+        " processed."
+    )
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._seen_ids: set[str] = set()
+
+    def _run(self, items: Iterable[Dict[str, str]]) -> Dict[str, List[Dict[str, str]]]:
+        new_items: List[Dict[str, str]] = []
+        for item in items:
+            item_id = item.get("id")
+            if item_id and item_id not in self._seen_ids:
+                self._seen_ids.add(item_id)
+                new_items.append(item)
+        return {"status": "success", "new_items": new_items}
+
+    def run(self, *args, **kwargs):  # pragma: no cover - thin wrapper
+        return self._run(*args, **kwargs)

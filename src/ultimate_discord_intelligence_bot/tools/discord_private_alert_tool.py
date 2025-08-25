@@ -1,6 +1,7 @@
 """Send internal alerts to a private Discord channel."""
 
 import ipaddress
+from typing import Dict, Optional
 from urllib.parse import urlparse
 
 import requests
@@ -33,7 +34,10 @@ class DiscordPrivateAlertTool(BaseTool):
         super().__init__()
         self.webhook_url = _validate_webhook(webhook_url)
 
-    def _run(self, message: str) -> dict:
+    def _run(self, message: str, metrics: Optional[Dict[str, float]] = None) -> dict:
+        if metrics:
+            metrics_text = "\n".join(f"{k}: {v}" for k, v in metrics.items())
+            message = f"{message}\n```\n{metrics_text}\n```"
         payload = {"content": message}
         try:
             response = requests.post(self.webhook_url, json=payload)

@@ -13,8 +13,35 @@ execute_multi_platform_downloads:
   expected_output: Local file paths and metadata for downloaded media.
   agent: content_downloader
 
+identify_new_content:
+  description: >-
+    Given candidate items from platform feeds, return only those that have not
+    been previously seen.
+  expected_output: List of new content items annotated with platform and URL.
+  agent: multi_platform_monitor
+
 monitor_system:
   description: >-
     Post an alert to the private Discord channel with the provided message.
   expected_output: Confirmation that the alert was posted.
   agent: system_alert_manager
+
+gather_cross_platform_intelligence:
+  description: >-
+    Use the social media monitor tool to collect posts mentioning {keyword}
+    across Reddit, X and Discord.
+  expected_output: Aggregated posts grouped by platform.
+  agent: cross_platform_intelligence_gatherer
+
+fact_check_content:
+  description: >-
+    Analyse {text} for logical fallacies and combine external perspectives to
+    verify claims.
+  expected_output: Summary of detected fallacies and supporting context.
+  agent: enhanced_fact_checker
+
+score_truthfulness:
+  description: >-
+    Convert a list of fact-check verdicts into a numerical trust score.
+  expected_output: A score between 0 and 1 representing truthfulness.
+  agent: truth_scoring_specialist
