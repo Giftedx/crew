@@ -1,5 +1,5 @@
 import subprocess
-from ultimate_discord_intelligence_bot___complete_social_media_analysis_fact_checking_system.tools.youtube_download_tool import YouTubeDownloadTool
+from ultimate_discord_intelligence_bot.tools.youtube_download_tool import YouTubeDownloadTool
 
 
 def test_youtube_download_parses_filepath(monkeypatch):

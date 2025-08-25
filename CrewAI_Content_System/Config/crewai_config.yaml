@@ -1,4 +1,0 @@
-base_dir: ${CREWAI_BASE_DIR}
-downloads_dir: ${CREWAI_DOWNLOADS_DIR}
-config_dir: ${CREWAI_CONFIG_DIR}
-logs_dir: ${CREWAI_LOGS_DIR}

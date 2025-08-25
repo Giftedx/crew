@@ -4,7 +4,9 @@ from unittest.mock import MagicMock
 
 import requests
 
-from ultimate_discord_intelligence_bot___complete_social_media_analysis_fact_checking_system.tools.discord_post_tool import (
+import pytest
+
+from ultimate_discord_intelligence_bot.tools.discord_post_tool import (
     DiscordPostTool,
 )
 
@@ -20,7 +22,7 @@ def test_embed_post(monkeypatch):
 
     monkeypatch.setattr(requests, 'post', fake_post)
 
-    tool = DiscordPostTool('http://example.com/webhook')
+    tool = DiscordPostTool('https://example.com/webhook')
     data = {
         'title': 'Video',
         'uploader': 'Author',
@@ -47,7 +49,7 @@ def test_file_upload(monkeypatch, tmp_path):
     file_path = tmp_path / 'video.mp4'
     file_path.write_bytes(b'test')
 
-    tool = DiscordPostTool('http://example.com/webhook')
+    tool = DiscordPostTool('https://example.com/webhook')
     data = {
         'title': 'Video',
         'uploader': 'Author',
@@ -60,3 +62,8 @@ def test_file_upload(monkeypatch, tmp_path):
     assert result['status'] == 'success'
     # ensure file handle closed after request
     assert payload['files']['file'][1].closed
+
+
+def test_reject_private_ip():
+    with pytest.raises(ValueError):
+        DiscordPostTool('https://192.168.1.10/webhook')

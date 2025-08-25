@@ -9,11 +9,16 @@ venv/
 .env.*
 !.env.example
 
+# Secrets
+google-credentials.json
+
 # Logs and temporary files
 *.log
 Downloads/
 Logs/
 Processing/
+crew_data/
+yt-dlp/archives/
 
 # OS files
 .DS_Store

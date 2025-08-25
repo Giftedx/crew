@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-MODULE_PATH = "ultimate_discord_intelligence_bot___complete_social_media_analysis_fact_checking_system.settings"
+MODULE_PATH = "ultimate_discord_intelligence_bot.settings"
 
 
 def reload_settings(monkeypatch, **env):
@@ -23,7 +23,7 @@ def test_base_dir_env_override(monkeypatch):
 
 def test_base_dir_default(monkeypatch):
     settings = reload_settings(monkeypatch, CREWAI_BASE_DIR=None)
-    assert settings.BASE_DIR.name == "CrewAI_Content_System"
+    assert settings.BASE_DIR.name == "crew_data"
 
 
 def test_path_envs_expand_user(monkeypatch, tmp_path):
@@ -36,3 +36,17 @@ def test_path_envs_expand_user(monkeypatch, tmp_path):
         CREWAI_DOWNLOADS_DIR=downloads,
     )
     assert settings.DOWNLOADS_DIR == env_home / "downloads"
+
+
+def test_qdrant_url(monkeypatch):
+    settings = reload_settings(monkeypatch, QDRANT_URL="http://localhost:6333")
+    assert settings.QDRANT_URL == "http://localhost:6333"
+
+    settings = reload_settings(monkeypatch, QDRANT_URL=None)
+    assert settings.QDRANT_URL == ""
+
+
+def test_private_webhook(monkeypatch):
+    url = "https://discord.com/api/webhooks/test"
+    settings = reload_settings(monkeypatch, DISCORD_PRIVATE_WEBHOOK=url)
+    assert settings.DISCORD_PRIVATE_WEBHOOK == url
