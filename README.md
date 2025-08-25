@@ -39,6 +39,9 @@ IP addresses are rejected for safety. A separate `DISCORD_PRIVATE_WEBHOOK` can
 be supplied to the internal `Discord Private Alert Tool` for system health
 notifications. Pair this with the `System Status Tool` and the `monitor_system`
 task to include CPU load and disk usage metrics in those alerts.
+Optional API keys can further enhance fact-checking: set `SERPLY_API_KEY`,
+`EXA_API_KEY`, `PERPLEXITY_API_KEY`, and `WOLFRAM_ALPHA_APPID` to enable
+additional search backends used by the Fact Check Tool.
 The accompanying `Multi-Platform Monitor Tool` keeps an in-memory record of
 seen items and reports only fresh content so downloads are triggered once per
 upload. Dedicated monitors for X and Discord expose structured metadata for new

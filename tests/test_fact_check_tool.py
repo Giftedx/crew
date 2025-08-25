@@ -1,24 +1,31 @@
-import types
-
-import requests
-
 from ultimate_discord_intelligence_bot.tools.fact_check_tool import FactCheckTool
+from requests import RequestException
 
 
-def test_fact_check(monkeypatch):
-    def fake_get(url, params=None, timeout=10):
-        class Resp:
-            def json(self):
-                return {
-                    "RelatedTopics": [
-                        {"Text": "Example", "FirstURL": "http://example.com"}
-                    ]
-                }
-
-        return Resp()
-
-    monkeypatch.setattr(requests, "get", fake_get)
+def test_fact_check_aggregates(monkeypatch):
     tool = FactCheckTool()
+    monkeypatch.setattr(tool, "_search_duckduckgo", lambda q: [{"title": "A", "url": "u", "snippet": "a"}])
+    monkeypatch.setattr(tool, "_search_serply", lambda q: [{"title": "B", "url": "u", "snippet": "b"}])
+    monkeypatch.setattr(tool, "_search_exa", lambda q: [])
+    monkeypatch.setattr(tool, "_search_perplexity", lambda q: [])
+    monkeypatch.setattr(tool, "_search_wolfram", lambda q: [])
     result = tool.run("sample claim")
     assert result["status"] == "success"
-    assert result["evidence"]
+    titles = [e["title"] for e in result["evidence"]]
+    assert "A" in titles and "B" in titles
+
+
+def test_fact_check_skips_failed_backend(monkeypatch):
+    tool = FactCheckTool()
+
+    def boom(_query):
+        raise RequestException("network down")
+
+    monkeypatch.setattr(tool, "_search_duckduckgo", boom)
+    monkeypatch.setattr(tool, "_search_serply", lambda q: [])
+    monkeypatch.setattr(tool, "_search_exa", lambda q: [])
+    monkeypatch.setattr(tool, "_search_perplexity", lambda q: [])
+    monkeypatch.setattr(tool, "_search_wolfram", lambda q: [])
+    result = tool.run("sample claim")
+    assert result["status"] == "success"
+    assert result["evidence"] == []
