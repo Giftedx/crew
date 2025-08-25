@@ -79,3 +79,10 @@ character_profile_manager:
   backstory: >-
     You aggregate timeline events and verdicts to understand each person's
     motives and reliability over time.
+
+personality_synthesis_manager:
+  role: Personality Synthesis Manager
+  goal: Craft nuanced personality summaries using profile events and sentiment analysis.
+  backstory: >-
+    You combine trust metrics, timeline events and text analysis to generate
+    concise personality profiles.

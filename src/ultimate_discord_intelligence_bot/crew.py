@@ -15,6 +15,7 @@ from .tools.leaderboard_tool import LeaderboardTool
 from .tools.debate_command_tool import DebateCommandTool
 from .tools.discord_qa_tool import DiscordQATool
 from .tools.steelman_argument_tool import SteelmanArgumentTool
+from .tools.text_analysis_tool import TextAnalysisTool
 from .tools.yt_dlp_download_tool import (
     YouTubeDownloadTool,
     TwitchDownloadTool,
@@ -117,6 +118,13 @@ class UltimateDiscordIntelligenceBotCrew:
             tools=[CharacterProfileTool()],
         )
 
+    @agent
+    def personality_synthesis_manager(self) -> Agent:
+        return Agent(
+            config=self.agents_config["personality_synthesis_manager"],
+            tools=[CharacterProfileTool(), TextAnalysisTool(), PerspectiveSynthesizerTool()],
+        )
+
 
     @task
     def process_video(self) -> Task:
@@ -177,6 +185,10 @@ class UltimateDiscordIntelligenceBotCrew:
     @task
     def get_profile(self) -> Task:
         return Task(config=self.tasks_config["get_profile"])
+
+    @task
+    def synthesize_personality(self) -> Task:
+        return Task(config=self.tasks_config["synthesize_personality"])
 
     @crew
     def crew(self) -> Crew:

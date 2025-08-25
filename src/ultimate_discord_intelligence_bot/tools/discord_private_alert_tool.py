@@ -34,10 +34,24 @@ class DiscordPrivateAlertTool(BaseTool):
         super().__init__()
         self.webhook_url = _validate_webhook(webhook_url)
 
-    def _run(self, message: str, metrics: Optional[Dict[str, float]] = None) -> dict:
+    def _run(
+        self,
+        message: str,
+        metrics: Optional[Dict[str, float]] = None,
+        thresholds: Optional[Dict[str, float]] = None,
+    ) -> dict:
+        warning = False
         if metrics:
+            if thresholds:
+                for key, limit in thresholds.items():
+                    value = metrics.get(key)
+                    if value is not None and value > limit:
+                        warning = True
+                        break
             metrics_text = "\n".join(f"{k}: {v}" for k, v in metrics.items())
             message = f"{message}\n```\n{metrics_text}\n```"
+        if warning:
+            message = f"⚠️ {message}"
         payload = {"content": message}
         try:
             response = requests.post(self.webhook_url, json=payload)
