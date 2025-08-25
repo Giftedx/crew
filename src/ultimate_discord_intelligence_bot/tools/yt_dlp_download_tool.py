@@ -68,6 +68,13 @@ class YtDlpDownloadTool(BaseTool):
             if result.returncode == 0:
                 output_lines = result.stdout.strip().split("\n")
                 download_info = output_lines[-1].split("|")
+                if len(download_info) != 6:
+                    return {
+                        "status": "error",
+                        "platform": self.platform,
+                        "error": f"Unexpected yt-dlp output: {output_lines[-1]}",
+                        "command": " ".join(command),
+                    }
                 local_path = download_info[5]
                 return {
                     "status": "success",
@@ -89,7 +96,11 @@ class YtDlpDownloadTool(BaseTool):
                 }
 
         except subprocess.TimeoutExpired:
-            return {"status": "error", "platform": self.platform, "error": "Download timeout after 30 minutes"}
+            return {
+                "status": "error",
+                "platform": self.platform,
+                "error": "Download timeout after 30 minutes",
+            }
         except Exception as e:  # pragma: no cover - defensive logging path
             logging.exception("%s download failed", self.platform)
             return {"status": "error", "platform": self.platform, "error": str(e)}
@@ -127,4 +138,10 @@ class InstagramDownloadTool(YtDlpDownloadTool):
     name = "Instagram Download Tool"
     description = "Download Instagram reels or posts"
     platform = "Instagram"
+
+
+class TikTokDownloadTool(YtDlpDownloadTool):
+    name = "TikTok Download Tool"
+    description = "Download TikTok videos"
+    platform = "TikTok"
 
