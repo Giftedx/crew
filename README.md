@@ -1,6 +1,6 @@
-# UltimateDiscordIntelligenceBotCompleteSocialMediaAnalysisFactCheckingSystem Crew
+# Ultimate Discord Intelligence Bot Crew
 
-Welcome to the UltimateDiscordIntelligenceBotCompleteSocialMediaAnalysisFactCheckingSystem Crew project, powered by [crewAI](https://crewai.com). This template is designed to help you set up a multi-agent AI system with ease, leveraging the powerful and flexible framework provided by crewAI. Our goal is to enable your agents to collaborate effectively on complex tasks, maximizing their collective intelligence and capabilities.
+Welcome to the Ultimate Discord Intelligence Bot project, powered by [crewAI](https://crewai.com). This template helps you set up a multi-agent AI system using crewAI so agents can collaborate on complex tasks and maximize their collective intelligence.
 
 ## Installation
 
@@ -28,9 +28,19 @@ cp .env.example .env
 
 All paths and credentials are configured through environment variables so the project
 works across Linux, macOS and Windows without modification.
-Key variables include `CREWAI_BASE_DIR` (defaulting to a `CrewAI_Content_System`
-folder in your home directory) and optional overrides like `CREWAI_DOWNLOADS_DIR`
-or `CREWAI_YTDLP_CONFIG` when custom locations are required.
+Key variables include `CREWAI_BASE_DIR` (defaulting to a `crew_data` folder in your
+home directory) and optional overrides like `CREWAI_DOWNLOADS_DIR` or
+`CREWAI_YTDLP_CONFIG` for custom locations. The repository ships with a default
+yt-dlp configuration under `yt-dlp/config/crewai-system.conf` and supports
+downloading from YouTube, Twitch, Kick and X/Twitter. The pipeline automatically
+selects the appropriate downloader based on the URL. When providing a Discord
+webhook via `DISCORD_WEBHOOK` ensure it is a public HTTPS URL; local or private
+IP addresses are rejected for safety. A separate `DISCORD_PRIVATE_WEBHOOK` can
+be supplied to the internal `Discord Private Alert Tool` for system health
+notifications.
+For long-term memory the pipeline can connect to a Qdrant vector database using
+`QDRANT_URL` and optional `QDRANT_API_KEY`; transcripts and analysis results are
+stored with lightweight embeddings for later retrieval.
 For audio transcription you can choose the Whisper model size by setting
 `WHISPER_MODEL` (defaults to `base`). The text analysis component relies on NLTK
 corpora which are downloaded automatically on first use.
@@ -38,36 +48,43 @@ corpora which are downloaded automatically on first use.
 
 **Add your `OPENAI_API_KEY` into the `.env` file**
 
-- Modify `src/ultimate_discord_intelligence_bot___complete_social_media_analysis_fact_checking_system/config/agents.yaml` to define your agents
-- Modify `src/ultimate_discord_intelligence_bot___complete_social_media_analysis_fact_checking_system/config/tasks.yaml` to define your tasks
-- Modify `src/ultimate_discord_intelligence_bot___complete_social_media_analysis_fact_checking_system/crew.py` to add your own logic, tools and specific args
-- Modify `src/ultimate_discord_intelligence_bot___complete_social_media_analysis_fact_checking_system/main.py` to add custom inputs for your agents and tasks
+- Update `src/ultimate_discord_intelligence_bot/config/agents.yaml` to define agents
+  (a single `content_manager` is provided as an example)
+- Adjust `src/ultimate_discord_intelligence_bot/config/tasks.yaml` to describe your
+  tasks and required inputs
+- Extend `src/ultimate_discord_intelligence_bot/crew.py` if you need additional
+  logic or tools
+- Modify `src/ultimate_discord_intelligence_bot/main.py` to change how inputs are
+  supplied when running locally
 
 ## Running the Project
 
-To kickstart your crew of AI agents and begin task execution, run this from the root folder of your project:
+To run the default crew against a specific video, supply the URL as input:
 
 ```bash
-$ crewai run
+crewai run --inputs url=<video_url>
 ```
 
-To execute the end-to-end content pipeline for a single YouTube URL:
+You can also invoke the pipeline directly without the crew layer:
 
 ```bash
-python src/Ultimate\ Discord\ Intelligence\ Bot\ -\ Complete\ Social\ Media\ Analysis\ \&\ Fact-Checking\ System/pipeline.py <video_url>
+python src/ultimate_discord_intelligence_bot/pipeline.py <video_url>
 ```
 
-This command initializes the ultimate_discord_intelligence_bot___complete_social_media_analysis_fact_checking_system Crew, assembling the agents and assigning them tasks as defined in your configuration.
-
-This example, unmodified, will run the create a `report.md` file with the output of a research on LLMs in the root folder.
+Both approaches download the video, upload it to Google Drive, analyse the
+transcript, flag basic logical fallacies, synthesise perspectives and post a
+summary to Discord.
+Additionally, transcripts and analysis metadata are stored in a Qdrant
+collection so future agents can perform retrieval-augmented generation over the
+processed content.
 
 ## Understanding Your Crew
 
-The ultimate_discord_intelligence_bot___complete_social_media_analysis_fact_checking_system Crew is composed of multiple AI agents, each with unique roles, goals, and tools. These agents collaborate on a series of tasks, defined in `config/tasks.yaml`, leveraging their collective skills to achieve complex objectives. The `config/agents.yaml` file outlines the capabilities and configurations of each agent in your crew.
+The Ultimate Discord Intelligence Bot crew is composed of multiple AI agents, each with unique roles, goals, and tools. These agents collaborate on a series of tasks, defined in `config/tasks.yaml`, leveraging their collective skills to achieve complex objectives. The `config/agents.yaml` file outlines the capabilities and configurations of each agent in your crew.
 
 ## Support
 
-For support, questions, or feedback regarding the UltimateDiscordIntelligenceBotCompleteSocialMediaAnalysisFactCheckingSystem Crew or crewAI.
+For support, questions, or feedback regarding the Ultimate Discord Intelligence Bot crew or crewAI.
 - Visit our [documentation](https://docs.crewai.com)
 - Reach out to us through our [GitHub repository](https://github.com/joaomdmoura/crewai)
 - [Join our Discord](https://discord.com/invite/X4JWnZnxPb)

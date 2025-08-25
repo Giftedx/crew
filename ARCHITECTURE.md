@@ -11,7 +11,7 @@ and posts a summary to Discord.  Each stage is implemented as an isolated tool
 whose job is to interact with an external service.
 
 ```
-YouTube -> Drive -> Transcription -> Analysis -> Discord
+Video Platform -> Drive -> Transcription -> Analysis -> Discord
 ```
 
 Configuration and secrets are supplied through environment variables as defined
@@ -30,19 +30,21 @@ agents to perform monitoring, downloading, analysis and posting activities.
 Each interaction with an external system is encapsulated in a tool living under
 `tools/`.
 
-- `youtube_download_tool.py` – uses `yt-dlp` to fetch videos and returns metadata
-  including the local file path.
+- `yt_dlp_download_tool.py` – generic `yt-dlp` wrapper with subclasses for
+  YouTube, Twitch, Kick and X/Twitter downloads.
 - `drive_upload_tool.py` – uploads files to Google Drive and produces shareable
   links suitable for Discord embeds.
 - `audio_transcription_tool.py` – lazily loads Whisper models to transcribe
   audio.
 - `text_analysis_tool.py` – performs sentiment and keyword extraction using
   NLTK.
+- `logical_fallacy_tool.py` – flags basic logical fallacies in transcripts.
+- `perspective_synthesizer_tool.py` – generates alternative viewpoints from the
+  analysed text.
 - `discord_post_tool.py` – posts either embeds or direct uploads to Discord via a
   webhook.
-
-Custom tools exist for Instagram, TikTok and other platforms, following the same
-pattern.
+- `discord_private_alert_tool.py` – sends operational alerts to a restricted
+  webhook for monitoring.
 
 ## Model Context Protocol (MCP)
 
