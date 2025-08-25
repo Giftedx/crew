@@ -13,8 +13,14 @@ class LogicalFallacyTool(BaseTool):
     description = "Identify simple logical fallacies in statements"
 
     FALLACIES = {
-        "straw man": ["straw man"],
         "ad hominem": ["ad hominem"],
+        "appeal to authority": ["appeal to authority", "because i said so"],
+        "bandwagon": ["everyone knows", "bandwagon"],
+        "circular reasoning": ["circular reasoning", "because because"],
+        "false dilemma": ["either", "neither"],
+        "red herring": ["red herring"],
+        "slippery slope": ["slippery slope", "inevitably"],
+        "straw man": ["straw man"],
     }
 
     def _run(self, text: str) -> dict:

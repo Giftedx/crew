@@ -11,6 +11,7 @@ from .tools.yt_dlp_download_tool import (
     TwitchDownloadTool,
     KickDownloadTool,
     TwitterDownloadTool,
+    InstagramDownloadTool,
 )
 from .tools.audio_transcription_tool import AudioTranscriptionTool
 from .tools.text_analysis_tool import TextAnalysisTool
@@ -46,6 +47,7 @@ class ContentPipeline:
             "kick.com": KickDownloadTool(),
             "twitter.com": TwitterDownloadTool(),
             "x.com": TwitterDownloadTool(),
+            "instagram.com": InstagramDownloadTool(),
         }
         self.transcriber = transcriber or AudioTranscriptionTool()
         self.analyzer = analyzer or TextAnalysisTool()
@@ -101,7 +103,7 @@ class ContentPipeline:
         ----------
         url: str
             The video URL to process. Supported platforms include YouTube,
-            Twitch, Kick and Twitter.
+            Twitch, Kick, Twitter and Instagram.
 
         Returns
         -------

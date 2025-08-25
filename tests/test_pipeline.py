@@ -3,8 +3,15 @@ import importlib
 import logging
 from unittest.mock import MagicMock
 
-from ultimate_discord_intelligence_bot.pipeline import (
-    ContentPipeline,
+import pytest
+
+from ultimate_discord_intelligence_bot.pipeline import ContentPipeline
+from ultimate_discord_intelligence_bot.tools.yt_dlp_download_tool import (
+    YouTubeDownloadTool,
+    TwitchDownloadTool,
+    KickDownloadTool,
+    TwitterDownloadTool,
+    InstagramDownloadTool,
 )
 
 
@@ -238,3 +245,62 @@ def test_unsupported_platform(monkeypatch):
     result = asyncio.run(pipeline.process_video("http://unknown.com"))
     assert result["status"] == "error"
     assert result["step"] == "download"
+
+
+@pytest.mark.parametrize(
+    "url, tool_cls, platform",
+    [
+        ("https://www.youtube.com/watch?v=1", YouTubeDownloadTool, "YouTube"),
+        ("https://www.twitch.tv/videos/1", TwitchDownloadTool, "Twitch"),
+        ("https://kick.com/video/1", KickDownloadTool, "Kick"),
+        ("https://twitter.com/video/1", TwitterDownloadTool, "Twitter"),
+        ("https://www.instagram.com/reel/1", InstagramDownloadTool, "Instagram"),
+    ],
+)
+def test_pipeline_selects_correct_downloader(url, tool_cls, platform, monkeypatch):
+    """ContentPipeline should dispatch to the appropriate downloader."""
+
+    def fake_run(self, video_url):
+        return {
+            "status": "success",
+            "platform": platform,
+            "video_id": "1",
+            "title": "t",
+            "uploader": "u",
+            "duration": "1",
+            "file_size": "1000",
+            "local_path": "/tmp/video.mp4",
+        }
+
+    monkeypatch.setattr(tool_cls, "run", fake_run)
+
+    drive = MagicMock()
+    drive.run.return_value = {"status": "success", "links": {"preview_link": "x"}}
+    transcriber = MagicMock()
+    transcriber.run.return_value = {"status": "success", "transcript": "hello"}
+    analyzer = MagicMock()
+    analyzer.run.return_value = {"status": "success", "sentiment": {}, "keywords": []}
+    fallacy = MagicMock()
+    fallacy.run.return_value = {"status": "success", "fallacies": []}
+    perspective = MagicMock()
+    perspective.run.return_value = {"status": "success", "summary": "s"}
+    memory = MagicMock()
+    memory.run.return_value = {"status": "success"}
+    discord = MagicMock()
+    discord.run.return_value = {"status": "success"}
+
+    pipeline = ContentPipeline(
+        webhook_url="http://example.com",
+        transcriber=transcriber,
+        analyzer=analyzer,
+        drive=drive,
+        discord=discord,
+        fallacy_detector=fallacy,
+        perspective=perspective,
+        memory=memory,
+    )
+
+    result = asyncio.run(pipeline.process_video(url))
+
+    assert result["status"] == "success"
+    assert result["download"]["platform"] == platform

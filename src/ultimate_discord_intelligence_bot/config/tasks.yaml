@@ -8,15 +8,15 @@ process_video:
 
 execute_multi_platform_downloads:
   description: >-
-    Retrieve media from a list of URLs spanning YouTube, Twitch, Kick and
-    Twitter. Return metadata for each successful download.
+    Retrieve media from a list of URLs spanning YouTube, Twitch, Kick,
+    Twitter and Instagram. Return metadata for each successful download.
   expected_output: Local file paths and metadata for downloaded media.
   agent: content_downloader
 
 identify_new_content:
   description: >-
-    Given candidate items from platform feeds, return only those that have not
-    been previously seen.
+    Given candidate items from platform feeds (YouTube, Twitch, Kick, Twitter,
+    Instagram, Discord), return only those that have not been previously seen.
   expected_output: List of new content items annotated with platform and URL.
   agent: multi_platform_monitor
 

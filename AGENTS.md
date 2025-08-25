@@ -58,11 +58,11 @@ Follow this checklist whenever adding agents, tasks, tools, or workflows:
 - Steelman argument generator.
 - Twitch, Kick, Twitter, Instagram downloaders and X/Discord monitor tools.
 - Qdrant collections separated for transcripts and analyses.
+- Enhanced fact-checking backends (Serply, EXA, Perplexity, WolframAlpha).
+- Expanded logical fallacy detection.
+- Environment variables documented for new search backends.
+- Full workflow tests for new ingestion sources.
 
 ### To Do
-- Add enhanced fact-checking backends (Serply, EXA, Perplexity, WolframAlpha).
-- Implement logical fallacy upgrades.
-- Add full workflow tests for new ingestion sources.
-- Document environment variables and deployment steps for new platforms.
 
 *Update this file whenever significant goals are finished or new tasks arise.*
