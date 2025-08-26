@@ -8,9 +8,9 @@ class PipelineTool(BaseTool):
     name: str = "Content Pipeline Tool"
     description: str = "Download, transcribe, analyse and post a video to Discord."
 
-    def _run(self, url: str) -> dict:
+    def _run(self, url: str, quality: str = "1080p") -> dict:
         pipeline = ContentPipeline()
-        return asyncio.run(pipeline.process_video(url))
+        return asyncio.run(pipeline.process_video(url, quality=quality))
 
     # Expose run for CrewAI compatibility
     def run(self, *args, **kwargs):  # pragma: no cover - thin wrapper

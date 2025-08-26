@@ -1,18 +1,9 @@
 import asyncio
 import logging
 from functools import partial
-from typing import Dict, Optional
-from urllib.parse import urlparse
+from typing import Optional, TYPE_CHECKING
 
 from .settings import DISCORD_WEBHOOK
-from .tools.yt_dlp_download_tool import (
-    YtDlpDownloadTool,
-    YouTubeDownloadTool,
-    TwitchDownloadTool,
-    KickDownloadTool,
-    TwitterDownloadTool,
-    InstagramDownloadTool,
-)
 from .tools.audio_transcription_tool import AudioTranscriptionTool
 from .tools.text_analysis_tool import TextAnalysisTool
 from .tools.discord_post_tool import DiscordPostTool
@@ -21,6 +12,9 @@ from .tools.logical_fallacy_tool import LogicalFallacyTool
 from .tools.perspective_synthesizer_tool import PerspectiveSynthesizerTool
 from .tools.memory_storage_tool import MemoryStorageTool
 from .step_result import StepResult
+
+if TYPE_CHECKING:  # pragma: no cover - for typing only
+    from .tools.multi_platform_download_tool import MultiPlatformDownloadTool
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +25,7 @@ class ContentPipeline:
     def __init__(
         self,
         webhook_url: Optional[str] = None,
-        downloaders: Optional[Dict[str, YtDlpDownloadTool]] = None,
+        downloader: Optional["MultiPlatformDownloadTool"] = None,
         transcriber: Optional[AudioTranscriptionTool] = None,
         analyzer: Optional[TextAnalysisTool] = None,
         drive: Optional[DriveUploadTool] = None,
@@ -40,15 +34,12 @@ class ContentPipeline:
         perspective: Optional[PerspectiveSynthesizerTool] = None,
         memory: Optional[MemoryStorageTool] = None,
     ):
-        self.downloaders = downloaders or {
-            "youtube.com": YouTubeDownloadTool(),
-            "youtu.be": YouTubeDownloadTool(),
-            "twitch.tv": TwitchDownloadTool(),
-            "kick.com": KickDownloadTool(),
-            "twitter.com": TwitterDownloadTool(),
-            "x.com": TwitterDownloadTool(),
-            "instagram.com": InstagramDownloadTool(),
-        }
+        if downloader is None:
+            from .tools.multi_platform_download_tool import MultiPlatformDownloadTool
+
+            self.downloader = MultiPlatformDownloadTool()
+        else:
+            self.downloader = downloader
         self.transcriber = transcriber or AudioTranscriptionTool()
         self.analyzer = analyzer or TextAnalysisTool()
         self.drive = drive or DriveUploadTool()
@@ -56,14 +47,6 @@ class ContentPipeline:
         self.fallacy_detector = fallacy_detector or LogicalFallacyTool()
         self.perspective = perspective or PerspectiveSynthesizerTool()
         self.memory = memory or MemoryStorageTool()
-
-    def _select_downloader(self, url: str) -> YtDlpDownloadTool:
-        """Pick an appropriate downloader based on the URL's hostname."""
-        host = urlparse(url).netloc.lower()
-        for domain, tool in self.downloaders.items():
-            if domain in host:
-                return tool
-        raise ValueError(f"Unsupported platform for url: {url}")
 
     async def _run_with_retries(
         self,
@@ -96,14 +79,17 @@ class ContentPipeline:
             await asyncio.sleep(delay)
         return result
 
-    async def process_video(self, url: str) -> dict:
+    async def process_video(self, url: str, quality: str = "1080p") -> dict:
         """Run the full content pipeline for a single video.
 
         Parameters
         ----------
         url: str
             The video URL to process. Supported platforms include YouTube,
-            Twitch, Kick, Twitter and Instagram.
+            Twitch, Kick, Twitter, Instagram, TikTok and Reddit.
+        quality: str, optional
+            Preferred maximum resolution for the download (e.g. ``720p``).
+            Defaults to ``1080p``.
 
         Returns
         -------
@@ -113,12 +99,8 @@ class ContentPipeline:
         """
 
         logger.info("Starting download for %s", url)
-        try:
-            downloader = self._select_downloader(url)
-        except ValueError as exc:
-            return {"status": "error", "step": "download", "error": str(exc)}
         download_info = await self._run_with_retries(
-            downloader.run, url, step="download"
+            self.downloader.run, url, quality=quality, step="download"
         )
         if not download_info.success:
             logger.error("Download failed: %s", download_info.error)
@@ -253,7 +235,12 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Run content pipeline")
     parser.add_argument("url", help="Video URL")
+    parser.add_argument(
+        "--quality",
+        default="1080p",
+        help="Maximum download resolution (e.g. 720p)",
+    )
     args = parser.parse_args()
 
     pipeline = ContentPipeline()
-    asyncio.run(pipeline.process_video(args.url))
+    asyncio.run(pipeline.process_video(args.url, quality=args.quality))

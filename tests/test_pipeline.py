@@ -12,6 +12,11 @@ from ultimate_discord_intelligence_bot.tools.yt_dlp_download_tool import (
     KickDownloadTool,
     TwitterDownloadTool,
     InstagramDownloadTool,
+    TikTokDownloadTool,
+    RedditDownloadTool,
+)
+from ultimate_discord_intelligence_bot.tools.discord_download_tool import (
+    DiscordDownloadTool,
 )
 
 
@@ -51,7 +56,7 @@ def test_process_video(monkeypatch):
 
     pipeline = ContentPipeline(
         webhook_url="http://example.com",
-        downloaders={"example.com": downloader},
+        downloader=downloader,
         transcriber=transcriber,
         analyzer=analyzer,
         drive=drive,
@@ -88,7 +93,7 @@ def test_download_failure(monkeypatch):
 
     pipeline = ContentPipeline(
         webhook_url="http://example.com",
-        downloaders={"example.com": downloader},
+        downloader=downloader,
         transcriber=transcriber,
         analyzer=analyzer,
         drive=drive,
@@ -162,7 +167,7 @@ def test_drive_upload_retry(monkeypatch):
 
     pipeline = ContentPipeline(
         webhook_url="http://example.com",
-        downloaders={"example.com": downloader},
+        downloader=downloader,
         transcriber=transcriber,
         analyzer=analyzer,
         drive=drive,
@@ -209,7 +214,7 @@ def test_exception_in_analysis(monkeypatch):
 
     pipeline = ContentPipeline(
         webhook_url="http://example.com",
-        downloaders={"example.com": downloader},
+        downloader=downloader,
         transcriber=transcriber,
         analyzer=analyzer,
         drive=drive,
@@ -233,7 +238,6 @@ def test_unsupported_platform(monkeypatch):
     """Pipeline should error on URLs without a matching downloader."""
     pipeline = ContentPipeline(
         webhook_url="http://example.com",
-        downloaders={},
         drive=MagicMock(),
         transcriber=MagicMock(),
         analyzer=MagicMock(),
@@ -255,12 +259,21 @@ def test_unsupported_platform(monkeypatch):
         ("https://kick.com/video/1", KickDownloadTool, "Kick"),
         ("https://twitter.com/video/1", TwitterDownloadTool, "Twitter"),
         ("https://www.instagram.com/reel/1", InstagramDownloadTool, "Instagram"),
+        ("https://www.tiktok.com/@user/video/1", TikTokDownloadTool, "TikTok"),
+        ("https://vm.tiktok.com/ZM1/", TikTokDownloadTool, "TikTok"),
+        ("https://vt.tiktok.com/ZM2/", TikTokDownloadTool, "TikTok"),
+        ("https://www.reddit.com/r/videos/comments/1/demo/", RedditDownloadTool, "Reddit"),
+        (
+            "https://cdn.discordapp.com/attachments/1/2/video.mp4",
+            DiscordDownloadTool,
+            "Discord",
+        ),
     ],
 )
 def test_pipeline_selects_correct_downloader(url, tool_cls, platform, monkeypatch):
     """ContentPipeline should dispatch to the appropriate downloader."""
 
-    def fake_run(self, video_url):
+    def fake_run(self, video_url, quality="1080p"):
         return {
             "status": "success",
             "platform": platform,
@@ -270,6 +283,8 @@ def test_pipeline_selects_correct_downloader(url, tool_cls, platform, monkeypatc
             "duration": "1",
             "file_size": "1000",
             "local_path": "/tmp/video.mp4",
+            "command": "yt-dlp stub",
+            "requested_quality": quality,
         }
 
     monkeypatch.setattr(tool_cls, "run", fake_run)
@@ -300,7 +315,9 @@ def test_pipeline_selects_correct_downloader(url, tool_cls, platform, monkeypatc
         memory=memory,
     )
 
-    result = asyncio.run(pipeline.process_video(url))
+    result = asyncio.run(pipeline.process_video(url, quality="720p"))
 
     assert result["status"] == "success"
     assert result["download"]["platform"] == platform
+    assert result["download"]["command"].startswith("yt-dlp")
+    assert result["download"].get("requested_quality") == "720p"

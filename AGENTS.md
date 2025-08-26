@@ -32,7 +32,7 @@ Follow this checklist whenever adding agents, tasks, tools, or workflows:
 
 ## Project Goals
 1. Build a debate-analysis system with partisan defenders (Traitor AB & Old Dan).
-2. Ingest videos and transcripts from multiple platforms (YouTube, Twitch, Kick, Twitter/X, Instagram, Discord).
+2. Ingest videos and transcripts from multiple platforms (YouTube, Twitch, Kick, Twitter/X, Instagram, TikTok, Reddit, Discord).
 3. Verify clip context, fact‑check claims, and trace misinfo sources.
 4. Maintain persistent scores for lies, misquotes, misinfo, and trustworthiness.
 5. Store transcripts, analyses, and social context in Qdrant for retrieval.
@@ -57,7 +57,7 @@ The checklist below tracks major components of the system and their status.
 - [x] System alert manager for Discord-only monitoring.
 - [x] Cross-platform intelligence gatherer agent.
 - [x] Steelman argument generator.
-- [x] Twitch, Kick, Twitter, Instagram downloaders and X/Discord monitor tools.
+- [x] Twitch, Kick, Twitter, Instagram, TikTok, Reddit, Discord downloaders and X/Discord monitor tools.
 - [x] Qdrant collections separated for transcripts and analyses.
 - [x] Enhanced fact-checking backends (Serply, EXA, Perplexity, WolframAlpha).
 - [x] Expanded logical fallacy detection.
@@ -65,5 +65,18 @@ The checklist below tracks major components of the system and their status.
 - [x] Full workflow tests for new ingestion sources.
 - [x] Personality Synthesis Manager agent.
 - [x] Additional monitoring and alerting enhancements.
+- [x] Unified multi-platform download dispatcher.
+- [x] Content pipeline uses multi-platform dispatcher for TikTok and Reddit downloads.
+- [x] Agent and task configs updated for TikTok and Reddit coverage.
+- [x] yt-dlp downloaders respect optional quality parameter.
+- [x] Content pipeline exposes optional quality override.
+- [x] Prompt engine and token counter service available globally.
+- [x] OpenRouter-based model router with learning feedback.
+- [x] In-memory memory retrieval service.
+- [x] Perspective synthesizer grounded by memory retrieval.
+- [x] Token counter leverages transformers tokenizers for non-OpenAI models.
+- [x] Prompt evaluation harness for routing and RL feedback.
+- [x] OpenRouter models configurable via environment variables.
+- [x] TikTok short-link domains (`vm.tiktok.com`, `vt.tiktok.com`) routed through multi-platform dispatcher.
 
 *Update this checklist whenever significant goals are finished or new tasks arise.*
