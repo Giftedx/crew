@@ -74,6 +74,46 @@ def test_openrouter_env_model_override(monkeypatch):
     assert result["model"] == "env-model"
 
 
+def test_openrouter_provider_options(monkeypatch):
+    monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
+    router = OpenRouterService(provider_opts={"sort": "price"})
+    result = router.route("hi")
+    assert result["provider"] == {"sort": "price"}
+
+
+def test_openrouter_provider_override(monkeypatch):
+    """Call-level provider options should override service defaults."""
+    monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
+    router = OpenRouterService(provider_opts={"sort": "price", "allow_fallbacks": True})
+    result = router.route("hi", provider_opts={"sort": "latency", "only": ["p1"]})
+    assert result["provider"] == {
+        "sort": "latency",
+        "allow_fallbacks": True,
+        "only": ["p1"],
+    }
+
+
+def test_openrouter_provider_defaults_unchanged(monkeypatch):
+    """Service defaults should remain untouched after call-level overrides."""
+    monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
+    defaults = {"sort": "price", "only": ["p1"]}
+    router = OpenRouterService(provider_opts=defaults)
+    router.route("hi", provider_opts={"only": ["p2"]})
+    assert defaults == {"sort": "price", "only": ["p1"]}
+    assert router.provider_opts == {"sort": "price", "only": ["p1"]}
+
+
+def test_openrouter_provider_deep_merge(monkeypatch):
+    """Nested provider dictionaries should be merged recursively."""
+    monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
+    defaults = {"require_parameters": {"a": 1, "b": 2}}
+    router = OpenRouterService(provider_opts=defaults)
+    result = router.route("hi", provider_opts={"require_parameters": {"b": 3}})
+    assert result["provider"]["require_parameters"] == {"a": 1, "b": 3}
+    # Ensure neither defaults nor call-level overrides were mutated
+    assert defaults == {"require_parameters": {"a": 1, "b": 2}}
+
+
 def test_perspective_synthesizer_integration(monkeypatch):
     monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
     tool = PerspectiveSynthesizerTool()
