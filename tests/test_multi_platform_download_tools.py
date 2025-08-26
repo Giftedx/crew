@@ -177,3 +177,19 @@ def test_discord_downloader_reports_http_error(monkeypatch):
     assert result["error"] == "boom"
     assert result["command"].startswith("requests.get")
 
+
+def test_downloader_handles_malformed_output(monkeypatch):
+    def fake_run(cmd, capture_output, text, timeout, env):
+        class Result:
+            returncode = 0
+            stdout = "unexpected"
+            stderr = ""
+
+        return Result()
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+    tool = TikTokDownloadTool()
+    result = tool._run("http://example.com")
+    assert result["status"] == "error"
+    assert "Unexpected yt-dlp output" in result["error"]
+
