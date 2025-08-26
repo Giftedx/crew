@@ -7,8 +7,12 @@ together and highlights opportunities for optimisation.
 
 The repository centres around an asynchronous `ContentPipeline` that downloads
 videos, uploads them to Google Drive, transcribes the audio, analyses the text
-and posts a summary to Discord.  Each stage is implemented as an isolated tool
-whose job is to interact with an external service.
+and posts a summary to Discord.  The pipeline accepts an optional `quality`
+parameter so callers can cap the download resolution (default `1080p`). Each
+stage is implemented as an isolated tool whose job is to interact with an
+external service.  Downloads flow through a unified dispatcher so the pipeline
+can ingest YouTube, Twitch, Kick, Twitter, Instagram, TikTok, Reddit and
+Discord sources via the same entry point.
 
 ```
 Video Platform -> Drive -> Transcription -> Analysis -> Discord
@@ -31,7 +35,11 @@ Each interaction with an external system is encapsulated in a tool living under
 `tools/`.
 
 - `yt_dlp_download_tool.py` – generic `yt-dlp` wrapper with subclasses for
-  YouTube, Twitch, Kick and X/Twitter downloads.
+  YouTube, Twitch, Kick, Instagram, TikTok, Reddit, Discord and X/Twitter downloads and an
+  optional quality parameter to cap resolution.
+- `multi_platform_download_tool.py` – dispatches to the appropriate downloader
+  based on the URL (including `vm.tiktok.com`/`vt.tiktok.com` aliases) and
+  returns `platform: "unknown"` for unsupported links.
 - `drive_upload_tool.py` – uploads files to Google Drive and produces shareable
   links suitable for Discord embeds.
 - `audio_transcription_tool.py` – lazily loads Whisper models to transcribe
@@ -40,7 +48,8 @@ Each interaction with an external system is encapsulated in a tool living under
   NLTK.
 - `logical_fallacy_tool.py` – flags basic logical fallacies in transcripts.
 - `perspective_synthesizer_tool.py` – generates alternative viewpoints from the
-  analysed text.
+  analysed text using the shared `PromptEngine`, `OpenRouterService` and
+  `MemoryService` for contextual grounding.
 - `discord_post_tool.py` – posts either embeds or direct uploads to Discord via a
   webhook.
 - `discord_private_alert_tool.py` – sends operational alerts to a restricted
@@ -59,6 +68,23 @@ To simplify orchestration and improve reliability the pipeline now wraps all
 step results in a small dataclass `StepResult`.  This removes repetitive status
 handling, provides a typed interface for callers and ensures every stage returns
 structured data.
+
+## Global services
+
+A set of lightweight services are available under
+`ultimate_discord_intelligence_bot.services` to support efficient and grounded
+language-model usage across the system:
+
+- **PromptEngine** – central prompt builder and token counter using
+  ``tiktoken`` and ``transformers`` tokenizers where available.
+- **OpenRouterService** – dynamic model router with offline fallback.
+  Defaults may be customised via ``OPENROUTER_GENERAL_MODEL`` and
+  ``OPENROUTER_ANALYSIS_MODEL``.
+- **LearningEngine** – epsilon‑greedy policy that records routing rewards.
+- **MemoryService** – minimal in-memory store for contextual lookups and used to
+  ground the `PerspectiveSynthesizerTool`.
+- **EvaluationHarness** – runs prompts across models, logging latency and
+  token usage for offline analysis and future training.
 
 ## Potential optimisations
 

@@ -32,9 +32,12 @@ Key variables include `CREWAI_BASE_DIR` (defaulting to a `crew_data` folder in y
 home directory) and optional overrides like `CREWAI_DOWNLOADS_DIR` or
 `CREWAI_YTDLP_CONFIG` for custom locations. The repository ships with a default
 yt-dlp configuration under `yt-dlp/config/crewai-system.conf` and supports
-downloading from YouTube, Twitch, Kick, Instagram and X/Twitter. The pipeline automatically
-selects the appropriate downloader based on the URL. When providing a Discord
-webhook via `DISCORD_WEBHOOK` ensure it is a public HTTPS URL; local or private
+downloading from YouTube, Twitch, Kick, Instagram, TikTok (including `vm.tiktok.com`
+and `vt.tiktok.com` share links), Reddit, Discord and X/Twitter. A `Multi-Platform Download
+Tool` inspects the URL and delegates to the correct downloader automatically,
+honouring an optional `quality` parameter (defaulting to `1080p`) to cap
+resolution. When
+providing a Discord webhook via `DISCORD_WEBHOOK` ensure it is a public HTTPS URL; local or private
 IP addresses are rejected for safety. A separate `DISCORD_PRIVATE_WEBHOOK` can
 be supplied to the internal `Discord Private Alert Tool` for system health
 notifications. Pair this with the `System Status Tool` and the `monitor_system`
@@ -77,9 +80,32 @@ For long-term memory the pipeline can connect to a Qdrant vector database using
 For audio transcription you can choose the Whisper model size by setting
 `WHISPER_MODEL` (defaults to `base`). The text analysis component relies on NLTK
 corpora which are downloaded automatically on first use.
+
+To keep language-model usage efficient and grounded, the repository includes a
+set of shared services:
+
+- ``PromptEngine`` – builds prompts and estimates token counts across model
+  providers, using ``tiktoken`` for OpenAI models and ``transformers``
+  tokenizers for open‑source ones.
+- ``OpenRouterService`` – selects the best available model via
+  `openrouter.ai <https://openrouter.ai>`_ with an offline-friendly fallback.
+  Defaults can be overridden with the ``OPENROUTER_GENERAL_MODEL`` and
+  ``OPENROUTER_ANALYSIS_MODEL`` environment variables.
+- ``LearningEngine`` – records routing outcomes and uses a simple
+  epsilon‑greedy strategy to improve future choices.
+- ``MemoryService`` – offers lightweight in‑process storage and retrieval so
+  any component can fetch relevant context before making a request and is used
+  by the `PerspectiveSynthesizerTool` to ground summaries.
+- ``EvaluationHarness`` – benchmarks prompts across models and logs latency
+  and token usage for offline analysis and reinforcement learning.
+
+These utilities are exposed under ``ultimate_discord_intelligence_bot.services``
+and can be imported by agents, tools or pipelines as needed.
 ### Customizing
 
-**Add your `OPENAI_API_KEY` into the `.env` file**
+**Add your `OPENAI_API_KEY` into the `.env` file**. Optionally set
+`OPENROUTER_API_KEY` to enable dynamic model routing and
+`OPENROUTER_GENERAL_MODEL`/`OPENROUTER_ANALYSIS_MODEL` to override defaults.
 
 - Update `src/ultimate_discord_intelligence_bot/config/agents.yaml` to define agents
   (a single `content_manager` is provided as an example)
@@ -101,8 +127,10 @@ crewai run --inputs url=<video_url>
 You can also invoke the pipeline directly without the crew layer:
 
 ```bash
-python src/ultimate_discord_intelligence_bot/pipeline.py <video_url>
+python src/ultimate_discord_intelligence_bot/pipeline.py <video_url> --quality 720p
 ```
+
+The optional ``--quality`` flag caps the download resolution (default ``1080p``).
 
 Both approaches download the video, upload it to Google Drive, analyse the
 transcript, gather cross-platform discussions, flag basic logical fallacies,

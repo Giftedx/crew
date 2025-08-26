@@ -11,11 +11,12 @@ content_downloader:
   goal: Fetch media from supported platforms using specialised tools.
   backstory: >-
     You leverage yt-dlp to retrieve videos or streams from YouTube, Twitch,
-    Kick, Twitter and Instagram.
+    Kick, Twitter, Instagram, TikTok, Reddit and Discord.
 
 multi_platform_monitor:
   role: Multi-Platform Monitor
-  goal: Identify new content across YouTube, Twitch, Kick, Twitter, Instagram and Discord.
+  goal: Identify new content across YouTube, Twitch, Kick, Twitter, Instagram,
+    TikTok, Reddit and Discord.
   backstory: >-
     You watch platform feeds and report back only unseen items so downloads can
     be triggered when something fresh appears.

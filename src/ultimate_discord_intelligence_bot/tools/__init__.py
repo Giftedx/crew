@@ -9,14 +9,16 @@ from .yt_dlp_download_tool import (
     TwitterDownloadTool,
     InstagramDownloadTool,
     TikTokDownloadTool,
+    RedditDownloadTool,
 )
+from .discord_download_tool import DiscordDownloadTool
+from .multi_platform_download_tool import MultiPlatformDownloadTool
 from .audio_transcription_tool import AudioTranscriptionTool
 from .discord_post_tool import DiscordPostTool
 from .drive_upload_tool import DriveUploadTool
 from .logical_fallacy_tool import LogicalFallacyTool
 from .memory_storage_tool import MemoryStorageTool
 from .perspective_synthesizer_tool import PerspectiveSynthesizerTool
-from .pipeline_tool import PipelineTool
 from .social_media_monitor_tool import SocialMediaMonitorTool
 from .multi_platform_monitor_tool import MultiPlatformMonitorTool
 from .x_monitor_tool import XMonitorTool
@@ -44,13 +46,15 @@ __all__ = [
     "TwitterDownloadTool",
     "InstagramDownloadTool",
     "TikTokDownloadTool",
+    "RedditDownloadTool",
+    "DiscordDownloadTool",
+    "MultiPlatformDownloadTool",
     "AudioTranscriptionTool",
     "DiscordPostTool",
     "DriveUploadTool",
     "LogicalFallacyTool",
     "MemoryStorageTool",
     "PerspectiveSynthesizerTool",
-    "PipelineTool",
     "SocialMediaMonitorTool",
     "MultiPlatformMonitorTool",
     "XMonitorTool",
