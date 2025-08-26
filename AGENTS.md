@@ -77,6 +77,7 @@ The checklist below tracks major components of the system and their status.
 - [x] Token counter leverages transformers tokenizers for non-OpenAI models.
 - [x] Prompt evaluation harness for routing and RL feedback.
 - [x] OpenRouter models configurable via environment variables.
+- [x] Provider routing preferences for OpenRouter requests.
 - [x] TikTok short-link domains (`vm.tiktok.com`, `vt.tiktok.com`) routed through multi-platform dispatcher.
 
 *Update this checklist whenever significant goals are finished or new tasks arise.*
