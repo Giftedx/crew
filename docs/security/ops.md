@@ -28,3 +28,11 @@ underlying value to refresh the in-memory cache.
 The :class:`security.moderation.Moderation` helper scans text for banned
 terms defined in ``config/security.yaml``. Depending on the configured action it
 will redact or block offending content.
+
+## Security events
+
+All security-related decisions emit a structured log via
+``security.events.log_security_event``. Logs include actor, action,
+resource and decision so operators can audit denials or moderation
+actions. The logs are written using the same JSON logger as the rest of
+the system and can be aggregated centrally.

@@ -1,0 +1,28 @@
+name: golden
+
+on:
+  push:
+    paths:
+      - 'src/**'
+      - 'datasets/**'
+      - 'baselines/**'
+      - 'config/**'
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'datasets/**'
+      - 'baselines/**'
+      - 'config/**'
+  schedule:
+    - cron: '0 3 * * *'
+
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - run: pip install -e .
+      - run: python -m eval.runner datasets/golden/core/v1 baselines/golden/core/v1/summary.json

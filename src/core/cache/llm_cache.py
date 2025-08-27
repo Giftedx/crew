@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 from typing import Any, Dict, Tuple, Callable
 
 from .. import flags
+from ..learning_engine import LearningEngine
 
 
 @dataclass
@@ -33,19 +34,43 @@ def make_key(parts: Dict[str, Any]) -> str:
     return ":".join(f"{k}={parts[k]}" for k in sorted(parts))
 
 
-def memo_llm(key_builder: Callable[..., Dict[str, Any]]) -> Callable:
-    """Decorator to cache LLM calls based on key parts."""
+def memo_llm(
+    key_builder: Callable[..., Dict[str, Any]],
+    *,
+    learning: LearningEngine | None = None,
+    domain: str = "cache",
+) -> Callable:
+    """Decorator to cache LLM calls with RL-controlled policy.
+
+    ``learning`` is consulted to decide whether to use the cache or bypass it.
+    The domain defaults to ``"cache"``.
+    """
+
+    engine = learning or LearningEngine()
 
     def decorator(func: Callable):
         def wrapper(*args, **kwargs):
             if not flags.enabled("ENABLE_CACHE", True):
                 return func(*args, **kwargs)
+
+            try:
+                arm = engine.recommend(domain, {}, ["use", "bypass"])
+                registered = True
+            except KeyError:
+                arm = "use"
+                registered = False
             key = make_key(key_builder(*args, **kwargs))
-            hit = llm_cache.get(key)
-            if hit is not None:
-                return hit
+            if arm == "use":
+                hit = llm_cache.get(key)
+                if hit is not None:
+                    engine.record(domain, {}, arm, 1.0)
+                    return hit
+
             result = func(*args, **kwargs)
-            llm_cache.set(key, result)
+            if arm == "use":
+                llm_cache.set(key, result)
+            if registered:
+                engine.record(domain, {}, arm, 1.0)
             return result
 
         return wrapper

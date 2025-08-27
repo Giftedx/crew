@@ -1,0 +1,3 @@
+allowed_models:
+  - gpt-3.5
+  - gpt-4

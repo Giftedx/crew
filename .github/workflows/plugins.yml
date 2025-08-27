@@ -1,0 +1,26 @@
+name: Plugin capability tests
+
+on:
+  push:
+    paths:
+      - 'src/ultimate_discord_intelligence_bot/plugins/**'
+      - 'tests/plugins/**'
+      - '.github/workflows/plugins.yml'
+  pull_request:
+    paths:
+      - 'src/ultimate_discord_intelligence_bot/plugins/**'
+      - 'tests/plugins/**'
+      - '.github/workflows/plugins.yml'
+
+jobs:
+  plugin-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - name: Install dependencies
+        run: pip install -e .[dev]
+      - name: Run example plugin tests
+        run: python -m ultimate_discord_intelligence_bot.plugins.testkit.cli --plugin ultimate_discord_intelligence_bot.plugins.example_summarizer

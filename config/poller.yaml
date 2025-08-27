@@ -1,0 +1,10 @@
+# Poller configuration with per-source defaults.
+# Values are purposely minimal for tests.
+
+youtube:
+  interval: 3600  # seconds
+  priority: 0
+
+twitch:
+  interval: 3600
+  priority: 0

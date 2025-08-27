@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import hashlib
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List
 
 from .store import MarketplaceStore
@@ -44,11 +44,11 @@ def verify_manifest(
     store:
         Marketplace storage providing signer metadata.
     now:
-        Optional timestamp used for validity checks.  Defaults to ``datetime.utcnow``.
+        Optional timestamp used for validity checks.  Defaults to ``datetime.now(timezone.utc)``.
     """
 
     errors: List[str] = []
-    now = now or datetime.utcnow()
+    now = now or datetime.now(timezone.utc)
 
     signer = store.get_signer(signer_fingerprint)
     if not signer:

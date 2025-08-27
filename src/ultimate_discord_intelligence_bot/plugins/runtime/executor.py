@@ -4,12 +4,15 @@ import importlib
 import json
 import multiprocessing as mp
 import pathlib
+import time
 from dataclasses import dataclass
 from typing import Any, Dict, Iterable, Optional
 
 import jsonschema
 
 from .perm_guard import PermissionGuard, PermissionError
+from core import learn
+from core.rl import registry as rl_registry
 
 
 @dataclass
@@ -53,6 +56,8 @@ class PluginExecutor:
         adapters: Dict[str, Any],
         args: Optional[Dict[str, Any]] = None,
         timeout: float = 10.0,
+        *,
+        policy_registry: rl_registry.PolicyRegistry | None = None,
     ) -> PluginResult:
         plugin_path = pathlib.Path(plugin_dir)
         manifest = self._load_manifest(plugin_path)
@@ -63,14 +68,35 @@ class PluginExecutor:
             return PluginResult(success=False, error=str(exc))
 
         entrypoint = manifest["entrypoint"]
-        queue: mp.Queue = mp.Queue()
-        proc = mp.Process(
-            target=_plugin_entry,
-            args=(entrypoint, adapters, args or {}, queue),
+
+        result_holder: dict[str, PluginResult] = {}
+
+        def act(chosen_timeout: float):
+            start = time.perf_counter()
+            queue: mp.Queue = mp.Queue()
+            proc = mp.Process(
+                target=_plugin_entry,
+                args=(entrypoint, adapters, args or {}, queue),
+            )
+            proc.start()
+            proc.join(chosen_timeout)
+            if proc.is_alive():
+                proc.kill()
+                res = PluginResult(success=False, error="timeout")
+            else:
+                res = queue.get() if not queue.empty() else PluginResult(success=False, error="no result")
+            elapsed = (time.perf_counter() - start) * 1000
+            result_holder["res"] = res
+            outcome = {"cost_usd": 0.0, "latency_ms": elapsed}
+            signals = {"quality": 1.0 if res.success else 0.0}
+            return outcome, signals
+
+        candidates = [timeout, max(1.0, timeout / 2.0)]
+        learn.learn(
+            "plugin",
+            {"name": manifest.get("name", plugin_path.name)},
+            candidates,
+            act,
+            policy_registry=policy_registry,
         )
-        proc.start()
-        proc.join(timeout)
-        if proc.is_alive():
-            proc.kill()
-            return PluginResult(success=False, error="timeout")
-        return queue.get() if not queue.empty() else PluginResult(success=False, error="no result")
+        return result_holder.get("res", PluginResult(success=False, error="no result"))

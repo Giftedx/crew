@@ -17,6 +17,13 @@ During runtime the `TenantRegistry` loads these files and resolves incoming
 Discord requests to a `TenantContext` which carries the tenant and workspace
 identifiers through the system.
 
+### Routing Profiles and Budgets
+
+If `routing.yaml` is present it may define an `allowed_models` list limiting
+which LLMs the router can select for that tenant.  `budgets.yaml` configures
+`daily_cap_usd` and `max_per_request` so costs are tracked per tenant rather
+than globally.
+
 ## Memory Namespaces
 
 The in-memory store and other persistence layers must prefix all namespaces with

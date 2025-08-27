@@ -54,6 +54,16 @@ class VectorStore:
         self.client.upsert(collection_name=namespace, points=points)
 
     def query(self, namespace: str, vector: Sequence[float], top_k: int = 3):
-        return self.client.search(
-            collection_name=namespace, query_vector=list(vector), limit=top_k
+        """Return top ``top_k`` matches for ``vector`` in ``namespace``.
+
+        Uses ``query_points`` which supersedes the deprecated ``search`` API
+        and ensures payloads are returned with each scored point.
+        """
+
+        res = self.client.query_points(
+            collection_name=namespace,
+            query=list(vector),
+            limit=top_k,
+            with_payload=True,
         )
+        return res.points

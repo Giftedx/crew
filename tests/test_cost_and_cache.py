@@ -3,8 +3,9 @@ from __future__ import annotations
 import time
 import pytest
 
-from core import cache, router, token_meter, learning_engine
+from core import cache, router, token_meter, learning_engine, alerts
 from core import reliability
+from discord import commands
 
 
 def test_cost_guard_rejects_and_downshifts() -> None:
@@ -37,3 +38,9 @@ def test_retry_succeeds() -> None:
     result = reliability.retry(flake, retries=3, backoff=0)
     assert result == "ok"
     assert attempts["n"] == 3
+
+
+def test_ops_status_includes_alerts() -> None:
+    alerts.alerts.record("test")
+    status = commands.ops_status(1.0, cache_hits=0, breaker_open=False, alerts=alerts.alerts.drain())
+    assert status["alerts"] == ["test"]

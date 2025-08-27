@@ -78,6 +78,49 @@ class UsageLog:
     ts: str
 
 
+@dataclass
+class Watchlist:
+    id: Optional[int]
+    tenant: str
+    workspace: str
+    source_type: str
+    handle: str
+    label: Optional[str]
+    enabled: bool = True
+    created_at: Optional[str] = None
+    updated_at: Optional[str] = None
+
+
+@dataclass
+class IngestState:
+    id: Optional[int]
+    watchlist_id: int
+    cursor: Optional[str]
+    last_seen_at: Optional[str]
+    etag: Optional[str]
+    failure_count: int = 0
+    backoff_until: Optional[str] = None
+
+
+@dataclass
+class IngestJobRecord:
+    id: Optional[int]
+    tenant: str
+    workspace: str
+    source_type: str
+    external_id: str
+    url: str
+    tags: str
+    visibility: str
+    priority: int
+    status: str
+    attempts: int
+    scheduled_at: str
+    picked_at: Optional[str] = None
+    finished_at: Optional[str] = None
+    error: Optional[str] = None
+
+
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS creator_profile (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -137,6 +180,43 @@ CREATE TABLE IF NOT EXISTS usage_log (
     user_cmd TEXT,
     channel_id TEXT,
     ts TEXT
+);
+CREATE TABLE IF NOT EXISTS watchlist (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    tenant TEXT,
+    workspace TEXT,
+    source_type TEXT,
+    handle TEXT,
+    label TEXT,
+    enabled INTEGER,
+    created_at TEXT,
+    updated_at TEXT
+);
+CREATE TABLE IF NOT EXISTS ingest_state (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    watchlist_id INTEGER,
+    cursor TEXT,
+    last_seen_at TEXT,
+    etag TEXT,
+    failure_count INTEGER,
+    backoff_until TEXT
+);
+CREATE TABLE IF NOT EXISTS ingest_job (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    tenant TEXT,
+    workspace TEXT,
+    source_type TEXT,
+    external_id TEXT,
+    url TEXT,
+    tags TEXT,
+    visibility TEXT,
+    priority INTEGER,
+    status TEXT,
+    attempts INTEGER,
+    scheduled_at TEXT,
+    picked_at TEXT,
+    finished_at TEXT,
+    error TEXT
 );
 """
 

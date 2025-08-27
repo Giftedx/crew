@@ -8,6 +8,7 @@ from typing import Any, Dict, Tuple
 from policy import policy_engine
 from . import pii_detector, redactor
 from core import flags
+from core.learning_engine import LearningEngine
 
 
 @dataclass
@@ -17,7 +18,12 @@ class PrivacyReport:
     decisions: list[policy_engine.Decision]
 
 
-def filter_text(text: str, context: Dict[str, Any] | None = None) -> Tuple[str, PrivacyReport]:
+def filter_text(
+    text: str,
+    context: Dict[str, Any] | None = None,
+    learning: LearningEngine | None = None,
+    domain: str = "safety",
+) -> Tuple[str, PrivacyReport]:
     ctx = context or {}
     policy = policy_engine.load_policy(ctx.get("tenant"))
     decisions = []
@@ -25,13 +31,27 @@ def filter_text(text: str, context: Dict[str, Any] | None = None) -> Tuple[str, 
     decisions.append(dec)
     if dec.decision == "block":
         return text, PrivacyReport([], {}, decisions)
+
+    engine = learning or LearningEngine()
+    try:
+        arm = engine.recommend(domain, ctx, ["strict", "lenient"])
+        registered = True
+    except KeyError:
+        arm = "lenient"
+        registered = False
     detect_enabled = ctx.get("enable_detection", flags.enabled("enable_pii_detection", True))
     redact_enabled = ctx.get("enable_redaction", flags.enabled("enable_pii_redaction", True))
+    if arm == "strict":
+        detect_enabled = True
+        redact_enabled = True
+
     spans = pii_detector.detect(text) if detect_enabled else []
     redacted = redactor.apply(text, spans, policy.masks) if spans and redact_enabled else text
     counts: Dict[str, int] = {}
     for s in spans:
         counts[s.type] = counts.get(s.type, 0) + 1
+    if registered:
+        engine.record(domain, ctx, arm, 1.0 if spans else 0.5)
     return redacted, PrivacyReport(spans, counts, decisions)
 
 

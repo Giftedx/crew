@@ -4,6 +4,7 @@ import random
 
 from core import learn, reward_pipe, rl
 from core.rl.policies.bandit_base import EpsilonGreedyBandit, UCB1Bandit
+from core.learning_engine import LearningEngine
 
 
 def test_feature_store_stats_and_featurize() -> None:
@@ -76,6 +77,29 @@ def test_policy_registry_and_shields() -> None:
     assert reg.get("test") is bandit
     result = rl.shields.check({"cost_usd": 2.0}, {"budget": 1.0})
     assert not result.allowed and result.reason == "budget_exceeded"
+
+
+def test_learning_engine_snapshot_and_status() -> None:
+    eng = LearningEngine()
+    eng.register_domain("demo", EpsilonGreedyBandit(epsilon=0.0))
+    eng.record("demo", {}, "a", 1.0)
+    snap = eng.snapshot()
+    eng.record("demo", {}, "a", 0.0)
+    eng.restore(snap)
+    status = eng.status()
+    assert status["demo"]["arms"]["a"]["q"] == snap["demo"]["q_values"]["a"]
+
+
+def test_learning_engine_shadow_bakeoff() -> None:
+    eng = LearningEngine()
+    eng.register_domain("demo", EpsilonGreedyBandit(epsilon=0.0))
+
+    def trial(arm: str) -> float:
+        return 1.0 if arm == "b" else 0.0
+
+    eng.shadow_bakeoff("demo", ["a", "b"], trial)
+    status = eng.status()["demo"]["arms"]
+    assert status["b"]["q"] > status["a"]["q"]
 
 
 def test_learn_helper_executes_cycle(monkeypatch) -> None:

@@ -14,7 +14,7 @@ See `plugins/example_summarizer` for a minimal example.
 
 Every plugin must define a `tests` block in its `manifest.json` describing a self‑test entrypoint and a set of capability
 scenarios.  The lightweight test runner located in `plugins/testkit` executes these scenarios with stubbed adapters and
-ensures expectations such as required substrings are met.  Developers can run
+verifies expectations such as required substrings via helpers like `must_include`, `forbidden`, or `status_ok`.  Developers can run
 
 ```bash
 python -m ultimate_discord_intelligence_bot.plugins.testkit.cli --plugin ultimate_discord_intelligence_bot.plugins.example_summarizer

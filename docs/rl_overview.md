@@ -21,7 +21,20 @@ while respecting safety, cost and latency constraints.
   actions execute.
 
 Policies begin in **shadow mode** with conservative priors so learning can only
-match or improve deterministic behaviour.
+match or improve deterministic behaviour. Domains currently wired include
+model routing, prompt selection, retrieval scoring, **tool planning** and the
+**plugin runtime** which adjusts execution budgets for sandboxed extensions.
+
+## Operations
+
+The learning engine supports basic operational controls:
+
+- **Snapshots** – ``LearningEngine.snapshot()`` returns a serialisable mapping
+  of policy state.  Persist it to create a checkpoint.
+- **Restore** – pass a snapshot to ``LearningEngine.restore()`` to roll back to
+  the saved state.
+- **Status** – ``LearningEngine.status()`` exposes the current policies and
+  arm statistics for debugging and monitoring.
 
 ## Feature Flags
 

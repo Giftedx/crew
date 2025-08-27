@@ -1,0 +1,7 @@
+defaults:
+  min_citations: 1
+  require_timestamped: false
+commands:
+  context:
+    min_citations: 3
+    require_timestamped: false

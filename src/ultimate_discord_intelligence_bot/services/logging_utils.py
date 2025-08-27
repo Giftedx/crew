@@ -10,7 +10,7 @@ import sqlite3
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable, Optional, Sequence
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 def _as_list(value: Optional[Sequence[str]]) -> str:
@@ -134,7 +134,7 @@ class AnalyticsStore:
                 tokens_out,
                 cost,
                 latency_ms,
-                (ts or datetime.utcnow()).isoformat(),
+                (ts or datetime.now(timezone.utc)).isoformat(),
                 profile_id,
                 1 if success else 0,
                 _as_list(toolset),

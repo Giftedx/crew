@@ -38,6 +38,16 @@ def test_limit_detection_webhook_override(monkeypatch):
     assert limits.detect(use_bot=False) == 4096
 
 
+def test_limit_detection_guild_override(monkeypatch):
+    monkeypatch.setenv("DISCORD_UPLOAD_LIMIT_GUILD_42", "8192")
+    assert limits.detect(guild_id=42) == 8192
+
+
+def test_limit_detection_webhook_guild_override(monkeypatch):
+    monkeypatch.setenv("DISCORD_UPLOAD_LIMIT_WEBHOOK_GUILD_99", "1024")
+    assert limits.detect(guild_id=99, use_bot=False) == 1024
+
+
 def test_archive_file_records_manifest(monkeypatch, tmp_path):
     db = tmp_path / "manifest.db"
     os.environ["ARCHIVE_DB_PATH"] = str(db)
