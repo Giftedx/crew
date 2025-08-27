@@ -1,0 +1,59 @@
+profiles:
+  - name: "H3H3 Productions"
+    type: "brand"
+    roles:
+      - "YouTube channel/brand"
+      - "Commentary/Sketch/Reaction (historical)"
+    shows:
+      - "H3 Podcast (hosted under H3 brand)"
+    content_tags: ["comedy", "internet culture", "commentary"]
+    seed_handles:
+      youtube: ["@h3h3Productions"]
+    notes: "Brand umbrella for H3 content; H3 Podcast is the main current focus."
+
+  - name: "H3 Podcast"
+    type: "show"
+    roles: ["Podcast", "YouTube show", "Livestream"]
+    content_tags: ["interviews", "commentary", "internet culture"]
+    seed_handles:
+      youtube: ["@h3podcast"]
+      podcast: ["Search: H3 Podcast RSS/Spotify/Apple"]
+    notes: "Long-form show hosted by Ethan (and frequent co-hosts)."
+
+  - name: "Ethan Klein"
+    type: "person"
+    roles: ["Host of H3 Podcast", "YouTube personality"]
+    content_tags: ["comedy", "commentary", "internet culture"]
+    seed_handles:
+      youtube: ["@h3podcast", "@h3h3Productions"]
+      twitter: ["Search: Ethan Klein official X handle"]
+      instagram: ["Search: Ethan Klein Instagram"]
+    notes: "Primary host of H3 Podcast."
+
+  - name: "Hila Klein"
+    type: "person"
+    roles: ["Creative director/fashion brand co-founder", "On-air co-host (recurring)"]
+    content_tags: ["fashion", "design", "commentary"]
+    seed_handles:
+      instagram: ["Search: Hila Klein Instagram"]
+      youtube: ["@h3podcast"]
+    notes: "Frequently appears on H3 Podcast; known for fashion brand leadership."
+
+  - name: "Hasan Piker"
+    known_as: "HasanAbi"
+    type: "person"
+    roles: ["Streamer", "Political commentator"]
+    content_tags: ["politics", "news commentary", "livestream"]
+    seed_handles:
+      twitch: ["twitch.tv/hasanabi"]
+      youtube: ["Search: HasanAbi official YouTube"]
+      twitter: ["Search: Hasan Piker X"]
+      instagram: ["Search: Hasan Piker Instagram"]
+    notes: "Frequent subject/collaborator across the broader ecosystem."
+
+  - name: "Producer(s) / on-air staff"
+    type: "person"
+    roles: ["producer", "audio/tech", "on-air personality"]
+    seed_handles:
+      youtube: ["@h3podcast"]
+    notes: "Auto-discover recurring names from episode descriptions/credits/transcripts."

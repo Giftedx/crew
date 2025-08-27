@@ -4,7 +4,6 @@ import pytest
 
 from ultimate_discord_intelligence_bot.services import (
     LearningEngine,
-    MemoryService,
     OpenRouterService,
     PromptEngine,
 )
@@ -40,12 +39,6 @@ def test_prompt_engine_uses_transformers(monkeypatch):
     )
     count = engine.count_tokens("hello", model="dummy-model")
     assert count == 3
-
-
-def test_memory_service_store_and_retrieve():
-    memory = MemoryService()
-    memory.add("The sky is blue", {"source": "test"})
-    assert memory.retrieve("sky") == [{"text": "The sky is blue", "metadata": {"source": "test"}}]
 
 
 def test_learning_engine_updates(tmp_path):

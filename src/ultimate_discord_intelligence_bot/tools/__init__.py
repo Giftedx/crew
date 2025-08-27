@@ -36,6 +36,14 @@ from .discord_qa_tool import DiscordQATool
 from .timeline_tool import TimelineTool
 from .character_profile_tool import CharacterProfileTool
 from .steelman_argument_tool import SteelmanArgumentTool
+from .sentiment_tool import SentimentTool
+from .claim_extractor_tool import ClaimExtractorTool
+from .platform_resolver import (
+    YouTubeResolverTool,
+    TwitchResolverTool,
+    PodcastResolverTool,
+    SocialResolverTool,
+)
 
 __all__ = [
     "DiscordPrivateAlertTool",
@@ -72,4 +80,10 @@ __all__ = [
     "TimelineTool",
     "CharacterProfileTool",
     "SteelmanArgumentTool",
+    "SentimentTool",
+    "ClaimExtractorTool",
+    "YouTubeResolverTool",
+    "TwitchResolverTool",
+    "PodcastResolverTool",
+    "SocialResolverTool",
 ]

@@ -9,18 +9,84 @@ infrastructure during testing.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Dict, List
+from copy import deepcopy
+from typing import Any, Dict, List
+
+from ..tenancy.context import TenantContext, mem_ns, current_tenant
 
 
 @dataclass
 class MemoryService:
     """Store and retrieve small text memories."""
 
-    memories: List[Dict[str, str]] = field(default_factory=list)
+    memories: List[Dict[str, Any]] = field(default_factory=list)
 
-    def add(self, text: str, metadata: Dict[str, str] | None = None) -> None:
-        self.memories.append({"text": text, "metadata": metadata or {}})
+    def add(
+        self,
+        text: str,
+        metadata: Dict[str, Any] | None = None,
+        namespace: str | None = None,
+    ) -> None:
+        """Store a ``text`` snippet with optional ``metadata`` and ``namespace``.
 
-    def retrieve(self, query: str, limit: int = 5) -> List[Dict[str, str]]:
-        results = [m for m in self.memories if query.lower() in m["text"].lower()]
-        return results[:limit]
+        The snippet is passed through the privacy filter before storage so any
+        personally identifiable information is redacted according to policy.
+        Metadata values are kept as-is but may be coerced to strings during
+        retrieval comparisons so non-string values such as integers are
+        supported.
+        """
+        from ..privacy import privacy_filter
+
+        clean_text, _report = privacy_filter.filter_text(text, metadata or {})
+        # Store copies so external mutations to ``metadata`` don't affect the
+        # service's internal state.
+        ns = namespace or mem_ns(current_tenant() or TenantContext("default", "main"), "mem")
+        self.memories.append(
+            {"namespace": ns, "text": clean_text, "metadata": deepcopy(metadata) or {}}
+        )
+
+    def retrieve(
+        self,
+        query: str,
+        limit: int = 5,
+        metadata: Dict[str, Any] | None = None,
+        namespace: str | None = None,
+    ) -> List[Dict[str, Any]]:
+        """Return stored memories matching ``query`` within ``namespace``.
+
+        The search performs a case-insensitive substring match on the memory
+        text. When ``metadata`` is supplied each key/value pair must also match
+        the memory's metadata for it to be included in the results. Metadata
+        comparisons are case-insensitive for both keys and values. Results are
+        returned as deep copies and truncated to ``limit`` entries so callers
+        cannot mutate the stored memories. ``limit`` values less than ``1`` or
+        blank ``query`` strings short‑circuit the search and return an empty
+        list.
+        """
+
+        query_norm = query.strip().lower()
+        if limit < 1 or not query_norm:
+            return []
+
+        ns = namespace or mem_ns(current_tenant() or TenantContext("default", "main"), "mem")
+        results = [
+            m for m in self.memories if m.get("namespace") == ns and query_norm in m["text"].lower()
+        ]
+        if metadata:
+            lowered = {str(k).lower(): str(v).lower() for k, v in metadata.items()}
+            filtered: List[Dict[str, Any]] = []
+            for m in results:
+                meta_lower = {
+                    str(mk).lower(): str(mv).lower() for mk, mv in m["metadata"].items()
+                }
+                if all(meta_lower.get(k, "") == v for k, v in lowered.items()):
+                    filtered.append(m)
+            results = filtered
+        # Return deep copies without the internal namespace key to protect
+        # stored memories from caller mutation and avoid leaking prefixes.
+        sanitized = []
+        for m in results[:limit]:
+            copy = deepcopy(m)
+            copy.pop("namespace", None)
+            sanitized.append(copy)
+        return sanitized

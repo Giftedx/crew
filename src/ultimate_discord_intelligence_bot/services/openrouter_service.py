@@ -11,11 +11,16 @@ from __future__ import annotations
 import os
 from typing import Any, Dict, List, Mapping
 import copy
+import time
+from datetime import datetime
 
 import requests
 
 from .learning_engine import LearningEngine
 from .prompt_engine import PromptEngine
+from .logging_utils import AnalyticsStore
+from .token_meter import TokenMeter
+from .cache import LLMCache
 
 
 class OpenRouterService:
@@ -27,6 +32,9 @@ class OpenRouterService:
         learning_engine: LearningEngine | None = None,
         api_key: str | None = None,
         provider_opts: Dict[str, Any] | None = None,
+        logger: AnalyticsStore | None = None,
+        token_meter: TokenMeter | None = None,
+        cache: LLMCache | None = None,
     ) -> None:
         """Initialise the router.
 
@@ -55,8 +63,11 @@ class OpenRouterService:
         self.learning = learning_engine or LearningEngine()
         self.api_key = api_key or os.getenv("OPENROUTER_API_KEY")
         self.prompt_engine = PromptEngine()
+        self.token_meter = token_meter or TokenMeter()
+        self.cache = cache
         # Deep copy to avoid mutating caller-supplied dictionaries when merging
         self.provider_opts = copy.deepcopy(provider_opts or {})
+        self.logger = logger
 
     @staticmethod
     def _deep_merge(base: Dict[str, Any], overrides: Mapping[str, Any]) -> Dict[str, Any]:
@@ -98,17 +109,66 @@ class OpenRouterService:
         provider = copy.deepcopy(self.provider_opts)
         if provider_opts:
             provider = self._deep_merge(provider, provider_opts)
-        tokens = self.prompt_engine.count_tokens(prompt, chosen)
+
+        # Estimate token usage and project cost, enforcing per-request budget
+        tokens_in = self.prompt_engine.count_tokens(prompt, chosen)
+        projected_cost = self.token_meter.estimate_cost(tokens_in, chosen)
+        affordable = self.token_meter.affordable_model(
+            tokens_in, self.models_map.get(task_type, [])
+        )
+        if projected_cost > (self.token_meter.max_cost_per_request or float("inf")):
+            if affordable and affordable != chosen:
+                chosen = affordable
+                tokens_in = self.prompt_engine.count_tokens(prompt, chosen)
+            elif affordable is None:
+                return {
+                    "status": "error",
+                    "error": "projected cost exceeds limit",
+                    "model": chosen,
+                    "tokens": tokens_in,
+                    "provider": provider,
+                }
+
+        # Cache lookup
+        cache_key = None
+        if self.cache:
+            cache_key = self.cache.make_key(prompt, chosen)
+            cached = self.cache.get(cache_key)
+            if cached:
+                result = dict(cached)
+                result["cached"] = True
+                return result
+
+        start = time.perf_counter()
         if not self.api_key:  # offline deterministic behaviour
             response = prompt.upper()
+            latency_ms = (time.perf_counter() - start) * 1000
+            tokens_out = self.prompt_engine.count_tokens(response, chosen)
             self.learning.update(task_type, chosen, reward=1.0)
-            return {
+            if self.logger:
+                self.logger.log_llm_call(
+                    task_type,
+                    chosen,
+                    str(provider),
+                    tokens_in,
+                    tokens_out,
+                    0.0,
+                    latency_ms,
+                    None,
+                    True,
+                    None,
+                )
+            result = {
                 "status": "success",
                 "model": chosen,
                 "response": response,
-                "tokens": tokens,
+                "tokens": tokens_in,
                 "provider": provider,
             }
+            if self.cache and cache_key:
+                self.cache.set(cache_key, result)
+            result["cached"] = False
+            return result
         try:  # pragma: no cover - network call
             payload: Dict[str, Any] = {
                 "model": chosen,
@@ -124,19 +184,52 @@ class OpenRouterService:
             )
             data = resp.json()
             message = data.get("choices", [{}])[0].get("message", {}).get("content", "")
+            latency_ms = (time.perf_counter() - start) * 1000
+            tokens_out = self.prompt_engine.count_tokens(message, chosen)
             self.learning.update(task_type, chosen, reward=1.0)
-            return {
+            if self.logger:
+                self.logger.log_llm_call(
+                    task_type,
+                    chosen,
+                    str(provider),
+                    tokens_in,
+                    tokens_out,
+                    0.0,
+                    latency_ms,
+                    None,
+                    True,
+                    None,
+                )
+            result = {
                 "status": "success",
                 "model": chosen,
                 "response": message,
-                "tokens": tokens,
+                "tokens": tokens_in,
                 "provider": provider,
             }
+            if self.cache and cache_key:
+                self.cache.set(cache_key, result)
+            result["cached"] = False
+            return result
         except Exception as exc:  # pragma: no cover - network failure
+            latency_ms = (time.perf_counter() - start) * 1000
+            if self.logger:
+                self.logger.log_llm_call(
+                    task_type,
+                    chosen,
+                    str(provider),
+                    tokens_in,
+                    0,
+                    0.0,
+                    latency_ms,
+                    None,
+                    False,
+                    None,
+                )
             return {
                 "status": "error",
                 "error": str(exc),
                 "model": chosen,
-                "tokens": tokens,
+                "tokens": tokens_in,
                 "provider": provider,
             }

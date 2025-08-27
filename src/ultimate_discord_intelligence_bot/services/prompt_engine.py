@@ -10,7 +10,9 @@ whitespace split acts as a final fallback.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Dict
+from typing import Any, Dict, Optional
+
+from .memory_service import MemoryService
 
 try:  # pragma: no cover - optional dependency
     import tiktoken
@@ -27,6 +29,7 @@ except Exception:  # pragma: no cover
 class PromptEngine:
     """Generate prompts and estimate token usage."""
 
+    memory: Optional[MemoryService] = None
     _tokenizers: Dict[str, Any] = field(default_factory=dict, init=False, repr=False)
 
     def generate(self, template: str, variables: Dict[str, Any]) -> str:
@@ -75,3 +78,34 @@ class PromptEngine:
         be extended with more advanced optimisation strategies.
         """
         return prompt.strip()
+
+    def build_with_context(
+        self,
+        instruction: str,
+        query: str,
+        k: int = 3,
+        metadata: Optional[Dict[str, Any]] = None,
+    ) -> str:
+        """Build a prompt that includes top-``k`` context snippets.
+
+        ``metadata`` may be provided to scope memory lookups to a specific
+        creator or source. Returned prompts list sources for traceability.
+        """
+
+        context_blocks = []
+        sources = []
+        if self.memory:
+            hits = self.memory.retrieve(query, limit=k, metadata=metadata)
+            for idx, hit in enumerate(hits, 1):
+                context_blocks.append(f"[{idx}] {hit['text']}")
+                meta = hit.get("metadata", {})
+                src = meta.get("source")
+                ts = meta.get("ts")
+                if src:
+                    if ts is not None:
+                        sources.append(f"[{idx}] {src}#{ts}")
+                    else:
+                        sources.append(f"[{idx}] {src}")
+        context_text = "\n".join(context_blocks) or "(no context)"
+        sources_text = "\n".join(sources)
+        return f"{instruction}\n\nContext:\n{context_text}\n\nSources:\n{sources_text}\n\nQuery: {query}" 
