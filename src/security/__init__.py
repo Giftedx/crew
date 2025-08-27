@@ -11,6 +11,12 @@ from .validate import (
     validate_mime,
 )
 from .moderation import Moderation
+from .signing import (
+    sign_message,
+    verify_signature,
+    build_signature_headers,
+    verify_signature_headers,
+)
 
 __all__ = [
     "RBAC",
@@ -23,4 +29,8 @@ __all__ = [
     "validate_path",
     "validate_mime",
     "Moderation",
+    "sign_message",
+    "verify_signature",
+    "build_signature_headers",
+    "verify_signature_headers",
 ]
