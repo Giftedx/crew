@@ -3,8 +3,9 @@
 The archiver stores project artifacts in Discord and keeps enough metadata to
 re‑fetch them when CDN links expire. Discord’s default per‑attachment upload
 limit is roughly **10 MiB** unless a server’s boost tier raises it. Because CDN
-links are temporary and signed, the manifest records the message and attachment
-IDs instead of raw URLs.
+links are temporary and signed, the manifest records the message ID and all
+attachment IDs instead of raw URLs. Compression parameters are persisted so
+future re‑uploads can avoid double re‑encoding.
 
 ## Limit Detection and Policy
 

@@ -42,7 +42,6 @@ def archive_file(
     sha256 = manifest.compute_hash(fitted_path)
     existing = manifest.lookup(sha256)
     if existing:
-        existing["tags"] = existing.get("tags", "").split(",") if existing.get("tags") else []
         existing["content_hash"] = sha256
         if not keep_local:
             cleanup.delete(path)
@@ -56,7 +55,7 @@ def archive_file(
     record = {
         "message_id": str(upload_resp.get("id", "0")),
         "channel_id": channel_id,
-        "attachment_id": str(upload_resp.get("attachments", [{}])[0].get("id", "0")),
+        "attachment_ids": [str(a.get("id", "0")) for a in upload_resp.get("attachments", [])],
         "filename": Path(fitted_path).name,
         "size": stats["final_size"],
         "sha256": sha256,
@@ -65,6 +64,7 @@ def archive_file(
         "media_type": kind,
         "visibility": visibility,
         "tags": meta.get("tags", []),
+        "compression": stats,
     }
     manifest.record(sha256, record)
     if not keep_local:

@@ -38,6 +38,17 @@
 - [x] retention sweeper & export tool
 - [ ] Discord ops privacy commands
 
+## PR7 – Discord CDN Archiver (future-proof)
+- [x] router + routes config
+- [x] policy layer + EXIF redaction
+- [x] limits detection
+- [x] compressors and segmenting stubs
+- [x] uploader with retries
+- [x] manifest with dedup & compression params
+- [x] rehydrate helpers
+- [x] REST façade + CLI
+- [x] basic tests & docs
+
 | Phase | Item | Status | Notes |
 |------:|------|:------:|-------|
 | PR2 | Adapters (YT/Twitch + fixtures) | ✅ | |
@@ -59,3 +70,12 @@
 | PR5 | provenance + usage_log schema and writes | ✅ | |
 | PR5 | retention sweeper + export tool | ✅ | |
 | PR5 | ops commands + alerts | ☐ | alerts pending |
+| PR7 | manifest stores attachment ids + compression | ✅ | |
+
+## PR18 – Security Hardening, Secrets, RBAC & Abuse Prevention
+- [x] RBAC module and YAML permissions
+- [x] Network guard blocking private hosts
+- [x] In-memory token bucket rate limiter
+- [x] Security docs and baseline config
+- [x] Input validation helpers for URLs and file paths
+- [x] Basic content moderation helper
