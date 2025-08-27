@@ -7,6 +7,11 @@ requires-python = ">=3.10,<3.14"
 dependencies = [
     "crewai[tools]>=0.150.0,<1.0.0",
     "qdrant-client>=1.7.3,<2.0.0",
+    "aiohttp>=3.9.0",
+    "PyYAML>=6.0",
+    "fastapi>=0.110",
+    "python-multipart>=0.0.20",
+    "discord.py>=2.3.2,<3.0.0",
 ]
 
 [project.scripts]
@@ -22,3 +27,6 @@ build-backend = "hatchling.build"
 
 [tool.crewai]
 type = "crew"
+
+[tool.hatch.build.targets.wheel]
+packages = ["ultimate_discord_intelligence_bot", "core", "archive"]

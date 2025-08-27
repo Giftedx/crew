@@ -1,212 +1,62 @@
-# Ultimate Discord Intelligence Bot Crew
+# Giftedx Crew
 
-Welcome to the Ultimate Discord Intelligence Bot project, powered by [crewAI](https://crewai.com). This template helps you set up a multi-agent AI system using crewAI so agents can collaborate on complex tasks and maximize their collective intelligence.
+Giftedx Crew is a tenant‑aware Discord platform that ingests public media, builds grounded context, and answers questions through cost‑guarded model routing and reinforcement learning. The system emphasises privacy, provenance, and reliability so features can be rolled out safely.
 
-## Installation
+## Features
+- **Core services** – prompt builder, token meter, router with cost guards, caching, and RL hooks.
+- **Ingestion & RAG** – async adapters for YouTube and Twitch, transcript analysis, Qdrant vector memory, and Discord commands like `/creator`, `/latest`, `/context`, `/collabs`, and `/verify_profiles`.
+- **Privacy & governance** – policy engine, deterministic PII detection and redaction, provenance logging, retention sweeps, export tooling.
+- **Cost & reliability** – budgets, retries, circuit breakers, shadow/canary rollout, feature flags.
+- **Discord CDN archiver** – size‑aware compression, policy checks, channel routing, manifest deduplication, and rehydration of expiring CDN links.
+- **Reinforcement learning** – feature store, reward engine, bandit policies, and a `learn` helper to integrate decision loops across routing, prompting, and retrieval.
 
-Ensure you have Python >=3.10 <3.14 installed on your system. This project uses [UV](https://docs.astral.sh/uv/) for dependency management and package handling, offering a seamless setup and execution experience.
+See the documentation for full subsystem guides:
+- [Core services](docs/core_services.md)
+- [Cost guards and caching](docs/cost_and_caching.md)
+- [Ingestion](docs/ingestion.md) and [RAG usage](docs/rag.md)
+- [Privacy](docs/privacy.md), [provenance](docs/provenance.md), and [retention](docs/retention.md)
+- [Discord CDN archiver](docs/archiver.md)
+- [Reinforcement learning](docs/rl_overview.md)
 
-First, if you haven't already, install uv:
+## Getting started
+1. Install Python ≥3.10 and clone the repository.
+2. Install dependencies:
+   ```bash
+   pip install -e .
+   ```
+3. Copy the example environment and fill in required tokens:
+   ```bash
+   cp .env.example .env
+   # edit .env
+   ```
+4. Run the tests:
+   ```bash
+   pytest
+   ```
 
+## Quick ingest example
 ```bash
-pip install uv
+python -m ingest.pipeline https://youtu.be/dummy --tenant default --workspace main
+```
+Then query stored context:
+```bash
+python - <<'PY'
+from memory.vector_store import VectorStore
+from discord.commands import context_query
+
+store = VectorStore()
+ns = VectorStore.namespace('default', 'main', 'dummy')
+print(context_query(store, ns, 'hello'))
+PY
 ```
 
-Next, navigate to your project directory and install the dependencies:
+## Feature flags
+Subsystems are disabled by default and enabled via environment flags:
+- `ENABLE_INGEST_YOUTUBE`, `ENABLE_INGEST_TWITCH`
+- `ENABLE_RAG_CONTEXT`
+- `ENABLE_CACHE`
+- `ENABLE_RL_GLOBAL` (plus `ENABLE_RL_ROUTING`, `ENABLE_RL_PROMPT`, `ENABLE_RL_RETRIEVAL`)
+- `ENABLE_DISCORD_ARCHIVER`
 
-(Optional) Lock the dependencies and install them by using the CLI command:
-```bash
-crewai install
-```
-
-Copy `.env.example` to `.env` and fill in the required secrets:
-
-```bash
-cp .env.example .env
-# edit .env and add your API keys
-```
-
-All paths and credentials are configured through environment variables so the project
-works across Linux, macOS and Windows without modification.
-Key variables include `CREWAI_BASE_DIR` (defaulting to a `crew_data` folder in your
-home directory) and optional overrides like `CREWAI_DOWNLOADS_DIR` or
-`CREWAI_YTDLP_CONFIG` for custom locations. The repository ships with a default
-yt-dlp configuration under `yt-dlp/config/crewai-system.conf` and supports
-downloading from YouTube, Twitch, Kick, Instagram, TikTok (including `vm.tiktok.com`
-and `vt.tiktok.com` share links), Reddit, Discord and X/Twitter. A `Multi-Platform Download
-Tool` inspects the URL and delegates to the correct downloader automatically,
-honouring an optional `quality` parameter (defaulting to `1080p`) to cap
-resolution. When
-providing a Discord webhook via `DISCORD_WEBHOOK` ensure it is a public HTTPS URL; local or private
-IP addresses are rejected for safety. A separate `DISCORD_PRIVATE_WEBHOOK` can
-be supplied to the internal `Discord Private Alert Tool` for system health
-notifications. Pair this with the `System Status Tool` and the `monitor_system`
-task to include CPU load and disk usage metrics in those alerts.
-Optional API keys can further enhance fact-checking: set `SERPLY_API_KEY`,
-`EXA_API_KEY`, `PERPLEXITY_API_KEY`, and `WOLFRAM_ALPHA_APPID` to enable
-additional search backends used by the Fact Check Tool.
-The accompanying `Multi-Platform Monitor Tool` keeps an in-memory record of
-seen items and reports only fresh content so downloads are triggered once per
-upload. Dedicated monitors for X and Discord expose structured metadata for new
-posts, paving the way for richer context gathering.
-To broaden analysis beyond video content, the repository ships lightweight
-tools for gathering social-media chatter and scoring factual accuracy. The
-`Social Media Monitor Tool` aggregates Reddit, X and Discord posts matching a
-keyword, while the `Truth Scoring Tool` converts fact-check verdicts into a
-numerical trustworthiness score.  Building on those verdicts, the
-`Trustworthiness Tracker Tool` maintains per-person counts of truthful and
-false statements to derive long-term reliability profiles that feed the
-overall scoreboard.  For clip context
-checks, the `Transcript Index Tool` slices transcripts into timestamped
-chunks so the `Context Verification Tool` can compare quoted clips against the
-surrounding transcript.  Claims can be probed via the lightweight `Fact Check
-Tool`, and cumulative lie or misquote counts are persisted by the
-`Leaderboard Tool`.  A `Steelman Argument Tool` combines supporting snippets to
-produce the strongest possible version of a claim for deep-dive reasoning.
-These pieces power the informal H3/Hasan debate analysis
-flow: VODs are indexed, clip context verified, claims fact-checked and a
-scoreboard of lies, misquotes and misinfo is exposed through Discord commands
-like `/analyze`, `/context`, `/claim`, `/leaderboard`, `/timeline`, `/ask`,
-`/creator`, `/latest`, `/collabs`, and `/verify_profiles`.
-Two partisan defenders – Traitor AB for Ethan and Old Dan for Hasan – generate
-short, casual closing statements for each analysis.  The `/timeline` command
-surfaces a chronological list of analysed clips for a video while `/ask`
-queries the stored vector memory to surface relevant transcript or analysis
-snippets for quick Q&A.  A `/profile` command summarises per-person trust
-metrics and recent events collected throughout debates.
-For long-term memory the pipeline can connect to a Qdrant vector database using
-`QDRANT_URL` and optional `QDRANT_API_KEY`.  Raw transcripts are written to a
-`transcripts` collection while distilled analysis summaries land in an
-`analysis` collection, keeping sources and reasoning separate for retrieval.
-For audio transcription you can choose the Whisper model size by setting
-`WHISPER_MODEL` (defaults to `base`). The text analysis component relies on NLTK
-corpora which are downloaded automatically on first use.
-
-To keep language-model usage efficient and grounded, the repository includes a
-set of shared services:
-
-- ``PromptEngine`` – builds prompts and estimates token counts across model
-  providers, using ``tiktoken`` for OpenAI models and ``transformers``
-  tokenizers for open‑source ones.
-- ``OpenRouterService`` – selects the best available model via
-  `openrouter.ai <https://openrouter.ai>`_ with an offline-friendly fallback.
-  Defaults can be overridden with the ``OPENROUTER_GENERAL_MODEL`` and
-  ``OPENROUTER_ANALYSIS_MODEL`` environment variables.
-- ``LearningEngine`` – records routing outcomes and uses a simple
-  epsilon‑greedy strategy to improve future choices.
-- ``MemoryService`` – offers lightweight in‑process storage and retrieval with
-  optional case‑insensitive metadata filtering so any component can fetch
-  relevant context before making a request. Calls may pass a ``metadata``
-  dictionary whose key/value pairs must match stored metadata for a memory to
-  be returned. Requests may also specify a ``limit``; values below ``1`` or
-  blank queries short‑circuit the lookup and return an empty list. When
-  operating in multi‑tenant mode each entry is scoped to a
-  ``<tenant>:<workspace>`` namespace so data remains isolated. For example:
-
-  ```python
-  memory.add("blue sky", {"source": "test"})
-  memory.retrieve("blue", metadata={"SOURCE": "TEST"})
-  # -> [{"text": "blue sky", "metadata": {"source": "test"}}]
-  ```
-
-  The service is used by the `PerspectiveSynthesizerTool` to ground summaries.
-- ``AnalyticsStore`` – writes privacy-safe metrics about LLM calls and bandit
-  events to a small SQLite database so performance can be analysed offline.
-- ``TokenMeter`` – estimates request cost for different models and enforces a
-  per-request budget to avoid unexpected spend.
-- ``LLMCache`` – optional in-memory cache keyed by prompt and model to avoid
-  repeated LLM calls when prompts and context are unchanged.
-- ``profiles`` – provides a normalized creator profile schema, SQLite-backed
-  storage helpers, and seed data for the H3/H3 Podcast/Hasan ecosystem so
-  resolvers and agents can reason about verified channels.
-- ``ContentPoller`` – lightweight scheduler that updates creator profiles with
-  the last time each platform was checked so new content can be discovered
-  continuously.
-- ``SentimentTool`` and ``ClaimExtractorTool`` – enrichment helpers for episode
-  segments. Sentiment analysis classifies text into positive/neutral/negative
-  while the claim extractor provides a stub for future factual extraction.
-  - ``EvaluationHarness`` – benchmarks prompts across models and logs latency
-    and token usage for offline analysis and an epsilon-greedy learning engine
-    that gradually favours cheaper or higher quality models.
-
-These utilities are exposed under ``ultimate_discord_intelligence_bot.services``
-and can be imported by agents, tools or pipelines as needed.
-Dedicated tests audit that agent and task entries in ``config/`` stay in sync
-with ``crew.py`` and that each agent exposes its required tools so
-misconfigurations are caught early.
-### Customizing
-
-**Add your `OPENAI_API_KEY` into the `.env` file**. Optionally set
-`OPENROUTER_API_KEY` to enable dynamic model routing and
-`OPENROUTER_GENERAL_MODEL`/`OPENROUTER_ANALYSIS_MODEL` to override defaults.
-
-- Update `src/ultimate_discord_intelligence_bot/config/agents.yaml` to define agents
-  (a single `content_manager` is provided as an example)
-- Adjust `src/ultimate_discord_intelligence_bot/config/tasks.yaml` to describe your
-  tasks and required inputs
-- Extend `src/ultimate_discord_intelligence_bot/crew.py` if you need additional
-  logic or tools
-- Modify `src/ultimate_discord_intelligence_bot/main.py` to change how inputs are
-  supplied when running locally
-
-## Running the Project
-
-To run the default crew against a specific video, supply the URL as input:
-
-```bash
-crewai run --inputs url=<video_url>
-```
-
-You can also invoke the pipeline directly without the crew layer:
-
-```bash
-python src/ultimate_discord_intelligence_bot/pipeline.py <video_url> --quality 720p
-```
-
-The optional ``--quality`` flag caps the download resolution (default ``1080p``).
-
-Both approaches download the video, upload it to Google Drive, analyse the
-transcript, gather cross-platform discussions, flag basic logical fallacies,
-synthesise perspectives, score claim truthfulness and post a summary to
-Discord.
-Additionally, transcripts and analysis metadata are stored in dedicated Qdrant
-collections so future agents can perform retrieval-augmented generation over
-the processed content.
-
-## Understanding Your Crew
-
-The Ultimate Discord Intelligence Bot crew is composed of multiple AI agents, each with unique roles, goals, and tools. These agents collaborate on a series of tasks, defined in `config/tasks.yaml`, leveraging their collective skills to achieve complex objectives. The `config/agents.yaml` file outlines the capabilities and configurations of each agent in your crew.
-
-## Future Work
-
-- Introduce a **Personality Synthesis Manager** agent that learns from user interactions in Q&A threads to adapt the bot's conversational style over time.
-
-## Support
-
-For support, questions, or feedback regarding the Ultimate Discord Intelligence Bot crew or crewAI.
-- Visit our [documentation](https://docs.crewai.com)
-- Reach out to us through our [GitHub repository](https://github.com/joaomdmoura/crewai)
-- [Join our Discord](https://discord.com/invite/X4JWnZnxPb)
-- [Chat with our docs](https://chatg.pt/DWjSBZn)
-
-Let's create wonders together with the power and simplicity of crewAI.
-
-## Offline Evaluation
-Golden datasets under `datasets/` provide regression tests for quality,
-cost, and latency. Run the harness:
-
-```bash
-python -m ultimate_discord_intelligence_bot.services.eval_harness run \
-  --dataset datasets/golden/v1/analyze_claim.jsonl \
-  --task analyze_claim --out out/eval/analyze_claim_v1.json
-```
-
-Compare against `benchmarks/baselines.yaml` to ensure no regressions before
-updating baselines with `scripts/update_baseline.sh`.
-
-## Privacy
-
-A lightweight privacy layer redacts email addresses and phone numbers before
-content is stored in memory. Rules live in
-`ultimate_discord_intelligence_bot/policy/policy.yaml`; see
-`docs/privacy.md` for details on extending or overriding the defaults.
+## Contributing
+Follow the guidelines in [AGENTS.md](AGENTS.md): reuse existing modules, add tests, run `pytest`, and commit using Conventional Commits.

@@ -1,0 +1,41 @@
+allowed_sources:
+  youtube: []
+  twitch: []
+  podcast: []
+  official_social: []
+  web_archive: []
+forbidden_types:
+  - executable
+  - script
+  - installer
+  - unknown
+pii_types:
+  email: "[redacted-email]"
+  phone: "[redacted-phone]"
+  ip: "[redacted-ip]"
+  credit_like: "[redacted-credit]"
+  gov_id_like: "[redacted-gov-id]"
+  address_like: "[redacted-address]"
+  geo_exact: "[redacted-geo]"
+masks:
+  email: "[redacted-email]"
+  phone: "[redacted-phone]"
+  ip: "[redacted-ip]"
+  credit_like: "[redacted-credit]"
+  gov_id_like: "[redacted-gov-id]"
+  address_like: "[redacted-address]"
+  geo_exact: "[redacted-geo]"
+storage:
+  max_retention_days_by_ns:
+    default: 30
+  cache_ttl_overrides: {}
+consent:
+  allow_quotes: true
+  allow_thumbnails: true
+  allow_embed: true
+  allow_snippets: true
+per_command:
+  /context:
+    max_tokens: 2048
+    require_sources: true
+    speculation_forbidden: true

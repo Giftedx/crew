@@ -1,28 +1,39 @@
-from ultimate_discord_intelligence_bot.services import (
-    OpenRouterService,
-    TokenMeter,
-    LLMCache,
-)
+from __future__ import annotations
+
+import time
+import pytest
+
+from core import cache, router, token_meter, learning_engine
+from core import reliability
 
 
-def test_cost_guard_downshift():
-    models = {"general": ["expensive", "cheap"]}
-    tm = TokenMeter(
-        model_prices={"expensive": 1000.0, "cheap": 0.5},
-        max_cost_per_request=0.01,
-    )
-    router = OpenRouterService(models_map=models, token_meter=tm, cache=LLMCache())
-    res = router.route("hello world")
-    assert res["model"] == "cheap"
-    assert res["status"] == "success"
+def test_cost_guard_rejects_and_downshifts() -> None:
+    token_meter.budget.max_per_request = 0.0001
+    engine = learning_engine.LearningEngine()
+    r = router.Router(engine)
+    with pytest.raises(token_meter.BudgetError):
+        r.preflight("hello", ["gpt-4"], expected_output_tokens=10)
+    model = r.preflight("hello", ["gpt-4", "gpt-3.5"], expected_output_tokens=10)
+    assert model == "gpt-3.5"
 
 
-def test_llm_cache_hit():
-    tm = TokenMeter(model_prices={"openai/gpt-3.5-turbo": 0.5}, max_cost_per_request=1)
-    cache = LLMCache(ttl=60)
-    router = OpenRouterService(token_meter=tm, cache=cache)
-    first = router.route("cached prompt")
-    assert first["cached"] is False
-    second = router.route("cached prompt")
-    assert second["cached"] is True
-    assert second["response"] == first["response"]
+def test_llm_cache_hits() -> None:
+    c = cache.LLMCache(ttl=1)
+    c.set("key", "value")
+    assert c.get("key") == "value"
+    time.sleep(1.1)
+    assert c.get("key") is None
+
+
+def test_retry_succeeds() -> None:
+    attempts = {"n": 0}
+
+    def flake():
+        attempts["n"] += 1
+        if attempts["n"] < 3:
+            raise ValueError("fail")
+        return "ok"
+
+    result = reliability.retry(flake, retries=3, backoff=0)
+    assert result == "ok"
+    assert attempts["n"] == 3

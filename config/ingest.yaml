@@ -1,0 +1,7 @@
+youtube:
+  enabled: true
+twitch:
+  enabled: true
+chunk:
+  max_chars: 800
+  overlap: 200
