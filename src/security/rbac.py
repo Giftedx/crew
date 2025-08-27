@@ -6,6 +6,8 @@ from typing import Iterable, Callable, Any, Dict, Set
 import functools
 import yaml
 
+from .events import log_security_event
+
 DEFAULT_CONFIG_PATH = Path(__file__).resolve().parents[2] / "config" / "security.yaml"
 
 
@@ -57,8 +59,19 @@ class RBAC:
             def wrapper(*args: Any, **kwargs: Any) -> Any:
                 roles = kwargs.get("roles", [])
                 if not self.has_perm(roles, perm):
+                    log_security_event(
+                        actor=kwargs.get("actor", "unknown"),
+                        action="rbac",
+                        resource=perm,
+                        decision="deny",
+                        reason="missing_permission",
+                        tenant=kwargs.get("tenant"),
+                        workspace=kwargs.get("workspace"),
+                    )
                     raise PermissionError(f"missing permission '{perm}'")
-                kwargs.pop("roles", None)
+                # drop security metadata before invoking the wrapped function
+                for key in ("roles", "actor", "tenant", "workspace"):
+                    kwargs.pop(key, None)
                 return func(*args, **kwargs)
 
             return wrapper

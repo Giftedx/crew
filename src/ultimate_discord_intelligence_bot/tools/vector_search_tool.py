@@ -50,12 +50,13 @@ class VectorSearchTool(BaseTool):
     def _run(self, query: str, limit: int = 3, collection: str | None = None) -> List[Dict]:
         target = collection or self.collection
         vector = self.embedding_fn(query)
-        hits = self.client.search(
+        res = self.client.query_points(
             collection_name=target,
-            query_vector=vector,
+            query=vector,
             limit=limit,
+            with_payload=True,
         )
-        return [getattr(hit, "payload", {}) for hit in hits]
+        return [getattr(hit, "payload", {}) for hit in res.points]
 
     def run(self, query: str, limit: int = 3, collection: str | None = None):  # pragma: no cover - thin wrapper
         return self._run(query, limit=limit, collection=collection)

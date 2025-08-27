@@ -4,6 +4,12 @@ Plugins must prove their behaviour through a small suite of capability
 scenarios described in the `tests` block of `manifest.json`.  Each
 scenario specifies minimal inputs and simple predicates that the plugin
 must satisfy when executed in a sandbox with stubbed service adapters.
+Supported expectation helpers include:
+
+- `must_include`: required substrings in the output
+- `forbidden`: substrings that must not appear
+- `must_link`: required URLs (alias of `must_include` for clarity)
+- `status_ok`: output must be truthy
 
 The test runner can be invoked with:
 

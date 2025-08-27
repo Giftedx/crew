@@ -12,7 +12,12 @@ dependencies = [
     "fastapi>=0.110",
     "python-multipart>=0.0.20",
     "discord.py>=2.3.2,<3.0.0",
+    "opentelemetry-sdk>=1.25.0",
+    "opentelemetry-exporter-otlp>=1.25.0",
 ]
+
+[project.optional-dependencies]
+metrics = ["prometheus-client>=0.20.0"]
 
 [project.scripts]
 ultimate_discord_intelligence_bot = "ultimate_discord_intelligence_bot.main:run"
@@ -29,4 +34,4 @@ build-backend = "hatchling.build"
 type = "crew"
 
 [tool.hatch.build.targets.wheel]
-packages = ["ultimate_discord_intelligence_bot", "core", "archive"]
+packages = ["ultimate_discord_intelligence_bot", "core", "archive", "obs"]

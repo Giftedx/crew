@@ -12,7 +12,7 @@ from core.privacy import privacy_filter
 from ingest import models
 import hashlib
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 @dataclass
@@ -86,7 +86,7 @@ def run(job: IngestJob, store: vector_store.VectorStore) -> dict:
             content_id=meta.id,
             source_url=job.url,
             source_type=job.source,
-            retrieved_at=datetime.utcnow().isoformat(),
+            retrieved_at=datetime.now(timezone.utc).isoformat(),
             license="unknown",
             terms_url=None,
             consent_flags=None,

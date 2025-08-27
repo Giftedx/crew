@@ -9,10 +9,12 @@ future re‑uploads can avoid double re‑encoding.
 
 ## Limit Detection and Policy
 
-`limits.detect` reads environment overrides (e.g.
-`DISCORD_UPLOAD_LIMIT_BYTES`) and falls back to 10 MiB when no guild‑specific
-limit is known. Files pass through `policy.check` which enforces allowlists,
-size ceilings and EXIF stripping before any data leaves the machine.
+`limits.detect` reads environment overrides such as `DISCORD_UPLOAD_LIMIT_BYTES`
+for bot uploads, `DISCORD_UPLOAD_LIMIT_WEBHOOK_BYTES` for webhooks, and
+per‑guild variants like `DISCORD_UPLOAD_LIMIT_GUILD_<id>` or
+`DISCORD_UPLOAD_LIMIT_WEBHOOK_GUILD_<id>`. When none are set it falls back to
+10 MiB. Files pass through `policy.check` which enforces allowlists, size
+ceilings and EXIF stripping before any data leaves the machine.
 
 ## Compression and Routing
 

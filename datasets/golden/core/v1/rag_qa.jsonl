@@ -1,0 +1,1 @@
+{"id":"q1","query":"What color is the sky on a clear day?","expected_points":[{"url":"https://example.com/sky"}],"must_include":["blue"],"forbidden":["green"]}

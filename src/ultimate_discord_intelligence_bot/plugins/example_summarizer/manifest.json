@@ -14,7 +14,10 @@
           {
             "name": "summarises text",
             "inputs": {"text": "hello world"},
-            "expected": {"must_include": ["stubbed"]},
+            "expected": {
+              "must_include": ["stubbed"],
+              "forbidden": ["error"]
+            },
             "perms_required": [],
             "quotas_required": {},
             "policy_context": {}

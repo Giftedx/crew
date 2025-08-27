@@ -1,13 +1,10 @@
-# Offline Evaluation
+# Evaluation Harness
 
-Run golden tests to guard quality, cost, and latency.
+This repository ships a lightweight evaluation harness with tiny public-safe fixtures.  
+Run the suite against the core dataset and compare against the baseline to catch regressions in quality, cost, and latency.
 
-## Running
 ```bash
-python -m ultimate_discord_intelligence_bot.services.eval_harness run \
-  --dataset datasets/golden/v1/analyze_claim.jsonl \
-  --task analyze_claim --router-profile baseline --seed 42 \
-  --out out/eval/analyze_claim_v1.json
+python -m eval.runner datasets/golden/core/v1 baselines/golden/core/v1/summary.json
 ```
 
-Reports are written as JSON and Markdown in `out/eval/`.
+Use `scripts/update_baseline.sh` to refresh the baseline after intentional improvements.

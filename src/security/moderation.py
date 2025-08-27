@@ -7,6 +7,8 @@ from pathlib import Path
 from typing import List
 import yaml
 
+from .events import log_security_event
+
 DEFAULT_CONFIG_PATH = Path(__file__).resolve().parents[2] / "config" / "security.yaml"
 
 
@@ -43,14 +45,24 @@ class Moderation:
         lowered = text.lower()
         found = False
         cleaned = text
+        offending = None
         for term in self.banned_terms:
             if term in lowered:
                 found = True
+                offending = term
                 if self.action == "redact":
                     pattern = re.compile(re.escape(term), re.IGNORECASE)
                     cleaned = pattern.sub("[redacted]", cleaned)
         if not found:
             return ModerationResult("allow", text)
-        if self.action == "redact":
+        decision = "redact" if self.action == "redact" else "block"
+        log_security_event(
+            actor="system",
+            action="moderation",
+            resource=offending or "text",
+            decision=decision,
+            reason="banned_term",
+        )
+        if decision == "redact":
             return ModerationResult("redact", cleaned)
         return ModerationResult("block", text)

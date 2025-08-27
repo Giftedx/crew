@@ -6,12 +6,14 @@ from ultimate_discord_intelligence_bot.tools.vector_search_tool import VectorSea
 def test_vector_search_tool_queries_client():
     client = MagicMock()
     client.get_collection.return_value = None
-    client.search.return_value = [MagicMock(payload={"text": "hello"})]
+    client.query_points.return_value = MagicMock(
+        points=[MagicMock(payload={"text": "hello"})]
+    )
 
     tool = VectorSearchTool(client=client, embedding_fn=lambda t: [0.1])
     results = tool.run("hi", limit=1, collection="analysis")
 
     assert results == [{"text": "hello"}]
-    client.search.assert_called_once()
-    args, kwargs = client.search.call_args
+    client.query_points.assert_called_once()
+    args, kwargs = client.query_points.call_args
     assert kwargs.get("collection_name") == "analysis"

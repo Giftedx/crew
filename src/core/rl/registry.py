@@ -15,3 +15,8 @@ class PolicyRegistry:
 
     def get(self, name: str) -> object:
         return self._policies[name]
+
+    def items(self):
+        """Iterate over ``(name, policy)`` pairs registered in the registry."""
+
+        return self._policies.items()

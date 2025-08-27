@@ -3,22 +3,25 @@ from __future__ import annotations
 
 from typing import Any, Dict, Sequence
 
-from typing import Any
-
 from .learning_engine import LearningEngine
 from . import token_meter
+from obs import tracing, metrics
+from ultimate_discord_intelligence_bot.tenancy import current_tenant
+from ultimate_discord_intelligence_bot.tenancy.registry import TenantRegistry
 
 
 class Router:
     """Selects a model/provider combination for a request."""
 
-    def __init__(self, engine: LearningEngine) -> None:
+    def __init__(self, engine: LearningEngine, registry: TenantRegistry | None = None) -> None:
         self.engine = engine
+        self.registry = registry
         try:
             self.engine.registry.get("routing")
         except KeyError:
             self.engine.register_domain("routing")
 
+    @tracing.trace_call("router.preflight")
     def preflight(self, prompt: str, candidates: Sequence[str], expected_output_tokens: int) -> str:
         """Select a model that fits within the cost guard.
 
@@ -37,23 +40,39 @@ class Router:
                 continue
         raise token_meter.BudgetError("budget_exceeded")
 
-    def route(self, task: str, candidates: Sequence[str], context: Dict[str, Any]) -> str:
-        """Return the model name selected for ``task``.
+    def _filter_candidates(self, candidates: Sequence[str]) -> Sequence[str]:
+        ctx = current_tenant()
+        if not ctx or not self.registry:
+            return candidates
+        allowed = self.registry.get_allowed_models(ctx)
+        if allowed:
+            filtered = [c for c in candidates if c in allowed]
+            return filtered
+        return candidates
 
-        The learning engine chooses among ``candidates``. A preflight cost
-        check is performed to downshift to cheaper models if necessary.
-        """
+    @tracing.trace_call("router.route")
+    def route(self, task: str, candidates: Sequence[str], context: Dict[str, Any]) -> str:
+        """Return the model name selected for ``task``."""
+
+        candidates = list(self._filter_candidates(candidates))
+        if not candidates:
+            raise ValueError("no allowed models for tenant")
 
         try:
             model = self.engine.recommend("routing", context, candidates)
         except Exception:
             model = candidates[0]
+        metrics.ROUTER_DECISIONS.labels(**metrics.label_ctx()).inc()
 
         try:
             token_meter.budget.preflight(context.get("estimated_cost_usd", 0.0))
         except token_meter.BudgetError:
             # downshift to cheapest candidate that fits
-            model = self.preflight(context.get("prompt", ""), candidates, context.get("expected_output_tokens", 0))
+            model = self.preflight(
+                context.get("prompt", ""),
+                candidates,
+                context.get("expected_output_tokens", 0),
+            )
         return model
 
 

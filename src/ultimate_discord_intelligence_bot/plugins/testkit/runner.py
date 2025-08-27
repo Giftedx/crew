@@ -75,11 +75,26 @@ def run(plugin: str) -> Dict[str, Any]:
                 expected = scenario.get("expected", {})
                 passed = True
                 reason = None
-                if "must_include" in expected:
+                if "must_include" in expected and passed:
                     predicate = scorers.must_include(expected["must_include"])
                     if not predicate(str(output)):
                         passed = False
                         reason = "must_include failed"
+                if "forbidden" in expected and passed:
+                    predicate = scorers.forbidden(expected["forbidden"])
+                    if not predicate(str(output)):
+                        passed = False
+                        reason = "forbidden failed"
+                if "must_link" in expected and passed:
+                    predicate = scorers.must_link(expected["must_link"])
+                    if not predicate(str(output)):
+                        passed = False
+                        reason = "must_link failed"
+                if "status_ok" in expected and passed:
+                    predicate = scorers.status_ok()
+                    if not predicate(output):
+                        passed = False
+                        reason = "status_ok failed"
                 results.append(ScenarioResult(scenario["name"], passed, reason))
             except Exception as exc:  # pragma: no cover - exercised in tests
                 results.append(ScenarioResult(scenario["name"], False, str(exc)))

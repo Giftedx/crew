@@ -21,13 +21,18 @@ def detect(guild_id: Optional[int] = None, use_bot: bool = True) -> int:
     ``DISCORD_UPLOAD_LIMIT_BYTES`` – global override for bot uploads.
     ``DISCORD_UPLOAD_LIMIT_WEBHOOK_BYTES`` – global override for webhooks.
     ``DISCORD_UPLOAD_LIMIT_GUILD_<id>`` – per‑guild override (bot uploads).
+    ``DISCORD_UPLOAD_LIMIT_WEBHOOK_GUILD_<id>`` – per‑guild override for
+    webhook uploads.
 
     When no overrides are found the function defaults to 10 MiB per
     attachment. Webhooks often have lower ceilings; callers can set
     ``DISCORD_UPLOAD_LIMIT_WEBHOOK_BYTES`` to reflect that.
     """
-    if guild_id is not None and use_bot:
-        specific = os.getenv(f"DISCORD_UPLOAD_LIMIT_GUILD_{guild_id}")
+    if guild_id is not None:
+        if use_bot:
+            specific = os.getenv(f"DISCORD_UPLOAD_LIMIT_GUILD_{guild_id}")
+        else:
+            specific = os.getenv(f"DISCORD_UPLOAD_LIMIT_WEBHOOK_GUILD_{guild_id}")
         if specific and specific.isdigit():
             return int(specific)
 

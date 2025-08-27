@@ -13,6 +13,9 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import Dict
 
+from ultimate_discord_intelligence_bot.tenancy import current_tenant, TenantContext
+from ultimate_discord_intelligence_bot.tenancy.registry import TenantRegistry
+
 # Rough per-token costs in USD for demonstration purposes.
 MODEL_PRICES: Dict[str, float] = {
     "gpt-3.5": 0.002 / 1000,
@@ -40,7 +43,52 @@ class BudgetManager:
         self.spent_today += cost_usd
 
 
-budget = BudgetManager()
+class BudgetStore:
+    """Per-tenant budgets resolved via :class:`TenantRegistry`."""
+
+    def __init__(self, registry: TenantRegistry | None = None) -> None:
+        self.registry = registry
+        self._budgets: Dict[str, BudgetManager] = {}
+
+    def _get(self) -> BudgetManager:
+        ctx = current_tenant() or TenantContext("default", "main")
+        key = ctx.tenant_id
+        if key not in self._budgets:
+            max_req = float(os.getenv("COST_MAX_PER_REQUEST", "1.0"))
+            daily = float(os.getenv("COST_BUDGET_DAILY", "100.0"))
+            if self.registry:
+                cfg = self.registry.get_budget_config(key)
+                if cfg:
+                    max_req = float(cfg.get("max_per_request", max_req))
+                    daily = float(cfg.get("daily_cap_usd", daily))
+            self._budgets[key] = BudgetManager(max_per_request=max_req, daily_budget=daily)
+        return self._budgets[key]
+
+    def preflight(self, cost_usd: float) -> None:
+        self._get().preflight(cost_usd)
+
+    def charge(self, cost_usd: float) -> None:
+        self._get().charge(cost_usd)
+
+    # expose attributes for tests
+    @property
+    def max_per_request(self) -> float:  # type: ignore[override]
+        return self._get().max_per_request
+
+    @max_per_request.setter
+    def max_per_request(self, value: float) -> None:  # type: ignore[override]
+        self._get().max_per_request = value
+
+    @property
+    def daily_budget(self) -> float:  # type: ignore[override]
+        return self._get().daily_budget
+
+    @daily_budget.setter
+    def daily_budget(self, value: float) -> None:  # type: ignore[override]
+        self._get().daily_budget = value
+
+
+budget = BudgetStore()
 
 
 def estimate_tokens(text: str) -> int:

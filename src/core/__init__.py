@@ -14,6 +14,8 @@ from . import (
     cache,
     reliability,
     privacy,
+    alerts,
+    tool_planner,
 )
 
 __all__ = [
@@ -30,4 +32,6 @@ __all__ = [
     "cache",
     "reliability",
     "privacy",
+    "alerts",
+    "tool_planner",
 ]
