@@ -96,6 +96,9 @@ The checklist below tracks major components of the system and their status.
   - [x] Tenancy primitives with namespaced memory isolation.
   - [x] Plugin architecture for sandboxed, tenant-scoped extensions.
   - [x] Plugin marketplace data model, signing helpers, and trust tiers (rollout tooling pending).
-  - [x] Plugin capability testkit with manifest `tests` block and CI gate.
+- [x] Plugin capability testkit with manifest `tests` block and CI gate.
+- [x] Core RL scaffolding with feature store, reward engine, reward pipe, bandit policy base, registry, and shields.
 
-*Update this checklist whenever significant goals are finished or new tasks arise.*
+*Update this checklist whenever significant goals are finished or new tasks arise.
+
+- [x] Discord CDN archiver subsystem for long-term file storage.

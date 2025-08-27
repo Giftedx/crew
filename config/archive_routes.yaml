@@ -1,0 +1,30 @@
+defaults:
+  max_retries: 3
+  chunking: true
+routes:
+  images:
+    public:
+      channel_id: "000000000000000000"
+    private:
+      channel_id: "000000000000000000"
+  videos:
+    public:
+      channel_id: "000000000000000000"
+    private:
+      channel_id: "000000000000000000"
+  audio:
+    public:
+      channel_id: "000000000000000000"
+    private:
+      channel_id: "000000000000000000"
+  docs:
+    public:
+      channel_id: "000000000000000000"
+    private:
+      channel_id: "000000000000000000"
+  blobs:
+    public:
+      channel_id: "000000000000000000"
+    private:
+      channel_id: "000000000000000000"
+per_tenant_overrides: {}
