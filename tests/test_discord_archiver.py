@@ -65,8 +65,11 @@ def test_archive_file_records_manifest(monkeypatch, tmp_path):
     monkeypatch.setattr(api.uploader, "upload_file_sync", _fake_upload)
     res = api.archive_file(f, {"kind": "images", "visibility": "public"})
     assert res["channel_id"] == "123"
+    assert res["attachment_ids"] == ["2"]
     look = manifest.lookup(res["content_hash"])
     assert look is not None
+    assert look["attachment_ids"] == ["2"]
+    assert "final_size" in look["compression"]
     assert not f.exists()
 
 

@@ -1,0 +1,16 @@
+role_permissions:
+  viewer: []
+  user: []
+  moderator:
+    - security.view
+  ops:
+    - security.view
+    - ingest.backfill
+  admin:
+    - "*"
+rate_limits:
+  default_per_minute: 60
+moderation:
+  banned_terms:
+    - banned
+  action: redact
