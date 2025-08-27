@@ -1,0 +1,11 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["task", "input", "expected"],
+  "properties": {
+    "task": {"type": "string"},
+    "input": {"type": "object"},
+    "expected": {"type": "object"},
+    "metrics_hints": {"type": "object"}
+  }
+}

@@ -1,0 +1,24 @@
+allowed_sources:
+  youtube_channels: []
+  twitch_channels: []
+  podcast_feeds: []
+  official_socials: []
+forbidden_data_types:
+  - email
+  - phone
+  - address
+redaction_rules:
+  email: "[redacted-email]"
+  phone: "[redacted-phone]"
+storage:
+  max_retention_days: 30
+consent_flags:
+  allow_quotes: true
+  allow_thumbnails: true
+  allow_embed: true
+  allow_snippets: true
+usage_rules:
+  latest:
+    max_tokens: 1000
+  analyze:
+    max_tokens: 2000

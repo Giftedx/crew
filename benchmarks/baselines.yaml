@@ -1,0 +1,6 @@
+analyze_claim_v1:
+  quality: 1.0
+  cost_usd: 0.00
+  latency_ms: 0
+  lambda: 0.0
+  mu: 0.0

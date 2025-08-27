@@ -46,7 +46,10 @@ Each interaction with an external system is encapsulated in a tool living under
   audio.
 - `text_analysis_tool.py` – performs sentiment and keyword extraction using
   NLTK.
+- `sentiment_tool.py` – standalone sentiment classifier using VADER or a
+  simple lexical fallback.
 - `logical_fallacy_tool.py` – flags basic logical fallacies in transcripts.
+- `claim_extractor_tool.py` – stub for future factual claim extraction.
 - `perspective_synthesizer_tool.py` – generates alternative viewpoints from the
   analysed text using the shared `PromptEngine`, `OpenRouterService` and
   `MemoryService` for contextual grounding.
@@ -54,6 +57,9 @@ Each interaction with an external system is encapsulated in a tool living under
   webhook.
 - `discord_private_alert_tool.py` – sends operational alerts to a restricted
   webhook for monitoring.
+- `tools/platform_resolver/` – lookup helpers turning platform handles into
+  canonical channel or profile references. They support the creator profile
+  system described below.
 
 ## Model Context Protocol (MCP)
 
@@ -61,6 +67,9 @@ CrewAI uses the MCP to let agents invoke tools safely.  In this project the
 pipeline tools are simple functions but they can be exposed to MCP-aware agents
 through the CrewAI framework.  The declarative agent and task configuration files
 allow other MCP compatible runtimes to drive the same tools.
+AST-based tests verify that those configuration files stay in sync with
+``crew.py`` and that each agent exposes the expected tools, preventing subtle
+misconfigurations.
 
 ## Recent refactor
 
@@ -81,8 +90,24 @@ language-model usage across the system:
   Defaults may be customised via ``OPENROUTER_GENERAL_MODEL`` and
   ``OPENROUTER_ANALYSIS_MODEL``.
 - **LearningEngine** – epsilon‑greedy policy that records routing rewards.
-- **MemoryService** – minimal in-memory store for contextual lookups and used to
-  ground the `PerspectiveSynthesizerTool`.
+- **TokenMeter** – estimates request cost across models and enforces a
+  per-request ceiling via ``COST_MAX_PER_REQUEST``.
+- **LLMCache** – deterministic prompt→response cache with configurable TTL so
+repeated prompts can be served without requerying models.
+- **MemoryService** – minimal in-memory store for contextual lookups with
+  optional case-insensitive metadata filtering. All entries are stored under a
+  ``<tenant>:<workspace>`` namespace to prevent cross-tenant leakage. Calls may
+  pass a ``metadata`` dictionary whose pairs must match stored metadata for a
+  memory to be returned. Lookups honour a ``limit`` parameter where values below
+  ``1`` or blank queries return no results. The service grounds the
+  `PerspectiveSynthesizerTool`.
+- **Profiles module** – dataclasses and a SQLite-backed ``ProfileStore`` to
+  maintain verified creator, show and staff information. Seed data for the
+  H3/H3 Podcast/Hasan ecosystem lives in ``profiles.yaml`` and resolution tools
+  populate canonical IDs at runtime. The store now tracks cross-profile
+  collaborations and exposes helper methods to record and query those links.
+- **ContentPoller** – simple scheduler that updates profile ``last_checked``
+  timestamps, forming the basis of continuous ingestion.
 - **EvaluationHarness** – runs prompts across models, logging latency and
   token usage for offline analysis and future training.
 

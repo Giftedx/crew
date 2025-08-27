@@ -1,0 +1,30 @@
+name: Golden Regression Gate
+
+on:
+  pull_request:
+
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - name: Install
+        run: pip install -e .[dev]
+      - name: Run golden suite
+        run: |
+          python -m ultimate_discord_intelligence_bot.services.eval_harness run \
+            --dataset datasets/golden/v1/analyze_claim.jsonl \
+            --task analyze_claim --out out/eval/analyze_claim_v1.json
+      - name: Compare baseline
+        run: |
+          python -c "import yaml,json;res=json.load(open('out/eval/analyze_claim_v1.json'));base=yaml.safe_load(open('benchmarks/baselines.yaml'));\
+from pathlib import Path;import sys;quality=res['aggregates']['quality'];cost=res['aggregates']['cost_usd'];lat=res['aggregates']['latency_ms'];b=base['analyze_claim_v1'];\
+print(f'delta quality {quality-b["quality"]:.3f}');\
+assert quality >= b['quality']-0.5 and cost <= b['cost_usd']+0.0 and lat <= b['latency_ms']+50"      
+      - uses: actions/upload-artifact@v4
+        with:
+          name: eval-report
+          path: out/eval

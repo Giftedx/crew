@@ -74,10 +74,28 @@ The checklist below tracks major components of the system and their status.
 - [x] OpenRouter-based model router with learning feedback.
 - [x] In-memory memory retrieval service.
 - [x] Perspective synthesizer grounded by memory retrieval.
+- [x] Memory service offers case-insensitive metadata filtering, guards against blank queries or non-positive limits, and returns deep copies to prevent mutation.
 - [x] Token counter leverages transformers tokenizers for non-OpenAI models.
 - [x] Prompt evaluation harness for routing and RL feedback.
 - [x] OpenRouter models configurable via environment variables.
 - [x] Provider routing preferences for OpenRouter requests.
 - [x] TikTok short-link domains (`vm.tiktok.com`, `vt.tiktok.com`) routed through multi-platform dispatcher.
+- [x] Config and crew synchronization tests for agents and tasks.
+- [x] Agent tool coverage tests ensure each agent exposes required tools.
+- [x] Creator profile schema, SQLite store and seed data for H3/Hasan ecosystem.
+- [x] Content poller updates profile last-checked timestamps.
+- [x] Cross-profile link tracking and collaborator queries.
+- [x] Sentiment and claim extraction tools for enrichment.
+- [x] Discord commands `/latest`, `/collabs`, `/trends`, `/compare`.
+- [x] Prompt engine supports context retrieval with source pointers.
+- [x] Analytics store logging LLM calls for reinforcement learning.
+- [x] Epsilon-greedy learning engine selects models based on rewards.
+- [x] Cost guard in router with per-request budget and prompt-response caching.
+- [x] Golden datasets and regression gates for quality, cost, latency.
+  - [x] Policy engine with privacy filter and redaction of PII before storage.
+  - [x] Tenancy primitives with namespaced memory isolation.
+  - [x] Plugin architecture for sandboxed, tenant-scoped extensions.
+  - [x] Plugin marketplace data model, signing helpers, and trust tiers (rollout tooling pending).
+  - [x] Plugin capability testkit with manifest `tests` block and CI gate.
 
 *Update this checklist whenever significant goals are finished or new tasks arise.*

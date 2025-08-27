@@ -66,7 +66,8 @@ produce the strongest possible version of a claim for deep-dive reasoning.
 These pieces power the informal H3/Hasan debate analysis
 flow: VODs are indexed, clip context verified, claims fact-checked and a
 scoreboard of lies, misquotes and misinfo is exposed through Discord commands
-like `/analyze`, `/context`, `/claim`, `/leaderboard`, `/timeline` and `/ask`.
+like `/analyze`, `/context`, `/claim`, `/leaderboard`, `/timeline`, `/ask`,
+`/creator`, `/latest`, `/collabs`, and `/verify_profiles`.
 Two partisan defenders – Traitor AB for Ethan and Old Dan for Hasan – generate
 short, casual closing statements for each analysis.  The `/timeline` command
 surfaces a chronological list of analysed clips for a video while `/ask`
@@ -93,14 +94,46 @@ set of shared services:
   ``OPENROUTER_ANALYSIS_MODEL`` environment variables.
 - ``LearningEngine`` – records routing outcomes and uses a simple
   epsilon‑greedy strategy to improve future choices.
-- ``MemoryService`` – offers lightweight in‑process storage and retrieval so
-  any component can fetch relevant context before making a request and is used
-  by the `PerspectiveSynthesizerTool` to ground summaries.
-- ``EvaluationHarness`` – benchmarks prompts across models and logs latency
-  and token usage for offline analysis and reinforcement learning.
+- ``MemoryService`` – offers lightweight in‑process storage and retrieval with
+  optional case‑insensitive metadata filtering so any component can fetch
+  relevant context before making a request. Calls may pass a ``metadata``
+  dictionary whose key/value pairs must match stored metadata for a memory to
+  be returned. Requests may also specify a ``limit``; values below ``1`` or
+  blank queries short‑circuit the lookup and return an empty list. When
+  operating in multi‑tenant mode each entry is scoped to a
+  ``<tenant>:<workspace>`` namespace so data remains isolated. For example:
+
+  ```python
+  memory.add("blue sky", {"source": "test"})
+  memory.retrieve("blue", metadata={"SOURCE": "TEST"})
+  # -> [{"text": "blue sky", "metadata": {"source": "test"}}]
+  ```
+
+  The service is used by the `PerspectiveSynthesizerTool` to ground summaries.
+- ``AnalyticsStore`` – writes privacy-safe metrics about LLM calls and bandit
+  events to a small SQLite database so performance can be analysed offline.
+- ``TokenMeter`` – estimates request cost for different models and enforces a
+  per-request budget to avoid unexpected spend.
+- ``LLMCache`` – optional in-memory cache keyed by prompt and model to avoid
+  repeated LLM calls when prompts and context are unchanged.
+- ``profiles`` – provides a normalized creator profile schema, SQLite-backed
+  storage helpers, and seed data for the H3/H3 Podcast/Hasan ecosystem so
+  resolvers and agents can reason about verified channels.
+- ``ContentPoller`` – lightweight scheduler that updates creator profiles with
+  the last time each platform was checked so new content can be discovered
+  continuously.
+- ``SentimentTool`` and ``ClaimExtractorTool`` – enrichment helpers for episode
+  segments. Sentiment analysis classifies text into positive/neutral/negative
+  while the claim extractor provides a stub for future factual extraction.
+  - ``EvaluationHarness`` – benchmarks prompts across models and logs latency
+    and token usage for offline analysis and an epsilon-greedy learning engine
+    that gradually favours cheaper or higher quality models.
 
 These utilities are exposed under ``ultimate_discord_intelligence_bot.services``
 and can be imported by agents, tools or pipelines as needed.
+Dedicated tests audit that agent and task entries in ``config/`` stay in sync
+with ``crew.py`` and that each agent exposes its required tools so
+misconfigurations are caught early.
 ### Customizing
 
 **Add your `OPENAI_API_KEY` into the `.env` file**. Optionally set
@@ -157,3 +190,23 @@ For support, questions, or feedback regarding the Ultimate Discord Intelligence 
 - [Chat with our docs](https://chatg.pt/DWjSBZn)
 
 Let's create wonders together with the power and simplicity of crewAI.
+
+## Offline Evaluation
+Golden datasets under `datasets/` provide regression tests for quality,
+cost, and latency. Run the harness:
+
+```bash
+python -m ultimate_discord_intelligence_bot.services.eval_harness run \
+  --dataset datasets/golden/v1/analyze_claim.jsonl \
+  --task analyze_claim --out out/eval/analyze_claim_v1.json
+```
+
+Compare against `benchmarks/baselines.yaml` to ensure no regressions before
+updating baselines with `scripts/update_baseline.sh`.
+
+## Privacy
+
+A lightweight privacy layer redacts email addresses and phone numbers before
+content is stored in memory. Rules live in
+`ultimate_discord_intelligence_bot/policy/policy.yaml`; see
+`docs/privacy.md` for details on extending or overriding the defaults.

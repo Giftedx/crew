@@ -1,0 +1,1 @@
+{"task": "analyze_claim", "input": {"query": "Did Ethan say the moon is made of cheese?"}, "expected": {"must_include": ["no"], "forbidden": ["cheese wheel"]}}

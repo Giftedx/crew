@@ -6,6 +6,18 @@ from typing import Callable
 from crewai_tools import BaseTool
 
 from ..debate_analysis_pipeline import DebateAnalysisPipeline
+from ..profiles.store import ProfileStore
+from ..profiles.schema import (
+    CreatorProfile,
+    Platforms,
+    load_seeds,
+)
+from ..tools.platform_resolver import (
+    resolve_youtube_handle,
+    resolve_twitch_login,
+    resolve_podcast_query,
+    resolve_social_handle,
+)
 
 
 class DebateCommandTool(BaseTool):
@@ -19,6 +31,7 @@ class DebateCommandTool(BaseTool):
         pipeline: DebateAnalysisPipeline | None = None,
         ethan_defender: Callable[[str], str] | None = None,
         hasan_defender: Callable[[str], str] | None = None,
+        profile_store: ProfileStore | None = None,
     ):
         super().__init__()
         self.pipeline = pipeline or DebateAnalysisPipeline(
@@ -30,6 +43,7 @@ class DebateCommandTool(BaseTool):
         self.timeline = self.pipeline.timeline
         self.trust_tracker = self.pipeline.trust_tracker
         self.profile_tool = self.pipeline.profile_tool
+        self.profile_store = profile_store or ProfileStore(":memory:")
 
     def _run(self, command: str, **kwargs):
         if command == "analyze":
@@ -70,11 +84,53 @@ class DebateCommandTool(BaseTool):
                 "status": "success",
                 "events": self.timeline.get_timeline(kwargs["video_id"]),
             }
-        if command == "profile":
+        if command == "profile" or command == "creator":
             return {
                 "status": "success",
                 "profile": self.profile_tool.get_profile(kwargs["person"]),
             }
+        if command == "latest":
+            prof = self.profile_tool.get_profile(kwargs["person"]) or {}
+            events = prof.get("events", [])
+            events = sorted(events, key=lambda e: e.get("ts", 0), reverse=True)
+            return {"status": "success", "events": events[: kwargs.get("n", 5)]}
+        if command == "collabs":
+            collabs = self.profile_store.get_collaborators(kwargs["person"], kwargs.get("n", 10))
+            return {"status": "success", "collabs": collabs}
+        if command == "trends":
+            return {"status": "success", "trends": []}
+        if command == "compare":
+            a = self.profile_store.get_collaborators(kwargs["a"], kwargs.get("n", 10))
+            b = self.profile_store.get_collaborators(kwargs["b"], kwargs.get("n", 10))
+            return {"status": "success", "compare": {kwargs["a"]: a, kwargs["b"]: b}}
+        if command == "verify_profiles":
+            seeds = load_seeds(kwargs.get("seeds", "profiles.yaml"))
+            verified = []
+            for seed in seeds:
+                handles = seed.seed_handles
+                platforms = Platforms()
+                if yt := handles.get("youtube"):
+                    platforms.youtube = [resolve_youtube_handle(yt[0])]
+                if tw := handles.get("twitch"):
+                    platforms.twitch = [resolve_twitch_login(tw[0])]
+                if pod := handles.get("podcast"):
+                    platforms.podcast = [resolve_podcast_query(pod[0])]
+                for social in ("twitter", "instagram", "tiktok"):
+                    if social in handles:
+                        getattr(platforms, social).append(
+                            resolve_social_handle(social, handles[social][0])
+                        )
+                profile = CreatorProfile(
+                    name=seed.name,
+                    type=seed.type,
+                    roles=seed.roles,
+                    shows=seed.shows,
+                    content_tags=seed.content_tags,
+                    platforms=platforms,
+                )
+                self.profile_store.upsert_profile(profile)
+                verified.append(seed.name)
+            return {"status": "success", "verified": verified}
         return {"status": "error", "error": "unknown command"}
 
     def run(self, *args, **kwargs):  # pragma: no cover - thin wrapper

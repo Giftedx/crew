@@ -22,10 +22,15 @@ from .tools.yt_dlp_download_tool import (
     KickDownloadTool,
     TwitterDownloadTool,
     InstagramDownloadTool,
+    TikTokDownloadTool,
+    RedditDownloadTool,
 )
+from .tools.discord_download_tool import DiscordDownloadTool
 from .tools.character_profile_tool import CharacterProfileTool
 from .tools.x_monitor_tool import XMonitorTool
 from .tools.discord_monitor_tool import DiscordMonitorTool
+from .tools.transcript_index_tool import TranscriptIndexTool
+from .tools.timeline_tool import TimelineTool
 from .settings import DISCORD_PRIVATE_WEBHOOK
 
 
@@ -37,7 +42,7 @@ class UltimateDiscordIntelligenceBotCrew:
     def content_manager(self) -> Agent:
         return Agent(
             config=self.agents_config["content_manager"],
-            tools=[PipelineTool(), DebateCommandTool()],
+            tools=[PipelineTool(), DebateCommandTool(), TranscriptIndexTool(), TimelineTool()],
         )
 
     @agent
@@ -50,6 +55,9 @@ class UltimateDiscordIntelligenceBotCrew:
                 KickDownloadTool(),
                 TwitterDownloadTool(),
                 InstagramDownloadTool(),
+                TikTokDownloadTool(),
+                RedditDownloadTool(),
+                DiscordDownloadTool(),
             ],
         )
 
