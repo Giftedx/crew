@@ -5,11 +5,14 @@ from pathlib import Path
 from datetime import datetime
 
 import requests
-from crewai_tools import BaseTool
+from crewai.tools import BaseTool
 
 class DiscordPostTool(BaseTool):
     name: str = "Discord Post Tool"
     description: str = "Post content notifications to Discord with proper formatting"
+    
+    # Properly declare field for pydantic v2
+    webhook_url: str = ""
 
     def __init__(self, webhook_url: str):
         super().__init__()

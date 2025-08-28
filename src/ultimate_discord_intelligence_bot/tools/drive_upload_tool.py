@@ -1,7 +1,7 @@
 import logging
 import os
 
-from crewai_tools import BaseTool
+from crewai.tools import BaseTool
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload

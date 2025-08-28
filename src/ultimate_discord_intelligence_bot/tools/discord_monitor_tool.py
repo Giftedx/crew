@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Dict, Iterable, List
 
-from crewai_tools import BaseTool
+from crewai.tools import BaseTool
 
 from .multi_platform_monitor_tool import MultiPlatformMonitorTool
 
@@ -12,8 +12,8 @@ from .multi_platform_monitor_tool import MultiPlatformMonitorTool
 class DiscordMonitorTool(BaseTool):
     """Return unseen Discord messages."""
 
-    name = "Discord Monitor Tool"
-    description = "Track new messages from Discord channels"
+    name: str = "Discord Monitor Tool"
+    description: str = "Track new messages from Discord channels"
 
     def __init__(self) -> None:
         super().__init__()

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from crewai_tools import BaseTool
+from crewai.tools import BaseTool
 
 from ...profiles.schema import CanonicalChannel
 
@@ -23,11 +23,45 @@ class YouTubeResolverTool(BaseTool):
 
 def resolve_youtube_handle(handle: str) -> CanonicalChannel:
     """Return a canonical reference for a YouTube handle.
-
-    The function performs basic normalization only. Real deployments should
-    call the YouTube Data API to validate and retrieve channel IDs.
+    
+    This performs enhanced normalization and validation. Real deployments
+    should integrate with YouTube Data API for channel ID resolution.
     """
-    norm = handle.lstrip("@").strip()
+    # Handle various YouTube URL formats
+    handle = handle.strip()
+    
+    # Extract handle from full URLs
+    if "youtube.com/" in handle:
+        if "/channel/" in handle:
+            # https://www.youtube.com/channel/UC-channel-id
+            channel_id = handle.split("/channel/")[-1].split("?")[0]
+            return CanonicalChannel(
+                id=channel_id,
+                handle=f"@{channel_id}",  # Channel ID format
+                url=f"https://www.youtube.com/channel/{channel_id}"
+            )
+        elif "/@" in handle:
+            # https://www.youtube.com/@handle
+            norm = handle.split("/@")[-1].split("?")[0]
+        elif "/c/" in handle:
+            # https://www.youtube.com/c/custom-name
+            norm = handle.split("/c/")[-1].split("?")[0]
+        else:
+            # https://www.youtube.com/username
+            norm = handle.split("/")[-1].split("?")[0]
+    else:
+        # Raw handle
+        norm = handle.lstrip("@").strip()
+    
+    # Normalize the handle
+    norm = norm.replace(" ", "").strip("/")
     channel_id = norm.lower()
-    url = f"https://www.youtube.com/@{norm}"
-    return CanonicalChannel(id=channel_id, handle=f"@{norm}", url=url)
+    
+    # Generate URLs for different potential formats
+    handle_url = f"https://www.youtube.com/@{norm}"
+    
+    return CanonicalChannel(
+        id=channel_id,
+        handle=f"@{norm}",
+        url=handle_url
+    )

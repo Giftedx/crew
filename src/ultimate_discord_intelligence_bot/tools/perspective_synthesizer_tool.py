@@ -1,13 +1,13 @@
 """Combine search results into a coherent perspective."""
 
-from crewai_tools import BaseTool
+from crewai.tools import BaseTool
 
 from ..services import MemoryService, OpenRouterService, PromptEngine
 
 
 class PerspectiveSynthesizerTool(BaseTool):
-    name = "Perspective Synthesizer"
-    description = "Merge multiple search backends into a unified summary"
+    name: str = "Perspective Synthesizer"
+    description: str = "Merge multiple search backends into a unified summary"
 
     def __init__(
         self,

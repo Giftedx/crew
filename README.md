@@ -3,27 +3,31 @@
 Giftedx Crew is a tenant‑aware Discord platform that ingests public media, builds grounded context, and answers questions through cost‑guarded model routing and reinforcement learning. The system emphasises privacy, provenance, and reliability so features can be rolled out safely.
 
 ## Features
-- **Core services** – prompt builder, token meter, router with cost guards, caching, and RL hooks.
-- **Ingestion & RAG** – async adapters for YouTube and Twitch, transcript analysis, Qdrant vector memory, and Discord commands like `/creator`, `/latest`, `/context`, `/collabs`, and `/verify_profiles`.
-- **Privacy & governance** – policy engine, deterministic PII detection and redaction, provenance logging, retention sweeps, export tooling.
-- **Cost & reliability** – budgets, retries, circuit breakers, shadow/canary rollout, feature flags.
+- **Core services** – prompt builder, token meter, router with cost guards, caching, RL hooks, alerts, reliability patterns, and tool planning.
+- **Ingestion & RAG** – async adapters for YouTube, Twitch, and TikTok, transcript analysis with segmentation, Qdrant vector memory, and Discord commands like `/creator`, `/latest`, `/context`, `/collabs`, and `/verify_profiles`.
+- **Privacy & governance** – policy engine, deterministic PII detection and redaction, provenance logging, retention sweeps, export tooling, and RBAC security.
+- **Cost & reliability** – budgets, retries, circuit breakers, shadow/canary rollout, feature flags, and comprehensive observability.
 - **Discord CDN archiver** – size‑aware compression, policy checks, channel routing, manifest deduplication, and rehydration of expiring CDN links.
 - **Unified memory layer** – SQLite/Qdrant backed store with retention policies, pinning, archival, and hybrid retrieval.
-- **Grounded answers** – citation‑enforced responses with verifier checks and Discord audit helpers.
+- **Grounded answers** – citation‑enforced responses with verifier checks, claim extraction, logical fallacy detection, and Discord audit helpers.
 - **Reinforcement learning** – feature store, reward engine, bandit policies, and a `learn` helper to integrate decision loops across routing, prompting, and retrieval.
-- **Debate & scheduler** – multi-role debate panel and RL-paced ingest scheduler for ongoing refinement.
+- **Debate & scheduler** – multi-role debate panel, perspective synthesis, steelman arguments, and RL-paced ingest scheduler for ongoing refinement.
+- **Advanced analysis** – sentiment analysis, trustworthiness tracking, timeline construction, and comprehensive content analysis tools.
 
 See the documentation for full subsystem guides:
-- [Core services](docs/core_services.md)
-- [Cost guards and caching](docs/cost_and_caching.md)
-- [Ingestion](docs/ingestion.md) and [RAG usage](docs/rag.md)
-- [Privacy](docs/privacy.md), [provenance](docs/provenance.md), and [retention](docs/retention.md)
-- [Discord CDN archiver](docs/archiver.md)
-- [Reinforcement learning](docs/rl_overview.md)
-- [Scheduler and connectors](docs/scheduler.md)
-- [Knowledge graph](docs/kg.md)
-- [Unified memory](docs/memory.md)
-- [Grounding guarantees](docs/grounding.md)
+- [Tools Reference](docs/tools_reference.md) - Comprehensive tool documentation
+- [Analysis Modules](docs/analysis_modules.md) - Transcript processing and content analysis
+- [Configuration Reference](docs/configuration.md) - Complete configuration guide
+- [Core services](docs/core_services.md) - Foundation utilities and services
+- [Cost guards and caching](docs/cost_and_caching.md) - Budget management and caching
+- [Ingestion](docs/ingestion.md) and [RAG usage](docs/rag.md) - Content ingestion and retrieval
+- [Privacy](docs/privacy.md), [provenance](docs/provenance.md), and [retention](docs/retention.md) - Data governance
+- [Discord CDN archiver](docs/archiver.md) - CDN link preservation
+- [Reinforcement learning](docs/rl_overview.md) - RL system overview
+- [Scheduler and connectors](docs/scheduler.md) - Content polling and scheduling
+- [Knowledge graph](docs/kg.md) - Entity and relationship extraction
+- [Unified memory](docs/memory.md) - Memory management and storage
+- [Grounding guarantees](docs/grounding.md) - Citation enforcement and verification
 
 ## Getting started
 1. Install Python ≥3.10 and clone the repository.
@@ -86,12 +90,16 @@ sched.worker_run_once(store=None)
 ```
 
 ## Feature flags
-Subsystems are disabled by default and enabled via environment flags:
-- `ENABLE_INGEST_YOUTUBE`, `ENABLE_INGEST_TWITCH`
-- `ENABLE_RAG_CONTEXT`
-- `ENABLE_CACHE`
-- `ENABLE_RL_GLOBAL` (plus `ENABLE_RL_ROUTING`, `ENABLE_RL_PROMPT`, `ENABLE_RL_RETRIEVAL`)
-- `ENABLE_DISCORD_ARCHIVER`
+Core subsystems are disabled by default and enabled via environment flags:
+- **Ingestion:** `ENABLE_INGEST_YOUTUBE`, `ENABLE_INGEST_TWITCH`, `ENABLE_INGEST_TIKTOK`
+- **RAG & Context:** `ENABLE_RAG_CONTEXT`, `ENABLE_VECTOR_SEARCH`, `ENABLE_GROUNDING`
+- **Caching & Performance:** `ENABLE_CACHE`, `ENABLE_CACHE_LLM`, `ENABLE_CACHE_VECTOR`
+- **Reinforcement Learning:** `ENABLE_RL_GLOBAL` (plus `ENABLE_RL_ROUTING`, `ENABLE_RL_PROMPT`, `ENABLE_RL_RETRIEVAL`)
+- **Discord Integration:** `ENABLE_DISCORD_ARCHIVER`, `ENABLE_DISCORD_COMMANDS`, `ENABLE_DISCORD_MONITOR`
+- **Security & Privacy:** `ENABLE_PII_DETECTION`, `ENABLE_CONTENT_MODERATION`, `ENABLE_RATE_LIMITING`
+- **Observability:** `ENABLE_TRACING`, `ENABLE_METRICS`, `ENABLE_AUDIT_LOGGING`
+
+See [Configuration Reference](docs/configuration.md) for complete flag documentation.
 
 ## Contributing
 Follow the guidelines in [AGENTS.md](AGENTS.md): reuse existing modules, add tests, run `pytest`, and commit using Conventional Commits.

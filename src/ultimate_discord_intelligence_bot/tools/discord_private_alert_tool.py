@@ -5,7 +5,7 @@ from typing import Dict, Optional
 from urllib.parse import urlparse
 
 import requests
-from crewai_tools import BaseTool
+from crewai.tools import BaseTool
 
 
 def _validate_webhook(url: str) -> str:
@@ -29,6 +29,9 @@ class DiscordPrivateAlertTool(BaseTool):
 
     name: str = "Discord Private Alert Tool"
     description: str = "Send internal monitoring alerts to Discord"
+    
+    # Properly declare field for pydantic v2
+    webhook_url: str = ""
 
     def __init__(self, webhook_url: str):
         super().__init__()

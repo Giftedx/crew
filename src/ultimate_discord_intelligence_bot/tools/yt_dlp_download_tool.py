@@ -13,7 +13,7 @@ import re
 import subprocess
 from typing import Dict
 
-from crewai_tools import BaseTool
+from crewai.tools import BaseTool
 
 from ..settings import DOWNLOADS_DIR, YTDLP_ARCHIVE, YTDLP_CONFIG, TEMP_DIR
 
@@ -138,43 +138,43 @@ class YtDlpDownloadTool(BaseTool):
         return self._run(video_url, quality)
 
 class YouTubeDownloadTool(YtDlpDownloadTool):
-    name = "YouTube Download Tool"
-    description = "Download YouTube videos with optimal settings for Discord sharing"
-    platform = "YouTube"
+    name: str = "YouTube Download Tool"
+    description: str = "Download YouTube videos with optimal settings for Discord sharing"
+    platform: str = "YouTube"
 
 
 class TwitchDownloadTool(YtDlpDownloadTool):
-    name = "Twitch Download Tool"
-    description = "Download Twitch VODs or clips"
-    platform = "Twitch"
+    name: str = "Twitch Download Tool" 
+    description: str = "Download Twitch VODs or clips"
+    platform: str = "Twitch"
 
 
 class KickDownloadTool(YtDlpDownloadTool):
-    name = "Kick Download Tool"
-    description = "Download Kick streams"
-    platform = "Kick"
+    name: str = "Kick Download Tool"
+    description: str = "Download Kick streams"
+    platform: str = "Kick"
 
 
 class TwitterDownloadTool(YtDlpDownloadTool):
-    name = "Twitter Download Tool"
-    description = "Download videos from X/Twitter"
-    platform = "Twitter"
+    name: str = "Twitter Download Tool"
+    description: str = "Download videos from X/Twitter"
+    platform: str = "Twitter"
 
 
 class InstagramDownloadTool(YtDlpDownloadTool):
-    name = "Instagram Download Tool"
-    description = "Download Instagram reels or posts"
-    platform = "Instagram"
+    name: str = "Instagram Download Tool"
+    description: str = "Download Instagram reels or posts"
+    platform: str = "Instagram"
 
 
 class TikTokDownloadTool(YtDlpDownloadTool):
-    name = "TikTok Download Tool"
-    description = "Download TikTok videos"
-    platform = "TikTok"
+    name: str = "TikTok Download Tool"
+    description: str = "Download TikTok videos"
+    platform: str = "TikTok"
 
 
 class RedditDownloadTool(YtDlpDownloadTool):
-    name = "Reddit Download Tool"
-    description = "Download Reddit-hosted videos"
-    platform = "Reddit"
+    name: str = "Reddit Download Tool"
+    description: str = "Download Reddit-hosted videos"
+    platform: str = "Reddit"
 

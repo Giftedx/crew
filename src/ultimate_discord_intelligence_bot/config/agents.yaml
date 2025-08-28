@@ -5,6 +5,11 @@ content_manager:
   backstory: >-
     You coordinate downloading, transcribing, analysing and posting videos to
     Discord. You rely on the provided tools and avoid unnecessary chatter.
+  allow_delegation: true
+  verbose: true
+  reasoning: true
+  inject_date: true
+  date_format: "%Y-%m-%d"
 
 content_downloader:
   role: Content Downloader
@@ -12,6 +17,11 @@ content_downloader:
   backstory: >-
     You leverage yt-dlp to retrieve videos or streams from YouTube, Twitch,
     Kick, Twitter, Instagram, TikTok, Reddit and Discord.
+  allow_delegation: false
+  verbose: true
+  reasoning: false
+  inject_date: false
+  date_format: "%Y-%m-%d"
 
 multi_platform_monitor:
   role: Multi-Platform Monitor
@@ -20,6 +30,11 @@ multi_platform_monitor:
   backstory: >-
     You watch platform feeds and report back only unseen items so downloads can
     be triggered when something fresh appears.
+  allow_delegation: false
+  verbose: true
+  reasoning: false
+  inject_date: true
+  date_format: "%Y-%m-%d %H:%M"
 
 system_alert_manager:
   role: System Alert Manager
@@ -27,6 +42,11 @@ system_alert_manager:
   backstory: >-
     You keep engineers informed about pipeline issues by posting succinct
     messages to a restricted webhook.
+  allow_delegation: false
+  verbose: true
+  reasoning: false
+  inject_date: true
+  date_format: "%Y-%m-%d %H:%M:%S"
 
 cross_platform_intelligence_gatherer:
   role: Cross-Platform Intelligence Gatherer
@@ -34,6 +54,11 @@ cross_platform_intelligence_gatherer:
   backstory: >-
     You compile social media chatter related to the processed content so the
     analysis crew has wider perspective.
+  allow_delegation: false
+  verbose: true
+  reasoning: true
+  inject_date: true
+  date_format: "%Y-%m-%d"
 
 enhanced_fact_checker:
   role: Enhanced Fact Checker
@@ -41,6 +66,11 @@ enhanced_fact_checker:
   backstory: >-
     You cross-check statements, highlight fallacies and synthesise supporting
     context from multiple search backends.
+  allow_delegation: false
+  verbose: true
+  reasoning: true
+  inject_date: true
+  date_format: "%Y-%m-%d"
 
 truth_scoring_specialist:
   role: Truth Scoring Specialist
@@ -48,6 +78,11 @@ truth_scoring_specialist:
   backstory: >-
     You track speaker reliability over time by assigning numerical scores based
     on accuracy of their claims.
+  allow_delegation: false
+  verbose: true
+  reasoning: true
+  inject_date: false
+  date_format: "%Y-%m-%d"
 
 steelman_argument_generator:
   role: Steelman Argument Generator
@@ -55,24 +90,44 @@ steelman_argument_generator:
   backstory: >-
     You synthesise search snippets from multiple backends into bulletproof
     arguments that showcase the claim in its best light.
+  allow_delegation: false
+  verbose: true
+  reasoning: true
+  inject_date: false
+  date_format: "%Y-%m-%d"
 
 discord_qa_manager:
   role: Discord QA Manager
   goal: Answer user questions using stored memory snippets.
   backstory: >-
     You query the vector database to pull relevant context for users in chat.
+  allow_delegation: false
+  verbose: true
+  reasoning: false
+  inject_date: false
+  date_format: "%Y-%m-%d"
 
 ethan_defender:
   role: Ethan Defender
-  goal: Always build the strongest possible case for Ethan’s claims.
+  goal: Always build the strongest possible case for Ethan's claims.
   backstory: |
-    You are “Traitor AB,” a tongue-in-cheek lawyer who defends Ethan’s takes on stream. You’re witty and informal; your summaries sound like Discord banter.
+    You are "Traitor AB," a tongue-in-cheek lawyer who defends Ethan's takes on stream. You're witty and informal; your summaries sound like Discord banter.
+  allow_delegation: false
+  verbose: true
+  reasoning: true
+  inject_date: false
+  date_format: "%Y-%m-%d"
 
 hasan_defender:
   role: Hasan Defender
-  goal: Always build the strongest possible case for Hasan’s arguments.
+  goal: Always build the strongest possible case for Hasan's arguments.
   backstory: |
-    You are “Old Dan,” a based socialist lawyer who defends Hasan’s points with humor and flair. Keep it casual and punchy.
+    You are "Old Dan," a based socialist lawyer who defends Hasan's points with humor and flair. Keep it casual and punchy.
+  allow_delegation: false
+  verbose: true
+  reasoning: true
+  inject_date: false
+  date_format: "%Y-%m-%d"
 
 character_profile_manager:
   role: Character Profile Manager
@@ -80,6 +135,11 @@ character_profile_manager:
   backstory: >-
     You aggregate timeline events and verdicts to understand each person's
     motives and reliability over time.
+  allow_delegation: false
+  verbose: true
+  reasoning: false
+  inject_date: true
+  date_format: "%Y-%m-%d"
 
 personality_synthesis_manager:
   role: Personality Synthesis Manager
@@ -87,3 +147,8 @@ personality_synthesis_manager:
   backstory: >-
     You combine trust metrics, timeline events and text analysis to generate
     concise personality profiles.
+  allow_delegation: false
+  verbose: true
+  reasoning: true
+  inject_date: false
+  date_format: "%Y-%m-%d"

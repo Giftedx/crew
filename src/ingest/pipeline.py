@@ -3,7 +3,8 @@ from __future__ import annotations
 """Ingestion orchestration for media sources."""
 
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import List, Optional, Tuple, Any, Callable
+import concurrent.futures
 
 from analysis import segmenter, topics, transcribe
 from memory import embeddings, vector_store
@@ -26,31 +27,63 @@ class IngestJob:
     visibility: str = "public"
 
 
-def run(job: IngestJob, store: vector_store.VectorStore) -> dict:
-    """Run an ingest job and upsert transcript chunks into *store*."""
+def _get_provider(source: str):
+    if source == "youtube":
+        return youtube, "channel"
+    if source == "twitch":
+        return twitch, "streamer"
+    raise ValueError(f"unknown source {source}")  # pragma: no cover - defensive
 
-    if job.source == "youtube":
-        meta = youtube.fetch_metadata(job.url)
-        transcript_text = youtube.fetch_transcript(job.url)
-        creator = meta.channel
-    elif job.source == "twitch":
-        meta = twitch.fetch_metadata(job.url)
-        transcript_text = twitch.fetch_transcript(job.url)
-        creator = meta.streamer
-    else:  # pragma: no cover - defensive
-        raise ValueError(f"unknown source {job.source}")
 
+def _fetch_both_concurrent(provider_mod: Any, url: str) -> Tuple[Any, Optional[str]]:
+    """Fetch metadata & transcript concurrently.
+
+    Falls back to sequential if an exception arises in transcript fetch; metadata
+    failure propagates (cannot proceed without it).
+    """
+    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as ex:
+        fut_meta = ex.submit(provider_mod.fetch_metadata, url)
+        fut_tx = ex.submit(provider_mod.fetch_transcript, url)
+        meta = fut_meta.result()
+        try:
+            transcript_text = fut_tx.result()
+        except Exception:  # pragma: no cover - defensive; fallback to None
+            transcript_text = None
+    return meta, transcript_text
+
+
+def _build_transcript(job: IngestJob, transcript_text: Optional[str]) -> transcribe.Transcript:
     if transcript_text is None:
-        # fall back to running whisper on the media URL; in tests this will
-        # be a small text file path.
-        transcript = transcribe.run_whisper(job.url)
+        return transcribe.run_whisper(job.url)
+    lines = [l.strip() for l in transcript_text.splitlines() if l.strip()]
+    return transcribe.Transcript([
+        transcribe.Segment(start=float(i), end=float(i + 1), text=t)
+        for i, t in enumerate(lines)
+    ])
+
+
+def run(job: IngestJob, store: vector_store.VectorStore) -> dict:
+    """Run an ingest job and upsert transcript chunks into *store*.
+
+    If `ENABLE_INGEST_CONCURRENT` is set, metadata & transcript retrieval
+    execute concurrently (threaded) for supported sources.
+    """
+
+    provider_mod, creator_attr = _get_provider(job.source)
+
+    if os.getenv("ENABLE_INGEST_CONCURRENT"):
+        try:
+            meta, transcript_text = _fetch_both_concurrent(provider_mod, job.url)
+        except Exception:
+            # Fallback to sequential path on unexpected executor failure
+            meta = provider_mod.fetch_metadata(job.url)
+            transcript_text = provider_mod.fetch_transcript(job.url)
     else:
-        # treat transcript text as lines
-        lines = [l.strip() for l in transcript_text.splitlines() if l.strip()]
-        transcript = transcribe.Transcript([
-            transcribe.Segment(start=float(i), end=float(i + 1), text=t)
-            for i, t in enumerate(lines)
-        ])
+        meta = provider_mod.fetch_metadata(job.url)
+        transcript_text = provider_mod.fetch_transcript(job.url)
+
+    creator = getattr(meta, creator_attr)
+    transcript = _build_transcript(job, transcript_text)
 
     chunks = segmenter.chunk_transcript(transcript)
     texts = []

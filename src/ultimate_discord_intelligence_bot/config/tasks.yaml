@@ -5,6 +5,11 @@ process_video:
     then post the summary and Drive links to Discord.
   expected_output: Summary of the processed video posted to Discord.
   agent: content_manager
+  context:
+    - execute_multi_platform_downloads
+  human_input: false
+  async_execution: false
+  output_file: "output/processed_video_{url_hash}.md"
 
 execute_multi_platform_downloads:
   description: >-
@@ -41,6 +46,11 @@ fact_check_content:
     verify claims.
   expected_output: Summary of detected fallacies and supporting context.
   agent: enhanced_fact_checker
+  context:
+    - gather_cross_platform_intelligence
+  human_input: false
+  async_execution: false
+  output_file: "output/fact_check_{timestamp}.json"
 
 score_truthfulness:
   description: >-
@@ -49,12 +59,22 @@ score_truthfulness:
   expected_output: Updated profile with counts of truths and lies plus a score
     between 0 and 1.
   agent: truth_scoring_specialist
+  context:
+    - fact_check_content
+  human_input: false
+  async_execution: false
+  output_file: "output/truthfulness_score_{person}_{timestamp}.json"
 
 steelman_argument:
   description: >-
     Generate the strongest possible argument for {claim} using evidence snippets.
   expected_output: Steelman argument text.
   agent: steelman_argument_generator
+  context:
+    - fact_check_content
+  human_input: false
+  async_execution: false
+  output_file: "output/steelman_{claim_hash}.md"
 
 analyze_claim:
   description: >-
@@ -62,6 +82,11 @@ analyze_claim:
     Produce context, fact-check results and score updates.
   expected_output: Analysis report with defender blurbs and scoreboard deltas.
   agent: content_manager
+  context:
+    - get_context
+  human_input: false
+  async_execution: false
+  output_file: "output/claim_analysis_{person}_{timestamp}.json"
 
 get_context:
   description: >-

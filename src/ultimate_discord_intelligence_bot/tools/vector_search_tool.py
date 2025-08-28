@@ -4,7 +4,7 @@ from __future__ import annotations
 import os
 from typing import Callable, Dict, List, Optional
 
-from crewai_tools import BaseTool
+from crewai.tools import BaseTool
 
 try:  # pragma: no cover - optional dependency
     from qdrant_client import QdrantClient

@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from typing import Dict, Iterable, List
 
-from crewai_tools import BaseTool
+from crewai.tools import BaseTool
 
 from .multi_platform_monitor_tool import MultiPlatformMonitorTool
 
@@ -17,8 +17,8 @@ from .multi_platform_monitor_tool import MultiPlatformMonitorTool
 class XMonitorTool(BaseTool):
     """Return unseen tweets."""
 
-    name = "X Monitor Tool"
-    description = "Track new posts from X/Twitter feeds"
+    name: str = "X Monitor Tool"
+    description: str = "Track new posts from X/Twitter feeds"
 
     def __init__(self) -> None:
         super().__init__()

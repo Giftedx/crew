@@ -200,10 +200,26 @@ class UltimateDiscordIntelligenceBotCrew:
 
     @crew
     def crew(self) -> Crew:
-        """Create the project crew."""
+        """Create the project crew with enhanced features."""
         return Crew(
             agents=self.agents,
             tasks=self.tasks,
             process=Process.sequential,
             verbose=True,
+            # ADD THESE MODERN FEATURES:
+            planning=True,           # Enable dynamic planning
+            memory=True,            # Enable memory across executions
+            cache=True,             # Enable tool result caching  
+            max_rpm=10,            # Rate limiting for API calls
+            embedder={"provider": "openai"},  # Memory embeddings
+            step_callback=self._log_step,     # Custom logging
+            # Error handling
+            max_execution_time=3600,  # 1 hour timeout
         )
+
+    def _log_step(self, step) -> None:
+        """Log each agent step for observability."""
+        if hasattr(step, 'agent') and hasattr(step, 'tool'):
+            print(f"🤖 Agent {step.agent.role} using {step.tool}")
+        elif hasattr(step, 'agent'):
+            print(f"🤖 Agent {step.agent.role} thinking...")

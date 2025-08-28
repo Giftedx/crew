@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from crewai_tools import BaseTool
+from crewai.tools import BaseTool
 
 from ...profiles.schema import CanonicalProfile
 

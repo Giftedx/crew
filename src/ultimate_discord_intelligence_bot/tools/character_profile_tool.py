@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 from typing import Dict, List
 
-from crewai_tools import BaseTool
+from crewai.tools import BaseTool
 
 from .. import settings
 from .leaderboard_tool import LeaderboardTool

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from crewai_tools import BaseTool
+from crewai.tools import BaseTool
 
 try:  # pragma: no cover - optional dependency
     import nltk

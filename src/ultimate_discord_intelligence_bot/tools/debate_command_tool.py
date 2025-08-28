@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Callable
 
-from crewai_tools import BaseTool
+from crewai.tools import BaseTool
 
 from ..debate_analysis_pipeline import DebateAnalysisPipeline
 from ..profiles.store import ProfileStore

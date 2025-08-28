@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Dict, Iterable, List
 
-from crewai_tools import BaseTool
+from crewai.tools import BaseTool
 
 
 class MultiPlatformMonitorTool(BaseTool):
@@ -14,8 +14,8 @@ class MultiPlatformMonitorTool(BaseTool):
     observed. Subsequent calls filter out previously seen entries.
     """
 
-    name = "Multi-Platform Monitor"
-    description = (
+    name: str = "Multi-Platform Monitor"
+    description: str = (
         "Identify new content items across platforms, filtering out those already"
         " processed."
     )

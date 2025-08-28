@@ -11,7 +11,7 @@ import os
 import logging
 from functools import cached_property
 
-from crewai_tools import BaseTool
+from crewai.tools import BaseTool
 
 try:  # pragma: no cover - optional dependency
     import whisper  # type: ignore

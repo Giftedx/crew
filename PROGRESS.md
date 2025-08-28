@@ -151,3 +151,15 @@
 - [x] Security event logger for RBAC and moderation
 
 All planned PR tasks completed.
+
+### Additional Enhancements (Post PR18)
+
+- [x] Feature-flagged concurrent metadata + transcript fetch (`ENABLE_INGEST_CONCURRENT`)
+- [x] Structural concurrency test (`tests/test_ingest_concurrent.py`)
+- [x] Ingestion module CLI (`python -m ingest`) with console script `ingest`
+- [x] Console script test (`tests/test_ingest_console_script.py`)
+- [x] Packaging correction for src layout (explicit wheel package list)
+- [x] Documentation updates for concurrency & CLI usage
+- [x] Marker configuration (`pytest.ini`) to register integration tests
+
+No outstanding in-repo TODO/FIXME or `NotImplementedError` stubs were found as of this update (scans on 2025-08-28). Remaining potential improvements are enhancement-class only (observability metrics for concurrency, richer error analytics) and tracked externally.

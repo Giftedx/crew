@@ -8,12 +8,12 @@ statements, laying groundwork for richer historical tracking.
 from statistics import mean
 from typing import Iterable
 
-from crewai_tools import BaseTool
+from crewai.tools import BaseTool
 
 
 class TruthScoringTool(BaseTool):
-    name = "Truth Scoring Tool"
-    description = "Calculate a trustworthiness score from fact-check results"
+    name: str = "Truth Scoring Tool"
+    description: str = "Calculate a trustworthiness score from fact-check results"
 
     def _run(self, verdicts: Iterable[bool]) -> dict:
         values = list(verdicts)

@@ -8,14 +8,14 @@ keeping unit tests fast and self-contained.
 
 from typing import Dict, List
 
-from crewai_tools import BaseTool
+from crewai.tools import BaseTool
 
 
 class SocialMediaMonitorTool(BaseTool):
     """Collect posts mentioning a keyword across platforms."""
 
-    name = "Social Media Monitor"
-    description = (
+    name: str = "Social Media Monitor"
+    description: str = (
         "Aggregate social media posts and return those containing the keyword"
     )
 

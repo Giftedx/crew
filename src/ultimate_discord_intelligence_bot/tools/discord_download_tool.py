@@ -5,15 +5,15 @@ import tempfile
 from typing import Dict
 
 import requests
-from crewai_tools import BaseTool
+from crewai.tools import BaseTool
 
 
 class DiscordDownloadTool(BaseTool):
     """Download Discord-hosted attachments."""
 
-    name = "Discord Download Tool"
-    description = "Download Discord attachments"
-    platform = "Discord"
+    name: str = "Discord Download Tool"
+    description: str = "Download Discord attachments"
+    platform: str = "Discord"
 
     def _run(self, url: str, quality: str = "1080p") -> Dict[str, str]:
         """Download a file from a Discord attachment URL."""

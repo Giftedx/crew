@@ -7,7 +7,7 @@ from pathlib import Path
 from threading import Lock
 from typing import Dict
 
-from crewai_tools import BaseTool
+from crewai.tools import BaseTool
 
 
 class TrustworthinessTrackerTool(BaseTool):

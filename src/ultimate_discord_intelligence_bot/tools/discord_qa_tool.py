@@ -1,7 +1,8 @@
 """Discord-facing Q&A commands using vector search."""
 from __future__ import annotations
 
-from crewai_tools import BaseTool
+from typing import Optional
+from crewai.tools import BaseTool
 
 from .vector_search_tool import VectorSearchTool
 
@@ -11,6 +12,9 @@ class DiscordQATool(BaseTool):
 
     name: str = "Discord QA Tool"
     description: str = "Answer questions using the vector database."
+    
+    # Properly declare field for pydantic v2
+    search: Optional[VectorSearchTool] = None
 
     def __init__(self, search_tool: VectorSearchTool | None = None) -> None:
         super().__init__()

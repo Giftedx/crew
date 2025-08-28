@@ -1,7 +1,7 @@
 """Verify whether a clip aligns with its transcript context."""
 from __future__ import annotations
 
-from crewai_tools import BaseTool
+from crewai.tools import BaseTool
 
 from .transcript_index_tool import TranscriptIndexTool
 

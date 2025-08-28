@@ -1,4 +1,4 @@
-"""Store transcripts and analysis in a Qdrant vector database."""
+"""Store transcripts and analysis in a Qdrant vector database with tenant isolation."""
 
 from __future__ import annotations
 
@@ -6,7 +6,9 @@ import os
 import uuid
 from typing import Callable, Dict, Optional
 
-from crewai_tools import BaseTool
+from crewai.tools import BaseTool
+
+from ..tenancy import current_tenant, mem_ns
 
 try:  # pragma: no cover - optional dependency
     from qdrant_client import QdrantClient
@@ -27,10 +29,15 @@ except Exception:  # pragma: no cover - used for testing without qdrant
 
 
 class MemoryStorageTool(BaseTool):
-    """Persist text and metadata to a Qdrant collection."""
+    """Persist text and metadata to a tenant-scoped Qdrant collection."""
 
     name: str = "Qdrant Memory Storage Tool"
-    description: str = "Stores documents in a Qdrant vector database for later retrieval."
+    description: str = "Stores documents in a tenant-isolated Qdrant vector database for later retrieval."
+    
+    # Properly declare fields for pydantic v2
+    base_collection: str = "content"
+    embedding_fn: Optional[Callable[[str], list[float]]] = None
+    client: Optional[object] = None
 
     def __init__(
         self,
@@ -39,7 +46,7 @@ class MemoryStorageTool(BaseTool):
         embedding_fn: Optional[Callable[[str], list[float]]] = None,
     ) -> None:
         super().__init__()
-        self.collection = collection or os.getenv("QDRANT_COLLECTION", "content")
+        self.base_collection = collection or os.getenv("QDRANT_COLLECTION", "content")
         self.embedding_fn = embedding_fn or (lambda text: [float(len(text))])
         if client is not None:
             self.client = client
@@ -49,7 +56,8 @@ class MemoryStorageTool(BaseTool):
             url = os.getenv("QDRANT_URL", "http://localhost:6333")
             api_key = os.getenv("QDRANT_API_KEY")
             self.client = QdrantClient(url=url, api_key=api_key)
-        self._ensure_collection(self.collection)
+        # Initialize default collection to maintain backward compatibility with tests
+        self._ensure_collection(self.base_collection)
 
     def _ensure_collection(self, name: str) -> None:  # pragma: no cover - setup
         try:
@@ -59,19 +67,50 @@ class MemoryStorageTool(BaseTool):
                 name,
                 vectors_config=VectorParams(size=1, distance=Distance.COSINE),
             )
+    
+    def _get_tenant_collection(self) -> str:
+        """Get tenant-scoped collection name."""
+        tenant_ctx = current_tenant()
+        if tenant_ctx:
+            return mem_ns(tenant_ctx, self.base_collection)
+        return self.base_collection
 
     def _run(self, text: str, metadata: Dict, collection: str | None = None) -> Dict:
-        target = collection or self.collection
+        # Use tenant-scoped collection if available
+        if collection is None:
+            target = self._get_tenant_collection()
+        else:
+            # Allow override but still apply tenant scoping if in tenant context
+            tenant_ctx = current_tenant()
+            if tenant_ctx:
+                target = mem_ns(tenant_ctx, collection)
+            else:
+                target = collection
+                
         try:
             self._ensure_collection(target)
             vector = self.embedding_fn(text)
+            
+            # Enhance metadata with tenant context
+            enhanced_metadata = dict(metadata)
+            tenant_ctx = current_tenant()
+            if tenant_ctx:
+                enhanced_metadata.update({
+                    "tenant_id": tenant_ctx.tenant_id,
+                    "workspace_id": tenant_ctx.workspace_id,
+                })
+            
             point = PointStruct(
                 id=str(uuid.uuid4()),
                 vector=vector,
-                payload={**metadata, "text": text},
+                payload={**enhanced_metadata, "text": text},
             )
             self.client.upsert(collection_name=target, points=[point])
-            return {"status": "success"}
+            return {
+                "status": "success", 
+                "collection": target,
+                "tenant_scoped": tenant_ctx is not None
+            }
         except Exception as exc:  # pragma: no cover - network errors
             return {"status": "error", "error": str(exc)}
 

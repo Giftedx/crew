@@ -9,7 +9,7 @@ error so the caller can react appropriately.
 import logging
 from collections import Counter
 
-from crewai_tools import BaseTool
+from crewai.tools import BaseTool
 
 try:  # pragma: no cover - optional dependency
     import nltk

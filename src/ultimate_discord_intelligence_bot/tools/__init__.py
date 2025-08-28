@@ -15,7 +15,7 @@ from .discord_download_tool import DiscordDownloadTool
 from .multi_platform_download_tool import MultiPlatformDownloadTool
 from .audio_transcription_tool import AudioTranscriptionTool
 from .discord_post_tool import DiscordPostTool
-from .drive_upload_tool import DriveUploadTool
+# from .drive_upload_tool import DriveUploadTool  # Commented out - missing googleapiclient
 from .logical_fallacy_tool import LogicalFallacyTool
 from .memory_storage_tool import MemoryStorageTool
 from .perspective_synthesizer_tool import PerspectiveSynthesizerTool
@@ -59,7 +59,7 @@ __all__ = [
     "MultiPlatformDownloadTool",
     "AudioTranscriptionTool",
     "DiscordPostTool",
-    "DriveUploadTool",
+    # "DriveUploadTool",  # Commented out - missing googleapiclient
     "LogicalFallacyTool",
     "MemoryStorageTool",
     "PerspectiveSynthesizerTool",
