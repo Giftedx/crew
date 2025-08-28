@@ -5,6 +5,8 @@ __pycache__/
 
 # Virtual environments
 venv/
+.venv/
+.python-version
 .env
 .env.*
 !.env.example
@@ -20,6 +22,47 @@ Processing/
 crew_data/
 yt-dlp/archives/
 
+# Build / packaging
+build/
+dist/
+*.egg-info/
+*.egg
+
+# Test & coverage
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# Caches
+cache/
+.cache/
+
+# IDE / editor
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Type checker artifacts
+pyrightcache/
+
+# Runtime data artifacts (created automatically; see docs/runtime_data.md)
+data/*.db
+data/*.json
+
 # OS files
 .DS_Store
 Thumbs.db
+
+# Node / frontend (if added later)
+node_modules/
+*.tsbuildinfo
+
+# Local dev runtime artifacts
+tmp/
+temp/
+*.tmp
+*.bak
