@@ -55,12 +55,15 @@ def _add_rate_limit_middleware(app: FastAPI, settings: Settings) -> None:
 
     @app.middleware("http")
     async def _rate_limit(request: Request, call_next: Callable):  # type: ignore[no-untyped-def]
+        route = getattr(request.scope.get("route"), "path", request.url.path)
+        # Allow scraping endpoint to bypass rate limiting so metrics remain observable
+        if route == settings.prometheus_endpoint_path:
+            return await call_next(request)
         key = request.client.host if request.client else "unknown"
         if not bucket.allow(key):
             # Attempt to record rejection metric if metrics enabled
             if settings.enable_http_metrics:
                 try:  # pragma: no cover - defensive
-                    route = getattr(request.scope.get("route"), "path", request.url.path)
                     metrics.RATE_LIMIT_REJECTIONS.labels(route, request.method).inc()
                 except Exception:
                     pass
