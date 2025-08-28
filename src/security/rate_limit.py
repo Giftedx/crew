@@ -6,11 +6,11 @@ capacity. The implementation is intentionally lightweight so it can be used
 in tests or small utilities without external dependencies. It is not meant
 for distributed rate limiting.
 """
+
 from __future__ import annotations
 
 import time
 from dataclasses import dataclass, field
-from typing import Dict
 
 
 @dataclass
@@ -27,8 +27,8 @@ class TokenBucket:
 
     rate: float
     capacity: int
-    _tokens: Dict[str, float] = field(default_factory=dict)
-    _timestamps: Dict[str, float] = field(default_factory=dict)
+    _tokens: dict[str, float] = field(default_factory=dict)
+    _timestamps: dict[str, float] = field(default_factory=dict)
 
     def allow(self, key: str, tokens: float = 1.0) -> bool:
         """Return ``True`` if ``key`` may consume ``tokens`` now.

@@ -2,8 +2,11 @@ from __future__ import annotations
 
 """Minimal Qdrant wrapper with namespace support."""
 
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Iterable, List, Sequence
+
+from core.settings import get_settings
+from memory.qdrant_provider import get_qdrant_client
 
 try:
     from qdrant_client import QdrantClient
@@ -15,7 +18,7 @@ except Exception:  # pragma: no cover - optional dependency
 
 @dataclass
 class VectorRecord:
-    vector: List[float]
+    vector: list[float]
     payload: dict
 
 
@@ -29,7 +32,13 @@ class VectorStore:
     def __init__(self, url: str | None = None, api_key: str | None = None):
         if QdrantClient is None:  # pragma: no cover
             raise RuntimeError("qdrant-client is required for VectorStore")
-        self.client = QdrantClient(url or ":memory:", api_key=api_key)
+        # Prefer central singleton unless explicit override provided
+        self.client = get_qdrant_client() if url is None else QdrantClient(url, api_key=api_key)
+        settings = get_settings()
+        self._batch_size = max(1, getattr(settings, "vector_batch_size", 128))
+        # Track per-collection dimension + id counters (monotonic ids)
+        self._dims: dict[str, int] = {}
+        self._counters: dict[str, int] = {}
 
     @staticmethod
     def namespace(tenant: str, workspace: str, creator: str) -> str:
@@ -42,16 +51,36 @@ class VectorStore:
                 name,
                 vectors_config=qmodels.VectorParams(size=dim, distance=qmodels.Distance.COSINE),
             )
+            self._dims[name] = dim
+        else:
+            # Verify existing dimension if we have cached value; if not cache it
+            if name not in self._dims:
+                # Attempt to infer dimension by inserting a dummy approach is unsafe; instead rely
+                # on first record establishing dimension. So just cache expected dim.
+                self._dims[name] = dim
+            elif self._dims[name] != dim:
+                raise ValueError(
+                    f"Dimension mismatch for namespace '{name}': expected {self._dims[name]}, got {dim}"
+                )
 
     def upsert(self, namespace: str, records: Sequence[VectorRecord]) -> None:
         if not records:
             return
-        self._ensure_collection(namespace, len(records[0].vector))
-        points = [
-            qmodels.PointStruct(id=i, vector=r.vector, payload=r.payload)
-            for i, r in enumerate(records)
-        ]
-        self.client.upsert(collection_name=namespace, points=points)
+        dim = len(records[0].vector)
+        self._ensure_collection(namespace, dim)
+
+        # Monotonic base ID
+        base = self._counters.get(namespace, 0)
+
+        # Chunk large batches to reduce memory usage and allow streaming ingest
+        for offset in range(0, len(records), self._batch_size):
+            chunk = records[offset : offset + self._batch_size]
+            points = [
+                qmodels.PointStruct(id=base + offset + i, vector=r.vector, payload=r.payload)
+                for i, r in enumerate(chunk)
+            ]
+            self.client.upsert(collection_name=namespace, points=points)
+        self._counters[namespace] = base + len(records)
 
     def query(self, namespace: str, vector: Sequence[float], top_k: int = 3):
         """Return top ``top_k`` matches for ``vector`` in ``namespace``.
