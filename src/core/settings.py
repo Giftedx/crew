@@ -11,9 +11,9 @@ should ship behind an ``ENABLE_*`` style flag for opt‑in safety.
 
 from __future__ import annotations
 
-from functools import lru_cache
 import importlib
 import sys
+from functools import lru_cache
 from types import ModuleType
 
 from pydantic import AliasChoices, Field
@@ -33,7 +33,7 @@ if _DOTENV_AVAILABLE and "dotenv" in sys.modules and getattr(sys.modules["dotenv
 if not _DOTENV_AVAILABLE:  # pragma: no cover
     fake = ModuleType("dotenv")
 
-    def dotenv_values(_path: str | None = None):  # type: ignore
+    def dotenv_values(_path: str | None = None) -> dict[str, str]:
         return {}
 
     fake.dotenv_values = dotenv_values  # type: ignore[attr-defined]
@@ -53,7 +53,7 @@ class Settings(BaseSettings):
     model_config = ConfigDict(
         env_file=".env" if _DOTENV_AVAILABLE else None,
         case_sensitive=False,
-    )  # type: ignore[arg-type]
+    )
     # Service metadata
     service_name: str = Field(
         default="ultimate-discord-intel",

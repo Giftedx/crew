@@ -18,28 +18,28 @@ except Exception:  # pragma: no cover - missing optional dependency
     PROMETHEUS_AVAILABLE = False
 
     class _NoOpMetric:
-        def labels(self, *args, **kwargs):  # type: ignore[no-untyped-def]
+        def labels(self, *args, **kwargs) -> _NoOpMetric:  # forward ref ok via __future__ annotations
             return self
 
-        def inc(self, *args, **kwargs):  # type: ignore[no-untyped-def]
+        def inc(self, *args, **kwargs) -> None:
             return None
 
-        def observe(self, *args, **kwargs):  # type: ignore[no-untyped-def]
+        def observe(self, *args, **kwargs) -> None:
             return None
 
     class _NoOpRegistry:  # pragma: no cover - simple container
         pass
 
-    def Counter(*args, **kwargs):  # type: ignore[no-untyped-def]
+    def Counter(*_args, **_kwargs) -> _NoOpMetric:  # noqa: N802 - match prometheus style
         return _NoOpMetric()
 
-    def Histogram(*args, **kwargs):  # type: ignore[no-untyped-def]
+    def Histogram(*_args, **_kwargs) -> _NoOpMetric:  # noqa: N802 - match prometheus style
         return _NoOpMetric()
 
-    def CollectorRegistry(*args, **kwargs):  # type: ignore[no-untyped-def]
+    def CollectorRegistry(*_args, **_kwargs) -> _NoOpRegistry:  # noqa: N802 - keep API parity
         return _NoOpRegistry()
 
-    def generate_latest(registry):  # type: ignore[no-untyped-def]
+    def generate_latest(_registry: _NoOpRegistry) -> bytes:  # noqa: N802 - prometheus style
         return b""
 
 

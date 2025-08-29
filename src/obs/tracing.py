@@ -12,20 +12,20 @@ from collections.abc import Callable
 from importlib import metadata
 
 try:  # Optional dependency
-    from opentelemetry import trace  # type: ignore
-    from opentelemetry.sdk.resources import Resource  # type: ignore
-    from opentelemetry.sdk.trace import TracerProvider  # type: ignore
-    from opentelemetry.sdk.trace.export import (  # type: ignore
+    from opentelemetry import trace  # optional dependency
+    from opentelemetry.sdk.resources import Resource
+    from opentelemetry.sdk.trace import TracerProvider
+    from opentelemetry.sdk.trace.export import (
         ConsoleSpanExporter,
         SimpleSpanProcessor,
         SpanExporter,
     )
     try:  # OTLP exporter optional
-        from opentelemetry.exporter.otlp.proto.http.trace_exporter import (  # type: ignore
+        from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
             OTLPSpanExporter as _HttpOTLPSpanExporter,
         )
     except Exception:  # pragma: no cover
-        _HttpOTLPSpanExporter = None  # type: ignore
+        _HttpOTLPSpanExporter = None
     _OTEL_AVAILABLE = True
 except Exception:  # pragma: no cover - fallback path
     _OTEL_AVAILABLE = False
@@ -54,22 +54,22 @@ except Exception:  # pragma: no cover - fallback path
         def get_tracer(self, _name):
             return _NoopTracer()
 
-    trace = _API()  # type: ignore
+    trace = _API()
 
-    class SpanExporter:  # type: ignore
+    class SpanExporter:  # minimal stub
         pass
 
-    class ConsoleSpanExporter(SpanExporter):  # type: ignore
+    class ConsoleSpanExporter(SpanExporter):  # minimal stub
         pass
 
-    class SimpleSpanProcessor:  # type: ignore
+    class SimpleSpanProcessor:  # minimal stub
         def __init__(self, *_a, **_k):
             pass
 
-    class TracerProvider:  # type: ignore
+    class TracerProvider:  # minimal stub
         pass
 
-    class Resource:  # type: ignore
+    class Resource:  # minimal stub
         @staticmethod
         def create(_attrs):
             return None
@@ -88,9 +88,9 @@ def _auto_exporter() -> SpanExporter:
             if "=" in part:
                 k, v = part.split("=", 1)
                 header_dict[k.strip()] = v.strip()
-    if '_HttpOTLPSpanExporter' in globals() and globals().get('_HttpOTLPSpanExporter') is not None:  # type: ignore
+    if '_HttpOTLPSpanExporter' in globals() and globals().get('_HttpOTLPSpanExporter') is not None:
         try:  # pragma: no cover
-            return _HttpOTLPSpanExporter(endpoint=endpoint, headers=header_dict or None)  # type: ignore
+            return _HttpOTLPSpanExporter(endpoint=endpoint, headers=header_dict or None)
         except Exception:
             return ConsoleSpanExporter()
     return ConsoleSpanExporter()
@@ -103,7 +103,7 @@ def init_tracing(service_name: str, exporter: SpanExporter | None = None) -> Spa
     """
 
     if not _OTEL_AVAILABLE:
-        return ConsoleSpanExporter()  # type: ignore
+        return ConsoleSpanExporter()
 
     from opentelemetry.sdk.trace import TracerProvider as _TP  # type: ignore
 

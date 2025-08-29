@@ -3,10 +3,11 @@ from __future__ import annotations
 import random
 import time
 from collections.abc import Callable
+from typing import Any
 
 
 def retry(
-    fn: Callable[[], any],
+    fn: Callable[[], Any],
     retries: int = 3,
     backoff: float = 0.1,
     factor: float = 2.0,
