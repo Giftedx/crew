@@ -52,7 +52,7 @@ See the documentation for full subsystem guides:
 
 ### Developer workflow
 
-Core quality tooling is configured via Ruff (lint + format) and mypy (incremental typing):
+Core quality tooling is configured via Ruff (lint + format) and mypy (incremental typing). See `CONTRIBUTING.md` for full guidelines and the baseline policy:
 
 ```bash
 make format   # auto-fix style & imports
@@ -66,6 +66,9 @@ Or use the helper script:
 
 ```bash
 ./scripts/dev.sh format
+./scripts/dev.sh type-changed            # mypy only changed files vs origin/main
+./scripts/dev.sh type-baseline           # check current mypy error count vs baseline
+./scripts/dev.sh type-baseline-update    # update baseline if improved
 ```
 
 Install pre-commit hooks to ensure consistent formatting before commits:
@@ -131,7 +134,7 @@ Core subsystems are disabled by default and enabled via environment flags:
 See [Configuration Reference](docs/configuration.md) for complete flag documentation.
 
 ## Contributing
-Follow the guidelines in [AGENTS.md](AGENTS.md): reuse existing modules, add tests, run `pytest`, and commit using Conventional Commits.
+Follow the guidelines in [AGENTS.md](AGENTS.md) and the broader contribution steps in [CONTRIBUTING.md](CONTRIBUTING.md): reuse existing modules, add tests, run `pytest`, and commit using Conventional Commits.
 
 Additional guidelines:
 - Keep changes tenant‑aware (always pass explicit tenant/workspace context).

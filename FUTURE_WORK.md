@@ -47,6 +47,36 @@ Add minimal benchmark harness measuring retry overhead and rate limit hot path m
 ### 15. Settings Schema Documentation Sync (M)
 Generate documentation for each `Settings` field (description, env, default) into `docs/configuration.md` to avoid stale manual edits.
 
+### 16. Codebase Lint Hygiene Pass (M)
+Resolve accumulated Ruff violations (notably E402 import ordering, F841 unused vars in tests, E741 ambiguous loop vars, E501 long lines) in a staged approach to minimize noisy diffs:
+1. Imports: reorder to eliminate E402 without altering semantics (module docstrings preserved).
+2. Tests: remove unused variables or prefix with underscore where semantically helpful.
+3. Rename ambiguous single-letter loop vars (`l`, `O`, `I`) to descriptive names.
+4. Long lines: wrap metrics constant groupings & server bucket construction; prefer parentheses over backslashes.
+Add a temporary CI job running `ruff check --select E,F --diff` to prevent regression once baseline clean.
+
+### 17. Mypy Debt Reduction Roadmap (H → M)
+Current snapshot ~140 errors across 49 files. Phased plan:
+Phase 1 (H): Eliminate unused/incorrect `# type: ignore` (quick wins, improves signal). Add `warn_unused_ignores = True` enforcement project-wide after cleanup.
+Phase 2 (H): Provide minimal stub packages or `types-` dependencies for external libs (`nltk`, `yt_dlp`, `jsonschema`, `prometheus_client`).
+Phase 3 (M): Annotate public function boundaries in `ingest`, `memory`, `grounding` modules (inputs/outputs) to reduce Any leakage.
+Phase 4 (M): Introduce Protocols / TypedDicts for frequently passed dict payloads (e.g., StepResult-like data) and enable `disallow_any_generics`.
+Phase 5 (L): Tighten config with `disallow_untyped_defs = True` for new/modified files via per-file overrides; gradually expand.
+Track progress metric: mypy error count trend in CI (simple badge or log summary).
+
+### 18. Remove Deprecated Logical Fallacy Stub (M)
+Delete `logical_fallacy_tool_backup.py` once two consecutive releases occur with zero import attempts (instrumented via grep in CI + optional runtime guard). Update any docs referencing prior duplication.
+
+### 19. Developer Tooling / Pre-Commit Enhancements (M)
+Add optional `.pre-commit-config.yaml` with hooks:
+* Ruff (lint + format if adopting `ruff format`).
+* Mypy (changed files only via `--cache-fine-grained`).
+* Pyproject toml sort (ensure deterministic dependency/order formatting).
+Provide `scripts/dev.sh` convenience wrapper (already added) – extend to offer `./scripts/dev.sh lint|type|test` subcommands. Document in README contributing section.
+
+### 20. Incremental Type Enforcement Guard (M)
+Add a CI script that fails if mypy error count increases relative to a stored baseline JSON (updated only when errors decrease). Prevents regression while allowing staged improvements.
+
 ---
 Legend: Priority H (High) – next cycle; M (Medium) – upcoming; L (Low) – opportunistic.
 
