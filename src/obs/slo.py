@@ -1,8 +1,9 @@
 """Simple SLO evaluation utilities."""
+
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Dict, Iterable, List
 
 
 @dataclass
@@ -17,11 +18,11 @@ class SLOEvaluator:
     """Evaluate metrics against SLO thresholds."""
 
     def __init__(self, slos: Iterable[SLO]) -> None:
-        self.slos: List[SLO] = list(slos)
+        self.slos: list[SLO] = list(slos)
 
-    def evaluate(self, values: Dict[str, float]) -> Dict[str, bool]:
+    def evaluate(self, values: dict[str, float]) -> dict[str, bool]:
         """Return a mapping of metric -> whether it met the SLO."""
-        result: Dict[str, bool] = {}
+        result: dict[str, bool] = {}
         for slo in self.slos:
             val = values.get(slo.metric, 0.0)
             result[slo.metric] = val <= slo.threshold

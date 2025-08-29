@@ -1,9 +1,8 @@
-from __future__ import annotations
-
 """Transcript chunking utilities for retrieval augmented generation."""
 
+from __future__ import annotations
+
 from dataclasses import dataclass
-from typing import Iterable, List
 
 from .transcribe import Transcript
 
@@ -17,7 +16,7 @@ class Chunk:
 
 def chunk_transcript(
     transcript: Transcript, *, max_chars: int = 800, overlap: int = 200
-) -> List[Chunk]:
+) -> list[Chunk]:
     """Split a :class:`~analysis.transcribe.Transcript` into overlapping chunks.
 
     Parameters
@@ -30,8 +29,8 @@ def chunk_transcript(
         Overlap size in characters between consecutive chunks.
     """
 
-    chunks: List[Chunk] = []
-    buf: List[str] = []
+    chunks: list[Chunk] = []
+    buf: list[str] = []
     start = 0.0
     end = 0.0
     for seg in transcript.segments:

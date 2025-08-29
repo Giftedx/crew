@@ -9,7 +9,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Optional
 
 
 @dataclass(slots=True)
@@ -21,7 +20,7 @@ class Repo:
     status: str
     trust_tier: str
     signing_policy: str | None = None
-    last_synced_at: Optional[datetime] = None
+    last_synced_at: datetime | None = None
 
 
 @dataclass(slots=True)

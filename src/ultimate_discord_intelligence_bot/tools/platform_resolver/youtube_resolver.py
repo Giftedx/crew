@@ -23,13 +23,13 @@ class YouTubeResolverTool(BaseTool):
 
 def resolve_youtube_handle(handle: str) -> CanonicalChannel:
     """Return a canonical reference for a YouTube handle.
-    
+
     This performs enhanced normalization and validation. Real deployments
     should integrate with YouTube Data API for channel ID resolution.
     """
     # Handle various YouTube URL formats
     handle = handle.strip()
-    
+
     # Extract handle from full URLs
     if "youtube.com/" in handle:
         if "/channel/" in handle:
@@ -38,7 +38,7 @@ def resolve_youtube_handle(handle: str) -> CanonicalChannel:
             return CanonicalChannel(
                 id=channel_id,
                 handle=f"@{channel_id}",  # Channel ID format
-                url=f"https://www.youtube.com/channel/{channel_id}"
+                url=f"https://www.youtube.com/channel/{channel_id}",
             )
         elif "/@" in handle:
             # https://www.youtube.com/@handle
@@ -52,16 +52,12 @@ def resolve_youtube_handle(handle: str) -> CanonicalChannel:
     else:
         # Raw handle
         norm = handle.lstrip("@").strip()
-    
+
     # Normalize the handle
     norm = norm.replace(" ", "").strip("/")
     channel_id = norm.lower()
-    
+
     # Generate URLs for different potential formats
     handle_url = f"https://www.youtube.com/@{norm}"
-    
-    return CanonicalChannel(
-        id=channel_id,
-        handle=f"@{norm}",
-        url=handle_url
-    )
+
+    return CanonicalChannel(id=channel_id, handle=f"@{norm}", url=handle_url)

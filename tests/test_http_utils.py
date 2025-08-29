@@ -1,7 +1,6 @@
-import types
 from unittest.mock import MagicMock
 
-from core.http_utils import resilient_post, resilient_get, REQUEST_TIMEOUT_SECONDS
+from core.http_utils import resilient_get, resilient_post
 
 
 def test_resilient_post_normal():
@@ -24,7 +23,10 @@ def test_resilient_post_legacy_timeout_fallback():
 
     def legacy(url, json=None, headers=None, files=None):  # missing timeout
         calls["attempts"] += 1
-        r = MagicMock(); r.status_code = 204; r.text = ""; return r
+        r = MagicMock()
+        r.status_code = 204
+        r.text = ""
+        return r
 
     resp = resilient_post("https://example.com", json_payload={"x": 2}, request_fn=legacy)
     assert resp.status_code == 204
@@ -37,7 +39,10 @@ def test_resilient_get_normal():
 
     def fake(url, params=None, headers=None, timeout=None, stream=None):
         captured["params"] = params
-        r = MagicMock(); r.status_code = 200; r.text = "ok"; return r
+        r = MagicMock()
+        r.status_code = 200
+        r.text = "ok"
+        return r
 
     resp = resilient_get("https://example.com", params={"q": "x"}, request_fn=fake)
     assert resp.status_code == 200
@@ -49,7 +54,10 @@ def test_resilient_get_legacy_timeout_fallback():
 
     def legacy(url, params=None, headers=None, stream=None):  # no timeout
         calls["attempts"] += 1
-        r = MagicMock(); r.status_code = 200; r.text = "ok"; return r
+        r = MagicMock()
+        r.status_code = 200
+        r.text = "ok"
+        return r
 
     resp = resilient_get("https://example.com", params={"k": 1}, request_fn=legacy)
     assert resp.status_code == 200

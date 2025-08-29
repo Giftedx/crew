@@ -1,6 +1,5 @@
-import os
-import requests
 import pytest
+import requests
 
 from core.http_utils import http_request_with_retry
 from obs import metrics as m

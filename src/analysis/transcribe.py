@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 """Lightweight Whisper wrapper for speech-to-text.
 
 This module intentionally keeps dependencies optional; when the
@@ -9,8 +7,9 @@ interpreted as a transcript segment. This allows deterministic unit
 tests without requiring heavy models.
 """
 
+from __future__ import annotations
+
 from dataclasses import dataclass
-from typing import List, Optional
 
 
 @dataclass
@@ -20,14 +19,14 @@ class Segment:
     start: float
     end: float
     text: str
-    speaker: Optional[str] = None
+    speaker: str | None = None
 
 
 @dataclass
 class Transcript:
     """Collection of transcript segments."""
 
-    segments: List[Segment]
+    segments: list[Segment]
 
 
 def run_whisper(path: str, model: str = "tiny") -> Transcript:
@@ -41,6 +40,7 @@ def run_whisper(path: str, model: str = "tiny") -> Transcript:
 
     try:
         import whisper  # type: ignore
+
         model_inst = whisper.load_model(model)
         result = model_inst.transcribe(path)
         segments = [
@@ -49,10 +49,9 @@ def run_whisper(path: str, model: str = "tiny") -> Transcript:
         ]
         return Transcript(segments=segments)
     except Exception:
-        with open(path, "r", encoding="utf-8") as fh:
+        with open(path, encoding="utf-8") as fh:
             lines = fh.read().splitlines()
         segments = [
-            Segment(start=float(i), end=float(i + 1), text=line)
-            for i, line in enumerate(lines)
+            Segment(start=float(i), end=float(i + 1), text=line) for i, line in enumerate(lines)
         ]
         return Transcript(segments=segments)

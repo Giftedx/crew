@@ -1,17 +1,17 @@
 import asyncio
 import logging
 from functools import partial
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from .settings import DISCORD_WEBHOOK
+from .step_result import StepResult
 from .tools.audio_transcription_tool import AudioTranscriptionTool
-from .tools.text_analysis_tool import TextAnalysisTool
 from .tools.discord_post_tool import DiscordPostTool
 from .tools.drive_upload_tool import DriveUploadTool
 from .tools.logical_fallacy_tool import LogicalFallacyTool
-from .tools.perspective_synthesizer_tool import PerspectiveSynthesizerTool
 from .tools.memory_storage_tool import MemoryStorageTool
-from .step_result import StepResult
+from .tools.perspective_synthesizer_tool import PerspectiveSynthesizerTool
+from .tools.text_analysis_tool import TextAnalysisTool
 
 if TYPE_CHECKING:  # pragma: no cover - for typing only
     from .tools.multi_platform_download_tool import MultiPlatformDownloadTool
@@ -24,15 +24,15 @@ class ContentPipeline:
 
     def __init__(
         self,
-        webhook_url: Optional[str] = None,
+        webhook_url: str | None = None,
         downloader: Optional["MultiPlatformDownloadTool"] = None,
-        transcriber: Optional[AudioTranscriptionTool] = None,
-        analyzer: Optional[TextAnalysisTool] = None,
-        drive: Optional[DriveUploadTool] = None,
-        discord: Optional[DiscordPostTool] = None,
-        fallacy_detector: Optional[LogicalFallacyTool] = None,
-        perspective: Optional[PerspectiveSynthesizerTool] = None,
-        memory: Optional[MemoryStorageTool] = None,
+        transcriber: AudioTranscriptionTool | None = None,
+        analyzer: TextAnalysisTool | None = None,
+        drive: DriveUploadTool | None = None,
+        discord: DiscordPostTool | None = None,
+        fallacy_detector: LogicalFallacyTool | None = None,
+        perspective: PerspectiveSynthesizerTool | None = None,
+        memory: MemoryStorageTool | None = None,
     ):
         if downloader is None:
             from .tools.multi_platform_download_tool import MultiPlatformDownloadTool

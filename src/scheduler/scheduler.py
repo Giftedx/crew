@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
-from typing import Dict, Optional
 import sqlite3
+from datetime import datetime, timedelta, timezone
 
 from core.learning_engine import LearningEngine
 from ingest import models, pipeline
-from ingest.sources.base import Watch, SourceConnector
+from ingest.sources.base import SourceConnector, Watch
+
 from .priority_queue import PriorityQueue
 
 
@@ -19,7 +19,7 @@ class Scheduler:
         self,
         conn: sqlite3.Connection,
         queue: PriorityQueue,
-        connectors: Dict[str, SourceConnector],
+        connectors: dict[str, SourceConnector],
         *,
         learner: LearningEngine | None = None,
     ) -> None:
@@ -43,12 +43,18 @@ class Scheduler:
     ) -> models.Watchlist:
         now = datetime.now(timezone.utc).isoformat()
         cur = self.conn.execute(
-            "INSERT INTO watchlist (tenant, workspace, source_type, handle, label, enabled, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?)",
+            (
+                "INSERT INTO watchlist (tenant, workspace, source_type, handle, label, enabled, created_at, "
+                "updated_at) VALUES (?,?,?,?,?,?,?,?)"
+            ),
             (tenant, workspace, source_type, handle, label, 1, now, now),
         )
         watch_id = int(cur.lastrowid)
         self.conn.execute(
-            "INSERT INTO ingest_state (watchlist_id, cursor, last_seen_at, etag, failure_count, backoff_until) VALUES (?,?,?,?,?,?)",
+            (
+                "INSERT INTO ingest_state (watchlist_id, cursor, last_seen_at, etag, failure_count, "
+                "backoff_until) VALUES (?,?,?,?,?,?)"
+            ),
             (watch_id, None, None, None, 0, None),
         )
         self.conn.commit()
@@ -100,12 +106,12 @@ class Scheduler:
                 (wid,),
             ).fetchone()
             cursor = state_row[0] if state_row else None
-            last_polled = datetime.fromisoformat(state_row[1]) if state_row and state_row[1] else None
+            last_polled = (
+                datetime.fromisoformat(state_row[1]) if state_row and state_row[1] else None
+            )
 
             # RL arm: decide poll interval (seconds)
-            interval = self.learner.recommend(
-                "scheduler", {"source_type": source_type}, [30, 300]
-            )
+            interval = self.learner.recommend("scheduler", {"source_type": source_type}, [30, 300])
             if last_polled and now - last_polled < timedelta(seconds=interval):
                 continue
 
@@ -140,12 +146,10 @@ class Scheduler:
                 (state.get("cursor"), now.isoformat(), wid),
             )
             self.conn.commit()
-            self.learner.record(
-                "scheduler", {"source_type": source_type}, interval, float(reward)
-            )
+            self.learner.record("scheduler", {"source_type": source_type}, interval, float(reward))
 
     # ----------------------------------------------------------- worker
-    def worker_run_once(self, store) -> Optional[pipeline.IngestJob]:
+    def worker_run_once(self, store) -> pipeline.IngestJob | None:
         qjob = self.queue.dequeue()
         if not qjob:
             return None
@@ -158,4 +162,3 @@ class Scheduler:
 
 
 __all__ = ["Scheduler", "PriorityQueue"]
-

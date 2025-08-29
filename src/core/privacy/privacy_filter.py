@@ -3,27 +3,28 @@ from __future__ import annotations
 """High-level privacy filter that combines policy checks and redaction."""
 
 from dataclasses import dataclass
-from typing import Any, Dict, Tuple
+from typing import Any
 
-from policy import policy_engine
-from . import pii_detector, redactor
 from core import flags
 from core.learning_engine import LearningEngine
+from policy import policy_engine
+
+from . import pii_detector, redactor
 
 
 @dataclass
 class PrivacyReport:
     found: list[pii_detector.Span]
-    redacted_by_type: Dict[str, int]
+    redacted_by_type: dict[str, int]
     decisions: list[policy_engine.Decision]
 
 
 def filter_text(
     text: str,
-    context: Dict[str, Any] | None = None,
+    context: dict[str, Any] | None = None,
     learning: LearningEngine | None = None,
     domain: str = "safety",
-) -> Tuple[str, PrivacyReport]:
+) -> tuple[str, PrivacyReport]:
     ctx = context or {}
     policy = policy_engine.load_policy(ctx.get("tenant"))
     decisions = []
@@ -47,7 +48,7 @@ def filter_text(
 
     spans = pii_detector.detect(text) if detect_enabled else []
     redacted = redactor.apply(text, spans, policy.masks) if spans and redact_enabled else text
-    counts: Dict[str, int] = {}
+    counts: dict[str, int] = {}
     for s in spans:
         counts[s.type] = counts.get(s.type, 0) + 1
     if registered:

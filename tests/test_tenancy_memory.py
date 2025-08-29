@@ -1,5 +1,5 @@
 from ultimate_discord_intelligence_bot.services import MemoryService
-from ultimate_discord_intelligence_bot.tenancy import TenantContext, with_tenant, mem_ns
+from ultimate_discord_intelligence_bot.tenancy import TenantContext, mem_ns, with_tenant
 
 
 def test_mem_ns_composition():

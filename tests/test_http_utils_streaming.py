@@ -1,4 +1,3 @@
-from unittest.mock import MagicMock
 
 from core.http_utils import resilient_get
 

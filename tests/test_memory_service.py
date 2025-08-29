@@ -4,9 +4,7 @@ from ultimate_discord_intelligence_bot.services import MemoryService
 def test_memory_service_store_and_retrieve():
     memory = MemoryService()
     memory.add("The sky is blue", {"source": "test"})
-    assert memory.retrieve("sky") == [
-        {"text": "The sky is blue", "metadata": {"source": "test"}}
-    ]
+    assert memory.retrieve("sky") == [{"text": "The sky is blue", "metadata": {"source": "test"}}]
 
 
 def test_memory_service_metadata_filter():
@@ -46,4 +44,3 @@ def test_memory_service_empty_query():
     memory.add("blue")
     assert memory.retrieve("") == []
     assert memory.retrieve("   ") == []
-

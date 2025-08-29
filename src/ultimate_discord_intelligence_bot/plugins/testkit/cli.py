@@ -1,4 +1,5 @@
 """Command line interface for plugin capability tests."""
+
 from __future__ import annotations
 
 import argparse

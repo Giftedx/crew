@@ -4,11 +4,9 @@ from __future__ import annotations
 
 import json
 import sqlite3
+from dataclasses import asdict
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
-
-from dataclasses import asdict
 
 from .models import Signer
 
@@ -103,11 +101,9 @@ class MarketplaceStore:
         )
         self.conn.commit()
 
-    def get_signer(self, fingerprint: str) -> Optional[Signer]:
+    def get_signer(self, fingerprint: str) -> Signer | None:
         cur = self.conn.cursor()
-        cur.execute(
-            "SELECT data FROM mp_signers WHERE fingerprint=?", (fingerprint,)
-        )
+        cur.execute("SELECT data FROM mp_signers WHERE fingerprint=?", (fingerprint,))
         row = cur.fetchone()
         if not row:
             return None

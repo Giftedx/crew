@@ -1,4 +1,5 @@
 import json
+
 from ultimate_discord_intelligence_bot.tools.trustworthiness_tracker_tool import (
     TrustworthinessTrackerTool,
 )

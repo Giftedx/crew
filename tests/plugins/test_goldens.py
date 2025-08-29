@@ -1,5 +1,5 @@
-from pathlib import Path
 import json
+from pathlib import Path
 
 from ultimate_discord_intelligence_bot.plugins.testkit import goldens
 

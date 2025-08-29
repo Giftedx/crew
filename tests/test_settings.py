@@ -1,8 +1,6 @@
 import importlib
 from pathlib import Path
 
-import pytest
-
 MODULE_PATH = "ultimate_discord_intelligence_bot.settings"
 
 
@@ -18,7 +16,7 @@ def reload_settings(monkeypatch, **env):
 def test_base_dir_env_override(monkeypatch):
     tmp = Path("/tmp/crewtest")
     settings = reload_settings(monkeypatch, CREWAI_BASE_DIR=str(tmp))
-    assert settings.BASE_DIR == tmp
+    assert tmp == settings.BASE_DIR
 
 
 def test_base_dir_default(monkeypatch):
@@ -35,7 +33,7 @@ def test_path_envs_expand_user(monkeypatch, tmp_path):
         CREWAI_BASE_DIR=str(tmp_path / "base"),
         CREWAI_DOWNLOADS_DIR=downloads,
     )
-    assert settings.DOWNLOADS_DIR == env_home / "downloads"
+    assert env_home / "downloads" == settings.DOWNLOADS_DIR
 
 
 def test_qdrant_url(monkeypatch):
@@ -49,4 +47,4 @@ def test_qdrant_url(monkeypatch):
 def test_private_webhook(monkeypatch):
     url = "https://discord.com/api/webhooks/test"
     settings = reload_settings(monkeypatch, DISCORD_PRIVATE_WEBHOOK=url)
-    assert settings.DISCORD_PRIVATE_WEBHOOK == url
+    assert url == settings.DISCORD_PRIVATE_WEBHOOK

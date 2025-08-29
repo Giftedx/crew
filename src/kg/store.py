@@ -1,15 +1,17 @@
 from __future__ import annotations
+
 """SQLite-backed knowledge graph store with tenant isolation."""
 
-from dataclasses import dataclass
-from typing import Any, Iterable, List, Optional
 import json
 import sqlite3
+from collections.abc import Iterable
+from dataclasses import dataclass
+from typing import Any
 
 
 @dataclass
 class KGNode:
-    id: Optional[int]
+    id: int | None
     tenant: str
     type: str
     name: str
@@ -19,12 +21,12 @@ class KGNode:
 
 @dataclass
 class KGEdge:
-    id: Optional[int]
+    id: int | None
     src_id: int
     dst_id: int
     type: str
     weight: float
-    provenance_id: Optional[int]
+    provenance_id: int | None
     created_at: str
 
 
@@ -84,7 +86,9 @@ class KGStore:
         self.conn.commit()
 
     # Node operations
-    def add_node(self, tenant: str, type: str, name: str, attrs: Optional[dict] = None, created_at: str = "") -> int:
+    def add_node(
+        self, tenant: str, type: str, name: str, attrs: dict | None = None, created_at: str = ""
+    ) -> int:
         cur = self.conn.cursor()
         cur.execute(
             "INSERT INTO kg_nodes (tenant, type, name, attrs_json, created_at) VALUES (?, ?, ?, ?, ?)",
@@ -93,23 +97,23 @@ class KGStore:
         self.conn.commit()
         return int(cur.lastrowid)
 
-    def query_nodes(self, tenant: str, *, type: Optional[str] = None, name: Optional[str] = None) -> List[KGNode]:
+    def query_nodes(
+        self, tenant: str, *, type: str | None = None, name: str | None = None
+    ) -> list[KGNode]:
         cur = self.conn.cursor()
         conditions = ["tenant = ?"]
-        params: List[Any] = [tenant]
+        params: list[Any] = [tenant]
         if type:
             conditions.append("type = ?")
             params.append(type)
         if name:
             conditions.append("name = ?")
             params.append(name)
-        cur.execute(
-            f"SELECT * FROM kg_nodes WHERE {' AND '.join(conditions)}", params
-        )
+        cur.execute(f"SELECT * FROM kg_nodes WHERE {' AND '.join(conditions)}", params)
         rows = cur.fetchall()
         return [KGNode(**row) for row in rows]
 
-    def get_node(self, node_id: int) -> Optional[KGNode]:
+    def get_node(self, node_id: int) -> KGNode | None:
         cur = self.conn.cursor()
         cur.execute("SELECT * FROM kg_nodes WHERE id = ?", (node_id,))
         row = cur.fetchone()
@@ -123,7 +127,7 @@ class KGStore:
         type: str,
         *,
         weight: float = 1.0,
-        provenance_id: Optional[int] = None,
+        provenance_id: int | None = None,
         created_at: str = "",
     ) -> int:
         cur = self.conn.cursor()
@@ -137,10 +141,12 @@ class KGStore:
         self.conn.commit()
         return int(cur.lastrowid)
 
-    def query_edges(self, *, src_id: Optional[int] = None, dst_id: Optional[int] = None, type: Optional[str] = None) -> List[KGEdge]:
+    def query_edges(
+        self, *, src_id: int | None = None, dst_id: int | None = None, type: str | None = None
+    ) -> list[KGEdge]:
         cur = self.conn.cursor()
-        conditions: List[str] = []
-        params: List[Any] = []
+        conditions: list[str] = []
+        params: list[Any] = []
         if src_id is not None:
             conditions.append("src_id = ?")
             params.append(src_id)
@@ -164,9 +170,7 @@ class KGStore:
                 break
             cur = self.conn.cursor()
             q_marks = ",".join(["?"] * len(frontier))
-            cur.execute(
-                f"SELECT dst_id FROM kg_edges WHERE src_id IN ({q_marks})", list(frontier)
-            )
+            cur.execute(f"SELECT dst_id FROM kg_edges WHERE src_id IN ({q_marks})", list(frontier))
             rows = {r[0] for r in cur.fetchall()}
             rows -= seen
             seen |= rows

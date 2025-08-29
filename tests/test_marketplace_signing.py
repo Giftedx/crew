@@ -1,9 +1,8 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
+from ultimate_discord_intelligence_bot.marketplace.models import Signer
 from ultimate_discord_intelligence_bot.marketplace.signing import verify_manifest
 from ultimate_discord_intelligence_bot.marketplace.store import MarketplaceStore
-from ultimate_discord_intelligence_bot.marketplace.models import Signer
-from datetime import datetime, timedelta, timezone
 
 
 def make_store() -> MarketplaceStore:

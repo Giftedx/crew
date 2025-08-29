@@ -1,20 +1,18 @@
-import ipaddress
 import json
 from datetime import datetime
 from pathlib import Path
-from urllib.parse import urlparse
 
-import requests
 from crewai.tools import BaseTool
+from pydantic import Field
+
 from core.http_utils import (
-    REQUEST_TIMEOUT_SECONDS,
-    HTTP_SUCCESS_NO_CONTENT,
-    HTTP_RATE_LIMITED,
     DEFAULT_RATE_LIMIT_RETRY,
+    HTTP_RATE_LIMITED,
+    HTTP_SUCCESS_NO_CONTENT,
+    REQUEST_TIMEOUT_SECONDS,
     resilient_post,
     validate_public_https_url,
 )
-from pydantic import BaseModel, Field
 
 # ---------------------------------------------------------------------------
 # Constants (avoid magic numbers in logic)

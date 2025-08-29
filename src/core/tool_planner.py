@@ -17,7 +17,8 @@ Example
 
 """
 
-from typing import Callable, Mapping, Sequence, Any
+from collections.abc import Callable, Mapping, Sequence
+from typing import Any
 
 from . import learn
 from .rl import registry as rl_registry
@@ -76,5 +77,6 @@ def execute_plan(
         policy_registry=policy_registry,
     )
     return outputs
+
 
 __all__ = ["execute_plan"]

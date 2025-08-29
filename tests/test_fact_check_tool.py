@@ -1,11 +1,16 @@
-from ultimate_discord_intelligence_bot.tools.fact_check_tool import FactCheckTool
 from requests import RequestException
+
+from ultimate_discord_intelligence_bot.tools.fact_check_tool import FactCheckTool
 
 
 def test_fact_check_aggregates(monkeypatch):
     tool = FactCheckTool()
-    monkeypatch.setattr(tool, "_search_duckduckgo", lambda q: [{"title": "A", "url": "u", "snippet": "a"}])
-    monkeypatch.setattr(tool, "_search_serply", lambda q: [{"title": "B", "url": "u", "snippet": "b"}])
+    monkeypatch.setattr(
+        tool, "_search_duckduckgo", lambda q: [{"title": "A", "url": "u", "snippet": "a"}]
+    )
+    monkeypatch.setattr(
+        tool, "_search_serply", lambda q: [{"title": "B", "url": "u", "snippet": "b"}]
+    )
     monkeypatch.setattr(tool, "_search_exa", lambda q: [])
     monkeypatch.setattr(tool, "_search_perplexity", lambda q: [])
     monkeypatch.setattr(tool, "_search_wolfram", lambda q: [])

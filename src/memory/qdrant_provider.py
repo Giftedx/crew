@@ -16,8 +16,8 @@ except Exception:  # pragma: no cover
 from core.settings import get_settings
 
 
-@lru_cache()
-def get_qdrant_client() -> "QdrantClient":  # type: ignore[override]
+@lru_cache
+def get_qdrant_client() -> QdrantClient:  # type: ignore[override]
     settings = get_settings()
     if QdrantClient is None:  # pragma: no cover
         raise RuntimeError("qdrant-client not installed")

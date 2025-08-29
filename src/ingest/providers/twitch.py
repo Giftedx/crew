@@ -3,7 +3,6 @@ from __future__ import annotations
 """Twitch ingestion utilities using ``yt-dlp`` for simplicity."""
 
 from dataclasses import dataclass
-from typing import Optional
 
 
 @dataclass
@@ -11,8 +10,8 @@ class ClipMetadata:
     id: str
     title: str
     streamer: str
-    published_at: Optional[str]
-    duration: Optional[float]
+    published_at: str | None
+    duration: float | None
     url: str
 
 
@@ -31,6 +30,6 @@ def fetch_metadata(url: str) -> ClipMetadata:
     )
 
 
-def fetch_transcript(url: str) -> Optional[str]:
+def fetch_transcript(url: str) -> str | None:
     """Twitch rarely exposes transcripts; return ``None`` to signal fallback."""
     return None

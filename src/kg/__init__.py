@@ -1,8 +1,8 @@
 """Knowledge graph utilities."""
 
-from .store import KGStore, KGNode, KGEdge
+from . import viz
 from .extract import extract
 from .reasoner import timeline
-from . import viz
+from .store import KGEdge, KGNode, KGStore
 
 __all__ = ["KGStore", "KGNode", "KGEdge", "extract", "timeline", "viz"]

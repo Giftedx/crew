@@ -2,18 +2,19 @@ from __future__ import annotations
 
 """Ingestion orchestration for media sources."""
 
-from dataclasses import dataclass
-from typing import List, Optional, Tuple, Any, Callable
 import concurrent.futures
-
-from analysis import segmenter, topics, transcribe
-from memory import embeddings, vector_store
-from .providers import youtube, twitch
-from core.privacy import privacy_filter
-from ingest import models
 import hashlib
 import os
+from dataclasses import dataclass
 from datetime import datetime, timezone
+from typing import Any
+
+from analysis import segmenter, topics, transcribe
+from core.privacy import privacy_filter
+from ingest import models
+from memory import embeddings, vector_store
+
+from .providers import twitch, youtube
 
 
 @dataclass
@@ -23,7 +24,7 @@ class IngestJob:
     url: str
     tenant: str
     workspace: str
-    tags: List[str]
+    tags: list[str]
     visibility: str = "public"
 
 
@@ -35,7 +36,7 @@ def _get_provider(source: str):
     raise ValueError(f"unknown source {source}")  # pragma: no cover - defensive
 
 
-def _fetch_both_concurrent(provider_mod: Any, url: str) -> Tuple[Any, Optional[str]]:
+def _fetch_both_concurrent(provider_mod: Any, url: str) -> tuple[Any, str | None]:
     """Fetch metadata & transcript concurrently.
 
     Falls back to sequential if an exception arises in transcript fetch; metadata
@@ -52,14 +53,13 @@ def _fetch_both_concurrent(provider_mod: Any, url: str) -> Tuple[Any, Optional[s
     return meta, transcript_text
 
 
-def _build_transcript(job: IngestJob, transcript_text: Optional[str]) -> transcribe.Transcript:
+def _build_transcript(job: IngestJob, transcript_text: str | None) -> transcribe.Transcript:
     if transcript_text is None:
         return transcribe.run_whisper(job.url)
     lines = [l.strip() for l in transcript_text.splitlines() if l.strip()]
-    return transcribe.Transcript([
-        transcribe.Segment(start=float(i), end=float(i + 1), text=t)
-        for i, t in enumerate(lines)
-    ])
+    return transcribe.Transcript(
+        [transcribe.Segment(start=float(i), end=float(i + 1), text=t) for i, t in enumerate(lines)]
+    )
 
 
 def run(job: IngestJob, store: vector_store.VectorStore) -> dict:

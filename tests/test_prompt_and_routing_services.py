@@ -1,7 +1,3 @@
-import os
-
-import pytest
-
 from ultimate_discord_intelligence_bot.services import (
     LearningEngine,
     OpenRouterService,
@@ -111,8 +107,6 @@ def test_perspective_synthesizer_integration(monkeypatch):
     monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
     tool = PerspectiveSynthesizerTool()
     out = tool.run("piece one", "piece two")
-    expected = (
-        "Summarise the following information:\n" "piece one\n" "piece two"
-    ).upper()
+    expected = ("Summarise the following information:\npiece one\npiece two").upper()
     assert out["summary"] == expected
     assert out["model"]

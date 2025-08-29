@@ -1,5 +1,5 @@
-import requests
 import pytest
+import requests
 
 from ultimate_discord_intelligence_bot.tools.discord_private_alert_tool import (
     DiscordPrivateAlertTool,
@@ -9,7 +9,7 @@ from ultimate_discord_intelligence_bot.tools.discord_private_alert_tool import (
 def test_discord_alert_posts(monkeypatch):
     called = {}
 
-    def fake_post(url, json):
+    def fake_post(url, json=None, headers=None, files=None, timeout=None):
         called["url"] = url
         called["json"] = json
 
@@ -29,7 +29,7 @@ def test_discord_alert_posts(monkeypatch):
 def test_discord_alert_includes_metrics(monkeypatch):
     called = {}
 
-    def fake_post(url, json):
+    def fake_post(url, json=None, headers=None, files=None, timeout=None):
         called["json"] = json
 
         class Resp:
@@ -60,7 +60,7 @@ def test_discord_alert_rejects_private_ip():
 def test_discord_alert_warns_on_threshold(monkeypatch):
     called = {}
 
-    def fake_post(url, json):
+    def fake_post(url, json=None, headers=None, files=None, timeout=None):
         called["json"] = json
 
         class Resp:
@@ -76,4 +76,3 @@ def test_discord_alert_warns_on_threshold(monkeypatch):
     result = tool._run("status", metrics, thresholds)
     assert result["status"] == "success"
     assert called["json"]["content"].startswith("⚠️")
-

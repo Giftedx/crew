@@ -1,16 +1,12 @@
-import os
 import importlib
-from unittest.mock import patch, MagicMock
-
-import pytest
+import os
+from unittest.mock import patch
 
 from core.http_utils import (
-    retrying_post,
-    retrying_get,
-    DEFAULT_HTTP_RETRY_ATTEMPTS,
     HTTP_RATE_LIMITED,
+    retrying_get,
+    retrying_post,
 )
-from obs.metrics import HTTP_RETRY_ATTEMPTS, HTTP_RETRY_GIVEUPS
 
 
 def _reset_metrics():

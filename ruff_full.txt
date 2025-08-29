@@ -1,0 +1,3519 @@
+E402 Module level import not at top of file
+  --> scripts/run_eval.py:12:1
+   |
+11 | # Now run the evaluation
+12 | from eval.runner import main
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+13 |
+14 | if __name__ == "__main__":
+   |
+
+E501 Line too long (108 > 100)
+   --> scripts/validate_config_docs.py:251:100
+    |
+250 |         print(
+251 |             "\n💡 Summary: Documentation needs significant updates to match actual configuration structure."
+    |                                                                                                     ^^^^^^^^
+252 |         )
+253 |     else:
+    |
+
+PERF401 Use `list.extend` to create a transformed list
+  --> scripts/validate_docs.py:48:17
+   |
+46 |             # Simple validation - just check if it looks reasonable
+47 |             if "ultimate_discord_intelligence_bot" in import_line:
+48 |                 issues.append(f"Import may need PYTHONPATH: {import_line}")
+   |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+49 |
+50 |     return issues
+   |
+help: Replace for loop with list.extend
+
+E402 Module level import not at top of file
+ --> src/analysis/segmenter.py:5:1
+  |
+3 | """Transcript chunking utilities for retrieval augmented generation."""
+4 |
+5 | from dataclasses import dataclass
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+6 |
+7 | from .transcribe import Transcript
+  |
+
+E402 Module level import not at top of file
+ --> src/analysis/segmenter.py:7:1
+  |
+5 | from dataclasses import dataclass
+6 |
+7 | from .transcribe import Transcript
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+
+E402 Module level import not at top of file
+ --> src/analysis/topics.py:5:1
+  |
+3 | """Enhanced topic/keyword extraction utilities with proper NLP."""
+4 |
+5 | import re
+  | ^^^^^^^^^
+6 | from collections import Counter
+7 | from dataclasses import dataclass
+  |
+
+E402 Module level import not at top of file
+ --> src/analysis/topics.py:6:1
+  |
+5 | import re
+6 | from collections import Counter
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+7 | from dataclasses import dataclass
+  |
+
+E402 Module level import not at top of file
+ --> src/analysis/topics.py:7:1
+  |
+5 | import re
+6 | from collections import Counter
+7 | from dataclasses import dataclass
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+
+PLR2004 Magic value used in comparison, consider replacing `2` with a constant variable
+   --> src/analysis/topics.py:297:61
+    |
+295 |     # Extract keywords (filter stop words and short words)
+296 |     word_tokens = re.findall(r"\b[a-zA-Z]+\b", text_lower)
+297 |     keywords = [word for word in word_tokens if len(word) > 2 and word not in STOP_WORDS]
+    |                                                             ^
+298 |
+299 |     # Count keyword frequency and get top keywords
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `2` with a constant variable
+   --> src/analysis/topics.py:313:37
+    |
+311 |                 words[i] not in STOP_WORDS
+312 |                 and words[i + 1] not in STOP_WORDS
+313 |                 and len(words[i]) > 2
+    |                                     ^
+314 |                 and len(words[i + 1]) > 2
+315 |             ):
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `2` with a constant variable
+   --> src/analysis/topics.py:314:41
+    |
+312 |                 and words[i + 1] not in STOP_WORDS
+313 |                 and len(words[i]) > 2
+314 |                 and len(words[i + 1]) > 2
+    |                                         ^
+315 |             ):
+316 |                 phrases.append(phrase)
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `10` with a constant variable
+   --> src/analysis/topics.py:322:97
+    |
+320 |             phrase = f"{words[i]} {words[i + 1]} {words[i + 2]}"
+321 |             if (
+322 |                 words[i] not in STOP_WORDS and words[i + 2] not in STOP_WORDS and len(phrase) > 10
+    |                                                                                                 ^^
+323 |             ):  # Avoid very short phrases
+324 |                 phrases.append(phrase)
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `4` with a constant variable
+   --> src/analysis/topics.py:341:27
+    |
+339 |     # Also add high-frequency keywords as topics
+340 |     for keyword in top_keywords[:10]:
+341 |         if len(keyword) > 4:  # Only longer, more meaningful words
+    |                           ^
+342 |             detected_topics.add(keyword)
+    |
+
+E402 Module level import not at top of file
+  --> src/analysis/transcribe.py:12:1
+   |
+10 | """
+11 |
+12 | from dataclasses import dataclass
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+
+PLC0415 `import` should be at the top-level of a file
+  --> src/analysis/transcribe.py:42:9
+   |
+41 |     try:
+42 |         import whisper  # type: ignore
+   |         ^^^^^^^^^^^^^^
+43 |
+44 |         model_inst = whisper.load_model(model)
+   |
+
+PLR2004 Magic value used in comparison, consider replacing `35` with a constant variable
+  --> src/archive/discord_store/compress.py:35:54
+   |
+33 |                 )
+34 |                 size = dst.stat().st_size
+35 |                 if size <= bytes_limit or quality <= 35:
+   |                                                      ^^
+36 |                     stats["final_size"] = size
+37 |                     break
+   |
+
+PLW1508 Invalid type for environment variable default; expected `str` or `None`
+  --> src/archive/discord_store/policy.py:20:60
+   |
+18 | _DENY_EXTS = {".exe", ".bat", ".cmd"}
+19 |
+20 | _MAX_SIZE = int(os.environ.get("ARCHIVER_POLICY_MAX_SIZE", 100 * 1024 * 1024))
+   |                                                            ^^^^^^^^^^^^^^^^^
+21 | _POLICY = policy_engine.load_policy()
+   |
+
+SIM117 Use a single `with` statement with multiple contexts instead of nested `with` statements
+  --> src/archive/discord_store/rehydrate.py:30:5
+   |
+28 |       headers = {"Authorization": f"Bot {token}"}
+29 |       url = f"{API_BASE}/channels/{channel_id}/messages/{message_id}"
+30 | /     async with aiohttp.ClientSession() as session:
+31 | |         async with session.get(url, headers=headers) as resp:
+   | |_____________________________________________________________^
+32 |               resp.raise_for_status()
+33 |               data = await resp.json()
+   |
+help: Combine `with` statements
+
+PLR0913 Too many arguments in function definition (6 > 5)
+  --> src/core/learn.py:12:5
+   |
+12 | def learn(
+   |     ^^^^^
+13 |     domain: str,
+14 |     context: Mapping[str, Any],
+   |
+
+E402 Module level import not at top of file
+ --> src/core/privacy/pii_detector.py:5:1
+  |
+3 | """Deterministic PII pattern detector."""
+4 |
+5 | import re
+  | ^^^^^^^^^
+6 | from dataclasses import dataclass
+  |
+
+E402 Module level import not at top of file
+ --> src/core/privacy/pii_detector.py:6:1
+  |
+5 | import re
+6 | from dataclasses import dataclass
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+7 |
+8 | EMAIL_RE = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")
+  |
+
+PERF401 Use `list.extend` to create a transformed list
+  --> src/core/privacy/pii_detector.py:42:13
+   |
+40 |     for typ, regex in patterns.items():
+41 |         for m in regex.finditer(text):
+42 |             spans.append(Span(typ, m.start(), m.end(), m.group()))
+   |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+43 |     return spans
+   |
+help: Replace for loop with list.extend
+
+E402 Module level import not at top of file
+ --> src/core/privacy/privacy_filter.py:5:1
+  |
+3 | """High-level privacy filter that combines policy checks and redaction."""
+4 |
+5 | from dataclasses import dataclass
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+6 | from typing import Any
+  |
+
+E402 Module level import not at top of file
+ --> src/core/privacy/privacy_filter.py:6:1
+  |
+5 | from dataclasses import dataclass
+6 | from typing import Any
+  | ^^^^^^^^^^^^^^^^^^^^^^
+7 |
+8 | from core import flags
+  |
+
+E402 Module level import not at top of file
+  --> src/core/privacy/privacy_filter.py:8:1
+   |
+ 6 | from typing import Any
+ 7 |
+ 8 | from core import flags
+   | ^^^^^^^^^^^^^^^^^^^^^^
+ 9 | from core.learning_engine import LearningEngine
+10 | from policy import policy_engine
+   |
+
+E402 Module level import not at top of file
+  --> src/core/privacy/privacy_filter.py:9:1
+   |
+ 8 | from core import flags
+ 9 | from core.learning_engine import LearningEngine
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+10 | from policy import policy_engine
+   |
+
+E402 Module level import not at top of file
+  --> src/core/privacy/privacy_filter.py:10:1
+   |
+ 8 | from core import flags
+ 9 | from core.learning_engine import LearningEngine
+10 | from policy import policy_engine
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+11 |
+12 | from . import pii_detector, redactor
+   |
+
+E402 Module level import not at top of file
+  --> src/core/privacy/privacy_filter.py:12:1
+   |
+10 | from policy import policy_engine
+11 |
+12 | from . import pii_detector, redactor
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+
+E402 Module level import not at top of file
+ --> src/core/privacy/redactor.py:6:1
+  |
+6 | from .pii_detector import Span
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+
+E402 Module level import not at top of file
+ --> src/core/privacy/retention.py:5:1
+  |
+3 | """Retention helpers for deleting expired records."""
+4 |
+5 | import json
+  | ^^^^^^^^^^^
+6 | import sqlite3
+7 | from datetime import datetime, timedelta, timezone
+  |
+
+E402 Module level import not at top of file
+ --> src/core/privacy/retention.py:6:1
+  |
+5 | import json
+6 | import sqlite3
+  | ^^^^^^^^^^^^^^
+7 | from datetime import datetime, timedelta, timezone
+  |
+
+E402 Module level import not at top of file
+ --> src/core/privacy/retention.py:7:1
+  |
+5 | import json
+6 | import sqlite3
+7 | from datetime import datetime, timedelta, timezone
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+8 |
+9 | from policy import policy_engine
+  |
+
+E402 Module level import not at top of file
+ --> src/core/privacy/retention.py:9:1
+  |
+7 | from datetime import datetime, timedelta, timezone
+8 |
+9 | from policy import policy_engine
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+
+E402 Module level import not at top of file
+  --> src/core/prompt_engine.py:13:1
+   |
+12 | SAFETY_PREAMBLE = "You are a helpful assistant."
+13 | from core.privacy import privacy_filter
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+
+PERF203 `try`-`except` within a loop incurs performance overhead
+  --> src/core/reliability.py:19:9
+   |
+17 |           try:
+18 |               return fn()
+19 | /         except exc:
+20 | |             if attempt == retries - 1:
+21 | |                 raise
+22 | |             sleep = backoff * (factor**attempt) + random.random() * backoff
+23 | |             time.sleep(sleep)
+   | |_____________________________^
+   |
+
+S311 Standard pseudo-random generators are not suitable for cryptographic purposes
+  --> src/core/reliability.py:22:51
+   |
+20 |             if attempt == retries - 1:
+21 |                 raise
+22 |             sleep = backoff * (factor**attempt) + random.random() * backoff
+   |                                                   ^^^^^^^^^^^^^^^
+23 |             time.sleep(sleep)
+   |
+
+S311 Standard pseudo-random generators are not suitable for cryptographic purposes
+  --> src/core/rl/policies/bandit_base.py:24:12
+   |
+22 |         if not candidates:
+23 |             raise ValueError("candidates must not be empty")
+24 |         if random.random() < self.epsilon:
+   |            ^^^^^^^^^^^^^^^
+25 |             return random.choice(list(candidates))
+26 |         return max(candidates, key=lambda c: self.q_values[c])
+   |
+
+S311 Standard pseudo-random generators are not suitable for cryptographic purposes
+  --> src/core/rl/policies/bandit_base.py:25:20
+   |
+23 |             raise ValueError("candidates must not be empty")
+24 |         if random.random() < self.epsilon:
+25 |             return random.choice(list(candidates))
+   |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+26 |         return max(candidates, key=lambda c: self.q_values[c])
+   |
+
+E402 Module level import not at top of file
+ --> src/core/rollout.py:5:1
+  |
+3 | """Simple shadow/canary rollout controller."""
+4 |
+5 | import random
+  | ^^^^^^^^^^^^^
+6 | from dataclasses import dataclass
+  |
+
+E402 Module level import not at top of file
+ --> src/core/rollout.py:6:1
+  |
+5 | import random
+6 | from dataclasses import dataclass
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+
+S311 Standard pseudo-random generators are not suitable for cryptographic purposes
+  --> src/core/rollout.py:38:35
+   |
+36 |         if state.promoted:
+37 |             return state.control
+38 |         return state.candidate if random.random() < state.canary_pct else state.control
+   |                                   ^^^^^^^^^^^^^^^
+39 |
+40 |     def record(self, domain: str, arm: str, reward: float) -> None:
+   |
+
+E402 Module level import not at top of file
+  --> src/core/tool_planner.py:20:1
+   |
+18 | """
+19 |
+20 | from collections.abc import Callable, Mapping, Sequence
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+21 | from typing import Any
+   |
+
+E402 Module level import not at top of file
+  --> src/core/tool_planner.py:21:1
+   |
+20 | from collections.abc import Callable, Mapping, Sequence
+21 | from typing import Any
+   | ^^^^^^^^^^^^^^^^^^^^^^
+22 |
+23 | from . import learn
+   |
+
+E402 Module level import not at top of file
+  --> src/core/tool_planner.py:23:1
+   |
+21 | from typing import Any
+22 |
+23 | from . import learn
+   | ^^^^^^^^^^^^^^^^^^^
+24 | from .rl import registry as rl_registry
+   |
+
+E402 Module level import not at top of file
+  --> src/core/tool_planner.py:24:1
+   |
+23 | from . import learn
+24 | from .rl import registry as rl_registry
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+25 |
+26 | ToolFn = Callable[[], tuple[Mapping[str, float], Mapping[str, float]]]
+   |
+
+E402 Module level import not at top of file
+ --> src/debate/panel.py:5:1
+  |
+3 | """Simple multi-agent debate panel."""
+4 |
+5 | from collections.abc import Callable
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+6 | from dataclasses import dataclass, field
+  |
+
+E402 Module level import not at top of file
+ --> src/debate/panel.py:6:1
+  |
+5 | from collections.abc import Callable
+6 | from dataclasses import dataclass, field
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+7 |
+8 | from core.learning_engine import LearningEngine
+  |
+
+E402 Module level import not at top of file
+  --> src/debate/panel.py:8:1
+   |
+ 6 | from dataclasses import dataclass, field
+ 7 |
+ 8 | from core.learning_engine import LearningEngine
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ 9 | from core.router import Router
+10 | from obs import tracing
+   |
+
+E402 Module level import not at top of file
+  --> src/debate/panel.py:9:1
+   |
+ 8 | from core.learning_engine import LearningEngine
+ 9 | from core.router import Router
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+10 | from obs import tracing
+   |
+
+E402 Module level import not at top of file
+  --> src/debate/panel.py:10:1
+   |
+ 8 | from core.learning_engine import LearningEngine
+ 9 | from core.router import Router
+10 | from obs import tracing
+   | ^^^^^^^^^^^^^^^^^^^^^^^
+   |
+
+PLR0913 Too many arguments in function definition (6 > 5)
+  --> src/debate/panel.py:39:5
+   |
+38 | @tracing.trace_call("debate.run_panel")
+39 | def run_panel(
+   |     ^^^^^^^^^
+40 |     query: str,
+41 |     router: Router,
+   |
+
+E402 Module level import not at top of file
+ --> src/debate/store.py:5:1
+  |
+3 | """SQLite storage for debate sessions."""
+4 |
+5 | import sqlite3
+  | ^^^^^^^^^^^^^^
+6 | from dataclasses import dataclass
+  |
+
+E402 Module level import not at top of file
+ --> src/debate/store.py:6:1
+  |
+5 | import sqlite3
+6 | from dataclasses import dataclass
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+
+E501 Line too long (113 > 100)
+   --> src/debate/store.py:126:101
+    |
+124 |         cur.execute(
+125 |             """
+126 |             INSERT INTO debates (tenant, workspace, query, panel_config_json, n_rounds, final_output, created_at)
+    |                                                                                                     ^^^^^^^^^^^^^
+127 |             VALUES (?, ?, ?, ?, ?, ?, ?)
+128 |             """,
+    |
+
+E402 Module level import not at top of file
+ --> src/discord/__init__.py:7:1
+  |
+5 | _discord = import_module("discord")
+6 |
+7 | from . import commands
+  | ^^^^^^^^^^^^^^^^^^^^^^
+8 |
+9 | Client = getattr(_discord, "Client", object)
+  |
+
+E402 Module level import not at top of file
+  --> src/discord/commands.py:11:1
+   |
+ 9 | """
+10 |
+11 | import os
+   | ^^^^^^^^^
+12 | from dataclasses import asdict
+13 | from datetime import datetime, timezone
+   |
+
+E402 Module level import not at top of file
+  --> src/discord/commands.py:12:1
+   |
+11 | import os
+12 | from dataclasses import asdict
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+13 | from datetime import datetime, timezone
+   |
+
+E402 Module level import not at top of file
+  --> src/discord/commands.py:13:1
+   |
+11 | import os
+12 | from dataclasses import asdict
+13 | from datetime import datetime, timezone
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+14 |
+15 | from core.learning_engine import LearningEngine
+   |
+
+E402 Module level import not at top of file
+  --> src/discord/commands.py:15:1
+   |
+13 | from datetime import datetime, timezone
+14 |
+15 | from core.learning_engine import LearningEngine
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+16 | from core.privacy import privacy_filter, retention
+17 | from core.router import Router
+   |
+
+E402 Module level import not at top of file
+  --> src/discord/commands.py:16:1
+   |
+15 | from core.learning_engine import LearningEngine
+16 | from core.privacy import privacy_filter, retention
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+17 | from core.router import Router
+18 | from debate.panel import PanelConfig, run_panel
+   |
+
+E402 Module level import not at top of file
+  --> src/discord/commands.py:17:1
+   |
+15 | from core.learning_engine import LearningEngine
+16 | from core.privacy import privacy_filter, retention
+17 | from core.router import Router
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+18 | from debate.panel import PanelConfig, run_panel
+19 | from debate.store import Debate, DebateStore
+   |
+
+E402 Module level import not at top of file
+  --> src/discord/commands.py:18:1
+   |
+16 | from core.privacy import privacy_filter, retention
+17 | from core.router import Router
+18 | from debate.panel import PanelConfig, run_panel
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+19 | from debate.store import Debate, DebateStore
+20 | from grounding.schema import AnswerContract
+   |
+
+E402 Module level import not at top of file
+  --> src/discord/commands.py:19:1
+   |
+17 | from core.router import Router
+18 | from debate.panel import PanelConfig, run_panel
+19 | from debate.store import Debate, DebateStore
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+20 | from grounding.schema import AnswerContract
+21 | from grounding.verifier import VerifierReport
+   |
+
+E402 Module level import not at top of file
+  --> src/discord/commands.py:20:1
+   |
+18 | from debate.panel import PanelConfig, run_panel
+19 | from debate.store import Debate, DebateStore
+20 | from grounding.schema import AnswerContract
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+21 | from grounding.verifier import VerifierReport
+22 | from ingest import models
+   |
+
+E402 Module level import not at top of file
+  --> src/discord/commands.py:21:1
+   |
+19 | from debate.store import Debate, DebateStore
+20 | from grounding.schema import AnswerContract
+21 | from grounding.verifier import VerifierReport
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+22 | from ingest import models
+23 | from memory import api as memory_api
+   |
+
+E402 Module level import not at top of file
+  --> src/discord/commands.py:22:1
+   |
+20 | from grounding.schema import AnswerContract
+21 | from grounding.verifier import VerifierReport
+22 | from ingest import models
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^
+23 | from memory import api as memory_api
+24 | from memory import embeddings, vector_store
+   |
+
+E402 Module level import not at top of file
+  --> src/discord/commands.py:23:1
+   |
+21 | from grounding.verifier import VerifierReport
+22 | from ingest import models
+23 | from memory import api as memory_api
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+24 | from memory import embeddings, vector_store
+25 | from memory import store as memory_store
+   |
+
+E402 Module level import not at top of file
+  --> src/discord/commands.py:24:1
+   |
+22 | from ingest import models
+23 | from memory import api as memory_api
+24 | from memory import embeddings, vector_store
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+25 | from memory import store as memory_store
+26 | from obs import incident, slo
+   |
+
+E402 Module level import not at top of file
+  --> src/discord/commands.py:25:1
+   |
+23 | from memory import api as memory_api
+24 | from memory import embeddings, vector_store
+25 | from memory import store as memory_store
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+26 | from obs import incident, slo
+27 | from scheduler import PriorityQueue, Scheduler
+   |
+
+E402 Module level import not at top of file
+  --> src/discord/commands.py:26:1
+   |
+24 | from memory import embeddings, vector_store
+25 | from memory import store as memory_store
+26 | from obs import incident, slo
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+27 | from scheduler import PriorityQueue, Scheduler
+   |
+
+E402 Module level import not at top of file
+  --> src/discord/commands.py:27:1
+   |
+25 | from memory import store as memory_store
+26 | from obs import incident, slo
+27 | from scheduler import PriorityQueue, Scheduler
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+28 |
+29 | _DEBATE_STORE = DebateStore()
+   |
+
+PLC0415 `import` should be at the top-level of a file
+   --> src/discord/commands.py:247:5
+    |
+245 |     """
+246 |
+247 |     from eval.runner import run
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+248 |
+249 |     report = run(dataset_dir, model_func)
+    |
+
+PLR0913 Too many arguments in function definition (6 > 5)
+   --> src/discord/commands.py:298:5
+    |
+297 | # ----------------------------------------------------------------- ingest ops
+298 | def ops_ingest_watch_add(
+    |     ^^^^^^^^^^^^^^^^^^^^
+299 |     sched: Scheduler,
+300 |     source_type: str,
+    |
+
+E501 Line too long (103 > 100)
+  --> src/eval/gates.py:22:101
+   |
+20 |         if current.get("latency_ms", 0.0) > base_metrics.get("latency_ms", 0.0):
+21 |             reasons.append(
+22 |                 f"{task} latency {current.get('latency_ms', 0):.1f} > {base_metrics['latency_ms']:.1f}"
+   |                                                                                                     ^^^
+23 |             )
+24 |     return {"pass": not reasons, "reasons": reasons}
+   |
+
+E402 Module level import not at top of file
+ --> src/eval/loader.py:5:1
+  |
+3 | """Dataset loading helpers for the golden evaluation suite."""
+4 |
+5 | import json
+  | ^^^^^^^^^^^
+6 | from pathlib import Path
+  |
+
+E402 Module level import not at top of file
+ --> src/eval/loader.py:6:1
+  |
+5 | import json
+6 | from pathlib import Path
+  | ^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+
+PLW2901 `for` loop variable `line` overwritten by assignment target
+  --> src/eval/loader.py:15:13
+   |
+13 |     with path.open() as f:
+14 |         for line in f:
+15 |             line = line.strip()
+   |             ^^^^
+16 |             if not line:
+17 |                 continue
+   |
+
+E402 Module level import not at top of file
+ --> src/eval/report.py:5:1
+  |
+3 | """Helpers to summarise evaluation results."""
+4 |
+5 | import json
+  | ^^^^^^^^^^^
+6 | from pathlib import Path
+  |
+
+E402 Module level import not at top of file
+ --> src/eval/report.py:6:1
+  |
+5 | import json
+6 | from pathlib import Path
+  | ^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+
+E402 Module level import not at top of file
+ --> src/eval/runner.py:5:1
+  |
+3 | """Simple evaluation runner used in tests and CI."""
+4 |
+5 | from collections.abc import Callable
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+6 | from pathlib import Path
+  |
+
+E402 Module level import not at top of file
+ --> src/eval/runner.py:6:1
+  |
+5 | from collections.abc import Callable
+6 | from pathlib import Path
+  | ^^^^^^^^^^^^^^^^^^^^^^^^
+7 |
+8 | from . import scorers
+  |
+
+E402 Module level import not at top of file
+ --> src/eval/runner.py:8:1
+  |
+6 | from pathlib import Path
+7 |
+8 | from . import scorers
+  | ^^^^^^^^^^^^^^^^^^^^^
+9 | from .loader import load_cases
+  |
+
+E402 Module level import not at top of file
+  --> src/eval/runner.py:9:1
+   |
+ 8 | from . import scorers
+ 9 | from .loader import load_cases
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+10 |
+11 | # Type alias for the model function used in tests.
+   |
+
+PLC0415 `import` should be at the top-level of a file
+  --> src/eval/runner.py:72:5
+   |
+71 | def main() -> None:
+72 |     import argparse
+   |     ^^^^^^^^^^^^^^^
+73 |     import json
+   |
+
+PLC0415 `import` should be at the top-level of a file
+  --> src/eval/runner.py:73:5
+   |
+71 | def main() -> None:
+72 |     import argparse
+73 |     import json
+   |     ^^^^^^^^^^^
+74 |
+75 |     p = argparse.ArgumentParser(description="run evaluation suite")
+   |
+
+PLC0415 `import` should be at the top-level of a file
+   --> src/eval/runner.py:103:9
+    |
+102 |     if args.baseline:
+103 |         from .gates import compare
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^
+104 |
+105 |         with open(args.baseline) as f:
+    |
+
+E402 Module level import not at top of file
+ --> src/eval/scorers.py:5:1
+  |
+3 | """Deterministic scorers for golden evaluation suites."""
+4 |
+5 | import json
+  | ^^^^^^^^^^^
+6 | from collections.abc import Sequence
+  |
+
+E402 Module level import not at top of file
+ --> src/eval/scorers.py:6:1
+  |
+5 | import json
+6 | from collections.abc import Sequence
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+
+E402 Module level import not at top of file
+ --> src/grounding/consistency.py:5:1
+  |
+3 | """Consistency checks for grounded answers to detect contradictions."""
+4 |
+5 | import re
+  | ^^^^^^^^^
+6 |
+7 | from .schema import AnswerContract, Evidence
+  |
+
+E402 Module level import not at top of file
+ --> src/grounding/consistency.py:7:1
+  |
+5 | import re
+6 |
+7 | from .schema import AnswerContract, Evidence
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+
+PLR2004 Magic value used in comparison, consider replacing `3` with a constant variable
+  --> src/grounding/consistency.py:38:77
+   |
+36 |     # Split by sentence-ending punctuation
+37 |     statements = re.split(r"[.!?]+", text)
+38 |     return [s.strip() for s in statements if s.strip() and len(s.strip()) > 3]
+   |                                                                             ^
+   |
+
+E402 Module level import not at top of file
+ --> src/grounding/contracts.py:5:1
+  |
+3 | """Builders and validators for :class:`AnswerContract`."""
+4 |
+5 | from dataclasses import dataclass
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+6 | from pathlib import Path
+  |
+
+E402 Module level import not at top of file
+ --> src/grounding/contracts.py:6:1
+  |
+5 | from dataclasses import dataclass
+6 | from pathlib import Path
+  | ^^^^^^^^^^^^^^^^^^^^^^^^
+7 |
+8 | import yaml
+  |
+
+E402 Module level import not at top of file
+  --> src/grounding/contracts.py:8:1
+   |
+ 6 | from pathlib import Path
+ 7 |
+ 8 | import yaml
+   | ^^^^^^^^^^^
+ 9 |
+10 | from .schema import AnswerContract, Evidence
+   |
+
+E402 Module level import not at top of file
+  --> src/grounding/contracts.py:10:1
+   |
+ 8 | import yaml
+ 9 |
+10 | from .schema import AnswerContract, Evidence
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+11 |
+12 | CONFIG_PATH = Path("config/grounding.yaml")
+   |
+
+E402 Module level import not at top of file
+ --> src/grounding/retriever.py:5:1
+  |
+3 | """Lightweight evidence retriever that wraps the unified memory API."""
+4 |
+5 | from dataclasses import dataclass
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+6 |
+7 | from memory import api as memory_api
+  |
+
+E402 Module level import not at top of file
+ --> src/grounding/retriever.py:7:1
+  |
+5 | from dataclasses import dataclass
+6 |
+7 | from memory import api as memory_api
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+8 | from memory import store as memory_store
+9 | from memory import vector_store
+  |
+
+E402 Module level import not at top of file
+ --> src/grounding/retriever.py:8:1
+  |
+7 | from memory import api as memory_api
+8 | from memory import store as memory_store
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+9 | from memory import vector_store
+  |
+
+E402 Module level import not at top of file
+  --> src/grounding/retriever.py:9:1
+   |
+ 7 | from memory import api as memory_api
+ 8 | from memory import store as memory_store
+ 9 | from memory import vector_store
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+10 |
+11 | from .schema import Evidence
+   |
+
+E402 Module level import not at top of file
+  --> src/grounding/retriever.py:11:1
+   |
+ 9 | from memory import vector_store
+10 |
+11 | from .schema import Evidence
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+
+PLR0913 Too many arguments in function definition (6 > 5)
+  --> src/grounding/retriever.py:19:5
+   |
+19 | def gather(
+   |     ^^^^^^
+20 |     mstore: memory_store.MemoryStore,
+21 |     vstore: vector_store.VectorStore,
+   |
+
+E402 Module level import not at top of file
+ --> src/grounding/schema.py:5:1
+  |
+3 | """Lightweight models describing grounded answers."""
+4 |
+5 | from dataclasses import dataclass, field
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+6 | from typing import Any
+  |
+
+E402 Module level import not at top of file
+ --> src/grounding/schema.py:6:1
+  |
+5 | from dataclasses import dataclass, field
+6 | from typing import Any
+  | ^^^^^^^^^^^^^^^^^^^^^^
+  |
+
+E402 Module level import not at top of file
+ --> src/grounding/verifier.py:5:1
+  |
+3 | """Simple verifier that checks :class:`AnswerContract` objects."""
+4 |
+5 | from dataclasses import dataclass
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+6 |
+7 | from . import consistency
+  |
+
+E402 Module level import not at top of file
+ --> src/grounding/verifier.py:7:1
+  |
+5 | from dataclasses import dataclass
+6 |
+7 | from . import consistency
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^
+8 | from .contracts import load_config
+9 | from .schema import AnswerContract
+  |
+
+E402 Module level import not at top of file
+ --> src/grounding/verifier.py:8:1
+  |
+7 | from . import consistency
+8 | from .contracts import load_config
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+9 | from .schema import AnswerContract
+  |
+
+E402 Module level import not at top of file
+ --> src/grounding/verifier.py:9:1
+  |
+7 | from . import consistency
+8 | from .contracts import load_config
+9 | from .schema import AnswerContract
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+
+E402 Module level import not at top of file
+  --> src/ingest/__main__.py:13:1
+   |
+11 | """
+12 |
+13 | import argparse
+   | ^^^^^^^^^^^^^^^
+14 |
+15 | from memory import vector_store
+   |
+
+E402 Module level import not at top of file
+  --> src/ingest/__main__.py:15:1
+   |
+13 | import argparse
+14 |
+15 | from memory import vector_store
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+16 |
+17 | from . import pipeline
+   |
+
+E402 Module level import not at top of file
+  --> src/ingest/__main__.py:17:1
+   |
+15 | from memory import vector_store
+16 |
+17 | from . import pipeline
+   | ^^^^^^^^^^^^^^^^^^^^^^
+18 | from .pipeline import IngestJob
+   |
+
+E402 Module level import not at top of file
+  --> src/ingest/__main__.py:18:1
+   |
+17 | from . import pipeline
+18 | from .pipeline import IngestJob
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+
+E402 Module level import not at top of file
+ --> src/ingest/models.py:5:1
+  |
+3 | """Lightweight SQLite-backed data models for ingestion metadata."""
+4 |
+5 | import sqlite3
+  | ^^^^^^^^^^^^^^
+6 | from dataclasses import dataclass
+  |
+
+E402 Module level import not at top of file
+ --> src/ingest/models.py:6:1
+  |
+5 | import sqlite3
+6 | from dataclasses import dataclass
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+
+E501 Line too long (190 > 100)
+   --> src/ingest/models.py:231:101
+    |
+229 | …
+230 | …
+231 | …_at, license, terms_url, consent_flags, checksum_sha256, creator_id, episode_id) VALUES (?,?,?,?,?,?,?,?,?,?)",
+    |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+232 | …
+233 | …
+    |
+
+E501 Line too long (160 > 100)
+   --> src/ingest/models.py:250:101
+    |
+248 | …one:
+249 | …
+250 | …sion, decisions, redactions, output_hash, user_cmd, channel_id, ts) VALUES (?,?,?,?,?,?,?,?,?)",
+    |                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+251 | …
+252 | …
+    |
+
+E402 Module level import not at top of file
+ --> src/ingest/pipeline.py:5:1
+  |
+3 | """Ingestion orchestration for media sources."""
+4 |
+5 | import concurrent.futures
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^
+6 | import hashlib
+7 | import os
+  |
+
+E402 Module level import not at top of file
+ --> src/ingest/pipeline.py:6:1
+  |
+5 | import concurrent.futures
+6 | import hashlib
+  | ^^^^^^^^^^^^^^
+7 | import os
+8 | from dataclasses import dataclass
+  |
+
+E402 Module level import not at top of file
+ --> src/ingest/pipeline.py:7:1
+  |
+5 | import concurrent.futures
+6 | import hashlib
+7 | import os
+  | ^^^^^^^^^
+8 | from dataclasses import dataclass
+9 | from datetime import datetime, timezone
+  |
+
+E402 Module level import not at top of file
+  --> src/ingest/pipeline.py:8:1
+   |
+ 6 | import hashlib
+ 7 | import os
+ 8 | from dataclasses import dataclass
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ 9 | from datetime import datetime, timezone
+10 | from typing import Any
+   |
+
+E402 Module level import not at top of file
+  --> src/ingest/pipeline.py:9:1
+   |
+ 7 | import os
+ 8 | from dataclasses import dataclass
+ 9 | from datetime import datetime, timezone
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+10 | from typing import Any
+   |
+
+E402 Module level import not at top of file
+  --> src/ingest/pipeline.py:10:1
+   |
+ 8 | from dataclasses import dataclass
+ 9 | from datetime import datetime, timezone
+10 | from typing import Any
+   | ^^^^^^^^^^^^^^^^^^^^^^
+11 |
+12 | from analysis import segmenter, topics, transcribe
+   |
+
+E402 Module level import not at top of file
+  --> src/ingest/pipeline.py:12:1
+   |
+10 | from typing import Any
+11 |
+12 | from analysis import segmenter, topics, transcribe
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+13 | from core.privacy import privacy_filter
+14 | from ingest import models
+   |
+
+E402 Module level import not at top of file
+  --> src/ingest/pipeline.py:13:1
+   |
+12 | from analysis import segmenter, topics, transcribe
+13 | from core.privacy import privacy_filter
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+14 | from ingest import models
+15 | from memory import embeddings, vector_store
+   |
+
+E402 Module level import not at top of file
+  --> src/ingest/pipeline.py:14:1
+   |
+12 | from analysis import segmenter, topics, transcribe
+13 | from core.privacy import privacy_filter
+14 | from ingest import models
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^
+15 | from memory import embeddings, vector_store
+   |
+
+E402 Module level import not at top of file
+  --> src/ingest/pipeline.py:15:1
+   |
+13 | from core.privacy import privacy_filter
+14 | from ingest import models
+15 | from memory import embeddings, vector_store
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+16 |
+17 | from .providers import twitch, youtube
+   |
+
+E402 Module level import not at top of file
+  --> src/ingest/pipeline.py:17:1
+   |
+15 | from memory import embeddings, vector_store
+16 |
+17 | from .providers import twitch, youtube
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+
+E741 Ambiguous variable name: `l`
+  --> src/ingest/pipeline.py:59:28
+   |
+57 |     if transcript_text is None:
+58 |         return transcribe.run_whisper(job.url)
+59 |     lines = [l.strip() for l in transcript_text.splitlines() if l.strip()]
+   |                            ^
+60 |     return transcribe.Transcript(
+61 |         [transcribe.Segment(start=float(i), end=float(i + 1), text=t) for i, t in enumerate(lines)]
+   |
+
+E402 Module level import not at top of file
+ --> src/ingest/providers/twitch.py:5:1
+  |
+3 | """Twitch ingestion utilities using ``yt-dlp`` for simplicity."""
+4 |
+5 | from dataclasses import dataclass
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+
+PLC0415 `import` should be at the top-level of a file
+  --> src/ingest/providers/twitch.py:19:5
+   |
+18 | def fetch_metadata(url: str) -> ClipMetadata:
+19 |     import yt_dlp
+   |     ^^^^^^^^^^^^^
+20 |
+21 |     with yt_dlp.YoutubeDL({"quiet": True}) as ydl:  # pragma: no cover - network
+   |
+
+E402 Module level import not at top of file
+ --> src/ingest/providers/youtube.py:5:1
+  |
+3 | """YouTube ingestion utilities."""
+4 |
+5 | from dataclasses import dataclass
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+
+PLC0415 `import` should be at the top-level of a file
+  --> src/ingest/providers/youtube.py:21:5
+   |
+19 | def fetch_metadata(url: str) -> VideoMetadata:
+20 |     """Return basic metadata for a YouTube video *url* using ``yt-dlp``."""
+21 |     import yt_dlp
+   |     ^^^^^^^^^^^^^
+22 |
+23 |     with yt_dlp.YoutubeDL({"quiet": True}) as ydl:  # pragma: no cover - network
+   |
+
+PLC0415 `import` should be at the top-level of a file
+  --> src/ingest/providers/youtube.py:38:5
+   |
+36 | def fetch_transcript(url: str) -> str | None:
+37 |     """Return an available transcript for *url* if yt-dlp exposes one."""
+38 |     import yt_dlp
+   |     ^^^^^^^^^^^^^
+39 |
+40 |     with yt_dlp.YoutubeDL({"skip_download": True, "quiet": True}) as ydl:  # pragma: no cover
+   |
+
+PLC0415 `import` should be at the top-level of a file
+  --> src/ingest/providers/youtube.py:46:13
+   |
+44 |         tracks = subs.get(lang)
+45 |         if tracks:
+46 |             import urllib.request
+   |             ^^^^^^^^^^^^^^^^^^^^^
+47 |
+48 |             with urllib.request.urlopen(tracks[0]["url"]) as resp:
+   |
+
+S310 Audit URL open for permitted schemes. Allowing use of `file:` or custom schemes is often unexpected.
+  --> src/ingest/providers/youtube.py:48:18
+   |
+46 |             import urllib.request
+47 |
+48 |             with urllib.request.urlopen(tracks[0]["url"]) as resp:
+   |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+49 |                 return resp.read().decode("utf-8")
+50 |     return None
+   |
+
+E402 Module level import not at top of file
+ --> src/ingest/sources/base.py:5:1
+  |
+3 | """Source connector interface for the ingest scheduler."""
+4 |
+5 | from dataclasses import dataclass
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+6 | from typing import Protocol
+  |
+
+E402 Module level import not at top of file
+ --> src/ingest/sources/base.py:6:1
+  |
+5 | from dataclasses import dataclass
+6 | from typing import Protocol
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+
+E402 Module level import not at top of file
+ --> src/kg/extract.py:5:1
+  |
+3 | """Naive entity and claim extractor used during ingestion."""
+4 |
+5 | import re
+  | ^^^^^^^^^
+6 | from dataclasses import dataclass
+  |
+
+E402 Module level import not at top of file
+ --> src/kg/extract.py:6:1
+  |
+5 | import re
+6 | from dataclasses import dataclass
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+7 |
+8 | ENTITY_RE = re.compile(r"\b([A-Z][a-z]+(?:\s[A-Z][a-z]+)*)\b")
+  |
+
+E402 Module level import not at top of file
+ --> src/kg/reasoner.py:5:1
+  |
+3 | """Simple reasoning utilities for the knowledge graph."""
+4 |
+5 | from dataclasses import dataclass
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+6 |
+7 | from .store import KGStore
+  |
+
+E402 Module level import not at top of file
+ --> src/kg/reasoner.py:7:1
+  |
+5 | from dataclasses import dataclass
+6 |
+7 | from .store import KGStore
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+
+E402 Module level import not at top of file
+ --> src/kg/store.py:5:1
+  |
+3 | """SQLite-backed knowledge graph store with tenant isolation."""
+4 |
+5 | import json
+  | ^^^^^^^^^^^
+6 | import sqlite3
+7 | from collections.abc import Iterable
+  |
+
+E402 Module level import not at top of file
+ --> src/kg/store.py:6:1
+  |
+5 | import json
+6 | import sqlite3
+  | ^^^^^^^^^^^^^^
+7 | from collections.abc import Iterable
+8 | from dataclasses import dataclass
+  |
+
+E402 Module level import not at top of file
+ --> src/kg/store.py:7:1
+  |
+5 | import json
+6 | import sqlite3
+7 | from collections.abc import Iterable
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+8 | from dataclasses import dataclass
+9 | from typing import Any
+  |
+
+E402 Module level import not at top of file
+ --> src/kg/store.py:8:1
+  |
+6 | import sqlite3
+7 | from collections.abc import Iterable
+8 | from dataclasses import dataclass
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+9 | from typing import Any
+  |
+
+E402 Module level import not at top of file
+ --> src/kg/store.py:9:1
+  |
+7 | from collections.abc import Iterable
+8 | from dataclasses import dataclass
+9 | from typing import Any
+  | ^^^^^^^^^^^^^^^^^^^^^^
+  |
+
+E501 Line too long (103 > 100)
+  --> src/kg/store.py:94:101
+   |
+92 |         cur = self.conn.cursor()
+93 |         cur.execute(
+94 |             "INSERT INTO kg_nodes (tenant, type, name, attrs_json, created_at) VALUES (?, ?, ?, ?, ?)",
+   |                                                                                                     ^^^
+95 |             (tenant, type, name, json.dumps(attrs or {}), created_at),
+96 |         )
+   |
+
+S608 Possible SQL injection vector through string-based query construction
+   --> src/kg/store.py:112:21
+    |
+110 |             conditions.append("name = ?")
+111 |             params.append(name)
+112 |         cur.execute(f"SELECT * FROM kg_nodes WHERE {' AND '.join(conditions)}", params)
+    |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+113 |         rows = cur.fetchall()
+114 |         return [KGNode(**row) for row in rows]
+    |
+
+PLR0913 Too many arguments in function definition (6 > 5)
+   --> src/kg/store.py:123:9
+    |
+122 |     # Edge operations
+123 |     def add_edge(
+    |         ^^^^^^^^
+124 |         self,
+125 |         src_id: int,
+    |
+
+S608 Possible SQL injection vector through string-based query construction
+   --> src/kg/store.py:160:21
+    |
+158 |             params.append(type)
+159 |         clause = f" WHERE {' AND '.join(conditions)}" if conditions else ""
+160 |         cur.execute(f"SELECT * FROM kg_edges{clause}", params)
+    |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+161 |         rows = cur.fetchall()
+162 |         return [KGEdge(**row) for row in rows]
+    |
+
+S608 Possible SQL injection vector through string-based query construction
+   --> src/kg/store.py:173:25
+    |
+171 |             cur = self.conn.cursor()
+172 |             q_marks = ",".join(["?"] * len(frontier))
+173 |             cur.execute(f"SELECT dst_id FROM kg_edges WHERE src_id IN ({q_marks})", list(frontier))
+    |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+174 |             rows = {r[0] for r in cur.fetchall()}
+175 |             rows -= seen
+    |
+
+E402 Module level import not at top of file
+ --> src/kg/viz.py:5:1
+  |
+3 | """Render knowledge graph subgraphs to simple DOT graphs."""
+4 |
+5 | from collections.abc import Iterable
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+6 |
+7 | from .store import KGEdge, KGNode
+  |
+
+E402 Module level import not at top of file
+ --> src/kg/viz.py:7:1
+  |
+5 | from collections.abc import Iterable
+6 |
+7 | from .store import KGEdge, KGNode
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+
+PERF401 Use `list.extend` to create a transformed list
+  --> src/kg/viz.py:13:9
+   |
+11 |     lines = ["digraph G {"]
+12 |     for n in nodes:
+13 |         lines.append(f'  {n.id} [label="{n.name}"]')
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+14 |     for e in edges:
+15 |         lines.append(f'  {e.src_id} -> {e.dst_id} [label="{e.type}"]')
+   |
+help: Replace for loop with list.extend
+
+PERF401 Use `list.extend` to create a transformed list
+  --> src/kg/viz.py:15:9
+   |
+13 |         lines.append(f'  {n.id} [label="{n.name}"]')
+14 |     for e in edges:
+15 |         lines.append(f'  {e.src_id} -> {e.dst_id} [label="{e.type}"]')
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+16 |     lines.append("}")
+17 |     return "\n".join(lines).encode()
+   |
+help: Replace for loop with list.extend
+
+PLR0913 Too many arguments in function definition (7 > 5)
+  --> src/memory/api.py:26:5
+   |
+26 | def store(
+   |     ^^^^^
+27 |     store: MemoryStore,
+28 |     vstore: vector_store.VectorStore,
+   |
+
+PLR0913 Too many arguments in function definition (8 > 5)
+  --> src/memory/api.py:63:5
+   |
+63 | def retrieve(
+   |     ^^^^^^^^
+64 |     store: MemoryStore,
+65 |     vstore: vector_store.VectorStore,
+   |
+
+E402 Module level import not at top of file
+  --> src/memory/embeddings.py:11:1
+   |
+ 9 | """
+10 |
+11 | import hashlib
+   | ^^^^^^^^^^^^^^
+12 | from collections.abc import Iterable
+   |
+
+E402 Module level import not at top of file
+  --> src/memory/embeddings.py:12:1
+   |
+11 | import hashlib
+12 | from collections.abc import Iterable
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+
+E402 Module level import not at top of file
+ --> src/memory/vector_store.py:5:1
+  |
+3 | """Minimal Qdrant wrapper with namespace support."""
+4 |
+5 | from collections.abc import Sequence
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+6 | from dataclasses import dataclass
+  |
+
+E402 Module level import not at top of file
+ --> src/memory/vector_store.py:6:1
+  |
+5 | from collections.abc import Sequence
+6 | from dataclasses import dataclass
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+7 |
+8 | try:
+  |
+
+N802 Function name `Counter` should be lowercase
+  --> src/obs/metrics.py:33:9
+   |
+31 |         pass
+32 |
+33 |     def Counter(*args, **kwargs):  # type: ignore[no-untyped-def]
+   |         ^^^^^^^
+34 |         return _NoOpMetric()
+   |
+
+N802 Function name `Histogram` should be lowercase
+  --> src/obs/metrics.py:36:9
+   |
+34 |         return _NoOpMetric()
+35 |
+36 |     def Histogram(*args, **kwargs):  # type: ignore[no-untyped-def]
+   |         ^^^^^^^^^
+37 |         return _NoOpMetric()
+   |
+
+N802 Function name `CollectorRegistry` should be lowercase
+  --> src/obs/metrics.py:39:9
+   |
+37 |         return _NoOpMetric()
+38 |
+39 |     def CollectorRegistry(*args, **kwargs):  # type: ignore[no-untyped-def]
+   |         ^^^^^^^^^^^^^^^^^
+40 |         return _NoOpRegistry()
+   |
+
+PLW0603 Using the global statement to update `registry` is discouraged
+  --> src/obs/metrics.py:67:12
+   |
+65 | def reset() -> None:
+66 |     """Reset the metrics registry (for tests)."""
+67 |     global registry, ROUTER_DECISIONS, LLM_LATENCY
+   |            ^^^^^^^^
+68 |     registry = CollectorRegistry()
+69 |     ROUTER_DECISIONS = Counter(
+   |
+
+PLW0603 Using the global statement to update `ROUTER_DECISIONS` is discouraged
+  --> src/obs/metrics.py:67:22
+   |
+65 | def reset() -> None:
+66 |     """Reset the metrics registry (for tests)."""
+67 |     global registry, ROUTER_DECISIONS, LLM_LATENCY
+   |                      ^^^^^^^^^^^^^^^^
+68 |     registry = CollectorRegistry()
+69 |     ROUTER_DECISIONS = Counter(
+   |
+
+PLW0603 Using the global statement to update `LLM_LATENCY` is discouraged
+  --> src/obs/metrics.py:67:40
+   |
+65 | def reset() -> None:
+66 |     """Reset the metrics registry (for tests)."""
+67 |     global registry, ROUTER_DECISIONS, LLM_LATENCY
+   |                                        ^^^^^^^^^^^
+68 |     registry = CollectorRegistry()
+69 |     ROUTER_DECISIONS = Counter(
+   |
+
+E402 Module level import not at top of file
+ --> src/policy/policy_engine.py:5:1
+  |
+3 | """Config-driven policy engine for privacy and usage rules."""
+4 |
+5 | from dataclasses import dataclass
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+6 | from pathlib import Path
+7 | from typing import Any
+  |
+
+E402 Module level import not at top of file
+ --> src/policy/policy_engine.py:6:1
+  |
+5 | from dataclasses import dataclass
+6 | from pathlib import Path
+  | ^^^^^^^^^^^^^^^^^^^^^^^^
+7 | from typing import Any
+  |
+
+E402 Module level import not at top of file
+ --> src/policy/policy_engine.py:7:1
+  |
+5 | from dataclasses import dataclass
+6 | from pathlib import Path
+7 | from typing import Any
+  | ^^^^^^^^^^^^^^^^^^^^^^
+8 |
+9 | import yaml
+  |
+
+E402 Module level import not at top of file
+  --> src/policy/policy_engine.py:9:1
+   |
+ 7 | from typing import Any
+ 8 |
+ 9 | import yaml
+   | ^^^^^^^^^^^
+10 |
+11 | POLICY_PATH = Path("config/policy.yaml")
+   |
+
+E402 Module level import not at top of file
+ --> src/prompt_engine/guards.py:5:1
+  |
+3 | """Prompt guards for enforcing citation markers."""
+4 |
+5 | import re
+  | ^^^^^^^^^
+  |
+
+E501 Line too long (179 > 100)
+  --> src/scheduler/priority_queue.py:30:101
+   |
+28 | …
+29 | …
+30 | …rnal_id, url, tags, visibility, priority, status, attempts, scheduled_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+   |                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+31 | …
+32 | …
+   |
+
+E501 Line too long (179 > 100)
+  --> src/scheduler/priority_queue.py:51:101
+   |
+49 | …
+50 | …
+51 | … tags, visibility, attempts FROM ingest_job WHERE status='pending' ORDER BY priority DESC, id ASC LIMIT 1"
+   |                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+52 | …
+53 | …
+   |
+
+E501 Line too long (142 > 100)
+  --> src/scheduler/scheduler.py:46:101
+   |
+44 | …
+45 | …
+46 | …source_type, handle, label, enabled, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?)",
+   |                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+47 | …bel, 1, now, now),
+48 | …
+   |
+
+E501 Line too long (133 > 100)
+  --> src/scheduler/scheduler.py:51:101
+   |
+49 |         watch_id = int(cur.lastrowid)
+50 |         self.conn.execute(
+51 |             "INSERT INTO ingest_state (watchlist_id, cursor, last_seen_at, etag, failure_count, backoff_until) VALUES (?,?,?,?,?,?)",
+   |                                                                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+52 |             (watch_id, None, None, None, 0, None),
+53 |         )
+   |
+
+E501 Line too long (120 > 100)
+  --> src/scheduler/scheduler.py:68:101
+   |
+67 |     def list_watches(self, tenant: str | None = None) -> list[models.Watchlist]:
+68 |         sql = "SELECT id, tenant, workspace, source_type, handle, label, enabled, created_at, updated_at FROM watchlist"
+   |                                                                                                     ^^^^^^^^^^^^^^^^^^^^
+69 |         params: tuple = ()
+70 |         if tenant:
+   |
+
+PERF401 Use a list comprehension to create a transformed list
+  --> src/scheduler/scheduler.py:76:13
+   |
+74 |           out: list[models.Watchlist] = []
+75 |           for r in rows:
+76 | /             out.append(
+77 | |                 models.Watchlist(
+78 | |                     id=r[0],
+79 | |                     tenant=r[1],
+80 | |                     workspace=r[2],
+81 | |                     source_type=r[3],
+82 | |                     handle=r[4],
+83 | |                     label=r[5],
+84 | |                     enabled=bool(r[6]),
+85 | |                     created_at=r[7],
+86 | |                     updated_at=r[8],
+87 | |                 )
+88 | |             )
+   | |_____________^
+89 |           return out
+   |
+help: Replace for loop with list comprehension
+
+E501 Line too long (102 > 100)
+  --> src/scheduler/scheduler.py:94:101
+   |
+92 |     def tick(self) -> None:
+93 |         rows = self.conn.execute(
+94 |             "SELECT id, tenant, workspace, source_type, handle, label FROM watchlist WHERE enabled=1",
+   |                                                                                                     ^^
+95 |         ).fetchall()
+96 |         now = datetime.now(timezone.utc)
+   |
+
+PLR0913 Too many arguments in function definition (7 > 5)
+  --> src/security/events.py:14:5
+   |
+14 | def log_security_event(
+   |     ^^^^^^^^^^^^^^^^^^
+15 |     *,
+16 |     actor: str,
+   |
+
+SIM110 Use `return any(ip.is_private or ip.is_loopback or ip.is_reserved or ip.is_multicast for ip in ips)` instead of `for` loop
+  --> src/security/net_guard.py:38:5
+   |
+36 |               return True
+37 |           ips = [ipaddress.ip_address(ip) for ip in resolved]
+38 | /     for ip in ips:
+39 | |         if ip.is_private or ip.is_loopback or ip.is_reserved or ip.is_multicast:
+40 | |             return True
+41 | |     return False
+   | |________________^
+   |
+help: Replace with `return any(ip.is_private or ip.is_loopback or ip.is_reserved or ip.is_multicast for ip in ips)`
+
+SIM103 Return the condition `not _is_private(host)` directly
+  --> src/security/net_guard.py:57:5
+   |
+55 |       if not host:
+56 |           return False
+57 | /     if _is_private(host):
+58 | |         return False
+59 | |     return True
+   | |_______________^
+   |
+help: Replace with `return not _is_private(host)`
+
+PLR0913 Too many arguments in function definition (6 > 5)
+  --> src/security/signing.py:74:5
+   |
+74 | def verify_signature(
+   |     ^^^^^^^^^^^^^^^^
+75 |     payload: bytes,
+76 |     secret: str,
+   |
+
+PLR0913 Too many arguments in function definition (7 > 5)
+   --> src/security/signing.py:119:5
+    |
+119 | def verify_signature_headers(
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^
+120 |     payload: bytes,
+121 |     secret: str,
+    |
+
+PLR0913 Too many arguments in function definition (12 > 5)
+  --> src/ultimate_discord_intelligence_bot/debate_analysis_pipeline.py:22:9
+   |
+20 |     """Download, transcribe and analyse clips for context and accuracy."""
+21 |
+22 |     def __init__(
+   |         ^^^^^^^^
+23 |         self,
+24 |         downloader: YtDlpDownloadTool | None = None,
+   |
+
+PLR2004 Magic value used in comparison, consider replacing `2` with a constant variable
+  --> src/ultimate_discord_intelligence_bot/main.py:36:24
+   |
+35 | if __name__ == "__main__":
+36 |     if len(sys.argv) < 2:
+   |                        ^
+37 |         print("Usage: main.py <command> [<args>]")
+38 |         sys.exit(1)
+   |
+
+E402 Module level import not at top of file
+  --> src/ultimate_discord_intelligence_bot/marketplace/trust.py:12:1
+   |
+10 | """
+11 |
+12 | from collections.abc import Iterable
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+13 | from dataclasses import dataclass
+   |
+
+E402 Module level import not at top of file
+  --> src/ultimate_discord_intelligence_bot/marketplace/trust.py:13:1
+   |
+12 | from collections.abc import Iterable
+13 | from dataclasses import dataclass
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+14 |
+15 | # ---------------------------------------------------------------------------
+   |
+
+PLR0913 Too many arguments in function definition (9 > 5)
+  --> src/ultimate_discord_intelligence_bot/pipeline.py:25:9
+   |
+23 |     """End-to-end pipeline for downloading, processing and posting content."""
+24 |
+25 |     def __init__(
+   |         ^^^^^^^^
+26 |         self,
+27 |         webhook_url: str | None = None,
+   |
+
+PLC0415 `import` should be at the top-level of a file
+  --> src/ultimate_discord_intelligence_bot/pipeline.py:38:13
+   |
+36 |     ):
+37 |         if downloader is None:
+38 |             from .tools.multi_platform_download_tool import MultiPlatformDownloadTool
+   |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+39 |
+40 |             self.downloader = MultiPlatformDownloadTool()
+   |
+
+PLR0911 Too many return statements (9 > 6)
+  --> src/ultimate_discord_intelligence_bot/pipeline.py:82:15
+   |
+80 |         return result
+81 |
+82 |     async def process_video(self, url: str, quality: str = "1080p") -> dict:
+   |               ^^^^^^^^^^^^^
+83 |         """Run the full content pipeline for a single video.
+   |
+
+PLR0915 Too many statements (54 > 50)
+  --> src/ultimate_discord_intelligence_bot/pipeline.py:82:15
+   |
+80 |         return result
+81 |
+82 |     async def process_video(self, url: str, quality: str = "1080p") -> dict:
+   |               ^^^^^^^^^^^^^
+83 |         """Run the full content pipeline for a single video.
+   |
+
+PLR0913 Too many arguments in function definition (6 > 5)
+  --> src/ultimate_discord_intelligence_bot/plugins/runtime/executor.py:56:9
+   |
+54 |         return manifest
+55 |
+56 |     def run(
+   |         ^^^
+57 |         self,
+58 |         plugin_dir: str | pathlib.Path,
+   |
+
+PLW2901 `for` loop variable `line` overwritten by assignment target
+  --> src/ultimate_discord_intelligence_bot/plugins/testkit/goldens.py:35:17
+   |
+33 |         with path.open("r", encoding="utf-8") as fh:
+34 |             for line in fh:
+35 |                 line = line.strip()
+   |                 ^^^^
+36 |                 if line:
+37 |                     records.append(json.loads(line))
+   |
+
+PLR0912 Too many branches (13 > 12)
+  --> src/ultimate_discord_intelligence_bot/plugins/testkit/runner.py:41:5
+   |
+41 | def run(plugin: str) -> dict[str, Any]:
+   |     ^^^
+42 |     """Execute the plugin's capability scenarios.
+   |
+
+PLC0415 `import` should be at the top-level of a file
+   --> src/ultimate_discord_intelligence_bot/profiles/schema.py:193:5
+    |
+191 | def load_seeds(path: str) -> list[CreatorSeed]:
+192 |     """Load creator seed profiles from a YAML file."""
+193 |     import yaml
+    |     ^^^^^^^^^^^
+194 |
+195 |     with open(path, encoding="utf-8") as fh:
+    |
+
+E501 Line too long (106 > 100)
+  --> src/ultimate_discord_intelligence_bot/profiles/store.py:80:101
+   |
+78 |             count, first_seen = row
+79 |             cur.execute(
+80 |                 "UPDATE cross_profile_links SET count = ?, last_seen = ? WHERE source = ? AND target = ?",
+   |                                                                                                     ^^^^^^
+81 |                 (count + 1, timestamp.isoformat(), source, target),
+82 |             )
+   |
+
+E501 Line too long (120 > 100)
+  --> src/ultimate_discord_intelligence_bot/profiles/store.py:85:101
+   |
+83 |         else:
+84 |             cur.execute(
+85 |                 "INSERT INTO cross_profile_links (source, target, count, first_seen, last_seen) VALUES (?, ?, ?, ?, ?)",
+   |                                                                                                     ^^^^^^^^^^^^^^^^^^^^
+86 |                 (source, target, 1, timestamp.isoformat(), timestamp.isoformat()),
+87 |             )
+   |
+
+E501 Line too long (105 > 100)
+  --> src/ultimate_discord_intelligence_bot/profiles/store.py:94:101
+   |
+92 |         cur = self.conn.cursor()
+93 |         rows = cur.execute(
+94 |             "SELECT target, count FROM cross_profile_links WHERE source = ? ORDER BY count DESC LIMIT ?",
+   |                                                                                                     ^^^^^
+95 |             (creator, limit),
+96 |         ).fetchall()
+   |
+
+E741 Ambiguous variable name: `l`
+  --> src/ultimate_discord_intelligence_bot/services/eval_harness.py:47:22
+   |
+45 |     if not links:
+46 |         return 1.0
+47 |     hits = sum(1 for l in links if l in output)
+   |                      ^
+48 |     return hits / len(links)
+   |
+
+SIM115 Use a context manager for opening files
+  --> src/ultimate_discord_intelligence_bot/services/eval_harness.py:87:24
+   |
+85 |     seed: int = 0,
+86 | ) -> EvalResult:
+87 |     schema = json.load(open("datasets/schemas/task_record.schema.json"))
+   |                        ^^^^
+88 |     samples: list[SampleResult] = []
+89 |     for line in dataset_path.read_text().splitlines():
+   |
+
+SIM115 Use a context manager for opening files
+   --> src/ultimate_discord_intelligence_bot/services/eval_harness.py:132:31
+    |
+131 | def compare_to_baseline(result: EvalResult, key: str, tolerances: dict[str, float]) -> bool:
+132 |     baseline = yaml.safe_load(open("benchmarks/baselines.yaml"))
+    |                               ^^^^
+133 |     if key not in baseline:
+134 |         return True
+    |
+
+E402 Module level import not at top of file
+  --> src/ultimate_discord_intelligence_bot/services/evaluation_harness.py:10:1
+   |
+ 8 | can consume the data."""
+ 9 |
+10 | import json
+   | ^^^^^^^^^^^
+11 | import time
+12 | from dataclasses import dataclass, field
+   |
+
+E402 Module level import not at top of file
+  --> src/ultimate_discord_intelligence_bot/services/evaluation_harness.py:11:1
+   |
+10 | import json
+11 | import time
+   | ^^^^^^^^^^^
+12 | from dataclasses import dataclass, field
+13 | from typing import Any
+   |
+
+E402 Module level import not at top of file
+  --> src/ultimate_discord_intelligence_bot/services/evaluation_harness.py:12:1
+   |
+10 | import json
+11 | import time
+12 | from dataclasses import dataclass, field
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+13 | from typing import Any
+   |
+
+E402 Module level import not at top of file
+  --> src/ultimate_discord_intelligence_bot/services/evaluation_harness.py:13:1
+   |
+11 | import time
+12 | from dataclasses import dataclass, field
+13 | from typing import Any
+   | ^^^^^^^^^^^^^^^^^^^^^^
+14 |
+15 | from .openrouter_service import OpenRouterService
+   |
+
+E402 Module level import not at top of file
+  --> src/ultimate_discord_intelligence_bot/services/evaluation_harness.py:15:1
+   |
+13 | from typing import Any
+14 |
+15 | from .openrouter_service import OpenRouterService
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+
+S110 `try`-`except`-`pass` detected, consider logging the exception
+  --> src/ultimate_discord_intelligence_bot/services/evaluation_harness.py:53:13
+   |
+51 |                       json.dump(record, fh)
+52 |                       fh.write("\n")
+53 | /             except Exception:
+54 | |                 pass
+   | |____________________^
+55 |           return results
+   |
+
+S311 Standard pseudo-random generators are not suitable for cryptographic purposes
+  --> src/ultimate_discord_intelligence_bot/services/learning_engine.py:86:12
+   |
+84 |             available = list(arms)
+85 |
+86 |         if random.random() < self.epsilon:
+   |            ^^^^^^^^^^^^^^^
+87 |             return random.choice(available)
+88 |         return max(available, key=lambda a: arms[a].value)
+   |
+
+S311 Standard pseudo-random generators are not suitable for cryptographic purposes
+  --> src/ultimate_discord_intelligence_bot/services/learning_engine.py:87:20
+   |
+86 |         if random.random() < self.epsilon:
+87 |             return random.choice(available)
+   |                    ^^^^^^^^^^^^^^^^^^^^^^^^
+88 |         return max(available, key=lambda a: arms[a].value)
+   |
+
+PLR0913 Too many arguments in function definition (11 > 5)
+   --> src/ultimate_discord_intelligence_bot/services/logging_utils.py:102:9
+    |
+101 |     # -- logging helpers --------------------------------------------------------
+102 |     def log_llm_call(
+    |         ^^^^^^^^^^^^
+103 |         self,
+104 |         task: str,
+    |
+
+UP028 Replace `yield` over `for` loop with `yield from`
+   --> src/ultimate_discord_intelligence_bot/services/logging_utils.py:149:9
+    |
+147 |           """Yield minimal info about logged calls for tests or dashboards."""
+148 |           cur = self.conn.cursor()
+149 | /         for row in cur.execute("SELECT task, model FROM llm_calls"):
+150 | |             yield row
+    | |_____________________^
+151 |
+152 |       def close(self) -> None:  # pragma: no cover - trivial
+    |
+help: Replace with `yield from`
+
+PLC0415 `import` should be at the top-level of a file
+  --> src/ultimate_discord_intelligence_bot/services/memory_service.py:38:9
+   |
+36 |         supported.
+37 |         """
+38 |         from ..privacy import privacy_filter
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+39 |
+40 |         clean_text, _report = privacy_filter.filter_text(text, metadata or {})
+   |
+
+PLR0913 Too many arguments in function definition (7 > 5)
+  --> src/ultimate_discord_intelligence_bot/services/openrouter_service.py:29:9
+   |
+27 |     """Route prompts to the best model and provider available."""
+28 |
+29 |     def __init__(
+   |         ^^^^^^^^
+30 |         self,
+31 |         models_map: dict[str, list[str]] | None = None,
+   |
+
+PLR0912 Too many branches (14 > 12)
+  --> src/ultimate_discord_intelligence_bot/services/openrouter_service.py:94:9
+   |
+92 |         return self.learning.select_model(task_type, candidates)
+93 |
+94 |     def route(
+   |         ^^^^^
+95 |         self,
+96 |         prompt: str,
+   |
+
+PLR0915 Too many statements (52 > 50)
+  --> src/ultimate_discord_intelligence_bot/services/openrouter_service.py:94:9
+   |
+92 |         return self.learning.select_model(task_type, candidates)
+93 |
+94 |     def route(
+   |         ^^^^^
+95 |         self,
+96 |         prompt: str,
+   |
+
+S110 `try`-`except`-`pass` detected, consider logging the exception
+  --> src/ultimate_discord_intelligence_bot/services/prompt_engine.py:58:17
+   |
+56 |                       enc = tiktoken.encoding_for_model(model)
+57 |                       return len(enc.encode(text))
+58 | /                 except Exception:
+59 | |                     pass
+   | |________________________^
+60 |               if AutoTokenizer:
+61 |                   try:
+   |
+
+S110 `try`-`except`-`pass` detected, consider logging the exception
+  --> src/ultimate_discord_intelligence_bot/services/prompt_engine.py:67:17
+   |
+65 |                           self._tokenizers[model] = tokenizer
+66 |                       return len(tokenizer.encode(text))
+67 | /                 except Exception:
+68 | |                     pass
+   | |________________________^
+69 |               if tiktoken:
+70 |                   enc = tiktoken.get_encoding("cl100k_base")
+   |
+
+E501 Line too long (105 > 100)
+   --> src/ultimate_discord_intelligence_bot/services/prompt_engine.py:111:101
+    |
+109 |         context_text = "\n".join(context_blocks) or "(no context)"
+110 |         sources_text = "\n".join(sources)
+111 |         return f"{instruction}\n\nContext:\n{context_text}\n\nSources:\n{sources_text}\n\nQuery: {query}"
+    |                                                                                                     ^^^^^
+    |
+
+E402 Module level import not at top of file
+  --> src/ultimate_discord_intelligence_bot/step_result.py:12:1
+   |
+10 | """
+11 |
+12 | from dataclasses import dataclass, field
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+13 | from typing import Any
+   |
+
+E402 Module level import not at top of file
+  --> src/ultimate_discord_intelligence_bot/step_result.py:13:1
+   |
+12 | from dataclasses import dataclass, field
+13 | from typing import Any
+   | ^^^^^^^^^^^^^^^^^^^^^^
+   |
+
+PLR2004 Magic value used in comparison, consider replacing `5` with a constant variable
+  --> src/ultimate_discord_intelligence_bot/tools/claim_extractor_tool.py:30:53
+   |
+28 |             for claim in claims:
+29 |                 claim_text = claim.text.strip()
+30 |                 if claim_text and len(claim_text) > 5:  # Filter out very short matches
+   |                                                     ^
+31 |                     claim_texts.append(claim_text)
+   |
+
+PLC0415 `import` should be at the top-level of a file
+  --> src/ultimate_discord_intelligence_bot/tools/debate_command_tool.py:40:13
+   |
+38 |         # Local import to avoid circular dependency at module import time.
+39 |         if pipeline is None:
+40 |             from ..debate_analysis_pipeline import DebateAnalysisPipeline
+   |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+41 |
+42 |             pipeline = DebateAnalysisPipeline(
+   |
+
+PLR0911 Too many return statements (12 > 6)
+  --> src/ultimate_discord_intelligence_bot/tools/debate_command_tool.py:54:9
+   |
+52 |         self.profile_store = profile_store or ProfileStore(":memory:")
+53 |
+54 |     def _run(self, command: str, **kwargs):
+   |         ^^^^
+55 |         if command == "analyze":
+56 |             return self.pipeline.analyze(
+   |
+
+PLR0912 Too many branches (18 > 12)
+  --> src/ultimate_discord_intelligence_bot/tools/debate_command_tool.py:54:9
+   |
+52 |         self.profile_store = profile_store or ProfileStore(":memory:")
+53 |
+54 |     def _run(self, command: str, **kwargs):
+   |         ^^^^
+55 |         if command == "analyze":
+56 |             return self.pipeline.analyze(
+   |
+
+PLR1714 Consider merging multiple comparisons: `command in {"profile", "creator"}`.
+  --> src/ultimate_discord_intelligence_bot/tools/debate_command_tool.py:93:12
+   |
+91 |                 "events": self.timeline.get_timeline(kwargs["video_id"]),
+92 |             }
+93 |         if command == "profile" or command == "creator":
+   |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+94 |             return {
+95 |                 "status": "success",
+   |
+help: Merge multiple comparisons
+
+PLR2004 Magic value used in comparison, consider replacing `100` with a constant variable
+  --> src/ultimate_discord_intelligence_bot/tools/discord_post_tool.py:46:28
+   |
+44 |         file_size_mb = int(content_data.get("file_size", 0)) / (1024 * 1024)
+45 |
+46 |         if file_size_mb <= 100:  # Within Discord limits for most servers
+   |                            ^^^
+47 |             return self._post_with_file_upload(content_data, drive_links)
+48 |         else:
+   |
+
+S113 Probable use of `requests` call without timeout
+   --> src/ultimate_discord_intelligence_bot/tools/discord_post_tool.py:121:24
+    |
+119 |             }
+120 |
+121 |             response = requests.post(self.webhook_url, files=files)
+    |                        ^^^^^^^^^^^^^
+122 |
+123 |         return self._handle_response(response)
+    |
+
+S113 Probable use of `requests` call without timeout
+   --> src/ultimate_discord_intelligence_bot/tools/discord_post_tool.py:128:24
+    |
+126 |         """Send webhook with rate limiting"""
+127 |         try:
+128 |             response = requests.post(
+    |                        ^^^^^^^^^^^^^
+129 |                 self.webhook_url, json=payload, headers={"Content-Type": "application/json"}
+130 |             )
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `204` with a constant variable
+   --> src/ultimate_discord_intelligence_bot/tools/discord_post_tool.py:138:36
+    |
+136 |     def _handle_response(self, response) -> dict:
+137 |         """Handle Discord API response with rate limiting"""
+138 |         if response.status_code == 204:
+    |                                    ^^^
+139 |             return {"status": "success"}
+140 |         elif response.status_code == 429:
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `429` with a constant variable
+   --> src/ultimate_discord_intelligence_bot/tools/discord_post_tool.py:140:38
+    |
+138 |         if response.status_code == 204:
+139 |             return {"status": "success"}
+140 |         elif response.status_code == 429:
+    |                                      ^^^
+141 |             retry_after = response.json().get("retry_after", 60)
+142 |             return {"status": "rate_limited", "retry_after": retry_after}
+    |
+
+S113 Probable use of `requests` call without timeout
+  --> src/ultimate_discord_intelligence_bot/tools/discord_private_alert_tool.py:59:24
+   |
+57 |         payload = {"content": message}
+58 |         try:
+59 |             response = requests.post(self.webhook_url, json=payload)
+   |                        ^^^^^^^^^^^^^
+60 |         except Exception as exc:  # pragma: no cover - network failure path
+61 |             return {"status": "error", "error": str(exc)}
+   |
+
+PLR2004 Magic value used in comparison, consider replacing `204` with a constant variable
+  --> src/ultimate_discord_intelligence_bot/tools/discord_private_alert_tool.py:63:36
+   |
+61 |             return {"status": "error", "error": str(exc)}
+62 |
+63 |         if response.status_code == 204:
+   |                                    ^^^
+64 |             return {"status": "success"}
+65 |         else:
+   |
+
+E501 Line too long (114 > 100)
+  --> src/ultimate_discord_intelligence_bot/tools/drive_upload_tool.py:42:101
+   |
+40 |         if not _GOOGLE_LIBS_AVAILABLE:  # pragma: no cover - exercised via import path
+41 |             raise RuntimeError(
+42 |                 "Google client libraries not installed. Install google-api-python-client to enable Drive uploads."
+   |                                                                                                     ^^^^^^^^^^^^^^
+43 |             )
+44 |         credentials_path = str(GOOGLE_CREDENTIALS)
+   |
+
+PERF203 `try`-`except` within a loop incurs performance overhead
+  --> src/ultimate_discord_intelligence_bot/tools/fact_check_tool.py:27:17
+   |
+25 |                   try:
+26 |                       return func(*args, **kwargs)
+27 | /                 except Exception as e:
+28 | |                     if attempt == max_retries - 1:
+29 | |                         raise
+30 | |                     logger.warning(f"Attempt {attempt + 1} failed: {e}. Retrying in {delay}s...")
+31 | |                     time.sleep(delay)
+   | |_____________________________________^
+32 |               return []
+   |
+
+PERF401 Use a list comprehension to create a transformed list
+  --> src/ultimate_discord_intelligence_bot/tools/fact_check_tool.py:65:17
+   |
+63 |           for item in topics[:3]:
+64 |               if isinstance(item, dict) and item.get("Text") and item.get("FirstURL"):
+65 | /                 results.append(
+66 | |                     {
+67 | |                         "title": item["Text"],
+68 | |                         "url": item["FirstURL"],
+69 | |                         "snippet": item["Text"],
+70 | |                     }
+71 | |                 )
+   | |_________________^
+72 |           return results
+   |
+help: Replace for loop with list comprehension
+
+PLR2004 Magic value used in comparison, consider replacing `3` with a constant variable
+   --> src/ultimate_discord_intelligence_bot/tools/fact_check_tool.py:198:29
+    |
+197 |         # Simple heuristic based on evidence count and sources
+198 |         if len(evidence) >= 3:
+    |                             ^
+199 |             return "well_supported"
+200 |         elif len(evidence) >= 2:
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `2` with a constant variable
+   --> src/ultimate_discord_intelligence_bot/tools/fact_check_tool.py:200:31
+    |
+198 |         if len(evidence) >= 3:
+199 |             return "well_supported"
+200 |         elif len(evidence) >= 2:
+    |                               ^
+201 |             return "moderately_supported"
+202 |         else:
+    |
+
+PERF203 `try`-`except` within a loop incurs performance overhead
+   --> src/ultimate_discord_intelligence_bot/tools/fact_check_tool.py:237:13
+    |
+235 |                   evidence.extend(results)
+236 |                   logger.debug(f"Backend {name} returned {len(results)} results")
+237 | /             except Exception as e:
+238 | |                 error_msg = str(e)
+239 | |                 failed_backends.append({"backend": name, "error": error_msg})
+240 | |                 logger.error(f"Backend {name} failed: {error_msg}")
+    | |___________________________________________________________________^
+241 |
+242 |           # Determine verdict based on evidence quality
+    |
+
+SIM115 Use a context manager for opening files
+  --> src/ultimate_discord_intelligence_bot/tools/golden/diff_reports.py:14:19
+   |
+12 |     p.add_argument("--b", required=True)
+13 |     args = p.parse_args(argv)
+14 |     a = json.load(open(args.a))
+   |                   ^^^^
+15 |     b = json.load(open(args.b))
+16 |     dq = b["aggregates"]["quality"] - a["aggregates"]["quality"]
+   |
+
+SIM115 Use a context manager for opening files
+  --> src/ultimate_discord_intelligence_bot/tools/golden/diff_reports.py:15:19
+   |
+13 |     args = p.parse_args(argv)
+14 |     a = json.load(open(args.a))
+15 |     b = json.load(open(args.b))
+   |                   ^^^^
+16 |     dq = b["aggregates"]["quality"] - a["aggregates"]["quality"]
+17 |     dc = b["aggregates"]["cost_usd"] - a["aggregates"]["cost_usd"]
+   |
+
+SIM115 Use a context manager for opening files
+  --> src/ultimate_discord_intelligence_bot/tools/golden/lint_golden.py:12:20
+   |
+11 | SCHEMA_PATH = Path(__file__).resolve().parents[4] / "datasets/schemas/task_record.schema.json"
+12 | SCHEMA = json.load(open(SCHEMA_PATH))
+   |                    ^^^^
+   |
+
+PERF203 `try`-`except` within a loop incurs performance overhead
+  --> src/ultimate_discord_intelligence_bot/tools/golden/lint_golden.py:23:9
+   |
+21 |           try:
+22 |               jsonschema.validate(json.loads(line), SCHEMA)
+23 | /         except jsonschema.ValidationError as e:
+24 | |             print(f"line {i}: {e.message}")
+25 | |             ok = False
+   | |______________________^
+26 |       return 0 if ok else 1
+   |
+
+SIM115 Use a context manager for opening files
+  --> src/ultimate_discord_intelligence_bot/tools/golden/mk_record.py:12:20
+   |
+11 | SCHEMA_PATH = Path(__file__).resolve().parents[4] / "datasets/schemas/task_record.schema.json"
+12 | SCHEMA = json.load(open(SCHEMA_PATH))
+   |                    ^^^^
+   |
+
+PLR0912 Too many branches (13 > 12)
+  --> src/ultimate_discord_intelligence_bot/tools/logical_fallacy_tool.py:76:9
+   |
+74 |     }
+75 |
+76 |     def _run(self, text: str) -> dict:
+   |         ^^^^
+77 |         findings = []
+78 |         confidence_scores = {}
+   |
+
+PLR2004 Magic value used in comparison, consider replacing `3` with a constant variable
+   --> src/ultimate_discord_intelligence_bot/tools/logical_fallacy_tool.py:142:30
+    |
+140 |         ]
+141 |         absolute_count = sum(1 for word in absolute_words if word in text_lower)
+142 |         if absolute_count >= 3:
+    |                              ^
+143 |             fallacies.append(("hasty generalization", 0.6))
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `2` with a constant variable
+   --> src/ultimate_discord_intelligence_bot/tools/logical_fallacy_tool.py:155:31
+    |
+153 |         ]
+154 |         emotional_count = sum(1 for word in emotional_words if word in text_lower)
+155 |         if emotional_count >= 2:
+    |                               ^
+156 |             fallacies.append(("appeal to emotion", 0.5))
+    |
+
+E501 Line too long (101 > 100)
+   --> src/ultimate_discord_intelligence_bot/tools/logical_fallacy_tool.py:176:101
+    |
+174 |         """Generate brief explanations for detected fallacies."""
+175 |         explanations = {
+176 |             "ad hominem": "Attacking the person making the argument rather than the argument itself",
+    |                                                                                                     ^
+177 |             "appeal to authority": "Using authority or expertise as the sole basis for accepting a claim",
+178 |             "bandwagon": "Arguing something is true because many people believe it",
+    |
+
+E501 Line too long (106 > 100)
+   --> src/ultimate_discord_intelligence_bot/tools/logical_fallacy_tool.py:177:101
+    |
+175 |         explanations = {
+176 |             "ad hominem": "Attacking the person making the argument rather than the argument itself",
+177 |             "appeal to authority": "Using authority or expertise as the sole basis for accepting a claim",
+    |                                                                                                     ^^^^^^
+178 |             "bandwagon": "Arguing something is true because many people believe it",
+179 |             "red herring": "Introducing irrelevant information to distract from the main issue",
+    |
+
+E501 Line too long (101 > 100)
+   --> src/ultimate_discord_intelligence_bot/tools/logical_fallacy_tool.py:182:101
+    |
+180 |             "straw man": "Misrepresenting someone's argument to make it easier to attack",
+181 |             "false dilemma": "Presenting only two options when more exist",
+182 |             "slippery slope": "Arguing that one event will inevitably lead to negative consequences",
+    |                                                                                                     ^
+183 |             "circular reasoning": "Using the conclusion as evidence for the premise",
+184 |             "hasty generalization": "Drawing broad conclusions from limited examples",
+    |
+
+E501 Line too long (103 > 100)
+   --> src/ultimate_discord_intelligence_bot/tools/logical_fallacy_tool.py:189:101
+    |
+187 |             "false cause": "Assuming correlation implies causation",
+188 |             "begging the question": "Assuming the conclusion in the premises",
+189 |             "appeal to consequences": "Arguing something is false because of undesirable consequences",
+    |                                                                                                     ^^^
+190 |             "tu quoque": "Avoiding criticism by turning it back on the accuser",
+191 |             "loaded question": "Asking a question that contains controversial assumptions",
+    |
+
+E402 Module level import not at top of file
+  --> src/ultimate_discord_intelligence_bot/tools/logical_fallacy_tool_backup.py:79:1
+   |
+79 | from crewai.tools import BaseTool
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+
+F811 Redefinition of unused `LogicalFallacyTool` from line 13
+  --> src/ultimate_discord_intelligence_bot/tools/logical_fallacy_tool_backup.py:82:7
+   |
+82 | class LogicalFallacyTool(BaseTool):
+   |       ^^^^^^^^^^^^^^^^^^ `LogicalFallacyTool` redefined here
+83 |     name: str = "Logical Fallacy Detector"
+84 |     description: str = (
+   |
+  ::: src/ultimate_discord_intelligence_bot/tools/logical_fallacy_tool_backup.py:13:7
+   |
+13 | class LogicalFallacyTool(BaseTool):
+   |       ------------------ previous definition of `LogicalFallacyTool` here
+14 |     name: str = "Logical Fallacy Detector"
+15 |     description: str = (
+   |
+help: Remove definition: `LogicalFallacyTool`
+
+PLR0912 Too many branches (13 > 12)
+   --> src/ultimate_discord_intelligence_bot/tools/logical_fallacy_tool_backup.py:147:9
+    |
+145 |     }
+146 |
+147 |     def _run(self, text: str) -> dict:
+    |         ^^^^
+148 |         findings = []
+149 |         confidence_scores = {}
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `3` with a constant variable
+   --> src/ultimate_discord_intelligence_bot/tools/logical_fallacy_tool_backup.py:215:30
+    |
+213 |         ]
+214 |         absolute_count = sum(1 for word in absolute_words if word in text_lower)
+215 |         if absolute_count >= 3:
+    |                              ^
+216 |             fallacies.append(("hasty generalization", 0.6))
+    |
+
+PLR2004 Magic value used in comparison, consider replacing `2` with a constant variable
+   --> src/ultimate_discord_intelligence_bot/tools/logical_fallacy_tool_backup.py:228:31
+    |
+226 |         ]
+227 |         emotional_count = sum(1 for word in emotional_words if word in text_lower)
+228 |         if emotional_count >= 2:
+    |                               ^
+229 |             fallacies.append(("appeal to emotion", 0.5))
+    |
+
+E501 Line too long (101 > 100)
+   --> src/ultimate_discord_intelligence_bot/tools/logical_fallacy_tool_backup.py:249:101
+    |
+247 |         """Generate brief explanations for detected fallacies."""
+248 |         explanations = {
+249 |             "ad hominem": "Attacking the person making the argument rather than the argument itself",
+    |                                                                                                     ^
+250 |             "appeal to authority": "Using authority or expertise as the sole basis for accepting a claim",
+251 |             "bandwagon": "Arguing something is true because many people believe it",
+    |
+
+E501 Line too long (106 > 100)
+   --> src/ultimate_discord_intelligence_bot/tools/logical_fallacy_tool_backup.py:250:101
+    |
+248 |         explanations = {
+249 |             "ad hominem": "Attacking the person making the argument rather than the argument itself",
+250 |             "appeal to authority": "Using authority or expertise as the sole basis for accepting a claim",
+    |                                                                                                     ^^^^^^
+251 |             "bandwagon": "Arguing something is true because many people believe it",
+252 |             "red herring": "Introducing irrelevant information to distract from the main issue",
+    |
+
+E501 Line too long (101 > 100)
+   --> src/ultimate_discord_intelligence_bot/tools/logical_fallacy_tool_backup.py:255:101
+    |
+253 |             "straw man": "Misrepresenting someone's argument to make it easier to attack",
+254 |             "false dilemma": "Presenting only two options when more exist",
+255 |             "slippery slope": "Arguing that one event will inevitably lead to negative consequences",
+    |                                                                                                     ^
+256 |             "circular reasoning": "Using the conclusion as evidence for the premise",
+257 |             "hasty generalization": "Drawing broad conclusions from limited examples",
+    |
+
+E501 Line too long (103 > 100)
+   --> src/ultimate_discord_intelligence_bot/tools/logical_fallacy_tool_backup.py:262:101
+    |
+260 |             "false cause": "Assuming correlation implies causation",
+261 |             "begging the question": "Assuming the conclusion in the premises",
+262 |             "appeal to consequences": "Arguing something is false because of undesirable consequences",
+    |                                                                                                     ^^^
+263 |             "tu quoque": "Avoiding criticism by turning it back on the accuser",
+264 |             "loaded question": "Asking a question that contains controversial assumptions",
+    |
+
+SIM108 Use ternary operator `target = mem_ns(tenant_ctx, collection) if tenant_ctx else collection` instead of `if`-`else`-block
+  --> src/ultimate_discord_intelligence_bot/tools/memory_storage_tool.py:87:13
+   |
+85 |               # Allow override but still apply tenant scoping if in tenant context
+86 |               tenant_ctx = current_tenant()
+87 | /             if tenant_ctx:
+88 | |                 target = mem_ns(tenant_ctx, collection)
+89 | |             else:
+90 | |                 target = collection
+   | |___________________________________^
+91 |
+92 |           try:
+   |
+help: Replace `if`-`else`-block with `target = mem_ns(tenant_ctx, collection) if tenant_ctx else collection`
+
+PLR0911 Too many return statements (11 > 6)
+  --> src/ultimate_discord_intelligence_bot/tools/multi_platform_download_tool.py:73:9
+   |
+71 |         return None
+72 |
+73 |     def _get_platform_from_url(self, url: str) -> str | None:
+   |         ^^^^^^^^^^^^^^^^^^^^^^
+74 |         """Extract platform name from URL for metadata."""
+75 |         try:
+   |
+
+SIM118 Use `key in dict` instead of `key in dict.keys()`
+  --> src/ultimate_discord_intelligence_bot/tools/multi_platform_download_tool.py:77:17
+   |
+75 |         try:
+76 |             domain = urlparse(url).netloc.lower()
+77 |             for pattern in self._dispatch.keys():
+   |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+78 |                 if domain.endswith(pattern):
+79 |                     # Convert domain to friendly platform name
+   |
+help: Remove `.keys()`
+
+E501 Line too long (123 > 100)
+   --> src/ultimate_discord_intelligence_bot/tools/multi_platform_download_tool.py:170:101
+    |
+168 |             # No matching platform found
+169 |             supported_platforms = list(set(self._dispatch.keys()))
+170 |             error_msg = f"Unsupported platform for URL: {url}. Supported domains: {', '.join(sorted(supported_platforms))}"
+    |                                                                                                     ^^^^^^^^^^^^^^^^^^^^^^^
+171 |
+172 |             logger.warning(error_msg)
+    |
+
+E501 Line too long (117 > 100)
+  --> src/ultimate_discord_intelligence_bot/tools/pipeline_tool.py:17:101
+   |
+16 |     name: str = "Content Pipeline Tool"
+17 |     description: str = "Download, transcribe, analyse and post a video to Discord. Provide url and optional quality."
+   |                                                                                                     ^^^^^^^^^^^^^^^^^
+18 |
+19 |     def _run(self, url: str, quality: str = "1080p") -> dict[str, Any]:
+   |
+
+N806 Variable `KNOWN_PODCASTS` in function should be lowercase
+  --> src/ultimate_discord_intelligence_bot/tools/platform_resolver/podcast_resolver.py:34:5
+   |
+33 |     # Common podcast mappings for well-known shows
+34 |     KNOWN_PODCASTS = {
+   |     ^^^^^^^^^^^^^^
+35 |         "joe rogan": "https://feeds.redcircle.com/0eccc737-7d67-4fea-b3de-37faf0e5c9a1",
+36 |         "tim ferriss": "https://feeds.feedburner.com/thetimferrissshow",
+   |
+
+PLR2004 Magic value used in comparison, consider replacing `0.05` with a constant variable
+  --> src/ultimate_discord_intelligence_bot/tools/sentiment_tool.py:37:28
+   |
+35 |             scores = self.analyzer.polarity_scores(text)
+36 |             compound = scores.get("compound", 0.0)
+37 |             if compound >= 0.05:
+   |                            ^^^^
+38 |                 label = "positive"
+39 |             elif compound <= -0.05:
+   |
+
+PLR2004 Magic value used in comparison, consider replacing `-0.05` with a constant variable
+  --> src/ultimate_discord_intelligence_bot/tools/sentiment_tool.py:39:30
+   |
+37 |             if compound >= 0.05:
+38 |                 label = "positive"
+39 |             elif compound <= -0.05:
+   |                              ^^^^^
+40 |                 label = "negative"
+41 |             else:
+   |
+
+S110 `try`-`except`-`pass` detected, consider logging the exception
+  --> src/ultimate_discord_intelligence_bot/tools/system_status_tool.py:33:9
+   |
+31 |               mem_total = info.get("MemTotal", 0.0)
+32 |               mem_free = info.get("MemAvailable", info.get("MemFree", 0.0))
+33 | /         except Exception:
+34 | |             pass
+   | |________________^
+35 |           mem_used = mem_total - mem_free if mem_total else 0.0
+36 |           return {
+   |
+
+PERF203 `try`-`except` within a loop incurs performance overhead
+  --> src/ultimate_discord_intelligence_bot/tools/text_analysis_tool.py:43:13
+   |
+41 |               try:
+42 |                   nltk.data.find(path)
+43 | /             except LookupError:
+44 | |                 try:
+45 | |                     nltk.download(name, quiet=True)
+46 | |                 except Exception as exc:  # pragma: no cover
+47 | |                     logging.warning("Failed to download %s: %s", name, exc)
+   | |___________________________________________________________________________^
+48 |
+49 |       def _run(self, text: str) -> dict:
+   |
+
+S603 `subprocess` call: check for execution of untrusted input
+  --> src/ultimate_discord_intelligence_bot/tools/yt_dlp_download_tool.py:74:22
+   |
+72 |             # signature (without 'check' kwarg) still work. We manually handle
+73 |             # the return code below to classify success vs error.
+74 |             result = subprocess.run(
+   |                      ^^^^^^^^^^^^^^
+75 |                 command,
+76 |                 capture_output=True,
+   |
+
+PLW1510 [*] `subprocess.run` without explicit `check` argument
+  --> src/ultimate_discord_intelligence_bot/tools/yt_dlp_download_tool.py:74:22
+   |
+72 |             # signature (without 'check' kwarg) still work. We manually handle
+73 |             # the return code below to classify success vs error.
+74 |             result = subprocess.run(
+   |                      ^^^^^^^^^^^^^^
+75 |                 command,
+76 |                 capture_output=True,
+   |
+help: Add explicit `check=False`
+
+F841 Local variable `metadata` is assigned to but never used
+   --> tests/test_analysis_integration.py:120:13
+    |
+119 |             # Create metadata from analysis
+120 |             metadata = {
+    |             ^^^^^^^^
+121 |                 "chunk_id": i,
+122 |                 "start_time": chunk.start,
+    |
+help: Remove assignment to unused variable `metadata`
+
+PLC0415 `import` should be at the top-level of a file
+   --> tests/test_analysis_integration.py:169:5
+    |
+167 | def test_topics_integration_with_memory_service():
+168 |     """Test topics analysis integration with MemoryService."""
+169 |     from ultimate_discord_intelligence_bot.services import MemoryService
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+170 |
+171 |     memory_service = MemoryService()
+    |
+
+E501 Line too long (120 > 100)
+   --> tests/test_analysis_integration.py:174:101
+    |
+173 |     # Analyze content and store with topic metadata
+174 |     test_content = "Machine learning algorithms are transforming data science and artificial intelligence applications."
+    |                                                                                                     ^^^^^^^^^^^^^^^^^^^^
+175 |
+176 |     topics_result = extract(test_content)
+    |
+
+F841 Local variable `tech_entities` is assigned to but never used
+   --> tests/test_analysis_integration.py:325:5
+    |
+324 |     # Should extract entities
+325 |     tech_entities = [
+    |     ^^^^^^^^^^^^^
+326 |         e
+327 |         for e in topics_result.entities
+    |
+help: Remove assignment to unused variable `tech_entities`
+
+PLC0415 `import` should be at the top-level of a file
+   --> tests/test_analysis_integration.py:441:5
+    |
+440 |     # Check for repeated keywords indicating consistent processing
+441 |     from collections import Counter
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+442 |
+443 |     keyword_counts = Counter(all_keywords)
+    |
+
+E501 Line too long (104 > 100)
+   --> tests/test_analysis_integration.py:455:100
+    |
+453 |         {
+454 |             "type": "social_media",
+455 |             "content": "Just deployed our #AI model! 🚀 Amazing results with @team_ml #MachineLearning",
+    |                                                                                                     ^^^^
+456 |             "expected_hashtags": 2,
+457 |             "expected_keywords": 3,
+    |
+
+E501 Line too long (156 > 100)
+   --> tests/test_analysis_integration.py:461:101
+    |
+459 | …
+460 | …
+461 | …tecture demonstrated superior performance on image classification tasks with 97.3% accuracy.",
+    |                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+462 | …
+463 | …
+    |
+
+E501 Line too long (127 > 100)
+   --> tests/test_analysis_integration.py:467:101
+    |
+465 |         {
+466 |             "type": "technical",
+467 |             "content": 'import tensorflow as tf; model = tf.keras.Sequential([tf.keras.layers.Dense(128, activation="relu")])',
+    |                                                                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+468 |             "expected_hashtags": 0,
+469 |             "expected_keywords": 5,
+    |
+
+E501 Line too long (111 > 100)
+   --> tests/test_analysis_integration.py:473:101
+    |
+471 |         {
+472 |             "type": "conversational",
+473 |             "content": "Hey, can you explain how machine learning works? I heard it uses algorithms and data.",
+    |                                                                                                     ^^^^^^^^^^^
+474 |             "expected_hashtags": 0,
+475 |             "expected_keywords": 5,
+    |
+
+F841 Local variable `all_successful` is assigned to but never used
+   --> tests/test_analysis_integration.py:513:5
+    |
+512 |     # Overall verification
+513 |     all_successful = all(
+    |     ^^^^^^^^^^^^^^
+514 |         r["meets_hashtag_expectation"] and r["meets_keyword_expectation"] for r in results
+515 |     )
+    |
+help: Remove assignment to unused variable `all_successful`
+
+E501 Line too long (110 > 100)
+   --> tests/test_analysis_integration.py:516:101
+    |
+514 |         r["meets_hashtag_expectation"] and r["meets_keyword_expectation"] for r in results
+515 |     )
+516 |     # Note: This might not always pass due to implementation specifics, so we check for reasonable performance
+    |                                                                                                     ^^^^^^^^^^
+517 |
+518 |     successful_count = sum(1 for r in results if r["keyword_count"] > 0)
+    |
+
+F841 Local variable `reasonable_chunks` is assigned to but never used
+  --> tests/test_analysis_segmenter.py:44:5
+   |
+42 |     # At least some chunks should be reasonably sized
+43 |     # (The implementation may create some larger chunks when segments can't be split)
+44 |     reasonable_chunks = [chunk for chunk in chunks if len(chunk.text) <= max_chars + 100]
+   |     ^^^^^^^^^^^^^^^^^
+45 |     # This is more of a behavioral test - the segmenter groups complete segments
+   |
+help: Remove assignment to unused variable `reasonable_chunks`
+
+F841 Local variable `mention_related` is assigned to but never used
+  --> tests/test_analysis_topics.py:64:5
+   |
+62 |     # Mentions might be captured as keywords, entities, or phrases
+63 |     all_extracted = result.keywords + result.entities + result.phrases + result.topics
+64 |     mention_related = [item for item in all_extracted if "@" in item]
+   |     ^^^^^^^^^^^^^^^
+65 |     # Mentions may or may not be handled - flexible test
+   |
+help: Remove assignment to unused variable `mention_related`
+
+F841 Local variable `ceo_entities` is assigned to but never used
+  --> tests/test_analysis_topics.py:87:5
+   |
+86 |     # Should extract titles with names - flexible assertion
+87 |     ceo_entities = [e for e in result.entities if "CEO" in e]
+   |     ^^^^^^^^^^^^
+88 |     # CEO may appear as separate entity or not at all
+   |
+help: Remove assignment to unused variable `ceo_entities`
+
+E501 Line too long (109 > 100)
+  --> tests/test_analysis_topics.py:97:101
+   |
+95 | def test_extract_keywords():
+96 |     """Test keyword extraction with stop word filtering."""
+97 |     text = "The artificial intelligence system processes data efficiently using machine learning algorithms."
+   |                                                                                                     ^^^^^^^^^
+98 |     result = extract(text)
+   |
+
+W291 Trailing whitespace
+   --> tests/test_analysis_topics.py:212:72
+    |
+210 |     text = """
+211 |     Just deployed our new #AI model! 🚀 Thanks to @dataTeam for the amazing work.
+212 |     This will revolutionize how we process #MachineLearning algorithms. 
+    |                                                                        ^
+213 |     Check it out: https://example.com/demo #TechNews #Innovation
+214 |     """
+    |
+help: Remove trailing whitespace
+
+F841 Local variable `tech_terms_found` is assigned to but never used
+   --> tests/test_analysis_topics.py:328:5
+    |
+326 |     # Should handle technical abbreviations
+327 |     all_extracted = result.keywords + result.entities + result.topics
+328 |     tech_terms_found = any(
+    |     ^^^^^^^^^^^^^^^^
+329 |         term in item.lower()
+330 |         for item in all_extracted
+    |
+help: Remove assignment to unused variable `tech_terms_found`
+
+PERF401 Use a list comprehension to create a transformed list
+   --> tests/test_analysis_transcribe.py:185:9
+    |
+183 |     long_lines = []
+184 |     for i in range(100):
+185 |         long_lines.append(f"This is line {i + 1} with some content to test segmentation.")
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+186 |
+187 |     with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as temp_file:
+    |
+help: Replace for loop with list comprehension
+
+E501 Line too long (137 > 100)
+  --> tests/test_discord_archiver.py:12:101
+   |
+10 | …
+11 | …
+12 | …annel_id: '123'\n    private:\n      channel_id: '456'\nper_tenant_overrides: {}\n"""
+   |                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+13 | …
+14 | …)
+   |
+
+PLC0415 `import` should be at the top-level of a file
+  --> tests/test_discord_archiver.py:15:5
+   |
+13 |     )
+14 |     os.environ["ARCHIVE_ROUTES_PATH"] = str(cfg_path)
+15 |     import importlib
+   |     ^^^^^^^^^^^^^^^^
+16 |
+17 |     importlib.reload(router)
+   |
+
+E501 Line too long (137 > 100)
+  --> tests/test_discord_archiver.py:55:101
+   |
+53 | …
+54 | …
+55 | …annel_id: '123'\n    private:\n      channel_id: '456'\nper_tenant_overrides: {}\n"""
+   |                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+56 | …
+57 | …g_path))
+   |
+
+PLC0415 `import` should be at the top-level of a file
+  --> tests/test_discord_archiver.py:58:5
+   |
+56 |     )
+57 |     monkeypatch.setenv("ARCHIVE_ROUTES_PATH", str(cfg_path))
+58 |     import importlib
+   |     ^^^^^^^^^^^^^^^^
+59 |
+60 |     importlib.reload(router)
+   |
+
+PLC0415 `import` should be at the top-level of a file
+  --> tests/test_discord_archiver.py:63:5
+   |
+61 |     # create small file
+62 |     f = tmp_path / "foo.png"
+63 |     import base64
+   |     ^^^^^^^^^^^^^
+64 |
+65 |     f.write_bytes(
+   |
+
+E501 Line too long (137 > 100)
+  --> tests/test_discord_archiver.py:95:101
+   |
+93 | …
+94 | …
+95 | …annel_id: '123'\n    private:\n      channel_id: '456'\nper_tenant_overrides: {}\n"""
+   |                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+96 | …
+97 | …g_path))
+   |
+
+PLC0415 `import` should be at the top-level of a file
+   --> tests/test_discord_archiver.py:98:5
+    |
+ 96 |     )
+ 97 |     monkeypatch.setenv("ARCHIVE_ROUTES_PATH", str(cfg_path))
+ 98 |     import importlib
+    |     ^^^^^^^^^^^^^^^^
+ 99 |
+100 |     importlib.reload(router)
+    |
+
+PLC0415 `import` should be at the top-level of a file
+   --> tests/test_discord_archiver.py:105:5
+    |
+104 |     f = tmp_path / "foo.png"
+105 |     import base64
+    |     ^^^^^^^^^^^^^
+106 |
+107 |     f.write_bytes(
+    |
+
+E501 Line too long (137 > 100)
+   --> tests/test_discord_archiver.py:144:101
+    |
+142 | …
+143 | …
+144 | …nnel_id: '123'\n    private:\n      channel_id: '456'\nper_tenant_overrides: {}\n"""
+    |                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+145 | …
+146 | …_path))
+    |
+
+PLC0415 `import` should be at the top-level of a file
+   --> tests/test_discord_archiver.py:147:5
+    |
+145 |     )
+146 |     monkeypatch.setenv("ARCHIVE_ROUTES_PATH", str(cfg_path))
+147 |     import importlib
+    |     ^^^^^^^^^^^^^^^^
+148 |
+149 |     importlib.reload(router)
+    |
+
+PLC0415 `import` should be at the top-level of a file
+   --> tests/test_discord_archiver.py:153:5
+    |
+151 |     # create small file
+152 |     f = tmp_path / "foo.png"
+153 |     import base64
+    |     ^^^^^^^^^^^^^
+154 |
+155 |     f.write_bytes(
+    |
+
+PLC0415 `import` should be at the top-level of a file
+  --> tests/test_eval_harness.py:18:9
+   |
+16 |         return case["expected_label"], {"cost_usd": 0.0, "latency_ms": 0}
+17 |     if task == "tool_tasks":
+18 |         import json
+   |         ^^^^^^^^^^^
+19 |
+20 |         return json.dumps(case["expected"]), {"cost_usd": 0.0, "latency_ms": 0}
+   |
+
+PLC0415 `import` should be at the top-level of a file
+  --> tests/test_eval_harness.py:33:9
+   |
+32 |     with open("baselines/golden/core/v1/summary.json") as f:
+33 |         import json
+   |         ^^^^^^^^^^^
+34 |
+35 |         baseline = json.load(f)
+   |
+
+PLC0415 `import` should be at the top-level of a file
+  --> tests/test_ingest_concurrent.py:45:5
+   |
+43 |         return fake_transcript
+44 |
+45 |     import ingest.providers.youtube as ymod
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+46 |
+47 |     monkeypatch.setattr(ymod, "fetch_metadata", fake_fetch_metadata)
+   |
+
+E501 Line too long (107 > 100)
+  --> tests/test_ingest_concurrent.py:53:101
+   |
+51 |     monkeypatch.setenv("ENABLE_INGEST_CONCURRENT", "1")
+52 |
+53 |     # Use in-memory vector store substitute: monkeypatch vector_store.VectorStore.upsert to capture records
+   |                                                                                                     ^^^^^^^
+54 |     from memory import vector_store
+   |
+
+PLC0415 `import` should be at the top-level of a file
+  --> tests/test_ingest_concurrent.py:54:5
+   |
+53 |     # Use in-memory vector store substitute: monkeypatch vector_store.VectorStore.upsert to capture records
+54 |     from memory import vector_store
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+55 |
+56 |     captured = {}
+   |
+
+PLC0415 `import` should be at the top-level of a file
+   --> tests/test_ingest_concurrent.py:103:5
+    |
+101 |         return fake_transcript
+102 |
+103 |     import ingest.providers.youtube as ymod
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+104 |
+105 |     monkeypatch.setattr(ymod, "fetch_metadata", fake_fetch_metadata)
+    |
+
+PLC0415 `import` should be at the top-level of a file
+   --> tests/test_ingest_concurrent.py:111:5
+    |
+109 |     monkeypatch.delenv("ENABLE_INGEST_CONCURRENT", raising=False)
+110 |
+111 |     from memory import vector_store
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+112 |
+113 |     monkeypatch.setattr(vector_store.VectorStore, "upsert", lambda self, ns, recs: None)
+    |
+
+E501 Line too long (107 > 100)
+  --> tests/test_ingest_console_script.py:28:101
+   |
+26 |     else:
+27 |         pytest.skip(
+28 |             "ingest console script not found on PATH; skipping (module invocation still covered elsewhere)"
+   |                                                                                                     ^^^^^^^
+29 |         )
+   |
+
+S603 `subprocess` call: check for execution of untrusted input
+  --> tests/test_ingest_console_script.py:31:12
+   |
+29 |         )
+30 |
+31 |     proc = subprocess.run(cmd, check=False, capture_output=True, text=True, timeout=15)
+   |            ^^^^^^^^^^^^^^
+32 |     assert proc.returncode == 0, proc.stderr
+33 |     assert "Run a single ingestion job" in proc.stdout
+   |
+
+S108 Probable insecure usage of temporary file or directory: "/tmp/uploader/title [id].mp4"
+  --> tests/test_multi_platform_download_tools.py:45:37
+   |
+43 |                         "duration": 10,
+44 |                         "filesize_approx": 100,
+45 |                         "filepath": "/tmp/uploader/title [id].mp4",
+   |                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+46 |                     }
+47 |                 )
+   |
+
+S108 Probable insecure usage of temporary file or directory: "/tmp/uploader/title [id].mp4"
+   --> tests/test_multi_platform_download_tools.py:136:37
+    |
+134 |                         "duration": 10,
+135 |                         "filesize_approx": 100,
+136 |                         "filepath": "/tmp/uploader/title [id].mp4",
+    |                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+137 |                     }
+138 |                 )
+    |
+
+F811 Redefinition of unused `test_downloader_handles_malformed_output` from line 63
+   --> tests/test_multi_platform_download_tools.py:189:5
+    |
+189 | def test_downloader_handles_malformed_output(monkeypatch):
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `test_downloader_handles_malformed_output` redefined here
+190 |     def fake_run(cmd, capture_output, text, timeout, env):
+191 |         class Result:
+    |
+   ::: tests/test_multi_platform_download_tools.py:63:5
+    |
+ 63 | def test_downloader_handles_malformed_output(monkeypatch):
+    |     ---------------------------------------- previous definition of `test_downloader_handles_malformed_output` here
+ 64 |     def fake_run(cmd, capture_output, text, timeout, env):
+ 65 |         class Result:
+    |
+help: Remove definition: `test_downloader_handles_malformed_output`
+
+PLC0415 `import` should be at the top-level of a file
+  --> tests/test_observability.py:53:5
+   |
+52 | def test_logging_includes_tenant():
+53 |     import io
+   |     ^^^^^^^^^
+54 |     import json
+55 |     import logging
+   |
+
+PLC0415 `import` should be at the top-level of a file
+  --> tests/test_observability.py:54:5
+   |
+52 | def test_logging_includes_tenant():
+53 |     import io
+54 |     import json
+   |     ^^^^^^^^^^^
+55 |     import logging
+   |
+
+PLC0415 `import` should be at the top-level of a file
+  --> tests/test_observability.py:55:5
+   |
+53 |     import io
+54 |     import json
+55 |     import logging
+   |     ^^^^^^^^^^^^^^
+56 |
+57 |     from obs import logging as obs_logging
+   |
+
+PLC0415 `import` should be at the top-level of a file
+  --> tests/test_observability.py:57:5
+   |
+55 |     import logging
+56 |
+57 |     from obs import logging as obs_logging
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+58 |
+59 |     stream = io.StringIO()
+   |
+
+PLC0415 `import` should be at the top-level of a file
+  --> tests/test_observability.py:74:5
+   |
+72 | def test_metrics_module_degrades_without_prometheus(monkeypatch):
+73 |     """Metrics module should operate with no-op stubs when Prometheus is absent."""
+74 |     import importlib
+   |     ^^^^^^^^^^^^^^^^
+75 |     import sys
+   |
+
+PLC0415 `import` should be at the top-level of a file
+  --> tests/test_observability.py:75:5
+   |
+73 |     """Metrics module should operate with no-op stubs when Prometheus is absent."""
+74 |     import importlib
+75 |     import sys
+   |     ^^^^^^^^^^
+76 |
+77 |     import obs.metrics as metrics_mod
+   |
+
+PLC0415 `import` should be at the top-level of a file
+  --> tests/test_observability.py:77:5
+   |
+75 |     import sys
+76 |
+77 |     import obs.metrics as metrics_mod
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+78 |
+79 |     with monkeypatch.context() as m:
+   |
+
+S108 Probable insecure usage of temporary file or directory: "/tmp/video.mp4"
+  --> tests/test_pipeline.py:33:23
+   |
+31 |         "duration": "1",
+32 |         "file_size": "1000",
+33 |         "local_path": "/tmp/video.mp4",
+   |                       ^^^^^^^^^^^^^^^^
+34 |     }
+   |
+
+S108 Probable insecure usage of temporary file or directory: "/tmp/video.mp4"
+   --> tests/test_pipeline.py:137:23
+    |
+135 |         "duration": "1",
+136 |         "file_size": "1000",
+137 |         "local_path": "/tmp/video.mp4",
+    |                       ^^^^^^^^^^^^^^^^
+138 |     }
+    |
+
+S108 Probable insecure usage of temporary file or directory: "/tmp/video.mp4"
+   --> tests/test_pipeline.py:194:23
+    |
+192 |         "duration": "1",
+193 |         "file_size": "1000",
+194 |         "local_path": "/tmp/video.mp4",
+    |                       ^^^^^^^^^^^^^^^^
+195 |     }
+    |
+
+S108 Probable insecure usage of temporary file or directory: "/tmp/video.mp4"
+   --> tests/test_pipeline.py:281:27
+    |
+279 |             "duration": "1",
+280 |             "file_size": "1000",
+281 |             "local_path": "/tmp/video.mp4",
+    |                           ^^^^^^^^^^^^^^^^
+282 |             "command": "yt-dlp stub",
+283 |             "requested_quality": quality,
+    |
+
+PLC0415 `import` should be at the top-level of a file
+  --> tests/test_plugin_runtime.py:24:5
+   |
+22 |     assert result.success, result.error
+23 |     assert result.output == "summary:hello"
+24 |     from core import rl
+   |     ^^^^^^^^^^^^^^^^^^^
+25 |
+26 |     rl.feature_store._cost_usd_history.clear()
+   |
+
+E402 Module level import not at top of file
+  --> tests/test_privacy_filter.py:24:1
+   |
+24 | from ultimate_discord_intelligence_bot.policy import policy_engine
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+
+E501 Line too long (190 > 100)
+  --> tests/test_privacy_ops.py:21:101
+   |
+19 | …
+20 | …
+21 | …_at, license, terms_url, consent_flags, checksum_sha256, creator_id, episode_id) VALUES (?,?,?,?,?,?,?,?,?,?)",
+   |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+22 | …
+23 | …
+   |
+
+E501 Line too long (190 > 100)
+  --> tests/test_retention.py:12:101
+   |
+10 | …
+11 | …
+12 | …_at, license, terms_url, consent_flags, checksum_sha256, creator_id, episode_id) VALUES (?,?,?,?,?,?,?,?,?,?)",
+   |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+13 | …
+14 | …
+   |
+
+PLC0415 `import` should be at the top-level of a file
+  --> tests/test_security_net_guard.py:15:5
+   |
+14 | def test_domain_with_mixed_ips(monkeypatch):
+15 |     from security import net_guard
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+16 |
+17 |     def fake_resolve(host: str):
+   |
+
+S105 Possible hardcoded password assigned to: "secret"
+  --> tests/test_security_signing.py:13:14
+   |
+12 | def test_sign_and_verify():
+13 |     secret = "s3cr3t"
+   |              ^^^^^^^^
+14 |     payload = b"payload"
+15 |     ts = int(time.time())
+   |
+
+S105 Possible hardcoded password assigned to: "secret"
+  --> tests/test_security_signing.py:22:14
+   |
+21 | def test_replay_and_tamper():
+22 |     secret = "s3cr3t"
+   |              ^^^^^^^^
+23 |     payload = b"data"
+24 |     ts = int(time.time())
+   |
+
+S105 Possible hardcoded password assigned to: "secret"
+  --> tests/test_security_signing.py:39:14
+   |
+38 | def test_header_helpers():
+39 |     secret = "s3cr3t"
+   |              ^^^^^^^^
+40 |     payload = b"data"
+41 |     headers = build_signature_headers(payload, secret)
+   |
+
+S105 Possible hardcoded password assigned to: "secret"
+  --> tests/test_security_signing.py:50:14
+   |
+49 | def test_nonce_cache_bounded(monkeypatch):
+50 |     secret = "s3cr3t"
+   |              ^^^^^^^^
+51 |     payload = b"x"
+52 |     signing._seen_nonces.clear()
+   |
+
+S108 Probable insecure usage of temporary file or directory: "/tmp/crewtest"
+  --> tests/test_settings.py:17:16
+   |
+16 | def test_base_dir_env_override(monkeypatch):
+17 |     tmp = Path("/tmp/crewtest")
+   |                ^^^^^^^^^^^^^^^
+18 |     settings = reload_settings(monkeypatch, CREWAI_BASE_DIR=str(tmp))
+19 |     assert tmp == settings.BASE_DIR
+   |
+
+S108 Probable insecure usage of temporary file or directory: "/tmp/uploader/title [id].mp4"
+  --> tests/test_youtube_download_tool.py:21:37
+   |
+19 |                         "duration": 10,
+20 |                         "filesize_approx": 100,
+21 |                         "filepath": "/tmp/uploader/title [id].mp4",
+   |                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+22 |                     }
+23 |                 )
+   |
+
+Found 334 errors.
+[*] 1 fixable with the `--fix` option (15 hidden fixes can be enabled with the `--unsafe-fixes` option).

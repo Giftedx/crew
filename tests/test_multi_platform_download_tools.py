@@ -4,17 +4,17 @@ import subprocess
 import pytest
 import requests
 
-from ultimate_discord_intelligence_bot.tools.yt_dlp_download_tool import (
-    YouTubeDownloadTool,
-    TwitchDownloadTool,
-    KickDownloadTool,
-    TwitterDownloadTool,
-    InstagramDownloadTool,
-    TikTokDownloadTool,
-    RedditDownloadTool,
-)
 from ultimate_discord_intelligence_bot.tools.discord_download_tool import (
     DiscordDownloadTool,
+)
+from ultimate_discord_intelligence_bot.tools.yt_dlp_download_tool import (
+    InstagramDownloadTool,
+    KickDownloadTool,
+    RedditDownloadTool,
+    TikTokDownloadTool,
+    TwitchDownloadTool,
+    TwitterDownloadTool,
+    YouTubeDownloadTool,
 )
 
 
@@ -34,16 +34,19 @@ def test_downloader_reports_platform(monkeypatch, tool_cls):
     def fake_run(cmd, capture_output, text, timeout, env):
         class Result:
             returncode = 0
-            stdout = json.dumps(
-                {
-                    "id": "id",
-                    "title": "title",
-                    "uploader": "uploader",
-                    "duration": 10,
-                    "filesize_approx": 100,
-                    "filepath": "/tmp/uploader/title [id].mp4",
-                }
-            ) + "\n"
+            stdout = (
+                json.dumps(
+                    {
+                        "id": "id",
+                        "title": "title",
+                        "uploader": "uploader",
+                        "duration": 10,
+                        "filesize_approx": 100,
+                        "filepath": "/tmp/uploader/title [id].mp4",
+                    }
+                )
+                + "\n"
+            )
             stderr = ""
 
         return Result()
@@ -57,7 +60,7 @@ def test_downloader_reports_platform(monkeypatch, tool_cls):
     assert result["command"].startswith("yt-dlp")
 
 
-def test_downloader_handles_malformed_output(monkeypatch):
+def test_downloader_handles_malformed_output_alt(monkeypatch):
     def fake_run(cmd, capture_output, text, timeout, env):
         class Result:
             returncode = 0
@@ -119,19 +122,24 @@ def test_downloader_honors_quality(monkeypatch):
 
     def fake_run(cmd, capture_output, text, timeout, env):
         captured["cmd"] = cmd
+
         class Result:
             returncode = 0
-            stdout = json.dumps(
-                {
-                    "id": "id",
-                    "title": "title",
-                    "uploader": "uploader",
-                    "duration": 10,
-                    "filesize_approx": 100,
-                    "filepath": "/tmp/uploader/title [id].mp4",
-                }
-            ) + "\n"
+            stdout = (
+                json.dumps(
+                    {
+                        "id": "id",
+                        "title": "title",
+                        "uploader": "uploader",
+                        "duration": 10,
+                        "filesize_approx": 100,
+                        "filepath": "/tmp/uploader/title [id].mp4",
+                    }
+                )
+                + "\n"
+            )
             stderr = ""
+
         return Result()
 
     monkeypatch.setattr(subprocess, "run", fake_run)
@@ -178,7 +186,7 @@ def test_discord_downloader_reports_http_error(monkeypatch):
     assert result["command"].startswith("requests.get")
 
 
-def test_downloader_handles_malformed_output(monkeypatch):
+def test_downloader_handles_malformed_output_run_private(monkeypatch):
     def fake_run(cmd, capture_output, text, timeout, env):
         class Result:
             returncode = 0
@@ -192,4 +200,3 @@ def test_downloader_handles_malformed_output(monkeypatch):
     result = tool._run("http://example.com")
     assert result["status"] == "error"
     assert "Unexpected yt-dlp output" in result["error"]
-

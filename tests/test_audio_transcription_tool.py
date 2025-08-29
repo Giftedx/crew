@@ -1,11 +1,14 @@
 import importlib
 import sys
-from pathlib import Path
 
 
 def test_missing_whisper_returns_error(monkeypatch, tmp_path):
     # Remove existing module so import uses patched sys.modules entry
-    monkeypatch.delitem(sys.modules, "ultimate_discord_intelligence_bot.tools.audio_transcription_tool", raising=False)
+    monkeypatch.delitem(
+        sys.modules,
+        "ultimate_discord_intelligence_bot.tools.audio_transcription_tool",
+        raising=False,
+    )
     monkeypatch.setitem(sys.modules, "whisper", None)
 
     mod = importlib.import_module(

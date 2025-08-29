@@ -2,15 +2,16 @@ from __future__ import annotations
 
 """Retention helpers for deleting expired records."""
 
-from datetime import datetime, timedelta, timezone
+import json
 import sqlite3
-from typing import Dict
+from datetime import datetime, timedelta, timezone
 
 from policy import policy_engine
-import json
 
 
-def sweep(conn: sqlite3.Connection, *, tenant: str | None = None, now: datetime | None = None) -> int:
+def sweep(
+    conn: sqlite3.Connection, *, tenant: str | None = None, now: datetime | None = None
+) -> int:
     """Delete provenance rows older than the configured max retention."""
     policy = policy_engine.load_policy(tenant)
     days = policy.storage.get("max_retention_days_by_ns", {}).get("default", 30)

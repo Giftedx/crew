@@ -1,5 +1,6 @@
-from ultimate_discord_intelligence_bot.tools.logical_fallacy_tool import LogicalFallacyTool
 import pytest
+
+from ultimate_discord_intelligence_bot.tools.logical_fallacy_tool import LogicalFallacyTool
 
 
 def test_detects_straw_man():

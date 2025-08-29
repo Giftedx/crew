@@ -1,9 +1,10 @@
 """Structured JSON logging with basic redaction."""
+
 from __future__ import annotations
 
 import json
 import logging
-from typing import Any, Dict
+from typing import Any
 
 from core.privacy import privacy_filter
 from ultimate_discord_intelligence_bot.tenancy import current_tenant
@@ -19,7 +20,7 @@ class JsonLogger(logging.Logger):
 
     def _serialize(self, message: str, **fields: Any) -> str:
         clean, report = privacy_filter.filter_text(message, {})
-        payload: Dict[str, Any] = {"msg": clean, **fields, "redactions": report.found}
+        payload: dict[str, Any] = {"msg": clean, **fields, "redactions": report.found}
         ctx = current_tenant()
         if ctx:
             payload.setdefault("tenant", ctx.tenant_id)

@@ -3,6 +3,7 @@
 The helpers intentionally stay minimal: they read JSON Lines files into
 standard Python structures so plugin tests can replay golden scenarios.
 """
+
 from __future__ import annotations
 
 import json

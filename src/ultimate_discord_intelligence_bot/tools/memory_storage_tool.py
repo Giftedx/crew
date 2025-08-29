@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import os
 import uuid
-from typing import Callable, Dict, Optional
+from collections.abc import Callable
 
 from crewai.tools import BaseTool
 
@@ -32,18 +32,20 @@ class MemoryStorageTool(BaseTool):
     """Persist text and metadata to a tenant-scoped Qdrant collection."""
 
     name: str = "Qdrant Memory Storage Tool"
-    description: str = "Stores documents in a tenant-isolated Qdrant vector database for later retrieval."
-    
+    description: str = (
+        "Stores documents in a tenant-isolated Qdrant vector database for later retrieval."
+    )
+
     # Properly declare fields for pydantic v2
     base_collection: str = "content"
-    embedding_fn: Optional[Callable[[str], list[float]]] = None
-    client: Optional[object] = None
+    embedding_fn: Callable[[str], list[float]] | None = None
+    client: object | None = None
 
     def __init__(
         self,
-        client: Optional[object] = None,
+        client: object | None = None,
         collection: str | None = None,
-        embedding_fn: Optional[Callable[[str], list[float]]] = None,
+        embedding_fn: Callable[[str], list[float]] | None = None,
     ) -> None:
         super().__init__()
         self.base_collection = collection or os.getenv("QDRANT_COLLECTION", "content")
@@ -67,7 +69,7 @@ class MemoryStorageTool(BaseTool):
                 name,
                 vectors_config=VectorParams(size=1, distance=Distance.COSINE),
             )
-    
+
     def _get_tenant_collection(self) -> str:
         """Get tenant-scoped collection name."""
         tenant_ctx = current_tenant()
@@ -75,31 +77,30 @@ class MemoryStorageTool(BaseTool):
             return mem_ns(tenant_ctx, self.base_collection)
         return self.base_collection
 
-    def _run(self, text: str, metadata: Dict, collection: str | None = None) -> Dict:
+    def _run(self, text: str, metadata: dict, collection: str | None = None) -> dict:
         # Use tenant-scoped collection if available
         if collection is None:
             target = self._get_tenant_collection()
         else:
             # Allow override but still apply tenant scoping if in tenant context
             tenant_ctx = current_tenant()
-            if tenant_ctx:
-                target = mem_ns(tenant_ctx, collection)
-            else:
-                target = collection
-                
+            target = mem_ns(tenant_ctx, collection) if tenant_ctx else collection
+
         try:
             self._ensure_collection(target)
             vector = self.embedding_fn(text)
-            
+
             # Enhance metadata with tenant context
             enhanced_metadata = dict(metadata)
             tenant_ctx = current_tenant()
             if tenant_ctx:
-                enhanced_metadata.update({
-                    "tenant_id": tenant_ctx.tenant_id,
-                    "workspace_id": tenant_ctx.workspace_id,
-                })
-            
+                enhanced_metadata.update(
+                    {
+                        "tenant_id": tenant_ctx.tenant_id,
+                        "workspace_id": tenant_ctx.workspace_id,
+                    }
+                )
+
             point = PointStruct(
                 id=str(uuid.uuid4()),
                 vector=vector,
@@ -107,13 +108,15 @@ class MemoryStorageTool(BaseTool):
             )
             self.client.upsert(collection_name=target, points=[point])
             return {
-                "status": "success", 
+                "status": "success",
                 "collection": target,
-                "tenant_scoped": tenant_ctx is not None
+                "tenant_scoped": tenant_ctx is not None,
             }
         except Exception as exc:  # pragma: no cover - network errors
             return {"status": "error", "error": str(exc)}
 
     # Explicit run wrapper for pipeline compatibility
-    def run(self, text: str, metadata: Dict, collection: str | None = None):  # pragma: no cover - thin wrapper
+    def run(
+        self, text: str, metadata: dict, collection: str | None = None
+    ):  # pragma: no cover - thin wrapper
         return self._run(text, metadata, collection=collection)

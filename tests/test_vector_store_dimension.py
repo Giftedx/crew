@@ -1,4 +1,4 @@
-from memory.vector_store import VectorStore, VectorRecord
+from memory.vector_store import VectorRecord, VectorStore
 
 
 def test_vector_store_dimension_mismatch(monkeypatch):

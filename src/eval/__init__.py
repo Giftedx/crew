@@ -1,7 +1,7 @@
 """Evaluation harness utilities."""
 
+from .gates import compare
 from .loader import load_cases
 from .runner import run
-from .gates import compare
 
 __all__ = ["load_cases", "run", "compare"]

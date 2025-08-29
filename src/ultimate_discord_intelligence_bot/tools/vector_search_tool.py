@@ -1,8 +1,9 @@
 """Search Qdrant memory for relevant documents."""
+
 from __future__ import annotations
 
 import os
-from typing import Callable, Dict, List, Optional
+from collections.abc import Callable
 
 from crewai.tools import BaseTool
 
@@ -17,13 +18,14 @@ class VectorSearchTool(BaseTool):
     """Retrieve stored text snippets from a Qdrant collection."""
 
     name: str = "Qdrant Vector Search Tool"
-    description: str = "Query the vector database for similar documents." 
+    description: str = "Query the vector database for similar documents."
+    model_config = {"extra": "allow"}
 
     def __init__(
         self,
-        client: Optional[object] = None,
+        client: object | None = None,
         collection: str | None = None,
-        embedding_fn: Optional[Callable[[str], List[float]]] = None,
+        embedding_fn: Callable[[str], list[float]] | None = None,
     ) -> None:
         super().__init__()
         self.collection = collection or "content"
@@ -47,7 +49,7 @@ class VectorSearchTool(BaseTool):
                 vectors_config=VectorParams(size=1, distance=Distance.COSINE),
             )
 
-    def _run(self, query: str, limit: int = 3, collection: str | None = None) -> List[Dict]:
+    def _run(self, query: str, limit: int = 3, collection: str | None = None) -> list[dict]:
         target = collection or self.collection
         vector = self.embedding_fn(query)
         res = self.client.query_points(
@@ -58,5 +60,7 @@ class VectorSearchTool(BaseTool):
         )
         return [getattr(hit, "payload", {}) for hit in res.points]
 
-    def run(self, query: str, limit: int = 3, collection: str | None = None):  # pragma: no cover - thin wrapper
+    def run(
+        self, query: str, limit: int = 3, collection: str | None = None
+    ):  # pragma: no cover - thin wrapper
         return self._run(query, limit=limit, collection=collection)

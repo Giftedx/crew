@@ -2,16 +2,19 @@ from __future__ import annotations
 
 """Simple evaluation runner used in tests and CI."""
 
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable, Dict, Tuple
-from .loader import load_cases
+
 from . import scorers
+from .loader import load_cases
 
 # Type alias for the model function used in tests.
-ModelFunc = Callable[[str, dict], Tuple[str, Dict[str, float]]]
+ModelFunc = Callable[[str, dict], tuple[str, dict[str, float]]]
 
 
-def run(dataset_dir: str | Path, model: ModelFunc, tenant: str | None = None) -> Dict[str, Dict[str, float]]:
+def run(
+    dataset_dir: str | Path, model: ModelFunc, tenant: str | None = None
+) -> dict[str, dict[str, float]]:
     """Run the evaluation suite.
 
     Parameters
@@ -27,7 +30,7 @@ def run(dataset_dir: str | Path, model: ModelFunc, tenant: str | None = None) ->
 
     root = Path(dataset_dir)
     cases = load_cases(root, tenant)
-    report: Dict[str, Dict[str, float]] = {}
+    report: dict[str, dict[str, float]] = {}
     for task, items in cases.items():
         quality = 0.0
         total_cost = 0.0
@@ -36,7 +39,9 @@ def run(dataset_dir: str | Path, model: ModelFunc, tenant: str | None = None) ->
             output, meta = model(task, case)
             score = 0.0
             if task == "rag_qa":
-                if scorers.must_include(output, case.get("must_include", [])) and scorers.forbidden(output, case.get("forbidden", [])):
+                if scorers.must_include(output, case.get("must_include", [])) and scorers.forbidden(
+                    output, case.get("forbidden", [])
+                ):
                     score = 1.0
             elif task == "summarize":
                 if scorers.must_include(output, case.get("expected_keywords", [])):
@@ -64,15 +69,18 @@ def run(dataset_dir: str | Path, model: ModelFunc, tenant: str | None = None) ->
 
 
 def main() -> None:
-    import argparse, json
+    import argparse
+    import json
 
     p = argparse.ArgumentParser(description="run evaluation suite")
     p.add_argument("dataset", type=str, help="dataset directory")
     p.add_argument("baseline", type=str, nargs="?", help="path to baseline summary.json")
-    p.add_argument("--out", type=str, default="reports/eval/latest.json", help="where to write report")
+    p.add_argument(
+        "--out", type=str, default="reports/eval/latest.json", help="where to write report"
+    )
     args = p.parse_args()
 
-    def echo_model(task: str, case: dict) -> Tuple[str, Dict[str, float]]:
+    def echo_model(task: str, case: dict) -> tuple[str, dict[str, float]]:
         # trivial model that echoes expected answers for CI sanity checks
         if task == "rag_qa":
             return case.get("must_include", [""])[0], {"cost_usd": 0.0, "latency_ms": 0}
@@ -93,6 +101,7 @@ def main() -> None:
 
     if args.baseline:
         from .gates import compare
+
         with open(args.baseline) as f:
             base = json.load(f)
         result = compare(report, base)

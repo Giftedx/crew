@@ -1,6 +1,3 @@
-import os
-import json
-import types
 
 import pytest
 
@@ -13,7 +10,7 @@ class DummyResp:
         self._payload = payload
 
     def raise_for_status(self):
-        if 400 <= self.status_code:
+        if self.status_code >= 400:
             from requests import HTTPError
             raise HTTPError(f"status {self.status_code}")
 

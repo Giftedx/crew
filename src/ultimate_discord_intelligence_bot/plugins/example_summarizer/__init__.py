@@ -1,8 +1,9 @@
 from __future__ import annotations
-from typing import Any, Dict
+
+from typing import Any
 
 
-def run(adapters: Dict[str, Any], text: str) -> str:
+def run(adapters: dict[str, Any], text: str) -> str:
     """Example summarizer plugin that echoes a fixed summary.
 
     Parameters

@@ -1,9 +1,12 @@
 """Role based access control helpers."""
+
 from __future__ import annotations
 
-from pathlib import Path
-from typing import Iterable, Callable, Any, Dict, Set
 import functools
+from collections.abc import Callable, Iterable
+from pathlib import Path
+from typing import Any
+
 import yaml
 
 from .events import log_security_event
@@ -16,7 +19,7 @@ class RBAC:
 
     def __init__(
         self,
-        role_permissions: Dict[str, Set[str]] | None = None,
+        role_permissions: dict[str, set[str]] | None = None,
         config_path: Path | None = None,
     ) -> None:
         """Create an :class:`RBAC` instance.
@@ -34,9 +37,9 @@ class RBAC:
         self._config_path = config_path or DEFAULT_CONFIG_PATH
         if role_permissions is None:
             role_permissions = self._load()
-        self.role_permissions: Dict[str, Set[str]] = role_permissions
+        self.role_permissions: dict[str, set[str]] = role_permissions
 
-    def _load(self) -> Dict[str, Set[str]]:
+    def _load(self) -> dict[str, set[str]]:
         """Load role permissions from ``self._config_path``."""
         if not self._config_path.exists():
             return {}

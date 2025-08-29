@@ -1,9 +1,7 @@
 import os
 from unittest.mock import patch
 
-import pytest
-
-from core.http_utils import HTTP_RATE_LIMITED, retrying_get, DEFAULT_HTTP_RETRY_ATTEMPTS
+from core.http_utils import HTTP_RATE_LIMITED, retrying_get
 
 
 class DummyResp:

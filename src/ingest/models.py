@@ -2,47 +2,46 @@ from __future__ import annotations
 
 """Lightweight SQLite-backed data models for ingestion metadata."""
 
-from dataclasses import dataclass
-from typing import Optional
 import sqlite3
+from dataclasses import dataclass
 
 
 @dataclass
 class CreatorProfile:
-    id: Optional[int]
+    id: int | None
     slug: str
-    youtube_id: Optional[str] = None
-    twitch_id: Optional[str] = None
+    youtube_id: str | None = None
+    twitch_id: str | None = None
     verified: bool = False
-    last_checked_at: Optional[str] = None
+    last_checked_at: str | None = None
 
 
 @dataclass
 class Episode:
-    id: Optional[int]
+    id: int | None
     creator_id: int
     platform: str
     external_id: str
     url: str
     title: str
-    published_at: Optional[str]
-    duration: Optional[float]
+    published_at: str | None
+    duration: float | None
     visibility: str
 
 
 @dataclass
 class TranscriptSegment:
-    id: Optional[int]
+    id: int | None
     episode_id: int
     start: float
     end: float
     text: str
-    speaker: Optional[str] = None
+    speaker: str | None = None
 
 
 @dataclass
 class IngestLog:
-    id: Optional[int]
+    id: int | None
     episode_id: int
     status: str
     details: str
@@ -51,22 +50,22 @@ class IngestLog:
 
 @dataclass
 class Provenance:
-    id: Optional[int]
+    id: int | None
     content_id: str
     source_url: str
     source_type: str
     retrieved_at: str
     license: str
-    terms_url: Optional[str]
-    consent_flags: Optional[str]
+    terms_url: str | None
+    consent_flags: str | None
     checksum_sha256: str
-    creator_id: Optional[int] = None
-    episode_id: Optional[int] = None
+    creator_id: int | None = None
+    episode_id: int | None = None
 
 
 @dataclass
 class UsageLog:
-    id: Optional[int]
+    id: int | None
     call_id: str
     content_ids: str
     policy_version: str
@@ -80,31 +79,31 @@ class UsageLog:
 
 @dataclass
 class Watchlist:
-    id: Optional[int]
+    id: int | None
     tenant: str
     workspace: str
     source_type: str
     handle: str
-    label: Optional[str]
+    label: str | None
     enabled: bool = True
-    created_at: Optional[str] = None
-    updated_at: Optional[str] = None
+    created_at: str | None = None
+    updated_at: str | None = None
 
 
 @dataclass
 class IngestState:
-    id: Optional[int]
+    id: int | None
     watchlist_id: int
-    cursor: Optional[str]
-    last_seen_at: Optional[str]
-    etag: Optional[str]
+    cursor: str | None
+    last_seen_at: str | None
+    etag: str | None
     failure_count: int = 0
-    backoff_until: Optional[str] = None
+    backoff_until: str | None = None
 
 
 @dataclass
 class IngestJobRecord:
-    id: Optional[int]
+    id: int | None
     tenant: str
     workspace: str
     source_type: str
@@ -116,9 +115,9 @@ class IngestJobRecord:
     status: str
     attempts: int
     scheduled_at: str
-    picked_at: Optional[str] = None
-    finished_at: Optional[str] = None
-    error: Optional[str] = None
+    picked_at: str | None = None
+    finished_at: str | None = None
+    error: str | None = None
 
 
 SCHEMA = """
@@ -229,7 +228,10 @@ def connect(path: str) -> sqlite3.Connection:
 
 def record_provenance(conn: sqlite3.Connection, prov: Provenance) -> None:
     conn.execute(
-        "INSERT INTO provenance (content_id, source_url, source_type, retrieved_at, license, terms_url, consent_flags, checksum_sha256, creator_id, episode_id) VALUES (?,?,?,?,?,?,?,?,?,?)",
+        (
+            "INSERT INTO provenance (content_id, source_url, source_type, retrieved_at, license, "
+            "terms_url, consent_flags, checksum_sha256, creator_id, episode_id) VALUES (?,?,?,?,?,?,?,?,?,?)"
+        ),
         (
             prov.content_id,
             prov.source_url,
@@ -248,7 +250,10 @@ def record_provenance(conn: sqlite3.Connection, prov: Provenance) -> None:
 
 def record_usage(conn: sqlite3.Connection, usage: UsageLog) -> None:
     conn.execute(
-        "INSERT INTO usage_log (call_id, content_ids, policy_version, decisions, redactions, output_hash, user_cmd, channel_id, ts) VALUES (?,?,?,?,?,?,?,?,?)",
+        (
+            "INSERT INTO usage_log (call_id, content_ids, policy_version, decisions, redactions, "
+            "output_hash, user_cmd, channel_id, ts) VALUES (?,?,?,?,?,?,?,?,?)"
+        ),
         (
             usage.call_id,
             usage.content_ids,

@@ -16,6 +16,7 @@ Giftedx Crew is a tenant‑aware Discord platform that ingests public media, bui
 
 See the documentation for full subsystem guides:
 - [Tools Reference](docs/tools_reference.md) - Comprehensive tool documentation
+- [Network & HTTP Conventions](docs/network_conventions.md) - Shared helpers for URL validation, resilient POST/GET, timeouts, and rate limiting
 - [Analysis Modules](docs/analysis_modules.md) - Transcript processing and content analysis
 - [Configuration Reference](docs/configuration.md) - Complete configuration guide
 - [Core services](docs/core_services.md) - Foundation utilities and services
@@ -28,12 +29,13 @@ See the documentation for full subsystem guides:
 - [Knowledge graph](docs/kg.md) - Entity and relationship extraction
 - [Unified memory](docs/memory.md) - Memory management and storage
 - [Grounding guarantees](docs/grounding.md) - Citation enforcement and verification
+ - [Runtime data artifacts](docs/runtime_data.md) - Locations and overrides for mutable state (SQLite/JSON)
 
 ## Getting started
 1. Install Python ≥3.10 and clone the repository.
-2. Install dependencies:
+2. Install dependencies (editable mode) and dev extras for tooling:
    ```bash
-   pip install -e .
+   pip install -e .[dev]
    # add [metrics] extra to enable Prometheus support
    # pip install -e .[metrics]
    ```
@@ -47,6 +49,32 @@ See the documentation for full subsystem guides:
    ```bash
    pytest
    ```
+
+### Developer workflow
+
+Core quality tooling is configured via Ruff (lint + format) and mypy (incremental typing):
+
+```bash
+make format   # auto-fix style & imports
+make lint     # lint only (CI style)
+make type     # static type check (non-blocking initially)
+make test     # run pytest suite
+make docs     # validate documentation & config references
+```
+
+Or use the helper script:
+
+```bash
+./scripts/dev.sh format
+```
+
+Install pre-commit hooks to ensure consistent formatting before commits:
+
+```bash
+pre-commit install --install-hooks
+```
+
+The type checking configuration is intentionally permissive for gradual adoption; prefer adding precise annotations to new/modified code rather than sweeping refactors.
 
 ### Plugin capability tests
 
@@ -98,11 +126,19 @@ Core subsystems are disabled by default and enabled via environment flags:
 - **Discord Integration:** `ENABLE_DISCORD_ARCHIVER`, `ENABLE_DISCORD_COMMANDS`, `ENABLE_DISCORD_MONITOR`
 - **Security & Privacy:** `ENABLE_PII_DETECTION`, `ENABLE_CONTENT_MODERATION`, `ENABLE_RATE_LIMITING`
 - **Observability:** `ENABLE_TRACING`, `ENABLE_METRICS`, `ENABLE_AUDIT_LOGGING`
+ - **HTTP Resilience:** `ENABLE_ANALYSIS_HTTP_RETRY` (enables exponential backoff + jitter retry layer via `retrying_post` / `retrying_get`; when disabled, single-attempt behavior preserved)
 
 See [Configuration Reference](docs/configuration.md) for complete flag documentation.
 
 ## Contributing
 Follow the guidelines in [AGENTS.md](AGENTS.md): reuse existing modules, add tests, run `pytest`, and commit using Conventional Commits.
+
+Additional guidelines:
+- Keep changes tenant‑aware (always pass explicit tenant/workspace context).
+- Guard new subsystems with `ENABLE_<AREA>_<FEATURE>` flags.
+- Return `StepResult` instead of raising for recoverable tool/pipeline errors.
+- Add/extend docs under `docs/` for new config keys or tools and run `make docs`.
+- Prefer small, focused PRs: config, typing, logic changes separate when feasible.
 
 ## Golden Evaluation Suite
 

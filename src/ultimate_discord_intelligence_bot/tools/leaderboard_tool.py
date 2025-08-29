@@ -1,9 +1,9 @@
 """Persist and retrieve per-person lie/misquote/misinfo counts."""
+
 from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Dict, List, Optional
 
 from crewai.tools import BaseTool
 
@@ -15,6 +15,7 @@ class LeaderboardTool(BaseTool):
 
     name: str = "Leaderboard Tool"
     description: str = "Maintain counts of lies, misquotes and misinfo per person."
+    model_config = {"extra": "allow"}
 
     def __init__(self, storage_path: Path | None = None):
         super().__init__()
@@ -22,14 +23,14 @@ class LeaderboardTool(BaseTool):
         if not self.storage_path.exists():
             self._save({})
 
-    def _load(self) -> Dict[str, Dict[str, int]]:
+    def _load(self) -> dict[str, dict[str, int]]:
         try:
             with self.storage_path.open("r", encoding="utf-8") as f:
                 return json.load(f)
         except Exception:
             return {}
 
-    def _save(self, data: Dict[str, Dict[str, int]]) -> None:
+    def _save(self, data: dict[str, dict[str, int]]) -> None:
         self.storage_path.parent.mkdir(parents=True, exist_ok=True)
         with self.storage_path.open("w", encoding="utf-8") as f:
             json.dump(data, f)
@@ -45,15 +46,13 @@ class LeaderboardTool(BaseTool):
         data[person] = record
         self._save(data)
 
-    def get_top(self, n: int = 10) -> List[Dict[str, int]]:
+    def get_top(self, n: int = 10) -> list[dict[str, int]]:
         data = self._load()
-        items = [
-            {"person": person, **scores} for person, scores in data.items()
-        ]
+        items = [{"person": person, **scores} for person, scores in data.items()]
         items.sort(key=lambda x: (x["lies"] + x["misquotes"] + x["misinfo"]), reverse=True)
         return items[:n]
 
-    def get_person(self, person: str) -> Optional[Dict[str, int]]:
+    def get_person(self, person: str) -> dict[str, int] | None:
         """Return scoreboard counts for a single person."""
         data = self._load()
         record = data.get(person)
@@ -74,7 +73,11 @@ class LeaderboardTool(BaseTool):
             return {"status": "success", "results": self.get_top(kwargs.get("n", 10))}
         if action == "get":
             result = self.get_person(kwargs["person"])
-            return {"status": "success", "result": result} if result else {"status": "error", "error": "not found"}
+            return (
+                {"status": "success", "result": result}
+                if result
+                else {"status": "error", "error": "not found"}
+            )
         return {"status": "error", "error": "unknown action"}
 
     def run(self, *args, **kwargs):  # pragma: no cover - thin wrapper

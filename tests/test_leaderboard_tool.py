@@ -1,5 +1,3 @@
-from pathlib import Path
-
 from ultimate_discord_intelligence_bot.tools.leaderboard_tool import LeaderboardTool
 
 

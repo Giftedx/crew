@@ -1,12 +1,12 @@
 from ultimate_discord_intelligence_bot.debate_analysis_pipeline import DebateAnalysisPipeline
-from ultimate_discord_intelligence_bot.tools.leaderboard_tool import LeaderboardTool
+from ultimate_discord_intelligence_bot.tools.character_profile_tool import (
+    CharacterProfileTool,
+)
 from ultimate_discord_intelligence_bot.tools.debate_command_tool import DebateCommandTool
+from ultimate_discord_intelligence_bot.tools.leaderboard_tool import LeaderboardTool
 from ultimate_discord_intelligence_bot.tools.timeline_tool import TimelineTool
 from ultimate_discord_intelligence_bot.tools.trustworthiness_tracker_tool import (
     TrustworthinessTrackerTool,
-)
-from ultimate_discord_intelligence_bot.tools.character_profile_tool import (
-    CharacterProfileTool,
 )
 
 

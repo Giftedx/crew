@@ -1,9 +1,9 @@
 """File policy checks for Discord archiver."""
+
 from __future__ import annotations
 
 import os
 from pathlib import Path
-from typing import Dict, List, Tuple
 
 from policy import policy_engine
 
@@ -25,9 +25,9 @@ class PolicyError(RuntimeError):
     """Raised when a file fails policy checks."""
 
 
-def check(path: str | Path, meta: Dict) -> Tuple[bool, List[str]]:
+def check(path: str | Path, meta: dict) -> tuple[bool, list[str]]:
     """Return (allowed, reasons) for ``path`` given ``meta``."""
-    reasons: List[str] = []
+    reasons: list[str] = []
     p = Path(path)
     ext = p.suffix.lower()
     if meta.get("do_not_archive"):

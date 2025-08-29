@@ -1,11 +1,10 @@
 import os
 
 import pytest
-
 from fastapi.testclient import TestClient
 
-from server.app import create_app
 from obs import metrics
+from server.app import create_app
 
 
 @pytest.mark.skipif('fastapi' not in globals(), reason='fastapi not available')

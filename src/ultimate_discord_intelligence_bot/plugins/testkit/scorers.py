@@ -4,9 +4,10 @@ These predicates are intentionally lightweight so plugin tests remain
 fast and deterministic. Scorers return ``True`` when expectations are
 met and ``False`` otherwise.
 """
+
 from __future__ import annotations
 
-from typing import Iterable, Callable
+from collections.abc import Callable, Iterable
 
 
 def must_include(strs: Iterable[str]) -> Callable[[str], bool]:

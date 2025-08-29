@@ -4,11 +4,11 @@ from __future__ import annotations
 
 import json
 import sqlite3
-from pathlib import Path
-from typing import Iterable, Optional, List, Tuple
+from collections.abc import Iterable
 from datetime import datetime
+from pathlib import Path
 
-from .schema import CreatorProfile, Platforms, VerificationEvent
+from .schema import CreatorProfile
 
 
 class ProfileStore:
@@ -52,11 +52,9 @@ class ProfileStore:
         )
         self.conn.commit()
 
-    def get_profile(self, name: str) -> Optional[CreatorProfile]:
+    def get_profile(self, name: str) -> CreatorProfile | None:
         cur = self.conn.cursor()
-        row = cur.execute(
-            "SELECT data FROM profiles WHERE name = ?", (name,)
-        ).fetchone()
+        row = cur.execute("SELECT data FROM profiles WHERE name = ?", (name,)).fetchone()
         if not row:
             return None
         data = json.loads(row[0])
@@ -89,7 +87,7 @@ class ProfileStore:
             )
         self.conn.commit()
 
-    def get_collaborators(self, creator: str, limit: int = 10) -> List[Tuple[str, int]]:
+    def get_collaborators(self, creator: str, limit: int = 10) -> list[tuple[str, int]]:
         """Return collaborators for ``creator`` ordered by appearance count."""
         cur = self.conn.cursor()
         rows = cur.execute(

@@ -1,11 +1,13 @@
 import time
-import security.signing as signing
+
+from security import signing
 from security.signing import (
+    build_signature_headers,
     sign_message,
     verify_signature,
-    build_signature_headers,
     verify_signature_headers,
 )
+
 
 def test_sign_and_verify():
     secret = "s3cr3t"
@@ -14,6 +16,7 @@ def test_sign_and_verify():
     nonce = "abc"
     sig = sign_message(payload, secret, ts, nonce)
     assert verify_signature(payload, secret, sig, ts, nonce)
+
 
 def test_replay_and_tamper():
     secret = "s3cr3t"

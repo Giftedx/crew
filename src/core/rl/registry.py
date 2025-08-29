@@ -1,14 +1,13 @@
 """Policy registry for dependency injection."""
-from __future__ import annotations
 
-from typing import Dict
+from __future__ import annotations
 
 
 class PolicyRegistry:
     """A minimal registry for RL policies."""
 
     def __init__(self) -> None:
-        self._policies: Dict[str, object] = {}
+        self._policies: dict[str, object] = {}
 
     def register(self, name: str, policy: object) -> None:
         self._policies[name] = policy

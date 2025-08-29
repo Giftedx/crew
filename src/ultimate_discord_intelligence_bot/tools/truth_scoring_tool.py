@@ -5,8 +5,8 @@ verified claim. The returned score is the mean proportion of truthful
 statements, laying groundwork for richer historical tracking.
 """
 
+from collections.abc import Iterable
 from statistics import mean
-from typing import Iterable
 
 from crewai.tools import BaseTool
 

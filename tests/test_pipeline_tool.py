@@ -20,4 +20,3 @@ def test_pipeline_tool_passes_quality(monkeypatch):
 
     assert result["status"] == "success"
     assert called == {"url": "http://example.com", "quality": "720p"}
-

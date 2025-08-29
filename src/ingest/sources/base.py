@@ -3,7 +3,7 @@ from __future__ import annotations
 """Source connector interface for the ingest scheduler."""
 
 from dataclasses import dataclass
-from typing import List, Protocol, Optional
+from typing import Protocol
 
 
 @dataclass
@@ -15,7 +15,7 @@ class Watch:
     handle: str
     tenant: str
     workspace: str
-    label: Optional[str] = None
+    label: str | None = None
 
 
 @dataclass
@@ -24,7 +24,7 @@ class DiscoveryItem:
 
     external_id: str
     url: str
-    published_at: Optional[str] = None
+    published_at: str | None = None
 
 
 class SourceConnector(Protocol):
@@ -35,6 +35,4 @@ class SourceConnector(Protocol):
     ``state`` dictionary holding connector-specific cursor information.
     """
 
-    def discover(self, watch: Watch, state: dict) -> List[DiscoveryItem]:
-        ...
-
+    def discover(self, watch: Watch, state: dict) -> list[DiscoveryItem]: ...

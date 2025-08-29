@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 from core import rl
-from core.tool_planner import execute_plan
 from core.rl.policies.bandit_base import EpsilonGreedyBandit
+from core.tool_planner import execute_plan
 
 
 def test_tool_planner_bandit_updates(monkeypatch) -> None:

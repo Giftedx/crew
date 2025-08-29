@@ -1,9 +1,7 @@
-import os
-from unittest.mock import MagicMock
 
 import pytest
 
-from core.http_utils import http_request_with_retry, HTTP_RATE_LIMITED
+from core.http_utils import HTTP_RATE_LIMITED, http_request_with_retry
 
 
 def test_http_request_with_retry_status(monkeypatch):

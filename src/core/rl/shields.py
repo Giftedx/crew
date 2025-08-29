@@ -1,8 +1,9 @@
 """Safety and budget constraint checks."""
+
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Mapping, Optional
 
 
 @dataclass
@@ -10,7 +11,7 @@ class ShieldResult:
     """Result of a shield evaluation."""
 
     allowed: bool
-    reason: Optional[str] = None
+    reason: str | None = None
 
 
 def check(proposal: Mapping[str, float], constraints: Mapping[str, float]) -> ShieldResult:

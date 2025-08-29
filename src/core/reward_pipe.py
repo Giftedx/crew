@@ -1,8 +1,10 @@
 """Reward pipeline that fuses signals into a scalar reward."""
+
 from __future__ import annotations
 
+from collections.abc import Mapping, MutableMapping
 from dataclasses import dataclass
-from typing import Any, Dict, Mapping, MutableMapping
+from typing import Any
 
 from .rl import reward_engine
 
@@ -28,11 +30,11 @@ class RewardResult:
     """
 
     domain: str
-    context: Dict[str, Any]
+    context: dict[str, Any]
     reward: float
     breakdown: reward_engine.RewardBreakdown
-    signals: Dict[str, Any]
-    outcome: Dict[str, Any]
+    signals: dict[str, Any]
+    outcome: dict[str, Any]
 
 
 def compute(

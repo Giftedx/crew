@@ -52,16 +52,15 @@ class VectorStore:
                 vectors_config=qmodels.VectorParams(size=dim, distance=qmodels.Distance.COSINE),
             )
             self._dims[name] = dim
-        else:
-            # Verify existing dimension if we have cached value; if not cache it
-            if name not in self._dims:
-                # Attempt to infer dimension by inserting a dummy approach is unsafe; instead rely
-                # on first record establishing dimension. So just cache expected dim.
-                self._dims[name] = dim
-            elif self._dims[name] != dim:
-                raise ValueError(
-                    f"Dimension mismatch for namespace '{name}': expected {self._dims[name]}, got {dim}"
-                )
+        # Verify existing dimension if we have cached value; if not cache it
+        elif name not in self._dims:
+            # Attempt to infer dimension by inserting a dummy approach is unsafe; instead rely
+            # on first record establishing dimension. So just cache expected dim.
+            self._dims[name] = dim
+        elif self._dims[name] != dim:
+            raise ValueError(
+                f"Dimension mismatch for namespace '{name}': expected {self._dims[name]}, got {dim}"
+            )
 
     def upsert(self, namespace: str, records: Sequence[VectorRecord]) -> None:
         if not records:

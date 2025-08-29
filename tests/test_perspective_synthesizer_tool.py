@@ -1,7 +1,7 @@
+from ultimate_discord_intelligence_bot.services import MemoryService
 from ultimate_discord_intelligence_bot.tools.perspective_synthesizer_tool import (
     PerspectiveSynthesizerTool,
 )
-from ultimate_discord_intelligence_bot.services import MemoryService
 
 
 def test_combines_inputs(monkeypatch):

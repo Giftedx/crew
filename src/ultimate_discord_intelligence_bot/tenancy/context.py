@@ -1,10 +1,8 @@
 from __future__ import annotations
 
+import threading
 from contextlib import contextmanager
 from dataclasses import dataclass
-from typing import Optional
-import threading
-
 
 _thread_local = threading.local()
 
@@ -15,9 +13,9 @@ class TenantContext:
 
     tenant_id: str
     workspace_id: str
-    routing_profile_id: Optional[str] = None
-    budget_id: Optional[str] = None
-    policy_binding_id: Optional[str] = None
+    routing_profile_id: str | None = None
+    budget_id: str | None = None
+    policy_binding_id: str | None = None
     flags: dict | None = None
 
 
@@ -33,7 +31,7 @@ def with_tenant(ctx: TenantContext):
         _thread_local.tenant_ctx = prev
 
 
-def current_tenant() -> Optional[TenantContext]:
+def current_tenant() -> TenantContext | None:
     return getattr(_thread_local, "tenant_ctx", None)
 
 

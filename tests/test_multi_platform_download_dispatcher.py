@@ -1,19 +1,19 @@
 import pytest
 
+from ultimate_discord_intelligence_bot.tools.discord_download_tool import (
+    DiscordDownloadTool,
+)
 from ultimate_discord_intelligence_bot.tools.multi_platform_download_tool import (
     MultiPlatformDownloadTool,
 )
 from ultimate_discord_intelligence_bot.tools.yt_dlp_download_tool import (
-    YouTubeDownloadTool,
-    TwitchDownloadTool,
-    KickDownloadTool,
-    TwitterDownloadTool,
     InstagramDownloadTool,
-    TikTokDownloadTool,
+    KickDownloadTool,
     RedditDownloadTool,
-)
-from ultimate_discord_intelligence_bot.tools.discord_download_tool import (
-    DiscordDownloadTool,
+    TikTokDownloadTool,
+    TwitchDownloadTool,
+    TwitterDownloadTool,
+    YouTubeDownloadTool,
 )
 
 

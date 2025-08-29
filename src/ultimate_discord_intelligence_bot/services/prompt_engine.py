@@ -10,7 +10,7 @@ whitespace split acts as a final fallback.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, Optional
+from typing import Any
 
 from .memory_service import MemoryService
 
@@ -29,10 +29,10 @@ except Exception:  # pragma: no cover
 class PromptEngine:
     """Generate prompts and estimate token usage."""
 
-    memory: Optional[MemoryService] = None
-    _tokenizers: Dict[str, Any] = field(default_factory=dict, init=False, repr=False)
+    memory: MemoryService | None = None
+    _tokenizers: dict[str, Any] = field(default_factory=dict, init=False, repr=False)
 
-    def generate(self, template: str, variables: Dict[str, Any]) -> str:
+    def generate(self, template: str, variables: dict[str, Any]) -> str:
         """Fill ``template`` with ``variables`` using ``str.format``."""
         return template.format(**variables)
 
@@ -84,7 +84,7 @@ class PromptEngine:
         instruction: str,
         query: str,
         k: int = 3,
-        metadata: Optional[Dict[str, Any]] = None,
+        metadata: dict[str, Any] | None = None,
     ) -> str:
         """Build a prompt that includes top-``k`` context snippets.
 
@@ -108,4 +108,4 @@ class PromptEngine:
                         sources.append(f"[{idx}] {src}")
         context_text = "\n".join(context_blocks) or "(no context)"
         sources_text = "\n".join(sources)
-        return f"{instruction}\n\nContext:\n{context_text}\n\nSources:\n{sources_text}\n\nQuery: {query}" 
+        return f"{instruction}\n\nContext:\n{context_text}\n\nSources:\n{sources_text}\n\nQuery: {query}"

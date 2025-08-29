@@ -11,16 +11,14 @@ The second form is a convenience wrapper forwarding to the pipeline module.
 """
 
 import argparse
-import os
-import sys
-from typing import Optional
+
+from memory import vector_store
 
 from . import pipeline
 from .pipeline import IngestJob
-from memory import vector_store
 
 
-def _parse_args(argv: Optional[list[str]] = None):
+def _parse_args(argv: list[str] | None = None):
     p = argparse.ArgumentParser(description="Run a single ingestion job")
     p.add_argument("url", help="Source URL to ingest (YouTube/Twitch/TikTok)")
     p.add_argument("--tenant", required=True, help="Tenant slug")
@@ -39,7 +37,7 @@ def _infer_source(url: str) -> str:
     raise SystemExit("Could not infer source; specify --source explicitly")
 
 
-def main(argv: Optional[list[str]] = None) -> int:
+def main(argv: list[str] | None = None) -> int:
     args = _parse_args(argv)
     source = args.source or _infer_source(args.url)
     job = IngestJob(

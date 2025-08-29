@@ -1,7 +1,11 @@
 """Sample a subset of a golden dataset."""
+
 from __future__ import annotations
-import argparse, random
+
+import argparse
+import random
 from pathlib import Path
+
 
 def main(argv=None) -> int:
     p = argparse.ArgumentParser()
@@ -15,6 +19,7 @@ def main(argv=None) -> int:
     sample = random.sample(lines, min(a.n, len(lines)))
     Path(a.outfile).write_text("\n".join(sample) + ("\n" if sample else ""))
     return 0
+
 
 if __name__ == "__main__":
     raise SystemExit(main())

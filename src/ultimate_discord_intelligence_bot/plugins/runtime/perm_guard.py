@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Iterable, Set
+from collections.abc import Iterable
 
 
 class PermissionError(Exception):
@@ -11,7 +11,7 @@ class PermissionGuard:
     """Simple guard that checks a plugin's required scopes against grants."""
 
     def __init__(self, granted_scopes: Iterable[str]):
-        self._granted: Set[str] = set(granted_scopes)
+        self._granted: set[str] = set(granted_scopes)
 
     def require(self, scopes: Iterable[str]) -> None:
         missing = set(scopes) - self._granted

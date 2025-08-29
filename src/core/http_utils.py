@@ -11,14 +11,17 @@ that monkeypatch `requests.post` without modern keyword arguments.
 """
 from __future__ import annotations
 
-import ipaddress
 import inspect
+import ipaddress
 import os
 import time
-from typing import Any, Callable, Mapping
+import warnings
+from collections.abc import Callable, Mapping
+from typing import Any
 from urllib.parse import urlparse
 
 import requests
+
 try:  # optional dependency
     from opentelemetry import trace  # type: ignore
 except Exception:  # pragma: no cover
@@ -184,7 +187,23 @@ if _patched_resilient_get and getattr(_patched_resilient_get, "__module__", __na
 
 
 def _is_retry_enabled() -> bool:
-    return bool(os.getenv("ENABLE_ANALYSIS_HTTP_RETRY"))
+    """Return True if HTTP retry logic is enabled.
+
+    Supports both the new unified flag ``ENABLE_HTTP_RETRY`` and the legacy
+    ``ENABLE_ANALYSIS_HTTP_RETRY`` (deprecated). The unified flag takes
+    precedence when both are set. A future cleanup will remove the legacy
+    flag once all callers are migrated.
+    """
+    if os.getenv("ENABLE_HTTP_RETRY"):
+        return True
+    if os.getenv("ENABLE_ANALYSIS_HTTP_RETRY"):
+        warnings.warn(
+            "ENABLE_ANALYSIS_HTTP_RETRY is deprecated; use ENABLE_HTTP_RETRY instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return True
+    return False
 
 
 def http_request_with_retry(
@@ -201,8 +220,9 @@ def http_request_with_retry(
 ) -> Any:
     """Feature-flagged generic HTTP retry with exponential backoff.
 
-    Retries on network exceptions and selected status codes while the
-    ``ENABLE_ANALYSIS_HTTP_RETRY`` env var is set. Backoff doubles each
+    Retries on network exceptions and selected status codes while retry
+    feature flag(s) are enabled (``ENABLE_HTTP_RETRY`` preferred, legacy
+    ``ENABLE_ANALYSIS_HTTP_RETRY`` still honored). Backoff doubles each
     attempt (base * 2^(n-1)) with proportional jitter.
     """
     tracer = trace.get_tracer(__name__)

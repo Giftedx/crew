@@ -1,8 +1,7 @@
-import sqlite3
+from core.learning_engine import LearningEngine
+from core.router import Router
 from debate.panel import PanelConfig, run_panel
 from debate.store import Debate, DebateStore
-from core.router import Router
-from core.learning_engine import LearningEngine
 from discord import commands as dc
 
 

@@ -8,19 +8,23 @@ no API key is configured.
 
 from __future__ import annotations
 
-import os
-from typing import Any, Dict, List, Mapping
 import copy
+import os
 import time
-from datetime import datetime
+from collections.abc import Mapping
+from typing import Any
 
-import requests
+from core.http_utils import (
+    REQUEST_TIMEOUT_SECONDS,
+    http_request_with_retry,
+    resilient_post,
+)
 
-from .learning_engine import LearningEngine
-from .prompt_engine import PromptEngine
-from .logging_utils import AnalyticsStore
-from .token_meter import TokenMeter
 from .cache import LLMCache
+from .learning_engine import LearningEngine
+from .logging_utils import AnalyticsStore
+from .prompt_engine import PromptEngine
+from .token_meter import TokenMeter
 
 
 class OpenRouterService:
@@ -28,10 +32,10 @@ class OpenRouterService:
 
     def __init__(
         self,
-        models_map: Dict[str, List[str]] | None = None,
+        models_map: dict[str, list[str]] | None = None,
         learning_engine: LearningEngine | None = None,
         api_key: str | None = None,
-        provider_opts: Dict[str, Any] | None = None,
+        provider_opts: dict[str, Any] | None = None,
         logger: AnalyticsStore | None = None,
         token_meter: TokenMeter | None = None,
         cache: LLMCache | None = None,
@@ -70,7 +74,7 @@ class OpenRouterService:
         self.logger = logger
 
     @staticmethod
-    def _deep_merge(base: Dict[str, Any], overrides: Mapping[str, Any]) -> Dict[str, Any]:
+    def _deep_merge(base: dict[str, Any], overrides: Mapping[str, Any]) -> dict[str, Any]:
         """Recursively merge ``overrides`` into ``base``.
 
         Args:
@@ -96,8 +100,8 @@ class OpenRouterService:
         prompt: str,
         task_type: str = "general",
         model: str | None = None,
-        provider_opts: Dict[str, Any] | None = None,
-    ) -> Dict[str, Any]:
+        provider_opts: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         """Send ``prompt`` to a model and include provider preferences.
 
         ``provider_opts`` override the service defaults supplied at
@@ -170,18 +174,36 @@ class OpenRouterService:
             result["cached"] = False
             return result
         try:  # pragma: no cover - network call
-            payload: Dict[str, Any] = {
+            payload: dict[str, Any] = {
                 "model": chosen,
                 "messages": [{"role": "user", "content": prompt}],
             }
             if provider:
                 payload["provider"] = provider
-            resp = requests.post(
-                "https://openrouter.ai/api/v1/chat/completions",
-                headers={"Authorization": f"Bearer {self.api_key}"},
-                json=payload,
-                timeout=30,
-            )
+            url = "https://openrouter.ai/api/v1/chat/completions"
+            headers = {"Authorization": f"Bearer {self.api_key}"}
+            if os.getenv("ENABLE_HTTP_RETRY") or os.getenv("ENABLE_ANALYSIS_HTTP_RETRY"):
+                # Use retry helper wrapping resilient_post to inherit timeout & legacy behaviour
+                resp = http_request_with_retry(
+                    "POST",
+                    url,
+                    request_callable=lambda u, **_: resilient_post(
+                        u,
+                        headers=headers,
+                        json_payload=payload,
+                        timeout_seconds=REQUEST_TIMEOUT_SECONDS,
+                    ),
+                    max_attempts=3,
+                )
+            else:
+                resp = resilient_post(
+                    url,
+                    headers=headers,
+                    json_payload=payload,
+                    timeout_seconds=REQUEST_TIMEOUT_SECONDS,
+                )
+            if getattr(resp, "status_code", 200) >= 400:
+                raise RuntimeError(f"openrouter_error status={resp.status_code}")
             data = resp.json()
             message = data.get("choices", [{}])[0].get("message", {}).get("content", "")
             latency_ms = (time.perf_counter() - start) * 1000

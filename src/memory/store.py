@@ -2,16 +2,14 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Optional, List
-import json
 import sqlite3
+from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 
 
 @dataclass
 class MemoryItem:
-    id: Optional[int]
+    id: int | None
     tenant: str
     workspace: str
     type: str
@@ -100,7 +98,7 @@ class MemoryStore:
         self.conn.commit()
         return int(cur.lastrowid)
 
-    def get_item(self, item_id: int) -> Optional[MemoryItem]:
+    def get_item(self, item_id: int) -> MemoryItem | None:
         cur = self.conn.cursor()
         cur.execute("SELECT * FROM memory_items WHERE id = ?", (item_id,))
         row = cur.fetchone()
@@ -143,7 +141,7 @@ class MemoryStore:
         )
         self.conn.commit()
 
-    def get_policy(self, tenant: str, name: str) -> Optional[RetentionPolicy]:
+    def get_policy(self, tenant: str, name: str) -> RetentionPolicy | None:
         cur = self.conn.cursor()
         cur.execute(
             "SELECT * FROM retention_policies WHERE tenant = ? AND name = ?",
@@ -155,7 +153,7 @@ class MemoryStore:
     # ------------------------------------------------------------------ search
     def search_keyword(
         self, tenant: str, workspace: str, text: str, limit: int = 5
-    ) -> List[MemoryItem]:
+    ) -> list[MemoryItem]:
         cur = self.conn.cursor()
         like = f"%{text}%"
         cur.execute(
@@ -195,4 +193,3 @@ class MemoryStore:
 
 
 __all__ = ["MemoryItem", "RetentionPolicy", "MemoryStore"]
-

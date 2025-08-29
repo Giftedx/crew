@@ -5,19 +5,19 @@ specific tokenizer for a provider is unavailable. Costs are derived from
 provider-specific per-token pricing so that downstream reinforcement learning
 can reason about expenses.
 """
+
 from __future__ import annotations
 
 import math
 import os
 from contextlib import contextmanager
 from dataclasses import dataclass
-from typing import Dict
 
-from ultimate_discord_intelligence_bot.tenancy import current_tenant, TenantContext
+from ultimate_discord_intelligence_bot.tenancy import TenantContext, current_tenant
 from ultimate_discord_intelligence_bot.tenancy.registry import TenantRegistry
 
 # Rough per-token costs in USD for demonstration purposes.
-MODEL_PRICES: Dict[str, float] = {
+MODEL_PRICES: dict[str, float] = {
     "gpt-3.5": 0.002 / 1000,
     "gpt-4": 0.03 / 1000,
 }
@@ -48,7 +48,7 @@ class BudgetStore:
 
     def __init__(self, registry: TenantRegistry | None = None) -> None:
         self.registry = registry
-        self._budgets: Dict[str, BudgetManager] = {}
+        self._budgets: dict[str, BudgetManager] = {}
 
     def _get(self) -> BudgetManager:
         ctx = current_tenant() or TenantContext("default", "main")

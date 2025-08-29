@@ -6,8 +6,6 @@ establishes the contract for future, API-driven implementations while
 keeping unit tests fast and self-contained.
 """
 
-from typing import Dict, List
-
 from crewai.tools import BaseTool
 
 
@@ -15,12 +13,10 @@ class SocialMediaMonitorTool(BaseTool):
     """Collect posts mentioning a keyword across platforms."""
 
     name: str = "Social Media Monitor"
-    description: str = (
-        "Aggregate social media posts and return those containing the keyword"
-    )
+    description: str = "Aggregate social media posts and return those containing the keyword"
 
-    def _run(self, posts: Dict[str, List[str]], keyword: str) -> dict:
-        matches: Dict[str, List[str]] = {}
+    def _run(self, posts: dict[str, list[str]], keyword: str) -> dict[str, object]:
+        matches: dict[str, list[str]] = {}
         lower = keyword.lower()
         for platform, items in posts.items():
             platform_matches = [p for p in items if lower in p.lower()]
@@ -28,5 +24,3 @@ class SocialMediaMonitorTool(BaseTool):
                 matches[platform] = platform_matches
         return {"status": "success", "matches": matches}
 
-    def run(self, *args, **kwargs):  # pragma: no cover - thin wrapper
-        return self._run(*args, **kwargs)

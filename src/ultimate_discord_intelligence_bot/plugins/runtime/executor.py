@@ -5,24 +5,28 @@ import json
 import multiprocessing as mp
 import pathlib
 import time
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Any, Dict, Iterable, Optional
+from typing import Any
 
 import jsonschema
 
-from .perm_guard import PermissionGuard, PermissionError
 from core import learn
 from core.rl import registry as rl_registry
+
+from .perm_guard import PermissionError, PermissionGuard
 
 
 @dataclass
 class PluginResult:
     success: bool
     output: Any = None
-    error: Optional[str] = None
+    error: str | None = None
 
 
-def _plugin_entry(entrypoint: str, adapters: Dict[str, Any], args: Dict[str, Any], queue: mp.Queue) -> None:
+def _plugin_entry(
+    entrypoint: str, adapters: dict[str, Any], args: dict[str, Any], queue: mp.Queue
+) -> None:
     """Load the plugin entrypoint and execute it."""
     try:
         module_name, func_name = entrypoint.split(":")
@@ -42,7 +46,7 @@ class PluginExecutor:
         with self._schema_path.open("r", encoding="utf-8") as fh:
             self._schema = json.load(fh)
 
-    def _load_manifest(self, plugin_dir: pathlib.Path) -> Dict[str, Any]:
+    def _load_manifest(self, plugin_dir: pathlib.Path) -> dict[str, Any]:
         manifest_file = plugin_dir / "manifest.json"
         with manifest_file.open("r", encoding="utf-8") as fh:
             manifest = json.load(fh)
@@ -53,8 +57,8 @@ class PluginExecutor:
         self,
         plugin_dir: str | pathlib.Path,
         granted_scopes: Iterable[str],
-        adapters: Dict[str, Any],
-        args: Optional[Dict[str, Any]] = None,
+        adapters: dict[str, Any],
+        args: dict[str, Any] | None = None,
         timeout: float = 10.0,
         *,
         policy_registry: rl_registry.PolicyRegistry | None = None,
@@ -84,7 +88,11 @@ class PluginExecutor:
                 proc.kill()
                 res = PluginResult(success=False, error="timeout")
             else:
-                res = queue.get() if not queue.empty() else PluginResult(success=False, error="no result")
+                res = (
+                    queue.get()
+                    if not queue.empty()
+                    else PluginResult(success=False, error="no result")
+                )
             elapsed = (time.perf_counter() - start) * 1000
             result_holder["res"] = res
             outcome = {"cost_usd": 0.0, "latency_ms": elapsed}

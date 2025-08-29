@@ -1,10 +1,20 @@
 import logging
 import os
+from typing import Any
 
 from crewai.tools import BaseTool
-from google.oauth2 import service_account
-from googleapiclient.discovery import build
-from googleapiclient.http import MediaFileUpload
+
+# Optional heavy Google client dependencies. Tests monkeypatch `_setup_service`, so we
+# avoid import errors when these libraries are absent by deferring/failing gracefully.
+try:  # pragma: no cover - import guarding
+    from google.oauth2 import service_account  # pragma: no cover
+    from googleapiclient.discovery import build  # type: ignore  # pragma: no cover
+    from googleapiclient.http import MediaFileUpload  # type: ignore  # pragma: no cover
+
+    _GOOGLE_LIBS_AVAILABLE = True
+except Exception:  # broad: any import error should mark feature unavailable
+    service_account = build = MediaFileUpload = None  # type: ignore
+    _GOOGLE_LIBS_AVAILABLE = False
 
 # The Google client libraries make network requests, which are slow and can fail.
 # To keep the tool resilient and idempotent we check for the existence of folders
@@ -13,17 +23,24 @@ from googleapiclient.http import MediaFileUpload
 
 from ..settings import GOOGLE_CREDENTIALS
 
+
 class DriveUploadTool(BaseTool):
     name: str = "Google Drive Upload Tool"
     description: str = "Upload files to Google Drive and create shareable links"
-    
-    def __init__(self):
+    # Allow dynamic attributes (service, folders) assigned in __init__ under pydantic v2
+    model_config = {"extra": "allow"}
+
+    def __init__(self) -> None:
         super().__init__()
         self.service = self._setup_service()
         self.base_folder_id, self.subfolders = self._setup_folder_structure()
 
-    def _setup_service(self):
+    def _setup_service(self) -> Any:  # external client returns dynamic resource
         """Initialise the Drive service using service account credentials."""
+        if not _GOOGLE_LIBS_AVAILABLE:  # pragma: no cover - exercised via import path
+            raise RuntimeError(
+                "Google client libraries not installed. Install google-api-python-client to enable Drive uploads."
+            )
         credentials_path = str(GOOGLE_CREDENTIALS)
         try:
             credentials = service_account.Credentials.from_service_account_file(
@@ -37,14 +54,14 @@ class DriveUploadTool(BaseTool):
 
     def _find_folder(self, name: str, parent_id: str | None = None) -> str | None:
         """Return folder id if a folder with ``name`` exists under ``parent_id``."""
-        query = ["name = '{}'".format(name.replace("'", "\'")), "mimeType = 'application/vnd.google-apps.folder'", "trashed = false"]
+        query = [
+            "name = '{}'".format(name.replace("'", "'")),
+            "mimeType = 'application/vnd.google-apps.folder'",
+            "trashed = false",
+        ]
         if parent_id:
             query.append(f"'{parent_id}' in parents")
-        result = (
-            self.service.files()
-            .list(q=" and ".join(query), fields="files(id)")
-            .execute()
-        )
+        result = self.service.files().list(q=" and ".join(query), fields="files(id)").execute()
         files = result.get("files", [])
         return files[0]["id"] if files else None
 
@@ -52,17 +69,15 @@ class DriveUploadTool(BaseTool):
         folder_id = self._find_folder(name, parent_id)
         if folder_id:
             return folder_id
-        file_metadata = {"name": name, "mimeType": "application/vnd.google-apps.folder"}
+        # file_metadata is a loose dict accepted by the Drive API client
+        file_metadata: dict[str, Any] = {"name": name, "mimeType": "application/vnd.google-apps.folder"}
         if parent_id:
             file_metadata["parents"] = [parent_id]
-        file = (
-            self.service.files()
-            .create(body=file_metadata, fields="id")
-            .execute()
-        )
-        return file.get("id")
+        file = self.service.files().create(body=file_metadata, fields="id").execute()
+        # Drive API guarantees an 'id' field in successful response
+        return str(file.get("id"))
 
-    def _setup_folder_structure(self):
+    def _setup_folder_structure(self) -> tuple[str, dict[str, str]]:
         """Create or reuse an organised folder structure on Drive."""
         base_folder = self._get_or_create_folder("CrewAI_Content")
 
@@ -74,7 +89,7 @@ class DriveUploadTool(BaseTool):
 
         return base_folder, subfolders
 
-    def _run(self, file_path: str, platform: str) -> dict:
+    def _run(self, file_path: str, platform: str) -> dict[str, Any]:
         """Upload video file with Discord-compatible sharing setup"""
         try:
             folder_id = self.subfolders.get(platform, self.base_folder_id)
@@ -114,23 +129,20 @@ class DriveUploadTool(BaseTool):
             logging.exception("Drive upload failed")
             return {"status": "error", "error": str(e)}
 
-    def _make_public(self, file_id: str):
+    def _make_public(self, file_id: str) -> None:
         """Make file publicly accessible"""
-        permission = {
-            'role': 'reader',
-            'type': 'anyone'
-        }
+        permission = {"role": "reader", "type": "anyone"}
         self.service.permissions().create(fileId=file_id, body=permission).execute()
 
-    def _generate_discord_links(self, file_id: str) -> dict:
+    def _generate_discord_links(self, file_id: str) -> dict[str, str]:
         """Generate various link formats for Discord compatibility"""
         return {
-            'preview_link': f"https://drive.google.com/file/d/{file_id}/preview",
-            'direct_link': f"https://drive.google.com/uc?id={file_id}",
-            'view_link': f"https://drive.google.com/file/d/{file_id}/view",
-            'thumbnail': f"https://drive.google.com/thumbnail?id={file_id}&sz=w1920-h1080"
+            "preview_link": f"https://drive.google.com/file/d/{file_id}/preview",
+            "direct_link": f"https://drive.google.com/uc?id={file_id}",
+            "view_link": f"https://drive.google.com/file/d/{file_id}/view",
+            "thumbnail": f"https://drive.google.com/thumbnail?id={file_id}&sz=w1920-h1080",
         }
 
     # Expose run for pipeline compatibility
-    def run(self, *args, **kwargs):  # pragma: no cover - thin wrapper
+    def run(self, *args, **kwargs) -> dict:  # pragma: no cover - thin wrapper
         return self._run(*args, **kwargs)

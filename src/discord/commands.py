@@ -8,41 +8,41 @@ responses.  A full bot wiring is outside the scope of the tests but the
 interfaces make later integration straightforward.
 """
 
-from typing import List
-
-from memory import embeddings, vector_store
-from core.privacy import privacy_filter, retention
-from ingest import models
-from scheduler import Scheduler, PriorityQueue
-from obs import incident, slo
-from memory import api as memory_api, store as memory_store
-from grounding.schema import AnswerContract
-from grounding.verifier import VerifierReport
-from dataclasses import asdict
 import os
+from dataclasses import asdict
 from datetime import datetime, timezone
+
+from core.learning_engine import LearningEngine
+from core.privacy import privacy_filter, retention
+from core.router import Router
 from debate.panel import PanelConfig, run_panel
 from debate.store import Debate, DebateStore
-from core.router import Router
-from core.learning_engine import LearningEngine
-
+from grounding.schema import AnswerContract
+from grounding.verifier import VerifierReport
+from ingest import models
+from memory import api as memory_api
+from memory import embeddings, vector_store
+from memory import store as memory_store
+from obs import incident, slo
+from scheduler import PriorityQueue, Scheduler
 
 _DEBATE_STORE = DebateStore()
 
-def creator(profiles: List[dict], name: str) -> dict:
+
+def creator(profiles: list[dict], name: str) -> dict:
     for p in profiles:
         if p["slug"] == name:
             return p
     return {"error": "unknown creator"}
 
 
-def latest(episodes: List[dict], creator_slug: str, limit: int = 5) -> List[dict]:
+def latest(episodes: list[dict], creator_slug: str, limit: int = 5) -> list[dict]:
     items = [e for e in episodes if e["creator"] == creator_slug]
     items.sort(key=lambda e: e.get("published_at") or "", reverse=True)
     return items[:limit]
 
 
-def collabs(episodes: List[dict], creator_slug: str) -> List[str]:
+def collabs(episodes: list[dict], creator_slug: str) -> list[str]:
     guests = []
     for e in episodes:
         if e["creator"] == creator_slug:
@@ -50,14 +50,14 @@ def collabs(episodes: List[dict], creator_slug: str) -> List[str]:
     return sorted(set(guests))
 
 
-def verify_profiles(candidates: List[dict]) -> List[dict]:
+def verify_profiles(candidates: list[dict]) -> list[dict]:
     return candidates
 
 
-def context_query(store: vector_store.VectorStore, namespace: str, query: str) -> List[dict]:
+def context_query(store: vector_store.VectorStore, namespace: str, query: str) -> list[dict]:
     vec = embeddings.embed([query])[0]
     res = store.query(namespace, vec, top_k=3)
-    out: List[dict] = []
+    out: list[dict] = []
     texts = []
     for hit in res:
         payload = hit.payload or {}
@@ -86,14 +86,16 @@ def context_query(store: vector_store.VectorStore, namespace: str, query: str) -
     return out
 
 
-def ops_debate_run(query: str, roles: List[str]) -> dict:
+def ops_debate_run(query: str, roles: list[str]) -> dict:
     """Run a simple debate and persist the result."""
 
     engine = LearningEngine()
     engine.register_domain("debate")
     router = Router(engine)
     cfg = PanelConfig(roles=roles)
-    report = run_panel(query, router, lambda m, p: f"{m}:{p}"[:100], cfg, engine=router.engine, reward=1.0)
+    report = run_panel(
+        query, router, lambda m, p: f"{m}:{p}"[:100], cfg, engine=router.engine, reward=1.0
+    )
     debate = Debate(
         id=None,
         tenant="t",
@@ -189,9 +191,7 @@ def ops_memory_find(
     workspace: str,
     query: str,
 ) -> list[dict]:
-    hits = memory_api.retrieve(
-        mstore, vstore, tenant=tenant, workspace=workspace, query=query
-    )
+    hits = memory_api.retrieve(mstore, vstore, tenant=tenant, workspace=workspace, query=query)
     return [{"id": h.id, "text": h.text, "score": h.score} for h in hits]
 
 
@@ -205,9 +205,7 @@ def ops_memory_prune(mstore: memory_store.MemoryStore, tenant: str) -> dict:
     return {"deleted": deleted}
 
 
-def ops_memory_stats(
-    mstore: memory_store.MemoryStore, tenant: str, workspace: str
-) -> dict:
+def ops_memory_stats(mstore: memory_store.MemoryStore, tenant: str, workspace: str) -> dict:
     items = mstore.search_keyword(tenant, workspace, "", limit=1000)
     return {
         "total": len(items),

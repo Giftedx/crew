@@ -10,7 +10,7 @@ can consume the data."""
 import json
 import time
 from dataclasses import dataclass, field
-from typing import Any, Dict, List
+from typing import Any
 
 from .openrouter_service import OpenRouterService
 
@@ -26,19 +26,19 @@ class EvaluationHarness:
         self,
         prompt: str,
         task_type: str = "general",
-        models: List[str] | None = None,
-    ) -> List[Dict[str, Any]]:
+        models: list[str] | None = None,
+    ) -> list[dict[str, Any]]:
         """Execute ``prompt`` against ``models`` and log the outcomes."""
 
         models_to_run = models or self.router.models_map.get(
             task_type, self.router.models_map["general"]
         )
-        results: List[Dict[str, Any]] = []
+        results: list[dict[str, Any]] = []
         for model in models_to_run:
             start = time.perf_counter()
             response = self.router.route(prompt, task_type=task_type, model=model)
             latency = time.perf_counter() - start
-            record: Dict[str, Any] = {
+            record: dict[str, Any] = {
                 "prompt": prompt,
                 "model": model,
                 "task_type": task_type,

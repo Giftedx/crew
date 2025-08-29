@@ -1,7 +1,7 @@
 """Tests for PromptEngine contextual prompts."""
 
-from ultimate_discord_intelligence_bot.services.prompt_engine import PromptEngine
 from ultimate_discord_intelligence_bot.services.memory_service import MemoryService
+from ultimate_discord_intelligence_bot.services.prompt_engine import PromptEngine
 
 
 def test_prompt_engine_injects_context_sources():

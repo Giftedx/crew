@@ -1,4 +1,5 @@
 import sys
+
 from ultimate_discord_intelligence_bot.crew import UltimateDiscordIntelligenceBotCrew
 
 # This file simply wires CLI commands to the crew. Avoid adding heavy logic.
@@ -13,7 +14,9 @@ def run():
 def train():
     """Train the crew for a given number of iterations."""
     inputs = {"url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"}
-    UltimateDiscordIntelligenceBotCrew().crew().train(n_iterations=int(sys.argv[1]), filename=sys.argv[2], inputs=inputs)
+    UltimateDiscordIntelligenceBotCrew().crew().train(
+        n_iterations=int(sys.argv[1]), filename=sys.argv[2], inputs=inputs
+    )
 
 
 def replay():
@@ -24,7 +27,9 @@ def replay():
 def test():
     """Test the crew execution and return the results."""
     inputs = {"url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"}
-    UltimateDiscordIntelligenceBotCrew().crew().test(n_iterations=int(sys.argv[1]), openai_model_name=sys.argv[2], inputs=inputs)
+    UltimateDiscordIntelligenceBotCrew().crew().test(
+        n_iterations=int(sys.argv[1]), openai_model_name=sys.argv[2], inputs=inputs
+    )
 
 
 if __name__ == "__main__":

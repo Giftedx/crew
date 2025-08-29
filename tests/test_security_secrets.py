@@ -1,5 +1,3 @@
-import os
-
 from security.secrets import get_secret, rotate_secret
 
 

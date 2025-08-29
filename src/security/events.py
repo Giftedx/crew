@@ -3,9 +3,10 @@
 This module provides a tiny wrapper around :mod:`obs.logging` so that
 security relevant actions are recorded in a consistent JSON format.
 """
+
 from __future__ import annotations
 
-from typing import Any, Dict, Optional
+from typing import Any
 
 from obs.logging import logger
 
@@ -40,7 +41,7 @@ def log_security_event(
     extra:
         Additional key-value pairs to include in the log payload.
     """
-    payload: Dict[str, Any] = {
+    payload: dict[str, Any] = {
         "actor": actor,
         "action": action,
         "resource": resource,

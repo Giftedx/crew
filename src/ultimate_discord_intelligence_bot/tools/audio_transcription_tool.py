@@ -7,8 +7,8 @@ initialisation so that the model is only loaded when the tool is executed.  This
 also allows unit tests to mock out the behaviour without importing Whisper.
 """
 
-import os
 import logging
+import os
 from functools import cached_property
 
 from crewai.tools import BaseTool
@@ -17,6 +17,7 @@ try:  # pragma: no cover - optional dependency
     import whisper  # type: ignore
 except Exception:  # pragma: no cover - handled in runtime
     whisper = None
+
 
 class AudioTranscriptionTool(BaseTool):
     name: str = "Audio Transcription Tool"

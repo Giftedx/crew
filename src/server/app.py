@@ -13,13 +13,13 @@ value) is set.  The factory wires:
 from __future__ import annotations
 
 import time
+from collections.abc import Callable
 from contextlib import asynccontextmanager
-from typing import Callable
 
 from fastapi import FastAPI, Request, Response
 
 from archive.discord_store.api import api_router
-from core.settings import get_settings, Settings
+from core.settings import Settings
 from memory.qdrant_provider import get_qdrant_client
 from obs import metrics
 from obs.tracing import init_tracing

@@ -163,3 +163,13 @@ All planned PR tasks completed.
 - [x] Marker configuration (`pytest.ini`) to register integration tests
 
 No outstanding in-repo TODO/FIXME or `NotImplementedError` stubs were found as of this update (scans on 2025-08-28). Remaining potential improvements are enhancement-class only (observability metrics for concurrency, richer error analytics) and tracked externally.
+
+### Dead Code Review Methodology (2025-08-28 Sweep)
+
+1. Static search: `rg '(backup|old|deprecated)'` and tool name duplicates.
+2. Import surface: Cross-checked tool registrations (crew/agents config) and `__init__` exports vs filesystem modules.
+3. Lint signals: Ensured no orphaned imports (Ruff F401/F841) after removals.
+4. Runtime coverage: Full test pass after provisional deletions (notably removed duplicate logical_fallacy_tool_backup.py).
+5. Heuristic scan: Looked for modules with zero references in grep results for class/function names.
+
+Result: One duplicate module removed; no additional unused runtime code detected.

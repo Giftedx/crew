@@ -50,3 +50,11 @@ wire them into agents, pipelines, and dashboards. They follow consistent pattern
 - **Error handling** — Graceful degradation and comprehensive error reporting
 - **Configuration** — Environment-based configuration with sensible defaults
 - **Testing** — Comprehensive test coverage with mocked dependencies
+
+### HTTP Utility Monkeypatch Preservation (Testing Note)
+`core.http_utils` includes a lightweight shim that preserves externally
+monkeypatched `resilient_post` / `resilient_get` objects across a module reload.
+This supports legacy tests that patch, then reload the module (which would
+otherwise restore the original implementations). Prefer patching *after* import
+in new tests to keep the surface minimal; the shim can be safely removed once
+all reload-after-patch patterns are retired.

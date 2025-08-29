@@ -1,13 +1,12 @@
 from ultimate_discord_intelligence_bot.profiles.schema import (
-    load_seeds,
     CreatorProfile,
     Platforms,
-    CanonicalChannel,
+    load_seeds,
 )
 from ultimate_discord_intelligence_bot.profiles.store import ProfileStore
 from ultimate_discord_intelligence_bot.tools.platform_resolver import (
-    resolve_youtube_handle,
     resolve_twitch_login,
+    resolve_youtube_handle,
 )
 
 

@@ -7,7 +7,7 @@ watch X feeds.
 
 from __future__ import annotations
 
-from typing import Dict, Iterable, List
+from collections.abc import Iterable
 
 from crewai.tools import BaseTool
 
@@ -24,7 +24,7 @@ class XMonitorTool(BaseTool):
         super().__init__()
         self._monitor = MultiPlatformMonitorTool()
 
-    def _run(self, posts: Iterable[Dict[str, str]]) -> Dict[str, List[Dict[str, str]]]:
+    def _run(self, posts: Iterable[dict[str, str]]) -> dict[str, list[dict[str, str]]]:
         result = self._monitor._run(posts)
         return {"status": "success", "new_posts": result["new_items"]}
 

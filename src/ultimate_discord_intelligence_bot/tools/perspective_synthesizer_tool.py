@@ -8,6 +8,7 @@ from ..services import MemoryService, OpenRouterService, PromptEngine
 class PerspectiveSynthesizerTool(BaseTool):
     name: str = "Perspective Synthesizer"
     description: str = "Merge multiple search backends into a unified summary"
+    model_config = {"extra": "allow"}
 
     def __init__(
         self,

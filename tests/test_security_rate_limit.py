@@ -1,6 +1,8 @@
 import time
-from security.rate_limit import TokenBucket
+
 import pytest
+
+from security.rate_limit import TokenBucket
 
 
 def test_token_bucket_behavior():
