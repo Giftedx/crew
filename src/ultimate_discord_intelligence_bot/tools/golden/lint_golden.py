@@ -1,12 +1,17 @@
 """Lint golden dataset files for basic issues."""
+
 from __future__ import annotations
-import argparse, json
+
+import argparse
+import json
 from pathlib import Path
 
 import jsonschema
 
 SCHEMA_PATH = Path(__file__).resolve().parents[4] / "datasets/schemas/task_record.schema.json"
-SCHEMA = json.load(open(SCHEMA_PATH))
+with open(SCHEMA_PATH, encoding="utf-8") as fh:
+    SCHEMA = json.load(fh)
+
 
 def main(argv=None) -> int:
     p = argparse.ArgumentParser()
@@ -20,6 +25,7 @@ def main(argv=None) -> int:
             print(f"line {i}: {e.message}")
             ok = False
     return 0 if ok else 1
+
 
 if __name__ == "__main__":
     raise SystemExit(main())

@@ -1,10 +1,11 @@
 """Simple content moderation utilities."""
+
 from __future__ import annotations
 
 import re
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List
+
 import yaml
 
 from .events import log_security_event
@@ -23,7 +24,7 @@ class Moderation:
 
     def __init__(
         self,
-        banned_terms: List[str] | None = None,
+        banned_terms: list[str] | None = None,
         action: str | None = None,
         config_path: Path | None = None,
     ) -> None:

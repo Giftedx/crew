@@ -1,8 +1,7 @@
-import time
-from core.cache.llm_cache import memo_llm, llm_cache
+from core.cache.llm_cache import memo_llm
 from core.learning_engine import LearningEngine
-from core.rl.policies.bandit_base import EpsilonGreedyBandit
 from core.privacy import privacy_filter
+from core.rl.policies.bandit_base import EpsilonGreedyBandit
 
 
 def test_rl_cache_domain():
@@ -22,9 +21,7 @@ def test_rl_cache_domain():
     assert expensive() == 2  # bypassing cache, function executed again
 
     engine = LearningEngine()
-    engine.register_domain(
-        "cache", policy=EpsilonGreedyBandit(epsilon=0.0), priors={"use": 5.0}
-    )
+    engine.register_domain("cache", policy=EpsilonGreedyBandit(epsilon=0.0), priors={"use": 5.0})
 
     @memo_llm(lambda *_: {}, learning=engine)
     def cheap():
@@ -40,6 +37,8 @@ def test_rl_cache_domain():
 def test_rl_safety_domain():
     engine = LearningEngine()
     engine.register_domain("safety", priors={"strict": 5.0})
-    text, report = privacy_filter.filter_text("email me at test@example.com", {"tenant": None}, learning=engine)
+    text, report = privacy_filter.filter_text(
+        "email me at test@example.com", {"tenant": None}, learning=engine
+    )
     assert "[redacted-email]" in text
     assert report.redacted_by_type.get("email") == 1

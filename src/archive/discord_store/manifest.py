@@ -1,13 +1,38 @@
 """SQLite-backed manifest mapping content hashes to Discord attachments."""
+
 from __future__ import annotations
+
 import hashlib
+import json
 import os
 import sqlite3
-import json
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 
-_DB_PATH = Path(os.environ.get("ARCHIVE_DB_PATH", "archive_manifest.db"))
+# Backward-compatible path resolution:
+# 1. Explicit env var ARCHIVE_DB_PATH wins.
+# 2. If legacy root-level file exists (archive_manifest.db) and no data/ version yet, reuse it.
+# 3. Otherwise place the DB under data/archive_manifest.db (creating the directory) to keep root tidy.
+_LEGACY_DB = Path("archive_manifest.db")
+_DATA_DIR = Path("data")
+_PREFERRED_DB = _DATA_DIR / "archive_manifest.db"
+
+def _resolve_db_path() -> Path:
+    env_path = os.environ.get("ARCHIVE_DB_PATH")
+    if env_path:
+        return Path(env_path)
+    # Legacy file kept if already present and new location absent
+    if _LEGACY_DB.exists() and not _PREFERRED_DB.exists():
+        return _LEGACY_DB
+    # default new location
+    if not _DATA_DIR.exists():
+        try:
+            _DATA_DIR.mkdir(parents=True, exist_ok=True)
+        except Exception:  # pragma: no cover - extremely unlikely / non-critical
+            pass
+    return _PREFERRED_DB
+
+_DB_PATH = _resolve_db_path()
 
 _SCHEMA = """
 CREATE TABLE IF NOT EXISTS attachments (
@@ -35,7 +60,7 @@ def _connect():
     return conn
 
 
-def record(content_hash: str, meta: Dict[str, Any]) -> None:
+def record(content_hash: str, meta: dict[str, Any]) -> None:
     """Store ``meta`` under ``content_hash``.
 
     ``meta`` must contain ``attachment_ids`` as a list of strings and may include
@@ -69,7 +94,7 @@ def record(content_hash: str, meta: Dict[str, Any]) -> None:
     conn.close()
 
 
-def lookup(content_hash: str) -> Optional[Dict[str, Any]]:
+def lookup(content_hash: str) -> dict[str, Any] | None:
     conn = _connect()
     cur = conn.execute("SELECT * FROM attachments WHERE content_hash = ?", (content_hash,))
     row = cur.fetchone()
@@ -78,7 +103,9 @@ def lookup(content_hash: str) -> Optional[Dict[str, Any]]:
         return None
     columns = [c[0] for c in cur.description]
     rec = dict(zip(columns, row))
-    rec["attachment_ids"] = rec.get("attachment_ids", "").split(",") if rec.get("attachment_ids") else []
+    rec["attachment_ids"] = (
+        rec.get("attachment_ids", "").split(",") if rec.get("attachment_ids") else []
+    )
     if rec.get("tags"):
         rec["tags"] = rec["tags"].split(",")
     if rec.get("compression"):
@@ -91,7 +118,7 @@ def lookup(content_hash: str) -> Optional[Dict[str, Any]]:
     return rec
 
 
-def search_tag(tag: str, limit: int = 20, offset: int = 0) -> list[Dict[str, Any]]:
+def search_tag(tag: str, limit: int = 20, offset: int = 0) -> list[dict[str, Any]]:
     conn = _connect()
     cur = conn.execute(
         "SELECT content_hash, filename, tags FROM attachments WHERE tags LIKE ? LIMIT ? OFFSET ?",
@@ -111,5 +138,6 @@ def compute_hash(path: str | Path) -> str:
                 break
             sha.update(chunk)
     return sha.hexdigest()
+
 
 __all__ = ["record", "lookup", "compute_hash", "search_tag"]

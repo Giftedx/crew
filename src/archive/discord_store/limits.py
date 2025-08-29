@@ -4,16 +4,17 @@ Discord applies an effective 10 MiB default per attachment when no boosted
 limits are present, though the ceiling may be higher for Nitro or boosted
 servers. :contentReference[oaicite:0]{index=0}
 """
+
 from __future__ import annotations
+
 import os
-from typing import Optional
 
 # Default per-attachment limit in bytes when guild tier is unknown.
 # https://support.discord.com/hc/en-us/articles/213247207--My-files-are-too-powerful-
 _DEFAULT_LIMIT = 10 * 1024 * 1024
 
 
-def detect(guild_id: Optional[int] = None, use_bot: bool = True) -> int:
+def detect(guild_id: int | None = None, use_bot: bool = True) -> int:
     """Return the effective upload limit in bytes.
 
     Parameters can override the default via environment variables:
@@ -46,5 +47,6 @@ def detect(guild_id: Optional[int] = None, use_bot: bool = True) -> int:
         return int(global_override)
 
     return _DEFAULT_LIMIT
+
 
 __all__ = ["detect"]

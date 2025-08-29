@@ -22,9 +22,8 @@ Examples
 from __future__ import annotations
 
 import os
-from typing import Dict
 
-_cache: Dict[str, str] = {}
+_cache: dict[str, str] = {}
 
 
 def _env_key(ref: str) -> str:

@@ -1,37 +1,37 @@
 from crewai import Agent, Crew, Process, Task
 from crewai.project import CrewBase, agent, crew, task
 
-from .tools.pipeline_tool import PipelineTool
+from .settings import DISCORD_PRIVATE_WEBHOOK
+from .tools.character_profile_tool import CharacterProfileTool
+from .tools.debate_command_tool import DebateCommandTool
+from .tools.discord_download_tool import DiscordDownloadTool
+from .tools.discord_monitor_tool import DiscordMonitorTool
 from .tools.discord_private_alert_tool import DiscordPrivateAlertTool
-from .tools.system_status_tool import SystemStatusTool
-from .tools.logical_fallacy_tool import LogicalFallacyTool
-from .tools.perspective_synthesizer_tool import PerspectiveSynthesizerTool
-from .tools.social_media_monitor_tool import SocialMediaMonitorTool
-from .tools.multi_platform_monitor_tool import MultiPlatformMonitorTool
-from .tools.truth_scoring_tool import TruthScoringTool
-from .tools.trustworthiness_tracker_tool import TrustworthinessTrackerTool
+from .tools.discord_qa_tool import DiscordQATool
 from .tools.fact_check_tool import FactCheckTool
 from .tools.leaderboard_tool import LeaderboardTool
-from .tools.debate_command_tool import DebateCommandTool
-from .tools.discord_qa_tool import DiscordQATool
+from .tools.logical_fallacy_tool import LogicalFallacyTool
+from .tools.multi_platform_monitor_tool import MultiPlatformMonitorTool
+from .tools.perspective_synthesizer_tool import PerspectiveSynthesizerTool
+from .tools.pipeline_tool import PipelineTool
+from .tools.social_media_monitor_tool import SocialMediaMonitorTool
 from .tools.steelman_argument_tool import SteelmanArgumentTool
+from .tools.system_status_tool import SystemStatusTool
 from .tools.text_analysis_tool import TextAnalysisTool
-from .tools.yt_dlp_download_tool import (
-    YouTubeDownloadTool,
-    TwitchDownloadTool,
-    KickDownloadTool,
-    TwitterDownloadTool,
-    InstagramDownloadTool,
-    TikTokDownloadTool,
-    RedditDownloadTool,
-)
-from .tools.discord_download_tool import DiscordDownloadTool
-from .tools.character_profile_tool import CharacterProfileTool
-from .tools.x_monitor_tool import XMonitorTool
-from .tools.discord_monitor_tool import DiscordMonitorTool
-from .tools.transcript_index_tool import TranscriptIndexTool
 from .tools.timeline_tool import TimelineTool
-from .settings import DISCORD_PRIVATE_WEBHOOK
+from .tools.transcript_index_tool import TranscriptIndexTool
+from .tools.trustworthiness_tracker_tool import TrustworthinessTrackerTool
+from .tools.truth_scoring_tool import TruthScoringTool
+from .tools.x_monitor_tool import XMonitorTool
+from .tools.yt_dlp_download_tool import (
+    InstagramDownloadTool,
+    KickDownloadTool,
+    RedditDownloadTool,
+    TikTokDownloadTool,
+    TwitchDownloadTool,
+    TwitterDownloadTool,
+    YouTubeDownloadTool,
+)
 
 
 @CrewBase
@@ -133,7 +133,6 @@ class UltimateDiscordIntelligenceBotCrew:
             tools=[CharacterProfileTool(), TextAnalysisTool(), PerspectiveSynthesizerTool()],
         )
 
-
     @task
     def process_video(self) -> Task:
         return Task(config=self.tasks_config["process_video"])
@@ -207,19 +206,19 @@ class UltimateDiscordIntelligenceBotCrew:
             process=Process.sequential,
             verbose=True,
             # ADD THESE MODERN FEATURES:
-            planning=True,           # Enable dynamic planning
-            memory=True,            # Enable memory across executions
-            cache=True,             # Enable tool result caching  
-            max_rpm=10,            # Rate limiting for API calls
+            planning=True,  # Enable dynamic planning
+            memory=True,  # Enable memory across executions
+            cache=True,  # Enable tool result caching
+            max_rpm=10,  # Rate limiting for API calls
             embedder={"provider": "openai"},  # Memory embeddings
-            step_callback=self._log_step,     # Custom logging
+            step_callback=self._log_step,  # Custom logging
             # Error handling
             max_execution_time=3600,  # 1 hour timeout
         )
 
     def _log_step(self, step) -> None:
         """Log each agent step for observability."""
-        if hasattr(step, 'agent') and hasattr(step, 'tool'):
+        if hasattr(step, "agent") and hasattr(step, "tool"):
             print(f"🤖 Agent {step.agent.role} using {step.tool}")
-        elif hasattr(step, 'agent'):
+        elif hasattr(step, "agent"):
             print(f"🤖 Agent {step.agent.role} thinking...")

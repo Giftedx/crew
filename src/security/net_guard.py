@@ -4,11 +4,12 @@ The helpers here perform lightweight URL validation to reduce the risk of
 server-side request forgery (SSRF). Only basic checks are performed; callers
 should layer additional validation as needed for their context.
 """
+
 from __future__ import annotations
 
-from urllib.parse import urlparse
 import ipaddress
 import socket
+from urllib.parse import urlparse
 
 
 def _resolve_host(host: str) -> list[str]:

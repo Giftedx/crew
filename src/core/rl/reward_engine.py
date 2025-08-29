@@ -1,8 +1,10 @@
 """Reward computation utilities."""
+
 from __future__ import annotations
 
+from collections.abc import Mapping, MutableMapping
 from dataclasses import dataclass
-from typing import Any, Dict, Mapping, MutableMapping, Optional
+from typing import Any
 
 
 @dataclass
@@ -41,7 +43,7 @@ class RewardBreakdown:
 def compute_reward(
     outcome: Mapping[str, Any],
     signals: Mapping[str, Any],
-    weights: Optional[MutableMapping[str, float]] = None,
+    weights: MutableMapping[str, float] | None = None,
 ) -> RewardBreakdown:
     """Compute reward components from logged signals.
 
@@ -84,7 +86,7 @@ def compute_reward(
     )
 
 
-def attribute_reward(decisions: Mapping[str, Any], breakdown: RewardBreakdown) -> Dict[str, float]:
+def attribute_reward(decisions: Mapping[str, Any], breakdown: RewardBreakdown) -> dict[str, float]:
     """Naively attribute the total reward equally across decisions."""
     if not decisions:
         return {}

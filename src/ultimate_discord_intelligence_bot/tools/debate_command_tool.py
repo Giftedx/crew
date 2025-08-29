@@ -1,22 +1,22 @@
 """Discord-facing commands for debate analysis."""
+
 from __future__ import annotations
 
-from typing import Callable
+from collections.abc import Callable
 
 from crewai.tools import BaseTool
 
-from ..debate_analysis_pipeline import DebateAnalysisPipeline
-from ..profiles.store import ProfileStore
 from ..profiles.schema import (
     CreatorProfile,
     Platforms,
     load_seeds,
 )
+from ..profiles.store import ProfileStore
 from ..tools.platform_resolver import (
-    resolve_youtube_handle,
-    resolve_twitch_login,
     resolve_podcast_query,
     resolve_social_handle,
+    resolve_twitch_login,
+    resolve_youtube_handle,
 )
 
 
@@ -25,18 +25,24 @@ class DebateCommandTool(BaseTool):
 
     name: str = "Debate Command Tool"
     description: str = "Run debate analysis, context lookup and leaderboard ops."
+    model_config = {"extra": "allow"}
 
     def __init__(
         self,
-        pipeline: DebateAnalysisPipeline | None = None,
+        pipeline=None,  # type: ignore[annotation-unchecked]
         ethan_defender: Callable[[str], str] | None = None,
         hasan_defender: Callable[[str], str] | None = None,
         profile_store: ProfileStore | None = None,
     ):
         super().__init__()
-        self.pipeline = pipeline or DebateAnalysisPipeline(
-            ethan_defender=ethan_defender, hasan_defender=hasan_defender
-        )
+        # Local import to avoid circular dependency at module import time.
+        if pipeline is None:
+            from ..debate_analysis_pipeline import DebateAnalysisPipeline
+
+            pipeline = DebateAnalysisPipeline(
+                ethan_defender=ethan_defender, hasan_defender=hasan_defender
+            )
+        self.pipeline = pipeline
         self.index = self.pipeline.index_tool
         self.fact_checker = self.pipeline.fact_checker
         self.leaderboard = self.pipeline.leaderboard

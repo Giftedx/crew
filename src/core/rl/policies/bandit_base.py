@@ -1,11 +1,13 @@
 """Bandit policy implementations."""
+
 from __future__ import annotations
 
 import math
 import random
 from collections import defaultdict
+from collections.abc import Sequence
 from dataclasses import dataclass, field
-from typing import Any, DefaultDict, Dict, Sequence
+from typing import Any
 
 
 @dataclass
@@ -13,17 +15,17 @@ class EpsilonGreedyBandit:
     """A minimal epsilon-greedy bandit policy."""
 
     epsilon: float = 0.1
-    q_values: DefaultDict[Any, float] = field(default_factory=lambda: defaultdict(float))
-    counts: DefaultDict[Any, int] = field(default_factory=lambda: defaultdict(int))
+    q_values: defaultdict[Any, float] = field(default_factory=lambda: defaultdict(float))
+    counts: defaultdict[Any, int] = field(default_factory=lambda: defaultdict(int))
 
-    def recommend(self, context: Dict[str, Any], candidates: Sequence[Any]) -> Any:
+    def recommend(self, context: dict[str, Any], candidates: Sequence[Any]) -> Any:
         if not candidates:
             raise ValueError("candidates must not be empty")
         if random.random() < self.epsilon:
             return random.choice(list(candidates))
         return max(candidates, key=lambda c: self.q_values[c])
 
-    def update(self, action: Any, reward: float, context: Dict[str, Any]) -> None:
+    def update(self, action: Any, reward: float, context: dict[str, Any]) -> None:
         self.counts[action] += 1
         n = self.counts[action]
         q = self.q_values[action]
@@ -39,11 +41,11 @@ class UCB1Bandit:
     reward and ``n`` the pull count for the arm.
     """
 
-    q_values: DefaultDict[Any, float] = field(default_factory=lambda: defaultdict(float))
-    counts: DefaultDict[Any, int] = field(default_factory=lambda: defaultdict(int))
+    q_values: defaultdict[Any, float] = field(default_factory=lambda: defaultdict(float))
+    counts: defaultdict[Any, int] = field(default_factory=lambda: defaultdict(int))
     total_pulls: int = 0
 
-    def recommend(self, context: Dict[str, Any], candidates: Sequence[Any]) -> Any:
+    def recommend(self, context: dict[str, Any], candidates: Sequence[Any]) -> Any:
         if not candidates:
             raise ValueError("candidates must not be empty")
         # Explore each arm once before applying the UCB formula.
@@ -57,7 +59,7 @@ class UCB1Bandit:
             + math.sqrt(2 * math.log(self.total_pulls) / self.counts[c]),
         )
 
-    def update(self, action: Any, reward: float, context: Dict[str, Any]) -> None:
+    def update(self, action: Any, reward: float, context: dict[str, Any]) -> None:
         self.counts[action] += 1
         n = self.counts[action]
         q = self.q_values[action]

@@ -1,11 +1,12 @@
 from __future__ import annotations
+
 """Simple multi-agent debate panel."""
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Callable, Dict, List, Optional
 
-from core.router import Router
 from core.learning_engine import LearningEngine
+from core.router import Router
 from obs import tracing
 
 
@@ -13,8 +14,8 @@ from obs import tracing
 class PanelConfig:
     """Configuration for a debate panel."""
 
-    roles: List[str]
-    routing_profiles: Optional[List[str]] = None
+    roles: list[str]
+    routing_profiles: list[str] | None = None
     n_rounds: int = 1
     aggregation_strategy: str = "vote"
 
@@ -29,9 +30,9 @@ class AgentResult:
 
 @dataclass
 class DebateReport:
-    agents: List[AgentResult]
+    agents: list[AgentResult]
     final: str
-    votes: Dict[str, str] = field(default_factory=dict)
+    votes: dict[str, str] = field(default_factory=dict)
 
 
 @tracing.trace_call("debate.run_panel")
@@ -40,7 +41,7 @@ def run_panel(
     router: Router,
     call_model: Callable[[str, str], str],
     config: PanelConfig,
-    engine: Optional[LearningEngine] = None,
+    engine: LearningEngine | None = None,
     reward: float = 0.0,
 ) -> DebateReport:
     """Run a debate panel.
@@ -60,7 +61,7 @@ def run_panel(
         without recording.
     """
 
-    agents: List[AgentResult] = []
+    agents: list[AgentResult] = []
 
     for role in config.roles:
         model = router.route(
@@ -71,7 +72,7 @@ def run_panel(
         output = call_model(model, f"{role}: {query}")
         agents.append(AgentResult(role=role, model=model, output=output))
 
-    votes: Dict[str, str] = {}
+    votes: dict[str, str] = {}
     if config.aggregation_strategy == "vote":
         for agent in agents:
             votes[agent.role] = agent.role

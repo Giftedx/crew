@@ -1,9 +1,9 @@
 """Persist and retrieve chronological events with references."""
+
 from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Dict, List
 
 from crewai.tools import BaseTool
 
@@ -15,6 +15,7 @@ class TimelineTool(BaseTool):
 
     name: str = "Timeline Tool"
     description: str = "Record and fetch timeline events for videos."
+    model_config = {"extra": "allow"}
 
     def __init__(self, storage_path: Path | None = None):
         super().__init__()
@@ -22,14 +23,14 @@ class TimelineTool(BaseTool):
         if not self.storage_path.exists():
             self._save({})
 
-    def _load(self) -> Dict[str, List[dict]]:
+    def _load(self) -> dict[str, list[dict]]:
         try:
             with self.storage_path.open("r", encoding="utf-8") as f:
                 return json.load(f)
         except Exception:
             return {}
 
-    def _save(self, data: Dict[str, List[dict]]) -> None:
+    def _save(self, data: dict[str, list[dict]]) -> None:
         self.storage_path.parent.mkdir(parents=True, exist_ok=True)
         with self.storage_path.open("w", encoding="utf-8") as f:
             json.dump(data, f)
@@ -42,7 +43,7 @@ class TimelineTool(BaseTool):
         data[video_id] = events
         self._save(data)
 
-    def get_timeline(self, video_id: str) -> List[dict]:
+    def get_timeline(self, video_id: str) -> list[dict]:
         data = self._load()
         return data.get(video_id, [])
 

@@ -1,7 +1,8 @@
-import os, time
-import importlib
+import time
+
 from ingest import pipeline
 from ingest.pipeline import IngestJob
+
 
 class DummyMeta:
     def __init__(self, id="vid1", channel="chan", streamer="stream", published_at=None):
@@ -12,7 +13,9 @@ class DummyMeta:
         self.duration = 1.0
         self.url = "http://example.com"
 
+
 # Monkeypatch targets for youtube provider
+
 
 def test_concurrent_flag_monkeypatch_youtube(monkeypatch, tmp_path):
     """Verify concurrency flag executes metadata + transcript fetch in parallel.
@@ -28,18 +31,19 @@ def test_concurrent_flag_monkeypatch_youtube(monkeypatch, tmp_path):
     timings = {}
 
     def fake_fetch_metadata(url):
-        timings['meta_start'] = time.time()
+        timings["meta_start"] = time.time()
         time.sleep(0.05)  # simulate network delay
-        timings['meta_end'] = time.time()
+        timings["meta_end"] = time.time()
         return DummyMeta(channel="CreatorA")
 
     def fake_fetch_transcript(url):
-        timings['tx_start'] = time.time()
+        timings["tx_start"] = time.time()
         time.sleep(0.05)
-        timings['tx_end'] = time.time()
+        timings["tx_end"] = time.time()
         return fake_transcript
 
     import ingest.providers.youtube as ymod
+
     monkeypatch.setattr(ymod, "fetch_metadata", fake_fetch_metadata)
     monkeypatch.setattr(ymod, "fetch_transcript", fake_fetch_transcript)
 
@@ -48,29 +52,39 @@ def test_concurrent_flag_monkeypatch_youtube(monkeypatch, tmp_path):
 
     # Use in-memory vector store substitute: monkeypatch vector_store.VectorStore.upsert to capture records
     from memory import vector_store
+
     captured = {}
 
     def fake_upsert(ns, recs):
-        captured['ns'] = ns
-        captured['count'] = len(recs)
+        captured["ns"] = ns
+        captured["count"] = len(recs)
 
-    monkeypatch.setattr(vector_store.VectorStore, "upsert", lambda self, ns, recs: fake_upsert(ns, recs))
+    monkeypatch.setattr(
+        vector_store.VectorStore, "upsert", lambda self, ns, recs: fake_upsert(ns, recs)
+    )
 
     store = vector_store.VectorStore()
-    job = IngestJob(source="youtube", external_id="x", url="http://youtube.test/video", tenant="t1", workspace="w1", tags=["a"])    
+    job = IngestJob(
+        source="youtube",
+        external_id="x",
+        url="http://youtube.test/video",
+        tenant="t1",
+        workspace="w1",
+        tags=["a"],
+    )
 
     start = time.time()
     result = pipeline.run(job, store)
     elapsed = time.time() - start
 
     # All three short segments fit into one chunk with current max_chars settings.
-    assert result['chunks'] == 1
-    assert captured['count'] == 1
+    assert result["chunks"] == 1
+    assert captured["count"] == 1
     # concurrency should reduce wall time below sequential (~0.10s). Allow margin.
     assert elapsed < 0.09
     # Structural overlap: the second task should start almost immediately after the first.
-    assert 'meta_start' in timings and 'tx_start' in timings
-    start_delta = abs(timings['meta_start'] - timings['tx_start'])
+    assert "meta_start" in timings and "tx_start" in timings
+    start_delta = abs(timings["meta_start"] - timings["tx_start"])
     assert start_delta < 0.02, f"Expected concurrent start (<20ms apart), delta={start_delta:.4f}s"
 
 
@@ -87,6 +101,7 @@ def test_concurrent_flag_fallback_sequential(monkeypatch):
         return fake_transcript
 
     import ingest.providers.youtube as ymod
+
     monkeypatch.setattr(ymod, "fetch_metadata", fake_fetch_metadata)
     monkeypatch.setattr(ymod, "fetch_transcript", fake_fetch_transcript)
 
@@ -94,12 +109,20 @@ def test_concurrent_flag_fallback_sequential(monkeypatch):
     monkeypatch.delenv("ENABLE_INGEST_CONCURRENT", raising=False)
 
     from memory import vector_store
+
     monkeypatch.setattr(vector_store.VectorStore, "upsert", lambda self, ns, recs: None)
     store = vector_store.VectorStore()
-    job = IngestJob(source="youtube", external_id="x", url="http://youtube.test/video", tenant="t1", workspace="w1", tags=[])
+    job = IngestJob(
+        source="youtube",
+        external_id="x",
+        url="http://youtube.test/video",
+        tenant="t1",
+        workspace="w1",
+        tags=[],
+    )
     start = time.time()
     result = pipeline.run(job, store)
     elapsed = time.time() - start
     # Two short segments also coalesce into a single chunk.
-    assert result['chunks'] == 1
+    assert result["chunks"] == 1
     assert elapsed >= 0.10

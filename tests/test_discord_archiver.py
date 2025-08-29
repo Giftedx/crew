@@ -1,23 +1,27 @@
 import os
 from pathlib import Path
 
-import pytest
-
-import archive.discord_store.router as router
-import archive.discord_store.limits as limits
-import archive.discord_store.manifest as manifest
-import archive.discord_store.api as api
-import archive.discord_store.policy as policy
 from fastapi.testclient import TestClient
+
+from archive.discord_store import api, limits, manifest, policy, router
+
+ROUTES_YAML = (
+    "routes:\n"
+    "  images:\n"
+    "    public:\n"
+    "      channel_id: '123'\n"
+    "    private:\n"
+    "      channel_id: '456'\n"
+    "per_tenant_overrides: {}\n"
+)
 
 
 def test_router_basic(tmp_path):
     cfg_path = tmp_path / "routes.yaml"
-    cfg_path.write_text(
-        """routes:\n  images:\n    public:\n      channel_id: '123'\n    private:\n      channel_id: '456'\nper_tenant_overrides: {}\n"""
-    )
+    cfg_path.write_text(ROUTES_YAML)
     os.environ["ARCHIVE_ROUTES_PATH"] = str(cfg_path)
     import importlib
+
     importlib.reload(router)
     channel, thread = router.pick_channel("foo.png", visibility="public")
     assert channel == "123"
@@ -55,16 +59,20 @@ def test_archive_file_records_manifest(monkeypatch, tmp_path):
     monkeypatch.setenv("DISCORD_BOT_TOKEN", "dummy")
     # dummy routes
     cfg_path = tmp_path / "routes.yaml"
-    cfg_path.write_text(
-        """routes:\n  images:\n    public:\n      channel_id: '123'\n    private:\n      channel_id: '456'\nper_tenant_overrides: {}\n"""
-    )
+    cfg_path.write_text(ROUTES_YAML)
     monkeypatch.setenv("ARCHIVE_ROUTES_PATH", str(cfg_path))
     import importlib
+
     importlib.reload(router)
     # create small file
     f = tmp_path / "foo.png"
     import base64
-    f.write_bytes(base64.b64decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/w8AAgMBAQAAAAABJRU5ErkJggg=="))
+
+    f.write_bytes(
+        base64.b64decode(
+            "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/w8AAgMBAQAAAAABJRU5ErkJggg=="
+        )
+    )
 
     # stub uploader
     def _fake_upload(path, channel_id, token):
@@ -89,18 +97,22 @@ def test_dedup_short_circuits_upload(monkeypatch, tmp_path):
     monkeypatch.setenv("ENABLE_DISCORD_ARCHIVER", "1")
     monkeypatch.setenv("DISCORD_BOT_TOKEN", "dummy")
     cfg_path = tmp_path / "routes.yaml"
-    cfg_path.write_text(
-        """routes:\n  images:\n    public:\n      channel_id: '123'\n    private:\n      channel_id: '456'\nper_tenant_overrides: {}\n"""
-    )
+    cfg_path.write_text(ROUTES_YAML)
     monkeypatch.setenv("ARCHIVE_ROUTES_PATH", str(cfg_path))
     import importlib
+
     importlib.reload(router)
     importlib.reload(manifest)
     importlib.reload(api)
 
     f = tmp_path / "foo.png"
     import base64
-    f.write_bytes(base64.b64decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/w8AAgMBAQAAAAABJRU5ErkJggg=="))
+
+    f.write_bytes(
+        base64.b64decode(
+            "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/w8AAgMBAQAAAAABJRU5ErkJggg=="
+        )
+    )
 
     calls = []
 
@@ -132,17 +144,21 @@ def test_rest_api(monkeypatch, tmp_path):
     monkeypatch.setenv("DISCORD_BOT_TOKEN", "dummy")
     monkeypatch.setenv("ARCHIVE_API_TOKEN", "secret")
     cfg_path = tmp_path / "routes.yaml"
-    cfg_path.write_text(
-        """routes:\n  images:\n    public:\n      channel_id: '123'\n    private:\n      channel_id: '456'\nper_tenant_overrides: {}\n"""
-    )
+    cfg_path.write_text(ROUTES_YAML)
     monkeypatch.setenv("ARCHIVE_ROUTES_PATH", str(cfg_path))
     import importlib
+
     importlib.reload(router)
     importlib.reload(api)
     # create small file
     f = tmp_path / "foo.png"
     import base64
-    f.write_bytes(base64.b64decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/w8AAgMBAQAAAAABJRU5ErkJggg=="))
+
+    f.write_bytes(
+        base64.b64decode(
+            "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/w8AAgMBAQAAAAABJRU5ErkJggg=="
+        )
+    )
 
     def _fake_upload(path, channel_id, token):
         return {"id": "1", "attachments": [{"id": "2", "url": "https://temp"}]}
@@ -154,11 +170,12 @@ def test_rest_api(monkeypatch, tmp_path):
         resp = client.post(
             "/api/archive/",
             files={"file": ("foo.png", fh, "image/png")},
-            data={"meta": "{\"kind\": \"images\", \"visibility\": \"public\"}"},
+            data={"meta": '{"kind": "images", "visibility": "public"}'},
             headers={"X-API-TOKEN": "secret"},
         )
     assert resp.status_code == 200
     content_hash = resp.json()["content_hash"]
+
     # rehydrate endpoint
     async def _fake_fetch(message_id, channel_id, *, token, attachment_id=None):
         return {"url": "https://fresh"}

@@ -1,7 +1,8 @@
 from __future__ import annotations
+
 """Render knowledge graph subgraphs to simple DOT graphs."""
 
-from typing import Iterable
+from collections.abc import Iterable
 
 from .store import KGEdge, KGNode
 

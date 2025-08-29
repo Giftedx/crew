@@ -1,5 +1,5 @@
-from .pii_detector import detect, Span
+from .pii_detector import Span, detect
+from .privacy_filter import PrivacyReport, filter_text
 from .redactor import apply
-from .privacy_filter import filter_text, PrivacyReport
 
 __all__ = ["detect", "Span", "apply", "filter_text", "PrivacyReport"]

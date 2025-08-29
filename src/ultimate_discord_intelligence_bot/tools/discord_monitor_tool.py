@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Dict, Iterable, List
+from collections.abc import Iterable
 
 from crewai.tools import BaseTool
 
@@ -19,7 +19,7 @@ class DiscordMonitorTool(BaseTool):
         super().__init__()
         self._monitor = MultiPlatformMonitorTool()
 
-    def _run(self, messages: Iterable[Dict[str, str]]) -> Dict[str, List[Dict[str, str]]]:
+    def _run(self, messages: Iterable[dict[str, str]]) -> dict[str, list[dict[str, str]]]:
         result = self._monitor._run(messages)
         return {"status": "success", "new_messages": result["new_items"]}
 

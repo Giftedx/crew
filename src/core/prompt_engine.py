@@ -4,9 +4,10 @@ This module constructs deterministic prompts with a safety preamble and
 optional memory/context and tool descriptions. It intentionally avoids any
 clever templating to keep behaviour predictable for reinforcement learning.
 """
+
 from __future__ import annotations
 
-from typing import Iterable, Optional, Sequence
+from collections.abc import Sequence
 
 SAFETY_PREAMBLE = "You are a helpful assistant."
 from core.privacy import privacy_filter
@@ -15,8 +16,8 @@ from core.privacy import privacy_filter
 def build_prompt(
     template: str,
     *,
-    context: Optional[str] = None,
-    tools: Optional[Sequence[str]] = None,
+    context: str | None = None,
+    tools: Sequence[str] | None = None,
 ) -> str:
     """Render a prompt from ``template`` with optional context and tools.
 

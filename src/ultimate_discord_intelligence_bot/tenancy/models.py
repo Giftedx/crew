@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Optional, List, Dict
 
 
 @dataclass
@@ -24,8 +23,8 @@ class Workspace:
     tenant_id: int
     key: str
     display_name: str
-    discord_guild_id: Optional[int] = None
-    description: Optional[str] = None
+    discord_guild_id: int | None = None
+    description: str | None = None
 
 
 @dataclass
@@ -33,8 +32,8 @@ class RoutingProfile:
     id: int
     tenant_id: int
     name: str
-    allowed_models: List[str]
-    provider_prefs: Dict[str, str] | None = None
+    allowed_models: list[str]
+    provider_prefs: dict[str, str] | None = None
     cost_ceiling_usd: float | None = None
     latency_slo_ms: int | None = None
 
@@ -45,7 +44,7 @@ class Budget:
     tenant_id: int
     daily_cap_usd: float
     hourly_cap_usd: float
-    soft_caps_by_command: Dict[str, float] | None = None
+    soft_caps_by_command: dict[str, float] | None = None
 
 
 @dataclass
@@ -67,5 +66,5 @@ class Flags:
 class SecretsRef:
     id: int
     tenant_id: int
-    vault_path: Optional[str] = None
-    env_prefix: Optional[str] = None
+    vault_path: str | None = None
+    env_prefix: str | None = None

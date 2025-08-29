@@ -2,12 +2,14 @@
 
 This document provides comprehensive documentation for all available CrewAI tools in the system. Tools are organized by category and functionality.
 
+> Network & HTTP Conventions: See `docs/network_conventions.md` for canonical outbound HTTP guidance (timeouts, URL validation, resilient POST/GET helpers, rate‑limit handling, optional retry/backoff & tracing). Tools performing network I/O should rely on `src/core/http_utils.py` (`resilient_post`, `resilient_get`, `retrying_post`, `retrying_get`, `http_request_with_retry`, constants) rather than re‑implementing validation, timeouts, or monkeypatch‑friendly fallbacks.
+
 ## Content Analysis Tools
 
 ### Logical Fallacy Tool
 **File:** `src/ultimate_discord_intelligence_bot/tools/logical_fallacy_tool.py`
 
-Detects logical fallacies in text using sophisticated pattern matching and heuristics. Enhanced beyond basic keyword matching to include complex linguistic patterns.
+Detects logical fallacies in text using sophisticated pattern matching and heuristics. Enhanced beyond basic keyword matching to include complex linguistic patterns. A prior backup variant was removed as dead code to avoid duplication; this canonical implementation defines explicit heuristic threshold constants for maintainability.
 
 **Features:**
 - 17+ fallacy types including ad hominem, straw man, false dilemma, slippery slope
@@ -66,7 +68,7 @@ Creates the strongest possible version of arguments for debate analysis.
 ### Sentiment Tool
 **File:** `src/ultimate_discord_intelligence_bot/tools/sentiment_tool.py`
 
-Analyzes emotional tone and sentiment in text content.
+Analyzes emotional tone and sentiment in text content. Uses VADER when available; otherwise falls back to a lightweight lexical heuristic. Thresholds (`POSITIVE_THRESHOLD`, `NEGATIVE_THRESHOLD`) are declared as module constants for clarity.
 
 ### Text Analysis Tool
 **File:** `src/ultimate_discord_intelligence_bot/tools/text_analysis_tool.py`
@@ -112,7 +114,7 @@ Handles audio-to-text conversion with Whisper integration.
 ### Multi-Platform Download Tool
 **File:** `src/ultimate_discord_intelligence_bot/tools/multi_platform_download_tool.py`
 
-Dispatcher for downloading content from multiple platforms (YouTube, Twitch, TikTok).
+Dispatcher for downloading content from multiple platforms (YouTube, Twitch, TikTok). Includes early-return design for readability, with explicit logging and normalized error responses.
 
 **Features:**
 - Platform detection via URL patterns
@@ -143,7 +145,7 @@ result = tool._run("https://cdn.discordapp.com/attachments/...")
 ### yt-dlp Download Tool
 **File:** `src/ultimate_discord_intelligence_bot/tools/yt_dlp_download_tool.py`
 
-Generic yt-dlp wrapper providing reusable download functionality for video platforms.
+Generic yt-dlp wrapper providing reusable download functionality for video platforms. Adds an explicit `check=False` on the subprocess invocation (with justification comment) to preserve monkeypatched test compatibility while documenting security considerations.
 
 **Features:**
 - Base class for platform-specific downloaders
@@ -194,7 +196,7 @@ YouTube-specific content downloader with metadata extraction.
 ### Discord Post Tool  
 **File:** `src/ultimate_discord_intelligence_bot/tools/discord_post_tool.py`
 
-Posts messages, embeds, and files to Discord channels via webhooks.
+Posts messages, embeds, and files to Discord channels via webhooks. Delegates URL validation, timeout application, and safe request execution (including monkeypatch‑friendly fallbacks) to `core.http_utils.resilient_post` and `validate_public_https_url`. Local constants cover Discord‑specific limits (e.g. `DISCORD_FILE_LIMIT_MB`) while generic HTTP status constants come from the shared module.
 
 ### Discord QA Tool
 **File:** `src/ultimate_discord_intelligence_bot/tools/discord_qa_tool.py`
@@ -209,7 +211,7 @@ Monitors Discord activity and events.
 ### Discord Private Alert Tool
 **File:** `src/ultimate_discord_intelligence_bot/tools/discord_private_alert_tool.py`
 
-Sends private alerts and notifications.
+Sends private alerts and notifications. Centralized HTTP concerns (public HTTPS validation, timeout, rate‑limit aware retry for 429, and TypeError fallback when tests monkeypatch `requests.post`) are handled via `core.http_utils` helpers, keeping tool logic focused on payload construction.
 
 ## Search & Retrieval Tools
 
@@ -226,7 +228,7 @@ Verifies context accuracy and citation integrity.
 ### Fact Check Tool
 **File:** `src/ultimate_discord_intelligence_bot/tools/fact_check_tool.py`
 
-Performs fact-checking against reliable sources.
+Performs fact-checking against reliable sources. Aggregates multiple backend searches (DuckDuckGo, optional API-based engines) with retry logic and tunable evidence thresholds (`EVIDENCE_WELL_SUPPORTED_THRESHOLD`, etc.). All outbound requests specify timeouts.
 
 ### Truth Scoring Tool
 **File:** `src/ultimate_discord_intelligence_bot/tools/truth_scoring_tool.py`
@@ -255,7 +257,7 @@ X (Twitter) specific monitoring and content extraction.
 ### System Status Tool
 **File:** `src/ultimate_discord_intelligence_bot/tools/system_status_tool.py`
 
-Reports system health, metrics, and performance statistics.
+Reports system health, metrics, and performance statistics. Provides graceful degradation when `/proc` not available and logs (rather than silences) read failures.
 
 **Features:**
 - CPU load average monitoring
@@ -321,3 +323,10 @@ Tools follow consistent patterns for:
 - Observability through OpenTelemetry tracing
 - Privacy compliance via automated filtering
 - Cost management through token metering
+- Centralized HTTP utilities (`core/http_utils.py`) for outbound requests (see `network_conventions.md`)
+- Convenience retry wrappers: `retrying_post` / `retrying_get` (feature-flag controlled by `ENABLE_ANALYSIS_HTTP_RETRY`). These call `http_request_with_retry` when enabled; otherwise they devolve to single-attempt resilient helpers.
+- Retry metrics (Prometheus counters):
+    - `HTTP_RETRY_ATTEMPTS{method}` – increments for each retry attempt beyond the first.
+    - `HTTP_RETRY_GIVEUPS{method}` – increments when all retry attempts are exhausted (give-up scenario).
+    - Spans annotate attempts with attributes: `retry.attempt`, `retry.final_attempts`, `retry.give_up`, and scheduled backoff (`retry.scheduled_backoff`). When OpenTelemetry not installed, these no-op gracefully.
+    - A temporary shim preserves monkeypatched `resilient_post` / `resilient_get` across module reloads to maintain backward compatibility with legacy tests (see `network_conventions.md`).

@@ -1,15 +1,14 @@
 from __future__ import annotations
+
 """SQLite storage for debate sessions."""
 
-from dataclasses import dataclass
-from typing import List, Optional
-import json
 import sqlite3
+from dataclasses import dataclass
 
 
 @dataclass
 class Debate:
-    id: Optional[int]
+    id: int | None
     tenant: str
     workspace: str
     query: str
@@ -21,7 +20,7 @@ class Debate:
 
 @dataclass
 class DebateAgent:
-    id: Optional[int]
+    id: int | None
     debate_id: int
     role: str
     model: str
@@ -34,7 +33,7 @@ class DebateAgent:
 
 @dataclass
 class DebateCritique:
-    id: Optional[int]
+    id: int | None
     debate_id: int
     from_role: str
     target_role: str
@@ -44,7 +43,7 @@ class DebateCritique:
 
 @dataclass
 class DebateVote:
-    id: Optional[int]
+    id: int | None
     debate_id: int
     voter_role: str
     chosen_role: str
@@ -140,7 +139,7 @@ class DebateStore:
         self.conn.commit()
         return int(cur.lastrowid)
 
-    def list_debates(self, tenant: str, workspace: str) -> List[Debate]:
+    def list_debates(self, tenant: str, workspace: str) -> list[Debate]:
         cur = self.conn.cursor()
         cur.execute(
             "SELECT * FROM debates WHERE tenant = ? AND workspace = ? ORDER BY id DESC",

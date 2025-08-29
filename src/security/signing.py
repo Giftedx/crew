@@ -9,13 +9,12 @@ nonce cache to offer basic replay protection without unbounded memory use.
 
 from __future__ import annotations
 
-import hmac
 import hashlib
-import time
+import hmac
 import secrets
+import time
 from collections import OrderedDict
-from typing import Dict, Mapping
-
+from collections.abc import Mapping
 
 # ``OrderedDict`` gives us a tiny LRU cache so replay protection does not grow
 # without bound.  Keys are nonces, values are the timestamp they were first
@@ -29,8 +28,7 @@ def _prune_nonces(now: int, tolerance: int) -> None:
     """Drop cached nonces that have aged past ``tolerance`` seconds or exceed
     the ``MAX_NONCES`` limit."""
     while _seen_nonces and (
-        now - next(iter(_seen_nonces.values())) > tolerance
-        or len(_seen_nonces) > MAX_NONCES
+        now - next(iter(_seen_nonces.values())) > tolerance or len(_seen_nonces) > MAX_NONCES
     ):
         _seen_nonces.popitem(last=False)
 
@@ -52,7 +50,7 @@ def build_signature_headers(
     *,
     timestamp: int | None = None,
     nonce: str | None = None,
-) -> Dict[str, str]:
+) -> dict[str, str]:
     """Return signature headers for ``payload``.
 
     Parameters

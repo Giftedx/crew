@@ -1,15 +1,17 @@
 """Facade for archiving files to Discord's CDN-backed storage."""
-from __future__ import annotations
-import os
-from pathlib import Path
-from typing import Dict, Optional
 
-from . import compress, limits, manifest, router, uploader, cleanup, policy, rehydrate
-from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Header
-from fastapi.responses import JSONResponse
+from __future__ import annotations
+
 import asyncio
 import json
+import os
 import tempfile
+from pathlib import Path
+
+from fastapi import APIRouter, File, Form, Header, HTTPException, UploadFile
+from fastapi.responses import JSONResponse
+
+from . import cleanup, compress, limits, manifest, policy, rehydrate, router, uploader
 
 ENABLE_ARCHIVER = os.environ.get("ENABLE_DISCORD_ARCHIVER", "1") != "0"
 ALLOW_WEBHOOK = os.environ.get("ARCHIVER_ALLOW_WEBHOOK_FALLBACK", "0") == "1"
@@ -17,11 +19,11 @@ ALLOW_WEBHOOK = os.environ.get("ARCHIVER_ALLOW_WEBHOOK_FALLBACK", "0") == "1"
 
 def archive_file(
     path: str | Path,
-    meta: Optional[Dict] = None,
+    meta: dict | None = None,
     *,
     tenant: str | None = None,
     keep_local: bool = False,
-) -> Dict:
+) -> dict:
     """Archive ``path`` to Discord and return manifest metadata.
 
     This function performs routing, compression, upload, manifest write, and optional
@@ -107,7 +109,9 @@ async def archive_endpoint(
 
 
 @api_router.get("/{content_hash}")
-async def rehydrate_endpoint(content_hash: str, x_api_token: str | None = Header(None, alias="X-API-TOKEN")):
+async def rehydrate_endpoint(
+    content_hash: str, x_api_token: str | None = Header(None, alias="X-API-TOKEN")
+):
     _auth(x_api_token)
     rec = manifest.lookup(content_hash)
     if not rec:
@@ -121,5 +125,6 @@ async def rehydrate_endpoint(content_hash: str, x_api_token: str | None = Header
 def search_endpoint(tag: str, x_api_token: str | None = Header(None, alias="X-API-TOKEN")):
     _auth(x_api_token)
     return manifest.search_tag(tag)
+
 
 __all__ = ["archive_file", "api_router"]

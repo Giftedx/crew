@@ -1,18 +1,19 @@
 """Feature extraction and simple sliding window statistics."""
+
 from __future__ import annotations
 
 from collections import deque
 from statistics import mean
-from typing import Any, Deque, Dict
+from typing import Any
 
-FeatureVector = Dict[str, float]
+FeatureVector = dict[str, float]
 
 # Keep short sliding windows of recent outcomes to expose running averages.
-_cost_usd_history: Deque[float] = deque(maxlen=100)
-_latency_history: Deque[float] = deque(maxlen=100)
+_cost_usd_history: deque[float] = deque(maxlen=100)
+_latency_history: deque[float] = deque(maxlen=100)
 
 
-def featurize(call_ctx: Dict[str, Any]) -> FeatureVector:
+def featurize(call_ctx: dict[str, Any]) -> FeatureVector:
     """Convert a call context dictionary into a numeric feature vector.
 
     Parameters
@@ -34,7 +35,7 @@ def featurize(call_ctx: Dict[str, Any]) -> FeatureVector:
     return features
 
 
-def update_stats(outcome: Dict[str, Any]) -> None:
+def update_stats(outcome: dict[str, Any]) -> None:
     """Update sliding window statistics from a call outcome."""
     _cost_usd_history.append(float(outcome.get("cost_usd", 0.0)))
     _latency_history.append(float(outcome.get("latency_ms", 0.0)))

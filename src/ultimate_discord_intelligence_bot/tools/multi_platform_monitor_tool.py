@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Dict, Iterable, List
+from collections.abc import Iterable
 
 from crewai.tools import BaseTool
 
@@ -16,16 +16,15 @@ class MultiPlatformMonitorTool(BaseTool):
 
     name: str = "Multi-Platform Monitor"
     description: str = (
-        "Identify new content items across platforms, filtering out those already"
-        " processed."
+        "Identify new content items across platforms, filtering out those already processed."
     )
 
     def __init__(self) -> None:
         super().__init__()
         self._seen_ids: set[str] = set()
 
-    def _run(self, items: Iterable[Dict[str, str]]) -> Dict[str, List[Dict[str, str]]]:
-        new_items: List[Dict[str, str]] = []
+    def _run(self, items: Iterable[dict[str, str]]) -> dict[str, list[dict[str, str]]]:
+        new_items: list[dict[str, str]] = []
         for item in items:
             item_id = item.get("id")
             if item_id and item_id not in self._seen_ids:

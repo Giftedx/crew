@@ -4,8 +4,8 @@ Discord's CDN links are temporary and signed, so long-term access requires
 re-fetching attachment metadata via the API to obtain a fresh URL.
 https://discord.com/developers/docs/reference#cdn-endpoints
 """
+
 from __future__ import annotations
-from typing import Dict, Optional
 
 import aiohttp
 
@@ -17,8 +17,8 @@ async def fetch_attachment(
     channel_id: str,
     *,
     token: str,
-    attachment_id: Optional[str] = None,
-) -> Dict:
+    attachment_id: str | None = None,
+) -> dict:
     """Return attachment metadata for ``attachment_id``.
 
     If ``attachment_id`` is not provided the first attachment is returned. This
@@ -38,5 +38,6 @@ async def fetch_attachment(
         if str(att.get("id")) == str(attachment_id):
             return att
     raise KeyError("attachment not found")
+
 
 __all__ = ["fetch_attachment"]

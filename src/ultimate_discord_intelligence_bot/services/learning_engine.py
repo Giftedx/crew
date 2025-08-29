@@ -5,15 +5,16 @@ can be used to improve decision making across the stack.  It intentionally
 keeps the interface tiny so it can be swapped out for a more sophisticated
 learner later without touching callers.
 """
+
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Dict, Iterable, List, Sequence
 import json
-from pathlib import Path
 import random
 import sqlite3
 import time
+from collections.abc import Iterable, Sequence
+from dataclasses import dataclass
+from pathlib import Path
 
 
 @dataclass
@@ -40,12 +41,12 @@ class LearningEngine:
         self.conn = sqlite3.connect(db_path or ":memory:")
         self.epsilon = epsilon
         self._init_db()
-        self.policies: Dict[str, Dict[str, _ArmState]] = {}
+        self.policies: dict[str, dict[str, _ArmState]] = {}
         self.store_path = Path(store_path) if store_path else None
         if self.store_path and self.store_path.exists():
             self.stats = json.loads(self.store_path.read_text())
         else:
-            self.stats: Dict[str, Dict[str, Dict[str, float]]] = {}
+            self.stats: dict[str, dict[str, dict[str, float]]] = {}
 
     # ------------------------------------------------------------------ utils
     def _init_db(self) -> None:
@@ -78,7 +79,7 @@ class LearningEngine:
         if not arms:
             raise KeyError(f"policy '{policy_id}' is not registered")
 
-        available: List[str] = [a for a in arms if not candidates or a in candidates]
+        available: list[str] = [a for a in arms if not candidates or a in candidates]
         if not available:
             available = list(arms)
 

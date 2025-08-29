@@ -5,13 +5,14 @@ and then iterates through the declared capability scenarios.  Each
 scenario invokes the plugin's entrypoint with stubbed adapters and the
 provided inputs, asserting that expected predicates hold.
 """
+
 from __future__ import annotations
 
 import importlib
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
 from . import scorers
 
@@ -30,14 +31,14 @@ class ScenarioResult:
     reason: str | None = None
 
 
-def _load_manifest(plugin: str) -> Dict[str, Any]:
+def _load_manifest(plugin: str) -> dict[str, Any]:
     module = importlib.import_module(plugin)
     manifest_path = Path(module.__file__).parent / "manifest.json"
     with manifest_path.open("r", encoding="utf-8") as fh:
         return json.load(fh)
 
 
-def run(plugin: str) -> Dict[str, Any]:
+def run(plugin: str) -> dict[str, Any]:
     """Execute the plugin's capability scenarios.
 
     Parameters

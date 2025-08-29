@@ -1,12 +1,16 @@
 """Create a golden dataset record with schema validation."""
+
 from __future__ import annotations
-import argparse, json, sys
+
+import argparse
+import json
 from pathlib import Path
 
 import jsonschema
 
 SCHEMA_PATH = Path(__file__).resolve().parents[4] / "datasets/schemas/task_record.schema.json"
-SCHEMA = json.load(open(SCHEMA_PATH))
+with open(SCHEMA_PATH, encoding="utf-8") as fh:
+    SCHEMA = json.load(fh)
 
 
 def main(argv=None) -> int:
@@ -22,6 +26,7 @@ def main(argv=None) -> int:
     jsonschema.validate(record, SCHEMA)
     print(json.dumps(record))
     return 0
+
 
 if __name__ == "__main__":
     raise SystemExit(main())

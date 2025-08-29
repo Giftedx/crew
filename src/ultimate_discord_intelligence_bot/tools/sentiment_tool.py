@@ -4,6 +4,10 @@ from __future__ import annotations
 
 from crewai.tools import BaseTool
 
+# Sentiment threshold constants (VADER recommended)
+POSITIVE_THRESHOLD = 0.05
+NEGATIVE_THRESHOLD = -0.05
+
 try:  # pragma: no cover - optional dependency
     import nltk
     from nltk.sentiment import SentimentIntensityAnalyzer
@@ -17,6 +21,7 @@ class SentimentTool(BaseTool):
 
     name: str = "Sentiment Tool"
     description: str = "Return overall sentiment for a piece of text."
+    model_config = {"extra": "allow"}
 
     def __init__(self) -> None:
         super().__init__()
@@ -33,9 +38,9 @@ class SentimentTool(BaseTool):
         if self.analyzer:
             scores = self.analyzer.polarity_scores(text)
             compound = scores.get("compound", 0.0)
-            if compound >= 0.05:
+            if compound >= POSITIVE_THRESHOLD:
                 label = "positive"
-            elif compound <= -0.05:
+            elif compound <= NEGATIVE_THRESHOLD:
                 label = "negative"
             else:
                 label = "neutral"
@@ -58,4 +63,3 @@ class SentimentTool(BaseTool):
 
 
 __all__ = ["SentimentTool"]
-

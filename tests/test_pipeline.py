@@ -6,17 +6,17 @@ from unittest.mock import MagicMock
 import pytest
 
 from ultimate_discord_intelligence_bot.pipeline import ContentPipeline
-from ultimate_discord_intelligence_bot.tools.yt_dlp_download_tool import (
-    YouTubeDownloadTool,
-    TwitchDownloadTool,
-    KickDownloadTool,
-    TwitterDownloadTool,
-    InstagramDownloadTool,
-    TikTokDownloadTool,
-    RedditDownloadTool,
-)
 from ultimate_discord_intelligence_bot.tools.discord_download_tool import (
     DiscordDownloadTool,
+)
+from ultimate_discord_intelligence_bot.tools.yt_dlp_download_tool import (
+    InstagramDownloadTool,
+    KickDownloadTool,
+    RedditDownloadTool,
+    TikTokDownloadTool,
+    TwitchDownloadTool,
+    TwitterDownloadTool,
+    YouTubeDownloadTool,
 )
 
 
@@ -120,11 +120,7 @@ def test_pipeline_does_not_configure_root_logger(monkeypatch):
     """Importing the pipeline should not modify the root logger level."""
     root = logging.getLogger()
     root.setLevel(logging.WARNING)
-    importlib.reload(
-        importlib.import_module(
-            "ultimate_discord_intelligence_bot.pipeline"
-        )
-    )
+    importlib.reload(importlib.import_module("ultimate_discord_intelligence_bot.pipeline"))
     assert logging.getLogger().level == logging.WARNING
 
 

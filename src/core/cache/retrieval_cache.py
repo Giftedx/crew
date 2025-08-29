@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import os
 import time
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, Dict, Tuple, Callable
+from typing import Any
 
 from .. import flags
 
@@ -11,7 +12,7 @@ from .. import flags
 @dataclass
 class RetrievalCache:
     ttl: int
-    store: Dict[str, Tuple[Any, float]] = field(default_factory=dict)
+    store: dict[str, tuple[Any, float]] = field(default_factory=dict)
 
     def get(self, key: str) -> Any | None:
         item = self.store.get(key)

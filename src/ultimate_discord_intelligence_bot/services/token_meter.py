@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import Dict, List
 import os
+from dataclasses import dataclass, field
 
 
 @dataclass
@@ -16,7 +15,7 @@ class TokenMeter:
     guard against accidental overspend.
     """
 
-    model_prices: Dict[str, float] = field(default_factory=dict)
+    model_prices: dict[str, float] = field(default_factory=dict)
     max_cost_per_request: float | None = None
 
     def __post_init__(self) -> None:
@@ -36,7 +35,7 @@ class TokenMeter:
         return price * (tokens / 1000)
 
     # ------------------------------------------------------------------
-    def affordable_model(self, tokens: int, candidates: List[str]) -> str | None:
+    def affordable_model(self, tokens: int, candidates: list[str]) -> str | None:
         """Return the cheapest candidate fitting within the request budget.
 
         Models are sorted by price; the first whose estimated cost is below the

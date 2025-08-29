@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import pathlib
 
-from ultimate_discord_intelligence_bot.plugins.runtime.executor import PluginExecutor
 from core import rl
 from core.rl.policies.bandit_base import EpsilonGreedyBandit
+from ultimate_discord_intelligence_bot.plugins.runtime.executor import PluginExecutor
 
 
 class DummyLLM:
@@ -16,12 +16,8 @@ def test_plugin_executor_rl_updates(monkeypatch, tmp_path: pathlib.Path) -> None
     monkeypatch.setenv("ENABLE_RL_GLOBAL", "1")
     monkeypatch.setenv("ENABLE_RL_PLUGIN", "1")
 
-    plugin_dir = pathlib.Path(
-        "src/ultimate_discord_intelligence_bot/plugins/example_summarizer"
-    )
-    schema = pathlib.Path(
-        "src/ultimate_discord_intelligence_bot/plugins/manifest.schema.json"
-    )
+    plugin_dir = pathlib.Path("src/ultimate_discord_intelligence_bot/plugins/example_summarizer")
+    schema = pathlib.Path("src/ultimate_discord_intelligence_bot/plugins/manifest.schema.json")
     executor = PluginExecutor(schema)
     reg = rl.registry.PolicyRegistry()
     policy = EpsilonGreedyBandit(epsilon=0.0)

@@ -8,23 +8,23 @@ infrastructure during testing.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
 from copy import deepcopy
-from typing import Any, Dict, List
+from dataclasses import dataclass, field
+from typing import Any
 
-from ..tenancy.context import TenantContext, mem_ns, current_tenant
+from ..tenancy.context import TenantContext, current_tenant, mem_ns
 
 
 @dataclass
 class MemoryService:
     """Store and retrieve small text memories."""
 
-    memories: List[Dict[str, Any]] = field(default_factory=list)
+    memories: list[dict[str, Any]] = field(default_factory=list)
 
     def add(
         self,
         text: str,
-        metadata: Dict[str, Any] | None = None,
+        metadata: dict[str, Any] | None = None,
         namespace: str | None = None,
     ) -> None:
         """Store a ``text`` snippet with optional ``metadata`` and ``namespace``.
@@ -49,9 +49,9 @@ class MemoryService:
         self,
         query: str,
         limit: int = 5,
-        metadata: Dict[str, Any] | None = None,
+        metadata: dict[str, Any] | None = None,
         namespace: str | None = None,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Return stored memories matching ``query`` within ``namespace``.
 
         The search performs a case-insensitive substring match on the memory
@@ -74,11 +74,9 @@ class MemoryService:
         ]
         if metadata:
             lowered = {str(k).lower(): str(v).lower() for k, v in metadata.items()}
-            filtered: List[Dict[str, Any]] = []
+            filtered: list[dict[str, Any]] = []
             for m in results:
-                meta_lower = {
-                    str(mk).lower(): str(mv).lower() for mk, mv in m["metadata"].items()
-                }
+                meta_lower = {str(mk).lower(): str(mv).lower() for mk, mv in m["metadata"].items()}
                 if all(meta_lower.get(k, "") == v for k, v in lowered.items()):
                     filtered.append(m)
             results = filtered

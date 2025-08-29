@@ -1,5 +1,6 @@
-from security.rbac import RBAC
 import pytest
+
+from security.rbac import RBAC
 
 
 def test_rbac_has_permission():

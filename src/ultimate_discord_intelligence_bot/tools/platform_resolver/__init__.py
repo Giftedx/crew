@@ -1,9 +1,9 @@
 """Platform resolvers convert handles into canonical platform records."""
 
-from .youtube_resolver import YouTubeResolverTool, resolve_youtube_handle
-from .twitch_resolver import TwitchResolverTool, resolve_twitch_login
 from .podcast_resolver import PodcastResolverTool, resolve_podcast_query
 from .social_resolver import SocialResolverTool, resolve_social_handle
+from .twitch_resolver import TwitchResolverTool, resolve_twitch_login
+from .youtube_resolver import YouTubeResolverTool, resolve_youtube_handle
 
 __all__ = [
     "YouTubeResolverTool",

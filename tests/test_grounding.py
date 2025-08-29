@@ -1,9 +1,9 @@
-from grounding import retriever, contracts, verifier
-from grounding.schema import Evidence
-from memory import api as memory_api, MemoryStore
-import memory.vector_store as vector_store
-from prompt_engine import guards
 from discord import commands as cmds
+from grounding import contracts, retriever, verifier
+from grounding.schema import Evidence
+from memory import MemoryStore, vector_store
+from memory import api as memory_api
+from prompt_engine import guards
 
 
 def test_contract_requires_citations():
@@ -29,7 +29,9 @@ def test_retriever_and_audit():
     for txt in ["cats purr", "cats meow", "cats sleep"]:
         memory_api.store(mstore, vstore, tenant="t", workspace="w", text=txt)
     pack = retriever.gather(mstore, vstore, tenant="t", workspace="w", query="cats", k=3)
-    contract = contracts.build_contract("Cats make sounds [1][2][3]", pack.snippets, use_case="context")
+    contract = contracts.build_contract(
+        "Cats make sounds [1][2][3]", pack.snippets, use_case="context"
+    )
     report = verifier.verify(contract, use_case="context")
     audit = cmds.ops_grounding_audit(contract, report)
     assert audit["verdict"] == "pass"

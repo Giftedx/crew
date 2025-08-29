@@ -2,7 +2,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, Optional, Any
+from typing import Any
+
 import yaml
 
 from .context import TenantContext
@@ -12,10 +13,10 @@ from .models import Tenant
 @dataclass
 class TenantConfig:
     tenant: Tenant
-    workspaces: Dict[str, dict]
-    budgets: Dict[str, Any] | None = None
-    routing: Dict[str, Any] | None = None
-    flags: Dict[str, Any] | None = None
+    workspaces: dict[str, dict]
+    budgets: dict[str, Any] | None = None
+    routing: dict[str, Any] | None = None
+    flags: dict[str, Any] | None = None
 
 
 class TenantRegistry:
@@ -23,7 +24,7 @@ class TenantRegistry:
 
     def __init__(self, tenants_dir: Path):
         self.tenants_dir = tenants_dir
-        self._cache: Dict[str, TenantConfig] = {}
+        self._cache: dict[str, TenantConfig] = {}
 
     def load(self) -> None:
         for path in self.tenants_dir.glob("*/tenant.yaml"):
@@ -49,17 +50,17 @@ class TenantRegistry:
             )
 
     @staticmethod
-    def _load_yaml(path: Path) -> Dict[str, Any] | None:
+    def _load_yaml(path: Path) -> dict[str, Any] | None:
         if path.exists():
             with path.open("r", encoding="utf-8") as fh:
                 return yaml.safe_load(fh) or {}
         return None
 
-    def get_tenant(self, slug: str) -> Optional[TenantConfig]:
+    def get_tenant(self, slug: str) -> TenantConfig | None:
         return self._cache.get(slug)
 
     # ------------------------------------------------------------------ helpers
-    def get_budget_config(self, tenant_id: str) -> Optional[Dict[str, Any]]:
+    def get_budget_config(self, tenant_id: str) -> dict[str, Any] | None:
         cfg = self._cache.get(tenant_id)
         return cfg.budgets if cfg else None
 
@@ -78,11 +79,9 @@ class TenantRegistry:
                 allowed = cfg.routing.get("allowed_models")
         return allowed or []
 
-    def resolve_discord_guild(self, guild_id: int) -> Optional[TenantContext]:
+    def resolve_discord_guild(self, guild_id: int) -> TenantContext | None:
         for cfg in self._cache.values():
             for ws_key, ws in cfg.workspaces.items():
                 if ws.get("discord_guild_id") == guild_id:
-                    return TenantContext(
-                        tenant_id=cfg.tenant.slug, workspace_id=ws_key
-                    )
+                    return TenantContext(tenant_id=cfg.tenant.slug, workspace_id=ws_key)
         return None

@@ -1,7 +1,8 @@
 """Minimal adaptive compression helpers."""
+
 from __future__ import annotations
+
 from pathlib import Path
-from typing import Tuple
 
 try:
     from PIL import Image
@@ -9,7 +10,7 @@ except Exception:  # pragma: no cover - pillow optional
     Image = None  # type: ignore
 
 
-def fit_to_limit(path_in: str | Path, bytes_limit: int, kind: str) -> Tuple[Path, dict]:
+def fit_to_limit(path_in: str | Path, bytes_limit: int, kind: str) -> tuple[Path, dict]:
     """Ensure the file at ``path_in`` fits within ``bytes_limit``.
 
     Currently performs simple JPEG re-encoding for images when Pillow is available
@@ -41,5 +42,6 @@ def fit_to_limit(path_in: str | Path, bytes_limit: int, kind: str) -> Tuple[Path
             raise ValueError("file exceeds size limit and cannot be compressed")
         stats["final_size"] = size
     return dst, stats
+
 
 __all__ = ["fit_to_limit"]

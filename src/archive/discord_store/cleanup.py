@@ -1,6 +1,7 @@
 """Safe cleanup helpers for archived files."""
+
 from __future__ import annotations
-import os
+
 from pathlib import Path
 
 
@@ -11,5 +12,6 @@ def delete(path: str | Path) -> None:
         p.unlink()
     except FileNotFoundError:
         pass
+
 
 __all__ = ["delete"]

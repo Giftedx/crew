@@ -11,7 +11,6 @@ from __future__ import annotations
 import hashlib
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import List
 
 from .store import MarketplaceStore
 
@@ -19,7 +18,7 @@ from .store import MarketplaceStore
 @dataclass(slots=True)
 class VerificationReport:
     ok: bool
-    errors: List[str]
+    errors: list[str]
     signer_fingerprint: str | None = None
     chain_summary: str | None = None
 
@@ -47,7 +46,7 @@ def verify_manifest(
         Optional timestamp used for validity checks.  Defaults to ``datetime.now(timezone.utc)``.
     """
 
-    errors: List[str] = []
+    errors: list[str] = []
     now = now or datetime.now(timezone.utc)
 
     signer = store.get_signer(signer_fingerprint)

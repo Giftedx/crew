@@ -1,11 +1,10 @@
 import importlib
+import importlib.util
 
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
 
-import importlib.util
-
-from obs import tracing, metrics, slo, incident
 from discord import commands as dc
+from obs import metrics, slo, tracing
 from ultimate_discord_intelligence_bot.tenancy import TenantContext, with_tenant
 
 
@@ -51,9 +50,10 @@ def test_ops_slo_status():
 
 
 def test_logging_includes_tenant():
+    import io
     import json
     import logging
-    import io
+
     from obs import logging as obs_logging
 
     stream = io.StringIO()
@@ -73,6 +73,7 @@ def test_metrics_module_degrades_without_prometheus(monkeypatch):
     """Metrics module should operate with no-op stubs when Prometheus is absent."""
     import importlib
     import sys
+
     import obs.metrics as metrics_mod
 
     with monkeypatch.context() as m:

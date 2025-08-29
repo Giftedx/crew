@@ -1,5 +1,5 @@
-from .api import store, retrieve, prune, pin, archive, MemoryHit
-from .store import MemoryStore, MemoryItem, RetentionPolicy
+from .api import MemoryHit, archive, pin, prune, retrieve, store
+from .store import MemoryItem, MemoryStore, RetentionPolicy
 
 __all__ = [
     "store",
@@ -12,4 +12,3 @@ __all__ = [
     "MemoryItem",
     "RetentionPolicy",
 ]
-

@@ -1,6 +1,6 @@
 """Observability helpers: tracing, metrics, logging, SLOs, incidents."""
 
-from . import tracing, metrics, logging, slo, incident
+from . import incident, logging, metrics, slo, tracing
 
 __all__ = [
     "tracing",

@@ -1,4 +1,5 @@
 """Verify whether a clip aligns with its transcript context."""
+
 from __future__ import annotations
 
 from crewai.tools import BaseTool
@@ -10,9 +11,9 @@ class ContextVerificationTool(BaseTool):
     """Check if provided clip text appears in transcript around a timestamp."""
 
     name: str = "Context Verification Tool"
-    description: str = (
-        "Compare clip text to indexed transcript context to flag missing context."
-    )
+    description: str = "Compare clip text to indexed transcript context to flag missing context."
+    # Allow tests/pipeline to attach helper objects dynamically (pydantic v2 strict by default)
+    model_config = {"extra": "allow"}
 
     def __init__(self, index_tool: TranscriptIndexTool | None = None):
         super().__init__()

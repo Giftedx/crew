@@ -1,5 +1,7 @@
+from ultimate_discord_intelligence_bot.tools.context_verification_tool import (
+    ContextVerificationTool,
+)
 from ultimate_discord_intelligence_bot.tools.transcript_index_tool import TranscriptIndexTool
-from ultimate_discord_intelligence_bot.tools.context_verification_tool import ContextVerificationTool
 
 
 def test_verify_clip_context():

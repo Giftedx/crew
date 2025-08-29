@@ -2,12 +2,12 @@
 
 from datetime import datetime
 
+from ultimate_discord_intelligence_bot.debate_analysis_pipeline import DebateAnalysisPipeline
+from ultimate_discord_intelligence_bot.profiles.store import ProfileStore
 from ultimate_discord_intelligence_bot.tools.character_profile_tool import (
     CharacterProfileTool,
 )
 from ultimate_discord_intelligence_bot.tools.debate_command_tool import DebateCommandTool
-from ultimate_discord_intelligence_bot.debate_analysis_pipeline import DebateAnalysisPipeline
-from ultimate_discord_intelligence_bot.profiles.store import ProfileStore
 
 
 def test_latest_and_collabs(tmp_path):

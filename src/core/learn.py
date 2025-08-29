@@ -1,7 +1,9 @@
 """Helper to execute a recommend-act-learn cycle for a decision domain."""
+
 from __future__ import annotations
 
-from typing import Any, Callable, Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
+from typing import Any
 
 from . import flags, reward_pipe
 from .rl import feature_store, registry
@@ -48,10 +50,7 @@ def learn(
 
     # Honour global and per-domain feature flags. If learning is disabled the
     # first candidate is executed without updating any policy state.
-    if not (
-        flags.enabled("ENABLE_RL_GLOBAL")
-        and flags.enabled(f"ENABLE_RL_{domain.upper()}")
-    ):
+    if not (flags.enabled("ENABLE_RL_GLOBAL") and flags.enabled(f"ENABLE_RL_{domain.upper()}")):
         arm = candidates[0]
         outcome, signals = act_fn(arm)
         feature_store.update_stats(outcome)

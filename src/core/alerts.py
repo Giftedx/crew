@@ -1,8 +1,8 @@
 """Simple in-memory alert manager used by ops tools."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import List
 
 
 @dataclass
@@ -14,14 +14,14 @@ class AlertManager:
     alerts to external services instead.
     """
 
-    events: List[str] = field(default_factory=list)
+    events: list[str] = field(default_factory=list)
 
     def record(self, message: str) -> None:
         """Record an alert ``message``."""
 
         self.events.append(message)
 
-    def drain(self) -> List[str]:
+    def drain(self) -> list[str]:
         """Return and clear all pending alerts."""
 
         out = list(self.events)

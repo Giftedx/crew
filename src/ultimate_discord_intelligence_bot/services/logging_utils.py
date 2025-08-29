@@ -4,16 +4,17 @@ The :class:`AnalyticsStore` persists high level, privacy-safe metrics about
 language model usage and learning events. It uses a small SQLite database so
 records can be queried for offline analysis or reinforcement learning feedback.
 """
+
 from __future__ import annotations
 
 import sqlite3
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
-from pathlib import Path
-from typing import Iterable, Optional, Sequence
 from datetime import datetime, timezone
+from pathlib import Path
 
 
-def _as_list(value: Optional[Sequence[str]]) -> str:
+def _as_list(value: Sequence[str] | None) -> str:
     """Return a comma separated list or empty string."""
     if not value:
         return ""

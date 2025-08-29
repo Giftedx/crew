@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Dict, List
-
 from crewai.tools import BaseTool
 
 
@@ -11,11 +9,9 @@ class SteelmanArgumentTool(BaseTool):
     """Combine evidence snippets into a steelman argument."""
 
     name: str = "Steelman Argument Tool"
-    description: str = (
-        "Build the strongest possible version of a claim using supporting snippets"
-    )
+    description: str = "Build the strongest possible version of a claim using supporting snippets"
 
-    def _run(self, claim: str, evidence: List[Dict[str, str]]) -> Dict[str, str]:
+    def _run(self, claim: str, evidence: list[dict[str, str]]) -> dict[str, str]:
         """Craft a steelman argument.
 
         Parameters
@@ -27,7 +23,7 @@ class SteelmanArgumentTool(BaseTool):
             supportive text and optional ``source`` metadata.
         """
 
-        snippets: List[str] = []
+        snippets: list[str] = []
         for item in evidence:
             snippet = item.get("snippet")
             if snippet:

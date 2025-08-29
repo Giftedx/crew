@@ -1,10 +1,12 @@
 """High-level API for registering and using bandit policies."""
+
 from __future__ import annotations
 
-from typing import Any, Dict, Sequence, Callable
+from collections.abc import Sequence
+from typing import Any
 
-from .rl.registry import PolicyRegistry
 from .rl.policies.bandit_base import EpsilonGreedyBandit
+from .rl.registry import PolicyRegistry
 
 
 class LearningEngine:
@@ -13,7 +15,9 @@ class LearningEngine:
     def __init__(self, registry: PolicyRegistry | None = None) -> None:
         self.registry = registry or PolicyRegistry()
 
-    def register_domain(self, name: str, policy: object | None = None, priors: Dict[Any, float] | None = None) -> None:
+    def register_domain(
+        self, name: str, policy: object | None = None, priors: dict[Any, float] | None = None
+    ) -> None:
         """Register ``policy`` under ``name`` and apply optional ``priors``."""
 
         bandit = policy or EpsilonGreedyBandit()
@@ -22,13 +26,11 @@ class LearningEngine:
                 bandit.q_values[arm] = q
         self.registry.register(name, bandit)
 
-    def recommend(
-        self, domain: str, context: Dict[str, Any], candidates: Sequence[Any]
-    ) -> Any:
+    def recommend(self, domain: str, context: dict[str, Any], candidates: Sequence[Any]) -> Any:
         policy = self.registry.get(domain)
         return policy.recommend(context, candidates)
 
-    def record(self, domain: str, context: Dict[str, Any], action: Any, reward: float) -> None:
+    def record(self, domain: str, context: dict[str, Any], action: Any, reward: float) -> None:
         policy = self.registry.get(domain)
         policy.update(action, reward, context)
 
@@ -52,7 +54,7 @@ class LearningEngine:
             self.record(domain, {}, arm, reward)
 
     # ------------------------------------------------------------------ ops
-    def snapshot(self) -> Dict[str, Dict[str, Dict[Any, float]]]:
+    def snapshot(self) -> dict[str, dict[str, dict[Any, float]]]:
         """Return a snapshot of all registered policy state.
 
         The snapshot is a serialisable dictionary mapping ``domain`` to the
@@ -61,7 +63,7 @@ class LearningEngine:
         to an earlier state.
         """
 
-        data: Dict[str, Dict[str, Dict[Any, float]]] = {}
+        data: dict[str, dict[str, dict[Any, float]]] = {}
         for name, policy in self.registry.items():
             state = {
                 "policy": policy.__class__.__name__,
@@ -71,7 +73,7 @@ class LearningEngine:
             data[name] = state
         return data
 
-    def restore(self, snapshot: Dict[str, Dict[str, Dict[Any, float]]]) -> None:
+    def restore(self, snapshot: dict[str, dict[str, dict[Any, float]]]) -> None:
         """Restore policy state from ``snapshot`` produced by :meth:`snapshot`."""
 
         for name, state in snapshot.items():
@@ -83,10 +85,10 @@ class LearningEngine:
                 policy.counts.clear()
                 policy.counts.update(state.get("counts", {}))
 
-    def status(self) -> Dict[str, Dict[str, Any]]:
+    def status(self) -> dict[str, dict[str, Any]]:
         """Return a diagnostic view of all policies and their arms."""
 
-        summary: Dict[str, Dict[str, Any]] = {}
+        summary: dict[str, dict[str, Any]] = {}
         for name, policy in self.registry.items():
             arms = {}
             q_vals = getattr(policy, "q_values", {})

@@ -3,7 +3,6 @@ from __future__ import annotations
 """YouTube ingestion utilities."""
 
 from dataclasses import dataclass
-from typing import List, Optional
 
 
 @dataclass
@@ -11,10 +10,10 @@ class VideoMetadata:
     id: str
     title: str
     channel: str
-    published_at: Optional[str]
-    duration: Optional[float]
+    published_at: str | None
+    duration: float | None
     url: str
-    thumbnails: List[str]
+    thumbnails: list[str]
 
 
 def fetch_metadata(url: str) -> VideoMetadata:
@@ -34,7 +33,7 @@ def fetch_metadata(url: str) -> VideoMetadata:
     )
 
 
-def fetch_transcript(url: str) -> Optional[str]:
+def fetch_transcript(url: str) -> str | None:
     """Return an available transcript for *url* if yt-dlp exposes one."""
     import yt_dlp
 

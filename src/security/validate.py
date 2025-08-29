@@ -3,11 +3,12 @@
 Provides helpers to validate URLs, file names, MIME types, and file paths
 before using them. These helpers raise ``ValueError`` on invalid inputs.
 """
+
 from __future__ import annotations
 
-from pathlib import Path
 import mimetypes
 import os
+from pathlib import Path
 
 from . import net_guard
 

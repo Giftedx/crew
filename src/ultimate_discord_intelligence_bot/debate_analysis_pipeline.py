@@ -1,18 +1,19 @@
 """Lightweight pipeline for debate clip analysis."""
+
 from __future__ import annotations
 
-from typing import Callable, Optional
+from collections.abc import Callable
 
-from .tools.yt_dlp_download_tool import YtDlpDownloadTool, YouTubeDownloadTool
 from .tools.audio_transcription_tool import AudioTranscriptionTool
-from .tools.transcript_index_tool import TranscriptIndexTool
+from .tools.character_profile_tool import CharacterProfileTool
 from .tools.context_verification_tool import ContextVerificationTool
 from .tools.fact_check_tool import FactCheckTool
 from .tools.leaderboard_tool import LeaderboardTool
-from .tools.timeline_tool import TimelineTool
 from .tools.memory_storage_tool import MemoryStorageTool
+from .tools.timeline_tool import TimelineTool
+from .tools.transcript_index_tool import TranscriptIndexTool
 from .tools.trustworthiness_tracker_tool import TrustworthinessTrackerTool
-from .tools.character_profile_tool import CharacterProfileTool
+from .tools.yt_dlp_download_tool import YouTubeDownloadTool, YtDlpDownloadTool
 
 
 class DebateAnalysisPipeline:
@@ -20,18 +21,18 @@ class DebateAnalysisPipeline:
 
     def __init__(
         self,
-        downloader: Optional[YtDlpDownloadTool] = None,
-        transcriber: Optional[AudioTranscriptionTool] = None,
-        index_tool: Optional[TranscriptIndexTool] = None,
-        context_tool: Optional[ContextVerificationTool] = None,
-        fact_checker: Optional[FactCheckTool] = None,
-        leaderboard: Optional[LeaderboardTool] = None,
-        timeline: Optional[TimelineTool] = None,
-        memory_storage: Optional[MemoryStorageTool] = None,
-        trust_tracker: Optional[TrustworthinessTrackerTool] = None,
-        profile_tool: Optional[CharacterProfileTool] = None,
-        ethan_defender: Optional[Callable[[str], str]] = None,
-        hasan_defender: Optional[Callable[[str], str]] = None,
+        downloader: YtDlpDownloadTool | None = None,
+        transcriber: AudioTranscriptionTool | None = None,
+        index_tool: TranscriptIndexTool | None = None,
+        context_tool: ContextVerificationTool | None = None,
+        fact_checker: FactCheckTool | None = None,
+        leaderboard: LeaderboardTool | None = None,
+        timeline: TimelineTool | None = None,
+        memory_storage: MemoryStorageTool | None = None,
+        trust_tracker: TrustworthinessTrackerTool | None = None,
+        profile_tool: CharacterProfileTool | None = None,
+        ethan_defender: Callable[[str], str] | None = None,
+        hasan_defender: Callable[[str], str] | None = None,
     ) -> None:
         self.downloader = downloader or YouTubeDownloadTool()
         self.transcriber = transcriber or AudioTranscriptionTool()
@@ -132,17 +133,11 @@ class DebateAnalysisPipeline:
         if self.ethan_defender is not None:
             ethan_blurb = str(self.ethan_defender(summary))
         else:
-            ethan_blurb = (
-                "Traitor AB: seems legit"
-                if lies == 0
-                else "Traitor AB: sketchy vibes"
-            )
+            ethan_blurb = "Traitor AB: seems legit" if lies == 0 else "Traitor AB: sketchy vibes"
         if self.hasan_defender is not None:
             hasan_blurb = str(self.hasan_defender(summary))
         else:
-            hasan_blurb = (
-                "Old Dan: rock solid" if lies == 0 else "Old Dan: nah that's cap"
-            )
+            hasan_blurb = "Old Dan: rock solid" if lies == 0 else "Old Dan: nah that's cap"
         return {
             "status": "success",
             "context": context.get("context", ""),

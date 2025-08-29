@@ -1,9 +1,8 @@
 from __future__ import annotations
 
+import sqlite3
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Optional
-import sqlite3
 
 from ingest import pipeline
 
@@ -28,7 +27,10 @@ class PriorityQueue:
         tags = ",".join(job.tags)
         now = datetime.now(timezone.utc).isoformat()
         cur = self.conn.execute(
-            "INSERT INTO ingest_job (tenant, workspace, source_type, external_id, url, tags, visibility, priority, status, attempts, scheduled_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+            (
+                "INSERT INTO ingest_job (tenant, workspace, source_type, external_id, url, tags, visibility, "
+                "priority, status, attempts, scheduled_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)"
+            ),
             (
                 job.tenant,
                 job.workspace,
@@ -47,9 +49,12 @@ class PriorityQueue:
         return int(cur.lastrowid)
 
     # --------------------------------------------------------------- dequeue
-    def dequeue(self) -> Optional[QueuedJob]:
+    def dequeue(self) -> QueuedJob | None:
         row = self.conn.execute(
-            "SELECT id, tenant, workspace, source_type, external_id, url, tags, visibility, attempts FROM ingest_job WHERE status='pending' ORDER BY priority DESC, id ASC LIMIT 1"
+
+                "SELECT id, tenant, workspace, source_type, external_id, url, tags, visibility, attempts "
+                "FROM ingest_job WHERE status='pending' ORDER BY priority DESC, id ASC LIMIT 1"
+
         ).fetchone()
         if not row:
             return None
@@ -87,8 +92,5 @@ class PriorityQueue:
 
     # --------------------------------------------------------------- stats
     def pending_count(self) -> int:
-        row = self.conn.execute(
-            "SELECT COUNT(*) FROM ingest_job WHERE status='pending'"
-        ).fetchone()
+        row = self.conn.execute("SELECT COUNT(*) FROM ingest_job WHERE status='pending'").fetchone()
         return int(row[0]) if row else 0
-

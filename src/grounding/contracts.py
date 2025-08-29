@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Optional
 
 import yaml
 
@@ -24,7 +23,7 @@ class GroundingConfig:
     commands: dict
 
 
-def load_config(tenant: Optional[str] = None) -> GroundingConfig:
+def load_config(tenant: str | None = None) -> GroundingConfig:
     """Load base config and optional per-tenant overrides."""
 
     with CONFIG_PATH.open("r", encoding="utf-8") as f:
@@ -39,7 +38,9 @@ def load_config(tenant: Optional[str] = None) -> GroundingConfig:
     return GroundingConfig(defaults=data.get("defaults", {}), commands=data.get("commands", {}))
 
 
-def build_contract(answer: str, evidence: List[Evidence], *, use_case: str, tenant: str | None = None) -> AnswerContract:
+def build_contract(
+    answer: str, evidence: list[Evidence], *, use_case: str, tenant: str | None = None
+) -> AnswerContract:
     """Create and validate an :class:`AnswerContract` for ``answer``."""
 
     cfg = load_config(tenant)

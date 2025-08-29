@@ -1,11 +1,12 @@
 """Async Discord uploader using discord.py with webhook fallback."""
+
 from __future__ import annotations
 
 import asyncio
 from pathlib import Path
-from typing import Dict
 
 import aiohttp
+
 import discord
 
 
@@ -36,7 +37,7 @@ async def upload_file(
     *,
     token: str,
     use_webhook: bool = False,
-) -> Dict:
+) -> dict:
     """Upload ``path`` to Discord and return the message payload.
 
     ``channel_id`` is interpreted as a webhook URL when ``use_webhook`` is True.
@@ -70,7 +71,7 @@ async def upload_file(
     }
 
 
-def upload_file_sync(path: str | Path, channel_id: str, *, token: str) -> Dict:
+def upload_file_sync(path: str | Path, channel_id: str, *, token: str) -> dict:
     """Synchronous wrapper around :func:`upload_file`."""
     return asyncio.run(upload_file(path, channel_id, token=token))
 

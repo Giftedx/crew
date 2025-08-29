@@ -1,66 +1,72 @@
 """Offline evaluation harness for golden datasets."""
+
 from __future__ import annotations
 
 import argparse
 import json
-from dataclasses import dataclass, asdict
+from collections.abc import Callable
+from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Callable, Dict, List, Any
+from typing import Any
 
 import jsonschema
 import yaml
 
-from .memory_service import MemoryService  # reuse existing service if needed
-
 
 @dataclass
 class SampleResult:
-    record: Dict[str, Any]
+    record: dict[str, Any]
     output: str
     quality: float
     cost_usd: float
     latency_ms: float
-    scores: Dict[str, float]
+    scores: dict[str, float]
 
 
 @dataclass
 class EvalResult:
-    samples: List[SampleResult]
-    aggregates: Dict[str, float]
+    samples: list[SampleResult]
+    aggregates: dict[str, float]
 
 
 # --- Scorers ---------------------------------------------------------------
 
-def score_must_include(output: str, expected: Dict[str, Any]) -> float:
+
+def score_must_include(output: str, expected: dict[str, Any]) -> float:
     phrases = expected.get("must_include", [])
     if not phrases:
         return 1.0
     hits = sum(1 for p in phrases if p.lower() in output.lower())
     return hits / len(phrases)
 
-def score_must_link(output: str, expected: Dict[str, Any]) -> float:
+
+def score_must_link(output: str, expected: dict[str, Any]) -> float:
     links = expected.get("must_link", [])
     if not links:
         return 1.0
     hits = sum(1 for l in links if l in output)
     return hits / len(links)
 
-def score_forbidden(output: str, expected: Dict[str, Any]) -> float:
+
+def score_forbidden(output: str, expected: dict[str, Any]) -> float:
     bad = expected.get("forbidden", [])
     return 1.0 if all(b.lower() not in output.lower() for b in bad) else 0.0
 
-def score_coverage(output: str, expected: Dict[str, Any]) -> float:
+
+def score_coverage(output: str, expected: dict[str, Any]) -> float:
     phrases = expected.get("must_include", [])
     if not phrases:
         return 1.0
     return score_must_include(output, expected)
 
-def score_grounded(output: str, record: Dict[str, Any]) -> float:
+
+def score_grounded(output: str, record: dict[str, Any]) -> float:
     refs = record.get("input", {}).get("context_refs", [])
     if not refs:
         return 1.0
     hits = sum(1 for r in refs if r.get("id") and r["id"] in output)
     return hits / len(refs)
+
 
 SCORERS = {
     "must_include": score_must_include,
@@ -72,13 +78,14 @@ SCORERS = {
 
 # --- Evaluation ------------------------------------------------------------
 
+
 def run_dataset(
     dataset_path: Path,
-    runner: Callable[[Dict[str, Any]], Dict[str, Any]],
+    runner: Callable[[dict[str, Any]], dict[str, Any]],
     seed: int = 0,
 ) -> EvalResult:
     schema = json.load(open("datasets/schemas/task_record.schema.json"))
-    samples: List[SampleResult] = []
+    samples: list[SampleResult] = []
     for line in dataset_path.read_text().splitlines():
         record = json.loads(line)
         jsonschema.validate(record, schema)
@@ -86,12 +93,20 @@ def run_dataset(
         output = result.get("output", "")
         cost = float(result.get("cost_usd", 0))
         latency = float(result.get("latency_ms", 0))
-        scores = {name: fn(output, record["expected"]) if name != "grounded" else fn(output, record)
-                  for name, fn in SCORERS.items()}
+        scores = {
+            name: fn(output, record["expected"]) if name != "grounded" else fn(output, record)
+            for name, fn in SCORERS.items()
+        }
         quality = sum(scores.values()) / len(scores)
         samples.append(
-            SampleResult(record=record, output=output, quality=quality,
-                         cost_usd=cost, latency_ms=latency, scores=scores)
+            SampleResult(
+                record=record,
+                output=output,
+                quality=quality,
+                cost_usd=cost,
+                latency_ms=latency,
+                scores=scores,
+            )
         )
     # aggregates
     if samples:
@@ -109,9 +124,11 @@ def run_dataset(
     }
     return EvalResult(samples=samples, aggregates=aggregates)
 
+
 # --- Baseline comparison ---------------------------------------------------
 
-def compare_to_baseline(result: EvalResult, key: str, tolerances: Dict[str, float]) -> bool:
+
+def compare_to_baseline(result: EvalResult, key: str, tolerances: dict[str, float]) -> bool:
     baseline = yaml.safe_load(open("benchmarks/baselines.yaml"))
     if key not in baseline:
         return True
@@ -119,12 +136,15 @@ def compare_to_baseline(result: EvalResult, key: str, tolerances: Dict[str, floa
     return (
         result.aggregates["quality"] >= base["quality"] - tolerances.get("quality", 0.0)
         and result.aggregates["cost_usd"] <= base["cost_usd"] + tolerances.get("cost_usd", 0.0)
-        and result.aggregates["latency_ms"] <= base["latency_ms"] + tolerances.get("latency_ms", 0.0)
+        and result.aggregates["latency_ms"]
+        <= base["latency_ms"] + tolerances.get("latency_ms", 0.0)
     )
+
 
 # --- CLI ------------------------------------------------------------------
 
-def main(argv: List[str] | None = None) -> int:
+
+def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="eval_harness")
     sub = parser.add_subparsers(dest="cmd", required=True)
     run_p = sub.add_parser("run")
@@ -135,7 +155,7 @@ def main(argv: List[str] | None = None) -> int:
     run_p.add_argument("--out", required=True)
     args = parser.parse_args(argv)
 
-    def dummy_runner(_input: Dict[str, Any]) -> Dict[str, Any]:
+    def dummy_runner(_input: dict[str, Any]) -> dict[str, Any]:
         return {"output": "no", "cost_usd": 0.0, "latency_ms": 0.0}
 
     result = run_dataset(Path(args.dataset), dummy_runner, seed=args.seed)
@@ -154,12 +174,17 @@ def main(argv: List[str] | None = None) -> int:
         f.write(f"Quality: {result.aggregates['quality']:.3f}\n")
         f.write(f"Cost USD: {result.aggregates['cost_usd']:.3f}\n")
         f.write(f"Latency ms: {result.aggregates['latency_ms']:.1f}\n")
-    ok = compare_to_baseline(result, Path(args.dataset).stem + "_v1", {
-        "quality": 0.5,
-        "cost_usd": 0.0,
-        "latency_ms": 50.0,
-    })
+    ok = compare_to_baseline(
+        result,
+        Path(args.dataset).stem + "_v1",
+        {
+            "quality": 0.5,
+            "cost_usd": 0.0,
+            "latency_ms": 50.0,
+        },
+    )
     return 0 if ok else 1
+
 
 if __name__ == "__main__":
     raise SystemExit(main())

@@ -1,9 +1,8 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from discord import commands
 from ingest import models
 from policy import policy_engine
-from datetime import datetime, timedelta, timezone
 
 
 def test_ops_privacy_commands(tmp_path):
@@ -19,7 +18,10 @@ def test_ops_privacy_commands(tmp_path):
     conn = models.connect(str(db))
     old = datetime.now(timezone.utc) - timedelta(days=40)
     conn.execute(
-        "INSERT INTO provenance (content_id, source_url, source_type, retrieved_at, license, terms_url, consent_flags, checksum_sha256, creator_id, episode_id) VALUES (?,?,?,?,?,?,?,?,?,?)",
+        (
+            "INSERT INTO provenance (content_id, source_url, source_type, retrieved_at, license, terms_url, "
+            "consent_flags, checksum_sha256, creator_id, episode_id) VALUES (?,?,?,?,?,?,?,?,?,?)"
+        ),
         ("1", "u", "yt", old.isoformat(), "", None, None, "x", None, None),
     )
     conn.commit()

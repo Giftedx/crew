@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 
 import yaml
 
@@ -20,16 +20,16 @@ class Decision:
 
 @dataclass
 class Policy:
-    allowed_sources: Dict[str, list]
+    allowed_sources: dict[str, list]
     forbidden_types: list
-    pii_types: Dict[str, str]
-    masks: Dict[str, str]
-    storage: Dict[str, Any]
-    consent: Dict[str, Any]
-    per_command: Dict[str, Any]
+    pii_types: dict[str, str]
+    masks: dict[str, str]
+    storage: dict[str, Any]
+    consent: dict[str, Any]
+    per_command: dict[str, Any]
 
 
-def load_policy(tenant: Optional[str] = None) -> Policy:
+def load_policy(tenant: str | None = None) -> Policy:
     """Load base policy and optional per-tenant overrides."""
     with POLICY_PATH.open("r", encoding="utf-8") as f:
         data = yaml.safe_load(f)
@@ -46,7 +46,7 @@ def load_policy(tenant: Optional[str] = None) -> Policy:
     return Policy(**data)
 
 
-def check_source(source_meta: Dict[str, Any], policy: Policy) -> Decision:
+def check_source(source_meta: dict[str, Any], policy: Policy) -> Decision:
     """Evaluate a content source against the policy."""
     src = source_meta.get("source_platform") or source_meta.get("type")
     allowed_ids = policy.allowed_sources.get(src)
@@ -58,7 +58,7 @@ def check_source(source_meta: Dict[str, Any], policy: Policy) -> Decision:
     return Decision("allow", [])
 
 
-def check_payload(payload: str | bytes, context: Dict[str, Any], policy: Policy) -> Decision:
+def check_payload(payload: str | bytes, context: dict[str, Any], policy: Policy) -> Decision:
     """Check raw payload (text or bytes) prior to storage or display."""
     reasons: list[str] = []
     media_type = context.get("media_type")
@@ -67,7 +67,7 @@ def check_payload(payload: str | bytes, context: Dict[str, Any], policy: Policy)
     return Decision("allow" if not reasons else "block", reasons)
 
 
-def check_use_case(use_case: str, context: Dict[str, Any], policy: Policy) -> Decision:
+def check_use_case(use_case: str, context: dict[str, Any], policy: Policy) -> Decision:
     """Check a command/use-case against policy limits."""
     rules = policy.per_command.get(use_case)
     if not rules:

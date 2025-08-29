@@ -2,12 +2,11 @@ from __future__ import annotations
 
 """Apply masking to detected PII spans."""
 
-from typing import Dict, List
 
 from .pii_detector import Span
 
 
-def apply(text: str, spans: List[Span], masks: Dict[str, str]) -> str:
+def apply(text: str, spans: list[Span], masks: dict[str, str]) -> str:
     if not spans:
         return text
     out = text

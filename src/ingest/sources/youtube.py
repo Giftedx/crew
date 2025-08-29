@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-from typing import List
-
-from .base import Watch, DiscoveryItem, SourceConnector
+from .base import DiscoveryItem, SourceConnector, Watch
 
 
 class YouTubeConnector(SourceConnector):
@@ -13,10 +11,9 @@ class YouTubeConnector(SourceConnector):
     ensures items are only emitted once.
     """
 
-    def discover(self, watch: Watch, state: dict) -> List[DiscoveryItem]:
+    def discover(self, watch: Watch, state: dict) -> list[DiscoveryItem]:
         cursor = state.get("cursor")
         if cursor == watch.handle:
             return []
         state["cursor"] = watch.handle
         return [DiscoveryItem(external_id=watch.handle, url=watch.handle)]
-

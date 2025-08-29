@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import os
 import time
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, Dict, Tuple, Callable
+from typing import Any
 
 from .. import flags
 from ..learning_engine import LearningEngine
@@ -14,7 +15,7 @@ class LLMCache:
     """A tiny in-memory TTL cache for LLM outputs."""
 
     ttl: int
-    store: Dict[str, Tuple[Any, float]] = field(default_factory=dict)
+    store: dict[str, tuple[Any, float]] = field(default_factory=dict)
 
     def get(self, key: str) -> Any | None:
         item = self.store.get(key)
@@ -30,12 +31,12 @@ class LLMCache:
         self.store[key] = (value, time.time() + self.ttl)
 
 
-def make_key(parts: Dict[str, Any]) -> str:
+def make_key(parts: dict[str, Any]) -> str:
     return ":".join(f"{k}={parts[k]}" for k in sorted(parts))
 
 
 def memo_llm(
-    key_builder: Callable[..., Dict[str, Any]],
+    key_builder: Callable[..., dict[str, Any]],
     *,
     learning: LearningEngine | None = None,
     domain: str = "cache",

@@ -1,48 +1,55 @@
 import json
-import ipaddress
-from urllib.parse import urlparse
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 
-import requests
 from crewai.tools import BaseTool
+from pydantic import Field
+
+from core.http_utils import (
+    DEFAULT_RATE_LIMIT_RETRY,
+    HTTP_RATE_LIMITED,
+    HTTP_SUCCESS_NO_CONTENT,
+    REQUEST_TIMEOUT_SECONDS,
+    resilient_post,
+    validate_public_https_url,
+)
+
+# ---------------------------------------------------------------------------
+# Constants (avoid magic numbers in logic)
+# ---------------------------------------------------------------------------
+DISCORD_FILE_LIMIT_MB = 100  # Typical limit for standard servers (may vary)
+
 
 class DiscordPostTool(BaseTool):
+    """Post messages, embeds, and small file uploads to Discord via webhook.
+
+    HTTP concerns (URL validation, standard timeouts, legacy monkeypatch
+    compatibility for tests) are delegated to `core.http_utils` helpers
+    (`validate_public_https_url`, `resilient_post`) to avoid duplicated
+    request construction logic across tools.
+    """
+
     name: str = "Discord Post Tool"
     description: str = "Post content notifications to Discord with proper formatting"
-    
-    # Properly declare field for pydantic v2
-    webhook_url: str = ""
+
+    webhook_url: str = Field(default="")
 
     def __init__(self, webhook_url: str):
+        # Use BaseTool/Pydantic init for proper field setup then override value
         super().__init__()
-        self.webhook_url = self._validate_webhook(webhook_url)
+        object.__setattr__(self, 'webhook_url', validate_public_https_url(webhook_url))
 
     @staticmethod
-    def _validate_webhook(url: str) -> str:
-        """Validate the webhook URL to avoid insecure destinations."""
-        parsed = urlparse(url)
-        if parsed.scheme != "https":
-            raise ValueError("Discord webhook must use https")
-        if not parsed.hostname:
-            raise ValueError("Discord webhook must include a host")
-
-        try:
-            ip = ipaddress.ip_address(parsed.hostname)
-        except ValueError:
-            # Host is not an IP address; assume DNS will resolve to a public IP
-            return url
-        if not ip.is_global:
-            raise ValueError("Discord webhook IP must be globally routable")
-        return url
+    def _validate_webhook(url: str) -> str:  # backward compatibility shim
+        return validate_public_https_url(url)
 
     def _run(self, content_data: dict, drive_links: dict) -> dict:
         """Post content notification with proper formatting"""
 
         # Check file size for direct upload vs link sharing
-        file_size_mb = int(content_data.get('file_size', 0)) / (1024 * 1024)
+        file_size_mb = int(content_data.get("file_size", 0)) / (1024 * 1024)
 
-        if file_size_mb <= 100:  # Within Discord limits for most servers
+        if file_size_mb <= DISCORD_FILE_LIMIT_MB:  # Within Discord limits for most servers
             return self._post_with_file_upload(content_data, drive_links)
         else:
             return self._post_with_embed_links(content_data, drive_links)
@@ -51,17 +58,17 @@ class DiscordPostTool(BaseTool):
         """Post using structured embeds with links (recommended approach)"""
 
         embed = {
-            "title": content_data.get('title', 'New Content Available'),
+            "title": content_data.get("title", "New Content Available"),
             "description": f"📹 **Platform**: {content_data.get('platform', 'Unknown')}\n"
-                          f"👤 **Creator**: {content_data.get('uploader', 'Unknown')}\n"
-                          f"⏱️ **Duration**: {content_data.get('duration', 'Unknown')}\n"
-                          f"📊 **Size**: {content_data.get('file_size', 'Unknown')}",
-            "color": 0x00ff00,  # Green for success
+            f"👤 **Creator**: {content_data.get('uploader', 'Unknown')}\n"
+            f"⏱️ **Duration**: {content_data.get('duration', 'Unknown')}\n"
+            f"📊 **Size**: {content_data.get('file_size', 'Unknown')}",
+            "color": 0x00FF00,  # Green for success
             "thumbnail": {
                 # Drive metadata may be missing if upload failed but we still
                 # want to send a notification. Using ``get`` avoids KeyError
                 # while allowing Discord to render an empty thumbnail slot.
-                "url": drive_links.get('thumbnail', '')
+                "url": drive_links.get("thumbnail", "")
             },
             "fields": [
                 {
@@ -69,25 +76,25 @@ class DiscordPostTool(BaseTool):
                     # Safely access links; an empty string renders a plain label
                     # rather than raising an exception and losing the update.
                     "value": f"[Google Drive Preview]({drive_links.get('preview_link', '')})",
-                    "inline": True
+                    "inline": True,
                 },
                 {
                     "name": "💾 Download",
                     "value": f"[Direct Download]({drive_links.get('direct_link', '')})",
-                    "inline": True
-                }
+                    "inline": True,
+                },
             ],
             "footer": {
                 "text": "CrewAI Content Monitor",
-                "icon_url": "https://example.com/crewai-icon.png"
+                "icon_url": "https://example.com/crewai-icon.png",
             },
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
 
         payload = {
             "username": "Content Monitor",
             "avatar_url": "https://example.com/bot-avatar.png",
-            "embeds": [embed]
+            "embeds": [embed],
         }
 
         return self._send_webhook(payload)
@@ -95,63 +102,59 @@ class DiscordPostTool(BaseTool):
     def _post_with_file_upload(self, content_data: dict, drive_links: dict) -> dict:
         """Post with direct file upload for smaller files"""
 
-        local_file_path = content_data.get('local_path')
+        local_file_path = content_data.get("local_path")
         if not local_file_path or not Path(local_file_path).exists():
             # Fallback to link posting
             return self._post_with_embed_links(content_data, drive_links)
 
         # Upload file directly to Discord. A context manager ensures the file
         # handle is closed even if the request fails.
-        with open(local_file_path, 'rb') as fh:
+        with open(local_file_path, "rb") as fh:
             files = {
-                'file': (
-                    Path(local_file_path).name,
-                    fh,
-                    'video/mp4'
-                ),
-                'payload_json': (
+                "file": (Path(local_file_path).name, fh, "video/mp4"),
+                "payload_json": (
                     None,
-                    json.dumps({
-                        "content": f"🎥 **{content_data.get('title', 'New Video')}**\n"
-                                  f"From: {content_data.get('uploader', 'Unknown')}\n"
-                                  f"Platform: {content_data.get('platform', 'Unknown')}"
-                    })
-                )
+                    json.dumps(
+                        {
+                            "content": f"🎥 **{content_data.get('title', 'New Video')}**\n"
+                            f"From: {content_data.get('uploader', 'Unknown')}\n"
+                            f"Platform: {content_data.get('platform', 'Unknown')}"
+                        }
+                    ),
+                ),
             }
 
-            response = requests.post(self.webhook_url, files=files)
+            try:
+                response = resilient_post(
+                    self.webhook_url, files=files, timeout_seconds=REQUEST_TIMEOUT_SECONDS
+                )
+            except TypeError as exc:  # pragma: no cover - unrelated TypeError
+                return {"status": "error", "error": str(exc)}
 
         return self._handle_response(response)
 
     def _send_webhook(self, payload: dict) -> dict:
         """Send webhook with rate limiting"""
         try:
-            response = requests.post(
+            response = resilient_post(
                 self.webhook_url,
-                json=payload,
-                headers={'Content-Type': 'application/json'}
+                json_payload=payload,
+                headers={"Content-Type": "application/json"},
+                timeout_seconds=REQUEST_TIMEOUT_SECONDS,
             )
-            return self._handle_response(response)
-
-        except Exception as e:
-            return {'status': 'error', 'error': str(e)}
+        except Exception as e:  # pragma: no cover
+            return {"status": "error", "error": str(e)}
+        return self._handle_response(response)
 
     def _handle_response(self, response) -> dict:
         """Handle Discord API response with rate limiting"""
-        if response.status_code == 204:
-            return {'status': 'success'}
-        elif response.status_code == 429:
-            retry_after = response.json().get('retry_after', 60)
-            return {
-                'status': 'rate_limited',
-                'retry_after': retry_after
-            }
+        if response.status_code == HTTP_SUCCESS_NO_CONTENT:
+            return {"status": "success"}
+        elif response.status_code == HTTP_RATE_LIMITED:
+            retry_after = getattr(response, 'json', lambda: {})().get("retry_after", DEFAULT_RATE_LIMIT_RETRY)
+            return {"status": "rate_limited", "retry_after": retry_after}
         else:
-            return {
-                'status': 'error',
-                'status_code': response.status_code,
-                'error': response.text
-            }
+            return {"status": "error", "status_code": response.status_code, "error": getattr(response, 'text', '')}
 
     # Public run method to align with pipeline expectations
     def run(self, *args, **kwargs):  # pragma: no cover - thin wrapper

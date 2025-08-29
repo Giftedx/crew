@@ -2,17 +2,17 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import List, Sequence
 import json
+import tempfile
+from collections.abc import Sequence
+from dataclasses import dataclass
 from datetime import datetime, timezone
 
-from core.learning_engine import LearningEngine
-from memory import embeddings, vector_store
-from memory.store import MemoryStore, MemoryItem
-from core.privacy import privacy_filter
 from archive import archive_file
-import tempfile
+from core.learning_engine import LearningEngine
+from core.privacy import privacy_filter
+from memory import embeddings, vector_store
+from memory.store import MemoryItem, MemoryStore
 
 
 @dataclass
@@ -54,7 +54,9 @@ def store(
     )
     item_id = store.add_item(item)
     namespace = vector_store.VectorStore.namespace(tenant, workspace, "memory")
-    vstore.upsert(namespace, [vector_store.VectorRecord(vector=vec, payload={"id": item_id, "text": clean})])
+    vstore.upsert(
+        namespace, [vector_store.VectorRecord(vector=vec, payload={"id": item_id, "text": clean})]
+    )
     return item_id
 
 
@@ -68,25 +70,34 @@ def retrieve(
     k: int = 5,
     strategies: Sequence[str] | None = None,
     engine: LearningEngine | None = None,
-) -> List[MemoryHit]:
+) -> list[MemoryHit]:
     strategies = list(strategies or ["vector", "symbolic"])
     if engine:
         order = engine.recommend("retrieval_scoring", {"len": len(query)}, strategies)
         # ensure returned arm appears first
         strategies.sort(key=lambda s: 0 if s == order else 1)
 
-    hits: List[MemoryHit] = []
+    hits: list[MemoryHit] = []
     if "vector" in strategies:
         vec = embeddings.embed([query])[0]
         namespace = vector_store.VectorStore.namespace(tenant, workspace, "memory")
         res = vstore.query(namespace, vec, top_k=k)
         for r in res:
             payload = r.payload or {}
-            hits.append(MemoryHit(id=payload.get("id", 0), score=float(r.score), text=payload.get("text", ""), meta=payload))
+            hits.append(
+                MemoryHit(
+                    id=payload.get("id", 0),
+                    score=float(r.score),
+                    text=payload.get("text", ""),
+                    meta=payload,
+                )
+            )
     if "symbolic" in strategies:
         for item in store.search_keyword(tenant, workspace, query, limit=k):
             payload = json.loads(item.content_json)
-            hits.append(MemoryHit(id=item.id or 0, score=0.5, text=payload.get("text", ""), meta=payload))
+            hits.append(
+                MemoryHit(id=item.id or 0, score=0.5, text=payload.get("text", ""), meta=payload)
+            )
     hits.sort(key=lambda h: h.score, reverse=True)
     return hits[:k]
 
@@ -109,9 +120,11 @@ def archive(store: MemoryStore, item_id: int, *, tenant: str, workspace: str) ->
     with tempfile.NamedTemporaryFile("w", delete=False) as tmp:
         tmp.write(data)
         tmp.flush()
-        archive_file(tmp.name, {"kind": "memory", "tenant": tenant, "workspace": workspace, "visibility": "private"})
+        archive_file(
+            tmp.name,
+            {"kind": "memory", "tenant": tenant, "workspace": workspace, "visibility": "private"},
+        )
     store.mark_archived(item_id)
 
 
 __all__ = ["store", "retrieve", "prune", "pin", "archive", "MemoryHit"]
-

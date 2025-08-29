@@ -10,16 +10,19 @@ def test_youtube_download_parses_filepath(monkeypatch):
     def fake_run(cmd, capture_output, text, timeout, env):
         class Result:
             returncode = 0
-            stdout = json.dumps(
-                {
-                    "id": "id",
-                    "title": "title",
-                    "uploader": "uploader",
-                    "duration": 10,
-                    "filesize_approx": 100,
-                    "filepath": "/tmp/uploader/title [id].mp4",
-                }
-            ) + "\n"
+            stdout = (
+                json.dumps(
+                    {
+                        "id": "id",
+                        "title": "title",
+                        "uploader": "uploader",
+                        "duration": 10,
+                        "filesize_approx": 100,
+                        "filepath": "/tmp/uploader/title [id].mp4",
+                    }
+                )
+                + "\n"
+            )
             stderr = ""
 
         return Result()

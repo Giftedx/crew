@@ -13,11 +13,12 @@ from crewai.tools import BaseTool
 
 try:  # pragma: no cover - optional dependency
     import nltk
+    from nltk.corpus import stopwords
     from nltk.sentiment import SentimentIntensityAnalyzer
     from nltk.tokenize import word_tokenize
-    from nltk.corpus import stopwords
 except Exception:  # pragma: no cover
     nltk = None
+
 
 class TextAnalysisTool(BaseTool):
     name: str = "Text Analysis Tool"
@@ -50,15 +51,11 @@ class TextAnalysisTool(BaseTool):
         try:
             sentiment = self.get_sentiment(text)
             keywords = self.get_keywords(text)
-            
-            return {
-                'status': 'success',
-                'sentiment': sentiment,
-                'keywords': keywords
-            }
-            
+
+            return {"status": "success", "sentiment": sentiment, "keywords": keywords}
+
         except Exception as e:
-            return {'status': 'error', 'error': str(e)}
+            return {"status": "error", "error": str(e)}
 
     def get_sentiment(self, text: str) -> dict:
         """Get the sentiment of a piece of text."""
@@ -66,10 +63,10 @@ class TextAnalysisTool(BaseTool):
 
     def get_keywords(self, text: str, num_keywords: int = 10) -> list:
         """Get the most common keywords from a piece of text."""
-        stop_words = set(stopwords.words('english'))
+        stop_words = set(stopwords.words("english"))
         words = word_tokenize(text.lower())
         words = [word for word in words if word.isalpha() and word not in stop_words]
-        
+
         word_counts = Counter(words)
         keywords = [word for word, count in word_counts.most_common(num_keywords)]
 

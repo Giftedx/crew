@@ -24,8 +24,10 @@ def test_ingest_console_script_help():
     elif shutil.which("ingest"):
         cmd = ["ingest", "--help"]
     else:
-        pytest.skip("ingest console script not found on PATH; skipping (module invocation still covered elsewhere)")
+        pytest.skip(
+            "ingest console script not found on PATH; skipping (module invocation still covered elsewhere)"
+        )
 
-    proc = subprocess.run(cmd, capture_output=True, text=True, timeout=15)
+    proc = subprocess.run(cmd, check=False, capture_output=True, text=True, timeout=15)
     assert proc.returncode == 0, proc.stderr
     assert "Run a single ingestion job" in proc.stdout

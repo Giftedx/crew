@@ -1,13 +1,16 @@
 """Model and provider router using the learning engine."""
+
 from __future__ import annotations
 
-from typing import Any, Dict, Sequence
+from collections.abc import Sequence
+from typing import Any
 
-from .learning_engine import LearningEngine
-from . import token_meter
-from obs import tracing, metrics
+from obs import metrics, tracing
 from ultimate_discord_intelligence_bot.tenancy import current_tenant
 from ultimate_discord_intelligence_bot.tenancy.registry import TenantRegistry
+
+from . import token_meter
+from .learning_engine import LearningEngine
 
 
 class Router:
@@ -51,7 +54,7 @@ class Router:
         return candidates
 
     @tracing.trace_call("router.route")
-    def route(self, task: str, candidates: Sequence[str], context: Dict[str, Any]) -> str:
+    def route(self, task: str, candidates: Sequence[str], context: dict[str, Any]) -> str:
         """Return the model name selected for ``task``."""
 
         candidates = list(self._filter_candidates(candidates))

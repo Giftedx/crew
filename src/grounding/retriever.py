@@ -3,16 +3,17 @@ from __future__ import annotations
 """Lightweight evidence retriever that wraps the unified memory API."""
 
 from dataclasses import dataclass
-from typing import List
 
-from memory import api as memory_api, store as memory_store, vector_store
+from memory import api as memory_api
+from memory import store as memory_store
+from memory import vector_store
 
 from .schema import Evidence
 
 
 @dataclass
 class EvidencePack:
-    snippets: List[Evidence]
+    snippets: list[Evidence]
 
 
 def gather(
@@ -26,9 +27,7 @@ def gather(
 ) -> EvidencePack:
     """Retrieve ``k`` evidence snippets from memory for ``query``."""
 
-    hits = memory_api.retrieve(
-        mstore, vstore, tenant=tenant, workspace=workspace, query=query, k=k
-    )
+    hits = memory_api.retrieve(mstore, vstore, tenant=tenant, workspace=workspace, query=query, k=k)
     snippets = [
         Evidence(
             source_type="memory",

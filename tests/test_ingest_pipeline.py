@@ -1,14 +1,10 @@
-import os
-from pathlib import Path
-
 import pytest
 
-from ingest.providers import youtube, twitch
-from ingest import pipeline
-from memory import vector_store
+from analysis import segmenter, transcribe
 from discord import commands
-from analysis import transcribe, segmenter
-from memory import embeddings
+from ingest import pipeline
+from ingest.providers import twitch, youtube
+from memory import embeddings, vector_store
 
 
 class DummyYDL:
@@ -31,9 +27,7 @@ class DummyYDL:
                 "duration": 10,
                 "webpage_url": url,
                 "thumbnails": [],
-                "subtitles": {
-                    "en": [{"url": "data:text/plain,hello%20world"}]
-                },
+                "subtitles": {"en": [{"url": "data:text/plain,hello%20world"}]},
             }
         else:
             return {
@@ -107,9 +101,7 @@ def test_pipeline_and_context(monkeypatch):
 
 def test_commands_basic():
     profiles = [{"slug": "alice"}]
-    episodes = [
-        {"creator": "alice", "published_at": "20240101", "guests": ["bob"]}
-    ]
+    episodes = [{"creator": "alice", "published_at": "20240101", "guests": ["bob"]}]
     assert commands.creator(profiles, "alice")["slug"] == "alice"
     assert commands.latest(episodes, "alice")
     assert commands.collabs(episodes, "alice") == ["bob"]

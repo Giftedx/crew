@@ -324,6 +324,61 @@ limits:
 ## Tenant Configuration
 
 Each tenant has its own configuration directory under `tenants/<slug>/`.
+
+## Environment Variables (Central Settings)
+
+The project now centralises environment-driven configuration in `core.settings.Settings`.
+Below are the primary variables (all optional unless noted):
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `SERVICE_NAME` | `ultimate-discord-intel` | Service name (reported in tracing resource). |
+| `ENABLE_API` | `0` | Enable the optional FastAPI server. |
+| `ENABLE_PROMETHEUS_ENDPOINT` | `0` | Expose Prometheus metrics endpoint. |
+| `PROMETHEUS_ENDPOINT_PATH` | `/metrics` | Path for metrics exposition when enabled. |
+| `ENABLE_TRACING` | `0` | Enable tracing initialisation (console or OTLP if endpoint set). |
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | unset | OTLP HTTP endpoint for spans (auto-configures exporter). |
+| `OTEL_EXPORTER_OTLP_HEADERS` | unset | Comma separated `key=value` headers for OTLP exporter. |
+| `OTEL_TRACES_SAMPLER` | unset | OpenTelemetry sampler name (e.g. `parentbased_traceidratio`). |
+| `OTEL_TRACES_SAMPLER_ARG` | unset | Sampler argument (e.g. ratio `0.1`). |
+| `QDRANT_URL` | `:memory:` | Qdrant endpoint or `:memory:` for ephemeral store. |
+| `QDRANT_API_KEY` | unset | Qdrant API key (cloud / secured deployments). |
+| `QDRANT_PREFER_GRPC` | `0` | Prefer gRPC transport for performance. |
+| `QDRANT_GRPC_PORT` | unset | gRPC port if non-default. |
+| `VECTOR_BATCH_SIZE` | `128` | Chunk size for batched vector upserts. |
+| `ENABLE_HTTP_METRICS` | `1` | Enable HTTP server request metrics middleware. |
+| `ENABLE_HTTP_RETRY` | unset | Enables resilient HTTP retry layer (existing flag). |
+| `ENABLE_RATE_LIMITING` | `0` | Enable basic in-process token bucket rate limiting. |
+| `RATE_LIMIT_RPS` | `10` | Requests per second sustained rate when rate limiting enabled. |
+| `RATE_LIMIT_BURST` | `20` | Burst allowance over the sustained rate. |
+| `ARCHIVE_API_TOKEN` | unset | Shared token for archive endpoints (if set, enforced). |
+| `DISCORD_BOT_TOKEN` | unset | Discord bot token required for archiver uploads. |
+
+Settings are accessible via:
+
+```python
+from core.settings import get_settings
+settings = get_settings()
+```
+
+This ensures consistent, validated access across the codebase.
+
+### Metrics Reference (Prometheus)
+
+When `ENABLE_HTTP_METRICS=1` the FastAPI middleware emits request latency and count metrics. Additional metrics appear when related subsystems are active (router decisions, retries, rate limiting). All metrics degrade to no-ops if `prometheus-client` is not installed.
+
+| Name | Type | Labels | Description |
+|------|------|--------|-------------|
+| `router_decisions_total` | Counter | `tenant`, `workspace` | Routing decisions made by planner/router |
+| `llm_latency_ms` | Histogram | `tenant`, `workspace` | Latency of LLM/tool invocation round trips |
+| `http_retry_attempts_total` | Counter | `tenant`,`workspace`,`method` | Retry attempts for outbound HTTP (excludes first attempt) |
+| `http_retry_giveups_total` | Counter | `tenant`,`workspace`,`method` | Outbound HTTP operations that exhausted retries |
+| `http_request_latency_ms` | Histogram | `route`,`method` | Inbound HTTP request latency (FastAPI) |
+| `http_requests_total` | Counter | `route`,`method`,`status` | Inbound HTTP request counts |
+| `rate_limit_rejections_total` | Counter | `route`,`method` | Requests rejected (HTTP 429) by in-process rate limiter |
+
+Rate limiting uses a per-client-IP token bucket defined by `RATE_LIMIT_RPS` (tokens/sec) and `RATE_LIMIT_BURST` (capacity). It is intentionally stateless across processes; for horizontal scaling use an external distributed rate limiting layer.
+
 For example, the default tenant has files in `tenants/default/`.
 
 ### Tenant Metadata
@@ -562,6 +617,8 @@ QDRANT_API_KEY=...               # Qdrant API key (if required)
 # Database Configuration  
 DATABASE_URL=sqlite:///crew.db   # Database connection string
 MEMORY_DB_PATH=./memory.db       # Memory database path
+ARCHIVE_DB_PATH=./data/archive_manifest.db   # Override default archive manifest location (see runtime_data.md)
+TRUST_TRACKER_PATH=./data/trustworthiness.json # Override trust tracker JSON path (see runtime_data.md)
 
 # External Services
 GOOGLE_API_KEY=...               # Google services API key
@@ -610,3 +667,4 @@ ENABLE_PROFILING=false          # Performance profiling
 - [Security Documentation](security/) - Security model details  
 - [Observability Documentation](observability.md) - Monitoring and metrics
 - [Cost and Caching Documentation](cost_and_caching.md) - Budget management
+- [Runtime Data Artifacts](runtime_data.md) - Paths & env overrides for mutable state
