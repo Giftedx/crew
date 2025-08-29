@@ -23,7 +23,7 @@ from urllib.parse import urlparse
 import requests
 
 try:  # optional dependency
-    from opentelemetry import trace  # type: ignore
+    from opentelemetry import trace  # optional dependency
 except Exception:  # pragma: no cover
     class _NoopSpan:
         def __enter__(self):
@@ -38,7 +38,7 @@ except Exception:  # pragma: no cover
     class _NoopTraceAPI:
         def get_tracer(self, *_a, **_k):
             return _NoopTracer()
-    trace = _NoopTraceAPI()  # type: ignore
+    trace = _NoopTraceAPI()  # type: ignore[assignment]
 from obs.metrics import HTTP_RETRY_ATTEMPTS, HTTP_RETRY_GIVEUPS, label_ctx
 
 # Exported constants
@@ -160,7 +160,7 @@ def resilient_get(
         except TypeError as exc:
             if allow_legacy_timeout_fallback and "unexpected keyword argument" in str(exc):
                 try:
-                    sig = inspect.signature(request_fn)  # type: ignore[arg-type]
+                    sig = inspect.signature(request_fn)
                     allowed = set(sig.parameters.keys())
                 except Exception:  # pragma: no cover - very unlikely path
                     allowed = {"url"}

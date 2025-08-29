@@ -6,8 +6,23 @@ import json
 import os
 from pathlib import Path
 from threading import Lock
+from typing import TypedDict
 
 from crewai.tools import BaseTool
+
+
+class _PersonRecord(TypedDict):
+    truths: int
+    lies: int
+    score: float
+
+
+class _TrackerResult(TypedDict):
+    status: str
+    person: str
+    truths: int
+    lies: int
+    score: float
 
 
 class TrustworthinessTrackerTool(BaseTool):
@@ -46,21 +61,21 @@ class TrustworthinessTrackerTool(BaseTool):
         if not self.storage_path.exists():
             self._save({})
 
-    def _load(self) -> dict[str, dict[str, int]]:
+    def _load(self) -> dict[str, _PersonRecord]:
         try:
             with self.storage_path.open("r", encoding="utf-8") as f:
                 return json.load(f)
         except Exception:
             return {}
 
-    def _save(self, data: dict[str, dict[str, int]]) -> None:
+    def _save(self, data: dict[str, _PersonRecord]) -> None:
         with self.storage_path.open("w", encoding="utf-8") as f:
             json.dump(data, f)
 
-    def _run(self, person: str, verdict: bool) -> dict:
+    def _run(self, person: str, verdict: bool) -> _TrackerResult:
         with self._lock:
             data = self._load()
-            record = data.get(person, {"truths": 0, "lies": 0})
+            record = data.get(person, {"truths": 0, "lies": 0, "score": 0.0})
             if verdict:
                 record["truths"] += 1
             else:

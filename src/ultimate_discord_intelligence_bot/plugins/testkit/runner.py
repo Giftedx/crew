@@ -12,7 +12,7 @@ import importlib
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from . import scorers
 
@@ -33,7 +33,10 @@ class ScenarioResult:
 
 def _load_manifest(plugin: str) -> dict[str, Any]:
     module = importlib.import_module(plugin)
-    manifest_path = Path(module.__file__).parent / "manifest.json"
+    module_file = getattr(module, "__file__", None)
+    if module_file is None:
+        raise RuntimeError(f"Plugin module {plugin} has no __file__ attribute")
+    manifest_path = Path(cast(str, module_file)).parent / "manifest.json"
     with manifest_path.open("r", encoding="utf-8") as fh:
         return json.load(fh)
 

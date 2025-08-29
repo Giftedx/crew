@@ -3,8 +3,14 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
+from typing import TypedDict
 
 from crewai.tools import BaseTool
+
+
+class _MonitorResult(TypedDict):
+    status: str
+    new_items: list[dict[str, str]]
 
 
 class MultiPlatformMonitorTool(BaseTool):
@@ -23,7 +29,7 @@ class MultiPlatformMonitorTool(BaseTool):
         super().__init__()
         self._seen_ids: set[str] = set()
 
-    def _run(self, items: Iterable[dict[str, str]]) -> dict[str, list[dict[str, str]]]:
+    def _run(self, items: Iterable[dict[str, str]]) -> _MonitorResult:
         new_items: list[dict[str, str]] = []
         for item in items:
             item_id = item.get("id")
