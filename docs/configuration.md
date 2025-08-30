@@ -327,6 +327,25 @@ Each tenant has its own configuration directory under `tenants/<slug>/`.
 
 ## Environment Variables (Central Settings)
 
+### Deprecated Flags & Shims
+
+The following environment flags / import surfaces are formally deprecated and tracked in `config/deprecations.yaml`.
+They continue to function during their grace period while emitting `DeprecationWarning` (or logging) but are
+scheduled for removal after their respective `remove_after` date. New code MUST use the replacement.
+
+| Name | Replacement | Stage | Remove After | Notes |
+|------|-------------|-------|--------------|-------|
+| `ENABLE_ANALYSIS_HTTP_RETRY` | `ENABLE_HTTP_RETRY` | deprecated | 2025-12-31 | Legacy analysis-scoped retry flag; unified global flag preferred. |
+| `services.learning_engine.LearningEngine` | `core.learning_engine.LearningEngine` | deprecated | 2025-12-31 | Thin shim retained for backward compatibility; import core engine directly. |
+
+After the removal date the repository policy is:
+
+1. Symbols past deadline are escalated from warnings to errors at runtime.
+2. CI checks (see `scripts/check_deprecations.py`) will fail if references persist.
+3. The shim module will be deleted in the first minor release following the grace period.
+
+See also: `README.md` Deprecations section and `config/deprecations.yaml` for authoritative schedule.
+
 The project now centralises environment-driven configuration in `core.settings.Settings`.
 Below are the primary variables (all optional unless noted):
 
@@ -571,6 +590,7 @@ Feature flags follow a hierarchy:
 2. **Tenant feature overrides** (medium priority)  
 3. **Global defaults** (lowest priority)
 
+
 ### Dynamic Feature Flags
 
 Some features can be toggled at runtime:
@@ -638,24 +658,28 @@ ENABLE_PROFILING=false          # Performance profiling
 ## Configuration Best Practices
 
 ### Security
+
 - Store sensitive keys in environment variables, not config files
 - Use different configurations for development/staging/production
 - Rotate API keys regularly  
 - Enable audit logging in production
 
 ### Performance
+
 - Tune chunk sizes based on your embedding model
 - Adjust rate limits based on usage patterns
 - Configure appropriate cache TTLs
 - Monitor resource usage and adjust limits
 
 ### Tenant Management
+
 - Use descriptive tenant slugs
 - Set appropriate budget limits
 - Configure retention policies based on data sensitivity
 - Test policy overrides in non-production environments
 
 ### Monitoring
+
 - Enable all observability features in production
 - Set up alerting for budget thresholds
 - Monitor configuration changes via audit logs

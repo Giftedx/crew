@@ -14,10 +14,13 @@ from __future__ import annotations
 
 import inspect
 import ipaddress
+import json
+import logging
 import os
 import time
 import warnings
 from collections.abc import Callable, Mapping
+from datetime import date
 from typing import Any, Protocol, TypeVar, cast, runtime_checkable
 from urllib.parse import urlparse
 
@@ -213,6 +216,10 @@ if _patched_resilient_get and getattr(_patched_resilient_get, "__module__", __na
     resilient_get = _patched_resilient_get  # noqa: F401
 
 
+_HTTP_RETRY_LEGACY_REMOVAL = date.fromisoformat("2025-12-31")
+_DEPRECATION_LOG_EMITTED: dict[str, bool] = {}
+
+
 def _is_retry_enabled() -> bool:
     """Return True if HTTP retry logic is enabled.
 
@@ -220,15 +227,41 @@ def _is_retry_enabled() -> bool:
     ``ENABLE_ANALYSIS_HTTP_RETRY`` (deprecated). The unified flag takes
     precedence when both are set. A future cleanup will remove the legacy
     flag once all callers are migrated.
+
+    Deprecation timeline:
+        - Introduced unified flag: 2025-Q2
+        - Dual-support grace period ends: 2025-12-31 (planned)
+        - Removal target (subject to CHANGELOG confirmation): first minor
+          release after grace period. After removal, only ``ENABLE_HTTP_RETRY``
+          (or settings-driven equivalent) will be honored and references to
+          ``ENABLE_ANALYSIS_HTTP_RETRY`` will raise a ``KeyError`` in tests.
     """
     if os.getenv("ENABLE_HTTP_RETRY"):
         return True
     if os.getenv("ENABLE_ANALYSIS_HTTP_RETRY"):
+        if date.today() > _HTTP_RETRY_LEGACY_REMOVAL:
+            raise RuntimeError(
+                "ENABLE_ANALYSIS_HTTP_RETRY exceeded deprecation window (removal after 2025-12-31). "
+                "Remove this variable and set ENABLE_HTTP_RETRY if retries are desired."
+            )
         warnings.warn(
-            "ENABLE_ANALYSIS_HTTP_RETRY is deprecated; use ENABLE_HTTP_RETRY instead.",
+            "ENABLE_ANALYSIS_HTTP_RETRY is deprecated; use ENABLE_HTTP_RETRY instead (grace until 2025-12-31).",
             DeprecationWarning,
             stacklevel=2,
         )
+        # Structured one-time info log for observability dashboards
+        if not _DEPRECATION_LOG_EMITTED.get("ENABLE_ANALYSIS_HTTP_RETRY"):
+            logging.getLogger("deprecations").info(
+                json.dumps(
+                    {
+                        "event": "deprecated_flag_used",
+                        "flag": "ENABLE_ANALYSIS_HTTP_RETRY",
+                        "replacement": "ENABLE_HTTP_RETRY",
+                        "removal_date": str(_HTTP_RETRY_LEGACY_REMOVAL),
+                    }
+                )
+            )
+            _DEPRECATION_LOG_EMITTED["ENABLE_ANALYSIS_HTTP_RETRY"] = True
         return True
     return False
 

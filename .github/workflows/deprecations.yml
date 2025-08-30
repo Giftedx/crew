@@ -1,0 +1,50 @@
+name: Deprecations & Quality Gate
+
+on:
+  pull_request:
+  push:
+    branches: [ main, master ]
+    paths:
+      - 'config/deprecations.yaml'
+      - 'scripts/check_deprecations.py'
+      - '.github/workflows/deprecations.yml'
+      - 'src/**'
+      - 'tests/**'
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+      - name: Install project (dev)
+        run: pip install -e .[dev]
+      - name: Lint (ruff)
+        run: ruff check .
+      - name: Type check (mypy)
+        run: mypy --strict || mypy
+      - name: Run unit tests
+        run: pytest -q
+      - name: Deprecations scan (report)
+        run: |
+          python scripts/check_deprecations.py --json > deprecations_report.json || EXIT=$?
+          echo "scanner_exit_code: ${EXIT:-0}" >> deprecations_report.json.meta
+      - name: Deprecations strict window (fail if within 90 days)
+        run: |
+            python scripts/check_deprecations.py --fail-on-upcoming 90 --json > deprecations_strict.json
+      - name: Upload deprecations artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: deprecations-artifacts
+          path: |
+            deprecations_report.json
+            deprecations_report.json.meta
+            deprecations_strict.json

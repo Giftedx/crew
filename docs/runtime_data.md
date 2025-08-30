@@ -13,6 +13,10 @@ To keep the repository root clean, mutable runtime state is stored (by default) 
 
 If legacy root-level files (`archive_manifest.db`, `trustworthiness.json`) are present they will continue to be used until a `data/` version is created, avoiding accidental divergence. New deployments will create the `data/` directory automatically.
 
+Deprecated (2025): The root `trustworthiness.json` path is deprecated in favor of `data/trustworthiness.json` (or an explicit
+`TRUST_TRACKER_PATH`). It will be removed from documentation examples after 2025-12-31; environments should migrate now by
+moving the file into `data/` (the tracker will not auto-delete the legacy file to avoid data loss).
+
 ## Custom Locations
 
 Set the environment variables or pass an explicit path to the respective constructors / modules to place these artifacts elsewhere (e.g., a mounted volume in production).
@@ -33,11 +37,13 @@ data/*.db
 data/*.json
 ```
 
+
 (We intentionally allow pattern-based ignore so future runtime JSON/DB artifacts land under the same rule.)
 
 ## Rationale
 
 Consolidating mutable state under `data/`:
+
 - Keeps root uncluttered
 - Clarifies what is safe to delete/regenerate
 - Simplifies container volume mounts / backups

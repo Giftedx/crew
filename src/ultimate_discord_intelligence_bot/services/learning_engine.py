@@ -1,23 +1,31 @@
 """Deprecated learning engine shim.
 
-This module previously contained an independent epsilon‑greedy implementation
-with ad‑hoc SQLite + JSON persistence. The canonical reinforcement learning
-entry point now lives in :mod:`core.learning_engine` exposing a registry of
-policies plus snapshot/restore utilities.
+Summary:
+        Historical epsilon‑greedy implementation lived here with ad‑hoc SQLite / JSON
+        persistence. The canonical engine is :mod:`core.learning_engine` which
+        centralizes policy registration and snapshot handling.
 
-To preserve backward compatibility for existing imports we provide a thin
-subclass that delegates to the core engine and re‑implements the small legacy
-surface (``select_model`` / ``update``). Persistence‑related constructor
-arguments (``db_path`` / ``store_path``) are accepted but ignored. The old API
-will be removed after a deprecation period – callers should import and use
-``core.learning_engine.LearningEngine`` directly and register domains
-explicitly.
+Backward Compatibility:
+        We retain a thin subclass exposing the minimal legacy surface
+        (``select_model`` / ``update`` / ``register_policy``) while delegating core
+        logic to :class:`core.learning_engine.LearningEngine`. Persistence path
+        parameters are accepted but ignored.
 
-# Removal Plan:
-#   This shim is slated for deletion after the deprecation window tracked in
-#   config/deprecations.yaml (add entry if not present). New code MUST import
-#   ``core.learning_engine.LearningEngine`` directly. Retention only exists to
-#   avoid breaking older plugin integrations mid‑migration.
+Deprecation Timeline:
+        - Unified engine introduced: 2025-Q2
+        - Grace period ends: 2025-12-31 (planned)
+        - Removal target: first minor release after grace period (see CHANGELOG &
+            config/deprecations.yaml). After removal, importing
+            ``services.learning_engine`` will raise ``ImportError``.
+
+Migration Instructions:
+        - Replace ``from services.learning_engine import LearningEngine`` with
+            ``from core.learning_engine import LearningEngine``.
+        - Update calls: ``select_model`` -> ``recommend`` with domain naming
+            convention ``route.model.select::<task_type>`` if still needed.
+        - Use ``record`` instead of ``update`` with explicit domain/action.
+
+New code MUST import the core engine directly.
 """
 
 from __future__ import annotations
@@ -25,6 +33,7 @@ from __future__ import annotations
 import json
 import logging
 from collections.abc import Iterable, Sequence
+from datetime import date
 from pathlib import Path
 from warnings import warn
 
@@ -32,6 +41,19 @@ from core.learning_engine import LearningEngine as _CoreLearningEngine
 from core.rl.policies.bandit_base import EpsilonGreedyBandit
 
 __all__ = ["LearningEngine"]
+
+
+_REMOVAL_DEADLINE = date.fromisoformat("2025-12-31")
+_DEPRECATION_LOG_EMITTED = False
+
+
+def _check_deadline() -> None:
+    today = date.today()
+    if today > _REMOVAL_DEADLINE:  # hard stop after grace period
+        raise ImportError(
+            "services.learning_engine.LearningEngine has passed its removal deadline ("
+            f"{_REMOVAL_DEADLINE}); the shim has been disabled. Import core.learning_engine instead."
+        )
 
 
 class LearningEngine(_CoreLearningEngine):  # pragma: no cover - thin wrapper
@@ -55,12 +77,31 @@ class LearningEngine(_CoreLearningEngine):  # pragma: no cover - thin wrapper
         store_path: str | None = None,  # kept for signature compatibility
         registry: object | None = None,
     ) -> None:  # noqa: D401 - delegated
+        _check_deadline()
         warn(
-            "services.learning_engine.LearningEngine is deprecated; import "
-            "core.learning_engine.LearningEngine instead (persistence args are ignored)",
+            "services.learning_engine.LearningEngine is deprecated until 2025-12-31; "
+            "import core.learning_engine.LearningEngine instead (persistence args are ignored)",
             DeprecationWarning,
             stacklevel=2,
         )
+        global _DEPRECATION_LOG_EMITTED  # noqa: PLW0603 - single global gate for log emission
+        if not _DEPRECATION_LOG_EMITTED:
+            logging.getLogger("deprecations").info(
+                "{event}"
+                .replace("{event}", "{"  # simple brace escape for f-string avoidance
+                )
+            )
+            logging.getLogger("deprecations").info(
+                json.dumps(
+                    {
+                        "event": "deprecated_class_used",
+                        "symbol": "services.learning_engine.LearningEngine",
+                        "replacement": "core.learning_engine.LearningEngine",
+                        "removal_date": str(_REMOVAL_DEADLINE),
+                    }
+                )
+            )
+            _DEPRECATION_LOG_EMITTED = True
         # The legacy shim only forwards an optional registry; older code may
         # have passed extraneous kwargs which we now ignore explicitly.
         if registry is not None:

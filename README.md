@@ -133,10 +133,37 @@ Core subsystems are disabled by default and enabled via environment flags:
 
 See [Configuration Reference](docs/configuration.md) for complete flag documentation.
 
-## Contributing
+### Deprecations & Migration Timeline
+
+The project maintains short, documented grace periods for renamed flags and APIs to reduce churn while allowing cleanup.
+
+![Deprecations & Quality Gate](https://github.com/${{GITHUB_REPOSITORY:-ORG/REPO}}/actions/workflows/deprecations.yml/badge.svg)
+
+| Area | Legacy | Replacement | Grace Period Ends | Notes |
+|------|--------|-------------|-------------------|-------|
+| HTTP Retry Flag | `ENABLE_ANALYSIS_HTTP_RETRY` | `ENABLE_HTTP_RETRY` | 2025-12-31 (planned) | Both currently honored; unified flag takes precedence when both set. Metrics & tests will drop legacy after date. |
+| Learning Engine Shim | `services.learning_engine.LearningEngine` | `core.learning_engine.LearningEngine` | 2025-12-31 (planned) | Shim module will be removed; import core engine directly and use `recommend` / `record`. |
+| Trust Tracker Root File | Root `trustworthiness.json` | `data/trustworthiness.json` (or `TRUST_TRACKER_PATH`) | Immediate | Root file retained only if no `data/` version exists (auto-migration). |
+
+Action Items for Integrators:
+
+1. Replace environment usage of the legacy retry flag with `ENABLE_HTTP_RETRY`.
+2. Update imports to `from core.learning_engine import LearningEngine`.
+3. If scripting around trust scores, point `TRUST_TRACKER_PATH` to a managed location; avoid writing to repo root.
+
+Deprecation warnings surface via `DeprecationWarning`; run tests with `-Wd` to treat them as errors when hardening migrations.
+
+#### Automated Deprecation Status
+
+<!-- DEPRECATIONS:START -->
+Pending generation. Run `make deprecations-badge` (or `python scripts/update_deprecation_badge.py`) to inject the current summary.
+<!-- DEPRECATIONS:END -->
+
+\n## Contributing
 Follow the guidelines in [AGENTS.md](AGENTS.md) and the broader contribution steps in [CONTRIBUTING.md](CONTRIBUTING.md): reuse existing modules, add tests, run `pytest`, and commit using Conventional Commits.
 
 Additional guidelines:
+
 - Keep changes tenant‑aware (always pass explicit tenant/workspace context).
 - Guard new subsystems with `ENABLE_<AREA>_<FEATURE>` flags.
 - Return `StepResult` instead of raising for recoverable tool/pipeline errors.
@@ -168,12 +195,12 @@ See [docs/observability.md](docs/observability.md) for more details.
 
 ## Testing Convenience: In-Memory Qdrant & Tool Contracts
 
-### In-Memory Qdrant Fallback
+\n### In-Memory Qdrant Fallback
 When `QDRANT_URL` is unset, empty, set to `:memory:` or starts with `memory://`, the factory `memory.qdrant_provider.get_qdrant_client()` supplies a lightweight in‑memory stub. This removes the need to run a real Qdrant instance for unit tests while exercising the same higher‑level logic (collection creation, upsert, simple point retrieval). Set a concrete URL (e.g. `export QDRANT_URL=http://localhost:6333`) to use a real backend.
 
 The stub is intentionally minimal and not suitable for performance or recall benchmarking.
 
-### Simplified Tool Return Shapes
+\n### Simplified Tool Return Shapes
 Recent refactors streamlined several tool APIs:
 
 - `VectorSearchTool.run(query)` now returns a flat `list[dict]` of hits: `[{"text": "...", "score": 1.0}]`. Errors surface as `[{"error": "message"}]` instead of raising.

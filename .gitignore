@@ -66,3 +66,19 @@ tmp/
 temp/
 *.tmp
 *.bak
+
+# Ephemeral lint / analysis reports (removed from repo)
+ruff_full*.txt
+longlines.txt
+archive_manifest.db
+trustworthiness.json
+
+# Generated deprecation & governance artifacts
+reports/deprecations_report.json
+tests/deprecations_snapshot.json
+
+# Local virtual environment (already listed but keep explicit)
+.venv/
+
+# Tool-generated caches
+.pytest_cache/

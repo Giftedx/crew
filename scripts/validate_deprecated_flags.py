@@ -29,6 +29,7 @@ DOCS = ROOT / "docs"
 
 ALLOWED_PATH_SUBSTRINGS = {
     str(ROOT / "src" / "core" / "http_utils.py"),
+    str(ROOT / "docs" / "configuration.md"),
     str(ROOT / "docs" / "feature_flags.md"),
     str(ROOT / "CHANGELOG.md"),
     str(ROOT / "README.md"),

@@ -19,18 +19,35 @@ _DATA_DIR = Path("data")
 _PREFERRED_DB = _DATA_DIR / "archive_manifest.db"
 
 def _resolve_db_path() -> Path:
+    """Determine archive manifest SQLite path, migrating legacy root file if present.
+
+    Precedence:
+    1. Explicit ``ARCHIVE_DB_PATH`` environment variable.
+    2. If legacy root DB exists *and* the preferred location does not, move (rename) it into
+       ``data/archive_manifest.db`` (creating ``data/``) for a one-time migration.
+    3. Otherwise use the preferred ``data/`` location.
+    """
+    log = logging.getLogger(__name__)
     env_path = os.environ.get("ARCHIVE_DB_PATH")
     if env_path:
         return Path(env_path)
-    # Legacy file kept if already present and new location absent
     if _LEGACY_DB.exists() and not _PREFERRED_DB.exists():
-        return _LEGACY_DB
-    # default new location
-    if not _DATA_DIR.exists():
+        # Ensure data directory exists then attempt atomic move.
         try:
             _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        except Exception as exc:  # pragma: no cover - extremely unlikely / non-critical
-            logging.getLogger(__name__).debug("Failed creating data dir for archive DB: %s", exc)
+        except Exception as exc:  # pragma: no cover
+            log.debug("Failed creating data dir for archive DB migration: %s", exc)
+        try:
+            _LEGACY_DB.replace(_PREFERRED_DB)
+            log.info("Migrated legacy archive manifest DB to %s", _PREFERRED_DB)
+        except Exception as exc:  # pragma: no cover - unlikely; fall back to legacy path
+            log.warning("Archive DB migration failed (%s); continuing to use legacy path", exc)
+            return _LEGACY_DB
+    if not _DATA_DIR.exists():  # normal path (no legacy or already migrated)
+        try:
+            _DATA_DIR.mkdir(parents=True, exist_ok=True)
+        except Exception as exc:  # pragma: no cover
+            log.debug("Failed creating data dir for archive DB: %s", exc)
     return _PREFERRED_DB
 
 _DB_PATH = _resolve_db_path()

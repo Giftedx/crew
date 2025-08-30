@@ -152,6 +152,37 @@ Current schedule (subset):
 Add new entries when deprecating flags to make removal dates explicit and
 auditable. Avoid extending removal dates without a changelog entry.
 
+##### Proactive Upcoming Window Failure
+
+The deprecation scanner (`scripts/check_deprecations.py`) supports a proactive
+failure mode via `--fail-on-upcoming DAYS`.
+
+Usage examples:
+
+```bash
+python scripts/check_deprecations.py                 # table output, exit 0 or 1 (violations only)
+python scripts/check_deprecations.py --json          # machine JSON (never pretty table)
+python scripts/check_deprecations.py --fail-on-upcoming 90  # additionally fail (exit 1) if any item has remove_after within 90 days
+```
+
+Exit codes:
+
+- 0: No deprecated entries past their removal date AND (if `--fail-on-upcoming` provided) no entries inside the specified window.
+- 1: Either (a) at least one deprecated entry is past its `remove_after`, or (b) `--fail-on-upcoming` window triggered with at least one entry inside horizon.
+- 2: Structural / parsing error (malformed YAML entry, missing required fields, invalid date format) – always fail regardless of window.
+
+JSON mode adds fields:
+`{"fail_on_upcoming": <int|null>, "upcoming_triggered": <bool>, "base_exit_code": <int>}` to distinguish a pure upcoming trigger from active violations.
+
+Recommended CI pattern (strict but actionable):
+
+1. Always publish an informational JSON artifact (without failing early) for dashboards.
+2. Run a second strict invocation with `--fail-on-upcoming 90` (or your policy threshold) to fail the job if the window is breached.
+
+Default documentation window: Unless otherwise noted, examples use a 120‑day
+"upcoming" context for display only; choose a stricter (e.g. 60–90 day) window
+for failing CI to encourage timely cleanup while allowing longer public notice.
+
 Simulation / CI override:
 
 Set `DEPRECATION_AS_OF=YYYY-MM-DD` when invoking

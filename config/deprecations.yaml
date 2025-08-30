@@ -14,3 +14,8 @@ flags:
     remove_after: 2025-12-31
     replacement: ENABLE_HTTP_RETRY
     notes: Legacy analysis-scoped retry flag superseded by global ENABLE_HTTP_RETRY.
+  - name: services.learning_engine.LearningEngine
+    stage: deprecated
+    remove_after: 2025-12-31
+    replacement: core.learning_engine.LearningEngine
+    notes: Shim retained for backward compatibility; remove after grace period.

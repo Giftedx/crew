@@ -15,7 +15,7 @@ def _reset_metrics():
     pass
 
 
-@patch.dict(os.environ, {"ENABLE_ANALYSIS_HTTP_RETRY": "1"})
+@patch.dict(os.environ, {"ENABLE_HTTP_RETRY": "1"})
 @patch("core.http_utils.resilient_post")
 @patch("core.http_utils.http_request_with_retry")
 def test_retrying_post_enabled(mock_retry, mock_post):
@@ -29,7 +29,7 @@ def test_retrying_post_enabled(mock_retry, mock_post):
     assert mock_post.call_count == 0  # not called directly when retries enabled
 
 
-@patch.dict(os.environ, {"ENABLE_ANALYSIS_HTTP_RETRY": ""})
+@patch.dict(os.environ, {"ENABLE_HTTP_RETRY": ""})
 @patch("core.http_utils.resilient_post")
 @patch("core.http_utils.http_request_with_retry")
 def test_retrying_post_disabled(mock_retry, mock_post):
@@ -41,7 +41,7 @@ def test_retrying_post_disabled(mock_retry, mock_post):
     mock_post.assert_called_once()
 
 
-@patch.dict(os.environ, {"ENABLE_ANALYSIS_HTTP_RETRY": "1"})
+@patch.dict(os.environ, {"ENABLE_HTTP_RETRY": "1"})
 @patch("core.http_utils.resilient_get")
 @patch("core.http_utils.http_request_with_retry")
 def test_retrying_get_enabled(mock_retry, mock_get):
@@ -54,7 +54,7 @@ def test_retrying_get_enabled(mock_retry, mock_get):
     assert mock_get.call_count == 0
 
 
-@patch.dict(os.environ, {"ENABLE_ANALYSIS_HTTP_RETRY": ""})
+@patch.dict(os.environ, {"ENABLE_HTTP_RETRY": ""})
 @patch("core.http_utils.resilient_get")
 @patch("core.http_utils.http_request_with_retry")
 def test_retrying_get_disabled(mock_retry, mock_get):
@@ -66,7 +66,7 @@ def test_retrying_get_disabled(mock_retry, mock_get):
     mock_get.assert_called_once()
 
 
-@patch.dict(os.environ, {"ENABLE_ANALYSIS_HTTP_RETRY": "1"})
+@patch.dict(os.environ, {"ENABLE_HTTP_RETRY": "1"})
 def test_retrying_post_actual_retry(monkeypatch):
     calls = {"n": 0}
 
@@ -89,7 +89,7 @@ def test_retrying_post_actual_retry(monkeypatch):
     assert calls["n"] == 2
 
 
-@patch.dict(os.environ, {"ENABLE_ANALYSIS_HTTP_RETRY": "1"})
+@patch.dict(os.environ, {"ENABLE_HTTP_RETRY": "1"})
 def test_retrying_get_actual_retry(monkeypatch):
     calls = {"n": 0}
 
