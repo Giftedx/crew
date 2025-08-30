@@ -1,10 +1,12 @@
-from __future__ import annotations
-
 """Consistency checks for grounded answers to detect contradictions."""
+
+from __future__ import annotations
 
 import re
 
 from .schema import AnswerContract, Evidence
+
+MIN_STATEMENT_LEN = 3  # Minimum length (characters) for a cleaned statement to be considered
 
 
 def check(contract: AnswerContract) -> list[str]:
@@ -35,7 +37,7 @@ def _extract_statements(text: str) -> list[str]:
     """Extract individual statements from text."""
     # Split by sentence-ending punctuation
     statements = re.split(r"[.!?]+", text)
-    return [s.strip() for s in statements if s.strip() and len(s.strip()) > 3]
+    return [s.strip() for s in statements if s.strip() and len(s.strip()) > MIN_STATEMENT_LEN]
 
 
 def _check_evidence_contradictions(citations: list[Evidence]) -> list[str]:

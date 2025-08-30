@@ -8,9 +8,12 @@ from security.signing import (
     verify_signature_headers,
 )
 
+# Test-only secret value; acceptable hardcoded constant for unit tests.
+TEST_SECRET = "s3cr3t"  # noqa: S105 - non-production test secret
+
 
 def test_sign_and_verify():
-    secret = "s3cr3t"
+    secret = TEST_SECRET
     payload = b"payload"
     ts = int(time.time())
     nonce = "abc"
@@ -19,7 +22,7 @@ def test_sign_and_verify():
 
 
 def test_replay_and_tamper():
-    secret = "s3cr3t"
+    secret = TEST_SECRET
     payload = b"data"
     ts = int(time.time())
     nonce = "n1"
@@ -36,7 +39,7 @@ def test_replay_and_tamper():
 
 
 def test_header_helpers():
-    secret = "s3cr3t"
+    secret = TEST_SECRET
     payload = b"data"
     headers = build_signature_headers(payload, secret)
     assert verify_signature_headers(payload, secret, headers)
@@ -47,7 +50,7 @@ def test_header_helpers():
 
 
 def test_nonce_cache_bounded(monkeypatch):
-    secret = "s3cr3t"
+    secret = TEST_SECRET
     payload = b"x"
     signing._seen_nonces.clear()
     monkeypatch.setattr(signing, "MAX_NONCES", 3)

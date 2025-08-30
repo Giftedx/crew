@@ -8,17 +8,18 @@ records can be queried for offline analysis or reinforcement learning feedback.
 from __future__ import annotations
 
 import sqlite3
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 
 
-def _as_list(value: Sequence[str] | None) -> str:
+def _as_list(value: Iterable[str] | None) -> str:
     """Return a comma separated list or empty string."""
     if not value:
         return ""
-    return ",".join(value)
+    # Ensure we only join strings (defensive); convert any non-str via str()
+    return ",".join(str(v) for v in value)
 
 
 @dataclass
@@ -99,7 +100,7 @@ class AnalyticsStore:
         self.conn.commit()
 
     # -- logging helpers --------------------------------------------------------
-    def log_llm_call(
+    def log_llm_call(  # noqa: PLR0913 - arguments map 1:1 to schema columns; grouping preserves explicitness
         self,
         task: str,
         model: str,
@@ -112,7 +113,7 @@ class AnalyticsStore:
         success: bool,
         toolset: Iterable[str] | None = None,
         ts: datetime | None = None,
-    ) -> None:
+    ) -> None:  # noqa: PLR0913 - arguments mirror fixed analytics schema columns; packing into **kwargs loses type safety
         """Record a language model invocation.
 
         Only high-level metrics are stored; no prompt or response text is
@@ -146,8 +147,7 @@ class AnalyticsStore:
     def fetch_llm_calls(self) -> Iterable[tuple[str, str]]:
         """Yield minimal info about logged calls for tests or dashboards."""
         cur = self.conn.cursor()
-        for row in cur.execute("SELECT task, model FROM llm_calls"):
-            yield row
+        yield from cur.execute("SELECT task, model FROM llm_calls")
 
     def close(self) -> None:  # pragma: no cover - trivial
         self.conn.close()

@@ -1,11 +1,14 @@
-from __future__ import annotations
-
 """Prompt evaluation harness for benchmarking models.
 
 The :class:`EvaluationHarness` runs prompts across one or more models via the
 :class:`OpenRouterService`, recording latency, token usage and responses. Results
 are appended to a JSON Lines log so offline analysis and reinforcement learning
-can consume the data."""
+can consume the data.
+
+Import ordering: module docstring precedes ``__future__`` import per Ruff E402 guidance.
+"""
+
+from __future__ import annotations
 
 import json
 import time
@@ -27,8 +30,12 @@ class EvaluationHarness:
         prompt: str,
         task_type: str = "general",
         models: list[str] | None = None,
-    ) -> list[dict[str, Any]]:
-        """Execute ``prompt`` against ``models`` and log the outcomes."""
+    ) -> list[dict[str, Any]]:  # noqa: PLR0913 - explicit parameters aid clarity for CLI usage
+        """Execute ``prompt`` against ``models`` and log the outcomes.
+
+        Keeping parameters explicit (vs a config dict) improves discoverability for
+        callers / tests and avoids secondary validation layer.
+        """
 
         models_to_run = models or self.router.models_map.get(
             task_type, self.router.models_map["general"]
@@ -50,6 +57,18 @@ class EvaluationHarness:
                 with open(self.log_path, "a", encoding="utf-8") as fh:
                     json.dump(record, fh)
                     fh.write("\n")
-            except Exception:
-                pass
+            except OSError as exc:  # noqa: S110 - explicit exception capture & logging
+                # Logging failure should not abort benchmark loop; emit structured
+                # diagnostic for observability instead of swallowing silently.
+                # Using print keeps harness dependency‑light; upstream caller can
+                # redirect stdout to logging if desired.
+                print(
+                    json.dumps(
+                        {
+                            "event": "evaluation_harness_log_error",
+                            "error": str(exc),
+                            "path": self.log_path,
+                        }
+                    )
+                )
         return results

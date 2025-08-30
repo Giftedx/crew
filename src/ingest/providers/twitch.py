@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-"""Twitch ingestion utilities using ``yt-dlp`` for simplicity."""
-
 from dataclasses import dataclass
+
+"""Twitch ingestion utilities using ``yt-dlp`` for simplicity."""
 
 
 @dataclass
@@ -16,7 +16,7 @@ class ClipMetadata:
 
 
 def fetch_metadata(url: str) -> ClipMetadata:
-    import yt_dlp
+    import yt_dlp  # noqa: PLC0415 - heavy optional dependency only needed when fetching metadata
 
     with yt_dlp.YoutubeDL({"quiet": True}) as ydl:  # pragma: no cover - network
         info = ydl.extract_info(url, download=False)

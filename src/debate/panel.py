@@ -1,6 +1,6 @@
-from __future__ import annotations
-
 """Simple multi-agent debate panel."""
+
+from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass, field
@@ -36,7 +36,7 @@ class DebateReport:
 
 
 @tracing.trace_call("debate.run_panel")
-def run_panel(
+def run_panel(  # noqa: PLR0913 - explicit parameters clarify API; grouping into a context object would obscure call sites
     query: str,
     router: Router,
     call_model: Callable[[str, str], str],

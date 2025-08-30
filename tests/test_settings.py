@@ -14,7 +14,7 @@ def reload_settings(monkeypatch, **env):
 
 
 def test_base_dir_env_override(monkeypatch):
-    tmp = Path("/tmp/crewtest")
+    tmp = Path("/tmp/crewtest")  # noqa: S108 - controlled temporary directory for test isolation
     settings = reload_settings(monkeypatch, CREWAI_BASE_DIR=str(tmp))
     assert tmp == settings.BASE_DIR
 

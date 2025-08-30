@@ -4,6 +4,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
+# JPEG compression tuning constants
+INITIAL_JPEG_QUALITY = 85  # Starting quality for adaptive downscale
+MIN_JPEG_QUALITY = 35  # Lower bound to avoid excessive degradation (balances size vs fidelity)
+QUALITY_STEP = 5  # Step decrement per iteration
+
 try:
     from PIL import Image
 except Exception:  # pragma: no cover - pillow optional
@@ -21,7 +26,7 @@ def fit_to_limit(path_in: str | Path, bytes_limit: int, kind: str) -> tuple[Path
     stats: dict = {"original_size": src.stat().st_size}
     if kind == "images" and Image:
         with Image.open(src) as im:
-            quality = 85
+            quality = INITIAL_JPEG_QUALITY
             dst = src.with_suffix(".jpg")
             while True:
                 im.save(
@@ -32,10 +37,10 @@ def fit_to_limit(path_in: str | Path, bytes_limit: int, kind: str) -> tuple[Path
                     exif=b"",  # strip EXIF to avoid leaking metadata
                 )
                 size = dst.stat().st_size
-                if size <= bytes_limit or quality <= 35:
+                if size <= bytes_limit or quality <= MIN_JPEG_QUALITY:
                     stats["final_size"] = size
                     break
-                quality -= 5
+                quality -= QUALITY_STEP
     else:
         size = src.stat().st_size
         if size > bytes_limit:

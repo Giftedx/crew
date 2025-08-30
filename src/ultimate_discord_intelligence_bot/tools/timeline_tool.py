@@ -4,13 +4,34 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-
-from crewai.tools import BaseTool
+from typing import Any, TypedDict, cast
 
 from .. import settings
+from ._base import BaseTool
 
 
-class TimelineTool(BaseTool):
+class _TimelineAddResult(TypedDict, total=False):
+    status: str
+    error: str
+
+
+class _TimelineGetResult(TypedDict):
+    status: str
+    events: list[dict[str, object]]
+
+
+class TimelineEvent(TypedDict, total=False):
+    ts: int | float
+    type: str
+    data: dict[str, Any]
+    # Analysis pipeline specific optional fields
+    clip: str
+    context_verdict: str
+    fact_verdict: str
+    evidence: list[Any]
+
+
+class TimelineTool(BaseTool[dict[str, object]]):
     """Store timeline events per video with sources."""
 
     name: str = "Timeline Tool"
@@ -23,37 +44,72 @@ class TimelineTool(BaseTool):
         if not self.storage_path.exists():
             self._save({})
 
-    def _load(self) -> dict[str, list[dict]]:
+    def _load(self) -> dict[str, list[TimelineEvent]]:
         try:
             with self.storage_path.open("r", encoding="utf-8") as f:
-                return json.load(f)
+                raw: Any = json.load(f)
         except Exception:
             return {}
+        if not isinstance(raw, dict):
+            return {}
+        out: dict[str, list[TimelineEvent]] = {}
+        for vid, events in raw.items():
+            if not isinstance(vid, str) or not isinstance(events, list):
+                continue
+            norm_events: list[TimelineEvent] = []
+            for ev in events:
+                if not isinstance(ev, dict):
+                    continue
+                # Basic field extraction with safe casting
+                ts_val = ev.get("ts")
+                ts: int | float | None = ts_val if isinstance(ts_val, int | float) else None
+                type_val = ev.get("type")
+                type_str = type_val if isinstance(type_val, str) else ""
+                data_val = ev.get("data")
+                data_dict = data_val if isinstance(data_val, dict) else {}
+                norm: TimelineEvent = {"type": type_str, "data": data_dict}
+                if ts is not None:
+                    norm["ts"] = ts
+                # Optional fields assigned explicitly (avoid dynamic key for TypedDict literal requirement)
+                if "clip" in ev:
+                    norm["clip"] = cast(Any, ev["clip"])
+                if "context_verdict" in ev:
+                    norm["context_verdict"] = cast(Any, ev["context_verdict"])
+                if "fact_verdict" in ev:
+                    norm["fact_verdict"] = cast(Any, ev["fact_verdict"])
+                if "evidence" in ev:
+                    norm["evidence"] = cast(Any, ev["evidence"])
+                norm_events.append(norm)
+            out[vid] = norm_events
+        return out
 
-    def _save(self, data: dict[str, list[dict]]) -> None:
+    def _save(self, data: dict[str, list[TimelineEvent]]) -> None:
         self.storage_path.parent.mkdir(parents=True, exist_ok=True)
         with self.storage_path.open("w", encoding="utf-8") as f:
             json.dump(data, f)
 
-    def add_event(self, video_id: str, event: dict) -> None:
+    def add_event(self, video_id: str, event: TimelineEvent) -> None:
         data = self._load()
-        events = data.get(video_id, [])
+        events = data.get(video_id, [])  # already list[TimelineEvent] via _load signature
         events.append(event)
-        events.sort(key=lambda x: x.get("ts", 0))
+        events.sort(key=lambda x: (x.get("ts") or 0))
         data[video_id] = events
         self._save(data)
 
-    def get_timeline(self, video_id: str) -> list[dict]:
+    def get_timeline(self, video_id: str) -> list[TimelineEvent]:
         data = self._load()
         return data.get(video_id, [])
 
-    def _run(self, action: str, **kwargs):
+    def _run(self, action: str, **kwargs: object) -> dict[str, object]:
         if action == "add":
-            self.add_event(kwargs["video_id"], kwargs.get("event", {}))
+            video_id = cast(str, kwargs["video_id"])  # Expect caller contract
+            event = cast(TimelineEvent, kwargs.get("event", {}))
+            self.add_event(video_id, event)
             return {"status": "success"}
         if action == "get":
-            return {"status": "success", "events": self.get_timeline(kwargs["video_id"])}
+            video_id = cast(str, kwargs["video_id"])  # Expect caller contract
+            return {"status": "success", "events": self.get_timeline(video_id)}
         return {"status": "error", "error": "unknown action"}
 
-    def run(self, *args, **kwargs):  # pragma: no cover - thin wrapper
-        return self._run(*args, **kwargs)
+    def run(self, action: str, **kwargs: object) -> dict[str, object]:  # pragma: no cover - thin wrapper
+        return self._run(action, **kwargs)

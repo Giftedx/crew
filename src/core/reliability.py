@@ -12,7 +12,7 @@ def retry(
     backoff: float = 0.1,
     factor: float = 2.0,
     exc: type[Exception] = Exception,
-):
+) -> Any:
     """Retry ``fn`` with exponential backoff and jitter."""
     for attempt in range(retries):
         try:
@@ -20,8 +20,10 @@ def retry(
         except exc:
             if attempt == retries - 1:
                 raise
-            sleep = backoff * (factor**attempt) + random.random() * backoff
-            time.sleep(sleep)
+            # Non-crypto jitter; acceptable to use random here. If crypto needed, swap to secrets.
+            sleep = backoff * (factor**attempt) + random.random() * backoff  # noqa: S311
+        time.sleep(sleep)
+    return fn()  # pragma: no cover - logically unreachable
 
 
 __all__ = ["retry"]

@@ -1,6 +1,6 @@
-from __future__ import annotations
-
 """Config-driven policy engine for privacy and usage rules."""
+
+from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
@@ -20,8 +20,8 @@ class Decision:
 
 @dataclass
 class Policy:
-    allowed_sources: dict[str, list]
-    forbidden_types: list
+    allowed_sources: dict[str, list[str] | None]
+    forbidden_types: list[str]
     pii_types: dict[str, str]
     masks: dict[str, str]
     storage: dict[str, Any]
@@ -43,12 +43,26 @@ def load_policy(tenant: str | None = None) -> Policy:
                     data[k].update(v)
                 else:
                     data[k] = v
+    # Normalize selected list fields to expected types
+    allowed_sources = data.get("allowed_sources", {}) or {}
+    if not isinstance(allowed_sources, dict):
+        allowed_sources = {}
+    norm_allowed: dict[str, list[str] | None] = {}
+    for key, val in allowed_sources.items():
+        if val is None:
+            norm_allowed[key] = None
+        elif isinstance(val, list):
+            norm_allowed[key] = [str(x) for x in val]
+    forbidden_types = [str(x) for x in data.get("forbidden_types", [])]
+    data["allowed_sources"] = norm_allowed
+    data["forbidden_types"] = forbidden_types
     return Policy(**data)
 
 
 def check_source(source_meta: dict[str, Any], policy: Policy) -> Decision:
     """Evaluate a content source against the policy."""
-    src = source_meta.get("source_platform") or source_meta.get("type")
+    raw_src = source_meta.get("source_platform") or source_meta.get("type")
+    src = str(raw_src) if raw_src is not None else ""  # normalize to string for mapping lookup
     allowed_ids = policy.allowed_sources.get(src)
     if allowed_ids is None:
         return Decision("block", ["source not allowed"])

@@ -53,7 +53,7 @@ class PluginExecutor:
         jsonschema.validate(manifest, self._schema)
         return manifest
 
-    def run(
+    def run(  # noqa: PLR0913 - parameters mirror sandbox policy + execution knobs; **kwargs would obscure contract
         self,
         plugin_dir: str | pathlib.Path,
         granted_scopes: Iterable[str],

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+from collections.abc import Sequence
 from pathlib import Path
 
 import jsonschema
@@ -13,7 +14,7 @@ with open(SCHEMA_PATH, encoding="utf-8") as fh:
     SCHEMA = json.load(fh)
 
 
-def main(argv=None) -> int:
+def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--task", required=True)
     parser.add_argument("--query", required=True)

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import math
-import random
+import random  # noqa: S311 - exploration randomness is non-cryptographic
 from collections import defaultdict
 from collections.abc import Sequence
 from dataclasses import dataclass, field
@@ -21,8 +21,9 @@ class EpsilonGreedyBandit:
     def recommend(self, context: dict[str, Any], candidates: Sequence[Any]) -> Any:
         if not candidates:
             raise ValueError("candidates must not be empty")
-        if random.random() < self.epsilon:
-            return random.choice(list(candidates))
+        # Non-cryptographic randomness acceptable here: policy exploration.
+        if random.random() < self.epsilon:  # noqa: S311 - epsilon-greedy exploration
+            return random.choice(list(candidates))  # noqa: S311 - candidate selection not security sensitive
         return max(candidates, key=lambda c: self.q_values[c])
 
     def update(self, action: Any, reward: float, context: dict[str, Any]) -> None:

@@ -1,8 +1,9 @@
+from __future__ import annotations
+
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
-from crewai.tools import BaseTool
 from pydantic import Field
 
 from core.http_utils import (
@@ -14,13 +15,15 @@ from core.http_utils import (
     validate_public_https_url,
 )
 
+from ._base import BaseTool
+
 # ---------------------------------------------------------------------------
 # Constants (avoid magic numbers in logic)
 # ---------------------------------------------------------------------------
 DISCORD_FILE_LIMIT_MB = 100  # Typical limit for standard servers (may vary)
 
 
-class DiscordPostTool(BaseTool):
+class DiscordPostTool(BaseTool[dict[str, object]]):
     """Post messages, embeds, and small file uploads to Discord via webhook.
 
     HTTP concerns (URL validation, standard timeouts, legacy monkeypatch
@@ -88,7 +91,8 @@ class DiscordPostTool(BaseTool):
                 "text": "CrewAI Content Monitor",
                 "icon_url": "https://example.com/crewai-icon.png",
             },
-            "timestamp": datetime.now().isoformat(),
+            # Use explicit UTC to avoid naive timestamps which complicate downstream parsing
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
         payload = {
@@ -151,7 +155,26 @@ class DiscordPostTool(BaseTool):
         if response.status_code == HTTP_SUCCESS_NO_CONTENT:
             return {"status": "success"}
         elif response.status_code == HTTP_RATE_LIMITED:
-            retry_after = getattr(response, 'json', lambda: {})().get("retry_after", DEFAULT_RATE_LIMIT_RETRY)
+            data: dict[str, object] = {}
+            try:
+                raw_json: object = getattr(response, 'json', lambda: {})()
+                if isinstance(raw_json, dict):
+                    data = raw_json  # narrow to dict[str, object]
+            except Exception:  # pragma: no cover - malformed JSON
+                data = {}
+            ra = data.get("retry_after") if isinstance(data, dict) else None
+            retry_after: float = float(DEFAULT_RATE_LIMIT_RETRY)
+            if isinstance(ra, int | float):  # py311+ union isinstance style
+                if ra >= 0:
+                    retry_after = float(ra)
+            elif isinstance(ra, str):
+                try:
+                    candidate = float(ra)
+                    if candidate >= 0:
+                        retry_after = candidate
+                except ValueError:  # pragma: no cover - ignore non-numeric string
+                    # Non-numeric retry_after -> fallback to default; explicit except avoids blanket swallow
+                    ...
             return {"status": "rate_limited", "retry_after": retry_after}
         else:
             return {"status": "error", "status_code": response.status_code, "error": getattr(response, 'text', '')}

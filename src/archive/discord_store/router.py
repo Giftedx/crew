@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
+from typing import Any
 
 import yaml
 
@@ -14,11 +15,14 @@ class RouteConfigError(RuntimeError):
     """Raised when the routing configuration is missing or invalid."""
 
 
-def _load_config() -> dict:
+def _load_config() -> dict[str, Any]:
     if not _CONFIG_PATH.exists():
         raise RouteConfigError(f"missing routes config at {_CONFIG_PATH}")
     with _CONFIG_PATH.open("r", encoding="utf-8") as fh:
-        return yaml.safe_load(fh)
+        data = yaml.safe_load(fh) or {}
+    if not isinstance(data, dict):  # defensive
+        raise RouteConfigError("routes config root must be a mapping")
+    return data
 
 
 _CONFIG = _load_config()
@@ -42,7 +46,7 @@ def kind_from_path(path: Path) -> str:
 
 def pick_channel(
     path: str | Path,
-    meta: dict | None = None,
+    meta: dict[str, Any] | None = None,
     tenant: str | None = None,
     visibility: str = "public",
 ) -> tuple[str, str | None]:

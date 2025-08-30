@@ -28,6 +28,9 @@ def test_ingest_console_script_help():
             "ingest console script not found on PATH; skipping (module invocation still covered elsewhere)"
         )
 
-    proc = subprocess.run(cmd, check=False, capture_output=True, text=True, timeout=15)
+    # Security: command list is derived from installed entry point path, no shell used.
+    proc = subprocess.run(  # noqa: S603
+        cmd, check=True, capture_output=True, text=True, timeout=15
+    )
     assert proc.returncode == 0, proc.stderr
     assert "Run a single ingestion job" in proc.stdout

@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from typing import TypedDict
 
-from crewai.tools import BaseTool
+from ._base import BaseTool
 
 
 class _MonitorResult(TypedDict):
@@ -13,7 +13,7 @@ class _MonitorResult(TypedDict):
     new_items: list[dict[str, str]]
 
 
-class MultiPlatformMonitorTool(BaseTool):
+class MultiPlatformMonitorTool(BaseTool[_MonitorResult]):
     """Return unseen content items.
 
     The tool keeps an in-memory set of identifiers for items it has already
@@ -38,5 +38,5 @@ class MultiPlatformMonitorTool(BaseTool):
                 new_items.append(item)
         return {"status": "success", "new_items": new_items}
 
-    def run(self, *args, **kwargs):  # pragma: no cover - thin wrapper
-        return self._run(*args, **kwargs)
+    def run(self, items: Iterable[dict[str, str]]) -> _MonitorResult:  # pragma: no cover - thin wrapper
+        return self._run(items)

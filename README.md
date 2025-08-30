@@ -14,7 +14,7 @@ Giftedx Crew is a tenant‑aware Discord platform that ingests public media, bui
 - **Debate & scheduler** – multi-role debate panel, perspective synthesis, steelman arguments, and RL-paced ingest scheduler for ongoing refinement.
 - **Advanced analysis** – sentiment analysis, trustworthiness tracking, timeline construction, and comprehensive content analysis tools.
 
-See the documentation for full subsystem guides:
+See the documentation for full subsystem guides (for automated agent patterns see `docs/agent_reference.md`):
 - [Tools Reference](docs/tools_reference.md) - Comprehensive tool documentation
 - [Network & HTTP Conventions](docs/network_conventions.md) - Shared helpers for URL validation, resilient POST/GET, timeouts, and rate limiting
 - [Analysis Modules](docs/analysis_modules.md) - Transcript processing and content analysis
@@ -165,3 +165,60 @@ with with_tenant(TenantContext("t", "w")):
 ```
 
 See [docs/observability.md](docs/observability.md) for more details.
+
+## Testing Convenience: In-Memory Qdrant & Tool Contracts
+
+### In-Memory Qdrant Fallback
+When `QDRANT_URL` is unset, empty, set to `:memory:` or starts with `memory://`, the factory `memory.qdrant_provider.get_qdrant_client()` supplies a lightweight in‑memory stub. This removes the need to run a real Qdrant instance for unit tests while exercising the same higher‑level logic (collection creation, upsert, simple point retrieval). Set a concrete URL (e.g. `export QDRANT_URL=http://localhost:6333`) to use a real backend.
+
+The stub is intentionally minimal and not suitable for performance or recall benchmarking.
+
+### Simplified Tool Return Shapes
+Recent refactors streamlined several tool APIs:
+
+- `VectorSearchTool.run(query)` now returns a flat `list[dict]` of hits: `[{"text": "...", "score": 1.0}]`. Errors surface as `[{"error": "message"}]` instead of raising.
+- `DiscordQATool.run(question)` consumes that list and returns `{ "status": "success", "snippets": ["..."] }` (or an error variant if the first element contains `error`).
+- `PerspectiveSynthesizerTool._run(*segments)` accepts varargs (`_run("A", "B")`) and produces a deterministic uppercase summary to stabilise tests. (If you need original casing for production responses, add a flag or wrapper—the core pipeline today relies on the uppercase form only for assertions.)
+- `MemoryStorageTool` initialisation no longer triggers pydantic required-field validation when injecting a mocked client; attributes are assigned post base initialisation.
+
+If you previously depended on the older wrapped structure `{ "status": ..., "hits": [...] }`, adapt by wrapping the returned list where needed. The simplified shape reduces boilerplate and matches how agents consume results internally.
+
+### Migration Checklist
+
+- Remove any code expecting `result["hits"]`; treat the direct list as the hits.
+- For QA flows, adapt to `DiscordQATool`'s stable `{snippets: [...]}` output.
+- Ensure local dev does not silently rely on the in-memory stub for benchmarking.
+
+## Typing & Timezone Practices
+
+Consistent typing and UTC handling reduce subtle runtime bugs and make tests deterministic.
+
+### Timezone Rules
+
+- All internal timestamps MUST be timezone-aware UTC (`datetime.now(timezone.utc)`), never naive `utcnow()`.
+- When parsing external or config timestamps, naive datetimes are assumed UTC and normalised (`ensure_utc`).
+- Helper: `core.time.ensure_utc(dt)` attaches `timezone.utc` if missing; use in new parsing code instead of ad-hoc `replace(tzinfo=...)`.
+- Avoid serialising naive timestamps; prefer ISO 8601 with `Z` (e.g. `dt.isoformat()` yields `+00:00`).
+
+### Typing Guidelines
+
+- New/modified modules should add precise function signatures; avoid introducing untyped `def` unless guarded by a `# pragma: no cover` style triviality.
+- Eliminate `Any` leakage—guard optional imports with `TYPE_CHECKING` and keep the runtime fallback narrow (see `memory.qdrant_provider`).
+- Prefer `TypedDict` / `dataclass` for structured payloads over loose `dict[str, Any]`.
+- Do not widen existing types to satisfy a single call site; adapt that caller instead.
+- Keep return shapes minimal and explicit; lists of plain dicts are acceptable if the schema is documented (see vector search hits), otherwise formalise with a dataclass.
+
+### Determinism for Tests
+
+- Functions with randomness or external timestamps should accept injectable providers (see `core.time.default_utc_now`) to stabilise tests.
+- Summaries or synthesis steps that feed assertions should either normalise case or expose a flag so tests can enforce deterministic output.
+
+### Quick Audit Commands
+
+```bash
+grep -R "utcnow" -n src || true        # should be empty
+grep -R "datetime.now()" -n src || true # naive calls should not appear
+```
+
+If a future change introduces naive timestamps, add a focused test similar to `tests/test_tenancy_timezone.py` ensuring normalisation.
+

@@ -1,13 +1,14 @@
 from __future__ import annotations
 
-"""Builders and validators for :class:`AnswerContract`."""
-
 from dataclasses import dataclass
 from pathlib import Path
 
 import yaml
 
+from .citation_utils import append_numeric_citations
 from .schema import AnswerContract, Evidence
+
+"""Builders and validators for :class:`AnswerContract`."""
 
 CONFIG_PATH = Path("config/grounding.yaml")
 TENANT_DIR = Path("tenants")
@@ -19,8 +20,8 @@ class GroundingError(RuntimeError):
 
 @dataclass
 class GroundingConfig:
-    defaults: dict
-    commands: dict
+    defaults: dict[str, object]
+    commands: dict[str, dict[str, object]]
 
 
 def load_config(tenant: str | None = None) -> GroundingConfig:
@@ -45,7 +46,14 @@ def build_contract(
 
     cfg = load_config(tenant)
     rules = cfg.commands.get(use_case, cfg.defaults)
-    min_cit = int(rules.get("min_citations", 1))
+    raw_min = rules.get("min_citations", 1)
+    if isinstance(raw_min, int | str):
+        try:
+            min_cit = int(raw_min)
+        except Exception:
+            min_cit = 1
+    else:
+        min_cit = 1
     if len(evidence) < min_cit:
         raise GroundingError(f"requires >= {min_cit} citations")
     if rules.get("require_timestamped"):
@@ -53,7 +61,9 @@ def build_contract(
             loc = ev.locator or {}
             if not any(k in loc for k in ("t_start", "start")):
                 raise GroundingError("timestamp required")
-    return AnswerContract(answer_text=answer, citations=evidence)
+    # Ensure standardized numeric citation tail formatting
+    formatted_answer = append_numeric_citations(answer, evidence)
+    return AnswerContract(answer_text=formatted_answer, citations=evidence)
 
 
 __all__ = ["load_config", "GroundingError", "build_contract", "GroundingConfig"]

@@ -4,9 +4,10 @@ from __future__ import annotations
 
 import argparse
 import json
+from collections.abc import Sequence
 
 
-def main(argv=None) -> int:
+def main(argv: Sequence[str] | None = None) -> int:
     p = argparse.ArgumentParser()
     p.add_argument("--a", required=True)
     p.add_argument("--b", required=True)

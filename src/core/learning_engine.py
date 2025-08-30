@@ -2,11 +2,20 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
-from typing import Any
+from collections.abc import Mapping, MutableMapping, Sequence
+from typing import Any, Protocol, cast, runtime_checkable
 
 from .rl.policies.bandit_base import EpsilonGreedyBandit
 from .rl.registry import PolicyRegistry
+
+
+@runtime_checkable
+class _BanditLike(Protocol):  # minimal protocol for bandit policies
+    def recommend(self, context: dict[str, Any], candidates: Sequence[Any]) -> Any: ...
+    def update(self, action: Any, reward: float, context: dict[str, Any]) -> None: ...
+    # Mutable state mappings (duck-typed). Implementations may use defaultdicts.
+    q_values: MutableMapping[Any, float]
+    counts: MutableMapping[Any, int]
 
 
 class LearningEngine:
@@ -20,26 +29,26 @@ class LearningEngine:
     ) -> None:
         """Register ``policy`` under ``name`` and apply optional ``priors``."""
 
-        bandit = policy or EpsilonGreedyBandit()
-        if priors:
+        bandit = cast(_BanditLike, policy or EpsilonGreedyBandit())
+        if priors and hasattr(bandit, "q_values"):
             for arm, q in priors.items():
                 bandit.q_values[arm] = q
         self.registry.register(name, bandit)
 
     def recommend(self, domain: str, context: dict[str, Any], candidates: Sequence[Any]) -> Any:
-        policy = self.registry.get(domain)
+        policy = cast(_BanditLike, self.registry.get(domain))
         return policy.recommend(context, candidates)
 
     def record(self, domain: str, context: dict[str, Any], action: Any, reward: float) -> None:
-        policy = self.registry.get(domain)
+        policy = cast(_BanditLike, self.registry.get(domain))
         policy.update(action, reward, context)
 
     # ------------------------------------------------------------------ cold-start
     def shadow_bakeoff(
-        self,
-        domain: str,
-        candidates: Sequence[Any],
-        trial_fn,
+    self,
+    domain: str,
+    candidates: Sequence[Any],
+    trial_fn: Any,
     ) -> None:
         """Run a shadow bakeoff evaluating ``candidates`` without affecting live calls.
 
@@ -54,7 +63,7 @@ class LearningEngine:
             self.record(domain, {}, arm, reward)
 
     # ------------------------------------------------------------------ ops
-    def snapshot(self) -> dict[str, dict[str, dict[Any, float]]]:
+    def snapshot(self) -> dict[str, dict[str, Any]]:
         """Return a snapshot of all registered policy state.
 
         The snapshot is a serialisable dictionary mapping ``domain`` to the
@@ -63,40 +72,60 @@ class LearningEngine:
         to an earlier state.
         """
 
-        data: dict[str, dict[str, dict[Any, float]]] = {}
-        for name, policy in self.registry.items():
-            state = {
-                "policy": policy.__class__.__name__,
-                "q_values": dict(getattr(policy, "q_values", {})),
-                "counts": dict(getattr(policy, "counts", {})),
-            }
-            data[name] = state
+        data: dict[str, dict[str, Any]] = {}
+        for name, policy_obj in self.registry.items():
+            policy = cast(_BanditLike, policy_obj)
+            q_values = dict(getattr(policy, "q_values", {}))
+            counts = dict(getattr(policy, "counts", {}))
+            data[name] = {"policy": policy.__class__.__name__, "q_values": q_values, "counts": counts}
         return data
 
-    def restore(self, snapshot: dict[str, dict[str, dict[Any, float]]]) -> None:
+    def restore(self, snapshot: Mapping[str, Mapping[str, Any]]) -> None:
         """Restore policy state from ``snapshot`` produced by :meth:`snapshot`."""
 
         for name, state in snapshot.items():
-            policy = self.registry.get(name)
-            if hasattr(policy, "q_values"):
+            policy = cast(_BanditLike, self.registry.get(name))
+            q_vals = state.get("q_values", {})
+            counts = state.get("counts", {})
+            if hasattr(policy, "q_values") and isinstance(q_vals, Mapping):
                 policy.q_values.clear()
-                policy.q_values.update(state.get("q_values", {}))
-            if hasattr(policy, "counts"):
+                policy.q_values.update(cast(Mapping[Any, float], q_vals))
+            if hasattr(policy, "counts") and isinstance(counts, Mapping):
                 policy.counts.clear()
-                policy.counts.update(state.get("counts", {}))
+                policy.counts.update(cast(Mapping[Any, int], counts))
 
     def status(self) -> dict[str, dict[str, Any]]:
         """Return a diagnostic view of all policies and their arms."""
 
         summary: dict[str, dict[str, Any]] = {}
-        for name, policy in self.registry.items():
-            arms = {}
+        for name, policy_obj in self.registry.items():
+            policy = cast(_BanditLike, policy_obj)
+            arms: dict[Any, dict[str, float | int]] = {}
             q_vals = getattr(policy, "q_values", {})
             counts = getattr(policy, "counts", {})
             for arm, q in q_vals.items():
-                arms[arm] = {"q": q, "n": counts.get(arm, 0)}
+                arms[arm] = {"q": float(q), "n": int(counts.get(arm, 0))}
             summary[name] = {"policy": policy.__class__.__name__, "arms": arms}
         return summary
+
+    # ------------------- Convenience helpers (legacy compatibility) -------------------
+    def select_model(self, task_type: str, candidates: Sequence[str]) -> str:
+        """Legacy convenience wrapper used by services.
+
+        Ensures a domain for the given task_type exists and returns a recommended arm.
+        """
+        domain = f"route.model.select::{task_type}"
+        if domain not in self.registry:
+            self.register_domain(domain)
+        choice = self.recommend(domain, {}, candidates)
+        return cast(str, choice)
+
+    def update(self, task_type: str, action: str, reward: float) -> None:
+        """Legacy convenience update for model selection domains."""
+        domain = f"route.model.select::{task_type}"
+        if domain not in self.registry:
+            self.register_domain(domain)
+        self.record(domain, {}, action, reward)
 
 
 __all__ = ["LearningEngine"]

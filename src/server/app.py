@@ -12,6 +12,7 @@ value) is set.  The factory wires:
 
 from __future__ import annotations
 
+import logging
 import time
 from collections.abc import Callable
 from contextlib import asynccontextmanager
@@ -31,7 +32,7 @@ def _add_metrics_middleware(app: FastAPI, settings: Settings) -> None:
         return
 
     @app.middleware("http")
-    async def _metrics_mw(request: Request, call_next: Callable):  # type: ignore[no-untyped-def]
+    async def _metrics_mw(request: Request, call_next: Callable):
         start = time.perf_counter()
         response: Response = await call_next(request)
         route = getattr(request.scope.get("route"), "path", request.url.path)
@@ -42,8 +43,8 @@ def _add_metrics_middleware(app: FastAPI, settings: Settings) -> None:
         try:
             metrics.HTTP_REQUEST_LATENCY.labels(route, method).observe(dur_ms)
             metrics.HTTP_REQUEST_COUNT.labels(route, method, str(response.status_code)).inc()
-        except Exception:  # pragma: no cover - defensive; metrics optional
-            pass
+        except Exception as exc:  # pragma: no cover - defensive; metrics optional
+            logging.debug("metrics middleware swallow error: %s", exc)
         return response
 
 
@@ -51,10 +52,13 @@ def _add_rate_limit_middleware(app: FastAPI, settings: Settings) -> None:
     if not settings.enable_rate_limiting:
         return
 
-    bucket = TokenBucket(rate=float(max(1, settings.rate_limit_rps)), capacity=max(settings.rate_limit_rps, settings.rate_limit_burst))
+    bucket = TokenBucket(
+        rate=float(max(1, settings.rate_limit_rps)),
+        capacity=max(settings.rate_limit_rps, settings.rate_limit_burst),
+    )
 
     @app.middleware("http")
-    async def _rate_limit(request: Request, call_next: Callable):  # type: ignore[no-untyped-def]
+    async def _rate_limit(request: Request, call_next: Callable):
         route = getattr(request.scope.get("route"), "path", request.url.path)
         # Allow scraping endpoint to bypass rate limiting so metrics remain observable
         if route == settings.prometheus_endpoint_path:
@@ -65,8 +69,8 @@ def _add_rate_limit_middleware(app: FastAPI, settings: Settings) -> None:
             if settings.enable_http_metrics:
                 try:  # pragma: no cover - defensive
                     metrics.RATE_LIMIT_REJECTIONS.labels(route, request.method).inc()
-                except Exception:
-                    pass
+                except Exception as exc:
+                    logging.debug("rate limit metric record failed: %s", exc)
             return Response(status_code=429, content="Rate limit exceeded")
         return await call_next(request)
 
@@ -80,8 +84,8 @@ async def _lifespan(app: FastAPI):  # pragma: no cover - integration tested indi
     # Force Qdrant client instantiation early to surface config errors
     try:
         get_qdrant_client()
-    except Exception:
-        pass  # optional; errors will surface when used
+    except Exception as exc:
+        logging.debug("qdrant pre-init failed (will retry lazily): %s", exc)
     yield
     # QdrantClient has no explicit close for http/grpc; rely on GC
 
@@ -102,10 +106,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     if settings.enable_prometheus_endpoint:
 
         @app.get(settings.prometheus_endpoint_path)
-        def _metrics():  # type: ignore[no-untyped-def]
-            return Response(
-                content=metrics.render(), media_type="text/plain; version=0.0.4"
-            )
+        def _metrics():
+            return Response(content=metrics.render(), media_type="text/plain; version=0.0.4")
 
     return app
 

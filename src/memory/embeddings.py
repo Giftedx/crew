@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 """Deterministic text embedding helper.
 
 This module provides a tiny embedding function suitable for tests and
@@ -7,6 +5,8 @@ local development without external model dependencies.  Each text is
 hashed with SHA-256 and the resulting bytes are converted into a fixed
 -length list of floats in the range [0, 1).
 """
+
+from __future__ import annotations
 
 import hashlib
 from collections.abc import Iterable

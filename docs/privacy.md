@@ -12,6 +12,29 @@ personal data are masked.
 - `redactor` replaces detected spans with masks.
 - `privacy_filter` ties the components together and returns a `PrivacyReport`.
 
+## Feature Flags
+
+Two runtime flags gate detection and masking phases (managed via the generic
+flag service so they appear in lower‑case form):
+
+| Flag | Default | Effect |
+|------|---------|--------|
+| `enable_pii_detection` | on | When disabled, the detector is skipped entirely and no spans are produced. |
+| `enable_pii_redaction` | on | When disabled (while detection is on) spans are reported but the original text is returned unchanged. |
+
+Both can be overridden per call by passing `context={'enable_detection': bool, 'enable_redaction': bool}` to `privacy_filter.filter_text`.
+
+The reinforcement learning (RL) routing layer may return the arm `strict`; if
+so, both detection and redaction are force‑enabled regardless of flags or
+context overrides. This guarantees maximal privacy enforcement for high‑risk
+evaluation domains.
+
+## Test Coverage
+
+The matrix of flag combinations plus the RL `strict` override path is covered
+in `tests/test_privacy_flags.py` to prevent regressions (e.g. accidental
+redaction when detection off, or failure to redact under strict arm).
+
 ## Ops Commands
 
 The `discord.commands` module exposes a few helpers for operational tasks:
@@ -25,3 +48,4 @@ The `discord.commands` module exposes a few helpers for operational tasks:
 Rules can be adjusted by editing `policy.yaml` without changing code.
 Additional detectors or redaction strategies can be added under
 `core/privacy` as needed.
+

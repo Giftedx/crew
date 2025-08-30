@@ -1,12 +1,19 @@
 from __future__ import annotations
 
-"""SQLite-backed knowledge graph store with tenant isolation."""
-
 import json
 import sqlite3
 from collections.abc import Iterable
 from dataclasses import dataclass
 from typing import Any
+
+"""SQLite-backed knowledge graph store (final clean version).
+
+Security guarantees:
+* All dynamic values passed via parameter placeholders ("?").
+* WHERE clause assembly joins static column-comparison fragments only; user input is never
+    interpolated directly into SQL strings (documented via ``# noqa: S608``).
+* IN clause in ``neighbors`` consists solely of repeated '?' placeholders.
+"""
 
 
 @dataclass
@@ -87,7 +94,12 @@ class KGStore:
 
     # Node operations
     def add_node(
-        self, tenant: str, type: str, name: str, attrs: dict | None = None, created_at: str = ""
+        self,
+        tenant: str,
+        type: str,
+        name: str,
+        attrs: dict[str, Any] | None = None,
+        created_at: str = "",
     ) -> int:
         cur = self.conn.cursor()
         cur.execute(
@@ -95,7 +107,10 @@ class KGStore:
             (tenant, type, name, json.dumps(attrs or {}), created_at),
         )
         self.conn.commit()
-        return int(cur.lastrowid)
+        row_id = cur.lastrowid
+        if row_id is None:  # pragma: no cover
+            raise RuntimeError("Expected lastrowid for inserted kg_node")
+        return int(row_id)
 
     def query_nodes(
         self, tenant: str, *, type: str | None = None, name: str | None = None
@@ -109,7 +124,10 @@ class KGStore:
         if name:
             conditions.append("name = ?")
             params.append(name)
-        cur.execute(f"SELECT * FROM kg_nodes WHERE {' AND '.join(conditions)}", params)
+        # Dynamic assembly of WHERE clause uses only static column comparison
+        # fragments with parameter placeholders; safe from injection.
+        query = "SELECT * FROM kg_nodes WHERE " + " AND ".join(conditions)  # noqa: S608 - static fragments only (conditions from fixed allow‑list)
+        cur.execute(query, params)
         rows = cur.fetchall()
         return [KGNode(**row) for row in rows]
 
@@ -120,7 +138,7 @@ class KGStore:
         return KGNode(**row) if row else None
 
     # Edge operations
-    def add_edge(
+    def add_edge(  # noqa: PLR0913 - explicit edge attributes keep call sites self-documenting vs opaque tuple/dict
         self,
         src_id: int,
         dst_id: int,
@@ -139,7 +157,10 @@ class KGStore:
             (src_id, dst_id, type, weight, provenance_id, created_at),
         )
         self.conn.commit()
-        return int(cur.lastrowid)
+        row_id = cur.lastrowid
+        if row_id is None:  # pragma: no cover
+            raise RuntimeError("Expected lastrowid for inserted kg_edge")
+        return int(row_id)
 
     def query_edges(
         self, *, src_id: int | None = None, dst_id: int | None = None, type: str | None = None
@@ -156,8 +177,10 @@ class KGStore:
         if type is not None:
             conditions.append("type = ?")
             params.append(type)
-        clause = f" WHERE {' AND '.join(conditions)}" if conditions else ""
-        cur.execute(f"SELECT * FROM kg_edges{clause}", params)
+        query = "SELECT * FROM kg_edges"
+        if conditions:
+            query += " WHERE " + " AND ".join(conditions)
+        cur.execute(query, params)  # noqa: S608 - static fragments only
         rows = cur.fetchall()
         return [KGEdge(**row) for row in rows]
 
@@ -170,7 +193,8 @@ class KGStore:
                 break
             cur = self.conn.cursor()
             q_marks = ",".join(["?"] * len(frontier))
-            cur.execute(f"SELECT dst_id FROM kg_edges WHERE src_id IN ({q_marks})", list(frontier))
+            sql = "SELECT dst_id FROM kg_edges WHERE src_id IN (" + q_marks + ")"  # noqa: S608 - q_marks expands only to '?' placeholders
+            cur.execute(sql, list(frontier))
             rows = {r[0] for r in cur.fetchall()}
             rows -= seen
             seen |= rows

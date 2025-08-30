@@ -1,6 +1,6 @@
-from __future__ import annotations
-
 """Lightweight SQLite-backed data models for ingestion metadata."""
+
+from __future__ import annotations
 
 import sqlite3
 from dataclasses import dataclass

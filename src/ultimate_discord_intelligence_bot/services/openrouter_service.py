@@ -17,11 +17,12 @@ from typing import Any
 from core.http_utils import (
     REQUEST_TIMEOUT_SECONDS,
     http_request_with_retry,
+    is_retry_enabled,
     resilient_post,
 )
+from core.learning_engine import LearningEngine
 
 from .cache import LLMCache
-from .learning_engine import LearningEngine
 from .logging_utils import AnalyticsStore
 from .prompt_engine import PromptEngine
 from .token_meter import TokenMeter
@@ -30,7 +31,7 @@ from .token_meter import TokenMeter
 class OpenRouterService:
     """Route prompts to the best model and provider available."""
 
-    def __init__(
+    def __init__(  # noqa: PLR0913 - wide configuration surface is intentional & clearer than packing into a dataclass arg
         self,
         models_map: dict[str, list[str]] | None = None,
         learning_engine: LearningEngine | None = None,
@@ -95,7 +96,7 @@ class OpenRouterService:
         candidates = self.models_map.get(task_type) or self.models_map["general"]
         return self.learning.select_model(task_type, candidates)
 
-    def route(
+    def route(  # noqa: PLR0912, PLR0915 - branching & statements justified; see docstring rationale
         self,
         prompt: str,
         task_type: str = "general",
@@ -107,8 +108,16 @@ class OpenRouterService:
         ``provider_opts`` override the service defaults supplied at
         instantiation.  A deep merge preserves nested defaults while allowing
         the caller to replace specific values.
-        """
 
+        Notes
+        -----
+        The method intentionally uses several early returns for clarity and
+        to avoid deeply nested conditionals: cache hit, offline path, cost
+        limit rejection, network success/error. Refactoring into a single exit
+        point would add temporary variables and reduce readability without a
+        measurable maintenance benefit. Therefore we suppress the Ruff
+        complexity / many-return warnings here.
+        """  # noqa: PLR0911, PLR0912, PLR0915 - multiple returns/branches/statements balance clarity vs artificial refactor
         chosen = model or self._choose_model(task_type)
         provider = copy.deepcopy(self.provider_opts)
         if provider_opts:
@@ -182,8 +191,7 @@ class OpenRouterService:
                 payload["provider"] = provider
             url = "https://openrouter.ai/api/v1/chat/completions"
             headers = {"Authorization": f"Bearer {self.api_key}"}
-            if os.getenv("ENABLE_HTTP_RETRY") or os.getenv("ENABLE_ANALYSIS_HTTP_RETRY"):
-                # Use retry helper wrapping resilient_post to inherit timeout & legacy behaviour
+            if is_retry_enabled():
                 resp = http_request_with_retry(
                     "POST",
                     url,
@@ -202,7 +210,7 @@ class OpenRouterService:
                     json_payload=payload,
                     timeout_seconds=REQUEST_TIMEOUT_SECONDS,
                 )
-            if getattr(resp, "status_code", 200) >= 400:
+            if getattr(resp, "status_code", 200) >= 400:  # noqa: PLR2004 - HTTP threshold constant is self-explanatory here
                 raise RuntimeError(f"openrouter_error status={resp.status_code}")
             data = resp.json()
             message = data.get("choices", [{}])[0].get("message", {}).get("content", "")

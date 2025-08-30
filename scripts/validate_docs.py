@@ -30,7 +30,7 @@ def check_file_references(doc_content, base_path="/home/crew"):
 
 def check_import_statements(doc_content):
     """Check if import statements in code blocks are valid."""
-    issues = []
+    issues: list[str] = []
 
     # Extract Python code blocks
     code_blocks = re.findall(r"```python\n(.*?)\n```", doc_content, re.DOTALL)
@@ -41,11 +41,12 @@ def check_import_statements(doc_content):
             for line in code_block.split("\n")
             if line.strip().startswith(("import ", "from "))
         ]
-
-        for import_line in import_lines:
-            # Simple validation - just check if it looks reasonable
-            if "ultimate_discord_intelligence_bot" in import_line:
-                issues.append(f"Import may need PYTHONPATH: {import_line}")
+        # PERF401: build transformed list and extend once instead of appending inside a loop
+        issues.extend(
+            f"Import may need PYTHONPATH: {import_line}"
+            for import_line in import_lines
+            if "ultimate_discord_intelligence_bot" in import_line
+        )
 
     return issues
 

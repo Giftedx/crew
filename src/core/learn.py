@@ -3,13 +3,18 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
-from typing import Any
+from typing import Any, Protocol, cast
 
 from . import flags, reward_pipe
 from .rl import feature_store, registry
 
 
-def learn(
+class _PolicyLike(Protocol):  # mirrors interface used in learning_engine
+    def recommend(self, context: Mapping[str, Any], candidates: Sequence[Any]) -> Any: ...
+    def update(self, action: Any, reward: float, context: Mapping[str, Any]) -> None: ...
+
+
+def learn(  # noqa: PLR0913 - explicit parameters map RL loop stages clearly (domain, context, candidates, act_fn, registry, weights)
     domain: str,
     context: Mapping[str, Any],
     candidates: Sequence[Any],
@@ -17,7 +22,7 @@ def learn(
     *,
     policy_registry: registry.PolicyRegistry | None = None,
     reward_weights: Mapping[str, float] | None = None,
-):
+):  # noqa: PLR0913 - explicit parameters reflect RL loop stages; bundling reduces readability & type clarity
     """Run a single recommend/act/update loop for ``domain``.
 
     Parameters
@@ -53,7 +58,8 @@ def learn(
     if not (flags.enabled("ENABLE_RL_GLOBAL") and flags.enabled(f"ENABLE_RL_{domain.upper()}")):
         arm = candidates[0]
         outcome, signals = act_fn(arm)
-        feature_store.update_stats(outcome)
+        # feature_store expects a concrete dict for mutation; ensure copy
+        feature_store.update_stats(dict(outcome))
         return reward_pipe.compute(
             domain,
             features,
@@ -63,10 +69,10 @@ def learn(
         )
 
     reg = policy_registry or registry.PolicyRegistry()
-    policy = reg.get(domain)
+    policy = cast(_PolicyLike, reg.get(domain))
     arm = policy.recommend(features, candidates)
     outcome, signals = act_fn(arm)
-    feature_store.update_stats(outcome)
+    feature_store.update_stats(dict(outcome))
     result = reward_pipe.compute(
         domain,
         features,

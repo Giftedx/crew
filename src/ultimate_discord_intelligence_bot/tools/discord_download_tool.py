@@ -4,12 +4,12 @@ import os
 import tempfile
 from typing import ClassVar
 
-from crewai.tools import BaseTool
-
 from core.http_utils import REQUEST_TIMEOUT_SECONDS, resilient_get
 
+from ._base import BaseTool
 
-class DiscordDownloadTool(BaseTool):
+
+class DiscordDownloadTool(BaseTool[dict[str, str]]):
     """Download Discord-hosted attachments.
 
     Delegates HTTP GET handling (timeouts + legacy monkeypatch fallback) to

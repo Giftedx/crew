@@ -46,7 +46,7 @@ def test_reward_pipe_compute() -> None:
 def test_epsilon_greedy_bandit() -> None:
     random.seed(0)
     policy = EpsilonGreedyBandit(epsilon=0.0)
-    context = {}
+    context: dict[str, object] = {}
     candidates = ["x", "y"]
     policy.update("x", 1.0, context)
     policy.update("y", 0.0, context)
@@ -56,7 +56,7 @@ def test_epsilon_greedy_bandit() -> None:
 
 def test_ucb1_bandit() -> None:
     policy = UCB1Bandit()
-    context = {}
+    context: dict[str, object] = {}
     candidates = ["x", "y"]
     # First call explores arm x
     choice1 = policy.recommend(context, candidates)

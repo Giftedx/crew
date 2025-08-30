@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from crewai.tools import BaseTool
+from ._base import BaseTool
 
 
-class TranscriptIndexTool(BaseTool):
+class TranscriptIndexTool(BaseTool[dict[str, object]]):
     """Store transcript chunks for later context lookup."""
 
     name: str = "Transcript Index Tool"
@@ -17,7 +17,7 @@ class TranscriptIndexTool(BaseTool):
         self.window = window
         self.indices: dict[str, list[tuple[float, float, str]]] = {}
 
-    def index_transcript(self, transcript: str, video_id: str) -> dict:
+    def index_transcript(self, transcript: str, video_id: str) -> dict[str, object]:
         """Split a transcript into timestamped chunks and store them."""
         chunks: list[tuple[float, float, str]] = []
         for i, line in enumerate(transcript.splitlines()):
@@ -40,8 +40,8 @@ class TranscriptIndexTool(BaseTool):
         return " ".join(context)
 
     # expose indexing via BaseTool run
-    def _run(self, transcript: str, video_id: str) -> dict:
+    def _run(self, transcript: str, video_id: str) -> dict[str, object]:
         return self.index_transcript(transcript, video_id)
 
-    def run(self, *args, **kwargs):  # pragma: no cover - thin wrapper
-        return self._run(*args, **kwargs)
+    def run(self, transcript: str, video_id: str) -> dict[str, object]:  # pragma: no cover - thin wrapper
+        return self._run(transcript, video_id)

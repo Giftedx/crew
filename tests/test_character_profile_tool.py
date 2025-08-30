@@ -24,7 +24,12 @@ def test_character_profile_tool(tmp_path: Path) -> None:
     tool.record_event("bob", {"video_id": "vid", "ts": 1, "clip": "hi"})
 
     result = tool.run("bob")
-    profile = result["profile"]
-    assert profile["leaderboard"]["lies"] == 1
-    assert profile["trust"]["lies"] == 1
-    assert profile["events"][0]["video_id"] == "vid"
+    from typing import cast
+    profile = cast("dict[str, object]", result["profile"])  # runtime shape enforced by tool
+    leaderboard_section = cast(dict, profile["leaderboard"])  # nested sections are dicts
+    trust_section = cast(dict, profile["trust"])  # trust metrics dict
+    events_list = cast(list, profile["events"])  # list of event dicts
+    assert leaderboard_section["lies"] == 1
+    assert trust_section["lies"] == 1
+    first_event = cast(dict, events_list[0])
+    assert first_event["video_id"] == "vid"

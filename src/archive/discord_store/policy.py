@@ -17,7 +17,8 @@ _ALLOWLIST = {
 # Deny potentially dangerous types
 _DENY_EXTS = {".exe", ".bat", ".cmd"}
 
-_MAX_SIZE = int(os.environ.get("ARCHIVER_POLICY_MAX_SIZE", 100 * 1024 * 1024))
+# Environment variable defaults must be strings for clarity; convert after fetch.
+_MAX_SIZE = int(os.environ.get("ARCHIVER_POLICY_MAX_SIZE", str(100 * 1024 * 1024)))
 _POLICY = policy_engine.load_policy()
 
 

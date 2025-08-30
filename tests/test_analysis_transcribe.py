@@ -180,9 +180,10 @@ def test_run_whisper_unicode_content():
 
 def test_run_whisper_long_content():
     """Test run_whisper with longer text content."""
-    long_lines = []
-    for i in range(100):
-        long_lines.append(f"This is line {i + 1} with some content to test segmentation.")
+    long_lines = [
+        f"This is line {i + 1} with some content to test segmentation."
+        for i in range(100)
+    ]
 
     with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as temp_file:
         temp_file.write("\n".join(long_lines))

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 import os
 import sqlite3
 from pathlib import Path
@@ -28,8 +29,8 @@ def _resolve_db_path() -> Path:
     if not _DATA_DIR.exists():
         try:
             _DATA_DIR.mkdir(parents=True, exist_ok=True)
-        except Exception:  # pragma: no cover - extremely unlikely / non-critical
-            pass
+        except Exception as exc:  # pragma: no cover - extremely unlikely / non-critical
+            logging.getLogger(__name__).debug("Failed creating data dir for archive DB: %s", exc)
     return _PREFERRED_DB
 
 _DB_PATH = _resolve_db_path()
@@ -54,7 +55,7 @@ CREATE TABLE IF NOT EXISTS attachments (
 """
 
 
-def _connect():
+def _connect() -> sqlite3.Connection:
     conn = sqlite3.connect(_DB_PATH)
     conn.execute(_SCHEMA)
     return conn

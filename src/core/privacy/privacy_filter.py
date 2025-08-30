@@ -1,6 +1,9 @@
-from __future__ import annotations
+"""High-level privacy filter that combines policy checks and redaction.
 
-"""High-level privacy filter that combines policy checks and redaction."""
+Docstring precedes future import per Ruff E402.
+"""
+
+from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Any
@@ -25,6 +28,9 @@ def filter_text(
     learning: LearningEngine | None = None,
     domain: str = "safety",
 ) -> tuple[str, PrivacyReport]:
+    # Fast path: skip all policy / detection work for empty or whitespace-only input
+    if not text or text.strip() == "":
+        return text, PrivacyReport([], {}, [])
     ctx = context or {}
     policy = policy_engine.load_policy(ctx.get("tenant"))
     decisions = []

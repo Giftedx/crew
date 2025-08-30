@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 """Trust-tier policies for plugins installed via the marketplace.
 
 This module centralises limits applied to plugins based on their trust tier.
@@ -8,6 +6,8 @@ other components (e.g. install/update flows) can call to clamp requested
 capabilities or resource quotas before storing them in the registry.  The
 runtime executor receives the already-clamped grants.
 """
+
+from __future__ import annotations
 
 from collections.abc import Iterable
 from dataclasses import dataclass

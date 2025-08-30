@@ -1,6 +1,6 @@
-from __future__ import annotations
-
 """Source connector interface for the ingest scheduler."""
+
+from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Protocol
@@ -35,4 +35,4 @@ class SourceConnector(Protocol):
     ``state`` dictionary holding connector-specific cursor information.
     """
 
-    def discover(self, watch: Watch, state: dict) -> list[DiscoveryItem]: ...
+    def discover(self, watch: Watch, state: dict[str, object]) -> list[DiscoveryItem]: ...

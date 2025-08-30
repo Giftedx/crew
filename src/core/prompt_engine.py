@@ -9,8 +9,9 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
+from core.privacy import privacy_filter  # import near top (moved above constant) to satisfy E402
+
 SAFETY_PREAMBLE = "You are a helpful assistant."
-from core.privacy import privacy_filter
 
 
 def build_prompt(

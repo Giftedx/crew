@@ -96,7 +96,10 @@ class MemoryStore:
             ),
         )
         self.conn.commit()
-        return int(cur.lastrowid)
+        row_id = cur.lastrowid  # Optional[int] per stub
+        if row_id is None:  # Extremely unlikely after successful INSERT
+            raise RuntimeError("sqlite cursor.lastrowid was None after INSERT")
+        return int(row_id)
 
     def get_item(self, item_id: int) -> MemoryItem | None:
         cur = self.conn.cursor()

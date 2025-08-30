@@ -60,8 +60,8 @@ These are accessed through a flag service supporting lower‑case names.
 
 | Flag | Default | Purpose | Key Modules | Related Tests |
 |------|---------|---------|-------------|---------------|
-| `enable_pii_detection` | on | Enable detection (classification) phase of privacy filter. | `core/privacy/privacy_filter.py` | (covered indirectly in policy / privacy tests) |
-| `enable_pii_redaction` | on | Enable redaction phase (masking sensitive spans). | `core/privacy/privacy_filter.py` | (indirect) |
+| `enable_pii_detection` | on | Enable detection (classification) phase of privacy filter. | `core/privacy/privacy_filter.py` | `test_privacy_flags.py` |
+| `enable_pii_redaction` | on | Enable redaction phase (masking sensitive spans). | `core/privacy/privacy_filter.py` | `test_privacy_flags.py` |
 
 ### Observability Metrics (Defined Counters / Histograms)
 
@@ -74,9 +74,9 @@ Activated by combinations of flags:
 ### Deprecations / Migration Notes
 
 - `ENABLE_ANALYSIS_HTTP_RETRY` → superseded by `ENABLE_HTTP_RETRY` (precedence in `core/http_utils._is_retry_enabled`).
-	- Phase 1 (current): Both supported; legacy emits `DeprecationWarning` if unified flag absent.
-	- Phase 2 (planned): Update all tools/tests to set only `ENABLE_HTTP_RETRY`; add CI check forbidding legacy usage.
-	- Phase 3 (removal): Delete legacy checks & warning path; update this document & CHANGELOG.
+  - Phase 1 (current): Both supported; legacy emits `DeprecationWarning` if unified flag absent.
+  - Phase 2 (planned): Update all tools/tests to set only `ENABLE_HTTP_RETRY`; add CI check forbidding legacy usage.
+  - Phase 3 (removal): Delete legacy checks & warning path; update this document & CHANGELOG.
 - Transition env sourcing to centralized `Settings` model for consistency & testability.
 
 ### Adding a New Flag
@@ -95,3 +95,66 @@ Activated by combinations of flags:
 
 ---
 Generated as part of observability & resilience polish effort.
+
+### Automation & Drift Prevention
+
+This document is validated in CI by `scripts/validate_feature_flags.py` and the
+test `tests/test_feature_flag_sync.py`. The validator statically scans `src/`
+for:
+
+1. `ENABLE_*` occurrences (env lookups, constants, Field aliases)
+2. `flags.enabled("<name>")` calls (including lower‑case privacy flags)
+3. RL dynamic pattern usage (`f"ENABLE_RL_{domain.upper()}"`) – represented
+   here as the placeholder pattern `ENABLE_RL_<DOMAIN>`
+
+It then diffs the discovered set against the flags listed in this document.
+
+Validation rules:
+- Undocumented flags: cause failure (must be added here with description).
+- Stale flags (documented but absent in code): cause failure unless listed in
+  the deprecated allow‑list inside the script.
+- Pattern placeholders (e.g. `ENABLE_RL_<DOMAIN>`) are exempt from code
+  presence requirements; they document families of dynamic flags.
+
+To run manually:
+
+```
+python scripts/validate_feature_flags.py
+```
+
+Exit code 0 indicates sync; non‑zero prints a diff of issues. Update this file
+and/or code to resolve drift, then re‑run tests.
+
+#### Deprecated Flag Enforcement
+
+Stray usage of deprecated flags (currently `ENABLE_ANALYSIS_HTTP_RETRY`) is
+guarded by `scripts/validate_deprecated_flags.py` + `test_deprecated_flag_usage.py`.
+Only whitelisted legacy references (core implementation, docs, changelog, and
+explicit retry tests) are allowed until full removal.
+
+#### Deprecation Schedule Governance
+
+Long‑lived deprecated flags are tracked in `config/deprecations.yaml` with a
+planned `remove_after` (UTC, inclusive). CI invokes
+`scripts/validate_deprecation_schedule.py` (see new test
+`test_deprecation_schedule.py`) which:
+
+- Lists upcoming removals (informational) before the cutoff date.
+- After the cutoff, fails if the deprecated flag still appears outside an
+  allow‑list (archival docs, changelog, schedule file, validator scripts).
+
+Current schedule (subset):
+
+| Flag | Stage | Remove After | Replacement |
+|------|-------|--------------|-------------|
+| `ENABLE_ANALYSIS_HTTP_RETRY` | deprecated | 2025-12-31 | `ENABLE_HTTP_RETRY` |
+
+Add new entries when deprecating flags to make removal dates explicit and
+auditable. Avoid extending removal dates without a changelog entry.
+
+Simulation / CI override:
+
+Set `DEPRECATION_AS_OF=YYYY-MM-DD` when invoking
+`scripts/validate_deprecation_schedule.py` (or running its test) to simulate
+validation as of a future (or past) date—useful for previewing imminent
+enforcement before the real cutoff.

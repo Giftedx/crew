@@ -61,7 +61,7 @@ def test_extract_mentions():
 
     # Mentions might be captured as keywords, entities, or phrases
     all_extracted = result.keywords + result.entities + result.phrases + result.topics
-    mention_related = [item for item in all_extracted if "@" in item]
+    [item for item in all_extracted if "@" in item]
     # Mentions may or may not be handled - flexible test
 
 
@@ -84,7 +84,7 @@ def test_extract_entities():
     assert "AWS" in result.entities
 
     # Should extract titles with names - flexible assertion
-    ceo_entities = [e for e in result.entities if "CEO" in e]
+    [e for e in result.entities if "CEO" in e]
     # CEO may appear as separate entity or not at all
 
     # Should NOT include social handles in entities (they go in hashtags/other processing)
@@ -209,7 +209,7 @@ def test_social_media_content():
     """Test extraction from social media-like content."""
     text = """
     Just deployed our new #AI model! 🚀 Thanks to @dataTeam for the amazing work.
-    This will revolutionize how we process #MachineLearning algorithms. 
+    This will revolutionize how we process #MachineLearning algorithms.
     Check it out: https://example.com/demo #TechNews #Innovation
     """
     result = extract(text)
@@ -325,7 +325,7 @@ def test_edge_case_punctuation():
 
     # Should handle technical abbreviations
     all_extracted = result.keywords + result.entities + result.topics
-    tech_terms_found = any(
+    any(
         term in item.lower()
         for item in all_extracted
         for term in ["ai", "ml", "iot", "blockchain", "defi", "web", "solutions"]

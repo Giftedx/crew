@@ -4,7 +4,7 @@ import os
 import time
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, ParamSpec, TypeVar
 
 from .. import flags
 
@@ -28,15 +28,20 @@ class RetrievalCache:
         self.store[key] = (value, time.time() + self.ttl)
 
 
-def memo_retrieval(key_builder: Callable[..., str]) -> Callable:
-    def decorator(func: Callable):
-        def wrapper(*args, **kwargs):
+P = ParamSpec("P")
+R = TypeVar("R")
+
+
+def memo_retrieval(key_builder: Callable[P, str]) -> Callable[[Callable[P, R]], Callable[P, R]]:
+    def decorator(func: Callable[P, R]) -> Callable[P, R]:
+        def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
             if not flags.enabled("ENABLE_CACHE", True):
                 return func(*args, **kwargs)
             key = key_builder(*args, **kwargs)
             hit = retrieval_cache.get(key)
             if hit is not None:
-                return hit
+                # Cache stores Any; cast to expected return type R
+                return hit  # casting implicit; retrieval cache preserves type discipline by convention
             result = func(*args, **kwargs)
             retrieval_cache.set(key, result)
             return result

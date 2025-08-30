@@ -38,7 +38,7 @@ def test_retry_metrics_exposed(monkeypatch):
 
     # Collect exposition if prometheus is available; otherwise skip cleanly
     try:  # runtime optional dep guard
-        from prometheus_client import REGISTRY, generate_latest  # type: ignore
+        from prometheus_client import REGISTRY, generate_latest
     except Exception:  # pragma: no cover - skip path
         pytest.skip("prometheus_client not installed")
     else:

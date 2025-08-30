@@ -2,13 +2,14 @@
 
 Centralized helpers for:
 - URL validation (public HTTPS host, reject private/reserved IPs)
-- Resilient POST requests with optional fallback for legacy monkeypatched tests
+- Resilient POST/GET wrappers with optional fallback for legacy monkeypatched tests
+- Feature-flagged retry helpers with metrics and tracing
 - Standard timeout constants
 
-These utilities reduce duplicated logic in tools (e.g. Discord webhook tools)
-while preserving existing behaviour and backward compatibility with tests
-that monkeypatch `requests.post` without modern keyword arguments.
+Import ordering: docstring precedes future import (Ruff E402), then stdlib,
+third-party, and local imports.
 """
+
 from __future__ import annotations
 
 import inspect
@@ -17,14 +18,37 @@ import os
 import time
 import warnings
 from collections.abc import Callable, Mapping
-from typing import Any
+from typing import Any, Protocol, TypeVar, cast, runtime_checkable
 from urllib.parse import urlparse
 
 import requests
 
-try:  # optional dependency
-    from opentelemetry import trace  # optional dependency
-except Exception:  # pragma: no cover
+from obs import metrics as _metrics
+
+
+# ---------------------------------------------------------------------------
+# Lightweight structural protocol for responses (requests.Response compatible)
+# ---------------------------------------------------------------------------
+@runtime_checkable
+class ResponseLike(Protocol):  # minimal surface we rely upon across helpers
+    status_code: int
+    text: str
+    def json(self) -> Any: ...  # pragma: no cover - structural only
+    def raise_for_status(self) -> Any: ...  # pragma: no cover
+    def iter_content(self, chunk_size: int = ...) -> Any: ...  # streaming downloads
+
+RResp = TypeVar("RResp", bound=ResponseLike)
+
+
+class _TracerProtocol(Protocol):  # minimal structural contract we rely on
+    def start_as_current_span(self, *args: Any, **kwargs: Any): ...  # noqa: D401,E701 - concise protocol
+
+class _TraceAPIProtocol(Protocol):
+    def get_tracer(self, *args: Any, **kwargs: Any) -> _TracerProtocol: ...  # noqa: D401,E701
+
+try:  # optional dependency import – unify to a single symbol 'trace'
+    from opentelemetry import trace  # pragma: no cover
+except Exception:  # pragma: no cover - fallback when opentelemetry missing
     class _NoopSpan:
         def __enter__(self):
             return self
@@ -36,10 +60,12 @@ except Exception:  # pragma: no cover
         def start_as_current_span(self, *_a, **_k):
             return _NoopSpan()
     class _NoopTraceAPI:
-        def get_tracer(self, *_a, **_k):
+        def get_tracer(self, *_a, **_k) -> _NoopTracer:
             return _NoopTracer()
     trace = _NoopTraceAPI()  # type: ignore[assignment]
-from obs.metrics import HTTP_RETRY_ATTEMPTS, HTTP_RETRY_GIVEUPS, label_ctx
+# NOTE: metrics import intentionally placed with other third-party/local imports so
+# that later references do not trigger E402. We import the module (not individual
+# counters) so test-time resets that rebind metric globals propagate here.
 
 # Exported constants
 REQUEST_TIMEOUT_SECONDS = 15
@@ -60,6 +86,7 @@ __all__ = [
     "http_request_with_retry",
     "retrying_post",
     "retrying_get",
+    "is_retry_enabled",
 ]
 
 
@@ -86,7 +113,7 @@ def validate_public_https_url(url: str) -> str:
 
 
 _patched_resilient_post = globals().get("resilient_post")
-def resilient_post(
+def resilient_post(  # noqa: PLR0913 - explicit keyword params surface HTTP semantics clearly
     url: str,
     *,
     json_payload: Any | None = None,
@@ -95,7 +122,7 @@ def resilient_post(
     timeout_seconds: int = REQUEST_TIMEOUT_SECONDS,
     allow_legacy_timeout_fallback: bool = True,
     request_fn: Callable[..., Any] | None = None,
-) -> requests.Response:
+) -> ResponseLike:  # noqa: PLR0913 - explicit keyword params surface HTTP semantics clearly
     """POST wrapper adding timeout & legacy monkeypatch fallback.
 
     If a test monkeypatch provides a simplified signature (missing ``timeout``)
@@ -103,32 +130,32 @@ def resilient_post(
     preserve existing lightweight fixtures.
     """
     if request_fn is None:  # defer binding so tests monkeypatching requests.post take effect
-        request_fn = requests.post  # type: ignore[assignment]
+        request_fn = requests.post
     tracer = trace.get_tracer(__name__)
     with tracer.start_as_current_span("http.post") as span:
         span.set_attribute("http.url", url)
         span.set_attribute("http.method", "POST")
         try:
-            return request_fn(
+            return cast(ResponseLike, request_fn(
                 url,
                 json=json_payload,
                 headers=headers,
                 files=files,
                 timeout=timeout_seconds,
-            )
+            ))
         except TypeError as exc:
             if allow_legacy_timeout_fallback and "unexpected keyword argument" in str(exc):
-                return request_fn(
+                return cast(ResponseLike, request_fn(
                     url,
                     json=json_payload,
                     headers=headers,
                     files=files,
-                )
+                ))
             raise
 
 
 _patched_resilient_get = globals().get("resilient_get")
-def resilient_get(
+def resilient_get(  # noqa: PLR0913 - explicit knobs aid test monkeypatch ergonomics
     url: str,
     *,
     params: Mapping[str, Any] | None = None,
@@ -137,26 +164,26 @@ def resilient_get(
     allow_legacy_timeout_fallback: bool = True,
     request_fn: Callable[..., Any] | None = None,
     stream: bool | None = None,
-) -> requests.Response:
+) -> ResponseLike:  # noqa: PLR0913 - explicit knobs aid test monkeypatch ergonomics
     """GET wrapper mirroring resilient_post lazy binding & legacy fallback.
 
     Provides consistent timeout handling and supports fixtures that omit
     the ``timeout`` argument. ``stream`` is passed through when provided
     (used for large file downloads like Discord attachments)."""
     if request_fn is None:
-        request_fn = requests.get  # type: ignore[assignment]
+        request_fn = requests.get
     tracer = trace.get_tracer(__name__)
     with tracer.start_as_current_span("http.get") as span:
         span.set_attribute("http.url", url)
         span.set_attribute("http.method", "GET")
         try:
-            return request_fn(
+            return cast(ResponseLike, request_fn(
                 url,
                 params=params,
                 headers=headers,
                 timeout=timeout_seconds,
                 stream=stream,
-            )
+            ))
         except TypeError as exc:
             if allow_legacy_timeout_fallback and "unexpected keyword argument" in str(exc):
                 try:
@@ -173,7 +200,7 @@ def resilient_get(
                     retry_kwargs["timeout"] = timeout_seconds
                 if "stream" in allowed and stream is not None:
                     retry_kwargs["stream"] = stream
-                return request_fn(url, **retry_kwargs)
+                return cast(ResponseLike, request_fn(url, **retry_kwargs))
             raise
 
 # If the module was reloaded after an external test monkeypatch (function defined outside this module)
@@ -181,9 +208,9 @@ def resilient_get(
 # narrow compatibility shim for the test pattern `monkeypatch.setattr('core.http_utils.resilient_get', ...)` followed
 # by `importlib.reload(core.http_utils)`, which would normally overwrite the patched attribute.
 if _patched_resilient_post and getattr(_patched_resilient_post, "__module__", __name__) != __name__:
-    resilient_post = _patched_resilient_post  # type: ignore
+    resilient_post = _patched_resilient_post  # noqa: F401
 if _patched_resilient_get and getattr(_patched_resilient_get, "__module__", __name__) != __name__:
-    resilient_get = _patched_resilient_get  # type: ignore
+    resilient_get = _patched_resilient_get  # noqa: F401
 
 
 def _is_retry_enabled() -> bool:
@@ -206,7 +233,17 @@ def _is_retry_enabled() -> bool:
     return False
 
 
-def http_request_with_retry(
+def is_retry_enabled() -> bool:
+    """Public helper exposing consolidated retry flag state.
+
+    Preferred over ad-hoc environment variable checks. Internally delegates
+    to the legacy/env compatible ``_is_retry_enabled`` until all call sites
+    migrate to settings-driven configuration.
+    """
+    return _is_retry_enabled()
+
+
+def http_request_with_retry(  # noqa: PLR0913 - retry behaviour requires multiple tuned parameters
     method: str,
     url: str,
     *,
@@ -217,7 +254,7 @@ def http_request_with_retry(
     jitter: float = 0.05,
     on_give_up: Callable[[Exception | None, int], None] | None = None,
     **call_kwargs: Any,
-) -> Any:
+) -> Any:  # noqa: PLR0913 - retry behaviour requires multiple tuned parameters
     """Feature-flagged generic HTTP retry with exponential backoff.
 
     Retries on network exceptions and selected status codes while retry
@@ -240,7 +277,7 @@ def http_request_with_retry(
                 span.set_attribute("exception.type", exc.__class__.__name__)
                 if attempts >= max_attempts or not _is_retry_enabled():
                     if attempts > 1:  # count only retries (not first attempt) on give up
-                        HTTP_RETRY_GIVEUPS.labels(**label_ctx(), method=method).inc()
+                        _metrics.HTTP_RETRY_GIVEUPS.labels(**_metrics.label_ctx(), method=method).inc()
                     if on_give_up:
                         on_give_up(exc, attempts)
                     span.set_attribute("retry.give_up", True)
@@ -251,7 +288,7 @@ def http_request_with_retry(
                 effective_base = base_backoff * (0.3 if is_conn_refused else 1.0)
                 sleep_for = effective_base * (2 ** (attempts - 1))
                 sleep_for += jitter * sleep_for
-                HTTP_RETRY_ATTEMPTS.labels(**label_ctx(), method=method).inc()
+                _metrics.HTTP_RETRY_ATTEMPTS.labels(**_metrics.label_ctx(), method=method).inc()
                 time.sleep(sleep_for)
                 continue
             status = getattr(resp, "status_code", None)
@@ -262,7 +299,7 @@ def http_request_with_retry(
             ):
                 sleep_for = base_backoff * (2 ** (attempts - 1))
                 sleep_for += jitter * sleep_for
-                HTTP_RETRY_ATTEMPTS.labels(**label_ctx(), method=method).inc()
+                _metrics.HTTP_RETRY_ATTEMPTS.labels(**_metrics.label_ctx(), method=method).inc()
                 time.sleep(sleep_for)
                 span.set_attribute("retry.scheduled_backoff", sleep_for)
                 continue
@@ -271,7 +308,7 @@ def http_request_with_retry(
             return resp
 
 
-def retrying_post(
+def retrying_post(  # noqa: PLR0913 - convenience wrapper exposes key retry parameters
     url: str,
     *,
     json_payload: Any | None = None,
@@ -280,7 +317,7 @@ def retrying_post(
     timeout_seconds: int = REQUEST_TIMEOUT_SECONDS,
     max_attempts: int = DEFAULT_HTTP_RETRY_ATTEMPTS,
     **kwargs: Any,
-):
+) :  # noqa: PLR0913 - convenience wrapper exposes key retry parameters
     """Convenience helper: resilient_post wrapped in feature-flagged retry.
 
     Falls back to single attempt if retry flag disabled.
@@ -307,7 +344,7 @@ def retrying_post(
     )
 
 
-def retrying_get(
+def retrying_get(  # noqa: PLR0913 - explicit parameters preferred over opaque options dict
     url: str,
     *,
     params: Mapping[str, Any] | None = None,
@@ -316,7 +353,7 @@ def retrying_get(
     stream: bool | None = None,
     max_attempts: int = DEFAULT_HTTP_RETRY_ATTEMPTS,
     **kwargs: Any,
-):
+) :  # noqa: PLR0913 - explicit parameters preferred over opaque options dict
     """Convenience helper: resilient_get wrapped in feature-flagged retry."""
     if _is_retry_enabled():
         return http_request_with_retry(

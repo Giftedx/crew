@@ -190,7 +190,7 @@ class CreatorSeed:
 
 def load_seeds(path: str) -> list[CreatorSeed]:
     """Load creator seed profiles from a YAML file."""
-    import yaml
+    import yaml  # noqa: PLC0415 - optional dependency; only needed when loading seeds
 
     with open(path, encoding="utf-8") as fh:
         raw = yaml.safe_load(fh) or {}

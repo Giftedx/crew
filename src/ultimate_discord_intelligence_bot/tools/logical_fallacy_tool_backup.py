@@ -17,6 +17,6 @@ DEPRECATION_NOTICE = (
     "logical_fallacy_tool_backup is deprecated; use logical_fallacy_tool instead"
 )
 
-def __getattr__(name: str):  # pragma: no cover - defensive guard
+def __getattr__(name: str) -> object:  # pragma: no cover - defensive guard
     raise AttributeError(DEPRECATION_NOTICE)
 

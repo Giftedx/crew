@@ -46,15 +46,14 @@ class PriorityQueue:
             ),
         )
         self.conn.commit()
-        return int(cur.lastrowid)
+        job_id = cur.lastrowid
+        return int(job_id) if job_id is not None else 0
 
     # --------------------------------------------------------------- dequeue
     def dequeue(self) -> QueuedJob | None:
         row = self.conn.execute(
-
-                "SELECT id, tenant, workspace, source_type, external_id, url, tags, visibility, attempts "
-                "FROM ingest_job WHERE status='pending' ORDER BY priority DESC, id ASC LIMIT 1"
-
+            "SELECT id, tenant, workspace, source_type, external_id, url, tags, visibility, attempts "
+            "FROM ingest_job WHERE status='pending' ORDER BY priority DESC, id ASC LIMIT 1"
         ).fetchone()
         if not row:
             return None

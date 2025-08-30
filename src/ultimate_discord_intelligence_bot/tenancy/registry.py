@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -13,7 +14,7 @@ from .models import Tenant
 @dataclass
 class TenantConfig:
     tenant: Tenant
-    workspaces: dict[str, dict]
+    workspaces: dict[str, dict[str, Any]]
     budgets: dict[str, Any] | None = None
     routing: dict[str, Any] | None = None
     flags: dict[str, Any] | None = None
@@ -31,11 +32,37 @@ class TenantRegistry:
             tenant_dir = path.parent
             with path.open("r", encoding="utf-8") as fh:
                 data = yaml.safe_load(fh) or {}
+            created_raw = data.get("created_at")
+            created_at: datetime
+            if isinstance(created_raw, datetime):
+                # Normalize to UTC (assume naive datetimes are UTC)
+                created_at = created_raw if created_raw.tzinfo else created_raw.replace(tzinfo=timezone.utc)
+            elif isinstance(created_raw, str):
+                # Try ISO parse, fallback to numeric epoch if digits
+                if created_raw.isdigit():
+                    try:
+                        created_at = datetime.fromtimestamp(float(created_raw), tz=timezone.utc)
+                    except Exception:
+                        created_at = datetime.now(timezone.utc)
+                else:
+                    try:
+                        parsed = datetime.fromisoformat(created_raw)
+                        if parsed.tzinfo is None:
+                            parsed = parsed.replace(tzinfo=timezone.utc)
+                        created_at = parsed
+                    except ValueError:
+                        created_at = datetime.now(timezone.utc)
+            else:
+                # Try numeric epoch (int/float/other castables)
+                try:
+                    created_at = datetime.fromtimestamp(float(created_raw), tz=timezone.utc)  # type: ignore[arg-type]
+                except Exception:
+                    created_at = datetime.now(timezone.utc)
             tenant = Tenant(
                 id=data.get("id", 0),
                 slug=tenant_dir.name,
                 name=data.get("name", tenant_dir.name),
-                created_at=data.get("created_at"),
+                created_at=created_at,
                 status=data.get("status", "active"),
             )
             budgets = self._load_yaml(tenant_dir / "budgets.yaml")

@@ -5,36 +5,72 @@ from __future__ import annotations
 import logging
 import os
 import time
+from collections.abc import Callable, Mapping
 from functools import wraps
-from typing import Any
+from typing import Any, ParamSpec, Protocol, TypeVar, cast
 
-from crewai.tools import BaseTool
 from requests import RequestException
 
-from core.http_utils import (
+from core.http_utils import (  # noqa: I001 - grouped explicitly: stdlib, third-party, internal
     REQUEST_TIMEOUT_SECONDS,
+    is_retry_enabled,
     resilient_get,
     retrying_get,
 )
 
+from ._base import BaseTool
+
+
+class _HTTPGetFn(Protocol):
+    """Structural protocol for our minimal GET helpers.
+
+    Using Mapping + optional kwargs for forward compatibility with http_utils
+    which may accept additional keyword-only parameters (e.g. stream, max_attempts).
+    """
+
+    def __call__(
+        self,
+        url: str,
+        *,
+        params: Mapping[str, Any] | None = ...,
+        headers: Mapping[str, str] | None = ...,
+        timeout_seconds: int = ...,
+        **_: Any,
+    ) -> Any: ...  # Response-like object
+
+def _select_getter() -> _HTTPGetFn:
+    """Return appropriate GET helper with a narrow structural cast.
+
+    retrying_get / resilient_get have broader signatures; we only rely on a
+    small subset. Casting keeps call sites typed without over-constraining
+    http_utils implementation details.
+    """
+    return cast(_HTTPGetFn, retrying_get if is_retry_enabled() else resilient_get)
+
 logger = logging.getLogger(__name__)
 
 
-def retry_on_failure(max_retries: int = 3, delay: float = 1.0):
-    """Decorator for retrying failed operations."""
+P = ParamSpec("P")
+R = TypeVar("R")
 
-    def decorator(func):
+
+def retry_on_failure(max_retries: int = 3, delay: float = 1.0) -> Callable[[Callable[P, R]], Callable[P, R]]:
+    """Decorator for retrying failed operations with typing preserved."""
+
+    def decorator(func: Callable[P, R]) -> Callable[P, R]:
         @wraps(func)
-        def wrapper(*args, **kwargs):
-            for attempt in range(max_retries):
-                try:
+        def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
+            for attempt in range(max_retries):  # noqa: PERF203 - deliberate retry loop with exception control flow
+                try:  # noqa: PERF203 - controlled exception-based retry
                     return func(*args, **kwargs)
-                except Exception as e:
+                except Exception as e:  # noqa: PERF203  # pragma: no cover - defensive; retry boundary
                     if attempt == max_retries - 1:
                         raise
-                    logger.warning(f"Attempt {attempt + 1} failed: {e}. Retrying in {delay}s...")
+                    logger.warning(
+                        f"Attempt {attempt + 1} failed: {e}. Retrying in {delay}s..."
+                    )
                     time.sleep(delay)
-            return []
+            return cast(R, [])  # Unreachable; cast for type checker
 
         return wrapper
 
@@ -46,7 +82,7 @@ EVIDENCE_MODERATELY_SUPPORTED_THRESHOLD = 2
 BACKEND_RESULT_SLICE = 3
 
 
-class FactCheckTool(BaseTool):
+class FactCheckTool(BaseTool[dict[str, Any]]):
     """Search external sources to gather evidence for or against a claim."""
 
     name: str = "Fact Check Tool"
@@ -64,15 +100,13 @@ class FactCheckTool(BaseTool):
 
         params = {"q": query, "format": "json", "no_redirect": 1, "no_html": 1}
         url = "https://api.duckduckgo.com/"
-        if os.getenv("ENABLE_HTTP_RETRY") or os.getenv("ENABLE_ANALYSIS_HTTP_RETRY"):
-            resp = retrying_get(url, params=params, timeout_seconds=REQUEST_TIMEOUT_SECONDS)
-        else:
-            resp = resilient_get(url, params=params, timeout_seconds=REQUEST_TIMEOUT_SECONDS)
+        getter = _select_getter()
+        resp = getter(url, params=params, timeout_seconds=REQUEST_TIMEOUT_SECONDS)
         resp.raise_for_status()
 
         data = resp.json()
         topics = data.get("RelatedTopics", [])
-        results = []
+        results: list[dict[str, str]] = []
 
         results.extend(
             {
@@ -96,20 +130,13 @@ class FactCheckTool(BaseTool):
             url = "https://api.serply.io/v1/search"
             params = {"q": query}
             headers = {"Authorization": f"Bearer {key}"}
-            if os.getenv("ENABLE_HTTP_RETRY") or os.getenv("ENABLE_ANALYSIS_HTTP_RETRY"):
-                resp = retrying_get(
-                    url,
-                    params=params,
-                    headers=headers,
-                    timeout_seconds=REQUEST_TIMEOUT_SECONDS,
-                )
-            else:
-                resp = resilient_get(
-                    url,
-                    params=params,
-                    headers=headers,
-                    timeout_seconds=REQUEST_TIMEOUT_SECONDS,
-                )
+            getter = _select_getter()
+            resp = getter(
+                url,
+                params=params,
+                headers=headers,
+                timeout_seconds=REQUEST_TIMEOUT_SECONDS,
+            )
             resp.raise_for_status()
 
             data = resp.json()
@@ -137,20 +164,13 @@ class FactCheckTool(BaseTool):
             url = "https://api.exa.ai/search"
             params = {"q": query}
             headers = {"Authorization": f"Bearer {key}"}
-            if os.getenv("ENABLE_HTTP_RETRY") or os.getenv("ENABLE_ANALYSIS_HTTP_RETRY"):
-                resp = retrying_get(
-                    url,
-                    params=params,
-                    headers=headers,
-                    timeout_seconds=REQUEST_TIMEOUT_SECONDS,
-                )
-            else:
-                resp = resilient_get(
-                    url,
-                    params=params,
-                    headers=headers,
-                    timeout_seconds=REQUEST_TIMEOUT_SECONDS,
-                )
+            getter = _select_getter()
+            resp = getter(
+                url,
+                params=params,
+                headers=headers,
+                timeout_seconds=REQUEST_TIMEOUT_SECONDS,
+            )
             resp.raise_for_status()
 
             data = resp.json()
@@ -178,20 +198,13 @@ class FactCheckTool(BaseTool):
             url = "https://api.perplexity.ai/search"
             params = {"q": query}
             headers = {"Authorization": f"Bearer {key}"}
-            if os.getenv("ENABLE_HTTP_RETRY") or os.getenv("ENABLE_ANALYSIS_HTTP_RETRY"):
-                resp = retrying_get(
-                    url,
-                    params=params,
-                    headers=headers,
-                    timeout_seconds=REQUEST_TIMEOUT_SECONDS,
-                )
-            else:
-                resp = resilient_get(
-                    url,
-                    params=params,
-                    headers=headers,
-                    timeout_seconds=REQUEST_TIMEOUT_SECONDS,
-                )
+            getter = _select_getter()
+            resp = getter(
+                url,
+                params=params,
+                headers=headers,
+                timeout_seconds=REQUEST_TIMEOUT_SECONDS,
+            )
             resp.raise_for_status()
 
             data = resp.json()
@@ -218,18 +231,12 @@ class FactCheckTool(BaseTool):
         try:
             url = "https://api.wolframalpha.com/v1/result"
             params = {"i": query, "appid": key}
-            if os.getenv("ENABLE_HTTP_RETRY") or os.getenv("ENABLE_ANALYSIS_HTTP_RETRY"):
-                resp = retrying_get(
-                    url,
-                    params=params,
-                    timeout_seconds=REQUEST_TIMEOUT_SECONDS,
-                )
-            else:
-                resp = resilient_get(
-                    url,
-                    params=params,
-                    timeout_seconds=REQUEST_TIMEOUT_SECONDS,
-                )
+            getter = _select_getter()
+            resp = getter(
+                url,
+                params=params,
+                timeout_seconds=REQUEST_TIMEOUT_SECONDS,
+            )
             resp.raise_for_status()
 
             if resp.text and resp.text.strip():
@@ -259,13 +266,13 @@ class FactCheckTool(BaseTool):
             return "limited_evidence"
 
     # ------------------------------------------------------------------
-    def _run(self, claim: str) -> dict[str, Any]:
+    def _run(self, claim: str) -> dict[str, Any]:  # noqa: PLR0911 - multiple early returns for validation errors keep control flow flat
         """Enhanced fact checking with comprehensive error handling."""
         start_time = time.time()
 
         # Input validation
-        if not claim or not isinstance(claim, str):
-            return {
+        if not claim or not isinstance(claim, str):  # fast validation path
+            return {  # early return simplifies downstream logic
                 "status": "error",
                 "error": "Claim is required and must be a non-empty string",
                 "claim": claim,
@@ -285,12 +292,12 @@ class FactCheckTool(BaseTool):
 
         logger.info(f"Starting fact check for claim: {claim[:100]}...")
 
-        for name, backend_func in backends:
-            try:
+        for name, backend_func in backends:  # noqa: PERF203 - network IO dominates; per-iteration try/except keeps failures isolated without measurable overhead
+            try:  # noqa: PERF203 - intentional fine-grained error isolation per backend
                 results = backend_func(claim)
                 evidence.extend(results)
                 logger.debug(f"Backend {name} returned {len(results)} results")
-            except Exception as e:
+            except Exception as e:  # noqa: PERF203 - intentional isolation of failures
                 error_msg = str(e)
                 failed_backends.append({"backend": name, "error": error_msg})
                 logger.error(f"Backend {name} failed: {error_msg}")

@@ -39,7 +39,7 @@ def run_whisper(path: str, model: str = "tiny") -> Transcript:
     """
 
     try:
-        import whisper  # type: ignore
+        import whisper  # type: ignore  # noqa: PLC0415 - optional heavy dependency imported lazily
 
         model_inst = whisper.load_model(model)
         result = model_inst.transcribe(path)

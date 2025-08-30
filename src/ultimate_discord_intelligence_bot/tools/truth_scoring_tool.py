@@ -7,20 +7,26 @@ statements, laying groundwork for richer historical tracking.
 
 from collections.abc import Iterable
 from statistics import mean
+from typing import TypedDict
 
-from crewai.tools import BaseTool
+from ._base import BaseTool
 
 
-class TruthScoringTool(BaseTool):
+class _TruthScoreResult(TypedDict):
+    status: str
+    score: float
+
+
+class TruthScoringTool(BaseTool[_TruthScoreResult]):
     name: str = "Truth Scoring Tool"
     description: str = "Calculate a trustworthiness score from fact-check results"
 
-    def _run(self, verdicts: Iterable[bool]) -> dict:
+    def _run(self, verdicts: Iterable[bool]) -> _TruthScoreResult:
         values = list(verdicts)
         if not values:
             return {"status": "success", "score": 0.0}
         score = mean(1 if v else 0 for v in values)
         return {"status": "success", "score": score}
 
-    def run(self, *args, **kwargs):  # pragma: no cover - thin wrapper
-        return self._run(*args, **kwargs)
+    def run(self, verdicts: Iterable[bool]) -> _TruthScoreResult:  # pragma: no cover - thin wrapper
+        return self._run(verdicts)

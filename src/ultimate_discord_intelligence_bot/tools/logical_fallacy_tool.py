@@ -7,7 +7,7 @@ recognition for common logical fallacies in debates and arguments.
 import re
 from typing import ClassVar
 
-from crewai.tools import BaseTool
+from ._base import BaseTool
 
 # ---------------------------------------------------------------------------
 # Heuristic threshold constants
@@ -20,7 +20,7 @@ HASTY_GENERALIZATION_CONFIDENCE = 0.6
 APPEAL_TO_EMOTION_CONFIDENCE = 0.5
 
 
-class LogicalFallacyTool(BaseTool):
+class LogicalFallacyTool(BaseTool[dict[str, object]]):
     name: str = "Logical Fallacy Detector"
     description: str = (
         "Identify logical fallacies in statements using pattern matching and linguistic analysis"
@@ -83,7 +83,7 @@ class LogicalFallacyTool(BaseTool):
         ],
     }
 
-    def _run(self, text: str) -> dict:
+    def _run(self, text: str) -> dict[str, object]:  # noqa: PLR0912 - branch groups correspond to distinct heuristic families; splitting would reduce readability without simplifying logic
         # NOTE: Branch count is intentionally high due to sequential heuristic
         # pattern groups. Refactoring into many tiny helper methods would reduce
         # readability; kept as-is with clear section comments.
@@ -209,5 +209,5 @@ class LogicalFallacyTool(BaseTool):
             fallacy: explanations.get(fallacy, "Logical fallacy detected") for fallacy in fallacies
         }
 
-    def run(self, *args, **kwargs):
-        return self._run(*args, **kwargs)
+    def run(self, text: str) -> dict[str, object]:
+        return self._run(text)

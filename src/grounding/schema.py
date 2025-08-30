@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-"""Lightweight models describing grounded answers."""
-
 from dataclasses import dataclass, field
 from typing import Any
+
+"""Lightweight models describing grounded answers."""
 
 
 @dataclass

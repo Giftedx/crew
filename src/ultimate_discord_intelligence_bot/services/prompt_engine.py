@@ -9,6 +9,7 @@ whitespace split acts as a final fallback.
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -17,10 +18,10 @@ from .memory_service import MemoryService
 try:  # pragma: no cover - optional dependency
     import tiktoken
 except Exception:  # pragma: no cover
-    tiktoken = None
+    tiktoken = None  # type: ignore[assignment]
 
 try:  # pragma: no cover - optional dependency
-    from transformers import AutoTokenizer  # type: ignore
+    from transformers import AutoTokenizer  # type: ignore[import-not-found]
 except Exception:  # pragma: no cover
     AutoTokenizer = None
 
@@ -55,8 +56,8 @@ class PromptEngine:
                 try:
                     enc = tiktoken.encoding_for_model(model)
                     return len(enc.encode(text))
-                except Exception:
-                    pass
+                except Exception:  # pragma: no cover - best effort token counting
+                    logging.getLogger(__name__).debug("tiktoken model lookup failed", exc_info=True)
             if AutoTokenizer:
                 try:
                     tokenizer = self._tokenizers.get(model)
@@ -64,8 +65,8 @@ class PromptEngine:
                         tokenizer = AutoTokenizer.from_pretrained(model)
                         self._tokenizers[model] = tokenizer
                     return len(tokenizer.encode(text))
-                except Exception:
-                    pass
+                except Exception:  # pragma: no cover - optional tokenizer path
+                    logging.getLogger(__name__).debug("transformers tokenization failed", exc_info=True)
             if tiktoken:
                 enc = tiktoken.get_encoding("cl100k_base")
                 return len(enc.encode(text))
