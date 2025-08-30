@@ -1,0 +1,249 @@
+---
+alwaysApply: true
+---
+
+# Startup and Validation Patterns
+
+## Application Startup Standards
+
+All applications must follow this startup validation pattern established in [start_bot.py](mdc:start_bot.py):
+
+### Environment Validation
+```python
+def check_environment() -> bool:
+    """Check if required environment variables are set."""
+    load_dotenv()
+    
+    required_vars = {
+        "DISCORD_BOT_TOKEN": "Discord bot token",
+        "OPENAI_API_KEY": "OpenAI API key (or OPENROUTER_API_KEY)",
+        "QDRANT_URL": "Qdrant vector database URL",
+    }
+    
+    missing = []
+    for var, description in required_vars.items():
+        # Handle alternative API keys
+        if var == "OPENAI_API_KEY":
+            if not (os.getenv("OPENAI_API_KEY") or os.getenv("OPENROUTER_API_KEY")):
+                missing.append(f"{var} (or OPENROUTER_API_KEY): {description}")
+        elif not os.getenv(var):
+            missing.append(f"{var}: {description}")
+    
+    if missing:
+        print("❌ Missing required environment variables:")
+        for var in missing:
+            print(f"   - {var}")
+        return False
+    
+    return True
+```
+
+### Service Connectivity Validation
+```python
+def validate_services() -> bool:
+    """Validate connectivity to external services."""
+    
+    # Test Qdrant connection
+    try:
+        from qdrant_client import QdrantClient
+        client = QdrantClient(url=os.getenv("QDRANT_URL"))
+        collections = client.get_collections()
+        print("✅ Qdrant connection successful")
+    except Exception as e:
+        print(f"❌ Qdrant connection failed: {e}")
+        return False
+    
+    # Test Discord token
+    try:
+        import discord
+        # Basic token format validation
+        token = os.getenv("DISCORD_BOT_TOKEN")
+        if not token or not token.startswith(("Bot ", "MTk", "Nz")):
+            print("❌ Invalid Discord bot token format")
+            return False
+        print("✅ Discord token format valid")
+    except Exception as e:
+        print(f"❌ Discord validation failed: {e}")
+        return False
+    
+    return True
+```
+
+### Graceful Startup Process
+```python
+async def main():
+    """Main entry point with comprehensive validation."""
+    print("🚀 Starting Ultimate Discord Intelligence Bot...")
+    
+    # Phase 1: Environment validation
+    if not check_environment():
+        print("💡 Create a .env file with required variables")
+        sys.exit(1)
+    print("✅ Environment variables validated")
+    
+    # Phase 2: Service connectivity
+    if not validate_services():
+        print("💡 Check service configuration and connectivity")
+        sys.exit(1)
+    print("✅ External services validated")
+    
+    # Phase 3: Component initialization
+    try:
+        bot = await create_bot()
+        print("✅ Bot components initialized")
+    except Exception as e:
+        print(f"❌ Component initialization failed: {e}")
+        sys.exit(1)
+    
+    # Phase 4: Service startup
+    try:
+        token = os.getenv("DISCORD_BOT_TOKEN")
+        await bot.start(token)
+    except discord.LoginFailure:
+        print("❌ Discord authentication failed")
+        sys.exit(1)
+    except Exception as e:
+        print(f"❌ Service startup failed: {e}")
+        sys.exit(1)
+```
+
+## Deployment Script Standards
+
+Follow the pattern established in [deploy.sh](mdc:deploy.sh) for all deployment scripts:
+
+### Pre-deployment Validation
+```bash
+# Check project directory
+if [ ! -f "pyproject.toml" ]; then
+    echo "❌ Error: Run this script from the project root directory"
+    exit 1
+fi
+
+# Validate virtual environment
+if [ ! -d "venv" ]; then
+    echo "❌ Error: Virtual environment not found"
+    exit 1
+fi
+
+# Check environment file
+if [ ! -f ".env" ]; then
+    echo "⚠️  No .env file found"
+    echo "💡 Please copy .env.template to .env and configure your API keys"
+    exit 1
+fi
+```
+
+### Dependency Verification
+```bash
+# Check if dependencies are installed
+if ! python -c "import crewai, discord, qdrant_client" 2>/dev/null; then
+    echo "⚠️  Installing dependencies..."
+    pip install -e .
+    echo "✅ Dependencies installed"
+else
+    echo "✅ Dependencies already satisfied"
+fi
+```
+
+### Service Health Validation
+```bash
+# Test external service connectivity
+if [ "$QDRANT_URL" != ":memory:" ]; then
+    if python -c "
+from qdrant_client import QdrantClient
+client = QdrantClient(url='$QDRANT_URL')
+collections = client.get_collections()
+print('✅ Qdrant connection successful')
+"; then
+        echo "✅ Qdrant connection verified"
+    else
+        echo "❌ Qdrant connection failed"
+        exit 1
+    fi
+fi
+```
+
+## Error Handling in Startup
+
+### Informative Error Messages
+```python
+# BAD - Generic error
+except Exception as e:
+    print(f"Error: {e}")
+    sys.exit(1)
+
+# GOOD - Specific, actionable error
+except discord.LoginFailure:
+    print("❌ Invalid Discord bot token")
+    print("💡 Check your DISCORD_BOT_TOKEN in .env file")
+    print("   Get a new token at: https://discord.com/developers/applications")
+    sys.exit(1)
+```
+
+### Exit Code Standards
+```python
+# Standard exit codes
+sys.exit(0)   # Success
+sys.exit(1)   # General error
+sys.exit(2)   # Misuse of shell command
+sys.exit(126) # Command cannot execute  
+sys.exit(127) # Command not found
+sys.exit(130) # Script terminated by Ctrl+C
+```
+
+## Component Initialization Order
+
+Always initialize components in this order:
+
+1. **Environment Loading** - Load .env files first
+2. **Logging Setup** - Configure logging early for debugging
+3. **Settings Validation** - Check all required configuration
+4. **External Services** - Validate connectivity to databases, APIs
+5. **Core Components** - Initialize business logic components
+6. **Service Startup** - Start network services last
+
+```python
+def initialize_application():
+    # 1. Load environment
+    load_dotenv()
+    
+    # 2. Setup logging
+    setup_logging()
+    
+    # 3. Validate settings
+    if not validate_configuration():
+        raise StartupError("Configuration validation failed")
+    
+    # 4. Test external services
+    if not test_external_services():
+        raise StartupError("External service validation failed")
+    
+    # 5. Initialize core components
+    crew = UltimateDiscordIntelligenceBotCrew()
+    
+    # 6. Return ready application
+    return create_application(crew)
+```
+
+## Docker Container Startup
+
+### Multi-stage Health Checks
+```dockerfile
+# Health check with startup period
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD python -c "import requests; requests.get('http://localhost:8000/health')" || exit 1
+```
+
+### Graceful Shutdown
+```python
+import signal
+
+def signal_handler(sig, frame):
+    print('🛑 Shutting down gracefully...')
+    # Cleanup resources
+    cleanup_resources()
+    sys.exit(0)
+
+signal.signal(signal.SIGINT, signal_handler)
+signal.signal(signal.SIGTERM, signal_handler)
+```

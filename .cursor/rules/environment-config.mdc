@@ -1,0 +1,175 @@
+---
+description: "Environment configuration patterns and validation for the Ultimate Discord Intelligence Bot"
+---
+
+# Environment Configuration Standards
+
+## Environment File Organization
+
+### Development Environment
+Use `.env` for local development with all configuration options documented:
+
+```bash
+# Required API Keys
+DISCORD_BOT_TOKEN=your-bot-token
+OPENAI_API_KEY=sk-your-key  # or OPENROUTER_API_KEY
+
+# Vector Database
+QDRANT_URL=http://localhost:6333
+QDRANT_API_KEY=your-key  # optional for local
+
+# Feature Flags  
+ENABLE_DISCORD_COMMANDS=true
+ENABLE_CONTENT_MODERATION=true
+ENABLE_PII_DETECTION=true
+```
+
+### Production Environment
+Use `.env.production` with security-focused settings:
+```bash
+ENVIRONMENT=production
+ENABLE_TRACING=true
+ENABLE_PROMETHEUS_ENDPOINT=true
+ENABLE_AUDIT_LOGGING=true
+```
+
+## Configuration Validation
+
+### Startup Validation Pattern
+All applications must validate critical environment variables at startup:
+
+```python
+def check_environment() -> bool:
+    """Check if required environment variables are set."""
+    load_dotenv()
+    
+    required_vars = {
+        "DISCORD_BOT_TOKEN": "Discord bot token",
+        "OPENAI_API_KEY": "OpenAI API key (or OPENROUTER_API_KEY)",
+        "QDRANT_URL": "Qdrant vector database URL",
+    }
+    
+    missing = []
+    for var, description in required_vars.items():
+        if var == "OPENAI_API_KEY":
+            # Allow either OpenAI or OpenRouter
+            if not (os.getenv("OPENAI_API_KEY") or os.getenv("OPENROUTER_API_KEY")):
+                missing.append(f"{var} (or OPENROUTER_API_KEY): {description}")
+        elif not os.getenv(var):
+            missing.append(f"{var}: {description}")
+    
+    return len(missing) == 0
+```
+
+## Settings Management
+
+### Centralized Settings
+Use [src/core/settings.py](mdc:src/core/settings.py) for all configuration:
+```python
+from core.settings import get_settings
+
+settings = get_settings()
+if settings.enable_tracing:
+    # Initialize tracing
+```
+
+### Ultimate Discord Bot Settings
+Legacy settings in [src/ultimate_discord_intelligence_bot/settings.py](mdc:src/ultimate_discord_intelligence_bot/settings.py) handle:
+- Directory paths (DOWNLOADS_DIR, PROCESSING_DIR)
+- yt-dlp configuration
+- Discord webhooks
+
+## Environment Variable Categories
+
+### Required Variables
+- `DISCORD_BOT_TOKEN` - Discord authentication
+- `OPENAI_API_KEY` or `OPENROUTER_API_KEY` - LLM access
+- `QDRANT_URL` - Vector database connection
+
+### Feature Flags
+Follow the pattern `ENABLE_<AREA>_<FEATURE>`:
+```bash
+# Core features
+ENABLE_API=true
+ENABLE_TRACING=false
+
+# Discord integration
+ENABLE_DISCORD_COMMANDS=true
+ENABLE_DISCORD_ARCHIVER=true
+
+# Security and privacy
+ENABLE_PII_DETECTION=true
+ENABLE_CONTENT_MODERATION=true
+ENABLE_RATE_LIMITING=true
+
+# Caching and performance
+ENABLE_CACHE_GLOBAL=true
+ENABLE_CACHE_VECTOR=true
+
+# Reinforcement learning
+ENABLE_RL_GLOBAL=true
+ENABLE_RL_ROUTING=true
+```
+
+### Performance Tuning
+```bash
+MAX_WORKERS=4                    # Thread pool size
+VECTOR_BATCH_SIZE=100           # Vector operation batch size
+RATE_LIMIT_RPS=10               # API rate limiting
+RATE_LIMIT_BURST=20             # Burst allowance
+CACHE_TTL_SECONDS=3600          # Cache duration
+```
+
+### Development and Debug
+```bash
+DEBUG=false                      # Debug mode
+LOG_LEVEL=INFO                  # Logging level
+ENABLE_PROFILING=false          # Performance profiling
+```
+
+## Configuration Templates
+
+### Template Creation Pattern
+Always provide templates for environment configuration:
+- `.env.template` - Development configuration template
+- `.env.production.template` - Production configuration template
+
+### Template Documentation
+Include inline documentation in templates:
+```bash
+# ====== REQUIRED API KEYS ======
+# At least one of these is required for LLM functionality
+OPENAI_API_KEY=sk-your-openai-key-here
+# OPENROUTER_API_KEY=sk-your-openrouter-key-here
+
+# ====== DISCORD INTEGRATION ======
+# Required for Discord bot functionality and notifications
+DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/YOUR_WEBHOOK_HERE
+```
+
+## Validation Scripts
+
+### Environment Validation
+Deployment scripts like [deploy.sh](mdc:deploy.sh) must validate:
+1. Required environment variables are set
+2. External services are accessible
+3. Configuration files are properly formatted
+
+### Health Checks
+```bash
+# Test Qdrant connection
+python -c "
+from qdrant_client import QdrantClient
+client = QdrantClient(url='$QDRANT_URL', api_key='$QDRANT_API_KEY')
+print('✅ Qdrant connection successful')
+"
+```
+
+## Security Guidelines
+
+- **Never commit** API keys or secrets to version control
+- **Use environment variables** for all sensitive configuration
+- **Rotate keys regularly** in production environments
+- **Validate input** from environment variables to prevent injection
+- **Use separate environments** for development, staging, and production
+- **Enable audit logging** to track configuration changes

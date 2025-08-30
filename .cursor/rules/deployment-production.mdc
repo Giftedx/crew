@@ -1,0 +1,90 @@
+---
+description: "Deployment and production configuration patterns for the Ultimate Discord Intelligence Bot"
+---
+
+# Deployment and Production Configuration
+
+## Docker and Container Standards
+
+All production deployments must follow these container patterns:
+
+### Multi-stage Dockerfile Pattern
+```dockerfile
+FROM python:3.11-slim as builder
+# Build dependencies
+FROM python:3.11-slim as production
+# Copy only necessary artifacts
+```
+
+### Health Check Requirements
+Every service container must include health checks:
+```dockerfile
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD python -c "import requests; requests.get('http://localhost:8000/health')" || exit 1
+```
+
+### Non-root User Security
+All containers must run as non-root users:
+```dockerfile
+RUN useradd --create-home --shell /bin/bash bot && \
+    chown -R bot:bot /app
+USER bot
+```
+
+## Environment Configuration
+
+### Development vs Production
+- Development: Use [docker-compose.yml](mdc:docker-compose.yml) for basic services
+- Production: Use [production.yml](mdc:production.yml) with monitoring stack
+
+### Required Environment Variables
+All deployments must validate these critical variables:
+- `DISCORD_BOT_TOKEN` - Discord bot authentication
+- `OPENAI_API_KEY` or `OPENROUTER_API_KEY` - LLM access
+- `QDRANT_URL` - Vector database connection
+
+### Monitoring Stack
+Production deployments must include:
+- **Prometheus** - Metrics collection
+- **Grafana** - Visualization dashboards  
+- **Loki** - Log aggregation
+- **Health checks** - Service availability monitoring
+
+## Deployment Scripts
+
+### Validation Before Deployment
+Always run validation checks via [deploy.sh](mdc:deploy.sh):
+1. Environment variable validation
+2. Service connectivity tests
+3. Health check verification
+
+### Monitoring Setup
+Use [monitoring-setup.sh](mdc:monitoring-setup.sh) for production observability:
+- Automated configuration generation
+- Dashboard provisioning
+- Alert rule setup
+
+## Production Scaling
+
+### Horizontal Scaling
+```bash
+docker-compose -f production.yml up -d --scale discord-bot=3
+```
+
+### Resource Limits
+Set appropriate limits in production compose:
+```yaml
+deploy:
+  resources:
+    limits:
+      memory: 512M
+      cpus: '0.5'
+```
+
+## Security Best Practices
+
+- Store secrets in environment variables, never in code
+- Use Docker secrets for sensitive data in swarm mode
+- Enable audit logging: `ENABLE_AUDIT_LOGGING=true`
+- Configure rate limiting: `ENABLE_RATE_LIMITING=true`
+- Enable PII detection: `ENABLE_PII_DETECTION=true`

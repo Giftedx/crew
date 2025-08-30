@@ -1,0 +1,256 @@
+---
+description: "Error handling patterns and StepResult usage standards"
+---
+
+# Error Handling and Result Patterns
+
+## StepResult Standard
+
+**ALWAYS** use [StepResult](mdc:src/ultimate_discord_intelligence_bot/step_result.py) for consistent tool returns and error handling:
+
+```python
+from ultimate_discord_intelligence_bot.step_result import StepResult
+
+def my_tool_function(input_data: str) -> StepResult:
+    if not input_data:
+        return StepResult(error="missing_input", status="bad_request")
+    
+    try:
+        result = process_data(input_data)
+        return StepResult(data=result)
+    except ValueError as e:
+        return StepResult(error=f"Invalid input: {e}", status="bad_request")
+    except ConnectionError as e:
+        return StepResult(error=f"Connection failed: {e}", status="retryable")
+    except Exception as e:
+        return StepResult(error=str(e), status="retryable")
+```
+
+## Status Codes
+
+Use these standard status codes consistently:
+
+### Success Status
+```python
+return StepResult(data=result)  # status defaults to "success"
+```
+
+### Error Statuses
+```python
+# bad_request - Invalid input, don't retry
+return StepResult(error="Invalid URL format", status="bad_request")
+
+# retryable - Temporary error, safe to retry
+return StepResult(error="Network timeout", status="retryable")
+
+# rate_limited - Rate limit hit, backoff and retry
+return StepResult(error="API rate limit exceeded", status="rate_limited")
+
+# unauthorized - Authentication issue
+return StepResult(error="Invalid API key", status="unauthorized")
+
+# forbidden - Permission denied
+return StepResult(error="Access denied", status="forbidden")
+```
+
+## Exception Handling Patterns
+
+### Network Operations
+```python
+from core.http_utils import resilient_get, resilient_post
+
+try:
+    response = resilient_get(url, timeout=30)
+    return StepResult(data=response.json())
+except requests.exceptions.Timeout:
+    return StepResult(error="Request timeout", status="retryable")
+except requests.exceptions.ConnectionError:
+    return StepResult(error="Connection failed", status="retryable")
+except requests.exceptions.HTTPError as e:
+    if e.response.status_code == 429:
+        return StepResult(error="Rate limited", status="rate_limited")
+    elif e.response.status_code in [401, 403]:
+        return StepResult(error="Authentication failed", status="unauthorized")
+    else:
+        return StepResult(error=f"HTTP error: {e}", status="retryable")
+```
+
+### File Operations
+```python
+try:
+    with open(filepath, 'r') as f:
+        content = f.read()
+    return StepResult(data=content)
+except FileNotFoundError:
+    return StepResult(error="File not found", status="bad_request")
+except PermissionError:
+    return StepResult(error="Permission denied", status="forbidden")
+except IOError as e:
+    return StepResult(error=f"File operation failed: {e}", status="retryable")
+```
+
+### Database Operations
+```python
+try:
+    result = database_operation()
+    return StepResult(data=result)
+except ConnectionRefusedError:
+    return StepResult(error="Database unavailable", status="retryable")
+except TimeoutError:
+    return StepResult(error="Database timeout", status="retryable")
+except IntegrityError:
+    return StepResult(error="Data integrity violation", status="bad_request")
+```
+
+## Error Logging
+
+### Structured Logging
+```python
+import logging
+
+logger = logging.getLogger(__name__)
+
+def my_function():
+    try:
+        # Operation
+        pass
+    except Exception as e:
+        logger.error(
+            "Operation failed",
+            extra={
+                "error": str(e),
+                "error_type": type(e).__name__,
+                "function": "my_function",
+                "input_data": input_data  # Be careful with PII
+            }
+        )
+        return StepResult(error=str(e), status="retryable")
+```
+
+### Privacy-Safe Logging
+Never log sensitive information:
+```python
+# BAD - logs sensitive data
+logger.error(f"API call failed with token {api_token}")
+
+# GOOD - logs safe information
+logger.error("API call failed", extra={"status_code": response.status_code})
+```
+
+## Discord Bot Error Handling
+
+### Command Error Handling
+```python
+@bot.command(name="analyze")
+async def analyze_content(ctx, *, url: str):
+    """Analyze a video URL for debate content and fact-check claims."""
+    await ctx.send(f"🔍 Starting analysis of: {url}")
+    try:
+        inputs = {"url": url}
+        crew_system.crew().kickoff(inputs=inputs)
+        await ctx.send("✅ Analysis complete! Check results in processing logs.")
+    except ValueError:
+        await ctx.send("❌ Invalid URL format. Please provide a valid video URL.")
+    except ConnectionError:
+        await ctx.send("❌ Connection failed. Please try again later.")
+    except Exception as e:
+        await ctx.send(f"❌ Analysis failed: {e}")
+        logger.error("Command failed", extra={"command": "analyze", "error": str(e)})
+```
+
+### Bot Event Error Handling
+```python
+@bot.event
+async def on_command_error(ctx, error):
+    if isinstance(error, commands.CommandNotFound):
+        await ctx.send("❓ Command not found. Use `!help` for available commands.")
+    elif isinstance(error, commands.MissingRequiredArgument):
+        await ctx.send(f"❌ Missing required argument: {error.param}")
+    elif isinstance(error, commands.BadArgument):
+        await ctx.send("❌ Invalid argument format.")
+    else:
+        await ctx.send(f"❌ Error: {error}")
+        logger.error("Command error", extra={
+            "command": ctx.command.name if ctx.command else "unknown",
+            "error": str(error),
+            "guild": ctx.guild.id if ctx.guild else None
+        })
+```
+
+## Retry Patterns
+
+### Exponential Backoff
+```python
+import time
+import random
+
+def retry_with_backoff(func, max_retries=3):
+    for attempt in range(max_retries):
+        try:
+            return func()
+        except Exception as e:
+            if attempt == max_retries - 1:
+                raise
+            
+            # Exponential backoff with jitter
+            delay = (2 ** attempt) + random.uniform(0, 1)
+            time.sleep(delay)
+    
+    raise Exception("Max retries exceeded")
+```
+
+### Using HTTP Utils Retry
+```python
+from core.http_utils import http_request_with_retry
+
+result = http_request_with_retry(
+    method="GET",
+    url=url,
+    max_retries=3,
+    backoff_factor=1.0
+)
+```
+
+## Testing Error Conditions
+
+### Unit Tests for Error Handling
+```python
+def test_tool_handles_missing_input():
+    tool = MyTool()
+    result = tool._run("")
+    assert result.status == "bad_request"
+    assert "missing" in result.error
+
+def test_tool_handles_network_error():
+    tool = MyTool()
+    with mock.patch('requests.get') as mock_get:
+        mock_get.side_effect = ConnectionError("Network unreachable")
+        result = tool._run("valid_input")
+        assert result.status == "retryable"
+        assert "Connection failed" in result.error
+```
+
+## Error Recovery Strategies
+
+### Graceful Degradation
+```python
+def get_enhanced_data(input_data):
+    # Try primary source
+    result = try_primary_source(input_data)
+    if result.status == "success":
+        return result
+    
+    # Fall back to secondary source
+    result = try_secondary_source(input_data)
+    if result.status == "success":
+        return StepResult(
+            data=result.data,
+            metadata={"source": "fallback"}
+        )
+    
+    # Return minimal viable result
+    return StepResult(
+        data={"basic_info": input_data},
+        metadata={"degraded": True}
+    )
+```

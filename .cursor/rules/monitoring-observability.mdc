@@ -1,0 +1,306 @@
+---
+description: "Monitoring, observability, and logging patterns for production deployments"
+---
+
+# Monitoring and Observability Standards
+
+## Production Monitoring Stack
+
+All production deployments must include the complete observability stack configured in [production.yml](mdc:production.yml):
+
+### Core Components
+- **Prometheus** - Metrics collection and storage
+- **Grafana** - Visualization and dashboards
+- **Loki** - Log aggregation and analysis
+- **Health Checks** - Service availability monitoring
+
+### Setup and Configuration
+Use [monitoring-setup.sh](mdc:monitoring-setup.sh) to automatically configure:
+```bash
+./monitoring-setup.sh
+# Creates Prometheus config, Grafana dashboards, Loki configuration
+```
+
+## Metrics Standards
+
+### Application Metrics
+Enable Prometheus metrics in all services:
+```bash
+ENABLE_PROMETHEUS_ENDPOINT=true
+ENABLE_HTTP_METRICS=true
+```
+
+### Custom Metrics Pattern
+```python
+from prometheus_client import Counter, Histogram, Gauge
+
+# Counter for events
+discord_messages_processed = Counter(
+    'discord_messages_processed_total',
+    'Total Discord messages processed',
+    ['command', 'status']
+)
+
+# Histogram for latencies
+request_duration = Histogram(
+    'http_request_duration_seconds',
+    'HTTP request latency',
+    ['method', 'endpoint']
+)
+
+# Gauge for current state
+active_connections = Gauge(
+    'active_connections_current',
+    'Currently active connections'
+)
+```
+
+### Metric Usage
+```python
+# Increment counters
+discord_messages_processed.labels(command='analyze', status='success').inc()
+
+# Time operations
+with request_duration.labels(method='POST', endpoint='/analyze').time():
+    process_request()
+
+# Set gauge values
+active_connections.set(current_connection_count)
+```
+
+## Logging Standards
+
+### Structured Logging
+Always use structured logging with consistent fields:
+```python
+import logging
+import json
+
+# Configure structured logging
+logging.basicConfig(
+    format='%(asctime)s %(levelname)s %(name)s %(message)s',
+    level=logging.INFO
+)
+
+logger = logging.getLogger(__name__)
+
+# Log with structured data
+logger.info("Processing started", extra={
+    "user_id": user_id,
+    "command": command_name,
+    "url": sanitized_url,  # Remove sensitive data
+    "timestamp": time.time()
+})
+```
+
+### Log Levels
+Use appropriate log levels:
+```python
+logger.debug("Detailed diagnostic info")        # Development only
+logger.info("Normal operation events")          # Production info
+logger.warning("Unexpected but handled events") # Attention needed
+logger.error("Error conditions")                # Requires investigation
+logger.critical("Critical system failures")     # Immediate action required
+```
+
+### Privacy-Safe Logging
+**NEVER log sensitive information**:
+```python
+# BAD - logs sensitive data
+logger.info(f"User authenticated: {api_token}")
+logger.info(f"Processing content: {full_transcript}")
+
+# GOOD - logs safe information
+logger.info("User authenticated", extra={"user_id": hashed_user_id})
+logger.info("Processing content", extra={"content_length": len(transcript)})
+```
+
+## Health Checks
+
+### Service Health Endpoints
+All services must expose health check endpoints:
+```python
+from fastapi import FastAPI
+from core.settings import get_settings
+
+app = FastAPI()
+
+@app.get("/health")
+async def health_check():
+    settings = get_settings()
+    
+    health_status = {
+        "status": "healthy",
+        "timestamp": datetime.utcnow().isoformat(),
+        "services": {}
+    }
+    
+    # Check Qdrant
+    try:
+        client = QdrantClient(url=settings.qdrant_url)
+        collections = client.get_collections()
+        health_status["services"]["qdrant"] = "healthy"
+    except Exception as e:
+        health_status["services"]["qdrant"] = f"unhealthy: {e}"
+        health_status["status"] = "degraded"
+    
+    return health_status
+```
+
+### Docker Health Checks
+Include health checks in Docker containers:
+```dockerfile
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD python -c "import requests; requests.get('http://localhost:8000/health')" || exit 1
+```
+
+## Alerting Rules
+
+### Prometheus Alert Rules
+Create alert rules for critical conditions:
+```yaml
+groups:
+- name: discord_bot_alerts
+  rules:
+  - alert: BotDown
+    expr: up{job="discord-bot"} == 0
+    for: 1m
+    labels:
+      severity: critical
+    annotations:
+      summary: Discord bot is down
+      
+  - alert: HighErrorRate
+    expr: rate(http_requests_total{status=~"5.."}[5m]) > 0.1
+    for: 2m
+    labels:
+      severity: warning
+    annotations:
+      summary: High error rate detected
+```
+
+## Distributed Tracing
+
+### OpenTelemetry Integration
+Enable tracing for request tracking:
+```bash
+ENABLE_TRACING=true
+OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:14268/api/traces
+```
+
+### Trace Instrumentation
+```python
+from opentelemetry import trace
+from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+
+# Configure tracing
+trace.set_tracer_provider(TracerProvider())
+tracer = trace.get_tracer(__name__)
+
+# Instrument functions
+@tracer.start_as_current_span("process_content")
+def process_content(content):
+    span = trace.get_current_span()
+    span.set_attribute("content.length", len(content))
+    span.set_attribute("content.type", "video")
+    
+    # Process content
+    return result
+```
+
+## Performance Monitoring
+
+### Response Time Monitoring
+Track API response times:
+```python
+import time
+from functools import wraps
+
+def monitor_performance(func):
+    @wraps(func)
+    async def wrapper(*args, **kwargs):
+        start_time = time.time()
+        try:
+            result = await func(*args, **kwargs)
+            duration = time.time() - start_time
+            
+            # Record metrics
+            request_duration.labels(
+                method=func.__name__,
+                status="success"
+            ).observe(duration)
+            
+            return result
+        except Exception as e:
+            duration = time.time() - start_time
+            request_duration.labels(
+                method=func.__name__,
+                status="error"
+            ).observe(duration)
+            raise
+    return wrapper
+```
+
+### Resource Usage Monitoring
+Monitor system resources:
+```python
+import psutil
+from prometheus_client import Gauge
+
+# System metrics
+cpu_usage = Gauge('cpu_usage_percent', 'CPU usage percentage')
+memory_usage = Gauge('memory_usage_bytes', 'Memory usage in bytes')
+disk_usage = Gauge('disk_usage_percent', 'Disk usage percentage')
+
+def update_system_metrics():
+    cpu_usage.set(psutil.cpu_percent())
+    memory_usage.set(psutil.virtual_memory().used)
+    disk_usage.set(psutil.disk_usage('/').percent)
+```
+
+## Dashboard Configuration
+
+### Grafana Dashboard Requirements
+All services must have corresponding Grafana dashboards showing:
+- Service availability and uptime
+- Request rate and response times  
+- Error rates and success rates
+- Resource utilization (CPU, memory, disk)
+- Business metrics (commands processed, users served)
+
+### Dashboard Management
+Store dashboard configurations in [config/grafana/dashboards/](mdc:config/grafana/dashboards/):
+- `bot-dashboard.json` - Main bot metrics
+- `infrastructure-dashboard.json` - System resource metrics
+- `business-dashboard.json` - User and content metrics
+
+## Log Analysis
+
+### Log Aggregation with Loki
+Configure Loki for centralized logging:
+```yaml
+# config/loki.yml
+auth_enabled: false
+server:
+  http_listen_port: 3100
+common:
+  path_prefix: /tmp/loki
+  storage:
+    filesystem:
+      chunks_directory: /tmp/loki/chunks
+```
+
+### Log Queries
+Use LogQL for log analysis:
+```logql
+# Error rate over time
+sum(rate({job="discord-bot"} |= "ERROR" [5m])) by (level)
+
+# Top error messages
+topk(10, sum by (message) (count_over_time({job="discord-bot"} |= "ERROR" [24h])))
+
+# Response time distribution
+histogram_quantile(0.95, sum(rate({job="discord-bot"} | json | unwrap duration [5m])) by (le))
+```

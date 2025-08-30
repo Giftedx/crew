@@ -1,0 +1,138 @@
+---
+description: "Tool development patterns and standards for CrewAI tools in the Ultimate Discord Intelligence Bot"
+---
+
+# Tool Development Standards
+
+## Tool Structure Pattern
+
+All tools must follow the established pattern in [src/ultimate_discord_intelligence_bot/tools/](mdc:src/ultimate_discord_intelligence_bot/tools/):
+
+### Base Tool Implementation
+```python
+from crewai_tools import BaseTool
+from ultimate_discord_intelligence_bot.step_result import StepResult
+
+class MyTool(BaseTool):
+    name: str = "My Tool Name"
+    description: str = "Clear, actionable description of what the tool does"
+    
+    def _run(self, input_data: str) -> StepResult:
+        try:
+            # Tool logic here
+            result = process_input(input_data)
+            return StepResult(data=result)
+        except Exception as e:
+            return StepResult(error=str(e), status="retryable")
+```
+
+## StepResult Return Pattern
+
+**ALWAYS** use [StepResult](mdc:src/ultimate_discord_intelligence_bot/step_result.py) for consistent tool returns:
+
+### Success Response
+```python
+return StepResult(data=result)
+```
+
+### Error Responses
+```python
+# Bad request (don't retry)
+return StepResult(error="missing_input", status="bad_request")
+
+# Retryable error (can retry)
+return StepResult(error=str(e), status="retryable")
+
+# Rate limited (backoff and retry)
+return StepResult(error="rate_limited", status="rate_limited")
+```
+
+## Tool Categories and Organization
+
+### Content Analysis Tools
+- [LogicalFallacyTool](mdc:src/ultimate_discord_intelligence_bot/tools/logical_fallacy_tool.py) - Fallacy detection
+- [ClaimExtractorTool](mdc:src/ultimate_discord_intelligence_bot/tools/claim_extractor_tool.py) - Claim extraction
+- [TextAnalysisTool](mdc:src/ultimate_discord_intelligence_bot/tools/text_analysis_tool.py) - Text processing
+
+### Platform Integration Tools
+- [YouTubeDownloadTool](mdc:src/ultimate_discord_intelligence_bot/tools/yt_dlp_download_tool.py) - YouTube content
+- [TwitchDownloadTool](mdc:src/ultimate_discord_intelligence_bot/tools/yt_dlp_download_tool.py) - Twitch streams
+- [DiscordQATool](mdc:src/ultimate_discord_intelligence_bot/tools/discord_qa_tool.py) - Discord integration
+
+### Memory and Storage Tools
+- [VectorSearchTool](mdc:src/ultimate_discord_intelligence_bot/tools/vector_search_tool.py) - Semantic search
+- [MemoryStorageTool](mdc:src/ultimate_discord_intelligence_bot/tools/memory_storage_tool.py) - Data persistence
+- [TranscriptIndexTool](mdc:src/ultimate_discord_intelligence_bot/tools/transcript_index_tool.py) - Content indexing
+
+## Tool Registration
+
+### Agent Tool Assignment
+Tools must be explicitly assigned to agents in [crew.py](mdc:src/ultimate_discord_intelligence_bot/crew.py):
+```python
+@typed
+@agent
+def my_agent(self) -> Agent:
+    return Agent(
+        config=self.agents_config["my_agent"],
+        tools=[MyTool(), RelatedTool()],
+    )
+```
+
+### Tool Testing Requirements
+Every tool must have corresponding tests in [tests/](mdc:tests/):
+```python
+def test_my_tool_success():
+    tool = MyTool()
+    result = tool._run("valid input")
+    assert result.status == "success"
+    assert result.data is not None
+
+def test_my_tool_error_handling():
+    tool = MyTool()
+    result = tool._run("")
+    assert result.status == "bad_request"
+    assert "missing" in result.error
+```
+
+## Network Operations in Tools
+
+For tools making HTTP requests, use [core.http_utils](mdc:src/core/http_utils.py):
+```python
+from core.http_utils import resilient_post, resilient_get
+
+# Instead of raw requests
+response = resilient_get(url, timeout=30)
+```
+
+## Tool Documentation
+
+### Docstring Requirements
+```python
+def _run(self, input_data: str) -> StepResult:
+    """Process input data and return structured result.
+    
+    Args:
+        input_data: The data to process (specific format description)
+        
+    Returns:
+        StepResult with processed data or error information
+        
+    Raises:
+        No exceptions - all errors returned via StepResult
+    """
+```
+
+### Tool Reference Documentation
+All tools must be documented in [docs/tools_reference.md](mdc:docs/tools_reference.md) with:
+- Purpose and functionality
+- Usage examples
+- Input/output formats
+- Error handling behavior
+
+## Performance Guidelines
+
+- **Caching**: Implement caching for expensive operations
+- **Async Operations**: Use async/await for I/O bound operations  
+- **Batch Processing**: Support batch operations where applicable
+- **Timeout Handling**: Set reasonable timeouts for all network calls
+- **Memory Management**: Clean up resources in long-running tools
