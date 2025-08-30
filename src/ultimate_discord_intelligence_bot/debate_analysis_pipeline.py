@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from typing import Any, TypedDict
 
 from .tools.audio_transcription_tool import AudioTranscriptionTool
 from .tools.character_profile_tool import CharacterProfileTool
@@ -19,7 +20,7 @@ from .tools.yt_dlp_download_tool import YouTubeDownloadTool, YtDlpDownloadTool
 class DebateAnalysisPipeline:
     """Download, transcribe and analyse clips for context and accuracy."""
 
-    def __init__(
+    def __init__(  # noqa: PLR0913 - explicit optional dependencies improve test injection & readability
         self,
         downloader: YtDlpDownloadTool | None = None,
         transcriber: AudioTranscriptionTool | None = None,
@@ -49,6 +50,17 @@ class DebateAnalysisPipeline:
         self.ethan_defender = ethan_defender
         self.hasan_defender = hasan_defender
 
+    class DebateAnalysisResult(TypedDict, total=False):
+        status: str
+        context: str
+        context_verdict: str
+        fact_verdict: str
+        evidence: list[Any]
+        deltas: dict[str, int]
+        ethan_defender: str
+        hasan_defender: str
+        clip: str  # include for compatibility with timeline/profile aggregation
+
     def analyze(
         self,
         url: str,
@@ -56,7 +68,7 @@ class DebateAnalysisPipeline:
         clip_text: str,
         person: str,
         transcript: str | None = None,
-    ) -> dict:
+    ) -> DebateAnalysisResult:
         """Run context verification and fact-checking for a clip.
 
         Parameters
@@ -79,7 +91,7 @@ class DebateAnalysisPipeline:
             local_path = download_info.get("local_path")
             if local_path:
                 transcription = self.transcriber.run(local_path)
-                transcript = transcription.get("transcript", "")
+                transcript = str(transcription.get("transcript", ""))
             else:
                 transcript = ""
         self.index_tool.index_transcript(transcript or "", video_id)
@@ -96,8 +108,8 @@ class DebateAnalysisPipeline:
             {
                 "ts": ts,
                 "clip": clip_text,
-                "context_verdict": context.get("verdict"),
-                "fact_verdict": fact.get("verdict"),
+                "context_verdict": str(context.get("verdict", "")),
+                "fact_verdict": str(fact.get("verdict", "")),
                 "evidence": fact.get("evidence", []),
             },
         )
@@ -107,8 +119,8 @@ class DebateAnalysisPipeline:
                 "video_id": video_id,
                 "ts": ts,
                 "clip": clip_text,
-                "fact_verdict": verdict,
-                "context_verdict": context.get("verdict"),
+                "fact_verdict": str(verdict),
+                "context_verdict": str(context.get("verdict", "")),
                 "evidence": fact.get("evidence", []),
             },
         )

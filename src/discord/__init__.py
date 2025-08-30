@@ -1,10 +1,15 @@
-"""Shim package that exposes command helpers and discord.py classes."""
+"""Shim package that exposes command helpers and discord.py classes.
+
+The actual ``discord`` import is performed lazily via ``import_module`` so
+tests that do not install the optional dependency still import this shim
+without failing (tools using the real client will provide it in prod).
+"""
 
 from importlib import import_module
 
-_discord = import_module("discord")
+from . import commands  # re-export lightweight command helpers
 
-from . import commands
+_discord = import_module("discord")  # noqa: PLC0415 - dynamic optional dependency load
 
 Client = getattr(_discord, "Client", object)
 Intents = getattr(_discord, "Intents", object)

@@ -1,7 +1,9 @@
+"""Apply masking to detected PII spans.
+
+Docstring placed before future import to satisfy Ruff E402.
+"""
+
 from __future__ import annotations
-
-"""Apply masking to detected PII spans."""
-
 
 from .pii_detector import Span
 

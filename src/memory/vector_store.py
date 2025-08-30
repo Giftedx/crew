@@ -1,9 +1,10 @@
-from __future__ import annotations
-
 """Minimal Qdrant wrapper with namespace support."""
+
+from __future__ import annotations
 
 from collections.abc import Sequence
 from dataclasses import dataclass
+from typing import Any, TypedDict
 
 from core.settings import get_settings
 from memory.qdrant_provider import get_qdrant_client
@@ -16,10 +17,28 @@ except Exception:  # pragma: no cover - optional dependency
     qmodels = None  # type: ignore
 
 
+class VectorPayload(TypedDict, total=False):
+    text: str
+    id: int  # optional internal monotonic id for memory items
+    video_id: str
+    title: str
+    platform: str
+    sentiment: str
+    summary: str
+    keywords: list[str]
+    # Additional optional keys used by ingest payloads / context queries
+    source_url: str
+    start: float
+    end: float
+    tags: list[str]
+    episode_id: str
+    published_at: str
+
+
 @dataclass
 class VectorRecord:
     vector: list[float]
-    payload: dict
+    payload: VectorPayload
 
 
 class VectorStore:
@@ -74,14 +93,17 @@ class VectorStore:
         # Chunk large batches to reduce memory usage and allow streaming ingest
         for offset in range(0, len(records), self._batch_size):
             chunk = records[offset : offset + self._batch_size]
-            points = [
-                qmodels.PointStruct(id=base + offset + i, vector=r.vector, payload=r.payload)
-                for i, r in enumerate(chunk)
-            ]
+            points = []
+            for i, r in enumerate(chunk):
+                # qdrant_client stubs expect a plain dict; our TypedDict is compatible at runtime
+                payload_dict = dict(r.payload)
+                points.append(
+                    qmodels.PointStruct(id=base + offset + i, vector=r.vector, payload=payload_dict)
+                )
             self.client.upsert(collection_name=namespace, points=points)
         self._counters[namespace] = base + len(records)
 
-    def query(self, namespace: str, vector: Sequence[float], top_k: int = 3):
+    def query(self, namespace: str, vector: Sequence[float], top_k: int = 3) -> list[Any]:
         """Return top ``top_k`` matches for ``vector`` in ``namespace``.
 
         Uses ``query_points`` which supersedes the deprecated ``search`` API
@@ -94,4 +116,4 @@ class VectorStore:
             limit=top_k,
             with_payload=True,
         )
-        return res.points
+        return list(res.points)

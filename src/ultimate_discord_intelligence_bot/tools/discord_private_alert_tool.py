@@ -1,6 +1,6 @@
 """Send internal alerts to a private Discord channel."""
 
-from crewai.tools import BaseTool
+from __future__ import annotations
 
 from core.http_utils import (
     HTTP_SUCCESS_NO_CONTENT,
@@ -9,10 +9,12 @@ from core.http_utils import (
     validate_public_https_url,
 )
 
+from ._base import BaseTool
+
 _validate_webhook = validate_public_https_url
 
 
-class DiscordPrivateAlertTool(BaseTool):
+class DiscordPrivateAlertTool(BaseTool[dict[str, object]]):
     """Post system alerts to a dedicated Discord channel.
 
     Uses shared HTTP helpers (`validate_public_https_url`, `resilient_post`)

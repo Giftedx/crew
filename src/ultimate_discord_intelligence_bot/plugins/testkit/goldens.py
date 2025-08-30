@@ -31,10 +31,10 @@ def load(pattern: str) -> list[dict[str, Any]]:
     records: list[dict[str, Any]] = []
     for path in sorted(base.glob(glob_pat)):
         with path.open("r", encoding="utf-8") as fh:
-            for line in fh:
-                line = line.strip()
-                if line:
-                    records.append(json.loads(line))
+            for raw_line in fh:
+                stripped = raw_line.strip()
+                if stripped:
+                    records.append(json.loads(stripped))
     return records
 
 

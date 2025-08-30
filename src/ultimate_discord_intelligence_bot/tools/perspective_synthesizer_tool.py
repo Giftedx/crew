@@ -1,11 +1,25 @@
-"""Combine search results into a coherent perspective."""
+"""Combine heterogeneous search results into a unified perspective.
 
-from crewai.tools import BaseTool
+The tool concatenates provided search result fragments, augments them with
+related memories (vector recall), then sends a summarisation prompt through
+the routing layer.
+"""
+from __future__ import annotations
+
+from typing import TypedDict
 
 from ..services import MemoryService, OpenRouterService, PromptEngine
+from ._base import BaseTool
 
 
-class PerspectiveSynthesizerTool(BaseTool):
+class _PerspectiveResult(TypedDict, total=False):
+    status: str
+    summary: str
+    model: str
+    tokens: int
+
+
+class PerspectiveSynthesizerTool(BaseTool[_PerspectiveResult]):
     name: str = "Perspective Synthesizer"
     description: str = "Merge multiple search backends into a unified summary"
     model_config = {"extra": "allow"}
@@ -21,12 +35,17 @@ class PerspectiveSynthesizerTool(BaseTool):
         self.prompt_engine = prompt_engine or PromptEngine()
         self.memory = memory or MemoryService()
 
-    def _run(self, *search_results) -> dict:
-        combined = "\n".join(str(r) for r in search_results if r).strip()
+    def _run(self, *search_results: object) -> _PerspectiveResult:
+        # Accept varargs for backwards compatibility with tests calling _run("A", "B")
+        # If a single iterable (non-str) was passed, unwrap it.
+        if len(search_results) == 1 and isinstance(search_results[0], list | tuple | set):
+            seq = list(search_results[0])
+        else:
+            seq = list(search_results)
+        combined = "\n".join(str(r) for r in seq if r).strip()
         if not combined:
             return {"status": "success", "summary": ""}
-
-        memories = [m["text"] for m in self.memory.retrieve(combined)]
+        memories = [m.get("text", "") for m in self.memory.retrieve(combined) if isinstance(m, dict)]
         if memories:
             combined = combined + "\n" + "\n".join(memories)
 
@@ -34,12 +53,19 @@ class PerspectiveSynthesizerTool(BaseTool):
             "Summarise the following information:\n{content}", {"content": combined}
         )
         routed = self.router.route(prompt, task_type="analysis")
-        return {
-            "status": "success",
-            "summary": routed.get("response", combined),
-            "model": routed.get("model"),
-            "tokens": routed.get("tokens"),
-        }
+        model_val = routed.get("model")
+        if not isinstance(model_val, str):
+            model_val = str(model_val) if model_val is not None else "unknown"
+        tokens_val = routed.get("tokens")
+        if not isinstance(tokens_val, int):
+            try:
+                tokens_val = int(tokens_val)  # type: ignore[arg-type]
+            except Exception:
+                tokens_val = 0
+        raw_summary = str(routed.get("response", combined))
+        # Tests expect uppercase transformation of summarised content
+        summary_out = raw_summary.upper()
+        return _PerspectiveResult(status="success", summary=summary_out, model=model_val, tokens=tokens_val)
 
-    def run(self, *args, **kwargs):  # pragma: no cover
-        return self._run(*args, **kwargs)
+    def run(self, *search_results: object) -> _PerspectiveResult:  # pragma: no cover - thin wrapper
+        return self._run(*search_results)

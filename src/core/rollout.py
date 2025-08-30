@@ -1,8 +1,8 @@
-from __future__ import annotations
-
 """Simple shadow/canary rollout controller."""
 
-import random
+from __future__ import annotations
+
+import random  # noqa: S311 - canary rollout sampling is non-cryptographic
 from dataclasses import dataclass
 
 
@@ -35,7 +35,8 @@ class RolloutController:
             raise KeyError(domain)
         if state.promoted:
             return state.control
-        return state.candidate if random.random() < state.canary_pct else state.control
+        # Non-cryptographic sampling for progressive exposure; security irrelevance.
+        return state.candidate if random.random() < state.canary_pct else state.control  # noqa: S311
 
     def record(self, domain: str, arm: str, reward: float) -> None:
         state = self._domains.get(domain)

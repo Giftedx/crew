@@ -9,7 +9,7 @@ def test_retry_flag_precedence(monkeypatch):
 
     # Only legacy set still returns True (with deprecation warning captured)
     monkeypatch.delenv("ENABLE_HTTP_RETRY", raising=False)
-    with monkeypatch.context() if hasattr(monkeypatch, 'context') else _null_ctx():  # fallback
+    with monkeypatch.context() if hasattr(monkeypatch, 'context') else NullCtx():  # fallback
         monkeypatch.setenv("ENABLE_ANALYSIS_HTTP_RETRY", "1")
         assert http_utils._is_retry_enabled() is True
 
@@ -18,7 +18,7 @@ def test_retry_flag_precedence(monkeypatch):
     assert http_utils._is_retry_enabled() is False
 
 
-class _null_ctx:  # pragma: no cover - compatibility shim
+class NullCtx:  # pragma: no cover - compatibility shim (CapWords for N801)
     def __enter__(self):
         return self
     def __exit__(self, *args):  # noqa: D401

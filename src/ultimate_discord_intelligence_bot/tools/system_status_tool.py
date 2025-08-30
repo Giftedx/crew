@@ -12,12 +12,12 @@ import platform
 import shutil
 
 # NOTE: Import order intentionally groups stdlib then third-party for clarity.
-from crewai.tools import BaseTool
+from ._base import BaseTool
 
 logger = logging.getLogger(__name__)
 
 
-class SystemStatusTool(BaseTool):
+class SystemStatusTool(BaseTool[dict[str, object]]):
     """Collect simple system metrics."""
 
     name: str = "System Status Tool"
@@ -43,7 +43,7 @@ class SystemStatusTool(BaseTool):
             "mem_free": mem_free,
         }
 
-    def _run(self) -> dict[str, float]:
+    def _run(self) -> dict[str, object]:
         try:
             load1, load5, load15 = os.getloadavg()
         except (AttributeError, OSError):
@@ -63,5 +63,5 @@ class SystemStatusTool(BaseTool):
             **memory,
         }
 
-    def run(self, *args, **kwargs):  # pragma: no cover - thin wrapper
-        return self._run(*args, **kwargs)
+    def run(self) -> dict[str, object]:  # pragma: no cover - thin wrapper
+        return self._run()

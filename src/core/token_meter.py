@@ -72,19 +72,19 @@ class BudgetStore:
 
     # expose attributes for tests
     @property
-    def max_per_request(self) -> float:  # type: ignore[override]
+    def max_per_request(self) -> float:
         return self._get().max_per_request
 
     @max_per_request.setter
-    def max_per_request(self, value: float) -> None:  # type: ignore[override]
+    def max_per_request(self, value: float) -> None:
         self._get().max_per_request = value
 
     @property
-    def daily_budget(self) -> float:  # type: ignore[override]
+    def daily_budget(self) -> float:
         return self._get().daily_budget
 
     @daily_budget.setter
-    def daily_budget(self, value: float) -> None:  # type: ignore[override]
+    def daily_budget(self, value: float) -> None:
         self._get().daily_budget = value
 
 

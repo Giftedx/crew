@@ -11,7 +11,7 @@ class YouTubeConnector(SourceConnector):
     ensures items are only emitted once.
     """
 
-    def discover(self, watch: Watch, state: dict) -> list[DiscoveryItem]:
+    def discover(self, watch: Watch, state: dict[str, object]) -> list[DiscoveryItem]:
         cursor = state.get("cursor")
         if cursor == watch.handle:
             return []

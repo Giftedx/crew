@@ -8,6 +8,7 @@ from datetime import datetime, timedelta, timezone
 from core.learning_engine import LearningEngine
 from ingest import models, pipeline
 from ingest.sources.base import SourceConnector, Watch
+from memory.vector_store import VectorStore
 
 from .priority_queue import PriorityQueue
 
@@ -49,7 +50,8 @@ class Scheduler:
             ),
             (tenant, workspace, source_type, handle, label, 1, now, now),
         )
-        watch_id = int(cur.lastrowid)
+        raw_id = cur.lastrowid
+        watch_id = int(raw_id) if raw_id is not None else 0
         self.conn.execute(
             (
                 "INSERT INTO ingest_state (watchlist_id, cursor, last_seen_at, etag, failure_count, "
@@ -71,28 +73,29 @@ class Scheduler:
         )
 
     def list_watches(self, tenant: str | None = None) -> list[models.Watchlist]:
-        sql = "SELECT id, tenant, workspace, source_type, handle, label, enabled, created_at, updated_at FROM watchlist"
-        params: tuple = ()
+        sql = (
+            "SELECT id, tenant, workspace, source_type, handle, label, enabled, created_at, updated_at "
+            "FROM watchlist"
+        )
+        params: tuple[object, ...] = ()
         if tenant:
             sql += " WHERE tenant=?"
             params = (tenant,)
         rows = self.conn.execute(sql, params).fetchall()
-        out: list[models.Watchlist] = []
-        for r in rows:
-            out.append(
-                models.Watchlist(
-                    id=r[0],
-                    tenant=r[1],
-                    workspace=r[2],
-                    source_type=r[3],
-                    handle=r[4],
-                    label=r[5],
-                    enabled=bool(r[6]),
-                    created_at=r[7],
-                    updated_at=r[8],
-                )
+        return [
+            models.Watchlist(
+                id=r[0],
+                tenant=r[1],
+                workspace=r[2],
+                source_type=r[3],
+                handle=r[4],
+                label=r[5],
+                enabled=bool(r[6]),
+                created_at=r[7],
+                updated_at=r[8],
             )
-        return out
+            for r in rows
+        ]
 
     # ----------------------------------------------------------- scheduler tick
     def tick(self) -> None:
@@ -149,7 +152,7 @@ class Scheduler:
             self.learner.record("scheduler", {"source_type": source_type}, interval, float(reward))
 
     # ----------------------------------------------------------- worker
-    def worker_run_once(self, store) -> pipeline.IngestJob | None:
+    def worker_run_once(self, store: VectorStore) -> pipeline.IngestJob | None:
         qjob = self.queue.dequeue()
         if not qjob:
             return None

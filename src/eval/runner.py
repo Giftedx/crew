@@ -1,15 +1,18 @@
-from __future__ import annotations
-
 """Simple evaluation runner used in tests and CI."""
 
+from __future__ import annotations
+
+import argparse
+import json
 from collections.abc import Callable
 from pathlib import Path
+from typing import Any
 
 from . import scorers
 from .loader import load_cases
 
 # Type alias for the model function used in tests.
-ModelFunc = Callable[[str, dict], tuple[str, dict[str, float]]]
+ModelFunc = Callable[[str, dict[str, Any]], tuple[str, dict[str, float]]]
 
 
 def run(
@@ -69,8 +72,6 @@ def run(
 
 
 def main() -> None:
-    import argparse
-    import json
 
     p = argparse.ArgumentParser(description="run evaluation suite")
     p.add_argument("dataset", type=str, help="dataset directory")
@@ -80,7 +81,7 @@ def main() -> None:
     )
     args = p.parse_args()
 
-    def echo_model(task: str, case: dict) -> tuple[str, dict[str, float]]:
+    def echo_model(task: str, case: dict[str, Any]) -> tuple[str, dict[str, float]]:
         # trivial model that echoes expected answers for CI sanity checks
         if task == "rag_qa":
             return case.get("must_include", [""])[0], {"cost_usd": 0.0, "latency_ms": 0}
@@ -100,14 +101,18 @@ def main() -> None:
         json.dump(report, f, indent=2)
 
     if args.baseline:
-        from .gates import compare
+        from .gates import compare  # noqa: PLC0415 - local import avoids heavy dependency on baseline-less runs
 
         with open(args.baseline) as f:
             base = json.load(f)
         result = compare(report, base)
         if not result["pass"]:
-            for r in result["reasons"]:
-                print("FAIL:", r)
+            reasons = result.get("reasons")
+            if isinstance(reasons, list):
+                for r in reasons:
+                    print("FAIL:", r)
+            else:  # defensive: unexpected shape
+                print("FAIL:", reasons)
             raise SystemExit(1)
 
 

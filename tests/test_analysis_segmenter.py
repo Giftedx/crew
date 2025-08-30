@@ -41,7 +41,7 @@ def test_chunk_transcript_respects_max_chars(sample_transcript):
 
     # At least some chunks should be reasonably sized
     # (The implementation may create some larger chunks when segments can't be split)
-    reasonable_chunks = [chunk for chunk in chunks if len(chunk.text) <= max_chars + 100]
+    [chunk for chunk in chunks if len(chunk.text) <= max_chars + 100]
     # This is more of a behavioral test - the segmenter groups complete segments
 
 

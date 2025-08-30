@@ -1,6 +1,6 @@
-from __future__ import annotations
-
 """SQLite storage for debate sessions."""
+
+from __future__ import annotations
 
 import sqlite3
 from dataclasses import dataclass
@@ -137,7 +137,10 @@ class DebateStore:
             ),
         )
         self.conn.commit()
-        return int(cur.lastrowid)
+        row_id = cur.lastrowid
+        if row_id is None:
+            raise RuntimeError("Expected lastrowid after inserting debate")
+        return int(row_id)
 
     def list_debates(self, tenant: str, workspace: str) -> list[Debate]:
         cur = self.conn.cursor()

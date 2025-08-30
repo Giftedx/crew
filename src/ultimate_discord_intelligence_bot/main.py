@@ -2,16 +2,18 @@ import sys
 
 from ultimate_discord_intelligence_bot.crew import UltimateDiscordIntelligenceBotCrew
 
+_MIN_ARGS = 2  # program name + command
+
 # This file simply wires CLI commands to the crew. Avoid adding heavy logic.
 
 
-def run():
+def run() -> None:
     """Kick off the crew with a sample URL."""
     inputs = {"url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"}
     UltimateDiscordIntelligenceBotCrew().crew().kickoff(inputs=inputs)
 
 
-def train():
+def train() -> None:
     """Train the crew for a given number of iterations."""
     inputs = {"url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"}
     UltimateDiscordIntelligenceBotCrew().crew().train(
@@ -19,12 +21,12 @@ def train():
     )
 
 
-def replay():
+def replay() -> None:
     """Replay the crew execution from a specific task."""
     UltimateDiscordIntelligenceBotCrew().crew().replay(task_id=sys.argv[1])
 
 
-def test():
+def test() -> None:
     """Test the crew execution and return the results."""
     inputs = {"url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"}
     UltimateDiscordIntelligenceBotCrew().crew().test(
@@ -33,7 +35,7 @@ def test():
 
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
+    if len(sys.argv) < _MIN_ARGS:
         print("Usage: main.py <command> [<args>]")
         sys.exit(1)
 

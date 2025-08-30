@@ -5,13 +5,17 @@ from __future__ import annotations
 import functools
 from collections.abc import Callable, Iterable
 from pathlib import Path
-from typing import Any
+from typing import ParamSpec, TypeVar
 
 import yaml
 
 from .events import log_security_event
 
 DEFAULT_CONFIG_PATH = Path(__file__).resolve().parents[2] / "config" / "security.yaml"
+
+
+P = ParamSpec("P")
+R = TypeVar("R")
 
 
 class RBAC:
@@ -54,29 +58,33 @@ class RBAC:
                 return True
         return False
 
-    def require(self, perm: str) -> Callable:
-        """Decorator enforcing ``perm`` based on a ``roles`` kwarg."""
+    def require(self, perm: str) -> Callable[[Callable[P, R]], Callable[P, R]]:
+        """Decorator enforcing ``perm`` based on a ``roles`` kwarg.
 
-        def decorator(func: Callable) -> Callable:
+        The wrapped function signature is preserved using ``ParamSpec`` so
+        downstream call sites retain their type information.
+        """
+
+        def decorator(func: Callable[P, R]) -> Callable[P, R]:
             @functools.wraps(func)
-            def wrapper(*args: Any, **kwargs: Any) -> Any:
-                roles = kwargs.get("roles", [])
+            def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
+                roles_obj = kwargs.get("roles", [])
+                roles: Iterable[str] = roles_obj if isinstance(roles_obj, Iterable) else []
                 if not self.has_perm(roles, perm):
                     log_security_event(
-                        actor=kwargs.get("actor", "unknown"),
+                        actor=str(kwargs.get("actor", "unknown")),
                         action="rbac",
                         resource=perm,
                         decision="deny",
                         reason="missing_permission",
-                        tenant=kwargs.get("tenant"),
-                        workspace=kwargs.get("workspace"),
+                        tenant=kwargs.get("tenant"),  # type: ignore[arg-type]
+                        workspace=kwargs.get("workspace"),  # type: ignore[arg-type]
                     )
                     raise PermissionError(f"missing permission '{perm}'")
                 # drop security metadata before invoking the wrapped function
                 for key in ("roles", "actor", "tenant", "workspace"):
                     kwargs.pop(key, None)
                 return func(*args, **kwargs)
-
             return wrapper
 
         return decorator

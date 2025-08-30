@@ -23,7 +23,9 @@ def _resolve_host(host: str) -> list[str]:
         infos = socket.getaddrinfo(host, None)
     except socket.gaierror:
         return []
-    return list({info[4][0] for info in infos})
+    # getaddrinfo sockaddr first element is textual IP; be defensive and coerce to str
+    addresses: set[str] = {str(info[4][0]) for info in infos}
+    return list(addresses)
 
 
 def _is_private(host: str) -> bool:
@@ -35,10 +37,7 @@ def _is_private(host: str) -> bool:
         if not resolved:
             return True
         ips = [ipaddress.ip_address(ip) for ip in resolved]
-    for ip in ips:
-        if ip.is_private or ip.is_loopback or ip.is_reserved or ip.is_multicast:
-            return True
-    return False
+    return any(ip.is_private or ip.is_loopback or ip.is_reserved or ip.is_multicast for ip in ips)
 
 
 def is_safe_url(url: str, allowed_schemes: set[str] | None = None) -> bool:
@@ -54,6 +53,4 @@ def is_safe_url(url: str, allowed_schemes: set[str] | None = None) -> bool:
     host = parsed.hostname
     if not host:
         return False
-    if _is_private(host):
-        return False
-    return True
+    return not _is_private(host)

@@ -11,18 +11,22 @@ should ship behind an ``ENABLE_*`` style flag for opt‑in safety.
 
 from __future__ import annotations
 
-from functools import lru_cache
 import importlib
 import sys
+from functools import lru_cache
+from importlib import util as importlib_util
 from types import ModuleType
 
 from pydantic import AliasChoices, Field
 
-try:
-    from pydantic import ConfigDict  # v2
-except Exception:  # pragma: no cover
-    ConfigDict = dict  # type: ignore
-_DOTENV_AVAILABLE = importlib.util.find_spec("dotenv") is not None
+try:  # Pydantic v2 (preferred)
+    from pydantic_settings import BaseSettings, SettingsConfigDict
+    _HAS_PYDANTIC_V2 = True
+except Exception:  # pragma: no cover - fall back to pydantic v1 style
+    from pydantic import BaseSettings  # type: ignore
+    SettingsConfigDict = dict  # type: ignore[misc,assignment]
+    _HAS_PYDANTIC_V2 = False
+_DOTENV_AVAILABLE = importlib_util.find_spec("dotenv") is not None
 
 # If real package available but a stub without __file__ was inserted earlier by tests, drop it
 if _DOTENV_AVAILABLE and "dotenv" in sys.modules and getattr(sys.modules["dotenv"], "__file__", None) is None:
@@ -33,27 +37,25 @@ if _DOTENV_AVAILABLE and "dotenv" in sys.modules and getattr(sys.modules["dotenv
 if not _DOTENV_AVAILABLE:  # pragma: no cover
     fake = ModuleType("dotenv")
 
-    def dotenv_values(_path: str | None = None):  # type: ignore
+    def dotenv_values(_path: str | None = None) -> dict[str, str]:
         return {}
 
     fake.dotenv_values = dotenv_values  # type: ignore[attr-defined]
     sys.modules["dotenv"] = fake
 
-try:  # Pydantic v2 preferred
-    from pydantic_settings import BaseSettings  # type: ignore
-except Exception:  # pragma: no cover
-    from pydantic import BaseSettings  # type: ignore
-
- # _DOTENV_AVAILABLE already computed above
-
-
 class Settings(BaseSettings):
     # If python-dotenv is not installed, avoid referencing .env to prevent import error inside
     # pydantic-settings provider chain. Tests rely on environment variable injection directly.
-    model_config = ConfigDict(
-        env_file=".env" if _DOTENV_AVAILABLE else None,
-        case_sensitive=False,
-    )  # type: ignore[arg-type]
+    if _HAS_PYDANTIC_V2:
+        # Pydantic v2 settings configuration (class var expected by BaseSettings)
+        model_config = SettingsConfigDict(
+            env_file=".env" if _DOTENV_AVAILABLE else None,
+            case_sensitive=False,
+        )
+    else:  # pragma: no cover - pydantic v1 compatibility
+        class Config:
+            env_file = ".env" if _DOTENV_AVAILABLE else None
+            case_sensitive = False
     # Service metadata
     service_name: str = Field(
         default="ultimate-discord-intel",

@@ -1,3 +1,4 @@
+from ultimate_discord_intelligence_bot.policy import policy_engine
 from ultimate_discord_intelligence_bot.privacy import pii_detector
 from ultimate_discord_intelligence_bot.services import MemoryService
 
@@ -20,8 +21,6 @@ def test_memory_service_redacts_pii():
     results = mem.retrieve("email")
     assert "[redacted-email]" in results[0]["text"]
 
-
-from ultimate_discord_intelligence_bot.policy import policy_engine
 
 
 def test_policy_decision_block_unknown_source():

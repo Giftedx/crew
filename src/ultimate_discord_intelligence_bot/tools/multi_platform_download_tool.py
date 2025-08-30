@@ -7,8 +7,7 @@ import time
 from typing import Any
 from urllib.parse import urlparse
 
-from crewai.tools import BaseTool
-
+from ._base import BaseTool
 from .discord_download_tool import DiscordDownloadTool
 from .yt_dlp_download_tool import (
     InstagramDownloadTool,
@@ -23,7 +22,7 @@ from .yt_dlp_download_tool import (
 logger = logging.getLogger(__name__)
 
 
-class MultiPlatformDownloadTool(BaseTool):
+class MultiPlatformDownloadTool(BaseTool[dict[str, Any]]):
     """Dispatch to the correct platform downloader."""
 
     name: str = "Multi-Platform Download Tool"
@@ -70,7 +69,7 @@ class MultiPlatformDownloadTool(BaseTool):
 
         return None
 
-    def _get_platform_from_url(self, url: str) -> str | None:
+    def _get_platform_from_url(self, url: str) -> str | None:  # noqa: PLR0911 - early specific matches keep logic linear & faster than building mapping each loop
         """Extract platform name from URL for metadata."""
         try:
             domain = urlparse(url).netloc.lower()
@@ -199,6 +198,12 @@ class MultiPlatformDownloadTool(BaseTool):
             }
         # Multiple return points above are intentional for clarity (early exits)
 
-    def run(self, url: str, quality: str = "1080p") -> dict[str, Any]:
-        """Public wrapper with type safety."""
+    def run(self, url: str, quality: str = "1080p") -> dict[str, Any]:  # noqa: PLR0911 - multiple early returns keep error handling pathways flat & readable; refactoring to a single exit would add nested conditionals reducing clarity
+        """Public wrapper with type safety.
+
+        The internal ``_run`` uses intentional early returns for validation,
+        unsupported‑platform, and exceptional error branches. Consolidating
+        them would produce a deeply nested structure without improving
+        maintainability; each branch already returns a uniform dict shape.
+        """
         return self._run(url, quality=quality)

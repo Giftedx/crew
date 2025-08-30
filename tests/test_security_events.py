@@ -9,7 +9,7 @@ from security.rbac import RBAC
 def capture_logs(monkeypatch):
     records = []
 
-    def fake_info(message: str, **fields):  # type: ignore[override]
+    def fake_info(message: str, **fields):
         records.append({"msg": message, **fields})
 
     monkeypatch.setattr(obs_logging.logger, "info", fake_info)

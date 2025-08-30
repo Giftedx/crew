@@ -2,12 +2,20 @@
 
 from __future__ import annotations
 
-from crewai.tools import BaseTool
+from typing import TypedDict
 
+from ._base import BaseTool
 from .transcript_index_tool import TranscriptIndexTool
 
 
-class ContextVerificationTool(BaseTool):
+class _ContextVerificationResult(TypedDict):
+    status: str
+    verdict: str
+    context: str
+    notes: str
+
+
+class ContextVerificationTool(BaseTool[_ContextVerificationResult]):
     """Check if provided clip text appears in transcript around a timestamp."""
 
     name: str = "Context Verification Tool"
@@ -19,7 +27,7 @@ class ContextVerificationTool(BaseTool):
         super().__init__()
         self.index_tool = index_tool or TranscriptIndexTool()
 
-    def _run(self, video_id: str, ts: float, clip_text: str | None = None) -> dict:
+    def _run(self, video_id: str, ts: float, clip_text: str | None = None) -> _ContextVerificationResult:
         context = self.index_tool.get_context(video_id, ts)
         if not context:
             return {
@@ -41,5 +49,10 @@ class ContextVerificationTool(BaseTool):
             "notes": notes,
         }
 
-    def run(self, *args, **kwargs):  # pragma: no cover - thin wrapper
-        return self._run(*args, **kwargs)
+    def run(
+        self,
+        video_id: str,
+        ts: float,
+        clip_text: str | None = None,
+    ) -> _ContextVerificationResult:  # pragma: no cover - thin wrapper
+        return self._run(video_id, ts, clip_text)

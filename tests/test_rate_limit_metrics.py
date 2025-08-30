@@ -32,8 +32,7 @@ def test_rate_limit_rejections_metric():
     total = 0
     rejected = 0
     # First request should pass (fills bucket), remaining (without pause) should 429
-    for _ in range(5):
-        total += 1
+    for total, _ in enumerate(range(1, 6), start=1):  # enumerate for clarity (SIM113)
         resp = client.get(path)
         if resp.status_code == 429:
             rejected += 1
@@ -44,10 +43,17 @@ def test_rate_limit_rejections_metric():
     # If prometheus client not installed, metrics are no-ops; just ensure rejection count >0
     if getattr(metrics, "PROMETHEUS_AVAILABLE", False):
         prom_text = client.get("/metrics").text
-        pattern = rf'rate_limit_rejections_total\{{route="{path}",method="GET"}} (\d+(?:\.\d+)?)'
-        m = re.search(pattern, prom_text)
-        assert m, f"Did not find rate_limit_rejections_total series for {path}. Exposition was:\n{prom_text}"
-        value = float(m.group(1))
+        # Allow any label ordering inside the series (Prometheus may reorder labels)
+        # Use lookaheads so label order inside braces is irrelevant. Need to escape braces in f-string.
+        pattern = (
+            rf'rate_limit_rejections_total\{{'
+            rf'(?=[^}}]*route="{path}")'
+            rf'(?=[^}}]*method="GET")'
+            rf'[^}}]*\}} (\d+(?:\.\d+)?)'
+        )
+        match = re.search(pattern, prom_text)
+        assert match, f"Did not find rate_limit_rejections_total series for {path}. Exposition was:\n{prom_text}"
+        value = float(match.group(1))
         assert int(value) == rejected, f"Metric value {value} != observed 429 count {rejected}"
     else:
         # Document expectation: without prometheus_client metrics are inert but code path ran

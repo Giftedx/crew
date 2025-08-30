@@ -1,4 +1,7 @@
-"""Platform resolvers convert handles into canonical platform records."""
+"""Platform resolvers convert handles into canonical platform records.
+
+Import ordering normalized (docstring first) to satisfy Ruff E402.
+"""
 
 from .podcast_resolver import PodcastResolverTool, resolve_podcast_query
 from .social_resolver import SocialResolverTool, resolve_social_handle

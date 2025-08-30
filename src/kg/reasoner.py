@@ -1,6 +1,6 @@
-from __future__ import annotations
-
 """Simple reasoning utilities for the knowledge graph."""
+
+from __future__ import annotations
 
 from dataclasses import dataclass
 

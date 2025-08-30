@@ -1,6 +1,11 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Protocol, runtime_checkable
+
+
+@runtime_checkable
+class _LLMLike(Protocol):  # minimal protocol for the adapter used
+    def generate(self, text: str) -> str: ...
 
 
 def run(adapters: dict[str, Any], text: str) -> str:
@@ -15,6 +20,10 @@ def run(adapters: dict[str, Any], text: str) -> str:
     """
 
     llm = adapters["svc_llm"]
+    # Provide a defensive cast-like runtime check without importing typing.cast
+    if not isinstance(llm, _LLMLike):
+        # Fallback: best effort string conversion
+        return str(getattr(llm, "generate", lambda _: llm)(text))
     return llm.generate(text)
 
 

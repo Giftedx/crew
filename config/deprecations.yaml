@@ -1,0 +1,16 @@
+# Deprecation schedule for feature flags / surfaces.
+#
+# Each entry:
+#   name: Flag or symbol being deprecated.
+#   stage: One of [deprecated,pending_removal,removed]. Validators enforce
+#          absence once removal date passes.
+#   remove_after: Date (UTC, inclusive) after which code references (outside
+#          allowed archival docs) MUST be removed.
+#   replacement: Preferred new flag / surface (if applicable).
+#   notes: Freeform context.
+flags:
+  - name: ENABLE_ANALYSIS_HTTP_RETRY
+    stage: deprecated
+    remove_after: 2025-12-31
+    replacement: ENABLE_HTTP_RETRY
+    notes: Legacy analysis-scoped retry flag superseded by global ENABLE_HTTP_RETRY.

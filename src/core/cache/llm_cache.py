@@ -4,7 +4,7 @@ import os
 import time
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, ParamSpec, TypeVar, cast
 
 from .. import flags
 from ..learning_engine import LearningEngine
@@ -35,12 +35,16 @@ def make_key(parts: dict[str, Any]) -> str:
     return ":".join(f"{k}={parts[k]}" for k in sorted(parts))
 
 
+P = ParamSpec("P")
+R = TypeVar("R")
+
+
 def memo_llm(
-    key_builder: Callable[..., dict[str, Any]],
+    key_builder: Callable[P, dict[str, Any]],
     *,
     learning: LearningEngine | None = None,
     domain: str = "cache",
-) -> Callable:
+) -> Callable[[Callable[P, R]], Callable[P, R]]:
     """Decorator to cache LLM calls with RL-controlled policy.
 
     ``learning`` is consulted to decide whether to use the cache or bypass it.
@@ -49,8 +53,8 @@ def memo_llm(
 
     engine = learning or LearningEngine()
 
-    def decorator(func: Callable):
-        def wrapper(*args, **kwargs):
+    def decorator(func: Callable[P, R]) -> Callable[P, R]:
+        def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
             if not flags.enabled("ENABLE_CACHE", True):
                 return func(*args, **kwargs)
 
@@ -65,7 +69,7 @@ def memo_llm(
                 hit = llm_cache.get(key)
                 if hit is not None:
                     engine.record(domain, {}, arm, 1.0)
-                    return hit
+                    return cast(R, hit)
 
             result = func(*args, **kwargs)
             if arm == "use":

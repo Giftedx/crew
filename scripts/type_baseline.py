@@ -22,6 +22,7 @@ from pathlib import Path
 BASELINE_PATH = Path("mypy_baseline.json")
 MYPY_CMD = [sys.executable, "-m", "mypy", "src"]
 ERROR_RE = re.compile(r"Found (\d+) errors? in ")
+USAGE_MIN_ARGS = 2  # minimum argv length (script + command)
 
 @dataclass
 class Result:
@@ -29,7 +30,12 @@ class Result:
     raw: str
 
 def run_mypy() -> Result:
-    proc = subprocess.run(MYPY_CMD, capture_output=True, text=True)
+    # Security note (S603): command arguments are a static list (no user input)
+    # and we do not invoke a shell. We intentionally keep check=False so we can
+    # parse mypy's stdout/stderr even on non‑zero exit (regression reporting).
+    proc = subprocess.run(  # noqa: S603
+        MYPY_CMD, check=False, capture_output=True, text=True
+    )
     out = proc.stdout + "\n" + proc.stderr
     match = ERROR_RE.search(out)
     count = int(match.group(1)) if match else 0
@@ -68,7 +74,7 @@ def cmd_update(force: bool = False) -> int:
 
 
 def main(argv: list[str]) -> int:
-    if len(argv) < 2 or argv[1] not in {"check", "update"}:
+    if len(argv) < USAGE_MIN_ARGS or argv[1] not in {"check", "update"}:
         print("Usage: type_baseline.py {check|update} [--force]", file=sys.stderr)
         return 2
     cmd = argv[1]

@@ -8,13 +8,18 @@ watch X feeds.
 from __future__ import annotations
 
 from collections.abc import Iterable
+from typing import TypedDict
 
-from crewai.tools import BaseTool
-
+from ._base import BaseTool
 from .multi_platform_monitor_tool import MultiPlatformMonitorTool
 
 
-class XMonitorTool(BaseTool):
+class _XMonitorResult(TypedDict):
+    status: str
+    new_posts: list[dict[str, str]]
+
+
+class XMonitorTool(BaseTool[_XMonitorResult]):
     """Return unseen tweets."""
 
     name: str = "X Monitor Tool"
@@ -24,9 +29,9 @@ class XMonitorTool(BaseTool):
         super().__init__()
         self._monitor = MultiPlatformMonitorTool()
 
-    def _run(self, posts: Iterable[dict[str, str]]) -> dict[str, list[dict[str, str]]]:
+    def _run(self, posts: Iterable[dict[str, str]]) -> _XMonitorResult:
         result = self._monitor._run(posts)
         return {"status": "success", "new_posts": result["new_items"]}
 
-    def run(self, *args, **kwargs):  # pragma: no cover - thin wrapper
-        return self._run(*args, **kwargs)
+    def run(self, posts: Iterable[dict[str, str]]) -> _XMonitorResult:  # pragma: no cover - thin wrapper
+        return self._run(posts)

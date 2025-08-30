@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 """CLI entrypoints for the ingestion pipeline.
 
 Allows running either:
@@ -9,6 +7,8 @@ Allows running either:
 
 The second form is a convenience wrapper forwarding to the pipeline module.
 """
+
+from __future__ import annotations
 
 import argparse
 

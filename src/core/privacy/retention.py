@@ -1,6 +1,9 @@
-from __future__ import annotations
+"""Retention helpers for deleting expired records.
 
-"""Retention helpers for deleting expired records."""
+Docstring precedes future import (Ruff E402 compliance).
+"""
+
+from __future__ import annotations
 
 import json
 import sqlite3

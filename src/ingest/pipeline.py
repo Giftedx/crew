@@ -1,6 +1,6 @@
-from __future__ import annotations
-
 """Ingestion orchestration for media sources."""
+
+from __future__ import annotations
 
 import concurrent.futures
 import hashlib
@@ -56,7 +56,8 @@ def _fetch_both_concurrent(provider_mod: Any, url: str) -> tuple[Any, str | None
 def _build_transcript(job: IngestJob, transcript_text: str | None) -> transcribe.Transcript:
     if transcript_text is None:
         return transcribe.run_whisper(job.url)
-    lines = [l.strip() for l in transcript_text.splitlines() if l.strip()]
+    # Rename loop variable for clarity (avoid E741 ambiguous variable name)
+    lines = [line.strip() for line in transcript_text.splitlines() if line.strip()]
     return transcribe.Transcript(
         [transcribe.Segment(start=float(i), end=float(i + 1), text=t) for i, t in enumerate(lines)]
     )
@@ -104,7 +105,7 @@ def run(job: IngestJob, store: vector_store.VectorStore) -> dict:
                 "text": c.text,
                 "tags": job.tags,
                 "episode_id": meta.id,
-                "published_at": getattr(meta, "published_at", None),
+                "published_at": str(getattr(meta, "published_at", "")),
             },
         )
         for v, c in zip(vectors, chunks)

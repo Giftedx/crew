@@ -63,16 +63,21 @@ def test_openrouter_retry_giveup(monkeypatch, enable_retry):
     # capture pre value (prom client may not be installed; counter exposes internal _value for fallback registry)
     before = None
     try:
-        before = HTTP_RETRY_GIVEUPS.labels(**label_ctx(), method="POST")._value.get()  # type: ignore[attr-defined]
-    except Exception:
-        pass
+        before = HTTP_RETRY_GIVEUPS.labels(**label_ctx(), method="POST")._value.get()
+    except AttributeError:
+        # Older / fallback counter implementation may lack internal state attribute; treat as absent.
+        before = None
+    except Exception:  # noqa: S110 - metrics backend optional; silence only metrics retrieval failure
+        before = None
     result = service.route(prompt="hi", model="m")
     assert result["status"] == "error"
     assert attempts["n"] == 3  # max_attempts in service wiring
     try:
-        after = HTTP_RETRY_GIVEUPS.labels(**label_ctx(), method="POST")._value.get()  # type: ignore[attr-defined]
+        after = HTTP_RETRY_GIVEUPS.labels(**label_ctx(), method="POST")._value.get()
         if before is not None:
             assert after == before + 1
-    except Exception:
-        # metrics backend optional; skip assertion if not available
+    except AttributeError:
+        # Counter implementation changed or backend absent; skip post assertion.
+        pass
+    except Exception:  # noqa: S110 - intentionally ignoring metrics-only failure path
         pass

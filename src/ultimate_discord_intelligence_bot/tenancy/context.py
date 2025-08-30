@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import threading
+from collections.abc import Generator
 from contextlib import contextmanager
 from dataclasses import dataclass
 
@@ -16,11 +17,11 @@ class TenantContext:
     routing_profile_id: str | None = None
     budget_id: str | None = None
     policy_binding_id: str | None = None
-    flags: dict | None = None
+    flags: dict[str, str] | None = None
 
 
 @contextmanager
-def with_tenant(ctx: TenantContext):
+def with_tenant(ctx: TenantContext) -> Generator[TenantContext, None, None]:
     """Context manager that sets the active :class:`TenantContext`."""
 
     prev = getattr(_thread_local, "tenant_ctx", None)

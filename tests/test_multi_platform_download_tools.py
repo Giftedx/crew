@@ -42,7 +42,7 @@ def test_downloader_reports_platform(monkeypatch, tool_cls):
                         "uploader": "uploader",
                         "duration": 10,
                         "filesize_approx": 100,
-                        "filepath": "/tmp/uploader/title [id].mp4",
+                        "filepath": "/tmp/uploader/title [id].mp4",  # noqa: S108 - benign test stub path
                     }
                 )
                 + "\n"
@@ -133,7 +133,7 @@ def test_downloader_honors_quality(monkeypatch):
                         "uploader": "uploader",
                         "duration": 10,
                         "filesize_approx": 100,
-                        "filepath": "/tmp/uploader/title [id].mp4",
+                        "filepath": "/tmp/uploader/title [id].mp4",  # noqa: S108 - benign test stub path
                     }
                 )
                 + "\n"

@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from crewai.tools import BaseTool
+from ._base import BaseTool
 
 
-class SteelmanArgumentTool(BaseTool):
+class SteelmanArgumentTool(BaseTool[dict[str, str]]):
     """Combine evidence snippets into a steelman argument."""
 
     name: str = "Steelman Argument Tool"
@@ -41,5 +41,5 @@ class SteelmanArgumentTool(BaseTool):
         argument = f"{claim}. " + " ".join(snippets)
         return {"status": "success", "argument": argument}
 
-    def run(self, *args, **kwargs):  # pragma: no cover - thin wrapper
-        return self._run(*args, **kwargs)
+    def run(self, claim: str, evidence: list[dict[str, str]]) -> dict[str, str]:  # pragma: no cover - thin wrapper
+        return self._run(claim, evidence)

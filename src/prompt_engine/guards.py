@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-"""Prompt guards for enforcing citation markers."""
-
 import re
+
+"""Prompt guards for enforcing citation markers."""
 
 
 def has_min_citations(text: str, minimum: int) -> bool:

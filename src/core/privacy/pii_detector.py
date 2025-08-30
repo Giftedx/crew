@@ -1,6 +1,9 @@
-from __future__ import annotations
+"""Deterministic PII pattern detector.
 
-"""Deterministic PII pattern detector."""
+Docstring placed before future import to satisfy Ruff E402 ordering.
+"""
+
+from __future__ import annotations
 
 import re
 from dataclasses import dataclass
@@ -38,8 +41,8 @@ def detect(text: str, lang: str = "en") -> list[Span]:
         "geo_exact": GEO_RE,
     }
     for typ, regex in patterns.items():
-        for m in regex.finditer(text):
-            spans.append(Span(typ, m.start(), m.end(), m.group()))
+        # Extend list in batches for performance (PERF401)
+        spans.extend(Span(typ, m.start(), m.end(), m.group()) for m in regex.finditer(text))
     return spans
 
 

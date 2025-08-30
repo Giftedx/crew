@@ -3,7 +3,6 @@ import requests
 
 from core.http_utils import http_request_with_retry
 from obs import metrics as m
-from obs.metrics import HTTP_RETRY_ATTEMPTS, HTTP_RETRY_GIVEUPS
 
 
 def _counter_value(counter, **label_match):  # helper resilient to missing prometheus
@@ -41,8 +40,8 @@ def test_http_retry_metrics_giveup(monkeypatch):
             base_backoff=0.0,
             jitter=0.0,
         )
-    attempts_val = _counter_value(HTTP_RETRY_ATTEMPTS, tenant="unknown", workspace="unknown", method="GET")
-    giveups_val = _counter_value(HTTP_RETRY_GIVEUPS, tenant="unknown", workspace="unknown", method="GET")
+    attempts_val = _counter_value(m.HTTP_RETRY_ATTEMPTS, tenant="unknown", workspace="unknown", method="GET")
+    giveups_val = _counter_value(m.HTTP_RETRY_GIVEUPS, tenant="unknown", workspace="unknown", method="GET")
 
     if getattr(m, "PROMETHEUS_AVAILABLE", False):
         # Two retries beyond the first attempt (attempts = 3 total => 2 increments) and one giveup.
@@ -80,8 +79,8 @@ def test_http_retry_metrics_success_after_retries(monkeypatch):
     )
     assert resp.status_code == 200
 
-    attempts_val = _counter_value(HTTP_RETRY_ATTEMPTS, tenant="unknown", workspace="unknown", method="GET")
-    giveups_val = _counter_value(HTTP_RETRY_GIVEUPS, tenant="unknown", workspace="unknown", method="GET")
+    attempts_val = _counter_value(m.HTTP_RETRY_ATTEMPTS, tenant="unknown", workspace="unknown", method="GET")
+    giveups_val = _counter_value(m.HTTP_RETRY_GIVEUPS, tenant="unknown", workspace="unknown", method="GET")
 
     if getattr(m, "PROMETHEUS_AVAILABLE", False):
         # Two retries performed (attempts beyond first) and no giveup.

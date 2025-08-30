@@ -1,6 +1,6 @@
-from __future__ import annotations
-
 """Naive entity and claim extractor used during ingestion."""
+
+from __future__ import annotations
 
 import re
 from dataclasses import dataclass

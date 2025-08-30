@@ -3,22 +3,25 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-
-from crewai.tools import BaseTool
+from typing import Any
 
 from ...profiles.schema import CanonicalChannel
+from .._base import BaseTool
 
 
 @dataclass
-class YouTubeResolverTool(BaseTool):
+class YouTubeResolverTool(BaseTool[dict[str, Any]]):
     """Simple resolver mapping YouTube handles to canonical URLs."""
 
     name: str = "YouTube Resolver"
     description: str = "Resolve a YouTube handle to a canonical channel reference."
 
-    def _run(self, handle: str) -> dict:
+    def _run(self, handle: str) -> dict[str, Any]:  # pragma: no cover - pure mapping
         canonical = resolve_youtube_handle(handle)
         return canonical.to_dict()
+
+    def run(self, handle: str) -> dict[str, Any]:  # thin explicit wrapper
+        return self._run(handle)
 
 
 def resolve_youtube_handle(handle: str) -> CanonicalChannel:

@@ -1,6 +1,6 @@
-from __future__ import annotations
-
 """Simple verifier that checks :class:`AnswerContract` objects."""
+
+from __future__ import annotations
 
 from dataclasses import dataclass
 
@@ -23,7 +23,16 @@ def verify(contract: AnswerContract, *, use_case: str, tenant: str | None = None
 
     cfg = load_config(tenant)
     rules = cfg.commands.get(use_case, cfg.defaults)
-    min_cit = int(rules.get("min_citations", 1))
+    raw_min = rules.get("min_citations", 1)
+    if isinstance(raw_min, int):
+        min_cit = raw_min
+    elif isinstance(raw_min, str):
+        try:
+            min_cit = int(raw_min)
+        except ValueError:  # pragma: no cover - defensive
+            min_cit = 1
+    else:
+        min_cit = 1
 
     # Check for contradictions using the consistency module
     contradictions = consistency.check(contract)

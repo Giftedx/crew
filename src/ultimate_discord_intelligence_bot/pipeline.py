@@ -1,7 +1,7 @@
 import asyncio
 import logging
 from functools import partial
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Any, Optional, TypedDict
 
 from .settings import DISCORD_WEBHOOK
 from .step_result import StepResult
@@ -19,10 +19,24 @@ if TYPE_CHECKING:  # pragma: no cover - for typing only
 logger = logging.getLogger(__name__)
 
 
+class PipelineRunResult(TypedDict, total=False):
+    status: str
+    download: dict[str, Any]
+    drive: dict[str, Any]
+    transcription: dict[str, Any]
+    analysis: dict[str, Any]
+    fallacy: dict[str, Any]
+    perspective: dict[str, Any]
+    memory: dict[str, Any]
+    discord: dict[str, Any]
+    step: str
+    error: str
+
+
 class ContentPipeline:
     """End-to-end pipeline for downloading, processing and posting content."""
 
-    def __init__(
+    def __init__(  # noqa: PLR0913 - many optional dependency injection points improve testability
         self,
         webhook_url: str | None = None,
         downloader: Optional["MultiPlatformDownloadTool"] = None,
@@ -35,7 +49,9 @@ class ContentPipeline:
         memory: MemoryStorageTool | None = None,
     ):
         if downloader is None:
-            from .tools.multi_platform_download_tool import MultiPlatformDownloadTool
+            from .tools.multi_platform_download_tool import (  # noqa: PLC0415 - lazy import avoids heavy optional deps at module import
+                MultiPlatformDownloadTool,
+            )
 
             self.downloader = MultiPlatformDownloadTool()
         else:
@@ -50,12 +66,12 @@ class ContentPipeline:
 
     async def _run_with_retries(
         self,
-        func,
-        *args,
+        func: Any,
+        *args: Any,
         step: str,
         attempts: int = 3,
         delay: float = 2.0,
-        **kwargs,
+        **kwargs: Any,
     ) -> StepResult:
         """Run a blocking function in the default executor with retries.
 
@@ -79,7 +95,7 @@ class ContentPipeline:
             await asyncio.sleep(delay)
         return result
 
-    async def process_video(self, url: str, quality: str = "1080p") -> dict:
+    async def process_video(self, url: str, quality: str = "1080p") -> PipelineRunResult:  # noqa: PLR0915, PLR0911 - orchestrates sequential multi-step pipeline with explicit early exits for clearer error reporting
         """Run the full content pipeline for a single video.
 
         Parameters
@@ -106,7 +122,7 @@ class ContentPipeline:
             logger.error("Download failed: %s", download_info.error)
             err = download_info.to_dict()
             err["step"] = "download"
-            return err
+            return err  # type: ignore[return-value]
 
         local_path = download_info.data["local_path"]
         logger.info("Uploading %s to Drive", local_path)
@@ -118,7 +134,7 @@ class ContentPipeline:
             logger.error("Drive upload failed: %s", drive_info.error)
             err = drive_info.to_dict()
             err["step"] = "drive"
-            return err
+            return err  # type: ignore[return-value]
 
         logger.info("Transcribing %s", local_path)
         transcription = await self._run_with_retries(
@@ -128,7 +144,7 @@ class ContentPipeline:
             logger.error("Transcription failed: %s", transcription.error)
             err = transcription.to_dict()
             err["step"] = "transcription"
-            return err
+            return err  # type: ignore[return-value]
 
         # persist raw transcript in its own collection
         await self._run_with_retries(
@@ -151,7 +167,7 @@ class ContentPipeline:
             logger.error("Analysis failed: %s", analysis.error)
             err = analysis.to_dict()
             err["step"] = "analysis"
-            return err
+            return err  # type: ignore[return-value]
 
         logger.info("Detecting logical fallacies")
         fallacy = await self._run_with_retries(
@@ -163,7 +179,7 @@ class ContentPipeline:
             logger.error("Fallacy detection failed: %s", fallacy.error)
             err = fallacy.to_dict()
             err["step"] = "fallacy"
-            return err
+            return err  # type: ignore[return-value]
 
         logger.info("Synthesizing perspectives")
         perspective = await self._run_with_retries(
@@ -176,7 +192,7 @@ class ContentPipeline:
             logger.error("Perspective synthesis failed: %s", perspective.error)
             err = perspective.to_dict()
             err["step"] = "perspective"
-            return err
+            return err  # type: ignore[return-value]
 
         logger.info("Storing results in vector memory")
         memory_payload = {
@@ -198,7 +214,7 @@ class ContentPipeline:
             logger.error("Memory storage failed: %s", memory.error)
             err = memory.to_dict()
             err["step"] = "memory"
-            return err
+            return err  # type: ignore[return-value]
 
         content_data = {
             **download_info.to_dict(),
@@ -215,7 +231,7 @@ class ContentPipeline:
             logger.error("Discord post failed: %s", discord_result.error)
             err = discord_result.to_dict()
             err["step"] = "discord"
-            return err
+            return err  # type: ignore[return-value]
 
         return {
             "status": "success",

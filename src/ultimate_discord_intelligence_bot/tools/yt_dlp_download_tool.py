@@ -13,12 +13,11 @@ import re
 import subprocess
 from typing import ClassVar
 
-from crewai.tools import BaseTool
-
 from ..settings import DOWNLOADS_DIR, TEMP_DIR, YTDLP_ARCHIVE, YTDLP_CONFIG
+from ._base import BaseTool
 
 
-class YtDlpDownloadTool(BaseTool):
+class YtDlpDownloadTool(BaseTool[dict[str, str]]):
     """Reusable yt-dlp wrapper.
 
     Subclasses only need to provide ``platform`` metadata. The command and
@@ -77,8 +76,10 @@ class YtDlpDownloadTool(BaseTool):
             # to silence/clarify the audit rule.
             # Pass no 'check' kwarg so simple test monkeypatch functions without
             # that parameter continue to work. We'll examine returncode manually.
-            result = subprocess.run(  # noqa: S603
+            result = subprocess.run(  # noqa: S603, PLW1510 - manual returncode handling preferred for test monkeypatch compatibility
                 command,
+                # Deliberately omit 'check' so simple monkeypatched test fakes
+                # (signature without 'check') work; we inspect returncode.
                 capture_output=True,
                 text=True,
                 timeout=1800,

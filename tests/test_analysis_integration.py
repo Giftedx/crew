@@ -117,15 +117,6 @@ def test_full_analysis_to_memory_pipeline(
             topic_result = extract(chunk.text)
 
             # Create metadata from analysis
-            metadata = {
-                "chunk_id": i,
-                "start_time": chunk.start,
-                "end_time": chunk.end,
-                "keywords": topic_result.keywords,
-                "topics": topic_result.topics,
-                "entities": topic_result.entities,
-                "source": "test_pipeline",
-            }
 
             item_id = api.store(
                 mstore,
@@ -322,7 +313,7 @@ def test_multi_modal_content_analysis():
     assert len(tech_keywords) >= 3
 
     # Should extract entities
-    tech_entities = [
+    [
         e
         for e in topics_result.entities
         if any(term in e.lower() for term in ["github", "tensorflow", "pytorch", "python"])
@@ -516,7 +507,7 @@ def test_analysis_integration_with_different_content_types():
     assert conversational["keyword_count"] > 0  # Should extract question terms
 
     # Overall verification
-    all_successful = all(
+    all(
         r["meets_hashtag_expectation"] and r["meets_keyword_expectation"] for r in results
     )
     # Note: This might not always pass due to implementation specifics, so we check for reasonable performance

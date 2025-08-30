@@ -1,12 +1,12 @@
-from __future__ import annotations
-
 """Lightweight evidence retriever that wraps the unified memory API."""
+
+from __future__ import annotations
 
 from dataclasses import dataclass
 
 from memory import api as memory_api
-from memory import store as memory_store
 from memory import vector_store
+from memory.store import MemoryStore
 
 from .schema import Evidence
 
@@ -16,8 +16,8 @@ class EvidencePack:
     snippets: list[Evidence]
 
 
-def gather(
-    mstore: memory_store.MemoryStore,
+def gather(  # noqa: PLR0913 - explicit parameter list clearer than packing into config object
+    mstore: MemoryStore,
     vstore: vector_store.VectorStore,
     *,
     tenant: str,

@@ -23,7 +23,7 @@ class MemoryHit:
     meta: dict
 
 
-def store(
+def store(  # noqa: PLR0913,PLR0912 - explicit param groups (identity/payload/classification/policy) improve readability & validation; collapsing into **kwargs or a dict would reduce static typing
     store: MemoryStore,
     vstore: vector_store.VectorStore,
     *,
@@ -33,7 +33,12 @@ def store(
     item_type: str = "long",
     policy: str = "default",
 ) -> int:
-    """Store ``text`` and associated metadata in both SQLite and vector store."""
+    """Store ``text`` and associated metadata in both SQLite and vector store.
+
+    Parameter grouping reflects distinct conceptual domains (identity, payload,
+    classification, retention policy). Consolidating into a dict would remove
+    static typing benefits and shift validation burden downstream.
+    """
 
     clean, _ = privacy_filter.filter_text(text, {"tenant": tenant})
     vec = embeddings.embed([clean])[0]
@@ -60,7 +65,7 @@ def store(
     return item_id
 
 
-def retrieve(
+def retrieve(  # noqa: PLR0913,PLR0912 - explicit search knobs aid experimentation; refactoring into a config object would spread logic to call sites
     store: MemoryStore,
     vstore: vector_store.VectorStore,
     *,

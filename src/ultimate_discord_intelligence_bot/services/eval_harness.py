@@ -44,7 +44,7 @@ def score_must_link(output: str, expected: dict[str, Any]) -> float:
     links = expected.get("must_link", [])
     if not links:
         return 1.0
-    hits = sum(1 for l in links if l in output)
+    hits = sum(1 for link in links if link in output)
     return hits / len(links)
 
 
@@ -84,7 +84,8 @@ def run_dataset(
     runner: Callable[[dict[str, Any]], dict[str, Any]],
     seed: int = 0,
 ) -> EvalResult:
-    schema = json.load(open("datasets/schemas/task_record.schema.json"))
+    with open("datasets/schemas/task_record.schema.json", encoding="utf-8") as schema_f:
+        schema = json.load(schema_f)
     samples: list[SampleResult] = []
     for line in dataset_path.read_text().splitlines():
         record = json.loads(line)
@@ -129,16 +130,17 @@ def run_dataset(
 
 
 def compare_to_baseline(result: EvalResult, key: str, tolerances: dict[str, float]) -> bool:
-    baseline = yaml.safe_load(open("benchmarks/baselines.yaml"))
+    with open("benchmarks/baselines.yaml", encoding="utf-8") as base_f:
+        baseline = yaml.safe_load(base_f)
     if key not in baseline:
         return True
     base = baseline[key]
-    return (
-        result.aggregates["quality"] >= base["quality"] - tolerances.get("quality", 0.0)
-        and result.aggregates["cost_usd"] <= base["cost_usd"] + tolerances.get("cost_usd", 0.0)
-        and result.aggregates["latency_ms"]
-        <= base["latency_ms"] + tolerances.get("latency_ms", 0.0)
+    quality_ok = result.aggregates["quality"] >= base["quality"] - tolerances.get("quality", 0.0)
+    cost_ok = result.aggregates["cost_usd"] <= base["cost_usd"] + tolerances.get("cost_usd", 0.0)
+    latency_ok = (
+        result.aggregates["latency_ms"] <= base["latency_ms"] + tolerances.get("latency_ms", 0.0)
     )
+    return bool(quality_ok and cost_ok and latency_ok)
 
 
 # --- CLI ------------------------------------------------------------------

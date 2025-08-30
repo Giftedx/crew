@@ -3,22 +3,25 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-
-from crewai.tools import BaseTool
+from typing import Any
 
 from ...profiles.schema import CanonicalFeed
+from .._base import BaseTool
 
 
 @dataclass
-class PodcastResolverTool(BaseTool):
+class PodcastResolverTool(BaseTool[dict[str, Any]]):
     """Resolve a podcast search string to a canonical feed reference."""
 
     name: str = "Podcast Resolver"
     description: str = "Resolve podcast search queries to RSS feed URLs."
 
-    def _run(self, query: str) -> dict:
+    def _run(self, query: str) -> dict[str, Any]:  # pragma: no cover - pure mapping
         feed = resolve_podcast_query(query)
         return feed.to_dict()
+
+    def run(self, query: str) -> dict[str, Any]:  # thin wrapper
+        return self._run(query)
 
 
 def resolve_podcast_query(query: str) -> CanonicalFeed:
@@ -31,7 +34,7 @@ def resolve_podcast_query(query: str) -> CanonicalFeed:
     query_lower = query.lower().strip()
 
     # Common podcast mappings for well-known shows
-    KNOWN_PODCASTS = {
+    known_podcasts = {
         "joe rogan": "https://feeds.redcircle.com/0eccc737-7d67-4fea-b3de-37faf0e5c9a1",
         "tim ferriss": "https://feeds.feedburner.com/thetimferrissshow",
         "lex fridman": "https://lexfridman.com/feed/podcast/",
@@ -43,7 +46,7 @@ def resolve_podcast_query(query: str) -> CanonicalFeed:
     }
 
     # Check for exact matches or partial matches
-    for show_name, rss_url in KNOWN_PODCASTS.items():
+    for show_name, rss_url in known_podcasts.items():
         if show_name in query_lower or query_lower in show_name:
             return CanonicalFeed(
                 rss_url=rss_url,

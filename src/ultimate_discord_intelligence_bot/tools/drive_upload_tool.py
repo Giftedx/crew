@@ -2,7 +2,7 @@ import logging
 import os
 from typing import Any
 
-from crewai.tools import BaseTool
+from ._base import BaseTool
 
 # Optional heavy Google client dependencies. Tests monkeypatch `_setup_service`, so we
 # avoid import errors when these libraries are absent by deferring/failing gracefully.
@@ -24,7 +24,7 @@ except Exception:  # broad: any import error should mark feature unavailable
 from ..settings import GOOGLE_CREDENTIALS
 
 
-class DriveUploadTool(BaseTool):
+class DriveUploadTool(BaseTool[dict[str, Any]]):
     name: str = "Google Drive Upload Tool"
     description: str = "Upload files to Google Drive and create shareable links"
     # Allow dynamic attributes (service, folders) assigned in __init__ under pydantic v2
@@ -113,6 +113,8 @@ class DriveUploadTool(BaseTool):
                 if status:
                     logging.info("Upload progress: %s%%", int(status.progress() * 100))
 
+            if response is None:  # pragma: no cover - defensive fallback (should not happen)
+                raise RuntimeError("upload response missing after chunk loop")
             file_id = response.get("id")
 
             self._make_public(file_id)

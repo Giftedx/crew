@@ -10,7 +10,7 @@ class TwitchConnector(SourceConnector):
     as the discovered item.
     """
 
-    def discover(self, watch: Watch, state: dict) -> list[DiscoveryItem]:
+    def discover(self, watch: Watch, state: dict[str, object]) -> list[DiscoveryItem]:
         cursor = state.get("cursor")
         if cursor == watch.handle:
             return []

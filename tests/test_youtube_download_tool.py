@@ -18,7 +18,7 @@ def test_youtube_download_parses_filepath(monkeypatch):
                         "uploader": "uploader",
                         "duration": 10,
                         "filesize_approx": 100,
-                        "filepath": "/tmp/uploader/title [id].mp4",
+                        "filepath": "/tmp/uploader/title [id].mp4",  # noqa: S108 - benign test path stub
                     }
                 )
                 + "\n"

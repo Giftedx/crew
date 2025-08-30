@@ -33,9 +33,9 @@ class MemoryService:
         personally identifiable information is redacted according to policy.
         Metadata values are kept as-is but may be coerced to strings during
         retrieval comparisons so non-string values such as integers are
-        supported.
-        """
-        from ..privacy import privacy_filter
+    supported.
+    """
+        from ..privacy import privacy_filter  # noqa: PLC0415 - lazy import avoids circular during service wiring
 
         clean_text, _report = privacy_filter.filter_text(text, metadata or {})
         # Store copies so external mutations to ``metadata`` don't affect the

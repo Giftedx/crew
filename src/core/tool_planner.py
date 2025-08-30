@@ -1,5 +1,11 @@
 from __future__ import annotations
 
+from collections.abc import Callable, Mapping, Sequence
+from typing import Any
+
+from . import learn
+from .rl import registry as rl_registry
+
 """RL-driven helper for selecting and executing tool plans.
 
 The function :func:`execute_plan` accepts a mapping of plan labels to a
@@ -7,21 +13,14 @@ sequence of tool callables. Each tool callable must return a tuple of
 ``(outcome, signals)`` where ``outcome`` contains cost and latency metrics
 and ``signals`` holds quality indicators. The helper delegates the choice of
 plan to the reinforcement learning core via :func:`core.learn.learn` under
- the ``tool_planning`` domain.
+the ``tool_planning`` domain.
 
 Example
 -------
 >>> def tool() -> tuple[dict, dict]:
 ...     return {"cost_usd": 0.1, "latency_ms": 10}, {"success": 1.0}
 >>> execute_plan({"demo": [tool]}, {"strategy": "demo"})
-
 """
-
-from collections.abc import Callable, Mapping, Sequence
-from typing import Any
-
-from . import learn
-from .rl import registry as rl_registry
 
 ToolFn = Callable[[], tuple[Mapping[str, float], Mapping[str, float]]]
 

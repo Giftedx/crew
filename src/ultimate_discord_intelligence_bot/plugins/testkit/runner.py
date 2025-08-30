@@ -12,7 +12,7 @@ import importlib
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from . import scorers
 
@@ -33,9 +33,16 @@ class ScenarioResult:
 
 def _load_manifest(plugin: str) -> dict[str, Any]:
     module = importlib.import_module(plugin)
-    manifest_path = Path(module.__file__).parent / "manifest.json"
+    module_file = getattr(module, "__file__", None)
+    if module_file is None:
+        raise RuntimeError(f"Plugin module {plugin} has no __file__ attribute")
+    manifest_path = Path(cast(str, module_file)).parent / "manifest.json"
     with manifest_path.open("r", encoding="utf-8") as fh:
-        return json.load(fh)
+        data = json.load(fh)
+    if not isinstance(data, dict):
+        raise RuntimeError("manifest.json must contain an object")
+    # manifest shape is heterogeneous; we retain Dict[str, Any]
+    return data
 
 
 def run(plugin: str) -> dict[str, Any]:
@@ -74,29 +81,24 @@ def run(plugin: str) -> dict[str, Any]:
             try:
                 output = entry_fn(adapters, **scenario.get("inputs", {}))
                 expected = scenario.get("expected", {})
-                passed = True
-                reason = None
-                if "must_include" in expected and passed:
-                    predicate = scorers.must_include(expected["must_include"])
-                    if not predicate(str(output)):
-                        passed = False
-                        reason = "must_include failed"
-                if "forbidden" in expected and passed:
-                    predicate = scorers.forbidden(expected["forbidden"])
-                    if not predicate(str(output)):
-                        passed = False
-                        reason = "forbidden failed"
-                if "must_link" in expected and passed:
-                    predicate = scorers.must_link(expected["must_link"])
-                    if not predicate(str(output)):
-                        passed = False
-                        reason = "must_link failed"
-                if "status_ok" in expected and passed:
-                    predicate = scorers.status_ok()
-                    if not predicate(output):
-                        passed = False
-                        reason = "status_ok failed"
-                results.append(ScenarioResult(scenario["name"], passed, reason))
+                checks: list[tuple[str, bool]] = []
+                out_str = str(output)
+                if "must_include" in expected:
+                    checks.append(("must_include", scorers.must_include(expected["must_include"])(out_str)))
+                if "forbidden" in expected:
+                    checks.append(("forbidden", scorers.forbidden(expected["forbidden"])(out_str)))
+                if "must_link" in expected:
+                    checks.append(("must_link", scorers.must_link(expected["must_link"])(out_str)))
+                if "status_ok" in expected:
+                    checks.append(("status_ok", scorers.status_ok()(output)))
+                failing = next((name for name, ok in checks if not ok), None)
+                results.append(
+                    ScenarioResult(
+                        scenario["name"],
+                        failing is None,
+                        f"{failing} failed" if failing else None,
+                    )
+                )
             except Exception as exc:  # pragma: no cover - exercised in tests
                 results.append(ScenarioResult(scenario["name"], False, str(exc)))
 

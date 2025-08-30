@@ -15,7 +15,14 @@ class PolicyRegistry:
     def get(self, name: str) -> object:
         return self._policies[name]
 
-    def items(self):
-        """Iterate over ``(name, policy)`` pairs registered in the registry."""
+    def items(self) -> list[tuple[str, object]]:
+        """Return a snapshot list of ``(name, policy)`` pairs.
 
-        return self._policies.items()
+        A list is returned (rather than the live ``dict_items`` view) to provide
+        a stable snapshot for callers and simpler typing.
+        """
+        return list(self._policies.items())
+
+    # Provide containment to support legacy shims performing ``if name not in registry``.
+    def __contains__(self, name: str) -> bool:  # pragma: no cover - trivial
+        return name in self._policies

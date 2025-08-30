@@ -1,6 +1,6 @@
-from __future__ import annotations
-
 """YouTube ingestion utilities."""
+
+from __future__ import annotations
 
 from dataclasses import dataclass
 
@@ -17,8 +17,11 @@ class VideoMetadata:
 
 
 def fetch_metadata(url: str) -> VideoMetadata:
-    """Return basic metadata for a YouTube video *url* using ``yt-dlp``."""
-    import yt_dlp
+    """Return basic metadata for a YouTube video *url* using ``yt-dlp``.
+
+    Lazy import keeps heavy dependency cost out of cold start / tests.
+    """
+    import yt_dlp  # noqa: PLC0415 - intentional lazy import (heavy optional dep)
 
     with yt_dlp.YoutubeDL({"quiet": True}) as ydl:  # pragma: no cover - network
         info = ydl.extract_info(url, download=False)
@@ -34,8 +37,11 @@ def fetch_metadata(url: str) -> VideoMetadata:
 
 
 def fetch_transcript(url: str) -> str | None:
-    """Return an available transcript for *url* if yt-dlp exposes one."""
-    import yt_dlp
+    """Return an available transcript for *url* if yt-dlp exposes one.
+
+    Lazy import; dependency only needed when transcript retrieval requested.
+    """
+    import yt_dlp  # noqa: PLC0415 - intentional lazy import
 
     with yt_dlp.YoutubeDL({"skip_download": True, "quiet": True}) as ydl:  # pragma: no cover
         info = ydl.extract_info(url, download=False)
@@ -43,8 +49,9 @@ def fetch_transcript(url: str) -> str | None:
     for lang in ("en", "en-US"):
         tracks = subs.get(lang)
         if tracks:
-            import urllib.request
+            import urllib.request  # noqa: PLC0415 - narrow scope network helper
 
-            with urllib.request.urlopen(tracks[0]["url"]) as resp:
-                return resp.read().decode("utf-8")
+            with urllib.request.urlopen(tracks[0]["url"]) as resp:  # noqa: S310 - trusted remote URL from yt-dlp metadata
+                data: bytes = resp.read()
+                return data.decode("utf-8")
     return None

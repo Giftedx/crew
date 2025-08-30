@@ -6,10 +6,10 @@ establishes the contract for future, API-driven implementations while
 keeping unit tests fast and self-contained.
 """
 
-from crewai.tools import BaseTool
+from ._base import BaseTool
 
 
-class SocialMediaMonitorTool(BaseTool):
+class SocialMediaMonitorTool(BaseTool[dict[str, object]]):
     """Collect posts mentioning a keyword across platforms."""
 
     name: str = "Social Media Monitor"
@@ -23,4 +23,7 @@ class SocialMediaMonitorTool(BaseTool):
             if platform_matches:
                 matches[platform] = platform_matches
         return {"status": "success", "matches": matches}
+
+    def run(self, posts: dict[str, list[str]], keyword: str) -> dict[str, object]:  # pragma: no cover - thin wrapper
+        return self._run(posts, keyword)
 
