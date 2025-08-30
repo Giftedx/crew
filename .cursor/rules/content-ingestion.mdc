@@ -1,0 +1,177 @@
+---
+globs: **/ingest/**,**/tools/**download*.py,**/tools/**platform*.py,**/tools/platform_resolver/**
+description: "Multi-platform content ingestion patterns and downloaders"
+---
+
+# Multi-Platform Content Ingestion
+
+## Supported Platforms
+
+The ingestion system supports multiple platforms through [src/ingest/](mdc:src/ingest/):
+
+- **YouTube**: Videos, live streams, shorts
+- **Twitch**: VODs, clips, live streams  
+- **Kick**: Live streams and VODs
+- **Twitter/X**: Posts, threads, spaces
+- **Instagram**: Posts, stories, reels
+- **TikTok**: Videos (including short-link domains)
+- **Reddit**: Posts, comments, threads
+- **Discord**: Messages, threads
+
+## Multi-Platform Dispatcher
+
+The unified dispatcher handles URL routing to appropriate downloaders:
+
+```python
+from ingest.multi_platform_dispatcher import MultiPlatformDispatcher
+
+dispatcher = MultiPlatformDispatcher()
+result = await dispatcher.download(
+    url="https://example.com/content",
+    quality="best",  # optional quality override
+    output_dir="/path/to/output"
+)
+```
+
+## Platform-Specific Downloaders
+
+### YouTube Downloader
+
+```python
+from ingest.youtube_downloader import YouTubeDownloader
+
+downloader = YouTubeDownloader()
+result = await downloader.download(url, quality="720p")
+```
+
+### TikTok Support
+
+Handles multiple TikTok domains including short-links:
+
+- `tiktok.com`
+- `vm.tiktok.com` (short links)
+- `vt.tiktok.com` (short links)
+
+### Quality Parameters
+
+All downloaders support optional quality parameters:
+
+- `"best"`: Highest available quality (default)
+- `"worst"`: Lowest available quality
+- Specific resolutions: `"720p"`, `"1080p"`, etc.
+- Audio-only: `"audio"`
+
+## Content Processing Pipeline
+
+### Step 1: URL Detection and Routing
+
+```python
+def detect_platform(url: str) -> str:
+    """Detect platform from URL patterns"""
+    if "youtube.com" in url or "youtu.be" in url:
+        return "youtube"
+    elif "tiktok.com" in url:
+        return "tiktok"
+    # ... other platforms
+```
+
+### Step 2: Download and Extraction
+
+```python
+from ultimate_discord_intelligence_bot.step_result import StepResult
+
+async def download_content(url: str) -> StepResult:
+    try:
+        result = await dispatcher.download(url)
+        return StepResult(data={
+            "file_path": result.output_path,
+            "metadata": result.metadata,
+            "platform": result.platform
+        })
+    except Exception as e:
+        return StepResult(error=str(e), status="retryable")
+```
+
+### Step 3: Transcript Extraction
+
+```python
+async def extract_transcript(file_path: str) -> StepResult:
+    """Extract text/audio transcript from downloaded content"""
+    # Implementation varies by content type
+    pass
+```
+
+## Content Monitoring and Polling
+
+The system includes content polling for active monitoring:
+
+```python
+from ingest.content_poller import ContentPoller
+
+poller = ContentPoller()
+await poller.poll_creator_content(
+    creator_id="creator_handle",
+    platform="youtube",
+    since_timestamp=last_check
+)
+```
+
+## Creator Profile Integration
+
+Content ingestion integrates with creator profiles:
+
+```python
+# Update profile last-checked timestamps
+await profile_store.update_last_checked(
+    creator_id="creator_handle",
+    platform="youtube",
+    timestamp=datetime.utcnow()
+)
+```
+
+## Error Handling Patterns
+
+```python
+# Platform-specific error handling
+try:
+    content = await downloader.download(url)
+except PlatformUnavailableError:
+    return StepResult(status="skipped", error="platform_unavailable")
+except RateLimitError:
+    return StepResult(status="retryable", error="rate_limited")
+except ContentPrivateError:
+    return StepResult(status="bad_request", error="content_private")
+```
+
+## Testing Ingestion
+
+```python
+import pytest
+from unittest.mock import AsyncMock
+
+@pytest.fixture
+def mock_dispatcher():
+    dispatcher = MultiPlatformDispatcher()
+    dispatcher.download = AsyncMock()
+    return dispatcher
+
+async def test_youtube_ingestion(mock_dispatcher):
+    mock_dispatcher.download.return_value = StepResult(data={"success": True})
+    result = await mock_dispatcher.download("https://youtube.com/watch?v=test")
+    assert result.status == "success"
+```
+
+## Configuration
+
+Platform-specific settings are in [config/ingest.yaml](mdc:config/ingest.yaml):
+
+```yaml
+youtube:
+  api_key: ${YOUTUBE_API_KEY}
+  max_duration: 7200  # 2 hours
+  
+tiktok:
+  enable_shorts: true
+  quality_preference: "720p"
+
+```

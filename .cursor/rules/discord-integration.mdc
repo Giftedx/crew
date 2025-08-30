@@ -1,0 +1,158 @@
+---
+globs: **/discord/**,**/*discord*.py
+description: "Discord bot integration patterns and command handling"
+---
+
+# Discord Bot Integration
+
+## Discord.py Framework
+
+The bot uses discord.py 2.3.2+ for Discord integration. Core bot functionality is in [src/discord/](mdc:src/discord/).
+
+### Bot Setup Pattern
+
+```python
+import discord
+from discord.ext import commands
+
+class DiscordBot(commands.Bot):
+    def __init__(self):
+        intents = discord.Intents.default()
+        intents.message_content = True
+        super().__init__(command_prefix='/', intents=intents)
+    
+    async def on_ready(self):
+        print(f'{self.user} has connected to Discord!')
+```
+
+## Command Categories
+
+The bot provides several command categories:
+
+### Analysis Commands
+
+- `/analyze <url>`: Analyze political content from various platforms
+- `/context <claim>`: Verify context around specific claims
+- `/fact-check <statement>`: Fact-check specific statements
+
+### Profile and Social Commands
+
+- `/profile <creator>`: Get creator personality profile and stats
+- `/latest <creator>`: Get latest content from a creator
+- `/collabs <creator>`: Show collaboration network
+- `/compare <creator1> <creator2>`: Compare creator profiles
+
+### Data and Leaderboard Commands
+
+- `/leaderboard`: Show trustworthiness rankings
+- `/timeline <creator>`: Show creator timeline and evolution
+- `/trends`: Show trending topics and creators
+- `/ask <question>`: Q&A with vector memory search
+
+## Command Implementation Pattern
+
+```python
+from discord.ext import commands
+from ultimate_discord_intelligence_bot.step_result import StepResult
+
+class AnalysisCommands(commands.Cog):
+    @commands.slash_command(description="Analyze political content")
+    async def analyze(self, ctx, url: str):
+        await ctx.defer()  # Important for long-running operations
+        
+        try:
+            result = await self.analysis_service.analyze_content(url)
+            if result.status == "success":
+                await ctx.followup.send(embed=self.create_analysis_embed(result.data))
+            else:
+                await ctx.followup.send(f"Analysis failed: {result.error}")
+        except Exception as e:
+            await ctx.followup.send(f"Error: {str(e)}")
+```
+
+## Embed Formatting
+
+Use rich Discord embeds for better presentation:
+
+```python
+import discord
+
+def create_analysis_embed(analysis_data):
+    embed = discord.Embed(
+        title="Content Analysis",
+        description=analysis_data.get("summary"),
+        color=discord.Color.blue()
+    )
+    embed.add_field(
+        name="Trustworthiness Score",
+        value=f"{analysis_data.get('trust_score', 0)}/10",
+        inline=True
+    )
+    embed.add_field(
+        name="Fact Check Status",
+        value=analysis_data.get("fact_check_status", "Unknown"),
+        inline=True
+    )
+    return embed
+```
+
+## System Alerts and Monitoring
+
+The bot serves as the primary interface for system alerts:
+
+```python
+class AlertManager:
+    async def send_alert(self, channel_id: int, alert_type: str, message: str):
+        channel = self.bot.get_channel(channel_id)
+        embed = discord.Embed(
+            title=f"System Alert: {alert_type}",
+            description=message,
+            color=discord.Color.red()
+        )
+        await channel.send(embed=embed)
+```
+
+## Error Handling
+
+Always handle Discord API errors gracefully:
+
+```python
+import discord
+from discord.errors import HTTPException, Forbidden
+
+try:
+    await ctx.send(response)
+except Forbidden:
+    # Bot lacks permissions
+    await ctx.author.send("I don't have permission to send messages in that channel.")
+except HTTPException as e:
+    # Discord API error
+    await ctx.send(f"Discord API error: {e.status}")
+```
+
+## Rate Limiting and Performance
+
+- Use `ctx.defer()` for long-running operations
+- Implement proper pagination for large result sets
+- Cache frequently requested data
+- Respect Discord's rate limits
+- Use followup messages for deferred responses
+
+## Testing Discord Commands
+
+```python
+import pytest
+from unittest.mock import AsyncMock, MagicMock
+
+@pytest.fixture
+def mock_discord_context():
+    ctx = MagicMock()
+    ctx.defer = AsyncMock()
+    ctx.followup.send = AsyncMock()
+    return ctx
+
+async def test_analyze_command(mock_discord_context):
+    # Test command functionality
+    pass
+
+```

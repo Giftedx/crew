@@ -1,0 +1,116 @@
+---
+globs: **/memory/**,**/grounding/**
+description: "Vector storage and memory management patterns with Qdrant"
+---
+
+# Vector Storage and Memory Management
+
+## Qdrant Integration
+
+The system uses Qdrant for vector storage and semantic search. Configuration and clients are managed through [src/memory/](mdc:src/memory/).
+
+### Client Setup
+
+```python
+from memory.qdrant_provider import get_qdrant_client
+
+# Get configured client (supports in-memory fallback for testing)
+client = get_qdrant_client()
+```
+
+### In-Memory Fallback
+
+For testing and development, set `QDRANT_URL` to `:memory:` or `memory://` to use an in-memory stub. This should **never** be used for benchmarking recall accuracy.
+
+## Collection Strategy
+
+The system uses separate Qdrant collections:
+
+- **Transcripts**: Raw content from ingested videos/streams
+- **Analyses**: Processed debate analysis results and fact-checks
+- **Profiles**: Creator personality and behavior patterns
+- **Claims**: Individual factual claims and their verification status
+
+## Tenancy and Namespacing
+
+All vector operations must be tenant-aware:
+
+```python
+# Always include tenant and workspace context
+namespace = f"{tenant}:{workspace}"
+collection_name = f"{base_collection}_{namespace}"
+```
+
+## Memory Retrieval Patterns
+
+### Semantic Search
+
+```python
+from memory.retrieval import MemoryRetrievalService
+
+service = MemoryRetrievalService()
+results = await service.search(
+    query="user question",
+    tenant="default",
+    workspace="main",
+    limit=5,
+    metadata_filters={"source": "youtube"}
+)
+```
+
+### Citation Requirements
+
+All grounded responses must include sequential citations:
+
+```python
+# Append citation markers to answers
+cited_answer = answer + " " + "".join(f"[{i+1}]" for i, _ in enumerate(retrieved_docs))
+```
+
+## Grounding and Fact-Checking
+
+The [src/grounding/](mdc:src/grounding/) module provides fact-checking backends:
+
+- **Serply**: Web search and fact verification
+- **EXA**: Semantic web search
+- **Perplexity**: AI-powered fact checking
+- **WolframAlpha**: Mathematical and factual queries
+
+### Grounding Pattern
+
+```python
+from grounding.fact_checker import FactChecker
+
+checker = FactChecker()
+result = await checker.verify_claim(
+    claim="specific factual statement",
+    context="surrounding context",
+    sources=retrieved_documents
+)
+```
+
+## Performance Considerations
+
+- Use vector search for semantic similarity
+- Implement proper indexing for metadata filters
+- Cache frequently accessed embeddings
+- Monitor vector store size and performance
+- Use appropriate embedding models for domain-specific content
+
+## Testing Vector Operations
+
+```python
+# Test vector operations with in-memory client
+import pytest
+from memory.qdrant_provider import get_qdrant_client
+
+@pytest.fixture
+def in_memory_client():
+    # This will use in-memory fallback in test environment
+    return get_qdrant_client()
+
+def test_vector_search(in_memory_client):
+    # Test semantic search functionality
+    pass
+
+```

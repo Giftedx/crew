@@ -1,0 +1,166 @@
+# Ultimate Discord Intelligence Bot - Production Configuration
+# Docker Compose configuration for production deployment
+
+version: "3.8"
+
+services:
+  # Main Discord Bot Application
+  discord-bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    container_name: discord-bot
+    depends_on:
+      - qdrant
+      - redis
+    environment:
+      - ENVIRONMENT=production
+      - ENABLE_TRACING=true
+      - ENABLE_PROMETHEUS_ENDPOINT=true
+      - ENABLE_HTTP_METRICS=true
+      - QDRANT_URL=http://qdrant:6333
+      - REDIS_URL=redis://redis:6379
+    env_file:
+      - .env.production
+    volumes:
+      - ./logs:/app/logs:rw
+      - ./data:/app/data:rw
+    networks:
+      - bot-network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Vector Database
+  qdrant:
+    image: qdrant/qdrant:v1.7.3
+    restart: unless-stopped
+    container_name: qdrant-prod
+    volumes:
+      - qdrant_data:/qdrant/storage:rw
+      - ./config/qdrant.yaml:/qdrant/config/production.yaml:ro
+    environment:
+      - QDRANT__SERVICE__HTTP_PORT=6333
+      - QDRANT__SERVICE__GRPC_PORT=6334
+      - QDRANT__LOG_LEVEL=info
+    networks:
+      - bot-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:6333/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    container_name: redis-prod
+    volumes:
+      - redis_data:/data:rw
+      - ./config/redis.conf:/usr/local/etc/redis/redis.conf:ro
+    command: redis-server /usr/local/etc/redis/redis.conf
+    networks:
+      - bot-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Monitoring and Observability
+  prometheus:
+    image: prom/prometheus:latest
+    restart: unless-stopped
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus:rw
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    networks:
+      - bot-network
+
+  grafana:
+    image: grafana/grafana:latest
+    restart: unless-stopped
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana:rw
+      - ./config/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./config/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-changeme}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    networks:
+      - bot-network
+
+  # Log aggregation
+  loki:
+    image: grafana/loki:latest
+    restart: unless-stopped
+    container_name: loki
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./config/loki.yml:/etc/loki/local-config.yaml:ro
+      - loki_data:/tmp/loki:rw
+    networks:
+      - bot-network
+
+  # Reverse Proxy (Optional)
+  nginx:
+    image: nginx:alpine
+    restart: unless-stopped
+    container_name: nginx-proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./config/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/ssl:ro
+    networks:
+      - bot-network
+    profiles:
+      - proxy
+
+volumes:
+  qdrant_data:
+  redis_data:
+  prometheus_data:
+  grafana_data:
+  loki_data:
+
+networks:
+  bot-network:
+    driver: bridge
+
+# Production deployment commands:
+#
+# Start all services:
+#   docker-compose -f production.yml up -d
+#
+# Start with reverse proxy:
+#   docker-compose -f production.yml --profile proxy up -d
+#
+# View logs:
+#   docker-compose -f production.yml logs -f discord-bot
+#
+# Scale bot instances:
+#   docker-compose -f production.yml up -d --scale discord-bot=3
+#
+# Health check:
+#   docker-compose -f production.yml ps

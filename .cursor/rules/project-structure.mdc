@@ -1,0 +1,41 @@
+---
+alwaysApply: true
+description: "Ultimate Discord Intelligence Bot project structure and architecture guide"
+---
+
+# Ultimate Discord Intelligence Bot - Project Structure
+
+## Core Architecture
+
+The main entry point is [main.py](mdc:src/ultimate_discord_intelligence_bot/main.py), which orchestrates the CrewAI-based debate analysis system. Configuration is managed through [pyproject.toml](mdc:pyproject.toml) and YAML files in the [config/](mdc:config/) directory.
+
+## Key Directories
+
+- **src/ultimate_discord_intelligence_bot/**: Main application package with agents, tools, and pipeline
+- **src/ingest/**: Multi-platform content ingestion (YouTube, Twitch, TikTok, Reddit, etc.)
+- **src/analysis/**: Debate analysis, fact-checking, and scoring logic
+- **src/memory/**: Vector storage integration with Qdrant
+- **src/grounding/**: Context verification and fact-checking backends
+- **src/discord/**: Discord bot commands and integrations
+- **src/policy/**: Privacy, security, and content policies
+- **config/**: YAML configuration files for agents, tasks, and services
+- **tests/**: Comprehensive test suite with pytest
+- **docs/**: Documentation including [agent_reference.md](mdc:docs/agent_reference.md)
+
+## Project Standards
+
+- **Python 3.10+** with type hints and comprehensive docstrings
+- **CrewAI framework** for agent orchestration
+- **Qdrant** for vector storage and semantic search
+- **Discord.py** for bot functionality
+- **pytest** for testing with async support
+- **ruff** for linting and formatting (120 char line length)
+- **mypy** for type checking with baseline management
+
+## Key Files
+
+- [crew.py](mdc:src/ultimate_discord_intelligence_bot/crew.py): CrewAI crew definition
+- [settings.py](mdc:src/ultimate_discord_intelligence_bot/settings.py): Application settings
+- [step_result.py](mdc:src/ultimate_discord_intelligence_bot/step_result.py): Standard result format
+- [AGENTS.md](mdc:AGENTS.md): Comprehensive project guidelines and progress tracker
+- [ARCHITECTURE.md](mdc:ARCHITECTURE.md): System architecture documentation

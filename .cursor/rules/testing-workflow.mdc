@@ -1,0 +1,87 @@
+---
+globs: **/tests/**,pytest.ini,Makefile
+description: "Testing standards and workflow requirements"
+---
+
+# Testing and Workflow Standards
+
+## Testing Requirements
+
+All code changes must include tests. The project uses pytest with async support configured in [pytest.ini](mdc:pytest.ini).
+
+### Test Structure
+
+- **Unit tests**: Test individual functions and classes in isolation
+- **Integration tests**: Test component interactions
+- **End-to-end tests**: Test complete workflows
+- **Configuration audits**: Validate agent/task configurations
+
+### Key Test Categories
+
+```bash
+# Run specific test categories
+pytest -k agent_config_audit          # Validate CrewAI configurations
+pytest -k test_tool_coverage          # Ensure all agents have required tools
+pytest -k test_vector_operations      # Test Qdrant integration
+pytest -k test_discord_commands       # Test bot command handlers
+```
+
+## Development Workflow
+
+### Pre-commit Checks (Required)
+
+```bash
+make format                           # Format code with ruff
+make lint                            # Lint with ruff and mypy
+pytest -k agent_config_audit        # Quick config validation
+```
+
+### Full Validation Suite
+
+```bash
+pytest -q                           # Run all tests
+make docs                           # Generate/validate documentation
+./scripts/dev.sh type-changed       # Check type regressions
+```
+
+## Git Workflow
+
+- **Conventional Commits**: Use prefixes like `feat:`, `fix:`, `docs:`, `test:`
+- **Clean working tree**: Ensure `git status --short` is clean before finishing
+- **No history rewriting**: Treat commits as append-only
+- **Branch strategy**: Work directly on main (no feature branches)
+
+## Quality Gates
+
+The project includes several automated quality checks:
+
+- **Ruff linting**: Enforces code style and catches common issues
+- **Mypy type checking**: With baseline management for incremental improvement  
+- **Test coverage**: All new features require tests
+- **Configuration sync**: Agents and tasks must be properly wired
+- **Golden dataset regression**: Validates model performance
+
+## Environment Setup
+
+```bash
+# Install development dependencies
+pip install -e ".[dev]"
+
+# Set up pre-commit hooks
+pre-commit install
+
+# Run the full test suite
+pytest
+```
+
+## Debugging and Troubleshooting
+
+Use the troubleshooting ladder from [docs/agent_reference.md](mdc:docs/agent_reference.md):
+
+1. Check feature flags (`env | grep ENABLE_`)
+2. Verify tenancy consistency
+3. Confirm vector store population
+4. Validate citation formatting
+5. Run config/agent sync tests
+6. Check cost guard budgets
+7. Verify cache key stability

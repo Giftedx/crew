@@ -1,0 +1,73 @@
+---
+globs: **/crew.py,**/config/**/*.yaml
+description: "CrewAI agent and task configuration patterns"
+---
+
+# CrewAI Agents and Tasks Configuration
+
+## Agent Structure
+
+Agents are defined in [crew.py](mdc:src/ultimate_discord_intelligence_bot/crew.py) and follow this pattern:
+
+```python
+from crewai import Agent
+from ultimate_discord_intelligence_bot.tools import SomeToolClass
+
+agent = Agent(
+    role="Specific Role Name",
+    goal="Clear, measurable objective",
+    backstory="Context and personality for the agent",
+    tools=[SomeToolClass()],
+    verbose=True,
+    allow_delegation=False
+)
+```
+
+## Task Definitions
+
+Tasks connect agents to specific objectives:
+
+```python
+from crewai import Task
+
+task = Task(
+    description="Detailed task description with context",
+    expected_output="Specific format and content expectations",
+    agent=assigned_agent,
+    tools=[additional_tools] if needed
+)
+```
+
+## Configuration Files
+
+Agent and task configurations may also be stored in [config/](mdc:config/) YAML files:
+
+- Use consistent naming conventions
+- Include all required fields (role, goal, backstory)
+- Reference tools by their registered names
+- Validate configurations with tests
+
+## Tool Integration
+
+Tools are located in [src/ultimate_discord_intelligence_bot/tools/](mdc:src/ultimate_discord_intelligence_bot/tools/):
+
+- Each tool class must implement the required interface
+- Tools should return [StepResult](mdc:src/ultimate_discord_intelligence_bot/step_result.py) objects
+- Register tools explicitly in agent configurations
+- Reuse existing tools before creating new ones
+
+## Key Agents in the System
+
+- **Debate Analysis Pipeline**: Processes political content and fact-checks claims
+- **Intelligence Gatherer**: Multi-platform content ingestion
+- **Discord Command Handler**: Processes user commands and queries
+- **Personality Synthesis Manager**: Generates character profiles and perspectives
+- **System Alert Manager**: Monitors and alerts through Discord
+
+## Best Practices
+
+- Keep agent roles specific and focused
+- Use clear, actionable goals
+- Provide rich backstory for better LLM performance
+- Test agent configurations with the audit suite
+- Update [AGENTS.md](mdc:AGENTS.md) progress tracker when adding new agents
