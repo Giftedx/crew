@@ -13,6 +13,7 @@ Simplifications:
  - Only scans text files with .py / .md / .yaml / .yml extensions inside src/ and tests/.
  - Ignores the config/deprecations.yaml file itself and this script.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -36,9 +37,7 @@ TODAY = dt.date.today()
 def iter_files() -> Iterable[Path]:
     for base in SCAN_DIRS:
         if base.exists():
-            yield from (
-                p for p in base.rglob("*") if p.is_file() and p.suffix.lower() in TEXT_EXT
-            )
+            yield from (p for p in base.rglob("*") if p.is_file() and p.suffix.lower() in TEXT_EXT)
 
 
 def load_deprecations() -> list[dict]:
@@ -89,11 +88,7 @@ def _evaluate_entry(entry: dict, texts: dict[str, str]) -> tuple[dict | None, in
             return None, 2
         remove_after_str = remove_after
     needle = name.rsplit(".", 1)[-1]
-    occurrences = [
-        path
-        for path, text in texts.items()
-        if name in text or (needle != name and needle in text)
-    ]
+    occurrences = [path for path, text in texts.items() if name in text or (needle != name and needle in text)]
     past_deadline = deadline < TODAY
     removed_refs = stage == "removed" and bool(occurrences)
     overdue_refs = past_deadline and stage != "removed" and bool(occurrences)
@@ -213,13 +208,9 @@ def main(argv: list[str] | None = None) -> int:
         # In JSON mode we don't show human table (already suppressed above)
     elif ns.fail_on_upcoming is not None:
         if fail_upcoming_triggered:
-            print(
-                f"Fail-on-upcoming: at least one deprecation removes within {ns.fail_on_upcoming} days (will fail)."
-            )
+            print(f"Fail-on-upcoming: at least one deprecation removes within {ns.fail_on_upcoming} days (will fail).")
         else:
-            print(
-                f"Fail-on-upcoming: no deprecations within {ns.fail_on_upcoming} days (no failure)."
-            )
+            print(f"Fail-on-upcoming: no deprecations within {ns.fail_on_upcoming} days (no failure).")
 
     # Exit code precedence: structural/violation (existing code) > upcoming trigger
     if code != 0:

@@ -1,4 +1,3 @@
-
 import pytest
 
 from ultimate_discord_intelligence_bot.services.openrouter_service import OpenRouterService
@@ -12,6 +11,7 @@ class DummyResp:
     def raise_for_status(self):
         if self.status_code >= 400:
             from requests import HTTPError
+
             raise HTTPError(f"status {self.status_code}")
 
     def json(self):
@@ -20,9 +20,9 @@ class DummyResp:
 
 @pytest.fixture
 def enable_retry(monkeypatch):
-    monkeypatch.setenv("ENABLE_ANALYSIS_HTTP_RETRY", "1")
+    monkeypatch.setenv("ENABLE_HTTP_RETRY", "1")
     yield
-    monkeypatch.delenv("ENABLE_ANALYSIS_HTTP_RETRY", raising=False)
+    monkeypatch.delenv("ENABLE_HTTP_RETRY", raising=False)
 
 
 def test_openrouter_retries_and_succeeds(monkeypatch, enable_retry):
@@ -39,6 +39,7 @@ def test_openrouter_retries_and_succeeds(monkeypatch, enable_retry):
 
     # Patch resilient_post referenced inside lambda closure by monkeypatching at module level
     import ultimate_discord_intelligence_bot.services.openrouter_service as mod
+
     monkeypatch.setattr(mod, "resilient_post", fake_post)
 
     resp = service.route(prompt="hi", model="m")
@@ -57,9 +58,11 @@ def test_openrouter_retry_giveup(monkeypatch, enable_retry):
         return DummyResp(500, {"error": {"message": "still broken"}})
 
     import ultimate_discord_intelligence_bot.services.openrouter_service as mod
+
     monkeypatch.setattr(mod, "resilient_post", always_fail)
 
     from obs.metrics import HTTP_RETRY_GIVEUPS, label_ctx
+
     # capture pre value (prom client may not be installed; counter exposes internal _value for fallback registry)
     before = None
     try:

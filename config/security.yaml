@@ -10,7 +10,81 @@ role_permissions:
     - "*"
 rate_limits:
   default_per_minute: 60
+  # Multi-scope advanced limits (per key type). These will be enforced by the new
+  # multi-scope rate limiter (PR18 Task 7). Each bucket uses a token bucket semantics.
+  scopes:
+    user:
+      per_minute: 60
+      burst: 90
+    guild:
+      per_minute: 600
+      burst: 800
+    command:
+      per_minute: 120
+      burst: 150
+    provider:
+      per_minute: 300
+      burst: 400
+  escalation:
+    # After N consecutive violations apply cooldown seconds (exponential-ish backoff)
+    thresholds:
+      - violations: 3
+        cooldown_seconds: 30
+      - violations: 6
+        cooldown_seconds: 120
+      - violations: 9
+        cooldown_seconds: 600
+    reset_window_seconds: 900
 moderation:
   banned_terms:
     - banned
   action: redact
+  review_queue:
+    enabled: true
+    # If action == block for a term, create a review ticket event for auditors.
+    emit_events: true
+    # Also queue redacted content for human audit (default false)
+    queue_redacted: false
+    # Maximum items retained in in-memory review queue
+    max_items: 500
+    # Characters of original text to store as snippet (avoid excess PII retention)
+    snippet_chars: 120
+network:
+  allow_hosts: []  # Optional explicit host allowlist (empty means any public host)
+  deny_hosts: []   # Explicit blocklist (exact hostnames)
+  max_content_bytes: 5242880  # 5 MB fetch cap
+  follow_redirects: true
+  max_redirect_hops: 4
+  enforce_content_type: true
+  allowed_content_types:
+    - text/plain
+    - text/html
+    - application/json
+webhooks:
+  # Shared secrets for inbound webhook signature verification (HMAC). Non-empty keys enable enforcement.
+  # SECURITY CRITICAL: Secrets must be set via environment variables, never hardcoded.
+  # Use WEBHOOK_SECRET_DEFAULT environment variable or security.secrets system.
+  secrets:
+    # Removed hardcoded default - must be provided via environment
+  clock_skew_seconds: 300
+  nonce_cache:
+    max_entries: 10000
+    ttl_seconds: 900
+secrets:
+  rotation:
+    enabled: true
+    # Minimum hours before a rotated secret can be retired (grace period for dual-publish)
+    grace_hours: 24
+    audit_events: true
+abac:
+  # Attribute Based Access Control overlays. Each permission may specify required attributes.
+  risk_tiers: [low, medium, high]
+  # Example attribute rule skeleton for future expansion
+  rules:
+    ingest.backfill:
+      min_risk_tier: medium
+      allowed_channels: ["ops", "admin"]
+feature_flags:
+  pii_redaction_v2: false
+  grounding_confidence: false
+  enhanced_incident_workflow: false

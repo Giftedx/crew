@@ -51,7 +51,7 @@ Lua approach ensures atomicity without requiring distributed locks.
 | `RATE_LIMIT_GLOBAL_REFILL_PER_SEC` | Refill tokens per second. | 1 |
 | (future) `RATE_LIMIT_RULES_PATH` | YAML for per‑route / API key overrides. | unset |
 
-Add settings to `core/settings.py` with validation; document in `feature_flags.md` once implemented.
+Add settings to `src/core/settings.py` with validation; document in `docs/feature_flags.md` once implemented.
 
 ### Fallback & Resilience
 

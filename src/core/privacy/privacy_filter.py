@@ -9,7 +9,19 @@ from dataclasses import dataclass
 from typing import Any
 
 from core import flags
-from core.learning_engine import LearningEngine
+
+try:
+    from core.learning_engine import LearningEngine
+except Exception:  # pragma: no cover - fallback when heavy deps unavailable
+
+    class LearningEngine:  # type: ignore[no-redef]
+        def recommend(self, *_args, **_kwargs) -> str:
+            return "lenient"
+
+        def record(self, *_args, **_kwargs) -> None:
+            return None
+
+
 from policy import policy_engine
 
 from . import pii_detector, redactor
@@ -34,9 +46,17 @@ def filter_text(
     ctx = context or {}
     policy = policy_engine.load_policy(ctx.get("tenant"))
     decisions = []
-    dec = policy_engine.check_payload(text, ctx, policy)
-    decisions.append(dec)
-    if dec.decision == "block":
+    # Source evaluation (block unknown or explicitly disallowed sources before heavier work)
+    # A "source" is considered present if context provides at least one of these keys.
+    source_keys = ("source_platform", "type")
+    if any(k in ctx for k in source_keys):
+        src_dec = policy_engine.check_source(ctx, policy)
+        decisions.append(src_dec)
+        if src_dec.decision == "block":
+            return text, PrivacyReport([], {}, decisions)
+    payload_dec = policy_engine.check_payload(text, ctx, policy)
+    decisions.append(payload_dec)
+    if payload_dec.decision == "block":
         return text, PrivacyReport([], {}, decisions)
 
     engine = learning or LearningEngine()

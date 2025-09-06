@@ -1,10 +1,9 @@
 import importlib
 import importlib.util
 
-from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
-
 from discord import commands as dc
 from obs import metrics, slo, tracing
+from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
 from ultimate_discord_intelligence_bot.tenancy import TenantContext, with_tenant
 
 

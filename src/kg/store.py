@@ -112,9 +112,7 @@ class KGStore:
             raise RuntimeError("Expected lastrowid for inserted kg_node")
         return int(row_id)
 
-    def query_nodes(
-        self, tenant: str, *, type: str | None = None, name: str | None = None
-    ) -> list[KGNode]:
+    def query_nodes(self, tenant: str, *, type: str | None = None, name: str | None = None) -> list[KGNode]:
         cur = self.conn.cursor()
         conditions = ["tenant = ?"]
         params: list[Any] = [tenant]

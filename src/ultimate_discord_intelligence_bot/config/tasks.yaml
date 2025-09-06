@@ -1,131 +1,101 @@
----
 process_video:
-  description: >-
-    Use the pipeline tool to download {url}, transcribe and analyse the audio,
-    then post the summary and Drive links to Discord.
+  description: Use the pipeline tool to download {url}, transcribe and analyse the
+    audio, then post the summary and Drive links to Discord.
   expected_output: Summary of the processed video posted to Discord.
   agent: content_manager
   context:
-    - execute_multi_platform_downloads
+  - execute_multi_platform_downloads
   human_input: false
   async_execution: false
-  output_file: "output/processed_video_{url_hash}.md"
-
+  output_file: output/processed_video_{url_hash}.md
 execute_multi_platform_downloads:
-  description: >-
-    Retrieve media from a list of URLs spanning YouTube, Twitch, Kick,
-    Twitter, Instagram, TikTok, Reddit and Discord. Return metadata for each
-    successful download.
+  description: Retrieve media from a list of URLs spanning YouTube, Twitch, Kick,
+    Twitter, Instagram, TikTok, Reddit and Discord. Return metadata for each successful
+    download.
   expected_output: Local file paths and metadata for downloaded media.
   agent: content_downloader
-
 identify_new_content:
-  description: >-
-    Given candidate items from platform feeds (YouTube, Twitch, Kick, Twitter,
-    Instagram, TikTok, Reddit, Discord), return only those that have not been
-    previously seen.
+  description: Given candidate items from platform feeds (YouTube, Twitch, Kick, Twitter,
+    Instagram, TikTok, Reddit, Discord), return only those that have not been previously
+    seen.
   expected_output: List of new content items annotated with platform and URL.
   agent: multi_platform_monitor
-
 monitor_system:
-  description: >-
-    Gather basic system metrics and post them to the private Discord channel.
+  description: Gather basic system metrics and post them to the private Discord channel.
   expected_output: Confirmation that the alert and metrics were posted.
   agent: system_alert_manager
-
 gather_cross_platform_intelligence:
-  description: >-
-    Use the social media monitor tool to collect posts mentioning {keyword}
+  description: Use the social media monitor tool to collect posts mentioning {keyword}
     across Reddit, X and Discord.
   expected_output: Aggregated posts grouped by platform.
   agent: cross_platform_intelligence_gatherer
-
 fact_check_content:
-  description: >-
-    Analyse {text} for logical fallacies and combine external perspectives to
-    verify claims.
+  description: Analyse {text} for logical fallacies and combine external perspectives
+    to verify claims.
   expected_output: Summary of detected fallacies and supporting context.
   agent: enhanced_fact_checker
   context:
-    - gather_cross_platform_intelligence
+  - gather_cross_platform_intelligence
   human_input: false
   async_execution: false
-  output_file: "output/fact_check_{timestamp}.json"
-
+  output_file: output/fact_check_{timestamp}.json
 score_truthfulness:
-  description: >-
-    Convert a list of fact-check verdicts about {person} into a numerical
+  description: Convert a list of fact-check verdicts about {person} into a numerical
     trust score and update their historical profile.
-  expected_output: Updated profile with counts of truths and lies plus a score
-    between 0 and 1.
+  expected_output: Updated profile with counts of truths and lies plus a score between
+    0 and 1.
   agent: truth_scoring_specialist
   context:
-    - fact_check_content
+  - fact_check_content
   human_input: false
   async_execution: false
-  output_file: "output/truthfulness_score_{person}_{timestamp}.json"
-
+  output_file: output/truthfulness_score_{person}_{timestamp}.json
 steelman_argument:
-  description: >-
-    Generate the strongest possible argument for {claim} using evidence snippets.
+  description: Generate the strongest possible argument for {claim} using evidence
+    snippets.
   expected_output: Steelman argument text.
   agent: steelman_argument_generator
   context:
-    - fact_check_content
+  - fact_check_content
   human_input: false
   async_execution: false
-  output_file: "output/steelman_{claim_hash}.md"
-
+  output_file: output/steelman_{claim_hash}.md
 analyze_claim:
-  description: >-
-    Run the debate analysis pipeline on {url} at timestamp {ts} for {person}.
+  description: Run the debate analysis pipeline on {url} at timestamp {ts} for {person}.
     Produce context, fact-check results and score updates.
   expected_output: Analysis report with defender blurbs and scoreboard deltas.
   agent: content_manager
   context:
-    - get_context
+  - get_context
   human_input: false
   async_execution: false
-  output_file: "output/claim_analysis_{person}_{timestamp}.json"
-
+  output_file: output/claim_analysis_{person}_{timestamp}.json
 get_context:
-  description: >-
-    Retrieve transcript context around {ts} in {video_id}.
+  description: Retrieve transcript context around {ts} in {video_id}.
   expected_output: Surrounding transcript text.
   agent: content_manager
-
 fact_check_claim:
-  description: >-
-    Fact-check the statement {claim} and return a verdict with evidence.
+  description: Fact-check the statement {claim} and return a verdict with evidence.
   expected_output: Verdict and supporting citations.
   agent: enhanced_fact_checker
-
 update_leaderboard:
-  description: >-
-    Update the lie, misquote and misinfo counts for {person}.
+  description: Update the lie, misquote and misinfo counts for {person}.
   expected_output: Confirmation scores were persisted.
   agent: truth_scoring_specialist
-
 answer_question:
-  description: >-
-    Retrieve relevant memory snippets to answer {question}.
+  description: Retrieve relevant memory snippets to answer {question}.
   expected_output: List of context snippets.
   agent: discord_qa_manager
-
 get_timeline:
-  description: >-
-    Retrieve timeline events for {video_id}.
+  description: Retrieve timeline events for {video_id}.
   expected_output: Chronological list of events with sources.
   agent: content_manager
-
 get_profile:
-  description: >-
-    Retrieve stored profile information for {person}.
+  description: Retrieve stored profile information for {person}.
   expected_output: Profile with trust metrics and event history.
   agent: character_profile_manager
-
 synthesize_personality:
-  description: >-
-    Analyse historical events and trust metrics to summarise {person}'s personality.
+  description: Analyse historical events and trust metrics to summarise {person}'s
+    personality.
   expected_output: Concise personality profile.
   agent: personality_synthesis_manager

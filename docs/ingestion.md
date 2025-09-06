@@ -50,6 +50,39 @@ python -m ingest https://vm.tiktok.com/dummy --tenant default --workspace main
 - Retention policy enforcement
 - Embedding generation and indexing
 
+### Error Handling and Fallbacks
+- Transcript fetch failures: the pipeline falls back to Whisper transcription. In tests, this path is stubbed to avoid heavy dependencies.
+- Missing creator or episode id: creator defaults to `"unknown"`; episode id falls back to a stable hash of the URL and is used consistently in payloads and provenance.
+- `published_at` normalization: accepts strings, datetimes, or `None`. Naive datetimes are treated as UTC and emitted as ISO8601.
+
+#### Strict Mode (Optional)
+
+Enable `ENABLE_INGEST_STRICT=1` to fail fast when required metadata is missing:
+
+- Missing creator (channel/streamer) → error
+- Missing episode id → error (instead of using URL-hash fallback)
+
+Use in canary/staging to surface upstream provider regressions early.
+
+## Operations Runbook
+
+### Strict‑Mode Triage
+- Symptom: Ingest fails with "ingest strict mode violation".
+- Immediate steps:
+  1. Check provider health and recent API changes.
+  2. Inspect logs for missing fields (creator/id) and the affected URLs.
+  3. If this is an upstream regression, disable strict mode temporarily:
+     `unset ENABLE_INGEST_STRICT` (or set to `0`) and redeploy.
+  4. File an issue to track normalisation fixes or provider adapter updates.
+
+### Fallback Spike Triage
+- Symptom: Sudden increase in transcript/id fallbacks.
+- Immediate steps:
+  1. Open Grafana: Ingest Fallbacks dashboard; filter by source.
+  2. Check `/metrics` for `ingest_transcript_fallbacks_total` and `ingest_missing_id_fallbacks_total` deltas.
+  3. Sample a few recent URLs; verify captions/metadata availability.
+  4. If widespread, pause non‑essential ingest; create a provider incident and track status. Re‑enable after upstream recovery.
+
 ## Configuration
 
 The pipeline reads configuration from `config/ingest.yaml`:

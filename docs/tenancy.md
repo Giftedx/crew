@@ -8,9 +8,9 @@ shared while data and configuration stay isolated.
 ## Adding a Tenant
 
 1. Create a directory under `tenants/<slug>/`.
-2. Add `tenant.yaml` describing the tenant and its workspaces with Discord guild
+2. Add `tenants/<slug>/tenant.yaml` describing the tenant and its workspaces with Discord guild
    IDs.
-3. (Optional) Provide `routing.yaml`, `budgets.yaml`, `policy_overrides.yaml`
+3. (Optional) Provide `tenants/<slug>/routing.yaml`, `tenants/<slug>/budgets.yaml`, `tenants/<slug>/policy_overrides.yaml`
    and other configuration files for custom behaviour.
 
 During runtime the `TenantRegistry` loads these files and resolves incoming
@@ -19,8 +19,8 @@ identifiers through the system.
 
 ### Routing Profiles and Budgets
 
-If `routing.yaml` is present it may define an `allowed_models` list limiting
-which LLMs the router can select for that tenant.  `budgets.yaml` configures
+If `tenants/<slug>/routing.yaml` is present it may define an `allowed_models` list limiting
+which LLMs the router can select for that tenant.  `tenants/<slug>/budgets.yaml` configures
 `daily_cap_usd` and `max_per_request` so costs are tracked per tenant rather
 than globally.
 

@@ -29,9 +29,7 @@ def test_retriever_and_audit():
     for txt in ["cats purr", "cats meow", "cats sleep"]:
         memory_api.store(mstore, vstore, tenant="t", workspace="w", text=txt)
     pack = retriever.gather(mstore, vstore, tenant="t", workspace="w", query="cats", k=3)
-    contract = contracts.build_contract(
-        "Cats make sounds [1][2][3]", pack.snippets, use_case="context"
-    )
+    contract = contracts.build_contract("Cats make sounds [1][2][3]", pack.snippets, use_case="context")
     report = verifier.verify(contract, use_case="context")
     audit = cmds.ops_grounding_audit(contract, report)
     assert audit["verdict"] == "pass"

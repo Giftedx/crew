@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
-import os
 from collections.abc import Callable, Sequence
 from typing import Any, Protocol, TypedDict, cast, runtime_checkable
+
+from core.secure_config import get_config
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 from ._base import BaseTool
 
@@ -12,7 +15,7 @@ try:  # pragma: no cover - optional dependency
     from qdrant_client import QdrantClient
     from qdrant_client.models import Distance, VectorParams
 except Exception:  # pragma: no cover - used for testing without qdrant
-    QdrantClient = None  # type: ignore
+    QdrantClient = None
 
 
 @runtime_checkable
@@ -35,8 +38,12 @@ class _VectorSearchResult(TypedDict, total=False):  # retained for backwards com
     error: str
 
 
-class VectorSearchTool(BaseTool[list[dict[str, object]]]):
-    """Retrieve stored text snippets from a Qdrant collection."""
+class VectorSearchTool(BaseTool):
+    """Retrieve stored text snippets from a Qdrant collection.
+
+    Returns a StepResult with ``hits`` list on success. Errors surface via
+    ``success=False`` and ``error`` message for uniform handling upstream.
+    """
 
     name: str = "Qdrant Vector Search Tool"
     description: str = "Query the vector database for similar documents."
@@ -51,13 +58,15 @@ class VectorSearchTool(BaseTool[list[dict[str, object]]]):
         super().__init__()
         self.collection = collection or "content"
         self.embedding_fn = embedding_fn or (lambda text: [float(len(text))])
+        self._metrics = get_metrics()
         if client is not None:
             self.client = cast(_QdrantLike, client)
         else:
             if QdrantClient is None:  # pragma: no cover - real client missing
                 raise RuntimeError("qdrant-client package is not installed")
-            url = os.getenv("QDRANT_URL", "http://localhost:6333")
-            api_key = os.getenv("QDRANT_API_KEY")
+            config = get_config()
+            url = config.qdrant_url
+            api_key = config.qdrant_api_key
             self.client = cast(_QdrantLike, QdrantClient(url=url, api_key=api_key))
         self._ensure_collection(self.collection)
 
@@ -70,9 +79,7 @@ class VectorSearchTool(BaseTool[list[dict[str, object]]]):
                 vectors_config=VectorParams(size=1, distance=Distance.COSINE),
             )
 
-    def _run(
-        self, query: str, limit: int = 3, collection: str | None = None
-    ) -> list[dict[str, object]]:
+    def _run(self, query: str, limit: int = 3, collection: str | None = None) -> StepResult:
         target = collection or self.collection
         vector = self.embedding_fn(query)
         try:
@@ -96,14 +103,21 @@ class VectorSearchTool(BaseTool[list[dict[str, object]]]):
                 if isinstance(score_val, int | float):
                     record["score"] = float(score_val)
                 hits.append(record)
-            return hits
+            self._metrics.counter("tool_runs_total", labels={"tool": "vector_search", "outcome": "success"}).inc()
+            # For legacy tests expecting the tool result itself to equal a list of dicts we
+            # expose a canonical 'results' key in addition to 'hits'. StepResult.__eq__ treats a
+            # list comparison specially when the payload contains only a 'results' key, so keep
+            # both keys (hits for explicit access, results for direct equality to list).
+            return StepResult.ok(hits=hits, results=hits)
         except Exception as exc:  # pragma: no cover - network / client errors
-            return [{"error": str(exc)}]
+            self._metrics.counter("tool_runs_total", labels={"tool": "vector_search", "outcome": "error"}).inc()
+            return StepResult.fail(error=str(exc))
 
-    def run(self, *args: Any, **kwargs: Any) -> list[dict[str, object]]:  # pragma: no cover
+    def run(self, *args: Any, **kwargs: Any) -> StepResult:  # pragma: no cover
         query = str(args[0]) if args else str(kwargs.get("query", ""))
         limit = int(kwargs.get("limit", 3))
         collection = kwargs.get("collection")
         return self._run(query, limit=limit, collection=collection)
+
 
 __all__ = ["VectorSearchTool"]

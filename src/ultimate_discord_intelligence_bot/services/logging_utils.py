@@ -10,7 +10,7 @@ from __future__ import annotations
 import sqlite3
 from collections.abc import Iterable
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 
@@ -136,7 +136,7 @@ class AnalyticsStore:
                 tokens_out,
                 cost,
                 latency_ms,
-                (ts or datetime.now(timezone.utc)).isoformat(),
+                (ts or datetime.now(UTC)).isoformat(),
                 profile_id,
                 1 if success else 0,
                 _as_list(toolset),

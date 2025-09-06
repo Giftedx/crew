@@ -30,7 +30,7 @@ def test_process_video(monkeypatch):
         "uploader": "u",
         "duration": "1",
         "file_size": "1000",
-    "local_path": "/tmp/video.mp4",  # noqa: S108 - fixture stub path acceptable in test
+        "local_path": "/tmp/video.mp4",  # noqa: S108 - fixture stub path acceptable in test
     }
 
     drive = MagicMock()
@@ -134,7 +134,7 @@ def test_drive_upload_retry(monkeypatch):
         "uploader": "u",
         "duration": "1",
         "file_size": "1000",
-    "local_path": "/tmp/video.mp4",  # noqa: S108 - fixture stub path acceptable in test
+        "local_path": "/tmp/video.mp4",  # noqa: S108 - fixture stub path acceptable in test
     }
 
     drive = MagicMock()
@@ -191,7 +191,7 @@ def test_exception_in_analysis(monkeypatch):
         "uploader": "u",
         "duration": "1",
         "file_size": "1000",
-    "local_path": "/tmp/video.mp4",  # noqa: S108 - fixture stub path acceptable in test
+        "local_path": "/tmp/video.mp4",  # noqa: S108 - fixture stub path acceptable in test
     }
 
     drive = MagicMock()

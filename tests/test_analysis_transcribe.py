@@ -156,9 +156,7 @@ def test_run_whisper_with_blank_lines():
 
 def test_run_whisper_unicode_content():
     """Test run_whisper with unicode content."""
-    with tempfile.NamedTemporaryFile(
-        mode="w", suffix=".txt", delete=False, encoding="utf-8"
-    ) as temp_file:
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False, encoding="utf-8") as temp_file:
         temp_file.write("Café and résumé\n")
         temp_file.write("naïve algorithm 🚀\n")
         temp_file.write("数据处理")
@@ -180,10 +178,7 @@ def test_run_whisper_unicode_content():
 
 def test_run_whisper_long_content():
     """Test run_whisper with longer text content."""
-    long_lines = [
-        f"This is line {i + 1} with some content to test segmentation."
-        for i in range(100)
-    ]
+    long_lines = [f"This is line {i + 1} with some content to test segmentation." for i in range(100)]
 
     with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as temp_file:
         temp_file.write("\n".join(long_lines))
@@ -196,16 +191,11 @@ def test_run_whisper_long_content():
         assert len(transcript.segments) == 100
 
         # Check first and last segments
-        assert (
-            transcript.segments[0].text == "This is line 1 with some content to test segmentation."
-        )
+        assert transcript.segments[0].text == "This is line 1 with some content to test segmentation."
         assert transcript.segments[0].start == 0.0
         assert transcript.segments[0].end == 1.0
 
-        assert (
-            transcript.segments[99].text
-            == "This is line 100 with some content to test segmentation."
-        )
+        assert transcript.segments[99].text == "This is line 100 with some content to test segmentation."
         assert transcript.segments[99].start == 99.0
         assert transcript.segments[99].end == 100.0
 

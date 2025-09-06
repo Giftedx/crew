@@ -1,0 +1,121 @@
+{
+  "annotations": {"list": [{"builtIn": 1, "type": "dashboard"}]},
+  "description": "SLO panels for ingest duration (P95) and scheduler error rate",
+  "editable": true,
+  "graphTooltip": 0,
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Ingest Duration P95 (30m)",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum by (le)(rate(pipeline_duration_seconds_bucket{tenant=~\"$tenant\",workspace=~\"$workspace\"}[30m])))",
+          "legendFormat": "p95"
+        }
+      ],
+      "options": {
+        "reduceOptions": {"calcs": ["lastNotNull"]},
+        "thresholds": {
+          "mode": "absolute",
+          "steps": [
+            {"color": "green", "value": null},
+            {"color": "orange", "value": 20},
+            {"color": "red", "value": 30}
+          ]
+        }
+      },
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0}
+    },
+    {
+      "type": "stat",
+      "title": "Scheduler Error Rate (15m)",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "(sum(increase(scheduler_errors_total{tenant=~\"$tenant\",workspace=~\"$workspace\"}[15m])) / clamp_min(sum(increase(scheduler_processed_total{tenant=~\"$tenant\",workspace=~\"$workspace\"}[15m])) + sum(increase(scheduler_errors_total{tenant=~\"$tenant\",workspace=~\"$workspace\"}[15m])), 1))",
+          "legendFormat": "error_rate"
+        }
+      ],
+      "options": {
+        "reduceOptions": {"calcs": ["lastNotNull"]},
+        "thresholds": {
+          "mode": "absolute",
+          "steps": [
+            {"color": "green", "value": null},
+            {"color": "orange", "value": 0.005},
+            {"color": "red", "value": 0.01}
+          ]
+        }
+      },
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0}
+    },
+    {
+      "type": "stat",
+      "title": "Queue Backlog (current)",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "sum(scheduler_queue_backlog{tenant=~\"$tenant\",workspace=~\"$workspace\"})",
+          "legendFormat": "backlog"
+        }
+      ],
+      "options": {
+        "reduceOptions": {"calcs": ["lastNotNull"]},
+        "thresholds": {
+          "mode": "absolute",
+          "steps": [
+            {"color": "green", "value": null},
+            {"color": "orange", "value": 50},
+            {"color": "red", "value": 100}
+          ]
+        }
+      },
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8}
+    },
+    {
+      "type": "stat",
+      "title": "Ingest Requests (5m rate)",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "sum(rate(pipeline_requests_total{tenant=~\"$tenant\",workspace=~\"$workspace\"}[5m]))",
+          "legendFormat": "rps"
+        }
+      ],
+      "options": {"reduceOptions": {"calcs": ["lastNotNull"]}},
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8}
+    }
+  ],
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": ["slo"],
+  "templating": {
+    "list": [
+      {
+        "name": "tenant",
+        "type": "query",
+        "datasource": "Prometheus",
+        "query": "label_values(pipeline_duration_seconds_bucket, tenant)",
+        "includeAll": true,
+        "allValue": ".*",
+        "refresh": 2,
+        "current": {"text": "All", "value": "$__all"}
+      },
+      {
+        "name": "workspace",
+        "type": "query",
+        "datasource": "Prometheus",
+        "query": "label_values(pipeline_duration_seconds_bucket, workspace)",
+        "includeAll": true,
+        "allValue": ".*",
+        "refresh": 2,
+        "current": {"text": "All", "value": "$__all"}
+      }
+    ]
+  },
+  "time": {"from": "now-7d", "to": "now"},
+  "timezone": "browser",
+  "title": "SLOs",
+  "version": 1
+}

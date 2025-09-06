@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from discord import commands
 from ingest import models
@@ -16,7 +16,7 @@ def test_ops_privacy_commands(tmp_path):
 
     db = tmp_path / "p.db"
     conn = models.connect(str(db))
-    old = datetime.now(timezone.utc) - timedelta(days=40)
+    old = datetime.now(UTC) - timedelta(days=40)
     conn.execute(
         (
             "INSERT INTO provenance (content_id, source_url, source_type, retrieved_at, license, terms_url, "
@@ -25,7 +25,7 @@ def test_ops_privacy_commands(tmp_path):
         ("1", "u", "yt", old.isoformat(), "", None, None, "x", None, None),
     )
     conn.commit()
-    sweep = commands.ops_privacy_sweep(conn, now=datetime.now(timezone.utc))
+    sweep = commands.ops_privacy_sweep(conn, now=datetime.now(UTC))
     assert sweep["deleted"] == 1
 
 

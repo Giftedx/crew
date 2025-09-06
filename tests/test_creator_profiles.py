@@ -11,7 +11,7 @@ from ultimate_discord_intelligence_bot.tools.platform_resolver import (
 
 
 def test_load_seeds_and_store_roundtrip(tmp_path):
-    seeds = load_seeds("profiles.yaml")
+    seeds = load_seeds("config/profiles.yaml")
     assert seeds, "seed profiles should load"
     first = seeds[0]
     assert first.name == "H3H3 Productions"

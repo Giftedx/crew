@@ -39,9 +39,7 @@ def load_cases(dataset_root: Path, tenant: str | None = None) -> dict[str, list[
         cases[file.stem] = _load_jsonl(file)
 
     if tenant:
-        override_dir = (
-            dataset_root.parent.parent / "tenants" / tenant / "overrides" / dataset_root.name
-        )
+        override_dir = dataset_root.parent.parent / "tenants" / tenant / "overrides" / dataset_root.name
         for file in override_dir.glob("*.jsonl"):
             base = cases.get(file.stem, [])
             overrides = {item["id"]: item for item in _load_jsonl(file)}

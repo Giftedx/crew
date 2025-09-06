@@ -1,0 +1,53 @@
+name: ci-fast
+
+on:
+  pull_request:
+  push:
+    branches: [ main, master ]
+
+jobs:
+  fast:
+    runs-on: ubuntu-latest
+    env:
+      STRICT_DOC_IMPORTS: '0'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/pyproject.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dev dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e .[dev]
+
+      - name: Fast docs, guards, tests
+        run: |
+          make ci-fast
+
+      - name: Validate docs imports strictly
+        if: env.STRICT_DOC_IMPORTS == '1'
+        run: |
+          python scripts/validate_docs.py --fail-imports
+
+      - name: Upload deprecations report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: deprecations-report
+          path: reports/deprecations_report.json
+
+      - name: Guard upcoming deprecations (<30 days)
+        run: |
+          python scripts/check_deprecations.py --fail-on-upcoming 30

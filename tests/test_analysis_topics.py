@@ -170,8 +170,7 @@ def test_unicode_text():
 
     # Should find common English words at minimum
     common_words_found = any(
-        word in result.keywords
-        for word in ["processing", "data", "algorithms", "information", "café", "cafe"]
+        word in result.keywords for word in ["processing", "data", "algorithms", "information", "café", "cafe"]
     )
     assert common_words_found
 
@@ -247,9 +246,7 @@ def test_technical_content():
         "Docker",
         "Kubernetes",
     ]
-    found_terms = [
-        term for term in tech_terms if any(term.lower() in item.lower() for item in all_extracted)
-    ]
+    found_terms = [term for term in tech_terms if any(term.lower() in item.lower() for item in all_extracted)]
     assert len(found_terms) >= 2  # Should find at least some technical terms
 
 
@@ -309,9 +306,7 @@ def test_topic_categories():
         "learning",
         "tensorflow",
     ]
-    found_terms = [
-        term for term in tech_terms if any(term.lower() in item.lower() for item in all_extracted)
-    ]
+    found_terms = [term for term in tech_terms if any(term.lower() in item.lower() for item in all_extracted)]
     assert len(found_terms) >= 3  # Should find several technical terms
 
 

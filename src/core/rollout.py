@@ -24,9 +24,7 @@ class RolloutController:
     def __init__(self) -> None:
         self._domains: dict[str, RolloutState] = {}
 
-    def start(
-        self, domain: str, control: str, candidate: str, canary_pct: float, min_trials: int = 10
-    ) -> None:
+    def start(self, domain: str, control: str, candidate: str, canary_pct: float, min_trials: int = 10) -> None:
         self._domains[domain] = RolloutState(control, candidate, canary_pct, min_trials)
 
     def choose(self, domain: str) -> str:

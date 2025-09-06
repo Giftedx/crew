@@ -34,7 +34,7 @@ USER bot
 ## Environment Configuration
 
 ### Development vs Production
-- Development: Use [docker-compose.yml](mdc:docker-compose.yml) for basic services
+- Development: Use [ops/deployment/docker/docker-compose.yml](mdc:ops/deployment/docker/docker-compose.yml) for basic services
 - Production: Use [production.yml](mdc:production.yml) with monitoring stack
 
 ### Required Environment Variables
@@ -68,7 +68,7 @@ Use [monitoring-setup.sh](mdc:monitoring-setup.sh) for production observability:
 
 ### Horizontal Scaling
 ```bash
-docker-compose -f production.yml up -d --scale discord-bot=3
+docker-compose -f ops/deployment/docker/production.yml up -d --scale discord-bot=3
 ```
 
 ### Resource Limits

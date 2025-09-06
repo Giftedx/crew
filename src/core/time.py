@@ -6,9 +6,10 @@ Central place for enforcing UTC normalization so we avoid repeating
 This is intentionally tiny; expand only if a *clear* second use-case
 materialises (keep surface area small to preserve clarity).
 """
+
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Protocol
 
 __all__ = ["ensure_utc", "UtcNowProvider", "default_utc_now"]
@@ -24,9 +25,9 @@ def ensure_utc(dt: datetime) -> datetime:
     If ``dt`` is naive, we *assume* it represents a UTC instant (the only
     acceptable naive form in this codebase) and attach the UTC tzinfo.
     """
-    return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
+    return dt if dt.tzinfo else dt.replace(tzinfo=UTC)
 
 
 def default_utc_now() -> datetime:
     """Wrapper to allow patching in tests if needed."""
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)

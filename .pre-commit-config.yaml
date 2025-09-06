@@ -21,3 +21,24 @@ repos:
       - id: end-of-file-fixer
       - id: trailing-whitespace
       - id: mixed-line-ending
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.18.4
+    hooks:
+      - id: gitleaks
+        name: gitleaks (secret scan)
+        args: ["detect", "--no-color", "--redact", "--config=.gitleaks.toml"]
+        stages: [commit, push]
+  - repo: local
+    hooks:
+      - id: validate-dispatcher-usage
+        name: Validate no direct yt-dlp usage outside wrappers
+        entry: python scripts/validate_dispatcher_usage.py
+        language: system
+        types: [python]
+        files: ^src/.*\.py$
+      - id: validate-http-wrappers-usage
+        name: Validate no direct 'requests' usage outside http_utils
+        entry: python scripts/validate_http_wrappers_usage.py
+        language: system
+        types: [python]
+        files: ^src/.*\.py$

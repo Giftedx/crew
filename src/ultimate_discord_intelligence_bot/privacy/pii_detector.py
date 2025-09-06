@@ -1,1 +1,3 @@
-from core.privacy.pii_detector import *  # noqa: F401,F403
+from core.privacy.pii_detector import Span, detect
+
+__all__ = ["Span", "detect"]

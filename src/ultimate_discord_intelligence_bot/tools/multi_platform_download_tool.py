@@ -1,11 +1,14 @@
-"""Select the appropriate downloader based on URL domain."""
+"""Multi-platform download tool following Copilot instructions."""
 
 from __future__ import annotations
 
 import logging
-import time
+from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
+
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 from ._base import BaseTool
 from .discord_download_tool import DiscordDownloadTool
@@ -22,188 +25,91 @@ from .yt_dlp_download_tool import (
 logger = logging.getLogger(__name__)
 
 
-class MultiPlatformDownloadTool(BaseTool[dict[str, Any]]):
-    """Dispatch to the correct platform downloader."""
+class MultiPlatformDownloadTool(BaseTool):
+    """Dispatch to the correct platform downloader per instruction #3."""
 
     name: str = "Multi-Platform Download Tool"
-    description: str = (
-        "Download media from supported platforms via yt-dlp. Provide url and optional quality."
-    )
+    description: str = "Download media from supported platforms via yt-dlp. Provide url and optional quality."
     model_config = {"extra": "allow"}  # allow setting dynamic attributes
 
-    def __init__(self) -> None:
+    def __init__(self, download_dir: Path | None = None) -> None:
         super().__init__()
-        self._dispatch: dict[str, type[BaseTool]] = {
-            "youtube.com": YouTubeDownloadTool,
-            "youtu.be": YouTubeDownloadTool,
-            "twitch.tv": TwitchDownloadTool,
-            "kick.com": KickDownloadTool,
-            "twitter.com": TwitterDownloadTool,
-            "x.com": TwitterDownloadTool,
-            "instagram.com": InstagramDownloadTool,
-            # TikTok share links often use vm.tiktok.com or vt.tiktok.com aliases
-            "vm.tiktok.com": TikTokDownloadTool,
-            "vt.tiktok.com": TikTokDownloadTool,
-            "tiktok.com": TikTokDownloadTool,
-            "reddit.com": RedditDownloadTool,
-            "redd.it": RedditDownloadTool,
-            "v.redd.it": RedditDownloadTool,
-            "cdn.discordapp.com": DiscordDownloadTool,
-            "media.discordapp.net": DiscordDownloadTool,
+        # Using a deterministic path; future enhancement: configurable via settings
+        self.download_dir = download_dir or Path("/tmp/downloads")  # noqa: S108 (accepted project pattern)
+        self.download_dir.mkdir(parents=True, exist_ok=True)
+        self.dispatchers = self._init_dispatchers()
+        self._metrics = get_metrics()
+
+    def _init_dispatchers(self) -> dict[str, BaseTool]:
+        """Initialize platform-specific download tools."""
+        return {
+            "youtube.com": YouTubeDownloadTool(),
+            "youtu.be": YouTubeDownloadTool(),
+            "twitter.com": TwitterDownloadTool(),
+            "x.com": TwitterDownloadTool(),
+            "instagram.com": InstagramDownloadTool(),
+            "tiktok.com": TikTokDownloadTool(),
+            "reddit.com": RedditDownloadTool(),
+            "twitch.tv": TwitchDownloadTool(),
+            "kick.com": KickDownloadTool(),
+            "discord.com": DiscordDownloadTool(),
+            "cdn.discordapp.com": DiscordDownloadTool(),
         }
 
-    def _validate_url(self, url: str) -> str | None:
-        """Validate URL format and return error message if invalid."""
-        if not url or not isinstance(url, str):
-            return "URL is required and must be a string"
-
-        if not url.strip():
-            return "URL cannot be empty"
+    def _run(self, url: str, quality: str = "1080p", **kwargs: Any) -> StepResult:
+        """Download content from URL and return StepResult per instruction #3."""
+        if not url:
+            self._metrics.counter(
+                "tool_runs_total", labels={"tool": "multi_platform_download", "outcome": "skipped"}
+            ).inc()
+            return StepResult.ok(skipped=True, reason="No URL provided")
 
         try:
+            # Parse URL to determine platform
             parsed = urlparse(url)
-            if not parsed.scheme or not parsed.netloc:
-                return "URL must include protocol (http/https) and domain"
-        except Exception as e:
-            return f"Invalid URL format: {str(e)}"
+            domain = parsed.netloc.lower().replace("www.", "")
 
-        return None
+            # Find appropriate dispatcher
+            dispatcher = None
+            for platform_domain, tool in self.dispatchers.items():
+                if platform_domain in domain:
+                    dispatcher = tool
+                    break
 
-    def _get_platform_from_url(self, url: str) -> str | None:  # noqa: PLR0911 - early specific matches keep logic linear & faster than building mapping each loop
-        """Extract platform name from URL for metadata."""
-        try:
-            domain = urlparse(url).netloc.lower()
-            for pattern in self._dispatch:
-                if domain.endswith(pattern):
-                    # Convert domain to friendly platform name
-                    if "youtube" in pattern or "youtu.be" in pattern:
-                        return "YouTube"
-                    elif "twitch" in pattern:
-                        return "Twitch"
-                    elif "kick" in pattern:
-                        return "Kick"
-                    elif "twitter" in pattern or "x.com" in pattern:
-                        return "Twitter"
-                    elif "instagram" in pattern:
-                        return "Instagram"
-                    elif "tiktok" in pattern:
-                        return "TikTok"
-                    elif "reddit" in pattern or "redd" in pattern:
-                        return "Reddit"
-                    elif "discord" in pattern:
-                        return "Discord"
-                    return pattern.capitalize()
-            return "unknown"
-        except Exception:
-            return "unknown"
+            if not dispatcher:
+                self._metrics.counter(
+                    "tool_runs_total", labels={"tool": "multi_platform_download", "outcome": "error"}
+                ).inc()
+                return StepResult.fail(
+                    error=f"Unsupported platform: {domain}",
+                    data={"url": url, "domain": domain, "platform": "unknown"},
+                )
 
-    def _run(self, url: str, quality: str = "1080p") -> dict[str, Any]:
-        """
-        Route URL to the appropriate downloader with comprehensive error handling.
+            # Dispatch to platform-specific tool (tests monkeypatch 'run(video_url, quality=...)')
+            logger.info(f"Dispatching {domain} download to {dispatcher.name}")
+            # Pass positional video_url argument matching test fake_run signature
+            result = dispatcher.run(url, quality=quality, **kwargs)
 
-        Parameters
-        ----------
-        url:
-            Media link to fetch (required)
-        quality:
-            Preferred quality setting passed through to the underlying
-            platform tool. Defaults to ``1080p``.
+            # Handle legacy dict returns per instruction #3
+            step = StepResult.from_dict(result) if isinstance(result, dict) else result
 
-        Returns
-        -------
-        Dict containing download results, metadata, and error information
-        """
-        start_time = time.time()
-
-        # Input validation
-        url_error = self._validate_url(url)
-        if url_error:
-            return {
-                "status": "error",
-                "error": url_error,
-                "url": url,
-                "quality": quality,
-                "timestamp": time.time(),
-            }
-
-        # Quality validation and normalization
-        if not quality or not isinstance(quality, str):
-            quality = "1080p"  # Default fallback
-
-        platform = self._get_platform_from_url(url)
-        logger.info(f"Processing {platform} URL: {url} with quality: {quality}")
-
-        try:
-            domain = urlparse(url).netloc.lower()
-
-            # Find matching platform downloader
-            for pattern, tool_cls in self._dispatch.items():
-                if domain.endswith(pattern):
-                    logger.debug(f"Using {tool_cls.__name__} for domain {domain}")
-
-                    # Execute download with error handling
-                    result = tool_cls().run(url, quality=quality)
-
-                    # Ensure result is a dictionary
-                    if not isinstance(result, dict):
-                        result = {"status": "success", "data": result}
-
-                    # Add metadata
-                    result.update(
-                        {
-                            "platform": platform,
-                            "processing_time": time.time() - start_time,
-                            "url": url,
-                            "quality": quality,
-                            "timestamp": time.time(),
-                        }
-                    )
-
-                    logger.info(
-                        f"Successfully processed {platform} URL in {result['processing_time']:.2f}s"
-                    )
-                    return result
-
-            # No matching platform found
-            supported_platforms = list(set(self._dispatch.keys()))
-            supported_list = ", ".join(sorted(supported_platforms))
-            error_msg = (
-                f"Unsupported platform for URL: {url}. Supported domains: {supported_list}"
-            )
-
-            logger.warning(error_msg)
-            return {
-                "status": "error",
-                "error": error_msg,
-                "platform": platform,
-                "supported_platforms": supported_platforms,
-                "url": url,
-                "quality": quality,
-                "processing_time": time.time() - start_time,
-                "timestamp": time.time(),
-            }
+            label = "success" if step.success else "error"
+            self._metrics.counter("tool_runs_total", labels={"tool": "multi_platform_download", "outcome": label}).inc()
+            # Ensure dispatcher identity surfaced (tests expect 'tool' sometimes)
+            if isinstance(step, StepResult):
+                step.data.setdefault("tool", dispatcher.__class__.__name__)
+                step.data.setdefault(
+                    "platform", step.data.get("platform", dispatcher.__class__.__name__.replace("DownloadTool", ""))
+                )
+            return step
 
         except Exception as e:
-            error_msg = f"Unexpected error processing {platform} URL: {str(e)}"
-            logger.error(error_msg)
+            logger.error(f"Download failed for {url}: {e}")
+            self._metrics.counter(
+                "tool_runs_total", labels={"tool": "multi_platform_download", "outcome": "error"}
+            ).inc()
+            return StepResult.fail(error=str(e), data={"url": url})
 
-            return {
-                "status": "error",
-                "error": error_msg,
-                "platform": platform,
-                "url": url,
-                "quality": quality,
-                "processing_time": time.time() - start_time,
-                "timestamp": time.time(),
-            }
-        # Multiple return points above are intentional for clarity (early exits)
-
-    def run(self, url: str, quality: str = "1080p") -> dict[str, Any]:  # noqa: PLR0911 - multiple early returns keep error handling pathways flat & readable; refactoring to a single exit would add nested conditionals reducing clarity
-        """Public wrapper with type safety.
-
-        The internal ``_run`` uses intentional early returns for validation,
-        unsupported‑platform, and exceptional error branches. Consolidating
-        them would produce a deeply nested structure without improving
-        maintainability; each branch already returns a uniform dict shape.
-        """
-        return self._run(url, quality=quality)
+    def run(self, url: str, quality: str = "1080p", **kwargs: Any) -> StepResult:
+        """Public interface following StepResult pattern."""
+        return self._run(url=url, quality=quality, **kwargs)

@@ -1,251 +1,58 @@
 # Giftedx Crew
 
-Giftedx Crew is a tenant‑aware Discord platform that ingests public media, builds grounded context, and answers questions through cost‑guarded model routing and reinforcement learning. The system emphasises privacy, provenance, and reliability so features can be rolled out safely.
+A tenant-aware Discord platform that ingests public media, builds grounded context, and answers questions through cost-guarded model routing and reinforcement learning.
 
-## Features
-- **Core services** – prompt builder, token meter, router with cost guards, caching, RL hooks, alerts, reliability patterns, and tool planning.
-- **Ingestion & RAG** – async adapters for YouTube, Twitch, and TikTok, transcript analysis with segmentation, Qdrant vector memory, and Discord commands like `/creator`, `/latest`, `/context`, `/collabs`, and `/verify_profiles`.
-- **Privacy & governance** – policy engine, deterministic PII detection and redaction, provenance logging, retention sweeps, export tooling, and RBAC security.
-- **Cost & reliability** – budgets, retries, circuit breakers, shadow/canary rollout, feature flags, and comprehensive observability.
-- **Discord CDN archiver** – size‑aware compression, policy checks, channel routing, manifest deduplication, and rehydration of expiring CDN links.
-- **Unified memory layer** – SQLite/Qdrant backed store with retention policies, pinning, archival, and hybrid retrieval.
-- **Grounded answers** – citation‑enforced responses with verifier checks, claim extraction, logical fallacy detection, and Discord audit helpers.
-- **Reinforcement learning** – feature store, reward engine, bandit policies, and a `learn` helper to integrate decision loops across routing, prompting, and retrieval.
-- **Debate & scheduler** – multi-role debate panel, perspective synthesis, steelman arguments, and RL-paced ingest scheduler for ongoing refinement.
-- **Advanced analysis** – sentiment analysis, trustworthiness tracking, timeline construction, and comprehensive content analysis tools.
+## 📚 Documentation
 
-See the documentation for full subsystem guides (for automated agent patterns see `docs/agent_reference.md`):
-- [Tools Reference](docs/tools_reference.md) - Comprehensive tool documentation
-- [Network & HTTP Conventions](docs/network_conventions.md) - Shared helpers for URL validation, resilient POST/GET, timeouts, and rate limiting
-- [Analysis Modules](docs/analysis_modules.md) - Transcript processing and content analysis
-- [Configuration Reference](docs/configuration.md) - Complete configuration guide
-- [Core services](docs/core_services.md) - Foundation utilities and services
-- [Cost guards and caching](docs/cost_and_caching.md) - Budget management and caching
-- [Ingestion](docs/ingestion.md) and [RAG usage](docs/rag.md) - Content ingestion and retrieval
-- [Privacy](docs/privacy.md), [provenance](docs/provenance.md), and [retention](docs/retention.md) - Data governance
-- [Discord CDN archiver](docs/archiver.md) - CDN link preservation
-- [Reinforcement learning](docs/rl_overview.md) - RL system overview
-- [Scheduler and connectors](docs/scheduler.md) - Content polling and scheduling
-- [Knowledge graph](docs/kg.md) - Entity and relationship extraction
-- [Unified memory](docs/memory.md) - Memory management and storage
-- [Grounding guarantees](docs/grounding.md) - Citation enforcement and verification
- - [Runtime data artifacts](docs/runtime_data.md) - Locations and overrides for mutable state (SQLite/JSON)
+**📖 [Complete Documentation Index](docs/ROOT_DOCS_INDEX.md)**
 
-## Getting started
-1. Install Python ≥3.10 and clone the repository.
-2. Install dependencies (editable mode) and dev extras for tooling:
+All detailed guides, architecture docs, and operational procedures have been organized under `docs/`. Use the documentation index above to find what you need.
+
+## 🚀 Quick Start
+
+1. **Install dependencies:**
+
    ```bash
    pip install -e .[dev]
-   # add [metrics] extra to enable Prometheus support
-   # pip install -e .[metrics]
    ```
-3. Copy the example environment and fill in required tokens such as
-   `OPENAI_API_KEY` or `OPENROUTER_API_KEY` plus Discord webhooks:
+
+1. **Run setup wizard:**
+
    ```bash
-   cp .env.example .env
-   # edit .env
+   python -m ultimate_discord_intelligence_bot.setup_cli
    ```
-4. Run the tests:
+
+1. **Start the bot:**
+
    ```bash
-   pytest
+   python -m ultimate_discord_intelligence_bot.setup_cli run discord
    ```
 
-### Developer workflow
-
-Core quality tooling is configured via Ruff (lint + format) and mypy (incremental typing). See `CONTRIBUTING.md` for full guidelines and the baseline policy:
+## 🛠️ Development
 
 ```bash
-make format   # auto-fix style & imports
-make lint     # lint only (CI style)
-make type     # static type check (non-blocking initially)
-make test     # run pytest suite
-make docs     # validate documentation & config references
+make test     # Run tests
+make lint     # Check code style
+make format   # Auto-fix formatting
+make type     # Type checking
 ```
 
-Or use the helper script:
+## 📁 Key Features
 
-```bash
-./scripts/dev.sh format
-./scripts/dev.sh type-changed            # mypy only changed files vs origin/main
-./scripts/dev.sh type-baseline           # check current mypy error count vs baseline
-./scripts/dev.sh type-baseline-update    # update baseline if improved
-```
+- **Multi-platform ingestion** - YouTube, Twitch, TikTok, Discord
+- **Cost-guarded AI routing** - Intelligent model selection with budgets
+- **Privacy & governance** - PII detection, provenance tracking
+- **Reinforcement learning** - Adaptive routing and optimization
+- **Comprehensive observability** - Metrics, tracing, and monitoring
 
-Install pre-commit hooks to ensure consistent formatting before commits:
+## 🔗 Important Links
 
-```bash
-pre-commit install --install-hooks
-```
+- [Getting Started Guide](docs/GETTING_STARTED.md)
+- [Configuration Reference](docs/configuration.md)
+- [Contributing Guidelines](docs/operations/CONTRIBUTING.md)
+- [Security & Secrets](docs/security/SECURITY_SECRETS.md)
+- [Architecture Overview](docs/architecture/architecture.md)
 
-The type checking configuration is intentionally permissive for gradual adoption; prefer adding precise annotations to new/modified code rather than sweeping refactors.
+---
 
-### Plugin capability tests
-
-Plugins can validate their behaviour via a lightweight testkit:
-
-```bash
-python -m ultimate_discord_intelligence_bot.plugins.testkit.cli --plugin ultimate_discord_intelligence_bot.plugins.example_summarizer
-```
-
-## Quick ingest example
-```bash
-python -m ingest.pipeline https://youtu.be/dummy --tenant default --workspace main
-```
-
-Tenants are configured under `tenants/<slug>/` with a `tenant.yaml` plus optional
-`routing.yaml` and `budgets.yaml` for model allowlists and per-tenant cost caps.
-Then query stored context:
-```bash
-python - <<'PY'
-from memory.vector_store import VectorStore
-from discord.commands import context_query
-
-store = VectorStore()
-ns = VectorStore.namespace('default', 'main', 'dummy')
-print(context_query(store, ns, 'hello'))
-PY
-```
-
-## Poller quickstart
-```python
-from scheduler import Scheduler, PriorityQueue
-from ingest.sources.youtube import YouTubeConnector
-from ingest import models
-
-conn = models.connect('ingest.db')
-queue = PriorityQueue(conn)
-sched = Scheduler(conn, queue, {"youtube": YouTubeConnector()})
-sched.add_watch(tenant='default', workspace='main', source_type='youtube', handle='vid1')
-sched.tick()
-sched.worker_run_once(store=None)
-```
-
-## Feature flags
-Core subsystems are disabled by default and enabled via environment flags:
-- **Ingestion:** `ENABLE_INGEST_YOUTUBE`, `ENABLE_INGEST_TWITCH`, `ENABLE_INGEST_TIKTOK`
-- **RAG & Context:** `ENABLE_RAG_CONTEXT`, `ENABLE_VECTOR_SEARCH`, `ENABLE_GROUNDING`
-- **Caching & Performance:** `ENABLE_CACHE`, `ENABLE_CACHE_LLM`, `ENABLE_CACHE_VECTOR`
-- **Reinforcement Learning:** `ENABLE_RL_GLOBAL` (plus `ENABLE_RL_ROUTING`, `ENABLE_RL_PROMPT`, `ENABLE_RL_RETRIEVAL`)
-- **Discord Integration:** `ENABLE_DISCORD_ARCHIVER`, `ENABLE_DISCORD_COMMANDS`, `ENABLE_DISCORD_MONITOR`
-- **Security & Privacy:** `ENABLE_PII_DETECTION`, `ENABLE_CONTENT_MODERATION`, `ENABLE_RATE_LIMITING`
-- **Observability:** `ENABLE_TRACING`, `ENABLE_METRICS`, `ENABLE_AUDIT_LOGGING`
- - **HTTP Resilience:** `ENABLE_ANALYSIS_HTTP_RETRY` (enables exponential backoff + jitter retry layer via `retrying_post` / `retrying_get`; when disabled, single-attempt behavior preserved)
-
-See [Configuration Reference](docs/configuration.md) for complete flag documentation.
-
-### Deprecations & Migration Timeline
-
-The project maintains short, documented grace periods for renamed flags and APIs to reduce churn while allowing cleanup.
-
-![Deprecations & Quality Gate](https://github.com/${{GITHUB_REPOSITORY:-ORG/REPO}}/actions/workflows/deprecations.yml/badge.svg)
-
-| Area | Legacy | Replacement | Grace Period Ends | Notes |
-|------|--------|-------------|-------------------|-------|
-| HTTP Retry Flag | `ENABLE_ANALYSIS_HTTP_RETRY` | `ENABLE_HTTP_RETRY` | 2025-12-31 (planned) | Both currently honored; unified flag takes precedence when both set. Metrics & tests will drop legacy after date. |
-| Learning Engine Shim | `services.learning_engine.LearningEngine` | `core.learning_engine.LearningEngine` | 2025-12-31 (planned) | Shim module will be removed; import core engine directly and use `recommend` / `record`. |
-| Trust Tracker Root File | Root `trustworthiness.json` | `data/trustworthiness.json` (or `TRUST_TRACKER_PATH`) | Immediate | Root file retained only if no `data/` version exists (auto-migration). |
-
-Action Items for Integrators:
-
-1. Replace environment usage of the legacy retry flag with `ENABLE_HTTP_RETRY`.
-2. Update imports to `from core.learning_engine import LearningEngine`.
-3. If scripting around trust scores, point `TRUST_TRACKER_PATH` to a managed location; avoid writing to repo root.
-
-Deprecation warnings surface via `DeprecationWarning`; run tests with `-Wd` to treat them as errors when hardening migrations.
-
-#### Automated Deprecation Status
-
-<!-- DEPRECATIONS:START -->
-Pending generation. Run `make deprecations-badge` (or `python scripts/update_deprecation_badge.py`) to inject the current summary.
-<!-- DEPRECATIONS:END -->
-
-\n## Contributing
-Follow the guidelines in [AGENTS.md](AGENTS.md) and the broader contribution steps in [CONTRIBUTING.md](CONTRIBUTING.md): reuse existing modules, add tests, run `pytest`, and commit using Conventional Commits.
-
-Additional guidelines:
-
-- Keep changes tenant‑aware (always pass explicit tenant/workspace context).
-- Guard new subsystems with `ENABLE_<AREA>_<FEATURE>` flags.
-- Return `StepResult` instead of raising for recoverable tool/pipeline errors.
-- Add/extend docs under `docs/` for new config keys or tools and run `make docs`.
-- Prefer small, focused PRs: config, typing, logic changes separate when feasible.
-
-## Golden Evaluation Suite
-
-Run the golden tests to ensure quality, cost, and latency stay within limits:
-
-```bash
-python -m eval.runner datasets/golden/core/v1 baselines/golden/core/v1/summary.json
-```
-
-## Observability
-
-Tracing and metrics utilities live under `obs`.  Initialise tracing and record a
-router decision:
-
-```python
-from obs import tracing, metrics
-from ultimate_discord_intelligence_bot.tenancy import TenantContext, with_tenant
-tracing.init_tracing("crew-dev")
-with with_tenant(TenantContext("t", "w")):
-    metrics.ROUTER_DECISIONS.labels(**metrics.label_ctx()).inc()
-```
-
-See [docs/observability.md](docs/observability.md) for more details.
-
-## Testing Convenience: In-Memory Qdrant & Tool Contracts
-
-\n### In-Memory Qdrant Fallback
-When `QDRANT_URL` is unset, empty, set to `:memory:` or starts with `memory://`, the factory `memory.qdrant_provider.get_qdrant_client()` supplies a lightweight in‑memory stub. This removes the need to run a real Qdrant instance for unit tests while exercising the same higher‑level logic (collection creation, upsert, simple point retrieval). Set a concrete URL (e.g. `export QDRANT_URL=http://localhost:6333`) to use a real backend.
-
-The stub is intentionally minimal and not suitable for performance or recall benchmarking.
-
-\n### Simplified Tool Return Shapes
-Recent refactors streamlined several tool APIs:
-
-- `VectorSearchTool.run(query)` now returns a flat `list[dict]` of hits: `[{"text": "...", "score": 1.0}]`. Errors surface as `[{"error": "message"}]` instead of raising.
-- `DiscordQATool.run(question)` consumes that list and returns `{ "status": "success", "snippets": ["..."] }` (or an error variant if the first element contains `error`).
-- `PerspectiveSynthesizerTool._run(*segments)` accepts varargs (`_run("A", "B")`) and produces a deterministic uppercase summary to stabilise tests. (If you need original casing for production responses, add a flag or wrapper—the core pipeline today relies on the uppercase form only for assertions.)
-- `MemoryStorageTool` initialisation no longer triggers pydantic required-field validation when injecting a mocked client; attributes are assigned post base initialisation.
-
-If you previously depended on the older wrapped structure `{ "status": ..., "hits": [...] }`, adapt by wrapping the returned list where needed. The simplified shape reduces boilerplate and matches how agents consume results internally.
-
-### Migration Checklist
-
-- Remove any code expecting `result["hits"]`; treat the direct list as the hits.
-- For QA flows, adapt to `DiscordQATool`'s stable `{snippets: [...]}` output.
-- Ensure local dev does not silently rely on the in-memory stub for benchmarking.
-
-## Typing & Timezone Practices
-
-Consistent typing and UTC handling reduce subtle runtime bugs and make tests deterministic.
-
-### Timezone Rules
-
-- All internal timestamps MUST be timezone-aware UTC (`datetime.now(timezone.utc)`), never naive `utcnow()`.
-- When parsing external or config timestamps, naive datetimes are assumed UTC and normalised (`ensure_utc`).
-- Helper: `core.time.ensure_utc(dt)` attaches `timezone.utc` if missing; use in new parsing code instead of ad-hoc `replace(tzinfo=...)`.
-- Avoid serialising naive timestamps; prefer ISO 8601 with `Z` (e.g. `dt.isoformat()` yields `+00:00`).
-
-### Typing Guidelines
-
-- New/modified modules should add precise function signatures; avoid introducing untyped `def` unless guarded by a `# pragma: no cover` style triviality.
-- Eliminate `Any` leakage—guard optional imports with `TYPE_CHECKING` and keep the runtime fallback narrow (see `memory.qdrant_provider`).
-- Prefer `TypedDict` / `dataclass` for structured payloads over loose `dict[str, Any]`.
-- Do not widen existing types to satisfy a single call site; adapt that caller instead.
-- Keep return shapes minimal and explicit; lists of plain dicts are acceptable if the schema is documented (see vector search hits), otherwise formalise with a dataclass.
-
-### Determinism for Tests
-
-- Functions with randomness or external timestamps should accept injectable providers (see `core.time.default_utc_now`) to stabilise tests.
-- Summaries or synthesis steps that feed assertions should either normalise case or expose a flag so tests can enforce deterministic output.
-
-### Quick Audit Commands
-
-```bash
-grep -R "utcnow" -n src || true        # should be empty
-grep -R "datetime.now()" -n src || true # naive calls should not appear
-```
-
-If a future change introduces naive timestamps, add a focused test similar to `tests/test_tenancy_timezone.py` ensuring normalisation.
-
+*For detailed documentation on any topic, see the [Documentation Index](docs/ROOT_DOCS_INDEX.md)*

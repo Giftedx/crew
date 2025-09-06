@@ -1,4 +1,3 @@
-
 import pytest
 
 from core.http_utils import HTTP_RATE_LIMITED, http_request_with_retry

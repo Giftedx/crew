@@ -15,9 +15,7 @@ def save(report: dict[str, dict[str, float]], path: str | Path) -> None:
 def summary_markdown(report: dict[str, dict[str, float]]) -> str:
     lines = ["| task | quality | cost_usd | latency_ms |", "|---|---|---|---|"]
     for task, m in report.items():
-        lines.append(
-            f"| {task} | {m['quality']:.2f} | {m['cost_usd']:.2f} | {m['latency_ms']:.1f} |"
-        )
+        lines.append(f"| {task} | {m['quality']:.2f} | {m['cost_usd']:.2f} | {m['latency_ms']:.1f} |")
     return "\n".join(lines)
 
 

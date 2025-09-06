@@ -1,0 +1,42 @@
+{
+  "title": "HTTP Retries & Latency",
+  "schemaVersion": 36,
+  "version": 1,
+  "tags": ["http", "retries"],
+  "editable": true,
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Retry Attempts by Method (per min)",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "targets": [
+        {"expr": "sum by (method) (rate(http_retry_attempts_total[5m])) * 60", "refId": "A", "legendFormat": "{{method}}"}
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Retry Giveups by Method (per min)",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "targets": [
+        {"expr": "sum by (method) (rate(http_retry_giveups_total[5m])) * 60", "refId": "A", "legendFormat": "{{method}}"}
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "HTTP Request Latency p95 (ms)",
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 8},
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "targets": [
+        {"expr": "histogram_quantile(0.95, sum by (le) (rate(http_request_latency_ms_bucket[10m])))", "refId": "A"}
+      ]
+    }
+  ],
+  "templating": {
+    "list": [
+      {"name": "DS_PROMETHEUS", "type": "datasource", "query": "prometheus", "hide": 0}
+    ]
+  }
+}
+

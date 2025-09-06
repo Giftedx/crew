@@ -29,21 +29,19 @@ class MemoryService:
     ) -> None:
         """Store a ``text`` snippet with optional ``metadata`` and ``namespace``.
 
-        The snippet is passed through the privacy filter before storage so any
-        personally identifiable information is redacted according to policy.
-        Metadata values are kept as-is but may be coerced to strings during
-        retrieval comparisons so non-string values such as integers are
-    supported.
-    """
+            The snippet is passed through the privacy filter before storage so any
+            personally identifiable information is redacted according to policy.
+            Metadata values are kept as-is but may be coerced to strings during
+            retrieval comparisons so non-string values such as integers are
+        supported.
+        """
         from ..privacy import privacy_filter  # noqa: PLC0415 - lazy import avoids circular during service wiring
 
         clean_text, _report = privacy_filter.filter_text(text, metadata or {})
         # Store copies so external mutations to ``metadata`` don't affect the
         # service's internal state.
         ns = namespace or mem_ns(current_tenant() or TenantContext("default", "main"), "mem")
-        self.memories.append(
-            {"namespace": ns, "text": clean_text, "metadata": deepcopy(metadata) or {}}
-        )
+        self.memories.append({"namespace": ns, "text": clean_text, "metadata": deepcopy(metadata) or {}})
 
     def retrieve(
         self,
@@ -69,9 +67,7 @@ class MemoryService:
             return []
 
         ns = namespace or mem_ns(current_tenant() or TenantContext("default", "main"), "mem")
-        results = [
-            m for m in self.memories if m.get("namespace") == ns and query_norm in m["text"].lower()
-        ]
+        results = [m for m in self.memories if m.get("namespace") == ns and query_norm in m["text"].lower()]
         if metadata:
             lowered = {str(k).lower(): str(v).lower() for k, v in metadata.items()}
             filtered: list[dict[str, Any]] = []

@@ -1,9 +1,8 @@
 import os
 from pathlib import Path
 
-from fastapi.testclient import TestClient
-
 from archive.discord_store import api, limits, manifest, policy, router
+from fastapi.testclient import TestClient
 
 ROUTES_YAML = (
     "routes:\n"
@@ -69,9 +68,7 @@ def test_archive_file_records_manifest(monkeypatch, tmp_path):
     import base64
 
     f.write_bytes(
-        base64.b64decode(
-            "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/w8AAgMBAQAAAAABJRU5ErkJggg=="
-        )
+        base64.b64decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/w8AAgMBAQAAAAABJRU5ErkJggg==")
     )
 
     # stub uploader
@@ -109,9 +106,7 @@ def test_dedup_short_circuits_upload(monkeypatch, tmp_path):
     import base64
 
     f.write_bytes(
-        base64.b64decode(
-            "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/w8AAgMBAQAAAAABJRU5ErkJggg=="
-        )
+        base64.b64decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/w8AAgMBAQAAAAABJRU5ErkJggg==")
     )
 
     calls = []
@@ -155,9 +150,7 @@ def test_rest_api(monkeypatch, tmp_path):
     import base64
 
     f.write_bytes(
-        base64.b64decode(
-            "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/w8AAgMBAQAAAAABJRU5ErkJggg=="
-        )
+        base64.b64decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/w8AAgMBAQAAAAABJRU5ErkJggg==")
     )
 
     def _fake_upload(path, channel_id, token):

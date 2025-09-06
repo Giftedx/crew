@@ -18,6 +18,7 @@ _LEGACY_DB = Path("archive_manifest.db")
 _DATA_DIR = Path("data")
 _PREFERRED_DB = _DATA_DIR / "archive_manifest.db"
 
+
 def _resolve_db_path() -> Path:
     """Determine archive manifest SQLite path, migrating legacy root file if present.
 
@@ -49,6 +50,7 @@ def _resolve_db_path() -> Path:
         except Exception as exc:  # pragma: no cover
             log.debug("Failed creating data dir for archive DB: %s", exc)
     return _PREFERRED_DB
+
 
 _DB_PATH = _resolve_db_path()
 
@@ -121,9 +123,7 @@ def lookup(content_hash: str) -> dict[str, Any] | None:
         return None
     columns = [c[0] for c in cur.description]
     rec = dict(zip(columns, row))
-    rec["attachment_ids"] = (
-        rec.get("attachment_ids", "").split(",") if rec.get("attachment_ids") else []
-    )
+    rec["attachment_ids"] = rec.get("attachment_ids", "").split(",") if rec.get("attachment_ids") else []
     if rec.get("tags"):
         rec["tags"] = rec["tags"].split(",")
     if rec.get("compression"):

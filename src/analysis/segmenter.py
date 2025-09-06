@@ -14,9 +14,7 @@ class Chunk:
     end: float
 
 
-def chunk_transcript(
-    transcript: Transcript, *, max_chars: int = 800, overlap: int = 200
-) -> list[Chunk]:
+def chunk_transcript(transcript: Transcript, *, max_chars: int = 800, overlap: int = 200) -> list[Chunk]:
     """Split a :class:`~analysis.transcribe.Transcript` into overlapping chunks.
 
     Parameters

@@ -6,6 +6,9 @@ import json
 from pathlib import Path
 from typing import Any, TypedDict, cast
 
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
+from ultimate_discord_intelligence_bot.step_result import StepResult
+
 from .. import settings
 from ._base import BaseTool
 
@@ -31,7 +34,7 @@ class TimelineEvent(TypedDict, total=False):
     evidence: list[Any]
 
 
-class TimelineTool(BaseTool[dict[str, object]]):
+class TimelineTool(BaseTool):
     """Store timeline events per video with sources."""
 
     name: str = "Timeline Tool"
@@ -43,6 +46,7 @@ class TimelineTool(BaseTool[dict[str, object]]):
         self.storage_path = storage_path or settings.BASE_DIR / "timeline.json"
         if not self.storage_path.exists():
             self._save({})
+        self._metrics = get_metrics()
 
     def _load(self) -> dict[str, list[TimelineEvent]]:
         try:
@@ -100,16 +104,24 @@ class TimelineTool(BaseTool[dict[str, object]]):
         data = self._load()
         return data.get(video_id, [])
 
-    def _run(self, action: str, **kwargs: object) -> dict[str, object]:
-        if action == "add":
-            video_id = cast(str, kwargs["video_id"])  # Expect caller contract
-            event = cast(TimelineEvent, kwargs.get("event", {}))
-            self.add_event(video_id, event)
-            return {"status": "success"}
-        if action == "get":
-            video_id = cast(str, kwargs["video_id"])  # Expect caller contract
-            return {"status": "success", "events": self.get_timeline(video_id)}
-        return {"status": "error", "error": "unknown action"}
+    def _run(self, action: str, **kwargs: object) -> StepResult:
+        try:
+            if action == "add":
+                video_id = cast(str, kwargs["video_id"])  # Expect caller contract
+                event = cast(TimelineEvent, kwargs.get("event", {}))
+                self.add_event(video_id, event)
+                self._metrics.counter("tool_runs_total", labels={"tool": "timeline", "outcome": "success"}).inc()
+                return StepResult.ok()
+            if action == "get":
+                video_id = cast(str, kwargs["video_id"])  # Expect caller contract
+                events = self.get_timeline(video_id)
+                self._metrics.counter("tool_runs_total", labels={"tool": "timeline", "outcome": "success"}).inc()
+                return StepResult.ok(events=events)
+            self._metrics.counter("tool_runs_total", labels={"tool": "timeline", "outcome": "skipped"}).inc()
+            return StepResult.ok(skipped=True, reason="unknown action")
+        except Exception as exc:  # pragma: no cover - defensive
+            self._metrics.counter("tool_runs_total", labels={"tool": "timeline", "outcome": "error"}).inc()
+            return StepResult.fail(error=str(exc))
 
-    def run(self, action: str, **kwargs: object) -> dict[str, object]:  # pragma: no cover - thin wrapper
+    def run(self, action: str, **kwargs: object) -> StepResult:  # pragma: no cover - thin wrapper
         return self._run(action, **kwargs)

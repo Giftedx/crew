@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+import asyncio
 import sqlite3
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from typing import Any
 
+from core.batching import get_batching_metrics, get_bulk_inserter, get_request_batcher
 from ingest import pipeline
 
 
@@ -21,11 +24,13 @@ class PriorityQueue:
 
     def __init__(self, conn: sqlite3.Connection) -> None:
         self.conn = conn
+        self._bulk_inserter = get_bulk_inserter(conn)
+        self._request_batcher = get_request_batcher(conn)
 
     # --------------------------------------------------------------- enqueue
     def enqueue(self, job: pipeline.IngestJob, priority: int = 0) -> int:
         tags = ",".join(job.tags)
-        now = datetime.now(timezone.utc).isoformat()
+        now = datetime.now(UTC).isoformat()
         cur = self.conn.execute(
             (
                 "INSERT INTO ingest_job (tenant, workspace, source_type, external_id, url, tags, visibility, "
@@ -49,6 +54,47 @@ class PriorityQueue:
         job_id = cur.lastrowid
         return int(job_id) if job_id is not None else 0
 
+    def enqueue_bulk(self, jobs: list[pipeline.IngestJob], priority: int = 0) -> list[int]:
+        """Enqueue multiple jobs in bulk for improved performance."""
+        if not jobs:
+            return []
+
+        # Prepare data tuples for immediate inserts
+
+        now = datetime.now(UTC).isoformat()
+        values = []
+        for job in jobs:
+            tags = ",".join(job.tags)
+            values.append(
+                (
+                    job.tenant,
+                    job.workspace,
+                    job.source,
+                    job.external_id,
+                    job.url,
+                    tags,
+                    job.visibility,
+                    priority,
+                    "pending",
+                    0,
+                    now,
+                )
+            )
+
+        inserted_ids: list[int] = []
+        # Insert rows immediately to reflect in tests (simpler than deferred batch for now)
+        for value_tuple in values:
+            cur = self.conn.execute(
+                "INSERT INTO ingest_job (tenant, workspace, source_type, external_id, url, tags, visibility, "
+                "priority, status, attempts, scheduled_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+                value_tuple,
+            )
+            rid = cur.lastrowid
+            if rid is not None:
+                inserted_ids.append(int(rid))
+        self.conn.commit()
+        return inserted_ids
+
     # --------------------------------------------------------------- dequeue
     def dequeue(self) -> QueuedJob | None:
         row = self.conn.execute(
@@ -60,7 +106,7 @@ class PriorityQueue:
         job_id, tenant, workspace, source, external_id, url, tags, visibility, attempts = row
         self.conn.execute(
             "UPDATE ingest_job SET status='running', picked_at=? WHERE id=?",
-            (datetime.now(timezone.utc).isoformat(), job_id),
+            (datetime.now(UTC).isoformat(), job_id),
         )
         self.conn.commit()
         job = pipeline.IngestJob(
@@ -78,18 +124,63 @@ class PriorityQueue:
     def mark_done(self, job_id: int) -> None:
         self.conn.execute(
             "UPDATE ingest_job SET status='done', finished_at=? WHERE id=?",
-            (datetime.now(timezone.utc).isoformat(), job_id),
+            (datetime.now(UTC).isoformat(), job_id),
         )
         self.conn.commit()
 
     def mark_error(self, job_id: int, error: str) -> None:
         self.conn.execute(
             "UPDATE ingest_job SET status='err', error=?, finished_at=? WHERE id=?",
-            (error, datetime.now(timezone.utc).isoformat(), job_id),
+            (error, datetime.now(UTC).isoformat(), job_id),
         )
         self.conn.commit()
+
+    def mark_done_bulk(self, job_ids: list[int]) -> None:
+        """Mark multiple jobs as done in bulk."""
+        if not job_ids:
+            return
+
+        now = datetime.now(UTC).isoformat()
+        for job_id in job_ids:
+            self._request_batcher.add_update(
+                table="ingest_job",
+                set_clause="status='done', finished_at=?",
+                where_clause="id=?",
+                params=(now, job_id),
+            )
+
+    def mark_error_bulk(self, job_errors: list[tuple[int, str]]) -> None:
+        """Mark multiple jobs as error in bulk."""
+        if not job_errors:
+            return
+
+        now = datetime.now(UTC).isoformat()
+        for job_id, error in job_errors:
+            self._request_batcher.add_update(
+                table="ingest_job",
+                set_clause="status='err', error=?, finished_at=?",
+                where_clause="id=?",
+                params=(error, now, job_id),
+            )
 
     # --------------------------------------------------------------- stats
     def pending_count(self) -> int:
         row = self.conn.execute("SELECT COUNT(*) FROM ingest_job WHERE status='pending'").fetchone()
         return int(row[0]) if row else 0
+
+    def pending_count_for(self, tenant: str, workspace: str) -> int:
+        """Get pending count for a specific tenant/workspace."""
+        row = self.conn.execute(
+            "SELECT COUNT(*) FROM ingest_job WHERE status='pending' AND tenant=? AND workspace=?", (tenant, workspace)
+        ).fetchone()
+        return int(row[0]) if row else 0
+
+    def flush_pending_operations(self) -> None:
+        """Flush all pending batch operations."""
+        # Create a task to flush operations asynchronously
+        asyncio.create_task(self._request_batcher.flush())
+        self._bulk_inserter.flush_all()
+
+    def get_batching_metrics(self) -> dict[str, Any]:
+        """Get batching performance metrics."""
+        return get_batching_metrics(self.conn)

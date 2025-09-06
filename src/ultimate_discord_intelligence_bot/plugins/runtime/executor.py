@@ -9,7 +9,10 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from typing import Any
 
-import jsonschema
+try:  # Support different jsonschema versions
+    from jsonschema import validate as _js_validate  # type: ignore
+except Exception:  # pragma: no cover - fallback when jsonschema missing or API changed
+    _js_validate = None  # type: ignore
 
 from core import learn
 from core.rl import registry as rl_registry
@@ -24,9 +27,7 @@ class PluginResult:
     error: str | None = None
 
 
-def _plugin_entry(
-    entrypoint: str, adapters: dict[str, Any], args: dict[str, Any], queue: mp.Queue
-) -> None:
+def _plugin_entry(entrypoint: str, adapters: dict[str, Any], args: dict[str, Any], queue: mp.Queue) -> None:
     """Load the plugin entrypoint and execute it."""
     try:
         module_name, func_name = entrypoint.split(":")
@@ -50,7 +51,16 @@ class PluginExecutor:
         manifest_file = plugin_dir / "manifest.json"
         with manifest_file.open("r", encoding="utf-8") as fh:
             manifest = json.load(fh)
-        jsonschema.validate(manifest, self._schema)
+        if _js_validate is not None:
+            _js_validate(manifest, self._schema)
+        else:  # pragma: no cover - degraded validation path
+            # Minimal structural checks as fallback
+            if not isinstance(manifest, dict):  # noqa: TRY301
+                raise ValueError("Invalid manifest structure")
+            required = self._schema.get("required", []) if isinstance(self._schema, dict) else []
+            missing = [k for k in required if k not in manifest]
+            if missing:
+                raise ValueError(f"Manifest missing required fields: {missing}")
         return manifest
 
     def run(  # noqa: PLR0913 - parameters mirror sandbox policy + execution knobs; **kwargs would obscure contract
@@ -88,11 +98,7 @@ class PluginExecutor:
                 proc.kill()
                 res = PluginResult(success=False, error="timeout")
             else:
-                res = (
-                    queue.get()
-                    if not queue.empty()
-                    else PluginResult(success=False, error="no result")
-                )
+                res = queue.get() if not queue.empty() else PluginResult(success=False, error="no result")
             elapsed = (time.perf_counter() - start) * 1000
             result_holder["res"] = res
             outcome = {"cost_usd": 0.0, "latency_ms": elapsed}

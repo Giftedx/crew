@@ -15,9 +15,7 @@ from .loader import load_cases
 ModelFunc = Callable[[str, dict[str, Any]], tuple[str, dict[str, float]]]
 
 
-def run(
-    dataset_dir: str | Path, model: ModelFunc, tenant: str | None = None
-) -> dict[str, dict[str, float]]:
+def run(dataset_dir: str | Path, model: ModelFunc, tenant: str | None = None) -> dict[str, dict[str, float]]:
     """Run the evaluation suite.
 
     Parameters
@@ -72,13 +70,10 @@ def run(
 
 
 def main() -> None:
-
     p = argparse.ArgumentParser(description="run evaluation suite")
     p.add_argument("dataset", type=str, help="dataset directory")
     p.add_argument("baseline", type=str, nargs="?", help="path to baseline summary.json")
-    p.add_argument(
-        "--out", type=str, default="reports/eval/latest.json", help="where to write report"
-    )
+    p.add_argument("--out", type=str, default="reports/eval/latest.json", help="where to write report")
     args = p.parse_args()
 
     def echo_model(task: str, case: dict[str, Any]) -> tuple[str, dict[str, float]]:

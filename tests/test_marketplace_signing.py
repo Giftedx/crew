@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from ultimate_discord_intelligence_bot.marketplace.models import Signer
 from ultimate_discord_intelligence_bot.marketplace.signing import verify_manifest
@@ -13,8 +13,8 @@ def make_store() -> MarketplaceStore:
         subject="tester",
         trust_tier="verified",
         revoked=False,
-        not_before=datetime.now(timezone.utc) - timedelta(days=1),
-        not_after=datetime.now(timezone.utc) + timedelta(days=1),
+        not_before=datetime.now(UTC) - timedelta(days=1),
+        not_after=datetime.now(UTC) + timedelta(days=1),
     )
     store.upsert_signer(signer)
     return store

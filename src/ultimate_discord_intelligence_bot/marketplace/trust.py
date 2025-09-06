@@ -30,9 +30,7 @@ TIERS: dict[str, TierPolicy] = {
     "untrusted": TierPolicy(set(), 100, 128),
     "community": TierPolicy({"rag.read", "llm.call"}, 500, 256),
     "verified": TierPolicy({"rag.read", "rag.write", "llm.call", "web.fetch"}, 1000, 512),
-    "partner": TierPolicy(
-        {"rag.read", "rag.write", "llm.call", "web.fetch", "tool.exec"}, 2000, 1024
-    ),
+    "partner": TierPolicy({"rag.read", "rag.write", "llm.call", "web.fetch", "tool.exec"}, 2000, 1024),
     # ``None`` means unlimited/first party.
     "first_party": TierPolicy(None, None, None),
 }
@@ -69,7 +67,5 @@ def clamp_resources(cpu_ms: int | None, memory_mb: int | None, tier: str) -> dic
         raise ValueError(f"unknown trust tier: {tier}")
     return {
         "cpu_ms": min(cpu_ms, policy.max_cpu_ms) if (cpu_ms and policy.max_cpu_ms) else cpu_ms,
-        "memory_mb": min(memory_mb, policy.max_memory_mb)
-        if (memory_mb and policy.max_memory_mb)
-        else memory_mb,
+        "memory_mb": min(memory_mb, policy.max_memory_mb) if (memory_mb and policy.max_memory_mb) else memory_mb,
     }

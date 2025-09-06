@@ -1,6 +1,11 @@
-"""Lightweight sentiment analysis tool."""
+"""Lightweight sentiment analysis tool (StepResult version)."""
 
 from __future__ import annotations
+
+import logging
+
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 from ._base import BaseTool
 
@@ -9,7 +14,7 @@ POSITIVE_THRESHOLD = 0.05
 NEGATIVE_THRESHOLD = -0.05
 
 
-class SentimentTool(BaseTool[dict[str, object]]):
+class SentimentTool(BaseTool):
     """Classify text as positive, neutral or negative using a lexical heuristic.
 
     Rationale: A deterministic, dependency‑free heuristic keeps unit tests fast and
@@ -22,7 +27,11 @@ class SentimentTool(BaseTool[dict[str, object]]):
     description: str = "Return overall sentiment for a piece of text."
     model_config = {"extra": "allow"}
 
-    def _run(self, text: str) -> dict[str, object]:
+    def __init__(self):  # type: ignore[override]
+        super().__init__()
+        self._metrics = get_metrics()
+
+    def _run(self, text: str) -> StepResult:
         positive = {"good", "great", "awesome", "love", "excellent"}
         negative = {"bad", "terrible", "awful", "hate", "poor"}
         tokens = text.lower().split()
@@ -33,9 +42,13 @@ class SentimentTool(BaseTool[dict[str, object]]):
             label = "negative"
         else:
             label = "neutral"
-        return {"status": "success", "sentiment": label, "score": score}
+        try:
+            self._metrics.counter("tool_runs_total", labels={"tool": "sentiment", "outcome": "success"}).inc()
+        except Exception as exc:  # pragma: no cover - defensive metrics
+            logging.debug("sentiment metrics emit failed: %s", exc)
+        return StepResult.ok(data={"sentiment": label, "score": score})
 
-    def run(self, text: str) -> dict[str, object]:  # pragma: no cover - thin wrapper
+    def run(self, text: str) -> StepResult:  # pragma: no cover - thin wrapper
         return self._run(text)
 
 

@@ -1,7 +1,9 @@
 """FastAPI application factory.
 
-The API is optional and only enabled when ``ENABLE_API=1`` (or any truthy
-value) is set.  The factory wires:
+This project ships an optional API service. In containerized setups (docker-compose,
+Kubernetes) the API runs when the service is started. Feature exposure (metrics,
+tracing, rate limiting, Prometheus endpoint) is controlled by environment flags
+in settings. The factory wires:
 
 * Settings injection
 * Tracing initialisation (OTLP or console)
@@ -18,13 +20,37 @@ from collections.abc import Callable
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request, Response
+from server.middleware_shim import install_middleware_support
 
-from archive.discord_store.api import api_router
-from core.settings import Settings
+# Ensure middleware support available for local FastAPI shim
+install_middleware_support()
+
+try:
+    from archive.discord_store.api import api_router  # type: ignore
+except Exception:  # pragma: no cover - optional dependency path
+    api_router = None  # type: ignore
+try:
+    from core.settings import Settings  # type: ignore
+except Exception:  # pragma: no cover - fallback when pydantic unavailable
+
+    class Settings:  # type: ignore[no-redef]
+        service_name: str = "service"
+        enable_http_metrics: bool = False
+        enable_rate_limiting: bool = False
+        enable_tracing: bool = False
+        enable_prometheus_endpoint: bool = False
+        prometheus_endpoint_path: str = "/metrics"
+        rate_limit_redis_url: str | None = None
+        rate_limit_rps: int = 10
+        rate_limit_burst: int = 10
+
+
+from core.cache.api_cache_middleware import APICacheMiddleware
 from memory.qdrant_provider import get_qdrant_client
 from obs import metrics
+from obs.enhanced_monitoring import start_monitoring_system, stop_monitoring_system
 from obs.tracing import init_tracing
-from security.rate_limit import TokenBucket
+from ops.alert_adapter import alert_router
 
 
 def _add_metrics_middleware(app: FastAPI, settings: Settings) -> None:
@@ -48,31 +74,7 @@ def _add_metrics_middleware(app: FastAPI, settings: Settings) -> None:
         return response
 
 
-def _add_rate_limit_middleware(app: FastAPI, settings: Settings) -> None:
-    if not settings.enable_rate_limiting:
-        return
-
-    bucket = TokenBucket(
-        rate=float(max(1, settings.rate_limit_rps)),
-        capacity=max(settings.rate_limit_rps, settings.rate_limit_burst),
-    )
-
-    @app.middleware("http")
-    async def _rate_limit(request: Request, call_next: Callable):
-        route = getattr(request.scope.get("route"), "path", request.url.path)
-        # Allow scraping endpoint to bypass rate limiting so metrics remain observable
-        if route == settings.prometheus_endpoint_path:
-            return await call_next(request)
-        key = request.client.host if request.client else "unknown"
-        if not bucket.allow(key):
-            # Attempt to record rejection metric if metrics enabled
-            if settings.enable_http_metrics:
-                try:  # pragma: no cover - defensive
-                    metrics.RATE_LIMIT_REJECTIONS.labels(route, request.method).inc()
-                except Exception as exc:
-                    logging.debug("rate limit metric record failed: %s", exc)
-            return Response(status_code=429, content="Rate limit exceeded")
-        return await call_next(request)
+from server.rate_limit import add_rate_limit_middleware
 
 
 @asynccontextmanager
@@ -81,13 +83,49 @@ async def _lifespan(app: FastAPI):  # pragma: no cover - integration tested indi
     settings = Settings()
     if settings.enable_tracing:
         init_tracing(settings.service_name)
+
+        # Start enhanced monitoring system
+    try:
+        await start_monitoring_system()
+        logging.info("Enhanced monitoring system started")
+    except Exception as exc:
+        logging.warning(f"Failed to start enhanced monitoring system: {exc}")
+
     # Force Qdrant client instantiation early to surface config errors
     try:
         get_qdrant_client()
-    except Exception as exc:
-        logging.debug("qdrant pre-init failed (will retry lazily): %s", exc)
+    except Exception:
+        logging.debug("qdrant pre-init failed (will retry lazily): {exc}")
+
     yield
+
+    # Shutdown monitoring system
+    try:
+        await stop_monitoring_system()
+        logging.info("Enhanced monitoring system stopped")
+    except Exception as exc:
+        logging.warning(f"Failed to stop enhanced monitoring system: {exc}")
+
     # QdrantClient has no explicit close for http/grpc; rely on GC
+
+
+def _add_api_cache_middleware(app: FastAPI, settings: Settings) -> None:
+    """Add API response caching middleware."""
+    if not getattr(settings, "enable_advanced_cache", False):
+        return
+
+    # Create middleware instance
+    middleware_instance = APICacheMiddleware(
+        cache_ttl=getattr(settings, "cache_ttl_api", 300),
+        exclude_paths={"/health", "/metrics"},
+        exclude_methods={"POST", "PUT", "DELETE", "PATCH"},
+        include_headers=["Authorization", "X-API-Key"],
+    )
+
+    # Add as FastAPI middleware using decorator pattern
+    @app.middleware("http")
+    async def api_cache_middleware(request: Request, call_next):
+        return await middleware_instance(request, call_next)
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -96,18 +134,47 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     settings = settings or Settings()
     app = FastAPI(title=settings.service_name, lifespan=_lifespan)
 
-    # Routers
-    app.include_router(api_router)
+    # Routers (archive API optional in minimal test environments)
+    if api_router is not None:
+        try:
+            app.include_router(api_router)
+        except Exception as exc:
+            logging.debug(f"Failed to include archive API router: {exc}")
+    app.include_router(alert_router)
 
+    # Rate limit first so it precedes other middlewares
+    add_rate_limit_middleware(app)
     # Metrics & tracing
     _add_metrics_middleware(app, settings)
-    _add_rate_limit_middleware(app, settings)
+    _add_api_cache_middleware(app, settings)
 
-    if settings.enable_prometheus_endpoint:
+    # Prometheus endpoint registration with environment fallback (shim settings may not load env)
+    enable_prom = getattr(settings, "enable_prometheus_endpoint", False)
+    if not enable_prom:
+        import os as _os
 
-        @app.get(settings.prometheus_endpoint_path)
-        def _metrics():
-            return Response(content=metrics.render(), media_type="text/plain; version=0.0.4")
+        enable_prom = _os.getenv("ENABLE_PROMETHEUS_ENDPOINT", "0").lower() in ("1", "true", "yes", "on")
+    if enable_prom:
+        path = getattr(settings, "prometheus_endpoint_path", "/metrics")
+        # Pydantic FieldInfo may leak through if Settings not fully instantiated; coerce to str
+        try:
+            from pydantic.fields import FieldInfo  # type: ignore
+
+            if isinstance(path, FieldInfo):  # type: ignore
+                path = getattr(path, "default", "/metrics")  # type: ignore
+        except Exception:  # pragma: no cover - pydantic absent
+            pass
+
+        @app.get(str(path))
+        def _metrics():  # noqa: D401
+            data = metrics.render()
+            return Response(data, status_code=200, media_type="text/plain; version=0.0.4")
+
+    @app.get("/health")
+    def _health() -> dict[str, str]:
+        return {"status": "ok"}
+
+    # Removed experimental catch-all; middleware now consistently handles 404s.
 
     return app
 

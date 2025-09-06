@@ -18,9 +18,7 @@ def load_yaml_file(file_path: Path) -> dict[Any, Any]:
         return {}
 
 
-def compare_structures(
-    actual: dict[Any, Any], expected_keys: list[str], file_name: str
-) -> list[str]:
+def compare_structures(actual: dict[Any, Any], expected_keys: list[str], file_name: str) -> list[str]:
     """Compare actual YAML structure with expected keys from documentation."""
     issues = []
 
@@ -46,8 +44,17 @@ def validate_security_config():
 
     actual = load_yaml_file(Path("/home/crew/config/security.yaml"))
 
-    # Expected structure based on documentation
-    expected_keys = ["role_permissions", "rate_limits", "moderation"]
+    # Expected structure based on documentation and actual config
+    expected_keys = [
+        "role_permissions",
+        "rate_limits",
+        "moderation",
+        "network",
+        "webhooks",
+        "secrets",
+        "abac",
+        "feature_flags",
+    ]
 
     issues = compare_structures(actual, expected_keys, "security.yaml")
 
@@ -107,9 +114,7 @@ def validate_policy_config():
         pii_types = set(actual["pii_types"].keys())
         mask_keys = set(actual["masks"].keys())
         if pii_types != mask_keys:
-            issues.append(
-                f"Masks don't match PII types. PII: {sorted(pii_types)}, Masks: {sorted(mask_keys)}"
-            )
+            issues.append(f"Masks don't match PII types. PII: {sorted(pii_types)}, Masks: {sorted(mask_keys)}")
 
     return issues
 
@@ -179,6 +184,8 @@ def validate_other_configs():
         "ingest.yaml",
         "policy.yaml",
         "poller.yaml",
+        "retry.yaml",
+        "deprecations.yaml",
         "security.yaml",
     ]
 
@@ -247,9 +254,7 @@ def main():
         for i, issue in enumerate(all_issues, 1):
             print(f"  {i}. {issue}")
 
-        print(
-            "\n💡 Summary: Documentation needs significant updates to match actual configuration structure."
-        )
+        print("\n💡 Summary: Documentation needs significant updates to match actual configuration structure.")
     else:
         print("✅ All configuration documentation appears accurate!")
 

@@ -18,6 +18,7 @@ Because ``@typed`` is applied last (source order), it receives the already
 decorated callable and simply returns it while retaining the original
 signature via ParamSpec/TypeVar inference.
 """
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -25,6 +26,7 @@ from typing import ParamSpec, TypeVar
 
 P = ParamSpec("P")
 R = TypeVar("R")
+
 
 def typed(func: Callable[P, R]) -> Callable[P, R]:  # pragma: no cover - pure typing aid
     """Identity decorator that preserves the input function's type.
@@ -34,5 +36,6 @@ def typed(func: Callable[P, R]) -> Callable[P, R]:  # pragma: no cover - pure ty
     no-op; at type-check time it rebinds the precise generic signature.
     """
     return func
+
 
 __all__ = ["typed"]

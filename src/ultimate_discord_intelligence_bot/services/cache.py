@@ -3,37 +3,35 @@
 from __future__ import annotations
 
 import hashlib
-import time
-from dataclasses import dataclass, field
 from typing import Any
 
+from src.core.cache.bounded_cache import create_llm_cache
 
-@dataclass
-class LLMCache:
-    """Deterministic prompt→response cache with TTL."""
+try:  # optional Redis-backed cache adapter
+    from core.cache.redis_cache import RedisCache
+except Exception:  # pragma: no cover
+    RedisCache = None  # type: ignore
 
-    ttl: int = 300
-    _store: dict[str, tuple[float, dict[str, Any]]] = field(default_factory=dict)
 
-    def _now(self) -> float:
-        return time.time()
+LLMCache = create_llm_cache()
 
-    def _is_valid(self, expiry: float) -> bool:
-        return expiry > self._now()
 
-    def make_key(self, prompt: str, model: str) -> str:
-        digest = hashlib.sha256(prompt.encode("utf-8")).hexdigest()
-        return f"{model}:{digest}"
+def make_key(prompt: str, model: str) -> str:
+    digest = hashlib.sha256(prompt.encode("utf-8")).hexdigest()
+    return f"{model}:{digest}"
+
+
+class RedisLLMCache(LLMCache):  # pragma: no cover - networked cache, exercised in integration
+    """LLMCache-compatible adapter backed by Redis."""
+
+    def __init__(self, url: str, ttl: int = 300, namespace: str = "llm") -> None:
+        if RedisCache is None:
+            raise RuntimeError("redis not available")
+        self._rc = RedisCache(url=url, ttl=ttl, namespace=namespace)
+        self.ttl = ttl
 
     def get(self, key: str) -> dict[str, Any] | None:
-        item = self._store.get(key)
-        if not item:
-            return None
-        expiry, value = item
-        if self._is_valid(expiry):
-            return value
-        self._store.pop(key, None)
-        return None
+        return self._rc.get_json(key)
 
     def set(self, key: str, value: dict[str, Any]) -> None:
-        self._store[key] = (self._now() + self.ttl, value)
+        self._rc.set_json(key, value)

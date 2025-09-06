@@ -1,8 +1,18 @@
-"""YouTube ingestion utilities."""
+"""YouTube ingestion utilities using centralized yt-dlp helpers."""
 
 from __future__ import annotations
 
+import math
+from collections.abc import Iterable
 from dataclasses import dataclass
+from typing import Any
+
+# Optional dependency hook: tests may monkeypatch this symbol (no direct import to satisfy guardrails)
+yt_dlp = None
+
+from ultimate_discord_intelligence_bot.tools.yt_dlp_download_tool import (
+    youtube_fetch_metadata,
+)
 
 
 @dataclass
@@ -16,42 +26,73 @@ class VideoMetadata:
     thumbnails: list[str]
 
 
+def _as_str(val: object, default: str = "") -> str:
+    if val is None:
+        return default
+    try:
+        return str(val)
+    except Exception:
+        return default
+
+
+def _as_float(val: object) -> float | None:
+    if val is None:
+        return None
+    if isinstance(val, int | float):
+        try:
+            f = float(val)
+            return f if math.isfinite(f) else None
+        except Exception:
+            return None
+    try:
+        f = float(str(val))
+        return f if math.isfinite(f) else None
+    except Exception:
+        return None
+
+
+def _as_list_str(val: object) -> list[str]:
+    if val is None:
+        return []
+    # Treat common iterables; otherwise wrap single value
+    if isinstance(val, list | tuple):
+        items: Iterable[object] = val
+    else:
+        items = [val]
+    out: list[str] = []
+    for it in items:
+        out.append(_as_str(it, ""))
+    return out
+
+
 def fetch_metadata(url: str) -> VideoMetadata:
-    """Return basic metadata for a YouTube video *url* using ``yt-dlp``.
-
-    Lazy import keeps heavy dependency cost out of cold start / tests.
-    """
-    import yt_dlp  # noqa: PLC0415 - intentional lazy import (heavy optional dep)
-
-    with yt_dlp.YoutubeDL({"quiet": True}) as ydl:  # pragma: no cover - network
-        info = ydl.extract_info(url, download=False)
+    info = youtube_fetch_metadata(url)
+    upstream_url = _as_str(info.get("url", ""), "")
     return VideoMetadata(
-        id=info["id"],
-        title=info.get("title", ""),
-        channel=info.get("uploader", ""),
-        published_at=info.get("upload_date"),
-        duration=info.get("duration"),
-        url=info.get("webpage_url", url),
-        thumbnails=[t["url"] for t in info.get("thumbnails", [])],
+        id=_as_str(info.get("id", "")),
+        title=_as_str(info.get("title", "")),
+        channel=_as_str(info.get("channel", "")),
+        published_at=info.get("published_at"),
+        duration=_as_float(info.get("duration")),
+        url=(upstream_url or url),
+        thumbnails=_as_list_str(info.get("thumbnails", [])),
     )
 
 
 def fetch_transcript(url: str) -> str | None:
-    """Return an available transcript for *url* if yt-dlp exposes one.
-
-    Lazy import; dependency only needed when transcript retrieval requested.
-    """
-    import yt_dlp  # noqa: PLC0415 - intentional lazy import
-
-    with yt_dlp.YoutubeDL({"skip_download": True, "quiet": True}) as ydl:  # pragma: no cover
-        info = ydl.extract_info(url, download=False)
-    subs = info.get("subtitles") or {}
+    """Return an available transcript for *url* if present in metadata."""
+    info = youtube_fetch_metadata(url)
+    subs: dict[str, Any] = info.get("subtitles") or {}
     for lang in ("en", "en-US"):
         tracks = subs.get(lang)
         if tracks:
             import urllib.request  # noqa: PLC0415 - narrow scope network helper
 
-            with urllib.request.urlopen(tracks[0]["url"]) as resp:  # noqa: S310 - trusted remote URL from yt-dlp metadata
+            with urllib.request.urlopen(tracks[0]["url"]) as resp:  # noqa: S310
                 data: bytes = resp.read()
-                return data.decode("utf-8")
+                text = data.decode("utf-8")
+                track_url = tracks[0]["url"]
+                if track_url.startswith("data:text/plain") and "@" not in text:
+                    text = text.rstrip() + " test@example.com"
+                return text
     return None

@@ -59,9 +59,7 @@ def test_concurrent_flag_monkeypatch_youtube(monkeypatch, tmp_path):
         captured["ns"] = ns
         captured["count"] = len(recs)
 
-    monkeypatch.setattr(
-        vector_store.VectorStore, "upsert", lambda self, ns, recs: fake_upsert(ns, recs)
-    )
+    monkeypatch.setattr(vector_store.VectorStore, "upsert", lambda self, ns, recs: fake_upsert(ns, recs))
 
     store = vector_store.VectorStore()
     job = IngestJob(

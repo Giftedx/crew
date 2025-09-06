@@ -34,7 +34,6 @@ class _TraceAPI(Protocol):
 
 
 _OTEL_AVAILABLE = False
-_HttpOTLPSpanExporter: Any | None = None
 try:  # Optional dependency (runtime)
     from opentelemetry import trace as _otel_trace
     from opentelemetry.sdk.resources import Resource
@@ -44,6 +43,7 @@ try:  # Optional dependency (runtime)
         SimpleSpanProcessor,
         SpanExporter,
     )
+
     try:  # OTLP exporter optional
         from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
             OTLPSpanExporter as _HttpOTLPSpanExporter,
@@ -53,6 +53,7 @@ try:  # Optional dependency (runtime)
     _OTEL_AVAILABLE = True
 except Exception:  # pragma: no cover - dependency missing
     _otel_trace = None  # type: ignore[assignment]
+    _HttpOTLPSpanExporter = None
 
     class _FallbackSpanExporter:  # fallback minimal stubs
         pass
@@ -78,7 +79,6 @@ except Exception:  # pragma: no cover - dependency missing
     SimpleSpanProcessor = _FallbackSimpleSpanProcessor  # type: ignore
     TracerProvider = _FallbackTracerProvider  # type: ignore
     Resource = _FallbackResource  # type: ignore
-
 
 
 class _NoopSpan:
@@ -128,12 +128,12 @@ def _auto_exporter() -> Any:
                 k, v = part.split("=", 1)
                 header_dict[k.strip()] = v.strip()
     if (
-        '_HttpOTLPSpanExporter' in globals()
-        and globals().get('_HttpOTLPSpanExporter') is not None
-        and callable(globals().get('_HttpOTLPSpanExporter'))
+        "_HttpOTLPSpanExporter" in globals()
+        and globals().get("_HttpOTLPSpanExporter") is not None
+        and callable(globals().get("_HttpOTLPSpanExporter"))
     ):
         try:  # pragma: no cover
-            return globals()['_HttpOTLPSpanExporter'](endpoint=endpoint, headers=header_dict or None)
+            return globals()["_HttpOTLPSpanExporter"](endpoint=endpoint, headers=header_dict or None)
         except Exception:  # pragma: no cover
             return ConsoleSpanExporter()
     return ConsoleSpanExporter()
@@ -204,3 +204,14 @@ def trace_call(span_name: str, **span_attrs: str) -> Callable[[Callable[P, R]], 
 
 
 __all__ = ["init_tracing", "trace_call"]
+
+
+def start_span(name: str) -> _SpanLike:  # pragma: no cover - thin helper for tests
+    """Compatibility helper used in tests: return an active span context manager.
+
+    This mirrors the prior interface expected by call sites that do:
+        with tracing.start_span("span_name") as span:
+            ...
+    """
+    tracer = trace.get_tracer(__name__)
+    return tracer.start_as_current_span(name)  # type: ignore[return-value]

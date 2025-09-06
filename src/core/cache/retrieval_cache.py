@@ -1,31 +1,9 @@
 from __future__ import annotations
-
 import os
-import time
 from collections.abc import Callable
-from dataclasses import dataclass, field
 from typing import Any, ParamSpec, TypeVar
-
 from .. import flags
-
-
-@dataclass
-class RetrievalCache:
-    ttl: int
-    store: dict[str, tuple[Any, float]] = field(default_factory=dict)
-
-    def get(self, key: str) -> Any | None:
-        item = self.store.get(key)
-        if not item:
-            return None
-        value, exp = item
-        if exp < time.time():
-            self.store.pop(key, None)
-            return None
-        return value
-
-    def set(self, key: str, value: Any) -> None:
-        self.store[key] = (value, time.time() + self.ttl)
+from .bounded_cache import create_retrieval_cache
 
 
 P = ParamSpec("P")
@@ -51,6 +29,14 @@ def memo_retrieval(key_builder: Callable[P, str]) -> Callable[[Callable[P, R]], 
     return decorator
 
 
-retrieval_cache = RetrievalCache(ttl=int(os.getenv("CACHE_TTL_RETRIEVAL", "300")))
+# Use lazy import to avoid circular dependencies
+def _get_cache_ttl() -> int:
+    try:
+        from ..secure_config import get_config
+        return get_config().cache_ttl_retrieval
+    except ImportError:
+        return int(os.getenv("CACHE_TTL_RETRIEVAL", "300"))
 
-__all__ = ["RetrievalCache", "retrieval_cache", "memo_retrieval"]
+retrieval_cache = create_retrieval_cache(ttl=_get_cache_ttl())
+
+__all__ = ["retrieval_cache", "memo_retrieval"]

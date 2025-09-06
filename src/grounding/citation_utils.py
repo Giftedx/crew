@@ -28,6 +28,7 @@ Edge cases handled:
 NOTE: We intentionally keep this utility free of model / tenant context so it
 can be imported in tests and lightweight pipelines without circular imports.
 """
+
 from __future__ import annotations
 
 from collections.abc import Sequence

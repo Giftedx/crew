@@ -1,43 +1,208 @@
 PYTHON ?= python
+# Prefer local virtualenv if present
+ifneq (,$(wildcard .venv/bin/python))
+PYTHON := .venv/bin/python
+endif
 PKG := ultimate_discord_intelligence_bot
 
-.PHONY: install dev lint format type test eval docs pre-commit deprecations deprecations-json deprecations-strict ci-all
+.PHONY: install dev lint format format-check type test eval docs pre-commit deprecations deprecations-json deprecations-strict deprecations-badge guards ci-all clean deep-clean
+.PHONY: docs-strict
+.PHONY: ops-queue
+.PHONY: test-fast ci-fast
+.PHONY: ensure-venv uv-lock uv-sync uv-bootstrap
+.PHONY: install dev lint format format-check type type-changed type-baseline type-baseline-update test eval docs pre-commit hooks deprecations deprecations-json deprecations-strict deprecations-badge guards ci-all clean clean-bytecode deep-clean warn-venv
+ 
+lint:
+	bash scripts/dev.sh lint
+
+format:
+	bash scripts/dev.sh format
+
+type:
+	bash scripts/dev.sh type
+
+type-changed:
+	bash scripts/dev.sh type-changed
+
+type-baseline:
+	bash scripts/dev.sh type-baseline
+
+type-baseline-update:
+	bash scripts/dev.sh type-baseline-update
+
+test:
+	bash scripts/dev.sh test
+
+eval:
+	bash scripts/dev.sh eval
+
+pre-commit hooks:
+	bash scripts/dev.sh hooks
+
 
 install:
 	$(PYTHON) -m pip install -e .
 
-deV: install pre-commit
+dev: install pre-commit
 
 pre-commit:
 	pre-commit install --install-hooks
 
+bootstrap:
+	$(PYTHON) scripts/bootstrap_env.py
+
+clean-bytecode:
+	find . -name '__pycache__' -type d -prune -exec rm -rf {} + 2>/dev/null || true
+	find . -name '*.py[co]' -delete || true
+	echo "Bytecode caches removed"
+
+
+setup:
+	$(PYTHON) -m ultimate_discord_intelligence_bot.setup_cli wizard
+
+warn-venv:
+	@if [ -d venv ] && [ ! -L venv ]; then \
+		echo "[warn-venv] Detected legacy 'venv/' directory. Canonical environment is '.venv/'. Consider removing 'venv/' to avoid confusion."; \
+	else \
+		echo "No legacy 'venv/' directory detected."; \
+	fi
+
+doctor:
+	$(PYTHON) -m ultimate_discord_intelligence_bot.setup_cli doctor
+
+run-discord:
+	$(PYTHON) -m ultimate_discord_intelligence_bot.setup_cli run discord
+
+run-crew:
+	$(PYTHON) -m ultimate_discord_intelligence_bot.setup_cli run crew
+
+docker-build:
+	docker build -t $(IMAGE) .
+
+docker-push:
+	docker push $(IMAGE)
+
+k8s-apply:
+	kubectl apply -f ops/deployment/k8s/qdrant-pvc.yaml
+	kubectl apply -f ops/deployment/k8s/qdrant-deployment.yaml
+	kubectl apply -f ops/deployment/k8s/qdrant-service.yaml
+	kubectl apply -f ops/deployment/k8s/api-deployment.yaml
+	kubectl apply -f ops/deployment/k8s/api-service.yaml
+
+lock:
+	$(PYTHON) -m piptools compile pyproject.toml --extra dev -o requirements-dev.txt
+
+sync:
+	$(PYTHON) -m piptools sync requirements-dev.txt
+
 lint:
-	ruff check .
+	$(PYTHON) -m ruff check .
 
 format:
-	ruff check --fix . && ruff format .
+	$(PYTHON) -m ruff check --fix . && $(PYTHON) -m ruff format .
+
+format-check:
+	$(PYTHON) -m ruff format --check .
 
 type:
-	mypy src || true  # incremental adoption, non-zero tolerated locally
+	$(PYTHON) -m mypy src || true  # incremental adoption, non-zero tolerated locally
 
 test:
-	pytest -q
+	$(PYTHON) -m pytest -q
+
+# Fast local CI sweep (quick feedback loop)
+test-fast:
+	$(PYTHON) -m pytest -q -k "http_utils or guards_http_requests or vector_store_dimension or vector_store_namespace"
+
+ci-fast: docs guards test-fast
 
 # Golden evaluation harness (fast path)
 eval:
 	$(PYTHON) -m eval.runner datasets/golden/core/v1 baselines/golden/core/v1/summary.json || true
 
 docs:
-	$(PYTHON) scripts/validate_docs.py && $(PYTHON) scripts/validate_config_docs.py && $(PYTHON) scripts/check_deprecations.py --json > reports/deprecations_report.json
+	@mkdir -p reports
+	$(PYTHON) scripts/validate_docs.py && $(PYTHON) scripts/validate_config_docs.py && $(PYTHON) scripts/validate_dashboards.py && $(PYTHON) scripts/check_deprecations.py --json > reports/deprecations_report.json && $(PYTHON) scripts/update_deprecation_badge.py && PYTHONPATH=$$(pwd) $(PYTHON) scripts/generate_feature_flags_doc.py --check
 	@echo "Deprecation scan JSON written to reports/deprecations_report.json"
+
+# Strict docs validation (fails on import issues in examples)
+docs-strict:
+	$(PYTHON) scripts/validate_docs.py --fail-imports && $(PYTHON) scripts/validate_config_docs.py
+
+# Ops: print queue backlog by tenant/workspace
+ops-queue:
+	@if [ -z "$(DB)" ]; then echo "Usage: make ops-queue DB=path/to/sched.db"; exit 2; fi
+	$(PYTHON) scripts/ops_queue_status.py --db $(DB)
+
+# Update README deprecations badge/section
+deprecations-badge:
+	$(PYTHON) scripts/update_deprecation_badge.py
 
 deprecations-strict:
 	$(PYTHON) scripts/check_deprecations.py --fail-on-upcoming 90
 
-ci-all: lint type test deprecations-strict
+ci-all: doctor format-check lint type guards test deprecations-strict
+
+guards:
+	$(PYTHON) scripts/validate_dispatcher_usage.py && $(PYTHON) scripts/validate_http_wrappers_usage.py && $(PYTHON) scripts/metrics_instrumentation_guard.py
 
 deprecations:
 	$(PYTHON) scripts/check_deprecations.py
 
 deprecations-json:
 	$(PYTHON) scripts/check_deprecations.py --json > /dev/stdout
+
+# Remove typical transient build/test/cache artifacts
+clean:
+	rm -rf __pycache__ */__pycache__ */*/__pycache__
+	rm -rf .pytest_cache .mypy_cache .ruff_cache htmlcov coverage/ *.coverage *.cover *.py,cover
+	rm -rf build dist *.egg-info
+	rm -rf reports/*.tmp ruff_results
+	rm -rf .gemini gha-creds-*.json
+	find . -name '*.py[co]' -delete || true
+	find . -name '*.orig' -delete || true
+	find . -name '*.rej' -delete || true
+	find . -name '*~' -delete || true
+	echo "Workspace cleaned"
+
+# More aggressive: also remove virtual env & node_modules (opt-in)
+deep-clean: clean
+	rm -rf .venv venv node_modules
+	echo "Deep clean completed (virtual envs & node_modules removed)"
+
+# Ensure local virtual environment & editable install (wrapper around script)
+ensure-venv:
+	bash scripts/ensure_venv.sh
+
+# Produce a fully pinned lock file with uv (faster/more reproducible than pip-tools)
+uv-lock:
+	@if ! command -v uv >/dev/null 2>&1; then echo "uv not installed (pip install uv)"; exit 2; fi
+	uv pip compile pyproject.toml -o requirements.lock
+	@echo "Generated requirements.lock"
+
+# Synchronize environment exactly to requirements.lock
+uv-sync: ensure-venv
+	@if ! command -v uv >/dev/null 2>&1; then echo "uv not installed (pip install uv)"; exit 2; fi
+	uv pip sync requirements.lock
+	@echo "Environment synchronized from requirements.lock"
+
+# One-shot bootstrap using uv (creates venv if missing, installs dev extras)
+uv-bootstrap:
+	@if ! command -v uv >/dev/null 2>&1; then echo "uv not installed (pip install uv)"; exit 2; fi
+	@if [ ! -d .venv ]; then python3 -m venv .venv; fi
+	. .venv/bin/activate && uv pip install -e '.[dev]'
+	@echo "uv bootstrap complete"
+
+# Compliance checks per Copilot instructions #3 and #8
+.PHONY: compliance
+compliance:  ## Run compliance audits (HTTP + StepResult)
+	@cd src/ultimate_discord_intelligence_bot && python3 core/http_compliance_audit.py
+	@cd src/ultimate_discord_intelligence_bot && python3 tools/step_result_auditor.py
+
+.PHONY: compliance-fix
+compliance-fix:  ## Auto-fix simple compliance issues
+	@cd src/ultimate_discord_intelligence_bot && python3 tools/batch_stepresult_migration.py
+
+.PHONY: compliance-summary
+compliance-summary:  ## Generate compliance summary report
+	@cd src/ultimate_discord_intelligence_bot && python3 tools/compliance_executive_summary.py

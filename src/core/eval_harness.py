@@ -9,9 +9,7 @@ from .reward_pipe import RewardResult, compute
 CandidateFn = Callable[[], tuple[dict[str, float], dict[str, float]]]
 
 
-def bakeoff(
-    candidates: dict[str, CandidateFn], context: dict[str, float]
-) -> dict[str, RewardResult]:
+def bakeoff(candidates: dict[str, CandidateFn], context: dict[str, float]) -> dict[str, RewardResult]:
     """Run each candidate function and compute rewards.
 
     ``candidates`` maps an identifier to a callable returning ``(outcome, signals)``.

@@ -11,9 +11,7 @@ def test_missing_whisper_returns_error(monkeypatch, tmp_path):
     )
     monkeypatch.setitem(sys.modules, "whisper", None)
 
-    mod = importlib.import_module(
-        "ultimate_discord_intelligence_bot.tools.audio_transcription_tool"
-    )
+    mod = importlib.import_module("ultimate_discord_intelligence_bot.tools.audio_transcription_tool")
     tool = mod.AudioTranscriptionTool()
 
     video = tmp_path / "sample.mp4"

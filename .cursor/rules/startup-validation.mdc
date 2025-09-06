@@ -128,7 +128,7 @@ fi
 # Check environment file
 if [ ! -f ".env" ]; then
     echo "⚠️  No .env file found"
-    echo "💡 Please copy .env.template to .env and configure your API keys"
+    echo "💡 Please copy .env.example to .env and configure your API keys"
     exit 1
 fi
 ```

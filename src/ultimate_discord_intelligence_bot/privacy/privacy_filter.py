@@ -1,1 +1,3 @@
-from core.privacy.privacy_filter import *  # noqa: F401,F403
+from core.privacy.privacy_filter import PrivacyReport, filter_text
+
+__all__ = ["PrivacyReport", "filter_text"]

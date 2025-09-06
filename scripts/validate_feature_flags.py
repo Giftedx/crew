@@ -40,6 +40,7 @@ Programmatic usage:
 
 This module avoids any network or disk‑write side effects beyond reading files.
 """
+
 from __future__ import annotations
 
 import logging

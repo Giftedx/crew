@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: udi-api
+  labels:
+    app: udi-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: udi-api
+  template:
+    metadata:
+      labels:
+        app: udi-api
+    spec:
+      containers:
+        - name: api
+          image: your-registry/udi-bot:latest # replace with your image
+          imagePullPolicy: IfNotPresent
+          command: ["uvicorn", "server.app:create_app", "--factory", "--host", "0.0.0.0", "--port", "8000"]
+          ports:
+            - containerPort: 8000
+          env:
+            - name: ENABLE_API
+              value: "1"
+            - name: ENABLE_PROMETHEUS_ENDPOINT
+              value: "1"
+            - name: PROMETHEUS_ENDPOINT_PATH
+              value: "/metrics"
+            - name: ENABLE_RATE_LIMITING
+              value: "1"
+            - name: ENABLE_HTTP_RETRY
+              value: "1"
+            - name: HTTP_TIMEOUT
+              value: "30"
+            - name: QDRANT_URL
+              value: "http://qdrant:6333"
+          envFrom:
+            - configMapRef:
+                name: udi-config
+            - secretRef:
+                name: udi-secrets
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 20

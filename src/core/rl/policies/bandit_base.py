@@ -56,8 +56,7 @@ class UCB1Bandit:
         self.total_pulls += 1
         return max(
             candidates,
-            key=lambda c: self.q_values[c]
-            + math.sqrt(2 * math.log(self.total_pulls) / self.counts[c]),
+            key=lambda c: self.q_values[c] + math.sqrt(2 * math.log(self.total_pulls) / self.counts[c]),
         )
 
     def update(self, action: Any, reward: float, context: dict[str, Any]) -> None:

@@ -154,12 +154,8 @@ class CreatorProfile:
             platforms=Platforms.from_dict(data.get("platforms", {})),
             frequent_collaborators=data.get("frequent_collaborators", []),
             last_verified_at=datetime.fromisoformat(last_verified_at) if last_verified_at else None,
-            verification_log=[
-                VerificationEvent.from_dict(ev) for ev in data.get("verification_log", [])
-            ],
-            last_checked={
-                k: datetime.fromisoformat(v) for k, v in data.get("last_checked", {}).items()
-            },
+            verification_log=[VerificationEvent.from_dict(ev) for ev in data.get("verification_log", [])],
+            last_checked={k: datetime.fromisoformat(v) for k, v in data.get("last_checked", {}).items()},
         )
 
 

@@ -1,0 +1,134 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "Ingest fallback counters by source (transcript, missing id)",
+  "editable": true,
+  "graphTooltip": 0,
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Transcript Fallbacks (1d)",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "sum by (source)(increase(ingest_transcript_fallbacks_total{tenant=~\"$tenant\",workspace=~\"$workspace\",source=~\"$source\"}[1d]))",
+          "legendFormat": "{{source}}"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "orientation": "horizontal"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Missing ID Fallbacks (1d)",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "sum by (source)(increase(ingest_missing_id_fallbacks_total{tenant=~\"$tenant\",workspace=~\"$workspace\",source=~\"$source\"}[1d]))",
+          "legendFormat": "{{source}}"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "orientation": "horizontal"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      }
+    },
+    {
+      "type": "table",
+      "title": "Top 5 Sources by Transcript Fallbacks (1d)",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "topk(5, sum by (source)(increase(ingest_transcript_fallbacks_total{tenant=~\"$tenant\",workspace=~\"$workspace\",source=~\"$source\"}[1d])))",
+          "legendFormat": "{{source}}"
+        }
+      ],
+      "options": {"showHeader": true},
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 8}
+    }
+  ],
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": [
+    "ingest",
+    "fallbacks"
+  ],
+  "templating": {
+    "list": [
+      {
+        "name": "tenant",
+        "type": "query",
+        "datasource": "Prometheus",
+        "query": "label_values(ingest_transcript_fallbacks_total, tenant)",
+        "includeAll": true,
+        "allValue": ".*",
+        "refresh": 2,
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        }
+      },
+      {
+        "name": "workspace",
+        "type": "query",
+        "datasource": "Prometheus",
+        "query": "label_values(ingest_transcript_fallbacks_total, workspace)",
+        "includeAll": true,
+        "allValue": ".*",
+        "refresh": 2,
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        }
+      },
+      {
+        "name": "source",
+        "type": "query",
+        "datasource": "Prometheus",
+        "query": "label_values(ingest_transcript_fallbacks_total, source)",
+        "includeAll": true,
+        "allValue": ".*",
+        "refresh": 2,
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        }
+      }
+    ]
+  },
+  "time": {
+    "from": "now-7d",
+    "to": "now"
+  },
+  "timezone": "browser",
+  "title": "Ingest Fallbacks",
+  "version": 3
+}

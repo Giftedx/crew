@@ -12,7 +12,7 @@ QUALITY_STEP = 5  # Step decrement per iteration
 try:
     from PIL import Image
 except Exception:  # pragma: no cover - pillow optional
-    Image = None  # type: ignore
+    Image = None  # type: ignore[assignment]
 
 
 def fit_to_limit(path_in: str | Path, bytes_limit: int, kind: str) -> tuple[Path, dict]:

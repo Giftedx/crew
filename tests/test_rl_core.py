@@ -27,9 +27,7 @@ def test_reward_engine_compute_and_attribute() -> None:
 def test_reward_engine_weight_overrides() -> None:
     outcome = {"cost_usd": 1.0, "latency_ms": 10}
     signals = {"quality": 1.0, "groundedness": 1.0}
-    breakdown = rl.reward_engine.compute_reward(
-        outcome, signals, weights={"quality": 2.0, "cost": 0.5}
-    )
+    breakdown = rl.reward_engine.compute_reward(outcome, signals, weights={"quality": 2.0, "cost": 0.5})
     assert breakdown.total == 2.0 * 1.0 + 1.0 * 1.0 - 0.5 * 1.0 - 1.0 * 10
 
 

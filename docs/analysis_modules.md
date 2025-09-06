@@ -197,14 +197,16 @@ Common exceptions:
 ## Testing
 
 Analysis modules are tested through:
-- Unit tests: Various `test_*_tool.py` files (for tool integration)
-- Analysis-specific tests: `test_analysis_topics.py` (completed)
+- Unit tests: see e.g., `tests/test_analysis_transcribe.py` (tool integration)
+- Analysis-specific tests: `tests/test_analysis_topics.py` (completed)
 - Integration tests: Ingestion pipeline tests
 - Performance benchmarks: Topic extraction speed tests
 
 **Missing Test Coverage:**
-- `test_segmenter.py` - **Needs to be created**
-- `test_transcribe.py` - **Needs to be created**## Integration Workflows
+- segmenter test - needs to be created
+- transcribe unit test - needs to be created
+
+## Integration Workflows
 
 ### Typical Ingestion Flow
 
@@ -257,6 +259,6 @@ Planned improvements:
 
 ## See Also
 
-- [Ingestion Guide](ingestion.md) - How analysis integrates with ingestion
-- [Memory Documentation](memory.md) - Storage of analyzed content
-- [Tools Reference](tools_reference.md) - Related analysis tools
+- [Ingestion Guide](docs/ingestion.md) - How analysis integrates with ingestion
+- [Memory Documentation](docs/memory.md) - Storage of analyzed content
+- [Tools Reference](docs/tools_reference.md) - Related analysis tools

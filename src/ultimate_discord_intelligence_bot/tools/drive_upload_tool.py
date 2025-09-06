@@ -2,14 +2,18 @@ import logging
 import os
 from typing import Any
 
+from core.secure_config import get_config
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
+from ultimate_discord_intelligence_bot.step_result import StepResult
+
 from ._base import BaseTool
 
 # Optional heavy Google client dependencies. Tests monkeypatch `_setup_service`, so we
 # avoid import errors when these libraries are absent by deferring/failing gracefully.
 try:  # pragma: no cover - import guarding
     from google.oauth2 import service_account  # pragma: no cover
-    from googleapiclient.discovery import build  # type: ignore  # pragma: no cover
-    from googleapiclient.http import MediaFileUpload  # type: ignore  # pragma: no cover
+    from googleapiclient.discovery import build  # type: ignore[import]  # pragma: no cover
+    from googleapiclient.http import MediaFileUpload  # type: ignore[import]  # pragma: no cover
 
     _GOOGLE_LIBS_AVAILABLE = True
 except Exception:  # broad: any import error should mark feature unavailable
@@ -24,7 +28,7 @@ except Exception:  # broad: any import error should mark feature unavailable
 from ..settings import GOOGLE_CREDENTIALS
 
 
-class DriveUploadTool(BaseTool[dict[str, Any]]):
+class DriveUploadTool(BaseTool[StepResult]):
     name: str = "Google Drive Upload Tool"
     description: str = "Upload files to Google Drive and create shareable links"
     # Allow dynamic attributes (service, folders) assigned in __init__ under pydantic v2
@@ -32,25 +36,41 @@ class DriveUploadTool(BaseTool[dict[str, Any]]):
 
     def __init__(self) -> None:
         super().__init__()
+        self._metrics = get_metrics()
         self.service = self._setup_service()
-        self.base_folder_id, self.subfolders = self._setup_folder_structure()
+        # Annotate attributes for mypy
+        self.base_folder_id: str | None
+        self.subfolders: dict[str, str]
+        if self.service:
+            self.base_folder_id, self.subfolders = self._setup_folder_structure()
+        else:
+            self.base_folder_id = None
+            self.subfolders = {}
 
     def _setup_service(self) -> Any:  # external client returns dynamic resource
         """Initialise the Drive service using service account credentials."""
+        # Check if Google Drive is explicitly disabled
+        config = get_config()
+        if config.disable_google_drive:
+            print("⚠️  Google Drive disabled via environment variable")
+            return None
+
         if not _GOOGLE_LIBS_AVAILABLE:  # pragma: no cover - exercised via import path
-            raise RuntimeError(
-                "Google client libraries not installed. Install google-api-python-client to enable Drive uploads."
-            )
+            print("⚠️  Google client libraries not available - Drive uploads disabled")
+            return None
         credentials_path = str(GOOGLE_CREDENTIALS)
+        if service_account is None or build is None:  # pragma: no cover - safety net
+            return None
         try:
-            credentials = service_account.Credentials.from_service_account_file(
+            credentials = service_account.Credentials.from_service_account_file(  # type: ignore[attr-defined]
                 credentials_path, scopes=["https://www.googleapis.com/auth/drive"]
             )
         except Exception as exc:  # pragma: no cover - exercised in integration env
-            logging.error("Invalid Google credentials at %s: %s", credentials_path, exc)
-            raise
+            logging.warning("Google credentials unavailable at %s: %s", credentials_path, exc)
+            print("⚠️  Google Drive credentials invalid - Drive uploads disabled")
+            return None
 
-        return build("drive", "v3", credentials=credentials)
+        return build("drive", "v3", credentials=credentials)  # type: ignore[call-arg]
 
     def _find_folder(self, name: str, parent_id: str | None = None) -> str | None:
         """Return folder id if a folder with ``name`` exists under ``parent_id``."""
@@ -89,14 +109,25 @@ class DriveUploadTool(BaseTool[dict[str, Any]]):
 
         return base_folder, subfolders
 
-    def _run(self, file_path: str, platform: str) -> dict[str, Any]:
+    def _run(self, file_path: str, platform: str) -> StepResult:
         """Upload video file with Discord-compatible sharing setup"""
+        # Check if Google Drive is available
+        if not self.service or not self.base_folder_id:
+            self._metrics.counter("tool_runs_total", labels={"tool": "drive_upload", "outcome": "skipped"}).inc()
+            return StepResult.skip(
+                message="Google Drive uploads disabled (no credentials configured)",
+                file_path=file_path,
+                platform=platform,
+            )
+
         try:
             folder_id = self.subfolders.get(platform, self.base_folder_id)
 
             file_metadata = {"name": os.path.basename(file_path), "parents": [folder_id]}
 
-            media = MediaFileUpload(
+            if MediaFileUpload is None:  # pragma: no cover - import guard path
+                raise RuntimeError("google client library unavailable (MediaFileUpload missing)")
+            media = MediaFileUpload(  # type: ignore[call-arg]
                 file_path,
                 mimetype="video/mp4",
                 resumable=True,
@@ -120,21 +151,26 @@ class DriveUploadTool(BaseTool[dict[str, Any]]):
             self._make_public(file_id)
             links = self._generate_discord_links(file_id)
 
-            return {
-                "file_id": file_id,
-                "file_name": response.get("name"),
-                "file_size": response.get("size"),
-                "links": links,
-                "status": "success",
-            }
+            self._metrics.counter("tool_runs_total", labels={"tool": "drive_upload", "outcome": "success"}).inc()
+            return StepResult.ok(
+                data={
+                    "file_id": file_id,
+                    "file_name": response.get("name"),
+                    "file_size": response.get("size"),
+                    "links": links,
+                }
+            )
         except Exception as e:
             logging.exception("Drive upload failed")
-            return {"status": "error", "error": str(e)}
+            self._metrics.counter("tool_runs_total", labels={"tool": "drive_upload", "outcome": "error"}).inc()
+            return StepResult.fail(
+                error=str(e), platform="GoogleDrive", command=f"upload {os.path.basename(file_path)}"
+            )
 
     def _make_public(self, file_id: str) -> None:
         """Make file publicly accessible"""
         permission = {"role": "reader", "type": "anyone"}
-        self.service.permissions().create(fileId=file_id, body=permission).execute()
+        self.service.permissions().create(fileId=file_id, body=permission).execute()  # type: ignore[call-arg]
 
     def _generate_discord_links(self, file_id: str) -> dict[str, str]:
         """Generate various link formats for Discord compatibility"""
@@ -146,5 +182,9 @@ class DriveUploadTool(BaseTool[dict[str, Any]]):
         }
 
     # Expose run for pipeline compatibility
-    def run(self, *args, **kwargs) -> dict:  # pragma: no cover - thin wrapper
-        return self._run(*args, **kwargs)
+    def run(self, *args, **kwargs) -> StepResult:  # pragma: no cover - thin wrapper
+        try:
+            return self._run(*args, **kwargs)
+        except Exception as exc:  # pragma: no cover - unexpected
+            self._metrics.counter("tool_runs_total", labels={"tool": "drive_upload", "outcome": "error"}).inc()
+            return StepResult.fail(error=str(exc), platform="GoogleDrive", command="upload wrapper")

@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import hashlib
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from .store import MarketplaceStore
 
@@ -47,7 +47,7 @@ def verify_manifest(
     """
 
     errors: list[str] = []
-    now = now or datetime.now(timezone.utc)
+    now = now or datetime.now(UTC)
 
     signer = store.get_signer(signer_fingerprint)
     if not signer:

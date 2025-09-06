@@ -11,7 +11,7 @@ from __future__ import annotations
 import os
 from collections.abc import Callable
 from dataclasses import asdict
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any, TypedDict
 
 from core.learning_engine import LearningEngine
@@ -24,7 +24,7 @@ from grounding.verifier import VerifierReport
 from ingest import models
 from memory import api as memory_api
 from memory import embeddings, vector_store
-from memory import store as memory_store
+from memory.store import MemoryStore
 from obs import incident, slo
 from scheduler import PriorityQueue, Scheduler
 
@@ -92,6 +92,7 @@ class EvalRunResult(TypedDict):
     id: int
     report: dict[str, Any]
 
+
 class WatchAddResult(TypedDict):
     id: int | None
     handle: str
@@ -149,7 +150,7 @@ def context_query(store: vector_store.VectorStore, namespace: str, query: str) -
             output_hash="",
             user_cmd="/context",
             channel_id="",
-            ts=datetime.now(timezone.utc).isoformat(),
+            ts=datetime.now(UTC).isoformat(),
         )
         models.record_usage(conn, usage)
     return out
@@ -162,9 +163,7 @@ def ops_debate_run(query: str, roles: list[str]) -> DebateSummary:
     engine.register_domain("debate")
     router = Router(engine)
     cfg = PanelConfig(roles=roles)
-    report = run_panel(
-        query, router, lambda m, p: f"{m}:{p}"[:100], cfg, engine=router.engine, reward=1.0
-    )
+    report = run_panel(query, router, lambda m, p: f"{m}:{p}"[:100], cfg, engine=router.engine, reward=1.0)
     debate = Debate(
         id=None,
         tenant="t",
@@ -173,7 +172,7 @@ def ops_debate_run(query: str, roles: list[str]) -> DebateSummary:
         panel_config_json="{}",
         n_rounds=cfg.n_rounds,
         final_output=report.final,
-        created_at=datetime.now(timezone.utc).isoformat(),
+        created_at=datetime.now(UTC).isoformat(),
     )
     debate_id = _DEBATE_STORE.add_debate(debate)
     return {"id": debate_id, "final": report.final, "status": router.engine.status()}
@@ -254,7 +253,7 @@ def ops_privacy_sweep(conn: Any, *, tenant: str | None = None, now: datetime | N
 
 # ------------------------------------------------------------------ memory ops
 def ops_memory_find(
-    mstore: memory_store.MemoryStore,
+    mstore: MemoryStore,
     vstore: vector_store.VectorStore,
     tenant: str,
     workspace: str,
@@ -264,17 +263,17 @@ def ops_memory_find(
     return [{"id": h.id, "text": h.text, "score": h.score} for h in hits]
 
 
-def ops_memory_pin(mstore: memory_store.MemoryStore, item_id: int, pinned: bool = True) -> dict[str, bool]:
+def ops_memory_pin(mstore: MemoryStore, item_id: int, pinned: bool = True) -> dict[str, bool]:
     memory_api.pin(mstore, item_id, pinned)
     return {"pinned": pinned}
 
 
-def ops_memory_prune(mstore: memory_store.MemoryStore, tenant: str) -> dict[str, int]:
+def ops_memory_prune(mstore: MemoryStore, tenant: str) -> dict[str, int]:
     deleted = memory_api.prune(mstore, tenant=tenant)
     return {"deleted": deleted}
 
 
-def ops_memory_stats(mstore: memory_store.MemoryStore, tenant: str, workspace: str) -> dict[str, int]:
+def ops_memory_stats(mstore: MemoryStore, tenant: str, workspace: str) -> dict[str, int]:
     items = mstore.search_keyword(tenant, workspace, "", limit=1000)
     return {
         "total": len(items),
@@ -284,7 +283,7 @@ def ops_memory_stats(mstore: memory_store.MemoryStore, tenant: str, workspace: s
 
 
 def ops_memory_archive(
-    mstore: memory_store.MemoryStore,
+    mstore: MemoryStore,
     item_id: int,
     tenant: str,
     workspace: str,

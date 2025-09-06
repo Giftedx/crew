@@ -18,6 +18,7 @@ Allow list rationale mirrors deprecated flag validator: we permit references in
 Future: unify with validate_deprecated_flags.py; for now we keep lightweight to
 avoid coupling and speed.
 """
+
 from __future__ import annotations
 
 import logging
@@ -26,7 +27,7 @@ import re
 import sys
 from collections.abc import Iterable
 from dataclasses import dataclass
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 from pathlib import Path
 
 import yaml
@@ -119,7 +120,7 @@ def _scan_for(flag: str) -> list[Path]:
 def main() -> int:
     entries = _load_schedule()
     override = os.getenv("DEPRECATION_AS_OF")
-    today = datetime.now(timezone.utc).date()
+    today = datetime.now(UTC).date()
     if override:
         try:
             today = datetime.strptime(override, "%Y-%m-%d").date()

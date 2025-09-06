@@ -11,6 +11,22 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+try:
+    from core.secure_config import get_config
+except Exception:  # pragma: no cover - fallback when secure_config deps unavailable
+
+    class _FallbackConfig:
+        """Fallback configuration when secure_config is unavailable."""
+
+        enable_faster_whisper: bool = False
+        whisper_model: str | None = None
+
+    def _get_fallback_config() -> _FallbackConfig:
+        return _FallbackConfig()
+
+    # Alias for compatibility
+    get_config = _get_fallback_config  # type: ignore[assignment]
+
 
 @dataclass
 class Segment:
@@ -38,20 +54,30 @@ def run_whisper(path: str, model: str = "tiny") -> Transcript:
     operate on tiny fixtures.
     """
 
-    try:
-        import whisper  # type: ignore  # noqa: PLC0415 - optional heavy dependency imported lazily
+    cfg = get_config()
+    # Prefer Faster-Whisper when enabled and available
+    if getattr(cfg, "enable_faster_whisper", False):
+        try:  # pragma: no cover - heavy dependency path
+            from faster_whisper import WhisperModel
 
-        model_inst = whisper.load_model(model)
+            model_name = getattr(cfg, "whisper_model", model) or model
+            wm = WhisperModel(model_name)
+            segments_it, _info = wm.transcribe(path)
+            segs = list(segments_it)
+            return Transcript(
+                segments=[Segment(start=float(s.start), end=float(s.end), text=str(s.text).strip()) for s in segs]
+            )
+        except Exception:
+            ...  # fall back to standard whisper or text path
+    try:
+        import whisper  # noqa: PLC0415 - optional heavy dependency imported lazily
+
+        model_inst = whisper.load_model(getattr(cfg, "whisper_model", model) or model)
         result = model_inst.transcribe(path)
-        segments = [
-            Segment(start=s["start"], end=s["end"], text=s["text"].strip())
-            for s in result["segments"]
-        ]
+        segments = [Segment(start=s["start"], end=s["end"], text=s["text"].strip()) for s in result["segments"]]
         return Transcript(segments=segments)
     except Exception:
         with open(path, encoding="utf-8") as fh:
             lines = fh.read().splitlines()
-        segments = [
-            Segment(start=float(i), end=float(i + 1), text=line) for i, line in enumerate(lines)
-        ]
+        segments = [Segment(start=float(i), end=float(i + 1), text=line) for i, line in enumerate(lines)]
         return Transcript(segments=segments)

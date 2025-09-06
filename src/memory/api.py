@@ -6,11 +6,13 @@ import json
 import tempfile
 from collections.abc import Sequence
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
+from analysis.rerank import rerank
 from archive import archive_file
 from core.learning_engine import LearningEngine
 from core.privacy import privacy_filter
+from core.secure_config import get_config
 from memory import embeddings, vector_store
 from memory.store import MemoryItem, MemoryStore
 
@@ -42,7 +44,7 @@ def store(  # noqa: PLR0913,PLR0912 - explicit param groups (identity/payload/cl
 
     clean, _ = privacy_filter.filter_text(text, {"tenant": tenant})
     vec = embeddings.embed([clean])[0]
-    now = datetime.now(timezone.utc).isoformat()
+    now = datetime.now(UTC).isoformat()
     item = MemoryItem(
         id=None,
         tenant=tenant,
@@ -59,9 +61,7 @@ def store(  # noqa: PLR0913,PLR0912 - explicit param groups (identity/payload/cl
     )
     item_id = store.add_item(item)
     namespace = vector_store.VectorStore.namespace(tenant, workspace, "memory")
-    vstore.upsert(
-        namespace, [vector_store.VectorRecord(vector=vec, payload={"id": item_id, "text": clean})]
-    )
+    vstore.upsert(namespace, [vector_store.VectorRecord(vector=vec, payload={"id": item_id, "text": clean})])
     return item_id
 
 
@@ -100,9 +100,21 @@ def retrieve(  # noqa: PLR0913,PLR0912 - explicit search knobs aid experimentati
     if "symbolic" in strategies:
         for item in store.search_keyword(tenant, workspace, query, limit=k):
             payload = json.loads(item.content_json)
-            hits.append(
-                MemoryHit(id=item.id or 0, score=0.5, text=payload.get("text", ""), meta=payload)
-            )
+            hits.append(MemoryHit(id=item.id or 0, score=0.5, text=payload.get("text", ""), meta=payload))
+    # Optional reranker stage
+    cfg = get_config()
+    if getattr(cfg, "enable_reranker", False) and hits:
+        provider = (getattr(cfg, "rerank_provider", None) or "").strip().lower()
+        if provider:
+            texts = [h.text for h in hits]
+            try:
+                rr = rerank(query, texts, provider=provider, top_n=min(k, len(texts)))
+                # Reorder hits by reranked indexes (limit to top_n)
+                ordered = [hits[i] for i in rr.indexes if 0 <= i < len(hits)]
+                hits = ordered + [h for h in hits if h not in ordered]
+            except Exception:
+                # Fall back silently on provider errors
+                ...
     hits.sort(key=lambda h: h.score, reverse=True)
     return hits[:k]
 

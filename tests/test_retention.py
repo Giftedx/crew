@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from core.privacy import retention
 from ingest import models
@@ -7,7 +7,7 @@ from ingest import models
 def test_retention_sweep(tmp_path):
     db = tmp_path / "r.db"
     conn = models.connect(str(db))
-    old = datetime.now(timezone.utc) - timedelta(days=40)
+    old = datetime.now(UTC) - timedelta(days=40)
     conn.execute(
         (
             "INSERT INTO provenance (content_id, source_url, source_type, retrieved_at, license, terms_url, "
@@ -16,5 +16,5 @@ def test_retention_sweep(tmp_path):
         ("1", "u", "yt", old.isoformat(), "", None, None, "x", None, None),
     )
     conn.commit()
-    deleted = retention.sweep(conn, now=datetime.now(timezone.utc))
+    deleted = retention.sweep(conn, now=datetime.now(UTC))
     assert deleted == 1

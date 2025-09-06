@@ -162,9 +162,7 @@ def test_claim_extractor_tool_properties():
 
     assert tool.name == "Claim Extractor Tool"
     # The description property in CrewAI tools includes formatting
-    assert (
-        "Extract potential factual claims from text using linguistic patterns." in tool.description
-    )
+    assert "Extract potential factual claims from text using linguistic patterns." in tool.description
 
     # Test that it's a proper CrewAI tool
     assert hasattr(tool, "_run")

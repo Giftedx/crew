@@ -1,9 +1,16 @@
-"""Monitor new messages from Discord channels."""
+"""Monitor new messages from Discord channels.
+
+Migrated to StepResult. Wraps MultiPlatformMonitorTool and re-maps key.
+Metrics: tool_runs_total{tool="discord_monitor", outcome=success}
+"""
 
 from __future__ import annotations
 
 from collections.abc import Iterable
 from typing import TypedDict
+
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 from ._base import BaseTool
 from .multi_platform_monitor_tool import MultiPlatformMonitorTool
@@ -14,7 +21,7 @@ class _DiscordMonitorResult(TypedDict):
     new_messages: list[dict[str, str]]
 
 
-class DiscordMonitorTool(BaseTool[_DiscordMonitorResult]):
+class DiscordMonitorTool(BaseTool):
     """Return unseen Discord messages."""
 
     name: str = "Discord Monitor Tool"
@@ -23,10 +30,23 @@ class DiscordMonitorTool(BaseTool[_DiscordMonitorResult]):
     def __init__(self) -> None:
         super().__init__()
         self._monitor = MultiPlatformMonitorTool()
+        self._metrics = get_metrics()
 
-    def _run(self, messages: Iterable[dict[str, str]]) -> _DiscordMonitorResult:
-        result = self._monitor._run(messages)
-        return {"status": "success", "new_messages": result["new_items"]}
+    def _run(self, messages: Iterable[dict[str, str]]) -> StepResult:
+        # Delegate to underlying tool (already returns StepResult)
+        underlying = self._monitor._run(messages)
+        if isinstance(underlying, StepResult):  # defensive; underlying returns StepResult
+            if underlying.success:
+                data = underlying.data or {}
+                new_items = data.get("new_items", [])
+                self._metrics.counter("tool_runs_total", labels={"tool": "discord_monitor", "outcome": "success"}).inc()
+                return StepResult.ok(data={"new_messages": new_items})
+            else:
+                self._metrics.counter("tool_runs_total", labels={"tool": "discord_monitor", "outcome": "error"}).inc()
+                return StepResult.fail(error=underlying.error or "monitor failure")
+        # Fallback (should not happen)
+        self._metrics.counter("tool_runs_total", labels={"tool": "discord_monitor", "outcome": "error"}).inc()
+        return StepResult.fail(error="Unexpected underlying monitor return type")
 
-    def run(self, messages: Iterable[dict[str, str]]) -> _DiscordMonitorResult:  # pragma: no cover - thin wrapper
+    def run(self, messages: Iterable[dict[str, str]]) -> StepResult:  # pragma: no cover - thin wrapper
         return self._run(messages)

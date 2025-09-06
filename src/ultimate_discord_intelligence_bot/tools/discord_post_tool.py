@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from pydantic import Field
@@ -14,6 +14,8 @@ from core.http_utils import (
     resilient_post,
     validate_public_https_url,
 )
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 from ._base import BaseTool
 
@@ -23,7 +25,7 @@ from ._base import BaseTool
 DISCORD_FILE_LIMIT_MB = 100  # Typical limit for standard servers (may vary)
 
 
-class DiscordPostTool(BaseTool[dict[str, object]]):
+class DiscordPostTool(BaseTool[StepResult]):
     """Post messages, embeds, and small file uploads to Discord via webhook.
 
     HTTP concerns (URL validation, standard timeouts, legacy monkeypatch
@@ -40,24 +42,29 @@ class DiscordPostTool(BaseTool[dict[str, object]]):
     def __init__(self, webhook_url: str):
         # Use BaseTool/Pydantic init for proper field setup then override value
         super().__init__()
-        object.__setattr__(self, 'webhook_url', validate_public_https_url(webhook_url))
+        object.__setattr__(self, "webhook_url", validate_public_https_url(webhook_url))
+        self._metrics = get_metrics()
 
     @staticmethod
     def _validate_webhook(url: str) -> str:  # backward compatibility shim
         return validate_public_https_url(url)
 
-    def _run(self, content_data: dict, drive_links: dict) -> dict:
+    def _run(self, content_data: dict, drive_links: dict) -> StepResult:
         """Post content notification with proper formatting"""
-
+        if not content_data:
+            self._metrics.counter("tool_runs_total", labels={"tool": "discord_post", "outcome": "skipped"}).inc()
+            return StepResult.ok(skipped=True, reason="empty content data")
         # Check file size for direct upload vs link sharing
-        file_size_mb = int(content_data.get("file_size", 0)) / (1024 * 1024)
+        try:
+            file_size_mb = int(content_data.get("file_size", 0)) / (1024 * 1024)
+        except Exception:  # pragma: no cover - defensive parsing
+            file_size_mb = 0
 
         if file_size_mb <= DISCORD_FILE_LIMIT_MB:  # Within Discord limits for most servers
             return self._post_with_file_upload(content_data, drive_links)
-        else:
-            return self._post_with_embed_links(content_data, drive_links)
+        return self._post_with_embed_links(content_data, drive_links)
 
-    def _post_with_embed_links(self, content_data: dict, drive_links: dict) -> dict:
+    def _post_with_embed_links(self, content_data: dict, drive_links: dict) -> StepResult:
         """Post using structured embeds with links (recommended approach)"""
 
         embed = {
@@ -92,7 +99,7 @@ class DiscordPostTool(BaseTool[dict[str, object]]):
                 "icon_url": "https://example.com/crewai-icon.png",
             },
             # Use explicit UTC to avoid naive timestamps which complicate downstream parsing
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
         }
 
         payload = {
@@ -103,7 +110,7 @@ class DiscordPostTool(BaseTool[dict[str, object]]):
 
         return self._send_webhook(payload)
 
-    def _post_with_file_upload(self, content_data: dict, drive_links: dict) -> dict:
+    def _post_with_file_upload(self, content_data: dict, drive_links: dict) -> StepResult:
         """Post with direct file upload for smaller files"""
 
         local_file_path = content_data.get("local_path")
@@ -129,15 +136,14 @@ class DiscordPostTool(BaseTool[dict[str, object]]):
             }
 
             try:
-                response = resilient_post(
-                    self.webhook_url, files=files, timeout_seconds=REQUEST_TIMEOUT_SECONDS
-                )
+                response = resilient_post(self.webhook_url, files=files, timeout_seconds=REQUEST_TIMEOUT_SECONDS)
             except TypeError as exc:  # pragma: no cover - unrelated TypeError
-                return {"status": "error", "error": str(exc)}
+                self._metrics.counter("tool_runs_total", labels={"tool": "discord_post", "outcome": "error"}).inc()
+                return StepResult.fail(error=str(exc))
 
         return self._handle_response(response)
 
-    def _send_webhook(self, payload: dict) -> dict:
+    def _send_webhook(self, payload: dict) -> StepResult:
         """Send webhook with rate limiting"""
         try:
             response = resilient_post(
@@ -147,24 +153,26 @@ class DiscordPostTool(BaseTool[dict[str, object]]):
                 timeout_seconds=REQUEST_TIMEOUT_SECONDS,
             )
         except Exception as e:  # pragma: no cover
-            return {"status": "error", "error": str(e)}
+            self._metrics.counter("tool_runs_total", labels={"tool": "discord_post", "outcome": "error"}).inc()
+            return StepResult.fail(error=str(e))
         return self._handle_response(response)
 
-    def _handle_response(self, response) -> dict:
+    def _handle_response(self, response) -> StepResult:
         """Handle Discord API response with rate limiting"""
         if response.status_code == HTTP_SUCCESS_NO_CONTENT:
-            return {"status": "success"}
+            self._metrics.counter("tool_runs_total", labels={"tool": "discord_post", "outcome": "success"}).inc()
+            return StepResult.ok()
         elif response.status_code == HTTP_RATE_LIMITED:
             data: dict[str, object] = {}
             try:
-                raw_json: object = getattr(response, 'json', lambda: {})()
+                raw_json: object = getattr(response, "json", lambda: {})()
                 if isinstance(raw_json, dict):
                     data = raw_json  # narrow to dict[str, object]
             except Exception:  # pragma: no cover - malformed JSON
                 data = {}
             ra = data.get("retry_after") if isinstance(data, dict) else None
             retry_after: float = float(DEFAULT_RATE_LIMIT_RETRY)
-            if isinstance(ra, int | float):  # py311+ union isinstance style
+            if isinstance(ra, int | float):  # Compatible union syntax
                 if ra >= 0:
                     retry_after = float(ra)
             elif isinstance(ra, str):
@@ -175,10 +183,18 @@ class DiscordPostTool(BaseTool[dict[str, object]]):
                 except ValueError:  # pragma: no cover - ignore non-numeric string
                     # Non-numeric retry_after -> fallback to default; explicit except avoids blanket swallow
                     ...
-            return {"status": "rate_limited", "retry_after": retry_after}
+            self._metrics.counter("tool_runs_total", labels={"tool": "discord_post", "outcome": "skipped"}).inc()
+            return StepResult.ok(skipped=True, reason="rate_limited", data={"retry_after": retry_after})
         else:
-            return {"status": "error", "status_code": response.status_code, "error": getattr(response, 'text', '')}
+            self._metrics.counter("tool_runs_total", labels={"tool": "discord_post", "outcome": "error"}).inc()
+            return StepResult.fail(
+                error=f"HTTP error: {response.status_code}", data={"status_code": int(response.status_code)}
+            )
 
     # Public run method to align with pipeline expectations
-    def run(self, *args, **kwargs):  # pragma: no cover - thin wrapper
-        return self._run(*args, **kwargs)
+    def run(self, *args, **kwargs) -> StepResult:  # pragma: no cover - thin wrapper
+        try:
+            return self._run(*args, **kwargs)
+        except Exception as exc:  # pragma: no cover - unexpected
+            self._metrics.counter("tool_runs_total", labels={"tool": "discord_post", "outcome": "error"}).inc()
+            return StepResult.fail(error=str(exc))

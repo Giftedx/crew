@@ -1,0 +1,54 @@
+groups:
+  - name: llm-routing-health
+    rules:
+      - alert: LLMHighBudgetRejections
+        expr: |
+          sum by (tenant, workspace) (rate(llm_budget_rejections_total[5m])) > 0.2
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High LLM budget rejections"
+          description: |
+            Budget rejections are above 0.2/min for tenant={{ $labels.tenant }}, workspace={{ $labels.workspace }}.
+            Investigate pricing caps, per-task limits, or prompt sizes.
+
+      - alert: LLMLatencyP95High
+        expr: |
+          histogram_quantile(0.95, sum by (le, tenant, workspace) (rate(llm_latency_ms_bucket[10m]))) > 2500
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "LLM latency p95 elevated"
+          description: |
+            p95 latency > 2.5s for tenant={{ $labels.tenant }}, workspace={{ $labels.workspace }}.
+            Check provider availability and model selection.
+
+      - alert: LLMLowCacheHitRate
+        expr: |
+          (sum by (tenant, workspace) (rate(llm_cache_hits_total[10m])))
+            /
+          (sum by (tenant, workspace) (rate(llm_model_selected_total[10m]))) < 0.05
+        for: 30m
+        labels:
+          severity: info
+        annotations:
+          summary: "LLM cache hit rate low"
+          description: |
+            Cache hit rate < 5% for tenant={{ $labels.tenant }}, workspace={{ $labels.workspace }}.
+            Consider normalizing prompts further or increasing TTL if appropriate.
+
+  - name: http-retries-health
+    rules:
+      - alert: HTTPRetriesExhausted
+        expr: |
+          sum by (tenant, workspace, method) (rate(http_retry_giveups_total[5m])) > 0
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "HTTP retries exhausted"
+          description: |
+            Retries exhausted for method={{ $labels.method }}; investigate upstream API health or increase RETRY_MAX_ATTEMPTS.
+

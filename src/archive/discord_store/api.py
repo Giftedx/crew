@@ -96,12 +96,10 @@ async def archive_endpoint(
     meta_dict = json.loads(meta or "{}")
     suffix = Path(file.filename or "").suffix
     with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
-        tmp.write(await file.read())
+        tmp.write(await file.read())  # type: ignore[attr-defined]
         tmp_path = Path(tmp.name)
     try:
-        record = await asyncio.to_thread(
-            archive_file, tmp_path, meta_dict, tenant=meta_dict.get("tenant")
-        )
+        record = await asyncio.to_thread(archive_file, tmp_path, meta_dict, tenant=meta_dict.get("tenant"))
     finally:
         if tmp_path.exists():
             tmp_path.unlink()
@@ -109,9 +107,7 @@ async def archive_endpoint(
 
 
 @api_router.get("/{content_hash}")
-async def rehydrate_endpoint(
-    content_hash: str, x_api_token: str | None = Header(None, alias="X-API-TOKEN")
-):
+async def rehydrate_endpoint(content_hash: str, x_api_token: str | None = Header(None, alias="X-API-TOKEN")):
     _auth(x_api_token)
     rec = manifest.lookup(content_hash)
     if not rec:

@@ -87,8 +87,9 @@ class LearningEngine(_CoreLearningEngine):  # pragma: no cover - thin wrapper
         global _DEPRECATION_LOG_EMITTED  # noqa: PLW0603 - single global gate for log emission
         if not _DEPRECATION_LOG_EMITTED:
             logging.getLogger("deprecations").info(
-                "{event}"
-                .replace("{event}", "{"  # simple brace escape for f-string avoidance
+                "{event}".replace(
+                    "{event}",
+                    "{",  # simple brace escape for f-string avoidance
                 )
             )
             logging.getLogger("deprecations").info(
@@ -167,9 +168,7 @@ class LearningEngine(_CoreLearningEngine):  # pragma: no cover - thin wrapper
         policy = self.registry.get(policy_id)
         if candidates is None:
             # Derive candidate set from known q_values/ counts (arms seen so far)
-            cand: list[str] = list(getattr(policy, "q_values", {}).keys()) or list(
-                getattr(policy, "counts", {}).keys()
-            )
+            cand: list[str] = list(getattr(policy, "q_values", {}).keys()) or list(getattr(policy, "counts", {}).keys())
         else:
             cand = list(candidates)
         choice = super().recommend(policy_id, {}, cand)

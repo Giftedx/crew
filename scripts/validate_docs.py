@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
-"""Documentation validation script to check links and file references."""
+"""Documentation validation script to check links and file references.
 
+Optional: pass --fail-imports to treat import issues as failures.
+"""
+
+import argparse
 import re
 import sys
 from pathlib import Path
@@ -37,9 +41,7 @@ def check_import_statements(doc_content):
 
     for code_block in code_blocks:
         import_lines = [
-            line.strip()
-            for line in code_block.split("\n")
-            if line.strip().startswith(("import ", "from "))
+            line.strip() for line in code_block.split("\n") if line.strip().startswith(("import ", "from "))
         ]
         # PERF401: build transformed list and extend once instead of appending inside a loop
         issues.extend(
@@ -51,8 +53,11 @@ def check_import_statements(doc_content):
     return issues
 
 
-def validate_documentation():
-    """Main validation function."""
+def validate_documentation(fail_imports: bool = False):
+    """Main validation function.
+
+    If ``fail_imports`` is True, import issues are included in the failure count.
+    """
     docs_dir = Path("/home/crew/docs")
     total_issues = []
 
@@ -76,6 +81,8 @@ def validate_documentation():
             print(f"  Import issues in {doc_file.name}:")
             for issue in import_issues:
                 print(f"    ⚠️  {issue}")
+            if fail_imports:
+                total_issues.extend((doc_file.name, i) for i in import_issues)
 
         if not file_issues and not import_issues:
             print("  ✅ No issues found")
@@ -85,5 +92,8 @@ def validate_documentation():
 
 
 if __name__ == "__main__":
-    success = validate_documentation()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--fail-imports", action="store_true", help="Fail if import issues are detected")
+    args = parser.parse_args()
+    success = validate_documentation(fail_imports=args.fail_imports)
     sys.exit(0 if success else 1)

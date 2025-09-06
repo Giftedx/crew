@@ -1,56 +1,48 @@
-### GitHub Copilot / AI Agent Instructions
+## 🤖 Copilot Instructions (Project-Specific, ~50 lines)
+Goal: Enable fast, correct edits. Reuse existing abstractions; do not invent new layers unless explicitly requested.
 
-Goal: Precise, safe edits to a multi‑tenant Discord ingestion + grounding + RL routing platform. Keep work tenant‑scoped, config‑driven, observable, and cheap.
+### 1. Architecture (mental model)
+Ingestion (multi‑platform download dispatcher) → optional Drive upload → Whisper transcription → light analysis (sentiment / fallacy / claims / perspectives) → memory (Qdrant or in‑mem) → grounded answer / Discord output. Crew/agent orchestration: `src/ultimate_discord_intelligence_bot/crew.py` (+ any `config/agents|tasks*.yaml`). Pipeline tools live under `.../tools/` and return `StepResult`.
 
-Architecture & Layout: Domain packages under `src/` (`ingest/`, `analysis/`, `grounding/`, `memory/`, `policy/`, `security/`, `scheduler/`, `archive/`, `debate/`, `obs/`). Shared infra/services/agents/tools in `src/ultimate_discord_intelligence_bot/`. Core async pipeline: URL -> `multi_platform_download_tool` -> typed downloader (yt‑dlp, optional `quality`) -> `audio_transcription_tool` -> analysis (sentiment/claims/fallacies) -> grounding (citations) -> Discord post / alerts. Each stage returns `StepResult`.
+### 2. Core Directories (where things live)
+`core/` flags, http retry, learning & routing helpers
+`memory/` vector + namespace isolation (`tenant:workspace`)
+`obs/` tracing + metrics; init once per entrypoint
+`scheduler/` job types & handlers (deterministic job key)
+`security/`, `policy/` moderation + governance
+`analysis/`, `grounding/`, `debate/`, `kg/`, `eval/` advanced reasoning subsystems
 
-Tenancy: Always pass `(tenant, workspace)` or wrap with `with_tenant(TenantContext(...))`. Vector namespaces via `VectorStore.namespace(t, w, source)`. Never mix tenants in memory, cache, traces, or metrics labels.
+### 3. Tool & Result Pattern
+Every external/system step should yield `StepResult.ok|fail|skip`; avoid raising for recoverable issues (bad URL, empty index). Legacy dict → wrap via `StepResult.from_dict`. Consistent shapes: vector search = list of `{text, score}` (no wrapper); monitoring tools often `StepResult.ok(matches=[...])`. Treat unknown / unexpected exceptions as real failures (let them raise after metrics increment).
 
-Tools & Agents: New tool? ONLY if: (a) external system not covered, (b) materially different side‑effects, or (c) interface change would bloat existing class. Else extend. Place in `.../tools/`, add to `crew.py`, declare in `config/agents.yaml` + `config/tasks.yaml`, then `pytest -k agent_config_audit`.
+### 4. Tenancy & Isolation
+Always carry explicit `TenantContext` (`with_tenant`). Never mix tenant data; memory namespaces and metrics labels must exclude raw user text/high cardinality. New stateful code: add namespace parameter up‑front.
 
-Memory & RAG: Use `MemoryService` (Qdrant or in‑memory fallback). Reject blank queries, non‑positive limits. Grounded answers MUST append ordered numeric citations: `...[1][2]`. Use provided citation helper pattern (see tests) not ad‑hoc formats.
+### 5. Feature Flags & Deprecations
+Gate new behavior with `ENABLE_<AREA>_<FEATURE>` (default off). Prefer `ENABLE_HTTP_RETRY` (legacy `ENABLE_ANALYSIS_HTTP_RETRY` warns until 2025-12-31). Privacy filters use flexible casing (`enable_pii_detection` also accepted). On deprecation: emit `DeprecationWarning`, update README table, run `make docs` (regen badge & report).
 
-Model Routing & Cost: Only via `PromptEngine` + `OpenRouterService` + `TokenMeter` + `LLMCache`. Enforce `COST_MAX_PER_REQUEST` (else `StepResult(status="bad_request", error="cost_budget")`). After deterministic scoring: `LearningEngine.record(model=model, reward=score)`.
+### 6. Routing & RL (minimal rules)
+`PromptEngine.build` → candidate filter (cost, capability) → ε‑greedy choose via `LearningEngine` (requires both `ENABLE_RL_GLOBAL` and domain flag e.g. `ENABLE_RL_ROUTING`) → `OpenRouterService.call` (budget via `TokenMeter`) → reward 0–1 recorded (`record(model, reward, cached=bool, error_type=? )`). Failures = 0; cached still logged; negative only for policy violations (increment moderation metrics).
 
-Feature Flags: Guard all new areas with `ENABLE_<AREA>_<FEATURE>`. If disabled, return `StepResult(status="skipped")` early. Mirror patterns in `README.md` and `docs/configuration.md`.
+### 7. Scheduler & Profiles
+Jobs: add dataclass under `scheduler/jobs/` + handler under `scheduler/handlers/` + registry mapping update (search existing handler map). Job key must be deterministic (typically URL + bucket) to dedupe. Intended backpressure: drop lowest priority when max queue exceeded (preserve metric naming consistency if adding). `profiles.yaml` seeds creators; resolution utilities enrich ingestion payloads.
 
-Profiles & Collaboration: Resolve creator/show/staff via `profiles.yaml` helpers before persisting. Use existing store methods for cross‑profile links; do not introduce parallel schemas.
+### 8. Conventions / Determinism
+UTC only (`datetime.now(timezone.utc)`); normalise naive via `core.time.ensure_utc`. Deterministic seams: uppercase summariser outputs, injectable time providers. Guard heavy / slow paths with flags. Maintain `mypy_baseline.json` (never regress). Always use `core.http_utils` wrappers (`resilient_*` / `retrying_*`) not direct `requests.*`.
 
-Privacy / Policy / Security: Run content through policy + security filters before storage/posting. Reuse redaction utilities; do NOT invent new PII regexes. Respect rate limiting helpers.
+### 9. Observability
+One span per logical operation; increment metrics before returning. New counters/ histograms: define in central metrics module (avoid hot‑loop creation). Label sets: tenant/workspace + low‑cardinality fields (never raw text, IDs, or URLs). Emit deprecation structured log once per flag (see `core.http_utils`).
 
-Observability: Use `obs.tracing` context + `metrics` helpers; never `print`. If adding metric types, extend enums sparingly to control cardinality.
+### 10. Where to Add
+Ingestion: `ingest/sources/<platform>.py` + dispatcher update. Analysis: extend `analysis/` or focused tool under `tools/`. Crew tool: add under `tools/` + register in `crew.py`. Scheduler job: dataclass + handler + registry mapping + tests (dedupe, ordering). HTTP retry config override: add `retry.yaml` (tenant or global) with `max_attempts:` (no YAML lib required; simple parse).
 
-Error Handling: Recoverable issues return `StepResult(error=..., status="bad_request"|"retryable"|"partial")`. Raise only for programmer errors, then add/adjust a test. Missing citations or tenant context should surface explicit errors.
+### 11. Testing & Workflows
+Install: `pip install -e '.[dev]'` or `make ensure-venv`. Quality: `make format lint type`. Tests: `pytest -q` or `make test-fast` (focused subset). Eval: `make eval`. Deprecations/status/docs: `make docs`. Guards (fail fast): `make guards` (enforces dispatcher + HTTP wrapper usage). Run bot: `python -m ultimate_discord_intelligence_bot.setup_cli run discord`.
 
-Config First: New knobs go in `config/*.yaml` + docs. Avoid magic numbers; reference constants or config values. Update docs & run `make docs` when adding keys.
+### 12. Data & Storage Nuances
+Qdrant memory fallback: when `QDRANT_URL` unset, `:memory:` or `memory://*` or client missing → in‑memory stub (sufficient for unit tests; avoid benchmarking on it). Privacy filter: detection & redaction individually flag‑controlled (see `core/privacy/privacy_filter.py`). Cached GET: `cached_get` auto‑selects Redis vs in‑mem.
 
-Testing & Quality: Core: `pytest`. Golden eval: `python -m eval.runner datasets/golden/core/v1 baselines/golden/core/v1/summary.json`. Plugin testkit: `python -m ultimate_discord_intelligence_bot.plugins.testkit.cli --plugin <plugin>`. Keep tests deterministic (inject time/random providers). Use in‑memory Qdrant fallback (unset or `:memory:` `QDRANT_URL`) for unit tests only.
+### 13. Do / Avoid
+Do: thread tenant, use `StepResult`, gate features, reuse retry + cache helpers, maintain deterministic outputs, surface structured deprecation logs. Avoid: ad‑hoc HTTP retries, direct `requests.*`, global implicit tenant, naive time, bespoke vector schemas, heavy imports in hot paths, raising for expected miss/empty conditions.
 
-Performance & Determinism: Use controlled concurrency (e.g. parallel Drive upload + transcription) without changing downstream order. Always timezone‑aware UTC helpers; avoid `utcnow()`. Keep ordering/case stable for asserted values.
-
-Anti‑Patterns: Raw model calls, unguarded subsystems (no feature flag), tenancy leakage, duplicated download logic, silent exception swallowing, global mutable singletons, ad‑hoc prints, broad `Any` types, missing citations, naive UTC handling (`utcnow()`), adding new schema/dir without justification.
-
-Commit & PR Style: Conventional Commits; focused diffs (logic vs typing vs docs). Do not rewrite history. Update progress / docs when adding features.
-
-Quick Snippets:
-```python
-class MyTool:  # src/ultimate_discord_intelligence_bot/tools/my_tool.py
-    name = "my_tool"
-    def run(self, url: str) -> StepResult:
-        if not url.startswith("https://"):
-            return StepResult(error="invalid_url", status="bad_request")
-        # ... logic ...
-        return StepResult(data={"ok": True})
-```
-Flag guard: `if not os.getenv("ENABLE_ANALYSIS_MY_FEATURE"): return StepResult(status="skipped")`
-Citation append: `answer + " " + "".join(f"[{i+1}]" for i,_ in enumerate(docs))`
-RL reward (after deterministic score):
-```python
-score = score_answer(prediction, ref)  # pure function -> float
-LearningEngine.record(model=chosen_model, reward=score)
-```
-Timezone / typing audit (spot issues): `grep -R "utcnow(" -n src || true`; add precise types instead of widening to `Any`.
-
-Troubleshooting Ladder: (1) Feature flag off? (2) Tenant context missing/mismatch? (3) Empty vector namespace? (4) Missing `[n]` citations? (5) Agent/task config sync failing? (6) Cost over budget? (7) Cache key canonical? (8) Policy filter rejecting content?
-
-Extended references: `README.md`, `AGENTS.md`, `ARCHITECTURE.md`, `docs/agent_reference.md`, plus subsystem docs in `docs/*.md`. Only add new patterns here once enforced by tests or multiple usages.
+When unsure: search (`rg <keyword>`), mirror closest pattern, keep scope minimal, document flags. For deep dives see `README.md` + `docs/*.md`.

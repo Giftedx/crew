@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import sqlite3
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 
 @dataclass
@@ -154,9 +154,7 @@ class MemoryStore:
         return RetentionPolicy(**row) if row else None
 
     # ------------------------------------------------------------------ search
-    def search_keyword(
-        self, tenant: str, workspace: str, text: str, limit: int = 5
-    ) -> list[MemoryItem]:
+    def search_keyword(self, tenant: str, workspace: str, text: str, limit: int = 5) -> list[MemoryItem]:
         cur = self.conn.cursor()
         like = f"%{text}%"
         cur.execute(
@@ -172,7 +170,7 @@ class MemoryStore:
 
     # ------------------------------------------------------------------ pruning
     def prune(self, tenant: str, now: datetime | None = None) -> int:
-        now = now or datetime.now(timezone.utc)
+        now = now or datetime.now(UTC)
         cur = self.conn.cursor()
         cur.execute(
             "SELECT name, ttl_days FROM retention_policies WHERE tenant = ?",

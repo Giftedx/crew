@@ -6,9 +6,7 @@ from core.rl.policies.bandit_base import EpsilonGreedyBandit
 
 def test_rl_cache_domain():
     engine = LearningEngine()
-    engine.register_domain(
-        "cache", policy=EpsilonGreedyBandit(epsilon=0.0), priors={"bypass": 5.0, "use": 0.0}
-    )
+    engine.register_domain("cache", policy=EpsilonGreedyBandit(epsilon=0.0), priors={"bypass": 5.0, "use": 0.0})
 
     calls = {"n": 0}
 
@@ -37,8 +35,6 @@ def test_rl_cache_domain():
 def test_rl_safety_domain():
     engine = LearningEngine()
     engine.register_domain("safety", priors={"strict": 5.0})
-    text, report = privacy_filter.filter_text(
-        "email me at test@example.com", {"tenant": None}, learning=engine
-    )
+    text, report = privacy_filter.filter_text("email me at test@example.com", {"tenant": None}, learning=engine)
     assert "[redacted-email]" in text
     assert report.redacted_by_type.get("email") == 1

@@ -1,34 +1,10 @@
 from __future__ import annotations
-
 import os
-import time
 from collections.abc import Callable
-from dataclasses import dataclass, field
 from typing import Any, ParamSpec, TypeVar, cast
-
 from .. import flags
 from ..learning_engine import LearningEngine
-
-
-@dataclass
-class LLMCache:
-    """A tiny in-memory TTL cache for LLM outputs."""
-
-    ttl: int
-    store: dict[str, tuple[Any, float]] = field(default_factory=dict)
-
-    def get(self, key: str) -> Any | None:
-        item = self.store.get(key)
-        if not item:
-            return None
-        value, expires = item
-        if expires < time.time():
-            self.store.pop(key, None)
-            return None
-        return value
-
-    def set(self, key: str, value: Any) -> None:
-        self.store[key] = (value, time.time() + self.ttl)
+from .bounded_cache import create_llm_cache
 
 
 def make_key(parts: dict[str, Any]) -> str:
@@ -83,6 +59,14 @@ def memo_llm(
     return decorator
 
 
-llm_cache = LLMCache(ttl=int(os.getenv("CACHE_TTL_LLM", "3600")))
+# Use lazy import to avoid circular dependencies
+def _get_cache_ttl() -> int:
+    try:
+        from ..secure_config import get_config
+        return get_config().cache_ttl_llm
+    except ImportError:
+        return int(os.getenv("CACHE_TTL_LLM", "3600"))
 
-__all__ = ["LLMCache", "llm_cache", "memo_llm", "make_key"]
+llm_cache = create_llm_cache(ttl=_get_cache_ttl())
+
+__all__ = ["llm_cache", "memo_llm", "make_key"]

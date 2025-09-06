@@ -1,7 +1,7 @@
 # Plugin Capability Testing
 
 Plugins must prove their behaviour through a small suite of capability
-scenarios described in the `tests` block of `manifest.json`.  Each
+scenarios described in the `tests` block of `src/ultimate_discord_intelligence_bot/plugins/example_summarizer/manifest.json`.  Each
 scenario specifies minimal inputs and simple predicates that the plugin
 must satisfy when executed in a sandbox with stubbed service adapters.
 Supported expectation helpers include:

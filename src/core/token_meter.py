@@ -9,7 +9,6 @@ can reason about expenses.
 from __future__ import annotations
 
 import math
-import os
 from contextlib import contextmanager
 from dataclasses import dataclass
 
@@ -27,12 +26,28 @@ class BudgetError(RuntimeError):
     """Raised when a request would exceed the configured budget."""
 
 
+def _get_cost_settings() -> tuple[float, float]:
+    """Get cost settings with fallback to avoid circular imports."""
+    try:
+        from .secure_config import get_config
+
+        config = get_config()
+        return config.cost_max_per_request, config.cost_budget_daily
+    except ImportError:
+        return 1.0, 100.0  # Remove os.getenv fallback as config handles it
+
+
 @dataclass
 class BudgetManager:
-    """Tracks spend against simple in-memory budgets."""
+    """Tracks spend against simple in-memory budgets.
 
-    max_per_request: float = float(os.getenv("COST_MAX_PER_REQUEST", "1.0"))
-    daily_budget: float = float(os.getenv("COST_BUDGET_DAILY", "100.0"))
+    Values are injected by ``BudgetStore`` which already resolves global + per-tenant
+    overrides; we intentionally do NOT mutate them in ``__post_init__`` to avoid
+    clobbering tenant-specific configuration (previous behaviour caused tests to fail
+    because overrides were replaced with global defaults)."""
+
+    max_per_request: float = 1.0
+    daily_budget: float = 100.0
     spent_today: float = 0.0
 
     def preflight(self, cost_usd: float) -> None:
@@ -54,13 +69,34 @@ class BudgetStore:
         ctx = current_tenant() or TenantContext("default", "main")
         key = ctx.tenant_id
         if key not in self._budgets:
-            max_req = float(os.getenv("COST_MAX_PER_REQUEST", "1.0"))
-            daily = float(os.getenv("COST_BUDGET_DAILY", "100.0"))
+            max_req, daily = _get_cost_settings()
             if self.registry:
                 cfg = self.registry.get_budget_config(key)
                 if cfg:
-                    max_req = float(cfg.get("max_per_request", max_req))
-                    daily = float(cfg.get("daily_cap_usd", daily))
+                    # Backward-compatible flat keys
+                    if "max_per_request" in cfg:
+                        try:
+                            max_req = float(cfg.get("max_per_request", max_req))
+                        except Exception:
+                            pass
+                    if "daily_cap_usd" in cfg:
+                        try:
+                            daily = float(cfg.get("daily_cap_usd", daily))
+                        except Exception:
+                            pass
+                    # Optional nested schema: limits.{max_per_request,daily_limit}
+                    limits = cfg.get("limits") if isinstance(cfg, dict) else None
+                    if isinstance(limits, dict):
+                        if "max_per_request" in limits:
+                            try:
+                                max_req = float(limits.get("max_per_request", max_req))
+                            except Exception:
+                                pass
+                        if "daily_limit" in limits:
+                            try:
+                                daily = float(limits.get("daily_limit", daily))
+                            except Exception:
+                                pass
             self._budgets[key] = BudgetManager(max_per_request=max_req, daily_budget=daily)
         return self._budgets[key]
 

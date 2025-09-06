@@ -8,12 +8,19 @@ Design notes (typing):
             guarded imports.
 """
 
-import importlib
 import logging
+import os
 from collections import Counter
 from typing import TYPE_CHECKING, TypedDict
 
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
+from ultimate_discord_intelligence_bot.step_result import StepResult
+
 from ._base import BaseTool
+
+# Allow intentional runtime imports inside methods for optional dependencies
+# without triggering E402 (import at top of file) lint warnings.
+# ruff: noqa: E402
 
 if TYPE_CHECKING:  # pragma: no cover - hints only
     import nltk
@@ -24,6 +31,7 @@ else:  # lightweight runtime placeholders until loaded
     nltk = None  # type: ignore
     stopwords = None  # type: ignore
     SentimentIntensityAnalyzer = object  # type: ignore
+
     def word_tokenize(s: str) -> list[str]:  # type: ignore
         return []
 
@@ -35,7 +43,7 @@ class _SentimentResult(TypedDict, total=False):
     compound: float
 
 
-class TextAnalysisTool(BaseTool[dict[str, object]]):
+class TextAnalysisTool(BaseTool):
     name: str = "Text Analysis Tool"
     description: str = "Analyze text to extract sentiment, keywords, and topics."
 
@@ -43,27 +51,42 @@ class TextAnalysisTool(BaseTool[dict[str, object]]):
         super().__init__()
         self._load_runtime()
         if nltk is None or stopwords is None or SentimentIntensityAnalyzer is object:
-            raise RuntimeError("nltk is not installed; install 'nltk' extra to use this tool")
+            raise RuntimeError("NLTK dependency unavailable")
+        self._metrics = get_metrics()
+        self._nltk_available = True
         self._ensure_nltk_data()
-        self.sia = SentimentIntensityAnalyzer()
+        try:
+            self.sia = SentimentIntensityAnalyzer()
+        except Exception as exc:  # pragma: no cover - unexpected init failure
+            raise RuntimeError(f"Failed to initialize NLTK sentiment analyzer: {exc}")
 
     def _load_runtime(self) -> None:
         global nltk, stopwords, SentimentIntensityAnalyzer, word_tokenize  # noqa: PLW0603
         if nltk is not None:  # already loaded
             return
         try:  # pragma: no cover - import side effects
-            nltk = importlib.import_module("nltk")
-            stopwords = importlib.import_module("nltk.corpus").stopwords
-            sentiment_mod = importlib.import_module("nltk.sentiment")
-            SentimentIntensityAnalyzer = getattr(sentiment_mod, "SentimentIntensityAnalyzer")
-            word_tokenize = importlib.import_module("nltk.tokenize").word_tokenize
-        except Exception:
+            import nltk as _nltk
+            from nltk.corpus import stopwords as _stopwords
+            from nltk.sentiment.vader import SentimentIntensityAnalyzer as _SentimentIntensityAnalyzer
+            from nltk.tokenize import word_tokenize as _word_tokenize
+
+            nltk = _nltk
+            stopwords = _stopwords
+            SentimentIntensityAnalyzer = _SentimentIntensityAnalyzer
+            word_tokenize = _word_tokenize
+            print("✅ NLTK runtime components loaded successfully")
+        except Exception as e:
+            print(f"⚠️  NLTK import failed: {e}")
             nltk = None  # leave placeholders; __init__ will raise
 
     def _ensure_nltk_data(self) -> None:  # pragma: no cover - setup helper
+        if os.getenv("NLTK_OFFLINE"):
+            logging.info("NLTK_OFFLINE set - skipping NLTK data downloads")
+            return
         resources = [
             ("sentiment/vader_lexicon", "vader_lexicon"),
             ("tokenizers/punkt", "punkt"),
+            ("tokenizers/punkt_tab", "punkt_tab"),
             ("corpora/stopwords", "stopwords"),
         ]
         for path, name in resources:
@@ -77,21 +100,87 @@ class TextAnalysisTool(BaseTool[dict[str, object]]):
                 except Exception as exc:  # pragma: no cover
                     logging.warning("Failed to download %s: %s", name, exc)
 
-    def _run(self, text: str) -> dict[str, object]:
-        """Analyze a piece of text."""
-        try:
-            sentiment = self.get_sentiment(text)
+    def _run(self, text: str) -> StepResult:
+        # (nltk availability enforced in __init__; no degraded path)
+        try:  # full analysis path (or degraded neutral path)
+            # Import moved to top-level could be considered; kept local to avoid heavy import in cold paths
+            from ultimate_discord_intelligence_bot.models.structured_responses import (
+                AnalysisStatus,
+                SentimentScore,
+                TextAnalysisResult,
+            )
+
+            sentiment_data = self.get_sentiment(text)
             keywords = self.get_keywords(text)
+            word_count = len(word_tokenize(text)) if word_tokenize and text else 0
+            compound = sentiment_data.get("compound", 0.0)
+            pos_threshold = 0.05
+            neg_threshold = -0.05
+            if compound >= pos_threshold:
+                sentiment_label = "positive"
+                sentiment_score = compound
+            elif compound <= neg_threshold:
+                sentiment_label = "negative"
+                sentiment_score = abs(compound)
+            else:
+                sentiment_label = "neutral"
+                sentiment_score = abs(compound)
+            structured_sentiment = SentimentScore(label=sentiment_label, score=min(1.0, sentiment_score))
+            readability = self._calculate_readability_score(text)
+            result = TextAnalysisResult(
+                status=AnalysisStatus.SUCCESS,
+                sentiment=structured_sentiment,
+                key_phrases=keywords[:10],
+                word_count=word_count,
+                language_detected="en",
+                readability_score=readability,
+            )
+            data = result.model_dump()
+            try:
+                self._metrics.counter("tool_runs_total", labels={"tool": "text_analysis", "outcome": "success"}).inc()
+            except Exception as exc:  # pragma: no cover - metrics failure shouldn't break tool
+                logging.debug("metrics increment failed: %s", exc)
+            return StepResult.ok(data=data)
+        except Exception as e:  # broad to ensure tool robustness
+            try:
+                self._metrics.counter("tool_runs_total", labels={"tool": "text_analysis", "outcome": "error"}).inc()
+            except Exception as exc:  # pragma: no cover
+                logging.debug("metrics increment failed (error path): %s", exc)
+            return StepResult.fail(error=str(e), data={"sentiment": {"label": "neutral", "score": 0.0}})
 
-            return {"status": "success", "sentiment": sentiment, "keywords": keywords}
-
-        except Exception as e:
-            return {"status": "error", "error": str(e)}
+    def _calculate_readability_score(self, text: str) -> float | None:
+        try:
+            if not text.strip():
+                return None
+            sentence_count = max(1, text.count(".") + text.count("!") + text.count("?"))
+            words = word_tokenize(text) if word_tokenize else text.split()
+            word_count = len(words)
+            if word_count == 0:
+                return None
+            syllable_count = 0
+            for word in words:
+                vowels = "aeiouyAEIOUY"
+                word_syllables = 0
+                prev_was_vowel = False
+                for char in word:
+                    if char in vowels:
+                        if not prev_was_vowel:
+                            word_syllables += 1
+                        prev_was_vowel = True
+                    else:
+                        prev_was_vowel = False
+                syllable_count += max(1, word_syllables)
+            avg_sentence_length = word_count / sentence_count
+            avg_syllables_per_word = syllable_count / word_count
+            score = 206.835 - (1.015 * avg_sentence_length) - (84.6 * avg_syllables_per_word)
+            return max(0.0, min(100.0, score))
+        except Exception:
+            return None
 
     def get_sentiment(self, text: str) -> _SentimentResult:
-        """Get the sentiment of a piece of text."""
+        if self.sia is None:
+            return {"neg": 0.0, "neu": 1.0, "pos": 0.0, "compound": 0.0}
         raw = self.sia.polarity_scores(text)
-        # Assign using literal keys to satisfy TypedDict literal-required constraint
         result: _SentimentResult = {}
         if "neg" in raw:
             result["neg"] = float(raw["neg"])
@@ -104,16 +193,17 @@ class TextAnalysisTool(BaseTool[dict[str, object]]):
         return result
 
     def get_keywords(self, text: str, num_keywords: int = 10) -> list[str]:
-        """Get the most common keywords from a piece of text."""
-        stop_words = set(stopwords.words("english"))
-        words = word_tokenize(text.lower())
+        try:
+            stop_words = set(stopwords.words("english")) if stopwords else set()
+        except Exception:
+            stop_words = {"the", "a", "and", "or", "is", "to", "of", "in"}
+        try:
+            words = word_tokenize(text.lower()) if word_tokenize else text.lower().split()
+        except Exception:
+            words = text.lower().split()
         words = [word for word in words if word.isalpha() and word not in stop_words]
-
         word_counts = Counter(words)
-        keywords = [word for word, count in word_counts.most_common(num_keywords)]
+        return [word for word, _ in word_counts.most_common(num_keywords)]
 
-        return keywords
-
-    # Provide explicit run method for pipeline usage
-    def run(self, text: str) -> dict[str, object]:  # pragma: no cover - thin wrapper
+    def run(self, text: str) -> StepResult:  # pragma: no cover - thin wrapper
         return self._run(text)

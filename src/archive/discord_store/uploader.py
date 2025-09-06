@@ -18,9 +18,10 @@ import aiohttp
 
 try:  # optional dependency
     import discord
+
     _DISCORD_AVAILABLE = True
 except Exception:  # pragma: no cover
-    discord = None  # type: ignore
+    discord = None
     _DISCORD_AVAILABLE = False
 
 
@@ -47,6 +48,7 @@ def _make_file(path: Path) -> Any:
             return file_ctor(path)
     return path  # fallback sentinel
 
+
 class _OneShotClient:
     """Composition wrapper around discord.Client (when available)."""
 
@@ -61,12 +63,14 @@ class _OneShotClient:
             client_cls = getattr(discord, "Client", None)
             if client_cls is not None:
                 self._client = client_cls(intents=intents_val)
+
                 # register event handler dynamically
                 async def on_ready():  # pragma: no cover - network dependent
                     channel = await self._client.fetch_channel(self._channel_id)
                     msg = await channel.send(file=_make_file(self._path))
                     self._future.set_result(cast(_MessageLike, msg))
                     await self._client.close()
+
                 setattr(self._client, "on_ready", on_ready)
 
     async def start(self, token: str) -> None:  # pragma: no cover - network

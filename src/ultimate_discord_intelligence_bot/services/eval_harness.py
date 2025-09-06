@@ -137,9 +137,7 @@ def compare_to_baseline(result: EvalResult, key: str, tolerances: dict[str, floa
     base = baseline[key]
     quality_ok = result.aggregates["quality"] >= base["quality"] - tolerances.get("quality", 0.0)
     cost_ok = result.aggregates["cost_usd"] <= base["cost_usd"] + tolerances.get("cost_usd", 0.0)
-    latency_ok = (
-        result.aggregates["latency_ms"] <= base["latency_ms"] + tolerances.get("latency_ms", 0.0)
-    )
+    latency_ok = result.aggregates["latency_ms"] <= base["latency_ms"] + tolerances.get("latency_ms", 0.0)
     return bool(quality_ok and cost_ok and latency_ok)
 
 

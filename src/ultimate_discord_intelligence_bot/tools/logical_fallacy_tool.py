@@ -7,6 +7,9 @@ recognition for common logical fallacies in debates and arguments.
 import re
 from typing import ClassVar
 
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
+from ultimate_discord_intelligence_bot.step_result import StepResult
+
 from ._base import BaseTool
 
 # ---------------------------------------------------------------------------
@@ -20,17 +23,32 @@ HASTY_GENERALIZATION_CONFIDENCE = 0.6
 APPEAL_TO_EMOTION_CONFIDENCE = 0.5
 
 
-class LogicalFallacyTool(BaseTool[dict[str, object]]):
+class LogicalFallacyTool(BaseTool[StepResult]):
     name: str = "Logical Fallacy Detector"
-    description: str = (
-        "Identify logical fallacies in statements using pattern matching and linguistic analysis"
-    )
+    description: str = "Identify logical fallacies in statements using pattern matching and linguistic analysis"
 
     # Basic keyword-based fallacies
     KEYWORD_FALLACIES: ClassVar[dict[str, list[str]]] = {
-        "ad hominem": ["ad hominem", "attack the person", "personal attack"],
-        "appeal to authority": ["because i said so", "trust me", "i'm an expert"],
-        "bandwagon": ["everyone knows", "everybody does it", "most people", "popular opinion"],
+        "ad hominem": [
+            "you're stupid",
+            "you're an idiot",
+            "you're wrong because you're",
+            "shut up",
+            "you don't know",
+            "personal attack",
+            "attack the person",
+        ],
+        "appeal to authority": ["because i said so", "trust me", "i'm an expert", "authorities say"],
+        "bandwagon": [
+            "everyone knows",
+            "everybody does it",
+            "most people",
+            "popular opinion",
+            "everyone believes",
+            "everybody thinks",
+            "everyone says",
+            "most believe",
+        ],
         "red herring": ["red herring", "that's not the point", "changing the subject"],
         "straw man": ["straw man", "that's not what i said", "misrepresenting"],
     }
@@ -44,6 +62,8 @@ class LogicalFallacyTool(BaseTool[dict[str, object]]):
         "slippery slope": [
             r"\b(if\s+we\s+\w+.*then.*inevitably|this\s+will\s+lead\s+to|next\s+thing\s+you\s+know)\b",
             r"\b(opens?\s+the\s+floodgates?|slippery\s+slope|where\s+will\s+it\s+end)\b",
+            r"\b(if\s+we\s+allow.*world\s+will\s+end|if.*then.*everything\s+will)\b",
+            r"\b(this\s+leads?\s+to.*disaster|one\s+step\s+away\s+from)\b",
         ],
         "circular reasoning": [
             r"\b(because\s+it\s+is|it\'s\s+true\s+because|obviously\s+true)\b",
@@ -83,7 +103,11 @@ class LogicalFallacyTool(BaseTool[dict[str, object]]):
         ],
     }
 
-    def _run(self, text: str) -> dict[str, object]:  # noqa: PLR0912 - branch groups correspond to distinct heuristic families; splitting would reduce readability without simplifying logic
+    def __init__(self) -> None:  # pragma: no cover - trivial init
+        super().__init__()
+        self._metrics = get_metrics()
+
+    def _run(self, text: str) -> StepResult:  # noqa: PLR0912 - branch groups correspond to distinct heuristic families; splitting would reduce readability without simplifying logic
         # NOTE: Branch count is intentionally high due to sequential heuristic
         # pattern groups. Refactoring into many tiny helper methods would reduce
         # readability; kept as-is with clear section comments.
@@ -91,7 +115,15 @@ class LogicalFallacyTool(BaseTool[dict[str, object]]):
         confidence_scores = {}
 
         if not text or not text.strip():
-            return {"status": "success", "fallacies": [], "details": {}}
+            self._metrics.counter("tool_runs_total", labels={"tool": "logical_fallacy", "outcome": "skipped"}).inc()
+            return StepResult.ok(
+                skipped=True,
+                reason="empty text",
+                fallacies=[],
+                count=0,
+                confidence_scores={},
+                details={},
+            )
 
         text_lower = text.lower()
 
@@ -127,13 +159,15 @@ class LogicalFallacyTool(BaseTool[dict[str, object]]):
                 findings.append(fallacy)
                 confidence_scores[fallacy] = confidence
 
-        return {
-            "status": "success",
+        result_data = {
             "fallacies": findings,
             "count": len(findings),
             "confidence_scores": confidence_scores,
             "details": self._generate_explanations(findings),
         }
+        outcome = "success"
+        self._metrics.counter("tool_runs_total", labels={"tool": "logical_fallacy", "outcome": outcome}).inc()
+        return StepResult.ok(**result_data)
 
     def _check_heuristic_fallacies(self, text: str) -> list[tuple[str, float]]:
         """Check for fallacies using heuristic analysis."""
@@ -175,10 +209,7 @@ class LogicalFallacyTool(BaseTool[dict[str, object]]):
                 fallacies.append(("loaded question", LOADED_QUESTION_CONFIDENCE))
 
         # Check for false analogies
-        if any(
-            phrase in text_lower
-            for phrase in ["like comparing", "apples to oranges", "different as"]
-        ):
+        if any(phrase in text_lower for phrase in ["like comparing", "apples to oranges", "different as"]):
             fallacies.append(("false analogy", FALSE_ANALOGY_CONFIDENCE))
 
         return fallacies
@@ -205,9 +236,11 @@ class LogicalFallacyTool(BaseTool[dict[str, object]]):
             "false analogy": "Making comparisons between fundamentally different things",
         }
 
-        return {
-            fallacy: explanations.get(fallacy, "Logical fallacy detected") for fallacy in fallacies
-        }
+        return {fallacy: explanations.get(fallacy, "Logical fallacy detected") for fallacy in fallacies}
 
-    def run(self, text: str) -> dict[str, object]:
-        return self._run(text)
+    def run(self, text: str) -> StepResult:  # pragma: no cover - thin wrapper
+        try:
+            return self._run(text)
+        except Exception as exc:  # pragma: no cover - unexpected failure path
+            self._metrics.counter("tool_runs_total", labels={"tool": "logical_fallacy", "outcome": "error"}).inc()
+            return StepResult.fail(error=str(exc))

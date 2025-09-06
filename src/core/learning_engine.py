@@ -2,20 +2,31 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping, MutableMapping, Sequence
+from collections.abc import Mapping, Sequence
 from typing import Any, Protocol, cast, runtime_checkable
 
-from .rl.policies.bandit_base import EpsilonGreedyBandit
+from .error_handling import log_error
+from .rl.policies.bandit_base import EpsilonGreedyBandit, UCB1Bandit
+from .rl.policies.linucb import LinUCBDiagBandit
 from .rl.registry import PolicyRegistry
+
+try:
+    from .settings import get_settings
+except (ImportError, ModuleNotFoundError) as e:  # More specific exception types
+    # Log the import failure for debugging
+    log_error(e, message="Failed to import settings module, using fallback", context={"module": "core.settings"})
+
+    def get_settings():  # type: ignore
+        class _S:
+            rl_policy_model_selection = "epsilon_greedy"
+
+        return _S()
 
 
 @runtime_checkable
 class _BanditLike(Protocol):  # minimal protocol for bandit policies
     def recommend(self, context: dict[str, Any], candidates: Sequence[Any]) -> Any: ...
     def update(self, action: Any, reward: float, context: dict[str, Any]) -> None: ...
-    # Mutable state mappings (duck-typed). Implementations may use defaultdicts.
-    q_values: MutableMapping[Any, float]
-    counts: MutableMapping[Any, int]
 
 
 class LearningEngine:
@@ -24,12 +35,31 @@ class LearningEngine:
     def __init__(self, registry: PolicyRegistry | None = None) -> None:
         self.registry = registry or PolicyRegistry()
 
-    def register_domain(
-        self, name: str, policy: object | None = None, priors: dict[Any, float] | None = None
-    ) -> None:
+    def register_domain(self, name: str, policy: object | None = None, priors: dict[Any, float] | None = None) -> None:
         """Register ``policy`` under ``name`` and apply optional ``priors``."""
 
-        bandit = cast(_BanditLike, policy or EpsilonGreedyBandit())
+        if policy is None:
+            # Choose default policy from settings
+            try:
+                policy_name = getattr(get_settings(), "rl_policy_model_selection", "epsilon_greedy")
+            except (AttributeError, TypeError) as e:
+                # More specific exception handling for settings access
+                log_error(
+                    e,
+                    message="Failed to get policy selection from settings, using default",
+                    context={"default_policy": "epsilon_greedy"},
+                )
+                policy_name = "epsilon_greedy"
+            p = str(policy_name).lower().strip()
+            bandit: _BanditLike
+            if p == "linucb":
+                bandit = LinUCBDiagBandit()
+            elif p in ("ucb1", "ucb"):
+                bandit = UCB1Bandit()
+            else:
+                bandit = EpsilonGreedyBandit()
+        else:
+            bandit = cast(_BanditLike, policy)
         if priors and hasattr(bandit, "q_values"):
             for arm, q in priors.items():
                 bandit.q_values[arm] = q
@@ -45,10 +75,10 @@ class LearningEngine:
 
     # ------------------------------------------------------------------ cold-start
     def shadow_bakeoff(
-    self,
-    domain: str,
-    candidates: Sequence[Any],
-    trial_fn: Any,
+        self,
+        domain: str,
+        candidates: Sequence[Any],
+        trial_fn: Any,
     ) -> None:
         """Run a shadow bakeoff evaluating ``candidates`` without affecting live calls.
 

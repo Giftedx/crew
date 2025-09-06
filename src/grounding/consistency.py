@@ -25,9 +25,7 @@ def check(contract: AnswerContract) -> list[str]:
     contradictions.extend(text_contradictions)
 
     # Check if evidence contradicts the answer
-    answer_evidence_contradictions = _check_answer_evidence_alignment(
-        contract.answer_text, contract.citations
-    )
+    answer_evidence_contradictions = _check_answer_evidence_alignment(contract.answer_text, contract.citations)
     contradictions.extend(answer_evidence_contradictions)
 
     return contradictions
@@ -65,9 +63,7 @@ def _check_text_contradictions(statements: list[str]) -> list[str]:
     for i, stmt1 in enumerate(statements):
         for j, stmt2 in enumerate(statements[i + 1 :], i + 1):
             if _are_contradictory(stmt1, stmt2):
-                contradictions.append(
-                    f"Answer contains contradictory statements: '{stmt1}' contradicts '{stmt2}'"
-                )
+                contradictions.append(f"Answer contains contradictory statements: '{stmt1}' contradicts '{stmt2}'")
 
     return contradictions
 

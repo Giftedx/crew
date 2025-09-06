@@ -83,6 +83,7 @@ def test_retrying_post_actual_retry(monkeypatch):
     monkeypatch.setattr("core.http_utils.resilient_post", failing_post)
     # ensure real retry path used
     from core import http_utils as http_mod
+
     importlib.reload(http_mod)
     r = http_mod.retrying_post("https://example.com/x")
     assert isinstance(r, DummyResp)
@@ -105,6 +106,7 @@ def test_retrying_get_actual_retry(monkeypatch):
 
     monkeypatch.setattr("core.http_utils.resilient_get", failing_get)
     from core import http_utils as http_mod
+
     importlib.reload(http_mod)
     r = http_mod.retrying_get("https://example.com/y")
     assert isinstance(r, DummyResp)

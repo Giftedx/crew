@@ -17,7 +17,7 @@ All production deployments must include the complete observability stack configu
 ### Setup and Configuration
 Use [monitoring-setup.sh](mdc:monitoring-setup.sh) to automatically configure:
 ```bash
-./monitoring-setup.sh
+./ops/deployment/scripts/monitoring-setup.sh
 # Creates Prometheus config, Grafana dashboards, Loki configuration
 ```
 

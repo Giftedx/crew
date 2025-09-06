@@ -1,10 +1,11 @@
 ---
-globs: *.py
+globs: "*.py"
 description: "Python coding standards and conventions for the Ultimate Discord Intelligence Bot"
 ---
+
 # Python Coding Standards
 
-## Code Style Requirements
+## Code Style Requirements (ENFORCED)
 
 - **Target Python 3.10+** with modern language features
 - **Line length: 120 characters** (configured in [pyproject.toml](mdc:pyproject.toml))
@@ -18,10 +19,23 @@ description: "Python coding standards and conventions for the Ultimate Discord I
 Use ruff's isort integration for consistent import ordering:
 
 1. Standard library imports
-2. Third-party imports (crewai, discord, qdrant, etc.)
+2. Third-party imports (crewai, discord, qdrant, etc.)  
 3. Local application imports
 
-## Error Handling
+```python
+from __future__ import annotations
+
+import asyncio
+import logging
+from typing import Any
+
+from crewai import Agent, Task
+from qdrant_client import QdrantClient
+
+from ultimate_discord_intelligence_bot.step_result import StepResult
+```
+
+## Error Handling (MANDATORY)
 
 Always use the [StepResult](mdc:src/ultimate_discord_intelligence_bot/step_result.py) pattern for tool returns:
 
@@ -30,13 +44,37 @@ from ultimate_discord_intelligence_bot.step_result import StepResult
 
 def my_tool_function(input_data: str) -> StepResult:
     if not input_data:
-        return StepResult(error="missing_input", status="bad_request")
+        return StepResult.fail("missing_input")
     
     try:
         result = process_data(input_data)
-        return StepResult(data=result)
+        return StepResult.ok(data=result)
     except Exception as e:
-        return StepResult(error=str(e), status="retryable")
+        return StepResult.fail(str(e))
+```
+
+## Type Hints (REQUIRED)
+
+- Use `from __future__ import annotations` for forward references
+- Provide return type annotations for all functions
+- Use `TypedDict` or `dataclass` for structured data
+- Use `Generic[R_co]` for tool return types
+
+```python
+from __future__ import annotations
+
+from typing import TypedDict
+from dataclasses import dataclass
+
+class ToolResult(TypedDict):
+    status: str
+    data: dict[str, Any]
+
+@dataclass
+class ProcessedContent:
+    url: str
+    transcript: str
+    analysis: dict[str, Any]
 ```
 
 ## Async Patterns
@@ -52,6 +90,7 @@ def my_tool_function(input_data: str) -> StepResult:
 - Use pytest with async support
 - Mock external dependencies (APIs, databases)
 - Test both success and error paths
+- Follow patterns in [conftest.py](mdc:tests/conftest.py)
 
 ## Common Patterns
 
@@ -59,3 +98,17 @@ def my_tool_function(input_data: str) -> StepResult:
 - **Feature Flags**: Use `ENABLE_<AREA>_<FEATURE>` environment variables
 - **UTC Timestamps**: Always use timezone-aware UTC datetime objects
 - **Tenancy**: Thread `(tenant, workspace)` parameters for multi-tenant features
+
+## Quality Gates
+
+- **Ruff linting**: Must pass without new violations
+- **MyPy typing**: Cannot increase baseline error count (currently 120)
+- **Test coverage**: All new functions must have tests
+- **Documentation**: Complex functions require docstrings
+
+## Baseline Tracking
+
+The project uses incremental improvement:
+- MyPy baseline tracked in [mypy_baseline.json](mdc:mypy_baseline.json)
+- Only update baseline when error count decreases
+- Use `./scripts/dev.sh type-baseline-update` to update baseline

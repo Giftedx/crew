@@ -70,4 +70,4 @@ Tools are located in [src/ultimate_discord_intelligence_bot/tools/](mdc:src/ulti
 - Use clear, actionable goals
 - Provide rich backstory for better LLM performance
 - Test agent configurations with the audit suite
-- Update [AGENTS.md](mdc:AGENTS.md) progress tracker when adding new agents
+- Update [docs/agents/README.md](mdc:docs/agents/README.md) progress tracker when adding new agents

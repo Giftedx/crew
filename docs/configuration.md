@@ -4,13 +4,15 @@ This document provides comprehensive documentation for all configuration files a
 
 ## Configuration Structure
 
-```
+```bash
 config/                    # Global configuration
 ├── archive_routes.yaml    # Discord archiver routing  
 ├── grounding.yaml        # Citation requirements
 ├── ingest.yaml          # Content ingestion settings
 ├── policy.yaml          # Retention and governance policies
 ├── poller.yaml          # Scheduler and polling configuration
+├── retry.yaml           # HTTP retry/backoff policy (feature-flag controlled)
+├── deprecations.yaml    # Deprecated flags/surfaces and planned removal dates
 └── security.yaml        # Security controls and permissions
 
 tenants/                   # Tenant-specific overrides
@@ -57,11 +59,13 @@ moderation:
 ```
 
 **Supported Permissions:**
+
 - `security.view` - View security logs and metrics
 - `ingest.backfill` - Trigger content backfill operations
 - `*` - Wildcard for all permissions
 
 **Rate Limit Scopes:**
+
 - Per-user limits based on authentication
 - Per-IP limits for anonymous access  
 - Per-tenant global limits
@@ -123,11 +127,13 @@ chunk:
 ```
 
 **Platform Settings:**
+
 - Each platform can be individually enabled/disabled
 - Quality and extraction settings are handled by the download tools
 - Platform-specific settings like `max_duration` are configured at the tool level
 
 **Processing Settings:**
+
 - Chunking parameters control how content is split for vector storage
 - Overlap ensures context continuity between chunks
 
@@ -208,21 +214,25 @@ per_command:
 ```
 
 **PII Detection:**
+
 - Automatically detects and masks personally identifiable information
 - Uses semantic detection (e.g., `credit_like`, `gov_id_like`) rather than exact pattern matching
 - Configurable replacement text for each PII type
 
 **Source Control:**
+
 - Platform-specific allowlists for content ingestion
 - Empty arrays mean all sources from that platform are allowed
 - Forbidden file types prevent security risks from executable content
 
 **Consent Management:**
+
 - Controls what types of content processing are permitted
 - Granular permissions for quotes, thumbnails, embedding, and snippets
 - Can be overridden per tenant
 
 **Command Configuration:**
+
 - Per-command token limits and behavioral controls
 - Source citation requirements
 - Speculation prevention for factual accuracy
@@ -272,11 +282,13 @@ per_tenant_overrides: {}      # Tenant-specific channel mappings
 ```
 
 **Routing Logic:**
+
 - Content is routed by both type (images, videos, audio, docs, blobs) and visibility (public/private)
 - Each route specifies a Discord channel ID for archiving
 - Default settings apply retry behavior and chunking options
 
 **Channel Configuration:**
+
 - Channel IDs must be valid Discord channels accessible by the bot
 - Public/private distinction allows content access control
 - Tenant overrides enable per-tenant custom routing
@@ -360,7 +372,7 @@ Below are the primary variables (all optional unless noted):
 | `OTEL_EXPORTER_OTLP_HEADERS` | unset | Comma separated `key=value` headers for OTLP exporter. |
 | `OTEL_TRACES_SAMPLER` | unset | OpenTelemetry sampler name (e.g. `parentbased_traceidratio`). |
 | `OTEL_TRACES_SAMPLER_ARG` | unset | Sampler argument (e.g. ratio `0.1`). |
-| `QDRANT_URL` | `:memory:` | Qdrant endpoint or `:memory:` for ephemeral store. |
+| `QDRANT_URL` | `` (empty) | Qdrant endpoint; empty disables remote connection (explicit override required). |
 | `QDRANT_API_KEY` | unset | Qdrant API key (cloud / secured deployments). |
 | `QDRANT_PREFER_GRPC` | `0` | Prefer gRPC transport for performance. |
 | `QDRANT_GRPC_PORT` | unset | gRPC port if non-default. |
@@ -372,6 +384,48 @@ Below are the primary variables (all optional unless noted):
 | `RATE_LIMIT_BURST` | `20` | Burst allowance over the sustained rate. |
 | `ARCHIVE_API_TOKEN` | unset | Shared token for archive endpoints (if set, enforced). |
 | `DISCORD_BOT_TOKEN` | unset | Discord bot token required for archiver uploads. |
+
+### Qdrant Configuration Precedence
+
+Runtime resolution for Qdrant settings intentionally favors explicit environment overrides for
+deterministic behavior and testability.
+
+Order of precedence (highest first):
+
+1. `QDRANT_URL` / `QDRANT_API_KEY` environment variables (if set and non-empty)
+2. Secure config values (only when `CREW_ENABLE_SECURE_QDRANT_FALLBACK=1`)
+3. Empty string fallback (no implicit cloud endpoint)
+
+Optional secure fallback flag (opt-in):
+
+| Flag | Values | Effect |
+|------|--------|--------|
+| `CREW_ENABLE_SECURE_QDRANT_FALLBACK` | `1` / unset | When `1`, if `QDRANT_URL` env var is empty, attempt to load secure-config value. |
+
+#### In-Memory / Ephemeral Mode
+
+For unit tests and lightweight local experimentation, you can run without a real Qdrant instance.
+If `QDRANT_URL` is:
+
+- empty string (unset or cleared)
+- exactly `:memory:`
+- starts with `memory://`
+
+the vector store layer will (by design elsewhere in the codebase) provide an in-memory stub client.
+This preserves interface semantics (collections, upsert, simple queries) while avoiding network
+startup cost. Do not use this mode for benchmarking or persistence-sensitive workflows.
+
+This means clearing `QDRANT_URL` in a test (via `monkeypatch.delenv`) will yield an empty string
+after reloading the settings module, rather than repopulating from a `.env` file or secure config.
+
+To opt back into a secure-config provided default (e.g., in production), export:
+
+```bash
+export CREW_ENABLE_SECURE_QDRANT_FALLBACK=1
+```
+
+The `.env` file (if present) is loaded only once at process start; subsequent module reloads do
+not re-import it. This avoids deleted variables being silently restored during tests.
 
 Settings are accessible via:
 
@@ -557,9 +611,9 @@ ENABLE_VECTOR_SEARCH=true      # Vector similarity search
 ENABLE_GROUNDING=true          # Citation enforcement
 
 # Caching and performance
-ENABLE_CACHE=true              # Response caching
-ENABLE_CACHE_LLM=true         # LLM response caching
-ENABLE_CACHE_VECTOR=true      # Vector search caching
+ENABLE_CACHE_GLOBAL=true        # Global cache toggle across subsystems
+ENABLE_CACHE_TRANSCRIPT=true    # Transcript/analysis caching
+ENABLE_CACHE_VECTOR=true        # Vector search caching
 
 # Reinforcement learning
 ENABLE_RL_GLOBAL=true         # Global RL system
@@ -586,10 +640,10 @@ ENABLE_AUDIT_LOGGING=true     # Audit log collection
 ### Flag Hierarchies
 
 Feature flags follow a hierarchy:
+
 1. **Environment variables** (highest priority)
 2. **Tenant feature overrides** (medium priority)  
 3. **Global defaults** (lowest priority)
-
 
 ### Dynamic Feature Flags
 
@@ -687,8 +741,142 @@ ENABLE_PROFILING=false          # Performance profiling
 
 ## See Also
 
-- [Tenancy Documentation](tenancy.md) - Multi-tenant architecture
+- [Tenancy Documentation](docs/tenancy.md) - Multi-tenant architecture
 - [Security Documentation](security/) - Security model details  
-- [Observability Documentation](observability.md) - Monitoring and metrics
-- [Cost and Caching Documentation](cost_and_caching.md) - Budget management
-- [Runtime Data Artifacts](runtime_data.md) - Paths & env overrides for mutable state
+- [Observability Documentation](docs/observability.md) - Monitoring and metrics
+- [Cost and Caching Documentation](docs/cost_and_caching.md) - Budget management
+- [Runtime Data Artifacts](docs/runtime_data.md) - Paths & env overrides for mutable state
+
+### Retry Configuration
+
+**File:** `config/retry.yaml`
+
+Controls outbound HTTP retry attempts when `ENABLE_HTTP_RETRY` is active.
+
+**Simple Format:** The configuration parser supports a simple format with only the `max_attempts` setting:
+
+```yaml
+# HTTP retry and backoff policy configuration
+max_attempts: 3
+```
+
+**Precedence Order (highest to lowest):**
+
+1. Explicit call argument (sanity-checked range)
+2. This config file (key: `max_attempts`)
+3. Environment variable `RETRY_MAX_ATTEMPTS`  
+4. Library constant `DEFAULT_HTTP_RETRY_ATTEMPTS` (3)
+
+**Note:** Values must be integers in range [1, 20]. Invalid values fall back to the next precedence level.
+
+### Deprecations Registry
+
+**File:** `config/deprecations.yaml`
+
+Tracks deprecated flags/surfaces with a `remove_after` date to enable policy
+enforcement (see `docs/feature_flags.md` and repository deprecation scripts).
+
+## Deprecation Management Tools
+
+### Deprecation Dashboard
+
+**Script:** `scripts/deprecation_dashboard.py`
+
+Provides comprehensive visibility into the deprecation lifecycle, migration status,
+and timeline compliance across the codebase.
+
+#### Usage
+
+```bash
+# Generate console report (default)
+python scripts/deprecation_dashboard.py
+
+# Generate JSON report for CI/CD integration
+python scripts/deprecation_dashboard.py --format json
+
+# Generate HTML report
+python scripts/deprecation_dashboard.py --format html --output report.html
+```
+
+#### Features
+
+- **Health Score**: Overall deprecation health (0-100) based on violations and timeline compliance
+- **Migration Status**: Shows which deprecated features have automated migration scripts available
+- **Timeline Tracking**: Monitors days until removal deadlines
+- **Actionable Recommendations**: Clear next steps for addressing deprecation issues
+- **Multiple Output Formats**: Console, JSON, and HTML reports
+
+#### Example Output
+
+```text
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                        DEPRECATION DASHBOARD                              ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+Health Score: 🟢 100.0/100
+
+📊 Summary:
+   Total deprecated features: 2
+   Critical violations: 0
+   Upcoming deadlines: 2
+
+🔧 Migration Status:
+   ❌ ENABLE_ANALYSIS_HTTP_RETRY: Migrations pending
+   ❌ services.learning_engine.LearningEngine: Migrations pending
+
+💡 Recommendations:
+   ⚠️  2 deprecations due within 120 days
+   🔧 Run scripts/migrate_http_retry_flag.py to migrate ENABLE_ANALYSIS_HTTP_RETRY
+   🔧 Run scripts/migrate_learning_engine.py to migrate services.learning_engine.LearningEngine
+```
+
+#### Integration with CI/CD
+
+The dashboard can be integrated into CI/CD pipelines using the JSON output format:
+
+```bash
+# Fail CI if health score drops below threshold
+python scripts/deprecation_dashboard.py --format json > deprecation_report.json
+
+# Check health score in CI
+HEALTH_SCORE=$(jq '.health_score' deprecation_report.json)
+if (( $(echo "$HEALTH_SCORE < 80" | bc -l) )); then
+    echo "Deprecation health score too low: $HEALTH_SCORE"
+    exit 1
+fi
+```
+
+### Migration Scripts
+
+Automated migration tools are available for major deprecated features:
+
+- **`scripts/migrate_http_retry_flag.py`**: Migrates `ENABLE_ANALYSIS_HTTP_RETRY` → `ENABLE_HTTP_RETRY`
+- **`scripts/migrate_learning_engine.py`**: Migrates `services.learning_engine.LearningEngine` → `core.learning_engine.LearningEngine`
+
+#### Migration Script Usage
+
+```bash
+# Dry run to see what would be changed
+python scripts/migrate_http_retry_flag.py --dry-run --report-only
+
+# Apply migrations
+python scripts/migrate_http_retry_flag.py --apply
+```
+
+### Validation Scripts
+
+- **`scripts/check_deprecations.py`**: Scans for deprecated symbol usage and timeline violations
+- **`scripts/validate_deprecated_flags.py`**: Enforces deprecated flag usage policies
+
+#### Validation Usage
+
+```bash
+# Basic deprecation scan
+python scripts/check_deprecations.py
+
+# JSON output for automation
+python scripts/check_deprecations.py --json
+
+# Fail if deprecations due within 30 days
+python scripts/check_deprecations.py --fail-on-upcoming 30
+```

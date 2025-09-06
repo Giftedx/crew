@@ -1,138 +1,187 @@
 ---
-description: "Tool development patterns and standards for CrewAI tools in the Ultimate Discord Intelligence Bot"
+globs: "src/ultimate_discord_intelligence_bot/tools/*.py"
+description: "Tool development patterns and standards for CrewAI tools"
 ---
 
 # Tool Development Standards
 
-## Tool Structure Pattern
+## Tool Base Class (REQUIRED)
 
-All tools must follow the established pattern in [src/ultimate_discord_intelligence_bot/tools/](mdc:src/ultimate_discord_intelligence_bot/tools/):
+All tools must inherit from [BaseTool](mdc:src/ultimate_discord_intelligence_bot/tools/_base.py) with proper typing:
 
-### Base Tool Implementation
 ```python
-from crewai_tools import BaseTool
+from __future__ import annotations
+
+from typing import TypedDict
+from ultimate_discord_intelligence_bot.tools._base import BaseTool
+
+class MyToolResult(TypedDict, total=False):
+    status: str
+    data: dict[str, Any]
+    error: str
+
+class MyTool(BaseTool[MyToolResult]):
+    name: str = "My Tool"
+    description: str = "Tool description for CrewAI agents"
+    
+    def _run(self, input_param: str) -> MyToolResult:
+        # Implementation here
+        pass
+    
+    def run(self, input_param: str) -> MyToolResult:
+        return self._run(input_param)
+```
+
+## StepResult Integration (MANDATORY)
+
+Convert tool results to [StepResult](mdc:src/ultimate_discord_intelligence_bot/step_result.py) format:
+
+```python
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
-class MyTool(BaseTool):
-    name: str = "My Tool Name"
-    description: str = "Clear, actionable description of what the tool does"
+def _run(self, input_data: str) -> MyToolResult:
+    try:
+        if not input_data:
+            return {"status": "error", "error": "Input required"}
+        
+        result = process_input(input_data)
+        return {"status": "success", "data": result}
     
-    def _run(self, input_data: str) -> StepResult:
-        try:
-            # Tool logic here
-            result = process_input(input_data)
-            return StepResult(data=result)
-        except Exception as e:
-            return StepResult(error=str(e), status="retryable")
+    except Exception as e:
+        return {"status": "error", "error": str(e)}
 ```
-
-## StepResult Return Pattern
-
-**ALWAYS** use [StepResult](mdc:src/ultimate_discord_intelligence_bot/step_result.py) for consistent tool returns:
-
-### Success Response
-```python
-return StepResult(data=result)
-```
-
-### Error Responses
-```python
-# Bad request (don't retry)
-return StepResult(error="missing_input", status="bad_request")
-
-# Retryable error (can retry)
-return StepResult(error=str(e), status="retryable")
-
-# Rate limited (backoff and retry)
-return StepResult(error="rate_limited", status="rate_limited")
-```
-
-## Tool Categories and Organization
-
-### Content Analysis Tools
-- [LogicalFallacyTool](mdc:src/ultimate_discord_intelligence_bot/tools/logical_fallacy_tool.py) - Fallacy detection
-- [ClaimExtractorTool](mdc:src/ultimate_discord_intelligence_bot/tools/claim_extractor_tool.py) - Claim extraction
-- [TextAnalysisTool](mdc:src/ultimate_discord_intelligence_bot/tools/text_analysis_tool.py) - Text processing
-
-### Platform Integration Tools
-- [YouTubeDownloadTool](mdc:src/ultimate_discord_intelligence_bot/tools/yt_dlp_download_tool.py) - YouTube content
-- [TwitchDownloadTool](mdc:src/ultimate_discord_intelligence_bot/tools/yt_dlp_download_tool.py) - Twitch streams
-- [DiscordQATool](mdc:src/ultimate_discord_intelligence_bot/tools/discord_qa_tool.py) - Discord integration
-
-### Memory and Storage Tools
-- [VectorSearchTool](mdc:src/ultimate_discord_intelligence_bot/tools/vector_search_tool.py) - Semantic search
-- [MemoryStorageTool](mdc:src/ultimate_discord_intelligence_bot/tools/memory_storage_tool.py) - Data persistence
-- [TranscriptIndexTool](mdc:src/ultimate_discord_intelligence_bot/tools/transcript_index_tool.py) - Content indexing
 
 ## Tool Registration
 
-### Agent Tool Assignment
-Tools must be explicitly assigned to agents in [crew.py](mdc:src/ultimate_discord_intelligence_bot/crew.py):
+Tools must be explicitly registered to agents in [crew.py](mdc:src/ultimate_discord_intelligence_bot/crew.py):
+
 ```python
-@typed
 @agent
 def my_agent(self) -> Agent:
     return Agent(
         config=self.agents_config["my_agent"],
-        tools=[MyTool(), RelatedTool()],
+        tools=[MyTool(), OtherTool()],
     )
 ```
 
-### Tool Testing Requirements
-Every tool must have corresponding tests in [tests/](mdc:tests/):
+## Service Integration
+
+Use existing services rather than creating new ones:
+
 ```python
+from ultimate_discord_intelligence_bot.services.prompt_engine import PromptEngine
+from ultimate_discord_intelligence_bot.services.memory_service import MemoryService
+from ultimate_discord_intelligence_bot.services.openrouter_service import OpenRouterService
+
+class MyTool(BaseTool[MyToolResult]):
+    def __init__(self):
+        self.prompt_engine = PromptEngine()
+        self.memory = MemoryService()
+        self.llm_service = OpenRouterService()
+```
+
+## Error Handling Patterns
+
+Follow established error handling patterns:
+
+```python
+def _run(self, url: str) -> MyToolResult:
+    try:
+        # Validate inputs
+        if not url or not isinstance(url, str):
+            return {
+                "status": "error",
+                "error": "URL is required and must be a string",
+            }
+        
+        # Process with timeout
+        result = process_with_timeout(url)
+        
+        return {
+            "status": "success", 
+            "data": result,
+            "timestamp": time.time()
+        }
+        
+    except TimeoutError:
+        return {"status": "error", "error": "Operation timed out"}
+    except Exception as e:
+        logger.error(f"Tool execution failed: {e}")
+        return {"status": "error", "error": str(e)}
+```
+
+## Testing Requirements
+
+Every tool must have comprehensive tests in [tests/](mdc:tests/):
+
+```python
+# tests/test_my_tool.py
+from ultimate_discord_intelligence_bot.tools.my_tool import MyTool
+
 def test_my_tool_success():
     tool = MyTool()
-    result = tool._run("valid input")
-    assert result.status == "success"
-    assert result.data is not None
+    result = tool._run("valid_input")
+    assert result["status"] == "success"
+    assert "data" in result
 
 def test_my_tool_error_handling():
     tool = MyTool()
     result = tool._run("")
-    assert result.status == "bad_request"
-    assert "missing" in result.error
+    assert result["status"] == "error"
+    assert "error" in result
 ```
 
-## Network Operations in Tools
+## Documentation Requirements
 
-For tools making HTTP requests, use [core.http_utils](mdc:src/core/http_utils.py):
+Tools must be documented in [docs/tools_reference.md](mdc:docs/tools_reference.md):
+
+```markdown
+### My Tool
+**File:** `src/ultimate_discord_intelligence_bot/tools/my_tool.py`
+
+Description of what the tool does.
+
+**Features:**
+- Feature 1
+- Feature 2
+
+**Usage:**
 ```python
-from core.http_utils import resilient_post, resilient_get
-
-# Instead of raw requests
-response = resilient_get(url, timeout=30)
+tool = MyTool()
+result = tool._run("input")
 ```
 
-## Tool Documentation
+## Tool Categories
 
-### Docstring Requirements
+Follow existing categorization:
+- **Content Analysis**: Text processing, sentiment, fallacy detection
+- **Platform Integration**: Download tools, monitor tools  
+- **Memory & Storage**: Vector search, memory storage
+- **Discord Integration**: Posting, alerting, QA
+- **Fact Checking**: Verification, scoring, claim extraction
+
+## Async Considerations
+
+For async operations, use proper patterns:
+
 ```python
-def _run(self, input_data: str) -> StepResult:
-    """Process input data and return structured result.
-    
-    Args:
-        input_data: The data to process (specific format description)
-        
-    Returns:
-        StepResult with processed data or error information
-        
-    Raises:
-        No exceptions - all errors returned via StepResult
-    """
+import asyncio
+
+def _run(self, url: str) -> MyToolResult:
+    try:
+        result = asyncio.run(self._async_process(url))
+        return {"status": "success", "data": result}
+    except Exception as e:
+        return {"status": "error", "error": str(e)}
+
+async def _async_process(self, url: str) -> dict[str, Any]:
+    # Async implementation
+    pass
 ```
 
-### Tool Reference Documentation
-All tools must be documented in [docs/tools_reference.md](mdc:docs/tools_reference.md) with:
-- Purpose and functionality
-- Usage examples
-- Input/output formats
-- Error handling behavior
+## Reuse Existing Tools
 
-## Performance Guidelines
-
-- **Caching**: Implement caching for expensive operations
-- **Async Operations**: Use async/await for I/O bound operations  
-- **Batch Processing**: Support batch operations where applicable
-- **Timeout Handling**: Set reasonable timeouts for all network calls
-- **Memory Management**: Clean up resources in long-running tools
+Before creating new tools, check if existing tools can be extended:
+- [PipelineTool](mdc:src/ultimate_discord_intelligence_bot/tools/pipeline_tool.py) for content processing
+- [MultiPlatformDownloadTool](mdc:src/ultimate_discord_intelligence_bot/tools/multi_platform_download_tool.py) for downloads
+- [VectorSearchTool](mdc:src/ultimate_discord_intelligence_bot/tools/vector_search_tool.py) for memory queries

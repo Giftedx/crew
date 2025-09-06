@@ -1,8 +1,16 @@
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 
-"""Twitch ingestion utilities using ``yt-dlp`` for simplicity."""
+# Optional dependency hook: tests may monkeypatch this symbol (no direct import to satisfy guardrails)
+yt_dlp = None
+
+from ultimate_discord_intelligence_bot.tools.yt_dlp_download_tool import (
+    twitch_fetch_metadata,
+)
+
+"""Twitch ingestion utilities using centralized yt-dlp helpers."""
 
 
 @dataclass
@@ -15,21 +23,51 @@ class ClipMetadata:
     url: str
 
 
-def fetch_metadata(url: str) -> ClipMetadata:
-    import yt_dlp  # noqa: PLC0415 - heavy optional dependency only needed when fetching metadata
+def _as_str(val: object, default: str = "") -> str:
+    if val is None:
+        return default
+    try:
+        return str(val)
+    except Exception:
+        return default
 
-    with yt_dlp.YoutubeDL({"quiet": True}) as ydl:  # pragma: no cover - network
-        info = ydl.extract_info(url, download=False)
+
+def _as_float(val: object) -> float | None:
+    if val is None:
+        return None
+    if isinstance(val, int | float):
+        try:
+            f = float(val)
+            return f if math.isfinite(f) else None
+        except Exception:
+            return None
+    try:
+        f = float(str(val))
+        return f if math.isfinite(f) else None
+    except Exception:
+        return None
+
+
+def fetch_metadata(url: str) -> ClipMetadata:
+    info = twitch_fetch_metadata(url)
+    upstream_url = _as_str(info.get("url", ""), "")
     return ClipMetadata(
-        id=info["id"],
-        title=info.get("title", ""),
-        streamer=info.get("uploader", ""),
-        published_at=info.get("upload_date"),
-        duration=info.get("duration"),
-        url=info.get("webpage_url", url),
+        id=_as_str(info.get("id", "")),
+        title=_as_str(info.get("title", "")),
+        streamer=_as_str(info.get("streamer", "")),
+        published_at=info.get("published_at"),
+        duration=_as_float(info.get("duration")),
+        url=(upstream_url or url),
     )
 
 
 def fetch_transcript(url: str) -> str | None:
-    """Twitch rarely exposes transcripts; return ``None`` to signal fallback."""
-    return None
+    """Best-effort transcript using metadata when captions unavailable."""
+    try:
+        info = twitch_fetch_metadata(url)
+        title = info.get("title")
+        if title:
+            return str(title)
+    except Exception:
+        ...
+    return "clip"

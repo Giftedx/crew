@@ -1,0 +1,12 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'udi-api'
+    static_configs:
+      - targets: ['udi-api:8000']
+    metrics_path: /metrics
+
+  - job_name: 'qdrant'
+    static_configs:
+      - targets: ['qdrant:6333']

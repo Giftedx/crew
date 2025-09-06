@@ -37,9 +37,7 @@ class EvaluationHarness:
         callers / tests and avoids secondary validation layer.
         """
 
-        models_to_run = models or self.router.models_map.get(
-            task_type, self.router.models_map["general"]
-        )
+        models_to_run = models or self.router.models_map.get(task_type, self.router.models_map["general"])
         results: list[dict[str, Any]] = []
         for model in models_to_run:
             start = time.perf_counter()

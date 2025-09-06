@@ -6,6 +6,9 @@ import json
 from pathlib import Path
 from typing import Any, TypedDict
 
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
+from ultimate_discord_intelligence_bot.step_result import StepResult
+
 from .. import settings
 from ._base import BaseTool
 from .leaderboard_tool import LeaderboardTool
@@ -31,7 +34,7 @@ class _ProfileResult(TypedDict):
     trust: _ProfileTrustSection
 
 
-class CharacterProfileTool(BaseTool[dict[str, object]]):
+class CharacterProfileTool(BaseTool[StepResult]):
     """Store per-person events and summarise trust statistics."""
 
     name: str = "Character Profile Tool"
@@ -45,6 +48,7 @@ class CharacterProfileTool(BaseTool[dict[str, object]]):
         trust_tracker: TrustworthinessTrackerTool | None = None,
     ) -> None:
         super().__init__()
+        self._metrics = get_metrics()
         self.storage_path = storage_path or settings.BASE_DIR / "character_profiles.json"
         self.leaderboard = leaderboard or LeaderboardTool()
         self.trust_tracker = trust_tracker or TrustworthinessTrackerTool()
@@ -109,8 +113,17 @@ class CharacterProfileTool(BaseTool[dict[str, object]]):
             "trust": trust,
         }
 
-    def _run(self, person: str) -> dict[str, object]:
-        return {"status": "success", "profile": self.get_profile(person)}
+    def _run(self, person: str) -> StepResult:
+        if not person or not person.strip():
+            self._metrics.counter("tool_runs_total", labels={"tool": "character_profile", "outcome": "skipped"}).inc()
+            return StepResult.ok(skipped=True, reason="empty person")
+        profile = self.get_profile(person)
+        self._metrics.counter("tool_runs_total", labels={"tool": "character_profile", "outcome": "success"}).inc()
+        return StepResult.ok(data={"profile": profile})
 
-    def run(self, person: str) -> dict[str, object]:  # pragma: no cover - thin wrapper
-        return self._run(person)
+    def run(self, person: str) -> StepResult:  # pragma: no cover - thin wrapper
+        try:
+            return self._run(person)
+        except Exception as exc:  # pragma: no cover - unexpected
+            self._metrics.counter("tool_runs_total", labels={"tool": "character_profile", "outcome": "error"}).inc()
+            return StepResult.fail(error=str(exc))

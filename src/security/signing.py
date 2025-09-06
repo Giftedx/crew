@@ -27,9 +27,7 @@ _seen_nonces: OrderedDict[str, int] = OrderedDict()
 def _prune_nonces(now: int, tolerance: int) -> None:
     """Drop cached nonces that have aged past ``tolerance`` seconds or exceed
     the ``MAX_NONCES`` limit."""
-    while _seen_nonces and (
-        now - next(iter(_seen_nonces.values())) > tolerance or len(_seen_nonces) > MAX_NONCES
-    ):
+    while _seen_nonces and (now - next(iter(_seen_nonces.values())) > tolerance or len(_seen_nonces) > MAX_NONCES):
         _seen_nonces.popitem(last=False)
 
 

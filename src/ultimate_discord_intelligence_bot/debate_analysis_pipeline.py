@@ -137,11 +137,7 @@ class DebateAnalysisPipeline:
                 },
                 collection="analysis",
             )
-        summary = (
-            f"clip: {clip_text}\n"
-            f"context_verdict: {context.get('verdict')}"
-            f" fact_verdict: {fact.get('verdict')}"
-        )
+        summary = f"clip: {clip_text}\ncontext_verdict: {context.get('verdict')} fact_verdict: {fact.get('verdict')}"
         if self.ethan_defender is not None:
             ethan_blurb = str(self.ethan_defender(summary))
         else:

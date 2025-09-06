@@ -4,6 +4,9 @@ from __future__ import annotations
 
 from typing import TypedDict
 
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
+from ultimate_discord_intelligence_bot.step_result import StepResult
+
 from ._base import BaseTool
 from .transcript_index_tool import TranscriptIndexTool
 
@@ -15,7 +18,7 @@ class _ContextVerificationResult(TypedDict):
     notes: str
 
 
-class ContextVerificationTool(BaseTool[_ContextVerificationResult]):
+class ContextVerificationTool(BaseTool):
     """Check if provided clip text appears in transcript around a timestamp."""
 
     name: str = "Context Verification Tool"
@@ -26,33 +29,35 @@ class ContextVerificationTool(BaseTool[_ContextVerificationResult]):
     def __init__(self, index_tool: TranscriptIndexTool | None = None):
         super().__init__()
         self.index_tool = index_tool or TranscriptIndexTool()
+        self._metrics = get_metrics()
 
-    def _run(self, video_id: str, ts: float, clip_text: str | None = None) -> _ContextVerificationResult:
-        context = self.index_tool.get_context(video_id, ts)
-        if not context:
-            return {
-                "status": "success",
-                "verdict": "uncertain",
-                "context": "",
-                "notes": "no transcript indexed",
-            }
-        if clip_text and clip_text.strip() in context:
-            verdict = "in-context"
-            notes = "clip text matches context"
-        else:
-            verdict = "missing-context"
-            notes = "clip text not found near timestamp"
-        return {
-            "status": "success",
-            "verdict": verdict,
-            "context": context,
-            "notes": notes,
-        }
+    def _run(self, video_id: str, ts: float, clip_text: str | None = None) -> StepResult:
+        try:
+            context = self.index_tool.get_context(video_id, ts)
+            if not context:
+                # treat as skip (no indexed transcript yet)
+                self._metrics.counter(
+                    "tool_runs_total", labels={"tool": "context_verification", "outcome": "skipped"}
+                ).inc()
+                return StepResult.ok(skipped=True, verdict="uncertain", context="", notes="no transcript indexed")
+            if clip_text and clip_text.strip() in context:
+                verdict = "in-context"
+                notes = "clip text matches context"
+            else:
+                verdict = "missing-context"
+                notes = "clip text not found near timestamp"
+            self._metrics.counter(
+                "tool_runs_total", labels={"tool": "context_verification", "outcome": "success"}
+            ).inc()
+            return StepResult.ok(verdict=verdict, context=context, notes=notes)
+        except Exception as exc:  # pragma: no cover - defensive
+            self._metrics.counter("tool_runs_total", labels={"tool": "context_verification", "outcome": "error"}).inc()
+            return StepResult.fail(error=str(exc))
 
     def run(
         self,
         video_id: str,
         ts: float,
         clip_text: str | None = None,
-    ) -> _ContextVerificationResult:  # pragma: no cover - thin wrapper
+    ) -> StepResult:  # pragma: no cover - thin wrapper
         return self._run(video_id, ts, clip_text)

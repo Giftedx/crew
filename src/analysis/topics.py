@@ -299,9 +299,7 @@ def extract(text: str) -> TopicResult:
 
     # Extract keywords (filter stop words and short words)
     word_tokens = re.findall(r"\b[a-zA-Z]+\b", text_lower)
-    keywords = [
-        word for word in word_tokens if len(word) >= MIN_KEYWORD_LEN and word not in STOP_WORDS
-    ]
+    keywords = [word for word in word_tokens if len(word) >= MIN_KEYWORD_LEN and word not in STOP_WORDS]
 
     # Count keyword frequency and get top keywords
     keyword_counts = Counter(keywords)
@@ -326,9 +324,7 @@ def extract(text: str) -> TopicResult:
         if i < len(words) - 2:
             phrase = f"{words[i]} {words[i + 1]} {words[i + 2]}"
             if (
-                words[i] not in STOP_WORDS
-                and words[i + 2] not in STOP_WORDS
-                and len(phrase) > MIN_PHRASE_LEN
+                words[i] not in STOP_WORDS and words[i + 2] not in STOP_WORDS and len(phrase) > MIN_PHRASE_LEN
             ):  # Avoid very short phrases
                 phrases.append(phrase)
 

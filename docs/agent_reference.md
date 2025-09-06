@@ -2,16 +2,18 @@
 
 This file complements `.github/copilot-instructions.md` (kept lean for fast model ingestion). It expands on operational patterns that are *enforced by tests or code paths today*.
 
-## 1. Core Status Codes (`StepResult.status`)
-| Status | Meaning | Action |
-|--------|---------|--------|
-| `bad_request` | Caller/input/validation issue | Fix input, do not retry |
-| `retryable` | Transient external (timeout, 5xx) | Retry with backoff |
-| `partial` | Some sub‑steps succeeded | Emit metric; continue downstream |
-| `skipped` | Flag or precondition disabled | Safe no‑op |
+## 1. StepResult Semantics
+`StepResult` normalizes tool outcomes. It exposes:
+
+- `success`: boolean success flag
+- `data`: dict payload (tool-specific fields)
+- `error`: optional error string
+
+When converted to a dict (legacy callers), a `status` key is emitted as `"success"` or `"error"` for compatibility.
+Prefer `StepResult.ok(...)` / `StepResult.fail(err, ...)` in new code.
 
 ## 2. Config Knob Lifecycle
-1. Add key to relevant `config/*.yaml` (e.g. `config/ingest.yaml`).
+1. Add key to the appropriate config YAML (e.g., `config/ingest.yaml`).
 2. Load via existing loader (no bespoke parsers). Provide in‑code default.
 3. Document in `docs/configuration.md` (and subsystem doc if applicable).
 4. Add/adjust test covering both default & overridden behavior.
@@ -41,8 +43,8 @@ assert any(r.type == "collaborated_with" and r.b == "h3_podcast" for r in rels)
 ```
 
 ## 5. Discord CDN Archiver
-Location: `archive/` + SQLite manifest `archive_manifest.db`.
-Workflow: Input CDN URL -> size / policy validation -> optional compression -> dedupe via manifest (checksum) -> stored object metadata returned.
+Location: default `data/archive_manifest.db` (migrates from legacy root `archive_manifest.db` if present). Override with `ARCHIVE_DB_PATH`.
+Workflow: Input CDN URL -> size/policy validation -> optional compression -> dedupe via manifest (checksum) -> stored object metadata returned.
 Return shape must preserve stable keys: `id`, `original_url`, `stored_url`, `checksum`.
 
 ## 6. Observability & Metrics
@@ -66,7 +68,7 @@ rg "\[\d+\]" tests        # citation assertions
 ## 9. RL Reward Recording (Deterministic Pattern)
 ```python
 from prompt_engine import PromptEngine
-from ultimate_discord_intelligence_bot.services.learning import LearningEngine
+from core.learning_engine import LearningEngine
 prompt = PromptEngine().build("routing_eval", user_query)
 resp = router.route(prompt)
 

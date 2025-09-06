@@ -10,6 +10,9 @@ from __future__ import annotations
 
 from typing import TypedDict
 
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
+from ultimate_discord_intelligence_bot.step_result import StepResult
+
 from ._base import BaseTool
 from .vector_search_tool import VectorSearchTool
 
@@ -20,7 +23,7 @@ class _DiscordQAResult(TypedDict, total=False):
     error: str
 
 
-class DiscordQATool(BaseTool[_DiscordQAResult]):
+class DiscordQATool(BaseTool[StepResult]):
     """Expose simple question-answering over stored memory."""
 
     name: str = "Discord QA Tool"
@@ -32,16 +35,31 @@ class DiscordQATool(BaseTool[_DiscordQAResult]):
     def __init__(self, search_tool: VectorSearchTool | None = None) -> None:
         super().__init__()
         self.search = search_tool or VectorSearchTool()
+        self._metrics = get_metrics()
 
-    def _run(self, question: str, limit: int = 3) -> _DiscordQAResult:
+    def _run(self, question: str, limit: int = 3) -> StepResult:
+        if not question or not question.strip():
+            self._metrics.counter("tool_runs_total", labels={"tool": "discord_qa", "outcome": "skipped"}).inc()
+            return StepResult.ok(skipped=True, reason="empty question", data={"snippets": []})
         if self.search is None:  # pragma: no cover - defensive
-            return {"status": "error", "snippets": [], "error": "search tool not initialised"}
-        result = self.search.run(question, limit=limit)
-        # Error convention: list with single dict containing 'error'
-        if result and isinstance(result[0], dict) and "error" in result[0]:
-            return {"status": "error", "snippets": [], "error": str(result[0].get("error"))}
-        snippets = [str(h.get("text")) for h in result if isinstance(h, dict) and isinstance(h.get("text"), str)]
-        return {"status": "success", "snippets": snippets}
+            self._metrics.counter("tool_runs_total", labels={"tool": "discord_qa", "outcome": "error"}).inc()
+            return StepResult.fail(error="search tool not initialised")
+        search_res = self.search.run(question, limit=limit)
+        hits: list[dict[str, object]] = []
+        if isinstance(search_res, StepResult):
+            if not search_res.success:
+                self._metrics.counter("tool_runs_total", labels={"tool": "discord_qa", "outcome": "error"}).inc()
+                return StepResult.fail(error=search_res.error or "vector search failed")
+            hits = search_res.data.get("hits", []) or []
+        else:  # pragma: no cover - legacy path
+            hits = search_res  # type: ignore[assignment]
+        snippets = [str(h.get("text")) for h in hits if isinstance(h, dict) and isinstance(h.get("text"), str)]
+        self._metrics.counter("tool_runs_total", labels={"tool": "discord_qa", "outcome": "success"}).inc()
+        return StepResult.ok(data={"snippets": snippets})
 
-    def run(self, question: str, limit: int = 3) -> _DiscordQAResult:  # pragma: no cover - thin wrapper
-        return self._run(question, limit=limit)
+    def run(self, question: str, limit: int = 3) -> StepResult:  # pragma: no cover - thin wrapper
+        try:
+            return self._run(question, limit=limit)
+        except Exception as exc:  # pragma: no cover - unexpected
+            self._metrics.counter("tool_runs_total", labels={"tool": "discord_qa", "outcome": "error"}).inc()
+            return StepResult.fail(error=str(exc))

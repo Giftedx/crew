@@ -6,6 +6,7 @@ and testability.
 ## URL Validation
 
 Use `core.http_utils.validate_public_https_url(url)` to ensure:
+
 - HTTPS scheme is enforced.
 - Host is present.
 - If host is a literal IP it must be globally routable (rejects private / loopback / link-local).
@@ -15,11 +16,13 @@ Rationale: Prevent accidental posting to insecure or internal addresses.
 ## Resilient POST Requests
 
 `core.http_utils.resilient_post` wraps `requests.post` adding:
+
 - Standard timeout (`REQUEST_TIMEOUT_SECONDS`).
 - Optional fallback for legacy / monkeypatched test doubles that omit the
   `timeout` parameter (retries without it upon detecting a signature mismatch).
 
 Signature:
+
 ```python
 resilient_post(
     url: str,
@@ -41,6 +44,7 @@ like Discord CDN attachments. Pass `stream=True` and iterate over
 `response.iter_content(chunk_size=...)` to process data incrementally.
 
 Guidelines:
+
 - Prefer `resilient_get` over raw `requests.get` when you need a standard
   timeout or test‑friendly monkeypatch resilience.
 - For streaming downloads always specify an explicit `chunk_size` and guard
@@ -50,9 +54,9 @@ Guidelines:
 ## Retry & Backoff (Feature-Flagged)
 
 Use `http_request_with_retry` for transient failures (5xx, 429, selected network
-errors) by setting the environment variable `ENABLE_ANALYSIS_HTTP_RETRY=1`.
-The helper applies exponential backoff with light jitter, emits tracing spans
-(`http.retry_attempt`), and increments retry metrics counters when enabled.
+errors). Enable globally via `ENABLE_HTTP_RETRY=1`. The deprecated legacy flag
+`ENABLE_ANALYSIS_HTTP_RETRY` remains supported until 2025‑12‑31; the unified flag
+takes precedence when both are set.
 
 Example wrapping a GET:
 
@@ -72,9 +76,16 @@ resp = http_request_with_retry(
 When integrating into a higher-level service (e.g. model gateway) keep original helper usage so semantics remain identical when the flag is off:
 
 ```python
+from core.http_utils import (
+    REQUEST_TIMEOUT_SECONDS,
+    resilient_post,
+    http_request_with_retry,
+    is_retry_enabled,
+)
+
 url = "https://openrouter.ai/api/v1/chat/completions"
 headers = {"Authorization": f"Bearer {self.api_key}"}
-if os.getenv("ENABLE_ANALYSIS_HTTP_RETRY"):
+if is_retry_enabled():
     resp = http_request_with_retry(
         "POST",
         url,
@@ -95,7 +106,7 @@ else:
     )
 ```
 
-This preserves prior behavior while enabling retries + tracing + metrics when the env flag is enabled.
+This preserves prior behavior while enabling retries, tracing, and metrics when the flag is enabled.
 
 ## Tracing
 
@@ -104,17 +115,19 @@ This preserves prior behavior while enabling retries + tracing + metrics when th
 `http.retry_attempt` spans annotated with attempt counters and error metadata.
 If tracing is not initialized these spans are inexpensive no-ops.
 
-
 ## Tracing
 
 ## Constants
+
 Provided by `core.http_utils` for reuse (avoid scattering magic numbers):
+
 - `REQUEST_TIMEOUT_SECONDS` (default 15s)
 - `HTTP_SUCCESS_NO_CONTENT` (204)
 - `HTTP_RATE_LIMITED` (429)
 - `DEFAULT_RATE_LIMIT_RETRY` (60 seconds)
 
 ## Migration Guidelines
+
 - Replace ad hoc webhook URL validation with `validate_public_https_url`.
 - Replace direct `requests.post(..., timeout=...)` usages (especially with retry
   logic or fallback) with `resilient_post` where semantics match.
@@ -125,12 +138,14 @@ Provided by `core.http_utils` for reuse (avoid scattering magic numbers):
   behaviour beyond simple JSON/file POST, but still use the timeout constant.
 
 ## Testing Notes
+
 Tests that monkeypatch `requests.post` or `requests.get` with simplified
 signatures (e.g., omitting `timeout`, `params`) remain compatible: helpers
 retry with only the arguments supported by the provided callable upon detecting
 an unexpected keyword.
 
 ### Monkeypatch + Reload Preservation
+
 Some tests perform a module reload (`importlib.reload(core.http_utils)`) after
 monkeypatching `resilient_post` / `resilient_get`. The module now preserves any
 externally monkeypatched versions of these functions if they were replaced
@@ -140,6 +155,36 @@ after import—so this preservation shim can be removed in the future with a
 straightforward test refactor.
 
 ## Future Extensions
+
 Potential future additions:
+
 - Global circuit breaker integration.
 - Structured logging of request metadata for observability.
+
+## Compliance Exemption Pragmas
+
+In rare, test‑driven scenarios we intentionally allow a direct `requests.*` call
+to preserve a provenance string that the existing test suite asserts on.
+
+Use the inline marker:
+
+```python
+import requests  # http-compliance: allow-direct-requests (reason)
+```
+
+Rules:
+
+1. Provide a parenthetical reason (short, actionable, tied to a test or perf constraint).
+1. Only one exempt import per file; multiple exemptions warrant migrating to wrappers + updating tests.
+1. The HTTP compliance auditor (`core/http_compliance_audit.py`) skips any file containing the marker.
+1. Exemptions are temporary – prefer migrating tests to assert semantic behavior (status, metrics) instead of raw provenance strings.
+
+Current approved exemption(s):
+
+- `discord_download_tool.py` – small streaming GET where tests assert the `command` field starts with `requests.get`.
+
+Removal Process:
+
+1. Update tests to accept wrapper provenance (e.g., allow either `requests.get` or `resilient_get`).
+1. Remove the direct call and marker; switch to `resilient_get` / retry helper where appropriate.
+1. Run `make guards` (or the auditor script) to confirm zero direct usages remain.

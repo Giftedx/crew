@@ -73,9 +73,7 @@ def memory_stores():
 
 
 @pytest.mark.skip(reason="Requires Qdrant setup")
-def test_full_analysis_to_memory_pipeline(
-    sample_audio_file, memory_stores, mock_embedding_function
-):
+def test_full_analysis_to_memory_pipeline(sample_audio_file, memory_stores, mock_embedding_function):
     """Test complete pipeline from audio transcription to memory storage."""
     mstore, vstore = memory_stores
 
@@ -106,8 +104,7 @@ def test_full_analysis_to_memory_pipeline(
         tech_keywords = [
             k
             for k in all_keywords
-            if k.lower()
-            in ["artificial", "intelligence", "machine", "learning", "neural", "algorithms"]
+            if k.lower() in ["artificial", "intelligence", "machine", "learning", "neural", "algorithms"]
         ]
         assert len(tech_keywords) > 0
 
@@ -147,10 +144,7 @@ def test_full_analysis_to_memory_pipeline(
         ai_related = [
             hit
             for hit in hits
-            if any(
-                word in hit.text.lower()
-                for word in ["artificial", "intelligence", "machine", "learning"]
-            )
+            if any(word in hit.text.lower() for word in ["artificial", "intelligence", "machine", "learning"])
         ]
         assert len(ai_related) > 0
 
@@ -243,9 +237,7 @@ def test_transcript_chunking_with_topic_preservation():
         "data",
         "algorithms",
     ]
-    found_terms = [
-        term for term in tech_terms if any(term in keyword.lower() for keyword in all_keywords)
-    ]
+    found_terms = [term for term in tech_terms if any(term in keyword.lower() for keyword in all_keywords)]
 
     assert len(found_terms) >= 3  # Should find several technical terms
 
@@ -345,8 +337,7 @@ def test_content_pipeline_metadata_enrichment():
                 "topic_count": len(topics_result.topics),
                 "entity_count": len(topics_result.entities),
                 "has_tech_terms": any(
-                    term in content.lower()
-                    for term in ["ai", "neural", "data", "algorithm", "machine", "learning"]
+                    term in content.lower() for term in ["ai", "neural", "data", "algorithm", "machine", "learning"]
                 ),
                 "keywords": topics_result.keywords,
                 "topics": topics_result.topics,
@@ -459,8 +450,7 @@ def test_analysis_integration_with_different_content_types():
         {
             "type": "technical",
             "content": (
-                'import tensorflow as tf; model = tf.keras.Sequential('
-                '[tf.keras.layers.Dense(128, activation="relu")])'
+                'import tensorflow as tf; model = tf.keras.Sequential([tf.keras.layers.Dense(128, activation="relu")])'
             ),
             "expected_hashtags": 0,
             "expected_keywords": 5,
@@ -485,10 +475,8 @@ def test_analysis_integration_with_different_content_types():
             "keyword_count": len(topics_result.keywords),
             "topic_count": len(topics_result.topics),
             "entity_count": len(topics_result.entities),
-            "meets_hashtag_expectation": len(topics_result.hashtags)
-            >= content_info.get("expected_hashtags", 0),
-            "meets_keyword_expectation": len(topics_result.keywords)
-            >= content_info.get("expected_keywords", 0),
+            "meets_hashtag_expectation": len(topics_result.hashtags) >= content_info.get("expected_hashtags", 0),
+            "meets_keyword_expectation": len(topics_result.keywords) >= content_info.get("expected_keywords", 0),
         }
 
         results.append(result)
@@ -507,9 +495,7 @@ def test_analysis_integration_with_different_content_types():
     assert conversational["keyword_count"] > 0  # Should extract question terms
 
     # Overall verification
-    all(
-        r["meets_hashtag_expectation"] and r["meets_keyword_expectation"] for r in results
-    )
+    all(r["meets_hashtag_expectation"] and r["meets_keyword_expectation"] for r in results)
     # Note: This might not always pass due to implementation specifics, so we check for reasonable performance
 
     successful_count = sum(1 for r in results if r["keyword_count"] > 0)

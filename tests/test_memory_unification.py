@@ -7,9 +7,7 @@ def test_store_retrieve_and_prune(monkeypatch, tmp_path):
     vstore = vector_store.VectorStore()
     mstore.upsert_policy(RetentionPolicy(name="short", tenant="t", ttl_days=0))
 
-    item_id = api.store(
-        mstore, vstore, tenant="t", workspace="w", text="hello world", policy="short"
-    )
+    item_id = api.store(mstore, vstore, tenant="t", workspace="w", text="hello world", policy="short")
 
     hits = api.retrieve(mstore, vstore, tenant="t", workspace="w", query="hello")
     assert any(h.id == item_id for h in hits)

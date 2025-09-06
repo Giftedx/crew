@@ -15,9 +15,7 @@ def test_character_profile_tool(tmp_path: Path) -> None:
     profile_path = tmp_path / "profiles.json"
     leaderboard = LeaderboardTool(storage_path=leaderboard_path)
     trust = TrustworthinessTrackerTool(storage_path=trust_path)
-    tool = CharacterProfileTool(
-        storage_path=profile_path, leaderboard=leaderboard, trust_tracker=trust
-    )
+    tool = CharacterProfileTool(storage_path=profile_path, leaderboard=leaderboard, trust_tracker=trust)
 
     leaderboard.update_scores("bob", 1, 0, 0)
     trust.run("bob", False)
@@ -25,6 +23,7 @@ def test_character_profile_tool(tmp_path: Path) -> None:
 
     result = tool.run("bob")
     from typing import cast
+
     profile = cast("dict[str, object]", result["profile"])  # runtime shape enforced by tool
     leaderboard_section = cast(dict, profile["leaderboard"])  # nested sections are dicts
     trust_section = cast(dict, profile["trust"])  # trust metrics dict

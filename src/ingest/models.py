@@ -217,6 +217,42 @@ CREATE TABLE IF NOT EXISTS ingest_job (
     finished_at TEXT,
     error TEXT
 );
+
+-- Performance indexes for frequently queried columns
+CREATE INDEX IF NOT EXISTS idx_creator_profile_slug ON creator_profile(slug);
+CREATE INDEX IF NOT EXISTS idx_creator_profile_youtube_id ON creator_profile(youtube_id);
+CREATE INDEX IF NOT EXISTS idx_creator_profile_twitch_id ON creator_profile(twitch_id);
+
+CREATE INDEX IF NOT EXISTS idx_episode_creator_id ON episode(creator_id);
+CREATE INDEX IF NOT EXISTS idx_episode_external_id ON episode(external_id);
+CREATE INDEX IF NOT EXISTS idx_episode_platform ON episode(platform);
+CREATE INDEX IF NOT EXISTS idx_episode_published_at ON episode(published_at);
+
+CREATE INDEX IF NOT EXISTS idx_transcript_segment_episode_id ON transcript_segment(episode_id);
+CREATE INDEX IF NOT EXISTS idx_transcript_segment_start ON transcript_segment(start);
+
+CREATE INDEX IF NOT EXISTS idx_ingest_log_episode_id ON ingest_log(episode_id);
+CREATE INDEX IF NOT EXISTS idx_ingest_log_status ON ingest_log(status);
+
+CREATE INDEX IF NOT EXISTS idx_provenance_content_id ON provenance(content_id);
+CREATE INDEX IF NOT EXISTS idx_provenance_source_type ON provenance(source_type);
+CREATE INDEX IF NOT EXISTS idx_provenance_checksum ON provenance(checksum_sha256);
+
+CREATE INDEX IF NOT EXISTS idx_usage_log_call_id ON usage_log(call_id);
+CREATE INDEX IF NOT EXISTS idx_usage_log_ts ON usage_log(ts);
+CREATE INDEX IF NOT EXISTS idx_usage_log_channel_id ON usage_log(channel_id);
+
+CREATE INDEX IF NOT EXISTS idx_watchlist_tenant_workspace ON watchlist(tenant, workspace);
+CREATE INDEX IF NOT EXISTS idx_watchlist_source_type ON watchlist(source_type);
+CREATE INDEX IF NOT EXISTS idx_watchlist_enabled ON watchlist(enabled);
+
+CREATE INDEX IF NOT EXISTS idx_ingest_state_watchlist_id ON ingest_state(watchlist_id);
+CREATE INDEX IF NOT EXISTS idx_ingest_state_failure_count ON ingest_state(failure_count);
+
+CREATE INDEX IF NOT EXISTS idx_ingest_job_tenant_workspace ON ingest_job(tenant, workspace);
+CREATE INDEX IF NOT EXISTS idx_ingest_job_status ON ingest_job(status);
+CREATE INDEX IF NOT EXISTS idx_ingest_job_priority ON ingest_job(priority);
+CREATE INDEX IF NOT EXISTS idx_ingest_job_scheduled_at ON ingest_job(scheduled_at);
 """
 
 
@@ -267,3 +303,146 @@ def record_usage(conn: sqlite3.Connection, usage: UsageLog) -> None:
         ),
     )
     conn.commit()
+
+
+# Optimized query functions using indexes
+
+
+def get_creator_by_slug(conn: sqlite3.Connection, slug: str) -> CreatorProfile | None:
+    """Get creator profile by slug (uses index)."""
+    cursor = conn.execute("SELECT * FROM creator_profile WHERE slug = ?", (slug,))
+    row = cursor.fetchone()
+    if row:
+        return CreatorProfile(*row)
+    return None
+
+
+def get_episodes_by_creator(conn: sqlite3.Connection, creator_id: int, limit: int = 50) -> list[Episode]:
+    """Get episodes by creator ID with pagination (uses index)."""
+    cursor = conn.execute(
+        "SELECT * FROM episode WHERE creator_id = ? ORDER BY published_at DESC LIMIT ?", (creator_id, limit)
+    )
+    return [Episode(*row) for row in cursor.fetchall()]
+
+
+def get_transcript_segments(conn: sqlite3.Connection, episode_id: int) -> list[TranscriptSegment]:
+    """Get transcript segments for an episode (uses index)."""
+    cursor = conn.execute("SELECT * FROM transcript_segment WHERE episode_id = ? ORDER BY start", (episode_id,))
+    return [TranscriptSegment(*row) for row in cursor.fetchall()]
+
+
+def get_provenance_by_content_id(conn: sqlite3.Connection, content_id: str) -> Provenance | None:
+    """Get provenance record by content ID (uses index)."""
+    cursor = conn.execute("SELECT * FROM provenance WHERE content_id = ?", (content_id,))
+    row = cursor.fetchone()
+    if row:
+        return Provenance(*row)
+    return None
+
+
+def get_usage_by_call_id(conn: sqlite3.Connection, call_id: str) -> UsageLog | None:
+    """Get usage log by call ID (uses index)."""
+    cursor = conn.execute("SELECT * FROM usage_log WHERE call_id = ?", (call_id,))
+    row = cursor.fetchone()
+    if row:
+        return UsageLog(*row)
+    return None
+
+
+def get_watchlist_by_tenant_workspace(conn: sqlite3.Connection, tenant: str, workspace: str) -> list[Watchlist]:
+    """Get watchlist entries by tenant and workspace (uses index)."""
+    cursor = conn.execute(
+        "SELECT * FROM watchlist WHERE tenant = ? AND workspace = ? AND enabled = 1", (tenant, workspace)
+    )
+    return [Watchlist(*row) for row in cursor.fetchall()]
+
+
+def get_pending_ingest_jobs(
+    conn: sqlite3.Connection, tenant: str, workspace: str, limit: int = 10
+) -> list[IngestJobRecord]:
+    """Get pending ingest jobs ordered by priority (uses indexes)."""
+    cursor = conn.execute(
+        """
+        SELECT * FROM ingest_job
+        WHERE tenant = ? AND workspace = ? AND status = 'pending'
+        ORDER BY priority DESC, scheduled_at ASC
+        LIMIT ?
+        """,
+        (tenant, workspace, limit),
+    )
+    return [IngestJobRecord(*row) for row in cursor.fetchall()]
+
+
+def get_ingest_jobs_by_status(conn: sqlite3.Connection, status: str, limit: int = 100) -> list[IngestJobRecord]:
+    """Get ingest jobs by status (uses index)."""
+    cursor = conn.execute(
+        "SELECT * FROM ingest_job WHERE status = ? ORDER BY scheduled_at DESC LIMIT ?", (status, limit)
+    )
+    return [IngestJobRecord(*row) for row in cursor.fetchall()]
+
+
+def get_recent_usage_logs(conn: sqlite3.Connection, channel_id: str, limit: int = 50) -> list[UsageLog]:
+    """Get recent usage logs for a channel (uses indexes)."""
+    cursor = conn.execute("SELECT * FROM usage_log WHERE channel_id = ? ORDER BY ts DESC LIMIT ?", (channel_id, limit))
+    return [UsageLog(*row) for row in cursor.fetchall()]
+
+
+def bulk_insert_provenance(conn: sqlite3.Connection, provenance_records: list[Provenance]) -> None:
+    """Bulk insert multiple provenance records efficiently."""
+    if not provenance_records:
+        return
+
+    with conn:
+        conn.executemany(
+            """
+            INSERT INTO provenance (
+                content_id, source_url, source_type, retrieved_at, license,
+                terms_url, consent_flags, checksum_sha256, creator_id, episode_id
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            [
+                (
+                    p.content_id,
+                    p.source_url,
+                    p.source_type,
+                    p.retrieved_at,
+                    p.license,
+                    p.terms_url,
+                    p.consent_flags,
+                    p.checksum_sha256,
+                    p.creator_id,
+                    p.episode_id,
+                )
+                for p in provenance_records
+            ],
+        )
+
+
+def bulk_insert_usage_logs(conn: sqlite3.Connection, usage_records: list[UsageLog]) -> None:
+    """Bulk insert multiple usage log records efficiently."""
+    if not usage_records:
+        return
+
+    with conn:
+        conn.executemany(
+            """
+            INSERT INTO usage_log (
+                call_id, content_ids, policy_version, decisions, redactions,
+                output_hash, user_cmd, channel_id, ts
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            [
+                (
+                    u.call_id,
+                    u.content_ids,
+                    u.policy_version,
+                    u.decisions,
+                    u.redactions,
+                    u.output_hash,
+                    u.user_cmd,
+                    u.channel_id,
+                    u.ts,
+                )
+                for u in usage_records
+            ],
+        )

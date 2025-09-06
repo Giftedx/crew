@@ -13,6 +13,7 @@ Usage:
 
 It will fail (non‑zero) if markers are missing to avoid accidental README corruption.
 """
+
 from __future__ import annotations
 
 import argparse

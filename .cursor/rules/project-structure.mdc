@@ -37,5 +37,5 @@ The main entry point is [main.py](mdc:src/ultimate_discord_intelligence_bot/main
 - [crew.py](mdc:src/ultimate_discord_intelligence_bot/crew.py): CrewAI crew definition
 - [settings.py](mdc:src/ultimate_discord_intelligence_bot/settings.py): Application settings
 - [step_result.py](mdc:src/ultimate_discord_intelligence_bot/step_result.py): Standard result format
-- [AGENTS.md](mdc:AGENTS.md): Comprehensive project guidelines and progress tracker
-- [ARCHITECTURE.md](mdc:ARCHITECTURE.md): System architecture documentation
+- [docs/agents/README.md](mdc:docs/agents/README.md): Comprehensive project guidelines and progress tracker
+- [docs/architecture/architecture.md](mdc:docs/architecture/architecture.md): System architecture documentation

@@ -22,7 +22,6 @@ def test_memory_service_redacts_pii():
     assert "[redacted-email]" in results[0]["text"]
 
 
-
 def test_policy_decision_block_unknown_source():
     policy = policy_engine.load_policy()
     decision = policy_engine.check_source({"source_platform": "unknown"}, policy)

@@ -1,0 +1,202 @@
+{
+    "dashboard": {
+        "id": null,
+        "title": "Cache Performance Monitoring",
+        "tags": [
+            "cache",
+            "performance",
+            "monitoring"
+        ],
+        "timezone": "browser",
+        "panels": [
+            {
+                "id": 1,
+                "title": "Cache Hit Rate Overview",
+                "type": "stat",
+                "targets": [
+                    {
+                        "expr": "avg(cache_hit_rate_ratio)",
+                        "legendFormat": "Average Hit Rate"
+                    }
+                ],
+                "fieldConfig": {
+                    "defaults": {
+                        "unit": "percentunit",
+                        "thresholds": {
+                            "mode": "absolute",
+                            "steps": [
+                                {
+                                    "value": null,
+                                    "color": "red"
+                                },
+                                {
+                                    "value": 0.5,
+                                    "color": "orange"
+                                },
+                                {
+                                    "value": 0.7,
+                                    "color": "green"
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            {
+                "id": 2,
+                "title": "Cache Hit/Miss Rates Over Time",
+                "type": "graph",
+                "targets": [
+                    {
+                        "expr": "rate(cache_hits_total[5m])",
+                        "legendFormat": "{{cache_name}} - Hits"
+                    },
+                    {
+                        "expr": "rate(cache_misses_total[5m])",
+                        "legendFormat": "{{cache_name}} - Misses"
+                    }
+                ]
+            },
+            {
+                "id": 3,
+                "title": "Cache Size and Memory Usage",
+                "type": "graph",
+                "targets": [
+                    {
+                        "expr": "cache_size_bytes",
+                        "legendFormat": "{{cache_name}} - Size (bytes)"
+                    },
+                    {
+                        "expr": "cache_memory_usage_ratio * 100",
+                        "legendFormat": "{{cache_name}} - Memory Usage (%)"
+                    }
+                ]
+            },
+            {
+                "id": 4,
+                "title": "Cache Operation Latency",
+                "type": "graph",
+                "targets": [
+                    {
+                        "expr": "histogram_quantile(0.5, rate(cache_operation_latency_ms_bucket[5m]))",
+                        "legendFormat": "{{cache_name}} - P50 Latency"
+                    },
+                    {
+                        "expr": "histogram_quantile(0.95, rate(cache_operation_latency_ms_bucket[5m]))",
+                        "legendFormat": "{{cache_name}} - P95 Latency"
+                    },
+                    {
+                        "expr": "histogram_quantile(0.99, rate(cache_operation_latency_ms_bucket[5m]))",
+                        "legendFormat": "{{cache_name}} - P99 Latency"
+                    }
+                ]
+            },
+            {
+                "id": 5,
+                "title": "Cache Operations Rate",
+                "type": "graph",
+                "targets": [
+                    {
+                        "expr": "rate(cache_hits_total[5m]) + rate(cache_misses_total[5m])",
+                        "legendFormat": "{{cache_name}} - Total Operations"
+                    },
+                    {
+                        "expr": "rate(cache_compressions_total[5m])",
+                        "legendFormat": "{{cache_name}} - Compressions"
+                    },
+                    {
+                        "expr": "rate(cache_decompressions_total[5m])",
+                        "legendFormat": "{{cache_name}} - Decompressions"
+                    }
+                ]
+            },
+            {
+                "id": 6,
+                "title": "Cache Error Rate",
+                "type": "graph",
+                "targets": [
+                    {
+                        "expr": "rate(cache_errors_total[5m]) / (rate(cache_hits_total[5m]) + rate(cache_misses_total[5m])) * 100",
+                        "legendFormat": "{{cache_name}} - Error Rate (%)"
+                    }
+                ]
+            },
+            {
+                "id": 7,
+                "title": "Cache Compression Effectiveness",
+                "type": "graph",
+                "targets": [
+                    {
+                        "expr": "cache_compression_ratio",
+                        "legendFormat": "{{cache_name}} - Compression Ratio"
+                    }
+                ]
+            },
+            {
+                "id": 8,
+                "title": "Cache Promotions and Evictions",
+                "type": "graph",
+                "targets": [
+                    {
+                        "expr": "rate(cache_promotions_total[5m])",
+                        "legendFormat": "{{cache_name}} - Promotions"
+                    },
+                    {
+                        "expr": "rate(cache_evictions_total[5m])",
+                        "legendFormat": "{{cache_name}} - Evictions"
+                    }
+                ]
+            },
+            {
+                "id": 9,
+                "title": "Top Cache Keys by Access Frequency",
+                "type": "table",
+                "targets": [
+                    {
+                        "expr": "topk(10, rate(cache_hits_total[1h]))",
+                        "legendFormat": "{{cache_name}}"
+                    }
+                ]
+            },
+            {
+                "id": 10,
+                "title": "Cache Health Status",
+                "type": "table",
+                "targets": [
+                    {
+                        "expr": "up{job=\"cache\"}",
+                        "legendFormat": "{{cache_name}}"
+                    }
+                ]
+            }
+        ],
+        "time": {
+            "from": "now-1h",
+            "to": "now"
+        },
+        "timepicker": {},
+        "templating": {
+            "list": [
+                {
+                    "name": "cache_name",
+                    "type": "query",
+                    "query": "label_values(cache_name)",
+                    "label": "Cache Name"
+                },
+                {
+                    "name": "cache_level",
+                    "type": "query",
+                    "query": "label_values(cache_level)",
+                    "label": "Cache Level"
+                }
+            ]
+        },
+        "annotations": {
+            "list": []
+        },
+        "refresh": "30s",
+        "schemaVersion": 27,
+        "version": 0,
+        "links": []
+    }
+}

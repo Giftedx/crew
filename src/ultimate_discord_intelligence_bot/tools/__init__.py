@@ -1,90 +1,67 @@
-"""Tool exports for ultimate_discord_intelligence_bot."""
+"""Tools package (lightweight).
 
-from .audio_transcription_tool import AudioTranscriptionTool
-from .character_profile_tool import CharacterProfileTool
-from .claim_extractor_tool import ClaimExtractorTool
-from .context_verification_tool import ContextVerificationTool
-from .debate_command_tool import DebateCommandTool
-from .discord_download_tool import DiscordDownloadTool
-from .discord_monitor_tool import DiscordMonitorTool
-from .discord_post_tool import DiscordPostTool
-from .discord_private_alert_tool import DiscordPrivateAlertTool
-from .discord_qa_tool import DiscordQATool
-from .fact_check_tool import FactCheckTool
-from .leaderboard_tool import LeaderboardTool
-
-# from .drive_upload_tool import DriveUploadTool  # Commented out - missing googleapiclient
-from .logical_fallacy_tool import LogicalFallacyTool
-from .memory_storage_tool import MemoryStorageTool
-from .multi_platform_download_tool import MultiPlatformDownloadTool
-from .multi_platform_monitor_tool import MultiPlatformMonitorTool
-from .perspective_synthesizer_tool import PerspectiveSynthesizerTool
-from .platform_resolver import (
-    PodcastResolverTool,
-    SocialResolverTool,
-    TwitchResolverTool,
-    YouTubeResolverTool,
-)
-from .sentiment_tool import SentimentTool
-from .social_media_monitor_tool import SocialMediaMonitorTool
-from .steelman_argument_tool import SteelmanArgumentTool
-from .system_status_tool import SystemStatusTool
-from .timeline_tool import TimelineTool
-from .transcript_index_tool import TranscriptIndexTool
-from .trustworthiness_tracker_tool import TrustworthinessTrackerTool
-from .truth_scoring_tool import TruthScoringTool
-from .vector_search_tool import VectorSearchTool
-from .x_monitor_tool import XMonitorTool
-from .yt_dlp_download_tool import (
-    InstagramDownloadTool,
-    KickDownloadTool,
-    RedditDownloadTool,
-    TikTokDownloadTool,
-    TwitchDownloadTool,
-    TwitterDownloadTool,
-    YouTubeDownloadTool,
-    YtDlpDownloadTool,
-)
+Avoid importing all tool modules at package import time to prevent optional
+dependencies from being required during unrelated imports/tests.
+Import specific tools or submodules explicitly as needed.
+"""
 
 __all__ = [
-    "DiscordPrivateAlertTool",
-    "YtDlpDownloadTool",
-    "YouTubeDownloadTool",
-    "TwitchDownloadTool",
-    "KickDownloadTool",
-    "TwitterDownloadTool",
-    "InstagramDownloadTool",
-    "TikTokDownloadTool",
-    "RedditDownloadTool",
-    "DiscordDownloadTool",
-    "MultiPlatformDownloadTool",
+    # Advertise common tool names without importing them eagerly.
     "AudioTranscriptionTool",
-    "DiscordPostTool",
-    # "DriveUploadTool",  # Commented out - missing googleapiclient
-    "LogicalFallacyTool",
-    "MemoryStorageTool",
-    "PerspectiveSynthesizerTool",
-    "SocialMediaMonitorTool",
-    "MultiPlatformMonitorTool",
-    "XMonitorTool",
-    "DiscordMonitorTool",
-    "SystemStatusTool",
-    "TruthScoringTool",
-    "TrustworthinessTrackerTool",
-    "TranscriptIndexTool",
+    "CharacterProfileTool",
+    "ClaimExtractorTool",
     "ContextVerificationTool",
+    "DebateCommandTool",
+    "DiscordDownloadTool",
+    "DiscordMonitorTool",
+    "DiscordPostTool",
+    "DiscordPrivateAlertTool",
+    "DiscordQATool",
     "FactCheckTool",
     "LeaderboardTool",
-    "DebateCommandTool",
-    "VectorSearchTool",
-    "DiscordQATool",
-    "TimelineTool",
-    "CharacterProfileTool",
-    "SteelmanArgumentTool",
-    "SentimentTool",
-    "ClaimExtractorTool",
-    "YouTubeResolverTool",
-    "TwitchResolverTool",
+    # "DriveUploadTool",
+    "LogicalFallacyTool",
+    "MemoryStorageTool",
+    "MultiPlatformDownloadTool",
+    "MultiPlatformMonitorTool",
+    "PerspectiveSynthesizerTool",
     "PodcastResolverTool",
     "SocialResolverTool",
+    "TwitchResolverTool",
+    "YouTubeResolverTool",
+    "SentimentTool",
+    "SocialMediaMonitorTool",
+    "SteelmanArgumentTool",
+    "SystemStatusTool",
+    "TimelineTool",
+    "TranscriptIndexTool",
+    "TrustworthinessTrackerTool",
+    "TruthScoringTool",
+    "VectorSearchTool",
+    "XMonitorTool",
+    "InstagramDownloadTool",
+    "KickDownloadTool",
+    "RedditDownloadTool",
+    "TikTokDownloadTool",
+    "TwitchDownloadTool",
+    "TwitterDownloadTool",
+    "YouTubeDownloadTool",
+    "YtDlpDownloadTool",
 ]
+
+
+def __getattr__(name: str):  # PEP 562: lazy attribute loading
+    # Minimal on-demand loader for tools used in tests without importing all heavy deps
+    mapping = {
+        "PerspectiveSynthesizerTool": ".perspective_synthesizer_tool",
+    }
+    mod = mapping.get(name)
+    if mod is None:
+        raise AttributeError(name)
+    from importlib import import_module
+
+    module = import_module(f"{__name__}{mod}")
+    try:
+        return getattr(module, name)
+    except AttributeError as exc:  # pragma: no cover - defensive
+        raise AttributeError(name) from exc

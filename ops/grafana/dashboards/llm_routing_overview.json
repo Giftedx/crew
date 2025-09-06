@@ -1,0 +1,119 @@
+{
+  "title": "LLM Routing Overview",
+  "schemaVersion": 36,
+  "version": 1,
+  "tags": ["llm", "routing", "observability"],
+  "editable": true,
+  "timezone": "",
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Selections by Model (rps)",
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 0},
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "targets": [
+        {
+          "expr": "sum by (model) (rate(llm_model_selected_total{tenant=~\"$tenant\",workspace=~\"$workspace\",task=~\"$task\"}[5m]))",
+          "legendFormat": "{{model}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Avg Estimated Cost (USD/call)",
+      "gridPos": {"h": 4, "w": 8, "x": 0, "y": 8},
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "targets": [
+        {
+          "expr": "sum(rate(llm_estimated_cost_usd_sum{tenant=~\"$tenant\",workspace=~\"$workspace\"}[5m])) / sum(rate(llm_estimated_cost_usd_count{tenant=~\"$tenant\",workspace=~\"$workspace\"}[5m]))",
+          "refId": "A"
+        }
+      ],
+      "options": {"reduceOptions": {"calcs": ["lastNotNull"]}}
+    },
+    {
+      "type": "stat",
+      "title": "Budget Rejections (per min)",
+      "gridPos": {"h": 4, "w": 8, "x": 8, "y": 8},
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "targets": [
+        {
+          "expr": "sum(rate(llm_budget_rejections_total{tenant=~\"$tenant\",workspace=~\"$workspace\"}[5m])) * 60",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Cache Hit Rate",
+      "gridPos": {"h": 4, "w": 8, "x": 16, "y": 8},
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "targets": [
+        {
+          "expr": "sum(rate(llm_cache_hits_total{tenant=~\"$tenant\",workspace=~\"$workspace\"}[10m])) / sum(rate(llm_model_selected_total{tenant=~\"$tenant\",workspace=~\"$workspace\"}[10m]))",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Latency p95 (ms)",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 12},
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(llm_latency_ms_bucket{tenant=~\"$tenant\",workspace=~\"$workspace\"}[10m])))",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "bargauge",
+      "title": "Selections by Provider",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 12},
+      "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+      "targets": [
+        {
+          "expr": "sum by (provider) (rate(llm_model_selected_total{tenant=~\"$tenant\",workspace=~\"$workspace\",task=~\"$task\"}[5m]))",
+          "refId": "A"
+        }
+      ]
+    }
+  ],
+  "templating": {
+    "list": [
+      {
+        "name": "DS_PROMETHEUS",
+        "type": "datasource",
+        "query": "prometheus",
+        "hide": 0
+      },
+      {
+        "name": "tenant",
+        "type": "query",
+        "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+        "query": "label_values(llm_model_selected_total, tenant)",
+        "includeAll": true,
+        "multi": true
+      },
+      {
+        "name": "workspace",
+        "type": "query",
+        "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+        "query": "label_values(llm_model_selected_total, workspace)",
+        "includeAll": true,
+        "multi": true
+      },
+      {
+        "name": "task",
+        "type": "query",
+        "datasource": {"type": "prometheus", "uid": "${DS_PROMETHEUS}"},
+        "query": "label_values(llm_model_selected_total, task)",
+        "includeAll": true,
+        "multi": true
+      }
+    ]
+  }
+}
+

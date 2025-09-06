@@ -1,14 +1,12 @@
 allowed_sources:
-  youtube: []
-  twitch: []
-  podcast: []
-  official_social: []
-  web_archive: []
+  youtube_channels: []
+  twitch_channels: []
+  podcast_feeds: []
+  official_socials: []
 forbidden_types:
-  - executable
-  - script
-  - installer
-  - unknown
+  - email
+  - phone
+  - address
 pii_types:
   email: "[redacted-email]"
   phone: "[redacted-phone]"
@@ -26,16 +24,14 @@ masks:
   address_like: "[redacted-address]"
   geo_exact: "[redacted-geo]"
 storage:
-  max_retention_days_by_ns:
-    default: 30
-  cache_ttl_overrides: {}
+  max_retention_days: 30
 consent:
   allow_quotes: true
   allow_thumbnails: true
   allow_embed: true
   allow_snippets: true
 per_command:
-  /context:
-    max_tokens: 2048
-    require_sources: true
-    speculation_forbidden: true
+  latest:
+    max_tokens: 1000
+  analyze:
+    max_tokens: 2000

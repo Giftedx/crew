@@ -21,15 +21,15 @@ the foundation for higher level agents and reinforcement learning.
 - `reward_pipe` — reward calculation and aggregation pipeline for RL feedback.
 
 ### System Management
-- `alerts.py` — system alerting and notification management.
-- `reliability.py` — circuit breakers, retries, and reliability patterns.
-- `rollout.py` — feature rollout management and canary deployments.
-- `tool_planner.py` — intelligent tool selection and execution planning.
+- `src/core/alerts.py` — system alerting and notification management.
+- `src/core/reliability.py` — circuit breakers, retries, and reliability patterns.
+- `src/core/rollout.py` — feature rollout management and canary deployments.
+- `src/core/tool_planner.py` — intelligent tool selection and execution planning.
 
 ### Infrastructure
 - `flags.enabled` — helper to toggle features via environment variables.
 - `log_schema` — dataclasses describing structured logs for calls and rewards.
-- `learn.py` — convenience helpers for integrating learning into decision loops.
+- `src/core/learn.py` — convenience helpers for integrating learning into decision loops.
 
 ### Caching & Performance
 - `cache/` — caching subsystem with LRU, TTL, and distributed caching support.

@@ -3,7 +3,11 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from pathlib import Path
 from typing import Any, TypedDict
+
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 from ..debate_analysis_pipeline import DebateAnalysisPipeline  # top-level import (guarded by usage pattern)
 from ..profiles.schema import CreatorProfile, Platforms, load_seeds
@@ -30,7 +34,7 @@ class _DebateCommandResult(TypedDict, total=False):
     trends: Any
 
 
-class DebateCommandTool(BaseTool[_DebateCommandResult]):
+class DebateCommandTool(BaseTool[StepResult]):
     """Expose debate analysis features through simple commands."""
 
     name: str = "Debate Command Tool"
@@ -58,8 +62,9 @@ class DebateCommandTool(BaseTool[_DebateCommandResult]):
         self.trust_tracker = self.pipeline.trust_tracker
         self.profile_tool = self.pipeline.profile_tool
         self.profile_store = profile_store or ProfileStore(":memory:")
+        self._metrics = get_metrics()
 
-    def _run(self, command: str, **kwargs: Any) -> _DebateCommandResult:  # noqa: PLR0915 - command registry definition verbose
+    def _run(self, command: str, **kwargs: Any) -> StepResult:  # noqa: PLR0915 - command registry definition verbose
         """Dispatch debate related commands via a simple registry to reduce branches.
 
         Always returns a structured _DebateCommandResult. Underlying helpers that
@@ -119,6 +124,7 @@ class DebateCommandTool(BaseTool[_DebateCommandResult]):
         def latest() -> _DebateCommandResult:
             prof = self.profile_tool.get_profile(kwargs["person"])  # may be None
             raw_events = prof.get("events", [])
+
             # Ensure each event is a mapping with a numeric ts for sorting stability
             def _key(e: dict[str, object]) -> float:
                 ts = e.get("ts", 0)
@@ -126,6 +132,7 @@ class DebateCommandTool(BaseTool[_DebateCommandResult]):
                     return float(ts)  # type: ignore[arg-type]
                 except Exception:
                     return 0.0
+
             events = sorted(
                 [ev for ev in raw_events if isinstance(ev, dict)],
                 key=_key,
@@ -134,12 +141,7 @@ class DebateCommandTool(BaseTool[_DebateCommandResult]):
             return {"status": "success", "events": events[: kwargs.get("n", 5)]}
 
         def collabs() -> _DebateCommandResult:
-            return {
-                "status": "success",
-                "collabs": self.profile_store.get_collaborators(
-                    kwargs["person"], kwargs.get("n", 10)
-                ),
-            }
+            return {"status": "success", "collabs": self.profile_store.get_collaborators(kwargs["person"])}
 
         def trends() -> _DebateCommandResult:
             return {"status": "success", "trends": []}
@@ -150,13 +152,25 @@ class DebateCommandTool(BaseTool[_DebateCommandResult]):
             return {
                 "status": "success",
                 "compare": {
-                    a_key: self.profile_store.get_collaborators(a_key, kwargs.get("n", 10)),
-                    b_key: self.profile_store.get_collaborators(b_key, kwargs.get("n", 10)),
+                    a_key: self.profile_store.get_collaborators(a_key),
+                    b_key: self.profile_store.get_collaborators(b_key),
                 },
             }
 
         def verify_profiles() -> _DebateCommandResult:
-            seeds = load_seeds(kwargs.get("seeds", "profiles.yaml"))
+            # Allow overriding seed file path; fall back to repo config directory when a relative
+            # local file is not present (tests rely on shipping config/profiles.yaml).
+            seed_path = kwargs.get("seeds", "profiles.yaml")
+            try:
+                if seed_path == "profiles.yaml":  # common default; prefer config copy if local missing
+                    local = Path(seed_path)
+                    if not local.exists():
+                        candidate = Path(__file__).resolve().parents[3] / "config" / "profiles.yaml"
+                        if candidate.exists():
+                            seed_path = str(candidate)
+                seeds = load_seeds(seed_path)
+            except Exception as exc:  # pragma: no cover - unexpected seed load error
+                return {"status": "error", "error": f"Failed loading seeds: {exc}"}
             verified: list[str] = []
             for seed in seeds:
                 handles = seed.seed_handles
@@ -169,9 +183,7 @@ class DebateCommandTool(BaseTool[_DebateCommandResult]):
                     platforms.podcast = [resolve_podcast_query(pod[0])]
                 for social in ("twitter", "instagram", "tiktok"):
                     if social in handles:
-                        getattr(platforms, social).append(
-                            resolve_social_handle(social, handles[social][0])
-                        )
+                        getattr(platforms, social).append(resolve_social_handle(social, handles[social][0]))
                 profile_obj = CreatorProfile(
                     name=seed.name,
                     type=seed.type,
@@ -201,17 +213,26 @@ class DebateCommandTool(BaseTool[_DebateCommandResult]):
 
         handler = registry.get(command)
         if handler is None:
-            return {"status": "error", "error": "unknown command"}
-        result = handler()
-        # Normalise plain dict to _DebateCommandResult when possible
-        if not isinstance(result, dict):  # defensive (should not occur)
-            return {"status": "error", "error": "handler returned unexpected type"}
-        # Ensure required structural keys minimally include status
+            self._metrics.counter("tool_runs_total", labels={"tool": "debate_command", "outcome": "skipped"}).inc()
+            return StepResult.ok(skipped=True, reason="unknown command", data={"command": command})
+        try:
+            result = handler()
+        except Exception as exc:  # pragma: no cover - unexpected handler failure
+            self._metrics.counter("tool_runs_total", labels={"tool": "debate_command", "outcome": "error"}).inc()
+            return StepResult.fail(error=str(exc))
+        if not isinstance(result, dict):
+            self._metrics.counter("tool_runs_total", labels={"tool": "debate_command", "outcome": "error"}).inc()
+            return StepResult.fail(error="handler returned unexpected type")
         if "status" not in result:
             result["status"] = "success"
-        return result  # type: ignore[return-value]
-    def run(self, *args: Any, **kwargs: Any) -> _DebateCommandResult:  # pragma: no cover
+        # Success path
+        self._metrics.counter("tool_runs_total", labels={"tool": "debate_command", "outcome": "success"}).inc()
+        return StepResult.ok(data=result)
+
+    def run(self, *args: Any, **kwargs: Any) -> StepResult:  # pragma: no cover - thin wrapper
         command = str(args[0]) if args else str(kwargs.get("command", ""))
-        result = self._run(command, **kwargs)
-        # _run guarantees _DebateCommandResult structure; cast unnecessary but keeps mypy happy if widened.
-        return result
+        try:
+            return self._run(command, **kwargs)
+        except Exception as exc:  # pragma: no cover - unexpected
+            self._metrics.counter("tool_runs_total", labels={"tool": "debate_command", "outcome": "error"}).inc()
+            return StepResult.fail(error=str(exc))

@@ -1,0 +1,199 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "HTTP retries and give-ups counters by method (1d)",
+  "editable": true,
+  "gnetId": null,
+  "graphTooltip": 0,
+  "panels": [
+    {
+      "type": "stat",
+      "title": "HTTP Retry Attempts (1d)",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "sum by (method)(increase(http_retry_attempts_total{tenant=~\"$tenant\",workspace=~\"$workspace\",method=~\"$method\",host=~\"$host\"}[1d]))",
+          "legendFormat": "{{method}}"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "type": "stat",
+      "title": "HTTP Retry Give-ups (1d)",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "sum by (method)(increase(http_retry_giveups_total{tenant=~\"$tenant\",workspace=~\"$workspace\",method=~\"$method\",host=~\"$host\"}[1d]))",
+          "legendFormat": "{{method}}"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      }
+    },
+    {
+      "type": "table",
+      "title": "Top 5 Methods by Give-ups (1d)",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "topk(5, sum by (method)(increase(http_retry_giveups_total{tenant=~\"$tenant\",workspace=~\"$workspace\",method=~\"$method\",host=~\"$host\"}[1d])))",
+          "legendFormat": "{{method}}"
+        }
+      ],
+      "options": {
+        "showHeader": true
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 8
+      }
+    },
+    {
+      "type": "table",
+      "title": "Top 5 Routes by Rate Limit Rejections (1d)",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "topk(5, sum by (route, method)(increase(rate_limit_rejections_total{method=~\"$method\"}[1d])))",
+          "legendFormat": "{{route}} {{method}}"
+        }
+      ],
+      "options": {
+        "showHeader": true
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 16
+      }
+    },
+    {
+      "type": "table",
+      "title": "Top 5 Hosts by Give-ups (1d)",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "topk(5, sum by (host)(increase(http_retry_giveups_total{tenant=~\"$tenant\",workspace=~\"$workspace\",method=~\"$method\",host=~\"$host\"}[1d])))",
+          "legendFormat": "{{host}}"
+        }
+      ],
+      "options": {"showHeader": true},
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 24}
+    },
+    {
+      "type": "table",
+      "title": "Top 5 Hosts by Attempts (1d)",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "topk(5, sum by (host)(increase(http_retry_attempts_total{tenant=~\"$tenant\",workspace=~\"$workspace\",method=~\"$method\",host=~\"$host\"}[1d])))",
+          "legendFormat": "{{host}}"
+        }
+      ],
+      "options": {"showHeader": true},
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 32}
+    }
+  ],
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": [
+    "http",
+    "retries"
+  ],
+  "templating": {
+    "list": [
+      {
+        "name": "tenant",
+        "type": "query",
+        "datasource": "Prometheus",
+        "query": "label_values(http_retry_attempts_total, tenant)",
+        "includeAll": true,
+        "allValue": ".*",
+        "refresh": 2,
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        }
+      },
+      {
+        "name": "workspace",
+        "type": "query",
+        "datasource": "Prometheus",
+        "query": "label_values(http_retry_attempts_total, workspace)",
+        "includeAll": true,
+        "allValue": ".*",
+        "refresh": 2,
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        }
+      },
+      {
+        "name": "method",
+        "type": "query",
+        "datasource": "Prometheus",
+        "query": "label_values(http_retry_attempts_total, method)",
+        "includeAll": true,
+        "allValue": ".*",
+        "refresh": 2,
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        }
+      },
+      {
+        "name": "host",
+        "type": "query",
+        "datasource": "Prometheus",
+        "query": "label_values(http_retry_attempts_total, host)",
+        "includeAll": true,
+        "allValue": ".*",
+        "refresh": 2,
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        }
+      }
+    ]
+  },
+  "time": {
+    "from": "now-7d",
+    "to": "now"
+  },
+  "timezone": "browser",
+  "title": "HTTP Retries",
+  "version": 2
+}

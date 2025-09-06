@@ -1,0 +1,16 @@
+{
+    // Markdown lint configuration aligning with docs/conventions.md
+    "default": true,
+    "MD013": false, // line length (soft limit documented, not enforced)
+    "MD025": {
+        "front_matter_title": "^.*$"
+    },
+    "MD029": {
+        "style": "one"
+    },
+    "MD041": false, // allow missing H1 when front-matter present
+    "MD033": false, // allow inline HTML where necessary for diagrams/badges
+    "MD024": {
+        "siblings_only": true
+    }
+}

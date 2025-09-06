@@ -99,10 +99,7 @@ def check_tool_class_names():
             # Check if expected class exists
             if expected_class not in class_matches:
                 # Keep message components short per line for lint (E501)
-                msg = (
-                    f"{tool_file.name}: Expected class '{expected_class}' not found. "
-                    f"Found: {class_matches}"
-                )
+                msg = f"{tool_file.name}: Expected class '{expected_class}' not found. Found: {class_matches}"
                 issues.append(msg)
 
         except Exception as e:
@@ -154,10 +151,7 @@ def main():
 
     # Summary
     coverage = (len(documented_tools) / len(actual_tools)) * 100 if actual_tools else 0
-    print(
-        f"\n📊 Documentation Coverage: {coverage:.1f}% "
-        f"({len(documented_tools)}/{len(actual_tools)})"
-    )
+    print(f"\n📊 Documentation Coverage: {coverage:.1f}% ({len(documented_tools)}/{len(actual_tools)})")
 
     if missing_docs:
         print("\n💡 Recommendation: Add documentation for missing tools")

@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-import time
-
 import pytest
 
-from core import alerts, cache, learning_engine, reliability, router, token_meter
+from core import alerts, learning_engine, reliability, router, token_meter
+from core.cache.bounded_cache import BoundedLRUCache
 from discord import commands
 
 
@@ -19,11 +18,12 @@ def test_cost_guard_rejects_and_downshifts() -> None:
 
 
 def test_llm_cache_hits() -> None:
-    c = cache.LLMCache(ttl=1)
-    c.set("key", "value")
-    assert c.get("key") == "value"
-    time.sleep(1.1)
-    assert c.get("key") is None
+    c = BoundedLRUCache(ttl=1, max_size=1)
+    c.set("key1", "value1")
+    assert c.get("key1") == "value1"
+    c.set("key2", "value2")
+    assert c.get("key1") is None
+    assert c.get("key2") == "value2"
 
 
 def test_retry_succeeds() -> None:
@@ -42,7 +42,5 @@ def test_retry_succeeds() -> None:
 
 def test_ops_status_includes_alerts() -> None:
     alerts.alerts.record("test")
-    status = commands.ops_status(
-        1.0, cache_hits=0, breaker_open=False, alerts=alerts.alerts.drain()
-    )
+    status = commands.ops_status(1.0, cache_hits=0, breaker_open=False, alerts=alerts.alerts.drain())
     assert status["alerts"] == ["test"]

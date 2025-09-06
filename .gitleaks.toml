@@ -1,0 +1,67 @@
+title = "Crew Secret Scanning Policies"
+
+[extend]
+    # Inherit default gitleaks config (patterns) then refine with allowlists below.
+
+[allowlist]
+  description = "Global allowlist for non-sensitive test strings"
+  # Regexes of strings that may look like secrets but are safe
+  regexes = [
+    '''(?i)example(_|-)key''',
+    '''(?i)(dummy|placeholder|changeme)''',
+    '''^sk-your-openai-key-here$''',
+    '''^sk-your-openrouter-key-here$''',
+    '''your-discord-bot-token-here'''
+  ]
+  # Files (by path glob) to ignore
+  paths = [
+    'docs/.*',
+    'CHANGELOG.md',
+    'README.md'
+  ]
+
+[[rules]]
+id = "discord-bot-token"
+description = "Discord bot token pattern"
+regex = '''[MN][A-Za-z\d]{23}\.[\w-]{6}\.[\w-]{27}'''
+tags = ["discord", "token"]
+
+[[rules.allowlist]]
+  description = "Allow test token placeholders"
+  regexes = ['''your-discord-bot-token-here''']
+
+[[rules]]
+id = "openai-key"
+description = "OpenAI style key"
+regex = '''sk-[a-zA-Z0-9]{20,}'''
+tags = ["openai", "api", "key"]
+
+[[rules.allowlist]]
+  description = "Allow placeholder openai key"
+  regexes = ['''sk-your-openai-key-here''']
+
+[[rules]]
+id = "qdrant-api-key"
+description = "Qdrant simple JWT-like api token"
+regex = '''eyJ[a-zA-Z0-9_=-]{10,}\.[a-zA-Z0-9_=-]+\.[a-zA-Z0-9_=-]+'''
+tags = ["qdrant", "api", "jwt"]
+
+[[rules.allowlist]]
+  description = "Allow docs jwt placeholder"
+  regexes = ['''example\.jwt\.token''']
+
+[[rules]]
+id = "generic-b64-secret"
+description = "Generic base64 secret 40+ chars"
+regex = '''(?i)(secret|token|password|passwd|pwd)[^\n]{0,20}[=:\s]+[A-Za-z0-9+/]{40,}={0,2}'''
+tags = ["generic", "secret", "base64"]
+
+[[rules]]
+id = "url-with-basic-auth"
+description = "URL containing basic auth credentials"
+regex = '''[a-zA-Z]+:\/\/[a-zA-Z0-9_\-]+:[^@\s]{6,}@'''
+tags = ["basic-auth", "url"]
+
+[report]
+path = "gitleaks-report.json"
+format = "json"

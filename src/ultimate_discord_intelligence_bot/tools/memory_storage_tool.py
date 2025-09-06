@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
-import os
 import uuid
 from collections.abc import Callable, Sequence
 from typing import TYPE_CHECKING, Any, Protocol, TypedDict, cast, runtime_checkable
+
+from core.secure_config import get_config
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 from ..tenancy import current_tenant, mem_ns
 from ._base import BaseTool
@@ -45,20 +48,18 @@ class _QdrantLike(Protocol):
     def upsert(self, *, collection_name: str, points: Sequence[Any]) -> Any: ...
 
 
-class _MemoryStorageResult(TypedDict, total=False):
+class _MemoryStorageResult(TypedDict, total=False):  # retained for legacy ref usage
     status: str
     collection: str
     tenant_scoped: bool
     error: str
 
 
-class MemoryStorageTool(BaseTool[_MemoryStorageResult]):
+class MemoryStorageTool(BaseTool):
     """Persist text and metadata to a tenant-scoped Qdrant collection."""
 
     name: str = "Qdrant Memory Storage Tool"
-    description: str = (
-        "Stores documents in a tenant-isolated Qdrant vector database for later retrieval."
-    )
+    description: str = "Stores documents in a tenant-isolated Qdrant vector database for later retrieval."
 
     # Provide loose config so pydantic doesn't require field population pre-init
     model_config = {"arbitrary_types_allowed": True, "extra": "allow"}
@@ -74,21 +75,27 @@ class MemoryStorageTool(BaseTool[_MemoryStorageResult]):
         embedding_fn: Callable[[str], list[float]] | None = None,
     ) -> None:
         super().__init__()  # initialise pydantic machinery first
-        env_collection = os.getenv("QDRANT_COLLECTION")
+        config = get_config()
+        env_collection = config.get_setting("qdrant_collection")
         base_collection = collection or env_collection or "content"
         embed = embedding_fn or (lambda text: [float(len(text))])
         if client is not None:
             qclient = cast(_QdrantLike, client)
-        else:
-            if QdrantClient is None:  # pragma: no cover - real client missing
-                raise RuntimeError("qdrant-client package is not installed")
-            url = os.getenv("QDRANT_URL", "http://localhost:6333")
-            api_key = os.getenv("QDRANT_API_KEY")
-            qclient = cast(_QdrantLike, QdrantClient(url=url, api_key=api_key))
+        elif QdrantClient is None:  # pragma: no cover - real client missing
+            # Defer failure until first use to allow tests without dependency
+            qclient = cast(_QdrantLike, None)
+        else:  # pragma: no cover - normal path
+            url = config.qdrant_url
+            api_key = config.qdrant_api_key
+            try:
+                qclient = cast(_QdrantLike, QdrantClient(url=url, api_key=api_key))  # type: ignore
+            except Exception:  # pragma: no cover - fallback to None on instantiation issues
+                qclient = cast(_QdrantLike, None)
         # Assign via object.__setattr__ to avoid pydantic required-field validation
         object.__setattr__(self, "base_collection", base_collection)
         object.__setattr__(self, "embedding_fn", embed)
         object.__setattr__(self, "client", qclient)
+        self._metrics = get_metrics()
         self._ensure_collection(base_collection)
 
     def _ensure_collection(self, name: str) -> None:  # pragma: no cover - setup
@@ -99,10 +106,19 @@ class MemoryStorageTool(BaseTool[_MemoryStorageResult]):
         except Exception:  # pragma: no cover - creation branch
             if self.client is None:
                 raise
-            self.client.recreate_collection(
-                name,
-                vectors_config=VectorParams(size=1, distance=Distance.COSINE),
-            )
+            if (
+                self.client is None or "VectorParams" not in globals() or "Distance" not in globals()
+            ):  # pragma: no cover
+                return  # silently skip creation when dependencies absent
+            try:
+                if "VectorParams" in globals() and "Distance" in globals() and callable(VectorParams):
+                    try:
+                        vp = VectorParams(size=1, distance=getattr(Distance, "COSINE", "cosine"))  # type: ignore[arg-type]
+                        self.client.recreate_collection(name, vectors_config=vp)
+                    except Exception:  # pragma: no cover - ignore when stub mismatch
+                        return
+            except Exception:  # pragma: no cover - ignore creation issues in fallback
+                return
 
     def _get_tenant_collection(self) -> str:
         """Get tenant-scoped collection name."""
@@ -112,9 +128,7 @@ class MemoryStorageTool(BaseTool[_MemoryStorageResult]):
             return mem_ns(tenant_ctx, base)
         return base
 
-    def _run(
-        self, text: str, metadata: dict[str, object], collection: str | None = None
-    ) -> _MemoryStorageResult:
+    def _run(self, text: str, metadata: dict[str, object], collection: str | None = None) -> StepResult:
         # Use tenant-scoped collection if available
         if collection is None:
             target = self._get_tenant_collection()
@@ -139,26 +153,46 @@ class MemoryStorageTool(BaseTool[_MemoryStorageResult]):
                     }
                 )
 
-            point = PointStruct(
-                id=str(uuid.uuid4()),
-                vector=vector,
-                payload={**enhanced_metadata, "text": text},
-            )
+            if "PointStruct" in globals():
+                point = PointStruct(  # type: ignore[call-arg]
+                    id=str(uuid.uuid4()),
+                    vector=vector,
+                    payload={**enhanced_metadata, "text": text},
+                )
+            else:  # pragma: no cover - fallback plain dict
+                point = {  # type: ignore[assignment]
+                    "id": str(uuid.uuid4()),
+                    "vector": vector,
+                    "payload": {**enhanced_metadata, "text": text},
+                }
             if self.client is None:
                 raise RuntimeError("Qdrant client not initialised")
-            self.client.upsert(collection_name=target, points=[point])
-            return _MemoryStorageResult(
-                status="success",
-                collection=target,
-                tenant_scoped=tenant_ctx is not None,
-            )
+            self.client.upsert(collection_name=target, points=[point])  # type: ignore[arg-type]
+            self._metrics.counter(
+                "tool_runs_total",
+                labels={
+                    "tool": "memory_storage",
+                    "outcome": "success",
+                    "tenant_scoped": str(tenant_ctx is not None).lower(),
+                },
+            ).inc()
+            return StepResult.ok(collection=target, tenant_scoped=tenant_ctx is not None)
         except Exception as exc:  # pragma: no cover - network errors
-            return _MemoryStorageResult(status="error", error=str(exc))
+            self._metrics.counter(
+                "tool_runs_total",
+                labels={
+                    "tool": "memory_storage",
+                    "outcome": "error",
+                    "tenant_scoped": str("tenant_ctx" in locals() and tenant_ctx is not None).lower(),
+                },
+            ).inc()
+            return StepResult.fail(error=str(exc), collection=target if "target" in locals() else None)
 
     # Explicit run wrapper for pipeline compatibility
     def run(
         self, text: str, metadata: dict[str, object], collection: str | None = None
-    ) -> _MemoryStorageResult:  # pragma: no cover - thin wrapper
+    ) -> StepResult:  # pragma: no cover - thin wrapper
         return self._run(text, metadata, collection=collection)
+
 
 __all__ = ["MemoryStorageTool"]

@@ -6,6 +6,9 @@ import json
 from pathlib import Path
 from typing import Any, TypedDict, cast
 
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
+from ultimate_discord_intelligence_bot.step_result import StepResult
+
 from .. import settings
 from ._base import BaseTool
 
@@ -22,7 +25,7 @@ class _LeaderboardTopResult(TypedDict):
     results: list[_LeaderboardRecord]
 
 
-class LeaderboardTool(BaseTool[dict[str, object]]):
+class LeaderboardTool(BaseTool[StepResult]):
     """Simple JSON-backed scoreboard for misinformation tracking."""
 
     name: str = "Leaderboard Tool"
@@ -31,6 +34,7 @@ class LeaderboardTool(BaseTool[dict[str, object]]):
 
     def __init__(self, storage_path: Path | None = None):
         super().__init__()
+        self._metrics = get_metrics()
         self.storage_path = storage_path or settings.BASE_DIR / "leaderboard.json"
         if not self.storage_path.exists():
             self._save({})
@@ -62,9 +66,7 @@ class LeaderboardTool(BaseTool[dict[str, object]]):
         with self.storage_path.open("w", encoding="utf-8") as f:
             json.dump(data, f)
 
-    def update_scores(
-        self, person: str, lies_delta: int, misquotes_delta: int, misinfo_delta: int
-    ) -> None:
+    def update_scores(self, person: str, lies_delta: int, misquotes_delta: int, misinfo_delta: int) -> None:
         data = self._load()
         record = data.get(person, {"lies": 0, "misquotes": 0, "misinfo": 0})
         record["lies"] += lies_delta
@@ -103,9 +105,10 @@ class LeaderboardTool(BaseTool[dict[str, object]]):
             "misinfo": int(record.get("misinfo", 0)),
         }
 
-    def _run(self, action: str, **kwargs: object) -> dict[str, object]:
+    def _run(self, action: str, **kwargs: object) -> StepResult:
         if action == "update":
             person = cast(str, kwargs["person"])
+
             def _as_int(key: str, default: int = 0) -> int:
                 val = kwargs.get(key, default)
                 if isinstance(val, int):
@@ -113,20 +116,33 @@ class LeaderboardTool(BaseTool[dict[str, object]]):
                 if isinstance(val, str) and val.isdigit():
                     return int(val)
                 return default
+
             lies_delta = _as_int("lies_delta")
             misquotes_delta = _as_int("misquotes_delta")
             misinfo_delta = _as_int("misinfo_delta")
             self.update_scores(person, lies_delta, misquotes_delta, misinfo_delta)
-            return {"status": "success"}
+            self._metrics.counter("tool_runs_total", labels={"tool": "leaderboard", "outcome": "success"}).inc()
+            return StepResult.ok(data={"action": "update", "person": person})
         if action == "top":
             n_val = kwargs.get("n", 10)
             n = int(n_val) if isinstance(n_val, int) else 10
-            return {"status": "success", "results": self.get_top(n)}
+            results = self.get_top(n)
+            self._metrics.counter("tool_runs_total", labels={"tool": "leaderboard", "outcome": "success"}).inc()
+            return StepResult.ok(data={"action": "top", "results": results})
         if action == "get":
             person = cast(str, kwargs["person"])
             result = self.get_person(person)
-            return {"status": "success", "result": result} if result else {"status": "error", "error": "not found"}
-        return {"status": "error", "error": "unknown action"}
+            if result is None:
+                self._metrics.counter("tool_runs_total", labels={"tool": "leaderboard", "outcome": "error"}).inc()
+                return StepResult.fail(error="not found")
+            self._metrics.counter("tool_runs_total", labels={"tool": "leaderboard", "outcome": "success"}).inc()
+            return StepResult.ok(data={"action": "get", "result": result})
+        self._metrics.counter("tool_runs_total", labels={"tool": "leaderboard", "outcome": "skipped"}).inc()
+        return StepResult.ok(skipped=True, reason="unknown action", data={"action": action})
 
-    def run(self, action: str, **kwargs: object) -> dict[str, object]:  # pragma: no cover - thin wrapper
-        return self._run(action, **kwargs)
+    def run(self, action: str, **kwargs: object) -> StepResult:  # pragma: no cover - thin wrapper
+        try:
+            return self._run(action, **kwargs)
+        except Exception as exc:  # pragma: no cover - unexpected failure path
+            self._metrics.counter("tool_runs_total", labels={"tool": "leaderboard", "outcome": "error"}).inc()
+            return StepResult.fail(error=str(exc))

@@ -19,6 +19,23 @@ from collections.abc import Sequence
 from functools import lru_cache
 from typing import TYPE_CHECKING, Any
 
+try:
+    from core import settings as settings_mod  # module import (monkeypatch safe)
+except Exception:  # pragma: no cover - fallback when pydantic/settings unavailable
+
+    class _FallbackSettings:
+        qdrant_url = ":memory:"
+        qdrant_api_key = None
+        qdrant_prefer_grpc = False
+        qdrant_grpc_port = None
+
+    class _SettingsMod:
+        @staticmethod
+        def get_settings():
+            return _FallbackSettings()
+
+    settings_mod = _SettingsMod()  # type: ignore
+
 if TYPE_CHECKING:  # pragma: no cover - mypy / pyright only
     from qdrant_client import QdrantClient
 else:  # runtime fallback if dependency unavailable (tests may monkeypatch)
@@ -27,7 +44,9 @@ else:  # runtime fallback if dependency unavailable (tests may monkeypatch)
     except Exception:  # pragma: no cover
         QdrantClient = None  # type: ignore
 
-from core.settings import get_settings
+# NOTE: We purposefully avoid binding get_settings at import time so tests that
+# monkeypatch core.settings.get_settings see the effect when this provider is
+# first invoked. Import inside the factory function.
 
 
 class _DummyPoint:
@@ -71,18 +90,54 @@ class _DummyClient:
         cols.collections = [type("C", (), {"name": n})() for n in self._collections]
         return cols
 
-    def create_collection(self, name: str, vectors_config: Any):  # pragma: no cover - trivial
-        self._collections.add(name)
+    def create_collection(
+        self, name: str | None = None, vectors_config: Any = None, **kwargs: Any
+    ) -> None:  # pragma: no cover - trivial
+        collection_name = name or kwargs.get("collection_name", "default")
+        self._collections.add(collection_name)
 
     # memory_storage_tool / vector_search_tool usage
     def get_collection(self, name: str):  # pragma: no cover - trivial
         if name not in self._collections:
             raise Exception("missing collection")
-        return {}
+        # Return a minimal collection info object for enhanced vector store
+        return type(
+            "CollectionInfo",
+            (),
+            {
+                "vectors_count": 0,
+                "segments_count": 1,
+                "disk_data_size": 0,
+                "ram_data_size": 0,
+                "config": type(
+                    "Config",
+                    (),
+                    {
+                        "params": type(
+                            "Params",
+                            (),
+                            {
+                                "vectors": type(
+                                    "Vectors",
+                                    (),
+                                    {"distance": type("Distance", (), {"value": "cosine"})(), "size": 128},
+                                )()
+                            },
+                        )(),
+                        "quantization_config": None,
+                        "sparse_vectors_config": None,
+                    },
+                )(),
+            },
+        )()
 
-    def recreate_collection(self, name: str, *, vectors_config: Any):  # pragma: no cover
-        self._collections.add(name)
-        self._store.setdefault(name, [])
+    def create_payload_index(self, **kwargs: Any) -> None:  # pragma: no cover - dummy implementation
+        # Dummy implementation - do nothing
+        pass
+
+    def search(self, **kwargs: Any) -> list[Any]:  # pragma: no cover - dummy implementation
+        # Return empty results for dummy client
+        return []
 
     def upsert(self, *, collection_name: str, points: Sequence[Any]):  # pragma: no cover
         self._collections.add(collection_name)
@@ -106,6 +161,10 @@ class _DummyClient:
         # naive: just return first N points; score constant
         return _DummyQueryResult(bucket[:limit])
 
+    def get_cluster_info(self):  # pragma: no cover - dummy implementation
+        # Return a minimal cluster info object for testing
+        return type("ClusterInfo", (), {"status": "dummy", "peers": []})()
+
 
 @lru_cache
 def get_qdrant_client() -> QdrantClient | _DummyClient:
@@ -116,28 +175,27 @@ def get_qdrant_client() -> QdrantClient | _DummyClient:
     RuntimeError
         If the optional dependency *qdrant-client* is not installed at runtime.
     """
-    settings = get_settings()
-    if QdrantClient is None:  # pragma: no cover - safety net
-        raise RuntimeError("qdrant-client not installed")
-
+    settings = settings_mod.get_settings()
     # Build explicit kwargs so static type checkers can match the signature
     prefer_grpc: bool = bool(getattr(settings, "qdrant_prefer_grpc", False))
     grpc_port_val = getattr(settings, "qdrant_grpc_port", None)
     grpc_port: int | None = int(grpc_port_val) if grpc_port_val else None
 
+    url_val = getattr(settings, "qdrant_url", None)
+    # Provide an in-memory dummy fallback for tests requesting ':memory:' or empty URL, or when client missing.
+    raw_url = str(url_val or "").strip()
+    if (not raw_url) or raw_url == ":memory:" or raw_url.startswith("memory://") or QdrantClient is None:
+        return _DummyClient()
+
     # Some downstream environments may have older qdrant-client versions lacking kwargs; keep explicit
     kwargs: dict[str, object] = {
-        "url": settings.qdrant_url,
-        "api_key": settings.qdrant_api_key,
+        "url": url_val,
+        "api_key": getattr(settings, "qdrant_api_key", None),
         "prefer_grpc": prefer_grpc,
     }
     if grpc_port is not None:
         kwargs["grpc_port"] = grpc_port
-    # Provide an in-memory dummy fallback for tests requesting ':memory:' or empty URL.
-    raw_url = str(kwargs.get("url") or "").strip()
-    if not raw_url or raw_url == ":memory:" or raw_url.startswith("memory://"):
-        return _DummyClient()
-    client = QdrantClient(**kwargs)  # type: ignore[arg-type]
+    client = QdrantClient(**kwargs)  # type: ignore
     return client
 
 

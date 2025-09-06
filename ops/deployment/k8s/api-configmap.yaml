@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: udi-config
+data:
+  # Non-secret runtime configuration (override per environment as needed)
+  DEFAULT_DOWNLOAD_QUALITY: "1080p"
+  ENABLE_CACHE: "1"
+  ENABLE_CACHE_LLM: "1"
+  ENABLE_CACHE_VECTOR: "1"
+  ENABLE_RAG_CONTEXT: "1"
+  ENABLE_VECTOR_SEARCH: "1"
+  RETRY_MAX_ATTEMPTS: "3"
+  RATE_LIMIT_RPS: "2"
+  RATE_LIMIT_BURST: "10"
+  ENABLE_DISTRIBUTED_RATE_LIMITING: "0"
+  ENABLE_RERANKER: "0"
+  RERANK_PROVIDER: "cohere"
+  ENABLE_FASTER_WHISPER: "0"
+  ENABLE_HTTP_CACHE: "0"
+  HTTP_CACHE_TTL_SECONDS: "300"

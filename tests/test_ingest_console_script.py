@@ -24,9 +24,7 @@ def test_ingest_console_script_help():
     elif shutil.which("ingest"):
         cmd = ["ingest", "--help"]
     else:
-        pytest.skip(
-            "ingest console script not found on PATH; skipping (module invocation still covered elsewhere)"
-        )
+        pytest.skip("ingest console script not found on PATH; skipping (module invocation still covered elsewhere)")
 
     # Security: command list is derived from installed entry point path, no shell used.
     proc = subprocess.run(  # noqa: S603

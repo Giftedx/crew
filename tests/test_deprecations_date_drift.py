@@ -20,8 +20,8 @@ def _load_current() -> dict[str, str]:
         name = entry.get("name")
         remove_after = entry.get("remove_after")
     if isinstance(name, str) and isinstance(remove_after, str | int | float):
-            # Only accept ISO date strings; ignore others for robustness
-            current[name] = str(remove_after)
+        # Only accept ISO date strings; ignore others for robustness
+        current[name] = str(remove_after)
     return current
 
 
@@ -48,9 +48,7 @@ def test_deprecation_dates_not_extended():
             and new_date > old_date  # lexicographic works for ISO YYYY-MM-DD
             and (name.lower() not in changelog or "date update" not in changelog)
         ):
-            regressions.append(
-                f"{name}: {old_date} -> {new_date} (missing changelog 'date update' note)"
-            )
+            regressions.append(f"{name}: {old_date} -> {new_date} (missing changelog 'date update' note)")
     assert not regressions, "\n" + "\n".join(regressions)
 
 
@@ -60,6 +58,7 @@ def test_snapshot_stays_in_sync():
     current = _load_current()
     missing = sorted(set(current) - set(snapshot))
     assert not missing, (
-        "Snapshot missing entries: " + ", ".join(missing) +
-        "; update tests/deprecations_snapshot.json to include new deprecations."
+        "Snapshot missing entries: "
+        + ", ".join(missing)
+        + "; update tests/deprecations_snapshot.json to include new deprecations."
     )

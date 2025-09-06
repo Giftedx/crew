@@ -1,10 +1,34 @@
 import os
-import re
 
 from fastapi.testclient import TestClient
-
 from obs import metrics
 from server.app import create_app
+
+
+def test_rate_limit_rejections_metric_increments():
+    os.environ["ENABLE_API"] = "1"
+    os.environ["ENABLE_HTTP_METRICS"] = "1"
+    os.environ["ENABLE_PROMETHEUS_ENDPOINT"] = "1"
+    os.environ["ENABLE_RATE_LIMITING"] = "1"
+    os.environ["RATE_LIMIT_RPS"] = "3"
+    os.environ["RATE_LIMIT_BURST"] = "3"
+
+    app = create_app()
+    client = TestClient(app)
+
+    for _ in range(5):  # exceed burst
+        client.get("/__not_exist")
+
+    metrics_resp = client.get("/metrics")
+    assert metrics_resp.status_code == 200
+    raw = metrics_resp._content.decode()  # type: ignore[attr-defined]
+    if metrics.PROMETHEUS_AVAILABLE:
+        assert "rate_limit_rejections_total" in raw
+    else:  # fallback no-op metrics backend: just ensure endpoint reachable
+        assert raw == "" or raw == b"" or isinstance(raw, str)
+
+
+import re
 
 
 def test_rate_limit_rejections_metric():
@@ -46,10 +70,10 @@ def test_rate_limit_rejections_metric():
         # Allow any label ordering inside the series (Prometheus may reorder labels)
         # Use lookaheads so label order inside braces is irrelevant. Need to escape braces in f-string.
         pattern = (
-            rf'rate_limit_rejections_total\{{'
+            rf"rate_limit_rejections_total\{{"
             rf'(?=[^}}]*route="{path}")'
             rf'(?=[^}}]*method="GET")'
-            rf'[^}}]*\}} (\d+(?:\.\d+)?)'
+            rf"[^}}]*\}} (\d+(?:\.\d+)?)"
         )
         match = re.search(pattern, prom_text)
         assert match, f"Did not find rate_limit_rejections_total series for {path}. Exposition was:\n{prom_text}"

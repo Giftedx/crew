@@ -23,9 +23,7 @@ def test_debate_pipeline_smoke(tmp_path):
     lb = LeaderboardTool(storage_path=tmp_path / "lb.json")
     tl = TimelineTool(storage_path=tmp_path / "timeline.json")
     trust = TrustworthinessTrackerTool(storage_path=tmp_path / "trust.json")
-    profile = CharacterProfileTool(
-        storage_path=tmp_path / "profiles.json", leaderboard=lb, trust_tracker=trust
-    )
+    profile = CharacterProfileTool(storage_path=tmp_path / "profiles.json", leaderboard=lb, trust_tracker=trust)
     memory = DummyMemory()
     pipeline = DebateAnalysisPipeline(
         leaderboard=lb,

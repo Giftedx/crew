@@ -1,0 +1,93 @@
+groups:
+  - name: cache-performance
+    rules:
+      # Cache hit rate alerts
+      - alert: CacheHitRateLow
+        expr: cache_hit_rate_ratio < 0.7
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Cache hit rate is low"
+          description: 'Cache {{ $labels.cache_name }} hit rate is {{ $value | printf "%.2f" }} (below 70%)'
+
+      - alert: CacheHitRateCritical
+        expr: cache_hit_rate_ratio < 0.5
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Cache hit rate is critically low"
+          description: 'Cache {{ $labels.cache_name }} hit rate is {{ $value | printf "%.2f" }} (below 50%)'
+
+      # Cache error rate alerts
+      - alert: CacheErrorRateHigh
+        expr: rate(cache_errors_total[5m]) / rate(cache_hits_total[5m] + cache_misses_total[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Cache error rate is high"
+          description: 'Cache {{ $labels.cache_name }} error rate is {{ $value | printf "%.2f" }} (above 5%)'
+
+      # Cache memory usage alerts
+      - alert: CacheMemoryUsageHigh
+        expr: cache_memory_usage_ratio > 0.9
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Cache memory usage is high"
+          description: 'Cache {{ $labels.cache_name }} memory usage is {{ $value | printf "%.2f" }} (above 90%)'
+
+      # Cache operation latency alerts
+      - alert: CacheLatencyHigh
+        expr: histogram_quantile(0.95, rate(cache_operation_latency_ms_bucket[5m])) > 100
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Cache operation latency is high"
+          description: 'Cache {{ $labels.cache_name }} P95 latency is {{ $value | printf "%.2f" }}ms (above 100ms)'
+
+      # Cache compression effectiveness alerts
+      - alert: CacheCompressionIneffective
+        expr: cache_compression_ratio < 0.5
+        for: 10m
+        labels:
+          severity: info
+        annotations:
+          summary: "Cache compression is ineffective"
+          description: 'Cache {{ $labels.cache_name }} compression ratio is {{ $value | printf "%.2f" }} (below 50%)'
+
+      # Cache eviction rate alerts
+      - alert: CacheEvictionRateHigh
+        expr: rate(cache_evictions_total[5m]) > 10
+        for: 5m
+        labels:
+          severity: info
+        annotations:
+          summary: "Cache eviction rate is high"
+          description: 'Cache {{ $labels.cache_name }} eviction rate is {{ $value | printf "%.2f" }}/s (above 10/s)'
+
+  - name: cache-availability
+    rules:
+      # Cache down alerts
+      - alert: CacheUnavailable
+        expr: up{job="cache"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Cache is unavailable"
+          description: "Cache {{ $labels.cache_name }} is not responding"
+
+      # Cache size anomalies
+      - alert: CacheSizeAnomaly
+        expr: abs(cache_size_bytes - predict_linear(cache_size_bytes[1h], 3600)) / cache_size_bytes > 0.5
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Cache size anomaly detected"
+          description: "Cache {{ $labels.cache_name }} size changed by more than 50% from predicted trend"

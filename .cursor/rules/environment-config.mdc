@@ -131,7 +131,7 @@ ENABLE_PROFILING=false          # Performance profiling
 
 ### Template Creation Pattern
 Always provide templates for environment configuration:
-- `.env.template` - Development configuration template
+- `.env.example` - Development configuration template
 - `.env.production.template` - Production configuration template
 
 ### Template Documentation

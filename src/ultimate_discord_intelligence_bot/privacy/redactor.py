@@ -1,1 +1,3 @@
-from core.privacy.redactor import *  # noqa: F401,F403
+from core.privacy.redactor import apply
+
+__all__ = ["apply"]

@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-import os
 from dataclasses import dataclass, field
+
+from core.secure_config import get_config
 
 
 @dataclass
@@ -20,22 +21,28 @@ class TokenMeter:
 
     def __post_init__(self) -> None:
         if self.max_cost_per_request is None:
-            env_val = os.getenv("COST_MAX_PER_REQUEST")
-            self.max_cost_per_request = float(env_val) if env_val else float("inf")
+            config = get_config()
+            self.max_cost_per_request = config.cost_max_per_request
 
     # ------------------------------------------------------------------
-    def estimate_cost(self, tokens: int, model: str) -> float:
+    def estimate_cost(self, tokens: int, model: str, prices: dict[str, float] | None = None) -> float:
         """Return the projected cost for ``tokens`` on ``model``.
 
         Pricing is expressed as USD per 1K tokens.  Unknown models default to
         zero cost which effectively bypasses budgeting.
         """
 
-        price = self.model_prices.get(model, 0.0)
+        price_map = prices or self.model_prices
+        price = price_map.get(model, 0.0)
         return price * (tokens / 1000)
 
     # ------------------------------------------------------------------
-    def affordable_model(self, tokens: int, candidates: list[str]) -> str | None:
+    def affordable_model(
+        self,
+        tokens: int,
+        candidates: list[str],
+        prices: dict[str, float] | None = None,
+    ) -> str | None:
         """Return the cheapest candidate fitting within the request budget.
 
         Models are sorted by price; the first whose estimated cost is below the
@@ -44,7 +51,8 @@ class TokenMeter:
         """
 
         max_cost = self.max_cost_per_request or float("inf")
-        for model in sorted(candidates, key=lambda m: self.model_prices.get(m, 0.0)):
-            if self.estimate_cost(tokens, model) <= max_cost:
+        price_map = prices or self.model_prices
+        for model in sorted(candidates, key=lambda m: price_map.get(m, 0.0)):
+            if self.estimate_cost(tokens, model, prices=price_map) <= max_cost:
                 return model
         return None

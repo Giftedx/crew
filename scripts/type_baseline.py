@@ -10,6 +10,7 @@ Baseline file: mypy_baseline.json
 This focuses on count comparison (not exact error text) so incremental improvements are encouraged
 without creating noisy churn when line numbers shift.
 """
+
 from __future__ import annotations
 
 import json
@@ -24,10 +25,12 @@ MYPY_CMD = [sys.executable, "-m", "mypy", "src"]
 ERROR_RE = re.compile(r"Found (\d+) errors? in ")
 USAGE_MIN_ARGS = 2  # minimum argv length (script + command)
 
+
 @dataclass
 class Result:
     count: int
     raw: str
+
 
 def run_mypy() -> Result:
     # Security note (S603): command arguments are a static list (no user input)
@@ -41,11 +44,13 @@ def run_mypy() -> Result:
     count = int(match.group(1)) if match else 0
     return Result(count=count, raw=out)
 
+
 def load_baseline() -> int:
     if not BASELINE_PATH.exists():
         return 0
     data = json.loads(BASELINE_PATH.read_text())
     return int(data.get("error_count", 0))
+
 
 def save_baseline(count: int) -> None:
     BASELINE_PATH.write_text(json.dumps({"error_count": count}, indent=2) + "\n")
@@ -61,6 +66,7 @@ def cmd_check() -> int:
     if baseline == 0:
         print("(Baseline not set yet; run update to establish current count)")
     return 0
+
 
 def cmd_update(force: bool = False) -> int:
     res = run_mypy()
@@ -82,6 +88,7 @@ def main(argv: list[str]) -> int:
     if cmd == "check":
         return cmd_check()
     return cmd_update(force=force)
+
 
 if __name__ == "__main__":  # pragma: no cover
     raise SystemExit(main(sys.argv))
