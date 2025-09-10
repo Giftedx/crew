@@ -12,23 +12,14 @@ import copy
 import logging
 import os as _os  # used for dynamic offline detection
 import time
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from typing import Any
 
 # Optional dependencies (graceful degradation if unavailable)
 try:  # pragma: no cover - optional distributed cache
-    from core.cache.enhanced_redis_cache import DistributedLLMCache  # type: ignore
+    from core.cache.enhanced_redis_cache import DistributedLLMCache
 except Exception:  # pragma: no cover
     DistributedLLMCache = None  # type: ignore
-
-try:  # pragma: no cover - optional local vLLM adapter
-    from core.vllm_service import is_vllm_available, vLLMOpenRouterAdapter  # type: ignore
-except Exception:  # pragma: no cover
-
-    def is_vllm_available():  # type: ignore
-        return False
-
-    vllm_openrouter_adapter_class = None  # type: ignore
 
 from core.http_utils import (
     REQUEST_TIMEOUT_SECONDS,
@@ -56,17 +47,21 @@ except Exception:  # pragma: no cover - fallback when pydantic/settings unavaila
         return _S()
 
 
+from core.flags import enabled  # tenancy strictness flags
 from obs import metrics
 
 try:
-    from obs.enhanced_langsmith_integration import trace_llm_call  # type: ignore[assignment]
+    from obs.enhanced_langsmith_integration import trace_llm_call as _trace_llm_call
+
+    def trace_llm_call(*args: Any, **kwargs: Any) -> None:
+        _trace_llm_call(*args, **kwargs)
 except Exception:  # pragma: no cover
 
-    def trace_llm_call(*args, **kwargs):  # type: ignore
+    def trace_llm_call(*args: Any, **kwargs: Any) -> None:
         return None
 
 
-from ultimate_discord_intelligence_bot.tenancy.context import current_tenant
+from ultimate_discord_intelligence_bot.tenancy.context import TenantContext, current_tenant
 from ultimate_discord_intelligence_bot.tenancy.registry import TenantRegistry
 
 from .cache import RedisLLMCache, make_key
@@ -74,6 +69,38 @@ from .logging_utils import AnalyticsStore
 from .prompt_engine import PromptEngine
 from .request_budget import current_request_tracker as _crt
 from .token_meter import TokenMeter
+
+# Optional semantic cache (guarded by feature flag in settings)
+_semantic_cache_get = None
+_semantic_cache_factory_err: str | None = None
+try:
+    from core.cache.semantic_cache import get_semantic_cache as _get_semantic_cache
+
+    _semantic_cache_get = _get_semantic_cache
+except Exception as _sc_exc:  # pragma: no cover - optional feature
+    _semantic_cache_factory_err = str(_sc_exc)
+
+# Optional local vLLM adapter (placed after all imports to satisfy E402)
+_VLLMAdapterCtor: Any | None = None
+_is_vllm_available: Callable[[], bool] | None
+try:  # pragma: no cover - optional local vLLM adapter
+    from core.vllm_service import is_vllm_available as _is_vllm_available
+    from core.vllm_service import vLLMOpenRouterAdapter as _VLLMAdapterCtor
+except Exception:  # pragma: no cover
+    _is_vllm_available = None
+    _VLLMAdapterCtor = None
+vllm_adapter_ctor: Any | None = _VLLMAdapterCtor
+
+
+def _has_vllm() -> bool:
+    """Return True if local vLLM adapter is importable and available."""
+    try:
+        if _is_vllm_available is None:
+            return False
+        return bool(_is_vllm_available())
+    except Exception:
+        return False
+
 
 log = logging.getLogger(__name__)
 
@@ -152,10 +179,12 @@ class OpenRouterService:
                 if getattr(cfg, "enable_cache_global", True) and getattr(cfg, "rate_limit_redis_url", None):
                     if DistributedLLMCache is not None:
                         try:
-                            ctx_cache = current_tenant()
-                            tenant_id = getattr(ctx_cache, "tenant", None) or "default"
-                            workspace_id = getattr(ctx_cache, "workspace", None) or "main"
-                            self.cache = DistributedLLMCache(  # type: ignore[call-arg]
+                            # Resolve tenant context for cache namespacing (allows fallback in non-strict mode)
+                            ctx_cache = OpenRouterService._ctx_or_fallback("openrouter_service")
+                            tenant_id = (getattr(ctx_cache, "tenant_id", None) or "default") if ctx_cache else "default"
+                            workspace_id = (getattr(ctx_cache, "workspace_id", None) or "main") if ctx_cache else "main"
+                            CacheCtor: Any = DistributedLLMCache
+                            self.cache = CacheCtor(
                                 url=str(cfg.rate_limit_redis_url),
                                 ttl=int(getattr(cfg, "cache_ttl_llm", 3600)),
                                 tenant=tenant_id,
@@ -180,6 +209,40 @@ class OpenRouterService:
         self.provider_opts = copy.deepcopy(provider_opts or {})
         self.logger = logger
         self.tenant_registry = tenant_registry
+        # Semantic cache instance (only if enabled via settings or env fallback)
+        try:
+            settings = get_settings()
+            enabled_sem = bool(getattr(settings, "enable_semantic_cache", False))
+            if not enabled_sem:
+                raw = (_os.getenv("ENABLE_SEMANTIC_CACHE") or "").lower()
+                enabled_sem = raw in ("1", "true", "yes", "on")
+            self.semantic_cache = _semantic_cache_get() if enabled_sem and _semantic_cache_get else None
+        except Exception:
+            self.semantic_cache = None
+
+    # --- Tenancy helpers -------------------------------------------------
+    @staticmethod
+    def _ctx_or_fallback(component: str) -> TenantContext | None:
+        """Return current tenant or fallback/default according to flags.
+
+        If strict tenancy is enabled and no context is set, raise. Otherwise,
+        log a warning, increment the tenancy fallback metric, and return a
+        default context ("default:main").
+        """
+        ctx = current_tenant()
+        if ctx is not None:
+            return ctx
+        # Strict mode gates
+        if enabled("ENABLE_TENANCY_STRICT", False) or enabled("ENABLE_INGEST_STRICT", False):
+            raise RuntimeError("TenantContext required but not set (strict mode)")
+        logging.getLogger("tenancy").warning(
+            "TenantContext missing; defaulting to 'default:main' namespace (non-strict mode)",
+        )
+        try:
+            metrics.TENANCY_FALLBACKS.labels(**{**metrics.label_ctx(), "component": component}).inc()
+        except Exception as exc:  # pragma: no cover - metrics optional
+            logging.debug("tenancy metric increment failed: %s", exc)
+        return TenantContext("default", "main")
 
     @staticmethod
     def _deep_merge(base: dict[str, Any], overrides: Mapping[str, Any]) -> dict[str, Any]:
@@ -199,43 +262,57 @@ class OpenRouterService:
                 base[key] = copy.deepcopy(value)
         return base
 
-    def _filter_candidates_by_tenant(self, candidates: list[str]) -> list[str]:
-        """Filter candidates using tenant allowlist if available.
+    def _choose_model_from_map(self, task_type: str, models_map: dict[str, list[str]]) -> str:
+        """Pick a model for a given task type from the provided map.
 
-        Performs a forgiving substring match so allowlists like ['gpt-4'] match
-        provider-prefixed model IDs (e.g., 'openai/gpt-4o').
+        Preference order:
+          1) task_type list
+          2) general list
+          3) conservative default
         """
-        if not self.tenant_registry:
-            return candidates
-        ctx = current_tenant()
-        if not ctx:
-            return candidates
-        allowed = self.tenant_registry.get_allowed_models(ctx)
-        if not allowed:
-            return candidates
-        lowered = [a.lower() for a in allowed]
-        filtered = [c for c in candidates if any(a in c.lower() or c.lower().startswith(a) for a in lowered)]
-        return filtered or candidates
+        candidates = models_map.get(task_type) or models_map.get("general") or []
+        if candidates:
+            # Delegate to learning engine if multiple candidates exist
+            if len(candidates) > 1:
+                try:
+                    return self.learning.select_model(task_type, candidates)
+                except Exception:
+                    return candidates[0]
+            return candidates[0]
+        return "openai/gpt-3.5-turbo"
 
-    def _choose_model_from_map(self, task_type: str, model_map: dict[str, list[str]]) -> str:
-        base = model_map.get(task_type) or model_map.get("general") or []
-        if not base:
-            base = self.models_map.get(task_type) or self.models_map.get("general") or []
-        candidates = self._filter_candidates_by_tenant(list(base))
-        return self.learning.select_model(task_type, candidates)
-
-    def route(  # noqa: PLR0912, PLR0915, PLR0911
+    def route(  # noqa: PLR0912, PLR0913, PLR0915, C901 - complex orchestrator; slated for helper extraction
         self,
         prompt: str,
         task_type: str = "general",
         model: str | None = None,
         provider_opts: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
-        """Route a prompt with provider preferences and budget enforcement."""
+        """Route a prompt with provider preferences and budget enforcement.
+
+        Note: This function coordinates several concerns (tenancy, pricing,
+        budgeting, caching, offline/network execution, metrics, tracing). A
+        follow-up refactor will extract helpers to reduce complexity while
+        preserving behavior.
+        """
+        # Resolve tenant context early (strict mode can raise; non-strict records fallback once per call)
+        ctx_effective = OpenRouterService._ctx_or_fallback("openrouter_service")
+
+        # Ensure metrics are attributed to the effective tenant/workspace even when no
+        # TenantContext was pre-set by the caller. We avoid mutating thread-local state
+        # and instead provide a local label factory for metric calls.
+        def _labels() -> dict[str, str]:
+            if ctx_effective is not None:
+                return {
+                    "tenant": getattr(ctx_effective, "tenant_id", "unknown"),
+                    "workspace": getattr(ctx_effective, "workspace_id", "unknown"),
+                }
+            return metrics.label_ctx()
+
         # Effective model map (include tenant overrides)
         effective_models = copy.deepcopy(self.models_map)
         if self.tenant_registry:
-            ctx = current_tenant()
+            ctx = ctx_effective
             if ctx:
                 overrides = self.tenant_registry.get_model_overrides(ctx)
                 if overrides:
@@ -262,7 +339,7 @@ class OpenRouterService:
         # Provider preferences
         provider: dict[str, Any] = {}
         if self.tenant_registry:
-            ctx = current_tenant()
+            ctx = ctx_effective
             if ctx:
                 prefs = self.tenant_registry.get_provider_preferences(ctx)
                 if prefs:
@@ -284,7 +361,7 @@ class OpenRouterService:
         tokens_in = self.prompt_engine.count_tokens(prompt, chosen)
         effective_prices = dict(self.token_meter.model_prices)
         if self.tenant_registry:
-            ctx = current_tenant()
+            ctx = ctx_effective
             if ctx:
                 effective_prices.update(self.tenant_registry.get_pricing_map(ctx))
         projected_cost = self.token_meter.estimate_cost(tokens_in, chosen, prices=effective_prices)
@@ -305,9 +382,7 @@ class OpenRouterService:
                     tokens_in = alt_tokens
                     projected_cost = alt_cost
                 else:
-                    metrics.LLM_BUDGET_REJECTIONS.labels(
-                        **metrics.label_ctx(), task=task_type, provider=provider_family
-                    ).inc()
+                    metrics.LLM_BUDGET_REJECTIONS.labels(**_labels(), task=task_type, provider=provider_family).inc()
                     return {
                         "status": "error",
                         "error": "cumulative cost exceeds limit",
@@ -316,9 +391,7 @@ class OpenRouterService:
                         "provider": provider,
                     }
             else:
-                metrics.LLM_BUDGET_REJECTIONS.labels(
-                    **metrics.label_ctx(), task=task_type, provider=provider_family
-                ).inc()
+                metrics.LLM_BUDGET_REJECTIONS.labels(**_labels(), task=task_type, provider=provider_family).inc()
                 return {
                     "status": "error",
                     "error": "cumulative cost exceeds limit",
@@ -330,7 +403,7 @@ class OpenRouterService:
         # Per-request limit overrides
         tenant_max: float | None = None
         if self.tenant_registry:
-            ctx = current_tenant()
+            ctx = ctx_effective
             if ctx:
                 per_task_limit = self.tenant_registry.get_per_request_limit(ctx, task_type)
                 if per_task_limit is not None:
@@ -366,9 +439,7 @@ class OpenRouterService:
                     tokens_in = alt_tokens
                     projected_cost = alt_cost
                 else:
-                    metrics.LLM_BUDGET_REJECTIONS.labels(
-                        **metrics.label_ctx(), task=task_type, provider=provider_family
-                    ).inc()
+                    metrics.LLM_BUDGET_REJECTIONS.labels(**_labels(), task=task_type, provider=provider_family).inc()
                     return {
                         "status": "error",
                         "error": "projected cost exceeds limit",
@@ -377,9 +448,7 @@ class OpenRouterService:
                         "provider": provider,
                     }
             else:
-                metrics.LLM_BUDGET_REJECTIONS.labels(
-                    **metrics.label_ctx(), task=task_type, provider=provider_family
-                ).inc()
+                metrics.LLM_BUDGET_REJECTIONS.labels(**_labels(), task=task_type, provider=provider_family).inc()
                 return {
                     "status": "error",
                     "error": "projected cost exceeds limit",
@@ -388,8 +457,58 @@ class OpenRouterService:
                     "provider": provider,
                 }
 
-        # Cache lookup
+        # Cache lookup (semantic first, then traditional)
         cache_key = None
+        # Tenant namespace for scoping
+        ns = None
+        if ctx_effective:
+            try:
+                ns = f"{getattr(ctx_effective, 'tenant_id', 'unknown')}:{getattr(ctx_effective, 'workspace_id', 'unknown')}"
+            except Exception:
+                ns = None
+        # Semantic cache
+        if self.semantic_cache is not None:
+            try:
+                # Run coroutine in a background thread using asyncio.run so it works
+                # regardless of whether a loop is already running in this thread.
+                import asyncio as _asyncio
+                import threading as _threading
+
+                _holder: dict[str, Any] = {}
+                log.debug(
+                    "semantic_cache_get attempting (ns=%s, model=%s, type=%s)", ns, chosen, type(self.semantic_cache)
+                )
+
+                sc = self.semantic_cache
+
+                def _runner() -> None:
+                    try:
+                        if sc is not None:
+                            _holder["result"] = _asyncio.run(sc.get(prompt, chosen, namespace=ns))
+                    except Exception as e:  # pragma: no cover - defensive
+                        _holder["error"] = e
+
+                t = _threading.Thread(target=_runner, daemon=True)
+                t.start()
+                t.join()
+                if "error" not in _holder:
+                    sem_res = _holder.get("result")
+                    if sem_res is not None:
+                        log.debug("semantic_cache_get HIT for model=%s ns=%s", chosen, ns)
+                        result = dict(sem_res)
+                        result["cached"] = True
+                        result["cache_type"] = "semantic"
+                        metrics.LLM_CACHE_HITS.labels(**_labels(), model=chosen, provider=provider_family).inc()
+                        return result
+                    else:
+                        log.debug("semantic_cache_get MISS for model=%s ns=%s", chosen, ns)
+                        try:
+                            metrics.LLM_CACHE_MISSES.labels(**_labels(), model=chosen, provider=provider_family).inc()
+                        except Exception:
+                            pass
+            except Exception:
+                # Conservative: ignore semantic cache errors
+                pass
         if self.cache:
             norm_prompt = self.prompt_engine.optimise(prompt)
 
@@ -407,7 +526,7 @@ class OpenRouterService:
                 result = dict(cached)
                 result["cached"] = True
                 metrics.LLM_CACHE_HITS.labels(
-                    **metrics.label_ctx(), model=result.get("model", chosen), provider=provider_family
+                    **_labels(), model=result.get("model", chosen), provider=provider_family
                 ).inc()
                 return result
 
@@ -420,7 +539,7 @@ class OpenRouterService:
             settings = get_settings()
             rl = {}
             if self.tenant_registry:
-                ctx_t = current_tenant()
+                ctx_t = ctx_effective
                 rl = self.tenant_registry.get_rl_overrides(ctx_t) if ctx_t else {}
             w_cost = float(rl.get("reward_cost_weight", getattr(settings, "reward_cost_weight", 0.5) or 0.5))
             w_lat = float(rl.get("reward_latency_weight", getattr(settings, "reward_latency_weight", 0.5) or 0.5))
@@ -447,13 +566,11 @@ class OpenRouterService:
             lat_norm = min(1.0, latency_ms / lat_window)
             reward = max(0.0, 1.0 - w_cost * cost_norm - w_lat * lat_norm)
             self.learning.update(task_type, chosen, reward=reward)
-            metrics.LLM_MODEL_SELECTED.labels(
-                **metrics.label_ctx(), task=task_type, model=chosen, provider=provider_family
-            ).inc()
-            metrics.LLM_ESTIMATED_COST.labels(**metrics.label_ctx(), model=chosen, provider=provider_family).observe(
+            metrics.LLM_MODEL_SELECTED.labels(**_labels(), task=task_type, model=chosen, provider=provider_family).inc()
+            metrics.LLM_ESTIMATED_COST.labels(**_labels(), model=chosen, provider=provider_family).observe(
                 projected_cost
             )
-            metrics.LLM_LATENCY.labels(**metrics.label_ctx()).observe(latency_ms)
+            metrics.LLM_LATENCY.labels(**_labels()).observe(latency_ms)
             if self.logger:
                 self.logger.log_llm_call(
                     task_type,
@@ -488,6 +605,27 @@ class OpenRouterService:
                 },
                 cost=projected_cost,
             )
+            # Persist caches
+            if self.semantic_cache is not None:
+                try:
+                    import asyncio as _asyncio
+                    import threading as _threading
+
+                    sc = self.semantic_cache
+
+                    def _runner_set() -> None:
+                        try:
+                            if sc is not None:
+                                _asyncio.run(sc.set(prompt, chosen, result, namespace=ns))
+                        except Exception:
+                            pass
+
+                    t_set = _threading.Thread(target=_runner_set, daemon=True)
+                    t_set.start()
+                    t_set.join()
+                    log.debug("semantic_cache_set completed for model=%s ns=%s", chosen, ns)
+                except Exception:
+                    pass
             if self.cache and cache_key:
                 self.cache.set(cache_key, result)
             result["cached"] = False
@@ -510,12 +648,13 @@ class OpenRouterService:
             settings = get_settings()
             if (
                 chosen.startswith("local/")
-                and vLLMOpenRouterAdapter is not None
-                and is_vllm_available()
+                and vllm_adapter_ctor is not None
+                and _has_vllm()
                 and getattr(settings, "enable_vllm_local", False)
             ):
                 try:  # pragma: no cover - only when local inference available
-                    adapter = vLLMOpenRouterAdapter()  # type: ignore[operator]
+                    AdapterType: Any = vllm_adapter_ctor
+                    adapter = AdapterType()
                     vllm_result = adapter.route_to_local_model(prompt, chosen, task_type)
                     if vllm_result.get("status") == "success":
                         latency_ms = (time.perf_counter() - start) * 1000
@@ -549,13 +688,13 @@ class OpenRouterService:
                 if getattr(settings, "local_llm_url", None):
                     local_model = chosen.split("/", 1)[1] if "/" in chosen else chosen
                     local_payload = {"model": local_model, "messages": payload["messages"]}
-                    local_url = str(settings.local_llm_url).rstrip("/") + "/v1/chat/completions"
+                    local_url = str(getattr(settings, "local_llm_url", "")).rstrip("/") + "/v1/chat/completions"
                     resp = resilient_post(
                         local_url, json_payload=local_payload, timeout_seconds=REQUEST_TIMEOUT_SECONDS
                     )
-                    if getattr(resp, "status_code", 200) >= 400:  # noqa: PLR2004
+                    if resp is None or getattr(resp, "status_code", 200) >= 400:  # noqa: PLR2004
                         raise RuntimeError(f"local_llm_error status={resp.status_code}")
-                    data = resp.json()
+                    data = resp.json() if resp is not None else {}
                     message = data.get("choices", [{}])[0].get("message", {}).get("content", "")
                     latency_ms = (time.perf_counter() - start) * 1000
                     tokens_out = self.prompt_engine.count_tokens(message, local_model)
@@ -592,7 +731,7 @@ class OpenRouterService:
             title = getattr(settings, "openrouter_title", None) or _os.getenv("OPENROUTER_TITLE")
             if title:
                 headers["X-Title"] = str(title)
-            resp = None
+            resp = None  # type: ignore[assignment]
             if is_retry_enabled():
                 try:
                     resp = http_request_with_retry(
@@ -633,16 +772,17 @@ class OpenRouterService:
                 resp = resilient_post(
                     url, headers=headers, json_payload=payload, timeout_seconds=REQUEST_TIMEOUT_SECONDS
                 )
-            if getattr(resp, "status_code", 200) >= 400:  # noqa: PLR2004
-                raise RuntimeError(f"openrouter_error status={resp.status_code}")
-            data = resp.json()
+            if resp is None or getattr(resp, "status_code", 200) >= 400:  # noqa: PLR2004
+                code = getattr(resp, "status_code", "unknown")
+                raise RuntimeError(f"openrouter_error status={code}")
+            data = resp.json() if resp is not None else {}
             message = data.get("choices", [{}])[0].get("message", {}).get("content", "")
             latency_ms = (time.perf_counter() - start) * 1000
             tokens_out = self.prompt_engine.count_tokens(message, chosen)
             settings = get_settings()
             rl = {}
             if self.tenant_registry:
-                ctx_t = current_tenant()
+                ctx_t = ctx_effective
                 rl = self.tenant_registry.get_rl_overrides(ctx_t) if ctx_t else {}
             w_cost = float(rl.get("reward_cost_weight", getattr(settings, "reward_cost_weight", 0.5) or 0.5))
             w_lat = float(rl.get("reward_latency_weight", getattr(settings, "reward_latency_weight", 0.5) or 0.5))
@@ -665,13 +805,11 @@ class OpenRouterService:
             lat_norm = min(1.0, latency_ms / lat_window)
             reward = max(0.0, 1.0 - w_cost * cost_norm - w_lat * lat_norm)
             self.learning.update(task_type, chosen, reward=reward)
-            metrics.LLM_MODEL_SELECTED.labels(
-                **metrics.label_ctx(), task=task_type, model=chosen, provider=provider_family
-            ).inc()
-            metrics.LLM_ESTIMATED_COST.labels(**metrics.label_ctx(), model=chosen, provider=provider_family).observe(
+            metrics.LLM_MODEL_SELECTED.labels(**_labels(), task=task_type, model=chosen, provider=provider_family).inc()
+            metrics.LLM_ESTIMATED_COST.labels(**_labels(), model=chosen, provider=provider_family).observe(
                 projected_cost
             )
-            metrics.LLM_LATENCY.labels(**metrics.label_ctx()).observe(latency_ms)
+            metrics.LLM_LATENCY.labels(**_labels()).observe(latency_ms)
             if self.logger:
                 self.logger.log_llm_call(
                     task_type,

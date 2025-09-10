@@ -25,7 +25,15 @@ def test_pipeline_emits_duration_ok(monkeypatch):
     )
     monkeypatch.setattr(ip, "_get_provider", lambda src: (prov, "channel"))
     stub = _HistogramStub()
-    req = type("_C", (), {"count": 0, "labels": lambda self, **k: self, "inc": lambda self: setattr(self, "count", getattr(self, "count", 0) + 1)})()
+    req = type(
+        "_C",
+        (),
+        {
+            "count": 0,
+            "labels": lambda self, **k: self,
+            "inc": lambda self: setattr(self, "count", getattr(self, "count", 0) + 1),
+        },
+    )()
     monkeypatch.setattr(metrics, "PIPELINE_DURATION", stub)
     monkeypatch.setattr(metrics, "PIPELINE_REQUESTS", req)
     store = types.SimpleNamespace(upsert=lambda ns, recs: None)

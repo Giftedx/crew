@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+import importlib
 import importlib.util as _ilu
 import os
 import sys
@@ -5,6 +8,23 @@ import types
 from pathlib import Path
 
 import pytest
+
+
+def pytest_ignore_collect(path: Path, config) -> bool:  # type: ignore[override]
+    """Conditionally ignore tests that require optional heavy dependencies.
+
+    If importing 'crewai' fails for any reason (missing extras or platform wheels),
+    skip collecting tests that depend on it to keep the fast test subset stable.
+    """
+    basename = os.path.basename(str(path))
+    if basename == "test_crewai_enhancements.py":
+        try:
+            importlib.import_module("crewai")
+            return False
+        except Exception:
+            return True
+    return False
+
 
 # Ensure repository root (for 'scripts' package) and src/ are on sys.path.
 REPO_ROOT = Path(__file__).resolve().parents[1]

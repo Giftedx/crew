@@ -9,10 +9,12 @@ def test_openrouter_includes_recommended_headers(monkeypatch):
 
     # Reload configuration to pick up environment changes
     from core.secure_config import reload_config
+
     reload_config()
 
     # Clear settings cache to pick up new environment variables
     from core.settings import get_settings
+
     get_settings.cache_clear()
 
     # Import module under test after env is set

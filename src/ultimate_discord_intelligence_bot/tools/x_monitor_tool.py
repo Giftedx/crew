@@ -33,11 +33,8 @@ class XMonitorTool(BaseTool[StepResult]):
             self._metrics.counter("tool_runs_total", labels={"tool": "x_monitor", "outcome": "skipped"}).inc()
             return StepResult.ok(skipped=True, reason="no posts provided", new_posts=[])
         result = self._monitor._run(items)
-        # Result is a StepResult; rely on its mapping interface (supports nested fallback)
-        try:
-            new_posts = result["new_items"]  # type: ignore[index]
-        except KeyError:
-            new_posts = []
+        # StepResult supports .get for safe access
+        new_posts = result.get("new_items", [])
         self._metrics.counter("tool_runs_total", labels={"tool": "x_monitor", "outcome": "success"}).inc()
         return StepResult.ok(new_posts=new_posts)
 

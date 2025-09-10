@@ -4,15 +4,15 @@ origin: root_consolidation
 status: active
 last_moved: 2025-09-02
 replaces:
-  - CLAUDE.md
-  - GEMINI.md
+  - docs/dev_assistants/CLAUDE.md
+  - docs/dev_assistants/GEMINI.md
 related:
   - docs/conventions.md
 ---
 
 ## Developer Assistant Guidance
 
-This consolidated guide replaces the former `CLAUDE.md` and `GEMINI.md` files. It provides context and guard‑rails for any AI/code assistant operating on this repository.
+This consolidated guide replaces the former `docs/dev_assistants/CLAUDE.md` and `docs/dev_assistants/GEMINI.md` files. It provides context and guard‑rails for any AI/code assistant operating on this repository.
 
 ## Project Overview (Unified)
 
@@ -83,4 +83,4 @@ Prefer to:
 - `docs/architecture/` – architectural overviews & sync reports.
 
 ---
-_This file supersedes `CLAUDE.md` and `GEMINI.md` which have been removed from the repository root to reduce clutter._
+_This file supersedes `docs/dev_assistants/CLAUDE.md` and `docs/dev_assistants/GEMINI.md` (moved from the repository root to reduce clutter)._

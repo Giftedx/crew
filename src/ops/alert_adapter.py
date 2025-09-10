@@ -57,8 +57,9 @@ async def receive_alert(request: Request) -> dict[str, str]:
 
     # Parse the JSON payload after validation
     import json
+
     try:
-        payload = json.loads(body.decode('utf-8')) if body else {}
+        payload = json.loads(body.decode("utf-8")) if body else {}
     except json.JSONDecodeError:
         raise HTTPException(status_code=400, detail="Invalid JSON payload")
 
@@ -84,4 +85,3 @@ async def receive_alert(request: Request) -> dict[str, str]:
     if getattr(resp, "status_code", 400) >= 400:
         raise HTTPException(status_code=502, detail=f"Discord webhook error: {resp.text}")
     return {"status": "ok"}
-

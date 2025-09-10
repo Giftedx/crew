@@ -115,6 +115,7 @@ def verify_incoming(  # noqa: PLR0913 - explicit parameters are security-critica
                 ordered.append(str(v))
     else:
         import os as _os
+
         if secret_ref not in _os.environ:
             _log(
                 "allow",

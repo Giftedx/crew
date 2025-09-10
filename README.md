@@ -56,3 +56,13 @@ make type     # Type checking
 ---
 
 *For detailed documentation on any topic, see the [Documentation Index](docs/ROOT_DOCS_INDEX.md)*
+
+<!-- DEPRECATIONS:START -->
+**Deprecations:** 2 active (<= 120 days window highlighted)  \
+        Generated via `scripts/update_deprecation_badge.py`.
+
+| Name | Stage | Remove After | Days Left | Occurrences | Violation | Replacement |
+|------|-------|--------------|-----------|-------------|-----------|-------------|
+| `ENABLE_ANALYSIS_HTTP_RETRY` | deprecated | 2025-12-31 | 113 | 7 | ✅ | ENABLE_HTTP_RETRY |
+| `services.learning_engine.LearningEngine` | deprecated | 2025-12-31 | 113 | 22 | ✅ | core.learning_engine.LearningEngine |
+<!-- DEPRECATIONS:END -->

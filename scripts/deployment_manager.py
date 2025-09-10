@@ -22,6 +22,7 @@ logger = structlog.get_logger()
 
 class DeploymentEnvironment(Enum):
     """Deployment environment types."""
+
     BLUE = "blue"
     GREEN = "green"
     STAGING = "staging"
@@ -30,6 +31,7 @@ class DeploymentEnvironment(Enum):
 
 class DeploymentStatus(Enum):
     """Deployment status."""
+
     PENDING = "pending"
     DEPLOYING = "deploying"
     VALIDATING = "validating"
@@ -42,6 +44,7 @@ class DeploymentStatus(Enum):
 @dataclass
 class DeploymentConfig:
     """Configuration for deployment process."""
+
     version: str
     environment: DeploymentEnvironment
     feature_flags: dict[str, bool]
@@ -58,6 +61,7 @@ class DeploymentConfig:
 @dataclass
 class DeploymentMetrics:
     """Metrics collected during deployment."""
+
     timestamp: float
     response_latency_p95: float = 0.0
     error_rate_percentage: float = 0.0
@@ -88,6 +92,7 @@ class DeploymentMetrics:
 @dataclass
 class DeploymentRecord:
     """Record of a deployment attempt."""
+
     deployment_id: str
     config: DeploymentConfig
     status: DeploymentStatus
@@ -118,16 +123,9 @@ class DeploymentManager:
 
     def _switch_environments(self):
         """Switch active and standby environments."""
-        self.current_environment, self.standby_environment = (
-            self.standby_environment,
-            self.current_environment
-        )
+        self.current_environment, self.standby_environment = (self.standby_environment, self.current_environment)
 
-    async def _deploy_to_environment(
-        self,
-        config: DeploymentConfig,
-        environment: DeploymentEnvironment
-    ) -> bool:
+    async def _deploy_to_environment(self, config: DeploymentConfig, environment: DeploymentEnvironment) -> bool:
         """Deploy application to specified environment."""
         try:
             logger.info(f"Deploying version {config.version} to {environment.value}")
@@ -182,15 +180,13 @@ class DeploymentManager:
             throughput_rps=base_throughput + random.uniform(-5, 10),
             cost_per_interaction=base_cost + random.uniform(-0.002, 0.005),
             success_rate_percentage=min(100, 99.5 + random.uniform(-2, 0.5)),
-            memory_usage_mb=1800 + random.uniform(-200, 500)
+            memory_usage_mb=1800 + random.uniform(-200, 500),
         )
 
         return metrics
 
     async def _validate_deployment_health(
-        self,
-        config: DeploymentConfig,
-        duration_seconds: int
+        self, config: DeploymentConfig, duration_seconds: int
     ) -> tuple[bool, list[str]]:
         """Validate deployment health over specified duration."""
         logger.info(f"Validating deployment health for {duration_seconds} seconds")
@@ -211,11 +207,12 @@ class DeploymentManager:
 
             if not is_healthy:
                 all_issues.extend(issues)
-                logger.warning(f"Health check {i+1}/{checks} failed: {', '.join(issues)}")
+                logger.warning(f"Health check {i + 1}/{checks} failed: {', '.join(issues)}")
 
                 # Immediate rollback on critical issues
                 critical_issues = [
-                    issue for issue in issues
+                    issue
+                    for issue in issues
                     if "High error rate" in issue and float(issue.split(": ")[1].rstrip("%")) > 10.0
                 ]
 
@@ -223,7 +220,7 @@ class DeploymentManager:
                     logger.error("Critical health issues detected, triggering immediate rollback")
                     return False, all_issues
             else:
-                logger.info(f"Health check {i+1}/{checks} passed")
+                logger.info(f"Health check {i + 1}/{checks} passed")
 
             if i < checks - 1:  # Don't sleep after last check
                 await asyncio.sleep(validation_interval)
@@ -274,12 +271,14 @@ class DeploymentManager:
 
             # Verify rollback health
             rollback_metrics = await self._collect_deployment_metrics()
-            is_healthy, issues = rollback_metrics.is_healthy({
-                "response_latency_p95": 3000.0,  # More lenient thresholds for rollback
-                "error_rate_percentage": 8.0,
-                "success_rate_percentage": 90.0,
-                "cost_per_interaction": 0.1
-            })
+            is_healthy, issues = rollback_metrics.is_healthy(
+                {
+                    "response_latency_p95": 3000.0,  # More lenient thresholds for rollback
+                    "error_rate_percentage": 8.0,
+                    "success_rate_percentage": 90.0,
+                    "cost_per_interaction": 0.1,
+                }
+            )
 
             if is_healthy:
                 logger.info("Rollback completed successfully")
@@ -306,10 +305,7 @@ class DeploymentManager:
 
         # Create deployment record
         deployment_record = DeploymentRecord(
-            deployment_id=deployment_id,
-            config=config,
-            status=DeploymentStatus.PENDING,
-            started_at=time.time()
+            deployment_id=deployment_id, config=config, status=DeploymentStatus.PENDING, started_at=time.time()
         )
 
         self.active_deployment = deployment_record
@@ -351,7 +347,9 @@ class DeploymentManager:
 
                 if not is_healthy:
                     logger.error(f"Health validation failed at {traffic_percentage}% traffic")
-                    await self._rollback_deployment(f"Health issues at {traffic_percentage}% traffic: {', '.join(issues)}")
+                    await self._rollback_deployment(
+                        f"Health issues at {traffic_percentage}% traffic: {', '.join(issues)}"
+                    )
                     return False
 
                 logger.info(f"Health validation passed at {traffic_percentage}% traffic")
@@ -362,8 +360,7 @@ class DeploymentManager:
             # Final validation
             logger.info("Performing final validation after complete switchover")
             final_healthy, final_issues = await self._validate_deployment_health(
-                config,
-                config.validation_duration_seconds // 2
+                config, config.validation_duration_seconds // 2
             )
 
             if not final_healthy:
@@ -392,9 +389,7 @@ class DeploymentManager:
             "standby_environment": self.standby_environment.value,
             "traffic_percentage": self.current_traffic_percentage,
             "active_deployment": asdict(self.active_deployment) if self.active_deployment else None,
-            "recent_deployments": [
-                asdict(deployment) for deployment in self.deployment_history[-5:]
-            ]
+            "recent_deployments": [asdict(deployment) for deployment in self.deployment_history[-5:]],
         }
 
     def get_deployment_history(self, limit: int = 20) -> list[dict[str, Any]]:
@@ -419,19 +414,15 @@ async def main():
     config = DeploymentConfig(
         version="v2.1.0-ai-enhanced",
         environment=DeploymentEnvironment.PRODUCTION,
-        feature_flags={
-            "ENABLE_LITELLM_ROUTING": True,
-            "ENABLE_SEMANTIC_CACHE": True,
-            "ENABLE_LANGSMITH_TRACING": True
-        },
+        feature_flags={"ENABLE_LITELLM_ROUTING": True, "ENABLE_SEMANTIC_CACHE": True, "ENABLE_LANGSMITH_TRACING": True},
         rollback_threshold={
             "response_latency_p95": 1500.0,  # 1.5 seconds max
-            "error_rate_percentage": 3.0,    # 3% max error rate
+            "error_rate_percentage": 3.0,  # 3% max error rate
             "success_rate_percentage": 97.0,  # 97% min success rate
-            "cost_per_interaction": 0.02      # $0.02 max cost
+            "cost_per_interaction": 0.02,  # $0.02 max cost
         },
         validation_duration_seconds=120,  # 2 minutes validation
-        traffic_shift_steps=[10, 25, 50, 100]
+        traffic_shift_steps=[10, 25, 50, 100],
     )
 
     # Perform deployment

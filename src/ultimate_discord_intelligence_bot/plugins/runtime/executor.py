@@ -10,9 +10,9 @@ from dataclasses import dataclass
 from typing import Any
 
 try:  # Support different jsonschema versions
-    from jsonschema import validate as _js_validate  # type: ignore
+    from jsonschema import validate as _js_validate
 except Exception:  # pragma: no cover - fallback when jsonschema missing or API changed
-    _js_validate = None  # type: ignore
+    _js_validate = None
 
 from core import learn
 from core.rl import registry as rl_registry

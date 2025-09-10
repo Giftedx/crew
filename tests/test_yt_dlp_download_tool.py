@@ -1,4 +1,3 @@
-
 import unittest
 from unittest.mock import MagicMock, patch
 
@@ -31,7 +30,7 @@ class TestYtDlpDownloadTool(unittest.TestCase):
         # Arrange
         mock_process = MagicMock()
         mock_process.returncode = 0
-        mock_process.stdout = '[download] /path/to/video.mp4 has already been downloaded'
+        mock_process.stdout = "[download] /path/to/video.mp4 has already been downloaded"
         mock_run.return_value = mock_process
 
         tool = YtDlpDownloadTool()

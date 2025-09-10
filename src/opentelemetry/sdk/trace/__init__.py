@@ -4,4 +4,3 @@ from ...trace import TracerProvider
 from ..resources import Resource
 
 __all__ = ["TracerProvider", "Resource"]
-

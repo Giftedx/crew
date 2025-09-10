@@ -28,17 +28,31 @@ def _get_config():
         return None
 
 
+_ENABLE_SECURE_PATH_FALLBACK = os.getenv("CREW_ENABLE_SECURE_PATH_FALLBACK") == "1"
+
+
 def _get_path_setting(key: str, default_path: Path) -> Path:
-    """Get path setting with fallback to environment variable."""
-    config = _get_config()
-    if config:
-        value = config.get_setting(key, None)
-        if value:
-            return Path(value).expanduser()
-    # Fallback to direct environment variable
+    """Get path setting preferring environment variable, then secure config.
+
+    Tests and CLI expect that explicit environment variables take precedence
+    over values that may be provided by the secure configuration layer. This
+    function therefore checks the environment first, then consults secure
+    config, finally falling back to the provided default.
+    """
+    # Highest priority: direct environment variable override
     env_value = os.getenv(key.upper())
     if env_value:
         return Path(env_value).expanduser()
+
+    # Next: optional secure config (only if explicitly enabled to avoid sticky defaults in tests)
+    if _ENABLE_SECURE_PATH_FALLBACK:
+        config = _get_config()
+        if config:
+            value = config.get_setting(key, None)
+            if value:
+                return Path(value).expanduser()
+
+    # Default
     return default_path.expanduser()
 
 

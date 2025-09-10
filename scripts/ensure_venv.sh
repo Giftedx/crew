@@ -15,7 +15,8 @@ cd "$PROJECT_ROOT"
 
 PYTHON_BIN="${PYTHON_BIN:-python3}"
 VENV_DIR="${VENV_DIR:-.venv}"
-EXTRAS_SPEC="${EXTRAS_SPEC:-'.[dev]'}"
+# EXTRAS_SPEC should NOT include quotes; quoting is applied at invocation time below
+EXTRAS_SPEC="${EXTRAS_SPEC:-.[dev]}"
 
 if [[ ! -d "$VENV_DIR" ]]; then
   echo "[ensure_venv] Creating virtual environment in $VENV_DIR"
@@ -42,7 +43,7 @@ else
   echo "[ensure_venv] Installing project with extras: $EXTRAS_SPEC"
 fi
 
-# Quote extras to survive zsh/bash globbing
+# Quote extras to survive zsh/bash globbing (EXTRAS_SPEC should be unquoted value like .[dev])
 pip install -q -e "$EXTRAS_SPEC"
 
 # Optional: install pre-commit hooks if present

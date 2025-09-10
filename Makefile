@@ -11,7 +11,7 @@ PKG := ultimate_discord_intelligence_bot
 .PHONY: test-fast ci-fast
 .PHONY: ensure-venv uv-lock uv-sync uv-bootstrap
 .PHONY: install dev lint format format-check type type-changed type-baseline type-baseline-update test eval docs pre-commit hooks deprecations deprecations-json deprecations-strict deprecations-badge guards ci-all clean clean-bytecode deep-clean warn-venv
- 
+
 lint:
 	bash scripts/dev.sh lint
 
@@ -107,12 +107,28 @@ format-check:
 type:
 	$(PYTHON) -m mypy src || true  # incremental adoption, non-zero tolerated locally
 
+type-guard:
+	$(PYTHON) scripts/mypy_snapshot_guard.py --baseline reports/mypy_snapshot.json
+
+type-guard-update:
+	$(PYTHON) scripts/mypy_snapshot_guard.py --baseline reports/mypy_snapshot.json --update
+
+ci-type-guard:  ## CI-friendly guard (fails build if increased); can add --json for machine parsing
+	$(PYTHON) scripts/mypy_snapshot_guard.py --baseline reports/mypy_snapshot.json
+
+type-guard-json:
+	@if [ "$(BREAKDOWN)" = "1" ]; then \
+		$(PYTHON) scripts/mypy_snapshot_guard.py --baseline reports/mypy_snapshot.json --json --breakdown; \
+	else \
+		$(PYTHON) scripts/mypy_snapshot_guard.py --baseline reports/mypy_snapshot.json --json; \
+	fi
+
 test:
-	$(PYTHON) -m pytest -q
+	$(PYTHON) -m pytest -q -c config/pytest.ini
 
 # Fast local CI sweep (quick feedback loop)
 test-fast:
-	$(PYTHON) -m pytest -q -k "http_utils or guards_http_requests or vector_store_dimension or vector_store_namespace"
+	$(PYTHON) -m pytest -q -c config/pytest.ini -k "http_utils or guards_http_requests or vector_store_dimension or vector_store_namespace"
 
 ci-fast: docs guards test-fast
 
@@ -141,7 +157,7 @@ deprecations-badge:
 deprecations-strict:
 	$(PYTHON) scripts/check_deprecations.py --fail-on-upcoming 90
 
-ci-all: doctor format-check lint type guards test deprecations-strict
+ci-all: doctor format-check lint type guards test compliance deprecations-strict
 
 guards:
 	$(PYTHON) scripts/validate_dispatcher_usage.py && $(PYTHON) scripts/validate_http_wrappers_usage.py && $(PYTHON) scripts/metrics_instrumentation_guard.py
@@ -206,3 +222,14 @@ compliance-fix:  ## Auto-fix simple compliance issues
 .PHONY: compliance-summary
 compliance-summary:  ## Generate compliance summary report
 	@cd src/ultimate_discord_intelligence_bot && python3 tools/compliance_executive_summary.py
+
+# Install / update common third-party stub packages + auto-install types for direct deps
+.PHONY: types-install
+types-install:
+	@echo "[types-install] Installing common stub packages..."
+	$(PYTHON) -m pip install --quiet --upgrade \
+		types-psutil \
+		types-jsonschema || true
+	@echo "[types-install] Running mypy --install-types (non-interactive)..."
+	$(PYTHON) -m mypy --install-types --non-interactive || true
+	@echo "[types-install] Complete. Review newly added stub packages for pinning in pyproject if needed."

@@ -96,13 +96,15 @@ def find_os_getenv_usage(root_path: Path) -> list[ConfigUsage]:
                     else:
                         replacement = f"config.get_setting('{env_var.lower()}')"
 
-                    usages.append(ConfigUsage(
-                        file_path=py_file,
-                        line_number=line_num,
-                        env_var=env_var,
-                        context=line.strip(),
-                        suggested_replacement=replacement
-                    ))
+                    usages.append(
+                        ConfigUsage(
+                            file_path=py_file,
+                            line_number=line_num,
+                            env_var=env_var,
+                            context=line.strip(),
+                            suggested_replacement=replacement,
+                        )
+                    )
 
         except Exception as e:
             logger.warning(f"Error processing {py_file}: {e}")
@@ -122,7 +124,11 @@ def analyze_usage(root_path: Path) -> None:
     webhooks = [u for u in usages if u.env_var in WEBHOOK_MAPPING]
     feature_flags = [u for u in usages if u.env_var in FEATURE_FLAG_MAPPING]
     settings = [u for u in usages if u.env_var in SETTING_MAPPING]
-    other = [u for u in usages if u.env_var not in {**API_KEY_MAPPING, **WEBHOOK_MAPPING, **FEATURE_FLAG_MAPPING, **SETTING_MAPPING}]
+    other = [
+        u
+        for u in usages
+        if u.env_var not in {**API_KEY_MAPPING, **WEBHOOK_MAPPING, **FEATURE_FLAG_MAPPING, **SETTING_MAPPING}
+    ]
 
     if api_keys:
         print("🔑 API Keys:")

@@ -13,6 +13,18 @@ import logging
 from dataclasses import dataclass, field
 from typing import Any
 
+try:
+    from core.settings import get_settings
+except Exception:  # pragma: no cover - defensive fallback
+
+    def get_settings():  # type: ignore
+        class _S:
+            enable_prompt_compression = False
+            prompt_compression_max_repeated_blank_lines = 1
+
+        return _S()
+
+
 from .memory_service import MemoryService
 
 try:  # pragma: no cover - optional dependency
@@ -91,7 +103,25 @@ class PromptEngine:
         This basic implementation simply strips surrounding whitespace; it can
         be extended with more advanced optimisation strategies.
         """
-        return prompt.strip()
+        text = prompt.strip()
+        settings = get_settings()
+        if getattr(settings, "enable_prompt_compression", False):
+            # Collapse excessive blank lines to a configured maximum.
+            max_blanks = int(getattr(settings, "prompt_compression_max_repeated_blank_lines", 1) or 1)
+            lines: list[str] = []
+            blank_run = 0
+            for ln in text.splitlines():
+                if ln.strip() == "":
+                    blank_run += 1
+                    if blank_run <= max_blanks:
+                        lines.append("")
+                    # else: skip extra blanks
+                else:
+                    blank_run = 0
+                    # Trim trailing spaces
+                    lines.append(ln.rstrip())
+            text = "\n".join(lines).strip()
+        return text
 
     def build_with_context(
         self,

@@ -11,6 +11,7 @@ Usage:
   python -m ultimate_discord_intelligence_bot.setup_cli run discord
   python -m ultimate_discord_intelligence_bot.setup_cli run crew
 """
+
 from __future__ import annotations
 
 import os
@@ -139,6 +140,7 @@ def _wizard() -> int:
 
     # Advanced: Feature flags (enable subsystems)
     _print_header("Feature Flags")
+
     def yn(key: str, default: bool = True) -> str:
         dflt = "y" if default else "n"
         val = _prompt(f"Enable {key}? (y/n)", default=dflt)
@@ -281,6 +283,7 @@ def _wizard() -> int:
 
 def _check_binary(name: str) -> tuple[bool, str]:
     from shutil import which
+
     path = which(name)
     return (path is not None, path or "")
 

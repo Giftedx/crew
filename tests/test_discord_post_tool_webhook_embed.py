@@ -29,7 +29,11 @@ def test_discord_post_embed_monkeypatched(monkeypatch):
 
     tool = DiscordPostTool("https://discord.com/api/webhooks/123/abc")
     content = {"title": "T", "uploader": "U", "platform": "P", "file_size": 999999999}
-    links = {"preview_link": "https://drive/preview", "direct_link": "https://drive/download", "thumbnail": "https://cdn/thumb"}
+    links = {
+        "preview_link": "https://drive/preview",
+        "direct_link": "https://drive/download",
+        "thumbnail": "https://cdn/thumb",
+    }
     res = tool.run(content, links)
     assert res["status"] == "success"
     assert captured["url"].startswith("https://discord.com/api/webhooks/")
@@ -38,4 +42,3 @@ def test_discord_post_embed_monkeypatched(monkeypatch):
     assert embed["thumbnail"]["url"] == links["thumbnail"]
     assert "Watch Online" in embed["fields"][0]["name"]
     assert "Download" in embed["fields"][1]["name"]
-

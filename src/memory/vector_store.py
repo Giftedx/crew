@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Any, TypedDict
+from typing import TYPE_CHECKING, Any, TypedDict
 
 try:
     from core.settings import get_settings
@@ -23,12 +23,19 @@ from .qdrant_provider import (
     _DummyClient as _DC,  # lazy import to avoid cycles in typing
 )
 
+if TYPE_CHECKING:  # pragma: no cover - for type checkers only
+    from qdrant_client import QdrantClient as _QdrantClient  # noqa: F401
+    from qdrant_client.http import models as _qmodels  # noqa: F401
+else:
+    _QdrantClient = Any  # runtime fallback type
+    _qmodels = Any
+
 try:
     from qdrant_client import QdrantClient
-    from qdrant_client.http import models as qmodels
+
+    QDRANT_AVAILABLE = True
 except Exception:  # pragma: no cover - optional dependency
-    QdrantClient = None
-    qmodels = None
+    QDRANT_AVAILABLE = False
 
 # Constants for vector dimensions and batch sizing
 LARGE_EMBEDDING_DIM = 768
@@ -80,7 +87,7 @@ class VectorStore:
         # unavailable the provider returns an in-memory dummy client suitable for tests.
         if url is None:
             self.client = get_qdrant_client()
-        elif QdrantClient is None:  # pragma: no cover - fallback to dummy when constructing directly
+        elif not QDRANT_AVAILABLE:  # pragma: no cover - fallback to dummy when constructing directly
             self.client = _DC()
         else:
             self.client = QdrantClient(url, api_key=api_key)
@@ -104,7 +111,12 @@ class VectorStore:
             self._physical_names[name] = physical
         cols = self.client.get_collections().collections
         if not any(c.name == physical for c in cols):
-            vec_conf = None if qmodels is None else qmodels.VectorParams(size=dim, distance=qmodels.Distance.COSINE)
+            if QDRANT_AVAILABLE:
+                from qdrant_client.http import models as qmodels
+
+                vec_conf = qmodels.VectorParams(size=dim, distance=qmodels.Distance.COSINE)
+            else:
+                vec_conf = None
             # Dummy client ignores vectors_config
             self.client.create_collection(physical, vectors_config=vec_conf)
             self._dims[name] = dim
@@ -135,10 +147,10 @@ class VectorStore:
         # Chunk large batches to reduce memory usage and allow streaming ingest
         for offset in range(0, len(records), effective_batch_size):
             chunk = records[offset : offset + effective_batch_size]
-            points = []
+            points: list[Any] = []
 
             # Pre-allocate points list for better performance
-            if qmodels is None:
+            if not QDRANT_AVAILABLE:
                 points = []
                 for i, r in enumerate(chunk):
                     payload_dict = dict(r.payload)
@@ -147,6 +159,8 @@ class VectorStore:
                     points.append(point)
             else:
                 # Use more efficient list comprehension for PointStruct creation
+                from qdrant_client.http import models as qmodels
+
                 points = [
                     qmodels.PointStruct(id=base + offset + i, vector=r.vector, payload=dict(r.payload))
                     for i, r in enumerate(chunk)

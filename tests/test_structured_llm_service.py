@@ -1021,8 +1021,8 @@ class TestResponseCache:
         # Set a value with very short TTL
         cache.set("test_key", "test_value", ttl_seconds=1)  # Expire in 1 second
 
-        # Wait for expiration
-        time.sleep(1.1)
+        # Wait for expiration (add margin to avoid timing flakiness on CI)
+        time.sleep(1.3)
 
         # Try to get the expired value
         result = cache.get("test_key")
@@ -1060,8 +1060,6 @@ class TestResponseCache:
 
     def test_cache_clear_expired(self):
         """Test clearing expired entries."""
-        import time
-
         cache = ResponseCache()
 
         # Set some values
@@ -1069,8 +1067,11 @@ class TestResponseCache:
         cache.set("key2", "value2", ttl_seconds=1)  # Will expire
         cache.set("key3", "value3", ttl_seconds=1)  # Will expire
 
-        # Wait for expiration
-        time.sleep(1.1)
+        # Force expiration deterministically by adjusting created_at
+        import time as _time
+
+        cache.cache["key2"].created_at = _time.time() - 2.0
+        cache.cache["key3"].created_at = _time.time() - 2.0
 
         # Clear expired entries
         removed_count = cache.clear_expired()

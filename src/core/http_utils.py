@@ -595,9 +595,10 @@ def cached_get(
     now = time.time()
     ttl = int(ttl_seconds if ttl_seconds is not None else getattr(settings, "http_cache_ttl_seconds", 300) or 300)
     # Try Redis first
-    if _RedisCache is not None and getattr(settings, "rate_limit_redis_url", None):
+    redis_url = getattr(settings, "rate_limit_redis_url", None)
+    if _RedisCache is not None and redis_url:
         try:
-            rc = _RedisCache(url=str(settings.rate_limit_redis_url), namespace="http", ttl=ttl)
+            rc = _RedisCache(url=str(redis_url), namespace="http", ttl=ttl)
             raw = rc.get_str(key)
             if raw:
                 try:

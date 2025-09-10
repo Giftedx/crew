@@ -45,4 +45,3 @@ def test_reward_shaping_offline_monkeypatched_latency(monkeypatch):
     # With cost_norm=1, lat_norm=~0.5, weights 0.5/0.5 reward≈0.25
     _, _, reward = engine.updated[-1]
     assert 0.2 <= reward <= 0.3
-

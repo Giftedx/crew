@@ -102,6 +102,8 @@ def render(flags: set[str]) -> str:
 
 def main() -> int:
     code_flags = vf.discover_code_flags()
+    # Exclude internal alias flags to avoid documenting non-env constants
+    code_flags -= vf.INTERNAL_ALIAS_FLAGS
     # Keep documented-only placeholders too so doc retains pattern context
     documented = vf.discover_documented_flags()
     union = code_flags | {f for f in documented if f in vf.PATTERN_PLACEHOLDERS or f in vf.DEPRECATED}

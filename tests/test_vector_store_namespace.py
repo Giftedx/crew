@@ -19,4 +19,3 @@ def test_vector_store_namespace_and_physical_mapping():
     # Check dummy client collections contain the physical name
     cols = [c.name for c in store.client.get_collections().collections]
     assert physical in cols
-

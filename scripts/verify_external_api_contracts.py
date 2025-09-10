@@ -8,22 +8,38 @@ for manual use. CI should not rely on it unless network is permitted.
 
 from __future__ import annotations
 
+import sys as _sys
 from collections.abc import Callable
+from pathlib import Path
 
+# Ensure src/ is on path so we can use core HTTP wrappers everywhere
+_sys.path.append(str(Path(__file__).resolve().parents[1] / "src"))
+
+# isort: off - local path mutation requires nearby import for stability
 try:
-    import requests  # type: ignore
-except Exception:  # pragma: no cover - requests is in runtime deps
-    requests = None  # type: ignore
+    # Prefer centralized HTTP wrappers per repository policy
+    from core.http_utils import REQUEST_TIMEOUT_SECONDS, cached_get
+except Exception:  # pragma: no cover - fallback in environments without src path
+    cached_get = None  # type: ignore
+    REQUEST_TIMEOUT_SECONDS = 15  # sensible default
+# isort: on
+
+# Lint-friendly named constant for readability
+HTTP_ERROR_THRESHOLD = 400
 
 
 def _fetch(url: str, timeout: int = 10) -> str:
-    if requests is None:
-        return ""
+    """Fetch a URL using project HTTP helpers with caching when available.
+
+    Returns empty string on any failure; intended for best-effort diagnostics only.
+    """
     try:
-        r = requests.get(url, timeout=timeout)
-        if r.status_code >= 400:
+        if cached_get is None:
+            return ""  # wrappers unavailable in this environment
+        resp = cached_get(url, timeout_seconds=timeout or REQUEST_TIMEOUT_SECONDS)
+        if getattr(resp, "status_code", 500) >= HTTP_ERROR_THRESHOLD:
             return ""
-        return r.text or ""
+        return getattr(resp, "text", "") or ""
     except Exception:
         return ""
 
@@ -75,4 +91,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

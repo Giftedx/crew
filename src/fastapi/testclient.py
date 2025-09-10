@@ -27,6 +27,8 @@ class _Resp:
 class TestClient:
     def __init__(self, app: Any) -> None:
         self.app = app
+        # Provide public 'request' callable for compatibility with starlette TestClient
+        self.request = self._request
 
     # Internal unified request executor to minimise duplication
     def _request(
@@ -123,7 +125,7 @@ class TestClient:
         # Determine whether to pass request object based on handler signature
         sig = None
         try:
-            sig = inspect.signature(handler)  # type: ignore[arg-type]
+            sig = inspect.signature(handler)
         except (TypeError, ValueError):  # builtins or C funcs
             pass
         wants_arg = bool(sig and len(sig.parameters) >= 1)
@@ -132,16 +134,16 @@ class TestClient:
             if wants_arg:
                 # If the handler expects a Pydantic model, attempt to build it from JSON payload
                 try:
-                    from pydantic import BaseModel as _BM  # type: ignore
+                    from pydantic import BaseModel as _BM
 
                     if sig is not None:
                         params = list(sig.parameters.values())
                         if params:
                             param = params[0]
                             ann = param.annotation
-                            if isinstance(ann, type) and issubclass(ann, _BM):  # type: ignore[arg-type]
+                            if isinstance(ann, type) and issubclass(ann, _BM):
                                 data_obj = json if isinstance(json, dict) else {}
-                                return handler(ann(**data_obj))  # type: ignore[misc]
+                                return handler(ann(**data_obj))
                 except Exception:
                     pass
                 # Attempt simple form/header parameter injection
@@ -166,7 +168,7 @@ class TestClient:
                                 def __init__(self, filename: str, content: bytes) -> None:
                                     self.filename = filename
 
-                                async def read(self_inner):  # type: ignore[no-untyped-def]
+                                async def read(self):
                                     return fbytes
 
                             injected_args.append(_UploadStub(fname, fbytes))
@@ -182,11 +184,11 @@ class TestClient:
                             used_request = True
                             continue
                     try:
-                        return handler(*injected_args)  # type: ignore[misc]
+                        return handler(*injected_args)
                     except Exception:
                         return handler(req)  # final fallback
-                return handler(req)  # type: ignore[misc]
-            return handler()  # type: ignore[misc]
+                return handler(req)
+            return handler()
 
         if asyncio.iscoroutinefunction(handler):
             try:
@@ -202,7 +204,7 @@ class TestClient:
         try:  # pragma: no cover - lightweight defensive conversion
             from pydantic import BaseModel as _BM  # local import avoids hard dependency for non-pydantic tests
 
-            if isinstance(result, _BM):  # type: ignore[arg-type]
+            if isinstance(result, _BM):
                 return _Resp(200, json_obj=result.model_dump())
         except Exception:
             pass

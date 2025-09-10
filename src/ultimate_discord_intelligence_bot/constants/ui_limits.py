@@ -16,4 +16,3 @@ MAX_KEYWORD_TEXT_LENGTH = 100
 
 # Summary / perspective section
 MAX_SUMMARY_DISPLAY_LENGTH = 300
-

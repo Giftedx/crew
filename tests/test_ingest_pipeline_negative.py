@@ -40,14 +40,19 @@ def test_ingest_pipeline_handles_missing_transcript(monkeypatch):
         assert all("text" in r.payload for r in recs)
 
     store = types.SimpleNamespace(upsert=upsert)
+
     # Monkeypatch whisper fallback to avoid file IO
     class _Seg:
         def __init__(self, start: float, end: float, text: str):
             self.start, self.end, self.text = start, end, text
+
     class _Tx:
         def __init__(self, segments):
             self.segments = segments
-    monkeypatch.setattr(ip.transcribe, "run_whisper", lambda path: _Tx([_Seg(0.0,1.0,"hello"), _Seg(1.0,2.0,"world")]))
+
+    monkeypatch.setattr(
+        ip.transcribe, "run_whisper", lambda path: _Tx([_Seg(0.0, 1.0, "hello"), _Seg(1.0, 2.0, "world")])
+    )
     job = ip.IngestJob(source="youtube", external_id="x", url="https://x", tenant="t", workspace="w", tags=["a"])
     # Force sequential path to exercise fallback without threads
     monkeypatch.delenv("ENABLE_INGEST_CONCURRENT", raising=False)
@@ -65,6 +70,7 @@ def test_ingest_pipeline_missing_meta_id_uses_fallback(monkeypatch):
     monkeypatch.setattr(ip, "_get_provider", lambda src: (prov, "channel"))
 
     captured = {}
+
     def upsert(ns, recs):
         captured["ns"] = ns
         captured["ids"] = {r.payload.get("episode_id") for r in recs}

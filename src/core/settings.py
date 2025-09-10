@@ -18,35 +18,35 @@ from importlib import util as importlib_util
 from types import ModuleType
 
 try:
-    from pydantic import AliasChoices, Field
+    from pydantic import AliasChoices, Field  # type: ignore
 
     _HAS_PYDANTIC = True
 except Exception:  # pragma: no cover - fallback when pydantic unavailable
     _HAS_PYDANTIC = False
 
-    def Field(*_args, **kwargs):
+    def Field(*_args, **kwargs):  # type: ignore[override]
         return kwargs.get("default")
 
-    def AliasChoices(*_args, **_kwargs):
+    def AliasChoices(*_args, **_kwargs):  # type: ignore[override]
         return None
 
 
 if _HAS_PYDANTIC:
     try:  # Pydantic v2 (preferred)
-        from pydantic_settings import BaseSettings, SettingsConfigDict
+        from pydantic_settings import BaseSettings, SettingsConfigDict  # type: ignore
 
         _HAS_PYDANTIC_V2 = True
     except Exception:  # pragma: no cover - fall back to pydantic v1 style
         try:
-            from pydantic import BaseSettings
+            from pydantic import BaseSettings  # type: ignore
         except Exception:  # pragma: no cover
-            BaseSettings = object
+            BaseSettings = object  # type: ignore[assignment]
 
-        SettingsConfigDict = dict
+        SettingsConfigDict = dict  # type: ignore[assignment]
         _HAS_PYDANTIC_V2 = False
 else:  # pragma: no cover - no pydantic available at all
-    BaseSettings = object
-    SettingsConfigDict = dict
+    BaseSettings = object  # type: ignore[assignment]
+    SettingsConfigDict = dict  # type: ignore[assignment]
     _HAS_PYDANTIC_V2 = False
 try:
     _spec = importlib_util.find_spec("dotenv")
@@ -327,6 +327,38 @@ class Settings(BaseSettings):
         default="epsilon_greedy",
         validation_alias=AliasChoices("RL_POLICY_MODEL_SELECTION", "rl_policy_model_selection"),
         alias="RL_POLICY_MODEL_SELECTION",
+    )
+
+    # Prompt optimisation/compression
+    enable_prompt_compression: bool = Field(
+        default=False,
+        validation_alias=AliasChoices("ENABLE_PROMPT_COMPRESSION", "enable_prompt_compression"),
+        alias="ENABLE_PROMPT_COMPRESSION",
+    )
+    prompt_compression_max_repeated_blank_lines: int = Field(
+        default=1,
+        validation_alias=AliasChoices(
+            "PROMPT_COMPRESSION_MAX_REPEATED_BLANK_LINES",
+            "prompt_compression_max_repeated_blank_lines",
+        ),
+        alias="PROMPT_COMPRESSION_MAX_REPEATED_BLANK_LINES",
+    )
+
+    # Semantic LLM cache (disabled by default; opt-in for safety)
+    enable_semantic_cache: bool = Field(
+        default=False,
+        validation_alias=AliasChoices("ENABLE_SEMANTIC_CACHE", "enable_semantic_cache"),
+        alias="ENABLE_SEMANTIC_CACHE",
+    )
+    semantic_cache_threshold: float = Field(
+        default=0.85,
+        validation_alias=AliasChoices("SEMANTIC_CACHE_THRESHOLD", "semantic_cache_threshold"),
+        alias="SEMANTIC_CACHE_THRESHOLD",
+    )
+    semantic_cache_ttl_seconds: int = Field(
+        default=3600,
+        validation_alias=AliasChoices("SEMANTIC_CACHE_TTL_SECONDS", "semantic_cache_ttl_seconds"),
+        alias="SEMANTIC_CACHE_TTL_SECONDS",
     )
 
     # OpenRouter recommended headers (see docs)

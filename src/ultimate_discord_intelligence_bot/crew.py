@@ -4,11 +4,11 @@ import json
 import logging
 import os
 from pathlib import Path
-from typing import Any, Protocol, cast, runtime_checkable
+from typing import Any, Protocol, runtime_checkable
 
-from crewai import Agent, Crew, Process, Task
-from crewai.agents.agent_builder.base_agent import BaseAgent
-from crewai.project import CrewBase, agent, crew, task
+from crewai import Agent, Crew, Process, Task  # type: ignore[import-untyped]
+from crewai.agents.agent_builder.base_agent import BaseAgent  # type: ignore[import-untyped]
+from crewai.project import CrewBase, agent, crew, task  # type: ignore[import-untyped]
 
 from core.typing_utils import typed  # typing aid: keep precise signatures after framework decorators
 
@@ -63,7 +63,7 @@ class UltimateDiscordIntelligenceBotCrew:
     @typed  # outermost: preserves signature after crewai decorator
     @agent
     def content_manager(self) -> Agent:
-        return Agent(  # type: ignore[call-arg]
+        return Agent(
             config=self.agents_config["content_manager"],
             tools=[PipelineTool(), DebateCommandTool(), TranscriptIndexTool(), TimelineTool()],
         )
@@ -71,7 +71,7 @@ class UltimateDiscordIntelligenceBotCrew:
     @typed
     @agent
     def content_downloader(self) -> Agent:
-        return Agent(  # type: ignore[call-arg]
+        return Agent(
             config=self.agents_config["content_downloader"],
             tools=[
                 YouTubeDownloadTool(),
@@ -88,7 +88,7 @@ class UltimateDiscordIntelligenceBotCrew:
     @typed
     @agent
     def multi_platform_monitor(self) -> Agent:
-        return Agent(  # type: ignore[call-arg]
+        return Agent(
             config=self.agents_config["multi_platform_monitor"],
             tools=[MultiPlatformMonitorTool()],
         )
@@ -97,7 +97,7 @@ class UltimateDiscordIntelligenceBotCrew:
     @agent
     def system_alert_manager(self) -> Agent:
         webhook = DISCORD_PRIVATE_WEBHOOK or "https://discord.com/api/webhooks/example"
-        return Agent(  # type: ignore[call-arg]
+        return Agent(
             config=self.agents_config["system_alert_manager"],
             tools=[DiscordPrivateAlertTool(webhook), SystemStatusTool()],
         )
@@ -105,7 +105,7 @@ class UltimateDiscordIntelligenceBotCrew:
     @typed
     @agent
     def cross_platform_intelligence_gatherer(self) -> Agent:
-        return Agent(  # type: ignore[call-arg]
+        return Agent(
             config=self.agents_config["cross_platform_intelligence_gatherer"],
             tools=[SocialMediaMonitorTool(), XMonitorTool(), DiscordMonitorTool()],
         )
@@ -113,7 +113,7 @@ class UltimateDiscordIntelligenceBotCrew:
     @typed
     @agent
     def enhanced_fact_checker(self) -> Agent:
-        return Agent(  # type: ignore[call-arg]
+        return Agent(
             config=self.agents_config["enhanced_fact_checker"],
             tools=[LogicalFallacyTool(), PerspectiveSynthesizerTool(), FactCheckTool()],
         )
@@ -121,7 +121,7 @@ class UltimateDiscordIntelligenceBotCrew:
     @typed
     @agent
     def truth_scoring_specialist(self) -> Agent:
-        return Agent(  # type: ignore[call-arg]
+        return Agent(
             config=self.agents_config["truth_scoring_specialist"],
             tools=[TruthScoringTool(), TrustworthinessTrackerTool(), LeaderboardTool()],
         )
@@ -129,7 +129,7 @@ class UltimateDiscordIntelligenceBotCrew:
     @typed
     @agent
     def steelman_argument_generator(self) -> Agent:
-        return Agent(  # type: ignore[call-arg]
+        return Agent(
             config=self.agents_config["steelman_argument_generator"],
             tools=[SteelmanArgumentTool()],
         )
@@ -137,7 +137,7 @@ class UltimateDiscordIntelligenceBotCrew:
     @typed
     @agent
     def discord_qa_manager(self) -> Agent:
-        return Agent(  # type: ignore[call-arg]
+        return Agent(
             config=self.agents_config["discord_qa_manager"],
             tools=[DiscordQATool()],
         )
@@ -145,17 +145,17 @@ class UltimateDiscordIntelligenceBotCrew:
     @typed
     @agent
     def ethan_defender(self) -> Agent:
-        return Agent(config=self.agents_config["ethan_defender"])  # type: ignore[call-arg]
+        return Agent(config=self.agents_config["ethan_defender"])
 
     @typed
     @agent
     def hasan_defender(self) -> Agent:
-        return Agent(config=self.agents_config["hasan_defender"])  # type: ignore[call-arg]
+        return Agent(config=self.agents_config["hasan_defender"])
 
     @typed
     @agent
     def character_profile_manager(self) -> Agent:
-        return Agent(  # type: ignore[call-arg]
+        return Agent(
             config=self.agents_config["character_profile_manager"],
             tools=[CharacterProfileTool()],
         )
@@ -163,7 +163,7 @@ class UltimateDiscordIntelligenceBotCrew:
     @typed
     @agent
     def personality_synthesis_manager(self) -> Agent:
-        return Agent(  # type: ignore[call-arg]
+        return Agent(
             config=self.agents_config["personality_synthesis_manager"],
             tools=[CharacterProfileTool(), TextAnalysisTool(), PerspectiveSynthesizerTool()],
         )
@@ -171,82 +171,82 @@ class UltimateDiscordIntelligenceBotCrew:
     @typed
     @task
     def execute_multi_platform_downloads(self) -> Task:
-        return Task(config=self.tasks_config["execute_multi_platform_downloads"])  # type: ignore[call-arg]
+        return Task(config=self.tasks_config["execute_multi_platform_downloads"])
 
     @typed
     @task
     def process_video(self) -> Task:
-        return Task(config=self.tasks_config["process_video"])  # type: ignore[call-arg]
+        return Task(config=self.tasks_config["process_video"])
 
     @typed
     @task
     def monitor_system(self) -> Task:
-        return Task(config=self.tasks_config["monitor_system"])  # type: ignore[call-arg]
+        return Task(config=self.tasks_config["monitor_system"])
 
     @typed
     @task
     def identify_new_content(self) -> Task:
-        return Task(config=self.tasks_config["identify_new_content"])  # type: ignore[call-arg]
+        return Task(config=self.tasks_config["identify_new_content"])
 
     @typed
     @task
     def gather_cross_platform_intelligence(self) -> Task:
-        return Task(config=self.tasks_config["gather_cross_platform_intelligence"])  # type: ignore[call-arg]
+        return Task(config=self.tasks_config["gather_cross_platform_intelligence"])
 
     @typed
     @task
     def get_context(self) -> Task:
-        return Task(config=self.tasks_config["get_context"])  # type: ignore[call-arg]
+        return Task(config=self.tasks_config["get_context"])
 
     @typed
     @task
     def fact_check_content(self) -> Task:
-        return Task(config=self.tasks_config["fact_check_content"])  # type: ignore[call-arg]
+        return Task(config=self.tasks_config["fact_check_content"])
 
     @typed
     @task
     def score_truthfulness(self) -> Task:
-        return Task(config=self.tasks_config["score_truthfulness"])  # type: ignore[call-arg]
+        return Task(config=self.tasks_config["score_truthfulness"])
 
     @typed
     @task
     def steelman_argument(self) -> Task:
-        return Task(config=self.tasks_config["steelman_argument"])  # type: ignore[call-arg]
+        return Task(config=self.tasks_config["steelman_argument"])
 
     @typed
     @task
     def analyze_claim(self) -> Task:
-        return Task(config=self.tasks_config["analyze_claim"])  # type: ignore[call-arg]
+        return Task(config=self.tasks_config["analyze_claim"])
 
     @typed
     @task
     def fact_check_claim(self) -> Task:
-        return Task(config=self.tasks_config["fact_check_claim"])  # type: ignore[call-arg]
+        return Task(config=self.tasks_config["fact_check_claim"])
 
     @typed
     @task
     def update_leaderboard(self) -> Task:
-        return Task(config=self.tasks_config["update_leaderboard"])  # type: ignore[call-arg]
+        return Task(config=self.tasks_config["update_leaderboard"])
 
     @typed
     @task
     def answer_question(self) -> Task:
-        return Task(config=self.tasks_config["answer_question"])  # type: ignore[call-arg]
+        return Task(config=self.tasks_config["answer_question"])
 
     @typed
     @task
     def get_timeline(self) -> Task:
-        return Task(config=self.tasks_config["get_timeline"])  # type: ignore[call-arg]
+        return Task(config=self.tasks_config["get_timeline"])
 
     @typed
     @task
     def get_profile(self) -> Task:
-        return Task(config=self.tasks_config["get_profile"])  # type: ignore[call-arg]
+        return Task(config=self.tasks_config["get_profile"])
 
     @typed
     @task
     def synthesize_personality(self) -> Task:
-        return Task(config=self.tasks_config["synthesize_personality"])  # type: ignore[call-arg]
+        return Task(config=self.tasks_config["synthesize_personality"])
 
     @crew
     def crew(self) -> Crew:
@@ -346,7 +346,7 @@ class UltimateDiscordIntelligenceBotCrew:
         for t_name, t_cfg in self.tasks_config.items():
             if "agent" not in t_cfg:
                 raise ValueError(f"Task '{t_name}' missing agent reference")
-            agent_ref = cast(str, t_cfg["agent"])  # known present now
+            agent_ref = t_cfg["agent"]
             if agent_ref not in self.agents_config:
                 raise ValueError(f"Task '{t_name}' references unknown agent '{agent_ref}'")
             if "output_file" in t_cfg:

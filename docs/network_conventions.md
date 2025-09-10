@@ -5,7 +5,7 @@ and testability.
 
 ## URL Validation
 
-Use `core.http_utils.validate_public_https_url(url)` to ensure:
+Use `src/ultimate_discord_intelligence_bot/core/http_utils.py:validate_public_https_url(url)` to ensure:
 
 - HTTPS scheme is enforced.
 - Host is present.
@@ -15,7 +15,7 @@ Rationale: Prevent accidental posting to insecure or internal addresses.
 
 ## Resilient POST Requests
 
-`core.http_utils.resilient_post` wraps `requests.post` adding:
+`src/ultimate_discord_intelligence_bot/core/http_utils.py:resilient_post` wraps `requests.post` adding:
 
 - Standard timeout (`REQUEST_TIMEOUT_SECONDS`).
 - Optional fallback for legacy / monkeypatched test doubles that omit the
@@ -38,7 +38,7 @@ resilient_post(
 
 ## Resilient GET Requests & Streaming
 
-`core.http_utils.resilient_get` mirrors the POST helper (lazy binding + legacy
+`src/ultimate_discord_intelligence_bot/core/http_utils.py:resilient_get` mirrors the POST helper (lazy binding + legacy
 TypeError fallback) and adds optional streaming support for large downloads
 like Discord CDN attachments. Pass `stream=True` and iterate over
 `response.iter_content(chunk_size=...)` to process data incrementally.
@@ -53,7 +53,7 @@ Guidelines:
 
 ## Retry & Backoff (Feature-Flagged)
 
-Use `http_request_with_retry` for transient failures (5xx, 429, selected network
+Use `src/ultimate_discord_intelligence_bot/core/http_utils.py:http_request_with_retry` for transient failures (5xx, 429, selected network
 errors). Enable globally via `ENABLE_HTTP_RETRY=1`. The deprecated legacy flag
 `ENABLE_ANALYSIS_HTTP_RETRY` remains supported until 2025‑12‑31; the unified flag
 takes precedence when both are set.
@@ -61,7 +61,7 @@ takes precedence when both are set.
 Example wrapping a GET:
 
 ```python
-from core.http_utils import http_request_with_retry, resilient_get, REQUEST_TIMEOUT_SECONDS
+from ultimate_discord_intelligence_bot.core.http_utils import http_request_with_retry, resilient_get, REQUEST_TIMEOUT_SECONDS
 
 resp = http_request_with_retry(
     "GET",
@@ -76,7 +76,7 @@ resp = http_request_with_retry(
 When integrating into a higher-level service (e.g. model gateway) keep original helper usage so semantics remain identical when the flag is off:
 
 ```python
-from core.http_utils import (
+from ultimate_discord_intelligence_bot.core.http_utils import (
     REQUEST_TIMEOUT_SECONDS,
     resilient_post,
     http_request_with_retry,
@@ -108,7 +108,7 @@ else:
 
 This preserves prior behavior while enabling retries, tracing, and metrics when the flag is enabled.
 
-## Tracing
+## Tracing (Retries)
 
 `resilient_post` and `resilient_get` automatically emit spans (`http.post`,
 `http.get`) when OpenTelemetry tracing is initialized. The retry helper emits
@@ -119,7 +119,7 @@ If tracing is not initialized these spans are inexpensive no-ops.
 
 ## Constants
 
-Provided by `core.http_utils` for reuse (avoid scattering magic numbers):
+Provided by `ultimate_discord_intelligence_bot.core.http_utils` for reuse (avoid scattering magic numbers):
 
 - `REQUEST_TIMEOUT_SECONDS` (default 15s)
 - `HTTP_SUCCESS_NO_CONTENT` (204)
@@ -128,7 +128,7 @@ Provided by `core.http_utils` for reuse (avoid scattering magic numbers):
 
 ## Migration Guidelines
 
-- Replace ad hoc webhook URL validation with `validate_public_https_url`.
+- Replace ad hoc webhook URL validation with `validate_public_https_url` in `ultimate_discord_intelligence_bot.core.http_utils`.
 - Replace direct `requests.post(..., timeout=...)` usages (especially with retry
   logic or fallback) with `resilient_post` where semantics match.
 - Replace direct `requests.get` calls that just need a timeout / (optional)
@@ -176,12 +176,12 @@ Rules:
 
 1. Provide a parenthetical reason (short, actionable, tied to a test or perf constraint).
 1. Only one exempt import per file; multiple exemptions warrant migrating to wrappers + updating tests.
-1. The HTTP compliance auditor (`core/http_compliance_audit.py`) skips any file containing the marker.
+1. The HTTP compliance auditor (`src/ultimate_discord_intelligence_bot/core/http_compliance_audit.py`) skips any file containing the marker.
 1. Exemptions are temporary – prefer migrating tests to assert semantic behavior (status, metrics) instead of raw provenance strings.
 
 Current approved exemption(s):
 
-- `discord_download_tool.py` – small streaming GET where tests assert the `command` field starts with `requests.get`.
+- `src/ultimate_discord_intelligence_bot/tools/discord_download_tool.py` – small streaming GET where tests assert the `command` field starts with `requests.get`.
 
 Removal Process:
 

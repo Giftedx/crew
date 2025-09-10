@@ -51,9 +51,10 @@ class EnhancedYouTubeDownloadTool(BaseTool):
             self._metrics.counter("tool_runs_total", labels={"tool": "enhanced_youtube", "outcome": "success"}).inc()
             return StepResult.ok(platform="YouTube", command="<metadata-only>", **meta)
 
-        result = YouTubeDownloadTool().run(url, quality=quality)
+        result_any: Any = YouTubeDownloadTool().run(url, quality=quality)
         # If the downstream result already has platform/command, forward it directly.
-        if isinstance(result, StepResult):
+        if isinstance(result_any, StepResult):
+            result = result_any
             if result.success:
                 # Promote underlying data fields to top-level if they exist and are simple scalars
                 payload = result.data.copy() if result.data else {}
@@ -76,8 +77,8 @@ class EnhancedYouTubeDownloadTool(BaseTool):
                 else:
                     formatted_error = raw_error
                 return StepResult.fail(error=formatted_error, platform=platform, command=command, **payload)
-        elif isinstance(result, dict):  # Legacy dict path
-            result_dict = cast(dict[str, Any], result)
+        elif isinstance(result_any, dict):  # Legacy dict path
+            result_dict = cast(dict[str, Any], result_any)
             outcome = "success" if result_dict.get("status") == "success" else "error"
             self._metrics.counter("tool_runs_total", labels={"tool": "enhanced_youtube", "outcome": outcome}).inc()
             platform = result_dict.get("platform", getattr(YouTubeDownloadTool, "platform", "YouTube"))

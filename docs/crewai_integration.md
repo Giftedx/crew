@@ -12,7 +12,7 @@ This document explains how the repository integrates the CrewAI framework, the s
 ## Key Components
 
 - `src/ultimate_discord_intelligence_bot/crew.py`: Declarative assembly of agents/tasks → `Crew`.
-- `src/ultimate_discord_intelligence_bot/config/agents.yaml` & `tasks.yaml`: Primary configuration sources (role, goal, backstory, reasoning, context, output destinations, etc.).
+- `src/ultimate_discord_intelligence_bot/config/agents.yaml` & `src/ultimate_discord_intelligence_bot/config/tasks.yaml`: Primary configuration sources (role, goal, backstory, reasoning, context, output destinations, etc.).
 - `src/ultimate_discord_intelligence_bot/config_types.py`: `TypedDict` schemas (`AgentConfig`, `TaskConfig`) that mirror modern CrewAI YAML fields and give static analyzers (mypy/Pylance) precise shapes.
 - `src/ultimate_discord_intelligence_bot/tools/_base.py`: Protocol shim for tools ensuring `name`, `description`, and `run()` are type‑checked even without importing heavy vendor classes at analysis time.
 
@@ -36,7 +36,7 @@ export ENABLE_CREW_STEP_VERBOSE=1
 
 ## Validation Logic
 
-Located in `_validate_configs()` inside `crew.py` and executed only when `ENABLE_CREW_CONFIG_VALIDATION=1`.
+Located in `_validate_configs()` inside `src/ultimate_discord_intelligence_bot/crew.py` and executed only when `ENABLE_CREW_CONFIG_VALIDATION=1`.
 
 Checks:
 

@@ -14,8 +14,10 @@ from ._base import BaseTool
 try:  # pragma: no cover - optional dependency
     from qdrant_client import QdrantClient
     from qdrant_client.models import Distance, VectorParams
+
+    _QDRANT_OK = True
 except Exception:  # pragma: no cover - used for testing without qdrant
-    QdrantClient = None
+    _QDRANT_OK = False
 
 
 @runtime_checkable
@@ -62,7 +64,7 @@ class VectorSearchTool(BaseTool):
         if client is not None:
             self.client = cast(_QdrantLike, client)
         else:
-            if QdrantClient is None:  # pragma: no cover - real client missing
+            if not _QDRANT_OK:  # pragma: no cover - real client missing
                 raise RuntimeError("qdrant-client package is not installed")
             config = get_config()
             url = config.qdrant_url

@@ -1,7 +1,7 @@
 """Tests for debate command extensions and advanced argument analysis."""
 
 from datetime import datetime
-from unittest.mock import Mock
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 
@@ -119,7 +119,7 @@ class TestDebateCommandExtensions:
     async def test_async_debate_processing(self, mock_debate_tool):
         """Test asynchronous debate processing."""
         # Mock async version
-        mock_debate_tool.analyze_async = Mock(return_value=mock_debate_tool.analyze("test"))
+        mock_debate_tool.analyze_async = AsyncMock(return_value=mock_debate_tool.analyze("test"))
 
         result = await mock_debate_tool.analyze_async("async topic")
         assert result is not None

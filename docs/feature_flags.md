@@ -3,7 +3,12 @@
 
 (Do not edit by hand; regenerate instead.)
 
-Note: The unified `ENABLE_HTTP_RETRY` supersedes the legacy `ENABLE_ANALYSIS_HTTP_RETRY` (deprecated).
+### Api / Runtime
+
+| Flag | Referenced In (sample) |
+|------|------------------------|
+| `ENABLE_PROMETHEUS_ENDPOINT` | core/secure_config.py, core/settings.py |
+| `ENABLE_RATE_LIMITING` | core/secure_config.py, core/settings.py |
 
 ### Archiver / Discord
 
@@ -19,29 +24,32 @@ Note: The unified `ENABLE_HTTP_RETRY` supersedes the legacy `ENABLE_ANALYSIS_HTT
 | `ENABLE_HTTP_CACHE` | core/settings.py |
 | `ENABLE_HTTP_METRICS` | core/secure_config.py, core/settings.py |
 | `ENABLE_HTTP_RETRY` | core/http_utils.py, core/secure_config.py |
-| `ENABLE_API_CACHE` | core/settings.py |
-| `ENABLE_ADVANCED_CACHE` | core/settings.py, server/app.py |
-| `ENABLE_LLM_CACHE` | core/settings.py |
-| `ENABLE_DEPENDENCY_TRACKING` | core/settings.py, tests/test_dependency_invalidation.py |
+
+Note: Legacy analysis-scoped retry flag `ENABLE_ANALYSIS_HTTP_RETRY` is superseded by the global `ENABLE_HTTP_RETRY` and considered deprecated.
 
 ### Ingestion
 
 | Flag | Referenced In (sample) |
 |------|------------------------|
 | `ENABLE_INGEST_CONCURRENT` | ingest/pipeline.py, ultimate_discord_intelligence_bot/setup_cli.py |
-| `ENABLE_INGEST_STRICT` | ingest/pipeline.py |
+| `ENABLE_INGEST_STRICT` | ingest/pipeline.py, ultimate_discord_intelligence_bot/services/memory_service.py |
 
 ### Misc
 
 | Flag | Referenced In (sample) |
 |------|------------------------|
+| `ENABLE_ADVANCED_CACHE` | core/settings.py |
 | `ENABLE_API` | core/secure_config.py, core/settings.py |
+| `ENABLE_API_CACHE` | core/settings.py |
 | `ENABLE_AUDIT_LOGGING` | core/secure_config.py, ultimate_discord_intelligence_bot/setup_cli.py |
 | `ENABLE_CACHE` | core/cache/llm_cache.py, core/cache/retrieval_cache.py |
 | `ENABLE_CACHE_GLOBAL` | core/secure_config.py, ultimate_discord_intelligence_bot/setup_cli.py |
 | `ENABLE_CACHE_TRANSCRIPT` | core/secure_config.py, ultimate_discord_intelligence_bot/setup_cli.py |
 | `ENABLE_CACHE_VECTOR` | core/secure_config.py, ultimate_discord_intelligence_bot/setup_cli.py |
 | `ENABLE_CONTENT_MODERATION` | core/secure_config.py, ultimate_discord_intelligence_bot/setup_cli.py |
+| `ENABLE_CREW_CONFIG_VALIDATION` | ultimate_discord_intelligence_bot/crew.py |
+| `ENABLE_CREW_STEP_VERBOSE` | ultimate_discord_intelligence_bot/crew.py |
+| `ENABLE_DEPENDENCY_TRACKING` | core/settings.py |
 | `ENABLE_DISCORD_COMMANDS` | core/secure_config.py, ultimate_discord_intelligence_bot/setup_cli.py |
 | `ENABLE_DISCORD_MONITOR` | core/secure_config.py, ultimate_discord_intelligence_bot/setup_cli.py |
 | `ENABLE_DISTRIBUTED_RATE_LIMITING` | core/secure_config.py, core/settings.py |
@@ -50,18 +58,19 @@ Note: The unified `ENABLE_HTTP_RETRY` supersedes the legacy `ENABLE_ANALYSIS_HTT
 | `ENABLE_INGEST_TIKTOK` | ultimate_discord_intelligence_bot/setup_cli.py |
 | `ENABLE_INGEST_TWITCH` | ultimate_discord_intelligence_bot/setup_cli.py |
 | `ENABLE_INGEST_YOUTUBE` | ultimate_discord_intelligence_bot/setup_cli.py |
+| `ENABLE_LLM_CACHE` | core/settings.py |
 | `ENABLE_LOCAL_LLM` | core/secure_config.py, core/settings.py |
 | `ENABLE_METRICS` | ultimate_discord_intelligence_bot/setup_cli.py |
 | `ENABLE_PII_DETECTION` | core/secure_config.py, ultimate_discord_intelligence_bot/setup_cli.py |
-| `ENABLE_PROMETHEUS_ENDPOINT` | core/secure_config.py, core/settings.py |
+| `ENABLE_PROMPT_COMPRESSION` | core/settings.py |
 | `ENABLE_RAG_CONTEXT` | ultimate_discord_intelligence_bot/setup_cli.py |
-| `ENABLE_RATE_LIMITING` | core/secure_config.py, core/settings.py |
 | `ENABLE_RERANKER` | core/secure_config.py, core/settings.py |
+| `ENABLE_SECURE_PATH_FALLBACK` | ultimate_discord_intelligence_bot/settings.py |
+| `ENABLE_SECURE_QDRANT_FALLBACK` | ultimate_discord_intelligence_bot/settings.py |
+| `ENABLE_SEMANTIC_CACHE` | core/settings.py, ultimate_discord_intelligence_bot/services/openrouter_service.py |
+| `ENABLE_TENANCY_STRICT` | ultimate_discord_intelligence_bot/services/memory_service.py, ultimate_discord_intelligence_bot/services/openrouter_service.py |
 | `ENABLE_TRACING` | core/secure_config.py, core/settings.py |
 | `ENABLE_VECTOR_SEARCH` | ultimate_discord_intelligence_bot/setup_cli.py |
-| `ENABLE_CREW_CONFIG_VALIDATION` | ultimate_discord_intelligence_bot/crew.py |
-| `ENABLE_CREW_STEP_VERBOSE` | ultimate_discord_intelligence_bot/crew.py |
-| `CREW_ENABLE_SECURE_QDRANT_FALLBACK` | ultimate_discord_intelligence_bot/settings.py, docs/configuration.md |
 
 ### Privacy
 
@@ -81,8 +90,8 @@ Note: The unified `ENABLE_HTTP_RETRY` supersedes the legacy `ENABLE_ANALYSIS_HTT
 | `ENABLE_RL_RETRIEVAL` | core/secure_config.py, ultimate_discord_intelligence_bot/setup_cli.py |
 | `ENABLE_RL_ROUTING` | core/secure_config.py, ultimate_discord_intelligence_bot/setup_cli.py |
 
-_Generated digest: `978ac569bde6`_
+_Generated digest: `9afbf9cfc08f`_
 
-### Deprecated Surfaces
+### Deprecations
 
-- `services.learning_engine.LearningEngine`: deprecated; use `core.learning_engine.LearningEngine`.
+- Legacy symbol `services.learning_engine.LearningEngine` is deprecated; use `core.learning_engine.LearningEngine` instead.

@@ -60,4 +60,3 @@ def test_scheduler_error_metric(tmp_path, monkeypatch):
     monkeypatch.setattr(pipeline, "run", boom)
     sched.worker_run_once(store=None)
     assert err.count == 1
-

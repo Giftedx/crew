@@ -38,4 +38,3 @@ def test_resolve_retry_attempts_sanitizes_out_of_range(monkeypatch):
     monkeypatch.setattr(hu, "_load_retry_config", lambda: {"max_attempts": 8})
     monkeypatch.setattr(hu, "_config", SimpleNamespace(retry_max_attempts=2))
     assert hu.resolve_retry_attempts(call_arg=999) == 8
-

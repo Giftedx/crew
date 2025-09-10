@@ -9,5 +9,5 @@ class JSONResponse:
         self.status_code = status_code
         self.content = json.dumps(content).encode("utf-8")
 
-__all__ = ["JSONResponse"]
 
+__all__ = ["JSONResponse"]

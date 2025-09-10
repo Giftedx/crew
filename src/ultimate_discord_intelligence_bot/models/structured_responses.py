@@ -13,6 +13,7 @@ from pydantic import BaseModel, Field, validator
 
 class AnalysisStatus(str, Enum):
     """Analysis completion status."""
+
     SUCCESS = "success"
     PARTIAL = "partial"
     FAILED = "failed"
@@ -20,19 +21,21 @@ class AnalysisStatus(str, Enum):
 
 class SentimentScore(BaseModel):
     """Sentiment analysis result."""
+
     label: str = Field(description="Sentiment label: positive, negative, neutral")
     score: float = Field(ge=0.0, le=1.0, description="Confidence score between 0 and 1")
 
-    @validator('label')
+    @validator("label")
     def validate_label(cls, v):
-        allowed = ['positive', 'negative', 'neutral']
+        allowed = ["positive", "negative", "neutral"]
         if v.lower() not in allowed:
-            raise ValueError(f'Label must be one of: {allowed}')
+            raise ValueError(f"Label must be one of: {allowed}")
         return v.lower()
 
 
 class TextAnalysisResult(BaseModel):
     """Structured result from text analysis tool."""
+
     status: AnalysisStatus
     sentiment: SentimentScore
     key_phrases: list[str] = Field(default_factory=list, max_length=10, description="Top 10 key phrases extracted")
@@ -48,13 +51,14 @@ class TextAnalysisResult(BaseModel):
                 "key_phrases": ["artificial intelligence", "machine learning", "data science"],
                 "word_count": 1250,
                 "language_detected": "en",
-                "readability_score": 65.5
+                "readability_score": 65.5,
             }
         }
 
 
 class ClaimType(str, Enum):
     """Types of factual claims."""
+
     FACTUAL = "factual"
     OPINION = "opinion"
     PREDICTION = "prediction"
@@ -63,6 +67,7 @@ class ClaimType(str, Enum):
 
 class ExtractedClaim(BaseModel):
     """A single extracted claim with verification info."""
+
     claim_text: str = Field(description="The exact claim text")
     claim_type: ClaimType
     confidence: float = Field(ge=0.0, le=1.0, description="Extraction confidence")
@@ -72,8 +77,9 @@ class ExtractedClaim(BaseModel):
 
 class ClaimExtractionResult(BaseModel):
     """Structured result from claim extraction tool."""
+
     status: AnalysisStatus
-    claims: list[ExtractedClaim] = Field(max_items=20, description="Extracted claims")
+    claims: list[ExtractedClaim] = Field(default_factory=list, max_length=20, description="Extracted claims")
     total_sentences: int = Field(ge=0, description="Total sentences processed")
 
     class Config:
@@ -86,16 +92,17 @@ class ClaimExtractionResult(BaseModel):
                         "claim_type": "prediction",
                         "confidence": 0.9,
                         "context": "According to recent studies, AI will replace 40% of jobs by 2030.",
-                        "requires_verification": True
+                        "requires_verification": True,
                     }
                 ],
-                "total_sentences": 15
+                "total_sentences": 15,
             }
         }
 
 
 class LogicalFallacyType(str, Enum):
     """Types of logical fallacies."""
+
     AD_HOMINEM = "ad_hominem"
     STRAW_MAN = "straw_man"
     FALSE_DICHOTOMY = "false_dichotomy"
@@ -109,6 +116,7 @@ class LogicalFallacyType(str, Enum):
 
 class DetectedFallacy(BaseModel):
     """A detected logical fallacy."""
+
     fallacy_type: LogicalFallacyType
     explanation: str = Field(description="Why this is considered a fallacy")
     text_excerpt: str = Field(description="The specific text exhibiting the fallacy")
@@ -117,8 +125,9 @@ class DetectedFallacy(BaseModel):
 
 class LogicalFallacyResult(BaseModel):
     """Structured result from logical fallacy detection."""
+
     status: AnalysisStatus
-    fallacies: list[DetectedFallacy] = Field(max_items=10, description="Detected fallacies")
+    fallacies: list[DetectedFallacy] = Field(default_factory=list, max_length=10, description="Detected fallacies")
     overall_score: float = Field(ge=0.0, le=1.0, description="Overall logical consistency score")
 
     class Config:
@@ -130,16 +139,17 @@ class LogicalFallacyResult(BaseModel):
                         "fallacy_type": "ad_hominem",
                         "explanation": "Attack on person rather than argument",
                         "text_excerpt": "You can't trust John because he's a terrible person",
-                        "severity": 0.8
+                        "severity": 0.8,
                     }
                 ],
-                "overall_score": 0.7
+                "overall_score": 0.7,
             }
         }
 
 
 class PerspectiveType(str, Enum):
     """Types of alternative perspectives."""
+
     COUNTERARGUMENT = "counterargument"
     ALTERNATIVE_INTERPRETATION = "alternative_interpretation"
     DIFFERENT_CONTEXT = "different_context"
@@ -148,18 +158,22 @@ class PerspectiveType(str, Enum):
 
 class AlternativePerspective(BaseModel):
     """An alternative perspective or counterargument."""
+
     perspective_type: PerspectiveType
     title: str = Field(description="Brief title for this perspective")
     description: str = Field(description="Detailed explanation of the perspective")
-    supporting_points: list[str] = Field(max_items=5, description="Key supporting points")
+    supporting_points: list[str] = Field(default_factory=list, max_length=5, description="Key supporting points")
     strength: float = Field(ge=0.0, le=1.0, description="Strength of this perspective")
 
 
 class PerspectiveSynthesisResult(BaseModel):
     """Structured result from perspective synthesis tool."""
+
     status: AnalysisStatus
     original_summary: str = Field(description="Summary of the original content")
-    perspectives: list[AlternativePerspective] = Field(max_items=5, description="Alternative perspectives")
+    perspectives: list[AlternativePerspective] = Field(
+        default_factory=list, max_length=5, description="Alternative perspectives"
+    )
     synthesis: str = Field(description="Balanced synthesis of different viewpoints")
 
     class Config:
@@ -173,24 +187,26 @@ class PerspectiveSynthesisResult(BaseModel):
                         "title": "Innovation Concern",
                         "description": "Heavy regulation might stifle AI innovation",
                         "supporting_points": ["Slower development", "Competitive disadvantage"],
-                        "strength": 0.8
+                        "strength": 0.8,
                     }
                 ],
-                "synthesis": "While regulation is important for safety, it must be balanced with innovation needs"
+                "synthesis": "While regulation is important for safety, it must be balanced with innovation needs",
             }
         }
 
 
 class MemoryStorageEntry(BaseModel):
     """Entry for memory storage."""
+
     content: str = Field(description="Content to store")
     metadata: dict = Field(default_factory=dict, description="Additional metadata")
     importance_score: float = Field(ge=0.0, le=1.0, description="Importance score for retrieval")
-    tags: list[str] = Field(default_factory=list, max_items=10, description="Content tags")
+    tags: list[str] = Field(default_factory=list, max_length=10, description="Content tags")
 
 
 class MemoryStorageResult(BaseModel):
     """Structured result from memory storage operation."""
+
     status: AnalysisStatus
     entry_id: str | None = Field(None, description="Unique identifier for stored entry")
     stored_count: int = Field(ge=0, description="Number of entries stored")
@@ -202,13 +218,14 @@ class MemoryStorageResult(BaseModel):
                 "status": "success",
                 "entry_id": "mem_12345",
                 "stored_count": 1,
-                "namespace": "default:main:discussion"
+                "namespace": "default:main:discussion",
             }
         }
 
 
 class FactCheckVeracity(str, Enum):
     """Fact check veracity levels."""
+
     TRUE = "true"
     MOSTLY_TRUE = "mostly_true"
     MIXED = "mixed"
@@ -219,6 +236,7 @@ class FactCheckVeracity(str, Enum):
 
 class FactCheckSource(BaseModel):
     """Source used for fact checking."""
+
     url: str = Field(description="Source URL")
     title: str = Field(description="Source title")
     credibility_score: float = Field(ge=0.0, le=1.0, description="Source credibility score")
@@ -226,12 +244,13 @@ class FactCheckSource(BaseModel):
 
 class FactCheckResult(BaseModel):
     """Structured result from fact checking."""
+
     status: AnalysisStatus
     claim: str = Field(description="The claim being fact-checked")
     veracity: FactCheckVeracity
     confidence: float = Field(ge=0.0, le=1.0, description="Confidence in the assessment")
     explanation: str = Field(description="Explanation of the verdict")
-    sources: list[FactCheckSource] = Field(max_items=5, description="Sources consulted")
+    sources: list[FactCheckSource] = Field(default_factory=list, max_length=5, description="Sources consulted")
 
     class Config:
         json_schema_extra = {
@@ -242,18 +261,15 @@ class FactCheckResult(BaseModel):
                 "confidence": 0.99,
                 "explanation": "Overwhelming scientific evidence confirms the Earth's spherical shape",
                 "sources": [
-                    {
-                        "url": "https://nasa.gov/earth-shape",
-                        "title": "NASA: Earth's Shape",
-                        "credibility_score": 0.95
-                    }
-                ]
+                    {"url": "https://nasa.gov/earth-shape", "title": "NASA: Earth's Shape", "credibility_score": 0.95}
+                ],
             }
         }
 
 
 class TrustLevel(str, Enum):
     """Trust levels for content assessment."""
+
     HIGH = "high"
     MEDIUM = "medium"
     LOW = "low"
@@ -262,6 +278,7 @@ class TrustLevel(str, Enum):
 
 class TrustworthinessMetrics(BaseModel):
     """Trustworthiness assessment metrics."""
+
     source_credibility: float = Field(ge=0.0, le=1.0, description="Source credibility score")
     fact_accuracy: float = Field(ge=0.0, le=1.0, description="Factual accuracy score")
     bias_level: float = Field(ge=0.0, le=1.0, description="Bias level (0 = unbiased, 1 = highly biased)")
@@ -270,12 +287,13 @@ class TrustworthinessMetrics(BaseModel):
 
 class TrustworthinessResult(BaseModel):
     """Structured result from trustworthiness assessment."""
+
     status: AnalysisStatus
     overall_trust_level: TrustLevel
     overall_score: float = Field(ge=0.0, le=1.0, description="Overall trustworthiness score")
     metrics: TrustworthinessMetrics
     reasoning: str = Field(description="Explanation of the assessment")
-    red_flags: list[str] = Field(default_factory=list, max_items=10, description="Identified concerns")
+    red_flags: list[str] = Field(default_factory=list, max_length=10, description="Identified concerns")
 
     class Config:
         json_schema_extra = {
@@ -283,13 +301,8 @@ class TrustworthinessResult(BaseModel):
                 "status": "success",
                 "overall_trust_level": "medium",
                 "overall_score": 0.65,
-                "metrics": {
-                    "source_credibility": 0.7,
-                    "fact_accuracy": 0.8,
-                    "bias_level": 0.4,
-                    "transparency": 0.6
-                },
+                "metrics": {"source_credibility": 0.7, "fact_accuracy": 0.8, "bias_level": 0.4, "transparency": 0.6},
                 "reasoning": "Generally reliable source with some bias detected",
-                "red_flags": ["Potential selection bias in examples"]
+                "red_flags": ["Potential selection bias in examples"],
             }
         }

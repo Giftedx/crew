@@ -33,7 +33,13 @@ def test_discord_file_upload_uses_payload_json(monkeypatch):
         tmp.write(b"x" * 1024)  # small file
         path = tmp.name
     try:
-        content = {"title": "T", "uploader": "U", "platform": "P", "local_path": path, "file_size": os.path.getsize(path)}
+        content = {
+            "title": "T",
+            "uploader": "U",
+            "platform": "P",
+            "local_path": path,
+            "file_size": os.path.getsize(path),
+        }
         res = tool.run(content, {})
         assert res["status"] == "success"
         files = captured["files"]
@@ -41,4 +47,3 @@ def test_discord_file_upload_uses_payload_json(monkeypatch):
         assert isinstance(files["payload_json"][1], str)  # JSON string
     finally:
         os.unlink(path)
-

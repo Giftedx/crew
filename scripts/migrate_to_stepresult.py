@@ -33,7 +33,7 @@ def convert_tool_returns(content: str) -> tuple[str, int]:
             key, value = kv_match.groups()
             if key != "status":
                 # Clean up the value (remove trailing commas)
-                value = value.rstrip(', ')
+                value = value.rstrip(", ")
                 pairs.append(f"{key}={value}")
 
         if pairs:
@@ -51,7 +51,7 @@ def convert_tool_returns(content: str) -> tuple[str, int]:
         error_pattern = r'"error"\s*:\s*([^,}]+)'
         error_match = re.search(error_pattern, dict_content)
         error_msg = error_match.group(1) if error_match else '"Unknown error"'
-        error_msg = error_msg.rstrip(', ')
+        error_msg = error_msg.rstrip(", ")
 
         # Extract additional data (non-status, non-error keys)
         pairs = []
@@ -59,7 +59,7 @@ def convert_tool_returns(content: str) -> tuple[str, int]:
         for kv_match in re.finditer(kv_pattern, dict_content):
             key, value = kv_match.groups()
             if key not in ("status", "error"):
-                value = value.rstrip(', ')
+                value = value.rstrip(", ")
                 pairs.append(f"{key}={value}")
 
         if pairs:
@@ -68,20 +68,12 @@ def convert_tool_returns(content: str) -> tuple[str, int]:
             return f"StepResult.fail({error_msg})"
 
     # Apply patterns
-    content = re.sub(
-        r'{\s*"status"\s*:\s*"success"\s*,([^}]+)}',
-        replace_success,
-        content
-    )
+    content = re.sub(r'{\s*"status"\s*:\s*"success"\s*,([^}]+)}', replace_success, content)
 
-    content = re.sub(
-        r'{\s*"status"\s*:\s*"error"\s*,([^}]+)}',
-        replace_error,
-        content
-    )
+    content = re.sub(r'{\s*"status"\s*:\s*"error"\s*,([^}]+)}', replace_error, content)
 
     # Handle simple cases
-    content = re.sub(r'{\s*"status"\s*:\s*"success"\s*}', 'StepResult.ok()', content)
+    content = re.sub(r'{\s*"status"\s*:\s*"success"\s*}', "StepResult.ok()", content)
     content = re.sub(r'{\s*"status"\s*:\s*"error"\s*}', 'StepResult.fail("Unknown error")', content)
 
     return content, conversions
@@ -93,21 +85,21 @@ def add_stepresult_import(content: str) -> str:
         return content
 
     # Find the right place to add the import
-    lines = content.split('\n')
+    lines = content.split("\n")
 
     # Look for existing imports from ultimate_discord_intelligence_bot
     for i, line in enumerate(lines):
         if "from ultimate_discord_intelligence_bot." in line:
             # Insert before this import
             lines.insert(i, "from ultimate_discord_intelligence_bot.step_result import StepResult")
-            return '\n'.join(lines)
+            return "\n".join(lines)
 
     # Look for other tool imports
     for i, line in enumerate(lines):
         if "from ._base import BaseTool" in line:
             # Insert after this import
             lines.insert(i + 1, "from ultimate_discord_intelligence_bot.step_result import StepResult")
-            return '\n'.join(lines)
+            return "\n".join(lines)
 
     # Fallback: add after the last import
     for i, line in enumerate(lines):
@@ -117,7 +109,7 @@ def add_stepresult_import(content: str) -> str:
             # Found first non-import line
             lines.insert(i, "from ultimate_discord_intelligence_bot.step_result import StepResult")
             lines.insert(i + 1, "")
-            return '\n'.join(lines)
+            return "\n".join(lines)
 
     return content
 

@@ -6,6 +6,7 @@ Usage:
 
 Outputs a simple table of pending job counts grouped by tenant/workspace and a total.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -37,4 +38,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

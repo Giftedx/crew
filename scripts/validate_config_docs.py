@@ -182,6 +182,7 @@ def validate_other_configs():
         "archive_routes.yaml",
         "grounding.yaml",
         "ingest.yaml",
+        "profiles.yaml",
         "policy.yaml",
         "poller.yaml",
         "retry.yaml",

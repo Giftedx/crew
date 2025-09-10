@@ -39,4 +39,3 @@ def test_queue_backlog_gauge_updates(tmp_path, monkeypatch):
     labels2, val2 = g.last["val"]
     assert labels2.get("tenant") == "t" and labels2.get("workspace") == "w"
     assert val2 >= 0
-

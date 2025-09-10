@@ -16,9 +16,11 @@ def test_alert_adapter_posts_to_discord(monkeypatch):
     def fake_post(url, json_payload=None, headers=None, timeout_seconds=None, **_):
         captured["url"] = url
         captured["json"] = json_payload
+
         class R:
             status_code = 204
             text = ""
+
         return R()
 
     import ops.alert_adapter as adapter
@@ -29,7 +31,12 @@ def test_alert_adapter_posts_to_discord(monkeypatch):
         "status": "firing",
         "alerts": [
             {
-                "labels": {"alertname": "LLMLatencyP95High", "tenant": "default", "workspace": "main", "severity": "warning"},
+                "labels": {
+                    "alertname": "LLMLatencyP95High",
+                    "tenant": "default",
+                    "workspace": "main",
+                    "severity": "warning",
+                },
                 "annotations": {"summary": "LLM latency high", "description": "p95 > 2.5s"},
             }
         ],
@@ -38,4 +45,3 @@ def test_alert_adapter_posts_to_discord(monkeypatch):
     assert res.status_code == 200
     assert captured["url"].startswith("https://discord.com/api/webhooks/")
     assert "LLM latency high" in captured["json"]["content"]
-

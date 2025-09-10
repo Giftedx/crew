@@ -44,7 +44,8 @@ class DiscordQATool(BaseTool[StepResult]):
         if self.search is None:  # pragma: no cover - defensive
             self._metrics.counter("tool_runs_total", labels={"tool": "discord_qa", "outcome": "error"}).inc()
             return StepResult.fail(error="search tool not initialised")
-        search_res = self.search.run(question, limit=limit)
+        # Any-typed to avoid narrowing that makes legacy branch appear unreachable to mypy
+        search_res: object = self.search.run(question, limit=limit)
         hits: list[dict[str, object]] = []
         if isinstance(search_res, StepResult):
             if not search_res.success:
@@ -52,7 +53,9 @@ class DiscordQATool(BaseTool[StepResult]):
                 return StepResult.fail(error=search_res.error or "vector search failed")
             hits = search_res.data.get("hits", []) or []
         else:  # pragma: no cover - legacy path
-            hits = search_res  # type: ignore[assignment]
+            # Legacy adapters may return a plain list of hit dicts
+            if isinstance(search_res, list):
+                hits = list(search_res)
         snippets = [str(h.get("text")) for h in hits if isinstance(h, dict) and isinstance(h.get("text"), str)]
         self._metrics.counter("tool_runs_total", labels={"tool": "discord_qa", "outcome": "success"}).inc()
         return StepResult.ok(data={"snippets": snippets})

@@ -74,10 +74,7 @@ class RoadmapExecutor:
 
     def setup_logging(self):
         """Configure structured logging."""
-        logging.basicConfig(
-            level=logging.INFO,
-            format="%(asctime)s [%(levelname)s] %(message)s"
-        )
+        logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
     def load_tasks(self):
         """Load task definitions from configuration."""
@@ -92,7 +89,7 @@ class RoadmapExecutor:
                 priority="P0",
                 estimated_hours=16,
                 dependencies=[],
-                files_modified=["docker-compose.dev.yml", ".env.development"]
+                files_modified=["docker-compose.dev.yml", ".env.development"],
             ),
             Task(
                 id="MON-001",
@@ -103,7 +100,7 @@ class RoadmapExecutor:
                 priority="P0",
                 estimated_hours=8,
                 dependencies=["ENV-001"],
-                files_modified=["src/obs/baseline_metrics.py", "monitoring/dashboard.json"]
+                files_modified=["src/obs/baseline_metrics.py", "monitoring/dashboard.json"],
             ),
             Task(
                 id="LLM-001",
@@ -114,7 +111,7 @@ class RoadmapExecutor:
                 priority="P0",
                 estimated_hours=24,
                 dependencies=["ENV-001"],
-                files_modified=["src/ultimate_discord_intelligence_bot/services/openrouter_service.py"]
+                files_modified=["src/ultimate_discord_intelligence_bot/services/openrouter_service.py"],
             ),
             Task(
                 id="CACHE-001",
@@ -125,7 +122,7 @@ class RoadmapExecutor:
                 priority="P0",
                 estimated_hours=16,
                 dependencies=["LLM-001"],
-                files_modified=["src/core/cache/llm_cache.py", "src/core/cache/semantic_cache.py"]
+                files_modified=["src/core/cache/llm_cache.py", "src/core/cache/semantic_cache.py"],
             ),
             Task(
                 id="OBS-001",
@@ -136,8 +133,8 @@ class RoadmapExecutor:
                 priority="P1",
                 estimated_hours=16,
                 dependencies=["LLM-001"],
-                files_modified=["src/obs/tracing.py", "src/obs/langsmith_integration.py"]
-            )
+                files_modified=["src/obs/tracing.py", "src/obs/langsmith_integration.py"],
+            ),
         ]
 
         for task in tasks_definition:
@@ -151,11 +148,11 @@ class RoadmapExecutor:
         baseline = Metrics(
             timestamp=datetime.now(UTC).isoformat(),
             cost_per_interaction=0.10,  # $0.10 per interaction
-            response_latency_p95=2.0,   # 2 seconds P95
-            error_rate=0.02,            # 2% error rate
-            throughput_rps=10.0,        # 10 requests per second
-            cache_hit_rate=0.15,        # 15% cache hit rate
-            user_satisfaction=0.75      # 75% satisfaction
+            response_latency_p95=2.0,  # 2 seconds P95
+            error_rate=0.02,  # 2% error rate
+            throughput_rps=10.0,  # 10 requests per second
+            cache_hit_rate=0.15,  # 15% cache hit rate
+            user_satisfaction=0.75,  # 75% satisfaction
         )
 
         self.metrics_history.append(baseline)
@@ -264,7 +261,7 @@ class RoadmapExecutor:
             "current_phase": self.current_phase.value,
             "tasks": {tid: asdict(task) for tid, task in self.tasks.items()},
             "metrics_history": [asdict(m) for m in self.metrics_history],
-            "last_updated": datetime.now(UTC).isoformat()
+            "last_updated": datetime.now(UTC).isoformat(),
         }
 
         with open("roadmap_progress.json", "w") as f:

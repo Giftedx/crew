@@ -23,6 +23,7 @@ class TestSecureConfigSecurity:
         for default_value in default_values:
             with patch.dict(os.environ, {"WEBHOOK_SECRET_DEFAULT": default_value}):
                 from core.secure_config import reload_config
+
                 config = reload_config()
                 with pytest.raises(ValueError, match="must be changed from default value"):
                     config.get_webhook_secret("default")
@@ -31,6 +32,7 @@ class TestSecureConfigSecurity:
         """Test that webhook secrets must be configured."""
         with patch.dict(os.environ, {}, clear=True):
             from core.secure_config import reload_config
+
             config = reload_config()
             with pytest.raises(ValueError, match="is not configured"):
                 config.get_webhook_secret("missing")
@@ -40,6 +42,7 @@ class TestSecureConfigSecurity:
         # Test missing API key
         with patch.dict(os.environ, {}, clear=True):
             from core.secure_config import reload_config
+
             config = reload_config()
             with pytest.raises(ValueError, match="API key for service 'missing' is not configured"):
                 config.get_api_key("missing")
@@ -47,6 +50,7 @@ class TestSecureConfigSecurity:
         # Test valid API key
         with patch.dict(os.environ, {"OPENAI_API_KEY": "sk-valid-key"}):
             from core.secure_config import reload_config
+
             config = reload_config()
             key = config.get_api_key("openai")
             assert key == "sk-valid-key"
@@ -66,22 +70,22 @@ class TestSecureConfigSecurity:
         # Test flag enabled
         with patch.dict(os.environ, {"ENABLE_HTTP_RETRY": "true"}):
             from core.secure_config import reload_config
+
             config = reload_config()
             assert config.enable_http_retry is True
 
         # Test flag disabled
         with patch.dict(os.environ, {"ENABLE_HTTP_RETRY": "false"}):
             from core.secure_config import reload_config
+
             config = reload_config()
             assert config.enable_http_retry is False
 
     def test_audit_logging_for_sensitive_access(self):
         """Test that sensitive operations are audit logged."""
-        with patch.dict(os.environ, {
-            "OPENAI_API_KEY": "sk-test-key",
-            "ENABLE_AUDIT_LOGGING": "true"
-        }):
+        with patch.dict(os.environ, {"OPENAI_API_KEY": "sk-test-key", "ENABLE_AUDIT_LOGGING": "true"}):
             from core.secure_config import reload_config
+
             config = reload_config()
 
             with patch("core.secure_config.logger") as mock_logger:
@@ -112,11 +116,14 @@ class TestSecureConfigIntegration:
         """Test that backward compatibility functions work."""
         from core.secure_config import get_api_key, get_webhook_url, is_feature_enabled, reload_config
 
-        with patch.dict(os.environ, {
-            "OPENAI_API_KEY": "sk-test",
-            "DISCORD_WEBHOOK": "https://discord.com/webhook",
-            "ENABLE_HTTP_RETRY": "true"
-        }):
+        with patch.dict(
+            os.environ,
+            {
+                "OPENAI_API_KEY": "sk-test",
+                "DISCORD_WEBHOOK": "https://discord.com/webhook",
+                "ENABLE_HTTP_RETRY": "true",
+            },
+        ):
             reload_config()  # Reload to pick up env changes
             assert get_api_key("openai") == "sk-test"
             assert get_webhook_url("discord") == "https://discord.com/webhook"
@@ -126,6 +133,7 @@ class TestSecureConfigIntegration:
         """Test integration with security.secrets module."""
         with patch.dict(os.environ, {"WEBHOOK_SECRET_TEST": "secure-secret-123"}):
             from core.secure_config import reload_config
+
             config = reload_config()
             secret = config.get_webhook_secret("test")
             assert secret == "secure-secret-123"
@@ -134,5 +142,6 @@ class TestSecureConfigIntegration:
         """Test that invalid configuration values are caught."""
         with patch.dict(os.environ, {"QDRANT_GRPC_PORT": "not-a-number"}):
             from core.secure_config import reload_config
+
             with pytest.raises(ValueError):
                 reload_config()

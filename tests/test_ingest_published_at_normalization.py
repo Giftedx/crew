@@ -18,6 +18,7 @@ def _capture_store(container: dict):
     def upsert(ns, recs):
         container["ns"] = ns
         container["vals"] = [r.payload.get("published_at") for r in recs]
+
     return types.SimpleNamespace(upsert=upsert)
 
 
@@ -59,4 +60,3 @@ def test_published_at_preserves_string_and_none(monkeypatch):
     job2 = ip.IngestJob(source="youtube", external_id="e", url="u2", tenant="t", workspace="w", tags=[])
     ip.run(job2, store2)
     assert all(v == "" for v in captured2["vals"])
-

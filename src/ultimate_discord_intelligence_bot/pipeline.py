@@ -123,12 +123,12 @@ class ContentPipeline:
                     def _run(self, text: str):  # for consistency if called directly
                         return self.run(text)
 
-                self.analyzer = cast(TextAnalysisTool, _DegradedAnalyzer())  # type: ignore[assignment]
+                self.analyzer = cast(TextAnalysisTool, _DegradedAnalyzer())
         # Initialize Drive tool with error handling
         try:
             drive_tool = drive or DriveUploadTool()
             # Check if the drive tool is actually functional (has a service)
-            if hasattr(drive_tool, "service") and drive_tool.service is None:  # type: ignore[attr-defined]
+            if getattr(drive_tool, "service", None) is None:
                 logger.warning("Drive upload disabled via configuration")
                 self.drive = None
             else:
@@ -290,7 +290,7 @@ class ContentPipeline:
                 tenants_dir = pathlib.Path("tenants")
                 if tenants_dir.exists():  # pragma: no branch - simple check
                     try:  # pragma: no cover - best effort
-                        reg = TenantRegistry(tenants_dir)  # type: ignore[arg-type]
+                        reg = TenantRegistry(tenants_dir)
                     except Exception:  # pragma: no cover - ignore
                         reg = None
             if ctx and reg:
@@ -447,13 +447,7 @@ class ContentPipeline:
                 err["step"] = "fallacy"
                 return err  # type: ignore[return-value]
 
-            # At this point analysis and fallacy are successful StepResult instances
-            if not isinstance(analysis, StepResult) or not isinstance(
-                fallacy, StepResult
-            ):  # pragma: no cover - defensive
-                return {"status": "error", "step": "analysis", "error": "Unexpected analysis result type"}  # type: ignore[return-value]
-            analysis = cast(StepResult, analysis)
-            fallacy = cast(StepResult, fallacy)
+            # At this point, analysis and fallacy are successful StepResult instances
 
             # Phase 4: Perspective synthesis (depends on analysis results)
             logger.info("Synthesizing perspectives")
@@ -540,7 +534,7 @@ class ContentPipeline:
                 span.set_attribute("error_step", "memory")
                 if discord_task:
                     discord_task.cancel()
-                return {"status": "error", "step": "memory", "error": str(memory)}  # type: ignore[return-value]
+                return {"status": "error", "step": "memory", "error": str(memory)}
             else:
                 memory = cast(StepResult, memory)
                 if not memory.success:

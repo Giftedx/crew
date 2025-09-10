@@ -50,7 +50,8 @@ class IntegrationValidator:
         try:
             result = subprocess.run(
                 ["python", "-m", "ruff", "check", ".", "--quiet"],
-                check=False, cwd=self.project_root,
+                check=False,
+                cwd=self.project_root,
                 capture_output=True,
                 timeout=60,
             )
@@ -122,7 +123,12 @@ print("✅ Core imports successful")
 
             try:
                 result = subprocess.run(
-                    ["python", temp_path], check=False, cwd=self.project_root, capture_output=True, timeout=30, text=True
+                    ["python", temp_path],
+                    check=False,
+                    cwd=self.project_root,
+                    capture_output=True,
+                    timeout=30,
+                    text=True,
                 )
                 return result.returncode == 0 and "✅ Core imports successful" in result.stdout
             finally:
@@ -149,7 +155,8 @@ print("✅ Core imports successful")
         try:
             result = subprocess.run(
                 ["python", "-m", "pytest", "tests/test_fallacy_helpers.py", "-q"],
-                check=False, cwd=self.project_root,
+                check=False,
+                cwd=self.project_root,
                 capture_output=True,
                 timeout=60,
             )

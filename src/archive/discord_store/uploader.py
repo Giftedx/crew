@@ -13,15 +13,17 @@ from __future__ import annotations
 import asyncio
 from pathlib import Path
 from typing import Any, Protocol, cast, runtime_checkable
+from typing import Any as _Any
 
 import aiohttp
 
 try:  # optional dependency
-    import discord
+    import discord as _discord_mod
 
+    discord: _Any = _discord_mod
     _DISCORD_AVAILABLE = True
 except Exception:  # pragma: no cover
-    discord = None
+    discord = cast(_Any, None)
     _DISCORD_AVAILABLE = False
 
 
@@ -62,16 +64,17 @@ class _OneShotClient:
             intents_val = intents_cls.none() if intents_cls and hasattr(intents_cls, "none") else None
             client_cls = getattr(discord, "Client", None)
             if client_cls is not None:
-                self._client = client_cls(intents=intents_val)
+                client = client_cls(intents=intents_val)
+                self._client = client
 
                 # register event handler dynamically
                 async def on_ready():  # pragma: no cover - network dependent
-                    channel = await self._client.fetch_channel(self._channel_id)
+                    channel = await client.fetch_channel(self._channel_id)
                     msg = await channel.send(file=_make_file(self._path))
                     self._future.set_result(cast(_MessageLike, msg))
-                    await self._client.close()
+                    await client.close()
 
-                setattr(self._client, "on_ready", on_ready)
+                setattr(client, "on_ready", on_ready)
 
     async def start(self, token: str) -> None:  # pragma: no cover - network
         if not self._client:

@@ -12,9 +12,9 @@ class TestVelocityCalculation:
         """Test velocity calculation with recent completed tasks."""
         now = datetime.now(UTC)
         completed_tasks = [
-            {'completed_at': (now - timedelta(days=5)).isoformat(), 'id': 1},
-            {'completed_at': (now - timedelta(days=10)).isoformat(), 'id': 2},
-            {'completed_at': (now - timedelta(days=15)).isoformat(), 'id': 3},
+            {"completed_at": (now - timedelta(days=5)).isoformat(), "id": 1},
+            {"completed_at": (now - timedelta(days=10)).isoformat(), "id": 2},
+            {"completed_at": (now - timedelta(days=15)).isoformat(), "id": 3},
         ]
 
         velocity = calculate_velocity(completed_tasks, time_window_days=30)
@@ -24,8 +24,8 @@ class TestVelocityCalculation:
         """Test that old tasks outside the window are excluded."""
         now = datetime.now(UTC)
         completed_tasks = [
-            {'completed_at': (now - timedelta(days=5)).isoformat(), 'id': 1},
-            {'completed_at': (now - timedelta(days=45)).isoformat(), 'id': 2},  # Outside window
+            {"completed_at": (now - timedelta(days=5)).isoformat(), "id": 1},
+            {"completed_at": (now - timedelta(days=45)).isoformat(), "id": 2},  # Outside window
         ]
 
         velocity = calculate_velocity(completed_tasks, time_window_days=30)

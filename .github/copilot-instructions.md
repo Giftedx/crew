@@ -1,48 +1,58 @@
-## 🤖 Copilot Instructions (Project-Specific, ~50 lines)
-Goal: Enable fast, correct edits. Reuse existing abstractions; do not invent new layers unless explicitly requested.
+## 🤖 Copilot Instructions (Project-Specific, ~45 lines)
+Goal: Accelerate correct edits. Reuse existing seams; never invent parallel abstractions unless requested.
 
-### 1. Architecture (mental model)
-Ingestion (multi‑platform download dispatcher) → optional Drive upload → Whisper transcription → light analysis (sentiment / fallacy / claims / perspectives) → memory (Qdrant or in‑mem) → grounded answer / Discord output. Crew/agent orchestration: `src/ultimate_discord_intelligence_bot/crew.py` (+ any `config/agents|tasks*.yaml`). Pipeline tools live under `.../tools/` and return `StepResult`.
+### 1. Mental Model
+Ingestion (multi‑platform dispatcher) → transcription (Whisper / faster‑whisper fallback) → light analysis (sentiment / claims / topics / fallacies) → memory (Qdrant or in‑mem) → grounding & routing → Discord / API response. Orchestration lives in `src/ultimate_discord_intelligence_bot/crew.py` with agent/task YAML under `config/`.
 
-### 2. Core Directories (where things live)
-`core/` flags, http retry, learning & routing helpers
-`memory/` vector + namespace isolation (`tenant:workspace`)
-`obs/` tracing + metrics; init once per entrypoint
-`scheduler/` job types & handlers (deterministic job key)
-`security/`, `policy/` moderation + governance
-`analysis/`, `grounding/`, `debate/`, `kg/`, `eval/` advanced reasoning subsystems
+### 2. Directory Landmarks
+`core/` flags, HTTP wrappers (`resilient_*`, `retrying_*`), routing + RL helpers.
+`analysis/` pipelines (segment, sentiment, claims, topics).
+`ingest/` source adapters + dispatcher (`ingest/sources/<platform>.py`).
+`memory/` vector + metadata stores (namespaced by `tenant:workspace`).
+`obs/` tracing + metrics init (init once per entrypoint).
+`scheduler/` job dataclasses + handlers; deterministic keys dedupe.
+`grounding/`, `debate/`, `kg/`, `eval/` higher‑order reasoning & evaluation.
+`policy/`, `security/` moderation, rate limits, governance.
 
-### 3. Tool & Result Pattern
-Every external/system step should yield `StepResult.ok|fail|skip`; avoid raising for recoverable issues (bad URL, empty index). Legacy dict → wrap via `StepResult.from_dict`. Consistent shapes: vector search = list of `{text, score}` (no wrapper); monitoring tools often `StepResult.ok(matches=[...])`. Treat unknown / unexpected exceptions as real failures (let them raise after metrics increment).
+### 3. StepResult Contract
+All external/system operations return `StepResult.ok|fail|skip`. Recoverable issues (404, empty transcript) → `fail` or `skip`, not raised. Legacy dict tools: wrap with `StepResult.from_dict`. Vector search returns raw list of `{text, score}` (no wrapper). Unexpected exceptions: allow raise after metrics/logging.
 
-### 4. Tenancy & Isolation
-Always carry explicit `TenantContext` (`with_tenant`). Never mix tenant data; memory namespaces and metrics labels must exclude raw user text/high cardinality. New stateful code: add namespace parameter up‑front.
+### 4. Tenancy
+Always thread `TenantContext` (helpers: `with_tenant`). Do not leak raw user text into metric labels or namespace strings. New stateful components MUST accept `(tenant, workspace)` or a composed namespace param early.
 
 ### 5. Feature Flags & Deprecations
-Gate new behavior with `ENABLE_<AREA>_<FEATURE>` (default off). Prefer `ENABLE_HTTP_RETRY` (legacy `ENABLE_ANALYSIS_HTTP_RETRY` warns until 2025-12-31). Privacy filters use flexible casing (`enable_pii_detection` also accepted). On deprecation: emit `DeprecationWarning`, update README table, run `make docs` (regen badge & report).
+Pattern: `ENABLE_<AREA>_<FEATURE>` (default off). Key examples: `ENABLE_HTTP_RETRY`, `ENABLE_INGEST_CONCURRENT`, `ENABLE_RL_GLOBAL`, domain‑specific RL flags (`ENABLE_RL_ROUTING`). Emit `DeprecationWarning` + run `make docs` after modifying deprecated surfaces. Strict ingest mode: `ENABLE_INGEST_STRICT=1` (fails on missing creator/id). Privacy flags accept flexible casing (`enable_pii_detection`).
 
-### 6. Routing & RL (minimal rules)
-`PromptEngine.build` → candidate filter (cost, capability) → ε‑greedy choose via `LearningEngine` (requires both `ENABLE_RL_GLOBAL` and domain flag e.g. `ENABLE_RL_ROUTING`) → `OpenRouterService.call` (budget via `TokenMeter`) → reward 0–1 recorded (`record(model, reward, cached=bool, error_type=? )`). Failures = 0; cached still logged; negative only for policy violations (increment moderation metrics).
+### 6. Routing & RL
+`PromptEngine.build` → filter candidates → ε‑greedy via `LearningEngine` (needs global + domain flag) → `OpenRouterService.call` (cost metered by `TokenMeter`) → `record(model, reward, cached=?, error_type=?)`. Failure reward = 0; negative only for policy violations.
 
-### 7. Scheduler & Profiles
-Jobs: add dataclass under `scheduler/jobs/` + handler under `scheduler/handlers/` + registry mapping update (search existing handler map). Job key must be deterministic (typically URL + bucket) to dedupe. Intended backpressure: drop lowest priority when max queue exceeded (preserve metric naming consistency if adding). `profiles.yaml` seeds creators; resolution utilities enrich ingestion payloads.
+### 7. Scheduler
+Add job: dataclass under `scheduler/jobs/`, handler under `scheduler/handlers/`, update registry mapping. Key: deterministic job key (URL + bucket) prevents duplicates. Backpressure: drop lowest priority (preserve existing metric naming).
 
-### 8. Conventions / Determinism
-UTC only (`datetime.now(timezone.utc)`); normalise naive via `core.time.ensure_utc`. Deterministic seams: uppercase summariser outputs, injectable time providers. Guard heavy / slow paths with flags. Maintain `mypy_baseline.json` (never regress). Always use `core.http_utils` wrappers (`resilient_*` / `retrying_*`) not direct `requests.*`.
+### 8. Determinism & Time
+UTC only: use `core.time.ensure_utc`. Keep summarizer / analysis deterministic (uppercase normalization, stable hashing of URLs for episode IDs). Guard heavy / experimental code paths with flags.
 
-### 9. Observability
-One span per logical operation; increment metrics before returning. New counters/ histograms: define in central metrics module (avoid hot‑loop creation). Label sets: tenant/workspace + low‑cardinality fields (never raw text, IDs, or URLs). Emit deprecation structured log once per flag (see `core.http_utils`).
+### 9. HTTP & Caching
+Never call `requests.*` directly—use wrappers in `core/http_utils.py`. For GET with caching use `cached_get` (auto Redis vs in‑mem). Add retry config by placing `retry.yaml` (tenant or global) with `max_attempts:` (simple parser, no extra lib).
 
-### 10. Where to Add
-Ingestion: `ingest/sources/<platform>.py` + dispatcher update. Analysis: extend `analysis/` or focused tool under `tools/`. Crew tool: add under `tools/` + register in `crew.py`. Scheduler job: dataclass + handler + registry mapping + tests (dedupe, ordering). HTTP retry config override: add `retry.yaml` (tenant or global) with `max_attempts:` (no YAML lib required; simple parse).
+### 10. Observability
+One span per logical unit; increment metrics BEFORE returning a `StepResult`. New metrics: declare centrally (avoid dynamic label explosion). Labels: tenant, workspace, low‑cardinality enums only—never raw text/URLs. Deprecation flags log once (see pattern in `core.http_utils`).
 
-### 11. Testing & Workflows
-Install: `pip install -e '.[dev]'` or `make ensure-venv`. Quality: `make format lint type`. Tests: `pytest -q` or `make test-fast` (focused subset). Eval: `make eval`. Deprecations/status/docs: `make docs`. Guards (fail fast): `make guards` (enforces dispatcher + HTTP wrapper usage). Run bot: `python -m ultimate_discord_intelligence_bot.setup_cli run discord`.
+### 11. Memory Layer
+Use API in `memory/api.py` plus `store` + `vector_store`. Respect retention policies; pruning via `api.prune`. Qdrant absent → in‑mem fallback (ok for tests; avoid perf benchmarking). Archive/pin via archiver facade.
 
-### 12. Data & Storage Nuances
-Qdrant memory fallback: when `QDRANT_URL` unset, `:memory:` or `memory://*` or client missing → in‑memory stub (sufficient for unit tests; avoid benchmarking on it). Privacy filter: detection & redaction individually flag‑controlled (see `core/privacy/privacy_filter.py`). Cached GET: `cached_get` auto‑selects Redis vs in‑mem.
+### 12. Testing & CI Routines
+Env/bootstrap: `make ensure-venv` or `pip install -e '.[dev]'`.
+Quality sweep: `make format lint type`. Focused fast tests: `make test-fast` (targets HTTP + guards + vector store). Full tests: `make test`. Eval harness: `make eval`. Docs + deprecation scan: `make docs`. Compliance (HTTP + StepResult): `make compliance` / auto-fix: `make compliance-fix`.
 
-### 13. Do / Avoid
-Do: thread tenant, use `StepResult`, gate features, reuse retry + cache helpers, maintain deterministic outputs, surface structured deprecation logs. Avoid: ad‑hoc HTTP retries, direct `requests.*`, global implicit tenant, naive time, bespoke vector schemas, heavy imports in hot paths, raising for expected miss/empty conditions.
+### 13. Adding Functionality
+Ingestion source: new file under `ingest/sources/` + dispatcher update + tests for fallback paths. New analysis step: module under `analysis/` returning `StepResult`; wire into orchestrator. New tool for crew: create under `tools/`, ensure it returns `StepResult`, register in `crew.py`.
 
-When unsure: search (`rg <keyword>`), mirror closest pattern, keep scope minimal, document flags. For deep dives see `README.md` + `docs/*.md`.
+### 14. Do / Avoid
+Do: thread tenant context, return `StepResult`, gate new behavior, reuse retry + cache helpers, maintain mypy baseline (`config/mypy_baseline.json`), deterministic identifiers.
+Avoid: direct `requests`, ad‑hoc retries, leaking raw user inputs into metrics, raising for expected empty results, creating bespoke vector schemas, heavy imports in hot paths.
+
+### 15. Debug / Utilities
+Quick ingest: `python -m ingest <url> --tenant default --workspace main` (optionally `ENABLE_INGEST_CONCURRENT=1`). Run Discord bot: `python -m ultimate_discord_intelligence_bot.setup_cli run discord`. Doctor checks: `make doctor`. Queue snapshot: `make ops-queue DB=path/to/sched.db`.
+
+When unsure: search (`rg <keyword>`), mirror nearest existing pattern, keep PR scope small, document involved flags in code comments + commit message.

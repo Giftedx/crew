@@ -37,4 +37,3 @@ def test_creator_non_string_is_coerced(monkeypatch):
     ip.run(job, store)
     # f-string coercion produces a string namespace
     assert captured["ns"] == "t:w:12345"
-

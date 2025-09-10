@@ -61,4 +61,3 @@ def set_tracer_provider(provider: TracerProvider) -> None:
 
 def get_tracer(name: str) -> Tracer:
     return Tracer(name)
-

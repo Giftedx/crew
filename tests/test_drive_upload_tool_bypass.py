@@ -1,4 +1,3 @@
-
 import unittest
 
 from ultimate_discord_intelligence_bot.tools.drive_upload_tool_bypass import DriveUploadTool
@@ -16,9 +15,7 @@ class TestDriveUploadToolBypass(unittest.TestCase):
 
         # Assert
         self.assertEqual(result["status"], "skipped")
-        self.assertEqual(
-            result["message"], "Google Drive uploads disabled (no credentials configured)"
-        )
+        self.assertEqual(result["message"], "Google Drive uploads disabled (no credentials configured)")
         self.assertEqual(result["file_path"], file_path)
         self.assertEqual(result["platform"], platform)
 

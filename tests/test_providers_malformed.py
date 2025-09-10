@@ -5,7 +5,9 @@ from ingest.providers import twitch, youtube
 
 def test_youtube_fetch_metadata_malformed(monkeypatch):
     monkeypatch.setattr(
-        youtube, "youtube_fetch_metadata", lambda url: {
+        youtube,
+        "youtube_fetch_metadata",
+        lambda url: {
             "id": 123,
             "title": None,
             "channel": None,
@@ -13,7 +15,7 @@ def test_youtube_fetch_metadata_malformed(monkeypatch):
             "duration": "10",
             "url": None,
             "thumbnails": [1, "t2"],
-        }
+        },
     )
     meta = youtube.fetch_metadata("u")
     assert meta.id == "123"
@@ -26,14 +28,16 @@ def test_youtube_fetch_metadata_malformed(monkeypatch):
 
 def test_twitch_fetch_metadata_malformed(monkeypatch):
     monkeypatch.setattr(
-        twitch, "twitch_fetch_metadata", lambda url: {
+        twitch,
+        "twitch_fetch_metadata",
+        lambda url: {
             "id": None,
             "title": 42,
             "streamer": None,
             "published_at": 0,
             "duration": None,
             "url": None,
-        }
+        },
     )
     meta = twitch.fetch_metadata("v")
     assert meta.id == ""

@@ -11,9 +11,12 @@ All other Python files under src/ must use http_utils (resilient_get/post or ret
 
 from __future__ import annotations
 
+import io
+import logging
 import pathlib
 import re
 import sys
+import tokenize
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 SRC = ROOT / "src"
@@ -31,6 +34,25 @@ ALLOWED_FILES = {
 PATTERN = re.compile(r"\brequests\.(get|post|put|delete|patch|head)\s*\(")
 
 
+def strip_strings_and_comments(text: str) -> str:
+    """Remove string literals and comments using tokenize to avoid false positives.
+
+    This preserves actual code structure while eliminating docstrings, inline strings,
+    and comments where examples like "requests.get(" might appear.
+    """
+    try:
+        tokens = tokenize.generate_tokens(io.StringIO(text).readline)
+        parts: list[str] = []
+        for tok_type, tok_str, *_ in tokens:
+            if tok_type in (tokenize.STRING, tokenize.COMMENT):
+                continue
+            # Append token text directly to preserve punctuation adjacency
+            parts.append(tok_str)
+        return "".join(parts)
+    except Exception:
+        # Fallback to original text if tokenization fails
+        return text
+
 
 def main() -> int:
     violations: list[str] = []
@@ -44,9 +66,12 @@ def main() -> int:
             continue
         try:
             text = path.read_text(encoding="utf-8", errors="ignore")
-        except Exception:
+        except Exception as exc:
+            logging.warning("validate_http_wrappers_usage: failed to read %s: %s", rel, exc)
             continue
-        if PATTERN.search(text):
+        # Remove strings and comments before scanning
+        cleaned = strip_strings_and_comments(text)
+        if PATTERN.search(cleaned):
             violations.append(rel)
     if violations:
         print("Direct 'requests' usage detected; use core.http_utils helpers instead:")

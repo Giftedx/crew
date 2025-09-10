@@ -9,18 +9,22 @@ from __future__ import annotations
 import logging
 import math
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 logger = logging.getLogger(__name__)
 
-try:
-    from qdrant_client import QdrantClient
-    from qdrant_client.http import models as qmodels
+if TYPE_CHECKING:  # pragma: no cover
+    from qdrant_client import QdrantClient as _QdrantClient
+    from qdrant_client.http import models as _qmodels
+else:
+    _QdrantClient = Any
+    _qmodels = Any
 
-    QDRANT_AVAILABLE = True
-except ImportError:  # pragma: no cover
-    QdrantClient = None
-    qmodels = None
+try:
+    import importlib.util as _ils
+
+    QDRANT_AVAILABLE = _ils.find_spec("qdrant_client") is not None
+except Exception:  # pragma: no cover
     QDRANT_AVAILABLE = False
 
 from memory.vector_store import VectorStore
@@ -68,9 +72,19 @@ class EnhancedVectorStore(VectorStore):
             return
 
         try:
-            # Test connection and get cluster info
-            info = self.client.get_cluster_info()
-            logger.info(f"Qdrant cluster status: {info.status}")
+            # Test connection and get cluster info if available
+            status = None
+            try:
+                get_info = getattr(self.client, "get_cluster_info", None)
+                if callable(get_info):
+                    info = get_info()
+                    status = getattr(info, "status", None)
+                else:
+                    status = None
+            except Exception:
+                status = None
+            if status:
+                logger.info(f"Qdrant cluster status: {status}")
 
             # Check for advanced features
             try:
@@ -96,6 +110,8 @@ class EnhancedVectorStore(VectorStore):
 
         try:
             # Base dense vector configuration
+            from qdrant_client.http import models as qmodels
+
             vectors_config = qmodels.VectorParams(
                 size=dimension,
                 distance=qmodels.Distance.COSINE,
@@ -193,6 +209,8 @@ class EnhancedVectorStore(VectorStore):
             search_requests = []
 
             # Dense vector search
+            from qdrant_client.http import models as qmodels
+
             dense_request = qmodels.SearchRequest(
                 vector=qmodels.NamedVector(
                     name="",  # Default dense vector
@@ -250,8 +268,10 @@ class EnhancedVectorStore(VectorStore):
             logger.error(f"Hybrid search failed for {collection_name}: {e}")
             return []
 
-    def _text_to_sparse_vector(self, text: str) -> qmodels.SparseVector:
+    def _text_to_sparse_vector(self, text: str) -> Any:
         """Convert text to sparse vector using simple TF-IDF approximation."""
+        from qdrant_client.http import models as qmodels
+
         # Simple tokenization and weighting
         # In production, use a proper sparse encoder like SPLADE
         words = text.lower().split()
@@ -274,14 +294,16 @@ class EnhancedVectorStore(VectorStore):
 
         return qmodels.SparseVector(indices=indices, values=values)
 
-    def _build_filter(self, conditions: dict[str, Any]) -> qmodels.Filter:
+    def _build_filter(self, conditions: dict[str, Any]) -> Any:
         """Build Qdrant filter from conditions."""
-        must_conditions = []
+        from qdrant_client.http import models as qmodels
+
+        must_conditions: list[Any] = []
 
         for field, value in conditions.items():
             if isinstance(value, list):
                 # Multiple values - use 'should' (OR)
-                should_conditions = [
+                should_conditions: list[Any] = [
                     qmodels.FieldCondition(key=field, match=qmodels.MatchValue(value=v)) for v in value
                 ]
                 must_conditions.append(qmodels.Filter(should=should_conditions))
@@ -342,26 +364,32 @@ class EnhancedVectorStore(VectorStore):
 
         try:
             info = self.client.get_collection(collection_name)
+            cfg = getattr(info, "config", None)
+            params = getattr(cfg, "params", None)
+            vectors = getattr(params, "vectors", None)
 
             stats = {
                 "collection_name": collection_name,
-                "vectors_count": info.vectors_count,
-                "segments_count": info.segments_count,
-                "disk_data_size": info.disk_data_size,
-                "ram_data_size": info.ram_data_size,
+                "vectors_count": getattr(info, "vectors_count", None),
+                "segments_count": getattr(info, "segments_count", None),
+                "disk_data_size": getattr(info, "disk_data_size", None),
+                "ram_data_size": getattr(info, "ram_data_size", None),
                 "config": {
-                    "distance": info.config.params.vectors.distance.value,
-                    "dimension": info.config.params.vectors.size,
+                    "distance": getattr(getattr(vectors, "distance", None), "value", None),
+                    "dimension": getattr(vectors, "size", None),
                 },
-                "quantization_enabled": info.config.quantization_config is not None,
-                "sparse_vectors_enabled": bool(info.config.sparse_vectors_config),
+                "quantization_enabled": getattr(cfg, "quantization_config", None) is not None,
+                "sparse_vectors_enabled": bool(getattr(cfg, "sparse_vectors_config", None)),
             }
 
             # Add index statistics if available
             try:
-                cluster_info = self.client.get_cluster_info()
-                stats["cluster_status"] = cluster_info.status
-                stats["peer_count"] = len(cluster_info.peers)
+                get_ci = getattr(self.client, "get_cluster_info", None)
+                if callable(get_ci):
+                    cluster_info = get_ci()
+                    stats["cluster_status"] = getattr(cluster_info, "status", None)
+                    peers = getattr(cluster_info, "peers", None)
+                    stats["peer_count"] = len(peers) if isinstance(peers, list) else None
             except Exception:
                 pass
 

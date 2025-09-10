@@ -63,8 +63,8 @@ Rules:
 ## 3. Naming & Headings
 
 * Filenames use UPPER_SNAKE_CASE for conceptual / spec documents (e.g.
-  `IMPLEMENTATION_ROADMAP.md`), and lower-kebab-case for procedural guides
-  (e.g. `rotation-runbook.md`).
+  `docs/strategy/IMPLEMENTATION_ROADMAP.md`), and lower-kebab-case for procedural guides.
+  See `docs/operations/` for examples and indexes of runbooks.
 * Exactly one H1 (`#`) per file and it MUST match the `title` front‑matter.
 * Use sentence case for lower-level headings (H2+), unless they are proper nouns.
 
@@ -104,8 +104,8 @@ Any move / rename must update:
 
 The following are NOT allowed in the repository root:
 
-* Standalone `.md` documentation files (all belong under `docs/`)
-* Backup variants like `*.old.md`, `*-backup.md`
+* Standalone markdown files in the repository root (all belong under `docs/`)
+* Backup variants (avoid committing temporary backup files)
 * Redundant copies of migrated documents
 
 ## 8. Contribution Workflow (Docs)

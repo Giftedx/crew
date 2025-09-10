@@ -81,14 +81,13 @@ class MemoryStorageTool(BaseTool):
         embed = embedding_fn or (lambda text: [float(len(text))])
         if client is not None:
             qclient = cast(_QdrantLike, client)
-        elif QdrantClient is None:  # pragma: no cover - real client missing
-            # Defer failure until first use to allow tests without dependency
-            qclient = cast(_QdrantLike, None)
-        else:  # pragma: no cover - normal path
+        else:
+            # Attempt to construct a real client; fall back to None on any error/missing dep
             url = config.qdrant_url
             api_key = config.qdrant_api_key
             try:
-                qclient = cast(_QdrantLike, QdrantClient(url=url, api_key=api_key))  # type: ignore
+                QdrantCtor = cast(Callable[..., Any], QdrantClient)
+                qclient = cast(_QdrantLike, QdrantCtor(url=url, api_key=api_key))
             except Exception:  # pragma: no cover - fallback to None on instantiation issues
                 qclient = cast(_QdrantLike, None)
         # Assign via object.__setattr__ to avoid pydantic required-field validation
@@ -153,21 +152,24 @@ class MemoryStorageTool(BaseTool):
                     }
                 )
 
-            if "PointStruct" in globals():
-                point = PointStruct(  # type: ignore[call-arg]
+            payload: dict[str, object] = dict(enhanced_metadata)
+            payload["text"] = text
+            if "PointStruct" in globals() and callable(PointStruct):
+                point = cast(Any, PointStruct)(
                     id=str(uuid.uuid4()),
                     vector=vector,
-                    payload={**enhanced_metadata, "text": text},
+                    payload=payload,
                 )
             else:  # pragma: no cover - fallback plain dict
-                point = {  # type: ignore[assignment]
+                point = {
                     "id": str(uuid.uuid4()),
                     "vector": vector,
-                    "payload": {**enhanced_metadata, "text": text},
+                    "payload": payload,
                 }
             if self.client is None:
                 raise RuntimeError("Qdrant client not initialised")
-            self.client.upsert(collection_name=target, points=[point])  # type: ignore[arg-type]
+            points: Sequence[Any] = [point]
+            self.client.upsert(collection_name=target, points=points)
             self._metrics.counter(
                 "tool_runs_total",
                 labels={

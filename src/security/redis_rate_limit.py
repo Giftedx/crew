@@ -81,4 +81,3 @@ class RedisTokenBucket:
         except Exception:
             # Fail open: if backend is down, do not block
             return True
-

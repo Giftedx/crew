@@ -30,6 +30,7 @@ HISTORY_TRIM_SIZE = 500
 
 class TaskPriority(Enum):
     """Task priority levels with numerical values for sorting."""
+
     P0_CRITICAL = (0, "System stability, security, or core functionality")
     P1_HIGH = (1, "Performance improvements, user experience")
     P2_MEDIUM = (2, "Feature enhancements, technical debt")
@@ -42,6 +43,7 @@ class TaskPriority(Enum):
 
 class TaskStatus(Enum):
     """Task execution status."""
+
     PENDING = "pending"
     IN_PROGRESS = "in_progress"
     BLOCKED = "blocked"
@@ -51,6 +53,7 @@ class TaskStatus(Enum):
 
 class ResourceType(Enum):
     """Types of resources that can constrain task execution."""
+
     DEVELOPER_TIME = "developer_time"
     COMPUTE_RESOURCES = "compute_resources"
     API_BUDGET = "api_budget"
@@ -60,6 +63,7 @@ class ResourceType(Enum):
 @dataclass
 class TaskConstraint:
     """Represents a constraint affecting task execution."""
+
     resource_type: ResourceType
     required_amount: float
     available_amount: float
@@ -75,6 +79,7 @@ class TaskConstraint:
 @dataclass
 class BusinessImpactMetrics:
     """Metrics for measuring business impact of tasks."""
+
     user_satisfaction_improvement: float = 0.0  # Expected improvement (0-1 scale)
     cost_reduction_dollars: float = 0.0  # Expected cost savings
     performance_improvement_percent: float = 0.0  # Expected performance gain
@@ -88,7 +93,7 @@ class BusinessImpactMetrics:
             "cost_reduction": 0.20,
             "performance": 0.20,
             "risk_mitigation": 0.20,
-            "strategic_alignment": 0.15
+            "strategic_alignment": 0.15,
         }
 
         # Normalize cost reduction to 0-1 scale (assuming $1000 max impact)
@@ -98,17 +103,18 @@ class BusinessImpactMetrics:
         normalized_performance = min(1.0, self.performance_improvement_percent / 100.0)
 
         return (
-            weights["user_satisfaction"] * self.user_satisfaction_improvement +
-            weights["cost_reduction"] * normalized_cost +
-            weights["performance"] * normalized_performance +
-            weights["risk_mitigation"] * self.risk_mitigation_score +
-            weights["strategic_alignment"] * self.strategic_alignment_score
+            weights["user_satisfaction"] * self.user_satisfaction_improvement
+            + weights["cost_reduction"] * normalized_cost
+            + weights["performance"] * normalized_performance
+            + weights["risk_mitigation"] * self.risk_mitigation_score
+            + weights["strategic_alignment"] * self.strategic_alignment_score
         )
 
 
 @dataclass
 class AdaptiveTask:
     """Task with adaptive prioritization metadata."""
+
     id: str
     name: str
     description: str
@@ -153,6 +159,7 @@ class AdaptiveTask:
 @dataclass
 class SystemMetrics:
     """Current system metrics that influence prioritization."""
+
     error_rate: float = 0.0
     response_latency_p95: float = 0.0
     cost_per_interaction: float = 0.0
@@ -165,6 +172,7 @@ class SystemMetrics:
 @dataclass
 class PrioritizationContext:
     """Context information for prioritization decisions."""
+
     current_metrics: SystemMetrics
     emergency_mode: bool = False
     budget_constraints: bool = False
@@ -186,14 +194,14 @@ class AdaptivePrioritizer:
             "business_impact": 0.25,
             "urgency": 0.20,
             "resource_availability": 0.15,
-            "user_feedback": 0.10
+            "user_feedback": 0.10,
         }
 
         # Context-specific multipliers
         self.context_multipliers = {
             "emergency": {"P0_CRITICAL": 2.0, "P1_HIGH": 0.5, "P2_MEDIUM": 0.1, "P3_LOW": 0.1},
             "budget_constrained": {"cost_reduction": 2.0, "performance": 1.5},
-            "growth_focus": {"user_satisfaction": 1.8, "performance": 1.5, "strategic_alignment": 1.3}
+            "growth_focus": {"user_satisfaction": 1.8, "performance": 1.5, "strategic_alignment": 1.3},
         }
 
     def add_task(self, task: AdaptiveTask):
@@ -227,11 +235,7 @@ class AdaptivePrioritizer:
             self.tasks[task_id].user_feedback_score = feedback_score
             logger.info(f"Updated user feedback for task {task_id}: {feedback_score}")
 
-    def calculate_priority_score(
-        self,
-        task: AdaptiveTask,
-        context: PrioritizationContext
-    ) -> float:
+    def calculate_priority_score(self, task: AdaptiveTask, context: PrioritizationContext) -> float:
         """Calculate dynamic priority score for a task."""
 
         # Base priority score (higher number = lower priority, so invert)
@@ -242,7 +246,7 @@ class AdaptivePrioritizer:
 
         # Urgency score based on age and external factors
         age_factor = min(1.0, task.age_in_hours() / 168.0)  # Normalize to weeks
-        urgency_score = (age_factor * 0.5 + task.urgency_multiplier * 0.5)
+        urgency_score = age_factor * 0.5 + task.urgency_multiplier * 0.5
 
         # Resource availability score
         if task.constraints:
@@ -256,18 +260,16 @@ class AdaptivePrioritizer:
 
         # Calculate weighted score
         weighted_score = (
-            self.weights["base_priority"] * base_score +
-            self.weights["business_impact"] * impact_score +
-            self.weights["urgency"] * urgency_score +
-            self.weights["resource_availability"] * resource_score +
-            self.weights["user_feedback"] * feedback_score
+            self.weights["base_priority"] * base_score
+            + self.weights["business_impact"] * impact_score
+            + self.weights["urgency"] * urgency_score
+            + self.weights["resource_availability"] * resource_score
+            + self.weights["user_feedback"] * feedback_score
         )
 
         # Apply context-specific multipliers
         if context.emergency_mode:
-            priority_multiplier = self.context_multipliers["emergency"].get(
-                task.base_priority.name, 1.0
-            )
+            priority_multiplier = self.context_multipliers["emergency"].get(task.base_priority.name, 1.0)
             weighted_score *= priority_multiplier
 
         if context.budget_constraints and task.business_impact.cost_reduction_dollars > 0:
@@ -280,7 +282,10 @@ class AdaptivePrioritizer:
         if context.current_metrics.error_rate > ERROR_RATE_THRESHOLD and task.base_priority == TaskPriority.P0_CRITICAL:
             weighted_score *= 1.5
 
-        if context.current_metrics.response_latency_p95 > HIGH_LATENCY_THRESHOLD and "performance" in task.description.lower():
+        if (
+            context.current_metrics.response_latency_p95 > HIGH_LATENCY_THRESHOLD
+            and "performance" in task.description.lower()
+        ):
             weighted_score *= 1.3
 
         return min(1.0, weighted_score)  # Cap at 1.0
@@ -323,11 +328,9 @@ class AdaptivePrioritizer:
             updated_tasks[task_id] = new_score
 
         # Record prioritization history
-        self.prioritization_history.append({
-            "timestamp": time.time(),
-            "context": asdict(context),
-            "task_scores": updated_tasks.copy()
-        })
+        self.prioritization_history.append(
+            {"timestamp": time.time(), "context": asdict(context), "task_scores": updated_tasks.copy()}
+        )
 
         # Limit history size
         if len(self.prioritization_history) > HISTORY_MAX_SIZE:
@@ -336,10 +339,7 @@ class AdaptivePrioritizer:
         return updated_tasks
 
     def get_prioritized_tasks(
-        self,
-        context: PrioritizationContext,
-        statuses: list[TaskStatus] | None = None,
-        limit: int | None = None
+        self, context: PrioritizationContext, statuses: list[TaskStatus] | None = None, limit: int | None = None
     ) -> list[AdaptiveTask]:
         """Get tasks ordered by current priority."""
 
@@ -350,17 +350,10 @@ class AdaptivePrioritizer:
         if statuses is None:
             statuses = [TaskStatus.PENDING, TaskStatus.IN_PROGRESS, TaskStatus.BLOCKED]
 
-        eligible_tasks = [
-            task for task in self.tasks.values()
-            if task.status in statuses
-        ]
+        eligible_tasks = [task for task in self.tasks.values() if task.status in statuses]
 
         # Sort by priority score (descending)
-        prioritized_tasks = sorted(
-            eligible_tasks,
-            key=lambda t: (t.priority_score, -t.age_in_hours()),
-            reverse=True
-        )
+        prioritized_tasks = sorted(eligible_tasks, key=lambda t: (t.priority_score, -t.age_in_hours()), reverse=True)
 
         # Apply limit if specified
         if limit:
@@ -368,20 +361,13 @@ class AdaptivePrioritizer:
 
         return prioritized_tasks
 
-    def get_next_actionable_tasks(
-        self,
-        context: PrioritizationContext,
-        max_tasks: int = 5
-    ) -> list[AdaptiveTask]:
+    def get_next_actionable_tasks(self, context: PrioritizationContext, max_tasks: int = 5) -> list[AdaptiveTask]:
         """Get the next actionable tasks that aren't blocked by constraints."""
 
         prioritized_tasks = self.get_prioritized_tasks(context, [TaskStatus.PENDING])
 
         # Filter out blocked tasks
-        actionable_tasks = [
-            task for task in prioritized_tasks
-            if not task.is_blocked()
-        ]
+        actionable_tasks = [task for task in prioritized_tasks if not task.is_blocked()]
 
         return actionable_tasks[:max_tasks]
 
@@ -404,14 +390,15 @@ class AdaptivePrioritizer:
 
         bottlenecks = self.identify_resource_bottlenecks()
         high_priority_blocked = [
-            task for task in self.tasks.values()
+            task
+            for task in self.tasks.values()
             if task.status == TaskStatus.BLOCKED and task.current_priority.value <= 1
         ]
 
         suggestions = {
             "bottlenecks": bottlenecks,
             "high_priority_blocked_count": len(high_priority_blocked),
-            "recommendations": []
+            "recommendations": [],
         }
 
         # Generate recommendations
@@ -422,7 +409,8 @@ class AdaptivePrioritizer:
 
         if ResourceType.API_BUDGET in bottlenecks:
             cost_reduction_tasks = [
-                task for task in self.tasks.values()
+                task
+                for task in self.tasks.values()
                 if task.business_impact.cost_reduction_dollars > 0 and task.status == TaskStatus.PENDING
             ]
             if cost_reduction_tasks:
@@ -432,7 +420,8 @@ class AdaptivePrioritizer:
 
         if context.current_metrics.error_rate > ERROR_RATE_THRESHOLD:
             stability_tasks = [
-                task for task in self.tasks.values()
+                task
+                for task in self.tasks.values()
                 if task.current_priority == TaskPriority.P0_CRITICAL and task.status == TaskStatus.PENDING
             ]
             if stability_tasks:
@@ -472,17 +461,12 @@ class AdaptivePrioritizer:
                     "priority": task.current_priority.name,
                     "score": task.priority_score,
                     "status": task.status.value,
-                    "age_hours": task.age_in_hours()
+                    "age_hours": task.age_in_hours(),
                 }
                 for task in prioritized_tasks[:10]
             ],
             "next_actionable": [
-                {
-                    "id": task.id,
-                    "name": task.name,
-                    "priority": task.current_priority.name,
-                    "score": task.priority_score
-                }
+                {"id": task.id, "name": task.name, "priority": task.current_priority.name, "score": task.priority_score}
                 for task in actionable_tasks
             ],
             "resource_analysis": resource_suggestions,
@@ -493,9 +477,9 @@ class AdaptivePrioritizer:
                 "system_health": {
                     "error_rate": context.current_metrics.error_rate,
                     "latency_p95": context.current_metrics.response_latency_p95,
-                    "user_satisfaction": context.current_metrics.user_satisfaction
-                }
-            }
+                    "user_satisfaction": context.current_metrics.user_satisfaction,
+                },
+            },
         }
 
 
@@ -510,14 +494,12 @@ def create_example_tasks() -> list[AdaptiveTask]:
             base_priority=TaskPriority.P1_HIGH,
             estimated_hours=16.0,
             business_impact=BusinessImpactMetrics(
-                cost_reduction_dollars=500.0,
-                performance_improvement_percent=30.0,
-                user_satisfaction_improvement=0.2
+                cost_reduction_dollars=500.0, performance_improvement_percent=30.0, user_satisfaction_improvement=0.2
             ),
             constraints=[
                 TaskConstraint(ResourceType.DEVELOPER_TIME, 16.0, 20.0),
-                TaskConstraint(ResourceType.API_BUDGET, 100.0, 150.0)
-            ]
+                TaskConstraint(ResourceType.API_BUDGET, 100.0, 150.0),
+            ],
         ),
         AdaptiveTask(
             id="SEC-002",
@@ -525,13 +507,8 @@ def create_example_tasks() -> list[AdaptiveTask]:
             description="Critical security fix for user authentication",
             base_priority=TaskPriority.P0_CRITICAL,
             estimated_hours=8.0,
-            business_impact=BusinessImpactMetrics(
-                risk_mitigation_score=0.9,
-                strategic_alignment_score=0.8
-            ),
-            constraints=[
-                TaskConstraint(ResourceType.DEVELOPER_TIME, 8.0, 20.0)
-            ]
+            business_impact=BusinessImpactMetrics(risk_mitigation_score=0.9, strategic_alignment_score=0.8),
+            constraints=[TaskConstraint(ResourceType.DEVELOPER_TIME, 8.0, 20.0)],
         ),
         AdaptiveTask(
             id="FEAT-003",
@@ -540,14 +517,12 @@ def create_example_tasks() -> list[AdaptiveTask]:
             base_priority=TaskPriority.P2_MEDIUM,
             estimated_hours=40.0,
             business_impact=BusinessImpactMetrics(
-                user_satisfaction_improvement=0.4,
-                strategic_alignment_score=0.7,
-                performance_improvement_percent=15.0
+                user_satisfaction_improvement=0.4, strategic_alignment_score=0.7, performance_improvement_percent=15.0
             ),
             constraints=[
                 TaskConstraint(ResourceType.DEVELOPER_TIME, 40.0, 20.0),  # Over capacity
-                TaskConstraint(ResourceType.COMPUTE_RESOURCES, 1.0, 0.6)  # Limited compute
-            ]
+                TaskConstraint(ResourceType.COMPUTE_RESOURCES, 1.0, 0.6),  # Limited compute
+            ],
         ),
         AdaptiveTask(
             id="DOC-004",
@@ -555,14 +530,9 @@ def create_example_tasks() -> list[AdaptiveTask]:
             description="Comprehensive API documentation update",
             base_priority=TaskPriority.P3_LOW,
             estimated_hours=12.0,
-            business_impact=BusinessImpactMetrics(
-                user_satisfaction_improvement=0.1,
-                strategic_alignment_score=0.3
-            ),
-            constraints=[
-                TaskConstraint(ResourceType.DEVELOPER_TIME, 12.0, 20.0)
-            ]
-        )
+            business_impact=BusinessImpactMetrics(user_satisfaction_improvement=0.1, strategic_alignment_score=0.3),
+            constraints=[TaskConstraint(ResourceType.DEVELOPER_TIME, 12.0, 20.0)],
+        ),
     ]
 
     return tasks
@@ -588,9 +558,9 @@ async def main():
                 user_satisfaction=0.85,
                 system_load=0.6,
                 available_budget=500.0,
-                developer_availability=1.0
+                developer_availability=1.0,
             ),
-            strategic_focus="stability"
+            strategic_focus="stability",
         ),
         PrioritizationContext(
             current_metrics=SystemMetrics(
@@ -600,12 +570,12 @@ async def main():
                 user_satisfaction=0.65,
                 system_load=0.9,
                 available_budget=100.0,  # Low budget
-                developer_availability=0.7
+                developer_availability=0.7,
             ),
             emergency_mode=True,
             budget_constraints=True,
-            strategic_focus="stability"
-        )
+            strategic_focus="stability",
+        ),
     ]
 
     print("🔄 ADAPTIVE PRIORITIZATION DEMONSTRATION\n")
@@ -636,7 +606,7 @@ async def main():
             for rec in report["resource_analysis"]["recommendations"]:
                 print(f"  • {rec}")
 
-        print("\n" + "="*60 + "\n")
+        print("\n" + "=" * 60 + "\n")
 
         # Update some task feedback for next iteration
         prioritizer.update_user_feedback("PERF-001", 0.8)
@@ -645,4 +615,5 @@ async def main():
 
 if __name__ == "__main__":
     import asyncio
+
     asyncio.run(main())

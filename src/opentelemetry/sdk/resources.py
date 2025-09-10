@@ -8,5 +8,5 @@ class Resource:
     def create(attrs: dict[str, Any]) -> dict[str, Any]:
         return dict(attrs)
 
-__all__ = ["Resource"]
 
+__all__ = ["Resource"]

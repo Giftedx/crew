@@ -10,19 +10,25 @@ import logging
 import time
 import uuid
 from datetime import UTC, datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 logger = logging.getLogger(__name__)
 
+if TYPE_CHECKING:  # pragma: no cover - typing only
+    from langsmith import Client as _LSClient
+    from langsmith.schemas import Example as _LSExample
+else:
+    _LSClient = Any
+    _LSExample = Any
+
 try:
-    from langsmith import Client, traceable
-    from langsmith.schemas import Example
+    # Import only to detect availability; keep types separate to avoid runtime/type coupling
+    from langsmith import Client as _RuntimeClient  # noqa: F401
+    from langsmith.schemas import Example as _RuntimeExample  # noqa: F401
 
     LANGSMITH_AVAILABLE = True
     logger.info("LangSmith integration available")
 except ImportError:  # pragma: no cover
-    Client = None
-    traceable = None
     LANGSMITH_AVAILABLE = False
     logger.debug("LangSmith not available - specialized LLM tracing disabled")
 
@@ -35,7 +41,7 @@ class LangSmithObservabilityManager:
 
     def __init__(self):
         """Initialize LangSmith client if configured."""
-        self.client: Client | None = None
+        self.client: _LSClient | None = None
         self.enabled = False
 
         if LANGSMITH_AVAILABLE:
@@ -45,7 +51,10 @@ class LangSmithObservabilityManager:
                 project_name = getattr(config, "langsmith_project", "ultimate-discord-bot")
 
                 if api_key:
-                    self.client = Client(api_key=api_key)
+                    # Runtime import guarded by availability
+                    from langsmith import Client as _Client
+
+                    self.client = _Client(api_key=api_key)
                     self.project_name = project_name
                     self.enabled = True
                     logger.info(f"LangSmith observability enabled for project: {project_name}")
@@ -273,9 +282,12 @@ class LangSmithObservabilityManager:
             )
 
             # Add examples to dataset
-            dataset_examples = []
+            dataset_examples: list[_LSExample] = []
             for example in examples:
-                example_obj = Example(
+                # Only executed when LangSmith is available; Example exists at runtime
+                from langsmith.schemas import Example as _Example
+
+                example_obj = _Example(
                     inputs=example.get("inputs", {}),
                     outputs=example.get("outputs", {}),
                     metadata=example.get("metadata", {}),

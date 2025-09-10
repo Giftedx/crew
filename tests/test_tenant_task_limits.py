@@ -33,4 +33,3 @@ def test_per_task_limits_enforced(tmp_path: Path) -> None:
     with with_tenant(TenantContext("acme", "main")):
         res = svc.route(prompt, task_type="analysis")
     assert res["status"] == "error" and "exceeds" in res["error"]
-

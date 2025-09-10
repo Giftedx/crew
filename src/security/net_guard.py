@@ -205,6 +205,7 @@ def _log_allow(
         **extra,
     )
 
+
 __all__ = [
     "is_safe_url",
     "safe_fetch",

@@ -1,4 +1,3 @@
-
 import unittest
 
 from ultimate_discord_intelligence_bot.tools.mock_vector_tool import MockVectorSearchTool

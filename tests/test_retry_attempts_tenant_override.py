@@ -32,4 +32,3 @@ def test_tenant_retry_yaml_overrides_global(tmp_path: Path, monkeypatch) -> None
 
     with with_tenant(TenantContext("acme", "main")):
         assert resolve_retry_attempts() == 2
-

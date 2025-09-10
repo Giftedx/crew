@@ -135,10 +135,10 @@ class Scheduler:
 
         # Get the IDs of inserted watchlists
         watch_ids = []
-        for row in watchlist_rows:
+        for wrow in watchlist_rows:
             cur = self.conn.execute(
                 "INSERT INTO watchlist (tenant, workspace, source_type, handle, label, enabled, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?)",
-                row,
+                wrow,
             )
             watch_ids.append(cur.lastrowid)
 
@@ -146,11 +146,11 @@ class Scheduler:
         state_rows = [(int(watch_id), None, None, None, 0, None) for watch_id in watch_ids if watch_id]
 
         if state_rows:
-            for row in state_rows:
+            for srow in state_rows:
                 self._bulk_inserter.add_row(
                     "ingest_state",
                     ["watchlist_id", "cursor", "last_seen_at", "etag", "failure_count", "backoff_until"],
-                    row,
+                    srow,
                 )
 
         self.conn.commit()

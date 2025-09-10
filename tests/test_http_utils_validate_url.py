@@ -22,4 +22,3 @@ def test_validate_public_https_url_accepts_dns_hostname():
 def test_validate_public_https_url_rejects_insecure_and_private(url: str):
     with pytest.raises(ValueError):
         validate_public_https_url(url)
-

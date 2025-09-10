@@ -35,4 +35,3 @@ def test_provider_thumbnails_and_duration_edges(monkeypatch):
     )
     mt = twitch.fetch_metadata("v")
     assert mt.duration is None
-

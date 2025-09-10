@@ -1,4 +1,3 @@
-
 import unittest
 
 from ultimate_discord_intelligence_bot.tools.enhanced_analysis_tool import EnhancedAnalysisTool

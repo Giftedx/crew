@@ -33,6 +33,8 @@ class _TraceAPI(Protocol):
     def get_tracer(self, name: str) -> _TracerLike: ...
 
 
+# Optional OTLP HTTP exporter symbol (assigned when available)
+_HttpOTLPSpanExporter: Any | None = None
 _OTEL_AVAILABLE = False
 try:  # Optional dependency (runtime)
     from opentelemetry import trace as _otel_trace
@@ -46,8 +48,10 @@ try:  # Optional dependency (runtime)
 
     try:  # OTLP exporter optional
         from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
-            OTLPSpanExporter as _HttpOTLPSpanExporter,
+            OTLPSpanExporter as _ImportedHttpOTLPSpanExporter,
         )
+
+        _HttpOTLPSpanExporter = _ImportedHttpOTLPSpanExporter
     except Exception:  # pragma: no cover
         _HttpOTLPSpanExporter = None
     _OTEL_AVAILABLE = True

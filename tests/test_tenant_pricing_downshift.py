@@ -41,4 +41,3 @@ def test_pricing_overlay_downshifts_model(tmp_path: Path) -> None:
         res = svc.route(prompt)
     assert res["status"] == "success"
     assert res["model"].startswith("openai/gpt-3.5")
-

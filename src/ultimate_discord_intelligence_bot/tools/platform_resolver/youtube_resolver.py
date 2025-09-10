@@ -1,26 +1,40 @@
-"""Resolve YouTube channel handles to canonical channel URLs."""
+"""Resolve YouTube channel handles to canonical channel URLs.
+
+Contract: public run/_run returns StepResult; helper returns domain object.
+"""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
+
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 from ...profiles.schema import CanonicalChannel
 from .._base import BaseTool
 
 
 @dataclass
-class YouTubeResolverTool(BaseTool[dict[str, Any]]):
+class YouTubeResolverTool(BaseTool[StepResult]):
     """Simple resolver mapping YouTube handles to canonical URLs."""
 
     name: str = "YouTube Resolver"
     description: str = "Resolve a YouTube handle to a canonical channel reference."
 
-    def _run(self, handle: str) -> dict[str, Any]:  # pragma: no cover - pure mapping
-        canonical = resolve_youtube_handle(handle)
-        return canonical.to_dict()
+    def __post_init__(self) -> None:  # pragma: no cover - trivial init
+        self._metrics = get_metrics()
 
-    def run(self, handle: str) -> dict[str, Any]:  # thin explicit wrapper
+    def _run(self, handle: str) -> StepResult:  # pragma: no cover - pure mapping
+        try:
+            canonical = resolve_youtube_handle(handle)
+            data = canonical.to_dict()
+            self._metrics.counter("tool_runs_total", labels={"tool": "resolver_youtube", "outcome": "success"}).inc()
+            return StepResult.ok(data=data)
+        except Exception as exc:
+            self._metrics.counter("tool_runs_total", labels={"tool": "resolver_youtube", "outcome": "error"}).inc()
+            return StepResult.fail(error=str(exc))
+
+    def run(self, handle: str) -> StepResult:  # thin explicit wrapper
         return self._run(handle)
 
 

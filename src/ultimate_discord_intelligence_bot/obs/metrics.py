@@ -44,7 +44,9 @@ class _MetricsFacade:
             if self._backend and hasattr(self._backend, "CounterFactory"):
                 factory = getattr(self._backend, "CounterFactory")
                 ctr = factory(name, f"auto-generated counter: {name}", list(labels.keys()))
-                return ctr.labels(*labels.values())  # type: ignore[return-value]
+                # Prometheus client returns a metric-like object from labels(); fallback is a no-op metric
+                labeled = ctr.labels(*labels.values())
+                return labeled if hasattr(labeled, "inc") else _NoOpMetric()
         except Exception as exc:  # pragma: no cover - fallback
             logging.getLogger(__name__).debug("counter backend failure: %s", exc)
         return _NoOpMetric()
@@ -66,7 +68,7 @@ class _MetricsFacade:
 def get_metrics() -> _MetricsFacade:
     # Delayed import to avoid hard dependency at module import time.
     try:  # pragma: no cover - normal path
-        import obs.metrics as backend  # type: ignore  # noqa: WPS433,E402,PLC0415 (intentional lazy import for optional dependency)
+        import obs.metrics as backend  # noqa: WPS433,E402,PLC0415 (intentional lazy import for optional dependency)
 
         return _MetricsFacade(backend)
     except Exception as exc:  # pragma: no cover - fallback path

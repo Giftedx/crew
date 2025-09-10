@@ -88,6 +88,21 @@ The scheduler exposes lightweight counters:
 
 Use these with simple panels (stat/table) or combine with ingest duration to validate end‑to‑end pacing.
 
+## Tenancy Fallback Visibility (new)
+
+When services operate in non‑strict tenancy mode and no `TenantContext` is set, a fallback to the default
+namespace (`default:main`) is recorded via:
+
+- `tenancy_fallback_total{tenant,workspace,component}`
+
+The `component` label identifies the emitting subsystem (e.g. `openrouter_service`, `memory_service`).
+
+Example PromQL to track fallbacks by component over 1 day:
+
+```bash
+sum by (component)(increase(tenancy_fallback_total[1d]))
+```
+
 ## SLO Dashboards
 
 A minimal SLO dashboard JSON is available at `docs/grafana/slo_dashboard.json` with:
@@ -205,7 +220,7 @@ This keeps the success path uniform while still allowing downstream logic / dash
 
 CI runs `scripts/metrics_instrumentation_guard.py` which:
 
-- Scans each `tools/*.py` file
+- Scans each tool module under `src/ultimate_discord_intelligence_bot/tools/`
 - Detects classes suffixed `Tool` that actually return or call `StepResult`
 - Verifies presence of metrics usage (`get_metrics()` / counter / histogram patterns)
 - Fails if any StepResult tool lacks instrumentation (unless allow‑listed)

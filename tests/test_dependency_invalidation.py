@@ -179,7 +179,8 @@ class TestMultiLevelCacheIntegration:
         # Check that dependencies were registered
         if cache._dependency_tracker:
             deps = await cache.get_dependencies(key)
-            assert deps == set()  # The key depends on the dependencies
+            # The key should list its direct dependencies
+            assert deps == dependencies
 
             dependents = await cache.get_dependents("user:profile:123")
             assert key in dependents

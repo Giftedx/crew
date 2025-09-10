@@ -3,6 +3,7 @@
 
 Checks basic JSON validity and required fields. Prints a summary and exits non-zero on failure.
 """
+
 from __future__ import annotations
 
 import json
@@ -45,4 +46,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

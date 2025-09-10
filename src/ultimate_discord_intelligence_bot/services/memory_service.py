@@ -8,9 +8,13 @@ infrastructure during testing.
 
 from __future__ import annotations
 
+import logging
 from copy import deepcopy
 from dataclasses import dataclass, field
 from typing import Any
+
+from core.flags import enabled
+from obs import metrics
 
 from ..tenancy.context import TenantContext, current_tenant, mem_ns
 
@@ -40,7 +44,21 @@ class MemoryService:
         clean_text, _report = privacy_filter.filter_text(text, metadata or {})
         # Store copies so external mutations to ``metadata`` don't affect the
         # service's internal state.
-        ns = namespace or mem_ns(current_tenant() or TenantContext("default", "main"), "mem")
+        # Resolve tenant context with optional strict mode
+        ctx = current_tenant()
+        if ctx is None:
+            if enabled("ENABLE_TENANCY_STRICT", False) or enabled("ENABLE_INGEST_STRICT", False):
+                raise RuntimeError("TenantContext required but not set (strict mode)")
+            logging.getLogger("tenancy").warning(
+                "TenantContext missing; defaulting to 'default:main' namespace (non-strict mode)",
+            )
+            try:
+                metrics.TENANCY_FALLBACKS.labels(**{**metrics.label_ctx(), "component": "memory_service"}).inc()
+            except Exception as exc:
+                # Metrics are optional; record debug without affecting control flow
+                logging.debug("tenancy metric increment failed: %s", exc)
+            ctx = TenantContext("default", "main")
+        ns = namespace or mem_ns(ctx, "mem")
         self.memories.append({"namespace": ns, "text": clean_text, "metadata": deepcopy(metadata) or {}})
 
     def retrieve(
@@ -66,7 +84,19 @@ class MemoryService:
         if limit < 1 or not query_norm:
             return []
 
-        ns = namespace or mem_ns(current_tenant() or TenantContext("default", "main"), "mem")
+        ctx = current_tenant()
+        if ctx is None:
+            if enabled("ENABLE_TENANCY_STRICT", False) or enabled("ENABLE_INGEST_STRICT", False):
+                raise RuntimeError("TenantContext required but not set (strict mode)")
+            logging.getLogger("tenancy").warning(
+                "TenantContext missing; defaulting to 'default:main' namespace (non-strict mode)",
+            )
+            try:
+                metrics.TENANCY_FALLBACKS.labels(**{**metrics.label_ctx(), "component": "memory_service"}).inc()
+            except Exception as exc:
+                logging.debug("tenancy metric increment failed: %s", exc)
+            ctx = TenantContext("default", "main")
+        ns = namespace or mem_ns(ctx, "mem")
         results = [m for m in self.memories if m.get("namespace") == ns and query_norm in m["text"].lower()]
         if metadata:
             lowered = {str(k).lower(): str(v).lower() for k, v in metadata.items()}

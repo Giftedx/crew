@@ -36,4 +36,3 @@ def test_tenant_provider_prefs_and_models(tmp_path: Path) -> None:
     assert res["status"] == "success"
     assert res["model"].startswith("openai/gpt-4")
     assert res["provider"].get("order") == ["openrouter", "openai"]
-

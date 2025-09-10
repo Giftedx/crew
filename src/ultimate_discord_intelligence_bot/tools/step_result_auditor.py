@@ -26,9 +26,9 @@ class StepResultAuditor:
     def __init__(self, strict: bool = False):
         self.tools_dir = Path(__file__).parent
         # Hard errors (must fix)
-        self.error_tools = []
+        self.error_tools: list[dict] = []
         # Advisory warnings (legacy dict usage accepted temporarily)
-        self.advisory_tools = []
+        self.advisory_tools: list[dict] = []
         self.strict = strict
 
     def audit_tools(self) -> StepResult:
@@ -219,14 +219,14 @@ class StepResultAuditor:
 2. **Update return statements (per instruction #3):**
    ```python
    # ❌ Legacy dict pattern:
-   return {"success": True, "data": result}
-   
+    return {"success": True, "data": result}
+
    # ✅ StepResult pattern:
     return StepResult.ok(data=result)
-   
+
    # For errors (don't raise for recoverable):
     return StepResult.fail(error="Error message", data={"details": ...})
-   
+
    # For skipped operations:
     return StepResult.ok(skipped=True, reason="Not applicable")
    ```

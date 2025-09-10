@@ -11,13 +11,16 @@ only apply when the attribute is missing.
 
 from __future__ import annotations
 
+# Ensure mypy sees this module only once under server.middleware_shim
+__all__ = ["install_middleware_support"]
+
 import asyncio
 from collections.abc import Callable
 from typing import Any
 
 try:
-    from fastapi import FastAPI, Request  # type: ignore
-    from fastapi.testclient import TestClient  # type: ignore
+    from fastapi import FastAPI, Request
+    from fastapi.testclient import TestClient
 except Exception:  # pragma: no cover - fastapi shim always importable in tests
     raise
 
@@ -28,9 +31,10 @@ def install_middleware_support() -> None:
     Idempotent: safe to call multiple times.
     """
 
+    patched_app = False
     if not hasattr(FastAPI, "add_middleware"):
 
-        def add_middleware(self: Any, mw_cls: Any, **options: Any) -> None:  # type: ignore[no-untyped-def]
+        def add_middleware(self: Any, mw_cls: Any, **options: Any) -> None:
             chain = getattr(self, "_http_middlewares", [])
             instance = mw_cls(self, **options)
             # Prepend so rate limiter (typically first) executes before later additions
@@ -38,23 +42,27 @@ def install_middleware_support() -> None:
             self._http_middlewares = chain
 
             def middleware(_type: str):  # noqa: D401
-                def dec(fn: Callable):  # type: ignore[no-untyped-def]
+                def dec(fn: Callable[[Request], Any]):
                     self._http_middlewares.append(fn)
                     return fn
 
                 return dec
 
-            self.middleware = middleware  # type: ignore[attr-defined]
+            self.middleware = middleware
 
         FastAPI.add_middleware = add_middleware  # type: ignore[attr-defined]
+        patched_app = True
 
+    # If we didn't patch the FastAPI app (i.e., running real FastAPI), skip TestClient patching entirely
+    if not patched_app:
+        return
     # Patch TestClient only once
     if getattr(TestClient, "_patched_for_chain", False):  # pragma: no cover - idempotency guard
         return
 
-    original_request = TestClient._request
+    original_request = getattr(TestClient, "_request", None) or getattr(TestClient, "request")
 
-    def _patched_request(self: Any, method: str, path: str, **kw: Any):  # type: ignore[no-untyped-def]
+    def _patched_request(self: Any, method: str, path: str, **kw: Any):
         app = self.app
         # If no chain, fall back
         chain = [mw for mw in getattr(app, "_http_middlewares", [])]
@@ -81,10 +89,10 @@ def install_middleware_support() -> None:
                 result = await result
             return result
 
-        req = Request(method=method.upper(), path=path)  # type: ignore[call-arg]
+        req = Request(method=method.upper(), path=path)
         return asyncio.run(invoke(0, req))
 
-    TestClient._request = _patched_request  # type: ignore
+    TestClient._request = _patched_request
     TestClient._patched_for_chain = True  # type: ignore[attr-defined]
 
 

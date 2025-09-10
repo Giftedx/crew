@@ -12,7 +12,7 @@ import sqlite3
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, cast
 
 from .error_handling import log_error
 
@@ -31,12 +31,13 @@ class BatchOperation:
     operation_type: str  # 'insert', 'update', 'delete', 'select'
     table: str
     sql: str
-    params: tuple[Any, ...]
+    params: tuple[Any, ...] | list[Any]
     callback: Callable[[Any], None] | None = None
     priority: int = 0
 
     def __post_init__(self) -> None:
         if isinstance(self.params, list):
+            # Normalize to tuple for sqlite API compatibility
             self.params = tuple(self.params)
 
 
@@ -269,7 +270,7 @@ class RequestBatcher:
                 self._operations.extend(operations)
             except (TimeoutError, asyncio.CancelledError) as e:
                 log_error(
-                    e,
+                    cast(Exception, e),
                     message="Async operation error during batch flush",
                     context={
                         "operation_count": len(operations),

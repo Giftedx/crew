@@ -77,4 +77,3 @@ def test_cached_get_ignores_non_2xx(monkeypatch):
     assert r1.status_code == 500 and r2.status_code == 500
     # Because 500 is not cached, underlying callable called twice
     assert calls["n"] == 2
-

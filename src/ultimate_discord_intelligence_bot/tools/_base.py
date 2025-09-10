@@ -9,7 +9,6 @@ our internal tools without modifying the third-party dependency.
 from __future__ import annotations
 
 from typing import (  # noqa: I001 - single block intentionally grouped for clarity in shim
-    TYPE_CHECKING,
     Any,
     Generic,
     Protocol,
@@ -35,18 +34,6 @@ class _BaseToolProto(Protocol):
         ...  # pragma: no cover
 
 
-if TYPE_CHECKING:  # import only for static analysis
-    try:  # pragma: no cover - third party import
-        from crewai.tools import BaseTool as _CrewAIPBaseTool  # type: ignore[import-untyped]
-    except Exception:  # pragma: no cover - fallback typing stub
-
-        class _CrewAIPBaseTool:  # type: ignore[override]
-            name: str | None = None
-            description: str | None = None
-
-            def run(self, *args: Any, **kwargs: Any) -> Any: ...  # pragma: no cover
-
-
 R_co = TypeVar("R_co", covariant=True)
 
 
@@ -57,6 +44,10 @@ class BaseTool(Generic[R_co]):
     dict payloads or domain objects.  The generic parameter ``R`` captures that
     return type for callers.
     """
+
+    # Common metadata attributes used by our tools
+    name: str | None = None
+    description: str | None = None
 
     # We don't add new behaviour—purely for typing.
     def run(self, *args: Any, **kwargs: Any) -> R_co:  # runtime provided by subclass

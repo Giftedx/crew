@@ -12,8 +12,8 @@ from ._base import BaseTool
 # avoid import errors when these libraries are absent by deferring/failing gracefully.
 try:  # pragma: no cover - import guarding
     from google.oauth2 import service_account  # pragma: no cover
-    from googleapiclient.discovery import build  # type: ignore[import]  # pragma: no cover
-    from googleapiclient.http import MediaFileUpload  # type: ignore[import]  # pragma: no cover
+    from googleapiclient.discovery import build  # type: ignore[import-not-found]  # pragma: no cover
+    from googleapiclient.http import MediaFileUpload  # type: ignore[import-not-found]  # pragma: no cover
 
     _GOOGLE_LIBS_AVAILABLE = True
 except Exception:  # broad: any import error should mark feature unavailable
@@ -62,7 +62,7 @@ class DriveUploadTool(BaseTool[StepResult]):
         if service_account is None or build is None:  # pragma: no cover - safety net
             return None
         try:
-            credentials = service_account.Credentials.from_service_account_file(  # type: ignore[attr-defined]
+            credentials = service_account.Credentials.from_service_account_file(
                 credentials_path, scopes=["https://www.googleapis.com/auth/drive"]
             )
         except Exception as exc:  # pragma: no cover - exercised in integration env
@@ -70,7 +70,7 @@ class DriveUploadTool(BaseTool[StepResult]):
             print("⚠️  Google Drive credentials invalid - Drive uploads disabled")
             return None
 
-        return build("drive", "v3", credentials=credentials)  # type: ignore[call-arg]
+        return build("drive", "v3", credentials=credentials)
 
     def _find_folder(self, name: str, parent_id: str | None = None) -> str | None:
         """Return folder id if a folder with ``name`` exists under ``parent_id``."""
@@ -127,7 +127,7 @@ class DriveUploadTool(BaseTool[StepResult]):
 
             if MediaFileUpload is None:  # pragma: no cover - import guard path
                 raise RuntimeError("google client library unavailable (MediaFileUpload missing)")
-            media = MediaFileUpload(  # type: ignore[call-arg]
+            media = MediaFileUpload(
                 file_path,
                 mimetype="video/mp4",
                 resumable=True,
@@ -170,7 +170,7 @@ class DriveUploadTool(BaseTool[StepResult]):
     def _make_public(self, file_id: str) -> None:
         """Make file publicly accessible"""
         permission = {"role": "reader", "type": "anyone"}
-        self.service.permissions().create(fileId=file_id, body=permission).execute()  # type: ignore[call-arg]
+        self.service.permissions().create(fileId=file_id, body=permission).execute()
 
     def _generate_discord_links(self, file_id: str) -> dict[str, str]:
         """Generate various link formats for Discord compatibility"""

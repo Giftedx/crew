@@ -18,10 +18,11 @@ def test_http_guard_detects_direct_requests(tmp_path: Path) -> None:
     guard_copy = tmp_path / "validate_http_wrappers_usage.py"
     text = guard.read_text(encoding="utf-8")
     # Force ROOT to tmp_path for the test execution
-    text = text.replace("ROOT = pathlib.Path(__file__).resolve().parents[1]", f"ROOT = pathlib.Path('{tmp_path.as_posix()}')")
+    text = text.replace(
+        "ROOT = pathlib.Path(__file__).resolve().parents[1]", f"ROOT = pathlib.Path('{tmp_path.as_posix()}')"
+    )
     guard_copy.write_text(text, encoding="utf-8")
 
     proc = subprocess.run([sys.executable, str(guard_copy)], check=False, capture_output=True, text=True)
     assert proc.returncode == 1, proc.stdout + proc.stderr
     assert "bad.py" in proc.stdout
-

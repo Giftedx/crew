@@ -77,5 +77,75 @@ class LinUCBDiagBandit:
         q = self.q_values[action]
         self.q_values[action] = q + (reward - q) / n
 
-__all__ = ["LinUCBDiagBandit"]
+    # -------------------- optional serialization helpers --------------------
+    def state_dict(self) -> dict[str, Any]:
+        """Return a serialisable snapshot of LinUCB state."""
+        return {
+            "policy": self.__class__.__name__,
+            "version": 1,
+            "alpha": float(self.alpha),
+            "dim": int(self.dim),
+            "A_diag": {k: list(v) for k, v in self.A_diag.items()},
+            "b_vec": {k: list(v) for k, v in self.b_vec.items()},
+            "q_values": dict(self.q_values),
+            "counts": dict(self.counts),
+        }
 
+    def load_state(self, state: dict[str, Any]) -> None:
+        """Load state previously produced by :meth:`state_dict`.
+
+        Handles dimension changes by rebuilding default factories to match
+        the stored ``dim`` and padding/truncating vectors as needed.
+        """
+        ver = state.get("version")
+        if ver is not None and ver > 1:
+            return
+        try:
+            self.alpha = float(state.get("alpha", self.alpha))
+        except Exception:
+            pass
+        dim_val = state.get("dim", self.dim)
+        try:
+            self.dim = int(dim_val)
+        except Exception:
+            self.dim = self.dim
+
+        # Rebuild default dicts with factories that reflect current dim
+        def _mk_A_default() -> list[float]:
+            return [1.0] * self.dim
+
+        def _mk_b_default() -> list[float]:
+            return [0.0] * self.dim
+
+        A_in = state.get("A_diag") or {}
+        b_in = state.get("b_vec") or {}
+
+        self.A_diag = defaultdict(_mk_A_default)
+        for k, vec in A_in.items():
+            lst = list(vec)
+            # Adjust length to dim
+            if len(lst) < self.dim:
+                lst = lst + [1.0] * (self.dim - len(lst))
+            elif len(lst) > self.dim:
+                lst = lst[: self.dim]
+            self.A_diag[k] = lst
+
+        self.b_vec = defaultdict(_mk_b_default)
+        for k, vec in b_in.items():
+            lst = list(vec)
+            if len(lst) < self.dim:
+                lst = lst + [0.0] * (self.dim - len(lst))
+            elif len(lst) > self.dim:
+                lst = lst[: self.dim]
+            self.b_vec[k] = lst
+
+        # Scalars
+        qv = state.get("q_values") or {}
+        ct = state.get("counts") or {}
+        self.q_values.clear()
+        self.q_values.update(qv)
+        self.counts.clear()
+        self.counts.update(ct)
+
+
+__all__ = ["LinUCBDiagBandit"]

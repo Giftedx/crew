@@ -67,7 +67,6 @@ class BatchStepResultMigration:
             # Add import if missing
             if not has_stepresult:
                 # Find the right place to add import (after other imports)
-                import_lines = []
                 lines = content.split("\n")
                 insert_pos = 0
 
@@ -139,4 +138,4 @@ def main():
 
 
 if __name__ == "__main__":
-    exit(main())
+    sys.exit(main())

@@ -5,7 +5,7 @@ from __future__ import annotations
 import hashlib
 from typing import Any
 
-from src.core.cache.bounded_cache import create_llm_cache
+from core.cache.bounded_cache import DEFAULT_MAX_SIZE, BoundedLRUCache, create_llm_cache
 
 try:  # optional Redis-backed cache adapter
     from core.cache.redis_cache import RedisCache
@@ -21,14 +21,15 @@ def make_key(prompt: str, model: str) -> str:
     return f"{model}:{digest}"
 
 
-class RedisLLMCache(LLMCache):  # pragma: no cover - networked cache, exercised in integration
+class RedisLLMCache(BoundedLRUCache):  # pragma: no cover - networked cache, exercised in integration
     """LLMCache-compatible adapter backed by Redis."""
 
     def __init__(self, url: str, ttl: int = 300, namespace: str = "llm") -> None:
         if RedisCache is None:
             raise RuntimeError("redis not available")
         self._rc = RedisCache(url=url, ttl=ttl, namespace=namespace)
-        self.ttl = ttl
+        super().__init__(max_size=DEFAULT_MAX_SIZE, ttl=ttl, name=namespace)
+        self._namespace = namespace
 
     def get(self, key: str) -> dict[str, Any] | None:
         return self._rc.get_json(key)

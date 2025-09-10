@@ -36,7 +36,7 @@ class _TrackerResult(TypedDict):
     score: float
 
 
-class TrustworthinessTrackerTool(BaseTool[_TrackerResult]):
+class TrustworthinessTrackerTool(BaseTool[StepResult]):
     """Track and manage trustworthiness scores for sources per instruction #3."""
 
     name: str = "Trustworthiness Tracker Tool"
@@ -143,8 +143,21 @@ class TrustworthinessTrackerTool(BaseTool[_TrackerResult]):
             ).inc()
             return StepResult.fail(error=str(e))
 
-    def run(self, person: str, verdict: bool) -> StepResult:
-        """Track truthfulness verdict following StepResult pattern."""
+    def run(self, *args, **kwargs) -> StepResult:  # aligns with BaseTool[StepResult]
+        """Track truthfulness verdict following StepResult pattern.
+
+        Accepts positional or keyword args to remain compatible with orchestrators that
+        call tools with variadic parameters.
+        """
+        if args:
+            try:
+                person = str(args[0])
+                verdict = bool(args[1]) if len(args) > 1 else bool(kwargs.get("verdict", False))
+                return self._run(person, verdict)
+            except Exception:
+                return StepResult.fail(error="Invalid arguments for TrustworthinessTrackerTool.run")
+        person = str(kwargs.get("person", ""))
+        verdict = bool(kwargs.get("verdict", False))
         return self._run(person, verdict)
 
     def get_report(self) -> StepResult:

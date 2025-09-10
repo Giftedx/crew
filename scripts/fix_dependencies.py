@@ -40,7 +40,6 @@ def test_dependencies():
 
     # Test Google API
     try:
-
         print("✅ Google API client libraries working")
     except Exception as e:
         print(f"❌ Google API issue: {e}")

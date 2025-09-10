@@ -14,11 +14,13 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Callable, Sequence
-from typing import Any, Protocol, runtime_checkable
+from typing import Any, Protocol, cast, runtime_checkable
 
 from ultimate_discord_intelligence_bot.tenancy import current_tenant  # moved to top for E402 compliance
 
 PROMETHEUS_AVAILABLE = False
+REGISTRY: Any  # will be bound below
+generate_latest: Callable[[Any], bytes]
 
 
 @runtime_checkable
@@ -30,12 +32,15 @@ class MetricLike(Protocol):
 
 
 try:  # pragma: no cover - normal path
-    from prometheus_client import REGISTRY, generate_latest
+    from prometheus_client import REGISTRY as _PROM_REGISTRY
     from prometheus_client import Counter as _PromCounter
     from prometheus_client import Gauge as _PromGauge
     from prometheus_client import Histogram as _PromHistogram
+    from prometheus_client import generate_latest as _prom_generate_latest
 
     PROMETHEUS_AVAILABLE = True
+    REGISTRY = cast(Any, _PROM_REGISTRY)
+    generate_latest = cast(Callable[[Any], bytes], _prom_generate_latest)
     CounterFactory: Callable[..., MetricLike] = _PromCounter  # type: ignore[assignment]
     HistogramFactory: Callable[..., MetricLike] = _PromHistogram  # type: ignore[assignment]
     GaugeFactory: Callable[..., MetricLike] = _PromGauge  # type: ignore[assignment]
@@ -106,6 +111,7 @@ _METRIC_SPECS: list[tuple[Callable[..., MetricLike], str, str, list[str]]] = [
         ["tenant", "workspace", "model", "provider"],
     ),
     (CounterFactory, "llm_cache_hits_total", "Total LLM cache hits", ["tenant", "workspace", "model", "provider"]),
+    (CounterFactory, "llm_cache_misses_total", "Total LLM cache misses", ["tenant", "workspace", "model", "provider"]),
     # Structured LLM metrics
     (
         CounterFactory,
@@ -224,6 +230,13 @@ _METRIC_SPECS: list[tuple[Callable[..., MetricLike], str, str, list[str]]] = [
         "http_retry_giveups_total",
         "Total HTTP operations that exhausted retries",
         ["tenant", "workspace", "method", "host"],
+    ),
+    # Tenancy fallback visibility
+    (
+        CounterFactory,
+        "tenancy_fallback_total",
+        "Count of events where no TenantContext was set and default was used",
+        ["tenant", "workspace", "component"],
     ),
     # Pipeline-specific metrics
     (
@@ -451,6 +464,7 @@ def _instantiate_metrics() -> list[MetricLike]:
     LLM_BUDGET_REJECTIONS,
     LLM_ESTIMATED_COST,
     LLM_CACHE_HITS,
+    LLM_CACHE_MISSES,
     STRUCTURED_LLM_REQUESTS,
     STRUCTURED_LLM_SUCCESS,
     STRUCTURED_LLM_ERRORS,
@@ -472,6 +486,7 @@ def _instantiate_metrics() -> list[MetricLike]:
     RATE_LIMIT_REJECTIONS,
     HTTP_RETRY_ATTEMPTS,
     HTTP_RETRY_GIVEUPS,
+    TENANCY_FALLBACKS,
     PIPELINE_REQUESTS,
     PIPELINE_STEPS_COMPLETED,
     PIPELINE_STEPS_FAILED,
@@ -510,6 +525,7 @@ _COLLECTORS: list[MetricLike] = [
     LLM_BUDGET_REJECTIONS,
     LLM_ESTIMATED_COST,
     LLM_CACHE_HITS,
+    LLM_CACHE_MISSES,
     STRUCTURED_LLM_REQUESTS,
     STRUCTURED_LLM_SUCCESS,
     STRUCTURED_LLM_ERRORS,
@@ -531,6 +547,7 @@ _COLLECTORS: list[MetricLike] = [
     RATE_LIMIT_REJECTIONS,
     HTTP_RETRY_ATTEMPTS,
     HTTP_RETRY_GIVEUPS,
+    TENANCY_FALLBACKS,
     PIPELINE_REQUESTS,
     PIPELINE_STEPS_COMPLETED,
     PIPELINE_STEPS_FAILED,
@@ -571,9 +588,9 @@ def reset() -> None:
     metric objects bound to module globals. Downstream modules reference the
     *names*, so re-binding keeps them in sync.
     """
-    global ROUTER_DECISIONS, LLM_LATENCY, LLM_MODEL_SELECTED, LLM_BUDGET_REJECTIONS, LLM_ESTIMATED_COST, LLM_CACHE_HITS  # noqa: PLW0603 - module level metric rebinding required for reset semantics in tests
+    global ROUTER_DECISIONS, LLM_LATENCY, LLM_MODEL_SELECTED, LLM_BUDGET_REJECTIONS, LLM_ESTIMATED_COST, LLM_CACHE_HITS, LLM_CACHE_MISSES  # noqa: PLW0603 - module level metric rebinding required for reset semantics in tests
     global STRUCTURED_LLM_REQUESTS, STRUCTURED_LLM_SUCCESS, STRUCTURED_LLM_ERRORS, STRUCTURED_LLM_PARSING_FAILURES, STRUCTURED_LLM_VALIDATION_FAILURES, STRUCTURED_LLM_INSTRUCTOR_USAGE, STRUCTURED_LLM_FALLBACK_USAGE, STRUCTURED_LLM_LATENCY, STRUCTURED_LLM_PARSING_LATENCY, STRUCTURED_LLM_STREAMING_REQUESTS, STRUCTURED_LLM_STREAMING_CHUNKS, STRUCTURED_LLM_STREAMING_LATENCY, STRUCTURED_LLM_STREAMING_PROGRESS, STRUCTURED_LLM_STREAMING_ERRORS, STRUCTURED_LLM_CACHE_HITS, STRUCTURED_LLM_CACHE_MISSES  # noqa: PLW0603
-    global HTTP_REQUEST_LATENCY, HTTP_REQUEST_COUNT, RATE_LIMIT_REJECTIONS, HTTP_RETRY_ATTEMPTS, HTTP_RETRY_GIVEUPS  # noqa: PLW0603
+    global HTTP_REQUEST_LATENCY, HTTP_REQUEST_COUNT, RATE_LIMIT_REJECTIONS, HTTP_RETRY_ATTEMPTS, HTTP_RETRY_GIVEUPS, TENANCY_FALLBACKS  # noqa: PLW0603
     global PIPELINE_REQUESTS, PIPELINE_STEPS_COMPLETED, PIPELINE_STEPS_FAILED, PIPELINE_STEPS_SKIPPED, PIPELINE_DURATION  # noqa: PLW0603
     global CIRCUIT_BREAKER_REQUESTS, CIRCUIT_BREAKER_STATE, INGEST_TRANSCRIPT_FALLBACKS, INGEST_MISSING_ID_FALLBACKS, SCHEDULER_ENQUEUED, SCHEDULER_PROCESSED, SCHEDULER_ERRORS, SCHEDULER_QUEUE_BACKLOG, SYSTEM_HEALTH_SCORE, COST_PER_INTERACTION  # noqa: PLW0603
     global CACHE_HITS, CACHE_MISSES, CACHE_PROMOTIONS, CACHE_DEMOTIONS, CACHE_EVICTIONS, CACHE_COMPRESSIONS, CACHE_DECOMPRESSIONS, CACHE_ERRORS, CACHE_SIZE_BYTES, CACHE_ENTRIES_COUNT, CACHE_HIT_RATE_RATIO, CACHE_MEMORY_USAGE_RATIO, CACHE_OPERATION_LATENCY, CACHE_COMPRESSION_RATIO, _COLLECTORS  # noqa: PLW0603
@@ -583,7 +600,7 @@ def reset() -> None:
         for c in to_unreg:
             if hasattr(registry, "unregister"):
                 try:
-                    registry.unregister(c)  # type: ignore[arg-type]
+                    registry.unregister(c)
                 except Exception as exc:  # pragma: no cover - defensive
                     logging.debug("metrics: reset unregister failed: %s", exc)
         _purge_existing([spec[1] for spec in _METRIC_SPECS])
@@ -595,6 +612,7 @@ def reset() -> None:
         LLM_BUDGET_REJECTIONS,
         LLM_ESTIMATED_COST,
         LLM_CACHE_HITS,
+        LLM_CACHE_MISSES,
         STRUCTURED_LLM_REQUESTS,
         STRUCTURED_LLM_SUCCESS,
         STRUCTURED_LLM_ERRORS,
@@ -616,6 +634,7 @@ def reset() -> None:
         RATE_LIMIT_REJECTIONS,
         HTTP_RETRY_ATTEMPTS,
         HTTP_RETRY_GIVEUPS,
+        TENANCY_FALLBACKS,
         PIPELINE_REQUESTS,
         PIPELINE_STEPS_COMPLETED,
         PIPELINE_STEPS_FAILED,
@@ -659,7 +678,7 @@ def label_ctx() -> dict[str, str]:
 def render() -> bytes:
     """Return Prometheus exposition for current registry (global)."""
     if PROMETHEUS_AVAILABLE:
-        data = generate_latest(REGISTRY)  # type: ignore[arg-type]
+        data = generate_latest(REGISTRY)
         return data if isinstance(data, bytes) else bytes(str(data), "utf-8")
     else:
         return b""
@@ -672,6 +691,7 @@ __all__ = [
     "LLM_BUDGET_REJECTIONS",
     "LLM_ESTIMATED_COST",
     "LLM_CACHE_HITS",
+    "LLM_CACHE_MISSES",
     "STRUCTURED_LLM_REQUESTS",
     "STRUCTURED_LLM_SUCCESS",
     "STRUCTURED_LLM_ERRORS",
@@ -693,6 +713,7 @@ __all__ = [
     "RATE_LIMIT_REJECTIONS",
     "HTTP_RETRY_ATTEMPTS",
     "HTTP_RETRY_GIVEUPS",
+    "TENANCY_FALLBACKS",
     "PIPELINE_REQUESTS",
     "PIPELINE_STEPS_COMPLETED",
     "PIPELINE_STEPS_FAILED",

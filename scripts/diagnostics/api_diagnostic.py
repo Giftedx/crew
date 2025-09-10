@@ -13,6 +13,29 @@ import sys
 # Add src to path
 sys.path.append("src")
 
+# Optional imports centralized at top-level for lint compliance
+try:
+    import importlib.util as _il
+except Exception:  # pragma: no cover
+    _il = None  # type: ignore
+
+try:
+    import openai as _openai  # type: ignore
+except Exception:  # pragma: no cover - optional
+    _openai = None  # type: ignore
+
+try:
+    from qdrant_client import QdrantClient as _QdrantClient  # type: ignore
+except Exception:  # pragma: no cover - optional
+    _QdrantClient = None  # type: ignore
+
+# isort: off - keep local http_utils import adjacent due to dynamic sys.path mutation
+try:
+    from core import http_utils as _http_utils
+except Exception:  # pragma: no cover - keep script runnable without src
+    _http_utils = None  # type: ignore
+# isort: on
+
 from dotenv import load_dotenv
 
 
@@ -111,9 +134,7 @@ def test_discord_token():
 
     try:
         # Optional: check discord presence without importing heavy module at runtime
-        import importlib.util as _il
-
-        has_discord = _il.find_spec("discord") is not None
+        has_discord = (_il.find_spec("discord") is not None) if _il else False
         print_status("Discord.py", has_discord, "Library available" if has_discord else "Not installed")
         print_status("Discord Token", True, f"Format looks correct ({len(token)} chars)")
         return True
@@ -134,14 +155,13 @@ def test_openai_api():
         return False
 
     try:
-        import openai
-
+        if _openai is None:
+            print_status("OpenAI Library", False, "Not installed")
+            return False
         print_status("OpenAI Library", True, "Available")
-
         # Test API call
         try:
-            client = openai.OpenAI(api_key=api_key)
-            # Simple test - list models (cheap call)
+            client = _openai.OpenAI(api_key=api_key)
             models = client.models.list()
             print_status("OpenAI API", True, f"Connection successful ({len(models.data)} models available)")
             return True
@@ -149,7 +169,7 @@ def test_openai_api():
             error_msg = str(e)[:100] + "..." if len(str(e)) > 100 else str(e)
             print_status("OpenAI API", False, f"API call failed: {error_msg}")
             return False
-    except ImportError:
+    except Exception:
         print_status("OpenAI Library", False, "Not installed")
         return False
 
@@ -163,19 +183,15 @@ def test_qdrant():
         return False
 
     try:
-        from qdrant_client import QdrantClient
-
+        if _QdrantClient is None:
+            print_status("Qdrant Library", False, "Not installed")
+            return False
         print_status("Qdrant Library", True, "Available")
-
-        # Test connection
         api_key = os.getenv("QDRANT_API_KEY", "").strip() or None
-        client = QdrantClient(url=url, api_key=api_key)
+        client = _QdrantClient(url=url, api_key=api_key)
         collections = client.get_collections()
         print_status("Qdrant Connection", True, f"Connected ({len(collections.collections)} collections)")
         return True
-    except ImportError:
-        print_status("Qdrant Library", False, "Not installed")
-        return False
     except Exception as e:
         error_msg = str(e)[:100] + "..." if len(str(e)) > 100 else str(e)
         print_status("Qdrant Connection", False, f"Connection failed: {error_msg}")
@@ -191,13 +207,14 @@ def test_optional_apis():
     serply_key = os.getenv("SERPLY_API_KEY", "").strip()
     if serply_key:
         try:
-            import requests
-
-            response = requests.get(
+            # Use centralized HTTP wrappers per policy
+            if _http_utils is None or getattr(_http_utils, "resilient_get", None) is None:
+                raise RuntimeError("HTTP wrappers unavailable")
+            response = _http_utils.resilient_get(
                 "https://api.serply.io/v1/search",
                 params={"q": "test", "num": 1},
                 headers={"X-API-KEY": serply_key},
-                timeout=10,
+                timeout_seconds=10,
             )
             if response.status_code == 200:
                 print_status("Serply API", True, "Connection successful")
@@ -222,13 +239,26 @@ def test_optional_apis():
     return results
 
 
+try:
+    from ultimate_discord_intelligence_bot.tools.fact_check_tool import FactCheckTool as _FactCheckTool
+except Exception:  # pragma: no cover - optional
+    _FactCheckTool = None  # type: ignore
+
+try:
+    from ultimate_discord_intelligence_bot.tools.logical_fallacy_tool import (
+        LogicalFallacyTool as _LogicalFallacyTool,
+    )
+except Exception:  # pragma: no cover - optional
+    _LogicalFallacyTool = None  # type: ignore
+
+
 def test_bot_tools():
     print_header("Bot Tools Test")
 
     try:
-        from ultimate_discord_intelligence_bot.tools.fact_check_tool import FactCheckTool
-
-        fact_tool = FactCheckTool()
+        if _FactCheckTool is None:
+            raise RuntimeError("FactCheckTool unavailable")
+        fact_tool = _FactCheckTool()
         result = fact_tool.run("The sky is blue")
         status = result.get("status") == "success"
         print_status("Fact Check Tool", status, "Working" if status else f"Error: {result.get('error', 'Unknown')}")
@@ -236,9 +266,9 @@ def test_bot_tools():
         print_status("Fact Check Tool", False, f"Import/run error: {str(e)[:50]}...")
 
     try:
-        from ultimate_discord_intelligence_bot.tools.logical_fallacy_tool import LogicalFallacyTool
-
-        fallacy_tool = LogicalFallacyTool()
+        if _LogicalFallacyTool is None:
+            raise RuntimeError("LogicalFallacyTool unavailable")
+        fallacy_tool = _LogicalFallacyTool()
         result = fallacy_tool.run("Everyone believes this so it must be true")
         has_fallacies = len(result.get("fallacies", [])) > 0
         print_status(

@@ -89,7 +89,12 @@ class DebateCommandTool(BaseTool[StepResult]):
             return {"status": "success", "context": self.index.get_context(kwargs["video_id"], kwargs.get("ts", 0.0))}
 
         def claim() -> _DebateCommandResult:
-            result = self.fact_checker.run(kwargs["claim"])  # expected to be dict-like
+            # Normalize backend result into a StepResult for consistent handling
+            res = self.fact_checker.run(kwargs["claim"])  # declared to return StepResult
+            raw = res if isinstance(res, StepResult) else StepResult.from_dict(res)
+            if not raw.success:
+                return {"status": "error", "error": raw.error or "fact checker failed"}
+            result: dict[str, Any] = dict(raw.data or {})
             person = kwargs.get("person")
             if person:
                 verdict = result.get("verdict")

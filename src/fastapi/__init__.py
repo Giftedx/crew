@@ -140,9 +140,9 @@ def header(default: Any, alias: str | None = None) -> Any:  # pragma: no cover -
 
 
 # Preserve original FastAPI-esque names for compatibility
-File = file  # type: ignore
-Form = form  # type: ignore
-Header = header  # type: ignore
+File = file
+Form = form
+Header = header
 
 
 class UploadFile:  # pragma: no cover - placeholder for typing only

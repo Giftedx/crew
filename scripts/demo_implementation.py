@@ -14,7 +14,7 @@ from pathlib import Path
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
 
@@ -34,7 +34,7 @@ async def demonstrate_semantic_cache():
             "What is the capital of France?",
             "Tell me the capital city of France",  # Similar prompt
             "What is machine learning?",
-            "Explain artificial intelligence concepts"
+            "Explain artificial intelligence concepts",
         ]
 
         # Simulate responses
@@ -42,7 +42,7 @@ async def demonstrate_semantic_cache():
             {"response": "Paris is the capital of France.", "cost": 0.001},
             {"response": "The capital of France is Paris.", "cost": 0.001},
             {"response": "Machine learning is a subset of AI...", "cost": 0.002},
-            {"response": "AI concepts include machine learning...", "cost": 0.002}
+            {"response": "AI concepts include machine learning...", "cost": 0.002},
         ]
 
         model = "gpt-3.5-turbo"
@@ -50,15 +50,15 @@ async def demonstrate_semantic_cache():
         print("Storing responses in semantic cache...")
         for i, (prompt, response) in enumerate(zip(prompts, responses)):
             await cache.set(prompt, model, response)
-            print(f"  ✓ Stored response {i+1}")
+            print(f"  ✓ Stored response {i + 1}")
 
         print("\nTesting cache retrieval...")
         for i, prompt in enumerate(prompts):
             cached_response = await cache.get(prompt, model)
             if cached_response:
-                print(f"  ✓ Cache hit for prompt {i+1}")
+                print(f"  ✓ Cache hit for prompt {i + 1}")
             else:
-                print(f"  ❌ Cache miss for prompt {i+1}")
+                print(f"  ❌ Cache miss for prompt {i + 1}")
 
         # Test semantic similarity
         similar_prompt = "What's the capital city of France?"
@@ -101,7 +101,7 @@ async def demonstrate_enhanced_observability():
                 response="This is a test response",
                 tokens_input=10,
                 tokens_output=15,
-                cost=0.0001
+                cost=0.0001,
             )
 
         # Simulate a few more interactions
@@ -110,11 +110,11 @@ async def demonstrate_enhanced_observability():
                 await asyncio.sleep(0.05)
                 observability.log_llm_interaction(
                     run_context=context,
-                    prompt=f"Analysis prompt {i+1}",
-                    response=f"Analysis response {i+1}",
+                    prompt=f"Analysis prompt {i + 1}",
+                    response=f"Analysis response {i + 1}",
                     tokens_input=20,
                     tokens_output=30,
-                    cost=0.0002
+                    cost=0.0002,
                 )
 
         # Get metrics
@@ -190,12 +190,13 @@ async def demonstrate_circuit_breaker():
         config = CircuitConfig(
             failure_threshold=2,
             recovery_timeout=1,  # 1 second for demo
-            timeout=0.5
+            timeout=0.5,
         )
 
         def unreliable_service():
             """Simulates an unreliable service."""
             import random
+
             if random.random() < 0.7:  # 70% failure rate
                 raise Exception("Service failure")
             return "Success"
@@ -212,9 +213,9 @@ async def demonstrate_circuit_breaker():
         for i in range(8):
             try:
                 result = await circuit_breaker.call(unreliable_service)
-                print(f"  Call {i+1}: ✅ {result} (State: {circuit_breaker.get_state().value})")
+                print(f"  Call {i + 1}: ✅ {result} (State: {circuit_breaker.get_state().value})")
             except Exception as e:
-                print(f"  Call {i+1}: ❌ {str(e)} (State: {circuit_breaker.get_state().value})")
+                print(f"  Call {i + 1}: ❌ {str(e)} (State: {circuit_breaker.get_state().value})")
 
             await asyncio.sleep(0.1)
 
@@ -260,9 +261,8 @@ async def demonstrate_adaptive_prioritization():
                 base_priority=TaskPriority.P1_HIGH,
                 estimated_hours=16.0,
                 business_impact=BusinessImpactMetrics(
-                    cost_reduction_dollars=500.0,
-                    performance_improvement_percent=30.0
-                )
+                    cost_reduction_dollars=500.0, performance_improvement_percent=30.0
+                ),
             ),
             AdaptiveTask(
                 id="SEC-002",
@@ -270,9 +270,7 @@ async def demonstrate_adaptive_prioritization():
                 description="Critical security patch",
                 base_priority=TaskPriority.P0_CRITICAL,
                 estimated_hours=8.0,
-                business_impact=BusinessImpactMetrics(
-                    risk_mitigation_score=0.9
-                )
+                business_impact=BusinessImpactMetrics(risk_mitigation_score=0.9),
             ),
             AdaptiveTask(
                 id="FEAT-003",
@@ -280,10 +278,8 @@ async def demonstrate_adaptive_prioritization():
                 description="User-requested enhancement",
                 base_priority=TaskPriority.P2_MEDIUM,
                 estimated_hours=24.0,
-                business_impact=BusinessImpactMetrics(
-                    user_satisfaction_improvement=0.3
-                )
-            )
+                business_impact=BusinessImpactMetrics(user_satisfaction_improvement=0.3),
+            ),
         ]
 
         for task in tasks:
@@ -297,9 +293,9 @@ async def demonstrate_adaptive_prioritization():
                 error_rate=0.03,  # 3% error rate
                 response_latency_p95=1500.0,
                 cost_per_interaction=0.02,
-                user_satisfaction=0.8
+                user_satisfaction=0.8,
             ),
-            strategic_focus="stability"
+            strategic_focus="stability",
         )
 
         # Get prioritized tasks

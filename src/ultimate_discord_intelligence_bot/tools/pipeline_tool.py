@@ -50,7 +50,9 @@ class PipelineTool(BaseTool):
                 return StepResult.fail(error="URL is required and must be a string", url=url, quality=quality)
 
             if not quality or not isinstance(quality, str) or not quality.strip():
-                quality = get_settings().download_quality_default  # central default
+                settings = get_settings()
+                default_quality = getattr(settings, "download_quality_default", "720p")
+                quality = quality or quality.strip() or default_quality  # central default
 
             logger.info(f"Starting pipeline processing for URL: {url} with quality: {quality}")
 
@@ -128,7 +130,7 @@ class PipelineTool(BaseTool):
 
         try:
             current_data = input_data
-            results = []
+            results: list[dict[str, object]] = []
 
             for step_name in steps:
                 # Execute each step

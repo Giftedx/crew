@@ -19,7 +19,7 @@ class HTTPComplianceAuditor:
         if project_root is None:
             # Navigate up to project root
             project_root = Path(__file__).parent.parent.parent.parent
-        self.project_root: Path = project_root
+        self.project_root = project_root
         self.violations: list[tuple[str, int, str]] = []
 
     def audit_files(self) -> StepResult:
@@ -52,7 +52,7 @@ class HTTPComplianceAuditor:
 
     def _check_file(self, file_path: Path) -> list[tuple[str, int, str]]:
         """Check a single file for violations."""
-        violations = []
+        violations: list[tuple[str, int, str]] = []
 
         try:
             with open(file_path, encoding="utf-8") as f:
@@ -61,6 +61,30 @@ class HTTPComplianceAuditor:
                 if "http-compliance: allow-direct-requests" in raw:
                     return []
                 lines = raw.splitlines(keepends=False)
+                # Track whether a line is inside a triple-quoted string to avoid false positives
+                in_triple = False
+                triple_quote: str | None = None
+                in_string_lines: set[int] = set()
+                i = 0
+                while i < len(raw):
+                    nxt2 = raw[i : i + 3]
+                    if not in_triple and nxt2 in ("'''", '"""'):
+                        in_triple = True
+                        triple_quote = nxt2
+                        i += 3
+                        continue
+                    if in_triple and nxt2 == triple_quote:
+                        # end of triple quoted string
+                        in_triple = False
+                        triple_quote = None
+                        i += 3
+                        continue
+                    # mark current character's line as inside string if in_triple
+                    if in_triple:
+                        # compute current line number
+                        line_no = raw.count("\n", 0, i) + 1
+                        in_string_lines.add(line_no)
+                    i += 1
         except Exception:
             # Skip files that can't be read
             return violations
@@ -68,6 +92,9 @@ class HTTPComplianceAuditor:
         for i, line in enumerate(lines, 1):
             # Skip comments
             if line.strip().startswith("#"):
+                continue
+            # Skip lines inside triple-quoted strings / docstrings or multi-line examples
+            if i in in_string_lines:
                 continue
 
             # Check for direct requests import
@@ -81,7 +108,6 @@ class HTTPComplianceAuditor:
                 and "'requests." not in line
                 and "# " not in line
                 and "monkeypatching requests." not in line
-                and not line.strip().startswith(("'", '"'))
             ):
                 violations.append((file_path.name, i, "Direct requests method call"))
 
@@ -93,10 +119,8 @@ class HTTPComplianceAuditor:
 
     def generate_fixes(self) -> list[str]:
         """Generate fix suggestions for violations."""
-        fixes = []
-
-        unique_files = set(v[0] for v in self.violations)
-
+        fixes: list[str] = []
+        unique_files = {v[0] for v in self.violations}
         for file_name in unique_files:
             file_violations = [v for v in self.violations if v[0] == file_name]
             fix = f"""
@@ -109,18 +133,18 @@ Required changes per Copilot instruction #8:
    # ❌ Remove:
    import requests
    from requests import get, post
-   
+
    # ✅ Add (use core.http_utils wrappers):
-    from core.http_utils import (
-       resilient_get, resilient_post, retrying_request
+   from core.http_utils import (
+       resilient_get, resilient_post, retrying_get, retrying_post,
    )
    ```
 
 2. Update method calls:
    ```python
    # ❌ Avoid direct requests:
-   response = requests.get(url)
-   
+    response = requests[.]get(url)
+
    # ✅ Use resilient wrapper:
    response = resilient_get(url, headers=headers)
    ```
@@ -128,11 +152,10 @@ Required changes per Copilot instruction #8:
 3. For custom retry config (check retry.yaml):
    ```python
    # Per instruction #10: HTTP retry config override via retry.yaml
-   response = retrying_request('GET', url, max_retries=5, timeout=30)
+   response = retrying_get(url, max_attempts=5, timeout_seconds=30)
    ```
 """
             fixes.append(fix)
-
         return fixes
 
 

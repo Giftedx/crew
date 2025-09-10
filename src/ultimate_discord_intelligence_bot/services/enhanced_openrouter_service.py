@@ -10,11 +10,10 @@ from __future__ import annotations
 
 import asyncio
 import copy
-import hashlib
 import logging
 import time
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Protocol
 
 from core.cache.semantic_cache import get_semantic_cache
 from core.http_utils import REQUEST_TIMEOUT_SECONDS
@@ -23,20 +22,33 @@ from core.secure_config import get_config
 from core.settings import get_settings
 from obs import metrics
 from obs.langsmith_integration import get_enhanced_observability
-from ultimate_discord_intelligence_bot.tenancy.context import current_tenant
-from ultimate_discord_intelligence_bot.tenancy.registry import TenantRegistry
-
-from .cache import LLMCache, RedisLLMCache
 from .logging_utils import AnalyticsStore
 from .prompt_engine import PromptEngine
 from .token_meter import TokenMeter
+from ultimate_discord_intelligence_bot.tenancy.context import current_tenant
+from ultimate_discord_intelligence_bot.tenancy.registry import TenantRegistry
+
+from .cache import RedisLLMCache, make_key
+
+
+class LLMCacheProto(Protocol):  # minimal structural type used in this module
+    def get(self, key: str) -> dict[str, Any] | None: ...
+    def set(self, key: str, value: dict[str, Any]) -> None: ...
+
 
 litellm: Any  # runtime module if available; used under guards
 _completion: Any
 _completion_cost: Any
 try:
     import litellm as _litellm
-    from litellm import completion as _completion, completion_cost as _completion_cost
+    from litellm import completion as _completion
+
+    try:
+        # Newer litellm versions expose cost calculator under cost_calculator
+        from litellm.cost_calculator import completion_cost as _completion_cost
+    except Exception:  # pragma: no cover
+        _completion_cost = None
+
     litellm = _litellm
     LITELLM_AVAILABLE = True
 except Exception:
@@ -51,6 +63,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class ProviderConfig:
     """Configuration for a specific LLM provider."""
+
     name: str
     models: list[str]
     priority: int = 1
@@ -63,6 +76,7 @@ class ProviderConfig:
 @dataclass
 class RouterStats:
     """Runtime statistics for the enhanced router."""
+
     total_requests: int = 0
     successful_requests: int = 0
     failed_requests: int = 0
@@ -74,12 +88,13 @@ class RouterStats:
 
 class EnhancedOpenRouterService:
     """Enhanced LLM router with LiteLLM multi-provider support and intelligent failover."""
+
     def __init__(  # noqa: PLR0913 - explicit parameters improve clarity for DI
         self,
         models_map: dict[str, list[str]] | None = None,
         learning_engine: LearningEngine | None = None,
         provider_configs: list[ProviderConfig] | None = None,
-        cache: LLMCache | None = None,
+        cache: LLMCacheProto | None = None,
         token_meter: TokenMeter | None = None,
         tenant_registry: TenantRegistry | None = None,
         logger: AnalyticsStore | None = None,
@@ -117,7 +132,13 @@ class EnhancedOpenRouterService:
 
         # Cache setup (both traditional and semantic)
         self.cache = cache or self._setup_cache()
-        self.semantic_cache = get_semantic_cache()
+        # Semantic cache behind explicit feature flag
+        try:
+            self.semantic_cache = (
+                get_semantic_cache() if getattr(self.settings, "enable_semantic_cache", False) else None
+            )
+        except Exception:
+            self.semantic_cache = None
 
         # Enhanced observability
         self.observability = get_enhanced_observability()
@@ -131,13 +152,14 @@ class EnhancedOpenRouterService:
         # Original OpenRouter service for fallback
         if self.fallback_to_openrouter:
             from .openrouter_service import OpenRouterService  # noqa: PLC0415
+
             self._fallback_service: OpenRouterService | None = OpenRouterService(
                 models_map=models_map,
                 learning_engine=learning_engine,
                 cache=cache,
                 token_meter=token_meter,
                 tenant_registry=tenant_registry,
-                logger=logger
+                logger=logger,
             )
         else:
             self._fallback_service = None
@@ -153,35 +175,21 @@ class EnhancedOpenRouterService:
         """Create default provider configurations with intelligent prioritization."""
         providers = [
             ProviderConfig(
-                name="openai",
-                models=["gpt-4o", "gpt-4o-mini", "gpt-3.5-turbo"],
-                priority=1,
-                cost_multiplier=1.0
+                name="openai", models=["gpt-4o", "gpt-4o-mini", "gpt-3.5-turbo"], priority=1, cost_multiplier=1.0
             ),
             ProviderConfig(
                 name="anthropic",
                 models=["claude-3-5-sonnet-20241022", "claude-3-haiku-20240307"],
                 priority=2,
-                cost_multiplier=0.9
+                cost_multiplier=0.9,
             ),
             ProviderConfig(
-                name="google",
-                models=["gemini-1.5-pro", "gemini-1.5-flash"],
-                priority=3,
-                cost_multiplier=0.8
+                name="google", models=["gemini-1.5-pro", "gemini-1.5-flash"], priority=3, cost_multiplier=0.8
             ),
             ProviderConfig(
-                name="azure",
-                models=["azure/gpt-4o", "azure/gpt-35-turbo"],
-                priority=4,
-                cost_multiplier=1.1
+                name="azure", models=["azure/gpt-4o", "azure/gpt-35-turbo"], priority=4, cost_multiplier=1.1
             ),
-            ProviderConfig(
-                name="openrouter",
-                models=["openrouter/auto"],
-                priority=5,
-                cost_multiplier=1.2
-            )
+            ProviderConfig(name="openrouter", models=["openrouter/auto"], priority=5, cost_multiplier=1.2),
         ]
 
         # Filter providers based on available API keys
@@ -208,11 +216,7 @@ class EnhancedOpenRouterService:
             except Exception as e:
                 logger.debug(f"Provider {provider.name} not configured: {e}")
 
-        return enabled_providers or [ProviderConfig(
-            name="openrouter",
-            models=["openai/gpt-3.5-turbo"],
-            priority=1
-        )]
+        return enabled_providers or [ProviderConfig(name="openrouter", models=["openai/gpt-3.5-turbo"], priority=1)]
 
     def _build_enhanced_model_map(self, models_map: dict[str, list[str]] | None) -> dict[str, list[str]]:
         """Build enhanced model mapping with provider prefixes."""
@@ -228,14 +232,12 @@ class EnhancedOpenRouterService:
 
         return base_map
 
-    def _setup_cache(self) -> LLMCache | None:
+    def _setup_cache(self) -> LLMCacheProto | None:
         """Set up intelligent caching with semantic similarity."""
         try:
-            if (getattr(self.config, "enable_cache_global", True) and
-                getattr(self.config, "rate_limit_redis_url", None)):
+            if getattr(self.config, "enable_cache_global", True) and getattr(self.config, "rate_limit_redis_url", None):
                 return RedisLLMCache(
-                    url=str(self.config.rate_limit_redis_url),
-                    ttl=int(getattr(self.config, "cache_ttl_llm", 3600))
+                    url=str(self.config.rate_limit_redis_url), ttl=int(getattr(self.config, "cache_ttl_llm", 3600))
                 )
         except Exception as e:
             logger.warning(f"Failed to setup cache: {e}")
@@ -248,7 +250,7 @@ class EnhancedOpenRouterService:
 
         # Set global configuration
         litellm.set_verbose = False  # Reduce noise in logs
-        litellm.drop_params = True   # Allow extra parameters
+        litellm.drop_params = True  # Allow extra parameters
         litellm.success_callback = [self._on_litellm_success]
         litellm.failure_callback = [self._on_litellm_failure]
 
@@ -271,9 +273,7 @@ class EnhancedOpenRouterService:
                 cost = _completion_cost(completion_response, model)
                 self.stats.total_cost += cost
                 metrics.LLM_ESTIMATED_COST.labels(
-                    **metrics.label_ctx(),
-                    model=model,
-                    provider=self._extract_provider_from_model(model)
+                    **metrics.label_ctx(), model=model, provider=self._extract_provider_from_model(model)
                 ).observe(cost)
         except Exception as e:
             logger.debug(f"Failed to calculate cost: {e}")
@@ -284,12 +284,7 @@ class EnhancedOpenRouterService:
         model = kwargs.get("model", "unknown")
         provider = self._extract_provider_from_model(model)
 
-        metrics.LLM_MODEL_SELECTED.labels(
-            **metrics.label_ctx(),
-            task="error",
-            model=model,
-            provider=provider
-        ).inc()
+        metrics.LLM_MODEL_SELECTED.labels(**metrics.label_ctx(), task="error", model=model, provider=provider).inc()
 
     def _extract_provider_from_model(self, model: str) -> str:
         """Extract provider name from model string."""
@@ -307,10 +302,7 @@ class EnhancedOpenRouterService:
             if ctx:
                 allowed = self.tenant_registry.get_allowed_models(ctx)
                 if allowed:
-                    filtered = [
-                        c for c in candidates
-                        if any(a.lower() in c.lower() for a in allowed)
-                    ]
+                    filtered = [c for c in candidates if any(a.lower() in c.lower() for a in allowed)]
                     if filtered:
                         candidates = filtered
 
@@ -337,8 +329,8 @@ class EnhancedOpenRouterService:
             metadata={
                 "max_tokens": max_tokens,
                 "temperature": temperature,
-                **({k: v for k, v in (provider_opts or {}).items() if isinstance(v, str | int | float | bool)})
-            }
+                **({k: v for k, v in (provider_opts or {}).items() if isinstance(v, str | int | float | bool)}),
+            },
         ) as trace_context:
             try:
                 # Model selection
@@ -346,41 +338,50 @@ class EnhancedOpenRouterService:
                 provider = self._extract_provider_from_model(chosen_model)
 
                 # Update trace context with selected model
-                trace_context.update({
-                    "model": chosen_model,
-                    "provider": provider
-                })
+                trace_context.update({"model": chosen_model, "provider": provider})
 
                 # Check semantic cache first (higher priority)
-                semantic_cached = await self.semantic_cache.get(
-                    prompt=prompt,
-                    model=chosen_model,
-                    temperature=temperature,
-                    max_tokens=max_tokens
-                )
-                if semantic_cached:
-                    self.stats.cached_requests += 1
-                    metrics.LLM_CACHE_HITS.labels(
-                        **metrics.label_ctx(),
+                ns = None
+                try:
+                    ctx = current_tenant()
+                    if ctx:
+                        ns = f"{ctx.tenant_id}:{ctx.workspace_id}"
+                except Exception:
+                    ns = None
+                semantic_cached = None
+                if self.semantic_cache is not None:
+                    semantic_cached = await self.semantic_cache.get(
+                        prompt=prompt,
                         model=chosen_model,
-                        provider=provider
-                    ).inc()
+                        temperature=temperature,
+                        max_tokens=max_tokens,
+                        namespace=ns,
+                    )
+                if semantic_cached is not None:  # Semantic cache hit path
+                    self.stats.cached_requests += 1
+                    metrics.LLM_CACHE_HITS.labels(**metrics.label_ctx(), model=chosen_model, provider=provider).inc()
                     result = dict(semantic_cached)
                     result["cached"] = True
                     result["cache_type"] = "semantic"
                     return result
+                else:
+                    try:
+                        provider = self._extract_provider_from_model(chosen_model)
+                        metrics.LLM_CACHE_MISSES.labels(
+                            **metrics.label_ctx(), model=chosen_model, provider=provider
+                        ).inc()
+                    except Exception:
+                        pass
 
                 # Check traditional cache as fallback
                 cache_key = None
-                if self.cache:
+                if self.cache is not None:
                     cache_key = self._build_cache_key(prompt, chosen_model, provider_opts)
                     cached = self.cache.get(cache_key)
                     if cached:
                         self.stats.cached_requests += 1
                         metrics.LLM_CACHE_HITS.labels(
-                            **metrics.label_ctx(),
-                            model=chosen_model,
-                            provider=provider
+                            **metrics.label_ctx(), model=chosen_model, provider=provider
                         ).inc()
                         result = dict(cached)
                         result["cached"] = True
@@ -396,7 +397,7 @@ class EnhancedOpenRouterService:
                         "status": "error",
                         "error": "projected cost exceeds budget limit",
                         "model": chosen_model,
-                        "tokens": tokens_in
+                        "tokens": tokens_in,
                     }
 
                 # Prepare LiteLLM request
@@ -409,15 +410,12 @@ class EnhancedOpenRouterService:
                         messages=messages,
                         max_tokens=max_tokens,
                         temperature=temperature,
-                        task_type=task_type
+                        task_type=task_type,
                     )
                 # Fallback to original OpenRouter service
                 elif self._fallback_service:
                     result = self._fallback_service.route(
-                        prompt=prompt,
-                        task_type=task_type,
-                        model=model,
-                        provider_opts=provider_opts
+                        prompt=prompt, task_type=task_type, model=model, provider_opts=provider_opts
                     )
                 else:
                     raise RuntimeError("No LLM routing service available")
@@ -425,16 +423,18 @@ class EnhancedOpenRouterService:
                 # Cache successful response in both caches
                 if result.get("status") == "success":
                     # Store in semantic cache (higher priority)
-                    await self.semantic_cache.set(
-                        prompt=prompt,
-                        model=chosen_model,
-                        response=result,
-                        temperature=temperature,
-                        max_tokens=max_tokens
-                    )
+                    if self.semantic_cache is not None:
+                        await self.semantic_cache.set(
+                            prompt=prompt,
+                            model=chosen_model,
+                            response=result,
+                            temperature=temperature,
+                            max_tokens=max_tokens,
+                            namespace=ns,
+                        )
 
                     # Store in traditional cache as backup
-                    if self.cache and cache_key:
+                    if self.cache is not None and cache_key:
                         self.cache.set(cache_key, result)
 
                     # Log comprehensive LLM interaction data
@@ -447,7 +447,7 @@ class EnhancedOpenRouterService:
                         response=result.get("response", ""),
                         tokens_input=tokens_in,
                         tokens_output=tokens_out,
-                        cost=actual_cost
+                        cost=actual_cost,
                     )
 
                     # Update learning engine with reward
@@ -467,27 +467,19 @@ class EnhancedOpenRouterService:
                 if self._fallback_service:
                     self.stats.fallback_requests += 1
                     return self._fallback_service.route(
-                        prompt=prompt,
-                        task_type=task_type,
-                        model=model,
-                        provider_opts=provider_opts
+                        prompt=prompt, task_type=task_type, model=model, provider_opts=provider_opts
                     )
 
                 return {
                     "status": "error",
                     "error": str(e),
-                    "model": chosen_model if 'chosen_model' in locals() else "unknown"
+                    "model": chosen_model if "chosen_model" in locals() else "unknown",
                 }
         # Should not reach here; provide defensive error contract for type-checkers
         return {"status": "error", "error": "unreachable - no result from router"}
 
     async def _call_litellm(
-        self,
-        model: str,
-        messages: list[dict],
-        max_tokens: int,
-        temperature: float,
-        task_type: str
+        self, model: str, messages: list[dict], max_tokens: int, temperature: float, task_type: str
     ) -> dict[str, Any]:
         """Call LiteLLM with intelligent fallback."""
         fallback_models = self._get_fallback_candidates(task_type)
@@ -506,7 +498,7 @@ class EnhancedOpenRouterService:
                     max_tokens=max_tokens,
                     temperature=temperature,
                     timeout=REQUEST_TIMEOUT_SECONDS,
-                    fallbacks=[m for m in models_to_try if m != attempt_model][:2]
+                    fallbacks=[m for m in models_to_try if m != attempt_model][:2],
                 )
 
                 # Extract response content
@@ -530,7 +522,7 @@ class EnhancedOpenRouterService:
                     "tokens": tokens_in,
                     "tokens_out": tokens_out,
                     "cost": cost,
-                    "provider": self._extract_provider_from_model(attempt_model)
+                    "provider": self._extract_provider_from_model(attempt_model),
                 }
 
             except Exception as e:  # noqa: PERF203
@@ -552,11 +544,8 @@ class EnhancedOpenRouterService:
         """Build semantic cache key."""
         norm_prompt = self.prompt_engine.optimise(prompt)
         opts_str = str(sorted(provider_opts.items())) if provider_opts else ""
-        if self.cache is not None:
-            return self.cache.make_key(f"{norm_prompt}|opts={opts_str}", model)
-        # Deterministic fallback when no cache implementation is configured
-        base = f"{model}|{norm_prompt}|{opts_str}".encode()
-        return hashlib.sha256(base).hexdigest()
+        # Use canonical key function for compatibility with RedisLLMCache/BoundedLRUCache
+        return make_key(f"{norm_prompt}|opts={opts_str}", model)
 
     def _check_budget_limits(self, projected_cost: float, task_type: str) -> bool:
         """Check if request is within budget limits."""

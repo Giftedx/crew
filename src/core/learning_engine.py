@@ -6,7 +6,7 @@ from collections.abc import Mapping, Sequence
 from typing import Any, Protocol, cast, runtime_checkable
 
 from .error_handling import log_error
-from .rl.policies.bandit_base import EpsilonGreedyBandit, UCB1Bandit
+from .rl.policies.bandit_base import EpsilonGreedyBandit, ThompsonSamplingBandit, UCB1Bandit
 from .rl.policies.linucb import LinUCBDiagBandit
 from .rl.registry import PolicyRegistry
 
@@ -56,6 +56,8 @@ class LearningEngine:
                 bandit = LinUCBDiagBandit()
             elif p in ("ucb1", "ucb"):
                 bandit = UCB1Bandit()
+            elif p in ("ts", "thompson", "thompson_sampling"):
+                bandit = ThompsonSamplingBandit()
             else:
                 bandit = EpsilonGreedyBandit()
         else:
@@ -105,6 +107,15 @@ class LearningEngine:
         data: dict[str, dict[str, Any]] = {}
         for name, policy_obj in self.registry.items():
             policy = cast(_BanditLike, policy_obj)
+            # Prefer richer state when available
+            if hasattr(policy, "state_dict") and callable(getattr(policy, "state_dict")):
+                try:
+                    state = getattr(policy, "state_dict")()
+                    if isinstance(state, dict):
+                        data[name] = state
+                        continue
+                except Exception:
+                    pass
             q_values = dict(getattr(policy, "q_values", {}))
             counts = dict(getattr(policy, "counts", {}))
             data[name] = {"policy": policy.__class__.__name__, "q_values": q_values, "counts": counts}
@@ -115,14 +126,27 @@ class LearningEngine:
 
         for name, state in snapshot.items():
             policy = cast(_BanditLike, self.registry.get(name))
+            # If the snapshot declares a future version we do not understand, skip early.
+            ver = state.get("version") if isinstance(state, Mapping) else None
+            if ver is not None and ver > 1:
+                continue
+            # Prefer richer restore when available
+            if hasattr(policy, "load_state") and callable(getattr(policy, "load_state")):
+                try:
+                    getattr(policy, "load_state")(state)
+                    continue
+                except Exception:
+                    pass
             q_vals = state.get("q_values", {})
             counts = state.get("counts", {})
-            if hasattr(policy, "q_values") and isinstance(q_vals, Mapping):
-                policy.q_values.clear()
-                policy.q_values.update(cast(Mapping[Any, float], q_vals))
-            if hasattr(policy, "counts") and isinstance(counts, Mapping):
-                policy.counts.clear()
-                policy.counts.update(cast(Mapping[Any, int], counts))
+            # Access optional attributes via Any to satisfy type-checkers
+            _p_any = cast(Any, policy)
+            if hasattr(_p_any, "q_values") and isinstance(q_vals, Mapping):
+                _p_any.q_values.clear()
+                _p_any.q_values.update(cast(Mapping[Any, float], q_vals))
+            if hasattr(_p_any, "counts") and isinstance(counts, Mapping):
+                _p_any.counts.clear()
+                _p_any.counts.update(cast(Mapping[Any, int], counts))
 
     def status(self) -> dict[str, dict[str, Any]]:
         """Return a diagnostic view of all policies and their arms."""

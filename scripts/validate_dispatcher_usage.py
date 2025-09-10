@@ -42,7 +42,9 @@ def main() -> int:
         has_import = ("import yt_dlp" in lowered) or ("from yt_dlp" in lowered)
         has_shell_call = False
         for ln in lowered.splitlines():
-            if ("subprocess.run(" in ln or "subprocess.call(" in ln or "popen(" in ln or "os.system(" in ln) and "yt-dlp" in ln:
+            if (
+                "subprocess.run(" in ln or "subprocess.call(" in ln or "popen(" in ln or "os.system(" in ln
+            ) and "yt-dlp" in ln:
                 has_shell_call = True
                 break
         if has_import or has_shell_call:

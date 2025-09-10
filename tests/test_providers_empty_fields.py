@@ -29,4 +29,3 @@ def test_twitch_empty_fields(monkeypatch):
     assert m.title == ""
     assert m.streamer == ""
     assert m.url == "https://example.com/c"
-

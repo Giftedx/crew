@@ -7,6 +7,7 @@ initialisation so that the model is only loaded when the tool is executed.  This
 also allows unit tests to mock out the behaviour without importing Whisper.
 """
 
+import importlib
 import logging
 import os
 import time
@@ -19,8 +20,10 @@ from ultimate_discord_intelligence_bot.step_result import StepResult
 
 from ._base import BaseTool
 
+# Optional dependency loaded dynamically to avoid hard import errors during typing/linting
+whisper: Any | None
 try:  # pragma: no cover - optional dependency
-    import whisper  # type: ignore[import]
+    whisper = importlib.import_module("whisper")
 except Exception:  # pragma: no cover - handled in runtime
     whisper = None
 

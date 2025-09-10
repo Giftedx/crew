@@ -13,22 +13,27 @@ import logging
 import time
 from collections.abc import AsyncGenerator, Callable
 from dataclasses import dataclass
-from typing import Any, TypeVar, get_args, get_origin
+from typing import TYPE_CHECKING, Any, TypeVar, get_args, get_origin
 
 from pydantic import BaseModel, ValidationError
 from pydantic_core import PydanticUndefined
 
 logger = logging.getLogger(__name__)
 
+OpenAIClass: Any | None = None
 try:
     import instructor
-    from openai import OpenAI
 
+    if TYPE_CHECKING:  # pragma: no cover - typing only
+        from openai import OpenAI as _OpenAI  # noqa: F401
+    from openai import OpenAI as _OpenAI  # runtime import guarded by try
+
+    OpenAIClass = _OpenAI
     INSTRUCTOR_AVAILABLE = True
     logger.info("Instructor integration available for structured outputs")
 except ImportError:  # pragma: no cover
     instructor = None
-    OpenAI = None  # type: ignore[misc]
+    OpenAIClass = None
     INSTRUCTOR_AVAILABLE = False
     logger.debug("Instructor not available - falling back to manual parsing")
 
@@ -768,6 +773,9 @@ class StructuredRequest:
 class StructuredLLMService:
     """Enhanced LLM service with structured output validation using Instructor."""
 
+    # Ensure mypy knows this attribute can become non-None after initialization
+    instructor_client: Any | None
+
     def __init__(
         self,
         openrouter_service: OpenRouterService,
@@ -799,7 +807,7 @@ class StructuredLLMService:
         self._last_cleanup = time.time()
         self._cleanup_interval = 300  # Clean up every 5 minutes
 
-        # Initialize instructor client
+        # Initialize instructor client placeholder (set lazily when available)
         self.instructor_client = None
 
     def _perform_cache_maintenance(self):
@@ -815,10 +823,10 @@ class StructuredLLMService:
                 logger.info(f"Cache maintenance: removed {expired_count} expired, {stale_count} stale entries")
 
         # Initialize Instructor client if available
-        if INSTRUCTOR_AVAILABLE and self.openrouter.api_key and OpenAI is not None:
+        if INSTRUCTOR_AVAILABLE and self.openrouter.api_key and OpenAIClass is not None:
             try:
                 # Create OpenAI-compatible client for Instructor
-                base_client = OpenAI(
+                base_client = OpenAIClass(
                     base_url="https://openrouter.ai/api/v1",
                     api_key=self.openrouter.api_key,
                 )

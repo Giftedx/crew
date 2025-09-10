@@ -73,7 +73,7 @@ class DiscordPrivateAlertTool:
             content = f"{content}\n``{metrics_str}``"
 
         try:
-            response = resilient_post(  # type: ignore[arg-type]
+            response = resilient_post(
                 self.webhook_url,
                 json_payload={
                     "content": content,

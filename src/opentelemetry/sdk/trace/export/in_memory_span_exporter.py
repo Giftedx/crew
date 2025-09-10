@@ -21,5 +21,5 @@ class InMemorySpanExporter(SpanExporter):
     def clear(self) -> None:
         self._spans.clear()
 
-__all__ = ["InMemorySpanExporter"]
 
+__all__ = ["InMemorySpanExporter"]

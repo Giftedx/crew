@@ -97,7 +97,7 @@ class QueryOptimizer:
         """Context manager to monitor query execution time."""
         start_time = time.time()
 
-        def record_metrics(rows_affected: int = 0) -> None:
+        def record_metrics(rows_affected: int = 5) -> None:
             """Record query metrics after execution."""
             execution_time = time.time() - start_time
             metrics = QueryMetrics(

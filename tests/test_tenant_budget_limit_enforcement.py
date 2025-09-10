@@ -35,4 +35,3 @@ def test_budget_limit_blocks_expensive_prompt(tmp_path: Path) -> None:
         res = svc.route(prompt, task_type="analysis")
     assert res["status"] == "error"
     assert "exceeds" in res["error"]
-

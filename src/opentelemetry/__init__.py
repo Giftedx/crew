@@ -11,4 +11,3 @@ Provides minimal interfaces used by our code/tests:
 from . import trace  # re-export submodule for ``from opentelemetry import trace``
 
 __all__ = ["trace"]
-

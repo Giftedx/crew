@@ -27,7 +27,7 @@ class SentimentTool(BaseTool):
     description: str = "Return overall sentiment for a piece of text."
     model_config = {"extra": "allow"}
 
-    def __init__(self):  # type: ignore[override]
+    def __init__(self):
         super().__init__()
         self._metrics = get_metrics()
 

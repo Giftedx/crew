@@ -29,3 +29,49 @@ than globally.
 The in-memory store and other persistence layers must prefix all namespaces with
 `<tenant>:<workspace>:`. Utility :func:`tenancy.context.mem_ns` constructs these
 prefixes and the `MemoryService` validates them to prevent cross-tenant access.
+
+## Service Behavior: OpenRouter Tenancy
+
+The `OpenRouterService` resolves the active tenant via `current_tenant()` and applies it to
+model routing, budget evaluation, and cache namespacing. Behavior is guarded by flags:
+
+- Strict mode: when `ENABLE_TENANCY_STRICT=1` (or `ENABLE_INGEST_STRICT=1`), calling `route()`
+   without an active `TenantContext` raises `RuntimeError`.
+- Non‑strict mode: if no tenant is set, the service logs a warning and defaults to
+   `TenantContext("default", "main")`. A counter increments for visibility:
+
+  - `tenancy_fallback_total{tenant,workspace,component}` with `component="openrouter_service"`.
+
+Verification:
+
+1. Unit test: `tests/test_openrouter_tenancy.py` validates both strict and non‑strict paths.
+1. Metrics: render or scrape and inspect the counter.
+
+    Example (pseudo‑code):
+
+    ```python
+    from obs import metrics
+    print(metrics.render().decode("utf-8"))  # look for tenancy_fallback_total{...,component="openrouter_service"}
+    ```
+
+Notes:
+
+- Provider preferences and model overrides come from `TenantRegistry`. Cache namespaces include
+   `tenant` and `workspace` when the enhanced Redis cache is used.
+
+### Metrics Labeling: Effective Context
+
+LLM metrics (model selection, estimated cost, latency, cache hits) must be labeled with the
+effective tenant/workspace even when callers forget to set a `TenantContext` in non‑strict mode.
+To ensure this, the router computes an effective context at the start of each call and passes a
+local label factory into all metric emissions. This avoids the "unknown" fallback from
+`metrics.label_ctx()` while preserving strict mode semantics.
+
+Implications:
+
+- In strict mode, missing context still raises; no metrics are emitted for the failed call.
+- In non‑strict mode, the effective `default:main` context is used for metrics and cache keys,
+  and `tenancy_fallback_total{component="openrouter_service"}` is incremented once per call.
+
+Tests: `tests/test_openrouter_metrics_labels.py` asserts that LLM metrics include
+`tenant="default"` and `workspace="main"` labels in non‑strict mode when no context is set.

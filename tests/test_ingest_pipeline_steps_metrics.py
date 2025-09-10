@@ -53,4 +53,3 @@ def test_pipeline_emits_failed_on_exception(monkeypatch):
     else:  # pragma: no cover
         assert False, "expected strict mode to raise"
     assert "run" in failed.steps
-

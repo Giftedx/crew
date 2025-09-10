@@ -26,7 +26,7 @@ description = "Discord bot token pattern"
 regex = '''[MN][A-Za-z\d]{23}\.[\w-]{6}\.[\w-]{27}'''
 tags = ["discord", "token"]
 
-[[rules.allowlist]]
+[rules.allowlist]
   description = "Allow test token placeholders"
   regexes = ['''your-discord-bot-token-here''']
 
@@ -36,7 +36,7 @@ description = "OpenAI style key"
 regex = '''sk-[a-zA-Z0-9]{20,}'''
 tags = ["openai", "api", "key"]
 
-[[rules.allowlist]]
+[rules.allowlist]
   description = "Allow placeholder openai key"
   regexes = ['''sk-your-openai-key-here''']
 
@@ -46,7 +46,7 @@ description = "Qdrant simple JWT-like api token"
 regex = '''eyJ[a-zA-Z0-9_=-]{10,}\.[a-zA-Z0-9_=-]+\.[a-zA-Z0-9_=-]+'''
 tags = ["qdrant", "api", "jwt"]
 
-[[rules.allowlist]]
+[rules.allowlist]
   description = "Allow docs jwt placeholder"
   regexes = ['''example\.jwt\.token''']
 

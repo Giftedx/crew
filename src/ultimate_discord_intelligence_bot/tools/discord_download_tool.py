@@ -62,10 +62,14 @@ class DiscordDownloadTool(BaseTool):
     def run(
         self, attachment_url: str, filename: str | None = None, **kwargs
     ) -> StepResult:  # kwargs for forward compat
-        # If passed a pre-validated model instance (some frameworks do this), unwrap.
-        if isinstance(attachment_url, self.ArgsSchema):  # type: ignore[arg-type]
-            model = attachment_url  # type: ignore[assignment]
-            return self._run(str(model.attachment_url), model.filename)
+        # If passed an object with the ArgsSchema shape (some frameworks do this), unwrap via duck typing.
+        if hasattr(attachment_url, "attachment_url"):
+            try:
+                url_val = getattr(attachment_url, "attachment_url")
+                file_val = getattr(attachment_url, "filename", None)
+                return self._run(str(url_val), file_val)
+            except Exception:
+                return StepResult.fail(error="Invalid ArgsSchema instance")
         return self._run(str(attachment_url), filename)
 
     def _run(self, attachment_url: str, filename: str | None = None) -> StepResult:

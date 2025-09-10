@@ -1,26 +1,39 @@
-"""Best-effort podcast feed resolver."""
+"""Best-effort podcast feed resolver.
+
+Contract: public run/_run returns StepResult; helper returns domain object.
+"""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
+
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 from ...profiles.schema import CanonicalFeed
 from .._base import BaseTool
 
 
 @dataclass
-class PodcastResolverTool(BaseTool[dict[str, Any]]):
+class PodcastResolverTool(BaseTool[StepResult]):
     """Resolve a podcast search string to a canonical feed reference."""
 
     name: str = "Podcast Resolver"
     description: str = "Resolve podcast search queries to RSS feed URLs."
 
-    def _run(self, query: str) -> dict[str, Any]:  # pragma: no cover - pure mapping
-        feed = resolve_podcast_query(query)
-        return feed.to_dict()
+    def __post_init__(self) -> None:  # pragma: no cover - trivial init
+        self._metrics = get_metrics()
 
-    def run(self, query: str) -> dict[str, Any]:  # thin wrapper
+    def _run(self, query: str) -> StepResult:  # pragma: no cover - pure mapping
+        try:
+            feed = resolve_podcast_query(query)
+            self._metrics.counter("tool_runs_total", labels={"tool": "resolver_podcast", "outcome": "success"}).inc()
+            return StepResult.ok(data=feed.to_dict())
+        except Exception as exc:
+            self._metrics.counter("tool_runs_total", labels={"tool": "resolver_podcast", "outcome": "error"}).inc()
+            return StepResult.fail(error=str(exc))
+
+    def run(self, query: str) -> StepResult:  # thin wrapper
         return self._run(query)
 
 

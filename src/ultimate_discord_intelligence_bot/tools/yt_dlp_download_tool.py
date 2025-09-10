@@ -32,7 +32,7 @@ class YtDlpDownloadTool(BaseTool):
     platform: ClassVar[str] = "generic"
     model_config = {"extra": "allow"}  # allow dynamic fields set by subclasses/tests
 
-    def __init__(self):  # type: ignore[override]
+    def __init__(self):
         super().__init__()
         self._metrics = get_metrics()
 

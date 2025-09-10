@@ -21,4 +21,3 @@ def test_openrouter_respects_tenant_allowed_models_offline(tmp_path: Path) -> No
     # Ensure chosen model aligns with allowlist intent (substring check)
     model = res["model"]
     assert any(tok in model for tok in ("gpt-3.5", "gpt-4"))
-

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator, Mapping
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, cast
 
 """Lightweight helper to normalise tool responses across the pipeline.
 
@@ -151,7 +151,7 @@ class StepResult(Mapping[str, Any]):
             flat: dict[str, Any] = {}
             # merge nested mapping first (so top-level overrides win)
             if isinstance(self.data.get("data"), dict):
-                flat.update(self.data["data"])  # type: ignore[arg-type]
+                flat.update(cast(dict[str, Any], self.data["data"]))
             flat.update({k: v for k, v in self.data.items() if k != "data"})
             flat["status"] = self.custom_status or ("success" if self.success else "error")
             if self.error is not None:
@@ -164,7 +164,7 @@ class StepResult(Mapping[str, Any]):
         try:
             flat_items: list[tuple[str, Any]] = []
             if isinstance(self.data.get("data"), dict):
-                flat_items.extend(self.data["data"].items())  # type: ignore[arg-type]
+                flat_items.extend(cast(dict[str, Any], self.data["data"]).items())
             flat_items.extend([(k, v) for k, v in self.data.items() if k != "data"])
             flat_items.append(("status", self.custom_status or ("success" if self.success else "error")))
             if self.error is not None:
