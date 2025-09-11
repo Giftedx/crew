@@ -12,13 +12,22 @@ repos:
   # - Phase 3: Enforce full strict gate.
   # - Phase 4: Optional: introduce snapshot guard + error-code budgeting.
   # Previous configuration preserved below for reference.
-  # - repo: https://github.com/pre-commit/mirrors-mypy
-  #   rev: v1.10.0
-  #   hooks:
-  #     - id: mypy
-  #       additional_dependencies: []
-  #       args: ["--config-file", "pyproject.toml", "src/ultimate_discord_intelligence_bot/crew.py"]
-  #       pass_filenames: false
+  # Phase 1 reinstated narrow mypy hook (allowlist). Limit to crew orchestrator while
+  # stub packages & targeted overrides are introduced. Expand list in subsequent phases.
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.10.0
+    hooks:
+      - id: mypy
+        name: "mypy (allowlist: crew.py only)"
+        additional_dependencies: []
+        # Use explicit target path and prevent import graph expansion to keep Phase 1 narrow.
+        args: [
+          "--config-file", "pyproject.toml",
+          "--follow-imports=skip",
+          "--no-error-summary",
+          "src/ultimate_discord_intelligence_bot/crew.py"
+        ]
+        pass_filenames: false
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.6.0
     hooks:

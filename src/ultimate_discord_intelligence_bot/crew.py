@@ -108,20 +108,6 @@ class UltimateDiscordIntelligenceBotCrew:
             ],
         )
 
-        # The following unreachable block exists solely so the configuration
-        # audit tests (which statically parse for an Agent(...) call inside
-        # each agent factory) can extract the tool names without executing
-        # runtime helper indirection. It is safe and has zero runtime cost.
-        if False:  # pragma: no cover - audit only
-            Agent(
-                tools=[
-                    PipelineTool(),
-                    DebateCommandTool(),
-                    TranscriptIndexTool(),
-                    TimelineTool(),
-                ]
-            )
-
     @typed
     @agent
     def content_downloader(self) -> Agent:
@@ -139,27 +125,10 @@ class UltimateDiscordIntelligenceBotCrew:
             ],
         )
 
-        if False:  # pragma: no cover - audit only
-            Agent(
-                tools=[
-                    YouTubeDownloadTool(),
-                    TwitchDownloadTool(),
-                    KickDownloadTool(),
-                    TwitterDownloadTool(),
-                    InstagramDownloadTool(),
-                    TikTokDownloadTool(),
-                    RedditDownloadTool(),
-                    DiscordDownloadTool(),
-                ]
-            )
-
     @typed
     @agent
     def multi_platform_monitor(self) -> Agent:
         return self._agent_from_config("multi_platform_monitor", tools=[MultiPlatformMonitorTool()])
-
-        if False:  # pragma: no cover - audit only
-            Agent(tools=[MultiPlatformMonitorTool()])
 
     @typed
     @agent
@@ -170,9 +139,6 @@ class UltimateDiscordIntelligenceBotCrew:
             tools=[DiscordPrivateAlertTool(webhook), SystemStatusTool()],
         )
 
-        if False:  # pragma: no cover - audit only
-            Agent(tools=[DiscordPrivateAlertTool(webhook), SystemStatusTool()])
-
     @typed
     @agent
     def cross_platform_intelligence_gatherer(self) -> Agent:
@@ -180,9 +146,6 @@ class UltimateDiscordIntelligenceBotCrew:
             "cross_platform_intelligence_gatherer",
             tools=[SocialMediaMonitorTool(), XMonitorTool(), DiscordMonitorTool()],
         )
-
-        if False:  # pragma: no cover - audit only
-            Agent(tools=[SocialMediaMonitorTool(), XMonitorTool(), DiscordMonitorTool()])
 
     @typed
     @agent
@@ -192,15 +155,6 @@ class UltimateDiscordIntelligenceBotCrew:
             tools=[LogicalFallacyTool(), PerspectiveSynthesizerTool(), FactCheckTool()],
         )
 
-        if False:  # pragma: no cover - audit only
-            Agent(
-                tools=[
-                    LogicalFallacyTool(),
-                    PerspectiveSynthesizerTool(),
-                    FactCheckTool(),
-                ]
-            )
-
     @typed
     @agent
     def truth_scoring_specialist(self) -> Agent:
@@ -208,15 +162,6 @@ class UltimateDiscordIntelligenceBotCrew:
             "truth_scoring_specialist",
             tools=[TruthScoringTool(), TrustworthinessTrackerTool(), LeaderboardTool()],
         )
-
-        if False:  # pragma: no cover - audit only
-            Agent(
-                tools=[
-                    TruthScoringTool(),
-                    TrustworthinessTrackerTool(),
-                    LeaderboardTool(),
-                ]
-            )
 
     @typed
     @agent
@@ -226,16 +171,10 @@ class UltimateDiscordIntelligenceBotCrew:
             tools=[SteelmanArgumentTool()],
         )
 
-        if False:  # pragma: no cover - audit only
-            Agent(tools=[SteelmanArgumentTool()])
-
     @typed
     @agent
     def discord_qa_manager(self) -> Agent:
         return self._agent_from_config("discord_qa_manager", tools=[DiscordQATool()])
-
-        if False:  # pragma: no cover - audit only
-            Agent(tools=[DiscordQATool()])
 
     @typed
     @agent
@@ -255,9 +194,6 @@ class UltimateDiscordIntelligenceBotCrew:
             tools=[CharacterProfileTool()],
         )
 
-        if False:  # pragma: no cover - audit only
-            Agent(tools=[CharacterProfileTool()])
-
     @typed
     @agent
     def personality_synthesis_manager(self) -> Agent:
@@ -269,15 +205,6 @@ class UltimateDiscordIntelligenceBotCrew:
                 PerspectiveSynthesizerTool(),
             ],
         )
-
-        if False:  # pragma: no cover - audit only
-            Agent(
-                tools=[
-                    CharacterProfileTool(),
-                    TextAnalysisTool(),
-                    PerspectiveSynthesizerTool(),
-                ]
-            )
 
     @typed
     @task

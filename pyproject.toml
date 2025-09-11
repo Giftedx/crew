@@ -42,6 +42,9 @@ dev = [
     "pytest-asyncio>=0.23.0",
     "types-PyYAML",
     "types-requests",
+    "types-jsonschema",
+    "types-psutil",
+    "types-redis",
     "ruff>=0.5.0",
     "mypy>=1.10.0",
     "pre-commit>=3.7.0",
@@ -218,10 +221,6 @@ module = [
 ]
 ignore_errors = true
 
-[[tool.mypy.overrides]]
-
-
-[[tool.mypy.overrides]]
 
 
 [[tool.mypy.overrides]]
@@ -258,11 +257,6 @@ module = [
     "obs.langsmith_integration",
 ]
 ignore_errors = true
-
-[[tool.mypy.overrides]]
-
-
-[[tool.mypy.overrides]]
 
 
 [[tool.mypy.overrides]]
