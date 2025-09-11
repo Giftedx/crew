@@ -3,37 +3,13 @@ from __future__ import annotations
 import json
 import logging
 import os
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Any, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
 
-from core.typing_utils import typed  # typing aid: keep precise signatures after framework decorators
-
-# Optional heavy dependency: crewai. Wrapped in a try block so type checking
-# can succeed (with fallbacks) when the library isn't installed in minimal
-# environments (e.g., pre-commit hooks). The runtime will raise if actually
-# used without crewai present.
-try:  # pragma: no cover - environment dependent
-    from crewai import Agent, Crew, Process, Task  # type: ignore[import-not-found]
-    from crewai.agents.agent_builder.base_agent import BaseAgent  # type: ignore[import-not-found]
-    from crewai.project import CrewBase, agent, crew, task  # type: ignore[import-not-found]
-except Exception:  # pragma: no cover - fallback for typing-only contexts
-    from typing import Any as Agent  # type: ignore
-    from typing import Any as Crew  # type: ignore
-    from typing import Any as Process  # type: ignore
-    from typing import Any as Task  # type: ignore
-
-    class BaseAgent:  # minimal placeholder
-        pass
-
-    # Dummy decorators that transparently return the function/class
-    def CrewBase(cls):  # type: ignore
-        return cls
-    def agent(func):  # type: ignore
-        return func
-    def crew(func):  # type: ignore
-        return func
-    def task(func):  # type: ignore
-        return func
+from core.typing_utils import (
+    typed,  # typing aid: keep precise signatures after framework decorators
+)
 
 from .config_types import AgentConfig, TaskConfig
 from .settings import DISCORD_PRIVATE_WEBHOOK
@@ -68,6 +44,42 @@ from .tools.yt_dlp_download_tool import (
     YouTubeDownloadTool,
 )
 
+_CREWAI_AVAILABLE = False
+if TYPE_CHECKING:  # Provide real symbols for type checking when installed
+    from crewai import Agent, Crew, Process, Task  # noqa: F401
+    from crewai.agents.agent_builder.base_agent import BaseAgent  # noqa: F401
+    from crewai.project import CrewBase, agent, crew, task  # noqa: F401
+
+    _CREWAI_AVAILABLE = True
+else:  # Runtime: attempt import but allow graceful degradation
+    try:  # pragma: no cover - import side effects external
+        from crewai import Agent, Crew, Process, Task  # type: ignore
+        from crewai.agents.agent_builder.base_agent import BaseAgent  # type: ignore
+        from crewai.project import CrewBase, agent, crew, task  # type: ignore
+
+        _CREWAI_AVAILABLE = True
+    except Exception:  # pragma: no cover - fallback placeholders
+        from typing import Any as Agent  # type: ignore
+        from typing import Any as Crew  # type: ignore
+        from typing import Any as Process  # type: ignore
+        from typing import Any as Task  # type: ignore
+
+        class BaseAgent:  # minimal placeholder
+            ...
+
+        def CrewBase(cls):  # type: ignore
+            return cls
+
+        def agent(func):  # type: ignore
+            return func
+
+        def crew(func):  # type: ignore
+            return func
+
+        def task(func):  # type: ignore
+            return func
+
+
 RAW_SNIPPET_MAX_LEN = 160  # truncate raw output logging for verbose step mode
 
 
@@ -80,15 +92,20 @@ class UltimateDiscordIntelligenceBotCrew:
     # conservative placeholder types so mypy recognizes them.
     agents_config: dict[str, AgentConfig]  # loaded agent configurations
     tasks_config: dict[str, TaskConfig]  # loaded task configurations
-    agents: list[BaseAgent]
-    tasks: list[Task]
+    agents: Sequence[BaseAgent]
+    tasks: Sequence[Task]
 
     @typed  # outermost: preserves signature after crewai decorator
     @agent
     def content_manager(self) -> Agent:
         return self._agent_from_config(
             "content_manager",
-            tools=[PipelineTool(), DebateCommandTool(), TranscriptIndexTool(), TimelineTool()],
+            tools=[
+                PipelineTool(),
+                DebateCommandTool(),
+                TranscriptIndexTool(),
+                TimelineTool(),
+            ],
         )
 
         # The following unreachable block exists solely so the configuration
@@ -96,7 +113,14 @@ class UltimateDiscordIntelligenceBotCrew:
         # each agent factory) can extract the tool names without executing
         # runtime helper indirection. It is safe and has zero runtime cost.
         if False:  # pragma: no cover - audit only
-            Agent(tools=[PipelineTool(), DebateCommandTool(), TranscriptIndexTool(), TimelineTool()])
+            Agent(
+                tools=[
+                    PipelineTool(),
+                    DebateCommandTool(),
+                    TranscriptIndexTool(),
+                    TimelineTool(),
+                ]
+            )
 
     @typed
     @agent
@@ -169,7 +193,13 @@ class UltimateDiscordIntelligenceBotCrew:
         )
 
         if False:  # pragma: no cover - audit only
-            Agent(tools=[LogicalFallacyTool(), PerspectiveSynthesizerTool(), FactCheckTool()])
+            Agent(
+                tools=[
+                    LogicalFallacyTool(),
+                    PerspectiveSynthesizerTool(),
+                    FactCheckTool(),
+                ]
+            )
 
     @typed
     @agent
@@ -180,7 +210,13 @@ class UltimateDiscordIntelligenceBotCrew:
         )
 
         if False:  # pragma: no cover - audit only
-            Agent(tools=[TruthScoringTool(), TrustworthinessTrackerTool(), LeaderboardTool()])
+            Agent(
+                tools=[
+                    TruthScoringTool(),
+                    TrustworthinessTrackerTool(),
+                    LeaderboardTool(),
+                ]
+            )
 
     @typed
     @agent
@@ -227,11 +263,21 @@ class UltimateDiscordIntelligenceBotCrew:
     def personality_synthesis_manager(self) -> Agent:
         return self._agent_from_config(
             "personality_synthesis_manager",
-            tools=[CharacterProfileTool(), TextAnalysisTool(), PerspectiveSynthesizerTool()],
+            tools=[
+                CharacterProfileTool(),
+                TextAnalysisTool(),
+                PerspectiveSynthesizerTool(),
+            ],
         )
 
         if False:  # pragma: no cover - audit only
-            Agent(tools=[CharacterProfileTool(), TextAnalysisTool(), PerspectiveSynthesizerTool()])
+            Agent(
+                tools=[
+                    CharacterProfileTool(),
+                    TextAnalysisTool(),
+                    PerspectiveSynthesizerTool(),
+                ]
+            )
 
     @typed
     @task
@@ -319,6 +365,10 @@ class UltimateDiscordIntelligenceBotCrew:
 
         Adds optional runtime validation & dynamic embedder configuration.
         """
+        if not _CREWAI_AVAILABLE:
+            raise ImportError(
+                "crewai is not installed. Install project with extras or run 'pip install crewai' to use crew orchestration features."
+            )
         if os.getenv("ENABLE_CREW_CONFIG_VALIDATION") == "1":
             self._validate_configs()
 
@@ -334,8 +384,8 @@ class UltimateDiscordIntelligenceBotCrew:
                 logging.getLogger(__name__).warning("Invalid CREW_EMBEDDER_CONFIG_JSON: %s", exc)
 
         return Crew(
-            agents=self.agents,
-            tasks=self.tasks,
+            agents=list(self.agents),  # satisfy expected concrete list type
+            tasks=list(self.tasks),  # satisfy expected concrete list type
             process=Process.sequential,
             verbose=True,
             planning=True,
@@ -469,9 +519,9 @@ class UltimateDiscordIntelligenceBotCrew:
 
     def _task_from_config(self, name: str) -> Task:
         cfg = self.tasks_config[name]
-        assert "description" in cfg and "expected_output" in cfg and "agent" in cfg, (
-            f"Task config '{name}' missing required keys"
-        )
+        assert (
+            "description" in cfg and "expected_output" in cfg and "agent" in cfg
+        ), f"Task config '{name}' missing required keys"
         base: dict[str, Any] = {
             "description": cfg["description"],
             "expected_output": cfg["expected_output"],
