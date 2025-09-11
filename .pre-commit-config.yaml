@@ -18,7 +18,7 @@ repos:
     rev: v1.10.0
     hooks:
       - id: mypy
-        name: "mypy (allowlist: crew.py, profiles/schema.py, services/prompt_engine.py, services/memory_service.py, core/flags.py, core/time.py, core/typing_utils.py, core/error_handling.py)"
+        name: "mypy (allowlist: crew.py, profiles/schema.py, services/prompt_engine.py, services/memory_service.py, core/flags.py, core/time.py, core/typing_utils.py, core/error_handling.py, core/log_schema.py)"
         additional_dependencies:
           - types-PyYAML
           - types-requests
@@ -37,6 +37,7 @@ repos:
             "src/core/time.py",
             "src/core/typing_utils.py",
             "src/core/error_handling.py",
+            "src/core/log_schema.py",
           ]
         pass_filenames: false
   - repo: https://github.com/pre-commit/pre-commit-hooks
