@@ -6,8 +6,6 @@ Tests cover unit tests, integration tests, error handling, and performance scena
 from unittest.mock import Mock, patch
 
 import pytest
-from pydantic import BaseModel
-
 from core.structured_llm_service import (
     CacheEntry,
     CacheKeyGenerator,
@@ -21,6 +19,7 @@ from core.structured_llm_service import (
     StructuredRequest,
     create_structured_llm_service,
 )
+from pydantic import BaseModel
 
 
 class TestUserProfile(BaseModel):

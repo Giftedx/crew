@@ -10,7 +10,7 @@ from core.cache.bounded_cache import DEFAULT_MAX_SIZE, BoundedLRUCache, create_l
 try:  # optional Redis-backed cache adapter
     from core.cache.redis_cache import RedisCache
 except Exception:  # pragma: no cover
-    RedisCache = None  # type: ignore
+    RedisCache = None
 
 
 LLMCache = create_llm_cache()

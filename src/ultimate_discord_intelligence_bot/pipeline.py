@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any, Optional, TypedDict, cast
 from core.privacy import privacy_filter
 from obs import metrics
 from security.rate_limit import TokenBucket
+
 from ultimate_discord_intelligence_bot.services.request_budget import track_request_budget
 from ultimate_discord_intelligence_bot.tenancy import current_tenant
 from ultimate_discord_intelligence_bot.tenancy.registry import TenantRegistry

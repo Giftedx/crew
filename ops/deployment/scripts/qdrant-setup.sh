@@ -55,9 +55,9 @@ case $choice in
             echo "💡 Please make sure you're in the project root directory"
             exit 1
         fi
-        
+
         docker-compose up -d qdrant
-        
+
         echo "⏳ Waiting for Qdrant to be ready..."
         for i in {1..30}; do
             if curl -s http://localhost:6333/ > /dev/null 2>&1; then
@@ -72,14 +72,14 @@ case $choice in
             sleep 2
         done
         ;;
-        
+
     2)
         echo "🚀 Starting full stack (Qdrant + Redis + PostgreSQL)..."
         docker-compose --profile full up -d
-        
+
         echo "⏳ Waiting for services to be ready..."
         sleep 10
-        
+
         # Check Qdrant
         if curl -s http://localhost:6333/ > /dev/null 2>&1; then
             echo "✅ Qdrant is ready!"
@@ -87,14 +87,14 @@ case $choice in
             echo "⚠️  Qdrant may still be starting up"
         fi
         ;;
-        
+
     3)
         echo "🔧 Custom setup selected"
         echo "💡 Edit ops/deployment/docker/docker-compose.yml and run manually:"
         echo "   docker-compose up -d qdrant"
         exit 0
         ;;
-        
+
     *)
         echo "❌ Invalid choice"
         exit 1

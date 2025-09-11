@@ -35,4 +35,3 @@ jobs:
           make format-check
           make lint
           make guards
-

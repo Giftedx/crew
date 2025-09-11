@@ -19,7 +19,7 @@ echo "📦 Activating virtual environment..."
 if [ ! -d "venv" ]; then
     echo "❌ Error: Virtual environment not found. Please create it first:"
     echo "   python -m venv venv"
-    echo "   source venv/bin/activate"  
+    echo "   source venv/bin/activate"
     echo "   pip install -e ."
     exit 1
 fi
@@ -82,7 +82,7 @@ echo ""
 echo "1) Full Bot (recommended - all tools available)"
 echo "   python -m ultimate_discord_intelligence_bot.setup_cli run discord"
 echo ""
-echo "2) Simple Bot (basic Discord functionality)" 
+echo "2) Simple Bot (basic Discord functionality)"
 echo "   python -m ultimate_discord_intelligence_bot.setup_cli run discord"
 echo ""
 echo "3) Content Ingestion Only"

@@ -4,8 +4,6 @@ import json
 from datetime import UTC, datetime
 from pathlib import Path
 
-from pydantic import Field
-
 from core.http_utils import (
     DEFAULT_RATE_LIMIT_RETRY,
     HTTP_RATE_LIMITED,
@@ -14,6 +12,8 @@ from core.http_utils import (
     resilient_post,
     validate_public_https_url,
 )
+from pydantic import Field
+
 from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 from ultimate_discord_intelligence_bot.step_result import StepResult
 

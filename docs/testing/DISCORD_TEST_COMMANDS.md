@@ -31,7 +31,7 @@ Go to your Discord server and try these commands to verify everything is working
 
 ```text
 !fallacy Everyone believes this so it must be true
-!fallacy You're wrong because you're stupid  
+!fallacy You're wrong because you're stupid
 !fallacy If we allow this, next thing you know the world will end
 !fallacy This is true because my friend told me
 ```
@@ -54,7 +54,7 @@ Should show:
 ```text
 🟢 Full Discord Intelligence Bot Status:
 • Pipeline Tool: ✅
-• Debate Tool: ✅  
+• Debate Tool: ✅
 • Fact Check Tool: ✅ (or ⚠️ with warning)
 • Fallacy Tool: ✅
 • YouTube Tool: ✅
@@ -70,7 +70,7 @@ Should show:
 ### Fallacy Detection Examples
 
 - "Everyone believes this" → Appeal to Popularity
-- "You're wrong because you're stupid" → Ad Hominem  
+- "You're wrong because you're stupid" → Ad Hominem
 - "If we allow this, world will end" → Slippery Slope
 - Clean arguments → ✅ No fallacies detected
 
@@ -100,10 +100,10 @@ Should show:
 
 ## 🎉 Success Indicators
 
-✅ `!status` returns bot status  
-✅ `!factcheck` provides verdicts with confidence scores  
-✅ `!fallacy` detects logical fallacies with explanations  
-✅ `!analyze` processes video content (with valid URLs)  
+✅ `!status` returns bot status
+✅ `!factcheck` provides verdicts with confidence scores
+✅ `!fallacy` detects logical fallacies with explanations
+✅ `!analyze` processes video content (with valid URLs)
 ✅ Error handling shows helpful messages instead of crashes
 
 ---
@@ -111,7 +111,7 @@ Should show:
 ## 💡 Pro Tips
 
 - Use built-in fact-checking for reliable results without API keys
-- Test fallacy detection with obviously flawed arguments  
+- Test fallacy detection with obviously flawed arguments
 - Start with simple commands (`!status`) then try advanced ones
 - Check console output for detailed error information
 - Built-in patterns cover common conspiracy theories and scientific facts

@@ -14,7 +14,7 @@ from ultimate_discord_intelligence_bot.step_result import StepResult
 def my_tool_function(input_data: str) -> StepResult:
     if not input_data:
         return StepResult(error="missing_input", status="bad_request")
-    
+
     try:
         result = process_data(input_data)
         return StepResult(data=result)
@@ -191,11 +191,11 @@ def retry_with_backoff(func, max_retries=3):
         except Exception as e:
             if attempt == max_retries - 1:
                 raise
-            
+
             # Exponential backoff with jitter
             delay = (2 ** attempt) + random.uniform(0, 1)
             time.sleep(delay)
-    
+
     raise Exception("Max retries exceeded")
 ```
 
@@ -239,7 +239,7 @@ def get_enhanced_data(input_data):
     result = try_primary_source(input_data)
     if result.status == "success":
         return result
-    
+
     # Fall back to secondary source
     result = try_secondary_source(input_data)
     if result.status == "success":
@@ -247,7 +247,7 @@ def get_enhanced_data(input_data):
             data=result.data,
             metadata={"source": "fallback"}
         )
-    
+
     # Return minimal viable result
     return StepResult(
         data={"basic_info": input_data},

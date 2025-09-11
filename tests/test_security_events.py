@@ -1,5 +1,4 @@
 import pytest
-
 from obs import logging as obs_logging
 from security.moderation import Moderation
 from security.rbac import RBAC

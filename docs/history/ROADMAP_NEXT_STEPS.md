@@ -44,4 +44,3 @@ Last updated: 2025-08-31
 | Hidden heavy imports | Slow imports / test flakiness | Medium | Scan for unconditional imports |
 | Env drift | Validation errors | Low | Settings guard + explicit modeling |
 | Test suite time | Slow feedback | Medium | Split markers & fast path CI |
-

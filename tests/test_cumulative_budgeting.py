@@ -2,7 +2,6 @@ from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
-
 from ultimate_discord_intelligence_bot.pipeline import ContentPipeline
 from ultimate_discord_intelligence_bot.services.openrouter_service import OpenRouterService
 from ultimate_discord_intelligence_bot.services.prompt_engine import PromptEngine

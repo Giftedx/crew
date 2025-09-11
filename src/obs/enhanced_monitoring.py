@@ -650,13 +650,17 @@ class EnhancedMonitoringSystem:
                                 if self.monitoring_status == MonitoringStatus.DEGRADED
                                 else 0.0
                             )
-                            # Use type: ignore for dynamic attribute access
-                            system_health_metric.labels(**labels).set(health_score)  # type: ignore[attr-defined]
+                            try:
+                                system_health_metric.labels(**labels).set(health_score)  # runtime guard
+                            except Exception:
+                                logger.debug("Failed to set system health metric")
 
                         cost_metric = getattr(metrics, "COST_PER_INTERACTION", None)
                         if cost_metric is not None:
-                            # Use type: ignore for dynamic attribute access
-                            cost_metric.labels(**labels).set(current_metrics.cost_per_interaction)  # type: ignore[attr-defined]
+                            try:
+                                cost_metric.labels(**labels).set(current_metrics.cost_per_interaction)
+                            except Exception:
+                                logger.debug("Failed to set cost metric")
                     except (AttributeError, TypeError) as e:
                         logger.debug(f"Failed to update some Prometheus metrics: {e}")
 

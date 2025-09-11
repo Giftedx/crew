@@ -13,7 +13,9 @@ import copy
 import logging
 import time
 from dataclasses import dataclass
-from typing import Any, Protocol
+from typing import Any, Protocol, runtime_checkable, cast
+from collections.abc import Callable
+from collections.abc import Sequence
 
 from core.cache.semantic_cache import get_semantic_cache
 from core.http_utils import REQUEST_TIMEOUT_SECONDS
@@ -36,25 +38,61 @@ class LLMCacheProto(Protocol):  # minimal structural type used in this module
     def set(self, key: str, value: dict[str, Any]) -> None: ...
 
 
+# --- LiteLLM response shape (duck-typed) -------------------------------------
+@runtime_checkable
+class _LiteLLMMsg(Protocol):  # pragma: no cover - structural typing only
+    content: str | None
+
+
+@runtime_checkable
+class _LiteLLMChoice(Protocol):  # pragma: no cover
+    message: _LiteLLMMsg
+
+
+@runtime_checkable
+class _LiteLLMResponse(Protocol):  # pragma: no cover
+    choices: Sequence[_LiteLLMChoice]
+
+
+def _extract_content(resp: Any) -> str:
+    """Best-effort extraction of response text from a LiteLLM completion.
+
+    Handles both standard response objects exposing ``choices[0].message.content``
+    and fallback attributes; never raises and always returns a string for
+    downstream token counting.
+    """
+    try:
+        if isinstance(resp, _LiteLLMResponse):  # structural check
+            if resp.choices:
+                msg = resp.choices[0].message
+                if msg and getattr(msg, "content", None) is not None:
+                    return str(msg.content)
+        # Fallbacks: streaming wrappers may expose ``content`` directly
+        direct = getattr(resp, "content", None)
+        if direct is not None:
+            return str(direct)
+    except Exception:  # pragma: no cover - defensive
+        pass
+    return ""
+
+
 litellm: Any  # runtime module if available; used under guards
-_completion: Any
-_completion_cost: Any
+_completion_cost: Callable[..., float] | None = None
 try:
     import litellm as _litellm
     from litellm import completion as _completion
 
     try:
-        # Newer litellm versions expose cost calculator under cost_calculator
-        from litellm.cost_calculator import completion_cost as _completion_cost
+        from litellm.cost_calculator import completion_cost as _cc
+
+        _completion_cost = _cc  # assign only if import succeeds
     except Exception:  # pragma: no cover
         _completion_cost = None
-
     litellm = _litellm
     LITELLM_AVAILABLE = True
-except Exception:
+except Exception:  # pragma: no cover
     litellm = None
     _completion = None
-    _completion_cost = None
     LITELLM_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
@@ -492,7 +530,8 @@ class EnhancedOpenRouterService:
                 # Async completion with LiteLLM
                 if _completion is None:
                     raise RuntimeError("LiteLLM completion unavailable")
-                response = await _completion(
+                # _completion may be synchronous; call directly (wrapped in async context for uniform interface)
+                response = _completion(
                     model=attempt_model,
                     messages=messages,
                     max_tokens=max_tokens,
@@ -500,18 +539,18 @@ class EnhancedOpenRouterService:
                     timeout=REQUEST_TIMEOUT_SECONDS,
                     fallbacks=[m for m in models_to_try if m != attempt_model][:2],
                 )
-
-                # Extract response content
-                content = response.choices[0].message.content
+                # Extract response content safely
+                content = _extract_content(response)
 
                 # Calculate tokens and cost
                 tokens_in = sum(self.prompt_engine.count_tokens(m["content"], attempt_model) for m in messages)
-                tokens_out = self.prompt_engine.count_tokens(content, attempt_model)
+                tokens_out = self.prompt_engine.count_tokens(content, attempt_model) if content else 0
 
                 cost = 0.0
                 try:
                     if _completion_cost is not None:
-                        cost = _completion_cost(response, attempt_model)
+                        # Cast to silence mypy; runtime function can handle flexible shapes
+                        cost = _completion_cost(cast(Any, response), attempt_model)
                 except Exception as e:
                     logger.debug(f"Cost calculation failed: {e}")
 

@@ -1,7 +1,9 @@
 from __future__ import annotations
+
 import os
 from collections.abc import Callable
 from typing import Any, ParamSpec, TypeVar, cast
+
 from .. import flags
 from ..learning_engine import LearningEngine
 from .bounded_cache import create_llm_cache
@@ -63,9 +65,11 @@ def memo_llm(
 def _get_cache_ttl() -> int:
     try:
         from ..secure_config import get_config
+
         return get_config().cache_ttl_llm
     except ImportError:
         return int(os.getenv("CACHE_TTL_LLM", "3600"))
+
 
 llm_cache = create_llm_cache(ttl=_get_cache_ttl())
 

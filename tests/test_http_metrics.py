@@ -1,7 +1,6 @@
 import os
 
 import pytest
-
 from fastapi.testclient import TestClient
 from obs import metrics
 from server.app import create_app

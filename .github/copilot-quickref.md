@@ -29,7 +29,7 @@ Flow: PromptEngine.build → filter (capability, cost, context) → ε‑greedy 
 Priority queue for ingestion/analysis; deterministic job key (URL + bucket) dedupes. Backpressure: drop lowest‑priority future jobs when queue exceeds limit → emit `scheduler_dropped_total{reason="backpressure"}`. Profiles metadata (from `profiles.yaml`) attached to enrich jobs.
 
 ## Observability Snippets
- 
+
 ```python
 with tracing.start_span("grounded_answer", tenant=t, workspace=w) as span:
     metrics.qa_requests_total.labels(tenant=t).inc()
@@ -43,7 +43,7 @@ LearningEngine.record(model=chosen, reward=score)
 Guidelines: one span per logical op; avoid high‑cardinality labels (truncate/hash user text); define counters centrally, not inline inside loops.
 
 ## Feature Flag Categories
- 
+
 | Area | Examples |
 |------|----------|
 | Ingestion | ENABLE_INGEST_YOUTUBE / _TWITCH |
@@ -55,7 +55,7 @@ Guidelines: one span per logical op; avoid high‑cardinality labels (truncate/h
 | HTTP | ENABLE_HTTP_RETRY (legacy ENABLE_ANALYSIS_HTTP_RETRY honored) |
 
 ## Quick Commands
- 
+
 | Task | Command |
 |------|---------|
 | Install dev | `pip install -e .[dev]` |
@@ -70,7 +70,7 @@ Guidelines: one span per logical op; avoid high‑cardinality labels (truncate/h
 | Find utcnow | `rg "utcnow\(" src` |
 
 ## Troubleshooting Ladder
- 
+
 1. Flag enabled?
 2. Tenant context present?
 3. Vector namespace populated?
@@ -81,11 +81,11 @@ Guidelines: one span per logical op; avoid high‑cardinality labels (truncate/h
 8. Moderation/policy block?
 
 ## Anti‑Patterns
- 
+
 Raw model calls, unguarded features, tenant leakage, ad‑hoc prints, broad `Any`, silent except pass, duplicate ingestion logic.
 
 ## Add a Tool (Template)
- 
+
 ```python
 class MyTool(BaseTool):
     name = "my_tool"
@@ -95,7 +95,7 @@ class MyTool(BaseTool):
         return {"status": "success", "data": {"ok": True}}
 ```
 Flag guard:
- 
+
 ```python
 if not os.getenv("ENABLE_ANALYSIS_MY_FEATURE"):
     return {"status": "skipped"}

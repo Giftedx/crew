@@ -228,7 +228,7 @@ This roadmap establishes a structured, evidence-based methodology for systematic
 #### Category A: Critical Path (Immediate)
 
 - `core/secure_config.py`: Configuration consolidation
-- `memory/store.py`: Persistent storage validation  
+- `memory/store.py`: Persistent storage validation
 - `obs/metrics.py`: Observability enhancement
 
 #### Category B: High Impact (Phase 2-3)
@@ -272,7 +272,7 @@ This roadmap establishes a structured, evidence-based methodology for systematic
 ### Risk Management
 
 - **Technical Risks**: Dependency failures, integration issues
-- **Resource Risks**: Team availability, skill gaps  
+- **Resource Risks**: Team availability, skill gaps
 - **Business Risks**: Requirement changes, timeline pressures
 - **Mitigation Strategies**: Contingency planning, resource allocation
 

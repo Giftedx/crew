@@ -4,7 +4,6 @@ import logging
 from unittest.mock import MagicMock
 
 import pytest
-
 from ultimate_discord_intelligence_bot.pipeline import ContentPipeline
 from ultimate_discord_intelligence_bot.tools.discord_download_tool import (
     DiscordDownloadTool,

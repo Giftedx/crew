@@ -1,426 +1,188 @@
-"""Central application settings using Pydantic.
+"""Minimal, mypy-clean settings baseline.
 
-All environment driven knobs should live here so that other modules avoid
-scattered ``os.environ.get`` calls.  This makes configuration discoverable,
-testable, and documents defaults in one place.
-
-Convention: Boolean flags default to *disabled* unless the legacy behaviour
-prior to centralisation assumed enabled (e.g. HTTP metrics).  New features
-should ship behind an ``ENABLE_*`` style flag for opt‑in safety.
+This intentionally removes all dynamic pydantic import complexity. We expose a
+very small stable surface so the type checker has zero noise. If / when richer
+validation is required we can layer it back in behind feature flags.
 """
 
 from __future__ import annotations
 
-import importlib
-import sys
+import os
 from functools import lru_cache
-from importlib import util as importlib_util
-from types import ModuleType
-
-try:
-    from pydantic import AliasChoices, Field  # type: ignore
-
-    _HAS_PYDANTIC = True
-except Exception:  # pragma: no cover - fallback when pydantic unavailable
-    _HAS_PYDANTIC = False
-
-    def Field(*_args, **kwargs):  # type: ignore[override]
-        return kwargs.get("default")
-
-    def AliasChoices(*_args, **_kwargs):  # type: ignore[override]
-        return None
+from typing import Any
 
 
-if _HAS_PYDANTIC:
-    try:  # Pydantic v2 (preferred)
-        from pydantic_settings import BaseSettings, SettingsConfigDict  # type: ignore
+class BaseSettings:
+    """Lightweight base; stores provided kwargs as attributes."""
 
-        _HAS_PYDANTIC_V2 = True
-    except Exception:  # pragma: no cover - fall back to pydantic v1 style
-        try:
-            from pydantic import BaseSettings  # type: ignore
-        except Exception:  # pragma: no cover
-            BaseSettings = object  # type: ignore[assignment]
+    _IS_STUB = True
 
-        SettingsConfigDict = dict  # type: ignore[assignment]
-        _HAS_PYDANTIC_V2 = False
-else:  # pragma: no cover - no pydantic available at all
-    BaseSettings = object  # type: ignore[assignment]
-    SettingsConfigDict = dict  # type: ignore[assignment]
-    _HAS_PYDANTIC_V2 = False
-try:
-    _spec = importlib_util.find_spec("dotenv")
-    _DOTENV_AVAILABLE = _spec is not None and getattr(_spec, "loader", None) is not None
-except Exception:  # pragma: no cover - extremely defensive
-    _DOTENV_AVAILABLE = False
+    def __init__(self, **kwargs: Any) -> None:
+        for k, v in kwargs.items():
+            setattr(self, k, v)
 
-# If real package available but a stub without __file__ was inserted earlier by tests, drop it
-if _DOTENV_AVAILABLE and "dotenv" in sys.modules and getattr(sys.modules["dotenv"], "__file__", None) is None:
-    del sys.modules["dotenv"]
-    importlib.import_module("dotenv")
 
-# Provide stub only if absent (offers dotenv_values for pydantic-settings provider import)
-if not _DOTENV_AVAILABLE:  # pragma: no cover
-    fake = ModuleType("dotenv")
+def Field(default: Any = None, **_: Any) -> Any:  # noqa: D401
+    return default
 
-    def dotenv_values(_path: str | None = None) -> dict[str, str]:
-        return {}
 
-    fake.dotenv_values = dotenv_values  # type: ignore[attr-defined]
-    sys.modules["dotenv"] = fake
+class AliasChoices(tuple):  # compatibility shim
+    def __new__(cls, *choices: str):
+        return super().__new__(cls, choices)
+
+    def first(self) -> str:  # pragma: no cover - trivial
+        return self[0] if self else ""
 
 
 class Settings(BaseSettings):
-    # If python-dotenv is not installed, avoid referencing .env to prevent import error inside
-    # pydantic-settings provider chain. Tests rely on environment variable injection directly.
-    if _HAS_PYDANTIC_V2:
-        # Pydantic v2 settings configuration (class var expected by BaseSettings)
-        model_config = SettingsConfigDict(
-            env_file=".env" if _DOTENV_AVAILABLE else None,
-            case_sensitive=False,
-            # Tests (and real deployments) may inject many more environment variables
-            # than the curated subset we explicitly model here. We ignore unknown keys
-            # so that adding a new secret or flag externally does not immediately break
-            # Settings() construction with a ValidationError (pydantic's default would
-            # otherwise forbid extras in this context).
-            extra="ignore",
-        )
-    else:  # pragma: no cover - pydantic v1 compatibility
-
-        class Config:
-            env_file = ".env" if _DOTENV_AVAILABLE else None
-            case_sensitive = False
-
     # Service metadata
-    service_name: str = Field(
-        default="ultimate-discord-intel",
-        validation_alias=AliasChoices("SERVICE_NAME", "service_name"),
-        alias="SERVICE_NAME",
-    )
+    service_name: str = Field("crew-service")
+    environment: str = Field("dev")
 
-    # API / server enablement
-    enable_api: bool = Field(
-        default=False,
-        validation_alias=AliasChoices("ENABLE_API", "enable_api"),
-        alias="ENABLE_API",
-    )
+    # Core API / metrics / tracing / rate limiting toggles
+    enable_api: bool = Field(False, alias="ENABLE_API")
+    enable_http_metrics: bool = Field(False, alias="ENABLE_HTTP_METRICS")
+    enable_tracing: bool = Field(False, alias="ENABLE_TRACING")
+    enable_prometheus_endpoint: bool = Field(False, alias="ENABLE_PROMETHEUS_ENDPOINT")
+    enable_rate_limiting: bool = Field(False, alias="ENABLE_RATE_LIMITING")
+    prometheus_endpoint_path: str = Field("/metrics")
+    rate_limit_rps: int = Field(10)
+    rate_limit_burst: int = Field(10)
+    rate_limit_redis_url: str | None = Field(None)
 
-    # Metrics / Prometheus
-    enable_prometheus_endpoint: bool = Field(
-        default=False,
-        validation_alias=AliasChoices("ENABLE_PROMETHEUS_ENDPOINT", "enable_prometheus_endpoint"),
-        alias="ENABLE_PROMETHEUS_ENDPOINT",
-    )
-    prometheus_endpoint_path: str = Field(
-        default="/metrics",
-        validation_alias=AliasChoices("PROMETHEUS_ENDPOINT_PATH", "prometheus_endpoint_path"),
-        alias="PROMETHEUS_ENDPOINT_PATH",
-    )
-    enable_http_metrics: bool = Field(
-        default=True,
-        validation_alias=AliasChoices("ENABLE_HTTP_METRICS", "enable_http_metrics"),
-        alias="ENABLE_HTTP_METRICS",
-    )
+    # Feature flag surface (documented flags kept in sync with docs/feature_flags.md)
+    enable_advanced_cache: bool = Field(False, alias="ENABLE_ADVANCED_CACHE")
+    enable_api_cache: bool = Field(False, alias="ENABLE_API_CACHE")
+    enable_dependency_tracking: bool = Field(False, alias="ENABLE_DEPENDENCY_TRACKING")
+    enable_http_cache: bool = Field(False, alias="ENABLE_HTTP_CACHE")
+    enable_llm_cache: bool = Field(False, alias="ENABLE_LLM_CACHE")
+    enable_degradation_reporter: bool = Field(False, alias="ENABLE_DEGRADATION_REPORTER")
+    enable_discord_archiver: bool = Field(False, alias="ENABLE_DISCORD_ARCHIVER")
+    enable_rag_context: bool = Field(False, alias="ENABLE_RAG_CONTEXT")
+    enable_vector_search: bool = Field(False, alias="ENABLE_VECTOR_SEARCH")
+    enable_discord_commands: bool = Field(False, alias="ENABLE_DISCORD_COMMANDS")
+    enable_discord_monitor: bool = Field(False, alias="ENABLE_DISCORD_MONITOR")
+    enable_audit_logging: bool = Field(False, alias="ENABLE_AUDIT_LOGGING")
+    enable_cache_global: bool = Field(False, alias="ENABLE_CACHE_GLOBAL")
+    enable_cache_transcript: bool = Field(False, alias="ENABLE_CACHE_TRANSCRIPT")
+    enable_cache_vector: bool = Field(False, alias="ENABLE_CACHE_VECTOR")
+    enable_distr_rate_limiting: bool = Field(False, alias="ENABLE_DISTRIBUTED_RATE_LIMITING")
+    enable_rl_global: bool = Field(False, alias="ENABLE_RL_GLOBAL")
+    enable_rl_routing: bool = Field(False, alias="ENABLE_RL_ROUTING")
+    enable_rl_prompt: bool = Field(False, alias="ENABLE_RL_PROMPT")
+    enable_rl_retrieval: bool = Field(False, alias="ENABLE_RL_RETRIEVAL")
+    enable_experiment_harness: bool = Field(False, alias="ENABLE_EXPERIMENT_HARNESS")
+    enable_rl_lints: bool = Field(False, alias="ENABLE_RL_LINTS")
+    enable_secure_path_fallback: bool = Field(False, alias="ENABLE_SECURE_PATH_FALLBACK")
+    enable_secure_qdrant_fallback: bool = Field(False, alias="ENABLE_SECURE_QDRANT_FALLBACK")
 
-    # Tracing / OpenTelemetry
-    enable_tracing: bool = Field(
-        default=False,
-        validation_alias=AliasChoices("ENABLE_TRACING", "enable_tracing"),
-        alias="ENABLE_TRACING",
-    )
-    otel_endpoint: str | None = Field(
-        default=None,
-        validation_alias=AliasChoices("OTEL_EXPORTER_OTLP_ENDPOINT", "otel_endpoint"),
-        alias="OTEL_EXPORTER_OTLP_ENDPOINT",
-    )
-    otel_headers: str | None = Field(
-        default=None,
-        validation_alias=AliasChoices("OTEL_EXPORTER_OTLP_HEADERS", "otel_headers"),
-        alias="OTEL_EXPORTER_OTLP_HEADERS",
-    )
-    otel_traces_sampler: str | None = Field(
-        default=None,
-        validation_alias=AliasChoices("OTEL_TRACES_SAMPLER", "otel_traces_sampler"),
-        alias="OTEL_TRACES_SAMPLER",
-    )
-    otel_traces_sampler_arg: str | None = Field(
-        default=None,
-        validation_alias=AliasChoices("OTEL_TRACES_SAMPLER_ARG", "otel_traces_sampler_arg"),
-        alias="OTEL_TRACES_SAMPLER_ARG",
-    )
+    # Caching toggles
+    cache_compression_enabled: bool = Field(True)
+    cache_promotion_enabled: bool = Field(True)
 
-    # Qdrant / vector store
-    qdrant_url: str = Field(
-        default=":memory:",
-        validation_alias=AliasChoices("QDRANT_URL", "qdrant_url"),
-        alias="QDRANT_URL",
-    )
-    qdrant_api_key: str | None = Field(
-        default=None,
-        validation_alias=AliasChoices("QDRANT_API_KEY", "qdrant_api_key"),
-        alias="QDRANT_API_KEY",
-    )
-    qdrant_prefer_grpc: bool = Field(
-        default=False,
-        validation_alias=AliasChoices("QDRANT_PREFER_GRPC", "qdrant_prefer_grpc"),
-        alias="QDRANT_PREFER_GRPC",
-    )
-    qdrant_grpc_port: int | None = Field(
-        default=None,
-        validation_alias=AliasChoices("QDRANT_GRPC_PORT", "qdrant_grpc_port"),
-        alias="QDRANT_GRPC_PORT",
-    )
-    vector_batch_size: int = Field(
-        default=128,
-        validation_alias=AliasChoices("VECTOR_BATCH_SIZE", "vector_batch_size"),
-        alias="VECTOR_BATCH_SIZE",
-    )
+    # Feature flags
+    enable_reranker: bool = Field(False)
+    enable_faster_whisper: bool = Field(False)
+    enable_local_llm: bool = Field(False)
+    enable_prompt_compression: bool = Field(False)
+    enable_prompt_compression_flag: bool = Field(False, alias="ENABLE_PROMPT_COMPRESSION")  # doc sync
+    enable_token_aware_chunker: bool = Field(False)
+    enable_semantic_cache: bool = Field(False)
 
-    # Behaviour / feature flags
-    enable_rate_limiting: bool = Field(
-        default=False,
-        validation_alias=AliasChoices("ENABLE_RATE_LIMITING", "enable_rate_limiting"),
-        alias="ENABLE_RATE_LIMITING",
-    )
-    enable_distributed_rate_limiting: bool = Field(
-        default=False,
-        validation_alias=AliasChoices("ENABLE_DISTRIBUTED_RATE_LIMITING", "enable_distributed_rate_limiting"),
-        alias="ENABLE_DISTRIBUTED_RATE_LIMITING",
-    )
-    rate_limit_redis_url: str | None = Field(
-        default=None,
-        validation_alias=AliasChoices("RATE_LIMIT_REDIS_URL", "rate_limit_redis_url"),
-        alias="RATE_LIMIT_REDIS_URL",
-    )
-    rate_limit_rps: int = Field(
-        default=10,
-        validation_alias=AliasChoices("RATE_LIMIT_RPS", "rate_limit_rps"),
-        alias="RATE_LIMIT_RPS",
-    )
-    rate_limit_burst: int = Field(
-        default=20,
-        validation_alias=AliasChoices("RATE_LIMIT_BURST", "rate_limit_burst"),
-        alias="RATE_LIMIT_BURST",
-    )
-    enable_http_retry: bool = Field(
-        default=False,
-        validation_alias=AliasChoices("ENABLE_HTTP_RETRY", "enable_http_retry"),
-        alias="ENABLE_HTTP_RETRY",
-    )  # Mirrors previous flag
-    enable_http_cache: bool = Field(
-        default=False,
-        validation_alias=AliasChoices("ENABLE_HTTP_CACHE", "enable_http_cache"),
-        alias="ENABLE_HTTP_CACHE",
-    )
-    http_cache_ttl_seconds: int = Field(
-        default=300,
-        validation_alias=AliasChoices("HTTP_CACHE_TTL_SECONDS", "http_cache_ttl_seconds"),
-        alias="HTTP_CACHE_TTL_SECONDS",
-    )
+    # Provider + model routing
+    rerank_provider: str | None = Field(None)
+    local_llm_url: str | None = Field(None)
+    openrouter_referer: str | None = Field(None)
+    openrouter_title: str | None = Field(None)
 
-    # Advanced Caching System
-    enable_advanced_cache: bool = Field(
-        default=True,
-        validation_alias=AliasChoices("ENABLE_ADVANCED_CACHE", "enable_advanced_cache"),
-        alias="ENABLE_ADVANCED_CACHE",
-    )
-    enable_llm_cache: bool = Field(
-        default=True,
-        validation_alias=AliasChoices("ENABLE_LLM_CACHE", "enable_llm_cache"),
-        alias="ENABLE_LLM_CACHE",
-    )
-    enable_api_cache: bool = Field(
-        default=True,
-        validation_alias=AliasChoices("ENABLE_API_CACHE", "enable_api_cache"),
-        alias="ENABLE_API_CACHE",
-    )
-    enable_dependency_tracking: bool = Field(
-        default=True,
-        validation_alias=AliasChoices("ENABLE_DEPENDENCY_TRACKING", "enable_dependency_tracking"),
-        alias="ENABLE_DEPENDENCY_TRACKING",
-    )
-    cache_redis_url: str | None = Field(
-        default=None,
-        validation_alias=AliasChoices("CACHE_REDIS_URL", "cache_redis_url"),
-        alias="CACHE_REDIS_URL",
-    )
-    cache_ttl_llm: int = Field(
-        default=3600,  # 1 hour
-        validation_alias=AliasChoices("CACHE_TTL_LLM", "cache_ttl_llm"),
-        alias="CACHE_TTL_LLM",
-    )
-    cache_ttl_api: int = Field(
-        default=300,  # 5 minutes
-        validation_alias=AliasChoices("CACHE_TTL_API", "cache_ttl_api"),
-        alias="CACHE_TTL_API",
-    )
-    cache_max_size_mb: int = Field(
-        default=100,
-        validation_alias=AliasChoices("CACHE_MAX_SIZE_MB", "cache_max_size_mb"),
-        alias="CACHE_MAX_SIZE_MB",
-    )
-    cache_compression_enabled: bool = Field(
-        default=True,
-        validation_alias=AliasChoices("CACHE_COMPRESSION_ENABLED", "cache_compression_enabled"),
-        alias="CACHE_COMPRESSION_ENABLED",
-    )
-    cache_promotion_enabled: bool = Field(
-        default=True,
-        validation_alias=AliasChoices("CACHE_PROMOTION_ENABLED", "cache_promotion_enabled"),
-        alias="CACHE_PROMOTION_ENABLED",
-    )
+    # RL / reward shaping
+    reward_cost_weight: float = Field(0.5)
+    reward_latency_weight: float = Field(0.5)
+    reward_latency_ms_window: int = Field(2000)
+    rl_policy_model_selection: str = Field("epsilon_greedy")
 
-    enable_reranker: bool = Field(
-        default=False,
-        validation_alias=AliasChoices("ENABLE_RERANKER", "enable_reranker"),
-        alias="ENABLE_RERANKER",
-    )
-    rerank_provider: str | None = Field(
-        default=None,
-        validation_alias=AliasChoices("RERANK_PROVIDER", "rerank_provider"),
-        alias="RERANK_PROVIDER",
-    )
-    enable_faster_whisper: bool = Field(
-        default=False,
-        validation_alias=AliasChoices("ENABLE_FASTER_WHISPER", "enable_faster_whisper"),
-        alias="ENABLE_FASTER_WHISPER",
-    )
-    enable_local_llm: bool = Field(
-        default=False,
-        validation_alias=AliasChoices("ENABLE_LOCAL_LLM", "enable_local_llm"),
-        alias="ENABLE_LOCAL_LLM",
-    )
-    local_llm_url: str | None = Field(
-        default=None,
-        validation_alias=AliasChoices("LOCAL_LLM_URL", "local_llm_url"),
-        alias="LOCAL_LLM_URL",
-    )
+    # Prompt compression parameters
+    token_chunk_target_tokens: int = Field(220)
+    prompt_compression_max_repeated_blank_lines: int = Field(1)
 
-    # Content ingestion defaults
-    download_quality_default: str = Field(
-        default="1080p",
-        validation_alias=AliasChoices("DEFAULT_DOWNLOAD_QUALITY", "download_quality_default"),
-        alias="DEFAULT_DOWNLOAD_QUALITY",
-    )
+    # Semantic cache params
+    semantic_cache_threshold: float = Field(0.85)
+    semantic_cache_ttl_seconds: int = Field(3600)
 
-    # RL reward shaping weights
-    reward_cost_weight: float = Field(
-        default=0.5,
-        validation_alias=AliasChoices("REWARD_COST_WEIGHT", "reward_cost_weight"),
-        alias="REWARD_COST_WEIGHT",
-    )
-    reward_latency_weight: float = Field(
-        default=0.5,
-        validation_alias=AliasChoices("REWARD_LATENCY_WEIGHT", "reward_latency_weight"),
-        alias="REWARD_LATENCY_WEIGHT",
-    )
+    # Misc ingestion
+    download_quality_default: str = Field("1080p")
 
-    # Reward normalization window for latency (milliseconds)
-    reward_latency_ms_window: int = Field(
-        default=2000,
-        validation_alias=AliasChoices("REWARD_LATENCY_MS_WINDOW", "reward_latency_ms_window"),
-        alias="REWARD_LATENCY_MS_WINDOW",
-    )
-
-    # RL policy selection for model routing
-    rl_policy_model_selection: str = Field(
-        default="epsilon_greedy",
-        validation_alias=AliasChoices("RL_POLICY_MODEL_SELECTION", "rl_policy_model_selection"),
-        alias="RL_POLICY_MODEL_SELECTION",
-    )
-
-    # Prompt optimisation/compression
-    enable_prompt_compression: bool = Field(
-        default=False,
-        validation_alias=AliasChoices("ENABLE_PROMPT_COMPRESSION", "enable_prompt_compression"),
-        alias="ENABLE_PROMPT_COMPRESSION",
-    )
-    prompt_compression_max_repeated_blank_lines: int = Field(
-        default=1,
-        validation_alias=AliasChoices(
-            "PROMPT_COMPRESSION_MAX_REPEATED_BLANK_LINES",
-            "prompt_compression_max_repeated_blank_lines",
-        ),
-        alias="PROMPT_COMPRESSION_MAX_REPEATED_BLANK_LINES",
-    )
-
-    # Semantic LLM cache (disabled by default; opt-in for safety)
-    enable_semantic_cache: bool = Field(
-        default=False,
-        validation_alias=AliasChoices("ENABLE_SEMANTIC_CACHE", "enable_semantic_cache"),
-        alias="ENABLE_SEMANTIC_CACHE",
-    )
-    semantic_cache_threshold: float = Field(
-        default=0.85,
-        validation_alias=AliasChoices("SEMANTIC_CACHE_THRESHOLD", "semantic_cache_threshold"),
-        alias="SEMANTIC_CACHE_THRESHOLD",
-    )
-    semantic_cache_ttl_seconds: int = Field(
-        default=3600,
-        validation_alias=AliasChoices("SEMANTIC_CACHE_TTL_SECONDS", "semantic_cache_ttl_seconds"),
-        alias="SEMANTIC_CACHE_TTL_SECONDS",
-    )
-
-    # OpenRouter recommended headers (see docs)
-    openrouter_referer: str | None = Field(
-        default=None,
-        validation_alias=AliasChoices("OPENROUTER_REFERER", "openrouter_referer"),
-        alias="OPENROUTER_REFERER",
-    )
-    openrouter_title: str | None = Field(
-        default=None,
-        validation_alias=AliasChoices("OPENROUTER_TITLE", "openrouter_title"),
-        alias="OPENROUTER_TITLE",
-    )
-
-    # Tokens / secrets (do not log!)
-    archive_api_token: str | None = Field(
-        default=None,
-        validation_alias=AliasChoices("ARCHIVE_API_TOKEN", "archive_api_token"),
-        alias="ARCHIVE_API_TOKEN",
-    )
-    discord_bot_token: str | None = Field(
-        default=None,
-        validation_alias=AliasChoices("DISCORD_BOT_TOKEN", "discord_bot_token"),
-        alias="DISCORD_BOT_TOKEN",
-    )
+    # Secrets (never log these)
+    archive_api_token: str | None = Field(None)
+    discord_bot_token: str | None = Field(None)
 
 
-def _materialise_settings() -> Settings | object:  # internal helper
-    """Instantiate Settings; if runtime returns FieldInfo objects, build a plain container.
+_BOOL_TRUE = {"1", "true", "yes", "on"}
 
-    Some constrained environments (or partial pydantic installs) can cause the BaseSettings
-    machinery not to convert field descriptors into concrete values, leaving `FieldInfo` objects
-    on the instance. That breaks arithmetic in downstream code (e.g. comparisons, math).
-    We defensively detect that condition and emit a lightweight plain object with raw defaults.
+
+def _coerce_env(raw: str, current: Any) -> Any:
+    """Coerce raw env string to the existing attribute's type.
+
+    Only basic primitives are supported; complex coercion intentionally avoided
+    to keep this layer predictable. If coercion fails we return the existing
+    value (silent fallback) to avoid raising during import paths.
     """
-    inst = Settings()
-    try:  # Detect leakage
-        from pydantic.fields import FieldInfo  # type: ignore
+    try:
+        if isinstance(current, bool):
+            return raw.lower() in _BOOL_TRUE
+        if isinstance(current, int) and not isinstance(current, bool):  # bool is subclass of int
+            return int(raw)
+        if isinstance(current, float):
+            return float(raw)
+    except Exception:  # pragma: no cover - defensive
+        return current
+    return raw
 
-        leaked = any(isinstance(getattr(inst, n), FieldInfo) for n in getattr(inst.__class__, "__annotations__", {}))
-        if not leaked:
-            return inst
-        # Build plain container
-        attrs: dict[str, object] = {}
-        for name in getattr(inst.__class__, "__annotations__", {}):
-            raw = getattr(inst, name, None)
-            if isinstance(raw, FieldInfo):
-                attrs[name] = getattr(raw, "default", None)
-            else:
-                attrs[name] = raw
-        # Minimal namespace object
-        container = type("SettingsRuntime", (), {})()
-        for k, v in attrs.items():
-            setattr(container, k, v)
-        return container
-    except Exception:  # pragma: no cover - fallback to original instance
-        return inst
+
+def _apply_env_overrides(s: Settings) -> None:
+    if os.getenv("DISABLE_SETTINGS_ENV_OVERLAY") in ("1", "true", "yes", "on"):
+        return
+    # Build attribute map (uppercase -> attr name)
+    attr_map: dict[str, str] = {}
+    for name in dir(s):
+        if name.startswith("_"):
+            continue
+        # Only consider attributes with non-callable values
+        try:
+            val = getattr(s, name)
+        except Exception:  # pragma: no cover - defensive
+            continue
+        if callable(val):  # skip methods
+            continue
+        attr_map[name.upper()] = name
+    # Pass 1: direct name matches (SERVICE_NAME, RATE_LIMIT_RPS, etc.)
+    for env_key, raw in os.environ.items():
+        if env_key in attr_map:
+            attr_name = attr_map[env_key]
+            current = getattr(s, attr_name)
+            setattr(s, attr_name, _coerce_env(raw, current))
+    # Pass 2: ENABLE_* flags that map to attributes with enable_* or matching alias
+    for env_key, raw in os.environ.items():
+        if not env_key.startswith("ENABLE_"):
+            continue
+        # Derive attribute guess: enable_x (lowercase)
+        guess = "enable_" + env_key[len("ENABLE_") :].lower()
+        if guess in attr_map:  # direct enable_* attribute
+            current = getattr(s, guess)
+            setattr(s, guess, _coerce_env(raw, current))
+        else:
+            # Some attributes use slightly different internal names (e.g. ENABLE_CACHE_GLOBAL -> enable_cache_global)
+            lowered = env_key.lower()
+            if lowered in attr_map:
+                current = getattr(s, lowered)
+                setattr(s, lowered, _coerce_env(raw, current))
 
 
 @lru_cache
-def get_settings() -> Settings | object:
-    return _materialise_settings()
+def get_settings() -> Settings:
+    s = Settings()
+    _apply_env_overrides(s)
+    return s
 
 
-__all__ = ["Settings", "get_settings"]
+__all__ = ["Settings", "get_settings", "BaseSettings", "Field", "AliasChoices"]

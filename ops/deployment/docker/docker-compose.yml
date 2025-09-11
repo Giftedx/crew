@@ -77,7 +77,7 @@ volumes:
   postgres_data:
 
 # Usage Examples:
-# 
+#
 # Start only Qdrant (recommended for development):
 #   docker-compose up -d qdrant
 #

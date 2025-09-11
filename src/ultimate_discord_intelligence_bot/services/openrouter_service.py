@@ -12,14 +12,14 @@ import copy
 import logging
 import os as _os  # used for dynamic offline detection
 import time
-from collections.abc import Callable, Mapping
+from collections.abc import Mapping
 from typing import Any
 
 # Optional dependencies (graceful degradation if unavailable)
 try:  # pragma: no cover - optional distributed cache
     from core.cache.enhanced_redis_cache import DistributedLLMCache
 except Exception:  # pragma: no cover
-    DistributedLLMCache = None  # type: ignore
+    DistributedLLMCache = None
 
 from core.http_utils import (
     REQUEST_TIMEOUT_SECONDS,
@@ -34,7 +34,7 @@ try:
     from core.settings import get_settings
 except Exception:  # pragma: no cover - fallback when pydantic/settings unavailable
 
-    def get_settings():  # type: ignore
+    def get_settings() -> Any:  # minimal shim (return object with expected attrs)
         class _S:  # minimal shim for tests
             reward_cost_weight = 0.5
             reward_latency_weight = 0.5
@@ -80,12 +80,10 @@ try:
 except Exception as _sc_exc:  # pragma: no cover - optional feature
     _semantic_cache_factory_err = str(_sc_exc)
 
-# Optional local vLLM adapter (placed after all imports to satisfy E402)
-_VLLMAdapterCtor: Any | None = None
-_is_vllm_available: Callable[[], bool] | None
+# Optional local vLLM adapter (placed after all imports to satisfy E402). Define aliases once.
 try:  # pragma: no cover - optional local vLLM adapter
-    from core.vllm_service import is_vllm_available as _is_vllm_available
-    from core.vllm_service import vLLMOpenRouterAdapter as _VLLMAdapterCtor
+    from core.vllm_service import is_vllm_available as _is_vllm_available  # type: ignore[unused-ignore]
+    from core.vllm_service import vLLMOpenRouterAdapter as _VLLMAdapterCtor  # type: ignore[unused-ignore]
 except Exception:  # pragma: no cover
     _is_vllm_available = None
     _VLLMAdapterCtor = None
@@ -537,7 +535,7 @@ class OpenRouterService:
             latency_ms = (time.perf_counter() - start) * 1000
             tokens_out = self.prompt_engine.count_tokens(response, chosen)
             settings = get_settings()
-            rl = {}
+            rl: dict[str, float] = {}
             if self.tenant_registry:
                 ctx_t = ctx_effective
                 rl = self.tenant_registry.get_rl_overrides(ctx_t) if ctx_t else {}
@@ -731,7 +729,7 @@ class OpenRouterService:
             title = getattr(settings, "openrouter_title", None) or _os.getenv("OPENROUTER_TITLE")
             if title:
                 headers["X-Title"] = str(title)
-            resp = None  # type: ignore[assignment]
+            resp = None
             if is_retry_enabled():
                 try:
                     resp = http_request_with_retry(

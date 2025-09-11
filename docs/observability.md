@@ -247,3 +247,71 @@ Otherwise the per‑call overhead + metric cardinality is not justified.
 
 - Consider a lightweight decorator to wrap common counter + duration logic (behind a feature flag to avoid premature abstraction).
 - Expand guard to optionally warn (not fail) about dict‑return tools that still import `StepResult` but do not use it (tech debt visibility).
+
+## Segmentation & Embedding Metrics (new)
+
+The transcript segmentation and embedding pipeline now emit dedicated low‑cardinality metrics:
+
+- `segment_chunk_size_chars{tenant,workspace}` (histogram) — distribution of final chunk sizes in characters.
+- `segment_chunk_size_tokens{tenant,workspace}` (histogram) — approximate distribution of chunk sizes in tokens (heuristic: 4 chars ≈ 1 token). Emitted only when token‑aware mode is enabled.
+- `segment_chunk_merges_total{tenant,workspace}` — number of flush/merge operations performed during segmentation (helps tune `max_chars` / target tokens).
+- `embed_deduplicates_skipped_total{tenant,workspace}` — count of duplicate chunk texts skipped before embedding (cost avoidance signal).
+
+Token‑aware chunking is gated by `ENABLE_TOKEN_AWARE_CHUNKER=1` and uses `TOKEN_CHUNK_TARGET_TOKENS` (default 220) to derive an internal `max_chars` (`target_tokens / 0.25`). Overlap logic preserves context while keeping per‑chunk token budgets bounded.
+
+Example PromQL panels:
+
+```promql
+histogram_quantile(0.95, sum by (le)(rate(segment_chunk_size_chars_bucket[15m])))
+sum(increase(segment_chunk_merges_total[1h])) by (tenant,workspace)
+sum(increase(embed_deduplicates_skipped_total[1h])) by (tenant,workspace)
+```
+
+Use merges + size distributions to iteratively right‑size token targets: excessive merges or very large p95 suggests lowering `TOKEN_CHUNK_TARGET_TOKENS`; no merges and very small p95 may indicate under‑utilisation.
+
+## Degradation Reporter Metrics (new)
+
+Feature‑flag: `ENABLE_DEGRADATION_REPORTER=1`
+
+When enabled, structured fallback / partial failure signals record:
+
+- `degradation_events_total{tenant,workspace,component,event_type,severity}` — categorical count of degradation/fallback incidents.
+- `degradation_impact_latency_ms{tenant,workspace,component,event_type}` (histogram) — attributed added latency (when callers pass `added_latency_ms`).
+
+An in‑memory ring buffer (default 500 events) retains recent detail strings without inflating metric label cardinality. Access via:
+
+```python
+from core.degradation_reporter import get_degradation_reporter
+events = get_degradation_reporter().snapshot()
+```
+
+Grafana ideas:
+
+```promql
+sum by (component,event_type)(increase(degradation_events_total[30m]))
+histogram_quantile(0.90, sum by (le,component)(rate(degradation_impact_latency_ms_bucket[15m])))
+```
+
+## HTTP Negative Caching (new)
+
+Feature‑flag: `ENABLE_HTTP_NEGATIVE_CACHE=1` (requires also `enable_http_cache` setting true)
+
+Adds in‑memory negative caching in `cached_get` for 404 and 429 responses:
+
+- 404: cached for `min(60s, http_cache_ttl * 0.2)`
+- 429: respects `Retry-After` header (delta seconds or HTTP date); falls back to same heuristic when absent/malformed.
+
+Synthetic cache hits return status 404 with empty text to short‑circuit upstream calls, reducing load during transient upstream unavailability or rate limiting.
+
+Operational tip: Track reduction in outbound calls by comparing request counters before/after enabling flag, and correlate with upstream 404/429 rates.
+
+## Summary of New Feature Flags
+
+| Flag | Purpose | Default |
+|------|---------|---------|
+| `ENABLE_TOKEN_AWARE_CHUNKER` | Derive chunk size from token target rather than static char count | off |
+| `TOKEN_CHUNK_TARGET_TOKENS` | Target tokens per chunk (heuristic conversion to chars) | 220 |
+| `ENABLE_DEGRADATION_REPORTER` | Enable structured degradation event recording + metrics | off |
+| `ENABLE_HTTP_NEGATIVE_CACHE` | Cache 404/429 responses to reduce redundant calls | off |
+
+All flags are environment variable toggles; for staging validation enable individually and observe metrics before production rollout.

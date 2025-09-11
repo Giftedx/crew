@@ -128,13 +128,13 @@ app = FastAPI()
 @app.get("/health")
 async def health_check():
     settings = get_settings()
-    
+
     health_status = {
         "status": "healthy",
         "timestamp": datetime.utcnow().isoformat(),
         "services": {}
     }
-    
+
     # Check Qdrant
     try:
         client = QdrantClient(url=settings.qdrant_url)
@@ -143,7 +143,7 @@ async def health_check():
     except Exception as e:
         health_status["services"]["qdrant"] = f"unhealthy: {e}"
         health_status["status"] = "degraded"
-    
+
     return health_status
 ```
 
@@ -169,7 +169,7 @@ groups:
       severity: critical
     annotations:
       summary: Discord bot is down
-      
+
   - alert: HighErrorRate
     expr: rate(http_requests_total{status=~"5.."}[5m]) > 0.1
     for: 2m
@@ -205,7 +205,7 @@ def process_content(content):
     span = trace.get_current_span()
     span.set_attribute("content.length", len(content))
     span.set_attribute("content.type", "video")
-    
+
     # Process content
     return result
 ```
@@ -225,13 +225,13 @@ def monitor_performance(func):
         try:
             result = await func(*args, **kwargs)
             duration = time.time() - start_time
-            
+
             # Record metrics
             request_duration.labels(
                 method=func.__name__,
                 status="success"
             ).observe(duration)
-            
+
             return result
         except Exception as e:
             duration = time.time() - start_time
@@ -265,7 +265,7 @@ def update_system_metrics():
 ### Grafana Dashboard Requirements
 All services must have corresponding Grafana dashboards showing:
 - Service availability and uptime
-- Request rate and response times  
+- Request rate and response times
 - Error rates and success rates
 - Resource utilization (CPU, memory, disk)
 - Business metrics (commands processed, users served)

@@ -1,0 +1,110 @@
+pyproject.toml: toml config file contains a [[tool.mypy.overrides]] section, but no module to override was specified.
+src/ultimate_discord_intelligence_bot/tools/golden/mk_record.py:10: error: Library stubs not installed for "jsonschema"  [import-untyped]
+src/ultimate_discord_intelligence_bot/tools/golden/lint_golden.py:10: error: Library stubs not installed for "jsonschema"  [import-untyped]
+src/ultimate_discord_intelligence_bot/services/eval_harness.py:12: error: Library stubs not installed for "jsonschema"  [import-untyped]
+src/obs/enhanced_monitoring.py:21: error: Library stubs not installed for "psutil"  [import-untyped]
+src/obs/enhanced_monitoring.py:21: note: Hint: "python3 -m pip install types-psutil"
+src/obs/enhanced_monitoring.py:21: note: (or run "mypy --install-types" to install all missing stub packages)
+src/obs/enhanced_monitoring.py:180: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]
+src/obs/enhanced_monitoring.py:181: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]
+src/obs/enhanced_monitoring.py:182: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]
+src/obs/enhanced_monitoring.py:183: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]
+src/obs/enhanced_monitoring.py:416: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]
+src/obs/enhanced_monitoring.py:417: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]
+src/obs/enhanced_monitoring.py:421: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]
+src/obs/cache_monitor.py:234: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]
+src/core/db_optimizer.py:257: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]
+src/core/circuit_breaker.py:368: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]
+src/ultimate_discord_intelligence_bot/plugins/runtime/executor.py:13: error: Library stubs not installed for "jsonschema"  [import-untyped]
+src/ultimate_discord_intelligence_bot/plugins/runtime/executor.py:13: note: Hint: "python3 -m pip install types-jsonschema"
+src/fastapi/testclient.py:152: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]
+src/ultimate_discord_intelligence_bot/tools/text_analysis_tool.py:26: error: Skipping analyzing "nltk": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+src/ultimate_discord_intelligence_bot/tools/text_analysis_tool.py:27: error: Skipping analyzing "nltk.corpus": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+src/ultimate_discord_intelligence_bot/tools/text_analysis_tool.py:28: error: Skipping analyzing "nltk.sentiment": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+src/ultimate_discord_intelligence_bot/tools/text_analysis_tool.py:29: error: Skipping analyzing "nltk.tokenize": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+src/ultimate_discord_intelligence_bot/tools/text_analysis_tool.py:70: error: Skipping analyzing "nltk.sentiment.vader": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+src/server/middleware_shim.py:120: error: Cannot assign to a method  [method-assign]
+src/server/rate_limit.py:59: error: Unexpected keyword argument "receive" for "Request"  [call-arg]
+src/server/rate_limit.py:59: note: Error code "call-arg" not covered by "type: ignore" comment
+src/server/rate_limit.py:68: error: "Response" not callable  [operator]
+src/server/rate_limit.py:68: note: Error code "operator" not covered by "type: ignore" comment
+src/server/rate_limit.py:96: error: Argument 1 of "dispatch" is incompatible with supertype "BaseHTTPMiddleware"; supertype defines the argument type as "Request"  [override]
+src/server/rate_limit.py:96: note: This violates the Liskov substitution principle
+src/server/rate_limit.py:96: note: See https://mypy.readthedocs.io/en/stable/common_issues.html#incompatible-overrides
+src/server/rate_limit.py:97: error: Argument 2 of "dispatch" is incompatible with supertype "BaseHTTPMiddleware"; supertype defines the argument type as "Callable[[Request], Awaitable[Response]]"  [override]
+src/server/rate_limit.py:97: note: This violates the Liskov substitution principle
+src/server/rate_limit.py:97: note: See https://mypy.readthedocs.io/en/stable/common_issues.html#incompatible-overrides
+src/core/settings.py:66: error: Name "_AliasChoices" already defined (possibly by an import)  [no-redef]
+src/core/settings.py:77: error: Name "B" already defined on line 46  [no-redef]
+src/core/settings.py:77: note: Error code "no-redef" not covered by "type: ignore" comment
+src/core/settings.py:115: error: Name "_resolved.B" is not defined  [name-defined]
+src/core/settings.py:115: note: Error code "name-defined" not covered by "type: ignore" comment
+src/core/secure_config.py:27: error: Name "BaseSettings" already defined (possibly by an import)  [no-redef]
+src/core/secure_config.py:27: note: Error code "no-redef" not covered by "type: ignore" comment
+src/core/secure_config.py:32: error: Cannot assign to a type  [misc]
+src/core/secure_config.py:32: note: Error code "misc" not covered by "type: ignore" comment
+src/core/secure_config.py:37: error: Name "BaseSettings" already defined (possibly by an import)  [no-redef]
+src/core/secure_config.py:40: error: Name "SettingsConfigDict" already defined (possibly by an import)  [no-redef]
+src/core/secure_config.py:43: error: Name "AliasChoices" already defined (possibly by an import)  [no-redef]
+src/core/secure_config.py:47: error: Name "_PydField" already defined (possibly by an import)  [no-redef]
+src/memory/embeddings.py:20: error: Cannot assign to a type  [misc]
+src/memory/embeddings.py:20: error: Incompatible types in assignment (expression has type "None", variable has type "type[RedisCache]")  [assignment]
+src/core/vllm_service.py:19: error: Cannot find implementation or library stub for module named "vllm"  [import-not-found]
+src/core/vllm_service.py:20: error: Cannot find implementation or library stub for module named "vllm.engine.arg_utils"  [import-not-found]
+src/core/vllm_service.py:21: error: Cannot find implementation or library stub for module named "vllm.engine.async_llm_engine"  [import-not-found]
+src/core/http_utils.py:61: error: Cannot assign to a type  [misc]
+src/core/http_utils.py:61: error: Incompatible types in assignment (expression has type "None", variable has type "type[RedisCache]")  [assignment]
+src/core/http_utils.py:120: error: Incompatible types in assignment (expression has type "_NoopTraceAPI", variable has type Module)  [assignment]
+src/core/http_utils.py:653: error: All conditional function variants must have identical signatures  [misc]
+src/core/http_utils.py:653: note: Original:
+src/core/http_utils.py:653: note:     def current_tenant() -> TenantContext | None
+src/core/http_utils.py:653: note: Redefinition:
+src/core/http_utils.py:653: note:     def current_tenant() -> Any
+src/core/cache/semantic_cache.py:22: error: Skipping analyzing "gptcache": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+src/core/cache/semantic_cache.py:23: error: Skipping analyzing "gptcache.embedding.openai": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+src/core/cache/semantic_cache.py:24: error: Skipping analyzing "gptcache.embedding.string": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+src/core/cache/semantic_cache.py:25: error: Skipping analyzing "gptcache.manager": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+src/core/cache/semantic_cache.py:26: error: Skipping analyzing "gptcache.manager.scalar_data.sql_storage": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+src/core/cache/semantic_cache.py:27: error: Skipping analyzing "gptcache.manager.vector_data.faiss": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+src/core/cache/semantic_cache.py:28: error: Skipping analyzing "gptcache.processor.post": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+src/core/cache/semantic_cache.py:29: error: Skipping analyzing "gptcache.processor.pre": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+src/core/cache/semantic_cache.py:30: error: Skipping analyzing "gptcache.similarity_evaluation.distance": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+src/analysis/transcribe.py:28: error: Incompatible types in assignment (expression has type "Callable[[], _FallbackConfig]", variable has type "Callable[[], SecureConfig]")  [assignment]
+src/analysis/transcribe.py:61: error: Skipping analyzing "faster_whisper": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+src/analysis/transcribe.py:61: note: See https://mypy.readthedocs.io/en/stable/running_mypy.html#missing-imports
+src/analysis/transcribe.py:73: error: Cannot find implementation or library stub for module named "whisper"  [import-not-found]
+src/ultimate_discord_intelligence_bot/tools/yt_dlp_download_tool.py:238: error: Skipping analyzing "yt_dlp": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+src/ultimate_discord_intelligence_bot/services/learning_engine.py:172: error: Signature of "recommend" incompatible with supertype "LearningEngine"  [override]
+src/ultimate_discord_intelligence_bot/services/learning_engine.py:172: note:      Superclass:
+src/ultimate_discord_intelligence_bot/services/learning_engine.py:172: note:          def recommend(self, domain: str, context: dict[str, Any], candidates: Sequence[Any]) -> Any
+src/ultimate_discord_intelligence_bot/services/learning_engine.py:172: note:      Subclass:
+src/ultimate_discord_intelligence_bot/services/learning_engine.py:172: note:          def recommend(self, policy_id: str, candidates: Sequence[str] | None = ...) -> str
+src/ultimate_discord_intelligence_bot/services/cache.py:13: error: Cannot assign to a type  [misc]
+src/ultimate_discord_intelligence_bot/services/cache.py:13: error: Incompatible types in assignment (expression has type "None", variable has type "type[RedisCache]")  [assignment]
+src/core/cache/multi_level_cache.py:31: error: Incompatible types in assignment (expression has type "None", variable has type "Callable[[str, bool, KwArg(Any)], Coroutine[Any, Any, CacheMonitor]]")  [assignment]
+src/core/cache/multi_level_cache.py:41: error: Incompatible types in assignment (expression has type "None", variable has type "Callable[[], DependencyTracker]")  [assignment]
+src/core/cache/multi_level_cache.py:42: error: Incompatible types in assignment (expression has type "None", variable has type "Callable[[], InvalidationEngine]")  [assignment]
+src/core/cache/cache_warmer.py:412: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]
+src/memory/qdrant_provider.py:37: error: Incompatible types in assignment (expression has type "_SettingsMod", variable has type Module)  [assignment]
+src/memory/qdrant_provider.py:68: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]
+src/memory/qdrant_provider.py:84: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]
+src/memory/qdrant_provider.py:85: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]
+src/core/cache/llm_cache_advanced.py:235: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]
+src/obs/langsmith_integration.py:224: error: Incompatible types in assignment (expression has type "RunTree", target has type "float | dict[str, Any] | str | None")  [assignment]
+src/obs/enhanced_langsmith_integration.py:44: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]
+src/memory/vector_store.py:13: error: Incompatible redefinition (redefinition with type "Callable[[], Any]", original type "_lru_cache_wrapper[object]")  [misc]
+src/ultimate_discord_intelligence_bot/services/prompt_engine.py:20: error: Incompatible redefinition (redefinition with type "Callable[[], Any]", original type "_lru_cache_wrapper[object]")  [misc]
+src/ultimate_discord_intelligence_bot/services/prompt_engine.py:39: error: Cannot find implementation or library stub for module named "transformers"  [import-not-found]
+src/ultimate_discord_intelligence_bot/tools/debate_command_tool.py:94: error: Argument 1 to "from_dict" of "StepResult" has incompatible type "StepResult"; expected "dict[str, Any]"  [arg-type]
+src/ultimate_discord_intelligence_bot/services/openrouter_service.py:22: error: Cannot assign to a type  [misc]
+src/ultimate_discord_intelligence_bot/services/openrouter_service.py:22: error: Incompatible types in assignment (expression has type "None", variable has type "type[DistributedLLMCache]")  [assignment]
+src/ultimate_discord_intelligence_bot/services/openrouter_service.py:37: error: Incompatible redefinition (redefinition with type "Callable[[], Any]", original type "_lru_cache_wrapper[object]")  [misc]
+src/ultimate_discord_intelligence_bot/services/openrouter_service.py:88: error: Incompatible types in assignment (expression has type "None", variable has type "Callable[[], bool]")  [assignment]
+src/ultimate_discord_intelligence_bot/services/openrouter_service.py:89: error: Cannot assign to a type  [misc]
+src/ultimate_discord_intelligence_bot/services/openrouter_service.py:89: error: Incompatible types in assignment (expression has type "None", variable has type "type[vLLMOpenRouterAdapter]")  [assignment]
+src/ultimate_discord_intelligence_bot/services/openrouter_service.py:732: error: Incompatible types in assignment (expression has type "None", variable has type "ResponseLike")  [assignment]
+src/core/structured_llm_service.py:25: error: Skipping analyzing "instructor": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+src/ultimate_discord_intelligence_bot/crew.py:10: error: Skipping analyzing "crewai": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+src/ultimate_discord_intelligence_bot/crew.py:11: error: Skipping analyzing "crewai.agents.agent_builder.base_agent": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+src/ultimate_discord_intelligence_bot/crew.py:12: error: Skipping analyzing "crewai.project": module is installed, but missing library stubs or py.typed marker  [import-untyped]
+Found 69 errors in 27 files (checked 264 source files)

@@ -416,6 +416,44 @@ _METRIC_SPECS: list[tuple[Callable[..., MetricLike], str, str, list[str]]] = [
         "Compression effectiveness ratio (compressed/original)",
         ["tenant", "workspace", "cache_name"],
     ),
+    # Segmenter & embedding instrumentation (low cardinality)
+    (
+        HistogramFactory,
+        "segment_chunk_size_chars",
+        "Distribution of segment chunk sizes (characters)",
+        ["tenant", "workspace"],
+    ),
+    (
+        HistogramFactory,
+        "segment_chunk_size_tokens",
+        "Approximate distribution of segment chunk sizes (tokens, heuristic)",
+        ["tenant", "workspace"],
+    ),
+    (
+        CounterFactory,
+        "segment_chunk_merges_total",
+        "Number of chunk merges/flushes performed during segmentation",
+        ["tenant", "workspace"],
+    ),
+    (
+        CounterFactory,
+        "embed_deduplicates_skipped_total",
+        "Number of duplicate text segments skipped before embedding",
+        ["tenant", "workspace"],
+    ),
+    # Degradation / fallback reporting metrics (flag gated usage)
+    (
+        CounterFactory,
+        "degradation_events_total",
+        "Count of recorded degradation events (fallbacks, timeouts, partial failures)",
+        ["tenant", "workspace", "component", "event_type", "severity"],
+    ),
+    (
+        HistogramFactory,
+        "degradation_impact_latency_ms",
+        "Observed added latency (ms) attributed to degradation events when measurable",
+        ["tenant", "workspace", "component", "event_type"],
+    ),
 ]
 
 
@@ -516,6 +554,12 @@ def _instantiate_metrics() -> list[MetricLike]:
     CACHE_MEMORY_USAGE_RATIO,
     CACHE_OPERATION_LATENCY,
     CACHE_COMPRESSION_RATIO,
+    SEGMENT_CHUNK_SIZE_CHARS,
+    SEGMENT_CHUNK_SIZE_TOKENS,
+    SEGMENT_CHUNK_MERGES,
+    EMBED_DEDUPLICATES_SKIPPED,
+    DEGRADATION_EVENTS,
+    DEGRADATION_IMPACT_LATENCY,
 ) = _instantiate_metrics()
 
 _COLLECTORS: list[MetricLike] = [
@@ -577,6 +621,12 @@ _COLLECTORS: list[MetricLike] = [
     CACHE_MEMORY_USAGE_RATIO,
     CACHE_OPERATION_LATENCY,
     CACHE_COMPRESSION_RATIO,
+    SEGMENT_CHUNK_SIZE_CHARS,
+    SEGMENT_CHUNK_SIZE_TOKENS,
+    SEGMENT_CHUNK_MERGES,
+    EMBED_DEDUPLICATES_SKIPPED,
+    DEGRADATION_EVENTS,
+    DEGRADATION_IMPACT_LATENCY,
 ]
 
 
@@ -593,7 +643,7 @@ def reset() -> None:
     global HTTP_REQUEST_LATENCY, HTTP_REQUEST_COUNT, RATE_LIMIT_REJECTIONS, HTTP_RETRY_ATTEMPTS, HTTP_RETRY_GIVEUPS, TENANCY_FALLBACKS  # noqa: PLW0603
     global PIPELINE_REQUESTS, PIPELINE_STEPS_COMPLETED, PIPELINE_STEPS_FAILED, PIPELINE_STEPS_SKIPPED, PIPELINE_DURATION  # noqa: PLW0603
     global CIRCUIT_BREAKER_REQUESTS, CIRCUIT_BREAKER_STATE, INGEST_TRANSCRIPT_FALLBACKS, INGEST_MISSING_ID_FALLBACKS, SCHEDULER_ENQUEUED, SCHEDULER_PROCESSED, SCHEDULER_ERRORS, SCHEDULER_QUEUE_BACKLOG, SYSTEM_HEALTH_SCORE, COST_PER_INTERACTION  # noqa: PLW0603
-    global CACHE_HITS, CACHE_MISSES, CACHE_PROMOTIONS, CACHE_DEMOTIONS, CACHE_EVICTIONS, CACHE_COMPRESSIONS, CACHE_DECOMPRESSIONS, CACHE_ERRORS, CACHE_SIZE_BYTES, CACHE_ENTRIES_COUNT, CACHE_HIT_RATE_RATIO, CACHE_MEMORY_USAGE_RATIO, CACHE_OPERATION_LATENCY, CACHE_COMPRESSION_RATIO, _COLLECTORS  # noqa: PLW0603
+    global CACHE_HITS, CACHE_MISSES, CACHE_PROMOTIONS, CACHE_DEMOTIONS, CACHE_EVICTIONS, CACHE_COMPRESSIONS, CACHE_DECOMPRESSIONS, CACHE_ERRORS, CACHE_SIZE_BYTES, CACHE_ENTRIES_COUNT, CACHE_HIT_RATE_RATIO, CACHE_MEMORY_USAGE_RATIO, CACHE_OPERATION_LATENCY, CACHE_COMPRESSION_RATIO, SEGMENT_CHUNK_SIZE_CHARS, SEGMENT_CHUNK_SIZE_TOKENS, SEGMENT_CHUNK_MERGES, EMBED_DEDUPLICATES_SKIPPED, DEGRADATION_EVENTS, DEGRADATION_IMPACT_LATENCY, _COLLECTORS  # noqa: PLW0603
     if PROMETHEUS_AVAILABLE:
         # Attempt to unregister existing collectors; failures are logged but not fatal.
         to_unreg = list(_COLLECTORS)
@@ -664,6 +714,12 @@ def reset() -> None:
         CACHE_MEMORY_USAGE_RATIO,
         CACHE_OPERATION_LATENCY,
         CACHE_COMPRESSION_RATIO,
+        SEGMENT_CHUNK_SIZE_CHARS,
+        SEGMENT_CHUNK_SIZE_TOKENS,
+        SEGMENT_CHUNK_MERGES,
+        EMBED_DEDUPLICATES_SKIPPED,
+        DEGRADATION_EVENTS,
+        DEGRADATION_IMPACT_LATENCY,
     ) = objs
     _COLLECTORS = list(objs)
 
@@ -743,6 +799,12 @@ __all__ = [
     "CACHE_MEMORY_USAGE_RATIO",
     "CACHE_OPERATION_LATENCY",
     "CACHE_COMPRESSION_RATIO",
+    "SEGMENT_CHUNK_SIZE_CHARS",
+    "SEGMENT_CHUNK_SIZE_TOKENS",
+    "SEGMENT_CHUNK_MERGES",
+    "EMBED_DEDUPLICATES_SKIPPED",
+    "DEGRADATION_EVENTS",
+    "DEGRADATION_IMPACT_LATENCY",
     "reset",
     "render",
     "registry",

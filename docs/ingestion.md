@@ -8,7 +8,7 @@ and pushing processed chunks into a Qdrant vector store for later retrieval.
 ## Supported Platforms
 
 - **YouTube** - Videos, channels, playlists with captions and metadata
-- **Twitch** - Streams, clips, and chat integration  
+- **Twitch** - Streams, clips, and chat integration
 - **TikTok** - Short-form videos with audio transcription
 - **Multi-platform** - Unified dispatcher for URL routing
 
@@ -23,7 +23,7 @@ Examples:
 # YouTube video
 python -m ingest https://youtu.be/dummy --tenant default --workspace main
 
-# Twitch clip  
+# Twitch clip
 python -m ingest https://clips.twitch.tv/dummy --tenant default --workspace main
 
 # TikTok video (including short links)
@@ -40,7 +40,7 @@ python -m ingest https://vm.tiktok.com/dummy --tenant default --workspace main
 
 ### Analysis Pipeline
 - **Transcript segmentation** - Chunks content using `analysis.segmenter`
-- **Topic extraction** - Identifies key topics with `analysis.topics`  
+- **Topic extraction** - Identifies key topics with `analysis.topics`
 - **Claim extraction** - Extracts factual claims for verification
 - **Sentiment analysis** - Analyzes emotional tone
 
@@ -93,16 +93,16 @@ platforms:
     quality: best              # Video quality preference
     extract_subtitles: true    # Download captions
     max_duration: 7200         # 2 hours max
-    
+
   twitch:
     quality: source           # Source quality preferred
     extract_chat: true        # Include chat messages
     max_clips: 50            # Clip limit per stream
-    
+
   tiktok:
     quality: best
     extract_audio: true       # Audio for transcription
-    
+
 processing:
   chunk_size: 800             # Characters per chunk
   chunk_overlap: 200          # Overlap between chunks
@@ -124,16 +124,16 @@ from scheduler import Scheduler, PriorityQueue
 from ingest.sources.youtube import YouTubeConnector
 
 sched.add_watch(
-    tenant='default', 
-    workspace='main', 
-    source_type='youtube', 
+    tenant='default',
+    workspace='main',
+    source_type='youtube',
     handle='channel_id'
 )
 ```
 
 ### Quality Control
 - Content verification before storage
-- Duplicate detection and deduplication  
+- Duplicate detection and deduplication
 - Policy compliance checking
 - Error recovery and retries
 

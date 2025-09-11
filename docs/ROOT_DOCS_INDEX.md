@@ -40,6 +40,7 @@ All root-level markdown files have been successfully migrated to appropriate sub
 docs/
 ├── agents/           # Agent and repository guidelines
 ├── architecture/     # System architecture and design
+├── types_and_stubs.md # Type checking & stub strategy
 ├── dev_assistants.md # AI assistant guidance (consolidated)
 ├── history/          # Historical docs and implementation summaries
 ├── operations/       # Development workflow and operations

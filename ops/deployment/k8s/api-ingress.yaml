@@ -17,4 +17,3 @@ spec:
                 name: udi-api
                 port:
                   number: 8000
-

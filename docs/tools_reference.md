@@ -15,7 +15,7 @@ Detects logical fallacies in text using sophisticated pattern matching and heuri
 **Features:**
 
 - 17+ fallacy types including ad hominem, straw man, false dilemma, slippery slope
-- Keyword-based detection (`KEYWORD_FALLACIES`)  
+- Keyword-based detection (`KEYWORD_FALLACIES`)
 - Regex pattern matching (`PATTERN_FALLACIES`)
 - Confidence scoring and detailed explanations
 - Context-aware analysis
@@ -50,7 +50,7 @@ result = tool._run("The Earth is round and orbits the Sun.")
 # Returns: {"status": "success", "claims": ["The Earth is round", "Earth orbits the Sun"]}
 ```
 
-### Perspective Synthesizer Tool  
+### Perspective Synthesizer Tool
 
 **File:** `src/ultimate_discord_intelligence_bot/tools/perspective_synthesizer_tool.py`
 
@@ -66,7 +66,7 @@ Combines multiple search results into a coherent, unified summary using LLM proc
 **Dependencies:**
 
 - `MemoryService` - Retrieves relevant memories
-- `OpenRouterService` - LLM processing  
+- `OpenRouterService` - LLM processing
 - `PromptEngine` - Prompt construction
 
 ### Steelman Argument Tool
@@ -232,7 +232,7 @@ Enhanced YouTube-specific content downloader with additional features.
 
 ## Discord Integration Tools
 
-### Discord Post Tool  
+### Discord Post Tool
 
 **File:** `src/ultimate_discord_intelligence_bot/tools/discord_post_tool.py`
 

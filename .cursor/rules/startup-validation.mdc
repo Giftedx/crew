@@ -13,13 +13,13 @@ All applications must follow this startup validation pattern established in [sta
 def check_environment() -> bool:
     """Check if required environment variables are set."""
     load_dotenv()
-    
+
     required_vars = {
         "DISCORD_BOT_TOKEN": "Discord bot token",
         "OPENAI_API_KEY": "OpenAI API key (or OPENROUTER_API_KEY)",
         "QDRANT_URL": "Qdrant vector database URL",
     }
-    
+
     missing = []
     for var, description in required_vars.items():
         # Handle alternative API keys
@@ -28,13 +28,13 @@ def check_environment() -> bool:
                 missing.append(f"{var} (or OPENROUTER_API_KEY): {description}")
         elif not os.getenv(var):
             missing.append(f"{var}: {description}")
-    
+
     if missing:
         print("❌ Missing required environment variables:")
         for var in missing:
             print(f"   - {var}")
         return False
-    
+
     return True
 ```
 
@@ -42,7 +42,7 @@ def check_environment() -> bool:
 ```python
 def validate_services() -> bool:
     """Validate connectivity to external services."""
-    
+
     # Test Qdrant connection
     try:
         from qdrant_client import QdrantClient
@@ -52,7 +52,7 @@ def validate_services() -> bool:
     except Exception as e:
         print(f"❌ Qdrant connection failed: {e}")
         return False
-    
+
     # Test Discord token
     try:
         import discord
@@ -65,7 +65,7 @@ def validate_services() -> bool:
     except Exception as e:
         print(f"❌ Discord validation failed: {e}")
         return False
-    
+
     return True
 ```
 
@@ -74,19 +74,19 @@ def validate_services() -> bool:
 async def main():
     """Main entry point with comprehensive validation."""
     print("🚀 Starting Ultimate Discord Intelligence Bot...")
-    
+
     # Phase 1: Environment validation
     if not check_environment():
         print("💡 Create a .env file with required variables")
         sys.exit(1)
     print("✅ Environment variables validated")
-    
+
     # Phase 2: Service connectivity
     if not validate_services():
         print("💡 Check service configuration and connectivity")
         sys.exit(1)
     print("✅ External services validated")
-    
+
     # Phase 3: Component initialization
     try:
         bot = await create_bot()
@@ -94,7 +94,7 @@ async def main():
     except Exception as e:
         print(f"❌ Component initialization failed: {e}")
         sys.exit(1)
-    
+
     # Phase 4: Service startup
     try:
         token = os.getenv("DISCORD_BOT_TOKEN")
@@ -186,7 +186,7 @@ except discord.LoginFailure:
 sys.exit(0)   # Success
 sys.exit(1)   # General error
 sys.exit(2)   # Misuse of shell command
-sys.exit(126) # Command cannot execute  
+sys.exit(126) # Command cannot execute
 sys.exit(127) # Command not found
 sys.exit(130) # Script terminated by Ctrl+C
 ```
@@ -206,21 +206,21 @@ Always initialize components in this order:
 def initialize_application():
     # 1. Load environment
     load_dotenv()
-    
+
     # 2. Setup logging
     setup_logging()
-    
+
     # 3. Validate settings
     if not validate_configuration():
         raise StartupError("Configuration validation failed")
-    
+
     # 4. Test external services
     if not test_external_services():
         raise StartupError("External service validation failed")
-    
+
     # 5. Initialize core components
     crew = UltimateDiscordIntelligenceBotCrew()
-    
+
     # 6. Return ready application
     return create_application(crew)
 ```

@@ -11,6 +11,7 @@ import os
 import subprocess
 import sys
 import tempfile
+from collections.abc import Callable
 from pathlib import Path
 
 # Set up logging
@@ -26,7 +27,7 @@ class IntegrationValidator:
         self.passed_checks = 0
         self.total_checks = 0
 
-    def run_check(self, name: str, check_func: callable) -> bool:
+    def run_check(self, name: str, check_func: Callable[[], bool]) -> bool:
         """Run a validation check and track results."""
         self.total_checks += 1
         logger.info(f"Running check: {name}")

@@ -16,8 +16,8 @@ last_moved: 2025-09-02
 
 ```python
 local_path = (
-    info.get("filepath") or 
-    info.get("_filename") or 
+    info.get("filepath") or
+    info.get("_filename") or
     info.get("filename")
 )
 ```

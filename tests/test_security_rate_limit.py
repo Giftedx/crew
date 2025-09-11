@@ -1,7 +1,6 @@
 import time
 
 import pytest
-
 from security.rate_limit import TokenBucket
 
 

@@ -96,4 +96,3 @@ Residual Risks & Mitigations:
 
 Go / No-Go:
 * GO – All acceptance criteria satisfied; no open critical defects; deprecations communicated with mitigation timeline.
-

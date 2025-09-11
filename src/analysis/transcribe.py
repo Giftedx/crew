@@ -11,6 +11,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from core.degradation_reporter import record_degradation
+
 try:
     from core.secure_config import get_config
 except Exception:  # pragma: no cover - fallback when secure_config deps unavailable
@@ -25,7 +27,7 @@ except Exception:  # pragma: no cover - fallback when secure_config deps unavail
         return _FallbackConfig()
 
     # Alias for compatibility
-    get_config = _get_fallback_config  # type: ignore[assignment]
+    get_config = _get_fallback_config
 
 
 @dataclass
@@ -68,15 +70,29 @@ def run_whisper(path: str, model: str = "tiny") -> Transcript:
                 segments=[Segment(start=float(s.start), end=float(s.end), text=str(s.text).strip()) for s in segs]
             )
         except Exception:
-            ...  # fall back to standard whisper or text path
+            # Record degradation (faster-whisper failed -> fallback path)
+            record_degradation(
+                component="transcribe",
+                event_type="faster_whisper_fallback",
+                severity="warn",
+                detail="faster-whisper path failed; falling back to whisper/text",
+            )
+            # fall back to standard whisper or text path
     try:
-        import whisper  # noqa: PLC0415 - optional heavy dependency imported lazily
+        import whisper  # type: ignore  # noqa: PLC0415 - optional heavy dependency imported lazily
 
         model_inst = whisper.load_model(getattr(cfg, "whisper_model", model) or model)
         result = model_inst.transcribe(path)
         segments = [Segment(start=s["start"], end=s["end"], text=s["text"].strip()) for s in result["segments"]]
         return Transcript(segments=segments)
     except Exception:
+        # If whisper also fails we fallback to plain-text mode (record degradation once)
+        record_degradation(
+            component="transcribe",
+            event_type="whisper_fallback_text",
+            severity="warn",
+            detail="whisper unavailable; treating path as plaintext transcript",
+        )
         with open(path, encoding="utf-8") as fh:
             lines = fh.read().splitlines()
         segments = [Segment(start=float(i), end=float(i + 1), text=line) for i, line in enumerate(lines)]

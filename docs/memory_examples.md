@@ -28,4 +28,3 @@ api.archive(mstore, item_id, tenant="t", workspace="w")
 
 Archived items are uploaded using the Discord CDN archiver and flagged in the
 store so subsequent prune operations skip them.
-

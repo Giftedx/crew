@@ -156,9 +156,9 @@ def test_tasks_have_modern_config_fields():
 
             if "context" in config:
                 assert isinstance(config["context"], list), f"Task {task_name}: context must be a list"
-                assert all(isinstance(dep, str) for dep in config["context"]), (
-                    f"Task {task_name}: context items must be strings"
-                )
+                assert all(
+                    isinstance(dep, str) for dep in config["context"]
+                ), f"Task {task_name}: context items must be strings"
 
             if "output_file" in config:
                 assert isinstance(config["output_file"], str), f"Task {task_name}: output_file must be string"

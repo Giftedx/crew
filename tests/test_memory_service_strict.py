@@ -1,5 +1,4 @@
 import pytest
-
 from ultimate_discord_intelligence_bot.services import MemoryService
 from ultimate_discord_intelligence_bot.tenancy.context import TenantContext, with_tenant
 

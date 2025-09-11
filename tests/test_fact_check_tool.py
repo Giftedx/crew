@@ -1,5 +1,4 @@
 from requests import RequestException
-
 from ultimate_discord_intelligence_bot.tools.fact_check_tool import FactCheckTool
 
 

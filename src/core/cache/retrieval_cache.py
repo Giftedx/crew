@@ -1,10 +1,11 @@
 from __future__ import annotations
+
 import os
 from collections.abc import Callable
-from typing import Any, ParamSpec, TypeVar
+from typing import ParamSpec, TypeVar
+
 from .. import flags
 from .bounded_cache import create_retrieval_cache
-
 
 P = ParamSpec("P")
 R = TypeVar("R")
@@ -33,9 +34,11 @@ def memo_retrieval(key_builder: Callable[P, str]) -> Callable[[Callable[P, R]], 
 def _get_cache_ttl() -> int:
     try:
         from ..secure_config import get_config
+
         return get_config().cache_ttl_retrieval
     except ImportError:
         return int(os.getenv("CACHE_TTL_RETRIEVAL", "300"))
+
 
 retrieval_cache = create_retrieval_cache(ttl=_get_cache_ttl())
 

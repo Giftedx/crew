@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+import os
 from collections.abc import Mapping, Sequence
 from typing import Any, Protocol, cast, runtime_checkable
 
 from .error_handling import log_error
+from .rl.experiment import ExperimentManager
 from .rl.policies.bandit_base import EpsilonGreedyBandit, ThompsonSamplingBandit, UCB1Bandit
+from .rl.policies.lints import LinTSDiagBandit
 from .rl.policies.linucb import LinUCBDiagBandit
 from .rl.registry import PolicyRegistry
 
@@ -32,8 +35,12 @@ class _BanditLike(Protocol):  # minimal protocol for bandit policies
 class LearningEngine:
     """Wrapper around the RL policy registry."""
 
-    def __init__(self, registry: PolicyRegistry | None = None) -> None:
+    def __init__(
+        self, registry: PolicyRegistry | None = None, experiment_manager: ExperimentManager | None = None
+    ) -> None:
         self.registry = registry or PolicyRegistry()
+        # Lazy opt-in experiment harness; zero cost if flag disabled.
+        self._exp_mgr = experiment_manager or ExperimentManager()
 
     def register_domain(self, name: str, policy: object | None = None, priors: dict[Any, float] | None = None) -> None:
         """Register ``policy`` under ``name`` and apply optional ``priors``."""
@@ -54,6 +61,10 @@ class LearningEngine:
             bandit: _BanditLike
             if p == "linucb":
                 bandit = LinUCBDiagBandit()
+            elif p in {"lints", "lin_ts", "linthompsonsampling"} or (
+                os.getenv("ENABLE_RL_LINTS", "").lower() in {"1", "true", "yes", "on"} and p == "lints"
+            ):
+                bandit = LinTSDiagBandit()
             elif p in ("ucb1", "ucb"):
                 bandit = UCB1Bandit()
             elif p in ("ts", "thompson", "thompson_sampling"):
@@ -63,17 +74,37 @@ class LearningEngine:
         else:
             bandit = cast(_BanditLike, policy)
         if priors and hasattr(bandit, "q_values"):
+            # Access via Any to avoid blanket ignore; many bandit policies expose mutable q_values dict
+            qv = cast(Any, getattr(bandit, "q_values"))
             for arm, q in priors.items():
-                bandit.q_values[arm] = q
+                try:
+                    qv[arm] = q
+                except Exception:
+                    pass
         self.registry.register(name, bandit)
 
     def recommend(self, domain: str, context: dict[str, Any], candidates: Sequence[Any]) -> Any:
         policy = cast(_BanditLike, self.registry.get(domain))
+        if not candidates:
+            raise ValueError("candidates must not be empty")
+        # Experiment path (flag gated)
+        if os.getenv("ENABLE_EXPERIMENT_HARNESS", "").lower() in {"1", "true", "yes", "on"}:
+            exp_id = f"policy::{domain}"
+            if self._exp_mgr.exists(exp_id):
+                # Map policy-level candidates to variants (string names expected)
+                variant_choice = self._exp_mgr.recommend(exp_id, context, [str(c) for c in candidates])
+                # If the experiment returns a candidate that exists, use that; else fallback to policy.
+                if variant_choice in candidates:
+                    return variant_choice
         return policy.recommend(context, candidates)
 
     def record(self, domain: str, context: dict[str, Any], action: Any, reward: float) -> None:
         policy = cast(_BanditLike, self.registry.get(domain))
         policy.update(action, reward, context)
+        if os.getenv("ENABLE_EXPERIMENT_HARNESS", "").lower() in {"1", "true", "yes", "on"}:
+            exp_id = f"policy::{domain}"
+            if self._exp_mgr.exists(exp_id):
+                self._exp_mgr.record(exp_id, str(action), reward)
 
     # ------------------------------------------------------------------ cold-start
     def shadow_bakeoff(

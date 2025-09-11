@@ -17,7 +17,7 @@ from core.secure_config import get_config
 try:
     from core.cache.redis_cache import RedisCache  # optional
 except Exception:  # pragma: no cover
-    RedisCache = None  # type: ignore
+    RedisCache = None  # fallback sentinel when cache layer unavailable
 
 
 def embed(texts: Iterable[str], model_hint: str | None = None) -> list[list[float]]:
@@ -26,9 +26,9 @@ def embed(texts: Iterable[str], model_hint: str | None = None) -> list[list[floa
         getattr(cfg, "enable_cache_vector", True) and getattr(cfg, "rate_limit_redis_url", None) and RedisCache
     )
     rc = None
-    if use_cache:
+    if use_cache and callable(RedisCache):
         try:
-            rc = RedisCache(
+            rc = RedisCache(  # runtime optional dependency
                 url=str(cfg.rate_limit_redis_url), namespace="emb", ttl=int(getattr(cfg, "cache_ttl_retrieval", 300))
             )
         except Exception:

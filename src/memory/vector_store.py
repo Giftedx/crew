@@ -10,7 +10,7 @@ try:
     from core.settings import get_settings
 except Exception:  # pragma: no cover - fallback when pydantic/settings unavailable
 
-    def get_settings():  # type: ignore
+    def get_settings() -> Any:
         class _S:
             vector_batch_size = 128
 

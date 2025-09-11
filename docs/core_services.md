@@ -34,7 +34,7 @@ the foundation for higher level agents and reinforcement learning.
 ### Caching & Performance
 - `cache/` — caching subsystem with LRU, TTL, and distributed caching support.
 
-### Security & Privacy  
+### Security & Privacy
 - `privacy/` — privacy filtering, PII detection, and data anonymization.
 
 ### Reinforcement Learning

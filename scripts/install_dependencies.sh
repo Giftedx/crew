@@ -12,12 +12,12 @@ echo "=================================================================="
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
     # Linux
     echo "🐧 Detected Linux system"
-    
+
     # Check if running in WSL
     if grep -qi microsoft /proc/version; then
         echo "🪟 Running in WSL (Windows Subsystem for Linux)"
     fi
-    
+
     echo "📦 Installing ffmpeg and aria2c..."
     if command -v apt-get >/dev/null 2>&1; then
         sudo apt update
@@ -32,12 +32,12 @@ if [[ "$OSTYPE" == "linux-gnu"* ]]; then
         echo "❌ Package manager not detected. Please install ffmpeg and aria2 manually."
         exit 1
     fi
-    
+
 elif [[ "$OSTYPE" == "darwin"* ]]; then
     # macOS
     echo "🍎 Detected macOS system"
     echo "📦 Installing ffmpeg and aria2..."
-    
+
     if command -v brew >/dev/null 2>&1; then
         brew install ffmpeg aria2
     else
@@ -45,7 +45,7 @@ elif [[ "$OSTYPE" == "darwin"* ]]; then
         echo "   /bin/bash -c \"\$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
         exit 1
     fi
-    
+
 elif [[ "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" ]]; then
     # Windows
     echo "🪟 Detected Windows system"
@@ -54,7 +54,7 @@ elif [[ "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" ]]; then
     echo "   2. Extract to a folder (e.g., C:\\ffmpeg)"
     echo "   3. Add C:\\ffmpeg\\bin to your PATH environment variable"
     exit 1
-    
+
 else
     echo "❓ Unknown operating system: $OSTYPE"
     echo "❌ Please install ffmpeg manually for your system"

@@ -51,13 +51,13 @@ git_info=""
 if git rev-parse --git-dir > /dev/null 2>&1; then
     # Get current branch
     branch=$(git symbolic-ref --short HEAD 2>/dev/null || git rev-parse --short HEAD 2>/dev/null || "unknown")
-    
+
     # Get git status info
     git_status=$(git status --porcelain 2>/dev/null)
     modified_count=$(echo "$git_status" | grep -c "^ M\|^M " 2>/dev/null || echo "0")
     staged_count=$(echo "$git_status" | grep -c "^M\|^A\|^D\|^R\|^C" 2>/dev/null || echo "0")
     untracked_count=$(echo "$git_status" | grep -c "^??" 2>/dev/null || echo "0")
-    
+
     # Get ahead/behind info
     ahead_behind=$(git rev-list --count --left-right @{upstream}...HEAD 2>/dev/null)
     if [[ -n "$ahead_behind" ]]; then
@@ -67,10 +67,10 @@ if git rev-parse --git-dir > /dev/null 2>&1; then
         behind=0
         ahead=0
     fi
-    
+
     # Check for stashes
     stash_count=$(git stash list 2>/dev/null | wc -l | tr -d ' ')
-    
+
     # Build git status string
     git_indicators=""
     [[ $modified_count -gt 0 ]] && git_indicators="${git_indicators}${YELLOW}${MODIFIED_SYMBOL}${modified_count}${RESET}"
@@ -79,7 +79,7 @@ if git rev-parse --git-dir > /dev/null 2>&1; then
     [[ $ahead -gt 0 ]] && git_indicators="${git_indicators}${BLUE}${AHEAD_SYMBOL}${ahead}${RESET}"
     [[ $behind -gt 0 ]] && git_indicators="${git_indicators}${PURPLE}${BEHIND_SYMBOL}${behind}${RESET}"
     [[ $stash_count -gt 0 ]] && git_indicators="${git_indicators}${CYAN}${STASH_SYMBOL}${stash_count}${RESET}"
-    
+
     git_info="${GRAY}${BRANCH_SYMBOL}${RESET} ${GREEN}${branch}${RESET}"
     [[ -n "$git_indicators" ]] && git_info="${git_info} ${git_indicators}"
 fi
@@ -88,7 +88,7 @@ fi
 project_info=""
 if [[ -n "$project_dir" && "$project_dir" != "null" ]]; then
     project_name=$(basename "$project_dir")
-    
+
     # Detect project type
     project_type=""
     if [[ -f "$project_dir/pyproject.toml" || -f "$project_dir/requirements.txt" || -f "$project_dir/setup.py" ]]; then
@@ -102,7 +102,7 @@ if [[ -n "$project_dir" && "$project_dir" != "null" ]]; then
     elif [[ -f "$project_dir/go.mod" ]]; then
         project_type="🐹 Go"
     fi
-    
+
     project_info="${FOLDER_SYMBOL} ${BOLD}${project_name}${RESET}"
     [[ -n "$project_type" ]] && project_info="${project_info} ${DIM}${project_type}${RESET}"
 fi

@@ -12,6 +12,7 @@ This guide provides a concise, one-path setup and run flow.
 Make shortcuts: `make setup`, `make doctor`, `make run-discord`, `make run-crew`.
 
 ## What the Wizard Configures
+
 - Tokens: Discord, OpenAI/OpenRouter, Exa, Perplexity
 - Vector DB: Qdrant URL/API key
 - Paths: downloads/config/logs/processing, yt-dlp directory
@@ -23,19 +24,26 @@ Make shortcuts: `make setup`, `make doctor`, `make run-discord`, `make run-crew`
 See details in `docs/setup_cli.md`.
 
 ## Common Discord Commands
+
 - `!analyze <url>`: full analysis pipeline
 - `!factcheck <claim>`: verdict with sources
 - `!fallacy <text>`: logical fallacy detection
 - `!status`: system status
 
 ## Troubleshooting
+
 - Verify env: `python -m ultimate_discord_intelligence_bot.setup_cli doctor`
 - Check logs: `tail -f logs/bot.log` (if logging configured)
 - Restart: `pkill -f discord && python -m ultimate_discord_intelligence_bot.setup_cli run discord`
 - Network/services: ensure Qdrant is reachable (`QDRANT_URL`) and ffmpeg is installed
 
 ## Tips
+
 - Keep feature flags minimal at first; enable advanced ones as needed
 - Prefer `OPENROUTER_API_KEY` or `OPENAI_API_KEY` (either works)
 - Use tenants to keep workspaces isolated per team/project
 - Strict ingest checks (optional): enable `ENABLE_INGEST_STRICT=1` in staging to catch missing provider metadata early; see `docs/ingestion.md` runbook.
+
+## Next: Type Safety (Optional)
+
+When contributing new modules, see `docs/types_and_stubs.md` for the phased typing & stub strategy to avoid introducing fresh mypy debt.

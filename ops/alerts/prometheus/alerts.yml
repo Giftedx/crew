@@ -51,4 +51,3 @@ groups:
           summary: "HTTP retries exhausted"
           description: |
             Retries exhausted for method={{ $labels.method }}; investigate upstream API health or increase RETRY_MAX_ATTEMPTS.
-

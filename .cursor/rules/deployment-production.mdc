@@ -46,7 +46,7 @@ All deployments must validate these critical variables:
 ### Monitoring Stack
 Production deployments must include:
 - **Prometheus** - Metrics collection
-- **Grafana** - Visualization dashboards  
+- **Grafana** - Visualization dashboards
 - **Loki** - Log aggregation
 - **Health checks** - Service availability monitoring
 

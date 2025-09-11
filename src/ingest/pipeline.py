@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import concurrent.futures
+import concurrent.futures  # noqa: I001
 import hashlib
 import os
 import time
@@ -13,9 +13,10 @@ from typing import Any
 from analysis import segmenter, topics, transcribe
 from core.error_handling import handle_error_safely
 from core.privacy import privacy_filter
-from ingest import models
 from memory import embeddings, vector_store
 from obs import metrics
+
+from ingest import models
 
 from .providers import twitch, youtube
 
@@ -145,7 +146,28 @@ def run(job: IngestJob, store: vector_store.VectorStore) -> dict:
             c.text = clean
             texts.append(clean)
         _topics = topics.extract(" ".join(texts))
-        vectors = embeddings.embed(texts, model_hint=None)
+        # Deduplicate identical normalized texts within this batch to avoid redundant embedding cost
+        norm_map: dict[str, int] = {}
+        unique_texts: list[str] = []
+        index_remap: list[int] = []  # maps original position -> unique_texts index
+        for t in texts:
+            key = t.strip().lower()
+            if key in norm_map:
+                index_remap.append(norm_map[key])
+            else:
+                norm_map[key] = len(unique_texts)
+                index_remap.append(len(unique_texts))
+                unique_texts.append(t)
+        dup_count = len(texts) - len(unique_texts)
+        if dup_count:
+            # Record dedicated embedding deduplication skip counter (counts duplicates avoided)
+            handle_error_safely(
+                lambda: metrics.EMBED_DEDUPLICATES_SKIPPED.labels(**metrics.label_ctx()).inc(),
+                error_message="Failed to record embed dedup skipped metric",
+            )
+        vectors_unique = embeddings.embed(unique_texts, model_hint=None)
+        # Reconstruct full vector list (duplicates reuse embedding reference)
+        vectors = [vectors_unique[i] for i in index_remap]
         # Record embed completion metric
         handle_error_safely(
             lambda: metrics.PIPELINE_STEPS_COMPLETED.labels(**metrics.label_ctx(), step="embed").inc(),

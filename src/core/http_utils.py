@@ -22,29 +22,36 @@ import warnings
 from collections.abc import Callable, Mapping
 from datetime import date
 from typing import Any, Protocol, TypeVar, cast, runtime_checkable
+from typing import Protocol as _Protocol
 from urllib.parse import urlparse
 
 import requests
 
 from .error_handling import log_error
 
-try:
-    # Import settings lazily/optionally to avoid requiring pydantic during
-    # lightweight unit tests that only exercise HTTP helpers.
-    from core.settings import get_settings
-except (ImportError, ModuleNotFoundError) as e:  # More specific exception types
-    # Log the import failure for debugging
-    from .error_handling import log_error
 
+class _SettingsLike(_Protocol):  # minimal attributes we rely on
+    enable_http_cache: bool
+    http_cache_ttl_seconds: int
+    rate_limit_redis_url: str | None
+
+
+try:
+    from core.settings import get_settings as _real_get_settings
+
+    def get_settings() -> _SettingsLike:  # wrapper keeps narrow structural contract
+        # Cast to the structural protocol we rely on (narrow subset of full settings)
+        return cast(_SettingsLike, _real_get_settings())
+except (ImportError, ModuleNotFoundError) as e:  # pragma: no cover - fallback path
     log_error(e, message="Failed to import settings module, using fallback", context={"module": "core.settings"})
 
-    def get_settings():  # type: ignore[misc]
-        class _S:
-            enable_http_cache = False
-            http_cache_ttl_seconds = 300
-            rate_limit_redis_url = None
+    class _FallbackSettings:
+        enable_http_cache: bool = False
+        http_cache_ttl_seconds: int = 300
+        rate_limit_redis_url: str | None = None
 
-        return _S()
+    def get_settings() -> _SettingsLike:
+        return _FallbackSettings()
 
 
 from obs import metrics as _metrics
@@ -52,7 +59,7 @@ from obs import metrics as _metrics
 try:  # optional cache
     from core.cache.redis_cache import RedisCache as _RedisCache
 except Exception:  # pragma: no cover
-    _RedisCache = None  # type: ignore[assignment,misc]
+    _RedisCache = None
 
 # Import secure config for centralized settings
 _config: Any | None = None
@@ -111,7 +118,7 @@ except Exception:  # pragma: no cover - fallback when opentelemetry missing
         def get_tracer(self, *_a, **_k) -> _NoopTracer:
             return _NoopTracer()
 
-    trace = _NoopTraceAPI()  # type: ignore[assignment]
+    trace = _NoopTraceAPI()
 # NOTE: metrics import intentionally placed with other third-party/local imports so
 # that later references do not trigger E402. We import the module (not individual
 # counters) so test-time resets that rebind metric globals propagate here.
@@ -536,6 +543,7 @@ def retrying_get(  # noqa: PLR0913 - explicit parameters preferred over opaque o
 # Safe GET cache (idempotent endpoints only)
 # ---------------------------------------------------------------------------
 _MEM_HTTP_CACHE: dict[str, tuple[float, str, int]] = {}
+_MEM_HTTP_NEG_CACHE: dict[str, float] = {}  # key -> expiry epoch for negative cache statuses
 
 
 class _CachedResponse:
@@ -618,11 +626,41 @@ def cached_get(
     exp, text, status = _MEM_HTTP_CACHE.get(key, (0.0, "", 0))
     if exp > now:
         return _CachedResponse(text=text, status_code=status)
+    # Negative cache check (4xx/5xx previously cached) if enabled
+    if getattr(settings, "enable_http_negative_cache", False):
+        neg_exp = _MEM_HTTP_NEG_CACHE.get(key, 0.0)
+        if neg_exp > now:
+            # Return synthetic cached response (status retained in negative cache metadata? store as 404)
+            return _CachedResponse(text="", status_code=404)
     resp = resilient_get(
         url, params=params, headers=headers, timeout_seconds=timeout_seconds or REQUEST_TIMEOUT_SECONDS
     )
     if 200 <= resp.status_code < 300:
         _MEM_HTTP_CACHE[key] = (now + ttl, getattr(resp, "text", ""), int(resp.status_code))
+    else:
+        # Negative caching for selected status codes (404, 429) with Retry-After support
+        if getattr(settings, "enable_http_negative_cache", False) and resp.status_code in {404, 429}:
+            retry_after_s: float | None = None
+            try:
+                # Access headers via getattr to satisfy structural typing without ignores
+                headers_obj = getattr(resp, "headers", None)
+                ra = headers_obj.get("Retry-After") if headers_obj else None
+                if ra:
+                    # Retry-After may be delta-seconds or HTTP-date
+                    if ra.isdigit():
+                        retry_after_s = float(ra)
+                    else:
+                        from email.utils import parsedate_to_datetime
+
+                        try:
+                            dt = parsedate_to_datetime(ra)
+                            retry_after_s = max(0.0, (dt.timestamp() - time.time()))
+                        except Exception:
+                            retry_after_s = None
+            except Exception:
+                retry_after_s = None
+            neg_ttl = retry_after_s if retry_after_s is not None else min(60.0, ttl * 0.2)
+            _MEM_HTTP_NEG_CACHE[key] = now + float(neg_ttl)
     return resp
 
 
@@ -644,7 +682,7 @@ except (ImportError, ModuleNotFoundError) as e:  # More specific exception types
         context={"module": "ultimate_discord_intelligence_bot.tenancy.context"},
     )
 
-    def current_tenant():  # type: ignore[misc]
+    def current_tenant() -> Any:  # fallback returns opaque context
         return None
 
 

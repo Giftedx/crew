@@ -23,11 +23,11 @@ class MyToolResult(TypedDict, total=False):
 class MyTool(BaseTool[MyToolResult]):
     name: str = "My Tool"
     description: str = "Tool description for CrewAI agents"
-    
+
     def _run(self, input_param: str) -> MyToolResult:
         # Implementation here
         pass
-    
+
     def run(self, input_param: str) -> MyToolResult:
         return self._run(input_param)
 ```
@@ -43,10 +43,10 @@ def _run(self, input_data: str) -> MyToolResult:
     try:
         if not input_data:
             return {"status": "error", "error": "Input required"}
-        
+
         result = process_input(input_data)
         return {"status": "success", "data": result}
-    
+
     except Exception as e:
         return {"status": "error", "error": str(e)}
 ```
@@ -93,16 +93,16 @@ def _run(self, url: str) -> MyToolResult:
                 "status": "error",
                 "error": "URL is required and must be a string",
             }
-        
+
         # Process with timeout
         result = process_with_timeout(url)
-        
+
         return {
-            "status": "success", 
+            "status": "success",
             "data": result,
             "timestamp": time.time()
         }
-        
+
     except TimeoutError:
         return {"status": "error", "error": "Operation timed out"}
     except Exception as e:
@@ -155,7 +155,7 @@ result = tool._run("input")
 
 Follow existing categorization:
 - **Content Analysis**: Text processing, sentiment, fallacy detection
-- **Platform Integration**: Download tools, monitor tools  
+- **Platform Integration**: Download tools, monitor tools
 - **Memory & Storage**: Vector search, memory storage
 - **Discord Integration**: Posting, alerting, QA
 - **Fact Checking**: Verification, scoring, claim extraction

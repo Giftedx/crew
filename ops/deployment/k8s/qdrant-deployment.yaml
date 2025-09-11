@@ -38,4 +38,3 @@ spec:
         - name: qdrant-storage
           persistentVolumeClaim:
             claimName: qdrant-data
-

@@ -15,8 +15,6 @@ The caching system provides:
 
 import asyncio
 
-from pydantic import BaseModel
-
 from core.structured_llm_service import (
     CacheKeyGenerator,
     ResponseCache,
@@ -24,6 +22,7 @@ from core.structured_llm_service import (
     StructuredLLMService,
     StructuredRequest,
 )
+from pydantic import BaseModel
 
 
 class UserProfile(BaseModel):

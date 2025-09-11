@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# Pre-push hook: guard against new mypy errors increasing beyond snapshot.
+# Install manually or via: ln -s ../../scripts/git_hooks/pre-push .git/hooks/pre-push
+
+set -euo pipefail
+
+BASELINE="reports/mypy_snapshot.json"
+
+if [[ ! -f "$BASELINE" ]]; then
+  echo "[pre-push:mypy] Baseline not found ($BASELINE); skipping guard (first run)." >&2
+  exit 0
+fi
+
+echo "[pre-push:mypy] Running type error guard..."
+python scripts/mypy_snapshot_guard.py --baseline "$BASELINE" --json > /tmp/mypy_guard.json || STATUS=$?
+STATUS=${STATUS:-0}
+cat /tmp/mypy_guard.json
+
+if [[ $STATUS -ne 0 ]]; then
+  echo "[pre-push:mypy] Push blocked: mypy error count increased." >&2
+  exit $STATUS
+fi
+
+echo "[pre-push:mypy] OK (no regression)."
+exit 0

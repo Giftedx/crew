@@ -1,5 +1,4 @@
 import pytest
-
 from ultimate_discord_intelligence_bot.tools.discord_download_tool import (
     DiscordDownloadTool,
 )

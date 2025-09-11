@@ -19,7 +19,7 @@ description: "Python coding standards and conventions for the Ultimate Discord I
 Use ruff's isort integration for consistent import ordering:
 
 1. Standard library imports
-2. Third-party imports (crewai, discord, qdrant, etc.)  
+2. Third-party imports (crewai, discord, qdrant, etc.)
 3. Local application imports
 
 ```python
@@ -45,7 +45,7 @@ from ultimate_discord_intelligence_bot.step_result import StepResult
 def my_tool_function(input_data: str) -> StepResult:
     if not input_data:
         return StepResult.fail("missing_input")
-    
+
     try:
         result = process_data(input_data)
         return StepResult.ok(data=result)

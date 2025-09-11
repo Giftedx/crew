@@ -1,6 +1,6 @@
 # Evaluation Harness
 
-This repository ships a lightweight evaluation harness with tiny public-safe fixtures.  
+This repository ships a lightweight evaluation harness with tiny public-safe fixtures.
 Run the suite against the core dataset and compare against the baseline to catch regressions in quality, cost, and latency.
 
 ```bash

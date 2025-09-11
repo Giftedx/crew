@@ -1,6 +1,5 @@
 import pytest
 import requests
-
 from ultimate_discord_intelligence_bot.tools.discord_private_alert_tool import (
     DiscordPrivateAlertTool,
 )

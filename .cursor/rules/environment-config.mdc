@@ -18,7 +18,7 @@ OPENAI_API_KEY=sk-your-key  # or OPENROUTER_API_KEY
 QDRANT_URL=http://localhost:6333
 QDRANT_API_KEY=your-key  # optional for local
 
-# Feature Flags  
+# Feature Flags
 ENABLE_DISCORD_COMMANDS=true
 ENABLE_CONTENT_MODERATION=true
 ENABLE_PII_DETECTION=true
@@ -42,13 +42,13 @@ All applications must validate critical environment variables at startup:
 def check_environment() -> bool:
     """Check if required environment variables are set."""
     load_dotenv()
-    
+
     required_vars = {
         "DISCORD_BOT_TOKEN": "Discord bot token",
         "OPENAI_API_KEY": "OpenAI API key (or OPENROUTER_API_KEY)",
         "QDRANT_URL": "Qdrant vector database URL",
     }
-    
+
     missing = []
     for var, description in required_vars.items():
         if var == "OPENAI_API_KEY":
@@ -57,7 +57,7 @@ def check_environment() -> bool:
                 missing.append(f"{var} (or OPENROUTER_API_KEY): {description}")
         elif not os.getenv(var):
             missing.append(f"{var}: {description}")
-    
+
     return len(missing) == 0
 ```
 

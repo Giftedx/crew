@@ -29,16 +29,28 @@ HISTORY_TRIM_SIZE = 500
 
 
 class TaskPriority(Enum):
-    """Task priority levels with numerical values for sorting."""
+    """Task priority levels with integer values for ordering.
 
-    P0_CRITICAL = (0, "System stability, security, or core functionality")
-    P1_HIGH = (1, "Performance improvements, user experience")
-    P2_MEDIUM = (2, "Feature enhancements, technical debt")
-    P3_LOW = (3, "Documentation, optimization, future-proofing")
+    The previous implementation stored ``(int, description)`` tuples as enum
+    values and reassigned ``self.value`` inside ``__init__`` which is not
+    supported by :class:`Enum` (``.value`` is reserved). We now keep the enum
+    values as plain integers (stable ordering) and maintain a separate mapping
+    for descriptions.
+    """
 
-    def __init__(self, value: int, description: str):
-        self.value = value
-        self.description = description
+    P0_CRITICAL = 0
+    P1_HIGH = 1
+    P2_MEDIUM = 2
+    P3_LOW = 3
+
+    @property
+    def description(self) -> str:  # convenience accessor
+        return {
+            TaskPriority.P0_CRITICAL: "System stability, security, or core functionality",
+            TaskPriority.P1_HIGH: "Performance improvements, user experience",
+            TaskPriority.P2_MEDIUM: "Feature enhancements, technical debt",
+            TaskPriority.P3_LOW: "Documentation, optimization, future-proofing",
+        }[self]
 
 
 class TaskStatus(Enum):
@@ -125,7 +137,7 @@ class AdaptiveTask:
     business_impact: BusinessImpactMetrics = field(default_factory=BusinessImpactMetrics)
 
     # Dynamic properties
-    current_priority: TaskPriority = None
+    current_priority: TaskPriority | None = None
     status: TaskStatus = TaskStatus.PENDING
     priority_score: float = 0.0  # Calculated dynamic priority score
 
@@ -237,9 +249,10 @@ class AdaptivePrioritizer:
 
     def calculate_priority_score(self, task: AdaptiveTask, context: PrioritizationContext) -> float:
         """Calculate dynamic priority score for a task."""
-
-        # Base priority score (higher number = lower priority, so invert)
-        base_score = (4 - task.base_priority.value) / 4.0  # Normalize to 0-1
+        # Base priority score (higher number = lower priority, so invert). Highest
+        # priority (P0) should yield largest base score. With enum values 0..3 we
+        # invert relative to max (3) and normalise to 0..1.
+        base_score = (3 - task.base_priority.value) / 3.0
 
         # Business impact score
         impact_score = task.business_impact.calculate_total_impact()
@@ -318,9 +331,10 @@ class AdaptivePrioritizer:
 
             # Update priority if it changed significantly
             if task.current_priority != new_priority:
+                prev_name = task.current_priority.name if task.current_priority else "UNSET"
                 logger.info(
                     f"Priority change for {task_id}: "
-                    f"{task.current_priority.name} -> {new_priority.name} "
+                    f"{prev_name} -> {new_priority.name} "
                     f"(score: {old_score:.3f} -> {new_score:.3f})"
                 )
                 task.current_priority = new_priority
@@ -373,7 +387,7 @@ class AdaptivePrioritizer:
 
     def identify_resource_bottlenecks(self) -> dict[ResourceType, list[str]]:
         """Identify resource bottlenecks affecting task execution."""
-        bottlenecks = {}
+        bottlenecks: dict[ResourceType, list[str]] = {}
 
         for task in self.tasks.values():
             if task.status == TaskStatus.BLOCKED:
@@ -392,20 +406,14 @@ class AdaptivePrioritizer:
         high_priority_blocked = [
             task
             for task in self.tasks.values()
-            if task.status == TaskStatus.BLOCKED and task.current_priority.value <= 1
+            if task.status == TaskStatus.BLOCKED and task.current_priority and task.current_priority.value <= 1
         ]
 
-        suggestions = {
-            "bottlenecks": bottlenecks,
-            "high_priority_blocked_count": len(high_priority_blocked),
-            "recommendations": [],
-        }
+        recommendations: list[str] = []
 
         # Generate recommendations
         if ResourceType.DEVELOPER_TIME in bottlenecks:
-            suggestions["recommendations"].append(
-                "Consider adding developer resources or deprioritizing lower-value tasks"
-            )
+            recommendations.append("Consider adding developer resources or deprioritizing lower-value tasks")
 
         if ResourceType.API_BUDGET in bottlenecks:
             cost_reduction_tasks = [
@@ -414,9 +422,7 @@ class AdaptivePrioritizer:
                 if task.business_impact.cost_reduction_dollars > 0 and task.status == TaskStatus.PENDING
             ]
             if cost_reduction_tasks:
-                suggestions["recommendations"].append(
-                    f"Prioritize cost reduction tasks: {[t.id for t in cost_reduction_tasks[:3]]}"
-                )
+                recommendations.append(f"Prioritize cost reduction tasks: {[t.id for t in cost_reduction_tasks[:3]]}")
 
         if context.current_metrics.error_rate > ERROR_RATE_THRESHOLD:
             stability_tasks = [
@@ -425,11 +431,13 @@ class AdaptivePrioritizer:
                 if task.current_priority == TaskPriority.P0_CRITICAL and task.status == TaskStatus.PENDING
             ]
             if stability_tasks:
-                suggestions["recommendations"].append(
-                    f"Focus on critical stability tasks: {[t.id for t in stability_tasks[:3]]}"
-                )
+                recommendations.append(f"Focus on critical stability tasks: {[t.id for t in stability_tasks[:3]]}")
 
-        return suggestions
+        return {
+            "bottlenecks": bottlenecks,
+            "high_priority_blocked_count": len(high_priority_blocked),
+            "recommendations": recommendations,
+        }
 
     def get_prioritization_report(self, context: PrioritizationContext) -> dict[str, Any]:
         """Generate comprehensive prioritization report."""
@@ -458,7 +466,7 @@ class AdaptivePrioritizer:
                 {
                     "id": task.id,
                     "name": task.name,
-                    "priority": task.current_priority.name,
+                    "priority": task.current_priority.name if task.current_priority else "UNSET",
                     "score": task.priority_score,
                     "status": task.status.value,
                     "age_hours": task.age_in_hours(),
@@ -466,7 +474,12 @@ class AdaptivePrioritizer:
                 for task in prioritized_tasks[:10]
             ],
             "next_actionable": [
-                {"id": task.id, "name": task.name, "priority": task.current_priority.name, "score": task.priority_score}
+                {
+                    "id": task.id,
+                    "name": task.name,
+                    "priority": task.current_priority.name if task.current_priority else "UNSET",
+                    "score": task.priority_score,
+                }
                 for task in actionable_tasks
             ],
             "resource_analysis": resource_suggestions,

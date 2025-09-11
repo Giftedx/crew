@@ -14,22 +14,51 @@ import uuid
 from collections.abc import Generator
 from contextlib import contextmanager
 from dataclasses import asdict, dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from core.secure_config import get_config
-from obs import metrics
 from ultimate_discord_intelligence_bot.tenancy.context import current_tenant
 
-try:
-    from langsmith import Client, RunTree
-    from langsmith.run_trees import RunTree as LangSmithRunTree
+from obs import metrics
+
+# Optional LangSmith dependency handling.
+# We define LANGSMITH_AVAILABLE in all branches to avoid NameError at runtime
+# and provide minimal stubs when the package is absent.
+LANGSMITH_AVAILABLE = False
+if TYPE_CHECKING:  # pragma: no cover - type checking only
+    from langsmith import Client, RunTree  # noqa: F401
+    from langsmith.run_trees import RunTree as LangSmithRunTree  # noqa: F401
 
     LANGSMITH_AVAILABLE = True
-except ImportError:
-    LANGSMITH_AVAILABLE = False
-    Client = None  # type: ignore[misc]
-    RunTree = None  # type: ignore[misc]
-    LangSmithRunTree = None  # type: ignore[misc]
+else:  # runtime import attempt
+    try:  # noqa: SIM105
+        from langsmith import Client, RunTree  # type: ignore[import-not-found]
+        from langsmith.run_trees import RunTree as LangSmithRunTree  # type: ignore[import-not-found]
+
+        LANGSMITH_AVAILABLE = True
+    except Exception:  # pragma: no cover - absence path
+        # Provide lightweight stubs so attribute access doesn't explode; we do NOT
+        # mimic full behavior—only what's used here.
+        class _RunTreeStub:  # minimal stub used when LangSmith isn't installed
+            def __init__(self, *_, **__):
+                pass
+
+            def end(self, *_, **__):  # pragma: no cover - trivial
+                pass
+
+        # Assign stub classes so type checkers see objects (runtime only path)
+        RunTree = _RunTreeStub  # type: ignore[assignment]
+        LangSmithRunTree = _RunTreeStub  # type: ignore[assignment]
+
+        class _ClientStub:  # minimal Client stub
+            def __init__(self, *_, **__):
+                pass
+
+            def list_runs(self, *_, **__):  # pragma: no cover - trivial
+                return []
+
+        Client = _ClientStub  # type: ignore[assignment]
+
 
 logger = logging.getLogger(__name__)
 
@@ -93,7 +122,7 @@ class EnhancedLLMObservability:
         self.enable_local_tracing = enable_local_tracing
 
         # Initialize LangSmith client if available
-        self.langsmith_client = None
+        self.langsmith_client: Client | None = None
         if self.enable_langsmith:
             try:
                 self.langsmith_client = self._initialize_langsmith()

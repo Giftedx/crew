@@ -8,7 +8,7 @@ The analysis package provides utilities for processing and analyzing transcript 
 
 The analysis modules handle:
 - Transcript segmentation for vector storage
-- Topic extraction and classification  
+- Topic extraction and classification
 - Audio transcription with Whisper
 - Content chunking for retrieval systems
 
@@ -26,7 +26,7 @@ Splits transcripts into overlapping chunks optimized for retrieval augmented gen
 @dataclass
 class Chunk:
     text: str      # Chunk content
-    start: float   # Start timestamp  
+    start: float   # Start timestamp
     end: float     # End timestamp
 ```
 
@@ -34,13 +34,13 @@ class Chunk:
 
 ```python
 def chunk_transcript(
-    transcript: Transcript, 
-    *, 
+    transcript: Transcript,
+    *,
     max_chars: int = 800,
     overlap: int = 200
 ) -> List[Chunk]:
     """Split transcript into overlapping chunks.
-    
+
     Parameters
     ----------
     transcript : Transcript
@@ -49,7 +49,7 @@ def chunk_transcript(
         Target maximum characters per chunk
     overlap : int, default 200
         Overlap size in characters between consecutive chunks
-        
+
     Returns
     -------
     List[Chunk]
@@ -121,8 +121,8 @@ class Transcript:
     language: str
     confidence: float
     source: str  # Source file or URL
-    
-@dataclass 
+
+@dataclass
 class TranscriptSegment:
     """Individual segment of transcript with timing."""
     text: str
@@ -214,7 +214,7 @@ Analysis modules are tested through:
 # 1. Transcription
 transcript = transcribe_audio(audio_file)
 
-# 2. Segmentation  
+# 2. Segmentation
 chunks = chunk_transcript(transcript, max_chars=800)
 
 # 3. Topic extraction

@@ -35,6 +35,19 @@ make test     # Run tests
 make lint     # Check code style
 make format   # Auto-fix formatting
 make type     # Type checking
+make types-install  # Install common and suggested stub packages
+make type-guard     # Fail if mypy errors increase vs snapshot
+make type-guard-update  # Update snapshot after reducing errors
+make ci-type-guard  # CI variant (use in pipeline), supports --json via ARGS
+make type-guard-json  # Emit JSON (BREAKDOWN=1 for per-package counts)
+```
+
+See also: [Type Checking & Stub Guidance](docs/types_and_stubs.md) for the phased mypy remediation and stub strategy.
+
+Optional Git hook:
+
+```bash
+ln -s ../../scripts/git_hooks/pre-push .git/hooks/pre-push  # adds type regression guard
 ```
 
 ## 📁 Key Features

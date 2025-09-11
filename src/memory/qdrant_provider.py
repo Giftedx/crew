@@ -34,13 +34,13 @@ except Exception:  # pragma: no cover - fallback when pydantic/settings unavaila
         def get_settings():
             return _FallbackSettings()
 
-    settings_mod = _SettingsMod()  # type: ignore
+    settings_mod = _SettingsMod()
 
 if TYPE_CHECKING:  # pragma: no cover - mypy / pyright only
     from qdrant_client import QdrantClient
 else:  # runtime fallback if dependency unavailable (tests may monkeypatch)
     try:  # pragma: no cover - defensive
-        from qdrant_client import QdrantClient  # type: ignore
+        from qdrant_client import QdrantClient  # type: ignore[import-not-found]
     except Exception:  # pragma: no cover
         QdrantClient = None  # type: ignore
 

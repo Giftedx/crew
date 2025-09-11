@@ -43,17 +43,24 @@ class DeploymentStatus(Enum):
 
 @dataclass
 class DeploymentConfig:
-    """Configuration for deployment process."""
+    """Configuration for deployment process.
+
+    Notes:
+        ``traffic_shift_steps`` previously used a mutable default of ``None`` with
+        post-init reassignment. We retain the ability for callers to pass ``None``
+        (interpreted as the default progressive ramp) while providing a precise
+        Optional type annotation to satisfy static type checking.
+    """
 
     version: str
     environment: DeploymentEnvironment
     feature_flags: dict[str, bool]
     rollback_threshold: dict[str, float]  # Metric name -> threshold for rollback
     validation_duration_seconds: int = 300  # 5 minutes
-    traffic_shift_steps: list[int] = None  # [5, 10, 25, 50, 100] percent
+    traffic_shift_steps: list[int] | None = None  # [5, 10, 25, 50, 100] percent
     max_rollback_time_seconds: int = 120  # 2 minutes max rollback time
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:  # explicit return for mypy clarity
         if self.traffic_shift_steps is None:
             self.traffic_shift_steps = [5, 10, 25, 50, 100]
 
@@ -91,18 +98,24 @@ class DeploymentMetrics:
 
 @dataclass
 class DeploymentRecord:
-    """Record of a deployment attempt."""
+    """Record of a deployment attempt.
+
+    ``metrics_history`` and ``logs`` are optional during construction; we
+    annotate them as Optional and normalise them to lists in ``__post_init__``.
+    This avoids assigning ``None`` to a field typed as ``list[...]`` which
+    triggered mypy errors.
+    """
 
     deployment_id: str
     config: DeploymentConfig
     status: DeploymentStatus
     started_at: float
     completed_at: float | None = None
-    metrics_history: list[DeploymentMetrics] = None
+    metrics_history: list[DeploymentMetrics] | None = None
     rollback_reason: str | None = None
-    logs: list[str] = None
+    logs: list[str] | None = None
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:  # explicit return for mypy
         if self.metrics_history is None:
             self.metrics_history = []
         if self.logs is None:
@@ -200,7 +213,8 @@ class DeploymentManager:
 
             # Record metrics
             if self.active_deployment:
-                self.active_deployment.metrics_history.append(metrics)
+                # metrics_history normalised in DeploymentRecord.__post_init__
+                self.active_deployment.metrics_history.append(metrics)  # type: ignore[union-attr]
 
             # Check health against thresholds
             is_healthy, issues = metrics.is_healthy(config.rollback_threshold)
@@ -336,6 +350,8 @@ class DeploymentManager:
             deployment_record.status = DeploymentStatus.VALIDATING
 
             # Step 3: Gradual traffic shift with monitoring
+            # traffic_shift_steps normalised in DeploymentConfig.__post_init__
+            assert config.traffic_shift_steps is not None
             for traffic_percentage in config.traffic_shift_steps:
                 logger.info(f"Shifting to {traffic_percentage}% traffic")
 
@@ -401,7 +417,8 @@ class DeploymentManager:
         logger.error(f"EMERGENCY ROLLBACK TRIGGERED: {reason}")
 
         if self.active_deployment:
-            self.active_deployment.logs.append(f"EMERGENCY ROLLBACK: {reason}")
+            # logs normalised in DeploymentRecord.__post_init__
+            self.active_deployment.logs.append(f"EMERGENCY ROLLBACK: {reason}")  # type: ignore[union-attr]
 
         return await self._rollback_deployment(f"Emergency rollback: {reason}")
 

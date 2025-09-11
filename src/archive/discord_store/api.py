@@ -96,7 +96,10 @@ async def archive_endpoint(
     meta_dict = json.loads(meta or "{}")
     suffix = Path(file.filename or "").suffix
     with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
-        tmp.write(await file.read())  # type: ignore[attr-defined]
+        # Some type checkers may not see .read on UploadFile; use getattr fallback.
+        reader = getattr(file, "read")
+        data = await reader()
+        tmp.write(data)
         tmp_path = Path(tmp.name)
     try:
         record = await asyncio.to_thread(archive_file, tmp_path, meta_dict, tenant=meta_dict.get("tenant"))

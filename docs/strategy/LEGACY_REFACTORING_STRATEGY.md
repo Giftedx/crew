@@ -41,7 +41,7 @@ This document outlines a systematic strategy for refactoring legacy modules with
 **Priority Modules**:
 
 - `core/secure_config.py` - Configuration management consolidation
-- `core/http_utils.py` - HTTP retry pattern standardization  
+- `core/http_utils.py` - HTTP retry pattern standardization
 - `ultimate_discord_intelligence_bot/tenancy/` - Tenant context threading
 
 **Refactoring Approach**:
@@ -136,7 +136,7 @@ else:
 class ToolRegistry:
     def __init__(self):
         self.discovered_tools = {}
-    
+
     def auto_discover_tools(self) -> Dict[str, Type[BaseTool]]:
         """Automatically discover all tool classes."""
         tools = {}
@@ -145,7 +145,7 @@ class ToolRegistry:
                 if hasattr(tool_class, 'agent_assignments'):
                     tools[tool_class.__name__] = tool_class
         return tools
-    
+
     def register_tools_to_agents(self, crew_config: Dict) -> Dict:
         """Automatically assign tools to appropriate agents."""
         for agent_name, agent_config in crew_config.items():
@@ -204,7 +204,7 @@ def process_data(data: Union[Dict[str, Any], LegacyDataType]) -> ProcessedData:
     if isinstance(data, LegacyDataType):
         warnings.warn("Legacy data type usage", DeprecationWarning)
         data = convert_legacy_data(data)
-    
+
     return ProcessedData.from_dict(data)
 ```
 
@@ -496,13 +496,13 @@ def _on_success(self):
     except (AttributeError, TypeError, ValueError) as e:
         from .error_handling import log_error
         log_error(
-            e, message="Failed to update success metrics - invalid metrics configuration", 
+            e, message="Failed to update success metrics - invalid metrics configuration",
             context={"circuit": self.name, "state": self.state.value, "operation": "metrics_update"}
         )
     except Exception as e:
         from .error_handling import log_error
         log_error(
-            e, message="Failed to update success metrics", 
+            e, message="Failed to update success metrics",
             context={"circuit": self.name, "state": self.state.value}
         )
 
@@ -514,7 +514,7 @@ def _open_circuit(self):
         metrics.CIRCUIT_BREAKER_STATE.labels(**metrics.label_ctx(), circuit=self.name).set(1)  # 1 = open
     except (AttributeError, TypeError, ValueError) as e:
         from .error_handling import log_error
-        log_error(e, message="Failed to update circuit open metrics - invalid metrics configuration", 
+        log_error(e, message="Failed to update circuit open metrics - invalid metrics configuration",
                  context={"circuit": self.name, "operation": "metrics_update"})
     except Exception as e:
         from .error_handling import log_error
@@ -568,30 +568,30 @@ def process_request(tc: TenantContext, request: Request) -> StepResult:
     """Process request with full observability."""
     with tracing.start_span("process_request", tenant=tc.tenant) as span:
         span.set_attribute("request.type", type(request).__name__)
-        
+
         metrics.REQUESTS_TOTAL.labels(
             tenant=tc.tenant,
             workspace=tc.workspace,
             request_type=request.type
         ).inc()
-        
+
         start_time = time.time()
         try:
             result = handle_request(request)
-            
+
             metrics.REQUEST_DURATION.labels(
                 tenant=tc.tenant,
                 status="success"
             ).observe(time.time() - start_time)
-            
+
             return StepResult.ok(data=result)
-            
+
         except Exception as e:
             metrics.REQUEST_DURATION.labels(
                 tenant=tc.tenant,
                 status="error"
             ).observe(time.time() - start_time)
-            
+
             span.set_status(trace.Status(trace.StatusCode.ERROR, str(e)))
             raise
 ```
@@ -605,11 +605,11 @@ def test_legacy_behavior_preserved():
     """Ensure refactored code maintains exact legacy behavior."""
     legacy_impl = LegacyImplementation()
     modern_impl = ModernImplementation()
-    
+
     for test_case in get_legacy_test_cases():
         legacy_result = legacy_impl.process(test_case)
         modern_result = modern_impl.process(test_case)
-        
+
         assert_equivalent_behavior(legacy_result, modern_result)
 
 def test_gradual_migration():
@@ -617,7 +617,7 @@ def test_gradual_migration():
     with feature_flag("MODERN_IMPLEMENTATION", enabled=False):
         result = process_with_feature_flag()
         assert uses_legacy_implementation(result)
-    
+
     with feature_flag("MODERN_IMPLEMENTATION", enabled=True):
         result = process_with_feature_flag()
         assert uses_modern_implementation(result)
@@ -630,15 +630,15 @@ def test_gradual_migration():
 def test_refactoring_performance():
     """Ensure refactoring doesn't degrade performance."""
     setup_data = create_benchmark_data()
-    
+
     # Baseline performance
     with measure_performance() as legacy_perf:
         legacy_implementation(setup_data)
-    
+
     # Refactored performance
     with measure_performance() as modern_perf:
         modern_implementation(setup_data)
-    
+
     # Allow up to 10% performance degradation during transition
     assert modern_perf.latency <= legacy_perf.latency * 1.1
     assert modern_perf.memory_usage <= legacy_perf.memory_usage * 1.1
@@ -651,28 +651,28 @@ def test_refactoring_performance():
 ```python
 class RefactoringCircuitBreaker:
     """Circuit breaker for gradual refactoring rollout."""
-    
+
     def __init__(self, module_name: str):
         self.module_name = module_name
         self.error_threshold = 0.05  # 5% error rate threshold
         self.rollback_window = timedelta(hours=1)
-    
+
     def execute_with_fallback(self, modern_func, legacy_func, *args, **kwargs):
         """Execute modern function with automatic fallback."""
         if self.should_use_legacy():
             return legacy_func(*args, **kwargs)
-        
+
         try:
             result = modern_func(*args, **kwargs)
             self.record_success()
             return result
         except Exception as e:
             self.record_failure(e)
-            
+
             if self.should_fallback():
                 logger.warning(f"Falling back to legacy {self.module_name}")
                 return legacy_func(*args, **kwargs)
-            
+
             raise
 ```
 
@@ -681,24 +681,24 @@ class RefactoringCircuitBreaker:
 ```python
 class AutomatedRollback:
     """Automatic rollback for failed refactoring."""
-    
+
     def monitor_refactoring_health(self):
         """Monitor system health during refactoring."""
         metrics = collect_system_metrics()
-        
+
         if self.detect_regression(metrics):
             self.trigger_rollback()
-    
+
     def trigger_rollback(self):
         """Automatically rollback to previous version."""
         logger.critical("Regression detected, triggering rollback")
-        
+
         # Disable feature flags
         disable_feature_flag("MODERN_IMPLEMENTATION")
-        
+
         # Alert operations team
         send_alert("Automatic rollback triggered", severity="critical")
-        
+
         # Update system status
         update_system_status("rollback_active")
 ```

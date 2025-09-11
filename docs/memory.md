@@ -29,4 +29,3 @@ hits = api.retrieve(
 Retention policies are configured per tenant and enforced via
 `api.prune`.  Items can be `pin`ned to avoid pruning or `archive`d to the
 Discord CDN via the archiver facade.
-

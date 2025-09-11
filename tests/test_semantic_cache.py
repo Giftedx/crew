@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import pytest
-
 from ultimate_discord_intelligence_bot.services.openrouter_service import OpenRouterService
 from ultimate_discord_intelligence_bot.tenancy.context import TenantContext, with_tenant
 

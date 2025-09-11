@@ -3,7 +3,6 @@ from __future__ import annotations
 from pathlib import Path
 
 import yaml
-
 from ultimate_discord_intelligence_bot.services.openrouter_service import OpenRouterService
 from ultimate_discord_intelligence_bot.tenancy.context import TenantContext, with_tenant
 from ultimate_discord_intelligence_bot.tenancy.registry import TenantRegistry

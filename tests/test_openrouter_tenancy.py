@@ -4,7 +4,6 @@ import logging
 import re
 
 import pytest
-
 from obs import metrics as metrics_mod
 from ultimate_discord_intelligence_bot.services.openrouter_service import OpenRouterService
 

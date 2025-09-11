@@ -6,7 +6,6 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pytest
-
 from analysis.segmenter import chunk_transcript
 from analysis.topics import extract
 from analysis.transcribe import Segment, Transcript, run_whisper

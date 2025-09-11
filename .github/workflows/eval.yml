@@ -19,11 +19,31 @@ jobs:
             --dataset datasets/golden/v1/analyze_claim.jsonl \
             --task analyze_claim --out out/eval/analyze_claim_v1.json
       - name: Compare baseline
+        shell: bash
         run: |
-          python -c "import yaml,json;res=json.load(open('out/eval/analyze_claim_v1.json'));base=yaml.safe_load(open('benchmarks/baselines.yaml'));\
-from pathlib import Path;import sys;quality=res['aggregates']['quality'];cost=res['aggregates']['cost_usd'];lat=res['aggregates']['latency_ms'];b=base['analyze_claim_v1'];\
-print(f'delta quality {quality-b["quality"]:.3f}');\
-assert quality >= b['quality']-0.5 and cost <= b['cost_usd']+0.0 and lat <= b['latency_ms']+50"      
+          python - <<'PY'
+          import json, yaml, sys
+          from pathlib import Path
+
+          result_path = Path('out/eval/analyze_claim_v1.json')
+          baseline_path = Path('benchmarks/baselines.yaml')
+          if not result_path.exists():
+              print(f"Missing results file: {result_path}")
+              sys.exit(1)
+          res = json.load(result_path.open())
+          base = yaml.safe_load(baseline_path.open())
+
+          quality = res['aggregates']['quality']
+          cost = res['aggregates']['cost_usd']
+          lat = res['aggregates']['latency_ms']
+          bench = base['analyze_claim_v1']
+
+          print(f"delta quality {quality - bench['quality']:.3f}")
+          if not (quality >= bench['quality'] - 0.5 and cost <= bench['cost_usd'] + 0.0 and lat <= bench['latency_ms'] + 50):
+              print("Baseline comparison failed: thresholds exceeded")
+              print(f"quality: {quality} (baseline {bench['quality']}) cost: {cost} (baseline {bench['cost_usd']}) latency: {lat} (baseline {bench['latency_ms']})")
+              sys.exit(1)
+          PY
       - uses: actions/upload-artifact@v4
         with:
           name: eval-report

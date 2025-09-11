@@ -35,6 +35,7 @@ import logging
 from collections.abc import Iterable, Sequence
 from datetime import date
 from pathlib import Path
+from typing import Any
 from warnings import warn
 
 from core.learning_engine import LearningEngine as _CoreLearningEngine
@@ -75,7 +76,7 @@ class LearningEngine(_CoreLearningEngine):  # pragma: no cover - thin wrapper
         db_path: str | None = None,  # kept for signature compatibility
         epsilon: float = 0.1,
         store_path: str | None = None,  # kept for signature compatibility
-        registry: object | None = None,
+        registry: Any | None = None,
     ) -> None:  # noqa: D401 - delegated
         _check_deadline()
         warn(
@@ -106,7 +107,11 @@ class LearningEngine(_CoreLearningEngine):  # pragma: no cover - thin wrapper
         # The legacy shim only forwards an optional registry; older code may
         # have passed extraneous kwargs which we now ignore explicitly.
         if registry is not None:
-            super().__init__(registry=registry)  # type: ignore[arg-type]
+            try:
+                super().__init__(registry=registry)
+            except Exception:
+                # Fallback: if the provided object is not a proper registry just delegate default init
+                super().__init__()
         else:
             super().__init__()
         self._default_epsilon = epsilon
@@ -164,7 +169,7 @@ class LearningEngine(_CoreLearningEngine):  # pragma: no cover - thin wrapper
                 logging.getLogger(__name__).debug("Unable to prime q_values for legacy policy: %s", exc)
 
     # Legacy methods below mirror the prior minimal surface -----------------
-    def recommend(self, policy_id: str, candidates: Sequence[str] | None = None) -> str:  # type: ignore[override]
+    def recommend(self, policy_id: str, candidates: Sequence[str] | None = None) -> str:
         policy = self.registry.get(policy_id)
         if candidates is None:
             # Derive candidate set from known q_values/ counts (arms seen so far)

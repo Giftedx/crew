@@ -21,7 +21,7 @@ pip install -e .[dev]
 
 # Development workflow
 make format          # Auto-fix style & imports with ruff
-make lint            # Lint check (CI style)  
+make lint            # Lint check (CI style)
 make type            # Static type check with mypy (non-blocking)
 make test            # Run pytest suite
 make docs            # Validate documentation & config references
@@ -79,7 +79,7 @@ Multi-Platform Download → Drive Upload → Transcription → Analysis → Memo
 **Core Services (src/):**
 
 - `core/` - Foundation utilities, HTTP retry logic, learning engine, token metering
-- `memory/` - Vector store with Qdrant backend, in-memory fallback for testing  
+- `memory/` - Vector store with Qdrant backend, in-memory fallback for testing
 - `obs/` - Tracing, metrics, and observability (OpenTelemetry)
 - `security/` - Moderation, RBAC, rate limiting, webhook verification
 - `grounding/` - Citation enforcement and verification
@@ -258,7 +258,7 @@ Wrap expensive operations with metrics and tracing:
 from obs import tracing, metrics
 from ultimate_discord_intelligence_bot.tenancy import with_tenant
 
-@with_tenant  
+@with_tenant
 def operation(tc: TenantContext) -> StepResult:
     with tracing.start_span("operation", tenant=tc.tenant) as span:
         metrics.operations_total.labels(tenant=tc.tenant).inc()

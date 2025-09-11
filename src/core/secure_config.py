@@ -1,23 +1,6 @@
-"""Centralized secure configuration management for the Ultimate Discord Intelligence Bot.
+"""Central secure configuration management (clean rewrite)."""
 
-This module provides a unified interface for accessing all configuration values,
-including API keys, feature flags, and system settings. It replaces scattered
-os.getenv() calls with a secure, validated, and cached configuration system.
-
-Security features:
-- Mandatory validation for critical secrets
-- Optional encryption for sensitive values
-- Audit logging for secret access
-- Integration with existing security.secrets module
-
-Usage:
-    from core.secure_config import get_config
-
-    config = get_config()
-    api_key = config.get_api_key("openai")
-    webhook_url = config.get_webhook("discord_private")
-    is_enabled = config.is_feature_enabled("rl_global")
-"""
+# ruff: noqa: I001  (optional dependency import ordering is intentional)
 
 from __future__ import annotations
 
@@ -26,87 +9,75 @@ import os
 import warnings
 from typing import Any
 
-try:
-    from pydantic import AliasChoices, validator
-    from pydantic import Field as _PydField
-    from pydantic_settings import BaseSettings, SettingsConfigDict
-
-    _HAS_PYDANTIC_V2 = True
-except ImportError:
-    try:
-        from pydantic import BaseSettings, validator
-        from pydantic import Field as _PydField
-
-        SettingsConfigDict = dict  # type: ignore[misc]
-
-        # Provide a no-op fallback so field definitions can reference it safely
-        def AliasChoices(*_args, **_kwargs):
-            return None
-
-        _HAS_PYDANTIC_V2 = False
-    except ImportError:
-        # Fallback to basic configuration without pydantic
-        BaseSettings = object  # type: ignore[misc]
-
-        def _PydField(**kwargs):
-            return None
-
-        def validator(*args, **kwargs):
-            return lambda f: f
-
-        SettingsConfigDict = dict  # type: ignore[misc]
-
-        # Provide a no-op fallback for validation aliasing
-        def AliasChoices(*_args, **_kwargs):
-            return None
-
-        _HAS_PYDANTIC_V2 = False
-
 from security.secrets import get_secret
-
-# ---------------------------------------------------------------------------
-# Dotenv compatibility shim
-# Some environments ship a python-dotenv variant whose `dotenv_values` does not
-# accept an `encoding` parameter. pydantic-settings >=2 passes
-# `encoding=...`, causing a TypeError during settings construction and
-# preventing test collection. We detect this mismatch early and patch the
-# imported symbol inside pydantic-settings' provider module so that the extra
-# argument is ignored. This preserves behaviour while unblocking the suite.
-# ---------------------------------------------------------------------------
-try:  # pragma: no cover - environment dependent branch
-    import inspect
-
-    import pydantic_settings.sources.providers.dotenv as _ps_dotenv  # type: ignore
-
-    if "encoding" not in inspect.signature(_ps_dotenv.dotenv_values).parameters:  # type: ignore[attr-defined]
-        _orig_dotenv_values = _ps_dotenv.dotenv_values  # type: ignore[attr-defined]
-
-        def _compat_dotenv_values(file_path, *args, encoding=None, **kwargs):  # type: ignore[unused-argument]
-            return _orig_dotenv_values(file_path, *args, **kwargs)  # type: ignore[misc]
-
-        _ps_dotenv.dotenv_values = _compat_dotenv_values  # type: ignore[attr-defined]
-except Exception:  # pragma: no cover - best-effort patching
-    pass
 
 logger = logging.getLogger(__name__)
 
+_HAS_PYDANTIC = False
+_HAS_PYDANTIC_V2 = False
 
-# Compatibility wrapper: translate Field(env="VAR") to v2-style aliases
-def Field(*args, **kwargs):  # type: ignore[override]
-    """Compatibility Field that maps env= to alias/validation_alias for Pydantic v2.
+try:  # Full pydantic-settings + pydantic
+    from pydantic import AliasChoices, Field as _PydField, validator  # type: ignore[import-not-found]
+    from pydantic_settings import BaseSettings, SettingsConfigDict  # type: ignore[import-not-found]
 
-    - In Pydantic v1, the `env` kwarg is valid; we pass through unchanged.
-    - In Pydantic v2, `env` is deprecated/ignored; we convert to
-      alias+validation_alias so BaseSettings picks up the environment variable.
-    """
-    if _HAS_PYDANTIC_V2 and "env" in kwargs:
+    _HAS_PYDANTIC = True
+    _HAS_PYDANTIC_V2 = True
+except Exception:  # pragma: no cover
+    try:  # Plain pydantic only
+        from pydantic import AliasChoices, BaseSettings, Field as _PydField, validator  # type: ignore[import-not-found]
+
+        class _SettingsConfigDict(dict):
+            pass
+
+        SettingsConfigDict = _SettingsConfigDict  # type: ignore[assignment]
+        _HAS_PYDANTIC = True
+        _HAS_PYDANTIC_V2 = False
+    except Exception:  # Final minimal stubs
+
+        class BaseSettings:  # noqa: D401
+            pass
+
+        class SettingsConfigDict(dict):  # noqa: D401
+            pass
+
+        class AliasChoices:  # noqa: D401
+            def __init__(self, *args: Any, **kwargs: Any) -> None:  # pragma: no cover
+                pass
+
+        def _PydField(*_args: Any, **kw: Any) -> Any:  # pragma: no cover
+            return kw.get("default")
+
+        def validator(*_v_args: Any, **_v_kwargs: Any):  # pragma: no cover
+            def _wrap(f):
+                return f
+
+            return _wrap
+
+        _HAS_PYDANTIC = False
+        _HAS_PYDANTIC_V2 = False
+
+
+def Field(*args: Any, **kwargs: Any) -> Any:  # unified wrapper adding env->alias mapping
+    if _HAS_PYDANTIC and "env" in kwargs:
         env = kwargs.pop("env")
-        # Preserve explicit aliases if provided; otherwise set both to env var name
         kwargs.setdefault("alias", env)
-        # Use validation alias to bind environment variables during parsing
         if "validation_alias" not in kwargs:
-            kwargs["validation_alias"] = AliasChoices(env, kwargs.get("alias", env))
+            try:  # pragma: no cover - defensive
+                kwargs["validation_alias"] = AliasChoices(env, kwargs.get("alias", env))
+            except Exception:
+                pass
     return _PydField(*args, **kwargs)
+
+
+__all__ = [
+    "BaseSettings",
+    "SettingsConfigDict",
+    "Field",
+    "AliasChoices",
+    "validator",
+    "_HAS_PYDANTIC",
+    "_HAS_PYDANTIC_V2",
+]
 
 
 class SecureConfig(BaseSettings):
@@ -314,14 +285,6 @@ class SecureConfig(BaseSettings):
         return webhook_url
 
     def is_feature_enabled(self, feature: str) -> bool:
-        """Check if a feature flag is enabled.
-
-        Args:
-            feature: Feature name (without ENABLE_ prefix)
-
-        Returns:
-            True if feature is enabled
-        """
         feature_mapping = {
             "api": self.enable_api,
             "tracing": self.enable_tracing,
@@ -343,16 +306,12 @@ class SecureConfig(BaseSettings):
             "audit_logging": self.enable_audit_logging,
             "http_retry": self.enable_http_retry,
         }
-
         value = feature_mapping.get(feature)
-        # Handle None values when pydantic isn't available
         if value is None:
-            # Fall back to environment variable with ENABLE_ prefix
             env_key = f"ENABLE_{feature.upper()}"
             env_value = os.getenv(env_key)
             if env_value and env_value.lower() in ("1", "true", "yes", "on"):
                 return True
-            # Default values for known features when not configured
             default_enabled = {
                 "api",
                 "http_metrics",
@@ -372,7 +331,6 @@ class SecureConfig(BaseSettings):
                 "audit_logging",
             }
             return feature in default_enabled
-
         return bool(value)
 
     def get_webhook_secret(self, webhook_name: str = "default") -> str:
@@ -503,11 +461,11 @@ def get_setting(key: str, default: Any = None) -> Any:
 # ---------------------------------------------------------------------------
 # Lightweight fallback initialization when Pydantic is unavailable
 # ---------------------------------------------------------------------------
-if not _HAS_PYDANTIC_V2:
+if not _HAS_PYDANTIC:
     # Inject a basic __init__ to populate critical fields from environment and enforce
     # minimal validation expected by tests. This keeps API compatible without
     # requiring pydantic in ultra-minimal environments.
-    def _fallback_init(self) -> None:  # type: ignore[no-redef]
+    def _fallback_init(self) -> None:
         import os as _os
 
         # Core system

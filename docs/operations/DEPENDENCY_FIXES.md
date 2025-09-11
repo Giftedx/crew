@@ -20,8 +20,8 @@ Original root file migrated. Content preserved below.
 
 ```python
 local_path = (
-    info.get("filepath") or 
-    info.get("_filename") or 
+    info.get("filepath") or
+    info.get("_filename") or
     info.get("filename")
 )
 ```

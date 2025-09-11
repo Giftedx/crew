@@ -56,7 +56,7 @@ make docs                           # Generate/validate documentation
 The project includes several automated quality checks:
 
 - **Ruff linting**: Enforces code style and catches common issues
-- **Mypy type checking**: With baseline management for incremental improvement  
+- **Mypy type checking**: With baseline management for incremental improvement
 - **Test coverage**: All new features require tests
 - **Configuration sync**: Agents and tasks must be properly wired
 - **Golden dataset regression**: Validates model performance

@@ -10,7 +10,7 @@ description: "Multi-platform content ingestion patterns and downloaders"
 The ingestion system supports multiple platforms through [src/ingest/](mdc:src/ingest/):
 
 - **YouTube**: Videos, live streams, shorts
-- **Twitch**: VODs, clips, live streams  
+- **Twitch**: VODs, clips, live streams
 - **Kick**: Live streams and VODs
 - **Twitter/X**: Posts, threads, spaces
 - **Instagram**: Posts, stories, reels
@@ -169,7 +169,7 @@ Platform-specific settings are in [config/ingest.yaml](mdc:config/ingest.yaml):
 youtube:
   api_key: ${YOUTUBE_API_KEY}
   max_duration: 7200  # 2 hours
-  
+
 tiktok:
   enable_shorts: true
   quality_preference: "720p"

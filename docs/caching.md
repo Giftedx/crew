@@ -208,6 +208,42 @@ service._perform_cache_maintenance()
 - Check cache key generation with `CacheKeyGenerator.generate_key()`
 - Ensure service is properly initialized with caching enabled
 
+## Semantic (LLM) Cache Namespace Isolation
+
+When the semantic cache feature (`ENABLE_SEMANTIC_CACHE`) is enabled the system can operate in one of three progressively simpler modes depending on dependency availability and initialization success:
+
+1. Full GPTCache mode (vector similarity store operational)
+1. GPTCache degraded simple key/value mode (GPTCache imported but vector backend init failed ⇒ in-memory simple store)
+1. Fallback semantic cache implementation (pure Python lightweight embedding / fuzzy match)
+
+To prevent cross‑tenant leakage, all modes scope entries by a composed namespace `tenant_id:workspace_id` provided through an active `TenantContext`.
+
+Isolation mechanisms:
+
+- Prompt prefix injection: a leading marker (e.g. `[ns:tenant:workspace]`) included in the normalized prompt prior to hashing
+- Model scoping: internal model identifier (or synthetic model key) suffixed with `@@ns=<tenant:workspace>` ensuring separation even if prompts collide
+
+Recent hardening ensured that the degraded GPTCache simple store and the pure fallback path BOTH apply the same namespacing rules, eliminating a previously observed cross‑tenant hit scenario when GPTCache silently downgraded.
+
+Operational guidance:
+
+- Always enter a `TenantContext` (use `with_tenant(...)`) before invoking semantic cache dependent code paths.
+- Do not reuse service singletons across tenants without proper context switching; namespacing relies on the context at key construction time.
+- If cross‑tenant anomalies are suspected enable debug logging for `core.cache.semantic_cache` and confirm distinct `@@ns=` suffixes in emitted keys.
+
+Testing/Regression:
+
+- A regression test will (or already does, depending on commit history) force the degraded / fallback mode and assert that tenant A misses while tenant B hits only its own prior insertion.
+- Multi‑tenant tests also assert no leakage when GPTCache backend initialization is intentionally failed.
+
+Future enhancements under consideration:
+
+- Admin/ops endpoint to expose per‑namespace semantic cache statistics
+- Configurable eviction / size limits per namespace
+- Optional cryptographic hashing of namespace marker for additional obscurity
+
+If you modify semantic cache internals, ensure any new fast paths or fallbacks apply BOTH prompt prefix and model scoping to preserve isolation guarantees.
+
 ## Implementation Details
 
 ### Cache Storage

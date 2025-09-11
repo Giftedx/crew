@@ -1,6 +1,6 @@
 # Security Threat Model
 
-> Version: 0.1 (bootstrap)  
+> Version: 0.1 (bootstrap)
 > Scope: Discord entrypoints, REST façade, Agents / LLM routing, Ingestion & Scheduler, Archiver, Memory (vector + KG + unified), Plugins & Marketplace (future), Grounding & Verification, Privacy/PII, Observability & Incidents.
 
 This document captures an initial STRIDE‑style threat model for the platform. It will evolve as features (plugins, marketplace signing, advanced RL domains) are hardened. Each section lists: Assets, Trust Boundaries, Threats, Existing Controls, Gaps / Planned Mitigations (mapped to PR tasks).
@@ -50,58 +50,58 @@ This document captures an initial STRIDE‑style threat model for the platform. 
 
 ### 4.1 Spoofed Webhooks / Callbacks
 
-**Threat:** Attacker sends forged request to internal endpoint to enqueue jobs or inject data.  
-**Controls:** HMAC (timestamp + nonce) primitives exist.  
+**Threat:** Attacker sends forged request to internal endpoint to enqueue jobs or inject data.
+**Controls:** HMAC (timestamp + nonce) primitives exist.
 **Mitigations:** Enforce signature check on *all* inbound webhook endpoints; replay cache (nonce LRU) already available; reject skew > tolerance; security event on failure.
 
 ### 4.2 SSRF & Unsafe Fetch
 
-**Threat:** Crafted URL resolves to internal IP (169.254/ metadata, RFC1918) or redirects there.  
-**Controls:** Basic public-IP check.  
+**Threat:** Crafted URL resolves to internal IP (169.254/ metadata, RFC1918) or redirects there.
+**Controls:** Basic public-IP check.
 **Mitigations:** Add redirect chain revalidation, host allowlist/denylist, max bytes, content-type allowlist, per-host rate limiting.
 
 ### 4.3 Excessive LLM Spend / Abuse
 
-**Threat:** Flood of `/context` or tool invocations consumes budget.  
-**Controls:** Token bucket (global).  
+**Threat:** Flood of `/context` or tool invocations consumes budget.
+**Controls:** Token bucket (global).
 **Mitigations:** Per-user/guild/command/provider buckets, progressive backoff, cooldown unlock command, alerts on burst spend.
 
 ### 4.4 Privilege Escalation via Misconfigured Roles
 
-**Threat:** User obtains `ops` capabilities accidentally or via stale config.  
-**Controls:** Role→permission YAML.  
+**Threat:** User obtains `ops` capabilities accidentally or via stale config.
+**Controls:** Role→permission YAML.
 **Mitigations:** ABAC overlay (risk tier match, channel constraints), signed config optional, runtime diff detection + warning.
 
 ### 4.5 Data Exfiltration via Plugins (Future)
 
-**Threat:** Plugin exfiltrates embeddings or secrets.  
+**Threat:** Plugin exfiltrates embeddings or secrets.
 **Mitigations (planned):** Capability manifest, network egress allowlist, memory namespace scoping, cost & quota guards, PII redaction in adapters.
 
 ### 4.6 Hallucination / Unsupported Claims
 
-**Threat:** Ungrounded answer presented as fact.  
-**Controls:** AnswerContract + simple verifier.  
+**Threat:** Ungrounded answer presented as fact.
+**Controls:** AnswerContract + simple verifier.
 **Mitigations:** Evidence pack scoring, verifier escalate path (revise/fail), abstain fallback + user explanation, contradiction checks against KG.
 
 ### 4.7 PII Retention & Compliance Drift
 
-**Threat:** Sensitive data retained beyond policy or exported unredacted.  
-**Controls:** Baseline privacy filter.  
+**Threat:** Sensitive data retained beyond policy or exported unredacted.
+**Controls:** Baseline privacy filter.
 **Mitigations:** Provenance + retention sweeps, export tool with redaction, per-tenant retention policy enforcement & logs.
 
 ### 4.8 Supply Chain (Plugins / Marketplace)
 
-**Threat:** Malicious or compromised plugin introduces backdoor.  
+**Threat:** Malicious or compromised plugin introduces backdoor.
 **Mitigations:** Signing (ed25519 / Sigstore), trust tiers, staged rollout with health metrics, lockfile, advisory ingestion.
 
 ### 4.9 Scheduler / Ingestion Flood
 
-**Threat:** High-frequency polling of noisy sources saturates resources.  
+**Threat:** High-frequency polling of noisy sources saturates resources.
 **Mitigations:** RL-informed poll interval bounds, per-tenant source quotas, queue prioritization, dead-letter thresholds + alerts.
 
 ### 4.10 Incident Response Gaps
 
-**Threat:** Slow detection of systemic failure or attack.  
+**Threat:** Slow detection of systemic failure or attack.
 **Mitigations:** Synthetic probes, SLO burn rate detection, Discord incident workflow with timeline + postmortem template.
 
 ## 5. Risk Ranking (Current State)

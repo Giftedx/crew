@@ -11,6 +11,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
+from core.degradation_reporter import record_degradation
 from core.http_utils import REQUEST_TIMEOUT_SECONDS, resilient_post
 from core.secure_config import get_config
 
@@ -52,6 +53,12 @@ def _cohere_rerank(query: str, docs: list[str], top_n: int) -> RerankResult:
     results = data.get("results") if isinstance(data, dict) else None
     if not isinstance(results, list):
         # graceful fallback to identity order
+        record_degradation(
+            component="rerank",
+            event_type="cohere_identity_fallback",
+            severity="warn",
+            detail="cohere response missing results; using identity order",
+        )
         return RerankResult(indexes=list(range(len(docs))), scores=[0.0] * len(docs))
     # sort by provided index order (API returns already sorted)
     idxs: list[int] = []
@@ -65,6 +72,12 @@ def _cohere_rerank(query: str, docs: list[str], top_n: int) -> RerankResult:
     if not idxs:
         idxs = list(range(len(docs)))
         scores = [0.0] * len(docs)
+        record_degradation(
+            component="rerank",
+            event_type="cohere_empty_results",
+            severity="warn",
+            detail="cohere returned no usable indexes; identity order applied",
+        )
     return RerankResult(indexes=idxs, scores=scores)
 
 
@@ -107,5 +120,11 @@ def rerank(query: str, docs: list[str], *, provider: str, top_n: int) -> RerankR
         if not idxs:
             idxs = list(range(len(docs)))
             scores = [0.0] * len(docs)
+            record_degradation(
+                component="rerank",
+                event_type="jina_empty_results",
+                severity="warn",
+                detail="jina returned no usable indexes; identity order applied",
+            )
         return RerankResult(indexes=idxs, scores=scores)
     raise NotImplementedError(f"Rerank provider not implemented: {provider}")

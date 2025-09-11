@@ -42,4 +42,3 @@ jobs:
       - name: Full CI suite
         run: |
           make ci-all
-
