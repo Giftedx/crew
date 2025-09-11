@@ -285,6 +285,13 @@ module = [
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
+# Temporary: allow yaml unresolved import in profiles.schema while stubs evaluated.
+module = [
+    "ultimate_discord_intelligence_bot.profiles.schema",
+]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
 # Optional third-party runtime libraries
 module = [
     "psutil",

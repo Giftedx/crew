@@ -186,7 +186,12 @@ class CreatorSeed:
 
 def load_seeds(path: str) -> list[CreatorSeed]:
     """Load creator seed profiles from a YAML file."""
-    import yaml  # noqa: PLC0415 - optional dependency; only needed when loading seeds
+    try:  # Local import guarded to keep optional dependency soft for type checking
+        import yaml  # noqa: PLC0415
+    except Exception:  # pragma: no cover - degrade gracefully if yaml missing
+        raise ImportError(
+            "PyYAML is required to load seed profiles. Install with 'pip install PyYAML' or add the 'dev' extras."
+        ) from None
 
     with open(path, encoding="utf-8") as fh:
         raw = yaml.safe_load(fh) or {}

@@ -18,15 +18,20 @@ repos:
     rev: v1.10.0
     hooks:
       - id: mypy
-        name: "mypy (allowlist: crew.py only)"
-        additional_dependencies: []
+        name: "mypy (allowlist: crew.py, profiles/schema.py)"
+        additional_dependencies:
+          - types-PyYAML
+          - types-requests
         # Use explicit target path and prevent import graph expansion to keep Phase 1 narrow.
-        args: [
-          "--config-file", "pyproject.toml",
-          "--follow-imports=skip",
-          "--no-error-summary",
-          "src/ultimate_discord_intelligence_bot/crew.py"
-        ]
+        args:
+          [
+            "--config-file",
+            "pyproject.toml",
+            "--follow-imports=skip",
+            "--no-error-summary",
+            "src/ultimate_discord_intelligence_bot/crew.py",
+            "src/ultimate_discord_intelligence_bot/profiles/schema.py",
+          ]
         pass_filenames: false
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.6.0
