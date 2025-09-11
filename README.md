@@ -58,7 +58,16 @@ ln -s ../../scripts/git_hooks/pre-push .git/hooks/pre-push  # adds type regressi
 - **Reinforcement learning** - Adaptive routing and optimization
 - **Comprehensive observability** - Metrics, tracing, and monitoring
 
-## 🔗 Important Links
+## � Optimization & Caching Enhancements
+
+The platform includes advanced layers to control cost and latency:
+
+- [Prompt Compression](docs/prompt_compression.md) – Multi-pass structural reduction (whitespace normalization, dedupe, summarization) with compression ratio metrics.
+- [Semantic Cache](docs/semantic_cache.md) – Similarity-based response reuse with prefetch issued/used counters and similarity histograms.
+
+These work alongside adaptive retrieval (dynamic k) and reinforcement learning–driven routing to minimize unnecessary token usage while preserving answer quality.
+
+## �🔗 Important Links
 
 - [Getting Started Guide](docs/GETTING_STARTED.md)
 - [Configuration Reference](docs/configuration.md)

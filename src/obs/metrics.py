@@ -454,6 +454,55 @@ _METRIC_SPECS: list[tuple[Callable[..., MetricLike], str, str, list[str]]] = [
         "Observed added latency (ms) attributed to degradation events when measurable",
         ["tenant", "workspace", "component", "event_type"],
     ),
+    # -------------------- New retrieval & RL / compression instrumentation --------------------
+    (
+        HistogramFactory,
+        "retrieval_selected_k",
+        "Distribution of selected retrieval k values (post-adaptive heuristic)",
+        ["tenant", "workspace", "strategy"],
+    ),
+    (
+        HistogramFactory,
+        "retrieval_latency_ms",
+        "Latency of retrieval phases (phase label: initial|post_rerank|prefetch)",
+        ["tenant", "workspace", "phase"],
+    ),
+    (
+        HistogramFactory,
+        "prompt_compression_ratio",
+        "Prompt compression ratio (compressed/original tokens)",
+        ["tenant", "workspace", "method"],
+    ),
+    (
+        HistogramFactory,
+        "semantic_cache_similarity",
+        "Similarity scores for semantic cache hits",
+        ["tenant", "workspace", "bucket"],
+    ),
+    (
+        CounterFactory,
+        "semantic_cache_prefetch_issued_total",
+        "Number of semantic cache prefetch attempts issued",
+        ["tenant", "workspace"],
+    ),
+    (
+        CounterFactory,
+        "semantic_cache_prefetch_used_total",
+        "Number of prefetched semantic cache entries actually used",
+        ["tenant", "workspace"],
+    ),
+    (
+        HistogramFactory,
+        "rl_reward_latency_gap_ms",
+        "Latency between model response and reward recording",
+        ["tenant", "workspace", "domain"],
+    ),
+    (
+        GaugeFactory,
+        "active_bandit_policy",
+        "Current active bandit policy per domain (1 if active)",
+        ["tenant", "workspace", "domain", "policy"],
+    ),
 ]
 
 
@@ -560,6 +609,14 @@ def _instantiate_metrics() -> list[MetricLike]:
     EMBED_DEDUPLICATES_SKIPPED,
     DEGRADATION_EVENTS,
     DEGRADATION_IMPACT_LATENCY,
+    RETRIEVAL_SELECTED_K,
+    RETRIEVAL_LATENCY,
+    PROMPT_COMPRESSION_RATIO,
+    SEMANTIC_CACHE_SIMILARITY,
+    SEMANTIC_CACHE_PREFETCH_ISSUED,
+    SEMANTIC_CACHE_PREFETCH_USED,
+    RL_REWARD_LATENCY_GAP,
+    ACTIVE_BANDIT_POLICY,
 ) = _instantiate_metrics()
 
 _COLLECTORS: list[MetricLike] = [
@@ -627,6 +684,14 @@ _COLLECTORS: list[MetricLike] = [
     EMBED_DEDUPLICATES_SKIPPED,
     DEGRADATION_EVENTS,
     DEGRADATION_IMPACT_LATENCY,
+    RETRIEVAL_SELECTED_K,
+    RETRIEVAL_LATENCY,
+    PROMPT_COMPRESSION_RATIO,
+    SEMANTIC_CACHE_SIMILARITY,
+    SEMANTIC_CACHE_PREFETCH_ISSUED,
+    SEMANTIC_CACHE_PREFETCH_USED,
+    RL_REWARD_LATENCY_GAP,
+    ACTIVE_BANDIT_POLICY,
 ]
 
 
@@ -644,6 +709,7 @@ def reset() -> None:
     global PIPELINE_REQUESTS, PIPELINE_STEPS_COMPLETED, PIPELINE_STEPS_FAILED, PIPELINE_STEPS_SKIPPED, PIPELINE_DURATION  # noqa: PLW0603
     global CIRCUIT_BREAKER_REQUESTS, CIRCUIT_BREAKER_STATE, INGEST_TRANSCRIPT_FALLBACKS, INGEST_MISSING_ID_FALLBACKS, SCHEDULER_ENQUEUED, SCHEDULER_PROCESSED, SCHEDULER_ERRORS, SCHEDULER_QUEUE_BACKLOG, SYSTEM_HEALTH_SCORE, COST_PER_INTERACTION  # noqa: PLW0603
     global CACHE_HITS, CACHE_MISSES, CACHE_PROMOTIONS, CACHE_DEMOTIONS, CACHE_EVICTIONS, CACHE_COMPRESSIONS, CACHE_DECOMPRESSIONS, CACHE_ERRORS, CACHE_SIZE_BYTES, CACHE_ENTRIES_COUNT, CACHE_HIT_RATE_RATIO, CACHE_MEMORY_USAGE_RATIO, CACHE_OPERATION_LATENCY, CACHE_COMPRESSION_RATIO, SEGMENT_CHUNK_SIZE_CHARS, SEGMENT_CHUNK_SIZE_TOKENS, SEGMENT_CHUNK_MERGES, EMBED_DEDUPLICATES_SKIPPED, DEGRADATION_EVENTS, DEGRADATION_IMPACT_LATENCY, _COLLECTORS  # noqa: PLW0603
+    global RETRIEVAL_SELECTED_K, RETRIEVAL_LATENCY, PROMPT_COMPRESSION_RATIO, SEMANTIC_CACHE_SIMILARITY, SEMANTIC_CACHE_PREFETCH_ISSUED, SEMANTIC_CACHE_PREFETCH_USED, RL_REWARD_LATENCY_GAP, ACTIVE_BANDIT_POLICY  # noqa: PLW0603
     if PROMETHEUS_AVAILABLE:
         # Attempt to unregister existing collectors; failures are logged but not fatal.
         to_unreg = list(_COLLECTORS)
@@ -720,6 +786,14 @@ def reset() -> None:
         EMBED_DEDUPLICATES_SKIPPED,
         DEGRADATION_EVENTS,
         DEGRADATION_IMPACT_LATENCY,
+        RETRIEVAL_SELECTED_K,
+        RETRIEVAL_LATENCY,
+        PROMPT_COMPRESSION_RATIO,
+        SEMANTIC_CACHE_SIMILARITY,
+        SEMANTIC_CACHE_PREFETCH_ISSUED,
+        SEMANTIC_CACHE_PREFETCH_USED,
+        RL_REWARD_LATENCY_GAP,
+        ACTIVE_BANDIT_POLICY,
     ) = objs
     _COLLECTORS = list(objs)
 
@@ -805,6 +879,14 @@ __all__ = [
     "EMBED_DEDUPLICATES_SKIPPED",
     "DEGRADATION_EVENTS",
     "DEGRADATION_IMPACT_LATENCY",
+    "RETRIEVAL_SELECTED_K",
+    "RETRIEVAL_LATENCY",
+    "PROMPT_COMPRESSION_RATIO",
+    "SEMANTIC_CACHE_SIMILARITY",
+    "SEMANTIC_CACHE_PREFETCH_ISSUED",
+    "SEMANTIC_CACHE_PREFETCH_USED",
+    "RL_REWARD_LATENCY_GAP",
+    "ACTIVE_BANDIT_POLICY",
     "reset",
     "render",
     "registry",

@@ -3,8 +3,11 @@
 from __future__ import annotations
 
 import os
+import time
 from collections.abc import Mapping, Sequence
 from typing import Any, Protocol, cast, runtime_checkable
+
+from obs import metrics
 
 from .error_handling import log_error
 from .rl.experiment import ExperimentManager
@@ -20,10 +23,10 @@ except (ImportError, ModuleNotFoundError) as e:  # More specific exception types
     log_error(e, message="Failed to import settings module, using fallback", context={"module": "core.settings"})
 
     def get_settings():  # type: ignore
-        class _S:
+        class _S:  # minimal attribute surface used in this module
             rl_policy_model_selection = "epsilon_greedy"
 
-        return _S()
+        return _S()  # returning instance keeps attribute access consistent
 
 
 @runtime_checkable
@@ -44,13 +47,11 @@ class LearningEngine:
 
     def register_domain(self, name: str, policy: object | None = None, priors: dict[Any, float] | None = None) -> None:
         """Register ``policy`` under ``name`` and apply optional ``priors``."""
-
         if policy is None:
-            # Choose default policy from settings
+            # Choose default policy from settings (fallback epsilon)
             try:
                 policy_name = getattr(get_settings(), "rl_policy_model_selection", "epsilon_greedy")
             except (AttributeError, TypeError) as e:
-                # More specific exception handling for settings access
                 log_error(
                     e,
                     message="Failed to get policy selection from settings, using default",
@@ -58,8 +59,18 @@ class LearningEngine:
                 )
                 policy_name = "epsilon_greedy"
             p = str(policy_name).lower().strip()
+
+            # Feature flag overrides (explicit enable wins irrespective of config default)
+            # Order of precedence: explicit env force -> configured policy -> fallback
+            force_thompson = os.getenv("ENABLE_RL_THOMPSON", "").lower() in {"1", "true", "yes", "on"}
+            force_contextual = os.getenv("ENABLE_RL_CONTEXTUAL", "").lower() in {"1", "true", "yes", "on"}
+
             bandit: _BanditLike
-            if p == "linucb":
+            if force_contextual:
+                bandit = LinUCBDiagBandit()
+            elif force_thompson:
+                bandit = ThompsonSamplingBandit()
+            elif p == "linucb":
                 bandit = LinUCBDiagBandit()
             elif p in {"lints", "lin_ts", "linthompsonsampling"} or (
                 os.getenv("ENABLE_RL_LINTS", "").lower() in {"1", "true", "yes", "on"} and p == "lints"
@@ -82,6 +93,13 @@ class LearningEngine:
                 except Exception:
                     pass
         self.registry.register(name, bandit)
+        # Emit ACTIVE_BANDIT_POLICY gauge (1 for active)
+        try:
+            metrics.ACTIVE_BANDIT_POLICY.labels(
+                **metrics.label_ctx(), domain=name, policy=bandit.__class__.__name__
+            ).set(1)
+        except Exception:
+            pass
 
     def recommend(self, domain: str, context: dict[str, Any], candidates: Sequence[Any]) -> Any:
         policy = cast(_BanditLike, self.registry.get(domain))
@@ -100,7 +118,13 @@ class LearningEngine:
 
     def record(self, domain: str, context: dict[str, Any], action: Any, reward: float) -> None:
         policy = cast(_BanditLike, self.registry.get(domain))
+        started = time.perf_counter()
         policy.update(action, reward, context)
+        try:
+            gap_ms = (time.perf_counter() - started) * 1000.0
+            metrics.RL_REWARD_LATENCY_GAP.labels(**metrics.label_ctx(), domain=domain).observe(gap_ms)
+        except Exception:
+            pass
         if os.getenv("ENABLE_EXPERIMENT_HARNESS", "").lower() in {"1", "true", "yes", "on"}:
             exp_id = f"policy::{domain}"
             if self._exp_mgr.exists(exp_id):
@@ -202,7 +226,30 @@ class LearningEngine:
         domain = f"route.model.select::{task_type}"
         if domain not in self.registry:
             self.register_domain(domain)
+        # Shadow evaluation path (does not affect live choice)
+        shadow_enabled = os.getenv("ENABLE_RL_SHADOW", "").lower() in {"1", "true", "yes", "on"}
         choice = self.recommend(domain, {}, candidates)
+        if shadow_enabled:
+            try:
+                # Evaluate Thompson & LinUCB in shadow if they are not the active policy
+                shadow_candidates: list[tuple[str, _BanditLike]] = []
+                active = self.registry.get(domain)
+                if not isinstance(active, ThompsonSamplingBandit):
+                    shadow_candidates.append(("thompson", ThompsonSamplingBandit()))
+                if not isinstance(active, LinUCBDiagBandit):
+                    shadow_candidates.append(("linucb", LinUCBDiagBandit()))
+                for tag, policy in shadow_candidates:
+                    try:
+                        # Independent recommendation (no update to keep pure observation)
+                        shadow_pick = policy.recommend({}, candidates)
+                        # Encode as similarity (1 if same model else 0) using existing metric surfaces (reuse model_selected counter with task=shadow::<tag>)
+                        metrics.LLM_MODEL_SELECTED.labels(
+                            **metrics.label_ctx(), task=f"shadow::{tag}", model=str(shadow_pick), provider="shadow"
+                        ).inc()
+                    except Exception:
+                        continue
+            except Exception:
+                pass
         return cast(str, choice)
 
     def update(self, task_type: str, action: str, reward: float) -> None:

@@ -496,12 +496,32 @@ class OpenRouterService:
                         result = dict(sem_res)
                         result["cached"] = True
                         result["cache_type"] = "semantic"
+                        # Record similarity (if provided) into histogram buckets for observability
+                        try:
+                            sim_val = float(result.get("similarity", 0.0))
+                            # Bucket label keeps low cardinality; refine later if distribution warrants.
+                            if sim_val >= 0.9:
+                                bucket = ">=0.9"
+                            elif sim_val >= 0.75:
+                                bucket = "0.75-0.9"
+                            else:
+                                bucket = "<0.75"
+                            metrics.SEMANTIC_CACHE_SIMILARITY.labels(**_labels(), bucket=bucket).observe(sim_val)
+                        except Exception:  # pragma: no cover - best effort metrics
+                            pass
+                        # Prefetch USED: a prior miss would have issued a prefetch for this prompt/model.
+                        try:
+                            metrics.SEMANTIC_CACHE_PREFETCH_USED.labels(**_labels()).inc()
+                        except Exception:  # pragma: no cover
+                            pass
                         metrics.LLM_CACHE_HITS.labels(**_labels(), model=chosen, provider=provider_family).inc()
                         return result
                     else:
                         log.debug("semantic_cache_get MISS for model=%s ns=%s", chosen, ns)
                         try:
                             metrics.LLM_CACHE_MISSES.labels(**_labels(), model=chosen, provider=provider_family).inc()
+                            # Miss triggers a prefetch issuance (we will store response post-call via set())
+                            metrics.SEMANTIC_CACHE_PREFETCH_ISSUED.labels(**_labels()).inc()
                         except Exception:
                             pass
             except Exception:

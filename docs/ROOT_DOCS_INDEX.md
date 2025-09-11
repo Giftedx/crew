@@ -63,5 +63,16 @@ docs/
 - Consider adding redirects if this repository is published with web hosting
 - The root directory cleanup is now complete
 
+## Newly Added Optimization Docs
+
+The following optimization-focused documents have been added post-migration and live alongside existing performance and memory materials:
+
+| Topic | Location | Summary |
+|-------|----------|---------|
+| Prompt Compression | `docs/prompt_compression.md` | Multi-pass whitespace / duplication / summarisation pipeline with metrics (`prompt_compression_ratio`). |
+| Semantic Cache Prefetch | `docs/semantic_cache.md` | Similarity-based response reuse with prefetch issued/used counters and similarity histogram. |
+
+Cross-links to these topics have been (or will be) added to `memory.md` and `rag.md` for discoverability.
+
 ---
 Generated: 2025-09-03 | Migration completed successfully

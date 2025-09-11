@@ -97,7 +97,36 @@ class MemoryService:
                 logging.debug("tenancy metric increment failed: %s", exc)
             ctx = TenantContext("default", "main")
         ns = namespace or mem_ns(ctx, "mem")
+        # Measure initial retrieval latency optionally
+        import time as _t  # local import keeps module import time minimal
+
+        phase_start = _t.perf_counter()
+
         results = [m for m in self.memories if m.get("namespace") == ns and query_norm in m["text"].lower()]
+        initial_latency_ms = (_t.perf_counter() - phase_start) * 1000.0
+        try:
+            metrics.RETRIEVAL_LATENCY.labels(**metrics.label_ctx(), phase="initial").observe(initial_latency_ms)
+        except Exception:
+            pass
+
+        # Adaptive k heuristic (flag gated) adjusts the effective limit before truncation.
+        # Strategy: base_k = limit; if many matches and flag enabled, expand modestly; if few, keep.
+        adaptive_enabled = enabled("ENABLE_RETRIEVAL_ADAPTIVE_K", False)
+        effective_limit = limit
+        strategy_label = "static"
+        if adaptive_enabled and limit > 0:
+            total_matches = len(results)
+            # Heuristic: grow limit by sqrt(total_matches) bounded by 3x original, but not exceeding 50.
+            if total_matches > limit:
+                import math as _math
+
+                boost = int(_math.sqrt(total_matches))
+                effective_limit = min(50, min(limit * 3, max(limit, limit + boost)))
+                strategy_label = "adaptive"
+        try:
+            metrics.RETRIEVAL_SELECTED_K.labels(**metrics.label_ctx(), strategy=strategy_label).observe(effective_limit)
+        except Exception:
+            pass
         if metadata:
             lowered = {str(k).lower(): str(v).lower() for k, v in metadata.items()}
             filtered: list[dict[str, Any]] = []
@@ -109,8 +138,15 @@ class MemoryService:
         # Return deep copies without the internal namespace key to protect
         # stored memories from caller mutation and avoid leaking prefixes.
         sanitized = []
-        for m in results[:limit]:
+        # Truncate using effective_limit (adaptive or static)
+        trunc_start = _t.perf_counter()
+        for m in results[:effective_limit]:
             copy = deepcopy(m)
             copy.pop("namespace", None)
             sanitized.append(copy)
+        post_latency_ms = (_t.perf_counter() - trunc_start) * 1000.0
+        try:
+            metrics.RETRIEVAL_LATENCY.labels(**metrics.label_ctx(), phase="post_rerank").observe(post_latency_ms)
+        except Exception:
+            pass
         return sanitized

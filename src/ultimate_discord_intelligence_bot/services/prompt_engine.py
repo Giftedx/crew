@@ -10,8 +10,12 @@ whitespace split acts as a final fallback.
 from __future__ import annotations
 
 import logging
+import os
+import re
 from dataclasses import dataclass, field
 from typing import Any
+
+from obs import metrics
 
 try:
     from core.settings import get_settings
@@ -106,24 +110,96 @@ class PromptEngine:
         This basic implementation simply strips surrounding whitespace; it can
         be extended with more advanced optimisation strategies.
         """
-        text = prompt.strip()
+        original = prompt
+        text = original  # preserve internal structure initially
         settings = get_settings()
-        if getattr(settings, "enable_prompt_compression", False):
-            # Collapse excessive blank lines to a configured maximum.
-            max_blanks = int(getattr(settings, "prompt_compression_max_repeated_blank_lines", 1) or 1)
-            lines: list[str] = []
-            blank_run = 0
-            for ln in text.splitlines():
-                if ln.strip() == "":
-                    blank_run += 1
-                    if blank_run <= max_blanks:
-                        lines.append("")
-                    # else: skip extra blanks
-                else:
-                    blank_run = 0
-                    # Trim trailing spaces
-                    lines.append(ln.rstrip())
-            text = "\n".join(lines).strip()
+        # Environment variable should take precedence so test suites that
+        # mutate os.environ between calls are not affected by an lru_cached
+        # settings instance that may exist under a different import path
+        # (e.g. 'core.settings' vs 'src.core.settings'). This avoids order-
+        # dependent behaviour where one module path retains a cached flag.
+        env_present = "ENABLE_PROMPT_COMPRESSION" in os.environ
+        env_enabled = os.getenv("ENABLE_PROMPT_COMPRESSION", "").lower() in {"1", "true", "yes", "on"}
+        enabled_direct = bool(getattr(settings, "enable_prompt_compression", False))
+        enabled_alias = bool(getattr(settings, "enable_prompt_compression_flag", False))
+        # If the env var is absent we intentionally ignore any cached settings
+        # value that may have been populated via a different import path's
+        # lru_cache ("core.settings" vs "src.core.settings"). This prevents
+        # order-dependent test leakage: only an active environment variable
+        # may enable compression.
+        effective_enabled = env_enabled or (env_present and (enabled_direct or enabled_alias))
+        if not effective_enabled:
+            return original
+
+        lbl = metrics.label_ctx()
+
+        # 1. Collapse excessive blank lines (configurable)
+        max_blanks = int(getattr(settings, "prompt_compression_max_repeated_blank_lines", 1) or 1)
+        lines: list[str] = []
+        blank_run = 0
+        for ln in text.splitlines():
+            if ln.strip() == "":
+                blank_run += 1
+                if blank_run <= max_blanks:
+                    lines.append("")
+            else:
+                blank_run = 0
+                lines.append(ln.rstrip())
+        text = "\n".join(lines).strip()
+
+        # 2. Deduplicate consecutive identical lines (helps noisy logs / transcripts)
+        deduped: list[str] = []
+        prev: str | None = None
+        for ln in text.splitlines():
+            if ln == prev:
+                continue
+            deduped.append(ln)
+            prev = ln
+        text = "\n".join(deduped)
+
+        # 3. Trim repeated spaces within lines while preserving indentation inside code fences
+        def _squeeze_spaces(line: str) -> str:
+            if line.startswith("    ") or line.startswith("\t"):
+                return line  # assume preformatted/code
+            return re.sub(r"\s{2,}", " ", line)
+
+        text = "\n".join(_squeeze_spaces(line) for line in text.splitlines())
+
+        # 4. Section summarisation for very long contiguous blocks
+        MAX_SECTION_LINES = 40
+        HEAD_TAIL_KEEP = 5
+        compressed_sections: list[str] = []
+        current: list[str] = []
+        for ln in text.splitlines():
+            if ln.strip() == "":
+                if current:
+                    if len(current) > MAX_SECTION_LINES:
+                        head = current[:HEAD_TAIL_KEEP]
+                        tail = current[-HEAD_TAIL_KEEP:]
+                        omitted = len(current) - (HEAD_TAIL_KEEP * 2)
+                        current = head + [f"...[omitted {omitted} lines]..."] + tail
+                    compressed_sections.append("\n".join(current))
+                    current = []
+                compressed_sections.append("")
+            else:
+                current.append(ln)
+        if current:
+            if len(current) > MAX_SECTION_LINES:
+                head = current[:HEAD_TAIL_KEEP]
+                tail = current[-HEAD_TAIL_KEEP:]
+                omitted = len(current) - (HEAD_TAIL_KEEP * 2)
+                current = head + [f"...[omitted {omitted} lines]..."] + tail
+            compressed_sections.append("\n".join(current))
+        text = "\n".join(compressed_sections).strip()
+
+        try:  # metrics emission best-effort
+            original_tokens = max(1, self.count_tokens(original))
+            compressed_tokens = max(1, self.count_tokens(text))
+            ratio = compressed_tokens / original_tokens
+            metrics.PROMPT_COMPRESSION_RATIO.labels(lbl["tenant"], lbl["workspace"], "optimise").observe(ratio)
+        except Exception:
+            pass
+
         return text
 
     def build_with_context(

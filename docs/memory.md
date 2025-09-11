@@ -29,3 +29,12 @@ hits = api.retrieve(
 Retention policies are configured per tenant and enforced via
 `api.prune`.  Items can be `pin`ned to avoid pruning or `archive`d to the
 Discord CDN via the archiver facade.
+
+## Related Optimizations
+
+For improved retrieval efficiency and lower token costs, see:
+
+- [Prompt Compression](prompt_compression.md) – Reduces prompt token footprint before routing, preserving salient context while lowering cost.
+- [Semantic Cache](semantic_cache.md) – Skips redundant model calls by reusing high-similarity prior responses (with similarity bucketing & prefetch metrics).
+
+These layers are complementary: compression minimizes outgoing request size, while the semantic cache can eliminate the request entirely for near-duplicate intents.

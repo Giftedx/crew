@@ -2,6 +2,15 @@
 ## Feature Flags & Environment Toggles
 
 (Do not edit by hand; regenerate instead.)
+
+> Note: `ENABLE_ANALYSIS_HTTP_RETRY` is **deprecated** and superseded by `ENABLE_HTTP_RETRY` (see `config/deprecations.yaml`). The global flag now unifies retry precedence (tenant retry.yaml overrides global, explicit function args override both).
+
+Deprecated Symbols:
+
+| Symbol | Replacement |
+|--------|-------------|
+| `services.learning_engine.LearningEngine` | `core.learning_engine.LearningEngine` |
+
 ### Api / Runtime
 
 | Flag | Referenced In (sample) |
@@ -89,6 +98,9 @@
 | `ENABLE_RL_PROMPT` | core/secure_config.py, core/settings.py |
 | `ENABLE_RL_RETRIEVAL` | core/secure_config.py, core/settings.py |
 | `ENABLE_RL_ROUTING` | core/secure_config.py, core/settings.py |
-
+| `ENABLE_RL_THOMPSON` | core/learning_engine.py |
+| `ENABLE_RL_CONTEXTUAL` | core/learning_engine.py |
+| `ENABLE_RL_SHADOW` | core/learning_engine.py |
+| `ENABLE_RETRIEVAL_ADAPTIVE_K` | ultimate_discord_intelligence_bot/services/memory_service.py |
 
 _Generated digest: `13b1c4166d07`_
