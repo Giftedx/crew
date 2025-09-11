@@ -18,7 +18,7 @@ repos:
     rev: v1.10.0
     hooks:
       - id: mypy
-        name: "mypy (allowlist: crew.py, profiles/schema.py, services/prompt_engine.py, services/memory_service.py, core/flags.py)"
+        name: "mypy (allowlist: crew.py, profiles/schema.py, services/prompt_engine.py, services/memory_service.py, core/flags.py, core/time.py)"
         additional_dependencies:
           - types-PyYAML
           - types-requests
@@ -34,6 +34,7 @@ repos:
             "src/ultimate_discord_intelligence_bot/services/prompt_engine.py",
             "src/ultimate_discord_intelligence_bot/services/memory_service.py",
             "src/core/flags.py",
+            "src/core/time.py",
           ]
         pass_filenames: false
   - repo: https://github.com/pre-commit/pre-commit-hooks
