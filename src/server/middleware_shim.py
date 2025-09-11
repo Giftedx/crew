@@ -15,14 +15,22 @@ from __future__ import annotations
 __all__ = ["install_middleware_support"]
 
 import asyncio
-from collections.abc import Callable
-from typing import Any
+from collections.abc import Awaitable, Callable
+from typing import Any, Protocol, cast
 
-try:
+try:  # pragma: no cover - fastapi shim always importable in tests
     from fastapi import FastAPI, Request
     from fastapi.testclient import TestClient
-except Exception:  # pragma: no cover - fastapi shim always importable in tests
+except Exception:  # pragma: no cover
     raise
+
+
+class MiddlewareLike(Protocol):  # pragma: no cover - structural typing only
+    async def dispatch(self, request: Request, call_next: Callable[[Request], Awaitable[Any]]) -> Any: ...
+
+
+# A middleware entry can be either an object with a dispatch method OR a 2-arg callable
+MiddlewareEntry = MiddlewareLike | Callable[[Request, Callable[[Request], Awaitable[Any]]], Awaitable[Any] | Any]
 
 
 def install_middleware_support() -> None:
@@ -34,27 +42,34 @@ def install_middleware_support() -> None:
     patched_app = False
     if not hasattr(FastAPI, "add_middleware"):
 
-        def add_middleware(self: Any, mw_cls: Any, **options: Any) -> None:
-            chain = getattr(self, "_http_middlewares", [])
+        def _shim_add_middleware(self: Any, mw_cls: Any, **options: Any) -> None:  # noqa: D401
+            chain: list[MiddlewareEntry] = list(getattr(self, "_http_middlewares", []))
             instance = mw_cls(self, **options)
-            # Prepend so rate limiter (typically first) executes before later additions
-            chain.insert(0, instance)
+            # Append so that earlier added (decorator) middlewares run before later class middlewares,
+            # mimicking FastAPI's stacking order. This allows path/bypass flags set in early
+            # function middlewares to be visible to downstream class-based middleware like the rate limiter.
+            chain.append(cast(MiddlewareEntry, instance))
             self._http_middlewares = chain
 
             def middleware(_type: str):  # noqa: D401
-                def dec(fn: Callable[[Request], Any]):
-                    self._http_middlewares.append(fn)
+                def decorator(fn: Callable[[Request], Any]):
+                    async def two_arg(req: Request, _next: Callable[[Request], Awaitable[Any]]):  # noqa: D401
+                        return fn(req)
+
+                    chain.append(cast(MiddlewareEntry, two_arg))
+                    self._http_middlewares = chain
                     return fn
 
-                return dec
+                return decorator
 
-            self.middleware = middleware
+            # attach 'middleware' helper if absent
+            if not hasattr(self, "middleware"):
+                setattr(self, "middleware", middleware)
 
-        FastAPI.add_middleware = add_middleware  # type: ignore[attr-defined]
+        setattr(FastAPI, "add_middleware", _shim_add_middleware)
         patched_app = True
 
-    # If we didn't patch the FastAPI app (i.e., running real FastAPI), skip TestClient patching entirely
-    if not patched_app:
+    if not patched_app:  # real FastAPI: nothing else to do
         return
     # Patch TestClient only once
     if getattr(TestClient, "_patched_for_chain", False):  # pragma: no cover - idempotency guard
@@ -62,10 +77,9 @@ def install_middleware_support() -> None:
 
     original_request = getattr(TestClient, "_request", None) or getattr(TestClient, "request")
 
-    def _patched_request(self: Any, method: str, path: str, **kw: Any):
+    def _patched_request(self: Any, method: str, path: str, **kw: Any):  # noqa: D401
         app = self.app
-        # If no chain, fall back
-        chain = [mw for mw in getattr(app, "_http_middlewares", [])]
+        chain: list[MiddlewareEntry] = list(getattr(app, "_http_middlewares", []))
         if not chain:
             return original_request(self, method, path, **kw)
 
@@ -77,19 +91,46 @@ def install_middleware_support() -> None:
                 return await terminal(req)
             current = chain[i]
 
-            async def _call_next(r: Request):
+            async def _call_next(r: Request) -> Any:
                 return await invoke(i + 1, r)
 
             # Support both class instances with .dispatch and simple callables
             if hasattr(current, "dispatch"):
-                result = current.dispatch(req, _call_next)
+                result = cast(MiddlewareLike, current).dispatch(req, _call_next)
             else:
-                result = current(req, _call_next)
-            if hasattr(result, "__await__"):
+                two_arg = cast(Callable[[Request, Callable[[Request], Awaitable[Any]]], Any], current)
+                result = two_arg(req, _call_next)
+            if asyncio.iscoroutine(result):
                 result = await result
             return result
 
-        req = Request(method=method.upper(), path=path)
+        # Minimal ASGI scope for Request construction (method/path only)
+        scope = {
+            "type": "http",
+            "method": method.upper(),
+            "path": path,
+            "headers": [],
+            "query_string": b"",
+            "server": ("testserver", 80),
+            "client": ("testclient", 50000),
+            "scheme": "http",
+            "root_path": "",
+            "http_version": "1.1",
+        }
+        # Starlette style Request expects only scope; shim Request expects expanded params.
+        try:
+            req = Request(scope)  # type: ignore[arg-type]
+            if isinstance(getattr(req, "scope", None), dict):  # augment for limiter path lookup
+                req.scope.setdefault("path", path)  # type: ignore[attr-defined]
+        except TypeError:  # shim path
+            try:  # pragma: no cover - defensive
+                req = Request(method=method.upper(), path=path, headers={}, body=b"", query="")  # type: ignore[call-arg]
+                if not hasattr(req, "scope"):
+                    req.scope = {"path": path}  # type: ignore[attr-defined]
+                else:
+                    req.scope.setdefault("path", path)  # type: ignore[attr-defined]
+            except Exception:  # fallback last resort
+                req = Request(scope)  # type: ignore[arg-type]
         return asyncio.run(invoke(0, req))
 
     TestClient._request = _patched_request

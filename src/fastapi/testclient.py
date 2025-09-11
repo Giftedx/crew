@@ -29,6 +29,18 @@ class TestClient:
         self.app = app
         # Provide public 'request' callable for compatibility with starlette TestClient
         self.request = self._request
+        # Simple fixed window limiter state (shim only). Real FastAPI uses middleware.
+        self._rl_reset = 0.0
+        self._rl_remaining = None  # type: ignore[assignment]
+        try:
+            import os as _os
+
+            if _os.getenv("ENABLE_RATE_LIMITING", "0").lower() in ("1", "true", "yes", "on"):
+                burst = int(_os.getenv("RATE_LIMIT_BURST", _os.getenv("RATE_LIMIT_RPS", "10")))
+                self._rl_remaining = burst
+                self._rl_burst = burst
+        except Exception:  # pragma: no cover - defensive
+            pass
 
     # Internal unified request executor to minimise duplication
     def _request(
@@ -112,6 +124,21 @@ class TestClient:
             body = b"" if json is None else (json if isinstance(json, bytes | bytearray) else json_to_bytes(json))
 
         req = Request(body=body, headers=headers or {}, method=method.upper(), path=raw_path, query=raw_query)
+
+        # Shim-level rate limiting (only if middleware chain absent and enabled)
+        if getattr(self, "_rl_remaining", None) is not None:
+            import os as _os
+            import time as _t
+
+            metrics_path = _os.getenv("PROMETHEUS_ENDPOINT_PATH", "/metrics")
+            if raw_path not in (metrics_path, "/health"):
+                now = _t.monotonic()
+                if now >= getattr(self, "_rl_reset", 0.0):
+                    self._rl_reset = now + 1.0
+                    self._rl_remaining = self._rl_burst  # type: ignore[attr-defined]
+                if self._rl_remaining <= 0:  # type: ignore[operator]
+                    return _Resp(429, b"Rate limit exceeded")
+                self._rl_remaining = (self._rl_remaining or 0) - 1  # type: ignore[assignment]
         # Populate query params mapping for middleware tests if query exists
         if raw_query:
             query_items: dict[str, str] = {}

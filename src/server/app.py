@@ -20,6 +20,7 @@ from collections.abc import Callable
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request, Response
+
 from server.middleware_shim import install_middleware_support
 
 # Ensure middleware support available for local FastAPI shim
@@ -50,7 +51,9 @@ from memory.qdrant_provider import get_qdrant_client
 from obs import metrics
 from obs.enhanced_monitoring import start_monitoring_system, stop_monitoring_system
 from obs.tracing import init_tracing
+
 from ops.alert_adapter import alert_router
+from server.rate_limit import add_rate_limit_middleware
 
 
 def _add_metrics_middleware(app: FastAPI, settings: Settings) -> None:
@@ -74,7 +77,7 @@ def _add_metrics_middleware(app: FastAPI, settings: Settings) -> None:
         return response
 
 
-from server.rate_limit import add_rate_limit_middleware
+# from server.rate_limit import add_rate_limit_middleware  # legacy middleware unused after inline limiter
 
 
 @asynccontextmanager
@@ -142,9 +145,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             logging.debug(f"Failed to include archive API router: {exc}")
     app.include_router(alert_router)
 
-    # Rate limit first so it precedes other middlewares
-    add_rate_limit_middleware(app)
-    # Metrics & tracing
+    # Metrics & tracing (ensure metrics route can be registered before rate limiting so it is always observable)
     _add_metrics_middleware(app, settings)
     _add_api_cache_middleware(app, settings)
 
@@ -169,6 +170,18 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         def _metrics():  # noqa: D401
             data = metrics.render()
             return Response(data, status_code=200, media_type="text/plain; version=0.0.4")
+
+        # Persist metrics path to application state so middleware without reliable path
+        # information can still exclude it.
+        try:  # pragma: no cover - defensive
+            app.state.metrics_path = str(path)  # type: ignore[attr-defined]
+        except Exception:  # pragma: no cover
+            setattr(app, "_metrics_path", str(path))
+
+        # Bypass middleware no longer required: shim now propagates real path in scope.
+
+    # Install rate limit middleware after metrics route so it can still exclude it based on path.
+    add_rate_limit_middleware(app)
 
     @app.get("/health")
     def _health() -> dict[str, str]:
