@@ -17,7 +17,7 @@ try:
     from core.settings import get_settings
 except Exception:  # pragma: no cover - defensive fallback
 
-    def get_settings():  # type: ignore
+    def get_settings() -> Any:  # broad return type for fallback stub
         class _S:
             enable_prompt_compression = False
             prompt_compression_max_repeated_blank_lines = 1
@@ -28,14 +28,17 @@ except Exception:  # pragma: no cover - defensive fallback
 from .memory_service import MemoryService
 
 try:  # pragma: no cover - optional dependency
-    import tiktoken
+    import tiktoken as _tiktoken  # noqa: F401
 except Exception:  # pragma: no cover
-    tiktoken = None  # type: ignore[assignment]
+    _tiktoken = None
 
-try:  # pragma: no cover - optional dependency
-    from transformers import AutoTokenizer  # type: ignore[import-not-found]
+# Use a separate alias variable to avoid reassigning imported module symbol directly.
+tiktoken = _tiktoken  # may be None at runtime
+
+try:  # pragma: no cover - optional dependency (covered by mypy ignore-missing-imports override)
+    from transformers import AutoTokenizer  # noqa: F401
 except Exception:  # pragma: no cover
-    AutoTokenizer = None
+    AutoTokenizer = None  # noqa: N816 (capitalised from external lib convention, fallback sentinel)
 
 
 @dataclass
