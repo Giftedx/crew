@@ -10,13 +10,13 @@ from pathlib import Path
 import pytest
 
 
-def pytest_ignore_collect(path: Path, config) -> bool:  # type: ignore[override]
+def pytest_ignore_collect(collection_path: Path, config) -> bool:  # type: ignore[override]
     """Conditionally ignore tests that require optional heavy dependencies.
 
     If importing 'crewai' fails for any reason (missing extras or platform wheels),
     skip collecting tests that depend on it to keep the fast test subset stable.
     """
-    basename = os.path.basename(str(path))
+    basename = os.path.basename(str(collection_path))
     if basename == "test_crewai_enhancements.py":
         try:
             importlib.import_module("crewai")

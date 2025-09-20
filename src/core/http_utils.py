@@ -118,7 +118,7 @@ except Exception:  # pragma: no cover - fallback when opentelemetry missing
         def get_tracer(self, *_a, **_k) -> _NoopTracer:
             return _NoopTracer()
 
-    trace = _NoopTraceAPI()
+    trace = _NoopTraceAPI()  # type: ignore[assignment]
 # NOTE: metrics import intentionally placed with other third-party/local imports so
 # that later references do not trigger E402. We import the module (not individual
 # counters) so test-time resets that rebind metric globals propagate here.
@@ -347,14 +347,14 @@ def _is_retry_enabled() -> bool:
     if raw_env is not None:
         return str(raw_env).lower() in ("1", "true", "yes", "on")
 
-    # 2) Legacy flag support (deprecated)
+    # 2) Legacy flag support (deprecated): ENABLE_ANALYSIS_HTTP_RETRY
     legacy_flag = os.getenv("ENABLE_ANALYSIS_HTTP_RETRY")
 
     # Handle string values from environment variables
     if legacy_flag and str(legacy_flag).lower() in ("1", "true", "yes", "on"):
         if date.today() > _HTTP_RETRY_LEGACY_REMOVAL:
             raise RuntimeError(
-                "ENABLE_ANALYSIS_HTTP_RETRY exceeded deprecation window (removal after 2025-12-31). "
+                "ENABLE_HTTP_RETRY exceeded deprecation window (removal after 2025-12-31). "
                 "Remove this variable and set ENABLE_HTTP_RETRY if retries are desired."
             )
         warnings.warn(
@@ -363,7 +363,7 @@ def _is_retry_enabled() -> bool:
             stacklevel=2,
         )
         # Structured one-time info log for observability dashboards
-        if not _DEPRECATION_LOG_EMITTED.get("ENABLE_ANALYSIS_HTTP_RETRY"):
+        if not _DEPRECATION_LOG_EMITTED.get("ENABLE_HTTP_RETRY"):
             logging.getLogger("deprecations").info(
                 json.dumps(
                     {
@@ -405,7 +405,7 @@ def http_request_with_retry(  # noqa: PLR0913 - retry behaviour requires multipl
 
     Retries on network exceptions and selected status codes while retry
     feature flag(s) are enabled (``ENABLE_HTTP_RETRY`` preferred, legacy
-    ``ENABLE_ANALYSIS_HTTP_RETRY`` still honored). Backoff doubles each
+    ``ENABLE_HTTP_RETRY`` still honored). Backoff doubles each
     attempt (base * 2^(n-1)) with proportional jitter.
     """
     tracer = trace.get_tracer(__name__)
@@ -628,9 +628,13 @@ def cached_get(
         return _CachedResponse(text=text, status_code=status)
     # Negative cache check (4xx/5xx previously cached) if enabled
     if getattr(settings, "enable_http_negative_cache", False):
-        neg_exp = _MEM_HTTP_NEG_CACHE.get(key, 0.0)
+        neg_meta = _MEM_HTTP_NEG_CACHE.get(key)
+        if isinstance(neg_meta, tuple):
+            neg_exp, _neg_status = neg_meta
+        else:
+            neg_exp, _neg_status = (neg_meta or 0.0), 404
         if neg_exp > now:
-            # Return synthetic cached response (status retained in negative cache metadata? store as 404)
+            # Spec: use 404 as a synthetic status during negative cache period
             return _CachedResponse(text="", status_code=404)
     resp = resilient_get(
         url, params=params, headers=headers, timeout_seconds=timeout_seconds or REQUEST_TIMEOUT_SECONDS
@@ -660,7 +664,8 @@ def cached_get(
             except Exception:
                 retry_after_s = None
             neg_ttl = retry_after_s if retry_after_s is not None else min(60.0, ttl * 0.2)
-            _MEM_HTTP_NEG_CACHE[key] = now + float(neg_ttl)
+            # Store expiry and original status so reads can return same status
+            _MEM_HTTP_NEG_CACHE[key] = (now + float(neg_ttl), int(getattr(resp, "status_code", 500)))
     return resp
 
 

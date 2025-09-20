@@ -22,7 +22,7 @@ from core.structured_llm_service import (
 from pydantic import BaseModel
 
 
-class TestUserProfile(BaseModel):
+class UserProfile(BaseModel):
     """Test Pydantic model for user profiles."""
 
     name: str
@@ -31,7 +31,7 @@ class TestUserProfile(BaseModel):
     is_active: bool = True
 
 
-class TestProductInfo(BaseModel):
+class ProductInfo(BaseModel):
     """Test Pydantic model for product information."""
 
     title: str
@@ -62,7 +62,7 @@ class TestStructuredRequest:
         """Test creating a StructuredRequest with all parameters."""
         request = StructuredRequest(
             prompt="Generate a user profile",
-            response_model=TestUserProfile,
+            response_model=UserProfile,
             task_type="general",
             model="openai/gpt-4o",
             provider_opts={"temperature": 0.7},
@@ -70,7 +70,7 @@ class TestStructuredRequest:
         )
 
         assert request.prompt == "Generate a user profile"
-        assert request.response_model == TestUserProfile
+        assert request.response_model == UserProfile
         assert request.task_type == "general"
         assert request.model == "openai/gpt-4o"
         assert request.provider_opts == {"temperature": 0.7}
@@ -78,7 +78,7 @@ class TestStructuredRequest:
 
     def test_structured_request_defaults(self):
         """Test StructuredRequest with default values."""
-        request = StructuredRequest(prompt="Test prompt", response_model=TestUserProfile)
+        request = StructuredRequest(prompt="Test prompt", response_model=UserProfile)
 
         assert request.task_type == "general"
         assert request.model is None
@@ -111,7 +111,7 @@ class TestStructuredLLMService:
     def test_prompt_enhancement_for_json(self, structured_service):
         """Test prompt enhancement for JSON output."""
         prompt = "Generate a user profile"
-        enhanced = structured_service._enhance_prompt_for_json(prompt, TestUserProfile)
+        enhanced = structured_service._enhance_prompt_for_json(prompt, UserProfile)
 
         assert "IMPORTANT: Respond with valid JSON" in enhanced
         assert "UserProfile" in enhanced
@@ -120,9 +120,9 @@ class TestStructuredLLMService:
 
     def test_example_generation(self, structured_service):
         """Test generation of example instances for prompt enhancement."""
-        example = structured_service._generate_example_instance(TestUserProfile)
+        example = structured_service._generate_example_instance(UserProfile)
 
-        assert isinstance(example, TestUserProfile)
+        assert isinstance(example, UserProfile)
         assert example.name == "example_string"
         assert example.age == 0
         assert example.email == "example_string"
@@ -131,7 +131,7 @@ class TestStructuredLLMService:
     def test_prompt_enhancement_with_example(self, structured_service):
         """Test prompt enhancement with concrete examples."""
         prompt = "Create a product listing"
-        enhanced = structured_service._enhance_prompt_with_example(prompt, TestProductInfo)
+        enhanced = structured_service._enhance_prompt_with_example(prompt, ProductInfo)
 
         assert "Example of the expected JSON format:" in enhanced
         assert '"title": "example_string"' in enhanced
@@ -141,9 +141,9 @@ class TestStructuredLLMService:
     def test_json_parsing_and_validation_success(self, structured_service):
         """Test successful JSON parsing and validation."""
         json_str = '{"name": "John Doe", "age": 30, "email": "john@example.com", "is_active": true}'
-        result = structured_service._parse_and_validate_json(json_str, TestUserProfile)
+        result = structured_service._parse_and_validate_json(json_str, UserProfile)
 
-        assert isinstance(result, TestUserProfile)
+        assert isinstance(result, UserProfile)
         assert result.name == "John Doe"
         assert result.age == 30
         assert result.email == "john@example.com"
@@ -152,9 +152,9 @@ class TestStructuredLLMService:
     def test_json_parsing_with_markdown(self, structured_service):
         """Test JSON parsing with markdown code blocks."""
         json_str = '```json\n{"name": "Jane Doe", "age": 25, "email": "jane@example.com"}\n```'
-        result = structured_service._parse_and_validate_json(json_str, TestUserProfile)
+        result = structured_service._parse_and_validate_json(json_str, UserProfile)
 
-        assert isinstance(result, TestUserProfile)
+        assert isinstance(result, UserProfile)
         assert result.name == "Jane Doe"
         assert result.age == 25
 
@@ -162,14 +162,14 @@ class TestStructuredLLMService:
         """Test JSON parsing with validation errors."""
         # Missing required field
         json_str = '{"name": "John Doe", "email": "john@example.com"}'
-        result = structured_service._parse_and_validate_json(json_str, TestUserProfile)
+        result = structured_service._parse_and_validate_json(json_str, UserProfile)
 
         assert result is None
 
     def test_json_parsing_invalid_json(self, structured_service):
         """Test JSON parsing with invalid JSON."""
         invalid_json = '{"name": "John", "age": 30'  # Missing closing brace
-        result = structured_service._parse_and_validate_json(invalid_json, TestUserProfile)
+        result = structured_service._parse_and_validate_json(invalid_json, UserProfile)
 
         assert result is None
 
@@ -182,11 +182,11 @@ class TestStructuredLLMService:
         mock_response = {"status": "success", "response": '{"name": "Alice", "age": 28, "email": "alice@test.com"}'}
         mock_openrouter_service.route.return_value = mock_response
 
-        request = StructuredRequest(prompt="Generate a user profile", response_model=TestUserProfile)
+        request = StructuredRequest(prompt="Generate a user profile", response_model=UserProfile)
 
         result = service.route_structured(request)
 
-        assert isinstance(result, TestUserProfile)
+        assert isinstance(result, UserProfile)
         assert result.name == "Alice"
         assert result.age == 28
         assert result.email == "alice@test.com"
@@ -204,11 +204,11 @@ class TestStructuredLLMService:
         ]
         mock_openrouter_service.route.side_effect = responses
 
-        request = StructuredRequest(prompt="Generate a user profile", response_model=TestUserProfile, max_retries=3)
+        request = StructuredRequest(prompt="Generate a user profile", response_model=UserProfile, max_retries=3)
 
         result = service.route_structured(request)
 
-        assert isinstance(result, TestUserProfile)
+        assert isinstance(result, UserProfile)
         assert result.name == "Charlie"
         assert result.age == 35
         assert result.email == "charlie@test.com"
@@ -224,7 +224,7 @@ class TestStructuredLLMService:
         # Mock consistent failure
         mock_openrouter_service.route.return_value = {"status": "success", "response": "invalid json response"}
 
-        request = StructuredRequest(prompt="Generate a user profile", response_model=TestUserProfile, max_retries=2)
+        request = StructuredRequest(prompt="Generate a user profile", response_model=UserProfile, max_retries=2)
 
         result = service.route_structured(request)
 
@@ -241,7 +241,7 @@ class TestStructuredLLMService:
         # Mock OpenRouter error
         mock_openrouter_service.route.return_value = {"status": "error", "error": "API rate limit exceeded"}
 
-        request = StructuredRequest(prompt="Generate a user profile", response_model=TestUserProfile)
+        request = StructuredRequest(prompt="Generate a user profile", response_model=UserProfile)
 
         result = service.route_structured(request)
 
@@ -290,7 +290,7 @@ class TestStructuredLLMServiceIntegration:
 
         request = StructuredRequest(
             prompt="Create a profile for a software engineer named Sarah",
-            response_model=TestUserProfile,
+            response_model=UserProfile,
             task_type="general",
             model="openai/gpt-4o",
         )
@@ -298,7 +298,7 @@ class TestStructuredLLMServiceIntegration:
         result = service.route_structured(request)
 
         # Verify the result
-        assert isinstance(result, TestUserProfile)
+        assert isinstance(result, UserProfile)
         assert result.name == "Sarah Johnson"
         assert result.age == 32
         assert result.email == "sarah.johnson@example.com"
@@ -384,7 +384,7 @@ class TestStreamingDataStructures:
 
         request = StreamingStructuredRequest(
             prompt="Generate a user profile",
-            response_model=TestUserProfile,
+            response_model=UserProfile,
             progress_callback=callback_func,
             task_type="general",
             model="openai/gpt-4o",
@@ -395,7 +395,7 @@ class TestStreamingDataStructures:
         )
 
         assert request.prompt == "Generate a user profile"
-        assert request.response_model == TestUserProfile
+        assert request.response_model == UserProfile
         assert request.progress_callback == callback_func
         assert request.task_type == "general"
         assert request.model == "openai/gpt-4o"
@@ -406,7 +406,7 @@ class TestStreamingDataStructures:
 
     def test_streaming_structured_request_defaults(self):
         """Test StreamingStructuredRequest with default values."""
-        request = StreamingStructuredRequest(prompt="Test prompt", response_model=TestUserProfile)
+        request = StreamingStructuredRequest(prompt="Test prompt", response_model=UserProfile)
 
         assert request.task_type == "general"
         assert request.model is None
@@ -507,7 +507,7 @@ class TestStreamingLLMService:
             "response": '{"name": "Alice", "age": 28, "email": "alice@test.com"}',
         }
 
-        request = StreamingStructuredRequest(prompt="Generate a user profile", response_model=TestUserProfile)
+        request = StreamingStructuredRequest(prompt="Generate a user profile", response_model=UserProfile)
 
         # Test async streaming
         import asyncio
@@ -519,7 +519,7 @@ class TestStreamingLLMService:
             assert len(responses) >= 1
             final_response = responses[-1]
             assert final_response.is_complete is True
-            assert isinstance(final_response.partial_result, TestUserProfile)
+            assert isinstance(final_response.partial_result, UserProfile)
             assert final_response.partial_result.name == "Alice"
             assert final_response.partial_result.age == 28
             assert final_response.partial_result.email == "alice@test.com"
@@ -537,7 +537,7 @@ class TestStreamingLLMService:
             "response": '{"name": "Bob", "age": 35, "email": "bob@test.com"}',
         }
 
-        request = StreamingStructuredRequest(prompt="Generate a user profile", response_model=TestUserProfile)
+        request = StreamingStructuredRequest(prompt="Generate a user profile", response_model=UserProfile)
 
         # Test async streaming
         import asyncio
@@ -549,7 +549,7 @@ class TestStreamingLLMService:
             assert len(responses) >= 1
             final_response = responses[-1]
             assert final_response.is_complete is True
-            assert isinstance(final_response.partial_result, TestUserProfile)
+            assert isinstance(final_response.partial_result, UserProfile)
             assert final_response.partial_result.name == "Bob"
             assert final_response.partial_result.age == 35
             assert final_response.partial_result.email == "bob@test.com"
@@ -573,7 +573,7 @@ class TestStreamingLLMService:
             callback_calls.append(event)
 
         request = StreamingStructuredRequest(
-            prompt="Generate a user profile", response_model=TestUserProfile, progress_callback=progress_callback
+            prompt="Generate a user profile", response_model=UserProfile, progress_callback=progress_callback
         )
 
         # Test async streaming
@@ -586,7 +586,7 @@ class TestStreamingLLMService:
             assert len(responses) >= 1
             final_response = responses[-1]
             assert final_response.is_complete is True
-            assert isinstance(final_response.partial_result, TestUserProfile)
+            assert isinstance(final_response.partial_result, UserProfile)
             assert final_response.partial_result.name == "Charlie"
 
             # Verify progress callback was called
@@ -602,7 +602,7 @@ class TestStreamingLLMService:
         # Mock OpenRouter error response
         mock_openrouter_service.route.return_value = {"status": "error", "error": "Service unavailable"}
 
-        request = StreamingStructuredRequest(prompt="Generate a user profile", response_model=TestUserProfile)
+        request = StreamingStructuredRequest(prompt="Generate a user profile", response_model=UserProfile)
 
         # Test async streaming
         import asyncio
@@ -628,7 +628,7 @@ class TestStreamingLLMService:
         mock_openrouter_service.route.return_value = {"status": "error", "error": "Service unavailable"}
 
         request = StreamingStructuredRequest(
-            prompt="Generate a user profile", response_model=TestUserProfile, max_retries=2
+            prompt="Generate a user profile", response_model=UserProfile, max_retries=2
         )
 
         # Test async streaming
@@ -669,7 +669,7 @@ class TestStreamingIntegration:
 
         request = StreamingStructuredRequest(
             prompt="Create a profile for Diana Prince",
-            response_model=TestUserProfile,
+            response_model=UserProfile,
             progress_callback=track_progress,
             model="openai/gpt-4o",
         )
@@ -684,7 +684,7 @@ class TestStreamingIntegration:
             assert len(responses) >= 1
             final_response = responses[-1]
             assert final_response.is_complete is True
-            assert isinstance(final_response.partial_result, TestUserProfile)
+            assert isinstance(final_response.partial_result, UserProfile)
             assert final_response.partial_result.name == "Diana Prince"
             assert final_response.partial_result.age == 30
             assert final_response.partial_result.email == "diana@example.com"
@@ -710,7 +710,7 @@ class TestStreamingIntegration:
         }
 
         request = StreamingStructuredRequest(
-            prompt="Create a product listing for wireless headphones", response_model=TestProductInfo
+            prompt="Create a product listing for wireless headphones", response_model=ProductInfo
         )
 
         # Test async streaming
@@ -723,7 +723,7 @@ class TestStreamingIntegration:
             assert len(responses) >= 1
             final_response = responses[-1]
             assert final_response.is_complete is True
-            assert isinstance(final_response.partial_result, TestProductInfo)
+            assert isinstance(final_response.partial_result, ProductInfo)
             assert final_response.partial_result.title == "Wireless Headphones"
             assert final_response.partial_result.price == 199.99
             assert final_response.partial_result.category == "Electronics"
@@ -827,7 +827,7 @@ class TestCacheKeyGenerator:
         """Test basic cache key generation."""
         request = StructuredRequest(
             prompt="Generate a user profile",
-            response_model=TestUserProfile,
+            response_model=UserProfile,
             task_type="general",
         )
 
@@ -841,13 +841,13 @@ class TestCacheKeyGenerator:
         """Test cache key generation with model specified."""
         request1 = StructuredRequest(
             prompt="Generate a user profile",
-            response_model=TestUserProfile,
+            response_model=UserProfile,
             task_type="general",
         )
 
         request2 = StructuredRequest(
             prompt="Generate a user profile",
-            response_model=TestUserProfile,
+            response_model=UserProfile,
             task_type="general",
             model="openai/gpt-4o",
         )
@@ -863,13 +863,13 @@ class TestCacheKeyGenerator:
         """Test cache key generation with provider options."""
         request1 = StructuredRequest(
             prompt="Generate a user profile",
-            response_model=TestUserProfile,
+            response_model=UserProfile,
             task_type="general",
         )
 
         request2 = StructuredRequest(
             prompt="Generate a user profile",
-            response_model=TestUserProfile,
+            response_model=UserProfile,
             task_type="general",
             provider_opts={"temperature": 0.7, "max_tokens": 100},
         )
@@ -885,14 +885,14 @@ class TestCacheKeyGenerator:
         """Test that cache key generation is deterministic."""
         request1 = StructuredRequest(
             prompt="Generate a user profile",
-            response_model=TestUserProfile,
+            response_model=UserProfile,
             task_type="general",
             model="openai/gpt-4o",
         )
 
         request2 = StructuredRequest(
             prompt="Generate a user profile",
-            response_model=TestUserProfile,
+            response_model=UserProfile,
             task_type="general",
             model="openai/gpt-4o",
         )
@@ -906,13 +906,13 @@ class TestCacheKeyGenerator:
         """Test that different prompts generate different keys."""
         request1 = StructuredRequest(
             prompt="Generate a user profile",
-            response_model=TestUserProfile,
+            response_model=UserProfile,
             task_type="general",
         )
 
         request2 = StructuredRequest(
             prompt="Generate a product listing",
-            response_model=TestUserProfile,
+            response_model=UserProfile,
             task_type="general",
         )
 
@@ -925,14 +925,14 @@ class TestCacheKeyGenerator:
         """Test that different models generate different keys."""
         request1 = StructuredRequest(
             prompt="Generate a user profile",
-            response_model=TestUserProfile,
+            response_model=UserProfile,
             task_type="general",
             model="openai/gpt-4o",
         )
 
         request2 = StructuredRequest(
             prompt="Generate a user profile",
-            response_model=TestUserProfile,
+            response_model=UserProfile,
             task_type="general",
             model="anthropic/claude-3",
         )
@@ -946,7 +946,7 @@ class TestCacheKeyGenerator:
         """Test cache key generation for streaming requests."""
         request = StreamingStructuredRequest(
             prompt="Generate a user profile",
-            response_model=TestUserProfile,
+            response_model=UserProfile,
             task_type="general",
             model="openai/gpt-4o",
         )
@@ -958,15 +958,15 @@ class TestCacheKeyGenerator:
 
     def test_generate_model_schema_key(self):
         """Test model schema key generation."""
-        schema_key = CacheKeyGenerator.generate_model_schema_key(TestUserProfile)
+        schema_key = CacheKeyGenerator.generate_model_schema_key(UserProfile)
 
         assert isinstance(schema_key, str)
         assert len(schema_key) == 16  # Should be 16 characters (first 16 of hash)
 
     def test_generate_model_schema_key_deterministic(self):
         """Test that model schema key generation is deterministic."""
-        key1 = CacheKeyGenerator.generate_model_schema_key(TestUserProfile)
-        key2 = CacheKeyGenerator.generate_model_schema_key(TestUserProfile)
+        key1 = CacheKeyGenerator.generate_model_schema_key(UserProfile)
+        key2 = CacheKeyGenerator.generate_model_schema_key(UserProfile)
 
         assert key1 == key2
 
@@ -1143,10 +1143,10 @@ class TestResponseCache:
         cache = ResponseCache()
 
         # Test different task types
-        request_general = StructuredRequest(prompt="test", response_model=TestUserProfile, task_type="general")
-        request_analysis = StructuredRequest(prompt="test", response_model=TestUserProfile, task_type="analysis")
-        request_code = StructuredRequest(prompt="test", response_model=TestUserProfile, task_type="code")
-        request_factual = StructuredRequest(prompt="test", response_model=TestUserProfile, task_type="factual")
+        request_general = StructuredRequest(prompt="test", response_model=UserProfile, task_type="general")
+        request_analysis = StructuredRequest(prompt="test", response_model=UserProfile, task_type="analysis")
+        request_code = StructuredRequest(prompt="test", response_model=UserProfile, task_type="code")
+        request_factual = StructuredRequest(prompt="test", response_model=UserProfile, task_type="factual")
 
         assert cache.get_ttl_for_request(request_general) == 3600  # 1 hour
         assert cache.get_ttl_for_request(request_analysis) == 7200  # 2 hours
@@ -1158,9 +1158,7 @@ class TestResponseCache:
         cache = ResponseCache()
 
         # Regular streaming request
-        streaming_request = StreamingStructuredRequest(
-            prompt="test", response_model=TestUserProfile, task_type="general"
-        )
+        streaming_request = StreamingStructuredRequest(prompt="test", response_model=UserProfile, task_type="general")
 
         ttl = cache.get_ttl_for_request(streaming_request)
         assert ttl <= 1800  # Should be <= 30 minutes for streaming
@@ -1258,7 +1256,7 @@ class TestResponseCache:
         cache = ResponseCache(enable_compression=True, compression_min_size_bytes=100)
 
         # Add a small value (shouldn't be compressed)
-        small_value = TestUserProfile(name="Alice", age=25, email="alice@test.com")
+        small_value = UserProfile(name="Alice", age=25, email="alice@test.com")
         cache.set("small_key", small_value)
 
         entry = cache.cache["small_key"]
@@ -1461,16 +1459,16 @@ class TestCachingIntegration:
             "response": '{"name": "Alice", "age": 28, "email": "alice@test.com"}',
         }
 
-        request = StructuredRequest(prompt="Generate a user profile", response_model=TestUserProfile)
+        request = StructuredRequest(prompt="Generate a user profile", response_model=UserProfile)
 
         # First call should miss cache and call OpenRouter
         result1 = service.route_structured(request)
-        assert isinstance(result1, TestUserProfile)
+        assert isinstance(result1, UserProfile)
         assert mock_openrouter_service.route.call_count == 1
 
         # Second call should hit cache and not call OpenRouter
         result2 = service.route_structured(request)
-        assert isinstance(result2, TestUserProfile)
+        assert isinstance(result2, UserProfile)
         assert mock_openrouter_service.route.call_count == 1  # Still 1 call
 
         # Results should be identical
@@ -1495,15 +1493,15 @@ class TestCachingIntegration:
 
         mock_openrouter_service.route.side_effect = mock_route_response
 
-        request1 = StructuredRequest(prompt="Generate profile 1", response_model=TestUserProfile)
-        request2 = StructuredRequest(prompt="Generate profile 2", response_model=TestUserProfile)
+        request1 = StructuredRequest(prompt="Generate profile 1", response_model=UserProfile)
+        request2 = StructuredRequest(prompt="Generate profile 2", response_model=UserProfile)
 
         # Both calls should miss cache and call OpenRouter
         result1 = service.route_structured(request1)
         result2 = service.route_structured(request2)
 
-        assert isinstance(result1, TestUserProfile)
-        assert isinstance(result2, TestUserProfile)
+        assert isinstance(result1, UserProfile)
+        assert isinstance(result2, UserProfile)
         assert mock_openrouter_service.route.call_count == 2
 
         # Results should be different
@@ -1522,7 +1520,7 @@ class TestCachingIntegration:
             "response": '{"name": "Charlie", "age": 25, "email": "charlie@test.com"}',
         }
 
-        request = StreamingStructuredRequest(prompt="Generate a user profile", response_model=TestUserProfile)
+        request = StreamingStructuredRequest(prompt="Generate a user profile", response_model=UserProfile)
 
         # Test async streaming
         import asyncio
@@ -1532,13 +1530,13 @@ class TestCachingIntegration:
             responses1 = [response async for response in service.route_structured_streaming(request)]
             assert len(responses1) >= 1
             final_response1 = responses1[-1]
-            assert isinstance(final_response1.partial_result, TestUserProfile)
+            assert isinstance(final_response1.partial_result, UserProfile)
 
             # Second streaming call should hit cache
             responses2 = [response async for response in service.route_structured_streaming(request)]
             assert len(responses2) >= 1
             final_response2 = responses2[-1]
-            assert isinstance(final_response2.partial_result, TestUserProfile)
+            assert isinstance(final_response2.partial_result, UserProfile)
 
             # Results should be identical
             assert final_response1.partial_result.name == final_response2.partial_result.name
@@ -1560,11 +1558,11 @@ class TestCachingIntegration:
             "response": '{"name": "David", "age": 40, "email": "david@test.com"}',
         }
 
-        request = StructuredRequest(prompt="Generate a user profile", response_model=TestUserProfile)
+        request = StructuredRequest(prompt="Generate a user profile", response_model=UserProfile)
 
         # Make a request to populate cache
         result = service.route_structured(request)
-        assert isinstance(result, TestUserProfile)
+        assert isinstance(result, UserProfile)
 
         # Verify cache has entry
         assert len(service.cache.cache) == 1
@@ -1576,7 +1574,7 @@ class TestCachingIntegration:
 
         # Make another request (should trigger maintenance)
         result2 = service.route_structured(request)
-        assert isinstance(result2, TestUserProfile)
+        assert isinstance(result2, UserProfile)
 
         # Cache should still have the entry (not expired)
         assert len(service.cache.cache) == 1
@@ -1596,7 +1594,7 @@ class TestCachingIntegration:
         ]
 
         for task_type, expected_ttl in tasks_and_ttls:
-            request = StructuredRequest(prompt="test", response_model=TestUserProfile, task_type=task_type)
+            request = StructuredRequest(prompt="test", response_model=UserProfile, task_type=task_type)
             ttl = cache.get_ttl_for_request(request)
             assert ttl == expected_ttl, f"Task type {task_type} should have TTL {expected_ttl}, got {ttl}"
 
@@ -1606,12 +1604,12 @@ class TestCachingIntegration:
 
         # Generate keys for various request combinations
         requests = [
-            StructuredRequest(prompt="test1", response_model=TestUserProfile, task_type="general"),
-            StructuredRequest(prompt="test2", response_model=TestUserProfile, task_type="general"),
-            StructuredRequest(prompt="test1", response_model=TestProductInfo, task_type="general"),
-            StructuredRequest(prompt="test1", response_model=TestUserProfile, task_type="analysis"),
-            StructuredRequest(prompt="test1", response_model=TestUserProfile, task_type="general", model="gpt-4"),
-            StructuredRequest(prompt="test1", response_model=TestUserProfile, task_type="general", model="claude-3"),
+            StructuredRequest(prompt="test1", response_model=UserProfile, task_type="general"),
+            StructuredRequest(prompt="test2", response_model=UserProfile, task_type="general"),
+            StructuredRequest(prompt="test1", response_model=ProductInfo, task_type="general"),
+            StructuredRequest(prompt="test1", response_model=UserProfile, task_type="analysis"),
+            StructuredRequest(prompt="test1", response_model=UserProfile, task_type="general", model="gpt-4"),
+            StructuredRequest(prompt="test1", response_model=UserProfile, task_type="general", model="claude-3"),
         ]
 
         for request in requests:

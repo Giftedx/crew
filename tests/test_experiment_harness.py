@@ -59,7 +59,7 @@ def test_stats_accumulate_rewards():
         arm = mgr.recommend("exp:stats", {}, ["control", "var"])
         chosen_arms.append(arm)
         mgr.record("exp:stats", arm, r)
-    snap = mgr.snapshot()["exp:stats"]
+    snap = mgr.snapshot()["experiments"]["exp:stats"]  # Updated to access experiments key
     pulls_sum = sum(snap["stats"][a]["pulls"] for a in snap["stats"])  # sum across variants
     assert pulls_sum == float(len(total_rewards))
     # Verify reward accounting is consistent with recorded arms

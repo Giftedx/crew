@@ -1,0 +1,231 @@
+{
+    "info": {
+        "name": "Crew A2A JSON-RPC",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+        "description": "Sample requests for the A2A JSON-RPC adapter"
+    },
+    "item": [
+        {
+            "name": "Agent Card",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "X-API-Key",
+                        "value": "{{A2A_API_KEY}}",
+                        "type": "text",
+                        "disabled": true
+                    },
+                    {
+                        "key": "X-Tenant-Id",
+                        "value": "{{A2A_TENANT_ID}}",
+                        "type": "text",
+                        "disabled": true
+                    },
+                    {
+                        "key": "X-Workspace-Id",
+                        "value": "{{A2A_WORKSPACE_ID}}",
+                        "type": "text",
+                        "disabled": true
+                    }
+                ],
+                "url": {
+                    "raw": "{{A2A_BASE_URL}}/a2a/agent-card",
+                    "host": [
+                        "{{A2A_BASE_URL}}"
+                    ],
+                    "path": [
+                        "a2a",
+                        "agent-card"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "Skills",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "X-API-Key",
+                        "value": "{{A2A_API_KEY}}",
+                        "type": "text",
+                        "disabled": true
+                    },
+                    {
+                        "key": "X-Tenant-Id",
+                        "value": "{{A2A_TENANT_ID}}",
+                        "type": "text",
+                        "disabled": true
+                    },
+                    {
+                        "key": "X-Workspace-Id",
+                        "value": "{{A2A_WORKSPACE_ID}}",
+                        "type": "text",
+                        "disabled": true
+                    }
+                ],
+                "url": {
+                    "raw": "{{A2A_BASE_URL}}/a2a/skills",
+                    "host": [
+                        "{{A2A_BASE_URL}}"
+                    ],
+                    "path": [
+                        "a2a",
+                        "skills"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "JSON-RPC: text_analyze",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    },
+                    {
+                        "key": "X-Tenant-Id",
+                        "value": "{{A2A_TENANT_ID}}",
+                        "type": "text",
+                        "disabled": true
+                    },
+                    {
+                        "key": "X-Workspace-Id",
+                        "value": "{{A2A_WORKSPACE_ID}}",
+                        "type": "text",
+                        "disabled": true
+                    },
+                    {
+                        "key": "X-API-Key",
+                        "value": "{{A2A_API_KEY}}",
+                        "type": "text",
+                        "disabled": true
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"id\": 1,\n  \"method\": \"tools.text_analyze\",\n  \"params\": {\n    \"text\": \"hello world\"\n  }\n}"
+                },
+                "url": {
+                    "raw": "{{A2A_BASE_URL}}/a2a/jsonrpc",
+                    "host": [
+                        "{{A2A_BASE_URL}}"
+                    ],
+                    "path": [
+                        "a2a",
+                        "jsonrpc"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "JSON-RPC: agent.execute rag_query",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    },
+                    {
+                        "key": "X-Tenant-Id",
+                        "value": "{{A2A_TENANT_ID}}",
+                        "type": "text",
+                        "disabled": true
+                    },
+                    {
+                        "key": "X-Workspace-Id",
+                        "value": "{{A2A_WORKSPACE_ID}}",
+                        "type": "text",
+                        "disabled": true
+                    },
+                    {
+                        "key": "X-API-Key",
+                        "value": "{{A2A_API_KEY}}",
+                        "type": "text",
+                        "disabled": true
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"id\": 2,\n  \"method\": \"agent.execute\",\n  \"params\": {\n    \"skill\": \"tools.rag_query\",\n    \"args\": {\n      \"query\": \"policy\",\n      \"documents\": [\n        \"The policy states that all users must rotate keys every 90 days.\",\n        \"Our help docs explain API usage and retry limits.\",\n        \"Budget checks apply to all LLM calls.\"\n      ],\n      \"top_k\": 2\n    }\n  }\n}"
+                },
+                "url": {
+                    "raw": "{{A2A_BASE_URL}}/a2a/jsonrpc",
+                    "host": [
+                        "{{A2A_BASE_URL}}"
+                    ],
+                    "path": [
+                        "a2a",
+                        "jsonrpc"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "JSON-RPC: batch (auth)",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    },
+                    {
+                        "key": "X-API-Key",
+                        "value": "{{A2A_API_KEY}}",
+                        "type": "text",
+                        "disabled": true
+                    },
+                    {
+                        "key": "X-Tenant-Id",
+                        "value": "{{A2A_TENANT_ID}}",
+                        "type": "text",
+                        "disabled": true
+                    },
+                    {
+                        "key": "X-Workspace-Id",
+                        "value": "{{A2A_WORKSPACE_ID}}",
+                        "type": "text",
+                        "disabled": true
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "[\n  {\n    \"jsonrpc\": \"2.0\",\n    \"id\": 1,\n    \"method\": \"tools.text_analyze\",\n    \"params\": { \n      \"text\": \"alpha\" \n    }\n  },\n  {\n    \"jsonrpc\": \"2.0\",\n    \"id\": 2,\n    \"method\": \"agent.execute\",\n    \"params\": {\n      \"skill\": \"tools.lc_summarize\",\n      \"args\": { \n        \"text\": \"one. two. three.\", \n        \"max_sentences\": 2 \n      }\n    }\n  }\n]"
+                },
+                "url": {
+                    "raw": "{{A2A_BASE_URL}}/a2a/jsonrpc",
+                    "host": [
+                        "{{A2A_BASE_URL}}"
+                    ],
+                    "path": [
+                        "a2a",
+                        "jsonrpc"
+                    ]
+                }
+            }
+        }
+    ],
+    "variable": [
+        {
+            "key": "A2A_BASE_URL",
+            "value": "http://localhost:8000"
+        },
+        {
+            "key": "A2A_API_KEY",
+            "value": ""
+        },
+        {
+            "key": "A2A_TENANT_ID",
+            "value": ""
+        },
+        {
+            "key": "A2A_WORKSPACE_ID",
+            "value": ""
+        }
+    ]
+}

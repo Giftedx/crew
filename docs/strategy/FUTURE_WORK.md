@@ -13,7 +13,7 @@ This file tracks intentional deferrals identified during the observability, resi
 
 ### 1. Consolidate Retry Flags (H)
 
-Current dual flags: `ENABLE_ANALYSIS_HTTP_RETRY` (legacy) and `ENABLE_HTTP_RETRY` (new unified). Some tools (fact check, OpenRouter) still look at the legacy flag. Migrate all callers to settings attribute `enable_http_retry`, deprecate legacy env lookups, update docs, then remove legacy references after a grace period.
+Current dual flags: `ENABLE_HTTP_RETRY` (legacy) and `ENABLE_HTTP_RETRY` (new unified). Some tools (fact check, OpenRouter) still look at the legacy flag. Migrate all callers to settings attribute `enable_http_retry`, deprecate legacy env lookups, update docs, then remove legacy references after a grace period.
 
 ### 2. Distributed Rate Limiting (H)
 

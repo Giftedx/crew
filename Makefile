@@ -5,39 +5,14 @@ PYTHON := .venv/bin/python
 endif
 PKG := ultimate_discord_intelligence_bot
 
-.PHONY: install dev lint format format-check type test eval docs pre-commit deprecations deprecations-json deprecations-strict deprecations-badge guards ci-all clean deep-clean
+.PHONY: install dev lint format format-check type test eval docs pre-commit deprecations deprecations-json deprecations-strict deprecations-badge guards ci-all clean deep-clean organize-root maintain-archive
 .PHONY: docs-strict
 .PHONY: ops-queue
 .PHONY: test-fast ci-fast
 .PHONY: ensure-venv uv-lock uv-sync uv-bootstrap
-.PHONY: install dev lint format format-check type type-changed type-baseline type-baseline-update test eval docs pre-commit hooks deprecations deprecations-json deprecations-strict deprecations-badge guards ci-all clean clean-bytecode deep-clean warn-venv
+.PHONY: install dev lint format format-check type type-changed type-baseline type-baseline-update test eval docs pre-commit hooks deprecations deprecations-json deprecations-strict deprecations-badge guards ci-all clean clean-bytecode deep-clean warn-venv organize-root maintain-archive
 
-lint:
-	bash scripts/dev.sh lint
-
-format:
-	bash scripts/dev.sh format
-
-type:
-	bash scripts/dev.sh type
-
-type-changed:
-	bash scripts/dev.sh type-changed
-
-type-baseline:
-	bash scripts/dev.sh type-baseline
-
-type-baseline-update:
-	bash scripts/dev.sh type-baseline-update
-
-test:
-	bash scripts/dev.sh test
-
-eval:
-	bash scripts/dev.sh eval
-
-pre-commit hooks:
-	bash scripts/dev.sh hooks
+# Target definitions are below to avoid duplicates
 
 
 install:
@@ -105,7 +80,7 @@ format-check:
 	$(PYTHON) -m ruff format --check .
 
 type:
-	$(PYTHON) -m mypy src || true  # incremental adoption, non-zero tolerated locally
+	$(PYTHON) -m mypy src/core/llm_router.py src/ai/routing src/eval/config.py src/ai/performance_router.py src/ai/enhanced_ai_router.py src/ai/adaptive_ai_router.py src/ai/ai_enhanced_performance_monitor.py src/ultimate_discord_intelligence_bot/agent_training/performance_monitor.py || true  # incremental adoption, non-zero tolerated locally
 
 type-guard:
 	$(PYTHON) scripts/mypy_snapshot_guard.py --baseline reports/mypy_snapshot.json
@@ -130,7 +105,17 @@ test:
 test-fast:
 	$(PYTHON) -m pytest -q -c config/pytest.ini -k "http_utils or guards_http_requests or vector_store_dimension or vector_store_namespace"
 
+# Run the fast test sweep with a clean environment for retry precedence tests
+.PHONY: test-fast-clean-env
+test-fast-clean-env:
+	env -u RETRY_MAX_ATTEMPTS $(PYTHON) -m pytest -q -c config/pytest.ini -k "http_utils or guards_http_requests or vector_store_dimension or vector_store_namespace"
+
 ci-fast: docs guards test-fast
+
+# Quick A2A test sweep (router + client)
+.PHONY: test-a2a
+test-a2a:
+	$(PYTHON) -m pytest -q -c config/pytest.ini -k "a2a_router or a2a_client or a2a_collections_json"
 
 # Golden evaluation harness (fast path)
 eval:
@@ -157,7 +142,7 @@ deprecations-badge:
 deprecations-strict:
 	$(PYTHON) scripts/check_deprecations.py --fail-on-upcoming 90
 
-ci-all: doctor format-check lint type guards test compliance deprecations-strict
+ci-all: doctor format-check lint type ci-type-guard guards test compliance deprecations-strict
 
 guards:
 	$(PYTHON) scripts/validate_dispatcher_usage.py && $(PYTHON) scripts/validate_http_wrappers_usage.py && $(PYTHON) scripts/metrics_instrumentation_guard.py
@@ -180,6 +165,14 @@ clean:
 	find . -name '*.rej' -delete || true
 	find . -name '*~' -delete || true
 	echo "Workspace cleaned"
+
+# Organize root directory by moving clutter to archive
+organize-root:
+	$(PYTHON) scripts/cleanup_root.py
+
+# Maintain archive directory (compress old files, generate inventory)
+maintain-archive:
+	$(PYTHON) scripts/maintain_archive.py
 
 # More aggressive: also remove virtual env & node_modules (opt-in)
 deep-clean: clean
@@ -233,3 +226,27 @@ types-install:
 	@echo "[types-install] Running mypy --install-types (non-interactive)..."
 	$(PYTHON) -m mypy --install-types --non-interactive || true
 	@echo "[types-install] Complete. Review newly added stub packages for pinning in pyproject if needed."
+
+# Development workflow shortcuts
+.PHONY: quick-check full-check setup-hooks
+quick-check:  ## Run quick development checks (format + lint + test-fast)
+	./scripts/dev-workflow.sh quick-check
+
+full-check:  ## Run comprehensive checks (format + lint + type + test)
+	./scripts/dev-workflow.sh full-check
+
+setup-hooks:  ## Setup git hooks for automated quality checks
+	./scripts/dev-workflow.sh setup-hooks
+
+# Demo: LangGraph pilot orchestration
+.PHONY: run-langgraph-pilot
+run-langgraph-pilot:
+	@echo "Hint: set ENABLE_LANGGRAPH_PILOT=1 to exercise the completion metric path"; \
+	$(PYTHON) demo_langgraph_pilot.py
+
+# Demo: A2A client against running API service
+.PHONY: run-a2a-client-demo
+run-a2a-client-demo:
+	@echo "Hint: ensure the API is running with ENABLE_A2A_API=1 (and ENABLE_A2A_API_KEY/A2A_API_KEY if needed)"; \
+	@echo "Using A2A_BASE_URL=$${A2A_BASE_URL:-http://localhost:8000}"; \
+	$(PYTHON) scripts/a2a_client_demo.py

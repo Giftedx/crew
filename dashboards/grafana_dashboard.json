@@ -1,0 +1,265 @@
+{
+    "__inputs": [],
+    "__requires": [
+        {
+            "type": "grafana",
+            "id": "grafana",
+            "name": "Grafana",
+            "version": "10.x"
+        },
+        {
+            "type": "panel",
+            "id": "graph",
+            "name": "Graph (legacy)",
+            "version": "8.5.0"
+        },
+        {
+            "type": "datasource",
+            "id": "prometheus",
+            "name": "Prometheus",
+            "version": "2.0.0"
+        }
+    ],
+    "annotations": {
+        "list": []
+    },
+    "editable": true,
+    "fiscalYearStartMonth": 0,
+    "graphTooltip": 0,
+    "id": null,
+    "links": [],
+    "liveNow": false,
+    "panels": [
+        {
+            "type": "stat",
+            "title": "Semantic Cache Shadow Hit Ratio",
+            "gridPos": {
+                "h": 8,
+                "w": 8,
+                "x": 0,
+                "y": 0
+            },
+            "targets": [
+                {
+                    "expr": "avg by (tenant,workspace) (semantic_cache_shadow_hit_ratio)",
+                    "legendFormat": "{{tenant}}/{{workspace}}",
+                    "refId": "A"
+                }
+            ],
+            "options": {
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": false
+                },
+                "orientation": "auto"
+            }
+        },
+        {
+            "type": "timeSeries",
+            "title": "Semantic Cache Promotions (rate)",
+            "gridPos": {
+                "h": 8,
+                "w": 8,
+                "x": 8,
+                "y": 0
+            },
+            "targets": [
+                {
+                    "expr": "sum by (tenant,workspace) (rate(cache_promotions_total{cache_name=\"semantic\"}[5m]))",
+                    "legendFormat": "{{tenant}}/{{workspace}}",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "type": "timeSeries",
+            "title": "Semantic Cache Prefetch Issued vs Used (rate)",
+            "gridPos": {
+                "h": 8,
+                "w": 8,
+                "x": 16,
+                "y": 0
+            },
+            "targets": [
+                {
+                    "expr": "sum by (tenant,workspace) (rate(semantic_cache_prefetch_issued_total[5m]))",
+                    "legendFormat": "issued {{tenant}}/{{workspace}}",
+                    "refId": "A"
+                },
+                {
+                    "expr": "sum by (tenant,workspace) (rate(semantic_cache_prefetch_used_total[5m]))",
+                    "legendFormat": "used {{tenant}}/{{workspace}}",
+                    "refId": "B"
+                }
+            ]
+        },
+        {
+            "type": "timeSeries",
+            "title": "Ingest Concurrency Fallbacks (15m)",
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 8
+            },
+            "targets": [
+                {
+                    "expr": "sum by (tenant,workspace) (increase(degradation_events_total{component=\"ingest\",event_type=\"concurrency_executor_failure\"}[15m]))",
+                    "legendFormat": "{{tenant}}/{{workspace}}",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "type": "timeSeries",
+            "title": "AgentEvals Fallbacks (15m)",
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 8
+            },
+            "targets": [
+                {
+                    "expr": "sum by (tenant,workspace) (increase(degradation_events_total{component=\"trajectory_eval\",event_type=\"agent_evals_fallback\"}[15m]))",
+                    "legendFormat": "{{tenant}}/{{workspace}}",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "type": "timeSeries",
+            "title": "Semantic Cache Similarity (avg)",
+            "gridPos": {
+                "h": 8,
+                "w": 24,
+                "x": 0,
+                "y": 16
+            },
+            "targets": [
+                {
+                    "expr": "sum(rate(semantic_cache_similarity_sum[5m])) / sum(rate(semantic_cache_similarity_count[5m]))",
+                    "legendFormat": "avg",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "type": "timeSeries",
+            "title": "LangGraph Pilot Fallbacks (15m)",
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 24
+            },
+            "targets": [
+                {
+                    "expr": "sum by (tenant,workspace) (increase(degradation_events_total{component=\"langgraph_pilot\",event_type=\"fallback_sequential\"}[15m]))",
+                    "legendFormat": "{{tenant}}/{{workspace}}",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "type": "timeSeries",
+            "title": "LangGraph Pilot Step Completions",
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 24
+            },
+            "targets": [
+                {
+                    "expr": "sum by (tenant,workspace) (increase(pipeline_steps_completed_total{step=\"langgraph_pilot\"}[15m]))",
+                    "legendFormat": "{{tenant}}/{{workspace}}",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "type": "timeSeries",
+            "title": "Cost (avg 5m) vs Shadow Hit Ratio",
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 32
+            },
+            "targets": [
+                {
+                    "expr": "sum(rate(llm_estimated_cost_usd_sum[5m])) by (tenant,workspace) / sum(rate(llm_estimated_cost_usd_count[5m])) by (tenant,workspace)",
+                    "legendFormat": "cost {{tenant}}/{{workspace}}",
+                    "refId": "A"
+                },
+                {
+                    "expr": "avg by (tenant,workspace) (semantic_cache_shadow_hit_ratio)",
+                    "legendFormat": "shadow {{tenant}}/{{workspace}}",
+                    "refId": "B"
+                }
+            ]
+        },
+        {
+            "type": "timeSeries",
+            "title": "Latency (avg 5m) vs Promotions Rate",
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 32
+            },
+            "targets": [
+                {
+                    "expr": "sum(rate(llm_latency_ms_sum[5m])) by (tenant,workspace) / sum(rate(llm_latency_ms_count[5m])) by (tenant,workspace)",
+                    "legendFormat": "latency {{tenant}}/{{workspace}}",
+                    "refId": "A"
+                },
+                {
+                    "expr": "sum by (tenant,workspace) (rate(cache_promotions_total{cache_name=\"semantic\"}[5m]))",
+                    "legendFormat": "promotions {{tenant}}/{{workspace}}",
+                    "refId": "B"
+                }
+            ]
+        }
+    ],
+    "refresh": "30s",
+    "schemaVersion": 38,
+    "style": "dark",
+    "tags": [
+        "observability",
+        "semantic-cache",
+        "ingest",
+        "eval"
+    ],
+    "templating": {
+        "list": [
+            {
+                "name": "tenant",
+                "type": "query",
+                "datasource": "Prometheus",
+                "refresh": 2,
+                "query": "label_values(semantic_cache_shadow_hit_ratio, tenant)",
+                "includeAll": true
+            },
+            {
+                "name": "workspace",
+                "type": "query",
+                "datasource": "Prometheus",
+                "refresh": 2,
+                "query": "label_values(semantic_cache_shadow_hit_ratio, workspace)",
+                "includeAll": true
+            }
+        ]
+    },
+    "time": {
+        "from": "now-6h",
+        "to": "now"
+    },
+    "timezone": "browser",
+    "title": "Crew Observability: Semantic Cache & Resilience",
+    "version": 1
+}

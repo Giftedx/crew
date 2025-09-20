@@ -31,6 +31,7 @@ except Exception:  # pragma: no cover - handled in runtime
 
 class _TranscribeResult(TypedDict, total=False):
     text: str
+    segments: list[dict[str, object]]
 
 
 class _WhisperModel(Protocol):
@@ -54,6 +55,39 @@ class AudioTranscriptionTool(BaseTool):
         logging.info("Loading Whisper model %s", self._model_name)
         return cast(_WhisperModel, whisper.load_model(self._model_name))
 
+    def _load_corrections(self) -> dict[str, str]:
+        """Load optional transcript corrections from config file.
+
+        File format (JSON): {"sobra": "sabra", ...}
+        """
+        try:
+            from ultimate_discord_intelligence_bot.settings import CONFIG_DIR  # noqa: PLC0415
+
+            path = os.path.join(str(CONFIG_DIR), "transcript_corrections.json")
+            if os.path.exists(path):
+                import json
+
+                with open(path, encoding="utf-8") as f:
+                    data = json.load(f)
+                if isinstance(data, dict):
+                    # normalize keys to lowercase
+                    return {str(k).lower(): str(v) for k, v in data.items()}
+        except Exception:
+            pass
+        return {}
+
+    def _apply_corrections(self, text: str, corrections: dict[str, str]) -> str:
+        if not corrections or not text:
+            return text
+        import re
+
+        out = text
+        for wrong, right in corrections.items():
+            # Replace whole words only, ignore case, handle punctuation adjacency
+            pattern = re.compile(rf"\b{re.escape(wrong)}\b", flags=re.IGNORECASE)
+            out = pattern.sub(right, out)
+        return out
+
     def _run(self, video_path: str) -> StepResult:
         """Transcribe audio from a video file.
 
@@ -68,10 +102,32 @@ class AudioTranscriptionTool(BaseTool):
                 ).inc()
                 return StepResult.fail(error="Video file not found.")
 
-            result = self.model.transcribe(video_path)
+            # Provide language hint and stable decoding settings to improve proper nouns
+            # If model ignores language, it will auto-detect; otherwise it guides decoding.
+            opts = {"language": "en", "fp16": False}
+            result = self.model.transcribe(video_path, **opts)
             text = str(result.get("text", ""))
+            # Extract segments when available (start/end/text) for timestamped navigation
+            raw_segments = result.get("segments", []) if isinstance(result, dict) else []
+            segments: list[dict[str, object]] = []
+            if isinstance(raw_segments, list):
+                for seg in raw_segments:
+                    if not isinstance(seg, dict):
+                        continue
+                    try:
+                        start = float(seg.get("start", 0.0))
+                    except Exception:
+                        start = 0.0
+                    try:
+                        end = float(seg.get("end", start))
+                    except Exception:
+                        end = start
+                    txt = str(seg.get("text", "")).strip()
+                    segments.append({"start": start, "end": end, "text": txt})
+            # Optional post-correction pass
+            text = self._apply_corrections(text, self._load_corrections())
             self._metrics.counter("tool_runs_total", labels={"tool": "audio_transcription", "outcome": "success"}).inc()
-            return StepResult.ok(transcript=text)
+            return StepResult.ok(transcript=text, segments=segments)
         except Exception as e:  # pragma: no cover - exercised in integration
             logging.exception("Transcription failed")
             self._metrics.counter("tool_runs_total", labels={"tool": "audio_transcription", "outcome": "error"}).inc()

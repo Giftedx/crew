@@ -54,7 +54,6 @@ repos:
       - id: gitleaks
         name: gitleaks (secret scan)
         args: ["detect", "--no-color", "--redact", "--config=.gitleaks.toml"]
-        stages: [commit, push]
   - repo: local
     hooks:
       - id: validate-dispatcher-usage
@@ -69,3 +68,9 @@ repos:
         language: python
         types: [python]
         files: ^src/.*\.py$
+      - id: organize-root-directory
+        name: Keep root directory organized
+        entry: scripts/cleanup_root.py
+        language: python
+        always_run: true
+        pass_filenames: false

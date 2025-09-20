@@ -1,0 +1,61 @@
+#!/bin/bash
+# Pre-commit hook for Ultimate Discord Intelligence Bot
+# Ensures code quality and prevents common issues
+
+set -e
+
+echo "🔍 Running pre-commit quality checks..."
+
+# Check if we're in the right directory
+if [ ! -f "pyproject.toml" ]; then
+    echo "❌ Error: Not in project root directory"
+    exit 1
+fi
+
+# Ensure virtual environment is active
+if [ -z "$VIRTUAL_ENV" ] && [ ! -f ".venv/bin/python" ]; then
+    echo "⚠️  Warning: No virtual environment detected"
+    echo "   Run: python -m venv .venv && source .venv/bin/activate"
+fi
+
+# Use Python from virtual environment if available
+PYTHON="python"
+if [ -f ".venv/bin/python" ]; then
+    PYTHON=".venv/bin/python"
+fi
+
+echo "🎨 Formatting code..."
+if ! make format; then
+    echo "❌ Code formatting failed"
+    exit 1
+fi
+
+echo "🔍 Running lints..."
+if ! make lint; then
+    echo "❌ Linting failed"
+    exit 1
+fi
+
+echo "🧪 Running fast tests..."
+if ! make test-fast; then
+    echo "❌ Fast tests failed"
+    exit 1
+fi
+
+echo "🔧 Running compliance checks..."
+if command -v "$PYTHON" >/dev/null 2>&1; then
+    # Check for direct requests usage
+    if grep -r "import requests" src/ --include="*.py" | grep -v "http_utils.py" | grep -v "# type: ignore" >/dev/null 2>&1; then
+        echo "❌ Found direct requests import (use core.http_utils)"
+        grep -r "import requests" src/ --include="*.py" | grep -v "http_utils.py" | grep -v "# type: ignore"
+        exit 1
+    fi
+
+    # Check for missing StepResult usage in tools
+    if find src/ultimate_discord_intelligence_bot/tools/ -name "*.py" -not -name "_base.py" -not -name "__init__.py" -exec grep -l "def _run" {} \; | xargs grep -L "StepResult" 2>/dev/null; then
+        echo "⚠️  Warning: Some tools may not be using StepResult pattern"
+    fi
+fi
+
+echo "✅ All pre-commit checks passed!"
+echo "📝 Remember to run 'make type' before pushing for type checking"

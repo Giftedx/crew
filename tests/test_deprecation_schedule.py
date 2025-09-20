@@ -25,4 +25,4 @@ def test_deprecation_schedule_validator_runs():
     output = stdout.getvalue()
     assert rc == 0, output
     assert "Upcoming deprecations:" in output
-    assert "ENABLE_ANALYSIS_HTTP_RETRY" in output
+    assert "ENABLE_HTTP_RETRY" in output

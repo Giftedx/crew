@@ -59,12 +59,12 @@ Health Score: 🟢 100.0/100
    Upcoming deadlines: 2
 
 🔧 Migration Status:
-   ❌ ENABLE_ANALYSIS_HTTP_RETRY: Migrations pending
+   ❌ ENABLE_HTTP_RETRY: Migrations pending
    ❌ services.learning_engine.LearningEngine: Migrations pending
 
 💡 Recommendations:
    ⚠️  2 deprecations due within 120 days
-   🔧 Run scripts/migrate_http_retry_flag.py to migrate ENABLE_ANALYSIS_HTTP_RETRY
+   🔧 Run scripts/migrate_http_retry_flag.py to migrate ENABLE_HTTP_RETRY
    🔧 Run scripts/migrate_learning_engine.py to migrate services.learning_engine.LearningEngine
 ```
 
@@ -72,7 +72,7 @@ Health Score: 🟢 100.0/100
 
 | Deprecated Feature | Migration Script | Status |
 |-------------------|------------------|--------|
-| `ENABLE_ANALYSIS_HTTP_RETRY` | `scripts/migrate_http_retry_flag.py` | ✅ Available |
+| `ENABLE_HTTP_RETRY` | `scripts/migrate_http_retry_flag.py` | ✅ Available |
 | `services.learning_engine.LearningEngine` | `scripts/migrate_learning_engine.py` | ✅ Available |
 
 ## CI/CD Integration

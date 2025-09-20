@@ -1,0 +1,124 @@
+{
+  "report_generated": "2025-09-16T03:46:32.333704",
+  "production_monitoring_summary": {
+    "overall_status": "production_acceptable",
+    "metrics_analyzed": 24,
+    "deployment_success": false
+  },
+  "deployment_summary": {
+    "deployment_strategy": "canary",
+    "phases_completed": 2,
+    "execution_time": {
+      "duration_seconds": 14.527743,
+      "duration_formatted": "0:00:14.527743",
+      "start": "2025-09-16T03:44:19.934662",
+      "end": "2025-09-16T03:44:34.462405"
+    },
+    "final_deployment_status": "failed"
+  },
+  "production_analysis": {
+    "analysis_timestamp": "2025-09-16T03:46:32.333689",
+    "deployment_status": "failed",
+    "overall_production_status": "production_acceptable",
+    "metrics_analyzed": 24,
+    "performance_analysis": {
+      "trend": "stable",
+      "performance_change": 0.01537747158190439,
+      "response_time_change": -195.16043844833376,
+      "error_rate_change": 0.0008516728961362628,
+      "averages": {
+        "performance_score": 0.875647566966448,
+        "response_time_95th": 316.7069857652109,
+        "error_rate": 0.0009698222023668841
+      },
+      "latest_metrics": {
+        "performance_score": 0.8962196894295111,
+        "response_time_95th": 228.6968219008274,
+        "error_rate": 0.0011199389409335383
+      }
+    },
+    "ai_routing_analysis": {
+      "status": "excellent",
+      "average_effectiveness": 0.9095059120909749,
+      "max_effectiveness": 0.9451028069203494,
+      "min_effectiveness": 0.8539023299693679,
+      "stability": "stable",
+      "effectiveness_variance": 0.09120047695098155,
+      "samples_analyzed": 24,
+      "meets_threshold": true
+    },
+    "user_experience_analysis": {
+      "status": "excellent",
+      "average_satisfaction": 0.8944094304474124,
+      "max_satisfaction": 0.9465176343211709,
+      "min_satisfaction": 0.8209672339648887,
+      "satisfaction_variance": 0.12555040035628218,
+      "meets_threshold": true,
+      "business_metrics": {
+        "average_user_engagement": 0.8902832460018771,
+        "average_feature_adoption": 0.8171981828807814,
+        "average_conversion_rate": 0.819282110174569
+      },
+      "samples_analyzed": 24
+    },
+    "system_health_analysis": {
+      "status": "needs_attention",
+      "health_score": 0.3333333333333333,
+      "average_uptime": 0.9989725435372421,
+      "average_error_rate": 0.0009698222023668841,
+      "average_response_time": 316.7069857652109,
+      "health_checks": {
+        "uptime_acceptable": false,
+        "error_rate_acceptable": true,
+        "response_time_acceptable": false
+      },
+      "resource_utilization": {
+        "average_cpu_utilization": 0.6016235398352381,
+        "average_memory_utilization": 0.668545807654053,
+        "average_disk_utilization": 0.4722547516057764,
+        "average_network_utilization": 0.33078478986244503,
+        "resource_efficiency": "good"
+      },
+      "reliability_assessment": "medium"
+    },
+    "production_insights": {
+      "key_strengths": [
+        "AI routing highly effective (91.0%)",
+        "Excellent user satisfaction (89.4%)"
+      ],
+      "areas_for_improvement": [],
+      "performance_highlights": [],
+      "operational_insights": [
+        "Efficient resource utilization - good capacity management"
+      ]
+    },
+    "recommendations": [
+      "\u26a0\ufe0f Acceptable performance but improvement needed",
+      "\ud83d\udd0d Investigate performance bottlenecks and optimization opportunities",
+      "\ud83e\udd16 Continue monitoring AI routing effectiveness in real-world scenarios",
+      "\ud83d\udcca Collect user feedback on AI-enhanced features for continuous improvement",
+      "\ud83d\udd04 Implement A/B testing for AI routing optimization strategies",
+      "\ud83d\udcc8 Scale successful AI routing patterns to additional use cases"
+    ]
+  },
+  "executive_summary": {
+    "success_level": "Acceptable Deployment",
+    "summary_text": "Production deployment achieved acceptable results with identified areas for improvement.",
+    "key_metrics": {
+      "average_performance_score": 0.875647566966448,
+      "ai_routing_effectiveness": 0.9095059120909749,
+      "user_satisfaction": 0.8944094304474124,
+      "system_reliability": 0.9989725435372421
+    },
+    "deployment_strategy": "canary",
+    "phases_completed": 2,
+    "business_impact": "Mixed"
+  },
+  "next_steps": [
+    "\ud83d\udee0\ufe0f Implement immediate performance improvements",
+    "\ud83d\udd0d Conduct detailed root cause analysis",
+    "\ud83d\udcca Enhance monitoring and diagnostic capabilities",
+    "\u26a1 Optimize critical performance bottlenecks",
+    "\ud83c\udfaf Establish performance improvement targets and timeline"
+  ]
+}

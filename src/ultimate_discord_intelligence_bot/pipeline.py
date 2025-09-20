@@ -79,6 +79,9 @@ class PipelineRunResult(TypedDict, total=False):
 class ContentPipeline:
     """End-to-end pipeline for downloading, processing and posting content."""
 
+    # Instance attribute type annotations
+    discord: DiscordPostTool | None
+
     def __init__(  # noqa: PLR0913 - many optional dependency injection points improve testability
         self,
         webhook_url: str | None = None,
@@ -140,7 +143,7 @@ class ContentPipeline:
         # Initialize Discord tool only if webhook URL is provided
         discord_webhook = webhook_url or DISCORD_WEBHOOK
         if discord_webhook and discord_webhook.strip():
-            self.discord: DiscordPostTool | None = discord or DiscordPostTool(discord_webhook)
+            self.discord = discord or DiscordPostTool(discord_webhook)
         else:
             logger.warning("Discord webhook not configured - Discord posting disabled")
             self.discord = None
@@ -409,11 +412,14 @@ class ContentPipeline:
                 name="transcript_storage",
             )
 
+            # Phase 3: Run analysis first; only trigger fallacy detection if analysis succeeds.
+            logger.info("Running analysis step (fallacy detection deferred until success)")
             analysis = await self._run_with_retries(self.analyzer.run, filtered_transcript, step="analysis")
 
             # Handle analysis errors (ensure transcript storage given limited time to complete)
-            if not analysis.success:
-                logger.error("Analysis failed: %s", analysis.error)
+            if isinstance(analysis, Exception) or not analysis.success:
+                error_msg = str(analysis) if isinstance(analysis, Exception) else analysis.error
+                logger.error("Analysis failed: %s", error_msg)
                 span.set_attribute("error", True)
                 span.set_attribute("error_step", "analysis")
                 try:
@@ -425,27 +431,22 @@ class ContentPipeline:
                     metrics.PIPELINE_STEPS_FAILED.labels(**metrics.label_ctx(), step="analysis").inc()
                 except Exception as exc:  # pragma: no cover
                     logger.debug("metrics emit failed (analysis fail): %s", exc)
-                err = analysis.to_dict()
-                err["step"] = "analysis"
+                err = {"status": "error", "error": error_msg, "step": "analysis"}
                 return err  # type: ignore[return-value]
 
-            # Run fallacy detection only after successful analysis
-            fallacy = await self._run_with_retries(
-                self.fallacy_detector.run,
-                filtered_transcript,
-                step="fallacy",
-            )
+            # Run fallacy detection only now that analysis succeeded
+            logger.info("Running fallacy detection after successful analysis")
+            fallacy = await self._run_with_retries(self.fallacy_detector.run, filtered_transcript, step="fallacy")
             if not fallacy.success:
-                logger.error("Fallacy detection failed: %s", fallacy.error)
-                # Cancel transcript storage (not critical but free resources) if still running
+                error_msg = fallacy.error
+                logger.error("Fallacy detection failed: %s", error_msg)
                 if not transcript_storage_task.done():
                     transcript_storage_task.cancel()
                 try:  # pragma: no cover
                     metrics.PIPELINE_STEPS_FAILED.labels(**metrics.label_ctx(), step="fallacy").inc()
                 except Exception as exc:  # pragma: no cover
                     logger.debug("metrics emit failed (fallacy fail): %s", exc)
-                err = fallacy.to_dict()
-                err["step"] = "fallacy"
+                err = {"status": "error", "error": error_msg, "step": "fallacy"}
                 return err  # type: ignore[return-value]
 
             # At this point, analysis and fallacy are successful StepResult instances

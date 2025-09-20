@@ -114,6 +114,15 @@ def run(job: IngestJob, store: vector_store.VectorStore) -> dict:
                 meta, transcript_text = _fetch_both_concurrent(provider_mod, job.url)
             except Exception:
                 # Fallback to sequential path on unexpected executor failure
+                handle_error_safely(
+                    lambda: metrics.DEGRADATION_EVENTS.labels(
+                        **metrics.label_ctx(),
+                        component="ingest",
+                        event_type="concurrency_executor_failure",
+                        severity="warn",
+                    ).inc(),
+                    error_message="Failed to record concurrency executor failure degradation event",
+                )
                 meta = provider_mod.fetch_metadata(job.url)
                 transcript_text = provider_mod.fetch_transcript(job.url)
         else:
@@ -230,6 +239,40 @@ def run(job: IngestJob, store: vector_store.VectorStore) -> dict:
                 episode_id=None,
             )
             models.record_provenance(conn, prov)
+            # Optionally ensure a YouTube channel backfill watch after ingest
+            try:
+                if os.getenv("ENABLE_YOUTUBE_CHANNEL_BACKFILL_AFTER_INGEST", "0") == "1" and job.source == "youtube":
+                    # Prefer channel_id when available; otherwise fall back to channel handle
+                    chan_id = getattr(meta, "channel_id", None)
+                    chan_handle = getattr(meta, "channel", None)
+                    handle_url: str | None = None
+                    if chan_id:
+                        handle_url = f"https://www.youtube.com/channel/{chan_id}/videos"
+                    elif isinstance(chan_handle, str) and chan_handle.strip():
+                        h = chan_handle.strip()
+                        if not h.startswith("@"):  # normalise to @handle
+                            h = f"@{h}"
+                        handle_url = f"https://www.youtube.com/{h}/videos"
+                    if handle_url:
+                        models.ensure_watchlist(
+                            conn,
+                            tenant=job.tenant,
+                            workspace=job.workspace,
+                            source_type="youtube_channel",
+                            handle=handle_url,
+                            label=None,
+                        )
+                        # Best-effort creator upsert when channel id is present
+                        if isinstance(chan_id, str) and chan_id:
+                            try:
+                                models.upsert_creator_by_youtube_channel(
+                                    conn, tenant=job.tenant, workspace=job.workspace, channel_id=chan_id
+                                )
+                            except Exception:
+                                pass
+            except Exception:
+                # Backfill wiring is best-effort; do not impact ingest success
+                pass
         return {"chunks": len(records), "namespace": namespace}
     except Exception:
         _status = "error"

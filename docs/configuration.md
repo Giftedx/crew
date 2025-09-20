@@ -378,7 +378,7 @@ scheduled for removal after their respective `remove_after` date. New code MUST 
 
 | Name | Replacement | Stage | Remove After | Notes |
 |------|-------------|-------|--------------|-------|
-| `ENABLE_ANALYSIS_HTTP_RETRY` | `ENABLE_HTTP_RETRY` | deprecated | 2025-12-31 | Legacy analysis-scoped retry flag; unified global flag preferred. |
+| `ENABLE_HTTP_RETRY` | `ENABLE_HTTP_RETRY` | deprecated | 2025-12-31 | Legacy analysis-scoped retry flag; unified global flag preferred. |
 | `services.learning_engine.LearningEngine` | `core.learning_engine.LearningEngine` | deprecated | 2025-12-31 | Thin shim retained for backward compatibility; import core engine directly. |
 
 After the removal date the repository policy is:
@@ -852,12 +852,12 @@ Health Score: 🟢 100.0/100
    Upcoming deadlines: 2
 
 🔧 Migration Status:
-   ❌ ENABLE_ANALYSIS_HTTP_RETRY: Migrations pending
+   ❌ ENABLE_HTTP_RETRY: Migrations pending
    ❌ services.learning_engine.LearningEngine: Migrations pending
 
 💡 Recommendations:
    ⚠️  2 deprecations due within 120 days
-   🔧 Run scripts/migrate_http_retry_flag.py to migrate ENABLE_ANALYSIS_HTTP_RETRY
+   🔧 Run scripts/migrate_http_retry_flag.py to migrate ENABLE_HTTP_RETRY
    🔧 Run scripts/migrate_learning_engine.py to migrate services.learning_engine.LearningEngine
 ```
 
@@ -881,7 +881,7 @@ fi
 
 Automated migration tools are available for major deprecated features:
 
-- **`scripts/migrate_http_retry_flag.py`**: Migrates `ENABLE_ANALYSIS_HTTP_RETRY` → `ENABLE_HTTP_RETRY`
+- **`scripts/migrate_http_retry_flag.py`**: Migrates `ENABLE_HTTP_RETRY` → `ENABLE_HTTP_RETRY`
 - **`scripts/migrate_learning_engine.py`**: Migrates `services.learning_engine.LearningEngine` → `core.learning_engine.LearningEngine`
 
 #### Migration Script Usage

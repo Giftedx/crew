@@ -23,10 +23,10 @@ try:
     VLLM_AVAILABLE = True
     logger.info("vLLM available for high-performance local inference")
 except ImportError:  # pragma: no cover
-    LLM = None
-    SamplingParams = None
-    AsyncEngineArgs = None
-    AsyncLLMEngine = None
+    LLM = None  # type: ignore[assignment,misc]
+    SamplingParams = None  # type: ignore[assignment,misc]
+    AsyncEngineArgs = None  # type: ignore[assignment,misc]
+    AsyncLLMEngine = None  # type: ignore[assignment,misc]
     VLLM_AVAILABLE = False
     logger.debug("vLLM not available - high-performance local inference disabled")
 
@@ -133,7 +133,7 @@ class vLLMLocalInferenceService:
                 dtype=self.config.dtype,
                 max_num_batched_tokens=self.config.max_num_batched_tokens,
                 max_num_seqs=self.config.max_num_seqs,
-                max_paddings=self.config.max_paddings,
+                max_paddings=self.config.max_paddings,  # type: ignore[call-arg]
                 enable_prefix_caching=self.config.enable_prefix_caching,
                 disable_log_stats=self.config.disable_log_stats,
             )

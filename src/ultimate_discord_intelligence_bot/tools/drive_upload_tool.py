@@ -13,8 +13,8 @@ from ._base import BaseTool
 # avoid import errors when these libraries are absent by deferring/failing gracefully.
 try:  # pragma: no cover - import guarding
     from google.oauth2 import service_account  # pragma: no cover
-    from googleapiclient.discovery import build  # type: ignore[import-not-found]  # pragma: no cover
-    from googleapiclient.http import MediaFileUpload  # type: ignore[import-not-found]  # pragma: no cover
+    from googleapiclient.discovery import build  # pragma: no cover
+    from googleapiclient.http import MediaFileUpload  # pragma: no cover
 
     _GOOGLE_LIBS_AVAILABLE = True
 except Exception:  # broad: any import error should mark feature unavailable
@@ -139,15 +139,17 @@ class DriveUploadTool(BaseTool[StepResult]):
                 body=file_metadata, media_body=media, fields="id,name,size,webViewLink"
             )
 
-            response = None
+            response: dict[str, Any] | None = None
             while response is None:
                 status, response = request.next_chunk()
                 if status:
                     logging.info("Upload progress: %s%%", int(status.progress() * 100))
 
-            if response is None:  # pragma: no cover - defensive fallback (should not happen)
-                raise RuntimeError("upload response missing after chunk loop")
+            # response is guaranteed to be not None here due to while loop
             file_id = response.get("id")
+
+            if not file_id:
+                raise RuntimeError("Upload succeeded but no file ID returned")
 
             self._make_public(file_id)
             links = self._generate_discord_links(file_id)

@@ -73,21 +73,27 @@ class VectorSearchTool(BaseTool):
             self.client = cast(_QdrantLike, QdrantClient(url=url, api_key=api_key))
         self._ensure_collection(self.collection)
 
+    @staticmethod
+    def _physical_name(name: str) -> str:
+        # Mirror VectorStore and MemoryStorageTool: replace ':' with '__' for Qdrant
+        return name.replace(":", "__")
+
     def _ensure_collection(self, name: str) -> None:  # pragma: no cover - setup
         try:
-            self.client.get_collection(name)
+            self.client.get_collection(self._physical_name(name))
         except Exception:  # pragma: no cover - creation branch
             self.client.recreate_collection(
-                name,
+                self._physical_name(name),
                 vectors_config=VectorParams(size=1, distance=Distance.COSINE),
             )
 
     def _run(self, query: str, limit: int = 3, collection: str | None = None) -> StepResult:
         target = collection or self.collection
+        physical = self._physical_name(target)
         vector = self.embedding_fn(query)
         try:
             res = self.client.query_points(
-                collection_name=target,
+                collection_name=physical,
                 query=vector,
                 limit=limit,
                 with_payload=True,

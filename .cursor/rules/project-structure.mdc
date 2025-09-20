@@ -1,41 +1,221 @@
 ---
-alwaysApply: true
-description: "Ultimate Discord Intelligence Bot project structure and architecture guide"
+alwaysApply: false
+description: Project structure and organization overview for the Ultimate Discord Intelligence Bot
 ---
-
 # Ultimate Discord Intelligence Bot - Project Structure
 
 ## Core Architecture
 
 The main entry point is [main.py](mdc:src/ultimate_discord_intelligence_bot/main.py), which orchestrates the CrewAI-based debate analysis system. Configuration is managed through [pyproject.toml](mdc:pyproject.toml) and YAML files in the [config/](mdc:config/) directory.
 
-## Key Directories
+## Directory Structure
 
-- **src/ultimate_discord_intelligence_bot/**: Main application package with agents, tools, and pipeline
-- **src/ingest/**: Multi-platform content ingestion (YouTube, Twitch, TikTok, Reddit, etc.)
-- **src/analysis/**: Debate analysis, fact-checking, and scoring logic
-- **src/memory/**: Vector storage integration with Qdrant
-- **src/grounding/**: Context verification and fact-checking backends
-- **src/discord/**: Discord bot commands and integrations
-- **src/policy/**: Privacy, security, and content policies
-- **config/**: YAML configuration files for agents, tasks, and services
-- **tests/**: Comprehensive test suite with pytest
-- **docs/**: Documentation including [agent_reference.md](mdc:docs/agent_reference.md)
+```
+ultimate-discord-intelligence-bot/
+├── src/
+│   ├── ultimate_discord_intelligence_bot/   # Main application package
+│   │   ├── __init__.py
+│   │   ├── main.py                         # Entry point
+│   │   ├── crew.py                         # CrewAI crew definition
+│   │   ├── settings.py                     # Global settings
+│   │   ├── step_result.py                  # Standard result format
+│   │   ├── pipeline.py                     # Content processing pipeline
+│   │   ├── tools/                          # CrewAI tools
+│   │   │   ├── _base.py                    # Base tool class
+│   │   │   ├── content_ingestion.py
+│   │   │   ├── debate_analysis.py
+│   │   │   ├── fact_checking.py
+│   │   │   └── ...
+│   │   ├── services/                       # Core services
+│   │   │   ├── prompt_engine.py
+│   │   │   ├── memory_service.py
+│   │   │   ├── openrouter_service.py
+│   │   │   └── ...
+│   │   ├── tenancy/                        # Multi-tenancy support
+│   │   │   ├── context.py
+│   │   │   └── ...
+│   │   └── config/                         # YAML configurations
+│   │       ├── agents.yaml
+│   │       └── tasks.yaml
+│   ├── ingest/                             # Content ingestion
+│   │   ├── youtube/
+│   │   ├── twitch/
+│   │   ├── tiktok/
+│   │   ├── reddit/
+│   │   └── ...
+│   ├── analysis/                           # Analysis logic
+│   │   ├── debate/
+│   │   ├── fact_check/
+│   │   └── scoring/
+│   ├── memory/                             # Vector storage
+│   │   ├── qdrant/
+│   │   └── embeddings/
+│   ├── grounding/                          # Fact verification
+│   │   └── backends/
+│   ├── discord/                            # Discord integration
+│   │   ├── bot.py
+│   │   ├── commands/
+│   │   └── events/
+│   └── policy/                             # Privacy & security
+│       ├── privacy/
+│       └── security/
+├── config/                                 # Global configs
+├── tests/                                  # Test suite
+│   ├── conftest.py                         # Test fixtures
+│   ├── test_tools/
+│   ├── test_services/
+│   └── ...
+├── docs/                                   # Documentation
+│   ├── agents/
+│   ├── architecture/
+│   ├── configuration.md
+│   ├── tools_reference.md
+│   └── ...
+├── scripts/                                # Utility scripts
+│   ├── dev.sh
+│   ├── check_deprecations.py
+│   └── ...
+├── docker/                                 # Docker configs
+├── .env.example                            # Environment template
+├── pyproject.toml                          # Project config
+├── Makefile                                # Development commands
+└── docker-compose.yml                      # Service orchestration
+```
 
-## Project Standards
+## Key Components
 
-- **Python 3.10+** with type hints and comprehensive docstrings
-- **CrewAI framework** for agent orchestration
-- **Qdrant** for vector storage and semantic search
-- **Discord.py** for bot functionality
-- **pytest** for testing with async support
-- **ruff** for linting and formatting (120 char line length)
-- **mypy** for type checking with baseline management
+### Application Core
 
-## Key Files
+- **[main.py](mdc:src/ultimate_discord_intelligence_bot/main.py)**: Orchestrates the crew execution
+- **[crew.py](mdc:src/ultimate_discord_intelligence_bot/crew.py)**: Defines agents and their relationships
+- **[settings.py](mdc:src/ultimate_discord_intelligence_bot/settings.py)**: Centralized configuration management
+- **[step_result.py](mdc:src/ultimate_discord_intelligence_bot/step_result.py)**: Standardized return format
 
-- [crew.py](mdc:src/ultimate_discord_intelligence_bot/crew.py): CrewAI crew definition
-- [settings.py](mdc:src/ultimate_discord_intelligence_bot/settings.py): Application settings
-- [step_result.py](mdc:src/ultimate_discord_intelligence_bot/step_result.py): Standard result format
-- [docs/agents/README.md](mdc:docs/agents/README.md): Comprehensive project guidelines and progress tracker
-- [docs/architecture/architecture.md](mdc:docs/architecture/architecture.md): System architecture documentation
+### CrewAI Configuration
+
+- **[config/agents.yaml](mdc:src/ultimate_discord_intelligence_bot/config/agents.yaml)**: Agent definitions with roles and goals
+- **[config/tasks.yaml](mdc:src/ultimate_discord_intelligence_bot/config/tasks.yaml)**: Task definitions and dependencies
+
+### Tools & Services
+
+- **tools/**: CrewAI tools for content processing, analysis, and integration
+- **services/**: Shared services like prompt engine, memory, and LLM interfaces
+
+### Content Pipeline
+
+```
+Multi-Platform Sources → Ingestion → Transcription → Analysis → Memory Storage → Discord Output
+```
+
+### Testing Infrastructure
+
+- **[tests/conftest.py](mdc:tests/conftest.py)**: Shared test fixtures and mocks
+- Unit tests mirror source structure
+- Integration tests for end-to-end workflows
+
+## Development Standards
+
+### Code Organization
+
+- One class/tool per file
+- Clear separation of concerns
+- Dependency injection for services
+- Tenant-aware design throughout
+
+### Import Order
+
+```python
+# Standard library
+import os
+import sys
+from typing import Optional
+
+# Third-party
+import discord
+from crewai import Agent, Task
+
+# Local application
+from ultimate_discord_intelligence_bot.step_result import StepResult
+from ultimate_discord_intelligence_bot.tools import DebateAnalysisTool
+```
+
+### Module Responsibilities
+
+#### Tools (`tools/`)
+
+- Implement CrewAI BaseTool
+- Handle specific operations
+- Return StepResult objects
+- Include input validation
+
+#### Services (`services/`)
+
+- Provide shared functionality
+- Manage external integrations
+- Handle caching and optimization
+- Abstract complex operations
+
+#### Ingest (`ingest/`)
+
+- Platform-specific downloaders
+- Content extraction
+- Metadata parsing
+- Format normalization
+
+#### Analysis (`analysis/`)
+
+- Debate scoring algorithms
+- Fact-checking logic
+- Bias detection
+- Summarization
+
+#### Memory (`memory/`)
+
+- Vector storage operations
+- Embedding generation
+- Semantic search
+- Knowledge graph management
+
+#### Discord (`discord/`)
+
+- Bot commands
+- Event handlers
+- Message formatting
+- Rate limiting
+
+## Configuration Files
+
+### Environment Variables (`.env`)
+
+```bash
+# Required
+DISCORD_BOT_TOKEN=
+OPENAI_API_KEY=      # or OPENROUTER_API_KEY
+QDRANT_URL=
+
+# Optional
+ENABLE_DEBATE_ANALYSIS=true
+ENABLE_FACT_CHECKING=true
+LOG_LEVEL=INFO
+```
+
+### Project Configuration (`pyproject.toml`)
+
+- Package metadata
+- Dependencies
+- Development tools
+- Build configuration
+
+### Docker Services (`docker-compose.yml`)
+
+- Qdrant vector database
+- Discord bot service
+- Monitoring stack (optional)
+
+## Documentation Structure
+
+- **[docs/agents/](mdc:docs/agents/)**: Agent documentation and guidelines
+- **[docs/architecture/](mdc:docs/architecture/)**: System design and patterns
+- **[docs/configuration.md](mdc:docs/configuration.md)**: Configuration reference
+- **[docs/tools_reference.md](mdc:docs/tools_reference.md)**: Tool documentation
+- **[docs/operations/](mdc:docs/operations/)**: Deployment and operations

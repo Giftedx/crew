@@ -1,0 +1,70 @@
+{
+  "generated_at": "2025-09-20T03:34:20.355567",
+  "directories": {
+    "demos": {
+      "count": 16,
+      "files": [
+        "ai_enhancement_complete_demo.py",
+        "demo_langgraph_pilot.py",
+        "demo_enhanced_monitoring.py",
+        "demo_enhanced_ai_router.py",
+        "core_monitoring_demo.py",
+        "autonomous_optimization_demo.py",
+        "ai_routing_performance_integration_demo.py",
+        "simple_monitoring_demo.py",
+        "production_discord_bot_demo.py",
+        "advanced_bandits_integration_demo.py",
+        "... and 6 more"
+      ],
+      "total_size_mb": 0.24696731567382812
+    },
+    "results": {
+      "count": 24,
+      "files": [
+        "core_demo_results.json",
+        "deployment_report_deploy_1758001956.json",
+        "comprehensive_bandit_benchmark_results.json",
+        "production_deployment_results_20250916_034434.json",
+        "global_ai_platform_expansion_results_20250916_042829.json",
+        "ultimate_global_ai_supremacy_results_20250916_044132.json",
+        "ai_ecosystem_leadership_results_20250916_042029.json",
+        "live_deployment_demo_results_20250916_081106.json",
+        "deployment_plan_20250916_033553.json",
+        "ai_feature_expansion_results_20250916_041232.json",
+        "... and 14 more"
+      ],
+      "total_size_mb": 0.23366832733154297
+    },
+    "experimental": {
+      "count": 19,
+      "files": [
+        "production_monitoring_system.py",
+        "enhanced_performance_monitor_integration.py",
+        "global_platform_optimization_engine.py",
+        "ai_feature_expansion_engine.py",
+        "autonomous_performance_optimizer.py",
+        "production_monitoring.py",
+        "ai_ecosystem_leadership_engine.py",
+        "production_discord_bot.py",
+        "global_ai_platform_expansion_engine.py",
+        "production_deployment_automation.py",
+        "... and 9 more"
+      ],
+      "total_size_mb": 0.5916976928710938
+    },
+    "logs": {
+      "count": 3,
+      "files": [
+        "autonomous_optimization_demo.log",
+        "live_deployment_demo.log",
+        "production_bot_demo.log"
+      ],
+      "total_size_mb": 0.00121307373046875
+    }
+  },
+  "summary": {
+    "total_files": 62,
+    "total_size_mb": 1.07,
+    "directories": 4
+  }
+}

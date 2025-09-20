@@ -49,8 +49,8 @@ All notable changes will be documented in this file. Follow [Conventional Commit
 
 ### Changed
 
-* Refactored `FactCheckTool` and `OpenRouterService` to use `is_retry_enabled()` instead of direct environment variable checks for `ENABLE_HTTP_RETRY` / legacy `ENABLE_ANALYSIS_HTTP_RETRY` (no behavior change intended).
-* Consolidated HTTP retry flag logic: `ENABLE_HTTP_RETRY` now preferred over legacy `ENABLE_ANALYSIS_HTTP_RETRY` (which still works but emits `DeprecationWarning`).
+* Refactored `FactCheckTool` and `OpenRouterService` to use `is_retry_enabled()` instead of direct environment variable checks for `ENABLE_HTTP_RETRY` / legacy `ENABLE_HTTP_RETRY` (no behavior change intended).
+* Consolidated HTTP retry flag logic: `ENABLE_HTTP_RETRY` now preferred over legacy `ENABLE_HTTP_RETRY` (which still works but emits `DeprecationWarning`).
 * Reduced mypy errors from 42 to 0; strengthened `TypedDict`s; removed obsolete type ignores.
 * `VectorSearchTool.run()` returns flat `list[dict]` (replacing `{status, hits}` wrapper).
 * `DiscordQATool` updated to consume simplified vector search output.
@@ -63,7 +63,7 @@ All notable changes will be documented in this file. Follow [Conventional Commit
 
 ### Deprecated
 
-* `ENABLE_ANALYSIS_HTTP_RETRY` (use `ENABLE_HTTP_RETRY` going forward). Removal planned after a transition period once all external references migrate.
+* `ENABLE_HTTP_RETRY` (use `ENABLE_HTTP_RETRY` going forward). Removal planned after a transition period once all external references migrate.
 * Legacy vector search wrapper structure expecting `result['hits']`.
 * `services.learning_engine.LearningEngine` (import `core.learning_engine.LearningEngine` directly; shim will be removed after deprecation window).
 

@@ -31,7 +31,7 @@ except Exception:  # pragma: no cover - defensive fallback
 
 from .memory_service import MemoryService
 
-try:  # pragma: no cover - optional dependency
+try:  # pragma: no cover - optional heavy dependency (performance tokenization fallback)
     import tiktoken as _tiktoken  # noqa: F401
 except Exception:  # pragma: no cover
     _tiktoken = None
@@ -104,15 +104,29 @@ class PromptEngine:
             tokens = approx
         return tokens
 
-    def optimise(self, prompt: str) -> str:
-        """Return a lightly normalised variant of ``prompt``.
+    def optimise(self, prompt: str, target_token_reduction: float = 0.0, max_tokens: int | None = None) -> str:
+        """Return an optimised variant of ``prompt`` with intelligent context trimming.
 
-        This basic implementation simply strips surrounding whitespace; it can
-        be extended with more advanced optimisation strategies.
+        This implementation performs multiple passes of compression techniques to achieve
+        the target token reduction while preserving important information:
+
+        1. Basic compression (blank lines, deduplication, whitespace)
+        2. Context-aware section summarisation (only if target_token_reduction > 0)
+        3. Intelligent truncation with fallback strategies (only if max_tokens specified)
+
+        Parameters
+        ----------
+        prompt:
+            The input prompt text to optimize
+        target_token_reduction:
+            Target reduction ratio (0.15 = 15% reduction). If 0, only basic compression.
+        max_tokens:
+            Optional hard limit on output token count
         """
         original = prompt
         text = original  # preserve internal structure initially
         settings = get_settings()
+
         # Environment variable should take precedence so test suites that
         # mutate os.environ between calls are not affected by an lru_cached
         # settings instance that may exist under a different import path
@@ -129,10 +143,52 @@ class PromptEngine:
         # may enable compression.
         effective_enabled = env_enabled or (env_present and (enabled_direct or enabled_alias))
         if not effective_enabled:
-            return original
+            return original.strip()
 
         lbl = metrics.label_ctx()
 
+        # Phase 1: Basic compression (always applied when compression is enabled)
+        text = self._apply_basic_compression(text, settings)
+
+        # Phase 2: Intelligent context trimming (only if target reduction specified)
+        if target_token_reduction > 0:
+            original_tokens = self.count_tokens(original)
+            target_tokens = int(original_tokens * (1.0 - target_token_reduction))
+            if max_tokens:
+                target_tokens = min(target_tokens, max_tokens)
+
+            current_tokens = self.count_tokens(text)
+            if current_tokens > target_tokens:
+                text = self._apply_context_trimming(text, target_tokens, current_tokens)
+
+        # Phase 3: Emergency truncation if hard limit specified and still over
+        if max_tokens:
+            current_tokens = self.count_tokens(text)
+            if current_tokens > max_tokens:
+                text = self._apply_emergency_truncation(text, max_tokens)
+
+        try:  # metrics emission best-effort
+            original_tokens = max(1, self.count_tokens(original))
+            final_tokens = max(1, self.count_tokens(text))
+            ratio = final_tokens / original_tokens
+            reduction_achieved = 1.0 - ratio
+
+            metrics.PROMPT_COMPRESSION_RATIO.labels(lbl["tenant"], lbl["workspace"], "optimise").observe(ratio)
+
+            # Track if we achieved target reduction (only if target was set)
+            if target_token_reduction > 0 and hasattr(metrics, "PROMPT_COMPRESSION_TARGET_MET"):
+                target_met = reduction_achieved >= (target_token_reduction * 0.9)  # 90% of target
+                metrics.PROMPT_COMPRESSION_TARGET_MET.labels(
+                    lbl["tenant"], lbl["workspace"]
+                ).inc() if target_met else None
+
+        except Exception:
+            pass
+
+        return text
+
+    def _apply_basic_compression(self, text: str, settings: Any) -> str:
+        """Apply basic compression techniques (existing optimise logic)."""
         # 1. Collapse excessive blank lines (configurable)
         max_blanks = int(getattr(settings, "prompt_compression_max_repeated_blank_lines", 1) or 1)
         lines: list[str] = []
@@ -192,15 +248,173 @@ class PromptEngine:
             compressed_sections.append("\n".join(current))
         text = "\n".join(compressed_sections).strip()
 
-        try:  # metrics emission best-effort
-            original_tokens = max(1, self.count_tokens(original))
-            compressed_tokens = max(1, self.count_tokens(text))
-            ratio = compressed_tokens / original_tokens
-            metrics.PROMPT_COMPRESSION_RATIO.labels(lbl["tenant"], lbl["workspace"], "optimise").observe(ratio)
-        except Exception:
-            pass
-
         return text
+
+    def _apply_context_trimming(self, text: str, target_tokens: int, current_tokens: int) -> str:
+        """Apply intelligent context trimming strategies."""
+        lines = text.splitlines()
+        if not lines:
+            return text
+
+        # Strategy 1: Remove low-value lines (empty, short, repetitive)
+        line_values = []
+
+        for i, line in enumerate(lines):
+            stripped = line.strip()
+            value_score = 0
+
+            # Higher value for longer, information-dense lines
+            if len(stripped) > 10:
+                value_score += 1
+            if len(stripped) > 50:
+                value_score += 1
+
+            # Higher value for lines with specific markers
+            if any(
+                marker in stripped.lower()
+                for marker in [
+                    "error",
+                    "warning",
+                    "important",
+                    "note:",
+                    "question:",
+                    "answer:",
+                    "context:",
+                    "summary:",
+                    "conclusion:",
+                    "result:",
+                    "output:",
+                ]
+            ):
+                value_score += 2
+
+            # Lower value for very short or repetitive content
+            if len(stripped) < 5:
+                value_score -= 1
+            if stripped.count(".") > 5 or stripped.count("-") > 5:
+                value_score -= 1  # likely noise or formatting
+
+            line_values.append((value_score, i, line))
+
+        # Sort by value and keep highest-value lines
+        line_values.sort(reverse=True)
+
+        # Keep lines until we hit target token count
+        kept_lines: list[str] = [""] * len(lines)
+        running_tokens = 0
+
+        for value_score, original_index, line in line_values:
+            line_tokens = self.count_tokens(line)
+            if running_tokens + line_tokens <= target_tokens:
+                kept_lines[original_index] = line
+                running_tokens += line_tokens
+            else:
+                # Try truncating this line if it's high value
+                if value_score > 0 and running_tokens < target_tokens:
+                    remaining_tokens = target_tokens - running_tokens
+                    truncated = self._truncate_line_to_tokens(line, remaining_tokens)
+                    if truncated:
+                        kept_lines[original_index] = truncated
+                        break
+                else:
+                    break
+
+        # Reconstruct text preserving order
+        result_lines = [line for line in kept_lines if line is not None]
+        return "\n".join(result_lines)
+
+    def _truncate_line_to_tokens(self, line: str, max_tokens: int) -> str:
+        """Truncate a line to approximately max_tokens while preserving meaning."""
+        if self.count_tokens(line) <= max_tokens:
+            return line
+
+        words = line.split()
+        if not words:
+            return ""
+
+        # Binary search for optimal word count
+        left, right = 0, len(words)
+        best_result = ""
+
+        while left <= right:
+            mid = (left + right) // 2
+            candidate = " ".join(words[:mid])
+
+            if self.count_tokens(candidate) <= max_tokens:
+                best_result = candidate
+                left = mid + 1
+            else:
+                right = mid - 1
+
+        # Add ellipsis if we truncated
+        if best_result and best_result != line:
+            # Try to add ellipsis if there's room
+            with_ellipsis = best_result + "..."
+            if self.count_tokens(with_ellipsis) <= max_tokens:
+                return with_ellipsis
+
+        return best_result
+
+    def _apply_emergency_truncation(self, text: str, max_tokens: int) -> str:
+        """Apply emergency truncation when all else fails."""
+        if self.count_tokens(text) <= max_tokens:
+            return text
+
+        lines = text.splitlines()
+        if not lines:
+            return text
+
+        # For very small token limits, return a minimal response
+        if max_tokens <= 2:
+            return "[truncated]" if max_tokens >= 1 else ""
+
+        # Keep first and last portions, omit middle
+        total_lines = len(lines)
+        if total_lines <= 6:
+            # For very short texts, just truncate words
+            words = text.split()
+            for i in range(len(words), 0, -1):
+                candidate = " ".join(words[:i])
+                if self.count_tokens(candidate) <= max_tokens:
+                    return candidate + "..." if i < len(words) else candidate
+            # Fallback for extreme cases
+            return "[content omitted due to length]"[: max_tokens * 4] if max_tokens > 0 else ""
+
+        # For longer texts, keep beginning and end
+        keep_start = total_lines // 3
+        keep_end = total_lines // 3
+
+        while keep_start + keep_end > 0:
+            start_lines = lines[:keep_start]
+            end_lines = lines[-keep_end:] if keep_end > 0 else []
+
+            if start_lines and end_lines:
+                candidate_lines = (
+                    start_lines + [f"...[omitted {total_lines - keep_start - keep_end} lines]..."] + end_lines
+                )
+            elif start_lines:
+                candidate_lines = start_lines + [f"...[omitted {total_lines - keep_start} lines]..."]
+            else:
+                candidate_lines = [f"...[omitted {total_lines - keep_end} lines]..."] + end_lines
+
+            candidate = "\n".join(candidate_lines)
+            if self.count_tokens(candidate) <= max_tokens:
+                return candidate
+
+            # Reduce keep amounts
+            if keep_start > keep_end:
+                keep_start -= 1
+            else:
+                keep_end -= 1
+
+        # Last resort: just return truncated beginning
+        words = text.split()
+        for i in range(len(words), 0, -1):
+            candidate = " ".join(words[:i]) + "..."
+            if self.count_tokens(candidate) <= max_tokens:
+                return candidate
+
+        return "[content omitted due to length]" if max_tokens > 0 else ""
 
     def build_with_context(
         self,

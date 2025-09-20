@@ -1,0 +1,265 @@
+{
+  "timestamp": "2025-09-16T06:09:44.693346+00:00",
+  "configuration": {
+    "num_rounds": 2000,
+    "num_repetitions": 5,
+    "warmup_rounds": 200,
+    "context_dimension": 8,
+    "num_actions": 4,
+    "noise_level": 0.1,
+    "algorithms": [
+      "epsilon_greedy",
+      "thompson_sampling",
+      "linucb",
+      "doubly_robust",
+      "offset_tree"
+    ],
+    "significance_level": 0.05,
+    "confidence_level": 0.95,
+    "effect_size_threshold": 0.02,
+    "enable_profiling": true,
+    "memory_limit_mb": 512,
+    "latency_budget_ms": 100
+  },
+  "aggregated_results": {
+    "epsilon_greedy": {
+      "final_performance": {
+        "mean": 0.5812965358064703,
+        "std": 0.02921573553288448,
+        "min": 0.5486049485763679,
+        "max": 0.6274063012160584,
+        "median": 0.5726425680333812
+      },
+      "total_reward": {
+        "mean": 1172.743579621514,
+        "std": 54.396202381751515
+      },
+      "cumulative_regret": {
+        "mean": 242.66384636603672,
+        "std": 44.42092115915725
+      },
+      "latency": {
+        "mean": 0.0061710575333563614,
+        "std": 0.00039156979185177114,
+        "p95": 0.006634342591860331,
+        "p99": 0.0066548612067708745
+      },
+      "memory": {
+        "mean": 11.999,
+        "max": 11.999
+      },
+      "convergence": {
+        "mean_rounds": 100,
+        "std_rounds": 0.0
+      },
+      "repetitions": 5
+    },
+    "thompson_sampling": {
+      "final_performance": {
+        "mean": 0.6144725180603019,
+        "std": 0.05381975307739513,
+        "min": 0.5410695810548531,
+        "max": 0.6844917925899751,
+        "median": 0.6092198942888122
+      },
+      "total_reward": {
+        "mean": 1251.2456597308353,
+        "std": 82.91712327404329
+      },
+      "cumulative_regret": {
+        "mean": 114.01811923505082,
+        "std": 24.02441800812655
+      },
+      "latency": {
+        "mean": 0.0507435997511493,
+        "std": 0.0025788825945676536,
+        "p95": 0.053563536325236784,
+        "p99": 0.05373424739926122
+      },
+      "memory": {
+        "mean": 11.999,
+        "max": 11.999
+      },
+      "convergence": {
+        "mean_rounds": 100,
+        "std_rounds": 0.0
+      },
+      "repetitions": 5
+    },
+    "linucb": {
+      "final_performance": {
+        "mean": 0.6672796503566903,
+        "std": 0.04191299122258695,
+        "min": 0.6168161307213703,
+        "max": 0.7151024494359387,
+        "median": 0.6500726161604139
+      },
+      "total_reward": {
+        "mean": 1324.0230590635526,
+        "std": 66.55209760241613
+      },
+      "cumulative_regret": {
+        "mean": 39.74844500445299,
+        "std": 14.626704929517357
+      },
+      "latency": {
+        "mean": 0.04224710251728538,
+        "std": 0.0010707512197464257,
+        "p95": 0.04323530585388653,
+        "p99": 0.04327830064226873
+      },
+      "memory": {
+        "mean": 11.999,
+        "max": 11.999
+      },
+      "convergence": {
+        "mean_rounds": 100,
+        "std_rounds": 0.0
+      },
+      "repetitions": 5
+    },
+    "doubly_robust": {
+      "final_performance": {
+        "mean": 0.674759978954399,
+        "std": 0.013755362326291059,
+        "min": 0.6534508288095605,
+        "max": 0.6882071870989803,
+        "median": 0.6766728443483976
+      },
+      "total_reward": {
+        "mean": 1303.2062011171372,
+        "std": 38.53997386997047
+      },
+      "cumulative_regret": {
+        "mean": 65.40107584974498,
+        "std": 27.22955734264755
+      },
+      "latency": {
+        "mean": 0.016169768941472283,
+        "std": 0.00028323134936828365,
+        "p95": 0.01654149711248465,
+        "p99": 0.016589776769978925
+      },
+      "memory": {
+        "mean": 11.999,
+        "max": 11.999
+      },
+      "convergence": {
+        "mean_rounds": 100,
+        "std_rounds": 0.0
+      },
+      "repetitions": 5
+    },
+    "offset_tree": {
+      "final_performance": {
+        "mean": 0.629093648525639,
+        "std": 0.04559286788280039,
+        "min": 0.5559195725547975,
+        "max": 0.6773747278673793,
+        "median": 0.6305509634596099
+      },
+      "total_reward": {
+        "mean": 1263.6273510778026,
+        "std": 88.1567575921039
+      },
+      "cumulative_regret": {
+        "mean": 112.29813409060333,
+        "std": 15.724861863621445
+      },
+      "latency": {
+        "mean": 0.04991398743586615,
+        "std": 0.0012709883915510264,
+        "p95": 0.051512109447503465,
+        "p99": 0.05175474088988267
+      },
+      "memory": {
+        "mean": 11.999,
+        "max": 11.999
+      },
+      "convergence": {
+        "mean_rounds": 100,
+        "std_rounds": 0.0
+      },
+      "repetitions": 5
+    }
+  },
+  "statistical_comparisons": [
+    {
+      "algorithm_comparison": "doubly_robust vs epsilon_greedy",
+      "effect_size": 0.09346344314792854,
+      "confidence_interval": [
+        0.060161530590611606,
+        0.12676535570524547
+      ],
+      "p_value": 0.0011625848102723617,
+      "is_significant": "True",
+      "cohen_d": 4.093197285455025,
+      "power": 0.9999967882710026
+    },
+    {
+      "algorithm_comparison": "doubly_robust vs thompson_sampling",
+      "effect_size": 0.06028746089409687,
+      "confidence_interval": [
+        0.0030003045589278576,
+        0.11757461722926588
+      ],
+      "p_value": 0.24845972918530984,
+      "is_significant": "False",
+      "cohen_d": 1.5348283258406428,
+      "power": 0.6796888011901568
+    },
+    {
+      "algorithm_comparison": "doubly_robust vs linucb",
+      "effect_size": 0.00748032859770853,
+      "confidence_interval": [
+        -0.03801180684485269,
+        0.05297246404026975
+      ],
+      "p_value": 1.0,
+      "is_significant": false,
+      "cohen_d": 0.23981394310999846,
+      "power": 0.06662763397693637
+    },
+    {
+      "algorithm_comparison": "offset_tree vs epsilon_greedy",
+      "effect_size": 0.04779711271916853,
+      "confidence_interval": [
+        -0.008046945294559814,
+        0.10364117073289689
+      ],
+      "p_value": 0.5031607589517973,
+      "is_significant": "False",
+      "cohen_d": 1.2482879286543676,
+      "power": 0.5055281204542768
+    },
+    {
+      "algorithm_comparison": "offset_tree vs thompson_sampling",
+      "effect_size": 0.014621130465336862,
+      "confidence_interval": [
+        -0.058120602511239725,
+        0.08736286344191345
+      ],
+      "p_value": 1.0,
+      "is_significant": false,
+      "cohen_d": 0.2931483043232719,
+      "power": 0.07495392256975603
+    },
+    {
+      "algorithm_comparison": "offset_tree vs linucb",
+      "effect_size": -0.038186001831051475,
+      "confidence_interval": [
+        -0.10205364483272963,
+        0.025681641170626685
+      ],
+      "p_value": 1.0,
+      "is_significant": false,
+      "cohen_d": -0.8719937604714944,
+      "power": 0.28096667489291793
+    }
+  ],
+  "summary": {
+    "best_algorithm": "doubly_robust",
+    "significant_improvements": 1,
+    "total_experiments": 25
+  }
+}

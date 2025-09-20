@@ -11,7 +11,7 @@
         "/home/crew/.venv/bin/python"
     ],
     // Prefer Pylance for stability; switch back to "Jedi" if needed for repro
-    "python.languageServer": "Pylance",
+    "python.languageServer": "None",
     // Use Ruff for formatting & linting on save
     "editor.formatOnSave": true,
     "[python]": {

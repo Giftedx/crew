@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 from ultimate_discord_intelligence_bot.pipeline import ContentPipeline
 
 
-class TestPipeline(ContentPipeline):
+class MockPipeline(ContentPipeline):
     """Subclass to avoid real MemoryStorageTool dependency during tests."""
 
     def __init__(self, *args, **kwargs):  # noqa: D401 - thin wrapper
@@ -19,10 +19,14 @@ class DummyMemory:
 
 
 def test_pipeline_rate_limit(monkeypatch):
-    pipeline = TestPipeline()
+    """Test pipeline respects HTTP rate limiting."""
+    pipeline = MockPipeline()
 
-    # Force pipeline rate limit failure
-    monkeypatch.setattr(pipeline, "_check_rate_limit", lambda op: op != "pipeline")
+    # Mock URL validation to always succeed
+    monkeypatch.setattr("core.http_utils.validate_public_https_url", lambda x: x)
+
+    # Mock the rate limit check to return False to trigger rate limit exceeded
+    monkeypatch.setattr(pipeline, "_check_rate_limit", lambda op_type: False)
 
     result = asyncio.run(pipeline.process_video("http://example.com/video"))
     assert result.get("status") == "error"
@@ -34,7 +38,7 @@ def test_pipeline_rate_limit(monkeypatch):
 def test_tool_rate_limit_download(monkeypatch):
     # Downloader will be first tool step; simulate passing pipeline limit but failing tool limit
     downloader = MagicMock()
-    pipeline = TestPipeline(downloader=downloader)
+    pipeline = MockPipeline(downloader=downloader)
 
     calls = {"tool": 0}
 

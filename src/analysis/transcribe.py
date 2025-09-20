@@ -79,7 +79,7 @@ def run_whisper(path: str, model: str = "tiny") -> Transcript:
             )
             # fall back to standard whisper or text path
     try:
-        import whisper  # type: ignore  # noqa: PLC0415 - optional heavy dependency imported lazily
+        import whisper  # noqa: PLC0415 - optional heavy dependency imported lazily
 
         model_inst = whisper.load_model(getattr(cfg, "whisper_model", model) or model)
         result = model_inst.transcribe(path)

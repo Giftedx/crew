@@ -153,7 +153,7 @@ Feature flags follow `ENABLE_<AREA>_<FEATURE>` pattern:
 - `ENABLE_RL_GLOBAL`, `ENABLE_RL_ROUTING` - Reinforcement learning
 - `ENABLE_DISCORD_COMMANDS`, `ENABLE_DISCORD_ARCHIVER` - Discord integration
 - `ENABLE_PII_DETECTION`, `ENABLE_CONTENT_MODERATION` - Privacy/security
-- `ENABLE_HTTP_RETRY` - HTTP resilience (replaces deprecated `ENABLE_ANALYSIS_HTTP_RETRY`)
+- `ENABLE_HTTP_RETRY` - HTTP resilience (replaces deprecated `ENABLE_HTTP_RETRY`)
 
 **Security Requirements:**
 
@@ -252,7 +252,7 @@ The project uses incremental mypy adoption:
 
 Current deprecated patterns:
 
-- `ENABLE_ANALYSIS_HTTP_RETRY` → `ENABLE_HTTP_RETRY` (grace period: 2025-12-31)
+- `ENABLE_HTTP_RETRY` → `ENABLE_HTTP_RETRY` (grace period: 2025-12-31)
 - `services.learning_engine.LearningEngine` → `core.learning_engine.LearningEngine`
 - Root `trustworthiness.json` → `data/trustworthiness.json`
 

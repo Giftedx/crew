@@ -10,7 +10,9 @@ from typing import Any, Protocol, cast, runtime_checkable
 from obs import metrics
 
 from .error_handling import log_error
+from .rl.advanced_config import get_config_manager
 from .rl.experiment import ExperimentManager
+from .rl.policies.advanced_bandits import DoublyRobustBandit, OffsetTreeBandit
 from .rl.policies.bandit_base import EpsilonGreedyBandit, ThompsonSamplingBandit, UCB1Bandit
 from .rl.policies.lints import LinTSDiagBandit
 from .rl.policies.linucb import LinUCBDiagBandit
@@ -64,9 +66,34 @@ class LearningEngine:
             # Order of precedence: explicit env force -> configured policy -> fallback
             force_thompson = os.getenv("ENABLE_RL_THOMPSON", "").lower() in {"1", "true", "yes", "on"}
             force_contextual = os.getenv("ENABLE_RL_CONTEXTUAL", "").lower() in {"1", "true", "yes", "on"}
+            force_advanced = os.getenv("ENABLE_RL_ADVANCED", "").lower() in {"1", "true", "yes", "on"}
 
             bandit: _BanditLike
-            if force_contextual:
+            if force_advanced:
+                config_manager = get_config_manager()
+                if p in {"doubly_robust", "doubler", "dr"}:
+                    dr_config = config_manager.get_doubly_robust_config()
+                    bandit = DoublyRobustBandit(
+                        alpha=dr_config.alpha,
+                        dim=dr_config.dim,
+                        learning_rate=dr_config.learning_rate,
+                    )
+                elif p in {"offset_tree", "tree", "ot"}:
+                    ot_config = config_manager.get_offset_tree_config()
+                    bandit = OffsetTreeBandit(
+                        max_depth=ot_config.max_depth,
+                        min_samples_split=ot_config.min_samples_split,
+                        split_threshold=ot_config.split_threshold,
+                    )
+                else:
+                    # Default advanced algorithm
+                    dr_config = config_manager.get_doubly_robust_config()
+                    bandit = DoublyRobustBandit(
+                        alpha=dr_config.alpha,
+                        dim=dr_config.dim,
+                        learning_rate=dr_config.learning_rate,
+                    )
+            elif force_contextual:
                 bandit = LinUCBDiagBandit()
             elif force_thompson:
                 bandit = ThompsonSamplingBandit()
@@ -80,6 +107,22 @@ class LearningEngine:
                 bandit = UCB1Bandit()
             elif p in ("ts", "thompson", "thompson_sampling"):
                 bandit = ThompsonSamplingBandit()
+            elif p in {"doubly_robust", "doubler", "dr"}:
+                config_manager = get_config_manager()
+                dr_config = config_manager.get_doubly_robust_config()
+                bandit = DoublyRobustBandit(
+                    alpha=dr_config.alpha,
+                    dim=dr_config.dim,
+                    learning_rate=dr_config.learning_rate,
+                )
+            elif p in {"offset_tree", "tree", "ot"}:
+                config_manager = get_config_manager()
+                ot_config = config_manager.get_offset_tree_config()
+                bandit = OffsetTreeBandit(
+                    max_depth=ot_config.max_depth,
+                    min_samples_split=ot_config.min_samples_split,
+                    split_threshold=ot_config.split_threshold,
+                )
             else:
                 bandit = EpsilonGreedyBandit()
         else:
@@ -231,13 +274,19 @@ class LearningEngine:
         choice = self.recommend(domain, {}, candidates)
         if shadow_enabled:
             try:
-                # Evaluate Thompson & LinUCB in shadow if they are not the active policy
+                # Evaluate Thompson, LinUCB, and LinTS in shadow if they are not the active policy
                 shadow_candidates: list[tuple[str, _BanditLike]] = []
                 active = self.registry.get(domain)
                 if not isinstance(active, ThompsonSamplingBandit):
                     shadow_candidates.append(("thompson", ThompsonSamplingBandit()))
                 if not isinstance(active, LinUCBDiagBandit):
                     shadow_candidates.append(("linucb", LinUCBDiagBandit()))
+                # Add LinTS shadow evaluation if flag is enabled
+                if os.getenv("ENABLE_RL_LINTS", "").lower() in {"1", "true", "yes", "on"} and not isinstance(
+                    active, LinTSDiagBandit
+                ):
+                    shadow_candidates.append(("lints", LinTSDiagBandit()))
+
                 for tag, policy in shadow_candidates:
                     try:
                         # Independent recommendation (no update to keep pure observation)
@@ -258,6 +307,16 @@ class LearningEngine:
         if domain not in self.registry:
             self.register_domain(domain)
         self.record(domain, {}, action, reward)
+
+        # Update shadow regret tracking if LinTS shadow mode is enabled
+        if os.getenv("ENABLE_RL_LINTS", "").lower() in {"1", "true", "yes", "on"}:
+            try:
+                from .rl.shadow_regret import get_shadow_tracker
+
+                tracker = get_shadow_tracker()
+                tracker.update_baseline(reward)
+            except Exception:
+                pass  # Shadow tracking should never affect main flow
 
 
 __all__ = ["LearningEngine"]

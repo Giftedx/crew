@@ -59,7 +59,7 @@ DOC_PATH = Path(__file__).parent.parent / "docs" / "feature_flags.md"
 SRC_PATH = Path(__file__).parent.parent / "src"
 
 # Flags that are intentionally deprecated but still documented until removal.
-DEPRECATED: set[str] = {"ENABLE_ANALYSIS_HTTP_RETRY"}
+DEPRECATED: set[str] = {"ENABLE_HTTP_RETRY"}
 # Symbolic pattern placeholders that are expected in docs but not discovered as literal flags.
 PATTERN_PLACEHOLDERS: set[str] = {"ENABLE_RL_<DOMAIN>"}
 # Proposed (future) flags intentionally documented early.

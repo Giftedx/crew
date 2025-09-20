@@ -23,11 +23,11 @@ class DriveUploadTool(BaseTool):
 
     def __init__(self) -> None:
         super().__init__()
-        print("⚠️  Google Drive uploads disabled - no credentials configured")
         self._metrics = get_metrics()
 
     def _run(self, file_path: str, platform: str) -> StepResult:
         """Bypass Google Drive upload returning skipped StepResult."""
+        print("⚠️  Google Drive uploads disabled - no credentials configured")
         self._metrics.counter("tool_runs_total", labels={"tool": "drive_upload_bypass", "outcome": "skipped"}).inc()
         return StepResult.skip(
             message="Google Drive uploads disabled (no credentials configured)",
@@ -42,3 +42,7 @@ class DriveUploadTool(BaseTool):
 
     def run(self, file_path: str, platform: str) -> StepResult:  # pragma: no cover - thin wrapper
         return self._run(file_path, platform)
+
+
+# Provide an explicit alias matching tools package mapping
+DriveUploadToolBypass = DriveUploadTool

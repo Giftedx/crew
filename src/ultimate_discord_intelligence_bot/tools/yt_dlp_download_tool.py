@@ -10,10 +10,12 @@ import json
 import logging
 import os
 import re
+import shutil
 import subprocess
+import sys
 import time
 from pathlib import Path
-from typing import Any, ClassVar
+from typing import Any, ClassVar, cast
 
 from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 from ultimate_discord_intelligence_bot.step_result import StepResult
@@ -58,7 +60,28 @@ class YtDlpDownloadTool(BaseTool):
         # Use a simplified output template that doesn't require environment variables
         output_template = str(DOWNLOADS_DIR / "%(title)s [%(id)s].%(ext)s")
 
+        # Resolve yt-dlp path; fall back to `python -m yt_dlp` if CLI not on PATH
+        ytdlp_bin = shutil.which("yt-dlp")
+        if ytdlp_bin:
+            base_cmd = [ytdlp_bin]
+        else:
+            base_cmd = [sys.executable, "-m", "yt_dlp"]
+
         command = [
+            *base_cmd,
+            "-o",
+            output_template,
+            "-f",
+            format_selector,
+            "--restrict-filenames",
+            "--write-info-json",
+            "--print-json",
+            "--retries",
+            "3",
+            video_url,
+        ]
+        # For user-facing and tests, normalize to a stable command string beginning with 'yt-dlp'
+        display_cmd = [
             "yt-dlp",
             "-o",
             output_template,
@@ -71,7 +94,7 @@ class YtDlpDownloadTool(BaseTool):
             "3",
             video_url,
         ]
-        command_str = " ".join(command)
+        command_str = " ".join(display_cmd)
 
         env = os.environ.copy()
         env.update(
@@ -157,6 +180,18 @@ class YtDlpDownloadTool(BaseTool):
                 duration=str(info.get("duration", "unknown")),
                 file_size=str(info.get("filesize_approx", "unknown")),
             )
+            # Enrich with channel identifiers when available for downstream backfill
+            try:
+                base_fields.update(
+                    {
+                        "channel_id": info.get("channel_id") or info.get("uploader_id"),
+                        "channel_url": info.get("channel_url") or info.get("uploader_url"),
+                        "uploader_url": info.get("uploader_url"),
+                        "uploader_id": info.get("uploader_id"),
+                    }
+                )
+            except Exception:
+                pass
             if not local_path:
                 return _success(**base_fields, local_path="", note="Metadata only (no file path in output)")
             return _success(**base_fields, local_path=local_path)
@@ -239,14 +274,17 @@ def _extract_info_with_yt_dlp(url: str, opts: dict[str, Any] | None = None) -> d
     except Exception as e:  # pragma: no cover - surface a consistent error for callers
         raise RuntimeError("yt-dlp is not installed") from e
 
-    effective = {"quiet": True, "skip_download": True}
+    effective: dict[str, Any] = {"quiet": True, "skip_download": True}
     if opts:
         effective.update(opts)
-    with _real.YoutubeDL(effective) as ydl:  # pragma: no cover - network-using path
+    # Cast options to Any to satisfy yt-dlp's typed _Params without importing private types
+    with _real.YoutubeDL(cast(Any, effective)) as ydl:  # pragma: no cover - network-using path
         extracted = ydl.extract_info(url, download=False)
-        if not isinstance(extracted, dict):  # guard for unexpected library return (typing robustness)
-            raise RuntimeError("Unexpected yt-dlp return type (expected dict)")
-        return extracted
+        # yt-dlp returns an InfoDict (Mapping-like). Convert to a plain dict for downstream typing stability.
+        try:
+            return dict(extracted)
+        except Exception as e:  # pragma: no cover - defensive
+            raise RuntimeError("Unexpected yt-dlp return type (expected Mapping)") from e
 
 
 def youtube_fetch_metadata(url: str) -> dict[str, Any]:
@@ -255,6 +293,7 @@ def youtube_fetch_metadata(url: str) -> dict[str, Any]:
         "id": info.get("id", ""),
         "title": info.get("title", ""),
         "channel": info.get("uploader", ""),
+        "channel_id": info.get("channel_id") or info.get("uploader_id", ""),
         "published_at": info.get("upload_date"),
         "duration": info.get("duration"),
         "url": info.get("webpage_url", url),
@@ -273,3 +312,46 @@ def twitch_fetch_metadata(url: str) -> dict[str, Any]:
         "duration": info.get("duration"),
         "url": info.get("webpage_url", url),
     }
+
+
+def youtube_list_channel_videos(channel_url: str) -> list[dict[str, Any]]:
+    """List videos for a YouTube channel using yt-dlp in flat mode.
+
+    Returns a list of dicts with keys: id, url, upload_date (YYYYMMDD), title.
+    This function centralizes yt-dlp usage per guardrails.
+    """
+    # Allow overridable pagination depth to ensure a complete year of content
+    import os
+
+    try:
+        playlistend = int(os.getenv("YTDLP_PLAYLISTEND_MAX", "250"))
+    except Exception:
+        playlistend = 250
+
+    info = _extract_info_with_yt_dlp(
+        channel_url,
+        {
+            "skip_download": True,
+            "extract_flat": True,  # faster listing
+            "playlistend": playlistend,
+        },
+    )
+    entries = info.get("entries") or []
+    out: list[dict[str, Any]] = []
+    for e in entries:
+        if not isinstance(e, dict):
+            continue
+        vid = e.get("id") or e.get("url") or ""
+        url = e.get("url") or e.get("webpage_url") or ""
+        if url and not url.startswith("http"):
+            # yt-dlp flat entries may include only id; construct standard URL
+            url = f"https://www.youtube.com/watch?v={vid}"
+        out.append(
+            {
+                "id": vid,
+                "url": url,
+                "upload_date": e.get("upload_date"),
+                "title": e.get("title", ""),
+            }
+        )
+    return out

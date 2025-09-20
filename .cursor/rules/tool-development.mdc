@@ -1,187 +1,267 @@
 ---
-globs: "src/ultimate_discord_intelligence_bot/tools/*.py"
-description: "Tool development patterns and standards for CrewAI tools"
+globs: src/ultimate_discord_intelligence_bot/tools/*.py,**/tools/*.py
 ---
+# Tool Development Patterns - Ultimate Discord Intelligence Bot
 
-# Tool Development Standards
+## CrewAI Tool Template
 
-## Tool Base Class (REQUIRED)
-
-All tools must inherit from [BaseTool](mdc:src/ultimate_discord_intelligence_bot/tools/_base.py) with proper typing:
+All tools must follow this pattern:
 
 ```python
 from __future__ import annotations
 
-from typing import TypedDict
-from ultimate_discord_intelligence_bot.tools._base import BaseTool
+from typing import Type
 
-class MyToolResult(TypedDict, total=False):
-    status: str
-    data: dict[str, Any]
-    error: str
+from crewai_tools import BaseTool
+from pydantic import BaseModel, Field
 
-class MyTool(BaseTool[MyToolResult]):
-    name: str = "My Tool"
-    description: str = "Tool description for CrewAI agents"
-
-    def _run(self, input_param: str) -> MyToolResult:
-        # Implementation here
-        pass
-
-    def run(self, input_param: str) -> MyToolResult:
-        return self._run(input_param)
-```
-
-## StepResult Integration (MANDATORY)
-
-Convert tool results to [StepResult](mdc:src/ultimate_discord_intelligence_bot/step_result.py) format:
-
-```python
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
-def _run(self, input_data: str) -> MyToolResult:
-    try:
-        if not input_data:
-            return {"status": "error", "error": "Input required"}
 
-        result = process_input(input_data)
-        return {"status": "success", "data": result}
+class MyToolInput(BaseModel):
+    """Input schema for MyTool."""
 
-    except Exception as e:
-        return {"status": "error", "error": str(e)}
+    content: str = Field(..., description="Content to process")
+    tenant: str = Field(..., description="Tenant identifier")
+    workspace: str = Field(..., description="Workspace identifier")
+
+
+class MyTool(BaseTool):
+    """Tool for processing X with Y capabilities."""
+
+    name: str = "my_tool"
+    description: str = "Processes content by doing X, Y, and Z"
+    args_schema: Type[BaseModel] = MyToolInput
+
+    def _run(self, content: str, tenant: str, workspace: str) -> StepResult:
+        """Execute the tool logic.
+
+        Args:
+            content: Content to process
+            tenant: Tenant identifier for isolation
+            workspace: Workspace identifier
+
+        Returns:
+            StepResult with processed data or error
+        """
+        try:
+            # Validate inputs
+            if not content:
+                return StepResult.fail("Content cannot be empty")
+
+            # Tool logic here
+            result = self._process_content(content)
+
+            # Return success
+            return StepResult.ok(data={
+                "processed": result,
+                "tenant": tenant,
+                "workspace": workspace
+            })
+
+        except ValueError as e:
+            return StepResult.bad_request(str(e))
+        except Exception as e:
+            return StepResult.fail(f"Processing failed: {str(e)}")
+
+    def _process_content(self, content: str) -> dict:
+        """Internal processing logic."""
+        # Implementation here
+        return {"result": content.upper()}
 ```
 
-## Tool Registration
+## Tool Design Requirements
 
-Tools must be explicitly registered to agents in [crew.py](mdc:src/ultimate_discord_intelligence_bot/crew.py):
+### 1. Input Validation
+
+Always validate inputs before processing:
 
 ```python
-@agent
-def my_agent(self) -> Agent:
-    return Agent(
-        config=self.agents_config["my_agent"],
-        tools=[MyTool(), OtherTool()],
+def _run(self, url: str, tenant: str, workspace: str) -> StepResult:
+    # Type validation
+    if not isinstance(url, str):
+        return StepResult.bad_request("URL must be a string")
+
+    # Business logic validation
+    if not url.startswith(("http://", "https://")):
+        return StepResult.bad_request("Invalid URL format")
+
+    # Tenant validation
+    if not tenant or not workspace:
+        return StepResult.bad_request("Tenant and workspace required")
+```
+
+### 2. Error Handling Hierarchy
+
+Use appropriate StepResult methods:
+
+```python
+# User input errors
+return StepResult.bad_request("Invalid input format")
+
+# Resource not found
+return StepResult.fail("Content not found", status="not_found")
+
+# Rate limiting
+return StepResult.fail("Rate limit exceeded", status="rate_limited")
+
+# General errors
+return StepResult.fail(f"Processing failed: {str(e)}")
+
+# Success with data
+return StepResult.ok(data={"result": processed_data})
+```
+
+### 3. Tenant Isolation
+
+Always use tenant context for data operations:
+
+```python
+def _run(self, content: str, tenant: str, workspace: str) -> StepResult:
+    # Create namespace for tenant isolation
+    namespace = f"{tenant}:{workspace}"
+
+    # Use namespace in all storage operations
+    collection_name = f"vectors_{namespace}"
+
+    # Pass tenant context to services
+    result = self.memory_service.store(
+        content=content,
+        tenant=tenant,
+        workspace=workspace
     )
 ```
 
-## Service Integration
+### 4. Service Integration
 
-Use existing services rather than creating new ones:
+Use dependency injection for services:
 
 ```python
-from ultimate_discord_intelligence_bot.services.prompt_engine import PromptEngine
-from ultimate_discord_intelligence_bot.services.memory_service import MemoryService
-from ultimate_discord_intelligence_bot.services.openrouter_service import OpenRouterService
+class AnalysisTool(BaseTool):
+    """Tool with service dependencies."""
 
-class MyTool(BaseTool[MyToolResult]):
     def __init__(self):
+        super().__init__()
+        self.memory_service = MemoryService()
         self.prompt_engine = PromptEngine()
-        self.memory = MemoryService()
-        self.llm_service = OpenRouterService()
-```
+        self.openrouter = OpenRouterService()
 
-## Error Handling Patterns
-
-Follow established error handling patterns:
-
-```python
-def _run(self, url: str) -> MyToolResult:
-    try:
-        # Validate inputs
-        if not url or not isinstance(url, str):
-            return {
-                "status": "error",
-                "error": "URL is required and must be a string",
-            }
-
-        # Process with timeout
-        result = process_with_timeout(url)
-
-        return {
-            "status": "success",
-            "data": result,
-            "timestamp": time.time()
-        }
-
-    except TimeoutError:
-        return {"status": "error", "error": "Operation timed out"}
-    except Exception as e:
-        logger.error(f"Tool execution failed: {e}")
-        return {"status": "error", "error": str(e)}
-```
-
-## Testing Requirements
-
-Every tool must have comprehensive tests in [tests/](mdc:tests/):
-
-```python
-# tests/test_my_tool.py
-from ultimate_discord_intelligence_bot.tools.my_tool import MyTool
-
-def test_my_tool_success():
-    tool = MyTool()
-    result = tool._run("valid_input")
-    assert result["status"] == "success"
-    assert "data" in result
-
-def test_my_tool_error_handling():
-    tool = MyTool()
-    result = tool._run("")
-    assert result["status"] == "error"
-    assert "error" in result
-```
-
-## Documentation Requirements
-
-Tools must be documented in [docs/tools_reference.md](mdc:docs/tools_reference.md):
-
-```markdown
-### My Tool
-**File:** `src/ultimate_discord_intelligence_bot/tools/my_tool.py`
-
-Description of what the tool does.
-
-**Features:**
-- Feature 1
-- Feature 2
-
-**Usage:**
-```python
-tool = MyTool()
-result = tool._run("input")
+    def _run(self, content: str, tenant: str, workspace: str) -> StepResult:
+        # Use services
+        prompt = self.prompt_engine.create_prompt("analysis", content=content)
+        response = self.openrouter.complete(prompt)
 ```
 
 ## Tool Categories
 
-Follow existing categorization:
-- **Content Analysis**: Text processing, sentiment, fallacy detection
-- **Platform Integration**: Download tools, monitor tools
-- **Memory & Storage**: Vector search, memory storage
-- **Discord Integration**: Posting, alerting, QA
-- **Fact Checking**: Verification, scoring, claim extraction
+### Content Ingestion Tools
 
-## Async Considerations
+- Handle multi-platform content
+- Validate URLs and formats
+- Extract metadata
+- Return structured content
 
-For async operations, use proper patterns:
+### Analysis Tools
+
+- Process transcripts and text
+- Use LLM services appropriately
+- Structure outputs consistently
+- Include confidence scores
+
+### Memory Tools
+
+- Store with tenant isolation
+- Include proper metadata
+- Support semantic search
+- Handle embeddings correctly
+
+### Discord Integration Tools
+
+- Format for Discord limits
+- Handle rate limiting
+- Support rich embeds
+- Manage attachments
+
+## Tool Registration
+
+Register tools in [crew.py](mdc:src/ultimate_discord_intelligence_bot/crew.py):
 
 ```python
-import asyncio
-
-def _run(self, url: str) -> MyToolResult:
-    try:
-        result = asyncio.run(self._async_process(url))
-        return {"status": "success", "data": result}
-    except Exception as e:
-        return {"status": "error", "error": str(e)}
-
-async def _async_process(self, url: str) -> dict[str, Any]:
-    # Async implementation
-    pass
+def kickoff(self, inputs):
+    """Execute the crew with proper tool registration."""
+    # Register tools to agents
+    debate_analyst = self.agents.debate_analyst()
+    debate_analyst.tools = [
+        ContentIngestionTool(),
+        DebateAnalysisTool(),
+        FactCheckingTool(),
+    ]
 ```
 
-## Reuse Existing Tools
+## Performance Considerations
 
-Before creating new tools, check if existing tools can be extended:
-- [PipelineTool](mdc:src/ultimate_discord_intelligence_bot/tools/pipeline_tool.py) for content processing
-- [MultiPlatformDownloadTool](mdc:src/ultimate_discord_intelligence_bot/tools/multi_platform_download_tool.py) for downloads
-- [VectorSearchTool](mdc:src/ultimate_discord_intelligence_bot/tools/vector_search_tool.py) for memory queries
+### 1. Streaming Support
+
+For large content processing:
+
+```python
+def _run(self, url: str, tenant: str, workspace: str) -> StepResult:
+    try:
+        # Stream large files
+        with requests.get(url, stream=True) as response:
+            for chunk in response.iter_content(chunk_size=8192):
+                self._process_chunk(chunk)
+    except Exception as e:
+        return StepResult.fail(f"Streaming failed: {str(e)}")
+```
+
+### 2. Caching
+
+Use caching for expensive operations:
+
+```python
+from functools import lru_cache
+
+@lru_cache(maxsize=100)
+def _get_cached_analysis(self, content_hash: str) -> dict:
+    """Cache analysis results by content hash."""
+    return self._perform_analysis(content_hash)
+```
+
+### 3. Rate Limiting
+
+Respect external API limits:
+
+```python
+from tenacity import retry, stop_after_attempt, wait_exponential
+
+@retry(
+    stop=stop_after_attempt(3),
+    wait=wait_exponential(multiplier=1, min=4, max=10)
+)
+def _call_external_api(self, data: dict) -> dict:
+    """Call external API with retry logic."""
+    return self.api_client.process(data)
+```
+
+## Testing Tools
+
+Every tool needs comprehensive tests:
+
+```python
+def test_tool_success():
+    """Test successful tool execution."""
+    tool = MyTool()
+    result = tool._run("test content", "tenant1", "workspace1")
+
+    assert result.status == "success"
+    assert result.data["processed"] is not None
+
+def test_tool_validation():
+    """Test input validation."""
+    tool = MyTool()
+    result = tool._run("", "tenant1", "workspace1")
+
+    assert result.status == "bad_request"
+    assert "empty" in result.error.lower()
+```

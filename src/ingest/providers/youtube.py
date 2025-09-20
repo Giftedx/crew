@@ -20,6 +20,7 @@ class VideoMetadata:
     id: str
     title: str
     channel: str
+    channel_id: str | None
     published_at: str | None
     duration: float | None
     url: str
@@ -68,10 +69,21 @@ def _as_list_str(val: object) -> list[str]:
 def fetch_metadata(url: str) -> VideoMetadata:
     info = youtube_fetch_metadata(url)
     upstream_url = _as_str(info.get("url", ""), "")
+    chan_id_val = info.get("channel_id")
+    chan_id: str | None
+    if chan_id_val is None:
+        chan_id = None
+    else:
+        try:
+            chan_id = str(chan_id_val)
+        except Exception:
+            chan_id = None
+
     return VideoMetadata(
         id=_as_str(info.get("id", "")),
         title=_as_str(info.get("title", "")),
         channel=_as_str(info.get("channel", "")),
+        channel_id=chan_id,
         published_at=info.get("published_at"),
         duration=_as_float(info.get("duration")),
         url=(upstream_url or url),

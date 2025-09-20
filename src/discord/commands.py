@@ -27,6 +27,7 @@ from memory import embeddings, vector_store
 from memory.store import MemoryStore
 from obs import incident, slo
 from scheduler import PriorityQueue, Scheduler
+from ultimate_discord_intelligence_bot.auto_follow import trigger_auto_follow
 
 _DEBATE_STORE = DebateStore()
 
@@ -338,6 +339,58 @@ def ops_eval_diff(a: int, b: int) -> dict[str, float]:
     return diff
 
 
+def ops_auto_follow(
+    download_result: dict[str, Any],
+    queue: PriorityQueue,
+    *,
+    tenant: str,
+    workspace: str,
+) -> dict[str, Any]:
+    """Trigger uploader auto-follow and enqueue recent videos.
+
+    Thin wrapper around ``trigger_auto_follow`` to keep bot-facing helpers
+    centralized in this module.
+    """
+
+    return trigger_auto_follow(download_result, queue, tenant=tenant, workspace=workspace)
+
+
+def ops_auto_follow_toggle(state: str | bool) -> dict[str, Any]:
+    """Enable/disable uploader auto-follow at runtime.
+
+    Parameters
+    ----------
+    state:
+        "on"/"off" (case-insensitive) or a boolean. Sets ``ENABLE_AUTO_FOLLOW_UPLOADER``
+        in-process for subsequent calls.
+    """
+
+    enabled = False
+    if isinstance(state, str):
+        enabled = state.strip().lower() in {"on", "1", "true", "yes"}
+    else:
+        enabled = bool(state)
+    os.environ["ENABLE_AUTO_FOLLOW_UPLOADER"] = "1" if enabled else "0"
+    return {"enabled": enabled}
+
+
+def ops_auto_follow_status() -> dict[str, Any]:
+    """Return current auto-follow settings (from environment)."""
+
+    enabled = os.getenv("ENABLE_AUTO_FOLLOW_UPLOADER", "0") == "1"
+    limit = int(os.getenv("AUTO_FOLLOW_MAX_VIDEOS", "200"))
+    backfill_enabled = os.getenv("ENABLE_UPLOADER_BACKFILL", "0") == "1"
+    return {"enabled": enabled, "max_videos": limit, "backfill_enabled": backfill_enabled}
+
+
+def ops_auto_follow_set_limit(limit: int) -> dict[str, Any]:
+    """Set the maximum number of videos to enqueue during backfill."""
+
+    limit = max(1, int(limit))
+    os.environ["AUTO_FOLLOW_MAX_VIDEOS"] = str(limit)
+    return {"max_videos": limit}
+
+
 __all__ = [
     "creator",
     "latest",
@@ -352,6 +405,10 @@ __all__ = [
     "ops_eval_run",
     "ops_eval_latest",
     "ops_eval_diff",
+    "ops_auto_follow",
+    "ops_auto_follow_toggle",
+    "ops_auto_follow_status",
+    "ops_auto_follow_set_limit",
     "ops_ingest_watch_add",
     "ops_ingest_watch_list",
     "ops_ingest_queue_status",

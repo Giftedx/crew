@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -22,7 +23,9 @@ from ._base import BaseTool
 # ---------------------------------------------------------------------------
 # Constants (avoid magic numbers in logic)
 # ---------------------------------------------------------------------------
-DISCORD_FILE_LIMIT_MB = 100  # Typical limit for standard servers (may vary)
+# Conservative default: many servers/webhooks cap uploads around 8MB.
+# Prefer embeds for larger media to avoid HTTP 413 errors.
+DISCORD_FILE_LIMIT_MB = 7.5
 
 
 class DiscordPostTool(BaseTool[StepResult]):
@@ -44,24 +47,54 @@ class DiscordPostTool(BaseTool[StepResult]):
         super().__init__()
         object.__setattr__(self, "webhook_url", validate_public_https_url(webhook_url))
         self._metrics = get_metrics()
+        # Optional env switch to force embed-only posts regardless of file size
+        self._force_embeds = os.getenv("DISCORD_FORCE_EMBEDS", "0").strip() in {"1", "true", "True"}
 
     @staticmethod
     def _validate_webhook(url: str) -> str:  # backward compatibility shim
         return validate_public_https_url(url)
 
     def _run(self, content_data: dict, drive_links: dict) -> StepResult:
-        """Post content notification with proper formatting"""
+        """Post content notification with proper formatting
+
+        Prefer link-based embeds by default. Only attempt direct file upload when:
+        - a local file path exists AND
+        - the actual file size on disk is within Discord's typical limit.
+        This avoids 413 Payload Too Large errors when metadata is missing or stale.
+        """
         if not content_data:
             self._metrics.counter("tool_runs_total", labels={"tool": "discord_post", "outcome": "skipped"}).inc()
             return StepResult.ok(skipped=True, reason="empty content data")
-        # Check file size for direct upload vs link sharing
-        try:
-            file_size_mb = int(content_data.get("file_size", 0)) / (1024 * 1024)
-        except Exception:  # pragma: no cover - defensive parsing
-            file_size_mb = 0
 
-        if file_size_mb <= DISCORD_FILE_LIMIT_MB:  # Within Discord limits for most servers
+        # Prefer real on-disk size if we have a local path; fallback to metadata
+        local_file_path = content_data.get("local_path")
+        file_size_bytes: int | None = None
+        if local_file_path:
+            p = Path(str(local_file_path))
+            if p.exists() and p.is_file():
+                try:
+                    file_size_bytes = p.stat().st_size
+                except Exception:  # pragma: no cover - fs failure fallback
+                    file_size_bytes = None
+        if file_size_bytes is None:
+            # Some downloaders provide numeric bytes; handle strings like "12345" too
+            raw = content_data.get("file_size")
+            try:
+                if isinstance(raw, (int, float)):
+                    file_size_bytes = int(raw)
+                elif isinstance(raw, str) and raw.isdigit():
+                    file_size_bytes = int(raw)
+            except Exception:  # pragma: no cover - defensive
+                file_size_bytes = None
+
+        if (
+            not getattr(self, "_force_embeds", False)
+            and file_size_bytes is not None
+            and (file_size_bytes / (1024 * 1024)) <= DISCORD_FILE_LIMIT_MB
+            and local_file_path
+        ):
             return self._post_with_file_upload(content_data, drive_links)
+        # Default to embeds for safety
         return self._post_with_embed_links(content_data, drive_links)
 
     def _post_with_embed_links(self, content_data: dict, drive_links: dict) -> StepResult:

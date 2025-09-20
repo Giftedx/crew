@@ -57,6 +57,7 @@ class PipelineTool(BaseTool):
 
             logger.info(f"Starting pipeline processing for URL: {url} with quality: {quality}")
 
+            # Provide shared ingest queue so auto-follow can enqueue backfills
             pipeline = ContentPipeline()
             result = await pipeline.process_video(url, quality=quality)
 

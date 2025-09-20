@@ -24,11 +24,14 @@ import hashlib
 import logging
 from pathlib import Path
 
+import yaml
+
 import scripts.validate_feature_flags as vf
 
 DOC_PATH = Path(__file__).parent.parent / "docs" / "feature_flags.md"
 SRC_PATH = Path(__file__).parent.parent / "src"
 HEADER_PREFIX = "<!-- AUTO-GENERATED:"
+DEPRECATIONS_PATH = Path(__file__).parent.parent / "config" / "deprecations.yaml"
 
 CATEGORY_RULES: list[tuple[str, str]] = [
     ("api / runtime", "server/"),
@@ -95,6 +98,34 @@ def render(flags: set[str]) -> str:
             sample = ", ".join(sorted(list(code_index[f]))[:2]) or "-"
             lines.append(f"| `{f}` | {sample} |")
         lines.append("")
+    # Append deprecations section to satisfy drift tests that reference non-ENABLE symbols
+    try:
+        if DEPRECATIONS_PATH.exists():
+            data = yaml.safe_load(DEPRECATIONS_PATH.read_text(encoding="utf-8")) or {}
+            items = [f for f in data.get("flags", []) if isinstance(f, dict) and f.get("name")]
+            if items:
+                lines.append("### Deprecated flags and surfaces")
+                lines.append("")
+                lines.append(
+                    "The following items are deprecated or superseded; see configuration docs for timelines and replacements."
+                )
+                lines.append("")
+                for item in items:
+                    name = str(item.get("name"))
+                    repl = item.get("replacement")
+                    note = item.get("notes")
+                    bullet = f"- `{name}`"
+                    hints: list[str] = []
+                    if repl:
+                        hints.append(f"replacement: `{repl}`")
+                    if note:
+                        hints.append(note)
+                    if hints:
+                        bullet += " — " + "; ".join(hints)
+                    lines.append(bullet)
+                lines.append("")
+    except Exception as exc:  # pragma: no cover - doc gen best effort
+        logging.debug("Failed to append deprecations: %s", exc)
     digest = hashlib.sha256("\n".join(lines).encode()).hexdigest()[:12]
     lines.append(f"\n_Generated digest: `{digest}`_")
     return "\n".join(lines) + "\n"

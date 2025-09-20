@@ -72,6 +72,24 @@ The following optimization-focused documents have been added post-migration and 
 | Prompt Compression | `docs/prompt_compression.md` | Multi-pass whitespace / duplication / summarisation pipeline with metrics (`prompt_compression_ratio`). |
 | Semantic Cache Prefetch | `docs/semantic_cache.md` | Similarity-based response reuse with prefetch issued/used counters and similarity histogram. |
 
+## A2A Adapter & Client
+
+| Topic | Location | Summary |
+|-------|----------|---------|
+| A2A Adapter API | `docs/a2a_api.md` | JSON-RPC endpoints, discovery, auth, examples, Python client snippet |
+| Postman Collection | `docs/a2a_postman_collection.json` | Ready-to-import Postman requests for discovery and JSON-RPC (includes batch auth example) |
+| Insomnia Collection | `docs/a2a_insomnia_collection.json` | Insomnia workspace with discovery and JSON-RPC (includes batch auth example) |
+
+## Project Reorganization Deliverables (2025-09-15)
+
+Key project optimization and onboarding documents:
+
+| Document | Location | Purpose |
+|----------|----------|---------|
+| Developer Onboarding Guide | `DEVELOPER_ONBOARDING_GUIDE.md` | Quick-start guide for new developers with organized structure and AI guidance |
+| Final Reorganization Report | `FINAL_REORGANIZATION_REPORT.md` | Complete transformation documentation and validation of requirements |
+| Enhanced AI Guidance | `.github/copilot-instructions.md` | Comprehensive architectural coverage for AI-assisted development |
+
 Cross-links to these topics have been (or will be) added to `memory.md` and `rag.md` for discoverability.
 
 ---

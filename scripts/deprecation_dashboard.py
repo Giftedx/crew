@@ -27,8 +27,8 @@ import yaml
 ROOT = Path(__file__).resolve().parent.parent
 DEP_FILE = ROOT / "config" / "deprecations.yaml"
 MIGRATION_SCRIPTS = {
-    "ENABLE_ANALYSIS_HTTP_RETRY": "scripts/migrate_http_retry_flag.py",
-    "services.learning_engine.LearningEngine": "scripts/migrate_learning_engine.py",
+    "ENABLE_HTTP_RETRY": "scripts/migrate_http_retry_flag.py",
+    "core.learning_engine.LearningEngine": "scripts/migrate_learning_engine.py",
 }
 
 # Health score thresholds

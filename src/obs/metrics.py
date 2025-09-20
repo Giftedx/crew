@@ -270,6 +270,24 @@ _METRIC_SPECS: list[tuple[Callable[..., MetricLike], str, str, list[str]]] = [
         ["tenant", "workspace", "status"],
     ),
     (
+        HistogramFactory,
+        "pipeline_step_duration_seconds",
+        "Duration of individual pipeline steps",
+        ["tenant", "workspace", "step", "orchestrator", "status"],
+    ),
+    (
+        HistogramFactory,
+        "pipeline_total_duration_seconds",
+        "Duration of full pipeline processing (orchestrator-specific)",
+        ["tenant", "workspace", "orchestrator", "status"],
+    ),
+    (
+        GaugeFactory,
+        "pipeline_inflight",
+        "Current number of inflight pipeline runs",
+        ["tenant", "workspace", "orchestrator"],
+    ),
+    (
         CounterFactory,
         "circuit_breaker_requests_total",
         "Circuit breaker outcomes",
@@ -492,6 +510,24 @@ _METRIC_SPECS: list[tuple[Callable[..., MetricLike], str, str, list[str]]] = [
         ["tenant", "workspace"],
     ),
     (
+        CounterFactory,
+        "semantic_cache_shadow_hits_total",
+        "Number of semantic cache hits in shadow mode (would have been cache hits)",
+        ["tenant", "workspace", "model"],
+    ),
+    (
+        CounterFactory,
+        "semantic_cache_shadow_misses_total",
+        "Number of semantic cache misses in shadow mode",
+        ["tenant", "workspace", "model"],
+    ),
+    (
+        GaugeFactory,
+        "semantic_cache_shadow_hit_ratio",
+        "Current semantic cache hit ratio in shadow mode",
+        ["tenant", "workspace"],
+    ),
+    (
         HistogramFactory,
         "rl_reward_latency_gap_ms",
         "Latency between model response and reward recording",
@@ -502,6 +538,69 @@ _METRIC_SPECS: list[tuple[Callable[..., MetricLike], str, str, list[str]]] = [
         "active_bandit_policy",
         "Current active bandit policy per domain (1 if active)",
         ["tenant", "workspace", "domain", "policy"],
+    ),
+    # Experiment harness metrics for A/B testing
+    (
+        CounterFactory,
+        "experiment_variant_allocations_total",
+        "Total variant allocations by experiment",
+        ["tenant", "workspace", "experiment_id", "variant", "phase"],
+    ),
+    (
+        CounterFactory,
+        "experiment_rewards_total",
+        "Total rewards recorded by experiment variant",
+        ["tenant", "workspace", "experiment_id", "variant"],
+    ),
+    (
+        HistogramFactory,
+        "experiment_reward_value",
+        "Distribution of reward values by experiment variant",
+        ["tenant", "workspace", "experiment_id", "variant"],
+    ),
+    (
+        GaugeFactory,
+        "experiment_regret_total",
+        "Cumulative regret by experiment variant",
+        ["tenant", "workspace", "experiment_id", "variant"],
+    ),
+    (
+        GaugeFactory,
+        "experiment_phase_status",
+        "Experiment phase status (0=shadow, 1=active)",
+        ["tenant", "workspace", "experiment_id"],
+    ),
+    # Trajectory evaluation metrics
+    (
+        CounterFactory,
+        "trajectory_evaluations_total",
+        "Total trajectory evaluations performed",
+        ["tenant", "workspace", "success"],
+    ),
+    # Advanced bandit metrics
+    (
+        GaugeFactory,
+        "advanced_bandit_reward_model_mse",
+        "Mean squared error of DoublyRobust reward model",
+        ["tenant", "workspace", "experiment_id", "variant"],
+    ),
+    (
+        GaugeFactory,
+        "advanced_bandit_tree_depth",
+        "Average tree depth for OffsetTree bandit",
+        ["tenant", "workspace", "experiment_id", "variant"],
+    ),
+    (
+        GaugeFactory,
+        "advanced_bandit_importance_weight",
+        "Average importance weight for DoublyRobust bandit",
+        ["tenant", "workspace", "experiment_id", "variant"],
+    ),
+    (
+        GaugeFactory,
+        "advanced_bandit_confidence_interval",
+        "Average confidence interval width for advanced bandits",
+        ["tenant", "workspace", "experiment_id", "variant"],
     ),
 ]
 
@@ -579,6 +678,9 @@ def _instantiate_metrics() -> list[MetricLike]:
     PIPELINE_STEPS_FAILED,
     PIPELINE_STEPS_SKIPPED,
     PIPELINE_DURATION,
+    PIPELINE_STEP_DURATION,
+    PIPELINE_TOTAL_DURATION,
+    PIPELINE_INFLIGHT,
     CIRCUIT_BREAKER_REQUESTS,
     CIRCUIT_BREAKER_STATE,
     INGEST_TRANSCRIPT_FALLBACKS,
@@ -615,8 +717,21 @@ def _instantiate_metrics() -> list[MetricLike]:
     SEMANTIC_CACHE_SIMILARITY,
     SEMANTIC_CACHE_PREFETCH_ISSUED,
     SEMANTIC_CACHE_PREFETCH_USED,
+    SEMANTIC_CACHE_SHADOW_HITS,
+    SEMANTIC_CACHE_SHADOW_MISSES,
+    SEMANTIC_CACHE_SHADOW_HIT_RATIO,
     RL_REWARD_LATENCY_GAP,
     ACTIVE_BANDIT_POLICY,
+    EXPERIMENT_VARIANT_ALLOCATIONS,
+    EXPERIMENT_REWARDS,
+    EXPERIMENT_REWARD_VALUE,
+    EXPERIMENT_REGRET,
+    EXPERIMENT_PHASE_STATUS,
+    TRAJECTORY_EVALUATIONS,
+    ADVANCED_BANDIT_REWARD_MODEL_MSE,
+    ADVANCED_BANDIT_TREE_DEPTH,
+    ADVANCED_BANDIT_IMPORTANCE_WEIGHT,
+    ADVANCED_BANDIT_CONFIDENCE_INTERVAL,
 ) = _instantiate_metrics()
 
 _COLLECTORS: list[MetricLike] = [
@@ -654,6 +769,9 @@ _COLLECTORS: list[MetricLike] = [
     PIPELINE_STEPS_FAILED,
     PIPELINE_STEPS_SKIPPED,
     PIPELINE_DURATION,
+    PIPELINE_STEP_DURATION,
+    PIPELINE_TOTAL_DURATION,
+    PIPELINE_INFLIGHT,
     CIRCUIT_BREAKER_REQUESTS,
     CIRCUIT_BREAKER_STATE,
     INGEST_TRANSCRIPT_FALLBACKS,
@@ -690,8 +808,21 @@ _COLLECTORS: list[MetricLike] = [
     SEMANTIC_CACHE_SIMILARITY,
     SEMANTIC_CACHE_PREFETCH_ISSUED,
     SEMANTIC_CACHE_PREFETCH_USED,
+    SEMANTIC_CACHE_SHADOW_HITS,
+    SEMANTIC_CACHE_SHADOW_MISSES,
+    SEMANTIC_CACHE_SHADOW_HIT_RATIO,
     RL_REWARD_LATENCY_GAP,
     ACTIVE_BANDIT_POLICY,
+    EXPERIMENT_VARIANT_ALLOCATIONS,
+    EXPERIMENT_REWARDS,
+    EXPERIMENT_REWARD_VALUE,
+    EXPERIMENT_REGRET,
+    EXPERIMENT_PHASE_STATUS,
+    TRAJECTORY_EVALUATIONS,
+    ADVANCED_BANDIT_REWARD_MODEL_MSE,
+    ADVANCED_BANDIT_TREE_DEPTH,
+    ADVANCED_BANDIT_IMPORTANCE_WEIGHT,
+    ADVANCED_BANDIT_CONFIDENCE_INTERVAL,
 ]
 
 
@@ -706,10 +837,11 @@ def reset() -> None:
     global ROUTER_DECISIONS, LLM_LATENCY, LLM_MODEL_SELECTED, LLM_BUDGET_REJECTIONS, LLM_ESTIMATED_COST, LLM_CACHE_HITS, LLM_CACHE_MISSES  # noqa: PLW0603 - module level metric rebinding required for reset semantics in tests
     global STRUCTURED_LLM_REQUESTS, STRUCTURED_LLM_SUCCESS, STRUCTURED_LLM_ERRORS, STRUCTURED_LLM_PARSING_FAILURES, STRUCTURED_LLM_VALIDATION_FAILURES, STRUCTURED_LLM_INSTRUCTOR_USAGE, STRUCTURED_LLM_FALLBACK_USAGE, STRUCTURED_LLM_LATENCY, STRUCTURED_LLM_PARSING_LATENCY, STRUCTURED_LLM_STREAMING_REQUESTS, STRUCTURED_LLM_STREAMING_CHUNKS, STRUCTURED_LLM_STREAMING_LATENCY, STRUCTURED_LLM_STREAMING_PROGRESS, STRUCTURED_LLM_STREAMING_ERRORS, STRUCTURED_LLM_CACHE_HITS, STRUCTURED_LLM_CACHE_MISSES  # noqa: PLW0603
     global HTTP_REQUEST_LATENCY, HTTP_REQUEST_COUNT, RATE_LIMIT_REJECTIONS, HTTP_RETRY_ATTEMPTS, HTTP_RETRY_GIVEUPS, TENANCY_FALLBACKS  # noqa: PLW0603
-    global PIPELINE_REQUESTS, PIPELINE_STEPS_COMPLETED, PIPELINE_STEPS_FAILED, PIPELINE_STEPS_SKIPPED, PIPELINE_DURATION  # noqa: PLW0603
+    global PIPELINE_REQUESTS, PIPELINE_STEPS_COMPLETED, PIPELINE_STEPS_FAILED, PIPELINE_STEPS_SKIPPED, PIPELINE_DURATION, PIPELINE_STEP_DURATION, PIPELINE_TOTAL_DURATION, PIPELINE_INFLIGHT  # noqa: PLW0603
     global CIRCUIT_BREAKER_REQUESTS, CIRCUIT_BREAKER_STATE, INGEST_TRANSCRIPT_FALLBACKS, INGEST_MISSING_ID_FALLBACKS, SCHEDULER_ENQUEUED, SCHEDULER_PROCESSED, SCHEDULER_ERRORS, SCHEDULER_QUEUE_BACKLOG, SYSTEM_HEALTH_SCORE, COST_PER_INTERACTION  # noqa: PLW0603
     global CACHE_HITS, CACHE_MISSES, CACHE_PROMOTIONS, CACHE_DEMOTIONS, CACHE_EVICTIONS, CACHE_COMPRESSIONS, CACHE_DECOMPRESSIONS, CACHE_ERRORS, CACHE_SIZE_BYTES, CACHE_ENTRIES_COUNT, CACHE_HIT_RATE_RATIO, CACHE_MEMORY_USAGE_RATIO, CACHE_OPERATION_LATENCY, CACHE_COMPRESSION_RATIO, SEGMENT_CHUNK_SIZE_CHARS, SEGMENT_CHUNK_SIZE_TOKENS, SEGMENT_CHUNK_MERGES, EMBED_DEDUPLICATES_SKIPPED, DEGRADATION_EVENTS, DEGRADATION_IMPACT_LATENCY, _COLLECTORS  # noqa: PLW0603
-    global RETRIEVAL_SELECTED_K, RETRIEVAL_LATENCY, PROMPT_COMPRESSION_RATIO, SEMANTIC_CACHE_SIMILARITY, SEMANTIC_CACHE_PREFETCH_ISSUED, SEMANTIC_CACHE_PREFETCH_USED, RL_REWARD_LATENCY_GAP, ACTIVE_BANDIT_POLICY  # noqa: PLW0603
+    global RETRIEVAL_SELECTED_K, RETRIEVAL_LATENCY, PROMPT_COMPRESSION_RATIO, SEMANTIC_CACHE_SIMILARITY, SEMANTIC_CACHE_PREFETCH_ISSUED, SEMANTIC_CACHE_PREFETCH_USED, SEMANTIC_CACHE_SHADOW_HITS, SEMANTIC_CACHE_SHADOW_MISSES, SEMANTIC_CACHE_SHADOW_HIT_RATIO, RL_REWARD_LATENCY_GAP, ACTIVE_BANDIT_POLICY  # noqa: PLW0603
+    global EXPERIMENT_VARIANT_ALLOCATIONS, EXPERIMENT_REWARDS, EXPERIMENT_REWARD_VALUE, EXPERIMENT_REGRET, EXPERIMENT_PHASE_STATUS, TRAJECTORY_EVALUATIONS, ADVANCED_BANDIT_REWARD_MODEL_MSE, ADVANCED_BANDIT_TREE_DEPTH, ADVANCED_BANDIT_IMPORTANCE_WEIGHT, ADVANCED_BANDIT_CONFIDENCE_INTERVAL  # noqa: PLW0603
     if PROMETHEUS_AVAILABLE:
         # Attempt to unregister existing collectors; failures are logged but not fatal.
         to_unreg = list(_COLLECTORS)
@@ -756,6 +888,9 @@ def reset() -> None:
         PIPELINE_STEPS_FAILED,
         PIPELINE_STEPS_SKIPPED,
         PIPELINE_DURATION,
+        PIPELINE_STEP_DURATION,
+        PIPELINE_TOTAL_DURATION,
+        PIPELINE_INFLIGHT,
         CIRCUIT_BREAKER_REQUESTS,
         CIRCUIT_BREAKER_STATE,
         INGEST_TRANSCRIPT_FALLBACKS,
@@ -792,8 +927,21 @@ def reset() -> None:
         SEMANTIC_CACHE_SIMILARITY,
         SEMANTIC_CACHE_PREFETCH_ISSUED,
         SEMANTIC_CACHE_PREFETCH_USED,
+        SEMANTIC_CACHE_SHADOW_HITS,
+        SEMANTIC_CACHE_SHADOW_MISSES,
+        SEMANTIC_CACHE_SHADOW_HIT_RATIO,
         RL_REWARD_LATENCY_GAP,
         ACTIVE_BANDIT_POLICY,
+        EXPERIMENT_VARIANT_ALLOCATIONS,
+        EXPERIMENT_REWARDS,
+        EXPERIMENT_REWARD_VALUE,
+        EXPERIMENT_REGRET,
+        EXPERIMENT_PHASE_STATUS,
+        TRAJECTORY_EVALUATIONS,
+        ADVANCED_BANDIT_REWARD_MODEL_MSE,
+        ADVANCED_BANDIT_TREE_DEPTH,
+        ADVANCED_BANDIT_IMPORTANCE_WEIGHT,
+        ADVANCED_BANDIT_CONFIDENCE_INTERVAL,
     ) = objs
     _COLLECTORS = list(objs)
 
@@ -849,6 +997,9 @@ __all__ = [
     "PIPELINE_STEPS_FAILED",
     "PIPELINE_STEPS_SKIPPED",
     "PIPELINE_DURATION",
+    "PIPELINE_STEP_DURATION",
+    "PIPELINE_TOTAL_DURATION",
+    "PIPELINE_INFLIGHT",
     "CIRCUIT_BREAKER_REQUESTS",
     "CIRCUIT_BREAKER_STATE",
     "INGEST_TRANSCRIPT_FALLBACKS",
@@ -885,8 +1036,21 @@ __all__ = [
     "SEMANTIC_CACHE_SIMILARITY",
     "SEMANTIC_CACHE_PREFETCH_ISSUED",
     "SEMANTIC_CACHE_PREFETCH_USED",
+    "SEMANTIC_CACHE_SHADOW_HITS",
+    "SEMANTIC_CACHE_SHADOW_MISSES",
+    "SEMANTIC_CACHE_SHADOW_HIT_RATIO",
     "RL_REWARD_LATENCY_GAP",
     "ACTIVE_BANDIT_POLICY",
+    "EXPERIMENT_VARIANT_ALLOCATIONS",
+    "EXPERIMENT_REWARDS",
+    "EXPERIMENT_REWARD_VALUE",
+    "EXPERIMENT_REGRET",
+    "EXPERIMENT_PHASE_STATUS",
+    "TRAJECTORY_EVALUATIONS",
+    "ADVANCED_BANDIT_REWARD_MODEL_MSE",
+    "ADVANCED_BANDIT_TREE_DEPTH",
+    "ADVANCED_BANDIT_IMPORTANCE_WEIGHT",
+    "ADVANCED_BANDIT_CONFIDENCE_INTERVAL",
     "reset",
     "render",
     "registry",

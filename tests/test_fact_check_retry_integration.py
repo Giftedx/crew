@@ -18,7 +18,7 @@ class DummyResp:
             raise Exception(f"HTTP {self.status_code}")
 
 
-@patch.dict(os.environ, {"ENABLE_ANALYSIS_HTTP_RETRY": "1"})
+@patch.dict(os.environ, {"ENABLE_HTTP_RETRY": "1"})
 def test_retrying_get_transient_status(monkeypatch):
     calls = {"n": 0}
 

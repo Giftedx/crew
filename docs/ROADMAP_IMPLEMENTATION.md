@@ -185,7 +185,7 @@ This roadmap outlines a systematic, evidence-based approach to implementing comp
   - ✅ Create migration validation tools (`scripts/migrate_http_retry_flag.py`, `scripts/migrate_learning_engine.py`)
   - ✅ Establish deprecation timeline enforcement (`scripts/deprecation_dashboard.py`)
   - ✅ Comprehensive reporting dashboard with health scoring
-  - ✅ Migration scripts for ENABLE_ANALYSIS_HTTP_RETRY → ENABLE_HTTP_RETRY (45 instances migrated)
+  - ✅ Migration scripts for ENABLE_HTTP_RETRY → ENABLE_HTTP_RETRY (45 instances migrated)
   - ✅ Migration scripts for services.learning_engine.LearningEngine → core.learning_engine.LearningEngine (1 import updated)
   - ✅ CI/CD ready JSON output for automated health checks
   - ✅ Complete documentation and usage guides

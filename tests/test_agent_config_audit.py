@@ -50,9 +50,11 @@ def test_content_downloader_covers_all_platforms():
 
 def test_monitor_and_alert_agents_have_tools():
     assert _agent_tools("multi_platform_monitor") == {"MultiPlatformMonitorTool"}
+    # system_alert_manager recently enhanced with AdvancedPerformanceAnalyticsTool
     assert _agent_tools("system_alert_manager") == {
         "DiscordPrivateAlertTool",
         "SystemStatusTool",
+        "AdvancedPerformanceAnalyticsTool",
     }
 
 

@@ -17,34 +17,34 @@ _HAS_PYDANTIC = False
 _HAS_PYDANTIC_V2 = False
 
 try:  # Full pydantic-settings + pydantic
-    from pydantic import AliasChoices, Field as _PydField, validator  # type: ignore[import-not-found]
-    from pydantic_settings import BaseSettings, SettingsConfigDict  # type: ignore[import-not-found]
+    from pydantic import AliasChoices, Field as _PydField, validator
+    from pydantic_settings import BaseSettings, SettingsConfigDict
 
     _HAS_PYDANTIC = True
     _HAS_PYDANTIC_V2 = True
 except Exception:  # pragma: no cover
     try:  # Plain pydantic only
-        from pydantic import AliasChoices, BaseSettings, Field as _PydField, validator  # type: ignore[import-not-found]
+        from pydantic import AliasChoices, BaseSettings, Field as _PydField, validator  # type: ignore[no-redef]
 
         class _SettingsConfigDict(dict):
             pass
 
-        SettingsConfigDict = _SettingsConfigDict  # type: ignore[assignment]
+        SettingsConfigDict = _SettingsConfigDict  # type: ignore[assignment,misc]
         _HAS_PYDANTIC = True
         _HAS_PYDANTIC_V2 = False
     except Exception:  # Final minimal stubs
 
-        class BaseSettings:  # noqa: D401
+        class BaseSettings:  # type: ignore[no-redef]  # noqa: D401
             pass
 
-        class SettingsConfigDict(dict):  # noqa: D401
+        class SettingsConfigDict(dict):  # type: ignore[no-redef]  # noqa: D401
             pass
 
-        class AliasChoices:  # noqa: D401
+        class AliasChoices:  # type: ignore[no-redef]  # noqa: D401
             def __init__(self, *args: Any, **kwargs: Any) -> None:  # pragma: no cover
                 pass
 
-        def _PydField(*_args: Any, **kw: Any) -> Any:  # pragma: no cover
+        def _PydField(*_args: Any, **kw: Any) -> Any:  # type: ignore[no-redef]  # pragma: no cover
             return kw.get("default")
 
         def validator(*_v_args: Any, **_v_kwargs: Any):  # pragma: no cover

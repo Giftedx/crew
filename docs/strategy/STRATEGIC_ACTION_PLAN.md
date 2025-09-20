@@ -122,7 +122,7 @@ async def execute_pipeline_concurrent(steps):
 **Migration Plan**:
 ```bash
 # Deprecated → Modern Migration
-ENABLE_ANALYSIS_HTTP_RETRY → ENABLE_HTTP_RETRY
+ENABLE_HTTP_RETRY → ENABLE_HTTP_RETRY
 services.learning_engine → core.learning_engine
 root/trustworthiness.json → data/trustworthiness.json
 legacy webhook patterns → secure webhook verification

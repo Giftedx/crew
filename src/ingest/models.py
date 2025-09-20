@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import sqlite3
 from dataclasses import dataclass
+from datetime import UTC, datetime
 
 
 @dataclass
@@ -257,9 +258,80 @@ CREATE INDEX IF NOT EXISTS idx_ingest_job_scheduled_at ON ingest_job(scheduled_a
 
 
 def connect(path: str) -> sqlite3.Connection:
-    conn = sqlite3.connect(path)
+    # Allow use across threads; we serialize access at higher layers with locks
+    conn = sqlite3.connect(path, check_same_thread=False)
+    # Improve concurrency characteristics for multiple writers/readers
+    try:
+        conn.execute("PRAGMA journal_mode=WAL;")
+        conn.execute("PRAGMA synchronous=NORMAL;")
+        conn.execute("PRAGMA busy_timeout=5000;")
+    except Exception:
+        pass
     conn.executescript(SCHEMA)
     return conn
+
+
+# ------------------------------------------------------------ uploader tracking helpers
+def _slug_namespace(tenant: str, workspace: str, raw: str) -> str:
+    return f"{tenant}:{workspace}:{raw}"
+
+
+def upsert_creator_by_youtube_channel(conn: sqlite3.Connection, *, tenant: str, workspace: str, channel_id: str) -> int:
+    """Upsert a creator_profile row keyed by namespaced slug for a YouTube channel id.
+
+    Returns the creator_profile.id.
+    """
+    slug = _slug_namespace(tenant, workspace, f"yt:{channel_id}")
+    cur = conn.execute("SELECT id FROM creator_profile WHERE slug=?", (slug,))
+    row = cur.fetchone()
+    if row:
+        cid = int(row[0])
+        conn.execute(
+            "UPDATE creator_profile SET youtube_id=?, last_checked_at=datetime('now') WHERE id=?", (channel_id, cid)
+        )
+        conn.commit()
+        return cid
+    cur2 = conn.execute(
+        "INSERT INTO creator_profile (slug, youtube_id, verified, last_checked_at) VALUES (?,?,?,datetime('now'))",
+        (slug, channel_id, 0),
+    )
+    conn.commit()
+    rid = cur2.lastrowid
+    return int(rid) if rid is not None else 0
+
+
+def ensure_watchlist(
+    conn: sqlite3.Connection,
+    *,
+    tenant: str,
+    workspace: str,
+    source_type: str,
+    handle: str,
+    label: str | None = None,
+) -> int:
+    """Ensure a watchlist entry exists; returns its id.
+
+    Adds a corresponding ingest_state row if inserting.
+    """
+    cur = conn.execute(
+        "SELECT id FROM watchlist WHERE tenant=? AND workspace=? AND source_type=? AND handle=?",
+        (tenant, workspace, source_type, handle),
+    )
+    row = cur.fetchone()
+    if row:
+        return int(row[0])
+    now = datetime.now(UTC).isoformat()
+    cur2 = conn.execute(
+        "INSERT INTO watchlist (tenant, workspace, source_type, handle, label, enabled, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?)",
+        (tenant, workspace, source_type, handle, label, 1, now, now),
+    )
+    wid = int(cur2.lastrowid) if cur2.lastrowid is not None else 0
+    conn.execute(
+        "INSERT INTO ingest_state (watchlist_id, cursor, last_seen_at, etag, failure_count, backoff_until) VALUES (?,?,?,?,?,?)",
+        (wid, None, None, None, 0, None),
+    )
+    conn.commit()
+    return wid
 
 
 def record_provenance(conn: sqlite3.Connection, prov: Provenance) -> None:

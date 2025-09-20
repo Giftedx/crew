@@ -8,10 +8,30 @@ and imposes near-zero overhead when disabled.
 from __future__ import annotations
 
 import hashlib
+import logging
 import os
 from collections.abc import Callable, Mapping, MutableMapping
 from dataclasses import dataclass, field
 from typing import Any
+
+try:  # Provide a patchable placeholder metrics namespace for tests
+    METRICS_AVAILABLE = True
+
+    class _MetricsShim:  # minimal attribute container; tests will patch attributes on this
+        pass
+
+    metrics = _MetricsShim()  # type: ignore
+except ImportError:  # pragma: no cover
+    METRICS_AVAILABLE = False
+    metrics = None  # type: ignore
+
+
+# Provide a patchable placeholder for tenancy accessor used in tests when metrics patched
+def current_tenant():  # type: ignore
+    return None
+
+
+logger = logging.getLogger(__name__)
 
 
 def _flag_enabled(name: str) -> bool:
@@ -79,6 +99,46 @@ class Experiment:
             if r <= threshold:
                 chosen = arm
                 break
+
+        # Log allocation decision with full context
+        logger.debug(
+            "Experiment allocation: experiment_id=%s, allocation_key=%s, phase=%s, chosen=%s, r=%f, variants=%s",
+            self.experiment_id,
+            allocation_key,
+            self.phase,
+            chosen,
+            r,
+            self.variants,
+        )
+
+        # Record metrics if available
+        if METRICS_AVAILABLE:
+            try:
+                from obs import metrics
+                from ultimate_discord_intelligence_bot.tenancy import current_tenant
+
+                ctx = current_tenant()
+                if ctx:
+                    labels = {
+                        "tenant": ctx.tenant_id,
+                        "workspace": ctx.workspace_id,
+                        "experiment_id": self.experiment_id,
+                        "variant": chosen,
+                        "phase": self.phase,
+                    }
+                    metrics.EXPERIMENT_VARIANT_ALLOCATIONS.labels(**labels).inc()
+
+                    # Update phase status gauge
+                    phase_labels = {
+                        "tenant": ctx.tenant_id,
+                        "workspace": ctx.workspace_id,
+                        "experiment_id": self.experiment_id,
+                    }
+                    phase_value = 1.0 if self.phase == "active" else 0.0
+                    metrics.EXPERIMENT_PHASE_STATUS.labels(**phase_labels).set(phase_value)
+            except Exception as e:
+                logger.debug("Failed to record experiment allocation metrics: %s", e)
+
         return self.control if self.phase == "shadow" else chosen
 
     def record(self, arm: str, reward: float) -> None:
@@ -90,9 +150,54 @@ class Experiment:
         if baseline in self.stats and arm != baseline:
             base_mean = self.stats[baseline].reward_mean
             vs.regret_sum += max(0.0, base_mean - reward)
+
+        # Log reward recording with context
+        logger.debug(
+            "Experiment reward recorded: experiment_id=%s, arm=%s, reward=%f, "
+            "pulls=%d, reward_sum=%f, reward_mean=%f, regret_sum=%f",
+            self.experiment_id,
+            arm,
+            reward,
+            vs.pulls,
+            vs.reward_sum,
+            vs.reward_mean,
+            vs.regret_sum,
+        )
+
+        # Record metrics if available
+        if METRICS_AVAILABLE:
+            try:
+                from obs import metrics
+                from ultimate_discord_intelligence_bot.tenancy import current_tenant
+
+                ctx = current_tenant()
+                if ctx:
+                    reward_labels = {
+                        "tenant": ctx.tenant_id,
+                        "workspace": ctx.workspace_id,
+                        "experiment_id": self.experiment_id,
+                        "variant": arm,
+                    }
+                    metrics.EXPERIMENT_REWARDS.labels(**reward_labels).inc()
+                    metrics.EXPERIMENT_REWARD_VALUE.labels(**reward_labels).observe(reward)
+
+                    # Update regret gauge
+                    metrics.EXPERIMENT_REGRET.labels(**reward_labels).set(vs.regret_sum)
+            except Exception as e:
+                logger.debug("Failed to record experiment reward metrics: %s", e)
+
         if self.phase == "shadow" and self.auto_activate_after is not None:
             if self.stats[self.control].pulls >= self.auto_activate_after:
+                old_phase = self.phase
                 self.phase = "active"
+                logger.info(
+                    "Experiment auto-activated: experiment_id=%s, phase=%s->%s, control_pulls=%d, threshold=%d",
+                    self.experiment_id,
+                    old_phase,
+                    self.phase,
+                    self.stats[self.control].pulls,
+                    self.auto_activate_after,
+                )
 
     def snapshot(self) -> dict[str, Any]:
         return {
@@ -112,6 +217,14 @@ class ExperimentManager:
 
     def register(self, exp: Experiment) -> None:
         self._experiments[exp.experiment_id] = exp
+        logger.info(
+            "Experiment registered: experiment_id=%s, control=%s, variants=%s, phase=%s, auto_activate_after=%s",
+            exp.experiment_id,
+            exp.control,
+            exp.variants,
+            exp.phase,
+            exp.auto_activate_after,
+        )
 
     def exists(self, experiment_id: str) -> bool:
         return experiment_id in self._experiments
@@ -127,6 +240,7 @@ class ExperimentManager:
             return candidates[0] if candidates else ""
         exp = self._experiments.get(experiment_id)
         if not exp:
+            logger.debug("Experiment not found: experiment_id=%s", experiment_id)
             return candidates[0]
         if allocation_key_fn:
             key = allocation_key_fn(context)
@@ -135,18 +249,48 @@ class ExperimentManager:
             workspace = context.get("workspace", "w")
             group = context.get("user_group", "g")
             key = f"{tenant}:{workspace}:{group}:{experiment_id}"
-        return exp.allocate(key)
+
+        chosen = exp.allocate(key)
+        logger.debug(
+            "Experiment recommendation: experiment_id=%s, key=%s, chosen=%s, candidates=%s, context_keys=%s",
+            experiment_id,
+            key,
+            chosen,
+            candidates,
+            list(context.keys()),
+        )
+        return chosen
 
     def record(self, experiment_id: str, arm: str, reward: float) -> None:
         if not _flag_enabled(self.FLAG):
             return
         exp = self._experiments.get(experiment_id)
         if not exp:
+            logger.debug("Cannot record reward - experiment not found: experiment_id=%s", experiment_id)
             return
+        logger.debug("Recording experiment reward: experiment_id=%s, arm=%s, reward=%f", experiment_id, arm, reward)
         exp.record(arm, reward)
 
     def snapshot(self) -> dict[str, Any]:
-        return {eid: exp.snapshot() for eid, exp in self._experiments.items()}
+        snapshot_data = {eid: exp.snapshot() for eid, exp in self._experiments.items()}
+
+        # Add dashboard metadata
+        dashboard_summary = {
+            "total_experiments": len(self._experiments),
+            "active_experiments": sum(1 for exp in self._experiments.values() if exp.phase == "active"),
+            "shadow_experiments": sum(1 for exp in self._experiments.values() if exp.phase == "shadow"),
+            "experiments": snapshot_data,
+            "timestamp": __import__("time").time(),
+        }
+
+        logger.debug(
+            "Experiment snapshot generated: total=%d, active=%d, shadow=%d",
+            dashboard_summary["total_experiments"],
+            dashboard_summary["active_experiments"],
+            dashboard_summary["shadow_experiments"],
+        )
+
+        return dashboard_summary
 
 
 __all__ = ["Experiment", "ExperimentManager"]

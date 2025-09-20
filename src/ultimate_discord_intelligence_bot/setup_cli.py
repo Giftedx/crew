@@ -288,6 +288,26 @@ def _check_binary(name: str) -> tuple[bool, str]:
     return (path is not None, path or "")
 
 
+def _check_ytdlp_module() -> tuple[bool, str]:
+    """Detect yt-dlp availability either as a binary or runnable module.
+
+    Returns (ok, detail) where detail is the path to the binary or a 'python -m yt_dlp' hint.
+    Avoid importing yt_dlp directly to comply with guardrails (centralize imports in tools).
+    """
+    ok, path = _check_binary("yt-dlp")
+    if ok:
+        return True, path
+    # Fallback: probe if `python -m yt_dlp --version` works without importing in-process
+    try:
+        out = subprocess.check_output(
+            [sys.executable, "-m", "yt_dlp", "--version"], stderr=subprocess.STDOUT, text=True, timeout=5
+        )  # noqa: S603
+        ver = out.strip().splitlines()[0] if out else "unknown"
+        return True, f"python -m yt_dlp (v{ver})"
+    except Exception:
+        return False, ""
+
+
 def _doctor() -> int:
     _print_header("Doctor")
     ok = True
@@ -307,9 +327,9 @@ def _doctor() -> int:
     else:
         ok = False
         print("❌ ffmpeg not found. Install via 'apt install ffmpeg' or 'brew install ffmpeg'.")
-    ytdlp_ok, ytdlp_path = _check_binary("yt-dlp")
+    ytdlp_ok, ytdlp_detail = _check_ytdlp_module()
     if ytdlp_ok:
-        print(f"✅ yt-dlp: {ytdlp_path}")
+        print(f"✅ yt-dlp: {ytdlp_detail}")
     else:
         print("⚠️  yt-dlp not found. Some downloads will be limited. 'pip install yt-dlp' to enable.")
     print("✅ Basic env check passed" if ok else "⚠️  Fix the above issues and re-run doctor")
@@ -319,9 +339,15 @@ def _doctor() -> int:
 def _run_discord() -> int:
     _print_header("Run Discord Bot")
     # Launch the Discord bot directly to avoid indirection/recursion
-    target = REPO_ROOT / "start_full_bot.py"
-    if not target.exists():
-        print("❌ start_full_bot.py not found. Ensure repository is intact.")
+    # Support both repo root and scripts/ locations
+    candidates = [
+        REPO_ROOT / "start_full_bot.py",
+        REPO_ROOT / "scripts" / "start_full_bot.py",
+    ]
+    target = next((p for p in candidates if p.exists()), None)
+    if target is None:
+        print("❌ start_full_bot.py not found in repo root or scripts/. Ensure repository is intact.")
+        print(f"   Looked in: {', '.join(str(p) for p in candidates)}")
         return 2
     return subprocess.call([sys.executable, str(target)])
 

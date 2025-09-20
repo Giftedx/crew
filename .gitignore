@@ -117,3 +117,27 @@ core.*
 # Misc backups
 *~
 .#*
+
+# Prevent root directory clutter
+/*_demo.py
+/*_demo_*.py
+/demo_*.py
+/*_results*.json
+/*_20[0-9][0-9]*.json
+/*_engine.py
+/*_optimizer.py
+/*_orchestrator.py
+/*_benchmark*.py
+/*_integration*.py
+/PHASE_*_COMPLETE*.md
+/ADVANCED_*_COMPLETE*.md
+/COMPREHENSIVE_*.md
+/COMPLETE_*.md
+/FINAL_*.md
+/*_COMPLETE*.md
+/*.log
+/fix_*.py
+/test_*.py
+/*_test.py
+/*_util.py
+/*_script.py

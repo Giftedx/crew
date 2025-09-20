@@ -117,7 +117,7 @@ Successfully completed comprehensive codebase improvements beyond CQ-001 complet
 ### New Files
 
 - `src/core/batching.py` - Comprehensive batching infrastructure
-- `test_batching.py` - Complete test suite for batching functionality
+- `tests/test_batching.py` - Complete test suite for batching functionality
 
 ### Enhanced Files
 

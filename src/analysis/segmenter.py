@@ -86,7 +86,7 @@ def chunk_transcript(transcript: Transcript, *, max_chars: int = 800, overlap: i
         try:
             metrics.PIPELINE_STEPS_COMPLETED.labels(
                 tenant=lbl["tenant"], workspace=lbl["workspace"], step="segment_chunks"
-            ).inc()  # type: ignore[arg-type]
+            ).inc()
         except Exception:
             pass
     if merges:

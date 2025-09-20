@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import time
 from collections.abc import Sequence
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
@@ -11,8 +12,25 @@ from core.typing_utils import (
     typed,  # typing aid: keep precise signatures after framework decorators
 )
 
+try:
+    from .agent_training.performance_monitor import AgentPerformanceMonitor
+
+    _PERFORMANCE_MONITOR_AVAILABLE = True
+except ImportError:
+    _PERFORMANCE_MONITOR_AVAILABLE = False
+    AgentPerformanceMonitor = None
+
+try:
+    from eval.trajectory_evaluator import EnhancedCrewEvaluator
+
+    _TRAJECTORY_EVALUATOR_AVAILABLE = True
+except ImportError:
+    _TRAJECTORY_EVALUATOR_AVAILABLE = False
+    EnhancedCrewEvaluator = None
+
 from .config_types import AgentConfig, TaskConfig
 from .settings import DISCORD_PRIVATE_WEBHOOK
+from .tools.advanced_performance_analytics_tool import AdvancedPerformanceAnalyticsTool
 from .tools.character_profile_tool import CharacterProfileTool
 from .tools.debate_command_tool import DebateCommandTool
 from .tools.discord_download_tool import DiscordDownloadTool
@@ -165,10 +183,11 @@ class UltimateDiscordIntelligenceBotCrew:
                 role="p",
                 goal="p",
                 backstory="p",
-                tools=[DiscordPrivateAlertTool("w"), SystemStatusTool()],
+                tools=[DiscordPrivateAlertTool("w"), SystemStatusTool(), AdvancedPerformanceAnalyticsTool()],
             )
         return self._agent_from_config(
-            "system_alert_manager", tools=[DiscordPrivateAlertTool(webhook), SystemStatusTool()]
+            "system_alert_manager",
+            tools=[DiscordPrivateAlertTool(webhook), SystemStatusTool(), AdvancedPerformanceAnalyticsTool()],
         )
 
     @typed
@@ -348,6 +367,32 @@ class UltimateDiscordIntelligenceBotCrew:
     def synthesize_personality(self) -> Task:
         return self._task_from_config("synthesize_personality")
 
+    # Advanced Performance Analytics Tasks
+    @typed
+    @task
+    def run_performance_analytics(self) -> Task:
+        return self._task_from_config("run_performance_analytics")
+
+    @typed
+    @task
+    def monitor_performance_alerts(self) -> Task:
+        return self._task_from_config("monitor_performance_alerts")
+
+    @typed
+    @task
+    def send_performance_executive_summary(self) -> Task:
+        return self._task_from_config("send_performance_executive_summary")
+
+    @typed
+    @task
+    def optimize_system_performance(self) -> Task:
+        return self._task_from_config("optimize_system_performance")
+
+    @typed
+    @task
+    def predictive_performance_analysis(self) -> Task:
+        return self._task_from_config("predictive_performance_analysis")
+
     @crew
     def crew(self) -> Crew:
         """Create the project crew with enhanced features.
@@ -385,6 +430,176 @@ class UltimateDiscordIntelligenceBotCrew:
             step_callback=self._log_step,
         )
 
+    def kickoff_with_performance_tracking(self, inputs: dict[Any, Any] | None = None) -> Any:
+        """Execute crew with comprehensive performance tracking and trajectory evaluation."""
+        if not _PERFORMANCE_MONITOR_AVAILABLE:
+            # Fallback to standard kickoff if performance monitoring unavailable
+            return self.crew().kickoff(inputs=inputs or {})
+
+        crew_start_time = time.time()
+        session_id = f"crew_{int(crew_start_time)}"
+
+        # Initialize trajectory evaluator if available
+        trajectory_evaluator = None
+        if _TRAJECTORY_EVALUATOR_AVAILABLE:
+            try:
+                trajectory_evaluator = EnhancedCrewEvaluator()
+            except Exception as e:
+                logging.getLogger(__name__).warning(f"Failed to initialize trajectory evaluator: {e}")
+
+        try:
+            # Initialize performance monitor if not exists
+            if not hasattr(self, "_performance_monitor"):
+                self._performance_monitor = AgentPerformanceMonitor()
+
+            # Execute the crew
+            result = self.crew().kickoff(inputs=inputs or {})
+
+            crew_end_time = time.time()
+            total_execution_time = crew_end_time - crew_start_time
+
+            # Assess overall crew performance
+            crew_quality = self._assess_crew_result_quality(result)
+
+            # Extract tools used from all agents
+            all_tools_used = []
+            for agent in self.agents:
+                agent_tools = getattr(agent, "tools", [])
+                all_tools_used.extend([str(tool.__class__.__name__) for tool in agent_tools])
+
+            # Record crew-level performance
+            self._performance_monitor.record_agent_interaction(
+                agent_name="crew_orchestrator",
+                task_type="crew_execution",
+                tools_used=list(set(all_tools_used)),  # Unique tools
+                tool_sequence=[
+                    {
+                        "agent": agent.role if hasattr(agent, "role") else str(agent),
+                        "tools": [str(tool.__class__.__name__) for tool in getattr(agent, "tools", [])],
+                    }
+                    for agent in self.agents
+                ],
+                response_quality=crew_quality,
+                response_time=total_execution_time,
+                user_feedback={"crew_execution": True, "agent_count": len(self.agents)},
+                error_occurred=False,
+                error_details={},
+            )
+
+            # Trajectory evaluation if available
+            if trajectory_evaluator:
+                try:
+                    # Create execution log for trajectory evaluation
+                    execution_log = {
+                        "session_id": session_id,
+                        "user_input": str(inputs or {}),
+                        "start_time": crew_start_time,
+                        "total_duration": total_execution_time,
+                        "success": True,
+                        "final_output": str(result),
+                        "steps": self._extract_execution_steps(all_tools_used),
+                    }
+
+                    # Evaluate trajectory
+                    evaluation_result = trajectory_evaluator.evaluate_crew_execution(execution_log)
+
+                    if evaluation_result.success:
+                        logging.getLogger(__name__).info(
+                            f"Trajectory evaluation completed: score={evaluation_result.data.get('trajectory_evaluation', {}).get('score', 'unknown')}"
+                        )
+                    else:
+                        logging.getLogger(__name__).warning(f"Trajectory evaluation failed: {evaluation_result.error}")
+
+                except Exception as e:
+                    logging.getLogger(__name__).warning(f"Trajectory evaluation error: {e}")
+
+            return result
+
+        except Exception as e:
+            crew_end_time = time.time()
+
+            # Record failed execution
+            if hasattr(self, "_performance_monitor"):
+                self._performance_monitor.record_agent_interaction(
+                    agent_name="crew_orchestrator",
+                    task_type="crew_execution",
+                    tools_used=[],
+                    tool_sequence=[],
+                    response_quality=0.0,
+                    response_time=crew_end_time - crew_start_time,
+                    user_feedback={},
+                    error_occurred=True,
+                    error_details={"error": str(e), "type": type(e).__name__},
+                )
+
+            # Failed trajectory evaluation if available
+            if trajectory_evaluator:
+                try:
+                    execution_log = {
+                        "session_id": session_id,
+                        "user_input": str(inputs or {}),
+                        "start_time": crew_start_time,
+                        "total_duration": crew_end_time - crew_start_time,
+                        "success": False,
+                        "final_output": f"Error: {str(e)}",
+                        "steps": [],
+                    }
+                    trajectory_evaluator.evaluate_crew_execution(execution_log)
+                except Exception:
+                    pass  # Don't let trajectory evaluation errors affect main flow
+
+            raise  # Re-raise the original exception
+
+    def _extract_execution_steps(self, tools_used: list[str]) -> list[dict[str, Any]]:
+        """Extract execution steps for trajectory evaluation."""
+        steps = []
+        for i, tool in enumerate(tools_used):
+            steps.append(
+                {
+                    "timestamp": time.time(),
+                    "agent_role": f"agent_{i % len(self.agents)}",
+                    "action_type": "tool_call",
+                    "content": f"Used tool: {tool}",
+                    "tool_name": tool,
+                    "tool_args": {},
+                    "success": True,
+                    "error": None,
+                }
+            )
+        return steps
+
+    def _assess_crew_result_quality(self, result: Any) -> float:
+        """Assess the quality of crew execution result."""
+        try:
+            result_str = str(result)
+
+            # Basic quality assessment
+            quality_score = 0.5  # Base score
+
+            # Length and substance
+            if len(result_str) > 100:
+                quality_score += 0.2
+
+            # Quality indicators
+            quality_indicators = [
+                "analysis",
+                "evidence",
+                "conclusion",
+                "recommendation",
+                "verified",
+                "confirmed",
+                "research",
+                "assessment",
+            ]
+
+            indicator_count = sum(1 for indicator in quality_indicators if indicator.lower() in result_str.lower())
+            quality_score += min(0.3, indicator_count * 0.1)
+
+            return min(1.0, quality_score)
+
+        except Exception:
+            return 0.5  # Default if assessment fails
+
     @runtime_checkable
     class _StepLike(Protocol):  # protocol to narrow what we access
         agent: Any  # crewai runtime object with a 'role' attribute
@@ -411,6 +626,70 @@ class UltimateDiscordIntelligenceBotCrew:
                     if len(snippet) > RAW_SNIPPET_MAX_LEN:
                         snippet = snippet[: RAW_SNIPPET_MAX_LEN - 3] + "..."
                     print(f"   ↳ raw: {snippet}")
+
+            # Performance tracking integration
+            self._track_agent_step_performance(step)
+
+    def _track_agent_step_performance(self, step: object) -> None:
+        """Track individual agent step performance for learning."""
+        if not _PERFORMANCE_MONITOR_AVAILABLE:
+            return
+
+        try:
+            # Get or create performance monitor instance
+            if not hasattr(self, "_performance_monitor"):
+                self._performance_monitor = AgentPerformanceMonitor()
+
+            if isinstance(step, self._StepLike):
+                agent_role = getattr(step.agent, "role", "unknown")
+                tool_used = getattr(step, "tool", None)
+                step_start_time = getattr(step, "start_time", time.time())
+                step_end_time = time.time()
+
+                # Extract step output for quality assessment
+                raw_output = getattr(step, "raw", None) or getattr(getattr(step, "output", None), "raw", None)
+
+                # Simple quality assessment for this step
+                step_quality = 0.7  # Default baseline
+                if raw_output and isinstance(raw_output, str):
+                    # Basic quality indicators
+                    if len(raw_output) > 50:  # Substantial output
+                        step_quality += 0.1
+                    if any(word in raw_output.lower() for word in ["analysis", "evidence", "because", "therefore"]):
+                        step_quality += 0.1
+                    if tool_used:  # Tool usage indicates action
+                        step_quality += 0.1
+
+                step_quality = min(1.0, step_quality)
+
+                # Record this step as a micro-interaction
+                tools_used = [str(tool_used)] if tool_used else []
+                tool_sequence = [
+                    {
+                        "tool": str(tool_used) if tool_used else "reasoning",
+                        "action": "step_execution",
+                        "timestamp": step_end_time,
+                    }
+                ]
+
+                # Use a shortened agent name for tracking
+                agent_name = agent_role.replace(" ", "_").lower()
+
+                self._performance_monitor.record_agent_interaction(
+                    agent_name=agent_name,
+                    task_type="crew_step",
+                    tools_used=tools_used,
+                    tool_sequence=tool_sequence,
+                    response_quality=step_quality,
+                    response_time=step_end_time - step_start_time,
+                    user_feedback={"step_type": "crew_execution"},
+                    error_occurred=False,
+                    error_details={},
+                )
+
+        except Exception as e:
+            # Don't let performance tracking break the main workflow
+            logging.getLogger(__name__).debug(f"Performance tracking error: {e}")
 
     # -------------------------------
     # Validation helpers

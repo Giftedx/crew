@@ -1,0 +1,141 @@
+[
+    {
+        "id": "semantic_cache_shadow_hit_ratio",
+        "title": "Semantic Cache Shadow Hit Ratio",
+        "description": "Gauge of the current shadow-mode semantic cache hit ratio by tenant/workspace.",
+        "promql": "avg by (tenant,workspace) (semantic_cache_shadow_hit_ratio)"
+    },
+    {
+        "id": "semantic_cache_promotions_rate",
+        "title": "Semantic Cache Promotions (rate)",
+        "description": "Rate of promotions from shadow semantic cache to production usage.",
+        "promql": "sum by (tenant,workspace) (rate(cache_promotions_total{cache_name=\"semantic\"}[5m]))"
+    },
+    {
+        "id": "semantic_cache_prefetch_usage",
+        "title": "Semantic Cache Prefetch Issued vs Used (rate)",
+        "description": "Compare issued prefetches vs those actually used (semantic cache).",
+        "promql": "sum by (tenant,workspace) (rate(semantic_cache_prefetch_issued_total[5m])) / ignoring(__name__) sum by (tenant,workspace) (rate(semantic_cache_prefetch_used_total[5m]))",
+        "note": "For separate series, chart two queries: rate(semantic_cache_prefetch_issued_total[5m]) and rate(semantic_cache_prefetch_used_total[5m])."
+    },
+    {
+        "id": "ingest_concurrency_fallbacks",
+        "title": "Ingest Concurrency Fallbacks (15m)",
+        "description": "Number of times ingest fell back due to concurrency executor failure.",
+        "promql": "sum by (tenant,workspace) (increase(degradation_events_total{component=\"ingest\",event_type=\"concurrency_executor_failure\"}[15m]))"
+    },
+    {
+        "id": "agent_evals_fallbacks",
+        "title": "AgentEvals Fallbacks (15m)",
+        "description": "Count of trajectory evaluations that fell back from AgentEvals to local evaluator.",
+        "promql": "sum by (tenant,workspace) (increase(degradation_events_total{component=\"trajectory_eval\",event_type=\"agent_evals_fallback\"}[15m]))"
+    },
+    {
+        "id": "semantic_cache_similarity_avg",
+        "title": "Semantic Cache Similarity (avg)",
+        "description": "Average similarity of semantic cache hits over 5m window (if histogram metrics available)",
+        "promql": "sum(rate(semantic_cache_similarity_sum[5m])) / sum(rate(semantic_cache_similarity_count[5m]))",
+        "note": "If prometheus-client is not installed, these series may be absent."
+    },
+    {
+        "id": "langgraph_pilot_fallbacks",
+        "title": "LangGraph Pilot Fallbacks (15m)",
+        "description": "Degradation events where LangGraph pilot fell back to sequential execution.",
+        "promql": "sum by (tenant,workspace) (increase(degradation_events_total{component=\"langgraph_pilot\",event_type=\"fallback_sequential\"}[15m]))"
+    },
+    {
+        "id": "langgraph_pilot_completions",
+        "title": "LangGraph Pilot Step Completions",
+        "description": "Count of pilot step completions (stub path).",
+        "promql": "sum by (tenant,workspace) (increase(pipeline_steps_completed_total{step=\"langgraph_pilot\"}[15m]))"
+    },
+    {
+        "id": "pilot_runs_rate",
+        "title": "Pilot Runs (rate, 5m)",
+        "description": "Rate of pilot invocations (all orchestrators).",
+        "promql": "sum by (tenant,workspace) (rate(pipeline_requests_total[5m]))"
+    },
+    {
+        "id": "pilot_pipeline_duration_avg",
+        "title": "Pilot Pipeline Duration Avg (5m)",
+        "description": "Average duration in seconds for pilot runs (status=success)",
+        "promql": "sum(rate(pipeline_duration_seconds_sum{status=\"success\"}[5m])) by (tenant,workspace) / sum(rate(pipeline_duration_seconds_count{status=\"success\"}[5m])) by (tenant,workspace)",
+        "note": "Ensure ENABLE_PROMETHEUS_ENDPOINT=1 and that the pilot is exercised (endpoint or demo)."
+    },
+    {
+        "id": "pilot_step_duration_avg",
+        "title": "Pilot Step Duration Avg (5m)",
+        "description": "Average duration per step in seconds (status=success)",
+        "promql": "sum(rate(pipeline_step_duration_seconds_sum{status=\"success\"}[5m])) by (tenant,workspace,step,orchestrator) / sum(rate(pipeline_step_duration_seconds_count{status=\"success\"}[5m])) by (tenant,workspace,step,orchestrator)",
+        "note": "Use quantiles for p95/p99 with histogram_quantile over the rate of buckets."
+    },
+    {
+        "id": "pilot_total_duration_avg_by_orchestrator",
+        "title": "Pilot Total Duration Avg by Orchestrator (5m)",
+        "description": "Average total duration in seconds grouped by orchestrator (status=success)",
+        "promql": "sum(rate(pipeline_total_duration_seconds_sum{status=\"success\"}[5m])) by (tenant,workspace,orchestrator) / sum(rate(pipeline_total_duration_seconds_count{status=\"success\"}[5m])) by (tenant,workspace,orchestrator)",
+        "note": "Compare sequential vs stub orchestrator behavior."
+    },
+    {
+        "id": "pilot_total_duration_p95_by_orchestrator",
+        "title": "Pilot Total Duration p95 by Orchestrator (5m)",
+        "description": "p95 total duration in seconds grouped by orchestrator using histogram_quantile.",
+        "promql": "histogram_quantile(0.95, sum by (le,tenant,workspace,orchestrator) (rate(pipeline_total_duration_seconds_bucket{status=\"success\"}[5m])))"
+    },
+    {
+        "id": "pilot_error_ratio_by_orchestrator",
+        "title": "Pilot Error Ratio by Orchestrator (10m)",
+        "description": "Error ratio over 10 minutes grouped by orchestrator.",
+        "promql": "sum(rate(pipeline_total_duration_seconds_count{status=\"error\"}[10m])) by (tenant,workspace,orchestrator) / sum(rate(pipeline_total_duration_seconds_count[10m])) by (tenant,workspace,orchestrator)",
+        "note": "Requires pipeline_total_duration_seconds metric."
+    },
+    {
+        "id": "pilot_step_failures_15m",
+        "title": "Pilot Step Failures (15m)",
+        "description": "Count of step failures in the last 15 minutes grouped by step.",
+        "promql": "sum by (tenant,workspace,step) (increase(pipeline_steps_failed_total[15m]))"
+    },
+    {
+        "id": "pilot_step_duration_p95",
+        "title": "Pilot Step Duration p95 (5m)",
+        "description": "p95 per-step duration using histogram_quantile.",
+        "promql": "histogram_quantile(0.95, sum by (le,tenant,workspace,step,orchestrator) (rate(pipeline_step_duration_seconds_bucket{status=\"success\"}[5m])))"
+    },
+    {
+        "id": "pilot_step_skips_15m",
+        "title": "Pilot Step Skips (15m)",
+        "description": "Count of step skips in the last 15 minutes grouped by step.",
+        "promql": "sum by (tenant,workspace,step) (increase(pipeline_steps_skipped_total[15m]))"
+    },
+    {
+        "id": "pilot_step_failure_ratio_10m",
+        "title": "Pilot Step Failure Ratio (10m)",
+        "description": "Failure ratio per step over 10 minutes.",
+        "promql": "sum(rate(pipeline_steps_failed_total[10m])) by (tenant,workspace,step) / ( sum(rate(pipeline_steps_failed_total[10m])) by (tenant,workspace,step) + sum(rate(pipeline_steps_completed_total[10m])) by (tenant,workspace,step) )",
+        "note": "Uses failed/(failed+completed) per step."
+    },
+    {
+        "id": "pilot_inflight_gauge",
+        "title": "Pilot Inflight (current)",
+        "description": "Current number of inflight pilot runs by orchestrator.",
+        "promql": "sum by (tenant,workspace,orchestrator) (pipeline_inflight)"
+    },
+    {
+        "id": "langgraph_pilot_step_failures",
+        "title": "LangGraph Pilot Step Failures (15m)",
+        "description": "Degradation events for segment/embed failures in the pilot pipeline.",
+        "promql": "sum by (tenant,workspace,event_type) (increase(degradation_events_total{component=\"langgraph_pilot\",event_type=~\"segment_failure|embed_failure\"}[15m]))"
+    },
+    {
+        "id": "cost_vs_shadow_hit_ratio",
+        "title": "Cost vs Shadow Hit Ratio (5m)",
+        "description": "Correlate LLM estimated cost with semantic cache shadow hit ratio.",
+        "promql": "sum(rate(llm_estimated_cost_usd_sum[5m])) by (tenant,workspace) / sum(rate(llm_estimated_cost_usd_count[5m])) by (tenant,workspace)"
+    },
+    {
+        "id": "latency_vs_promotions_rate",
+        "title": "Latency vs Promotions Rate (5m)",
+        "description": "View LLM latency alongside semantic cache promotions rate.",
+        "promql": "sum(rate(llm_latency_ms_sum[5m])) by (tenant,workspace) / sum(rate(llm_latency_ms_count[5m])) by (tenant,workspace)"
+    }
+]

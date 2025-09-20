@@ -1,0 +1,262 @@
+{
+  "timestamp": "2025-09-16T06:40:56.057952+00:00",
+  "configuration": {
+    "context_dimension": 8,
+    "num_actions": 4,
+    "default_algorithm": "doubly_robust"
+  },
+  "routing_results": [
+    {
+      "selected_model": "gpt-4-turbo",
+      "action_id": "0",
+      "algorithm": "doubly_robust",
+      "confidence": 0.0,
+      "exploration_factor": 0.0,
+      "predicted_reward": 0.0,
+      "context": {
+        "user_id": "demo_user_0_0",
+        "domain": "model_routing",
+        "task_type": "analysis",
+        "complexity": 0.6290666666666667,
+        "priority": 0.77
+      },
+      "metadata": {
+        "importance_weight": 1.0,
+        "action_prob": 0.25,
+        "round": 0
+      },
+      "timestamp": "2025-09-16T06:40:56.046586+00:00"
+    },
+    {
+      "selected_model": "gemini-pro",
+      "action_id": "2",
+      "algorithm": "offset_tree",
+      "confidence": 0.3561723873052341,
+      "exploration_factor": 0.643827612694766,
+      "predicted_reward": 1.5957953705145536,
+      "context": {
+        "user_id": "demo_user_0_1",
+        "domain": "model_routing",
+        "task_type": "analysis",
+        "complexity": 0.6290666666666667,
+        "priority": 0.77
+      },
+      "metadata": {
+        "tree_depth": 0,
+        "leaf_samples": 0,
+        "round": 0
+      },
+      "timestamp": "2025-09-16T06:40:56.046818+00:00"
+    },
+    {
+      "selected_model": "gpt-4-turbo",
+      "action_id": "0",
+      "algorithm": "doubly_robust",
+      "confidence": 0.0,
+      "exploration_factor": 0.0,
+      "predicted_reward": 0.0,
+      "context": {
+        "user_id": "demo_user_1_0",
+        "domain": "content_analysis",
+        "task_type": "analysis",
+        "complexity": 0.6296666666666667,
+        "priority": 0.77
+      },
+      "metadata": {
+        "importance_weight": 1.0,
+        "action_prob": 0.25,
+        "round": 0
+      },
+      "timestamp": "2025-09-16T06:40:56.046995+00:00"
+    },
+    {
+      "selected_model": "gemini-pro",
+      "action_id": "2",
+      "algorithm": "offset_tree",
+      "confidence": 0.2845872217405901,
+      "exploration_factor": 0.71541277825941,
+      "predicted_reward": 1.5578440512230578,
+      "context": {
+        "user_id": "demo_user_1_1",
+        "domain": "content_analysis",
+        "task_type": "analysis",
+        "complexity": 0.6296666666666667,
+        "priority": 0.77
+      },
+      "metadata": {
+        "tree_depth": 0,
+        "leaf_samples": 0,
+        "round": 0
+      },
+      "timestamp": "2025-09-16T06:40:56.047144+00:00"
+    },
+    {
+      "selected_model": "gpt-4-turbo",
+      "action_id": "0",
+      "algorithm": "doubly_robust",
+      "confidence": 0.0,
+      "exploration_factor": 0.0,
+      "predicted_reward": 0.0,
+      "context": {
+        "user_id": "demo_user_2_0",
+        "domain": "user_engagement",
+        "task_type": "analysis",
+        "complexity": 0.6294666666666667,
+        "priority": 0.77
+      },
+      "metadata": {
+        "importance_weight": 1.0,
+        "action_prob": 0.25,
+        "round": 0
+      },
+      "timestamp": "2025-09-16T06:40:56.047282+00:00"
+    },
+    {
+      "selected_model": "gpt-4-turbo",
+      "action_id": "0",
+      "algorithm": "offset_tree",
+      "confidence": 0.309326636537055,
+      "exploration_factor": 0.690673363462945,
+      "predicted_reward": 2.3563468749509693,
+      "context": {
+        "user_id": "demo_user_2_1",
+        "domain": "user_engagement",
+        "task_type": "analysis",
+        "complexity": 0.6294666666666667,
+        "priority": 0.77
+      },
+      "metadata": {
+        "tree_depth": 0,
+        "leaf_samples": 0,
+        "round": 0
+      },
+      "timestamp": "2025-09-16T06:40:56.047488+00:00"
+    }
+  ],
+  "ab_test_results": {
+    "domain": "model_routing",
+    "algorithms": {
+      "doubly_robust": {
+        "mean_reward": 0.8015199999999999,
+        "sample_size": 25,
+        "min_reward": 0.716,
+        "max_reward": 0.8819999999999999
+      },
+      "offset_tree": {
+        "mean_reward": 0.7906399999999999,
+        "sample_size": 25,
+        "min_reward": 0.716,
+        "max_reward": 0.866
+      }
+    },
+    "lift_percentage": 1.3761003743802493,
+    "baseline_algorithm": "offset_tree",
+    "treatment_algorithm": "doubly_robust",
+    "timestamp": "2025-09-16T06:40:56.056804+00:00",
+    "total_requests": 50
+  },
+  "performance_stats": {
+    "global_stats": {
+      "total_decisions": 56,
+      "total_rewards": 47.521376000000025,
+      "start_time": "2025-09-16 06:40:56.046030+00:00",
+      "last_decision": "2025-09-16 06:40:56.056705+00:00",
+      "avg_reward": 0.8485960000000005
+    },
+    "domains": {
+      "model_routing": {
+        "doubly_robust": {
+          "algorithm": "doubly_robust",
+          "total_rounds": 26,
+          "avg_reward": 0.8550104615384615,
+          "avg_prediction": 1.4780312917451233,
+          "prediction_accuracy": 0.30695609287026104,
+          "last_update": "2025-09-16T06:40:56.056622+00:00",
+          "exploration_rate": 1.0943963043633325
+        },
+        "offset_tree": {
+          "algorithm": "offset_tree",
+          "total_rounds": 26,
+          "avg_reward": 0.8508886153846155,
+          "avg_prediction": 2.0630662657577266,
+          "prediction_accuracy": -0.2121776503731112,
+          "avg_tree_depth": 0.0,
+          "last_update": "2025-09-16T06:40:56.056793+00:00",
+          "tree_size": 1
+        }
+      },
+      "content_analysis": {
+        "doubly_robust": {
+          "algorithm": "doubly_robust",
+          "total_rounds": 1,
+          "avg_reward": 0.78,
+          "avg_prediction": 0.0,
+          "prediction_accuracy": 0.21999999999999997,
+          "last_update": "2025-09-16T06:40:56.047841+00:00",
+          "exploration_rate": 0
+        },
+        "offset_tree": {
+          "algorithm": "offset_tree",
+          "total_rounds": 1,
+          "avg_reward": 0.78,
+          "avg_prediction": 1.5578440512230578,
+          "prediction_accuracy": 0.22215594877694222,
+          "avg_tree_depth": 0.0,
+          "last_update": "2025-09-16T06:40:56.047905+00:00",
+          "tree_size": 1
+        }
+      },
+      "user_engagement": {
+        "doubly_robust": {
+          "algorithm": "doubly_robust",
+          "total_rounds": 1,
+          "avg_reward": 0.8040000000000002,
+          "avg_prediction": 0.0,
+          "prediction_accuracy": 0.19599999999999984,
+          "last_update": "2025-09-16T06:40:56.047979+00:00",
+          "exploration_rate": 0
+        },
+        "offset_tree": {
+          "algorithm": "offset_tree",
+          "total_rounds": 1,
+          "avg_reward": 0.8040000000000002,
+          "avg_prediction": 2.3563468749509693,
+          "prediction_accuracy": -0.552346874950969,
+          "avg_tree_depth": 0.0,
+          "last_update": "2025-09-16T06:40:56.048039+00:00",
+          "tree_size": 1
+        }
+      }
+    },
+    "timestamp": "2025-09-16T06:40:56.057230+00:00",
+    "uptime_seconds": 0.011202
+  },
+  "integration_status": "successful",
+  "algorithms_tested": {
+    "doubly_robust": {
+      "algorithm": "doubly_robust",
+      "total_rounds": 1,
+      "avg_reward": 0.8040000000000002,
+      "avg_prediction": 0.0,
+      "prediction_accuracy": 0.19599999999999984,
+      "last_update": "2025-09-16T06:40:56.047979+00:00",
+      "exploration_rate": 0
+    },
+    "offset_tree": {
+      "algorithm": "offset_tree",
+      "total_rounds": 1,
+      "avg_reward": 0.8040000000000002,
+      "avg_prediction": 2.3563468749509693,
+      "prediction_accuracy": -0.552346874950969,
+      "avg_tree_depth": 0.0,
+      "last_update": "2025-09-16T06:40:56.048039+00:00",
+      "tree_size": 1
+    }
+  },
+  "domains_tested": [
+    "model_routing",
+    "content_analysis",
+    "user_engagement"
+  ],
+  "total_decisions": 56
+}

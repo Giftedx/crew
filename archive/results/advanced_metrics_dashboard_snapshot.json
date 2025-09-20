@@ -1,0 +1,279 @@
+{
+  "timestamp": "2025-09-16T06:29:37.127998+00:00",
+  "performance_overview": [
+    {
+      "algorithm": "doubly_robust",
+      "domains": [
+        {
+          "algorithm": "doubly_robust",
+          "domain": "model_routing",
+          "sample_size": 63,
+          "avg_reward_rate": 0.6724569511509646,
+          "avg_latency_p95": 74.30897043099004,
+          "avg_user_satisfaction": 0.80519766010621,
+          "latest_timestamp": "2025-09-16T06:29:35.748621+00:00",
+          "performance_trend": "stable"
+        },
+        {
+          "algorithm": "doubly_robust",
+          "domain": "content_analysis",
+          "sample_size": 63,
+          "avg_reward_rate": 0.6719124030018708,
+          "avg_latency_p95": 72.55481284478734,
+          "avg_user_satisfaction": 0.7896148524633453,
+          "latest_timestamp": "2025-09-16T06:29:35.748621+00:00",
+          "performance_trend": "stable"
+        },
+        {
+          "algorithm": "doubly_robust",
+          "domain": "user_engagement",
+          "sample_size": 63,
+          "avg_reward_rate": 0.6717212951844292,
+          "avg_latency_p95": 75.04307819941653,
+          "avg_user_satisfaction": 0.8073470185903755,
+          "latest_timestamp": "2025-09-16T06:29:35.748621+00:00",
+          "performance_trend": "stable"
+        }
+      ]
+    },
+    {
+      "algorithm": "offset_tree",
+      "domains": [
+        {
+          "algorithm": "offset_tree",
+          "domain": "model_routing",
+          "sample_size": 63,
+          "avg_reward_rate": 0.626235137064692,
+          "avg_latency_p95": 74.76929705265556,
+          "avg_user_satisfaction": 0.8067816425568825,
+          "latest_timestamp": "2025-09-16T06:29:35.748621+00:00",
+          "performance_trend": "stable"
+        },
+        {
+          "algorithm": "offset_tree",
+          "domain": "content_analysis",
+          "sample_size": 63,
+          "avg_reward_rate": 0.6235034595972506,
+          "avg_latency_p95": 75.42899218896373,
+          "avg_user_satisfaction": 0.8144918707857717,
+          "latest_timestamp": "2025-09-16T06:29:35.748621+00:00",
+          "performance_trend": "stable"
+        },
+        {
+          "algorithm": "offset_tree",
+          "domain": "user_engagement",
+          "sample_size": 63,
+          "avg_reward_rate": 0.6260606451449569,
+          "avg_latency_p95": 73.01478233509324,
+          "avg_user_satisfaction": 0.8016573369137112,
+          "latest_timestamp": "2025-09-16T06:29:35.748621+00:00",
+          "performance_trend": "stable"
+        }
+      ]
+    },
+    {
+      "algorithm": "linucb",
+      "domains": [
+        {
+          "algorithm": "linucb",
+          "domain": "model_routing",
+          "sample_size": 63,
+          "avg_reward_rate": 0.6612245104339072,
+          "avg_latency_p95": 77.3019297832256,
+          "avg_user_satisfaction": 0.805049637525118,
+          "latest_timestamp": "2025-09-16T06:29:35.748621+00:00",
+          "performance_trend": "stable"
+        },
+        {
+          "algorithm": "linucb",
+          "domain": "content_analysis",
+          "sample_size": 63,
+          "avg_reward_rate": 0.6631825784965371,
+          "avg_latency_p95": 72.5234246331526,
+          "avg_user_satisfaction": 0.794715786738985,
+          "latest_timestamp": "2025-09-16T06:29:35.748621+00:00",
+          "performance_trend": "stable"
+        },
+        {
+          "algorithm": "linucb",
+          "domain": "user_engagement",
+          "sample_size": 63,
+          "avg_reward_rate": 0.6630404354587378,
+          "avg_latency_p95": 76.20181990745604,
+          "avg_user_satisfaction": 0.7960315294929525,
+          "latest_timestamp": "2025-09-16T06:29:35.748621+00:00",
+          "performance_trend": "stable"
+        }
+      ]
+    },
+    {
+      "algorithm": "thompson_sampling",
+      "domains": [
+        {
+          "algorithm": "thompson_sampling",
+          "domain": "model_routing",
+          "sample_size": 63,
+          "avg_reward_rate": 0.6093924951043034,
+          "avg_latency_p95": 72.78994917625256,
+          "avg_user_satisfaction": 0.8002324488777102,
+          "latest_timestamp": "2025-09-16T06:29:35.748621+00:00",
+          "performance_trend": "stable"
+        },
+        {
+          "algorithm": "thompson_sampling",
+          "domain": "content_analysis",
+          "sample_size": 63,
+          "avg_reward_rate": 0.6125690899155765,
+          "avg_latency_p95": 73.81823721553101,
+          "avg_user_satisfaction": 0.8045506953203905,
+          "latest_timestamp": "2025-09-16T06:29:35.748621+00:00",
+          "performance_trend": "stable"
+        },
+        {
+          "algorithm": "thompson_sampling",
+          "domain": "user_engagement",
+          "sample_size": 63,
+          "avg_reward_rate": 0.6103019536961013,
+          "avg_latency_p95": 75.07608457326477,
+          "avg_user_satisfaction": 0.7910123642882151,
+          "latest_timestamp": "2025-09-16T06:29:35.748621+00:00",
+          "performance_trend": "stable"
+        }
+      ]
+    },
+    {
+      "algorithm": "epsilon_greedy",
+      "domains": [
+        {
+          "algorithm": "epsilon_greedy",
+          "domain": "model_routing",
+          "sample_size": 63,
+          "avg_reward_rate": 0.5777846225452978,
+          "avg_latency_p95": 78.52872022647061,
+          "avg_user_satisfaction": 0.8029540274466362,
+          "latest_timestamp": "2025-09-16T06:29:35.748621+00:00",
+          "performance_trend": "stable"
+        },
+        {
+          "algorithm": "epsilon_greedy",
+          "domain": "content_analysis",
+          "sample_size": 63,
+          "avg_reward_rate": 0.5764289374198841,
+          "avg_latency_p95": 75.85671599287167,
+          "avg_user_satisfaction": 0.8009991486238495,
+          "latest_timestamp": "2025-09-16T06:29:35.748621+00:00",
+          "performance_trend": "stable"
+        },
+        {
+          "algorithm": "epsilon_greedy",
+          "domain": "user_engagement",
+          "sample_size": 63,
+          "avg_reward_rate": 0.5779932532463311,
+          "avg_latency_p95": 74.27242587179286,
+          "avg_user_satisfaction": 0.7992354229943666,
+          "latest_timestamp": "2025-09-16T06:29:35.748621+00:00",
+          "performance_trend": "stable"
+        }
+      ]
+    }
+  ],
+  "algorithm_comparison": [
+    {
+      "algorithm": "doubly_robust",
+      "average_score": 0.6720302164457549,
+      "domain_count": 3
+    },
+    {
+      "algorithm": "linucb",
+      "average_score": 0.6624825081297273,
+      "domain_count": 3
+    },
+    {
+      "algorithm": "offset_tree",
+      "average_score": 0.6252664139356332,
+      "domain_count": 3
+    },
+    {
+      "algorithm": "thompson_sampling",
+      "average_score": 0.610754512905327,
+      "domain_count": 3
+    },
+    {
+      "algorithm": "epsilon_greedy",
+      "average_score": 0.5774022710705043,
+      "domain_count": 3
+    }
+  ],
+  "operational_metrics": {
+    "latency": {
+      "average": 74.76594936212828,
+      "maximum": 99.98538718984511,
+      "sample_count": 945
+    },
+    "memory": {
+      "average": 123.52061087237927,
+      "maximum": 199.4350872490757,
+      "sample_count": 945
+    }
+  },
+  "ab_testing_results": [
+    {
+      "test_name": "DoublyRobust vs LinUCB",
+      "domain": "model_routing",
+      "treatment_algorithm": "doubly_robust",
+      "control_algorithm": "linucb",
+      "lift_percentage": 7.504929073689768,
+      "statistical_significance": 0.08218691389293849,
+      "sample_size": 9528,
+      "status": "active"
+    }
+  ],
+  "active_alerts": [],
+  "trend_analysis": [
+    {
+      "algorithm": "doubly_robust",
+      "trends": [
+        "stable",
+        "stable",
+        "stable"
+      ],
+      "dominant_trend": "stable"
+    },
+    {
+      "algorithm": "offset_tree",
+      "trends": [
+        "stable",
+        "stable",
+        "stable"
+      ],
+      "dominant_trend": "stable"
+    },
+    {
+      "algorithm": "linucb",
+      "trends": [
+        "stable",
+        "stable",
+        "stable"
+      ],
+      "dominant_trend": "stable"
+    },
+    {
+      "algorithm": "thompson_sampling",
+      "trends": [
+        "stable",
+        "stable",
+        "stable"
+      ],
+      "dominant_trend": "stable"
+    },
+    {
+      "algorithm": "epsilon_greedy",
+      "trends": [
+        "stable",
+        "stable",
+        "stable"
+      ],
+      "dominant_trend": "stable"
+    }
+  ]
+}

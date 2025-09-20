@@ -68,6 +68,8 @@ class MemoryStorageTool(BaseTool):
     base_collection: str | None = None
     embedding_fn: Callable[[str], list[float]] | None = None
     client: _QdrantLike | None = None
+    # maintain a simple logical->physical mapping to keep return values logical
+    _physical_names: dict[str, str] = {}
 
     def __init__(
         self,
@@ -98,26 +100,77 @@ class MemoryStorageTool(BaseTool):
         self._metrics = get_metrics()
         self._ensure_collection(base_collection)
 
+    @staticmethod
+    def _physical_name(name: str) -> str:
+        """Map logical namespace to a Qdrant-safe physical collection name.
+
+        Qdrant collections typically disallow ':' in names for HTTP APIs,
+        so we mirror VectorStore's convention by replacing ':' with '__'.
+        """
+        return name.replace(":", "__")
+
     def _ensure_collection(self, name: str) -> None:  # pragma: no cover - setup
+        """Ensure the collection exists by creating it if missing.
+
+        Uses lazy imports to support multiple qdrant-client versions and avoid
+        hard failures when the library isn't installed in light test envs.
+        """
+        if self.client is None:
+            raise RuntimeError("Qdrant client not initialised")
+        physical = self._physical_name(name)
         try:
-            if self.client is None:
-                raise RuntimeError("Qdrant client not initialised")
-            self.client.get_collection(name)
-        except Exception:  # pragma: no cover - creation branch
-            if self.client is None:
-                raise
-            if (
-                self.client is None or "VectorParams" not in globals() or "Distance" not in globals()
-            ):  # pragma: no cover
-                return  # silently skip creation when dependencies absent
+            self.client.get_collection(physical)
+            return
+        except Exception:
+            pass
+
+        # Lazy-import model types (modern path first, then legacy)
+        Distance = None
+        VectorParams = None
+        try:
+            from qdrant_client.http.models import Distance as _Distance
+            from qdrant_client.http.models import VectorParams as _VectorParams
+
+            Distance = _Distance
+            VectorParams = _VectorParams
+        except Exception:
             try:
-                if "VectorParams" in globals() and "Distance" in globals() and callable(VectorParams):
-                    try:
-                        vp = VectorParams(size=1, distance=getattr(Distance, "COSINE", "cosine"))  # type: ignore[arg-type]
-                        self.client.recreate_collection(name, vectors_config=vp)
-                    except Exception:  # pragma: no cover - ignore when stub mismatch
-                        return
-            except Exception:  # pragma: no cover - ignore creation issues in fallback
+                from qdrant_client.models import Distance as _Distance
+                from qdrant_client.models import VectorParams as _VectorParams
+
+                Distance = _Distance
+                VectorParams = _VectorParams
+            except Exception:
+                Distance = None
+                VectorParams = None
+
+        if Distance is None or VectorParams is None:
+            # Attempt best-effort create using loose dict when models aren't importable in tests.
+            try:
+                vp_dict = {"size": 1, "distance": getattr(Distance, "COSINE", "Cosine") if Distance else "Cosine"}
+                self.client.recreate_collection(physical, vectors_config=vp_dict)
+                return
+            except Exception:
+                try:
+                    # Only try create_collection if method exists
+                    if hasattr(self.client, "create_collection"):
+                        self.client.create_collection(physical, vectors_config=vp_dict)
+                except Exception:
+                    return
+            return
+
+        try:
+            # Use proper Distance enum value with safe fallback
+            distance_val = Distance.COSINE if hasattr(Distance, "COSINE") else "Cosine"
+            vp_obj = VectorParams(size=1, distance=distance_val)  # type: ignore[arg-type]
+            # Use positional for name to be compatible across client versions
+            self.client.recreate_collection(physical, vectors_config=vp_obj)
+        except Exception:
+            try:
+                # Only try create_collection if method exists
+                if hasattr(self.client, "create_collection"):
+                    self.client.create_collection(physical, vectors_config=vp_obj)
+            except Exception:
                 return
 
     def _get_tenant_collection(self) -> str:
@@ -170,7 +223,8 @@ class MemoryStorageTool(BaseTool):
             if self.client is None:
                 raise RuntimeError("Qdrant client not initialised")
             points: Sequence[Any] = [point]
-            self.client.upsert(collection_name=target, points=points)
+            physical = self._physical_name(target)
+            self.client.upsert(collection_name=physical, points=points)
             self._metrics.counter(
                 "tool_runs_total",
                 labels={
@@ -180,22 +234,27 @@ class MemoryStorageTool(BaseTool):
                 },
             ).inc()
             return StepResult.ok(collection=target, tenant_scoped=tenant_ctx is not None)
-        except Exception as exc:  # pragma: no cover - network errors
+        except Exception as exc:  # pragma: no cover - network/errors
             self._metrics.counter(
                 "tool_runs_total",
                 labels={
                     "tool": "memory_storage",
                     "outcome": "error",
-                    "tenant_scoped": str("tenant_ctx" in locals() and tenant_ctx is not None).lower(),
+                    "tenant_scoped": str(current_tenant() is not None).lower(),
                 },
             ).inc()
-            return StepResult.fail(error=str(exc), collection=target if "target" in locals() else None)
+            return StepResult.fail(str(exc), collection=target, tenant_scoped=current_tenant() is not None)
 
-    # Explicit run wrapper for pipeline compatibility
-    def run(
-        self, text: str, metadata: dict[str, object], collection: str | None = None
-    ) -> StepResult:  # pragma: no cover - thin wrapper
+    def run(self, *args: Any, **kwargs: Any) -> StepResult:  # pragma: no cover - public shim
+        text = str(args[0]) if args else str(kwargs.get("text", ""))
+        if len(args) >= 2 and isinstance(args[1], dict):
+            metadata: Any = args[1]
+        else:
+            metadata = kwargs.get("metadata", {})
+        if not isinstance(metadata, dict):
+            try:
+                metadata = dict(metadata)
+            except Exception:
+                metadata = {}
+        collection = kwargs.get("collection")
         return self._run(text, metadata, collection=collection)
-
-
-__all__ = ["MemoryStorageTool"]

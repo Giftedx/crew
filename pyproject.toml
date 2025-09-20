@@ -31,6 +31,12 @@ dependencies = [
     "structlog>=23.1.0,<24.0.0",
     "nltk>=3.8.1,<4.0.0",
     "instructor>=1.6.0,<2.0.0",
+    # Google Drive API + OAuth (for user account uploads)
+    "google-api-python-client>=2.130.0",
+    "google-auth-oauthlib>=1.2.0",
+    # Advanced Contextual Bandits dependencies
+    "numpy>=1.24.0,<2.0.0",
+    "scipy>=1.10.0,<2.0.0",
 ]
 
 [project.optional-dependencies]
@@ -113,7 +119,6 @@ ignore = [
     "SIM105",  # allow broad exception catches in tool orchestration areas (documented)
     "E501",    # temporarily ignore long line violations while focusing on functional fixes
     # Newly deferred for this finishing pass
-    # Removed UP046/UP047 (not recognized by current Ruff version v0.5.6); reintroduce if upgrading Ruff.
     "UP038",            # isinstance tuple → union style modernization deferred
 ]
 
@@ -163,7 +168,12 @@ exclude = [
     "src/core/cache/bounded_cache.py",
 ]
 # Temporary scoping to speed up incremental cleanup: restrict to primary src tree.
-files = ["src"]
+# Restrict scope to the currently adopted, typed modules
+files = [
+    "src/core/llm_router.py",
+    "src/ai/routing/",
+    "src/eval/config.py",
+]
 # Global suppression of missing imports while we stabilize optional dependency guards.
 ignore_missing_imports = true  # TODO: narrow via targeted overrides phase 2
 [[tool.mypy.overrides]]

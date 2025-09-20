@@ -62,6 +62,17 @@ class Request:
     async def body(self) -> bytes:
         return self._body
 
+    async def json(self):  # pragma: no cover - trivial JSON parser used by endpoints
+        import json as _json
+
+        try:
+            if isinstance(self._body, (bytes, bytearray)):
+                return _json.loads(self._body.decode("utf-8"))
+            # Allow tests to set body as pre-decoded string
+            return _json.loads(str(self._body))
+        except Exception as exc:
+            raise ValueError(f"Invalid JSON: {exc}")
+
 
 class APIRouter:
     def __init__(self, *, prefix: str = "", tags: list[str] | None = None) -> None:

@@ -1,0 +1,81 @@
+{
+  "deployment_summary": {
+    "deployment_id": "deploy_1758001956",
+    "start_time": "2025-09-16T05:52:36.469348+00:00",
+    "duration_minutes": 4.136902883333333,
+    "current_phase": "completed",
+    "final_rollout_percentage": 1.0,
+    "health_status": "healthy",
+    "success": true,
+    "rollback_reason": null
+  },
+  "configuration": {
+    "initial_rollout_percentage": 0.2,
+    "max_rollout_percentage": 1.0,
+    "rollout_increment": 0.3,
+    "rollout_interval_minutes": 1,
+    "target_domains": [
+      "model_routing",
+      "content_analysis",
+      "user_engagement"
+    ],
+    "min_success_rate": 0.95,
+    "max_latency_degradation": 0.2,
+    "min_reward_improvement": -0.05,
+    "health_check_interval_seconds": 10,
+    "health_check_window_minutes": 10,
+    "consecutive_failed_checks": 3,
+    "critical_error_threshold": 0.05,
+    "environment": "production",
+    "deployment_id": "deploy_1758001956"
+  },
+  "domains": {
+    "target": [
+      "model_routing",
+      "content_analysis",
+      "user_engagement"
+    ],
+    "completed": [
+      "model_routing",
+      "content_analysis",
+      "user_engagement"
+    ],
+    "failed": []
+  },
+  "health_metrics": {
+    "model_routing": {
+      "timestamp": "2025-09-16 05:56:44.683020+00:00",
+      "domain": "model_routing",
+      "success_rate": 0.9831830146312713,
+      "average_latency_ms": 492.9575365781784,
+      "average_reward": 0.8293177053451538,
+      "error_rate": 0.016816985368728665,
+      "request_count": 104,
+      "rollout_percentage": 1.0
+    },
+    "content_analysis": {
+      "timestamp": "2025-09-16 05:56:44.683151+00:00",
+      "domain": "content_analysis",
+      "success_rate": 0.9731831486225128,
+      "average_latency_ms": 788.7325944900513,
+      "average_reward": 0.7832454106330871,
+      "error_rate": 0.02681685137748724,
+      "request_count": 104,
+      "rollout_percentage": 1.0
+    },
+    "user_engagement": {
+      "timestamp": "2025-09-16 05:56:44.683194+00:00",
+      "domain": "user_engagement",
+      "success_rate": 0.9931831927299499,
+      "average_latency_ms": 295.7747890949249,
+      "average_reward": 0.8638739454746246,
+      "error_rate": 0.006816807270050074,
+      "request_count": 104,
+      "rollout_percentage": 1.0
+    }
+  },
+  "recommendations": [
+    "Deployment completed successfully - monitor for 24 hours",
+    "Consider increasing rollout increment for faster future deployments"
+  ]
+}

@@ -31,20 +31,26 @@ from core.learning_engine import LearningEngine
 from core.secure_config import get_config
 
 try:
-    from core.settings import get_settings
-except Exception:  # pragma: no cover - fallback when pydantic/settings unavailable
+    # Prefer src.core.settings import path to align with tests that patch via src.core.settings
+    from src.core.settings import get_settings  # type: ignore
+except Exception:
+    try:
+        from core.settings import get_settings  # type: ignore
+    except Exception:  # pragma: no cover - fallback when pydantic/settings unavailable
+        # Create fallback function to avoid redefinition error
+        def _get_settings_fallback() -> Any:  # minimal shim (return object with expected attrs)
+            class _S:  # minimal shim for tests
+                reward_cost_weight = 0.5
+                reward_latency_weight = 0.5
+                reward_latency_ms_window = 2000
+                openrouter_referer = None
+                openrouter_title = None
+                enable_vllm_local = False
+                local_llm_url = None
 
-    def get_settings() -> Any:  # minimal shim (return object with expected attrs)
-        class _S:  # minimal shim for tests
-            reward_cost_weight = 0.5
-            reward_latency_weight = 0.5
-            reward_latency_ms_window = 2000
-            openrouter_referer = None
-            openrouter_title = None
-            enable_vllm_local = False
-            local_llm_url = None
+            return _S()
 
-        return _S()
+        get_settings = _get_settings_fallback  # type: ignore[assignment]
 
 
 from core.flags import enabled  # tenancy strictness flags
@@ -214,9 +220,47 @@ class OpenRouterService:
             if not enabled_sem:
                 raw = (_os.getenv("ENABLE_SEMANTIC_CACHE") or "").lower()
                 enabled_sem = raw in ("1", "true", "yes", "on")
-            self.semantic_cache = _semantic_cache_get() if enabled_sem and _semantic_cache_get else None
+            if enabled_sem and _semantic_cache_get:
+                self.semantic_cache = _semantic_cache_get()
+            else:
+                self.semantic_cache = None
+
+            # Check for shadow mode (separate from production semantic cache)
+            enabled_shadow = bool(getattr(settings, "enable_semantic_cache_shadow", False))
+            if not enabled_shadow:
+                raw_shadow = (_os.getenv("ENABLE_SEMANTIC_CACHE_SHADOW") or "").lower()
+                enabled_shadow = raw_shadow in ("1", "true", "yes", "on")
+
+            # In shadow mode, we may create a semantic cache instance for tracking, but tests expect
+            # semantic_cache to remain None when ENABLE_SEMANTIC_CACHE is disabled. Track shadow mode
+            # via a boolean and access the factory lazily when routing (not stored on the service).
+            self.semantic_cache_shadow_mode = enabled_shadow
+            if enabled_shadow and not enabled_sem and self.semantic_cache is None:
+                # Shadow mode should have an instance for tracking, but not used for responses
+                self.semantic_cache = _semantic_cache_get() if _semantic_cache_get else None
+            # Optional promotion of shadow hits to production usage when similarity exceeds a threshold
+            promote_flag = bool(getattr(settings, "enable_semantic_cache_promotion", False))
+            if not promote_flag:
+                raw_promote = (_os.getenv("ENABLE_SEMANTIC_CACHE_PROMOTION") or "").lower()
+                promote_flag = raw_promote in ("1", "true", "yes", "on")
+            self.semantic_cache_promotion_enabled = promote_flag
+            # Threshold (default 0.9) can be overridden via settings or env
+            thr = getattr(settings, "semantic_cache_promotion_threshold", None)
+            if thr is None:
+                env_thr = _os.getenv("SEMANTIC_CACHE_PROMOTION_THRESHOLD")
+                try:
+                    thr = float(env_thr) if env_thr is not None and env_thr.strip() != "" else 0.9
+                except Exception:
+                    thr = 0.9
+            try:
+                self.semantic_cache_promotion_threshold = float(thr)
+            except Exception:
+                self.semantic_cache_promotion_threshold = 0.9
         except Exception:
             self.semantic_cache = None
+            self.semantic_cache_shadow_mode = False
+            self.semantic_cache_promotion_enabled = False
+            self.semantic_cache_promotion_threshold = 0.9
 
     # --- Tenancy helpers -------------------------------------------------
     @staticmethod
@@ -259,6 +303,25 @@ class OpenRouterService:
             else:
                 base[key] = copy.deepcopy(value)
         return base
+
+    def _update_shadow_hit_ratio(self, labels: dict[str, str], is_hit: bool) -> None:
+        """Update the semantic cache shadow mode hit ratio metric.
+
+        This calculates and updates a running hit ratio for observability.
+        """
+        try:
+            # This is a simplified hit ratio calculation
+            # In a production system, you might want a more sophisticated sliding window
+            # For now, we'll just track the instantaneous ratio via the gauge
+            if is_hit:
+                # For gauge metrics, we could track the ratio over time
+                # This is a basic implementation - in practice you might want to use
+                # a sliding window or more sophisticated ratio calculation
+                metrics.SEMANTIC_CACHE_SHADOW_HIT_RATIO.labels(**labels).set(1.0)
+            else:
+                metrics.SEMANTIC_CACHE_SHADOW_HIT_RATIO.labels(**labels).set(0.0)
+        except Exception:  # pragma: no cover
+            pass
 
     def _choose_model_from_map(self, task_type: str, models_map: dict[str, list[str]]) -> str:
         """Pick a model for a given task type from the provided map.
@@ -493,37 +556,102 @@ class OpenRouterService:
                     sem_res = _holder.get("result")
                     if sem_res is not None:
                         log.debug("semantic_cache_get HIT for model=%s ns=%s", chosen, ns)
-                        result = dict(sem_res)
-                        result["cached"] = True
-                        result["cache_type"] = "semantic"
-                        # Record similarity (if provided) into histogram buckets for observability
-                        try:
-                            sim_val = float(result.get("similarity", 0.0))
-                            # Bucket label keeps low cardinality; refine later if distribution warrants.
-                            if sim_val >= 0.9:
-                                bucket = ">=0.9"
-                            elif sim_val >= 0.75:
-                                bucket = "0.75-0.9"
+
+                        # In shadow mode, optionally promote to production if similarity exceeds threshold
+                        if self.semantic_cache_shadow_mode:
+                            try:
+                                metrics.SEMANTIC_CACHE_SHADOW_HITS.labels(**_labels(), model=chosen).inc()
+                                self._update_shadow_hit_ratio(_labels(), is_hit=True)
+                            except Exception:  # pragma: no cover
+                                pass
+                            # Decide on promotion
+                            try:
+                                sim_val = float(sem_res.get("similarity", 0.0)) if isinstance(sem_res, dict) else 0.0
+                            except Exception:
+                                sim_val = 0.0
+                            promote = bool(
+                                getattr(self, "semantic_cache_promotion_enabled", False)
+                            ) and sim_val >= float(getattr(self, "semantic_cache_promotion_threshold", 0.9))
+                            if promote:
+                                # Use as a real cache hit
+                                result = dict(sem_res) if isinstance(sem_res, dict) else {"response": str(sem_res)}
+                                result["cached"] = True
+                                result["cache_type"] = "semantic"
+                                # Record similarity bucket
+                                try:
+                                    if sim_val >= 0.9:
+                                        bucket = ">=0.9"
+                                    elif sim_val >= 0.75:
+                                        bucket = "0.75-0.9"
+                                    else:
+                                        bucket = "<0.75"
+                                    metrics.SEMANTIC_CACHE_SIMILARITY.labels(**_labels(), bucket=bucket).observe(
+                                        sim_val
+                                    )
+                                except Exception:  # pragma: no cover
+                                    pass
+                                try:
+                                    # Record a promotion from shadow semantic cache into production usage
+                                    # Low-cardinality labels: tenant/workspace from _labels(), cache_name fixed
+                                    metrics.CACHE_PROMOTIONS.labels(**_labels(), cache_name="semantic").inc()
+                                    metrics.LLM_CACHE_HITS.labels(
+                                        **_labels(), model=chosen, provider=provider_family
+                                    ).inc()
+                                    metrics.SEMANTIC_CACHE_PREFETCH_USED.labels(**_labels()).inc()
+                                except Exception:  # pragma: no cover
+                                    pass
+                                return result
                             else:
-                                bucket = "<0.75"
-                            metrics.SEMANTIC_CACHE_SIMILARITY.labels(**_labels(), bucket=bucket).observe(sim_val)
-                        except Exception:  # pragma: no cover - best effort metrics
-                            pass
-                        # Prefetch USED: a prior miss would have issued a prefetch for this prompt/model.
-                        try:
-                            metrics.SEMANTIC_CACHE_PREFETCH_USED.labels(**_labels()).inc()
-                        except Exception:  # pragma: no cover
-                            pass
-                        metrics.LLM_CACHE_HITS.labels(**_labels(), model=chosen, provider=provider_family).inc()
-                        return result
+                                log.debug(
+                                    "semantic_cache SHADOW HIT (no promotion) tracked for model=%s ns=%s sim=%.3f",
+                                    chosen,
+                                    ns,
+                                    sim_val,
+                                )
+                        else:
+                            # Production mode - return the cached result
+                            result = dict(sem_res)
+                            result["cached"] = True
+                            result["cache_type"] = "semantic"
+                            # Record similarity (if provided) into histogram buckets for observability
+                            try:
+                                sim_val = float(result.get("similarity", 0.0))
+                                # Bucket label keeps low cardinality; refine later if distribution warrants.
+                                if sim_val >= 0.9:
+                                    bucket = ">=0.9"
+                                elif sim_val >= 0.75:
+                                    bucket = "0.75-0.9"
+                                else:
+                                    bucket = "<0.75"
+                                metrics.SEMANTIC_CACHE_SIMILARITY.labels(**_labels(), bucket=bucket).observe(sim_val)
+                            except Exception:  # pragma: no cover - best effort metrics
+                                pass
+                            # Prefetch USED: a prior miss would have issued a prefetch for this prompt/model.
+                            try:
+                                metrics.SEMANTIC_CACHE_PREFETCH_USED.labels(**_labels()).inc()
+                            except Exception:  # pragma: no cover
+                                pass
+                            metrics.LLM_CACHE_HITS.labels(**_labels(), model=chosen, provider=provider_family).inc()
+                            return result
                     else:
                         log.debug("semantic_cache_get MISS for model=%s ns=%s", chosen, ns)
-                        try:
-                            metrics.LLM_CACHE_MISSES.labels(**_labels(), model=chosen, provider=provider_family).inc()
-                            # Miss triggers a prefetch issuance (we will store response post-call via set())
-                            metrics.SEMANTIC_CACHE_PREFETCH_ISSUED.labels(**_labels()).inc()
-                        except Exception:
-                            pass
+
+                        # Track miss in shadow mode or production
+                        if self.semantic_cache_shadow_mode:
+                            try:
+                                metrics.SEMANTIC_CACHE_SHADOW_MISSES.labels(**_labels(), model=chosen).inc()
+                                self._update_shadow_hit_ratio(_labels(), is_hit=False)
+                            except Exception:
+                                pass
+                        else:
+                            try:
+                                metrics.LLM_CACHE_MISSES.labels(
+                                    **_labels(), model=chosen, provider=provider_family
+                                ).inc()
+                                # Miss triggers a prefetch issuance (we will store response post-call via set())
+                                metrics.SEMANTIC_CACHE_PREFETCH_ISSUED.labels(**_labels()).inc()
+                            except Exception:
+                                pass
             except Exception:
                 # Conservative: ignore semantic cache errors
                 pass
@@ -862,6 +990,27 @@ class OpenRouterService:
                 },
                 cost=projected_cost,
             )
+            # Persist semantic cache in shadow mode or production mode
+            if self.semantic_cache is not None:
+                try:
+                    import asyncio as _asyncio
+                    import threading as _threading
+
+                    sc = self.semantic_cache
+
+                    def _runner_set() -> None:
+                        try:
+                            if sc is not None:
+                                _asyncio.run(sc.set(prompt, chosen, result, namespace=ns))
+                        except Exception:
+                            pass
+
+                    t_set = _threading.Thread(target=_runner_set, daemon=True)
+                    t_set.start()
+                    t_set.join()
+                    log.debug("semantic_cache_set completed for model=%s ns=%s", chosen, ns)
+                except Exception:
+                    pass
             if self.cache and cache_key:
                 self.cache.set(cache_key, result)
             result["cached"] = False

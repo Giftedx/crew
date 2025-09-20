@@ -31,7 +31,7 @@ class TestClient:
         self.request = self._request
         # Simple fixed window limiter state (shim only). Real FastAPI uses middleware.
         self._rl_reset = 0.0
-        self._rl_remaining = None  # type: ignore[assignment]
+        self._rl_remaining = None
         try:
             import os as _os
 
@@ -135,10 +135,10 @@ class TestClient:
                 now = _t.monotonic()
                 if now >= getattr(self, "_rl_reset", 0.0):
                     self._rl_reset = now + 1.0
-                    self._rl_remaining = self._rl_burst  # type: ignore[attr-defined]
+                    self._rl_remaining = self._rl_burst
                 if self._rl_remaining <= 0:  # type: ignore[operator]
                     return _Resp(429, b"Rate limit exceeded")
-                self._rl_remaining = (self._rl_remaining or 0) - 1  # type: ignore[assignment]
+                self._rl_remaining = (self._rl_remaining or 0) - 1
         # Populate query params mapping for middleware tests if query exists
         if raw_query:
             query_items: dict[str, str] = {}
@@ -236,6 +236,8 @@ class TestClient:
         except Exception:
             pass
         if isinstance(result, dict):  # simple JSON dict contract
+            return _Resp(200, json_obj=result)
+        if isinstance(result, list):  # support JSON arrays (e.g., JSON-RPC batch responses)
             return _Resp(200, json_obj=result)
         # Allow simple objects with 'url'/'filename' attributes (rehydrate) to map to dict
         if hasattr(result, "url") and hasattr(result, "filename"):

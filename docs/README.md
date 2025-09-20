@@ -12,6 +12,7 @@
 - Plugins: `docs/plugins.md`, `docs/plugins_testing.md`, `docs/marketplace.md`
 - Reinforcement Learning: `docs/rl_overview.md`
 - Memory & KG: `docs/memory.md`, `docs/kg.md`, `docs/kg_examples.md`
+- Autonomous video follow/backfill: `docs/autonomous_video_follow.md`
 - History Archive: `docs/history/`
 
 Tip: To run code examples from docs, add the repository `src/` to `PYTHONPATH`:

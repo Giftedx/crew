@@ -1,0 +1,327 @@
+{
+    "monitoring_config": {
+        "check_interval": 60,
+        "alert_thresholds": [
+            {
+                "metric_name": "avg_reward",
+                "min_value": 0.5,
+                "duration_seconds": 300,
+                "severity": "warning"
+            },
+            {
+                "metric_name": "avg_reward",
+                "min_value": 0.3,
+                "duration_seconds": 180,
+                "severity": "critical"
+            },
+            {
+                "metric_name": "decision_latency_ms",
+                "max_value": 100,
+                "duration_seconds": 300,
+                "severity": "warning"
+            },
+            {
+                "metric_name": "decision_latency_ms",
+                "max_value": 200,
+                "duration_seconds": 180,
+                "severity": "critical"
+            },
+            {
+                "metric_name": "error_rate",
+                "max_value": 0.05,
+                "duration_seconds": 180,
+                "severity": "warning"
+            },
+            {
+                "metric_name": "error_rate",
+                "max_value": 0.1,
+                "duration_seconds": 120,
+                "severity": "critical"
+            },
+            {
+                "metric_name": "memory_usage_mb",
+                "max_value": 400,
+                "duration_seconds": 600,
+                "severity": "warning"
+            },
+            {
+                "metric_name": "memory_usage_mb",
+                "max_value": 800,
+                "duration_seconds": 300,
+                "severity": "critical"
+            }
+        ],
+        "enable_dashboard": true,
+        "enable_alerts": true,
+        "export_metrics": true,
+        "metrics_export_path": "/tmp/bandits_metrics.json"
+    },
+    "advanced_bandits_config": {
+        "system": {
+            "context_dimension": 8,
+            "num_actions": 4,
+            "default_algorithm": "doubly_robust",
+            "enable_monitoring": true,
+            "log_level": "INFO"
+        },
+        "algorithms": {
+            "doubly_robust": {
+                "alpha": 1.5,
+                "learning_rate": 0.1,
+                "regularization": 0.01,
+                "confidence_threshold": 0.2
+            },
+            "offset_tree": {
+                "max_tree_depth": 4,
+                "min_samples": 20,
+                "split_criteria": "mse",
+                "confidence_threshold": 0.2
+            }
+        },
+        "domains": {
+            "model_routing": {
+                "priority_weight": 0.4,
+                "complexity_weight": 0.3,
+                "speed_weight": 0.3,
+                "enable_a_b_testing": true,
+                "exploration_rate": 0.1
+            },
+            "content_analysis": {
+                "accuracy_weight": 0.5,
+                "depth_weight": 0.3,
+                "efficiency_weight": 0.2,
+                "enable_a_b_testing": true,
+                "exploration_rate": 0.15
+            },
+            "user_engagement": {
+                "personalization_weight": 0.4,
+                "response_quality_weight": 0.4,
+                "speed_weight": 0.2,
+                "enable_a_b_testing": true,
+                "exploration_rate": 0.2
+            }
+        },
+        "models": {
+            "model_mapping": {
+                "0": "gpt-4-turbo",
+                "1": "claude-3.5-sonnet",
+                "2": "gemini-pro",
+                "3": "llama-3.1-70b"
+            },
+            "model_configs": {
+                "gpt-4-turbo": {
+                    "max_tokens": 4096,
+                    "temperature": 0.7,
+                    "cost_per_1k_tokens": 0.03,
+                    "avg_latency_ms": 2000,
+                    "quality_score": 0.95
+                },
+                "claude-3.5-sonnet": {
+                    "max_tokens": 4096,
+                    "temperature": 0.7,
+                    "cost_per_1k_tokens": 0.015,
+                    "avg_latency_ms": 1500,
+                    "quality_score": 0.92
+                },
+                "gemini-pro": {
+                    "max_tokens": 2048,
+                    "temperature": 0.7,
+                    "cost_per_1k_tokens": 0.0025,
+                    "avg_latency_ms": 1000,
+                    "quality_score": 0.88
+                },
+                "llama-3.1-70b": {
+                    "max_tokens": 4096,
+                    "temperature": 0.7,
+                    "cost_per_1k_tokens": 0.008,
+                    "avg_latency_ms": 3000,
+                    "quality_score": 0.85
+                }
+            }
+        },
+        "performance": {
+            "max_points_per_metric": 1000,
+            "metrics_retention_hours": 24,
+            "enable_profiling": false,
+            "cache_size": 10000,
+            "batch_size": 100
+        },
+        "feature_extraction": {
+            "user_features": [
+                "user_tier",
+                "engagement_score",
+                "preference_vector",
+                "historical_satisfaction"
+            ],
+            "context_features": [
+                "message_complexity",
+                "task_priority",
+                "time_of_day",
+                "channel_type",
+                "message_length",
+                "sentiment"
+            ],
+            "system_features": [
+                "current_load",
+                "model_availability",
+                "cost_budget",
+                "quality_threshold"
+            ]
+        }
+    },
+    "deployment": {
+        "environment": "production",
+        "scaling": {
+            "min_instances": 2,
+            "max_instances": 10,
+            "target_cpu_percent": 70,
+            "scale_up_cooldown": 300,
+            "scale_down_cooldown": 600
+        },
+        "health_checks": {
+            "readiness_probe": {
+                "path": "/readiness",
+                "interval_seconds": 10,
+                "timeout_seconds": 5,
+                "failure_threshold": 3
+            },
+            "liveness_probe": {
+                "path": "/health",
+                "interval_seconds": 30,
+                "timeout_seconds": 10,
+                "failure_threshold": 3
+            }
+        },
+        "resources": {
+            "cpu_request": "500m",
+            "cpu_limit": "2000m",
+            "memory_request": "1Gi",
+            "memory_limit": "4Gi"
+        },
+        "persistence": {
+            "enable_state_persistence": true,
+            "backup_interval_hours": 6,
+            "retention_days": 30,
+            "storage_class": "fast-ssd"
+        }
+    },
+    "security": {
+        "rate_limiting": {
+            "requests_per_minute": 100,
+            "burst_size": 200,
+            "per_user_limit": 60
+        },
+        "authentication": {
+            "require_api_key": true,
+            "jwt_secret_key": "${JWT_SECRET}",
+            "token_expiry_hours": 24
+        },
+        "data_protection": {
+            "encrypt_user_data": true,
+            "anonymize_logs": true,
+            "data_retention_days": 90,
+            "enable_audit_logging": true
+        }
+    },
+    "observability": {
+        "logging": {
+            "level": "INFO",
+            "format": "json",
+            "max_file_size": "100MB",
+            "backup_count": 5,
+            "structured_logging": true
+        },
+        "metrics": {
+            "enable_prometheus": true,
+            "metrics_port": 8090,
+            "collection_interval": 30,
+            "retention_days": 14
+        },
+        "tracing": {
+            "enable_opentelemetry": true,
+            "trace_sampling_rate": 0.1,
+            "jaeger_endpoint": "${JAEGER_ENDPOINT}"
+        },
+        "alerting": {
+            "webhook_url": "${ALERT_WEBHOOK_URL}",
+            "slack_channel": "#ai-alerts",
+            "email_recipients": [
+                "ops@company.com"
+            ],
+            "alert_cooldown_minutes": 15
+        }
+    },
+    "integration": {
+        "discord": {
+            "bot_token": "${DISCORD_BOT_TOKEN}",
+            "command_prefix": "!",
+            "max_message_length": 2000,
+            "typing_delay": true,
+            "embed_responses": true
+        },
+        "api": {
+            "host": "0.0.0.0",
+            "port": 8000,
+            "enable_cors": true,
+            "cors_origins": [
+                "*"
+            ],
+            "api_version": "v1",
+            "enable_docs": true
+        },
+        "external_apis": {
+            "openai": {
+                "api_key": "${OPENAI_API_KEY}",
+                "base_url": "https://api.openai.com/v1",
+                "timeout_seconds": 30,
+                "max_retries": 3
+            },
+            "anthropic": {
+                "api_key": "${ANTHROPIC_API_KEY}",
+                "base_url": "https://api.anthropic.com",
+                "timeout_seconds": 30,
+                "max_retries": 3
+            },
+            "google": {
+                "api_key": "${GOOGLE_API_KEY}",
+                "timeout_seconds": 30,
+                "max_retries": 3
+            },
+            "openrouter": {
+                "api_key": "${OPENROUTER_API_KEY}",
+                "base_url": "https://openrouter.ai/api/v1",
+                "timeout_seconds": 45,
+                "max_retries": 3
+            }
+        }
+    },
+    "feature_flags": {
+        "ENABLE_ADVANCED_BANDITS": true,
+        "ENABLE_A_B_TESTING": true,
+        "ENABLE_PERFORMANCE_MONITORING": true,
+        "ENABLE_AUTO_SCALING": true,
+        "ENABLE_CACHING": true,
+        "ENABLE_RATE_LIMITING": true,
+        "ENABLE_DETAILED_LOGGING": true,
+        "ENABLE_EXPERIMENTAL_FEATURES": false,
+        "ENABLE_DEBUG_MODE": false
+    },
+    "backup_and_recovery": {
+        "backup_schedule": "0 2 * * *",
+        "backup_retention_days": 30,
+        "enable_point_in_time_recovery": true,
+        "backup_storage_location": "s3://backups/advanced-bandits/",
+        "encryption_enabled": true
+    },
+    "compliance": {
+        "gdpr_enabled": true,
+        "data_anonymization": true,
+        "audit_trail": true,
+        "data_export_format": "json",
+        "retention_policy": {
+            "user_data": "2_years",
+            "performance_metrics": "1_year",
+            "audit_logs": "7_years"
+        }
+    }
+}

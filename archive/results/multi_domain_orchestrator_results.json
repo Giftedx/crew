@@ -1,0 +1,343 @@
+{
+  "demo_results": [
+    {
+      "scenario": "High Priority Enterprise Request",
+      "plan": {
+        "session_id": "sess_hp_001",
+        "global_context": {
+          "user_id": "enterprise_user_001",
+          "session_id": "sess_hp_001",
+          "timestamp": "2025-09-16 05:50:51.258259+00:00",
+          "request_priority": 0.9,
+          "resource_budget": 1.0,
+          "latency_requirement": 1000,
+          "quality_requirement": 0.9,
+          "cost_sensitivity": 0.3,
+          "previous_decisions": {},
+          "performance_history": {},
+          "user_satisfaction_trend": 0.85,
+          "user_tier": "enterprise",
+          "content_complexity": 0.8,
+          "interaction_count": 15,
+          "time_of_day": 0.5
+        },
+        "domain_decisions": {
+          "model_routing": {
+            "domain": "model_routing",
+            "decision": "gpt-4-turbo",
+            "confidence": 0.6675,
+            "expected_latency": 800,
+            "expected_quality": 0.9,
+            "expected_cost": 20,
+            "reasoning": "Selected based on quality=0.90, latency=800ms, cost=20, score=1.335",
+            "timestamp": "2025-09-16 05:50:51.258980+00:00"
+          },
+          "content_analysis": {
+            "domain": "content_analysis",
+            "decision": "specialized_tech",
+            "confidence": 1.0,
+            "expected_latency": 1000,
+            "expected_quality": 0.9,
+            "expected_cost": 8.0,
+            "reasoning": "Tree-based selection: complexity=0.80, threshold=0.80",
+            "timestamp": "2025-09-16 05:50:51.258996+00:00"
+          },
+          "user_engagement": {
+            "domain": "user_engagement",
+            "decision": "detailed_analysis",
+            "confidence": 1.0,
+            "expected_latency": 800,
+            "expected_quality": 0.85,
+            "expected_cost": 2.0,
+            "reasoning": "Engagement optimization: satisfaction_trend=0.85, tier=enterprise",
+            "timestamp": "2025-09-16 05:50:51.259008+00:00"
+          }
+        },
+        "execution_order": [
+          "model_routing",
+          "content_analysis",
+          "user_engagement"
+        ],
+        "total_expected_latency": 2600,
+        "total_expected_cost": 30.0,
+        "overall_quality_score": 0.8833333333333333,
+        "optimization_strategy": "quality_focused",
+        "timestamp": "2025-09-16 05:50:51.259015+00:00"
+      },
+      "execution": {
+        "session_id": "sess_hp_001",
+        "execution_results": {
+          "model_routing": {
+            "decision": "gpt-4-turbo",
+            "latency_ms": 859.17822265625,
+            "cost": 18.073444366455078,
+            "quality": 0.8759180784225464,
+            "reward": 0.784265921497345,
+            "success": true
+          },
+          "content_analysis": {
+            "decision": "specialized_tech",
+            "latency_ms": 1069.375244140625,
+            "cost": 7.262004852294922,
+            "quality": 0.87693772315979,
+            "reward": 0.7534501195907592,
+            "success": true
+          },
+          "user_engagement": {
+            "decision": "detailed_analysis",
+            "latency_ms": 879.61865234375,
+            "cost": 1.8236959457397461,
+            "quality": 0.8279620170593261,
+            "reward": 0.7476306140899658,
+            "success": true
+          }
+        },
+        "actual_metrics": {
+          "total_latency_ms": 2808.172119140625,
+          "total_cost": 27.159145164489747,
+          "average_quality": 0.8602726062138876,
+          "overall_satisfaction": 0.9462998668352764,
+          "execution_time_ms": 30.619144439697266
+        },
+        "success": true
+      }
+    },
+    {
+      "scenario": "Cost-Sensitive Free User",
+      "plan": {
+        "session_id": "sess_cs_001",
+        "global_context": {
+          "user_id": "free_user_001",
+          "session_id": "sess_cs_001",
+          "timestamp": "2025-09-16 05:50:51.258319+00:00",
+          "request_priority": 0.3,
+          "resource_budget": 0.5,
+          "latency_requirement": 800,
+          "quality_requirement": 0.6,
+          "cost_sensitivity": 0.9,
+          "previous_decisions": {},
+          "performance_history": {},
+          "user_satisfaction_trend": 0.65,
+          "user_tier": "free",
+          "content_complexity": 0.3,
+          "interaction_count": 3,
+          "time_of_day": 0.7
+        },
+        "domain_decisions": {
+          "model_routing": {
+            "domain": "model_routing",
+            "decision": "gpt-3.5-turbo",
+            "confidence": 0.5376666666666666,
+            "expected_latency": 300,
+            "expected_quality": 0.75,
+            "expected_cost": 5,
+            "reasoning": "Selected based on quality=0.75, latency=300ms, cost=5, score=1.075",
+            "timestamp": "2025-09-16 05:50:51.390842+00:00"
+          },
+          "content_analysis": {
+            "domain": "content_analysis",
+            "decision": "advanced_nlp",
+            "confidence": 0.7,
+            "expected_latency": 800,
+            "expected_quality": 0.85,
+            "expected_cost": 8.0,
+            "reasoning": "Tree-based selection: complexity=0.30, threshold=0.60",
+            "timestamp": "2025-09-16 05:50:51.390858+00:00"
+          },
+          "user_engagement": {
+            "domain": "user_engagement",
+            "decision": "detailed_analysis",
+            "confidence": 0.9299999999999999,
+            "expected_latency": 800,
+            "expected_quality": 0.85,
+            "expected_cost": 2.0,
+            "reasoning": "Engagement optimization: satisfaction_trend=0.65, tier=free",
+            "timestamp": "2025-09-16 05:50:51.390873+00:00"
+          }
+        },
+        "execution_order": [
+          "model_routing",
+          "content_analysis",
+          "user_engagement"
+        ],
+        "total_expected_latency": 1900,
+        "total_expected_cost": 15.0,
+        "overall_quality_score": 0.8166666666666668,
+        "optimization_strategy": "cost_optimized",
+        "timestamp": "2025-09-16 05:50:51.390883+00:00"
+      },
+      "execution": {
+        "session_id": "sess_cs_001",
+        "execution_results": {
+          "model_routing": {
+            "decision": "gpt-3.5-turbo",
+            "latency_ms": 391.24560546875,
+            "cost": 4.782494068145752,
+            "quality": 0.7391247510910034,
+            "reward": 0.7587004849433899,
+            "success": true
+          },
+          "content_analysis": {
+            "decision": "advanced_nlp",
+            "latency_ms": 801.441162109375,
+            "cost": 7.684613800048829,
+            "quality": 0.8401442050933837,
+            "reward": 0.7678847692489623,
+            "success": true
+          },
+          "user_engagement": {
+            "decision": "detailed_analysis",
+            "latency_ms": 811.626953125,
+            "cost": 1.9293022155761719,
+            "quality": 0.8411628007888794,
+            "reward": 0.7670699175834655,
+            "success": true
+          }
+        },
+        "actual_metrics": {
+          "total_latency_ms": 2004.313720703125,
+          "total_cost": 14.396410083770753,
+          "average_quality": 0.8068105856577555,
+          "overall_satisfaction": 0.8874916442235312,
+          "execution_time_ms": 30.5788516998291
+        },
+        "success": true
+      }
+    },
+    {
+      "scenario": "Speed-Critical Real-time Request",
+      "plan": {
+        "session_id": "sess_rt_001",
+        "global_context": {
+          "user_id": "premium_user_001",
+          "session_id": "sess_rt_001",
+          "timestamp": "2025-09-16 05:50:51.258324+00:00",
+          "request_priority": 0.7,
+          "resource_budget": 0.8,
+          "latency_requirement": 300,
+          "quality_requirement": 0.7,
+          "cost_sensitivity": 0.5,
+          "previous_decisions": {},
+          "performance_history": {},
+          "user_satisfaction_trend": 0.75,
+          "user_tier": "premium",
+          "content_complexity": 0.5,
+          "interaction_count": 8,
+          "time_of_day": 0.3
+        },
+        "domain_decisions": {
+          "model_routing": {
+            "domain": "model_routing",
+            "decision": "gpt-3.5-turbo",
+            "confidence": 0.4233333333333333,
+            "expected_latency": 300,
+            "expected_quality": 0.75,
+            "expected_cost": 5,
+            "reasoning": "Selected based on quality=0.75, latency=300ms, cost=5, score=0.847",
+            "timestamp": "2025-09-16 05:50:51.522622+00:00"
+          },
+          "content_analysis": {
+            "domain": "content_analysis",
+            "decision": "advanced_nlp",
+            "confidence": 0.9,
+            "expected_latency": 800,
+            "expected_quality": 0.85,
+            "expected_cost": 8.0,
+            "reasoning": "Tree-based selection: complexity=0.50, threshold=0.60",
+            "timestamp": "2025-09-16 05:50:51.522637+00:00"
+          },
+          "user_engagement": {
+            "domain": "user_engagement",
+            "decision": "interactive_followup",
+            "confidence": 0.8600000000000001,
+            "expected_latency": 400,
+            "expected_quality": 0.8,
+            "expected_cost": 2.0,
+            "reasoning": "Engagement optimization: satisfaction_trend=0.75, tier=premium",
+            "timestamp": "2025-09-16 05:50:51.522648+00:00"
+          }
+        },
+        "execution_order": [
+          "model_routing",
+          "content_analysis",
+          "user_engagement"
+        ],
+        "total_expected_latency": 1200.0,
+        "total_expected_cost": 15.0,
+        "overall_quality_score": 0.7999999999999999,
+        "optimization_strategy": "speed_focused",
+        "timestamp": "2025-09-16 05:50:51.522657+00:00"
+      },
+      "execution": {
+        "session_id": "sess_rt_001",
+        "execution_results": {
+          "model_routing": {
+            "decision": "gpt-3.5-turbo",
+            "latency_ms": 322.845947265625,
+            "cost": 5.045694351196289,
+            "quality": 0.7522847652435303,
+            "reward": 0.7781724435806274,
+            "success": true
+          },
+          "content_analysis": {
+            "decision": "advanced_nlp",
+            "latency_ms": 833.07421875,
+            "cost": 8.10583953857422,
+            "quality": 0.853307557106018,
+            "reward": 0.7723541571617125,
+            "success": true
+          },
+          "user_engagement": {
+            "decision": "interactive_followup",
+            "latency_ms": 443.281982421875,
+            "cost": 2.0346261978149416,
+            "quality": 0.8043282985687257,
+            "reward": 0.7965375116348267,
+            "success": true
+          }
+        },
+        "actual_metrics": {
+          "total_latency_ms": 1599.2021484375,
+          "total_cost": 15.18616008758545,
+          "average_quality": 0.8033068736394245,
+          "overall_satisfaction": 0.8836375610033671,
+          "execution_time_ms": 30.588150024414062
+        },
+        "success": true
+      }
+    }
+  ],
+  "performance_summary": {
+    "timestamp": "2025-09-16T05:50:51.653950+00:00",
+    "global_stats": {
+      "total_requests": 3,
+      "avg_satisfaction": 0.9058096906873917,
+      "avg_latency": 2137.2293294270835,
+      "success_rate": 1.0
+    },
+    "domain_performance": {
+      "model_routing": {
+        "avg_reward": 0.7737129500071207,
+        "avg_latency": 524.4232584635416,
+        "decision_count": 3,
+        "success_rate": 1.0
+      },
+      "content_analysis": {
+        "avg_reward": 0.7645630153338114,
+        "avg_latency": 901.296875,
+        "decision_count": 3,
+        "success_rate": 1.0
+      },
+      "user_engagement": {
+        "avg_reward": 0.7704126811027527,
+        "avg_latency": 711.5091959635416,
+        "decision_count": 3,
+        "success_rate": 1.0
+      }
+    },
+    "recommendations": [
+      "High average latency detected - consider speed optimizations"
+    ]
+  },
+  "timestamp": "2025-09-16T05:50:51.654811+00:00"
+}

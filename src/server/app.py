@@ -120,7 +120,7 @@ def _add_api_cache_middleware(app: FastAPI, settings: Settings) -> None:
     # Create middleware instance
     middleware_instance = APICacheMiddleware(
         cache_ttl=getattr(settings, "cache_ttl_api", 300),
-        exclude_paths={"/health", "/metrics"},
+        exclude_paths={"/health", "/metrics", "/pilot/run"},
         exclude_methods={"POST", "PUT", "DELETE", "PATCH"},
         include_headers=["Authorization", "X-API-Key"],
     )
@@ -144,6 +144,20 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         except Exception as exc:
             logging.debug(f"Failed to include archive API router: {exc}")
     app.include_router(alert_router)
+
+    # Optional: A2A JSON-RPC adapter (disabled by default; enable via env)
+    try:
+        import os as _os
+
+        if _os.getenv("ENABLE_A2A_API", "0").lower() in ("1", "true", "yes", "on"):
+            try:
+                from server.a2a_router import router as a2a_router  # type: ignore
+
+                app.include_router(a2a_router)
+            except Exception as exc:  # pragma: no cover - optional path
+                logging.debug("a2a router wiring skipped: %s", exc)
+    except Exception:  # pragma: no cover - environment access issues
+        pass
 
     # Metrics & tracing (ensure metrics route can be registered before rate limiting so it is always observable)
     _add_metrics_middleware(app, settings)
@@ -182,6 +196,89 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     # Install rate limit middleware after metrics route so it can still exclude it based on path.
     add_rate_limit_middleware(app)
+
+    # Optional: LangGraph pilot API endpoint for quick orchestration demo
+    try:
+        import os as _os
+
+        if _os.getenv("ENABLE_LANGGRAPH_PILOT_API", "0").lower() in ("1", "true", "yes", "on"):
+            try:
+                from graphs.langgraph_pilot import run_ingest_analysis_pilot  # type: ignore
+
+                @app.get("/pilot/run")
+                def _pilot_run(request: Request) -> dict:
+                    """Trigger the pilot with minimal stub functions.
+
+                    Query params 'tenant' and 'workspace' are optional and default
+                    to 'default'/'main' when not supplied.
+                    """
+
+                    def _ingest(job: dict) -> dict:
+                        """Simulate ingest step returning logical vector namespace.
+
+                        Uses VectorStore.namespace for consistency with memory layer so that
+                        downstream components (if wired later) can rely on identical formatting.
+                        """
+                        t = job.get("tenant", "default")
+                        w = job.get("workspace", "main")
+                        # Defensive: legacy/test shim may have injected a Request object if
+                        # handler signature misaligned; coerce non-string values to defaults.
+                        if not isinstance(t, str):
+                            t = "default"
+                        if not isinstance(w, str):
+                            w = "main"
+                        try:
+                            from memory.vector_store import (
+                                VectorStore,  # local import to avoid heavy deps at import time
+                            )
+
+                            ns = VectorStore.namespace(t, w, "pilot")
+                        except Exception:  # pragma: no cover - fallback if import fails
+                            ns = f"{t}:{w}:pilot"
+                        return {"chunks": 2, "namespace": ns}
+
+                    def _analyze(ctx: dict) -> dict:
+                        n = int(ctx.get("chunks", 0))
+                        return {"insights": n * 2}
+
+                    def _segment(ctx: dict) -> dict:
+                        # Derive a fake chunks detail to simulate segmentation
+                        n = int(ctx.get("chunks", 0))
+                        return {"segments": n * 4}
+
+                    def _embed(ctx: dict) -> dict:
+                        # Simulate embedding count derived from segments if present
+                        segs = int(ctx.get("segments", 0))
+                        return {"embeddings": max(segs, 1)}
+
+                    # Extract tenant/workspace from query params since the lightweight test shim
+                    # does not inject query arguments as named function parameters.
+                    q = getattr(request, "query_params", {}) if request is not None else {}
+                    tenant_val = q.get("tenant", "default") if isinstance(q, dict) else "default"
+                    workspace_val = q.get("workspace", "main") if isinstance(q, dict) else "main"
+                    # Optional feature toggles derived from query for demo purposes
+                    enable_segment = (
+                        q.get("enable_segment") in ("1", "true", "yes", "on") if isinstance(q, dict) else False
+                    )
+                    enable_embed = q.get("enable_embed") in ("1", "true", "yes", "on") if isinstance(q, dict) else False
+                    if not isinstance(tenant_val, str):  # defensive
+                        tenant_val = "default"
+                    if not isinstance(workspace_val, str):
+                        workspace_val = "main"
+                    job = {"tenant": tenant_val, "workspace": workspace_val}
+                    seg_fn = _segment if enable_segment else None
+                    emb_fn = _embed if enable_embed else None
+                    t0 = time.perf_counter()
+                    out = run_ingest_analysis_pilot(job, _ingest, _analyze, segment_fn=seg_fn, embed_fn=emb_fn)
+                    try:
+                        out["duration_seconds"] = max(0.0, time.perf_counter() - t0)
+                    except Exception:
+                        pass
+                    return out
+            except Exception as exc:  # pragma: no cover - optional path
+                logging.debug("pilot api wiring skipped: %s", exc)
+    except Exception:  # pragma: no cover - environment access issues
+        pass
 
     @app.get("/health")
     def _health() -> dict[str, str]:

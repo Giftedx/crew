@@ -1,0 +1,844 @@
+{
+  "execution_start": "2025-09-16T03:44:19.934662",
+  "deployment_strategy": {
+    "recommended_strategy": "canary",
+    "rationale": "System ready for advanced canary deployment with gradual traffic shifting",
+    "risk_level": "low",
+    "rollback_time": "seconds",
+    "complexity": "high",
+    "implementation_steps": [
+      "1. Deploy new version to small percentage of infrastructure",
+      "2. Route 5% of traffic to canary deployment",
+      "3. Monitor key performance indicators and error rates",
+      "4. Gradually increase traffic percentage (10%, 25%, 50%)",
+      "5. Validate performance at each stage",
+      "6. Complete rollout once canary proves stable"
+    ],
+    "monitoring_requirements": [
+      "Application performance metrics (latency, throughput, errors)",
+      "Infrastructure metrics (CPU, memory, disk, network)",
+      "Business metrics (user engagement, conversion rates)",
+      "Error rate and exception monitoring",
+      "Log aggregation and analysis",
+      "Traffic splitting accuracy monitoring",
+      "Canary vs. baseline performance comparison",
+      "Gradual rollout progress tracking"
+    ],
+    "rollback_procedures": [
+      "1. Stop traffic routing to canary deployment",
+      "2. Route all traffic back to stable baseline",
+      "3. Terminate canary infrastructure",
+      "4. Analyze failure data and implement fixes"
+    ]
+  },
+  "phases_executed": [
+    {
+      "phase": "1_preparation",
+      "start_time": "2025-09-16T03:44:19.934730",
+      "activities_completed": [
+        "Finalize production environment configuration",
+        "Complete security and performance testing",
+        "Prepare monitoring and alerting systems",
+        "Train operations team on new deployment",
+        "Create detailed rollback procedures",
+        "Schedule deployment window and communication"
+      ],
+      "health_checks": {
+        "infrastructure_healthy": true,
+        "security_scan_passed": true,
+        "performance_acceptable": true,
+        "criterion_3": true
+      },
+      "metrics_collected": [
+        {
+          "timestamp": "2025-09-16T03:44:20.440395",
+          "performance_score": 0.8808422178476067,
+          "ai_routing_effectiveness": 0.9179447582732355,
+          "user_satisfaction": 0.9340650049903838,
+          "error_rate": 0.0002682660447972755,
+          "response_time_95th": 423.85726034916115,
+          "throughput": 1121.8157904193502,
+          "uptime": 0.9984984691490139,
+          "resource_utilization": {
+            "cpu": 0.48423526680119544,
+            "memory": 0.7042941701553982,
+            "disk": 0.37098326098031253,
+            "network": 0.385707681085086
+          },
+          "business_metrics": {
+            "user_engagement": 0.9023148972869256,
+            "feature_adoption": 0.7269560855052524,
+            "conversion_rate": 0.7797150893135244
+          }
+        },
+        {
+          "timestamp": "2025-09-16T03:44:22.473588",
+          "performance_score": 0.8929008355012552,
+          "ai_routing_effectiveness": 0.9139046027704316,
+          "user_satisfaction": 0.897269633910155,
+          "error_rate": 0.0019958902091293525,
+          "response_time_95th": 257.8863015363247,
+          "throughput": 1044.5462557679696,
+          "uptime": 0.999451743478131,
+          "resource_utilization": {
+            "cpu": 0.45732575648202267,
+            "memory": 0.7237518044530407,
+            "disk": 0.3154060110158784,
+            "network": 0.4317678195392531
+          },
+          "business_metrics": {
+            "user_engagement": 0.9466499681519103,
+            "feature_adoption": 0.8787856856468373,
+            "conversion_rate": 0.8093757808231347
+          }
+        },
+        {
+          "timestamp": "2025-09-16T03:44:22.980171",
+          "performance_score": 0.811307289750471,
+          "ai_routing_effectiveness": 0.9057314847139603,
+          "user_satisfaction": 0.8252633774611826,
+          "error_rate": 0.0007833767029599388,
+          "response_time_95th": 420.2460136207935,
+          "throughput": 960.0532665252696,
+          "uptime": 0.998384623385316,
+          "resource_utilization": {
+            "cpu": 0.5141886381035273,
+            "memory": 0.6361885263375346,
+            "disk": 0.5213834712369577,
+            "network": 0.30756331917203295
+          },
+          "business_metrics": {
+            "user_engagement": 0.9257344909470041,
+            "feature_adoption": 0.8054054043395593,
+            "conversion_rate": 0.8490876689455281
+          }
+        },
+        {
+          "timestamp": "2025-09-16T03:44:23.987169",
+          "performance_score": 0.8495105743785953,
+          "ai_routing_effectiveness": 0.9248917389438746,
+          "user_satisfaction": 0.9119178157956264,
+          "error_rate": 0.0008330415240038079,
+          "response_time_95th": 446.90485713881674,
+          "throughput": 1032.0415121447918,
+          "uptime": 0.9980670623133217,
+          "resource_utilization": {
+            "cpu": 0.5798372070140592,
+            "memory": 0.6643654936745965,
+            "disk": 0.5672817272913311,
+            "network": 0.4934237280140491
+          },
+          "business_metrics": {
+            "user_engagement": 0.8623462333601507,
+            "feature_adoption": 0.8939691779763603,
+            "conversion_rate": 0.7714171096733338
+          }
+        },
+        {
+          "timestamp": "2025-09-16T03:44:24.997473",
+          "performance_score": 0.945838764400875,
+          "ai_routing_effectiveness": 0.8730935011412143,
+          "user_satisfaction": 0.9465176343211709,
+          "error_rate": 0.001562140105058259,
+          "response_time_95th": 299.65532795648755,
+          "throughput": 975.5366622920833,
+          "uptime": 0.9998235979081933,
+          "resource_utilization": {
+            "cpu": 0.5469110699114832,
+            "memory": 0.7425191989186817,
+            "disk": 0.5068971414140617,
+            "network": 0.2821283985140117
+          },
+          "business_metrics": {
+            "user_engagement": 0.8333661841967719,
+            "feature_adoption": 0.7868275147261121,
+            "conversion_rate": 0.7908569923619297
+          }
+        },
+        {
+          "timestamp": "2025-09-16T03:44:26.001797",
+          "performance_score": 0.8546154272904685,
+          "ai_routing_effectiveness": 0.8995935260112891,
+          "user_satisfaction": 0.9210831211811731,
+          "error_rate": 0.001234426094117904,
+          "response_time_95th": 326.3415892605241,
+          "throughput": 952.5148775713395,
+          "uptime": 0.9998329863041849,
+          "resource_utilization": {
+            "cpu": 0.5617897538480826,
+            "memory": 0.7471424097587813,
+            "disk": 0.37097093548009796,
+            "network": 0.3149934172427465
+          },
+          "business_metrics": {
+            "user_engagement": 0.8810730712518272,
+            "feature_adoption": 0.7532375916105273,
+            "conversion_rate": 0.7848464800172245
+          }
+        }
+      ],
+      "success": true,
+      "rollback_triggered": false,
+      "end_time": "2025-09-16T03:44:26.505036"
+    },
+    {
+      "phase": "2_deployment",
+      "start_time": "2025-09-16T03:44:26.505101",
+      "activities_completed": [
+        "1. Deploy new version to small percentage of infrastructure",
+        "2. Route 5% of traffic to canary deployment",
+        "3. Monitor key performance indicators and error rates",
+        "4. Gradually increase traffic percentage (10%, 25%, 50%)",
+        "5. Validate performance at each stage",
+        "6. Complete rollout once canary proves stable"
+      ],
+      "health_checks": {
+        "error_rate_acceptable": false,
+        "criterion_1": true,
+        "performance_acceptable": true,
+        "no_critical_alerts": true
+      },
+      "metrics_collected": [
+        {
+          "timestamp": "2025-09-16T03:44:27.005869",
+          "performance_score": 0.8059522883701503,
+          "ai_routing_effectiveness": 0.9297438400422908,
+          "user_satisfaction": 0.8580762834977866,
+          "error_rate": 0.00028694439056685064,
+          "response_time_95th": 405.8514968264608,
+          "throughput": 876.2722537499625,
+          "uptime": 0.9984499102625577,
+          "resource_utilization": {
+            "cpu": 0.6417161872948507,
+            "memory": 0.6119659246263021,
+            "disk": 0.5920119410749098,
+            "network": 0.32877592968896907
+          },
+          "business_metrics": {
+            "user_engagement": 0.9195965829755018,
+            "feature_adoption": 0.8907902296689753,
+            "conversion_rate": 0.7963595844717012
+          }
+        },
+        {
+          "timestamp": "2025-09-16T03:44:28.510530",
+          "performance_score": 0.8994318608270193,
+          "ai_routing_effectiveness": 0.8761963205086167,
+          "user_satisfaction": 0.9435802633453267,
+          "error_rate": 0.000895377694917891,
+          "response_time_95th": 420.49422113797993,
+          "throughput": 1189.550637194303,
+          "uptime": 0.9983422788926367,
+          "resource_utilization": {
+            "cpu": 0.6560402308471709,
+            "memory": 0.6155784455416539,
+            "disk": 0.4931198020583849,
+            "network": 0.3047427225235324
+          },
+          "business_metrics": {
+            "user_engagement": 0.8857496025732843,
+            "feature_adoption": 0.8855131249464878,
+            "conversion_rate": 0.7888993216411369
+          }
+        },
+        {
+          "timestamp": "2025-09-16T03:44:29.017751",
+          "performance_score": 0.9493993557704196,
+          "ai_routing_effectiveness": 0.9127840892942714,
+          "user_satisfaction": 0.8209672339648887,
+          "error_rate": 0.0005645461110685282,
+          "response_time_95th": 259.41637861706516,
+          "throughput": 1118.503977608686,
+          "uptime": 0.9991168077880933,
+          "resource_utilization": {
+            "cpu": 0.70709738602738,
+            "memory": 0.7027687129263963,
+            "disk": 0.4873214359504963,
+            "network": 0.424485718367528
+          },
+          "business_metrics": {
+            "user_engagement": 0.9153235195269638,
+            "feature_adoption": 0.7633767291824607,
+            "conversion_rate": 0.8523640337258279
+          }
+        },
+        {
+          "timestamp": "2025-09-16T03:44:30.732734",
+          "performance_score": 0.8432786747600678,
+          "ai_routing_effectiveness": 0.9368329957632002,
+          "user_satisfaction": 0.8932102674494218,
+          "error_rate": 0.0012008202337292781,
+          "response_time_95th": 348.75753443751825,
+          "throughput": 960.075055346972,
+          "uptime": 0.9998913981201433,
+          "resource_utilization": {
+            "cpu": 0.6219041309642106,
+            "memory": 0.6142621476228567,
+            "disk": 0.590179593932356,
+            "network": 0.22768803673331872
+          },
+          "business_metrics": {
+            "user_engagement": 0.9346410012648854,
+            "feature_adoption": 0.8698843246634596,
+            "conversion_rate": 0.7640511647817511
+          }
+        },
+        {
+          "timestamp": "2025-09-16T03:44:32.760135",
+          "performance_score": 0.8651983162040224,
+          "ai_routing_effectiveness": 0.8940669853272581,
+          "user_satisfaction": 0.9363903202243683,
+          "error_rate": 0.00025925990736402893,
+          "response_time_95th": 299.56189766845057,
+          "throughput": 917.5494458447682,
+          "uptime": 0.9991562753305611,
+          "resource_utilization": {
+            "cpu": 0.4907124511909795,
+            "memory": 0.5724478699803027,
+            "disk": 0.41306157974959734,
+            "network": 0.20807687880812534
+          },
+          "business_metrics": {
+            "user_engagement": 0.8616156065324057,
+            "feature_adoption": 0.7982595090158097,
+            "conversion_rate": 0.7540339369577213
+          }
+        },
+        {
+          "timestamp": "2025-09-16T03:44:34.480695",
+          "performance_score": 0.8565753285322522,
+          "ai_routing_effectiveness": 0.928456564713981,
+          "user_satisfaction": 0.9320617572273091,
+          "error_rate": 0.0011555929864337225,
+          "response_time_95th": 429.1889079256209,
+          "throughput": 1021.9173045537027,
+          "uptime": 0.998465039339237,
+          "resource_utilization": {
+            "cpu": 0.5993979621103561,
+            "memory": 0.7538509052618585,
+            "disk": 0.42432684732233816,
+            "network": 0.44846400686951565
+          },
+          "business_metrics": {
+            "user_engagement": 0.8940304751505134,
+            "feature_adoption": 0.7921186987796022,
+            "conversion_rate": 0.8692460834834057
+          }
+        }
+      ],
+      "success": false,
+      "rollback_triggered": false,
+      "end_time": "2025-09-16T03:44:34.462341"
+    }
+  ],
+  "real_time_metrics": [
+    {
+      "timestamp": "2025-09-16T03:44:20.440395",
+      "performance_score": 0.8808422178476067,
+      "ai_routing_effectiveness": 0.9179447582732355,
+      "user_satisfaction": 0.9340650049903838,
+      "error_rate": 0.0002682660447972755,
+      "response_time_95th": 423.85726034916115,
+      "throughput": 1121.8157904193502,
+      "uptime": 0.9984984691490139,
+      "resource_utilization": {
+        "cpu": 0.48423526680119544,
+        "memory": 0.7042941701553982,
+        "disk": 0.37098326098031253,
+        "network": 0.385707681085086
+      },
+      "business_metrics": {
+        "user_engagement": 0.9023148972869256,
+        "feature_adoption": 0.7269560855052524,
+        "conversion_rate": 0.7797150893135244
+      }
+    },
+    {
+      "timestamp": "2025-09-16T03:44:22.473588",
+      "performance_score": 0.8929008355012552,
+      "ai_routing_effectiveness": 0.9139046027704316,
+      "user_satisfaction": 0.897269633910155,
+      "error_rate": 0.0019958902091293525,
+      "response_time_95th": 257.8863015363247,
+      "throughput": 1044.5462557679696,
+      "uptime": 0.999451743478131,
+      "resource_utilization": {
+        "cpu": 0.45732575648202267,
+        "memory": 0.7237518044530407,
+        "disk": 0.3154060110158784,
+        "network": 0.4317678195392531
+      },
+      "business_metrics": {
+        "user_engagement": 0.9466499681519103,
+        "feature_adoption": 0.8787856856468373,
+        "conversion_rate": 0.8093757808231347
+      }
+    },
+    {
+      "timestamp": "2025-09-16T03:44:22.980094",
+      "performance_score": 0.9316560075700696,
+      "ai_routing_effectiveness": 0.9312261899779409,
+      "user_satisfaction": 0.90427291242525,
+      "error_rate": 0.0006395642217379156,
+      "response_time_95th": 326.44980286909055,
+      "throughput": 1018.8090077672925,
+      "uptime": 0.9990935786605055,
+      "resource_utilization": {
+        "cpu": 0.719434723158505,
+        "memory": 0.5951558070840981,
+        "disk": 0.5256268922579883,
+        "network": 0.288256112363689
+      },
+      "business_metrics": {
+        "user_engagement": 0.9289052508053337,
+        "feature_adoption": 0.8069688819068067,
+        "conversion_rate": 0.8409360986918449
+      }
+    },
+    {
+      "timestamp": "2025-09-16T03:44:22.980171",
+      "performance_score": 0.811307289750471,
+      "ai_routing_effectiveness": 0.9057314847139603,
+      "user_satisfaction": 0.8252633774611826,
+      "error_rate": 0.0007833767029599388,
+      "response_time_95th": 420.2460136207935,
+      "throughput": 960.0532665252696,
+      "uptime": 0.998384623385316,
+      "resource_utilization": {
+        "cpu": 0.5141886381035273,
+        "memory": 0.6361885263375346,
+        "disk": 0.5213834712369577,
+        "network": 0.30756331917203295
+      },
+      "business_metrics": {
+        "user_engagement": 0.9257344909470041,
+        "feature_adoption": 0.8054054043395593,
+        "conversion_rate": 0.8490876689455281
+      }
+    },
+    {
+      "timestamp": "2025-09-16T03:44:23.987169",
+      "performance_score": 0.8495105743785953,
+      "ai_routing_effectiveness": 0.9248917389438746,
+      "user_satisfaction": 0.9119178157956264,
+      "error_rate": 0.0008330415240038079,
+      "response_time_95th": 446.90485713881674,
+      "throughput": 1032.0415121447918,
+      "uptime": 0.9980670623133217,
+      "resource_utilization": {
+        "cpu": 0.5798372070140592,
+        "memory": 0.6643654936745965,
+        "disk": 0.5672817272913311,
+        "network": 0.4934237280140491
+      },
+      "business_metrics": {
+        "user_engagement": 0.8623462333601507,
+        "feature_adoption": 0.8939691779763603,
+        "conversion_rate": 0.7714171096733338
+      }
+    },
+    {
+      "timestamp": "2025-09-16T03:44:24.997473",
+      "performance_score": 0.945838764400875,
+      "ai_routing_effectiveness": 0.8730935011412143,
+      "user_satisfaction": 0.9465176343211709,
+      "error_rate": 0.001562140105058259,
+      "response_time_95th": 299.65532795648755,
+      "throughput": 975.5366622920833,
+      "uptime": 0.9998235979081933,
+      "resource_utilization": {
+        "cpu": 0.5469110699114832,
+        "memory": 0.7425191989186817,
+        "disk": 0.5068971414140617,
+        "network": 0.2821283985140117
+      },
+      "business_metrics": {
+        "user_engagement": 0.8333661841967719,
+        "feature_adoption": 0.7868275147261121,
+        "conversion_rate": 0.7908569923619297
+      }
+    },
+    {
+      "timestamp": "2025-09-16T03:44:26.001797",
+      "performance_score": 0.8546154272904685,
+      "ai_routing_effectiveness": 0.8995935260112891,
+      "user_satisfaction": 0.9210831211811731,
+      "error_rate": 0.001234426094117904,
+      "response_time_95th": 326.3415892605241,
+      "throughput": 952.5148775713395,
+      "uptime": 0.9998329863041849,
+      "resource_utilization": {
+        "cpu": 0.5617897538480826,
+        "memory": 0.7471424097587813,
+        "disk": 0.37097093548009796,
+        "network": 0.3149934172427465
+      },
+      "business_metrics": {
+        "user_engagement": 0.8810730712518272,
+        "feature_adoption": 0.7532375916105273,
+        "conversion_rate": 0.7848464800172245
+      }
+    },
+    {
+      "timestamp": "2025-09-16T03:44:26.504901",
+      "performance_score": 0.9477486006827954,
+      "ai_routing_effectiveness": 0.9119725193856224,
+      "user_satisfaction": 0.8344650073745729,
+      "error_rate": 0.00018781175461376437,
+      "response_time_95th": 217.89667071922264,
+      "throughput": 1064.066487075521,
+      "uptime": 0.9989795622897736,
+      "resource_utilization": {
+        "cpu": 0.5334644926923541,
+        "memory": 0.6661178586406513,
+        "disk": 0.3993744288716098,
+        "network": 0.2340569253231503
+      },
+      "business_metrics": {
+        "user_engagement": 0.8535330411292268,
+        "feature_adoption": 0.8616944393298981,
+        "conversion_rate": 0.798782972002854
+      }
+    },
+    {
+      "timestamp": "2025-09-16T03:44:27.005869",
+      "performance_score": 0.8059522883701503,
+      "ai_routing_effectiveness": 0.9297438400422908,
+      "user_satisfaction": 0.8580762834977866,
+      "error_rate": 0.00028694439056685064,
+      "response_time_95th": 405.8514968264608,
+      "throughput": 876.2722537499625,
+      "uptime": 0.9984499102625577,
+      "resource_utilization": {
+        "cpu": 0.6417161872948507,
+        "memory": 0.6119659246263021,
+        "disk": 0.5920119410749098,
+        "network": 0.32877592968896907
+      },
+      "business_metrics": {
+        "user_engagement": 0.9195965829755018,
+        "feature_adoption": 0.8907902296689753,
+        "conversion_rate": 0.7963595844717012
+      }
+    },
+    {
+      "timestamp": "2025-09-16T03:44:28.510530",
+      "performance_score": 0.8994318608270193,
+      "ai_routing_effectiveness": 0.8761963205086167,
+      "user_satisfaction": 0.9435802633453267,
+      "error_rate": 0.000895377694917891,
+      "response_time_95th": 420.49422113797993,
+      "throughput": 1189.550637194303,
+      "uptime": 0.9983422788926367,
+      "resource_utilization": {
+        "cpu": 0.6560402308471709,
+        "memory": 0.6155784455416539,
+        "disk": 0.4931198020583849,
+        "network": 0.3047427225235324
+      },
+      "business_metrics": {
+        "user_engagement": 0.8857496025732843,
+        "feature_adoption": 0.8855131249464878,
+        "conversion_rate": 0.7888993216411369
+      }
+    },
+    {
+      "timestamp": "2025-09-16T03:44:29.017657",
+      "performance_score": 0.8017134313167409,
+      "ai_routing_effectiveness": 0.8597121649874702,
+      "user_satisfaction": 0.9186148581019048,
+      "error_rate": 0.0016003538865317106,
+      "response_time_95th": 294.62567499558236,
+      "throughput": 1050.6406285752814,
+      "uptime": 0.9991218962037193,
+      "resource_utilization": {
+        "cpu": 0.4620977686743906,
+        "memory": 0.5817083590932274,
+        "disk": 0.5717743040957874,
+        "network": 0.3537229003295954
+      },
+      "business_metrics": {
+        "user_engagement": 0.8055431026713306,
+        "feature_adoption": 0.8492156258274939,
+        "conversion_rate": 0.8554044045519769
+      }
+    },
+    {
+      "timestamp": "2025-09-16T03:44:29.017751",
+      "performance_score": 0.9493993557704196,
+      "ai_routing_effectiveness": 0.9127840892942714,
+      "user_satisfaction": 0.8209672339648887,
+      "error_rate": 0.0005645461110685282,
+      "response_time_95th": 259.41637861706516,
+      "throughput": 1118.503977608686,
+      "uptime": 0.9991168077880933,
+      "resource_utilization": {
+        "cpu": 0.70709738602738,
+        "memory": 0.7027687129263963,
+        "disk": 0.4873214359504963,
+        "network": 0.424485718367528
+      },
+      "business_metrics": {
+        "user_engagement": 0.9153235195269638,
+        "feature_adoption": 0.7633767291824607,
+        "conversion_rate": 0.8523640337258279
+      }
+    },
+    {
+      "timestamp": "2025-09-16T03:44:29.821639",
+      "performance_score": 0.9331811609679083,
+      "ai_routing_effectiveness": 0.9322535142271364,
+      "user_satisfaction": 0.926498099935976,
+      "error_rate": 0.0011300721029037656,
+      "response_time_95th": 436.8671679448459,
+      "throughput": 964.3189317321289,
+      "uptime": 0.9982452095635778,
+      "resource_utilization": {
+        "cpu": 0.6067531649225423,
+        "memory": 0.6422147307055126,
+        "disk": 0.5227318503176296,
+        "network": 0.21360682523775348
+      },
+      "business_metrics": {
+        "user_engagement": 0.83679577380688,
+        "feature_adoption": 0.769508763274119,
+        "conversion_rate": 0.8255908932664558
+      }
+    },
+    {
+      "timestamp": "2025-09-16T03:44:30.124645",
+      "performance_score": 0.8023363518995011,
+      "ai_routing_effectiveness": 0.892287734661274,
+      "user_satisfaction": 0.8872801838430797,
+      "error_rate": 0.0018402441756571331,
+      "response_time_95th": 235.50358922142502,
+      "throughput": 850.6796166356792,
+      "uptime": 0.9995850527550335,
+      "resource_utilization": {
+        "cpu": 0.6684940234186447,
+        "memory": 0.618579323568262,
+        "disk": 0.527120893030955,
+        "network": 0.4759376146442409
+      },
+      "business_metrics": {
+        "user_engagement": 0.9460246484231343,
+        "feature_adoption": 0.8527786366829672,
+        "conversion_rate": 0.8799287233515404
+      }
+    },
+    {
+      "timestamp": "2025-09-16T03:44:30.430101",
+      "performance_score": 0.949448674064917,
+      "ai_routing_effectiveness": 0.8727338753052705,
+      "user_satisfaction": 0.9280528444023979,
+      "error_rate": 0.0009002995426944094,
+      "response_time_95th": 306.10127953275344,
+      "throughput": 1171.683567142753,
+      "uptime": 0.9985587592731601,
+      "resource_utilization": {
+        "cpu": 0.6669693571593849,
+        "memory": 0.7356475751175977,
+        "disk": 0.42963222709592197,
+        "network": 0.43873190266395035
+      },
+      "business_metrics": {
+        "user_engagement": 0.8353078691095677,
+        "feature_adoption": 0.7090281750422994,
+        "conversion_rate": 0.8678870628557293
+      }
+    },
+    {
+      "timestamp": "2025-09-16T03:44:30.732606",
+      "performance_score": 0.856620647497092,
+      "ai_routing_effectiveness": 0.9451028069203494,
+      "user_satisfaction": 0.9312146201749115,
+      "error_rate": 0.001905841065999434,
+      "response_time_95th": 283.42709697947606,
+      "throughput": 1087.5923867224847,
+      "uptime": 0.9985503197539238,
+      "resource_utilization": {
+        "cpu": 0.6246578250346962,
+        "memory": 0.6501531448324953,
+        "disk": 0.5314845173772759,
+        "network": 0.25054343111286986
+      },
+      "business_metrics": {
+        "user_engagement": 0.8852999500652226,
+        "feature_adoption": 0.8660892878873201,
+        "conversion_rate": 0.837084494667907
+      }
+    },
+    {
+      "timestamp": "2025-09-16T03:44:30.732734",
+      "performance_score": 0.8432786747600678,
+      "ai_routing_effectiveness": 0.9368329957632002,
+      "user_satisfaction": 0.8932102674494218,
+      "error_rate": 0.0012008202337292781,
+      "response_time_95th": 348.75753443751825,
+      "throughput": 960.075055346972,
+      "uptime": 0.9998913981201433,
+      "resource_utilization": {
+        "cpu": 0.6219041309642106,
+        "memory": 0.6142621476228567,
+        "disk": 0.590179593932356,
+        "network": 0.22768803673331872
+      },
+      "business_metrics": {
+        "user_engagement": 0.9346410012648854,
+        "feature_adoption": 0.8698843246634596,
+        "conversion_rate": 0.7640511647817511
+      }
+    },
+    {
+      "timestamp": "2025-09-16T03:44:32.760135",
+      "performance_score": 0.8651983162040224,
+      "ai_routing_effectiveness": 0.8940669853272581,
+      "user_satisfaction": 0.9363903202243683,
+      "error_rate": 0.00025925990736402893,
+      "response_time_95th": 299.56189766845057,
+      "throughput": 917.5494458447682,
+      "uptime": 0.9991562753305611,
+      "resource_utilization": {
+        "cpu": 0.4907124511909795,
+        "memory": 0.5724478699803027,
+        "disk": 0.41306157974959734,
+        "network": 0.20807687880812534
+      },
+      "business_metrics": {
+        "user_engagement": 0.8616156065324057,
+        "feature_adoption": 0.7982595090158097,
+        "conversion_rate": 0.7540339369577213
+      }
+    },
+    {
+      "timestamp": "2025-09-16T03:44:33.569911",
+      "performance_score": 0.8934039229624668,
+      "ai_routing_effectiveness": 0.918876410398457,
+      "user_satisfaction": 0.8644281066417897,
+      "error_rate": 0.00018725432528867648,
+      "response_time_95th": 234.63848398962614,
+      "throughput": 1067.288783367033,
+      "uptime": 0.999971065678761,
+      "resource_utilization": {
+        "cpu": 0.5716335822640727,
+        "memory": 0.6707989318017813,
+        "disk": 0.3189290229461291,
+        "network": 0.2752505287299418
+      },
+      "business_metrics": {
+        "user_engagement": 0.9064511660523185,
+        "feature_adoption": 0.8219858867552052,
+        "conversion_rate": 0.7794700685663165
+      }
+    },
+    {
+      "timestamp": "2025-09-16T03:44:33.872397",
+      "performance_score": 0.8461527086287947,
+      "ai_routing_effectiveness": 0.8539023299693679,
+      "user_satisfaction": 0.8696567880503011,
+      "error_rate": 0.00042197773725710853,
+      "response_time_95th": 214.3335984645655,
+      "throughput": 1020.1783022910062,
+      "uptime": 0.9999644244547139,
+      "resource_utilization": {
+        "cpu": 0.7013456465839458,
+        "memory": 0.6362957022493957,
+        "disk": 0.5012164392127694,
+        "network": 0.40626184564179946
+      },
+      "business_metrics": {
+        "user_engagement": 0.9304130126654844,
+        "feature_adoption": 0.7431776224156197,
+        "conversion_rate": 0.8536379060456478
+      }
+    },
+    {
+      "timestamp": "2025-09-16T03:44:34.175748",
+      "performance_score": 0.8534162453922124,
+      "ai_routing_effectiveness": 0.9279653482070995,
+      "user_satisfaction": 0.8375332532038223,
+      "error_rate": 0.0008522279694558808,
+      "response_time_95th": 262.8123840857338,
+      "throughput": 1038.8190411278244,
+      "uptime": 0.9993442440201337,
+      "resource_utilization": {
+        "cpu": 0.6715265892782578,
+        "memory": 0.7109849907632145,
+        "disk": 0.5640236034281658,
+        "network": 0.2683286290534131
+      },
+      "business_metrics": {
+        "user_engagement": 0.8248209579245989,
+        "feature_adoption": 0.8291190228875628,
+        "conversion_rate": 0.8674171641405808
+      }
+    },
+    {
+      "timestamp": "2025-09-16T03:44:34.480572",
+      "performance_score": 0.8487932331495407,
+      "ai_routing_effectiveness": 0.9319216347431352,
+      "user_satisfaction": 0.8367819402084226,
+      "error_rate": 0.0014504651295850447,
+      "response_time_95th": 221.4533011867096,
+      "throughput": 884.4352589642126,
+      "uptime": 0.9984363423301787,
+      "resource_utilization": {
+        "cpu": 0.710653289507639,
+        "memory": 0.7961049032048475,
+        "disk": 0.46213868594316526,
+        "network": 0.2929875026439943
+      },
+      "business_metrics": {
+        "user_engagement": 0.9177029689342701,
+        "feature_adoption": 0.8437412092157888,
+        "conversion_rate": 0.8602114256195126
+      }
+    },
+    {
+      "timestamp": "2025-09-16T03:44:34.480695",
+      "performance_score": 0.8565753285322522,
+      "ai_routing_effectiveness": 0.928456564713981,
+      "user_satisfaction": 0.9320617572273091,
+      "error_rate": 0.0011555929864337225,
+      "response_time_95th": 429.1889079256209,
+      "throughput": 1021.9173045537027,
+      "uptime": 0.998465039339237,
+      "resource_utilization": {
+        "cpu": 0.5993979621103561,
+        "memory": 0.7538509052618585,
+        "disk": 0.42432684732233816,
+        "network": 0.44846400686951565
+      },
+      "business_metrics": {
+        "user_engagement": 0.8940304751505134,
+        "feature_adoption": 0.7921186987796022,
+        "conversion_rate": 0.8692460834834057
+      }
+    },
+    {
+      "timestamp": "2025-09-16T03:44:34.462203",
+      "performance_score": 0.8962196894295111,
+      "ai_routing_effectiveness": 0.9369469538966477,
+      "user_satisfaction": 0.9066250030066774,
+      "error_rate": 0.0011199389409335383,
+      "response_time_95th": 228.6968219008274,
+      "throughput": 1050.7933464745718,
+      "uptime": 0.9980103976389394,
+      "resource_utilization": {
+        "cpu": 0.6407784527559633,
+        "memory": 0.6522024473787885,
+        "disk": 0.3271174264545139,
+        "network": 0.28333308239611416
+      },
+      "business_metrics": {
+        "user_engagement": 0.9335585292395402,
+        "feature_adoption": 0.8143247618522266,
+        "conversion_rate": 0.7861661842330712
+      }
+    }
+  ],
+  "issues_encountered": [],
+  "rollbacks_performed": [],
+  "final_status": "failed",
+  "execution_end": "2025-09-16T03:44:34.462405"
+}

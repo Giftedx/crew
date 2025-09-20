@@ -1,0 +1,328 @@
+{
+  "demo_metadata": {
+    "timestamp": "2025-09-16T07:56:26.646237",
+    "demo_version": "1.0",
+    "system_version": "advanced_contextual_bandits_v1.0"
+  },
+  "orchestrator_performance": {
+    "global_stats": {
+      "total_decisions": 50,
+      "total_rewards": 38.708,
+      "start_time": "2025-09-16 06:56:24.117467+00:00",
+      "last_decision": "2025-09-16 06:56:24.138148+00:00",
+      "avg_reward": 0.77416
+    },
+    "domains": {
+      "model_routing": {
+        "doubly_robust": {
+          "algorithm": "doubly_robust",
+          "total_rounds": 17,
+          "avg_reward": 0.7845882352941178,
+          "avg_prediction": 1.4996040909282953,
+          "prediction_accuracy": 0.20110179142464601,
+          "last_update": "2025-09-16T06:56:24.138112+00:00",
+          "exploration_rate": 1.2733446201209668
+        },
+        "offset_tree": {}
+      },
+      "content_analysis": {
+        "doubly_robust": {
+          "algorithm": "doubly_robust",
+          "total_rounds": 17,
+          "avg_reward": 0.77,
+          "avg_prediction": 1.481257598776269,
+          "prediction_accuracy": 0.20638946004726022,
+          "last_update": "2025-09-16T06:56:24.138163+00:00",
+          "exploration_rate": 1.2866722517281877
+        },
+        "offset_tree": {}
+      },
+      "user_engagement": {
+        "doubly_robust": {
+          "algorithm": "doubly_robust",
+          "total_rounds": 16,
+          "avg_reward": 0.7675000000000001,
+          "avg_prediction": 1.4759877121869738,
+          "prediction_accuracy": 0.2067622878130262,
+          "last_update": "2025-09-16T06:56:24.138050+00:00",
+          "exploration_rate": 1.3083888408550983
+        },
+        "offset_tree": {}
+      }
+    },
+    "timestamp": "2025-09-16T06:56:26.645778+00:00",
+    "uptime_seconds": 2.528314
+  },
+  "optimization_status": {
+    "is_running": false,
+    "last_optimization": null,
+    "next_optimization_eta": null,
+    "optimization_summary": {
+      "total_evaluations": 5,
+      "best_score": 0.8978629481764808,
+      "best_parameters": {
+        "doubly_robust_alpha": 2.119063827315022,
+        "learning_rate": 0.026816412996944976,
+        "regularization": 0.05071832711109408,
+        "max_tree_depth": 2,
+        "min_samples": 39,
+        "split_criteria": "mse"
+      },
+      "improvement": -0.03536440839561927,
+      "convergence_trend": "converging",
+      "evaluation_history": [
+        {
+          "experiment_id": "demo_exp_0",
+          "score": 0.8962792421804002,
+          "timestamp": "2025-09-16T07:56:24.640373"
+        },
+        {
+          "experiment_id": "demo_exp_1",
+          "score": 0.8978629481764808,
+          "timestamp": "2025-09-16T07:56:25.141207"
+        },
+        {
+          "experiment_id": "demo_exp_2",
+          "score": 0.745855271725288,
+          "timestamp": "2025-09-16T07:56:25.642003"
+        },
+        {
+          "experiment_id": "demo_exp_3",
+          "score": 0.88494586972788,
+          "timestamp": "2025-09-16T07:56:26.142877"
+        },
+        {
+          "experiment_id": "demo_exp_4",
+          "score": 0.860914833784781,
+          "timestamp": "2025-09-16T07:56:26.643765"
+        }
+      ]
+    },
+    "performance_analysis": {
+      "status": "analyzed",
+      "performance_stats": {
+        "reward": {
+          "mean": 0.7201980952380953,
+          "std": 0.03720381803243419,
+          "trend": "increasing",
+          "recent_min": 0.665,
+          "recent_max": 0.785
+        },
+        "latency": {
+          "mean": 50.904761904761905,
+          "std": 4.710676829339516,
+          "trend": "decreasing",
+          "p95": 59
+        },
+        "error_rate": {
+          "mean": 0.024285714285714285,
+          "trend": "stable",
+          "recent_spike": false
+        }
+      },
+      "recommendations": [],
+      "data_points": 21,
+      "analysis_timestamp": "2025-09-16T07:56:26.646231"
+    }
+  },
+  "performance_improvement": {
+    "reward_improvement": 0.1910153846153845,
+    "absolute_reward_gain": 0.12415999999999994
+  },
+  "demo_phases": {
+    "performance_analysis": {
+      "status": "analyzed",
+      "performance_stats": {
+        "reward": {
+          "mean": 0.7175,
+          "std": 0.03600073098673063,
+          "trend": "increasing",
+          "recent_min": 0.65,
+          "recent_max": 0.785
+        },
+        "latency": {
+          "mean": 51.2,
+          "std": 4.629425336623156,
+          "trend": "increasing",
+          "p95": 59
+        },
+        "error_rate": {
+          "mean": 0.0245,
+          "trend": "stable",
+          "recent_spike": false
+        }
+      },
+      "recommendations": [
+        "Latency trend increasing - monitor memory usage and tree depth"
+      ],
+      "data_points": 20,
+      "analysis_timestamp": "2025-09-16T07:56:24.139275"
+    },
+    "hyperparameter_optimization": {
+      "total_evaluations": 5,
+      "best_score": 0.8978629481764808,
+      "best_parameters": {
+        "doubly_robust_alpha": 2.119063827315022,
+        "learning_rate": 0.026816412996944976,
+        "regularization": 0.05071832711109408,
+        "max_tree_depth": 2,
+        "min_samples": 39,
+        "split_criteria": "mse"
+      },
+      "improvement": -0.03536440839561927,
+      "convergence_trend": "converging",
+      "evaluation_history": [
+        {
+          "experiment_id": "demo_exp_0",
+          "score": 0.8962792421804002,
+          "timestamp": "2025-09-16T07:56:24.640373"
+        },
+        {
+          "experiment_id": "demo_exp_1",
+          "score": 0.8978629481764808,
+          "timestamp": "2025-09-16T07:56:25.141207"
+        },
+        {
+          "experiment_id": "demo_exp_2",
+          "score": 0.745855271725288,
+          "timestamp": "2025-09-16T07:56:25.642003"
+        },
+        {
+          "experiment_id": "demo_exp_3",
+          "score": 0.88494586972788,
+          "timestamp": "2025-09-16T07:56:26.142877"
+        },
+        {
+          "experiment_id": "demo_exp_4",
+          "score": 0.860914833784781,
+          "timestamp": "2025-09-16T07:56:26.643765"
+        }
+      ]
+    },
+    "autonomous_cycle": {
+      "current_performance": {
+        "avg_reward": 0.77416,
+        "total_decisions": 50,
+        "decision_latency_ms": 45,
+        "error_rate": 0.02,
+        "timestamp": "2025-09-16 07:56:26.644388"
+      },
+      "analysis": {
+        "status": "analyzed",
+        "performance_stats": {
+          "reward": {
+            "mean": 0.7201980952380953,
+            "std": 0.03720381803243419,
+            "trend": "increasing",
+            "recent_min": 0.665,
+            "recent_max": 0.785
+          },
+          "latency": {
+            "mean": 50.904761904761905,
+            "std": 4.710676829339516,
+            "trend": "decreasing",
+            "p95": 59
+          },
+          "error_rate": {
+            "mean": 0.024285714285714285,
+            "trend": "stable",
+            "recent_spike": false
+          }
+        },
+        "recommendations": [],
+        "data_points": 21,
+        "analysis_timestamp": "2025-09-16T07:56:26.644976"
+      },
+      "optimization_needed": false,
+      "final_status": {
+        "is_running": false,
+        "last_optimization": null,
+        "next_optimization_eta": null,
+        "optimization_summary": {
+          "total_evaluations": 5,
+          "best_score": 0.8978629481764808,
+          "best_parameters": {
+            "doubly_robust_alpha": 2.119063827315022,
+            "learning_rate": 0.026816412996944976,
+            "regularization": 0.05071832711109408,
+            "max_tree_depth": 2,
+            "min_samples": 39,
+            "split_criteria": "mse"
+          },
+          "improvement": -0.03536440839561927,
+          "convergence_trend": "converging",
+          "evaluation_history": [
+            {
+              "experiment_id": "demo_exp_0",
+              "score": 0.8962792421804002,
+              "timestamp": "2025-09-16T07:56:24.640373"
+            },
+            {
+              "experiment_id": "demo_exp_1",
+              "score": 0.8978629481764808,
+              "timestamp": "2025-09-16T07:56:25.141207"
+            },
+            {
+              "experiment_id": "demo_exp_2",
+              "score": 0.745855271725288,
+              "timestamp": "2025-09-16T07:56:25.642003"
+            },
+            {
+              "experiment_id": "demo_exp_3",
+              "score": 0.88494586972788,
+              "timestamp": "2025-09-16T07:56:26.142877"
+            },
+            {
+              "experiment_id": "demo_exp_4",
+              "score": 0.860914833784781,
+              "timestamp": "2025-09-16T07:56:26.643765"
+            }
+          ]
+        },
+        "performance_analysis": {
+          "status": "analyzed",
+          "performance_stats": {
+            "reward": {
+              "mean": 0.7201980952380953,
+              "std": 0.03720381803243419,
+              "trend": "increasing",
+              "recent_min": 0.665,
+              "recent_max": 0.785
+            },
+            "latency": {
+              "mean": 50.904761904761905,
+              "std": 4.710676829339516,
+              "trend": "decreasing",
+              "p95": 59
+            },
+            "error_rate": {
+              "mean": 0.024285714285714285,
+              "trend": "stable",
+              "recent_spike": false
+            }
+          },
+          "recommendations": [],
+          "data_points": 21,
+          "analysis_timestamp": "2025-09-16T07:56:26.645611"
+        }
+      }
+    }
+  },
+  "system_capabilities": {
+    "autonomous_optimization": true,
+    "real_time_monitoring": true,
+    "hyperparameter_tuning": true,
+    "multi_objective_optimization": true,
+    "safety_constraints": true,
+    "bayesian_optimization": true,
+    "performance_analysis": true,
+    "trend_detection": true
+  },
+  "production_readiness": {
+    "safety_constraints_enforced": true,
+    "monitoring_active": true,
+    "error_handling_robust": true,
+    "scalable_architecture": true,
+    "configuration_flexible": true
+  }
+}

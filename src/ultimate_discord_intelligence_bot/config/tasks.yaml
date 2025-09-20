@@ -1,21 +1,24 @@
 process_video:
-  description: Use the pipeline tool to download {url}, transcribe and analyse the
+  description:
+    Use the pipeline tool to download {url}, transcribe and analyse the
     audio, then post the summary and Drive links to Discord.
   expected_output: Summary of the processed video posted to Discord.
   agent: content_manager
   context:
-  - execute_multi_platform_downloads
+    - execute_multi_platform_downloads
   human_input: false
   async_execution: false
   output_file: output/processed_video_{url_hash}.md
 execute_multi_platform_downloads:
-  description: Retrieve media from a list of URLs spanning YouTube, Twitch, Kick,
+  description:
+    Retrieve media from a list of URLs spanning YouTube, Twitch, Kick,
     Twitter, Instagram, TikTok, Reddit and Discord. Return metadata for each successful
     download.
   expected_output: Local file paths and metadata for downloaded media.
   agent: content_downloader
 identify_new_content:
-  description: Given candidate items from platform feeds (YouTube, Twitch, Kick, Twitter,
+  description:
+    Given candidate items from platform feeds (YouTube, Twitch, Kick, Twitter,
     Instagram, TikTok, Reddit, Discord), return only those that have not been previously
     seen.
   expected_output: List of new content items annotated with platform and URL.
@@ -25,48 +28,54 @@ monitor_system:
   expected_output: Confirmation that the alert and metrics were posted.
   agent: system_alert_manager
 gather_cross_platform_intelligence:
-  description: Use the social media monitor tool to collect posts mentioning {keyword}
+  description:
+    Use the social media monitor tool to collect posts mentioning {keyword}
     across Reddit, X and Discord.
   expected_output: Aggregated posts grouped by platform.
   agent: cross_platform_intelligence_gatherer
 fact_check_content:
-  description: Analyse {text} for logical fallacies and combine external perspectives
+  description:
+    Analyse {text} for logical fallacies and combine external perspectives
     to verify claims.
   expected_output: Summary of detected fallacies and supporting context.
   agent: enhanced_fact_checker
   context:
-  - gather_cross_platform_intelligence
+    - gather_cross_platform_intelligence
   human_input: false
   async_execution: false
   output_file: output/fact_check_{timestamp}.json
 score_truthfulness:
-  description: Convert a list of fact-check verdicts about {person} into a numerical
+  description:
+    Convert a list of fact-check verdicts about {person} into a numerical
     trust score and update their historical profile.
-  expected_output: Updated profile with counts of truths and lies plus a score between
+  expected_output:
+    Updated profile with counts of truths and lies plus a score between
     0 and 1.
   agent: truth_scoring_specialist
   context:
-  - fact_check_content
+    - fact_check_content
   human_input: false
   async_execution: false
   output_file: output/truthfulness_score_{person}_{timestamp}.json
 steelman_argument:
-  description: Generate the strongest possible argument for {claim} using evidence
+  description:
+    Generate the strongest possible argument for {claim} using evidence
     snippets.
   expected_output: Steelman argument text.
   agent: steelman_argument_generator
   context:
-  - fact_check_content
+    - fact_check_content
   human_input: false
   async_execution: false
   output_file: output/steelman_{claim_hash}.md
 analyze_claim:
-  description: Run the debate analysis pipeline on {url} at timestamp {ts} for {person}.
+  description:
+    Run the debate analysis pipeline on {url} at timestamp {ts} for {person}.
     Produce context, fact-check results and score updates.
   expected_output: Analysis report with defender blurbs and scoreboard deltas.
   agent: content_manager
   context:
-  - get_context
+    - get_context
   human_input: false
   async_execution: false
   output_file: output/claim_analysis_{person}_{timestamp}.json
@@ -95,7 +104,57 @@ get_profile:
   expected_output: Profile with trust metrics and event history.
   agent: character_profile_manager
 synthesize_personality:
-  description: Analyse historical events and trust metrics to summarise {person}'s
+  description:
+    Analyse historical events and trust metrics to summarise {person}'s
     personality.
   expected_output: Concise personality profile.
   agent: personality_synthesis_manager
+
+# Advanced Performance Analytics Tasks
+run_performance_analytics:
+  description:
+    Execute comprehensive performance analytics analysis for the specified
+    time period and generate insights about system performance, trends, and optimization
+    opportunities.
+  expected_output: Performance analytics report with health scores, trends, and recommendations.
+  agent: system_alert_manager
+  human_input: false
+  async_execution: true
+  output_file: output/performance_analytics_{timestamp}.json
+
+monitor_performance_alerts:
+  description:
+    Evaluate current performance analytics data against alert rules and
+    generate notifications for any threshold violations or anomalies detected.
+  expected_output: List of performance alerts generated and notification status.
+  agent: system_alert_manager
+  human_input: false
+  async_execution: true
+
+send_performance_executive_summary:
+  description:
+    Generate and send executive-level performance summary covering system
+    health, alert activity, and strategic recommendations to leadership channels.
+  expected_output: Executive summary delivered to appropriate Discord channels.
+  agent: system_alert_manager
+  human_input: false
+  async_execution: false
+
+optimize_system_performance:
+  description:
+    Execute automated performance optimization strategies based on analytics
+    insights and predictive recommendations to improve system efficiency.
+  expected_output: Optimization actions executed with performance impact measurements.
+  agent: system_alert_manager
+  human_input: false
+  async_execution: true
+  output_file: output/performance_optimization_{timestamp}.json
+
+predictive_performance_analysis:
+  description: Run predictive performance analysis to forecast potential issues,
+    capacity requirements, and proactive optimization opportunities.
+  expected_output: Predictive insights with forecasts and early warning alerts.
+  agent: system_alert_manager
+  human_input: false
+  async_execution: true
+  output_file: output/predictive_analysis_{timestamp}.json

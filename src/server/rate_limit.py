@@ -39,8 +39,8 @@ from server import middleware_shim
 # ASGI callable (no `__call__`). We now import at runtime and only provide a
 # lightweight fallback when Starlette truly is absent.
 try:  # pragma: no cover - starlette is present in normal test/runtime envs
-    from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint  # type: ignore
-    from starlette.requests import Request as StarletteRequest  # type: ignore
+    from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
+    from starlette.requests import Request as StarletteRequest
 except Exception:  # pragma: no cover - minimal environments without starlette
 
     class BaseHTTPMiddleware:  # type: ignore[no-redef]
@@ -52,20 +52,20 @@ except Exception:  # pragma: no cover - minimal environments without starlette
         def __init__(self, app: Any) -> None:  # noqa: D401
             self.app = app
 
-        async def __call__(self, scope: dict, receive: Callable, send: Callable):  # type: ignore[no-untyped-def]
+        async def __call__(self, scope: dict, receive: Callable, send: Callable):
             if scope.get("type") != "http":  # pass through non-http
                 await self.app(scope, receive, send)
                 return
-            request = Request(scope, receive=receive)  # type: ignore[arg-type]
+            request = Request(scope, receive=receive)
 
             async def call_next(req: Request) -> Response:  # noqa: D401
                 responder = await self.app(scope, receive, send)
-                return responder  # type: ignore[return-value]
+                return responder
 
-            response = await self.dispatch(request, call_next)  # type: ignore[arg-type]
+            response = await self.dispatch(request, call_next)
             # If dispatch returned a Response we need to send it (Starlette would handle this)
             if isinstance(response, Response):
-                await response(scope, receive, send)  # type: ignore[misc]
+                await response(scope, receive, send)
 
         async def dispatch(self, request: Request, call_next: Callable):  # pragma: no cover - overridden
             return await call_next(request)
@@ -84,9 +84,9 @@ class FixedWindowRateLimiter(BaseHTTPMiddleware):  # noqa: D401 - Starlette midd
     def __init__(self, app: Any, burst: int) -> None:  # noqa: D401 - Starlette middleware signature
         # Always attempt super(); fallback already ensures compat
         try:  # pragma: no cover - defensive
-            super().__init__(app)  # type: ignore[misc]
+            super().__init__(app)
         except Exception:  # pragma: no cover
-            self.app = app  # type: ignore[attribute-defined-outside-init]
+            self.app = app
         self._burst = max(1, burst)
         self._remaining = self._burst
         self._reset = time.monotonic() + 1.0
@@ -97,13 +97,13 @@ class FixedWindowRateLimiter(BaseHTTPMiddleware):  # noqa: D401 - Starlette midd
         call_next: Callable[[Request], Awaitable[Response]],
     ) -> Any:
         now = time.monotonic()
-        scope_path = request.scope.get("path", "/")  # type: ignore[attr-defined]
+        scope_path = request.scope.get("path", "/")
         raw_path = str(scope_path)
         # Some environments (observed under BaseHTTPMiddleware) surfaced a scope path
         # of '/' for every request, while request.url.path retained the real path.
         # Fallback to request.url.path when scope path is root to preserve exclusion logic.
         try:  # pragma: no cover - defensive; url should always exist
-            url_path = request.url.path  # type: ignore[attr-defined]
+            url_path = request.url.path
             if raw_path == "/" and url_path != "/":
                 raw_path = url_path
         except Exception:  # pragma: no cover - never expected

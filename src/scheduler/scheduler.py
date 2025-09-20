@@ -9,6 +9,7 @@ from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from core.batching import BulkInserter, RequestBatcher
+from core.db_locks import get_lock_for_connection
 from core.error_handling import handle_error_safely
 from core.learning_engine import LearningEngine
 from ingest import models, pipeline
@@ -36,6 +37,7 @@ class Scheduler:
         self.queue = queue
         self.connectors = connectors
         self.learner = learner or LearningEngine()
+        self._lock = get_lock_for_connection(self.conn)
         # Register scheduler domain if absent; arms represent poll interval seconds
         if "scheduler" not in self.learner.status():
             self.learner.register_domain("scheduler", priors={30: 0.0, 300: 0.0})
@@ -55,23 +57,24 @@ class Scheduler:
         label: str | None = None,
     ) -> models.Watchlist:
         now = datetime.now(UTC).isoformat()
-        cur = self.conn.execute(
-            (
-                "INSERT INTO watchlist (tenant, workspace, source_type, handle, label, enabled, created_at, "
-                "updated_at) VALUES (?,?,?,?,?,?,?,?)"
-            ),
-            (tenant, workspace, source_type, handle, label, 1, now, now),
-        )
-        raw_id = cur.lastrowid
-        watch_id = int(raw_id) if raw_id is not None else 0
-        self.conn.execute(
-            (
-                "INSERT INTO ingest_state (watchlist_id, cursor, last_seen_at, etag, failure_count, "
-                "backoff_until) VALUES (?,?,?,?,?,?)"
-            ),
-            (watch_id, None, None, None, 0, None),
-        )
-        self.conn.commit()
+        with self._lock:
+            cur = self.conn.execute(
+                (
+                    "INSERT INTO watchlist (tenant, workspace, source_type, handle, label, enabled, created_at, "
+                    "updated_at) VALUES (?,?,?,?,?,?,?,?)"
+                ),
+                (tenant, workspace, source_type, handle, label, 1, now, now),
+            )
+            raw_id = cur.lastrowid
+            watch_id = int(raw_id) if raw_id is not None else 0
+            self.conn.execute(
+                (
+                    "INSERT INTO ingest_state (watchlist_id, cursor, last_seen_at, etag, failure_count, "
+                    "backoff_until) VALUES (?,?,?,?,?,?)"
+                ),
+                (watch_id, None, None, None, 0, None),
+            )
+            self.conn.commit()
         return models.Watchlist(
             id=watch_id,
             tenant=tenant,
@@ -90,7 +93,8 @@ class Scheduler:
         if tenant:
             sql += " WHERE tenant=?"
             params = (tenant,)
-        rows = self.conn.execute(sql, params).fetchall()
+        with self._lock:
+            rows = self.conn.execute(sql, params).fetchall()
         return [
             models.Watchlist(
                 id=r[0],
@@ -135,12 +139,13 @@ class Scheduler:
 
         # Get the IDs of inserted watchlists
         watch_ids = []
-        for wrow in watchlist_rows:
-            cur = self.conn.execute(
-                "INSERT INTO watchlist (tenant, workspace, source_type, handle, label, enabled, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?)",
-                wrow,
-            )
-            watch_ids.append(cur.lastrowid)
+        with self._lock:
+            for wrow in watchlist_rows:
+                cur = self.conn.execute(
+                    "INSERT INTO watchlist (tenant, workspace, source_type, handle, label, enabled, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?)",
+                    wrow,
+                )
+                watch_ids.append(cur.lastrowid)
 
         # Bulk insert ingest states
         state_rows = [(int(watch_id), None, None, None, 0, None) for watch_id in watch_ids if watch_id]
@@ -153,7 +158,8 @@ class Scheduler:
                     srow,
                 )
 
-        self.conn.commit()
+        with self._lock:
+            self.conn.commit()
 
         # Return watchlist objects
         return [
@@ -192,18 +198,20 @@ class Scheduler:
         except RuntimeError:
             # No event loop, flush synchronously
             # Execute operations directly
-            for update in state_updates:
-                self.conn.execute(
-                    "UPDATE ingest_state SET cursor=?, last_seen_at=? WHERE watchlist_id=?",
-                    (update["cursor"], update["last_seen_at"], update["watchlist_id"]),
-                )
-            self.conn.commit()
+            with self._lock:
+                for update in state_updates:
+                    self.conn.execute(
+                        "UPDATE ingest_state SET cursor=?, last_seen_at=? WHERE watchlist_id=?",
+                        (update["cursor"], update["last_seen_at"], update["watchlist_id"]),
+                    )
+                self.conn.commit()
 
     # ----------------------------------------------------------- scheduler tick
     def tick(self) -> None:
-        rows = self.conn.execute(
-            "SELECT id, tenant, workspace, source_type, handle, label FROM watchlist WHERE enabled=1",
-        ).fetchall()
+        with self._lock:
+            rows = self.conn.execute(
+                "SELECT id, tenant, workspace, source_type, handle, label FROM watchlist WHERE enabled=1",
+            ).fetchall()
         now = datetime.now(UTC)
 
         # Collect jobs and state updates for batching
@@ -211,10 +219,11 @@ class Scheduler:
         state_updates = []
 
         for wid, tenant, workspace, source_type, handle, label in rows:
-            state_row = self.conn.execute(
-                "SELECT cursor, last_seen_at FROM ingest_state WHERE watchlist_id=?",
-                (wid,),
-            ).fetchone()
+            with self._lock:
+                state_row = self.conn.execute(
+                    "SELECT cursor, last_seen_at FROM ingest_state WHERE watchlist_id=?",
+                    (wid,),
+                ).fetchone()
             cursor = state_row[0] if state_row else None
             last_polled = datetime.fromisoformat(state_row[1]) if state_row and state_row[1] else None
 

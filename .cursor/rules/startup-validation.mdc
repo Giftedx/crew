@@ -1,7 +1,7 @@
 ---
-alwaysApply: true
+alwaysApply: false
+description: Startup and validation patterns for application initialization and deployment
 ---
-
 # Startup and Validation Patterns
 
 ## Application Startup Standards
@@ -9,6 +9,7 @@ alwaysApply: true
 All applications must follow this startup validation pattern established in [start_bot.py](mdc:start_bot.py):
 
 ### Environment Validation
+
 ```python
 def check_environment() -> bool:
     """Check if required environment variables are set."""
@@ -39,6 +40,7 @@ def check_environment() -> bool:
 ```
 
 ### Service Connectivity Validation
+
 ```python
 def validate_services() -> bool:
     """Validate connectivity to external services."""
@@ -70,6 +72,7 @@ def validate_services() -> bool:
 ```
 
 ### Graceful Startup Process
+
 ```python
 async def main():
     """Main entry point with comprehensive validation."""
@@ -112,6 +115,7 @@ async def main():
 Follow the pattern established in [deploy.sh](mdc:deploy.sh) for all deployment scripts:
 
 ### Pre-deployment Validation
+
 ```bash
 # Check project directory
 if [ ! -f "pyproject.toml" ]; then
@@ -134,6 +138,7 @@ fi
 ```
 
 ### Dependency Verification
+
 ```bash
 # Check if dependencies are installed
 if ! python -c "import crewai, discord, qdrant_client" 2>/dev/null; then
@@ -146,6 +151,7 @@ fi
 ```
 
 ### Service Health Validation
+
 ```bash
 # Test external service connectivity
 if [ "$QDRANT_URL" != ":memory:" ]; then
@@ -166,6 +172,7 @@ fi
 ## Error Handling in Startup
 
 ### Informative Error Messages
+
 ```python
 # BAD - Generic error
 except Exception as e:
@@ -181,6 +188,7 @@ except discord.LoginFailure:
 ```
 
 ### Exit Code Standards
+
 ```python
 # Standard exit codes
 sys.exit(0)   # Success
@@ -228,6 +236,7 @@ def initialize_application():
 ## Docker Container Startup
 
 ### Multi-stage Health Checks
+
 ```dockerfile
 # Health check with startup period
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
@@ -235,6 +244,7 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
 ```
 
 ### Graceful Shutdown
+
 ```python
 import signal
 
@@ -246,4 +256,132 @@ def signal_handler(sig, frame):
 
 signal.signal(signal.SIGINT, signal_handler)
 signal.signal(signal.SIGTERM, signal_handler)
+```
+
+## Service Dependencies
+
+### Startup Order in Docker Compose
+
+```yaml
+services:
+  bot:
+    depends_on:
+      qdrant:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import discord; print('healthy')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+```
+
+### Retry Logic for External Services
+
+```python
+from tenacity import retry, stop_after_attempt, wait_exponential
+
+@retry(
+    stop=stop_after_attempt(5),
+    wait=wait_exponential(multiplier=1, min=4, max=10)
+)
+def connect_to_service():
+    """Connect with exponential backoff."""
+    client = ServiceClient(url=service_url)
+    client.health_check()
+    return client
+```
+
+## Configuration Validation
+
+### Schema Validation
+
+```python
+from pydantic import BaseSettings, validator
+
+class Settings(BaseSettings):
+    """Application settings with validation."""
+
+    discord_token: str
+    openai_api_key: Optional[str] = None
+    openrouter_api_key: Optional[str] = None
+    qdrant_url: str = ":memory:"
+
+    @validator("discord_token")
+    def validate_discord_token(cls, v):
+        if not v or len(v) < 50:
+            raise ValueError("Invalid Discord token")
+        return v
+
+    @validator("openrouter_api_key", always=True)
+    def validate_api_keys(cls, v, values):
+        if not v and not values.get("openai_api_key"):
+            raise ValueError("Either OpenAI or OpenRouter API key required")
+        return v
+```
+
+### Feature Flag Validation
+
+```python
+def validate_feature_flags():
+    """Validate feature flag configuration."""
+    flags = {
+        "ENABLE_DEBATE_ANALYSIS": bool,
+        "ENABLE_FACT_CHECKING": bool,
+        "ENABLE_MEMORY_STORAGE": bool,
+    }
+
+    for flag, expected_type in flags.items():
+        value = os.getenv(flag, "").lower()
+        if value and value not in ["true", "false", "1", "0"]:
+            raise ValueError(f"Invalid value for {flag}: {value}")
+```
+
+## Logging During Startup
+
+### Structured Startup Logging
+
+```python
+import logging
+import structlog
+
+def setup_logging():
+    """Configure structured logging for startup."""
+    structlog.configure(
+        processors=[
+            structlog.stdlib.filter_by_level,
+            structlog.stdlib.add_logger_name,
+            structlog.stdlib.add_log_level,
+            structlog.stdlib.PositionalArgumentsFormatter(),
+            structlog.processors.TimeStamper(fmt="iso"),
+            structlog.processors.StackInfoRenderer(),
+            structlog.processors.format_exc_info,
+            structlog.dev.ConsoleRenderer()
+        ],
+        context_class=dict,
+        logger_factory=structlog.stdlib.LoggerFactory(),
+        cache_logger_on_first_use=True,
+    )
+
+logger = structlog.get_logger()
+
+def startup_with_logging():
+    """Startup with detailed logging."""
+    logger.info("application_startup_initiated", version="1.0.0")
+
+    try:
+        # Validation steps
+        logger.info("validating_environment")
+        check_environment()
+
+        logger.info("connecting_to_services")
+        validate_services()
+
+        logger.info("initializing_components")
+        initialize_components()
+
+        logger.info("application_startup_complete")
+    except Exception as e:
+        logger.error("startup_failed", error=str(e), exc_info=True)
+        raise
 ```

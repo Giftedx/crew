@@ -1,0 +1,6 @@
+{
+  "command": "/home/crew/.venv/bin/python -m mypy src",
+  "error_total": 162,
+  "mypy_version": "unknown",
+  "updated": "2025-09-15"
+}

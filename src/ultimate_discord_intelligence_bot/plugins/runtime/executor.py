@@ -12,7 +12,7 @@ from typing import Any
 try:  # Support different jsonschema versions
     from jsonschema import validate as _js_validate
 except Exception:  # pragma: no cover - fallback when jsonschema missing or API changed
-    _js_validate = None
+    _js_validate = None  # type: ignore[assignment]
 
 from core import learn
 from core.rl import registry as rl_registry
@@ -50,12 +50,12 @@ class PluginExecutor:
     def _load_manifest(self, plugin_dir: pathlib.Path) -> dict[str, Any]:
         manifest_file = plugin_dir / "manifest.json"
         with manifest_file.open("r", encoding="utf-8") as fh:
-            manifest = json.load(fh)
+            manifest: Any = json.load(fh)  # Could be any JSON type
         if _js_validate is not None:
             _js_validate(manifest, self._schema)
         else:  # pragma: no cover - degraded validation path
             # Minimal structural checks as fallback
-            if not isinstance(manifest, dict):  # noqa: TRY301
+            if not isinstance(manifest, dict):  # type: ignore[unreachable]  # noqa: TRY301 - defensive check
                 raise ValueError("Invalid manifest structure")
             required = self._schema.get("required", []) if isinstance(self._schema, dict) else []
             missing = [k for k in required if k not in manifest]

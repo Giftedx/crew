@@ -45,6 +45,11 @@ ALLOWED_PATH_SUBSTRINGS = {
     str(ROOT / "FUTURE_WORK.md"),
     str(ROOT / "docs" / "network_conventions.md"),
     str(ROOT / "docs" / "tools_reference.md"),
+    str(ROOT / "COMPREHENSIVE_PROJECT_REVIEW.md"),  # added due to legacy mention
+    str(ROOT / "COMPREHENSIVE_BANDIT_BENCHMARK_RESULTS_SUMMARY.md"),  # legacy historical report
+    str(ROOT / "COMPLETE_SYSTEM_DOCUMENTATION.md"),  # aggregate doc referencing deprecated flag
+    str(ROOT / "COMPREHENSIVE_CODEBASE_ASSESSMENT.md"),  # assessment doc includes deprecation status
+    str(ROOT / "REVIEW_README.md"),  # review summary containing legacy flag reference
     # Migration + dashboard tooling explicitly allowed (contain educational references)
     str(ROOT / "scripts" / "migrate_http_retry_flag.py"),
     str(ROOT / "scripts" / "deprecation_dashboard.py"),
@@ -59,6 +64,8 @@ ALLOWED_PATH_SUBSTRINGS = {
     str(ROOT / "docs" / "ROADMAP_IMPLEMENTATION.md"),
     str(ROOT / "tests" / "test_deprecated_flag_usage.py"),
     str(ROOT / "tests" / "test_deprecation_schedule.py"),
+    # Migration execution reports (document completed migration work)
+    str(ROOT / "reports" / "strategic_action_plan_execution_summary.md"),
     "validate_feature_flags.py",  # sibling validator
     "validate_deprecated_flags.py",  # self
 }

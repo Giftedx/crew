@@ -3,7 +3,7 @@ from core.http_utils import HTTP_RATE_LIMITED, http_request_with_retry
 
 
 def test_http_request_with_retry_status(monkeypatch):
-    monkeypatch.setenv("ENABLE_ANALYSIS_HTTP_RETRY", "1")
+    monkeypatch.setenv("ENABLE_HTTP_RETRY", "1")
     calls = {"count": 0}
 
     class Resp:
@@ -29,7 +29,7 @@ def test_http_request_with_retry_status(monkeypatch):
 
 
 def test_http_request_with_retry_network_error(monkeypatch):
-    monkeypatch.setenv("ENABLE_ANALYSIS_HTTP_RETRY", "1")
+    monkeypatch.setenv("ENABLE_HTTP_RETRY", "1")
     calls = {"count": 0}
 
     class Resp:
@@ -58,7 +58,7 @@ def test_http_request_with_retry_network_error(monkeypatch):
 def test_http_request_with_retry_network_requests_exception(monkeypatch):
     import requests
 
-    monkeypatch.setenv("ENABLE_ANALYSIS_HTTP_RETRY", "1")
+    monkeypatch.setenv("ENABLE_HTTP_RETRY", "1")
     calls = {"count": 0}
 
     class Resp:

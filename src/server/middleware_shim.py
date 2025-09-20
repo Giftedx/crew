@@ -119,21 +119,21 @@ def install_middleware_support() -> None:
         }
         # Starlette style Request expects only scope; shim Request expects expanded params.
         try:
-            req = Request(scope)  # type: ignore[arg-type]
+            req = Request(scope)
             if isinstance(getattr(req, "scope", None), dict):  # augment for limiter path lookup
-                req.scope.setdefault("path", path)  # type: ignore[attr-defined]
+                req.scope.setdefault("path", path)
         except TypeError:  # shim path
             try:  # pragma: no cover - defensive
                 req = Request(method=method.upper(), path=path, headers={}, body=b"", query="")  # type: ignore[call-arg]
                 if not hasattr(req, "scope"):
-                    req.scope = {"path": path}  # type: ignore[attr-defined]
+                    req.scope = {"path": path}
                 else:
-                    req.scope.setdefault("path", path)  # type: ignore[attr-defined]
+                    req.scope.setdefault("path", path)
             except Exception:  # fallback last resort
-                req = Request(scope)  # type: ignore[arg-type]
+                req = Request(scope)
         return asyncio.run(invoke(0, req))
 
-    TestClient._request = _patched_request
+    TestClient._request = _patched_request  # type: ignore[attr-defined]
     TestClient._patched_for_chain = True  # type: ignore[attr-defined]
 
 
