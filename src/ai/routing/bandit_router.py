@@ -5,6 +5,11 @@ Initial minimal implementation: Thompson Sampling for Bernoulli-ish reward
 
 Feature flag: ENABLE_BANDIT_ROUTING=1 gates usage by higher-level router wrappers.
 
+Env tuning:
+- Exploration and reset parameters (BANDIT_MIN_EPSILON, BANDIT_RESET_ENTROPY_THRESHOLD, BANDIT_RESET_ENTROPY_WINDOW)
+    are read dynamically at selection/reset time to support mid-process adjustments in tests and controlled environments.
+    Priors (BANDIT_PRIOR_ALPHA, BANDIT_PRIOR_BETA) remain import-time defaults.
+
 Design principles:
 - Stateless API aside from internal per-arm posterior parameters
 - Thread-safe updates via a lock (lightweight)
@@ -47,9 +52,32 @@ def _flag_enabled() -> bool:
 _PRIOR_ALPHA = float(os.getenv("BANDIT_PRIOR_ALPHA", "1.0") or 1.0)
 _PRIOR_BETA = float(os.getenv("BANDIT_PRIOR_BETA", "1.0") or 1.0)
 
-_MIN_EPSILON = float(os.getenv("BANDIT_MIN_EPSILON", "0.0") or 0.0)  # forced exploration floor
-_RESET_ENTROPY_THRESHOLD = float(os.getenv("BANDIT_RESET_ENTROPY_THRESHOLD", "0.05") or 0.05)
-_RESET_ENTROPY_WINDOW = int(os.getenv("BANDIT_RESET_ENTROPY_WINDOW", "50") or 50)
+
+def _min_epsilon() -> float:
+    """Return the current forced exploration floor from env.
+
+    Read dynamically to avoid import-time caching so tests can monkeypatch
+    BANDIT_MIN_EPSILON per test without requiring module reloads.
+    """
+    try:
+        return float(os.getenv("BANDIT_MIN_EPSILON", "0.0") or 0.0)
+    except Exception:
+        return 0.0
+
+
+def _reset_entropy_threshold() -> float:
+    try:
+        return float(os.getenv("BANDIT_RESET_ENTROPY_THRESHOLD", "0.05") or 0.05)
+    except Exception:
+        return 0.05
+
+
+def _reset_entropy_window() -> int:
+    try:
+        return int(os.getenv("BANDIT_RESET_ENTROPY_WINDOW", "50") or 50)
+    except Exception:
+        return 50
+
 
 # ---------------------- Data Structures ----------------------
 
@@ -132,9 +160,9 @@ class ThompsonBanditRouter:
         # pick argmax sample
         samples.sort(reverse=True)
         chosen = samples[0][1]
-
-        # epsilon-greedy overlay
-        if _MIN_EPSILON > 0 and random.random() < _MIN_EPSILON and len(arms) > 1:
+        # epsilon-greedy overlay (dynamic env read)
+        _eps = _min_epsilon()
+        if _eps > 0 and random.random() < _eps and len(arms) > 1:
             # choose a random different arm
             alt_choices = [a for a in arms if a != chosen]
             if alt_choices:
@@ -215,16 +243,18 @@ class ThompsonBanditRouter:
         return entropy
 
     def _maybe_reset(self) -> None:
-        if _RESET_ENTROPY_WINDOW <= 0:
+        window = _reset_entropy_window()
+        if window <= 0:
             return
         ent = self._posterior_mean_entropy()
         if ent is None:
             return
-        if ent < _RESET_ENTROPY_THRESHOLD:
+        threshold = _reset_entropy_threshold()
+        if ent < threshold:
             self._low_entropy_run += 1
         else:
             self._low_entropy_run = 0
-        if self._low_entropy_run >= _RESET_ENTROPY_WINDOW:
+        if self._low_entropy_run >= window:
             with self._lock:
                 # reset all arms to priors
                 for arm in list(self._arms.keys()):

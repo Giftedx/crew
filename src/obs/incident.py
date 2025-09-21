@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import builtins
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import datetime
+
+from core.time import default_utc_now
 
 
 @dataclass
@@ -13,7 +15,7 @@ class Incident:
     title: str
     severity: str
     status: str = "open"
-    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+    created_at: datetime = field(default_factory=default_utc_now)
     acknowledged_by: str | None = None
     resolved_at: datetime | None = None
 
@@ -39,7 +41,7 @@ class IncidentManager:
     def resolve(self, incident_id: int) -> None:
         inc = self._incidents[incident_id]
         inc.status = "resolved"
-        inc.resolved_at = datetime.now(UTC)
+        inc.resolved_at = default_utc_now()
 
     def get(self, incident_id: int) -> Incident:
         return self._incidents[incident_id]

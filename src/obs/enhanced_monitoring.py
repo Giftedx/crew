@@ -13,7 +13,6 @@ import logging
 import time
 from abc import ABC, abstractmethod
 from dataclasses import asdict, dataclass, field
-from datetime import UTC, datetime
 from enum import Enum
 from typing import Any
 
@@ -23,6 +22,8 @@ try:
     PSUTIL_AVAILABLE = True
 except ImportError:
     PSUTIL_AVAILABLE = False
+
+from core.time import default_utc_now
 
 from obs import metrics
 
@@ -735,7 +736,7 @@ class EnhancedMonitoringSystem:
             return {
                 "healthy": is_healthy,
                 "status": self.monitoring_status.value,
-                "timestamp": datetime.now(UTC).isoformat(),
+                "timestamp": default_utc_now().isoformat(),
                 "metrics": asdict(current_metrics),
                 "quality_gates": quality_results,
                 "active_alerts_count": len(active_alerts),
@@ -745,7 +746,7 @@ class EnhancedMonitoringSystem:
 
         except Exception as e:
             logger.error(f"Health check failed: {e}")
-            return {"healthy": False, "status": "error", "error": str(e), "timestamp": datetime.now(UTC).isoformat()}
+            return {"healthy": False, "status": "error", "error": str(e), "timestamp": default_utc_now().isoformat()}
 
 
 class MonitoringManager:

@@ -7,6 +7,7 @@ The analysis package provides utilities for processing and analyzing transcript 
 **Location:** `src/analysis/`
 
 The analysis modules handle:
+
 - Transcript segmentation for vector storage
 - Topic extraction and classification
 - Audio transcription with Whisper
@@ -83,6 +84,7 @@ for chunk in chunks:
 #### Integration
 
 The segmenter is used by:
+
 - Ingestion pipeline for vector storage preparation
 - Memory system for transcript indexing
 - RAG context preparation
@@ -94,12 +96,14 @@ The segmenter is used by:
 Extracts and classifies topics from text content using NLP techniques.
 
 **Features:**
+
 - Topic modeling
 - Keyword extraction
 - Content categorization
 - Semantic analysis
 
 **Integration Points:**
+
 - Content classification pipeline
 - Search result filtering
 - Content recommendation
@@ -134,6 +138,7 @@ class TranscriptSegment:
 #### Integration
 
 Used by:
+
 - Audio transcription tool
 - Ingestion pipeline
 - Memory storage
@@ -168,11 +173,13 @@ TOPIC_CONFIG = {
 ## Performance Characteristics
 
 ### Segmenter Performance
+
 - **Speed:** ~1000 chunks/second for typical transcripts
 - **Memory:** O(n) where n is transcript length
 - **Chunk Size:** Optimized for embedding model limits (512-1024 tokens)
 
 ### Topic Extraction Performance
+
 - **Speed:** Depends on text length and model complexity
 - **Accuracy:** Higher confidence with longer text segments
 - **Language Support:** English optimized, multilingual capable
@@ -190,6 +197,7 @@ except InvalidTranscriptError as e:
 ```
 
 Common exceptions:
+
 - `InvalidTranscriptError` - Malformed transcript data
 - `ChunkingError` - Segmentation failure
 - `TopicExtractionError` - Topic analysis failure
@@ -197,12 +205,14 @@ Common exceptions:
 ## Testing
 
 Analysis modules are tested through:
+
 - Unit tests: see e.g., `tests/test_analysis_transcribe.py` (tool integration)
 - Analysis-specific tests: `tests/test_analysis_topics.py` (completed)
 - Integration tests: Ingestion pipeline tests
 - Performance benchmarks: Topic extraction speed tests
 
 **Missing Test Coverage:**
+
 - segmenter test - needs to be created
 - transcribe unit test - needs to be created
 
@@ -244,6 +254,7 @@ context = reconstruct_context(filtered_chunks)
 ## Dependencies
 
 Analysis modules depend on:
+
 - **Core Python:** `dataclasses`, `typing`
 - **NLP Libraries:** For topic extraction
 - **Audio Processing:** For transcription support
@@ -252,6 +263,7 @@ Analysis modules depend on:
 ## Future Enhancements
 
 Planned improvements:
+
 1. **Multi-language support** - Better topic extraction for non-English
 2. **Smart chunking** - Sentence-boundary aware segmentation
 3. **Topic hierarchies** - Nested topic classification
@@ -259,6 +271,6 @@ Planned improvements:
 
 ## See Also
 
-- [Ingestion Guide](docs/ingestion.md) - How analysis integrates with ingestion
-- [Memory Documentation](docs/memory.md) - Storage of analyzed content
-- [Tools Reference](docs/tools_reference.md) - Related analysis tools
+- [Ingestion Guide](ingestion.md) - How analysis integrates with ingestion
+- [Memory Documentation](memory.md) - Storage of analyzed content
+- [Tools Reference](tools_reference.md) - Related analysis tools

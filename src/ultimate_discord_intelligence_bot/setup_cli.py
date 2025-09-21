@@ -192,6 +192,24 @@ def _wizard() -> int:
             "OTEL_EXPORTER_OTLP_HEADERS", default=os.getenv("OTEL_EXPORTER_OTLP_HEADERS", "")
         )
 
+    # Local web clients (CORS) and Activities dev helpers (optional)
+    _print_header("Local web clients & Activities dev (optional)")
+    enable_cors = yn("CORS for local dev (Vite, etc.)", default=False)
+    updates["ENABLE_CORS"] = enable_cors
+    if enable_cors == "1":
+        default_origins = os.getenv(
+            "CORS_ALLOW_ORIGINS",
+            "http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://127.0.0.1:5174",
+        )
+        updates["CORS_ALLOW_ORIGINS"] = _prompt("CORS_ALLOW_ORIGINS (comma)", default=default_origins)
+    else:
+        # Preserve existing value if present; otherwise set a sensible default comment-friendly value
+        if "CORS_ALLOW_ORIGINS" not in os.environ:
+            updates["CORS_ALLOW_ORIGINS"] = "http://localhost:5173,http://127.0.0.1:5173"
+
+    # Optional echo endpoint for debugging embedded clients
+    updates["ENABLE_ACTIVITIES_ECHO"] = yn("Activities echo debug endpoint", default=False)
+
     # Tenant configuration
     _print_header("Tenant Configuration")
     tenant_slug = _prompt("TENANT_SLUG", default="default")

@@ -7,16 +7,18 @@ from __future__ import annotations
 
 import json
 import sqlite3
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 
 from policy import policy_engine
+
+from core.time import default_utc_now
 
 
 def sweep(conn: sqlite3.Connection, *, tenant: str | None = None, now: datetime | None = None) -> int:
     """Delete provenance rows older than the configured max retention."""
     policy = policy_engine.load_policy(tenant)
     days = policy.storage.get("max_retention_days_by_ns", {}).get("default", 30)
-    cutoff = (now or datetime.now(UTC)) - timedelta(days=days)
+    cutoff = (now or default_utc_now()) - timedelta(days=days)
     cur = conn.execute("DELETE FROM provenance WHERE retrieved_at < ?", (cutoff.isoformat(),))
     return cur.rowcount
 

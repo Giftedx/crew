@@ -95,7 +95,7 @@ If adopting a strict CI gate, persist a JSON snapshot of error counts and block 
 Proposed incremental enforcement steps (do not enable all at once):
 
 1. Error Count Guard: Script runs `mypy` and parses total errors; fails if count > snapshot.
-1. New-File Guard: Any new `.py` file with >0 errors fails regardless of baseline.
+1. New-File Guard: Any new .py file with >0 errors fails regardless of baseline.
 1. Unused Ignore Guard: Enable `--warn-unused-ignores` in CI only; require cleanup before merge.
 1. Definition Strictness: For selected packages (`core/`, `analysis/`), add `per-module options` with `disallow-incomplete-defs = True` after they reach 0 errors.
 1. Full Strict Pilot: Trial `strict = True` in an isolated subpackage (e.g. `core/cache/`) to validate assumptions before broader rollout.
@@ -147,7 +147,7 @@ Sample breakdown output:
 
 ## py.typed
 
-If any internal package is intended for external reuse, add a `py.typed` file to mark inline types as authoritative.
+If any internal package is intended for external reuse, add a py.typed marker file (a text file named py.typed placed alongside the package) to mark inline types as authoritative.
 
 ## Pre-Commit Hook (Optional)
 

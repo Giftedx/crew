@@ -64,6 +64,9 @@ ALLOWED_PATH_SUBSTRINGS = {
     str(ROOT / "docs" / "ROADMAP_IMPLEMENTATION.md"),
     str(ROOT / "tests" / "test_deprecated_flag_usage.py"),
     str(ROOT / "tests" / "test_deprecation_schedule.py"),
+    # Historical review documents that mention legacy flags (allowed until doc scrub)
+    str(ROOT / "docs" / "history" / "REVIEW_README.md"),
+    str(ROOT / "docs" / "history" / "COMPREHENSIVE_PROJECT_REVIEW.md"),
     # Migration execution reports (document completed migration work)
     str(ROOT / "reports" / "strategic_action_plan_execution_summary.md"),
     "validate_feature_flags.py",  # sibling validator

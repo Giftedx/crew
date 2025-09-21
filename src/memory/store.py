@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import sqlite3
 from dataclasses import dataclass
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
+
+from core.time import default_utc_now
 
 
 @dataclass
@@ -170,7 +172,7 @@ class MemoryStore:
 
     # ------------------------------------------------------------------ pruning
     def prune(self, tenant: str, now: datetime | None = None) -> int:
-        now = now or datetime.now(UTC)
+        now = now or default_utc_now()
         cur = self.conn.cursor()
         cur.execute(
             "SELECT name, ttl_days FROM retention_policies WHERE tenant = ?",

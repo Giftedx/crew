@@ -10,8 +10,10 @@ from __future__ import annotations
 import sqlite3
 from collections.abc import Iterable
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import datetime
 from pathlib import Path
+
+from core.time import default_utc_now
 
 
 def _as_list(value: Iterable[str] | None) -> str:
@@ -136,7 +138,7 @@ class AnalyticsStore:
                 tokens_out,
                 cost,
                 latency_ms,
-                (ts or datetime.now(UTC)).isoformat(),
+                (ts or default_utc_now()).isoformat(),
                 profile_id,
                 1 if success else 0,
                 _as_list(toolset),

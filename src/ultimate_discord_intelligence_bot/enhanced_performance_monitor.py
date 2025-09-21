@@ -17,6 +17,8 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
 
+from core.time import default_utc_now
+
 from ultimate_discord_intelligence_bot.agent_training.performance_monitor import AgentPerformanceMonitor
 
 
@@ -188,13 +190,13 @@ class EnhancedPerformanceMonitor:
                     "avg_quality": 0.0,
                     "avg_response_time": 0.0,
                     "error_count": 0,
-                    "session_start": datetime.now().isoformat(),
+                    "session_start": default_utc_now().isoformat(),
                 },
             }
 
         # Add to recent interactions (keep last 50)
         agent_metrics = self.real_time_metrics[agent_name]
-        agent_metrics["recent_interactions"].append({**interaction_data, "timestamp": datetime.now().isoformat()})
+        agent_metrics["recent_interactions"].append({**interaction_data, "timestamp": default_utc_now().isoformat()})
 
         if len(agent_metrics["recent_interactions"]) > 50:
             agent_metrics["recent_interactions"] = agent_metrics["recent_interactions"][-50:]
@@ -324,7 +326,7 @@ class EnhancedPerformanceMonitor:
 
         # Comparative metrics
         comparative_analysis: dict[str, Any] = {
-            "reporting_period": {"days_analyzed": days, "end_date": datetime.now().isoformat()},
+            "reporting_period": {"days_analyzed": days, "end_date": default_utc_now().isoformat()},
             "agent_rankings": {},
             "performance_summary": {},
             "recommendations": {"top_performers": [], "needs_attention": [], "improvement_opportunities": []},
@@ -407,7 +409,7 @@ class EnhancedPerformanceMonitor:
         """Generate data for real-time performance dashboard."""
 
         dashboard_data: dict[str, Any] = {
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": default_utc_now().isoformat(),
             "agents": {},
             "system_overview": {
                 "total_agents_monitored": len(self.real_time_metrics),
@@ -435,7 +437,7 @@ class EnhancedPerformanceMonitor:
                     [
                         i
                         for i in recent_interactions
-                        if datetime.fromisoformat(i["timestamp"]) > datetime.now() - timedelta(hours=1)
+                        if datetime.fromisoformat(i["timestamp"]) > (default_utc_now() - timedelta(hours=1))
                     ]
                 ),
                 "performance_status": self._get_performance_status(session_stats, alerts),
@@ -515,7 +517,7 @@ class EnhancedPerformanceMonitor:
                 "real_time_performance": self.real_time_metrics.get(agent_name, {}),
                 "comparative_analysis": comparative_data,
                 "dashboard_snapshot": dashboard_data,
-                "enhancement_timestamp": datetime.now().isoformat(),
+                "enhancement_timestamp": default_utc_now().isoformat(),
             },
         }
 
@@ -523,7 +525,7 @@ class EnhancedPerformanceMonitor:
         output_dir = self.base_monitor.data_dir / "enhanced_reports"
         output_dir.mkdir(parents=True, exist_ok=True)
 
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        timestamp = default_utc_now().strftime("%Y%m%d_%H%M%S")
         report_file = output_dir / f"{agent_name}_enhanced_report_{timestamp}.json"
 
         with open(report_file, "w") as f:

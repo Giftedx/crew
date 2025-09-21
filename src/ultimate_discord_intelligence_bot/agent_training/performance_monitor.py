@@ -17,6 +17,8 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+from core.time import default_utc_now, ensure_utc
+
 if TYPE_CHECKING:  # type-only imports to avoid runtime dependencies
     from ai.adaptive_ai_router import AdaptiveAIRouter
     from ai.performance_router import PerformanceBasedRouter
@@ -172,7 +174,7 @@ class AgentPerformanceMonitor:
         """Record a single agent interaction for performance analysis."""
 
         interaction_record = {
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": default_utc_now().isoformat(),
             "agent_name": agent_name,
             "task_type": task_type,
             "tools_used": tools_used,
@@ -231,7 +233,7 @@ class AgentPerformanceMonitor:
 
         # Record AI routing specific data
         ai_interaction = {
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": default_utc_now().isoformat(),
             "agent_name": agent_name,
             "task_type": task_type,
             "routing_strategy": routing_strategy,
@@ -273,11 +275,11 @@ class AgentPerformanceMonitor:
         if not self.ai_routing_enabled or agent_name not in self.ai_routing_history:
             return None
 
-        cutoff_date = datetime.now() - timedelta(days=days)
+        cutoff_date = default_utc_now() - timedelta(days=days)
         recent_interactions = [
             interaction
             for interaction in self.ai_routing_history[agent_name]
-            if datetime.fromisoformat(interaction["timestamp"]) > cutoff_date
+            if ensure_utc(datetime.fromisoformat(interaction["timestamp"])) > cutoff_date
         ]
 
         if not recent_interactions:
@@ -389,11 +391,11 @@ class AgentPerformanceMonitor:
 
     def analyze_tool_usage_patterns(self, agent_name: str, days: int = 30) -> list[ToolUsagePattern]:
         """Analyze tool usage patterns for an agent over specified period."""
-        cutoff_date = datetime.now() - timedelta(days=days)
+        cutoff_date = default_utc_now() - timedelta(days=days)
         recent_interactions = [
             interaction
             for interaction in self.performance_history[agent_name]
-            if datetime.fromisoformat(interaction["timestamp"]) > cutoff_date
+            if ensure_utc(datetime.fromisoformat(interaction["timestamp"])) > cutoff_date
         ]
 
         if not recent_interactions:
@@ -454,11 +456,11 @@ class AgentPerformanceMonitor:
 
     def calculate_performance_metrics(self, agent_name: str, days: int = 30) -> list[PerformanceMetric]:
         """Calculate comprehensive performance metrics for an agent."""
-        cutoff_date = datetime.now() - timedelta(days=days)
+        cutoff_date = default_utc_now() - timedelta(days=days)
         recent_interactions = [
             interaction
             for interaction in self.performance_history[agent_name]
-            if datetime.fromisoformat(interaction["timestamp"]) > cutoff_date
+            if ensure_utc(datetime.fromisoformat(interaction["timestamp"])) > cutoff_date
         ]
 
         if not recent_interactions:
@@ -478,7 +480,7 @@ class AgentPerformanceMonitor:
                 actual_value=avg_quality,
                 trend=quality_trend,
                 confidence=0.9 if len(quality_scores) > 10 else 0.7,
-                last_updated=datetime.now().isoformat(),
+                last_updated=default_utc_now().isoformat(),
             )
         )
 
@@ -493,7 +495,7 @@ class AgentPerformanceMonitor:
                 actual_value=tool_usage_efficiency,
                 trend=tool_trend,
                 confidence=0.8,
-                last_updated=datetime.now().isoformat(),
+                last_updated=default_utc_now().isoformat(),
             )
         )
 
@@ -509,7 +511,7 @@ class AgentPerformanceMonitor:
                 actual_value=avg_response_time,
                 trend=time_trend,
                 confidence=0.9,
-                last_updated=datetime.now().isoformat(),
+                last_updated=default_utc_now().isoformat(),
             )
         )
 
@@ -517,11 +519,11 @@ class AgentPerformanceMonitor:
 
     def _calculate_trend(self, agent_name: str, metric_name: str, days: int, invert: bool = False) -> str:
         """Calculate trend for a specific metric over time."""
-        cutoff_date = datetime.now() - timedelta(days=days)
+        cutoff_date = default_utc_now() - timedelta(days=days)
         recent_interactions = [
             interaction
             for interaction in self.performance_history[agent_name]
-            if datetime.fromisoformat(interaction["timestamp"]) > cutoff_date
+            if ensure_utc(datetime.fromisoformat(interaction["timestamp"])) > cutoff_date
         ]
 
         if len(recent_interactions) < 10:
@@ -719,8 +721,8 @@ class AgentPerformanceMonitor:
         return AgentPerformanceReport(
             agent_name=agent_name,
             reporting_period={
-                "start_date": (datetime.now() - timedelta(days=days)).isoformat(),
-                "end_date": datetime.now().isoformat(),
+                "start_date": (default_utc_now() - timedelta(days=days)).isoformat(),
+                "end_date": default_utc_now().isoformat(),
                 "days_analyzed": str(days),
             },
             overall_score=overall_score,
@@ -774,7 +776,7 @@ class AgentPerformanceMonitor:
         output_dir = output_dir or (self.data_dir / "reports")
         output_dir.mkdir(parents=True, exist_ok=True)
 
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        timestamp = default_utc_now().strftime("%Y%m%d_%H%M%S")
         report_file = output_dir / f"{report.agent_name}_performance_report_{timestamp}.json"
 
         # Convert to dict for JSON serialization

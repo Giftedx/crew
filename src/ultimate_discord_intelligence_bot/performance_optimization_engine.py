@@ -24,6 +24,8 @@ from datetime import datetime, timedelta
 from enum import Enum
 from typing import Any
 
+from core.time import default_utc_now
+
 from .advanced_performance_analytics import AdvancedPerformanceAnalytics
 from .enhanced_performance_monitor import EnhancedPerformanceMonitor
 from .predictive_performance_insights import PredictivePerformanceInsights
@@ -173,7 +175,7 @@ class PerformanceOptimizationEngine:
             )
 
             return {
-                "optimization_timestamp": datetime.now().isoformat(),
+                "optimization_timestamp": default_utc_now().isoformat(),
                 "strategy_used": self.optimization_strategy.value,
                 "opportunities_identified": len(optimization_opportunities),
                 "actions_executed": len(execution_results),
@@ -182,12 +184,12 @@ class PerformanceOptimizationEngine:
                 ),
                 "performance_improvements": validation_results.get("improvements", {}),
                 "optimization_report": optimization_report,
-                "next_optimization_cycle": (datetime.now() + self.optimization_cooldown).isoformat(),
+                "next_optimization_cycle": (default_utc_now() + self.optimization_cooldown).isoformat(),
             }
 
         except Exception as e:
             logger.error(f"Comprehensive optimization execution failed: {e}")
-            return {"error": str(e), "timestamp": datetime.now().isoformat()}
+            return {"error": str(e), "timestamp": default_utc_now().isoformat()}
 
     def _identify_optimization_opportunities(
         self, analytics_results: dict[str, Any], predictive_results: dict[str, Any]
@@ -313,7 +315,7 @@ class PerformanceOptimizationEngine:
             category = getattr(rec, "category", "performance")
             title = getattr(rec, "title", "Optimization Action")
 
-            action_id = f"analytics_{category}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+            action_id = f"analytics_{category}_{default_utc_now().strftime('%Y%m%d_%H%M%S')}"
 
             # Determine action type based on category
             if category == "quality":
@@ -362,7 +364,7 @@ class PerformanceOptimizationEngine:
             alert_type = getattr(warning, "alert_type", "performance")
             severity = getattr(warning, "severity", "medium")
 
-            action_id = f"warning_{alert_type}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+            action_id = f"warning_{alert_type}_{default_utc_now().strftime('%Y%m%d_%H%M%S')}"
 
             # Determine optimization based on warning type
             if alert_type == "quality":
@@ -409,7 +411,7 @@ class PerformanceOptimizationEngine:
             if not forecast:
                 return None
 
-            action_id = f"capacity_scaling_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+            action_id = f"capacity_scaling_{default_utc_now().strftime('%Y%m%d_%H%M%S')}"
 
             return OptimizationAction(
                 action_id=action_id,
@@ -437,7 +439,7 @@ class PerformanceOptimizationEngine:
             current_score = opportunity.get("current_score", 0.5)
             target_score = opportunity.get("target_score", 0.8)
 
-            action_id = f"health_improvement_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+            action_id = f"health_improvement_{default_utc_now().strftime('%Y%m%d_%H%M%S')}"
 
             improvement_percentage = ((target_score - current_score) / current_score) * 100
 
@@ -569,7 +571,7 @@ class PerformanceOptimizationEngine:
                 )
 
                 if last_optimization and last_optimization.execution_duration:
-                    time_since_last = datetime.now() - (datetime.now() - last_optimization.execution_duration)
+                    time_since_last = default_utc_now() - (default_utc_now() - last_optimization.execution_duration)
                     if time_since_last < self.optimization_cooldown:
                         return False
 
@@ -590,7 +592,7 @@ class PerformanceOptimizationEngine:
 
     async def _execute_single_action(self, action: OptimizationAction) -> OptimizationResult:
         """Execute a single optimization action."""
-        start_time = datetime.now()
+        start_time = default_utc_now()
 
         try:
             # Update action status
@@ -604,7 +606,7 @@ class PerformanceOptimizationEngine:
                 # Calculate simulated improvement
                 actual_improvement = self._calculate_simulated_improvement(action)
 
-                end_time = datetime.now()
+                end_time = default_utc_now()
                 return OptimizationResult(
                     action_id=action.action_id,
                     status=OptimizationStatus.COMPLETED,
@@ -613,7 +615,7 @@ class PerformanceOptimizationEngine:
                     execution_duration=end_time - start_time,
                 )
             else:
-                end_time = datetime.now()
+                end_time = default_utc_now()
                 return OptimizationResult(
                     action_id=action.action_id,
                     status=OptimizationStatus.FAILED,
@@ -622,7 +624,7 @@ class PerformanceOptimizationEngine:
                 )
 
         except Exception as e:
-            end_time = datetime.now()
+            end_time = default_utc_now()
             return OptimizationResult(
                 action_id=action.action_id,
                 status=OptimizationStatus.FAILED,
@@ -853,7 +855,7 @@ class PerformanceOptimizationEngine:
                 "active_optimizations": len(self.active_optimizations),
                 "optimization_history_count": len(self.optimization_history),
                 "auto_tuning_configs": len(self.auto_tuning_configs),
-                "next_optimization_window": (datetime.now() + self.optimization_cooldown).isoformat(),
+                "next_optimization_window": (default_utc_now() + self.optimization_cooldown).isoformat(),
                 "recent_success_rate": self._calculate_recent_success_rate(),
                 "performance_baselines": self.performance_baselines,
                 "optimization_targets": self.optimization_targets,
@@ -907,7 +909,7 @@ async def get_optimization_recommendations() -> dict[str, Any]:
     actions = optimization_engine._generate_optimization_actions(opportunities)
 
     return {
-        "timestamp": datetime.now().isoformat(),
+        "timestamp": default_utc_now().isoformat(),
         "total_opportunities": len(opportunities),
         "recommended_actions": [
             {

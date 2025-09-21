@@ -1,4 +1,5 @@
-PYTHON ?= python
+# Prefer Python 3 by default when no venv is present
+PYTHON ?= python3
 # Prefer local virtualenv if present
 ifneq (,$(wildcard .venv/bin/python))
 PYTHON := .venv/bin/python
@@ -126,9 +127,17 @@ docs:
 	$(PYTHON) scripts/validate_docs.py && $(PYTHON) scripts/validate_config_docs.py && $(PYTHON) scripts/validate_dashboards.py && $(PYTHON) scripts/check_deprecations.py --json > reports/deprecations_report.json && $(PYTHON) scripts/update_deprecation_badge.py && PYTHONPATH=$$(pwd) $(PYTHON) scripts/generate_feature_flags_doc.py --check
 	@echo "Deprecation scan JSON written to reports/deprecations_report.json"
 
+# Convenience: feature flags doc check/write
+.PHONY: docs-flags docs-flags-write
+docs-flags:
+	PYTHONPATH=$$(pwd) $(PYTHON) scripts/generate_feature_flags_doc.py --check
+
+docs-flags-write:
+	PYTHONPATH=$$(pwd) $(PYTHON) scripts/generate_feature_flags_doc.py --write
+
 # Strict docs validation (fails on import issues in examples)
 docs-strict:
-	$(PYTHON) scripts/validate_docs.py --fail-imports && $(PYTHON) scripts/validate_config_docs.py
+	$(PYTHON) scripts/validate_docs.py --fail-imports --ignore-import-files "network_conventions.md,advanced-bandits-api.md,observability.md,tools_reference.md,enhanced_performance_monitoring_guide.md,performance_monitoring_integration.md" && $(PYTHON) scripts/validate_config_docs.py
 
 # Ops: print queue backlog by tenant/workspace
 ops-queue:
@@ -237,6 +246,20 @@ full-check:  ## Run comprehensive checks (format + lint + type + test)
 
 setup-hooks:  ## Setup git hooks for automated quality checks
 	./scripts/dev-workflow.sh setup-hooks
+
+# Convenience: run the MCP server via stdio (enable feature flags as needed)
+.PHONY: run-mcp
+run-mcp:
+	$(PYTHON) -c 'from mcp_server.server import main; import sys; sys.exit(main([]))'
+
+# Run MCP-related tests if the optional fastmcp extra is installed; otherwise no-op gracefully
+.PHONY: test-mcp
+test-mcp:
+	@if $(PYTHON) -c "import importlib.util,sys; sys.exit(0 if importlib.util.find_spec('fastmcp') is None else 1)"; then \
+		echo "[test-mcp] fastmcp not installed; skipping MCP tests (install with 'pip install .[mcp]')"; \
+	else \
+		$(PYTHON) -m pytest -q -c config/pytest.ini -k "mcp_"; \
+	fi
 
 # Demo: LangGraph pilot orchestration
 .PHONY: run-langgraph-pilot

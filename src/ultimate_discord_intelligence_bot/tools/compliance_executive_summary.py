@@ -1,11 +1,12 @@
 """Generate executive summary of compliance status."""
 
 import sys
-from datetime import UTC, datetime
 from pathlib import Path
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+
+from core.time import default_utc_now
 
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
@@ -17,7 +18,7 @@ def main():
     print("\n" + "=" * 70)
     print("EXECUTIVE COMPLIANCE SUMMARY")
     print("Ultimate Discord Intelligence Bot")
-    print(f"Date: {datetime.now(UTC).strftime('%Y-%m-%d %H:%M UTC')}")
+    print(f"Date: {default_utc_now().strftime('%Y-%m-%d %H:%M UTC')}")
     print("=" * 70)
 
     # Overall Status

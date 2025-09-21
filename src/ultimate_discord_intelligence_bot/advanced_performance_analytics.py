@@ -25,6 +25,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import Any
 
+from core.time import default_utc_now
 from scipy import stats
 
 from .enhanced_performance_monitor import EnhancedPerformanceMonitor
@@ -150,7 +151,7 @@ class AdvancedPerformanceAnalytics:
             comparative_insights = await self._perform_comparative_analysis()
 
             return {
-                "analysis_timestamp": datetime.now().isoformat(),
+                "analysis_timestamp": default_utc_now().isoformat(),
                 "lookback_hours": lookback_hours,
                 "system_health": {
                     "overall_score": health_score,
@@ -176,7 +177,7 @@ class AdvancedPerformanceAnalytics:
 
         except Exception as e:
             logger.error(f"Comprehensive performance analysis failed: {e}")
-            return {"error": str(e), "timestamp": datetime.now().isoformat()}
+            return {"error": str(e), "timestamp": default_utc_now().isoformat()}
 
     async def _analyze_performance_trends(self, lookback_hours: int) -> list[dict[str, Any]]:
         """Analyze performance trends over time."""
@@ -351,7 +352,7 @@ class AdvancedPerformanceAnalytics:
                             severity = "low"
 
                         anomaly = PerformanceAnomaly(
-                            timestamp=datetime.now() - timedelta(minutes=(len(values) - i) * 5),
+                            timestamp=default_utc_now() - timedelta(minutes=(len(values) - i) * 5),
                             metric_name=metric_name,
                             expected_value=mean_val,
                             actual_value=current_value,

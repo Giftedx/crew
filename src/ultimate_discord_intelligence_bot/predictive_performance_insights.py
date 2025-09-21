@@ -25,6 +25,7 @@ from enum import Enum
 from typing import Any
 
 import numpy as np
+from core.time import default_utc_now
 from scipy import stats
 from sklearn.ensemble import IsolationForest
 from sklearn.linear_model import LinearRegression
@@ -184,7 +185,7 @@ class PredictivePerformanceInsights:
             )
 
             return {
-                "prediction_timestamp": datetime.now().isoformat(),
+                "prediction_timestamp": default_utc_now().isoformat(),
                 "prediction_horizon": prediction_horizon,
                 "reliability_score": reliability_score,
                 "performance_predictions": {
@@ -217,7 +218,7 @@ class PredictivePerformanceInsights:
 
         except Exception as e:
             logger.error(f"Comprehensive predictions generation failed: {e}")
-            return {"error": str(e), "timestamp": datetime.now().isoformat()}
+            return {"error": str(e), "timestamp": default_utc_now().isoformat()}
 
     async def _update_historical_metrics(self) -> None:
         """Update historical metrics for prediction models."""
@@ -227,7 +228,7 @@ class PredictivePerformanceInsights:
                     recent_interactions = agent_data.get("recent_interactions", [])
 
                     for interaction in recent_interactions[-10:]:  # Last 10 interactions
-                        timestamp = interaction.get("timestamp", datetime.now())
+                        timestamp = interaction.get("timestamp", default_utc_now())
 
                         # Store quality metrics
                         quality_key = f"{agent_name}_quality"
@@ -340,7 +341,7 @@ class PredictivePerformanceInsights:
                 confidence_interval=confidence_interval,
                 confidence_level=confidence_level,
                 model_accuracy=accuracy,
-                prediction_timestamp=datetime.now(),
+                prediction_timestamp=default_utc_now(),
                 contributing_factors=contributing_factors,
                 uncertainty_factors=uncertainty_factors,
             )
@@ -511,7 +512,7 @@ class PredictivePerformanceInsights:
                 time_to_impact = timedelta(hours=interactions_to_critical * 0.5)  # Assume 30min per interaction
 
                 return EarlyWarningAlert(
-                    alert_id=f"quality_degradation_{agent_name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+                    alert_id=f"quality_degradation_{agent_name}_{default_utc_now().strftime('%Y%m%d_%H%M%S')}",
                     severity=AlertSeverity.WARNING if decline_ratio < 0.25 else AlertSeverity.CRITICAL,
                     alert_type="quality",
                     title=f"Quality Degradation Detected: {agent_name}",
@@ -570,7 +571,7 @@ class PredictivePerformanceInsights:
                 time_to_impact = timedelta(hours=interactions_to_critical * 0.5)
 
                 return EarlyWarningAlert(
-                    alert_id=f"performance_degradation_{agent_name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+                    alert_id=f"performance_degradation_{agent_name}_{default_utc_now().strftime('%Y%m%d_%H%M%S')}",
                     severity=AlertSeverity.WARNING if increase_ratio < 0.5 else AlertSeverity.CRITICAL,
                     alert_type="performance",
                     title=f"Performance Degradation Detected: {agent_name}",
@@ -622,7 +623,7 @@ class PredictivePerformanceInsights:
 
                         warnings.append(
                             EarlyWarningAlert(
-                                alert_id=f"capacity_imbalance_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+                                alert_id=f"capacity_imbalance_{default_utc_now().strftime('%Y%m%d_%H%M%S')}",
                                 severity=AlertSeverity.WARNING,
                                 alert_type="capacity",
                                 title="Agent Load Imbalance Detected",
@@ -715,12 +716,12 @@ class PredictivePerformanceInsights:
             breach_time = None
             for i, pred in enumerate(predictions):
                 if pred > threshold:
-                    breach_time = datetime.now() + timedelta(hours=i)
+                    breach_time = default_utc_now() + timedelta(hours=i)
                     break
 
             # Generate recommendations
             recommendations = []
-            if breach_time and breach_time < datetime.now() + timedelta(days=7):
+            if breach_time and breach_time < default_utc_now() + timedelta(days=7):
                 recommendations.extend(
                     [
                         "Scale up agent infrastructure within 1 week",
@@ -813,7 +814,7 @@ class PredictivePerformanceInsights:
                     model_name=metric_name,
                     drift_type=drift_type,
                     drift_magnitude=min(1.0, drift_magnitude),
-                    detection_timestamp=datetime.now(),
+                    detection_timestamp=default_utc_now(),
                     baseline_performance=baseline_mean,
                     current_performance=recent_mean,
                     contributing_factors=contributing_factors,

@@ -10,9 +10,10 @@ All actions are guarded by environment flags so this remains opt-in.
 from __future__ import annotations
 
 import os
-from datetime import UTC, datetime, timedelta
+from datetime import timedelta
 from typing import Any
 
+from core.time import default_utc_now
 from ingest.backfill import BackfillPlan, enqueue_backfill
 from scheduler.priority_queue import PriorityQueue
 
@@ -55,7 +56,7 @@ def trigger_auto_follow(
         return {"enabled": True, "enqueued": 0, "note": "unsupported platform or missing uploader"}
 
     # Compute 12-month boundary
-    since = datetime.now(UTC) - timedelta(days=365)
+    since = default_utc_now() - timedelta(days=365)
     since_iso = since.isoformat()
 
     # Prefer stable channel URL/ID over display name to avoid 404s

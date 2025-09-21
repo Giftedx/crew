@@ -15,7 +15,7 @@ This production deployment package contains everything needed to deploy the Adva
 
 ✅ **Production Monitoring System**
 
-- `production_monitoring.py` - Comprehensive monitoring script
+- Monitoring script (see `archive/experimental/production_monitoring.py` for reference)
 - Real-time performance tracking and alerting
 - Automated anomaly detection
 - Health checks and metrics export
@@ -31,7 +31,7 @@ This production deployment package contains everything needed to deploy the Adva
 
 - `Dockerfile` - Optimized production container
 - `docker-compose.yml` - Full stack deployment
-- `PRODUCTION_DEPLOYMENT_GUIDE.md` - Comprehensive deployment guide
+- `docs/PRODUCTION_DEPLOYMENT_GUIDE.md` - Comprehensive deployment guide
 - Load balancing and scaling configuration
 
 ### 📊 Validation Results
@@ -95,8 +95,8 @@ curl http://localhost:8000/health
 ### 4. Monitor Performance
 
 ```bash
-# Access monitoring dashboard
-python3 production_monitoring.py --config config/production_config.json
+# Access monitoring dashboard (example; see archived script for reference)
+# python3 archive/experimental/production_monitoring.py --config config/production_config.json
 
 # View web dashboards
 open http://localhost:3000  # Grafana
@@ -217,9 +217,9 @@ open http://localhost:16686 # Jaeger tracing
 
 ### Documentation Resources
 
-- **Deployment Guide**: `PRODUCTION_DEPLOYMENT_GUIDE.md`
+- **Deployment Guide**: `docs/PRODUCTION_DEPLOYMENT_GUIDE.md`
 - **Configuration Template**: `production_config_template.json`
-- **Monitoring Scripts**: `production_monitoring.py`
+- **Monitoring Scripts**: see `archive/experimental/production_monitoring.py`
 - **Docker Setup**: `docker-compose.yml`
 
 ---

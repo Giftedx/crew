@@ -34,6 +34,9 @@ jobs:
       - name: Lint/Format/Type/Guards/Tests
         run: make ci-all
 
+      - name: Feature flags docs check
+        run: make docs-flags
+
       - name: Best-effort docs contract check (non-blocking)
         run: |
           python scripts/verify_external_api_contracts.py || true

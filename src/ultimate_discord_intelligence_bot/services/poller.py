@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import UTC, datetime
+from datetime import datetime
+
+from core.time import default_utc_now
 
 from ..profiles.store import ProfileStore
 
@@ -17,7 +19,7 @@ class ContentPoller:
 
     async def poll_once(self) -> datetime:
         """Poll all profiles once and update ``last_checked``."""
-        now = datetime.now(UTC)
+        now = default_utc_now()
         for profile in self.store.all_profiles():
             profile.last_checked["poller"] = now
             self.store.upsert_profile(profile)

@@ -8,77 +8,77 @@ Ingestion → Transcription → Analysis (segment, topics, rerank) → Memory (s
 
 ## Ingestion
 
-- Orchestrator: `ingest/pipeline.py`
+- Orchestrator: `src/ingest/pipeline.py`
   - Steps: fetch metadata + transcript (concurrent flag), transcription (Whisper/faster‑whisper fallback), segmentation, privacy filter, topics extraction, dedup embeddings, Qdrant upsert, optional provenance to SQLite.
   - Flags: `ENABLE_INGEST_CONCURRENT`, `ENABLE_INGEST_STRICT`, privacy and caching flags (see Policy/Security, Memory).
   - Metrics: step counters/histograms via `obs.metrics`.
-- Providers: `ingest/providers/{youtube,twitch}.py`
+- Providers: `src/ingest/providers/youtube.py`, `src/ingest/providers/twitch.py`
   - Metadata/transcript helpers; yt-dlp path.
-- Sources/connectors: `ingest/sources/{base,youtube,twitch}.py`
+- Sources/connectors: `src/ingest/sources/base.py`, `src/ingest/sources/youtube.py`, `src/ingest/sources/twitch.py`
   - Discovery emitters used by scheduler.
-- Models/DB: `ingest/models.py`
+- Models/DB: `src/ingest/models.py`
   - SQLite tables and helpers for provenance, usage, jobs, watchlists, ingest state.
 
 ## Transcription
 
-- Module: `analysis/transcribe.py`
+- Module: `src/analysis/transcribe.py`
   - Primary: OpenAI Whisper; Optional: `faster-whisper` when `enable_faster_whisper` is true.
   - Fallbacks: plaintext line-per-second with degradation events via `core.degradation_reporter`.
   - Config: `Settings.enable_faster_whisper`, `Settings.whisper_model` (via `core.secure_config`).
 
 ## Analysis
 
-- Segmenter: `analysis/segmenter.py`
+- Segmenter: `src/analysis/segmenter.py`
   - Chunks transcript into overlapping windows.
   - Token-aware mode: `Settings.enable_token_aware_chunker`, target tokens `token_chunk_target_tokens`.
   - Metrics: chunk sizes, merges, step counter.
-- Topics: `analysis/topics.py`
+- Topics: `src/analysis/topics.py`
   - Extracts hashtags, entities, keywords, phrases; naive topic categories.
-- Reranker: `analysis/rerank.py`
+- Reranker: `src/analysis/rerank.py`
   - Providers: Cohere, Jina via `core.http_utils.resilient_post`; degradation identity fallbacks.
   - Config: `enable_reranker`, `rerank_provider` in secure config.
 
 ## Memory Layer
 
-- Unified API: `memory/api.py`
+- Unified API: `src/memory/api.py`
   - store/retrieve/prune/pin/archive; optional rerank on retrieve.
   - Privacy filter applied before storage; archived content persisted via `archive.archive_file`.
-- Store: `memory/store.py`
+- Store: `src/memory/store.py`
   - SQLite tables for items + retention policies; TTL prune, pin/archive flags.
-- Embeddings: `memory/embeddings.py`
+- Embeddings: `src/memory/embeddings.py`
   - Deterministic hash-based vectors; optional Redis cache (`enable_cache_vector`, `rate_limit_redis_url`).
-- Vector store: `memory/vector_store.py`
+- Vector store: `src/memory/vector_store.py`
   - Qdrant wrapper with namespace mapping `tenant:workspace:creator`; batch upsert; dummy fallback OK.
-- Qdrant provider: `memory/qdrant_provider.py`
+- Qdrant provider: `src/memory/qdrant_provider.py`
   - Central factory; in‑memory dummy for `:memory:` or when client missing; supports gRPC prefs.
 
 ## Grounding / Retrieval / Verification
 
-- Retriever: `grounding/retriever.py` delegates to memory API; returns `EvidencePack`.
-- Verifier: `grounding/verifier.py` checks `AnswerContract` against rules; reports missing citations/contradictions.
-- Schema: `grounding/schema.py` for `Evidence` and `AnswerContract` (requires at least one citation).
+- Retriever: `src/grounding/retriever.py` delegates to memory API; returns `EvidencePack`.
+- Verifier: `src/grounding/verifier.py` checks `AnswerContract` against rules; reports missing citations/contradictions.
+- Schema: `src/grounding/schema.py` for `Evidence` and `AnswerContract` (requires at least one citation).
 
 ## Routing and Reinforcement Learning
 
-- Learning engine: `core/learning_engine.py`
+- Learning engine: `src/core/learning_engine.py`
   - Policies: EpsilonGreedy, Thompson, UCB1, LinUCB, LinTS; experiment harness and shadow bakeoffs.
   - Flags: `ENABLE_RL_*`, `ENABLE_EXPERIMENT_HARNESS`, `ENABLE_RL_SHADOW`.
-- Router: `core/router.py`
+- Router: `src/core/router.py`
   - Candidate filtering via tenant registry; preflight with budget guard (`core/token_meter`).
-- Token/cost meter: `core/token_meter.py`
+- Token/cost meter: `src/core/token_meter.py`
   - Heuristic tokens, cost estimates, per‑tenant budgets with `BudgetStore`.
 
 ## Scheduler and Queueing
 
-- Scheduler: `scheduler/scheduler.py`
+- Scheduler: `src/scheduler/scheduler.py`
   - Watchlists, discovery, RL‑paced polling, batch enqueues/updates, worker loop, metrics.
-- Priority queue: `scheduler/priority_queue.py`
+- Priority queue: `src/scheduler/priority_queue.py`
   - SQLite-backed enqueue/dequeue; bulk operations; batching metrics exposure.
 
 ## Policy and Security
 
-- Policy engine: `policy/policy_engine.py` (loads `config/policy.yaml` + tenants overrides).
-- Security modules: `security/*`
+- Policy engine: `src/policy/policy_engine.py` (loads `config/policy.yaml` + tenants overrides).
+- Security modules: `src/security/*`
   - Moderation (`moderation.py`) with review queue + events.
   - Network guard (`net_guard.py`) safe fetch with redirect/content/type enforcement.
   - Webhook guard (`webhook_guard.py`) HMAC verification with rotation.
@@ -87,25 +87,25 @@ Ingestion → Transcription → Analysis (segment, topics, rerank) → Memory (s
 
 ## HTTP / Retry / Caching
 
-- HTTP helpers: `core/http_utils.py`
+- HTTP helpers: `src/core/http_utils.py`
   - `resilient_get/post`, feature‑flagged retry/backoff with metrics/tracing.
   - URL validation (`https` + public IPs), cached GETs (Redis/in‑mem), negative cache.
   - Flags: `ENABLE_HTTP_RETRY`, legacy analysis-scoped retry flag (deprecated; see `docs/retries.md`), `RETRY_MAX_ATTEMPTS`.
-- Cache stack: `core/cache/*` (API cache middleware, multi‑level cache, Redis helpers, semantic cache).
+- Cache stack: `src/core/cache/*` (API cache middleware, multi‒level cache, Redis helpers, semantic cache).
 
 ## Observability
 
-- Metrics: `obs/metrics.py` (central registry; no‑op fallback when prometheus_client missing).
-- Tracing: `obs/tracing.py` (OpenTelemetry optional; console or OTLP exporter).
-- Degradation reporter: `core/degradation_reporter.py` (flag `ENABLE_DEGRADATION_REPORTER`).
-- Enhanced monitoring: `obs/enhanced_monitoring.py` lifecycle hooks from API lifespan.
+- Metrics: `src/obs/metrics.py` (central registry; no‒op fallback when prometheus_client missing).
+- Tracing: `src/obs/tracing.py` (OpenTelemetry optional; console or OTLP exporter).
+- Degradation reporter: `src/core/degradation_reporter.py` (flag `ENABLE_DEGRADATION_REPORTER`).
+- Enhanced monitoring: `src/obs/enhanced_monitoring.py` lifecycle hooks from API lifespan.
 
 ## Entrypoints / CLI / Services
 
-- Setup wizard/runner: `ultimate_discord_intelligence_bot/setup_cli.py` (writes .env, creates tenants, launches run targets).
-- FastAPI app: `server/app.py` (metrics middleware, `/metrics`, rate limiting, alert router, optional tracing/monitoring).
-- Discord command helpers: `discord/commands.py` (ops utilities, ingest actions, memory ops, debate tools).
-- Crew orchestration: `ultimate_discord_intelligence_bot/crew.py` (agents, tasks, tools, validation, step logging).
+- Setup wizard/runner: `src/ultimate_discord_intelligence_bot/setup_cli.py` (writes .env, creates tenants, launches run targets).
+- FastAPI app: `src/server/app.py` (metrics middleware, `/metrics`, rate limiting, alert router, optional tracing/monitoring).
+- Discord command helpers: `src/discord/commands.py` (ops utilities, ingest actions, memory ops, debate tools).
+- Crew orchestration: `src/ultimate_discord_intelligence_bot/crew.py` (agents, tasks, tools, validation, step logging).
 
 ## Database Batching Utilities
 
@@ -143,7 +143,7 @@ Ingestion → Transcription → Analysis (segment, topics, rerank) → Memory (s
 
 - Add a new ingestion source under `ingest/sources/` and register its connector in the dispatcher; include provider fetcher.
 - New analysis step: add a module that returns a simple dataclass result; integrate in pipeline behind a feature flag.
-- New rerank provider: extend `analysis/rerank.py` following Cohere/Jina pattern using `core.http_utils`.
+- New rerank provider: extend `src/analysis/rerank.py` following Cohere/Jina pattern using `src/core/http_utils.py`.
 - Memory schema changes: prefer additive updates and keep `MemoryStore` pruning deterministic.
 - Always thread tenant/workspace context early and use `obs.metrics.label_ctx()` for metric labels.
 

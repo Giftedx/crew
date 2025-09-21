@@ -813,6 +813,552 @@
       },
       "error_occurred": false,
       "error_details": {}
+    },
+    {
+      "timestamp": "2025-09-20T18:13:07.978787",
+      "agent_name": "test_agent",
+      "task_type": "test_analysis",
+      "tools_used": [
+        "fact_check_tool",
+        "vector_tool"
+      ],
+      "tool_sequence": [
+        {
+          "tool": "fact_check_tool",
+          "action": "verify_claim"
+        },
+        {
+          "tool": "vector_tool",
+          "action": "semantic_search"
+        }
+      ],
+      "response_quality": 0.85,
+      "response_time": 12.5,
+      "user_feedback": {
+        "satisfaction": 0.9
+      },
+      "error_occurred": false,
+      "error_details": {}
+    },
+    {
+      "timestamp": "2025-09-20T18:23:19.076161",
+      "agent_name": "test_agent",
+      "task_type": "test_analysis",
+      "tools_used": [
+        "fact_check_tool",
+        "vector_tool"
+      ],
+      "tool_sequence": [
+        {
+          "tool": "fact_check_tool",
+          "action": "verify_claim"
+        },
+        {
+          "tool": "vector_tool",
+          "action": "semantic_search"
+        }
+      ],
+      "response_quality": 0.85,
+      "response_time": 12.5,
+      "user_feedback": {
+        "satisfaction": 0.9
+      },
+      "error_occurred": false,
+      "error_details": {}
+    },
+    {
+      "timestamp": "2025-09-20T18:44:42.734439",
+      "agent_name": "test_agent",
+      "task_type": "test_analysis",
+      "tools_used": [
+        "fact_check_tool",
+        "vector_tool"
+      ],
+      "tool_sequence": [
+        {
+          "tool": "fact_check_tool",
+          "action": "verify_claim"
+        },
+        {
+          "tool": "vector_tool",
+          "action": "semantic_search"
+        }
+      ],
+      "response_quality": 0.85,
+      "response_time": 12.5,
+      "user_feedback": {
+        "satisfaction": 0.9
+      },
+      "error_occurred": false,
+      "error_details": {}
+    },
+    {
+      "timestamp": "2025-09-20T18:46:47.436783",
+      "agent_name": "test_agent",
+      "task_type": "test_analysis",
+      "tools_used": [
+        "fact_check_tool",
+        "vector_tool"
+      ],
+      "tool_sequence": [
+        {
+          "tool": "fact_check_tool",
+          "action": "verify_claim"
+        },
+        {
+          "tool": "vector_tool",
+          "action": "semantic_search"
+        }
+      ],
+      "response_quality": 0.85,
+      "response_time": 12.5,
+      "user_feedback": {
+        "satisfaction": 0.9
+      },
+      "error_occurred": false,
+      "error_details": {}
+    },
+    {
+      "timestamp": "2025-09-20T19:47:48.447660",
+      "agent_name": "test_agent",
+      "task_type": "test_analysis",
+      "tools_used": [
+        "fact_check_tool",
+        "vector_tool"
+      ],
+      "tool_sequence": [
+        {
+          "tool": "fact_check_tool",
+          "action": "verify_claim"
+        },
+        {
+          "tool": "vector_tool",
+          "action": "semantic_search"
+        }
+      ],
+      "response_quality": 0.85,
+      "response_time": 12.5,
+      "user_feedback": {
+        "satisfaction": 0.9
+      },
+      "error_occurred": false,
+      "error_details": {}
+    },
+    {
+      "timestamp": "2025-09-20T19:51:29.444833",
+      "agent_name": "test_agent",
+      "task_type": "test_analysis",
+      "tools_used": [
+        "fact_check_tool",
+        "vector_tool"
+      ],
+      "tool_sequence": [
+        {
+          "tool": "fact_check_tool",
+          "action": "verify_claim"
+        },
+        {
+          "tool": "vector_tool",
+          "action": "semantic_search"
+        }
+      ],
+      "response_quality": 0.85,
+      "response_time": 12.5,
+      "user_feedback": {
+        "satisfaction": 0.9
+      },
+      "error_occurred": false,
+      "error_details": {}
+    },
+    {
+      "timestamp": "2025-09-20T20:56:56.548466",
+      "agent_name": "test_agent",
+      "task_type": "test_analysis",
+      "tools_used": [
+        "fact_check_tool",
+        "vector_tool"
+      ],
+      "tool_sequence": [
+        {
+          "tool": "fact_check_tool",
+          "action": "verify_claim"
+        },
+        {
+          "tool": "vector_tool",
+          "action": "semantic_search"
+        }
+      ],
+      "response_quality": 0.85,
+      "response_time": 12.5,
+      "user_feedback": {
+        "satisfaction": 0.9
+      },
+      "error_occurred": false,
+      "error_details": {}
+    },
+    {
+      "timestamp": "2025-09-20T21:36:53.427247",
+      "agent_name": "test_agent",
+      "task_type": "test_analysis",
+      "tools_used": [
+        "fact_check_tool",
+        "vector_tool"
+      ],
+      "tool_sequence": [
+        {
+          "tool": "fact_check_tool",
+          "action": "verify_claim"
+        },
+        {
+          "tool": "vector_tool",
+          "action": "semantic_search"
+        }
+      ],
+      "response_quality": 0.85,
+      "response_time": 12.5,
+      "user_feedback": {
+        "satisfaction": 0.9
+      },
+      "error_occurred": false,
+      "error_details": {}
+    },
+    {
+      "timestamp": "2025-09-20T21:39:27.601412",
+      "agent_name": "test_agent",
+      "task_type": "test_analysis",
+      "tools_used": [
+        "fact_check_tool",
+        "vector_tool"
+      ],
+      "tool_sequence": [
+        {
+          "tool": "fact_check_tool",
+          "action": "verify_claim"
+        },
+        {
+          "tool": "vector_tool",
+          "action": "semantic_search"
+        }
+      ],
+      "response_quality": 0.85,
+      "response_time": 12.5,
+      "user_feedback": {
+        "satisfaction": 0.9
+      },
+      "error_occurred": false,
+      "error_details": {}
+    },
+    {
+      "timestamp": "2025-09-21T05:32:39.992964",
+      "agent_name": "test_agent",
+      "task_type": "test_analysis",
+      "tools_used": [
+        "fact_check_tool",
+        "vector_tool"
+      ],
+      "tool_sequence": [
+        {
+          "tool": "fact_check_tool",
+          "action": "verify_claim"
+        },
+        {
+          "tool": "vector_tool",
+          "action": "semantic_search"
+        }
+      ],
+      "response_quality": 0.85,
+      "response_time": 12.5,
+      "user_feedback": {
+        "satisfaction": 0.9
+      },
+      "error_occurred": false,
+      "error_details": {}
+    },
+    {
+      "timestamp": "2025-09-21T05:35:32.614147",
+      "agent_name": "test_agent",
+      "task_type": "test_analysis",
+      "tools_used": [
+        "fact_check_tool",
+        "vector_tool"
+      ],
+      "tool_sequence": [
+        {
+          "tool": "fact_check_tool",
+          "action": "verify_claim"
+        },
+        {
+          "tool": "vector_tool",
+          "action": "semantic_search"
+        }
+      ],
+      "response_quality": 0.85,
+      "response_time": 12.5,
+      "user_feedback": {
+        "satisfaction": 0.9
+      },
+      "error_occurred": false,
+      "error_details": {}
+    },
+    {
+      "timestamp": "2025-09-21T05:40:00.562981",
+      "agent_name": "test_agent",
+      "task_type": "test_analysis",
+      "tools_used": [
+        "fact_check_tool",
+        "vector_tool"
+      ],
+      "tool_sequence": [
+        {
+          "tool": "fact_check_tool",
+          "action": "verify_claim"
+        },
+        {
+          "tool": "vector_tool",
+          "action": "semantic_search"
+        }
+      ],
+      "response_quality": 0.85,
+      "response_time": 12.5,
+      "user_feedback": {
+        "satisfaction": 0.9
+      },
+      "error_occurred": false,
+      "error_details": {}
+    },
+    {
+      "timestamp": "2025-09-21T05:43:48.869198",
+      "agent_name": "test_agent",
+      "task_type": "test_analysis",
+      "tools_used": [
+        "fact_check_tool",
+        "vector_tool"
+      ],
+      "tool_sequence": [
+        {
+          "tool": "fact_check_tool",
+          "action": "verify_claim"
+        },
+        {
+          "tool": "vector_tool",
+          "action": "semantic_search"
+        }
+      ],
+      "response_quality": 0.85,
+      "response_time": 12.5,
+      "user_feedback": {
+        "satisfaction": 0.9
+      },
+      "error_occurred": false,
+      "error_details": {}
+    },
+    {
+      "timestamp": "2025-09-21T05:53:34.717252",
+      "agent_name": "test_agent",
+      "task_type": "test_analysis",
+      "tools_used": [
+        "fact_check_tool",
+        "vector_tool"
+      ],
+      "tool_sequence": [
+        {
+          "tool": "fact_check_tool",
+          "action": "verify_claim"
+        },
+        {
+          "tool": "vector_tool",
+          "action": "semantic_search"
+        }
+      ],
+      "response_quality": 0.85,
+      "response_time": 12.5,
+      "user_feedback": {
+        "satisfaction": 0.9
+      },
+      "error_occurred": false,
+      "error_details": {}
+    },
+    {
+      "timestamp": "2025-09-21T05:59:58.991691",
+      "agent_name": "test_agent",
+      "task_type": "test_analysis",
+      "tools_used": [
+        "fact_check_tool",
+        "vector_tool"
+      ],
+      "tool_sequence": [
+        {
+          "tool": "fact_check_tool",
+          "action": "verify_claim"
+        },
+        {
+          "tool": "vector_tool",
+          "action": "semantic_search"
+        }
+      ],
+      "response_quality": 0.85,
+      "response_time": 12.5,
+      "user_feedback": {
+        "satisfaction": 0.9
+      },
+      "error_occurred": false,
+      "error_details": {}
+    },
+    {
+      "timestamp": "2025-09-21T06:01:34.088225",
+      "agent_name": "test_agent",
+      "task_type": "test_analysis",
+      "tools_used": [
+        "fact_check_tool",
+        "vector_tool"
+      ],
+      "tool_sequence": [
+        {
+          "tool": "fact_check_tool",
+          "action": "verify_claim"
+        },
+        {
+          "tool": "vector_tool",
+          "action": "semantic_search"
+        }
+      ],
+      "response_quality": 0.85,
+      "response_time": 12.5,
+      "user_feedback": {
+        "satisfaction": 0.9
+      },
+      "error_occurred": false,
+      "error_details": {}
+    },
+    {
+      "timestamp": "2025-09-21T06:03:21.986104",
+      "agent_name": "test_agent",
+      "task_type": "test_analysis",
+      "tools_used": [
+        "fact_check_tool",
+        "vector_tool"
+      ],
+      "tool_sequence": [
+        {
+          "tool": "fact_check_tool",
+          "action": "verify_claim"
+        },
+        {
+          "tool": "vector_tool",
+          "action": "semantic_search"
+        }
+      ],
+      "response_quality": 0.85,
+      "response_time": 12.5,
+      "user_feedback": {
+        "satisfaction": 0.9
+      },
+      "error_occurred": false,
+      "error_details": {}
+    },
+    {
+      "timestamp": "2025-09-21T07:04:17.894435",
+      "agent_name": "test_agent",
+      "task_type": "test_analysis",
+      "tools_used": [
+        "fact_check_tool",
+        "vector_tool"
+      ],
+      "tool_sequence": [
+        {
+          "tool": "fact_check_tool",
+          "action": "verify_claim"
+        },
+        {
+          "tool": "vector_tool",
+          "action": "semantic_search"
+        }
+      ],
+      "response_quality": 0.85,
+      "response_time": 12.5,
+      "user_feedback": {
+        "satisfaction": 0.9
+      },
+      "error_occurred": false,
+      "error_details": {}
+    },
+    {
+      "timestamp": "2025-09-21T06:08:23.439803+00:00",
+      "agent_name": "test_agent",
+      "task_type": "test_analysis",
+      "tools_used": [
+        "fact_check_tool",
+        "vector_tool"
+      ],
+      "tool_sequence": [
+        {
+          "tool": "fact_check_tool",
+          "action": "verify_claim"
+        },
+        {
+          "tool": "vector_tool",
+          "action": "semantic_search"
+        }
+      ],
+      "response_quality": 0.85,
+      "response_time": 12.5,
+      "user_feedback": {
+        "satisfaction": 0.9
+      },
+      "error_occurred": false,
+      "error_details": {}
+    },
+    {
+      "timestamp": "2025-09-21T06:12:50.692245+00:00",
+      "agent_name": "test_agent",
+      "task_type": "test_analysis",
+      "tools_used": [
+        "fact_check_tool",
+        "vector_tool"
+      ],
+      "tool_sequence": [
+        {
+          "tool": "fact_check_tool",
+          "action": "verify_claim"
+        },
+        {
+          "tool": "vector_tool",
+          "action": "semantic_search"
+        }
+      ],
+      "response_quality": 0.85,
+      "response_time": 12.5,
+      "user_feedback": {
+        "satisfaction": 0.9
+      },
+      "error_occurred": false,
+      "error_details": {}
+    },
+    {
+      "timestamp": "2025-09-21T06:13:23.000858+00:00",
+      "agent_name": "test_agent",
+      "task_type": "test_analysis",
+      "tools_used": [
+        "fact_check_tool",
+        "vector_tool"
+      ],
+      "tool_sequence": [
+        {
+          "tool": "fact_check_tool",
+          "action": "verify_claim"
+        },
+        {
+          "tool": "vector_tool",
+          "action": "semantic_search"
+        }
+      ],
+      "response_quality": 0.85,
+      "response_time": 12.5,
+      "user_feedback": {
+        "satisfaction": 0.9
+      },
+      "error_occurred": false,
+      "error_details": {}
     }
   ],
   "enhanced_fact_checker": [

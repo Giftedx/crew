@@ -39,7 +39,6 @@ def install_middleware_support() -> None:
     Idempotent: safe to call multiple times.
     """
 
-    patched_app = False
     if not hasattr(FastAPI, "add_middleware"):
 
         def _shim_add_middleware(self: Any, mw_cls: Any, **options: Any) -> None:  # noqa: D401
@@ -67,11 +66,27 @@ def install_middleware_support() -> None:
                 setattr(self, "middleware", middleware)
 
         setattr(FastAPI, "add_middleware", _shim_add_middleware)
-        patched_app = True
 
-    if not patched_app:  # real FastAPI: nothing else to do
-        return
-    # Patch TestClient only once
+        # Also attach a class-level middleware helper so function middlewares can be
+        # registered even before any add_middleware call occurs.
+        if not hasattr(FastAPI, "middleware"):
+
+            def _shim_middleware(self: Any, _type: str):  # noqa: D401
+                def decorator(fn: Callable[[Request], Any]):
+                    chain: list[MiddlewareEntry] = list(getattr(self, "_http_middlewares", []))
+
+                    async def two_arg(req: Request, _next: Callable[[Request], Awaitable[Any]]):  # noqa: D401
+                        return fn(req)
+
+                    chain.append(two_arg)
+                    self._http_middlewares = chain
+                    return fn
+
+                return decorator
+
+            setattr(FastAPI, "middleware", _shim_middleware)
+    # Patch TestClient only once (even with real FastAPI) so that, when a custom chain
+    # is present on the app (via function middlewares), tests execute through it.
     if getattr(TestClient, "_patched_for_chain", False):  # pragma: no cover - idempotency guard
         return
 
@@ -105,11 +120,20 @@ def install_middleware_support() -> None:
             return result
 
         # Minimal ASGI scope for Request construction (method/path only)
+        # Normalize headers from kwargs into ASGI-style bytes tuples
+        raw_headers: list[tuple[bytes, bytes]] = []
+        try:
+            hdrs = kw.get("headers") or {}
+            if hasattr(hdrs, "items"):
+                raw_headers = [(str(k).lower().encode("latin-1"), str(v).encode("latin-1")) for k, v in hdrs.items()]
+        except Exception:
+            raw_headers = []
+
         scope = {
             "type": "http",
             "method": method.upper(),
             "path": path,
-            "headers": [],
+            "headers": raw_headers,
             "query_string": b"",
             "server": ("testserver", 80),
             "client": ("testclient", 50000),
@@ -133,7 +157,9 @@ def install_middleware_support() -> None:
                 req = Request(scope)
         return asyncio.run(invoke(0, req))
 
+    # Patch both public and private entry points to be safe across client variants
     TestClient._request = _patched_request  # type: ignore[attr-defined]
+    TestClient.request = _patched_request  # type: ignore[assignment]
     TestClient._patched_for_chain = True  # type: ignore[attr-defined]
 
 

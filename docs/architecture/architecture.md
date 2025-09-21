@@ -23,6 +23,10 @@ external service.  Downloads flow through a unified dispatcher so the pipeline
 can ingest YouTube, Twitch, Kick, Twitter, Instagram, TikTok, Reddit and
 Discord sources via the same entry point.
 
+Source code location:
+
+- Pipeline orchestrator: `src/ultimate_discord_intelligence_bot/pipeline.py` (class `ContentPipeline`)
+
 ```text
 Video Platform -> Drive -> Transcription -> Analysis -> Discord
 ```
@@ -50,11 +54,15 @@ Each interaction with an external system is encapsulated in a tool living under
   based on the URL (including `vm.tiktok.com`/`vt.tiktok.com` aliases) and
   returns `platform: "unknown"` for unsupported links.
 - `drive_upload_tool.py` – uploads files to Google Drive and produces shareable
-  links suitable for Discord embeds.
+  links suitable for Discord embeds. If Google credentials are not configured or
+  the Drive API is unavailable, the system automatically falls back to a bypass
+  variant (`drive_upload_tool_bypass.py`) and marks the Drive step as skipped
+  without failing the overall run.
 - `audio_transcription_tool.py` – lazily loads Whisper models to transcribe
   audio.
 - `text_analysis_tool.py` – performs sentiment and keyword extraction using
-  NLTK.
+  NLTK (with a degraded stub fallback when NLTK is unavailable, so pipelines
+  continue to run without hard dependency on NLTK data).
 - `sentiment_tool.py` – standalone sentiment classifier using VADER or a
   simple lexical fallback.
 - `logical_fallacy_tool.py` – flags basic logical fallacies in transcripts.

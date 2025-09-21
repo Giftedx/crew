@@ -1,0 +1,68 @@
+name: CI (MCP)
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'src/mcp_server/**'
+      - 'src/ultimate_discord_intelligence_bot/tools/mcp_call_tool.py'
+      - 'tests/test_mcp_*'
+      - 'docs/mcp.md'
+      - 'Makefile'
+      - '.github/workflows/ci-mcp.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'src/mcp_server/**'
+      - 'src/ultimate_discord_intelligence_bot/tools/mcp_call_tool.py'
+      - 'tests/test_mcp_*'
+      - 'docs/mcp.md'
+      - 'Makefile'
+      - '.github/workflows/ci-mcp.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  mcp:
+    name: Lint + Fast tests + MCP tests
+    runs-on: ubuntu-latest
+    concurrency:
+      group: ci-mcp-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Upgrade pip
+        run: |
+          python -m pip install --upgrade pip
+
+      - name: Setup pip cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/pyproject.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install project with dev+mcp extras
+        run: |
+          python -m pip install -e '.[dev,mcp]'
+
+      - name: Lint
+        run: |
+          python -m ruff check .
+
+      - name: Fast tests
+        run: |
+          python -m pytest -q -c config/pytest.ini -k "http_utils or guards_http_requests or vector_store_dimension or vector_store_namespace"
+
+      - name: MCP tests (conditional)
+        run: |
+          make test-mcp --no-print-directory

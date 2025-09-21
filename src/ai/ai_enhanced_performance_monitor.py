@@ -16,6 +16,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+from core.time import default_utc_now, ensure_utc
 from ultimate_discord_intelligence_bot.agent_training.performance_monitor import (
     AgentPerformanceMonitor,
     AgentPerformanceReport,
@@ -145,7 +146,7 @@ class AIEnhancedPerformanceMonitor(AgentPerformanceMonitor):
 
         # Record AI-specific interaction
         ai_interaction = {
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": default_utc_now().isoformat(),
             "agent_name": agent_name,
             "task_type": task_type,
             "routing_strategy": routing_strategy,
@@ -195,7 +196,7 @@ class AIEnhancedPerformanceMonitor(AgentPerformanceMonitor):
                 "quality_samples": [],
                 "success_count": 0,
                 "total_count": 0,
-                "last_updated": datetime.now().isoformat(),
+                "last_updated": default_utc_now().isoformat(),
             }
 
         cache = self.model_performance_cache[model]
@@ -212,18 +213,22 @@ class AIEnhancedPerformanceMonitor(AgentPerformanceMonitor):
             if len(cache[key]) > 100:
                 cache[key] = cache[key][-100:]
 
-        cache["last_updated"] = datetime.now().isoformat()
+        cache["last_updated"] = default_utc_now().isoformat()
 
     def calculate_ai_routing_metrics(self, agent_name: str, days: int = 30) -> BaseAIRoutingMetrics | None:
         """Calculate comprehensive AI routing performance metrics."""
-        cutoff_date = datetime.now() - timedelta(days=days)
+        cutoff_date = default_utc_now() - timedelta(days=days)
 
         # Get AI routing interactions
-        ai_interactions = [
-            interaction
-            for interaction in self.ai_routing_history[agent_name]
-            if datetime.fromisoformat(interaction["timestamp"]) > cutoff_date
-        ]
+        ai_interactions = []
+        for interaction in self.ai_routing_history[agent_name]:
+            try:
+                ts = ensure_utc(datetime.fromisoformat(interaction["timestamp"]))
+            except Exception:
+                # Fallback: if timestamp unparsable, skip it
+                continue
+            if ts > cutoff_date:
+                ai_interactions.append(interaction)
 
         if not ai_interactions:
             # Minimal baseline metrics when no interactions exist
@@ -347,13 +352,16 @@ class AIEnhancedPerformanceMonitor(AgentPerformanceMonitor):
 
     def analyze_model_usage_patterns(self, agent_name: str, days: int = 30) -> dict[str, Any]:
         """Analyze model usage patterns and effectiveness."""
-        cutoff_date = datetime.now() - timedelta(days=days)
+        cutoff_date = default_utc_now() - timedelta(days=days)
 
-        ai_interactions = [
-            interaction
-            for interaction in self.ai_routing_history[agent_name]
-            if datetime.fromisoformat(interaction["timestamp"]) > cutoff_date
-        ]
+        ai_interactions = []
+        for interaction in self.ai_routing_history[agent_name]:
+            try:
+                ts = ensure_utc(datetime.fromisoformat(interaction["timestamp"]))
+            except Exception:
+                continue
+            if ts > cutoff_date:
+                ai_interactions.append(interaction)
 
         if not ai_interactions:
             return {}

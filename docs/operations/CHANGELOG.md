@@ -9,6 +9,22 @@ All notable changes will be documented in this file. Follow [Conventional Commit
 
 ## Unreleased
 
+_No unreleased changes yet._
+
+## 0.1.1 — 2025-09-21
+
+### Added (Unreleased historical)
+
+* Optional FastMCP servers suite: memory, router, obs, kg, ingest, http, and a2a; all mounted via feature flags.
+* Crew in-process bridge tool `MCPCallTool` (enable via `ENABLE_MCP_CALL_TOOL=1`) exposing a curated allowlist of MCP tools without transport.
+* Tests for MCP server behavior (safe, stubbed) and a smoke test for `MCPCallTool`.
+* Documentation: `docs/mcp.md` (servers, flags, usage), flags section in `docs/configuration.md`, assistant config in `docs/dev_assistants.md`, README MCP quickstart and CI badge, and index link.
+* CI: dedicated workflow `.github/workflows/ci-mcp.yml` running lint, fast tests, and MCP tests with dev+mcp extras; added pip caching.
+
+### Changed (Unreleased historical)
+
+* Makefile `test-mcp` now skips gracefully when `fastmcp` is not installed (exit 0 with message).
+
 ### Added
 
 * Public helper `is_retry_enabled()` in `core.http_utils` exposing consolidated HTTP retry flag state.

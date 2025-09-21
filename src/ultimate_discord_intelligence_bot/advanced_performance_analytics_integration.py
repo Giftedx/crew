@@ -20,6 +20,8 @@ import logging
 from datetime import datetime
 from typing import Any
 
+from core.time import default_utc_now
+
 from .advanced_performance_analytics import AdvancedPerformanceAnalytics
 from .enhanced_performance_monitor import EnhancedPerformanceMonitor
 from .performance_optimization_engine import PerformanceOptimizationEngine
@@ -66,7 +68,7 @@ class AdvancedPerformanceAnalyticsSystem:
         Returns:
             Dict containing comprehensive analysis results
         """
-        analysis_start = datetime.now()
+        analysis_start = default_utc_now()
 
         try:
             logger.info("Starting comprehensive performance analysis")
@@ -94,7 +96,7 @@ class AdvancedPerformanceAnalyticsSystem:
             self.system_insights = comprehensive_results
             self.last_full_analysis = analysis_start
 
-            analysis_duration = datetime.now() - analysis_start
+            analysis_duration = default_utc_now() - analysis_start
             comprehensive_results["analysis_metadata"] = {
                 "analysis_duration_seconds": analysis_duration.total_seconds(),
                 "analysis_timestamp": analysis_start.isoformat(),
@@ -395,7 +397,7 @@ class AdvancedPerformanceAnalyticsSystem:
 
         except Exception as e:
             logger.error(f"Real-time dashboard data generation failed: {e}")
-            return {"error": str(e), "timestamp": datetime.now().isoformat()}
+            return {"error": str(e), "timestamp": default_utc_now().isoformat()}
 
     async def generate_executive_report(self, format_type: str = "markdown") -> str:
         """Generate executive-level performance report.
@@ -408,7 +410,7 @@ class AdvancedPerformanceAnalyticsSystem:
         """
         try:
             # Run comprehensive analysis if not recent
-            if not self.last_full_analysis or (datetime.now() - self.last_full_analysis).total_seconds() > 6 * 3600:
+            if not self.last_full_analysis or (default_utc_now() - self.last_full_analysis).total_seconds() > 6 * 3600:
                 await self.run_comprehensive_performance_analysis()
 
             if format_type == "markdown":
@@ -432,7 +434,7 @@ class AdvancedPerformanceAnalyticsSystem:
 
             report = f"""# 🎯 Executive Performance Analytics Report
 
-**Generated**: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
+**Generated**: {default_utc_now().strftime("%Y-%m-%d %H:%M:%S")}
 
 ## 📊 Executive Summary
 
@@ -504,7 +506,7 @@ class AdvancedPerformanceAnalyticsSystem:
 <body>
     <div class="header">
         <h1>🎯 Executive Performance Analytics Report</h1>
-        <p>Generated: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}</p>
+    <p>Generated: {default_utc_now().strftime("%Y-%m-%d %H:%M:%S")}</p>
     </div>
 
     <div class="metric-card">

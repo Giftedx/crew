@@ -42,6 +42,15 @@ else:  # runtime fallback lightweight stubs to avoid dependency requirement in t
             COSINE = "cosine"
 
 
+# Centralized provider for qdrant client (ensures consistent config & fallbacks)
+try:
+    from memory.qdrant_provider import get_qdrant_client
+except Exception:  # pragma: no cover - fallback to None; tool will error gracefully if used
+
+    def get_qdrant_client():  # type: ignore
+        return None
+
+
 @runtime_checkable
 class _QdrantLike(Protocol):
     def get_collection(self, name: str) -> Any: ...
@@ -85,13 +94,10 @@ class MemoryStorageTool(BaseTool):
         if client is not None:
             qclient = cast(_QdrantLike, client)
         else:
-            # Attempt to construct a real client; fall back to None on any error/missing dep
-            url = config.qdrant_url
-            api_key = config.qdrant_api_key
+            # Use centralized provider to avoid scattered construction differences
             try:
-                QdrantCtor = cast(Callable[..., Any], QdrantClient)
-                qclient = cast(_QdrantLike, QdrantCtor(url=url, api_key=api_key))
-            except Exception:  # pragma: no cover - fallback to None on instantiation issues
+                qclient = cast(_QdrantLike, get_qdrant_client())
+            except Exception:
                 qclient = cast(_QdrantLike, None)
         # Assign via object.__setattr__ to avoid pydantic required-field validation
         object.__setattr__(self, "base_collection", base_collection)

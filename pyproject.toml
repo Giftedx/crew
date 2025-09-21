@@ -1,6 +1,6 @@
 [project]
 name = "ultimate_discord_intelligence_bot"
-version = "0.1.0"
+version = "0.1.1"
 description = "ultimate_discord_intelligence_bot using crewAI"
 authors = [{ name = "Your Name", email = "you@example.com" }]
 requires-python = ">=3.10,<3.14"
@@ -43,6 +43,7 @@ dependencies = [
 metrics = ["prometheus-client>=0.20.0"]
 vllm = ["vllm>=0.6.0", "torch>=2.0.0"]
 whisper = ["openai-whisper>=20231117"]
+mcp = ["fastmcp>=2.10.0"]
 dev = [
     "pytest>=8.0.0",
     "pytest-asyncio>=0.23.0",
@@ -66,6 +67,7 @@ test = "ultimate_discord_intelligence_bot.main:test"
 ingest = "ingest.__main__:main"
 udib = "ultimate_discord_intelligence_bot.setup_cli:main"
 rl_snapshot = "scripts.rl_snapshot:main"
+crew_mcp = "mcp_server.server:main"
 
 [build-system]
 requires = ["hatchling"]
@@ -97,15 +99,17 @@ packages = [
     "src/fastapi",
     "src/ops",
     "src/server",
+    "src/mcp_server",
 ]
 
 [tool.ruff]
 # Moderately relaxed line length to 120 to reduce noisy long-line diffs while
 # retaining review readability. (Was 100 previously.)
 line-length = 120
-# Target Python version aligned to highest supported (project requires >=3.10,<3.14).
-# Setting to py312 enables newer lint rules / syntax awareness while staying compatible.
-target-version = "py312"
+# Target Python version set to 3.11 to avoid PEP 695 upgrade suggestions
+# that require Python 3.12+ (e.g., UP046/UP047), while staying compatible
+# with project support range (>=3.10,<3.14).
+target-version = "py311"
 
 [tool.ruff.lint]
 select = [
@@ -120,6 +124,8 @@ ignore = [
     "E501",    # temporarily ignore long line violations while focusing on functional fixes
     # Newly deferred for this finishing pass
     "UP038",            # isinstance tuple → union style modernization deferred
+    # Defer PEP 695 generics (require Python 3.12) to keep 3.10 compatibility
+    # Note: Older ruff versions may not recognize UP046/UP047; omit to keep config portable.
 ]
 
 [tool.ruff.lint.per-file-ignores]
@@ -171,8 +177,15 @@ exclude = [
 # Restrict scope to the currently adopted, typed modules
 files = [
     "src/core/llm_router.py",
+    "src/core/http_utils.py",
+    "src/core/secure_config.py",
+    "src/core/time.py",
     "src/ai/routing/",
     "src/eval/config.py",
+    "src/ultimate_discord_intelligence_bot/step_result.py",
+    "src/ultimate_discord_intelligence_bot/tenancy/",
+    "src/memory/vector_store.py",
+    "src/memory/api.py",
 ]
 # Global suppression of missing imports while we stabilize optional dependency guards.
 ignore_missing_imports = true  # TODO: narrow via targeted overrides phase 2

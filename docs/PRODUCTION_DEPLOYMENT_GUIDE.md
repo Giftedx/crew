@@ -121,8 +121,8 @@ cp -r src/ai/ your_project/src/
 ### Verification
 
 ```bash
-# Run integration demo
-python3 advanced_bandits_integration_demo.py
+# Run integration demo (archived example)
+python3 archive/demos/advanced_bandits_integration_demo.py
 
 # Expected output: 100% success rate with performance metrics
 ```
@@ -791,7 +791,7 @@ class RateLimitedOrchestrator:
 ### Support Resources
 
 - **Documentation**: This deployment guide
-- **Integration Demo**: `advanced_bandits_integration_demo.py`
+- **Integration Demo**: `archive/demos/advanced_bandits_integration_demo.py`
 - **Monitoring Dashboard**: Access performance metrics
 - **Health Checks**: Monitor system status
 

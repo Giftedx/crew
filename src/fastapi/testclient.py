@@ -8,6 +8,9 @@ from typing import Any
 
 from . import APIRouter, Request
 
+# Prevent pytest from attempting to collect this module/class as tests
+__test__ = False  # type: ignore[var-annotated]
+
 
 class _Resp:
     def __init__(self, status_code: int, content: bytes | str = b"", json_obj: Any | None = None) -> None:
@@ -24,7 +27,14 @@ class _Resp:
             return None
 
 
-class TestClient:
+class FastAPITestClient:
+    """Custom test client for FastAPI applications.
+
+    Note: This class is not a pytest test class despite the name.
+    """
+
+    __test__ = False  # Explicitly tell pytest not to collect this as a test class
+
     def __init__(self, app: Any) -> None:
         self.app = app
         # Provide public 'request' callable for compatibility with starlette TestClient
@@ -54,11 +64,31 @@ class TestClient:
     ) -> _Resp:
         # Split query from path if present
         raw_path, _, raw_query = path.partition("?")
-        handler = self.app._routes.get((method.upper(), raw_path))
+        handler = None
+        # Try shim routes mapping first
+        if hasattr(self.app, "_routes"):
+            try:
+                handler = getattr(self.app, "_routes", {}).get((method.upper(), raw_path))
+            except Exception:
+                handler = None
+        # Fallback: resolve against real FastAPI/Starlette router if present
+        if handler is None:
+            try:
+                routes = getattr(self.app, "routes", None) or getattr(getattr(self.app, "router", None), "routes", None)
+                if routes:
+                    for route in routes:
+                        r_path = getattr(route, "path", getattr(route, "path_format", None))
+                        methods = set(getattr(route, "methods", set()) or set())
+                        if r_path == raw_path and (not methods or method.upper() in methods):
+                            handler = getattr(route, "endpoint", None) or getattr(route, "app", None)
+                            if handler is not None:
+                                break
+            except Exception:
+                handler = None
         path_params: dict[str, str] = {}
         if handler is None:
             # naive dynamic path support: match single-segment parameters {name}
-            for (m, pattern), fn in self.app._routes.items():
+            for (m, pattern), fn in getattr(self.app, "_routes", {}).items():
                 if m != method.upper():
                     continue
                 # Guard: only process string patterns (avoid FieldInfo / descriptor objects)
@@ -243,7 +273,8 @@ class TestClient:
         if hasattr(result, "url") and hasattr(result, "filename"):
             return _Resp(200, json_obj={"url": getattr(result, "url"), "filename": getattr(result, "filename")})
         status = getattr(result, "status_code", 200)
-        content = getattr(result, "content", b"")
+        # Starlette Response uses `.body`; shim Response exposes `.content`
+        content = getattr(result, "body", getattr(result, "content", b""))
         return _Resp(status, content)
 
     def post(
@@ -305,3 +336,7 @@ class TestClient:
 
 def json_to_bytes(obj: Any) -> bytes:
     return json.dumps(obj).encode("utf-8")
+
+
+# Backward compatibility alias - pytest won't collect this since it's not a class
+TestClient = FastAPITestClient

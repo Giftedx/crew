@@ -1,10 +1,18 @@
 # Advanced Prompt Compression
 
-This document describes the multi-pass prompt compression pipeline guarded by the feature flag `ENABLE_PROMPT_COMPRESSION`.
+This document describes the multi-pass prompt compression pipeline guarded by feature flags and settings.
 
 ## Overview
 
-The compression pass runs inside `PromptEngine.optimise()` and is fully bypassed unless the environment variable `ENABLE_PROMPT_COMPRESSION` is present with a truthy value (`1|true|yes|on`). We intentionally require *env presence* so stale cached settings objects (from parallel import paths) cannot lock the flag in an enabled state after unset.
+The compression pass runs inside `PromptEngine.optimise()` and is conditionally enabled based on a configurable source policy:
+
+- `ENABLE_PROMPT_COMPRESSION` (env boolean): "1|true|yes|on" to enable when using env policy.
+- `PROMPT_COMPRESSION_SOURCE` (env): selects enablement source — `env` (default), `settings`, or `both`.
+  - `env` (default): use only the env variable; if the env var is present but falsy, a truthy settings flag may still enable; if the env var is absent, settings are ignored (backward-compatible).
+  - `settings`: ignore env; honor `settings.enable_prompt_compression` (or `settings.enable_prompt_compression_flag`).
+  - `both`: enabled if either env or settings enable it.
+
+These semantics match `ultimate_discord_intelligence_bot/services/prompt_engine.py` (`PromptEngine.optimise`).
 
 ## Goals
 
@@ -30,13 +38,15 @@ All stages are pure transforms; failures silently fall back to the original prom
 |--------|------|--------|-------------|
 | `prompt_compression_ratio` | Histogram | tenant, workspace, method | Ratio = compressed_tokens / original_tokens (method currently `optimise`). |
 
-A ratio < 1.0 indicates net savings. Ratios are computed using the same token counting heuristics as the rest of the system (OpenAI model encodings when available, Transformers tokenizers, then whitespace fallback with long-unbroken heuristic).
+A ratio < 1.0 indicates net savings. Ratios are computed using the same token counting heuristics as the rest of the system (OpenAI model encodings when available, Transformers tokenizers, then whitespace fallback with a long-unbroken heuristic). The fallback heuristic treats very long contiguous text (no whitespace) as approximately one token per ~4 characters to avoid dramatically underestimating budget usage.
 
 ## Configuration
 
 | Setting | Source | Default | Effect |
 |---------|--------|---------|--------|
-| `ENABLE_PROMPT_COMPRESSION` | Environment variable | off | Enables pipeline. |
+| `ENABLE_PROMPT_COMPRESSION` | Environment variable | off | Enables pipeline under `env`/`both` policies. |
+| `PROMPT_COMPRESSION_SOURCE` | Environment variable | `env` | Selects policy: `env` \| `settings` \| `both`. |
+| `enable_prompt_compression` / `enable_prompt_compression_flag` | Settings (`core.settings.Settings`) | off | Enables pipeline under `settings`/`both` policies (and under `env` when env var present but falsy). |
 | `prompt_compression_max_repeated_blank_lines` | Settings (`core.settings.Settings`) | 1 | Upper bound of blank lines preserved in any blank run. |
 
 ## Flag Precedence & Caching
@@ -66,3 +76,5 @@ When disabled, `optimise()` returns the original prompt (no interior structural 
 
 ---
 For related retrieval and caching optimisations, see `docs/rag.md` and `docs/memory.md`.
+
+See also: `docs/feature_flags.md` for enablement policies and environment sources.

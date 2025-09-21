@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import sqlite3
 from dataclasses import dataclass
-from datetime import UTC, datetime
+
+from core.time import default_utc_now
 
 
 @dataclass
@@ -320,7 +321,7 @@ def ensure_watchlist(
     row = cur.fetchone()
     if row:
         return int(row[0])
-    now = datetime.now(UTC).isoformat()
+    now = default_utc_now().isoformat()
     cur2 = conn.execute(
         "INSERT INTO watchlist (tenant, workspace, source_type, handle, label, enabled, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?)",
         (tenant, workspace, source_type, handle, label, 1, now, now),

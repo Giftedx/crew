@@ -36,10 +36,14 @@ jobs:
         run: |
           make ci-fast
 
+      - name: Feature flags docs check (fast CI)
+        run: |
+          make docs-flags
+
       - name: Validate docs imports strictly
         if: env.STRICT_DOC_IMPORTS == '1'
         run: |
-          python scripts/validate_docs.py --fail-imports
+          make docs-strict
 
       - name: Upload deprecations report
         if: always()

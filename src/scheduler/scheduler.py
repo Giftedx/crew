@@ -5,13 +5,14 @@ from __future__ import annotations
 import asyncio
 import logging
 import sqlite3
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 from typing import Any
 
 from core.batching import BulkInserter, RequestBatcher
 from core.db_locks import get_lock_for_connection
 from core.error_handling import handle_error_safely
 from core.learning_engine import LearningEngine
+from core.time import default_utc_now
 from ingest import models, pipeline
 from ingest.sources.base import SourceConnector, Watch
 from memory.vector_store import VectorStore
@@ -56,7 +57,7 @@ class Scheduler:
         handle: str,
         label: str | None = None,
     ) -> models.Watchlist:
-        now = datetime.now(UTC).isoformat()
+        now = default_utc_now().isoformat()
         with self._lock:
             cur = self.conn.execute(
                 (
@@ -115,7 +116,7 @@ class Scheduler:
         if not watches:
             return []
 
-        now = datetime.now(UTC).isoformat()
+        now = default_utc_now().isoformat()
         watchlist_rows = [
             (
                 watch_data["tenant"],
@@ -212,7 +213,7 @@ class Scheduler:
             rows = self.conn.execute(
                 "SELECT id, tenant, workspace, source_type, handle, label FROM watchlist WHERE enabled=1",
             ).fetchall()
-        now = datetime.now(UTC)
+        now = default_utc_now()
 
         # Collect jobs and state updates for batching
         jobs_to_enqueue = []

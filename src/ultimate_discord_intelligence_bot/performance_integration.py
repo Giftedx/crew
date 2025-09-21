@@ -8,9 +8,10 @@ performance monitoring system with the existing Discord bot and crew execution.
 
 import asyncio
 import logging
-from datetime import datetime
 from pathlib import Path
 from typing import Any
+
+from core.time import default_utc_now
 
 from .agent_training.performance_monitor import AgentPerformanceMonitor
 from .enhanced_performance_monitor import EnhancedPerformanceMonitor
@@ -35,14 +36,13 @@ class PerformanceIntegrationManager:
 
     async def start_interaction_tracking(self, agent_name: str, task_type: str, context: dict[str, Any]) -> str:
         """Start tracking a new agent interaction."""
-
-        interaction_id = f"{agent_name}_{datetime.now().timestamp()}"
+        interaction_id = f"{agent_name}_{default_utc_now().timestamp()}"
 
         self.active_interactions[interaction_id] = {
             "agent_name": agent_name,
             "task_type": task_type,
             "context": context,
-            "start_time": datetime.now(),
+            "start_time": default_utc_now(),
             "tools_used": [],
             "tool_sequence": [],
         }
@@ -75,7 +75,7 @@ class PerformanceIntegrationManager:
             {
                 "tool": tool_name,
                 "action": tool_action,
-                "timestamp": datetime.now().isoformat(),
+                "timestamp": default_utc_now().isoformat(),
                 "success": success,
                 "error_details": error_details or {},
             }
@@ -96,7 +96,7 @@ class PerformanceIntegrationManager:
             return {}
 
         interaction = self.active_interactions[interaction_id]
-        end_time = datetime.now()
+        end_time = default_utc_now()
         response_time = (end_time - interaction["start_time"]).total_seconds()
 
         # Assess response quality
@@ -283,7 +283,7 @@ class PerformanceIntegrationManager:
                     for name, report in agent_reports.items()
                 },
                 "comparative_analysis": comparative_data,
-                "generation_timestamp": datetime.now().isoformat(),
+                "generation_timestamp": default_utc_now().isoformat(),
             }
 
         except Exception as e:
@@ -296,11 +296,11 @@ class PerformanceIntegrationManager:
         snapshot_dir = Path("data/agent_performance/snapshots")
         snapshot_dir.mkdir(parents=True, exist_ok=True)
 
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        timestamp = default_utc_now().strftime("%Y%m%d_%H%M%S")
         snapshot_file = snapshot_dir / f"performance_snapshot_{timestamp}.json"
 
         snapshot_data = {
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": default_utc_now().isoformat(),
             "active_interactions": len(self.active_interactions),
             "monitored_agents": list(self.base_monitor.performance_history.keys()),
             "enhanced_monitoring_enabled": self.enable_enhanced_monitoring,

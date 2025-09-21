@@ -12,6 +12,8 @@ All detailed guides, architecture docs, and operational procedures have been org
 
 ## 🚀 Quick Start
 
+[![CI (MCP)](https://github.com/Giftedx/crew/actions/workflows/ci-mcp.yml/badge.svg)](https://github.com/Giftedx/crew/actions/workflows/ci-mcp.yml)
+
 1. **Install dependencies:**
 
    ```bash
@@ -64,6 +66,39 @@ Notes:
 - If `openai-whisper` fails to build on Python 3.12, create a Python 3.11 virtualenv for that extra.
 - `vllm` pulls in large GPU-oriented dependencies (`torch`, `triton`, `xformers`); use only if you plan local model serving.
 - You can layer extras after the initial install (e.g., `pip install '.[metrics]'`).
+
+### MCP server (optional)
+
+See `docs/mcp.md` for the full guide. Quickstart:
+
+- Install extras: `pip install -e '.[mcp]'`
+- Run stdio server: `crew_mcp` (works with Claude Desktop)
+- Makefile helpers:
+  - `make run-mcp` — run stdio server honoring env flags
+  - `make test-mcp` — run MCP tests if `fastmcp` is installed; otherwise skip
+
+Enable optional servers via env flags before launch, e.g.:
+
+```bash
+export ENABLE_MCP_MEMORY=1 ENABLE_MCP_ROUTER=1 ENABLE_MCP_OBS=1 ENABLE_MCP_KG=1 ENABLE_MCP_INGEST=1 ENABLE_MCP_HTTP=1 ENABLE_MCP_A2A=1
+export MCP_HTTP_ALLOWLIST="api.github.com,raw.githubusercontent.com"
+crew_mcp
+```
+
+#### Use MCP tools inside Crew (no transport)
+
+Set `ENABLE_MCP_CALL_TOOL=1` to inject an in-process tool that calls MCP module functions directly from Crew agents.
+
+Example (pseudocode):
+
+```python
+from ultimate_discord_intelligence_bot.tools.mcp_call_tool import MCPCallTool
+
+tool = MCPCallTool()
+res = tool.run("http", "http_json_get", {"url": "https://example.com/data.json"})
+if res.success:
+   print(res.data["result"])  # dict
+```
 
 ## 🛠️ Development
 
@@ -130,6 +165,23 @@ This target also validates the Postman/Insomnia collections JSON and required va
   - Configure variables: `A2A_BASE_URL`, `A2A_API_KEY` (if auth enabled), `A2A_TENANT_ID`, `A2A_WORKSPACE_ID` (optional)
   - Includes a ready-made "JSON-RPC: batch (auth)" example that uses optional API key and tenancy headers
 
+### Activities local dev quick-start
+
+Developing the example Activity (`examples/activities/hello-activity`)? Enable CORS and optional echo endpoint in the API for smooth local testing:
+
+```bash
+# in repo root (zsh compatible)
+export ENABLE_CORS=1
+export CORS_ALLOW_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
+export ENABLE_ACTIVITIES_ECHO=1  # optional: enables GET /activities/echo
+```
+
+Notes:
+
+- Activities endpoints (`/activities/*`) are intentionally excluded from the API response cache for real-time behavior.
+- The Hello Activity pings `/activities/health` on load and has a button to call `/activities/echo?q=ping` when echo is enabled.
+- You can toggle these via the setup wizard too: `make setup`.
+
 ## 📁 Key Features
 
 ## � Optimization & Caching Enhancements
@@ -186,6 +238,27 @@ See: `docs/local_model_selection.md` for detailed rationale, VRAM strategies, an
 
 | Name | Stage | Remove After | Days Left | Occurrences | Violation | Replacement |
 |------|-------|--------------|-----------|-------------|-----------|-------------|
-| `ENABLE_ANALYSIS_HTTP_RETRY` | deprecated | 2025-12-31 | 113 | 7 | ✅ | ENABLE_HTTP_RETRY |
-| `services.learning_engine.LearningEngine` | deprecated | 2025-12-31 | 113 | 22 | ✅ | core.learning_engine.LearningEngine |
+| `ENABLE_ANALYSIS_HTTP_RETRY` | deprecated | 2025-12-31 | 101 | 1 | ✅ | ENABLE_HTTP_RETRY |
+| `services.learning_engine.LearningEngine` | deprecated | 2025-12-31 | 101 | 28 | ✅ | core.learning_engine.LearningEngine |
 <!-- DEPRECATIONS:END -->
+
+## ▶️ Run on Replit
+
+This repo includes minimal Replit configuration to run the FastAPI service and optionally the MCP server.
+
+- Press Run to install dependencies and start the API at your Replit app URL.
+- The API factory is `server.app:create_app`.
+- Metrics endpoint is exposed at `/metrics` when enabled.
+
+Optional: start the MCP server over HTTP on port 8001 in the Replit shell:
+
+```bash
+python -c 'from mcp_server.server import mcp; mcp.run(transport="http", host="0.0.0.0", port=8001, path="/mcp")'
+```
+
+For stdio-based MCP (e.g., for Claude Desktop), run locally and use the `crew_mcp` entrypoint after installing the `mcp` extra:
+
+```bash
+pip install -e '.[mcp]'
+crew_mcp
+```

@@ -15,6 +15,8 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import Any
 
+from core.time import default_utc_now
+
 logger = logging.getLogger(__name__)
 
 
@@ -28,10 +30,9 @@ class CostUtilityRecord:
     actual_reward: float | None = None
     actual_cost: float | None = None
     latency_ms: float | None = None
-    timestamp: datetime = field(default_factory=datetime.now)
+    timestamp: datetime = field(default_factory=default_utc_now)
 
 
-@dataclass
 @dataclass
 class ShadowRoutingResult:
     """Result of shadow cost-aware routing evaluation."""
@@ -45,7 +46,7 @@ class ShadowRoutingResult:
     potential_cost_savings: float
     utility_improvement: float
     recommendation_confidence: float
-    timestamp: datetime = field(default_factory=datetime.now)
+    timestamp: datetime = field(default_factory=default_utc_now)
 
 
 class CostAwareRoutingShadow:
@@ -214,8 +215,7 @@ class CostAwareRoutingShadow:
         """Get performance summary of shadow cost-aware routing."""
         if not self.is_enabled():
             return {"enabled": False}
-
-        cutoff_time = datetime.now() - timedelta(hours=lookback_hours)
+        cutoff_time = default_utc_now() - timedelta(hours=lookback_hours)
         recent_results = [r for r in self.shadow_results if r.timestamp >= cutoff_time]
 
         if not recent_results:

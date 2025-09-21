@@ -25,15 +25,15 @@ This document summarizes the comprehensive project reorganization completed on S
 
 **Files Moved to `docs/history/`:**
 
-- `AGENT_ENHANCEMENT_COMPLETE.md`
-- `COMPREHENSIVE_CODEBASE_ASSESSMENT.md`
-- `IMPLEMENTATION_PROMPT.md`
-- `NEXT_IMPLEMENTATION_PHASE.md`
-- `NEXT_IMPLEMENTATION_PROMPT.md`
-- `PHASE_1_IMPLEMENTATION_SUMMARY.md`
-- `SCOPED_BOT_README.md`
-- `SCOPED_IMPLEMENTATION_SUMMARY.md`
-- `QUICK_START.md`
+- `docs/history/AGENT_ENHANCEMENT_COMPLETE.md`
+- `docs/history/COMPREHENSIVE_CODEBASE_ASSESSMENT.md`
+- `docs/history/IMPLEMENTATION_PROMPT.md`
+- `docs/history/NEXT_IMPLEMENTATION_PHASE.md`
+- `docs/history/NEXT_IMPLEMENTATION_PROMPT.md`
+- `docs/history/PHASE_1_IMPLEMENTATION_SUMMARY.md`
+- `docs/history/SCOPED_BOT_README.md`
+- `docs/history/SCOPED_IMPLEMENTATION_SUMMARY.md`
+- `docs/history/QUICK_START.md`
 
 **Rationale:** These files contained historical implementation context that was valuable for reference but cluttered the root directory and made navigation difficult.
 
@@ -41,9 +41,9 @@ This document summarizes the comprehensive project reorganization completed on S
 
 **Files Moved to `tests/`:**
 
-- `test_batching.py`
-- `test_context_trimming.py`
-- `test_performance_integration.py`
+- batching tests (moved under `tests/`)
+- context trimming tests (moved under `tests/`)
+- performance integration tests (moved under `tests/`)
 
 **Rationale:** Test files belong in the `tests/` directory for consistency with project conventions and easier test discovery.
 
@@ -66,27 +66,27 @@ This document summarizes the comprehensive project reorganization completed on S
 
 #### New Extension Patterns Added
 
-- **Debate panel**: Add config in `debate/panel.py`, implement judging logic, register with `DebateStore` for persistence
-- **Grounding contracts**: Define in `grounding/schema.py`, implement verifiers in `grounding/verifier.py`, enforce via `AnswerContract`
+- **Debate panel**: Add config in `src/debate/panel.py`, implement judging logic, register with `DebateStore` for persistence
+- **Grounding contracts**: Define in `src/grounding/schema.py`, implement verifiers in `src/grounding/verifier.py`, enforce via `AnswerContract`
 - **Security policies**: Configure in `security/`, implement rate limiting/RBAC, test with tenant isolation patterns
-- **Archive routing**: Add routes in `archive/discord_store/router.py`, respect policy limits, handle compression automatically
-- **Evaluation scorers**: Add in `eval/scorers/`, register in `eval.runner.SCORERS`, test against golden datasets
-- **API endpoints**: Add to `server/app.py` with proper middleware, authentication, and observability integration
+- **Archive routing**: Add routes in `src/archive/discord_store/router.py`, respect policy limits, handle compression automatically
+- **Evaluation scorers**: Add in `src/eval/scorers/`, register in `eval.runner.SCORERS`, test against golden datasets
+- **API endpoints**: Add to `src/server/app.py` with proper middleware, authentication, and observability integration
 
 #### New Security & Compliance Patterns Section
 
 - **Tenant isolation**: All operations scoped with `TenantContext(tenant, workspace)`; memory namespaces `f"{tenant}:{workspace}:`
-- **Policy enforcement**: Use `policy/policy_engine.py` for content filtering, PII detection, consent validation
+- **Policy enforcement**: Use `src/policy/policy_engine.py` for content filtering, PII detection, consent validation
 - **Authentication**: FastAPI endpoints use `X-API-TOKEN` header validation; webhook verification in `security/`
-- **Rate limiting**: Distributed rate limiting via `security/rate_limiter.py`; respect per-tenant quotas
-- **Archive security**: File policy checks in `archive/discord_store/policy.py`; size/type validation mandatory
+- **Rate limiting**: Distributed rate limiting via `src/security/rate_limit.py`; respect per-tenant quotas
+- **Archive security**: File policy checks in `src/archive/discord_store/policy.py`; size/type validation mandatory
 
 ### Documentation Deduplication ✅
 
 **Files Removed:**
 
-- `docs/dev_assistants/CLAUDE.md` (duplicate)
-- `docs/operations/CLAUDE_GUIDE.md` (duplicate)
+- docs/dev_assistants/CLAUDE.md (duplicate)
+- docs/operations/CLAUDE_GUIDE.md (duplicate)
 
 **Canonical Version Retained:**
 
@@ -98,7 +98,7 @@ This document summarizes the comprehensive project reorganization completed on S
 
 **Files Removed:**
 
-- `config/scoped_bot_config.py` (unused, only referenced in historical documents)
+- config/scoped_bot_config.py (unused, only referenced in historical documents)
 
 **Rationale:** Removing unused configuration files reduces confusion and maintenance burden.
 

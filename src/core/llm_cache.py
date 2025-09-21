@@ -128,6 +128,9 @@ def _tenant_prefix() -> str:
 
 # ---------------------- Data Structures ----------------------
 
+# Small grace window to avoid timing flakiness around TTL boundaries (in seconds)
+_EXPIRY_GRACE_S = 0.05
+
 
 @dataclass
 class CacheEntry:
@@ -135,12 +138,24 @@ class CacheEntry:
     response: Any
     embedding: list[float]
     created: float
+    created_mono: float | None
     ttl: int
     snippet: str  # truncated original prompt text (or full if short) for cheap lexical fallback
 
     @property
     def expired(self) -> bool:
-        return (time.time() - self.created) > self.ttl
+        try:
+            if self.ttl <= 0:
+                return True
+            # Prefer monotonic clock if available
+            if self.created_mono is not None:
+                elapsed = time.monotonic() - self.created_mono
+            else:
+                elapsed = time.time() - self.created
+            # Boundary-inclusive with a small grace window
+            return elapsed >= max(0.0, self.ttl - _EXPIRY_GRACE_S)
+        except Exception:
+            return True
 
 
 class _LRU:
@@ -166,6 +181,14 @@ class _LRU:
     def items(self):  # pragma: no cover - simple iteration helper
         with self._lock:
             return list(self._store.items())
+
+    def delete(self, key: str) -> None:
+        with self._lock:
+            if key in self._store:
+                try:
+                    del self._store[key]
+                except Exception:
+                    self._store.pop(key, None)
 
 
 # ---------------------- Core Cache ----------------------
@@ -196,6 +219,7 @@ class SemanticLLMCache:
                 "response": entry.response,
                 "embedding": entry.embedding,
                 "created": entry.created,
+                "created_mono": entry.created_mono,
                 "ttl": entry.ttl,
                 "snippet": entry.snippet,
             }
@@ -211,6 +235,7 @@ class SemanticLLMCache:
                 response=obj.get("response"),
                 embedding=list(obj.get("embedding", [])),
                 created=float(obj.get("created", time.time())),
+                created_mono=float(obj.get("created_mono")) if obj.get("created_mono") is not None else None,
                 ttl=int(obj.get("ttl", self.ttl_seconds)),
                 snippet=obj.get("snippet", ""),
             )
@@ -226,23 +251,39 @@ class SemanticLLMCache:
         k = self._key(prompt, model)
         # 1. Exact LRU
         ent = self._lru.get(k)
-        if ent and not ent.expired:
-            return ent.response
+        if ent:
+            # Remove expired entry to prevent stale returns along alternate paths
+            if ent.expired:
+                try:
+                    self._lru.delete(k)
+                except Exception:
+                    pass
+            else:
+                return ent.response
         # 2. Redis exact
         if self._redis is not None:
             try:
                 raw = self._redis.get_str(k)
                 if raw:
                     ent = self._deserialize_entry(raw)
-                    if ent and not ent.expired:
-                        self._lru.put(k, ent)
-                        return ent.response
+                    if ent:
+                        if ent.expired:
+                            # Allow natural expiry; do not reinsert
+                            pass
+                        else:
+                            self._lru.put(k, ent)
+                            return ent.response
             except Exception:  # pragma: no cover
                 pass
         # 3. Semantic scan (LRU only for speed) if embedding provided / computed
         emb = embedding or _hash_embedding(prompt)
         for key, entry in self._lru.items():  # pragma: no cover - simple linear scan path
             if entry.expired:
+                # Opportunistically clean up expired entries during scan
+                try:
+                    self._lru.delete(key)
+                except Exception:
+                    pass
                 continue
             if key == k:
                 continue
@@ -276,6 +317,7 @@ class SemanticLLMCache:
             response=response,
             embedding=emb,
             created=time.time(),
+            created_mono=time.monotonic(),
             ttl=ttl_seconds or self.ttl_seconds,
             snippet=snippet,
         )

@@ -71,8 +71,34 @@ def move_completion_docs():
         "ADVANCED_*_COMPLETE*.md",
         "COMPREHENSIVE_*.md",
         "COMPLETE_*.md",
+        "*_COMPLETION*.md",
         "FINAL_*.md",
         "*_COMPLETE*.md",
+    ]
+    moved = []
+    for pattern in patterns:
+        for file_path in glob.glob(pattern):
+            dest = f"docs/history/{os.path.basename(file_path)}"
+            # If destination already exists (previously moved), remove source to keep root clean
+            if os.path.exists(dest):
+                os.remove(file_path)
+            else:
+                shutil.move(file_path, dest)
+            moved.append(file_path)
+    return moved
+
+
+def move_phase_guides():
+    """Move phase guide markdown files to docs/history/.
+
+    Examples:
+    - PHASE5_PRODUCTION_OPERATIONS_GUIDE.md
+    - PHASE*_OPERATIONS_GUIDE.md
+    """
+    patterns = [
+        "PHASE*_PRODUCTION_*GUIDE.md",
+        "PHASE*_OPERATIONS_*GUIDE.md",
+        "PHASE*_*GUIDE.md",
     ]
     moved = []
     for pattern in patterns:
@@ -131,6 +157,7 @@ def main():
     moved_results = move_result_files()
     moved_experimental = move_experimental_files()
     moved_docs = move_completion_docs()
+    moved_phase_guides = move_phase_guides()
     moved_logs = move_log_files()
     moved_utilities = move_utility_files()
 
@@ -138,6 +165,7 @@ def main():
     all_moved.extend(moved_results)
     all_moved.extend(moved_experimental)
     all_moved.extend(moved_docs)
+    all_moved.extend(moved_phase_guides)
     all_moved.extend(moved_logs)
     all_moved.extend(moved_utilities)
 

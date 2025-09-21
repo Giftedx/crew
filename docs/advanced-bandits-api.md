@@ -745,3 +745,17 @@ except Exception as e:
 ---
 
 *API Reference Last Updated: September 2025*
+
+## Environment Tuning (Routing)
+
+For the baseline Thompson bandit router used by default routing paths, the following environment variables apply:
+
+- `ENABLE_BANDIT_ROUTING`: Gate for enabling the bandit router.
+- `BANDIT_MIN_EPSILON`: Forced exploration floor in [0.0, 1.0]; when > 0.0, an epsilon-greedy overlay can choose a non-argmax arm.
+- `BANDIT_RESET_ENTROPY_THRESHOLD`: Entropy threshold below which the router counts a low-entropy step.
+- `BANDIT_RESET_ENTROPY_WINDOW`: Number of consecutive low-entropy steps to trigger a state reset.
+
+Semantics:
+
+- Exploration and reset parameters are read dynamically at selection/reset time (not cached at import), so they can be adjusted mid-process in tests and controlled environments.
+- Prior parameters (`BANDIT_PRIOR_ALPHA`, `BANDIT_PRIOR_BETA`) are read at import and act as stable defaults.

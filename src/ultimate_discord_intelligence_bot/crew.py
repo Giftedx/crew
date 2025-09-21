@@ -783,6 +783,18 @@ class UltimateDiscordIntelligenceBotCrew:
             base["max_rpm"] = cfg["max_rpm"]
         if tools:
             base["tools"] = tools
+            # Optionally add MCPCallTool to all agents when enabled
+            try:
+                if os.getenv("ENABLE_MCP_CALL_TOOL", "0").lower() in ("1", "true", "yes", "on"):
+                    try:
+                        from .tools.mcp_call_tool import MCPCallTool  # noqa: PLC0415
+
+                        base["tools"].append(MCPCallTool())
+                    except Exception:
+                        # Keep agent construction robust even if optional tool unavailable
+                        pass
+            except Exception:
+                pass
         return Agent(**base)
 
     def _task_from_config(self, name: str) -> Task:

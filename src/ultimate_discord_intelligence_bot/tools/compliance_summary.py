@@ -1,11 +1,6 @@
 """Generate compliance summary report for StepResult and HTTP patterns."""
 
-import sys
-from datetime import UTC, datetime
-from pathlib import Path
-
-# Add parent directory to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+from core.time import default_utc_now
 
 
 def generate_summary():
@@ -13,7 +8,7 @@ def generate_summary():
 
     print("=" * 70)
     print("COMPLIANCE AUDIT SUMMARY")
-    print(f"Generated: {datetime.now(UTC).isoformat()}")
+    print(f"Generated: {default_utc_now().isoformat()}")
     print("=" * 70)
 
     # HTTP Compliance Status

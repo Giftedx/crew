@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json
 import os
-from datetime import UTC, datetime
 from pathlib import Path
 
 from core.http_utils import (
@@ -13,6 +12,7 @@ from core.http_utils import (
     resilient_post,
     validate_public_https_url,
 )
+from core.time import default_utc_now
 from pydantic import Field
 
 from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
@@ -132,7 +132,7 @@ class DiscordPostTool(BaseTool[StepResult]):
                 "icon_url": "https://example.com/crewai-icon.png",
             },
             # Use explicit UTC to avoid naive timestamps which complicate downstream parsing
-            "timestamp": datetime.now(UTC).isoformat(),
+            "timestamp": default_utc_now().isoformat(),
         }
 
         payload = {

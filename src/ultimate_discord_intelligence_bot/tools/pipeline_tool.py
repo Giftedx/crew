@@ -7,10 +7,9 @@ from typing import Any, TypedDict
 
 from core.settings import get_settings
 
-from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
-from ultimate_discord_intelligence_bot.step_result import StepResult
-
+from ..obs.metrics import get_metrics
 from ..pipeline import ContentPipeline
+from ..step_result import StepResult
 from ._base import BaseTool
 
 logger = logging.getLogger(__name__)

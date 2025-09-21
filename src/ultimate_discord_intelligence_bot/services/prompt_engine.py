@@ -17,6 +17,31 @@ from typing import Any
 
 from obs import metrics
 
+try:  # lightweight tracing shim available in repo
+    from opentelemetry import trace
+except Exception:  # pragma: no cover - fallback to local noop-like tracer
+
+    class _NoopSpan:
+        def set_attribute(self, *_a, **_k):
+            return None
+
+    class _NoopTracer:
+        def start_as_current_span(self, *_a, **_k):  # noqa: D401 - simple context manager
+            class _Ctx:
+                def __enter__(self):
+                    return _NoopSpan()
+
+                def __exit__(self, *_):
+                    return False
+
+            return _Ctx()
+
+    class _NoopTraceAPI:
+        def get_tracer(self, *_a, **_k):  # noqa: D401 - return noop tracer
+            return _NoopTracer()
+
+    trace = _NoopTraceAPI()
+
 try:
     from core.settings import get_settings
 except Exception:  # pragma: no cover - defensive fallback
@@ -122,33 +147,69 @@ class PromptEngine:
             Target reduction ratio (0.15 = 15% reduction). If 0, only basic compression.
         max_tokens:
             Optional hard limit on output token count
-        """
-        original = prompt
-        text = original  # preserve internal structure initially
-        settings = get_settings()
 
-        # Environment variable should take precedence so test suites that
-        # mutate os.environ between calls are not affected by an lru_cached
-        # settings instance that may exist under a different import path
-        # (e.g. 'core.settings' vs 'src.core.settings'). This avoids order-
-        # dependent behaviour where one module path retains a cached flag.
+        Compression enablement
+        ----------------------
+        Controlled by the following environment and settings flags:
+
+        - ENABLE_PROMPT_COMPRESSION (env bool): primary switch when source is 'env'
+        - settings.enable_prompt_compression / settings.enable_prompt_compression_flag
+        - PROMPT_COMPRESSION_SOURCE (env str): 'env' | 'settings' | 'both'
+
+        Semantics:
+        - 'env' (default, backward compatible): enabled if env is truthy; if the
+          env var exists but is falsy, settings may enable it. If the env var is
+          absent, settings are ignored (historical behavior to avoid lru-cached
+          settings making tests order-dependent).
+        - 'settings': enabled only by settings flags (env ignored).
+        - 'both': enabled if either env or settings enable it.
+        """
+        tracer = trace.get_tracer(__name__)
+        with tracer.start_as_current_span("prompt.optimise") as span:
+            if span:
+                try:
+                    span.set_attribute("target_token_reduction", float(target_token_reduction))
+                    span.set_attribute("max_tokens", int(max_tokens) if max_tokens is not None else -1)
+                except Exception:
+                    pass
+
+            original = prompt
+            text = original  # preserve internal structure initially
+            settings = get_settings()
+
+        # Determine compression enablement per configurable source policy.
+        # Default preserves historical semantics: prefer ENV and ignore settings
+        # unless the env var is present (even if falsy), to avoid lru-cached
+        # settings causing order-dependent behavior.
         env_present = "ENABLE_PROMPT_COMPRESSION" in os.environ
         env_enabled = os.getenv("ENABLE_PROMPT_COMPRESSION", "").lower() in {"1", "true", "yes", "on"}
-        enabled_direct = bool(getattr(settings, "enable_prompt_compression", False))
-        enabled_alias = bool(getattr(settings, "enable_prompt_compression_flag", False))
-        # If the env var is absent we intentionally ignore any cached settings
-        # value that may have been populated via a different import path's
-        # lru_cache ("core.settings" vs "src.core.settings"). This prevents
-        # order-dependent test leakage: only an active environment variable
-        # may enable compression.
-        effective_enabled = env_enabled or (env_present and (enabled_direct or enabled_alias))
+        settings_enabled = bool(getattr(settings, "enable_prompt_compression", False)) or bool(
+            getattr(settings, "enable_prompt_compression_flag", False)
+        )
+        source_policy = os.getenv("PROMPT_COMPRESSION_SOURCE", "env").strip().lower()
+        if source_policy == "settings":
+            effective_enabled = settings_enabled
+        elif source_policy == "both":
+            effective_enabled = env_enabled or settings_enabled
+        else:  # "env" (default): env governs; settings only if env var is present
+            effective_enabled = env_enabled or (env_present and settings_enabled)
+        try:
+            # Add attributes for observability
+            span.set_attribute("prompt_compression.source_policy", source_policy)
+            span.set_attribute("prompt_compression.env_present", bool(env_present))
+            span.set_attribute("prompt_compression.env_enabled", bool(env_enabled))
+            span.set_attribute("prompt_compression.settings_enabled", bool(settings_enabled))
+            span.set_attribute("prompt_compression.enabled", bool(effective_enabled))
+        except Exception:
+            pass
         if not effective_enabled:
             return original.strip()
 
         lbl = metrics.label_ctx()
 
         # Phase 1: Basic compression (always applied when compression is enabled)
-        text = self._apply_basic_compression(text, settings)
+        with tracer.start_as_current_span("prompt.compress.basic"):
+            text = self._apply_basic_compression(text, settings)
 
         # Phase 2: Intelligent context trimming (only if target reduction specified)
         if target_token_reduction > 0:
@@ -156,16 +217,36 @@ class PromptEngine:
             target_tokens = int(original_tokens * (1.0 - target_token_reduction))
             if max_tokens:
                 target_tokens = min(target_tokens, max_tokens)
+            if span:
+                try:
+                    span.set_attribute("prompt.tokens.original", int(original_tokens))
+                    span.set_attribute("prompt.tokens.target", int(target_tokens))
+                except Exception:
+                    pass
 
             current_tokens = self.count_tokens(text)
             if current_tokens > target_tokens:
-                text = self._apply_context_trimming(text, target_tokens, current_tokens)
+                with tracer.start_as_current_span("prompt.compress.context_trimming") as subspan:
+                    if subspan:
+                        try:
+                            subspan.set_attribute("current_tokens", int(current_tokens))
+                            subspan.set_attribute("target_tokens", int(target_tokens))
+                        except Exception:
+                            pass
+                    text = self._apply_context_trimming(text, target_tokens, current_tokens)
 
         # Phase 3: Emergency truncation if hard limit specified and still over
         if max_tokens:
             current_tokens = self.count_tokens(text)
             if current_tokens > max_tokens:
-                text = self._apply_emergency_truncation(text, max_tokens)
+                with tracer.start_as_current_span("prompt.compress.emergency_truncation") as subspan:
+                    if subspan:
+                        try:
+                            subspan.set_attribute("current_tokens", int(current_tokens))
+                            subspan.set_attribute("max_tokens", int(max_tokens))
+                        except Exception:
+                            pass
+                    text = self._apply_emergency_truncation(text, max_tokens)
 
         try:  # metrics emission best-effort
             original_tokens = max(1, self.count_tokens(original))
@@ -178,10 +259,17 @@ class PromptEngine:
             # Track if we achieved target reduction (only if target was set)
             if target_token_reduction > 0 and hasattr(metrics, "PROMPT_COMPRESSION_TARGET_MET"):
                 target_met = reduction_achieved >= (target_token_reduction * 0.9)  # 90% of target
-                metrics.PROMPT_COMPRESSION_TARGET_MET.labels(
-                    lbl["tenant"], lbl["workspace"]
-                ).inc() if target_met else None
+                if target_met:
+                    metrics.PROMPT_COMPRESSION_TARGET_MET.labels(lbl["tenant"], lbl["workspace"]).inc()
 
+            # Add span attributes
+            if span:
+                try:
+                    span.set_attribute("prompt.tokens.final", int(final_tokens))
+                    span.set_attribute("prompt.compress.ratio", float(ratio))
+                    span.set_attribute("prompt.compress.reduction_achieved", float(reduction_achieved))
+                except Exception:
+                    pass
         except Exception:
             pass
 
@@ -359,6 +447,14 @@ class PromptEngine:
         """Apply emergency truncation when all else fails."""
         if self.count_tokens(text) <= max_tokens:
             return text
+
+        # count truncation occurrence for observability
+        try:
+            lbl = metrics.label_ctx()
+            if hasattr(metrics, "PROMPT_EMERGENCY_TRUNCATIONS"):
+                metrics.PROMPT_EMERGENCY_TRUNCATIONS.labels(lbl["tenant"], lbl["workspace"]).inc()
+        except Exception:
+            pass
 
         lines = text.splitlines()
         if not lines:

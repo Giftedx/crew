@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime, timedelta
+from datetime import timedelta
 
 import ultimate_discord_intelligence_bot.tools.yt_dlp_download_tool as ytdlp
+from core.time import default_utc_now
 
 from .base import DiscoveryItem, SourceConnector, Watch
 
@@ -21,7 +22,7 @@ class YouTubeChannelConnector(SourceConnector):
 
     def _cutoff(self) -> str:
         # YYYYMMDD cutoff inclusive
-        dt = datetime.now(UTC) - timedelta(days=30 * self.months)
+        dt = default_utc_now() - timedelta(days=30 * self.months)
         return dt.strftime("%Y%m%d")
 
     def discover(self, watch: Watch, state: dict[str, object]) -> list[DiscoveryItem]:

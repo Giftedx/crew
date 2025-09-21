@@ -80,6 +80,12 @@ The following optimization-focused documents have been added post-migration and 
 | Postman Collection | `docs/a2a_postman_collection.json` | Ready-to-import Postman requests for discovery and JSON-RPC (includes batch auth example) |
 | Insomnia Collection | `docs/a2a_insomnia_collection.json` | Insomnia workspace with discovery and JSON-RPC (includes batch auth example) |
 
+## MCP Servers & Crew Bridge
+
+| Topic | Location | Summary |
+|-------|----------|---------|
+| MCP Servers (FastMCP) | `docs/mcp.md` | Optional servers (memory, router, obs, kg, ingest, http, a2a), feature flags, Makefile helpers, and Crew in-process bridge (`ENABLE_MCP_CALL_TOOL`). |
+
 ## Project Reorganization Deliverables (2025-09-15)
 
 Key project optimization and onboarding documents:
@@ -87,10 +93,12 @@ Key project optimization and onboarding documents:
 | Document | Location | Purpose |
 |----------|----------|---------|
 | Developer Onboarding Guide | `DEVELOPER_ONBOARDING_GUIDE.md` | Quick-start guide for new developers with organized structure and AI guidance |
-| Final Reorganization Report | `FINAL_REORGANIZATION_REPORT.md` | Complete transformation documentation and validation of requirements |
+| Final Reorganization Report | history/FINAL_REORGANIZATION_REPORT.md | Complete transformation documentation and validation of requirements |
 | Enhanced AI Guidance | `.github/copilot-instructions.md` | Comprehensive architectural coverage for AI-assisted development |
 
-Cross-links to these topics have been (or will be) added to `memory.md` and `rag.md` for discoverability.
+Cross-links to these topics have been (or will be) added to [memory](memory.md) and [rag](rag.md) for discoverability.
+
+Additional curated external resources are available in [resources_index](resources_index.md).
 
 ---
 Generated: 2025-09-03 | Migration completed successfully

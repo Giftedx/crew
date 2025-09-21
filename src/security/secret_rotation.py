@@ -32,11 +32,12 @@ Structured security events emitted on promote / retire when auditing enabled.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
 
 import yaml
+from core.time import default_utc_now
 
 from .events import log_security_event
 
@@ -52,7 +53,7 @@ class SecretEntry:
     previous_activated_at: datetime | None = None
 
     def grace_elapsed(self, grace: timedelta) -> bool:
-        return datetime.now(UTC) - self.activated_at >= grace
+        return default_utc_now() - self.activated_at >= grace
 
 
 _registry: dict[str, SecretEntry] = {}
@@ -94,7 +95,7 @@ def register(  # noqa: PLR0913 - explicit parameters improve audit clarity
         logical=logical,
         current_ref=current_ref,
         previous_ref=previous_ref,
-        activated_at=activated_at or datetime.now(UTC),
+        activated_at=activated_at or default_utc_now(),
     )
     _registry[logical] = entry
     _audit(auditing, actor, "register", logical, current_ref=current_ref, previous_ref=previous_ref)
@@ -119,7 +120,7 @@ def promote(
 ) -> None:
     cfg = _load_rotation_config(config_path)
     auditing = bool(cfg.get("audit_events", True))
-    now = datetime.now(UTC)
+    now = default_utc_now()
     if logical in _registry:
         entry = _registry[logical]
         # Preserve activation time of outgoing current before overwriting
@@ -198,7 +199,7 @@ def validate_grace(logical: str, *, config_path: Path | None = None, actor: str 
         return False
     # Violation if previous existed longer than grace window since its original activation
     previous_started = entry.previous_activated_at or entry.activated_at
-    if datetime.now(UTC) - previous_started >= grace:
+    if default_utc_now() - previous_started >= grace:
         _audit(auditing, actor, "grace_violation", logical, previous_ref=entry.previous_ref)
         return True
     return False

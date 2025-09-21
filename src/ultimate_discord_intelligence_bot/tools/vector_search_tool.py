@@ -5,20 +5,18 @@ from __future__ import annotations
 from collections.abc import Callable, Sequence
 from typing import Any, Protocol, TypedDict, cast, runtime_checkable
 
-from core.secure_config import get_config
+from memory.qdrant_provider import get_qdrant_client
 
-from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
-from ultimate_discord_intelligence_bot.step_result import StepResult
-
+from ..obs.metrics import get_metrics
+from ..step_result import StepResult
 from ._base import BaseTool
 
 try:  # pragma: no cover - optional dependency
-    from qdrant_client import QdrantClient
     from qdrant_client.models import Distance, VectorParams
 
-    _QDRANT_OK = True
+    _HAS_QDRANT_MODELS = True
 except Exception:  # pragma: no cover - used for testing without qdrant
-    _QDRANT_OK = False
+    _HAS_QDRANT_MODELS = False
 
 
 @runtime_checkable
@@ -65,12 +63,8 @@ class VectorSearchTool(BaseTool):
         if client is not None:
             self.client = cast(_QdrantLike, client)
         else:
-            if not _QDRANT_OK:  # pragma: no cover - real client missing
-                raise RuntimeError("qdrant-client package is not installed")
-            config = get_config()
-            url = config.qdrant_url
-            api_key = config.qdrant_api_key
-            self.client = cast(_QdrantLike, QdrantClient(url=url, api_key=api_key))
+            # Centralized provider returns a real QdrantClient or an in-memory dummy
+            self.client = cast(_QdrantLike, get_qdrant_client())
         self._ensure_collection(self.collection)
 
     @staticmethod
@@ -79,13 +73,36 @@ class VectorSearchTool(BaseTool):
         return name.replace(":", "__")
 
     def _ensure_collection(self, name: str) -> None:  # pragma: no cover - setup
+        physical = self._physical_name(name)
         try:
-            self.client.get_collection(self._physical_name(name))
+            self.client.get_collection(physical)
         except Exception:  # pragma: no cover - creation branch
-            self.client.recreate_collection(
-                self._physical_name(name),
-                vectors_config=VectorParams(size=1, distance=Distance.COSINE),
-            )
+            # Prefer recreate_collection if available, else fall back to create_collection
+            recreate = getattr(self.client, "recreate_collection", None)
+            if callable(recreate) and _HAS_QDRANT_MODELS:
+                recreate(
+                    physical,
+                    vectors_config=VectorParams(size=1, distance=Distance.COSINE),
+                )
+            else:
+                create = getattr(self.client, "create_collection", None)
+                if callable(create):
+                    # When models are unavailable (dummy client), size/distance are irrelevant
+                    try:
+                        if _HAS_QDRANT_MODELS:
+                            create(physical, vectors_config=VectorParams(size=1, distance=Distance.COSINE))
+                        else:
+                            create(physical)
+                    except TypeError:
+                        # Some client versions use keyword 'collection_name'
+                        if _HAS_QDRANT_MODELS:
+                            create(
+                                collection_name=physical, vectors_config=VectorParams(size=1, distance=Distance.COSINE)
+                            )
+                        else:
+                            create(collection_name=physical)
+                else:  # pragma: no cover - unexpected client surface
+                    raise RuntimeError("Qdrant client does not support collection creation APIs")
 
     def _run(self, query: str, limit: int = 3, collection: str | None = None) -> StepResult:
         target = collection or self.collection

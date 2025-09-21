@@ -11,12 +11,13 @@ from __future__ import annotations
 import os
 from collections.abc import Callable
 from dataclasses import asdict
-from datetime import UTC, datetime
+from datetime import datetime
 from typing import Any, TypedDict
 
 from core.learning_engine import LearningEngine
 from core.privacy import privacy_filter, retention
 from core.router import Router
+from core.time import default_utc_now
 from debate.panel import PanelConfig, run_panel
 from debate.store import Debate, DebateStore
 from grounding.schema import AnswerContract
@@ -151,7 +152,7 @@ def context_query(store: vector_store.VectorStore, namespace: str, query: str) -
             output_hash="",
             user_cmd="/context",
             channel_id="",
-            ts=datetime.now(UTC).isoformat(),
+            ts=default_utc_now().isoformat(),
         )
         models.record_usage(conn, usage)
     return out
@@ -173,7 +174,7 @@ def ops_debate_run(query: str, roles: list[str]) -> DebateSummary:
         panel_config_json="{}",
         n_rounds=cfg.n_rounds,
         final_output=report.final,
-        created_at=datetime.now(UTC).isoformat(),
+        created_at=default_utc_now().isoformat(),
     )
     debate_id = _DEBATE_STORE.add_debate(debate)
     return {"id": debate_id, "final": report.final, "status": router.engine.status()}

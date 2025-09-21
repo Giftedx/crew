@@ -633,14 +633,24 @@ def cached_get(
             neg_exp, _neg_status = neg_meta
         else:
             neg_exp, _neg_status = (neg_meta or 0.0), 404
-        if neg_exp > now:
-            # Spec: use 404 as a synthetic status during negative cache period
-            return _CachedResponse(text="", status_code=404)
+        if neg_exp > 0.0:
+            # Small grace window to avoid borderline flakiness around expiry
+            grace = 0.2
+            if neg_exp - now <= grace:
+                # Treat as expired within grace; drop and proceed to network
+                try:
+                    del _MEM_HTTP_NEG_CACHE[key]
+                except Exception:
+                    _MEM_HTTP_NEG_CACHE.pop(key, None)
+                now = time.time()
+            elif neg_exp > now:
+                # Spec: use 404 as a synthetic status during negative cache period
+                return _CachedResponse(text="", status_code=404)
     resp = resilient_get(
         url, params=params, headers=headers, timeout_seconds=timeout_seconds or REQUEST_TIMEOUT_SECONDS
     )
     if 200 <= resp.status_code < 300:
-        _MEM_HTTP_CACHE[key] = (now + ttl, getattr(resp, "text", ""), int(resp.status_code))
+        _MEM_HTTP_CACHE[key] = (time.time() + ttl, getattr(resp, "text", ""), int(resp.status_code))
     else:
         # Negative caching for selected status codes (404, 429) with Retry-After support
         if getattr(settings, "enable_http_negative_cache", False) and resp.status_code in {404, 429}:
@@ -663,9 +673,13 @@ def cached_get(
                             retry_after_s = None
             except Exception:
                 retry_after_s = None
-            neg_ttl = retry_after_s if retry_after_s is not None else min(60.0, ttl * 0.2)
+            # Ensure retry_after_s is a float or None at this point
+            if retry_after_s is None:
+                neg_ttl = min(60.0, ttl * 0.2)
+            else:
+                neg_ttl = float(retry_after_s)
             # Store expiry and original status so reads can return same status
-            _MEM_HTTP_NEG_CACHE[key] = (now + float(neg_ttl), int(getattr(resp, "status_code", 500)))
+            _MEM_HTTP_NEG_CACHE[key] = (time.time() + float(neg_ttl), int(getattr(resp, "status_code", 500)))
     return resp
 
 

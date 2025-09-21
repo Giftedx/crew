@@ -1,8 +1,9 @@
 import os
 from pathlib import Path
 
-from archive.discord_store import api, limits, manifest, policy, router
 from fastapi.testclient import TestClient
+
+from archive.discord_store import api, limits, manifest, policy, router
 
 ROUTES_YAML = (
     "routes:\n"

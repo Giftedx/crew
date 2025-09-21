@@ -1,3 +1,20 @@
+## MCP Feature Flags
+
+MCP servers are optional and feature-flagged.
+
+Set these before launching the MCP server (stdio or HTTP) if you want to enable specific modules. See `docs/mcp.md` for details.
+
+- `ENABLE_MCP_MEMORY=1` — vector search/list/sample tools
+- `ENABLE_MCP_ROUTER=1` — cost estimation and advisory routing tools
+- `ENABLE_MCP_OBS=1` — observability tools and basic health
+- `ENABLE_MCP_OBS_PROM_RESOURCE=1` — enable Prometheus text resource `metrics://prom`
+- `ENABLE_MCP_KG=1` — KG subgraph/timeline tools and grounding/policy resources
+- `ENABLE_MCP_INGEST=1` — safe ingest utilities (metadata, local transcript)
+- `ENABLE_MCP_HTTP=1` — allowlisted HTTPS GET tools (`http_get`, `http_json_get`)
+- `ENABLE_MCP_A2A=1` — A2A bridge tool (`a2a_call`) plus discovery resources
+- `ENABLE_MCP_CALL_TOOL=1` — inject in-process MCP tool into Crew agents
+- `MCP_HTTP_ALLOWLIST="api.github.com,raw.githubusercontent.com"` — comma-separated host allowlist for HTTP tools
+
 # Configuration Reference
 
 This document provides comprehensive documentation for all configuration files and their options. Configuration controls system behavior, feature flags, tenant settings, and security policies.
@@ -772,11 +789,11 @@ ENABLE_PROFILING=false          # Performance profiling
 
 ## See Also
 
-- [Tenancy Documentation](docs/tenancy.md) - Multi-tenant architecture
+- [Tenancy Documentation](tenancy.md) - Multi-tenant architecture
 - [Security Documentation](security/) - Security model details
-- [Observability Documentation](docs/observability.md) - Monitoring and metrics
-- [Cost and Caching Documentation](docs/cost_and_caching.md) - Budget management
-- [Runtime Data Artifacts](docs/runtime_data.md) - Paths & env overrides for mutable state
+- [Observability Documentation](observability.md) - Monitoring and metrics
+- [Cost and Caching Documentation](cost_and_caching.md) - Budget management
+- [Runtime Data Artifacts](runtime_data.md) - Paths & env overrides for mutable state
 
 ### Retry Configuration
 

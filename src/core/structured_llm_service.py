@@ -223,7 +223,16 @@ class ResponseCache:
             return None
 
         entry = self.cache[key]
-        if entry.is_expired():
+        # Treat non-positive TTL entries as immediately expired (defensive)
+        try:
+            if entry.ttl_seconds <= 0:
+                expired_now = True
+            else:
+                expired_now = entry.is_expired()
+        except Exception:
+            expired_now = True
+
+        if expired_now:
             # Remove expired entry
             entry_size = self._calculate_entry_size(entry)
             self.current_memory_bytes -= entry_size

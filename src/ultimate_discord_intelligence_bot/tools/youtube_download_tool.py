@@ -5,3 +5,5 @@ the previous import path used by existing code and tests.
 """
 
 from .yt_dlp_download_tool import YouTubeDownloadTool  # noqa: F401
+
+__all__ = ["YouTubeDownloadTool"]

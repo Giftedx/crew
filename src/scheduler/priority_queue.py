@@ -3,11 +3,11 @@ from __future__ import annotations
 import asyncio
 import sqlite3
 from dataclasses import dataclass
-from datetime import UTC, datetime
 from typing import Any
 
 from core.batching import get_batching_metrics, get_bulk_inserter, get_request_batcher
 from core.db_locks import get_lock_for_connection
+from core.time import default_utc_now
 from ingest import pipeline
 
 
@@ -32,7 +32,7 @@ class PriorityQueue:
     # --------------------------------------------------------------- enqueue
     def enqueue(self, job: pipeline.IngestJob, priority: int = 0) -> int:
         tags = ",".join(job.tags)
-        now = datetime.now(UTC).isoformat()
+        now = default_utc_now().isoformat()
         with self._lock:
             cur = self.conn.execute(
                 (
@@ -63,8 +63,7 @@ class PriorityQueue:
             return []
 
         # Prepare data tuples for immediate inserts
-
-        now = datetime.now(UTC).isoformat()
+        now = default_utc_now().isoformat()
         values = []
         for job in jobs:
             tags = ",".join(job.tags)
@@ -111,7 +110,7 @@ class PriorityQueue:
             job_id, tenant, workspace, source, external_id, url, tags, visibility, attempts = row
             self.conn.execute(
                 "UPDATE ingest_job SET status='running', picked_at=? WHERE id=?",
-                (datetime.now(UTC).isoformat(), job_id),
+                (default_utc_now().isoformat(), job_id),
             )
             self.conn.commit()
         job = pipeline.IngestJob(
@@ -130,7 +129,7 @@ class PriorityQueue:
         with self._lock:
             self.conn.execute(
                 "UPDATE ingest_job SET status='done', finished_at=? WHERE id=?",
-                (datetime.now(UTC).isoformat(), job_id),
+                (default_utc_now().isoformat(), job_id),
             )
             self.conn.commit()
 
@@ -138,7 +137,7 @@ class PriorityQueue:
         with self._lock:
             self.conn.execute(
                 "UPDATE ingest_job SET status='err', error=?, finished_at=? WHERE id=?",
-                (error, datetime.now(UTC).isoformat(), job_id),
+                (error, default_utc_now().isoformat(), job_id),
             )
             self.conn.commit()
 
@@ -146,8 +145,7 @@ class PriorityQueue:
         """Mark multiple jobs as done in bulk."""
         if not job_ids:
             return
-
-        now = datetime.now(UTC).isoformat()
+        now = default_utc_now().isoformat()
         with self._lock:
             for job_id in job_ids:
                 self._request_batcher.add_update(
@@ -161,8 +159,7 @@ class PriorityQueue:
         """Mark multiple jobs as error in bulk."""
         if not job_errors:
             return
-
-        now = datetime.now(UTC).isoformat()
+        now = default_utc_now().isoformat()
         with self._lock:
             for job_id, error in job_errors:
                 self._request_batcher.add_update(

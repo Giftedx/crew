@@ -61,6 +61,7 @@ Commands:
   full-check     Run comprehensive checks (format + lint + type + test)
   fix-common     Auto-fix common issues (format + import organization)
   setup-hooks    Install git hooks for automated quality checks
+    organize-root  Move demos/results/guides from root to archive/docs
   doctor         Run project health check
   clean          Clean build artifacts and caches
   deps           Update and sync dependencies
@@ -193,6 +194,13 @@ update_deps() {
     success "Dependencies updated!"
 }
 
+# Organize root directory
+organize_root() {
+    log "Organizing root directory (moving demos/results/guides)..."
+    make organize-root || { error "organize-root failed"; exit 1; }
+    success "Root directory organized."
+}
+
 # Main command dispatcher
 case "${1:-help}" in
     quick-check|quick)
@@ -215,6 +223,9 @@ case "${1:-help}" in
         ;;
     deps)
         update_deps
+        ;;
+    organize-root|organize)
+        organize_root
         ;;
     help|--help|-h)
         show_help

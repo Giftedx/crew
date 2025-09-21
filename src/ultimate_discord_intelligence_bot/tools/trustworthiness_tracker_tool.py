@@ -5,10 +5,11 @@ from __future__ import annotations
 import json
 import logging
 import os
-from datetime import UTC, datetime
 from pathlib import Path
 from threading import Lock
 from typing import TypedDict
+
+from core.time import default_utc_now
 
 from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 from ultimate_discord_intelligence_bot.step_result import StepResult
@@ -178,7 +179,7 @@ class TrustworthinessTrackerTool(BaseTool[StepResult]):
                     }
                 )
 
-            timestamp = datetime.now(UTC)
+            timestamp = default_utc_now()
             self.metrics.counter(
                 "tool_runs_total", labels={"tool": "trustworthiness_tracker_report", "outcome": "success"}
             ).inc()

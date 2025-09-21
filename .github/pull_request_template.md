@@ -23,6 +23,7 @@ Explain the change: what problem does it solve or improvement does it bring?
 - [ ] Lint & format pass (`make lint` / `make format`)
 - [ ] CHANGELOG updated (Unreleased section)
 - [ ] README/docs updated if configuration, flags, or tool contracts changed
+- [ ] Docs examples verified (optionally `make docs-strict` locally; no new import issues introduced)
 - [ ] Tenancy respected (explicit tenant/workspace context where required)
 - [ ] Feature flags added for new subsystems (`ENABLE_<AREA>_<FEATURE>`)
 - [ ] No leaking `Any` / added precise signatures

@@ -13,6 +13,7 @@ from typing import Any
 from analysis import segmenter, topics, transcribe
 from core.error_handling import handle_error_safely
 from core.privacy import privacy_filter
+from core.time import default_utc_now
 from memory import embeddings, vector_store
 from obs import metrics
 
@@ -230,7 +231,7 @@ def run(job: IngestJob, store: vector_store.VectorStore) -> dict:
                 content_id=episode_id,
                 source_url=job.url,
                 source_type=job.source,
-                retrieved_at=datetime.now(UTC).isoformat(),
+                retrieved_at=default_utc_now().isoformat(),
                 license="unknown",
                 terms_url=None,
                 consent_flags=None,

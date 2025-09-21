@@ -82,5 +82,40 @@ Prefer to:
 - `docs/security/README.md` – security posture & secret handling.
 - `docs/architecture/` – architectural overviews & sync reports.
 
+## MCP (Model Context Protocol) usage with assistants
+
+This repo provides an optional FastMCP server that exposes safe tools (memory/router/obs/kg/ingest/http/a2a). See `docs/mcp.md` for details.
+
+### Claude Desktop configuration
+
+Add to `~/.claude/config.json`:
+
+```json
+{
+  "mcpServers": {
+    "crew": { "command": "crew_mcp" }
+  }
+}
+```
+
+Then launch the stdio server locally (after installing extras):
+
+```bash
+pip install -e '.[mcp]'
+crew_mcp
+```
+
+Enable servers via env flags before launch, e.g.:
+
+```bash
+export ENABLE_MCP_MEMORY=1 ENABLE_MCP_ROUTER=1 ENABLE_MCP_OBS=1 ENABLE_MCP_KG=1 ENABLE_MCP_INGEST=1 ENABLE_MCP_HTTP=1 ENABLE_MCP_A2A=1
+export MCP_HTTP_ALLOWLIST="api.github.com,raw.githubusercontent.com"
+crew_mcp
+```
+
+### Using MCP tools inside Crew (no transport)
+
+Set `ENABLE_MCP_CALL_TOOL=1` to inject an in-process tool that calls MCP module functions directly. See `src/ultimate_discord_intelligence_bot/tools/mcp_call_tool.py` and usage examples in `docs/mcp.md`.
+
 ---
 _This file supersedes `docs/dev_assistants/CLAUDE.md` and `docs/dev_assistants/GEMINI.md` (moved from the repository root to reduce clutter)._

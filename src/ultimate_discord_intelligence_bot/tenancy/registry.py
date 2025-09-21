@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any
 
 import yaml
+from core.time import default_utc_now
 
 from .context import TenantContext
 from .models import Tenant
@@ -43,7 +44,7 @@ class TenantRegistry:
                     try:
                         created_at = datetime.fromtimestamp(float(created_raw), tz=UTC)
                     except Exception:
-                        created_at = datetime.now(UTC)
+                        created_at = default_utc_now()
                 else:
                     try:
                         parsed = datetime.fromisoformat(created_raw)
@@ -51,13 +52,13 @@ class TenantRegistry:
                             parsed = parsed.replace(tzinfo=UTC)
                         created_at = parsed
                     except ValueError:
-                        created_at = datetime.now(UTC)
+                        created_at = default_utc_now()
             else:
                 # Try numeric epoch (int/float/other castables)
                 try:
                     created_at = datetime.fromtimestamp(float(created_raw), tz=UTC)  # type: ignore[arg-type]
                 except Exception:
-                    created_at = datetime.now(UTC)
+                    created_at = default_utc_now()
             tenant = Tenant(
                 id=data.get("id", 0),
                 slug=tenant_dir.name,

@@ -44,6 +44,9 @@ except Exception:  # pragma: no cover - fallback when pydantic unavailable
         rate_limit_redis_url: str | None = None
         rate_limit_rps: int = 10
         rate_limit_burst: int = 10
+        # Optional CORS support
+        enable_cors: bool = False
+        cors_allow_origins: list[str] | None = None
 
 
 from core.cache.api_cache_middleware import APICacheMiddleware
@@ -120,8 +123,8 @@ def _add_api_cache_middleware(app: FastAPI, settings: Settings) -> None:
     # Create middleware instance
     middleware_instance = APICacheMiddleware(
         cache_ttl=getattr(settings, "cache_ttl_api", 300),
-        exclude_paths={"/health", "/metrics", "/pilot/run"},
-        exclude_methods={"POST", "PUT", "DELETE", "PATCH"},
+        exclude_paths={"/health", "/metrics", "/pilot/run", "/activities/", "/activities/health", "/activities/echo"},
+        exclude_methods={"POST", "PUT", "DELETE", "PATCH", "OPTIONS"},
         include_headers=["Authorization", "X-API-Key"],
     )
 
@@ -129,6 +132,79 @@ def _add_api_cache_middleware(app: FastAPI, settings: Settings) -> None:
     @app.middleware("http")
     async def api_cache_middleware(request: Request, call_next):
         return await middleware_instance(request, call_next)
+
+
+def _add_cors_middleware(app: FastAPI, settings: Settings) -> None:
+    """Minimal CORS support without external middleware dependencies.
+
+    Controlled by settings.enable_cors or ENABLE_CORS env. Allowed origins can be
+    provided via settings.cors_allow_origins list or CORS_ALLOW_ORIGINS env (comma-separated).
+    """
+    try:
+        import os as _os
+
+        enable_cors = getattr(settings, "enable_cors", False)
+        if not enable_cors:
+            enable_cors = _os.getenv("ENABLE_CORS", "0").lower() in ("1", "true", "yes", "on")
+        if not enable_cors:
+            return
+
+        cfg_origins = getattr(settings, "cors_allow_origins", None)
+        origins: list[str] = []
+        if isinstance(cfg_origins, list) and cfg_origins:
+            origins = [str(o) for o in cfg_origins]
+        else:
+            raw = _os.getenv("CORS_ALLOW_ORIGINS", "")
+            if raw:
+                origins = [o.strip() for o in raw.split(",") if o.strip()]
+        if not origins:
+            origins = [
+                "http://localhost:5173",
+                "http://127.0.0.1:5173",
+                "http://localhost:5174",
+                "http://127.0.0.1:5174",
+            ]
+
+        allowed = set(origins)
+
+        @app.middleware("http")
+        async def _cors_middleware(request: Request, call_next):
+            origin = request.headers.get("origin")
+            req_method = request.method
+            # Preflight handling
+            if req_method == "OPTIONS" and origin and origin in allowed:
+                acrm = request.headers.get("access-control-request-method", "GET")
+                headers = {
+                    "access-control-allow-origin": origin,
+                    "access-control-allow-methods": acrm,
+                    "access-control-allow-headers": request.headers.get("access-control-request-headers", "*"),
+                    "access-control-allow-credentials": "true",
+                }
+                return Response(status_code=200, headers=headers)
+
+            response: Response = await call_next(request)
+            if origin and origin in allowed:
+                response.headers["access-control-allow-origin"] = origin
+                response.headers["access-control-allow-credentials"] = "true"
+            return response
+
+        # Additionally register a catch-all OPTIONS route for reliable preflight handling
+        @app.options("/{full_path:path}")
+        def _cors_preflight(request: Request) -> Response:  # noqa: D401
+            origin = request.headers.get("origin")
+            if not origin or origin not in allowed:
+                # Not an allowed origin; default 404 to mirror missing route handling
+                return Response(status_code=404)
+            acrm = request.headers.get("access-control-request-method", "GET")
+            headers = {
+                "access-control-allow-origin": origin,
+                "access-control-allow-methods": acrm,
+                "access-control-allow-headers": request.headers.get("access-control-request-headers", "*"),
+                "access-control-allow-credentials": "true",
+            }
+            return Response(status_code=200, headers=headers)
+    except Exception as exc:  # pragma: no cover
+        logging.debug("inline CORS middleware skipped: %s", exc)
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -158,6 +234,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 logging.debug("a2a router wiring skipped: %s", exc)
     except Exception:  # pragma: no cover - environment access issues
         pass
+
+    # Optional: CORS for local Activities or web clients (inline middleware)
+    # Register CORS EARLY so preflight (OPTIONS) can be intercepted reliably before other middlewares
+    _add_cors_middleware(app, settings)
 
     # Metrics & tracing (ensure metrics route can be registered before rate limiting so it is always observable)
     _add_metrics_middleware(app, settings)
@@ -283,6 +363,53 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @app.get("/health")
     def _health() -> dict[str, str]:
         return {"status": "ok"}
+
+    @app.get("/activities/health")
+    def _activities_health() -> dict[str, str]:
+        """Lightweight health endpoint for Discord Activities local dev."""
+        return {"status": "ok", "component": "activities"}
+
+    # Optional debug echo endpoint for Activities/web clients
+    try:
+        import os as _os
+
+        if _os.getenv("ENABLE_ACTIVITIES_ECHO", "0").lower() in ("1", "true", "yes", "on"):
+
+            @app.get("/activities/echo")
+            def _activities_echo(request: Request) -> dict:
+                """Return basic request information for debugging client wiring.
+
+                Includes method, url path, query params, selected headers, and client info.
+                Avoids echoing bodies to keep responses lightweight and safe by default.
+                """
+
+                # Extract a minimal, safe subset of headers for debugging
+                interesting = [
+                    "origin",
+                    "referer",
+                    "user-agent",
+                    "accept",
+                    "accept-language",
+                    "x-forwarded-for",
+                    "cf-connecting-ip",
+                ]
+                headers = {k: v for k, v in request.headers.items() if k.lower() in interesting}
+                client_host = None
+                try:
+                    if request.client:
+                        client_host = request.client.host
+                except Exception:
+                    client_host = None
+                return {
+                    "method": request.method,
+                    "path": request.url.path,
+                    "query": dict(getattr(request, "query_params", {}) or {}),
+                    "headers": headers,
+                    "client": client_host,
+                    "component": "activities-echo",
+                }
+    except Exception as exc:  # pragma: no cover - optional path
+        logging.debug("activities echo wiring skipped: %s", exc)
 
     # Removed experimental catch-all; middleware now consistently handles 404s.
 

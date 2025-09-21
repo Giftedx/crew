@@ -6,12 +6,12 @@ import json
 import tempfile
 from collections.abc import Sequence
 from dataclasses import dataclass
-from datetime import UTC, datetime
 
 from analysis.rerank import rerank
 from core.learning_engine import LearningEngine
 from core.privacy import privacy_filter
 from core.secure_config import get_config
+from core.time import default_utc_now
 
 from archive import archive_file
 from memory import embeddings, vector_store
@@ -45,7 +45,7 @@ def store(  # noqa: PLR0913,PLR0912 - explicit param groups (identity/payload/cl
 
     clean, _ = privacy_filter.filter_text(text, {"tenant": tenant})
     vec = embeddings.embed([clean])[0]
-    now = datetime.now(UTC).isoformat()
+    now = default_utc_now().isoformat()
     item = MemoryItem(
         id=None,
         tenant=tenant,

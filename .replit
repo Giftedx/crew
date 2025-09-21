@@ -1,0 +1,11 @@
+run = "bash -lc 'pip install -e .[metrics] && uvicorn server.app:create_app --factory --host 0.0.0.0 --port ${PORT}'"
+entrypoint = "src/server/app.py"
+hidden = [".venv", "__pycache__", ".git", "cache", "yt-dlp"]
+
+# Note: set environment variables via Replit Secrets panel or shell exports.
+
+# Optional alternate (run in the Replit shell):
+# - MCP over HTTP on port 8001 (path /mcp):
+#     python -c 'from mcp_server.server import mcp; mcp.run(transport="http", host="0.0.0.0", port=8001, path="/mcp")'
+# - Discord bot (requires secrets):
+#     make run-discord

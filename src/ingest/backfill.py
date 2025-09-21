@@ -16,6 +16,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
+from core.time import default_utc_now
 from scheduler.priority_queue import PriorityQueue
 
 from ingest import pipeline as ingest_pipeline
@@ -89,7 +90,7 @@ def enumerate_youtube_recent_videos(handle_or_url: str, since_iso: str, *, limit
     channel_videos_url = _normalize_youtube_handle(handle_or_url)
 
     # Build cutoff date
-    since_dt_env_fallback = datetime.now(UTC) - timedelta(days=365)
+    since_dt_env_fallback = default_utc_now() - timedelta(days=365)
     try:
         since_dt = datetime.fromisoformat(since_iso.replace("Z", "+00:00")).astimezone(UTC)
     except Exception:

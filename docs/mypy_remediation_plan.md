@@ -35,7 +35,7 @@ See `reports/mypy_snapshot.txt` for the full current output (69 errors / 27 file
 
 ### Phase 2: Interface Alignment
 
-- Conform `services/learning_engine.py` recommend signature to base `LearningEngine` or provide adapter wrapper.
+- Conform `ultimate_discord_intelligence_bot/services/learning_engine.py` recommend signature to base `LearningEngine` (see also `src/core/learning_engine.py`) or provide adapter wrapper.
 - Normalize middleware `dispatch` signature to match Starlette exactly (return type `Response` or `StreamingResponse`).
 - Encapsulate dynamic monkeypatch fallback logic into small functions returning typed Protocol instances.
 

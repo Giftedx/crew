@@ -9,7 +9,6 @@ from __future__ import annotations
 import logging
 import time
 import uuid
-from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
 
 logger = logging.getLogger(__name__)
@@ -33,6 +32,7 @@ except ImportError:  # pragma: no cover
     logger.debug("LangSmith not available - specialized LLM tracing disabled")
 
 from core.secure_config import get_config
+from core.time import default_utc_now
 from ultimate_discord_intelligence_bot.tenancy.context import current_tenant
 
 
@@ -107,7 +107,7 @@ class LangSmithObservabilityManager:
                 "model": model,
                 "tenant": tenant_id,
                 "workspace": workspace,
-                "timestamp": datetime.now(UTC).isoformat(),
+                "timestamp": default_utc_now().isoformat(),
             }
 
             if latency_ms is not None:
@@ -130,8 +130,8 @@ class LangSmithObservabilityManager:
                 inputs=inputs,
                 outputs=outputs,
                 extra=extra,
-                start_time=datetime.now(UTC),
-                end_time=datetime.now(UTC),
+                start_time=default_utc_now(),
+                end_time=default_utc_now(),
                 error=error,
             )
 
@@ -164,7 +164,7 @@ class LangSmithObservabilityManager:
                 "tenant": tenant_id,
                 "workspace": workspace,
                 "latency_ms": latency_ms,
-                "timestamp": datetime.now(UTC).isoformat(),
+                "timestamp": default_utc_now().isoformat(),
             }
 
             run_id = str(uuid.uuid4())
@@ -177,8 +177,8 @@ class LangSmithObservabilityManager:
                 inputs=inputs,
                 outputs=outputs,
                 extra=extra,
-                start_time=datetime.now(UTC),
-                end_time=datetime.now(UTC),
+                start_time=default_utc_now(),
+                end_time=default_utc_now(),
                 error=error,
             )
 
@@ -216,7 +216,7 @@ class LangSmithObservabilityManager:
                 "workspace": workspace,
                 "total_latency_ms": total_latency_ms,
                 "step_count": len(steps),
-                "timestamp": datetime.now(UTC).isoformat(),
+                "timestamp": default_utc_now().isoformat(),
             }
 
             # Create parent pipeline run
@@ -228,8 +228,8 @@ class LangSmithObservabilityManager:
                 inputs=inputs,
                 outputs=outputs,
                 extra=extra,
-                start_time=datetime.now(UTC),
-                end_time=datetime.now(UTC),
+                start_time=default_utc_now(),
+                end_time=default_utc_now(),
                 error=error,
             )
 
@@ -252,8 +252,8 @@ class LangSmithObservabilityManager:
                         "tenant": tenant_id,
                         "workspace": workspace,
                     },
-                    start_time=datetime.now(UTC),
-                    end_time=datetime.now(UTC),
+                    start_time=default_utc_now(),
+                    end_time=default_utc_now(),
                     error=step.get("error"),
                 )
 
@@ -326,7 +326,7 @@ class LangSmithObservabilityManager:
             # Placeholder for evaluation results
             results = {
                 "dataset_name": dataset_name,
-                "evaluation_time": datetime.now(UTC).isoformat(),
+                "evaluation_time": default_utc_now().isoformat(),
                 "metadata": metadata or {},
             }
 
@@ -347,7 +347,7 @@ class LangSmithObservabilityManager:
             analytics = {
                 "project_name": self.project_name,
                 "period_days": days,
-                "timestamp": datetime.now(UTC).isoformat(),
+                "timestamp": default_utc_now().isoformat(),
                 # Placeholder for actual analytics data
                 "total_runs": 0,
                 "error_rate": 0.0,
