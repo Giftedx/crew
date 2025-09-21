@@ -17,6 +17,7 @@ import ipaddress
 import json
 import logging
 import os
+import threading
 import time
 import warnings
 from collections.abc import Callable, Mapping
@@ -171,6 +172,7 @@ __all__ = [
     "retrying_get",
     "is_retry_enabled",
     "resolve_retry_attempts",
+    "is_circuit_breaker_enabled",
 ]
 
 
@@ -203,6 +205,24 @@ def validate_public_https_url(url: str) -> str:
 
 _patched_resilient_post = globals().get("resilient_post")
 
+# -------------------------------------------------------------
+# Connection pooling (optional)
+# -------------------------------------------------------------
+_SESSION: requests.Session | None = None
+
+
+def _get_session() -> requests.Session:
+    global _SESSION
+    if _SESSION is None:
+        _SESSION = requests.Session()
+        # Keep defaults; callers can set env to tune TCP keepalive externally
+    return _SESSION
+
+
+def _is_pooling_enabled() -> bool:
+    raw = os.getenv("ENABLE_CONNECTION_POOLING")
+    return bool(raw) and str(raw).lower() in {"1", "true", "yes", "on"}
+
 
 def resilient_post(  # noqa: PLR0913 - explicit keyword params surface HTTP semantics clearly
     url: str,
@@ -221,7 +241,7 @@ def resilient_post(  # noqa: PLR0913 - explicit keyword params surface HTTP sema
     preserve existing lightweight fixtures.
     """
     if request_fn is None:  # defer binding so tests monkeypatching requests.post take effect
-        request_fn = requests.post
+        request_fn = _get_session().post if _is_pooling_enabled() else requests.post
     tracer = trace.get_tracer(__name__)
     with tracer.start_as_current_span("http.post") as span:
         span.set_attribute("http.url", url)
@@ -270,7 +290,7 @@ def resilient_get(  # noqa: PLR0913 - explicit knobs aid test monkeypatch ergono
     the ``timeout`` argument. ``stream`` is passed through when provided
     (used for large file downloads like Discord attachments)."""
     if request_fn is None:
-        request_fn = requests.get
+        request_fn = _get_session().get if _is_pooling_enabled() else requests.get
     tracer = trace.get_tracer(__name__)
     with tracer.start_as_current_span("http.get") as span:
         span.set_attribute("http.url", url)
@@ -389,6 +409,72 @@ def is_retry_enabled() -> bool:
     return _is_retry_enabled()
 
 
+# -------------------------------------------------------------
+# Circuit breaker (per-host) with optional enable flag
+# -------------------------------------------------------------
+
+
+class _CircuitBreaker:
+    def __init__(
+        self,
+        name: str,
+        *,
+        failure_threshold: int = 5,
+        recovery_timeout: float = 60.0,
+        expected_exception: type[BaseException] = requests.RequestException,
+    ) -> None:
+        self.name = name
+        self.failure_threshold = max(1, int(failure_threshold))
+        self.recovery_timeout = float(recovery_timeout)
+        self.expected_exception = expected_exception
+        self.failure_count = 0
+        self.last_failure_time: float | None = None
+        self.state: str = "closed"  # closed | open | half_open
+        self.lock = threading.Lock()
+
+    def _update_state_on_success(self) -> None:
+        with self.lock:
+            if self.state == "half_open":
+                self.state = "closed"
+            self.failure_count = 0
+
+    def _update_state_on_failure(self) -> None:
+        with self.lock:
+            self.failure_count += 1
+            self.last_failure_time = time.time()
+            if self.failure_count >= self.failure_threshold:
+                self.state = "open"
+
+    def _can_attempt(self) -> bool:
+        with self.lock:
+            if self.state == "open":
+                if self.last_failure_time and (time.time() - self.last_failure_time) > self.recovery_timeout:
+                    # move to half-open; allow single probe
+                    self.state = "half_open"
+                    self.failure_count = 0
+                    return True
+                return False
+            return True
+
+
+_BREAKERS: dict[str, _CircuitBreaker] = {}
+
+
+def is_circuit_breaker_enabled() -> bool:
+    raw = os.getenv("ENABLE_HTTP_CIRCUIT_BREAKER")
+    return bool(raw) and str(raw).lower() in {"1", "true", "yes", "on"}
+
+
+def _breaker_for(url: str) -> tuple[str, _CircuitBreaker]:
+    host = urlparse(url).hostname or "unknown"
+    br = _BREAKERS.get(host)
+    if br is None:
+        # thresholds could be made configurable later
+        br = _CircuitBreaker(name=host, failure_threshold=5, recovery_timeout=60.0)
+        _BREAKERS[host] = br
+    return host, br
+
+
 def http_request_with_retry(  # noqa: PLR0913 - retry behaviour requires multiple tuned parameters
     method: str,
     url: str,
@@ -410,6 +496,22 @@ def http_request_with_retry(  # noqa: PLR0913 - retry behaviour requires multipl
     """
     tracer = trace.get_tracer(__name__)
     attempts = 0
+    host_label = "unknown"
+    try:
+        host_label = urlparse(url).hostname or "unknown"
+    except Exception:
+        host_label = "unknown"
+    # Circuit breaker pre-check
+    br_host = host_label
+    br_inst: _CircuitBreaker | None = None
+    if is_circuit_breaker_enabled():
+        br_host, br_inst = _breaker_for(url)
+        if br_inst and not br_inst._can_attempt():
+            _metrics.CIRCUIT_BREAKER_REQUESTS.labels(
+                **_metrics.label_ctx(), circuit=br_host, result="short_circuit"
+            ).inc()
+            _metrics.CIRCUIT_BREAKER_STATE.labels(**_metrics.label_ctx(), circuit=br_host).set(1.0)
+            raise requests.RequestException(f"circuit_open:{br_host}")
     while True:
         attempts += 1
         with tracer.start_as_current_span("http.retry_attempt") as span:
@@ -417,15 +519,20 @@ def http_request_with_retry(  # noqa: PLR0913 - retry behaviour requires multipl
             span.set_attribute("http.method", method)
             span.set_attribute("retry.attempt", attempts)
             # Extract host label for metrics (low-cardinality: netloc only)
-            try:
-                host_label = urlparse(url).hostname or "unknown"
-            except Exception:
-                host_label = "unknown"
+            host_label = br_host
             try:
                 resp = request_callable(url, **call_kwargs)
             except requests.RequestException as exc:
                 span.set_attribute("error", True)
                 span.set_attribute("exception.type", exc.__class__.__name__)
+                # circuit breaker failure accounting
+                if br_inst is not None:
+                    br_inst._update_state_on_failure()
+                    state_val = 1.0 if br_inst.state == "open" else (0.5 if br_inst.state == "half_open" else 0.0)
+                    _metrics.CIRCUIT_BREAKER_REQUESTS.labels(
+                        **_metrics.label_ctx(), circuit=br_host, result="failure"
+                    ).inc()
+                    _metrics.CIRCUIT_BREAKER_STATE.labels(**_metrics.label_ctx(), circuit=br_host).set(state_val)
                 if attempts >= max_attempts or not _is_retry_enabled():
                     if attempts > 1:  # count only retries (not first attempt) on give up
                         _metrics.HTTP_RETRY_GIVEUPS.labels(**_metrics.label_ctx(), method=method, host=host_label).inc()
@@ -443,6 +550,19 @@ def http_request_with_retry(  # noqa: PLR0913 - retry behaviour requires multipl
                 time.sleep(sleep_for)
                 continue
             status = getattr(resp, "status_code", None)
+            if is_circuit_breaker_enabled() and br_inst is not None:
+                if status is None or int(status) >= 500:
+                    br_inst._update_state_on_failure()
+                    _metrics.CIRCUIT_BREAKER_REQUESTS.labels(
+                        **_metrics.label_ctx(), circuit=br_host, result="failure"
+                    ).inc()
+                else:
+                    br_inst._update_state_on_success()
+                    _metrics.CIRCUIT_BREAKER_REQUESTS.labels(
+                        **_metrics.label_ctx(), circuit=br_host, result="success"
+                    ).inc()
+                state_val = 1.0 if br_inst.state == "open" else (0.5 if br_inst.state == "half_open" else 0.0)
+                _metrics.CIRCUIT_BREAKER_STATE.labels(**_metrics.label_ctx(), circuit=br_host).set(state_val)
             if status in statuses_to_retry and attempts < max_attempts and _is_retry_enabled():
                 sleep_for = base_backoff * (2 ** (attempts - 1))
                 sleep_for += jitter * sleep_for

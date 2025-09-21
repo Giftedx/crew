@@ -16,15 +16,39 @@ Notes:
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import Any
 
 try:
     from fastmcp import FastMCP  # type: ignore
-except Exception as exc:  # pragma: no cover
-    raise SystemExit("FastMCP is required for the ingest MCP server. Install with 'pip install .[mcp]'.") from exc
+
+    _FASTMCP_AVAILABLE = True
+except Exception:  # pragma: no cover
+    FastMCP = None  # type: ignore
+    _FASTMCP_AVAILABLE = False
 
 
-ingest_mcp = FastMCP("Ingest Utilities Server")
+class _StubMCP:  # pragma: no cover
+    def __init__(self, _name: str):
+        self.name = _name
+
+    def tool(self, fn: Callable | None = None, /, **_kw):
+        def _decorator(f: Callable):
+            return f
+
+        return _decorator if fn is None else fn
+
+    def resource(self, *_a, **_k):
+        def _decorator(f: Callable):
+            return f
+
+        return _decorator
+
+    def run(self) -> None:
+        raise RuntimeError("FastMCP not available; install '.[mcp]' to run this server")
+
+
+ingest_mcp = FastMCP("Ingest Utilities Server") if _FASTMCP_AVAILABLE else _StubMCP("Ingest Utilities Server")
 
 
 _ALLOWED_HOSTS = {

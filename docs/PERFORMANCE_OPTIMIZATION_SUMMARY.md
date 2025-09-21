@@ -173,14 +173,13 @@ Successfully completed comprehensive codebase improvements beyond CQ-001 complet
 
 The comprehensive performance optimization initiative has successfully delivered:
 
-- ✅ **CQ-001 Compliance**: 85.7% mypy error reduction achieved
-- ✅ **Database Optimization**: Intelligent caching and connection management
-- ✅ **Request Batching**: Complete batching infrastructure with measurable performance improvements
-- ✅ **Monitoring & Metrics**: Comprehensive observability for performance tracking
-- ✅ **Testing & Validation**: Automated test suite ensuring reliability
-- ✅ **Backward Compatibility**: Seamless integration with existing systems
-
 The implementation provides significant performance improvements while maintaining code quality, reliability, and maintainability. The batching system is production-ready and can handle high-volume operations efficiently.
 
 **Status**: ✅ Complete and validated</content>
+
+---
+
+## Addendum: Prompt Compression (Optional)
+
+An optional prompt compression layer is available for long source texts in the Research & Brief tool. When `ENABLE_PROMPT_COMPRESSION=1` and `llmlingua` is installed, inputs are compressed conservatively to reduce token costs and latency. The adapter fails open (returns original text on any error) and lives in `src/prompt_engine/llmlingua_adapter.py`. This is disabled by default to preserve deterministic CI.
 <parameter name="filePath">/home/crew/PERFORMANCE_OPTIMIZATION_SUMMARY.md

@@ -134,7 +134,28 @@ Optional Git hook:
 
 ```bash
 ln -s ../../scripts/git_hooks/pre-push .git/hooks/pre-push  # adds type regression guard
+### Tools export validator
+
+We verify that every Tool is universally importable and properly exported from the central tools package.
+
+- Run the validator directly:
+
+```bash
+python3 scripts/validate_tools_exports.py
 ```
+
+- Or include it in the broader guards sweep (recommended during dev):
+
+```bash
+make guards
+```
+
+What it checks:
+
+- Import every name from `ultimate_discord_intelligence_bot.tools.__all__` without crashing.
+- Statically scan `src/ultimate_discord_intelligence_bot/tools/` for `BaseTool` subclasses and ensure each is exported via `__all__`.
+
+Optional deps note: Tools with heavy optional dependencies resolve to lightweight stub classes if imports fail; calling `run()` on a stub returns `StepResult.fail(...)` with details instead of raising at import-time.
 
 ### A2A JSON-RPC Quickstart
 

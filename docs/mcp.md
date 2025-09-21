@@ -68,6 +68,9 @@ Gemini / GitHub MCP actions already exist in `.github/workflows/*` with examples
 ## Notes
 
 - The server name is derived from `core.settings.Settings.service_name` when available.
+- Import safety: If the FastMCP extra is not installed, MCP modules still import successfully. They expose a lightweight
+  stub object with `.tool`/`.resource` decorators so other frameworks/scaffolds don’t crash. Attempting to run a stub
+  server raises a clear error instructing to install `.[mcp]`.
 - Enable optional servers with environment variables before launching, for example:
 
 ```bash
@@ -127,3 +130,18 @@ assert res.ok and "result" in res
 ```
 
 Security: only a curated allowlist per namespace is exposed; adding new functions requires changing the registry in `mcp_call_tool.py`.
+
+## CI smoke test
+
+A lightweight GitHub Actions workflow runs on push/PR to ensure all MCP modules remain import-safe across Python versions (3.10–3.13) without installing optional extras:
+
+- Location: `.github/workflows/mcp-smoke.yml`
+- What it does: installs only `pytest`, sets `PYTHONPATH=src`, and runs `tests/test_mcp_imports.py`.
+
+Run locally:
+
+```bash
+make test-mcp-smoke
+```
+
+If you add a new MCP module under `src/mcp_server/`, update `tests/test_mcp_imports.py` to include it so the smoke test guards against regressions.

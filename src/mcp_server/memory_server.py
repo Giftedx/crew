@@ -16,17 +16,41 @@ Implementation notes:
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import Any
 
 try:
     from fastmcp import FastMCP  # type: ignore
-except Exception as exc:  # pragma: no cover
-    raise SystemExit("FastMCP is required for the memory MCP server. Install with 'pip install .[mcp]'.") from exc
+
+    _FASTMCP_AVAILABLE = True
+except Exception:  # pragma: no cover
+    FastMCP = None  # type: ignore
+    _FASTMCP_AVAILABLE = False
 
 # Defer memory imports to function scope to keep import ordering simple for linters.
 
 
-memory_mcp = FastMCP("Memory Server")
+class _StubMCP:  # pragma: no cover
+    def __init__(self, _name: str):
+        self.name = _name
+
+    def tool(self, fn: Callable | None = None, /, **_kw):
+        def _decorator(f: Callable):
+            return f
+
+        return _decorator if fn is None else fn
+
+    def resource(self, *_a, **_k):
+        def _decorator(f: Callable):
+            return f
+
+        return _decorator
+
+    def run(self) -> None:
+        raise RuntimeError("FastMCP not available; install '.[mcp]' to run this server")
+
+
+memory_mcp = FastMCP("Memory Server") if _FASTMCP_AVAILABLE else _StubMCP("Memory Server")
 
 
 def _ns(tenant: str, workspace: str, name: str) -> str:

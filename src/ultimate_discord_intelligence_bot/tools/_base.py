@@ -57,5 +57,31 @@ class BaseTool(Generic[R_co]):
         """
         raise NotImplementedError("Subclasses must implement run()")
 
+    # ---------------------- Optional agent-comms helpers ----------------------
+    # Tools may call these to publish lightweight messages to the shared
+    # agent communication bus when present. No hard dependency is introduced
+    # and absence of the bus is silently ignored.
+    def publish_message(self, msg_type: str, content: str, **metadata: Any) -> None:
+        try:
+            from ultimate_discord_intelligence_bot.tenancy.shared_context import (  # noqa: PLC0415
+                AgentMessage,
+                current_shared_context,
+            )
+
+            bus = current_shared_context()
+            if bus is None:
+                return
+            # type is validated in AgentMessage literal; invalid types will raise
+            bus.publish(AgentMessage(type=msg_type, content=content, metadata=metadata))
+        except Exception:
+            # Publishing is best-effort; never fail tool execution for bus issues
+            return
+
+    def note(self, content: str, **metadata: Any) -> None:
+        self.publish_message("note", content, **metadata)
+
+    def evidence(self, content: str, **metadata: Any) -> None:
+        self.publish_message("evidence", content, **metadata)
+
 
 __all__ = ["BaseTool"]

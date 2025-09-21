@@ -154,7 +154,7 @@ deprecations-strict:
 ci-all: doctor format-check lint type ci-type-guard guards test compliance deprecations-strict
 
 guards:
-	$(PYTHON) scripts/validate_dispatcher_usage.py && $(PYTHON) scripts/validate_http_wrappers_usage.py && $(PYTHON) scripts/metrics_instrumentation_guard.py
+	$(PYTHON) scripts/validate_dispatcher_usage.py && $(PYTHON) scripts/validate_http_wrappers_usage.py && $(PYTHON) scripts/metrics_instrumentation_guard.py && $(PYTHON) scripts/validate_tools_exports.py
 
 deprecations:
 	$(PYTHON) scripts/check_deprecations.py
@@ -273,3 +273,8 @@ run-a2a-client-demo:
 	@echo "Hint: ensure the API is running with ENABLE_A2A_API=1 (and ENABLE_A2A_API_KEY/A2A_API_KEY if needed)"; \
 	@echo "Using A2A_BASE_URL=$${A2A_BASE_URL:-http://localhost:8000}"; \
 	$(PYTHON) scripts/a2a_client_demo.py
+
+# Smoke: MCP imports always safe (stub or real)
+.PHONY: test-mcp-smoke
+test-mcp-smoke:
+	$(PYTHON) -m pytest -q -c config/pytest.ini tests/test_mcp_imports.py

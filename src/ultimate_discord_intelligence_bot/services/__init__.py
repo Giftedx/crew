@@ -4,6 +4,7 @@ from .cache import LLMCache
 from .evaluation_harness import EvaluationHarness
 from .learning_engine import LearningEngine  # Deprecated import path; prefer core.learning_engine.LearningEngine
 from .logging_utils import AnalyticsStore
+from .maintenance import MemoryMaintenance
 from .memory_service import MemoryService
 from .openrouter_service import OpenRouterService
 from .poller import ContentPoller
@@ -20,4 +21,5 @@ __all__ = [
     "AnalyticsStore",
     "TokenMeter",
     "LLMCache",
+    "MemoryMaintenance",
 ]

@@ -78,6 +78,8 @@ class _DummyClient:
     * recreate_collection(name, vectors_config=...)
     * upsert(collection_name, points)
     * query_points(collection_name, query, limit, with_payload=True)
+    * scroll(collection_name, limit=..., with_payload=True, offset=None, filter=None)
+    * delete_points(collection_name, ids=..., points=..., filter=None)
     """
 
     def __init__(self):
@@ -160,6 +162,64 @@ class _DummyClient:
         bucket = self._store.get(collection_name, [])
         # naive: just return first N points; score constant
         return _DummyQueryResult(bucket[:limit])
+
+    # Minimal scroll implementation for test usage
+    def scroll(
+        self,
+        *,
+        collection_name: str,
+        limit: int = 100,
+        with_payload: bool = True,
+        offset: int | None = None,
+        filter: Any | None = None,
+    ) -> tuple[list[_DummyPoint], int | None]:  # pragma: no cover - used by tests
+        bucket = self._store.get(collection_name, [])
+        start = int(offset or 0)
+        end = min(start + int(limit), len(bucket))
+        chunk = bucket[start:end]
+        next_off: int | None = end if end < len(bucket) else None
+        # Very basic payload filter support: expect callable or dict equality checks
+        if filter:
+
+            def _match(p: _DummyPoint) -> bool:
+                if callable(filter):
+                    return bool(filter(p.payload))
+                if isinstance(filter, dict):
+                    for k, v in filter.items():
+                        if p.payload.get(k) != v:
+                            return False
+                    return True
+                return True
+
+            chunk = [p for p in chunk if _match(p)]
+        return (chunk, next_off)
+
+    # Minimal delete implementation by ids or simple payload filter
+    def delete_points(
+        self,
+        *,
+        collection_name: str,
+        ids: Sequence[int | str] | None = None,
+        points: Sequence[int | str] | None = None,
+        filter: Any | None = None,
+    ) -> None:  # pragma: no cover - used by tests
+        bucket = self._store.get(collection_name, [])
+        id_set = set()
+        if ids is not None:
+            id_set.update(ids)
+        if points is not None:
+            id_set.update(points)
+        if filter is not None:
+            # filter may be a callable(payload)->bool in our tests
+            if callable(filter):
+                to_delete = {p.id for p in bucket if filter(p.payload)}
+                id_set.update(to_delete)
+            elif isinstance(filter, dict):
+                to_delete = {p.id for p in bucket if all(p.payload.get(k) == v for k, v in filter.items())}
+                id_set.update(to_delete)
+        if not id_set:
+            return
+        self._store[collection_name] = [p for p in bucket if p.id not in id_set]
 
     def get_cluster_info(self):  # pragma: no cover - dummy implementation
         # Return a minimal cluster info object for testing

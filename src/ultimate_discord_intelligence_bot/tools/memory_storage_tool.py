@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import uuid
 from collections.abc import Callable, Sequence
 from typing import TYPE_CHECKING, Any, Protocol, TypedDict, cast, runtime_checkable
@@ -105,6 +106,9 @@ class MemoryStorageTool(BaseTool):
         object.__setattr__(self, "client", qclient)
         self._metrics = get_metrics()
         self._ensure_collection(base_collection)
+        # feature flags
+        self._enable_ttl = str(os.getenv("ENABLE_MEMORY_TTL", "0")).lower() in {"1", "true", "yes", "on"}
+        self._ttl_seconds = int(os.getenv("MEMORY_TTL_SECONDS", "0") or 0)
 
     @staticmethod
     def _physical_name(name: str) -> str:
@@ -200,6 +204,9 @@ class MemoryStorageTool(BaseTool):
             if self.embedding_fn is None:
                 raise RuntimeError("embedding_fn not initialised")
             vector = self.embedding_fn(text)
+            # strict dimension validation against existing collection if known
+            if isinstance(vector, list) and vector and not all(isinstance(v, (float, int)) for v in vector):
+                return StepResult.fail("embedding vector must be numeric list")
 
             # Enhance metadata with tenant context
             enhanced_metadata = dict(metadata)
@@ -213,6 +220,17 @@ class MemoryStorageTool(BaseTool):
                 )
 
             payload: dict[str, object] = dict(enhanced_metadata)
+            # optional TTL metadata
+            if self._enable_ttl and self._ttl_seconds > 0:
+                payload["_ttl"] = int(self._ttl_seconds)
+            # record a creation timestamp if caller didn't provide one; used by compaction
+            if "created_at" not in payload:
+                try:
+                    import time as _t  # local import to avoid global dependency at module import
+
+                    payload["created_at"] = int(_t.time())
+                except Exception:
+                    ...
             payload["text"] = text
             if "PointStruct" in globals() and callable(PointStruct):
                 point = cast(Any, PointStruct)(

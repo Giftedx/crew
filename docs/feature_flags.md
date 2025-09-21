@@ -2,6 +2,7 @@
 ## Feature Flags & Environment Toggles
 
 (Do not edit by hand; regenerate instead.)
+
 ### Api / Runtime
 
 | Flag | Referenced In (sample) |
@@ -39,6 +40,8 @@
 | `ENABLE_HTTP_CACHE` | core/settings.py |
 | `ENABLE_HTTP_METRICS` | core/secure_config.py, core/settings.py |
 | `ENABLE_HTTP_RETRY` | core/http_utils.py, core/secure_config.py |
+| `ENABLE_HTTP_CIRCUIT_BREAKER` | core/http_utils.py |
+| `ENABLE_CONNECTION_POOLING` | core/http_utils.py, core/production_operations.py |
 
 ### Ingestion
 
@@ -70,8 +73,8 @@
 | `ENABLE_CONTEXTUAL_BANDIT` | ai/routing/linucb_router.py, core/llm_router.py |
 | `ENABLE_CONTEXTUAL_HYBRID` | core/llm_router.py |
 | `ENABLE_COST_AWARE_ROUTING_SHADOW` | core/cost_aware_routing.py |
-| `ENABLE_CREW_CONFIG_VALIDATION` | ultimate_discord_intelligence_bot/crew.py |
-| `ENABLE_CREW_STEP_VERBOSE` | ultimate_discord_intelligence_bot/crew.py |
+| `ENABLE_MEMORY_TTL` | ultimate_discord_intelligence_bot/tools/memory_storage_tool.py |
+| `ENABLE_MEMORY_COMPACTION` | ultimate_discord_intelligence_bot/tools/memory_compaction_tool.py |
 | `ENABLE_DEGRADATION_REPORTER` | core/degradation_reporter.py, core/settings.py |
 | `ENABLE_DEPENDENCY_TRACKING` | core/settings.py |
 | `ENABLE_DISCORD_COMMANDS` | core/secure_config.py, core/settings.py |
@@ -108,6 +111,19 @@
 | `ENABLE_TRAJECTORY_SHADOW_EVALUATION` | eval/config.py |
 | `ENABLE_VECTOR_SEARCH` | core/settings.py, ultimate_discord_intelligence_bot/setup_cli.py |
 
+### MCP / Model Context Protocol
+
+| Flag | Referenced In (sample) |
+|------|------------------------|
+| `ENABLE_MCP_A2A` | mcp_server/server.py |
+| `ENABLE_MCP_HTTP` | mcp_server/server.py |
+| `ENABLE_MCP_INGEST` | mcp_server/server.py |
+| `ENABLE_MCP_KG` | mcp_server/server.py |
+| `ENABLE_MCP_MEMORY` | mcp_server/server.py |
+| `ENABLE_MCP_OBS` | mcp_server/server.py |
+| `ENABLE_MCP_OBS_PROM_RESOURCE` | mcp_server/obs_server.py |
+| `ENABLE_MCP_ROUTER` | mcp_server/server.py |
+
 ### Privacy
 
 | Flag | Referenced In (sample) |
@@ -140,6 +156,5 @@ The following items are deprecated or superseded; see configuration docs for tim
 
 - `ENABLE_ANALYSIS_HTTP_RETRY` — replacement: `ENABLE_HTTP_RETRY`; Legacy analysis-scoped retry flag superseded by global ENABLE_HTTP_RETRY.
 - `services.learning_engine.LearningEngine` — replacement: `core.learning_engine.LearningEngine`; Shim retained for backward compatibility; remove after grace period.
-
 
 _Generated digest: `df79c58a92e1`_

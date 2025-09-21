@@ -29,6 +29,13 @@ from ultimate_discord_intelligence_bot.step_result import StepResult
 
 from ._base import BaseTool
 
+try:  # optional prompt compression
+    from prompt_engine.llmlingua_adapter import maybe_compress_prompt  # type: ignore
+except Exception:  # pragma: no cover - fallback when module unavailable
+
+    def maybe_compress_prompt(prompt: str, *, target_tokens: int | None = None) -> str:  # type: ignore
+        return prompt
+
 
 def _split_sentences(text: str) -> list[str]:
     # Minimal sentence splitter (period/exclamation/question) with trimming
@@ -82,6 +89,17 @@ class ResearchAndBriefTool(BaseTool[StepResult]):
             max_items = 5
 
         texts = [t for t in (sources_text or []) if isinstance(t, str) and t.strip()]
+        # Optional prompt compression to control token cost when sources are large
+        if texts:
+            try:
+                # Join for compression effectiveness, then split back approximately
+                joined = "\n\n".join(texts)
+                compressed = maybe_compress_prompt(joined, target_tokens=1200)
+                if isinstance(compressed, str) and compressed:
+                    # Heuristic re-split on double newline to keep sections
+                    texts = [s for s in compressed.split("\n\n") if s.strip()]
+            except Exception:
+                pass
         if not texts:
             # Empty sources: produce an uncertain result rather than hard-fail
             data = {

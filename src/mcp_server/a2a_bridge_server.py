@@ -14,15 +14,39 @@ Guards:
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import Any
 
 try:
     from fastmcp import FastMCP  # type: ignore
-except Exception as exc:  # pragma: no cover
-    raise SystemExit("FastMCP is required for the A2A MCP server. Install with 'pip install .[mcp]'.") from exc
+
+    _FASTMCP_AVAILABLE = True
+except Exception:  # pragma: no cover
+    FastMCP = None  # type: ignore
+    _FASTMCP_AVAILABLE = False
 
 
-a2a_mcp = FastMCP("A2A Bridge Server")
+class _StubMCP:  # pragma: no cover
+    def __init__(self, _name: str):
+        self.name = _name
+
+    def tool(self, fn: Callable | None = None, /, **_kw):
+        def _decorator(f: Callable):
+            return f
+
+        return _decorator if fn is None else fn
+
+    def resource(self, *_a, **_k):
+        def _decorator(f: Callable):
+            return f
+
+        return _decorator
+
+    def run(self) -> None:
+        raise RuntimeError("FastMCP not available; install '.[mcp]' to run this server")
+
+
+a2a_mcp = FastMCP("A2A Bridge Server") if _FASTMCP_AVAILABLE else _StubMCP("A2A Bridge Server")
 
 
 def _get_tools() -> dict[str, Any]:

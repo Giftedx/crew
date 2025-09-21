@@ -20,14 +20,27 @@ MAPPING = {
     "DriveUploadTool": ".drive_upload_tool",
     "DriveUploadToolBypass": ".drive_upload_tool_bypass",
     "EnhancedAnalysisTool": ".enhanced_analysis_tool",
+    "AdvancedPerformanceAnalyticsTool": ".advanced_performance_analytics_tool",
     "EnhancedYouTubeDownloadTool": ".enhanced_youtube_tool",
     "FactCheckTool": ".fact_check_tool",
+    # RAG & Retrieval
+    "LCSummarizeTool": ".lc_summarize_tool",
+    "OfflineRAGTool": ".offline_rag_tool",
+    "RagHybridTool": ".rag_hybrid_tool",
+    "RagIngestTool": ".rag_ingest_tool",
+    "RagIngestUrlTool": ".rag_ingest_url_tool",
+    "RagQueryVectorStoreTool": ".rag_query_vs_tool",
     "LeaderboardTool": ".leaderboard_tool",
     "LogicalFallacyTool": ".logical_fallacy_tool",
     "MemoryStorageTool": ".memory_storage_tool",
+    "MemoryCompactionTool": ".memory_compaction_tool",
     "MockVectorSearchTool": ".mock_vector_tool",
     "MultiPlatformDownloadTool": ".multi_platform_download_tool",
     "MultiPlatformMonitorTool": ".multi_platform_monitor_tool",
+    # MCP & Research
+    "MCPCallTool": ".mcp_call_tool",
+    "ResearchAndBriefTool": ".research_and_brief_tool",
+    "ResearchAndBriefMultiTool": ".research_and_brief_multi_tool",
     "PerspectiveSynthesizerTool": ".perspective_synthesizer_tool",
     "PipelineTool": ".pipeline_tool",
     "SystemStatusTool": ".system_status_tool",
@@ -71,14 +84,27 @@ __all__ = [
     "DriveUploadTool",
     "DriveUploadToolBypass",
     "EnhancedAnalysisTool",
+    "AdvancedPerformanceAnalyticsTool",
     "EnhancedYouTubeDownloadTool",
     "FactCheckTool",
+    # RAG & Retrieval
+    "LCSummarizeTool",
+    "OfflineRAGTool",
+    "RagHybridTool",
+    "RagIngestTool",
+    "RagIngestUrlTool",
+    "RagQueryVectorStoreTool",
     "LeaderboardTool",
     "LogicalFallacyTool",
+    "MemoryCompactionTool",
     "MemoryStorageTool",
     "MockVectorSearchTool",
     "MultiPlatformDownloadTool",
     "MultiPlatformMonitorTool",
+    # MCP & Research
+    "MCPCallTool",
+    "ResearchAndBriefTool",
+    "ResearchAndBriefMultiTool",
     "PerspectiveSynthesizerTool",
     "PipelineTool",
     "SystemStatusTool",
@@ -113,7 +139,35 @@ def __getattr__(name: str):  # PEP 562: lazy attribute loading
         raise AttributeError(name)
     from importlib import import_module
 
-    module = import_module(f"{__name__}{mod}")
+    try:
+        module = import_module(f"{__name__}{mod}")
+    except Exception as exc:  # Optional dependency or heavy module failed to import
+        # Provide a soft-fail stub so imports don’t break across frameworks/scaffolds.
+        # The stub mirrors a minimal tool surface and returns a StepResult.fail() when run.
+        def _make_stub(_tool_name: str, _error: Exception):  # noqa: D401 - tiny helper
+            try:
+                from ..step_result import StepResult  # lazy import to avoid cycles
+            except Exception:
+                StepResult = None  # type: ignore[assignment]
+
+            class _MissingDependencyTool:
+                name = _tool_name
+                description = f"{_tool_name} unavailable: optional dependencies missing ({type(_error).__name__})"
+
+                def run(self, *args, **kwargs):  # pragma: no cover - trivial
+                    if StepResult is None:
+                        # Last-resort preserve original import error
+                        raise _error
+                    return StepResult.fail(
+                        error=f"{_tool_name} is unavailable",
+                        details=str(_error),
+                    )
+
+            _MissingDependencyTool.__name__ = _tool_name
+            return _MissingDependencyTool
+
+        return _make_stub(name, exc)
+
     try:
         return getattr(module, name)
     except AttributeError as exc:  # pragma: no cover - defensive

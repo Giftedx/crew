@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import pathlib
+import random
 import time
 from functools import partial
 from typing import TYPE_CHECKING, Any, Optional, TypedDict, cast
@@ -232,9 +233,49 @@ class ContentPipeline:
                 result = StepResult.fail(str(exc))
             if result.success:
                 return result
-            logger.warning("%s attempt %s failed: %s", step, attempt + 1, result.error)
-            await asyncio.sleep(delay)
+            # Classify failure and decide whether to retry
+            classification = self._classify_failure(result)
+            logger.warning("%s attempt %s failed (%s): %s", step, attempt + 1, classification, result.error)
+            if classification == "permanent" or attempt >= attempts - 1:
+                break
+            # Exponential backoff with jitter (0.5x..1.5x)
+            backoff = delay * (2**attempt)
+            jitter = random.uniform(0.5, 1.5)
+            sleep_for = max(0.0, min(backoff * jitter, 60.0))
+            try:
+                # Best-effort metric for retry attempt
+                metrics.PIPELINE_RETRIES.labels(**metrics.label_ctx(), step=step, reason=classification).inc()  # type: ignore[attr-defined]
+            except Exception:  # pragma: no cover - optional metric
+                pass
+            await asyncio.sleep(sleep_for)
         return result
+
+    @staticmethod
+    def _classify_failure(result: StepResult) -> str:
+        """Classify a failed StepResult for retry policy.
+
+        Returns one of: "rate_limit", "transient", "permanent".
+        """
+        # Inspect status_code if present
+        status_code = None
+        try:
+            status_code = int(result.get("status_code", result.data.get("status_code")))  # type: ignore[arg-type]
+        except Exception:
+            status_code = None
+
+        if status_code == 429:
+            return "rate_limit"
+        if status_code is not None and 400 <= status_code < 500:
+            return "permanent"
+
+        # Inspect error text for common transient signals
+        err = (result.error or "").lower()
+        transient_markers = ["timeout", "temporarily", "temporary", "connection reset", "dns", "unavailable"]
+        if any(m in err for m in transient_markers):
+            return "transient"
+
+        # Default to transient to be safe (will still cap attempts)
+        return "transient"
 
     async def process_video(self, url: str, quality: str = "1080p") -> PipelineRunResult:  # noqa: PLR0915, PLR0911, PLR0912 - orchestrates concurrent multi-step pipeline with explicit early exits for clearer error reporting
         """Run the full content pipeline for a single video.

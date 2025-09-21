@@ -1,0 +1,10 @@
+# HTTP retry configuration (used by core.http_utils.resolve_retry_attempts)
+# Effective precedence:
+#   1) Call arg
+#   2) tenants/<tenant_id>/retry.yaml (if present)
+#   3) config/retry.yaml (this file)
+#   4) env RETRY_MAX_ATTEMPTS
+#   5) secure_config default
+#
+# Choose a small, reasonable default for local/dev.
+max_attempts: 3
