@@ -46,7 +46,10 @@ def test_http_request_with_retry_backoff_and_success(monkeypatch):
     assert isinstance(out, _Resp)
     # Two sleeps between three attempts; connection-refused reduces base by 0.3
     # so backoffs are 0.03, 0.06 (with jitter=0.0)
-    assert sleeps == pytest.approx([0.03, 0.06])
+    # Use manual comparison to avoid numpy 2.0 compatibility issues with pytest.approx
+    assert len(sleeps) == 2
+    assert abs(sleeps[0] - 0.03) < 1e-6
+    assert abs(sleeps[1] - 0.06) < 1e-6
     assert calls == ["https://example.com", "https://example.com", "https://example.com"]
 
 
@@ -72,4 +75,6 @@ def test_retrying_get_uses_wrapper_and_honors_attempts(monkeypatch):
     )
     assert isinstance(resp, _Resp)
     # One retry sleep with base 0.5 and default jitter 0.05 => 0.525
-    assert sleeps == pytest.approx([0.525])
+    # Use manual comparison to avoid numpy 2.0 compatibility issues with pytest.approx
+    assert len(sleeps) == 1
+    assert abs(sleeps[0] - 0.525) < 1e-6

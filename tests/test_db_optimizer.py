@@ -182,7 +182,8 @@ class TestQueryOptimizer:
         assert stats["total_queries"] == 3
         assert abs(stats["average_execution_time"] - 0.11666666666666667) < 1e-10
         assert stats["slow_queries_count"] == 1
-        assert stats["slow_query_percentage"] == pytest.approx(33.33, rel=1e-2)
+        # Use abs comparison instead of pytest.approx to avoid numpy 2.0 compatibility issues
+        assert abs(stats["slow_query_percentage"] - 33.33) < 0.01
 
 
 class TestConnectionPoolOptimizer:

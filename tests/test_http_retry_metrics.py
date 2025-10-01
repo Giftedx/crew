@@ -20,6 +20,7 @@ def _counter_value(counter, **label_match):  # helper resilient to missing prome
 def test_http_retry_metrics_giveup(monkeypatch):
     """Network exception path should increment attempts for each retry beyond first and one giveup."""
     monkeypatch.setenv("ENABLE_HTTP_RETRY", "1")
+    monkeypatch.setenv("ENABLE_HTTP_CIRCUIT_BREAKER", "1")  # Metrics require circuit breaker path
     # speed: eliminate real sleeping
     monkeypatch.setattr("time.sleep", lambda _x: None)
     m.reset()
@@ -55,6 +56,7 @@ def test_http_retry_metrics_giveup(monkeypatch):
 def test_http_retry_metrics_success_after_retries(monkeypatch):
     """Status-based retry success should increment attempts but not giveups."""
     monkeypatch.setenv("ENABLE_HTTP_RETRY", "1")
+    monkeypatch.setenv("ENABLE_HTTP_CIRCUIT_BREAKER", "1")  # Metrics require circuit breaker path
     monkeypatch.setattr("time.sleep", lambda _x: None)
     m.reset()
 

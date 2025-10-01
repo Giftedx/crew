@@ -1,6 +1,8 @@
 import os
 from pathlib import Path
 
+import pytest
+
 from archive.discord_store import api, limits, manifest, policy, router
 from fastapi.testclient import TestClient
 
@@ -132,6 +134,7 @@ def test_policy_denies(monkeypatch, tmp_path):
     assert "extension not allowed" in reasons
 
 
+@pytest.mark.fullstack  # Requires full FastAPI stack
 def test_rest_api(monkeypatch, tmp_path):
     db = tmp_path / "manifest.db"
     os.environ["ARCHIVE_DB_PATH"] = str(db)
