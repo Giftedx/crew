@@ -211,10 +211,11 @@ Analysis modules are tested through:
 - Integration tests: Ingestion pipeline tests
 - Performance benchmarks: Topic extraction speed tests
 
-**Missing Test Coverage:**
+**Test Coverage:**
 
-- segmenter test - needs to be created
-- transcribe unit test - needs to be created
+- ✅ Segmenter tests: `tests/test_analysis_segmenter.py`, `tests/test_segmenter_token_aware.py`
+- ✅ Transcription tests: `tests/test_analysis_transcribe.py`
+- ✅ Integration tests: Pipeline tests in `tests/test_ingest_pipeline.py`
 
 ## Integration Workflows
 
