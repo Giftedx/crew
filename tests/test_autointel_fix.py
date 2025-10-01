@@ -4,7 +4,11 @@ import asyncio
 import os
 from unittest.mock import AsyncMock, MagicMock
 
+import pytest
 
+
+@pytest.mark.asyncio
+@pytest.mark.integration
 async def test_complete_command():
     try:
         # Set dummy API key

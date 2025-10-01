@@ -6,12 +6,16 @@ import logging
 import os
 import sys
 
+import pytest
+
 # Add src to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
 
 logging.basicConfig(level=logging.DEBUG)
 
 
+@pytest.mark.asyncio
+@pytest.mark.integration
 async def test_autointel_workflow():
     """Test the autonomous intelligence workflow without Discord."""
     try:

@@ -6,6 +6,8 @@ import os
 import sys
 from pathlib import Path
 
+import pytest
+
 # Add src to Python path
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
@@ -28,6 +30,8 @@ class MockInteraction:
         print(f"📤 Followup: {content}")
 
 
+@pytest.mark.asyncio
+@pytest.mark.integration
 async def test_autonomous_orchestrator():
     """Test the autonomous orchestrator with our improvements."""
     try:
