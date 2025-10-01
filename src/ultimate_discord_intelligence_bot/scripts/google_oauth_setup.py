@@ -60,6 +60,11 @@ def parse_args() -> argparse.Namespace:
         default=Path(os.getenv("GOOGLE_OAUTH_TOKEN_PATH", str(CONFIG_DIR / "google-oauth-token.json"))),
         help="Where to write the OAuth token JSON",
     )
+    parser.add_argument(
+        "--console",
+        action="store_true",
+        help="Use console-based OAuth flow (for headless servers)",
+    )
     return parser.parse_args()
 
 
@@ -80,10 +85,30 @@ def main() -> int:
 
     if not creds or not creds.valid:
         if creds and getattr(creds, "expired", False) and getattr(creds, "refresh_token", None):
-            creds.refresh(Request())
-        else:
+            try:
+                creds.refresh(Request())
+            except Exception as exc:
+                print(f"Refresh failed: {exc}. Falling back to interactive flow…")
+                creds = None
+        if not creds:
             flow = InstalledAppFlow.from_client_secrets_file(str(args.client_secrets), SCOPES)
-            creds = flow.run_local_server(port=0)
+            if args.console:
+                print("Starting console-based OAuth flow…")
+                if hasattr(flow, "run_console"):
+                    creds = flow.run_console()
+                else:
+                    # Manual console flow for environments without run_console
+                    auth_url, _ = flow.authorization_url(
+                        prompt="consent", access_type="offline", include_granted_scopes="true"
+                    )
+                    print("Open this URL in a browser, approve access, then paste the authorization code below:\n")
+                    print(auth_url)
+                    code = input("Authorization code: ").strip()
+                    flow.fetch_token(code=code)
+                    creds = flow.credentials
+            else:
+                print("Starting local-server OAuth flow on a random port…")
+                creds = flow.run_local_server(port=0)
 
         # Save token
         args.token_path.parent.mkdir(parents=True, exist_ok=True)

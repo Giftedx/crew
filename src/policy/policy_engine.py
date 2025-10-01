@@ -32,19 +32,46 @@ class Policy:
 def load_policy(tenant: str | None = None) -> Policy:
     """Load base policy and optional per-tenant overrides."""
     with POLICY_PATH.open("r", encoding="utf-8") as f:
-        data = yaml.safe_load(f)
+        raw = yaml.safe_load(f)
+    # Ensure dict shape; ignore non-mapping content
+    data: dict[str, Any] = raw if isinstance(raw, dict) else {}
+    # Start from safe defaults and overlay only recognized keys to tolerate unknown fields
+    defaults: dict[str, Any] = {
+        "allowed_sources": {},
+        "forbidden_types": [],
+        "pii_types": {
+            "email": "Email Address",
+            "phone": "Phone Number",
+            "address": "Physical Address",
+        },
+        # Use lowercase mask tokens expected by tests (e.g., "[redacted-email]")
+        "masks": {
+            "email": "[redacted-email]",
+            "phone": "[redacted-phone]",
+            "address": "[redacted-address]",
+        },
+        "storage": {},
+        "consent": {},
+        "per_command": {},
+    }
+    recognized = set(defaults.keys())
+    merged: dict[str, Any] = defaults.copy()
+    for k, v in data.items():
+        if k in recognized:
+            merged[k] = v
     if tenant:
         override = TENANT_DIR / tenant / "policy_overrides.yaml"
         if override.exists():
             with override.open("r", encoding="utf-8") as f:
-                ov = yaml.safe_load(f)
+                ov_raw = yaml.safe_load(f)
+            ov: dict[str, Any] = ov_raw if isinstance(ov_raw, dict) else {}
             for k, v in ov.items():
-                if isinstance(v, dict) and k in data:
-                    data[k].update(v)
-                else:
-                    data[k] = v
+                if k in recognized and isinstance(v, dict) and isinstance(merged.get(k), dict):
+                    merged[k].update(v)
+                elif k in recognized:
+                    merged[k] = v
     # Normalize selected list fields to expected types
-    allowed_sources = data.get("allowed_sources", {}) or {}
+    allowed_sources = merged.get("allowed_sources", {}) or {}
     if not isinstance(allowed_sources, dict):
         allowed_sources = {}
     norm_allowed: dict[str, list[str] | None] = {}
@@ -53,10 +80,10 @@ def load_policy(tenant: str | None = None) -> Policy:
             norm_allowed[key] = None
         elif isinstance(val, list):
             norm_allowed[key] = [str(x) for x in val]
-    forbidden_types = [str(x) for x in data.get("forbidden_types", [])]
-    data["allowed_sources"] = norm_allowed
-    data["forbidden_types"] = forbidden_types
-    return Policy(**data)
+    forbidden_types = [str(x) for x in merged.get("forbidden_types", [])]
+    merged["allowed_sources"] = norm_allowed
+    merged["forbidden_types"] = forbidden_types
+    return Policy(**merged)
 
 
 def check_source(source_meta: dict[str, Any], policy: Policy) -> Decision:

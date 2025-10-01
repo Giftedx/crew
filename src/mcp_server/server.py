@@ -175,6 +175,13 @@ try:
             mcp.mount(a2a_mcp, prefix="a2a")
         except Exception:  # pragma: no cover
             pass
+    if _os.getenv("ENABLE_MCP_CREWAI", "0").lower() in ("1", "true", "yes", "on"):
+        try:
+            from mcp_server.crewai_server import crewai_mcp  # type: ignore
+
+            mcp.mount(crewai_mcp, prefix="crewai")
+        except Exception:  # pragma: no cover
+            pass
 except Exception:  # pragma: no cover - defensive guard
     pass
 

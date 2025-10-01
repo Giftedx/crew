@@ -25,7 +25,7 @@ class _PipelineResult(TypedDict, total=False):
     error: str
 
 
-class PipelineTool(BaseTool):
+class PipelineTool(BaseTool[StepResult]):
     """Tool wrapping the content pipeline."""
 
     name: str = "Content Pipeline Tool"
@@ -37,8 +37,15 @@ class PipelineTool(BaseTool):
         self.pipeline = pipeline
         self._metrics = get_metrics()
 
-    async def _run(self, url: str, quality: str = "1080p") -> StepResult:
-        """Process video with comprehensive error handling."""
+    async def _run(
+        self,
+        url: str,
+        quality: str = "1080p",
+        *,
+        tenant_id: str | None = None,
+        workspace_id: str | None = None,
+    ) -> StepResult:
+        """Process video with comprehensive error handling and tenancy."""
         start_time = time.time()
 
         try:
@@ -58,23 +65,42 @@ class PipelineTool(BaseTool):
 
             # Provide shared ingest queue so auto-follow can enqueue backfills
             pipeline = ContentPipeline()
-            result = await pipeline.process_video(url, quality=quality)
+
+            # Tenancy handling
+            if tenant_id and workspace_id:
+                try:
+                    from ..tenancy import TenantContext, with_tenant
+
+                    tenant_ctx = TenantContext(tenant_id=tenant_id, workspace_id=workspace_id)
+                    with with_tenant(tenant_ctx):
+                        result = await pipeline.process_video(url, quality=quality)
+                except ImportError:
+                    logger.warning("Tenancy modules not found, running without tenant context.")
+                    result = await pipeline.process_video(url, quality=quality)
+            else:
+                result = await pipeline.process_video(url, quality=quality)
 
             # Normalise into structured result (pipeline returns TypedDict already)
             status_raw = result.get("status")
-            status_val = status_raw if isinstance(status_raw, str) else "success"
             payload: Any = result.get("data", result)
-            result_dict: _PipelineResult = {"status": status_val, "data": payload}
 
             processing_time = time.time() - start_time
-            result_dict.update(
-                {
-                    "processing_time": processing_time,
-                    "url": url,
-                    "quality": quality,
-                    "timestamp": time.time(),
-                }
-            )
+            if status_raw != "success":
+                # Surface pipeline error explicitly
+                error_msg = result.get("error") or f"Pipeline failed at step: {result.get('step', 'unknown')}"
+                logger.error(f"Pipeline processing failed for URL {url}: {error_msg}")
+                self._metrics.counter("tool_runs_total", labels={"tool": "pipeline", "outcome": "error"}).inc()
+                self._metrics.histogram("tool_run_seconds", processing_time, labels={"tool": "pipeline"})
+                return StepResult.fail(
+                    error=error_msg,
+                    url=url,
+                    quality=quality,
+                    processing_time=processing_time,
+                    timestamp=time.time(),
+                    data=payload,
+                )
+
+            # Success path
             logger.info(f"Pipeline processing completed successfully in {processing_time:.2f}s")
             self._metrics.counter("tool_runs_total", labels={"tool": "pipeline", "outcome": "success"}).inc()
             self._metrics.histogram("tool_run_seconds", processing_time, labels={"tool": "pipeline"})
@@ -82,8 +108,8 @@ class PipelineTool(BaseTool):
                 url=url,
                 quality=quality,
                 processing_time=processing_time,
-                timestamp=result_dict.get("timestamp"),
-                data=result_dict.get("data"),
+                timestamp=time.time(),
+                data=payload,
             )
 
         except Exception as e:  # pragma: no cover - error path
@@ -100,34 +126,52 @@ class PipelineTool(BaseTool):
                 timestamp=time.time(),
             )
 
-    def run(self, url: str, quality: str = "1080p") -> StepResult:  # pragma: no cover - thin wrapper
+    def run(
+        self,
+        url: str,
+        quality: str = "1080p",
+        *,
+        tenant_id: str | None = None,
+        workspace_id: str | None = None,
+    ) -> StepResult:  # pragma: no cover - thin wrapper
         """Run pipeline with proper async handling."""
         try:
-            # Check if we're already in an event loop (e.g., Discord bot)
+            # Check if we're already in an event loop (e.g., Discord bot, CrewAI context)
             loop = asyncio.get_running_loop()
-            # If we're in a running loop, we need to create a task
-            # This should be called with await from the Discord command
+            # If we're in a running loop, run the coroutine in a separate thread
             if loop and loop.is_running():
-                # We're in an async context, caller should use _run_async instead
-                raise RuntimeError(
-                    "Pipeline tool is being called from an async context. "
-                    "Use 'await pipeline_tool._run_async(url)' instead of 'pipeline_tool.run(url)'"
-                )
+                import concurrent.futures
+
+                # Run the async function in a separate thread with its own event loop
+                def run_in_thread():
+                    return asyncio.run(self._run_async(url, quality, tenant_id=tenant_id, workspace_id=workspace_id))
+
+                with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+                    future = executor.submit(run_in_thread)
+                    return future.result(timeout=300)  # 5 minute timeout
+
         except RuntimeError:
             # No event loop running, we can use asyncio.run()
             pass
 
         # Use asyncio.run() when no event loop is running
-        return asyncio.run(self._run_async(url, quality))
+        return asyncio.run(self._run_async(url, quality, tenant_id=tenant_id, workspace_id=workspace_id))
 
-    async def _run_async(self, url: str, quality: str = "1080p") -> StepResult:
+    async def _run_async(
+        self,
+        url: str,
+        quality: str = "1080p",
+        *,
+        tenant_id: str | None = None,
+        workspace_id: str | None = None,
+    ) -> StepResult:
         """Async version for use within async contexts."""
-        return await self._run(url, quality)
+        return await self._run(url, quality, tenant_id=tenant_id, workspace_id=workspace_id)
 
     def execute_pipeline_steps(self, steps: list[str], input_data: dict[str, Any]) -> StepResult:
         """Execute pipeline steps following StepResult pattern per instruction #3."""
         if not steps:
-            return StepResult.ok(skipped=True, reason="No pipeline steps provided")
+            return StepResult.skip(reason="No pipeline steps provided")
 
         try:
             current_data = input_data
@@ -177,4 +221,4 @@ class PipelineTool(BaseTool):
             return StepResult.ok(data=enriched)
 
         else:
-            return StepResult.ok(skipped=True, reason=f"Unknown step: {step_name}")
+            return StepResult.skip(reason=f"Unknown step: {step_name}")

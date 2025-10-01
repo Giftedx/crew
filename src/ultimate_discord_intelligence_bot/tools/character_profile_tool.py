@@ -116,13 +116,19 @@ class CharacterProfileTool(BaseTool[StepResult]):
     def _run(self, person: str) -> StepResult:
         if not person or not person.strip():
             self._metrics.counter("tool_runs_total", labels={"tool": "character_profile", "outcome": "skipped"}).inc()
-            return StepResult.ok(skipped=True, reason="empty person")
+            return StepResult.skip(reason="empty person")
         profile = self.get_profile(person)
         self._metrics.counter("tool_runs_total", labels={"tool": "character_profile", "outcome": "success"}).inc()
         return StepResult.ok(data={"profile": profile})
 
-    def run(self, person: str) -> StepResult:  # pragma: no cover - thin wrapper
+    def run(self, *args, **kwargs) -> StepResult:  # pragma: no cover - thin wrapper
         try:
+            person = ""
+            if args and len(args) > 0:
+                person = str(args[0])
+            else:
+                # Accept alias 'name' used by some agents
+                person = str(kwargs.get("person", kwargs.get("name", "")))
             return self._run(person)
         except Exception as exc:  # pragma: no cover - unexpected
             self._metrics.counter("tool_runs_total", labels={"tool": "character_profile", "outcome": "error"}).inc()

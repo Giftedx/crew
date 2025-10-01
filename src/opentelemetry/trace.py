@@ -5,6 +5,22 @@ from typing import Any
 _GLOBAL_PROVIDER: TracerProvider | None = None
 
 
+class Status:
+    """Status for spans."""
+
+    def __init__(self, status_code: StatusCode, description: str = ""):
+        self.status_code = status_code
+        self.description = description
+
+
+class StatusCode:
+    """Status codes for spans."""
+
+    UNSET = 0
+    OK = 1
+    ERROR = 2
+
+
 class Span:
     def __init__(self, name: str) -> None:
         self.name = name
@@ -12,6 +28,9 @@ class Span:
 
     def set_attribute(self, key: str, value: Any) -> None:
         self.attributes[key] = value
+
+    def set_status(self, status: Status) -> None:
+        self.status = status
 
 
 class _SpanContext:

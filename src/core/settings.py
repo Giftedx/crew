@@ -54,6 +54,7 @@ class Settings(BaseSettings):
     enable_advanced_cache: bool = Field(False, alias="ENABLE_ADVANCED_CACHE")
     enable_api_cache: bool = Field(False, alias="ENABLE_API_CACHE")
     enable_dependency_tracking: bool = Field(False, alias="ENABLE_DEPENDENCY_TRACKING")
+    enable_pipeline_run_api: bool = Field(False, alias="ENABLE_PIPELINE_RUN_API")
     enable_http_cache: bool = Field(False, alias="ENABLE_HTTP_CACHE")
     enable_llm_cache: bool = Field(False, alias="ENABLE_LLM_CACHE")
     enable_degradation_reporter: bool = Field(False, alias="ENABLE_DEGRADATION_REPORTER")
@@ -86,8 +87,15 @@ class Settings(BaseSettings):
     enable_local_llm: bool = Field(False)
     enable_prompt_compression: bool = Field(False)
     enable_prompt_compression_flag: bool = Field(False, alias="ENABLE_PROMPT_COMPRESSION")  # doc sync
+    enable_llmlingua: bool = Field(False, alias="ENABLE_LLMLINGUA")
+    enable_llmlingua_shadow: bool = Field(False, alias="ENABLE_LLMLINGUA_SHADOW")
     enable_token_aware_chunker: bool = Field(False)
     enable_semantic_cache: bool = Field(False)
+    enable_gptcache: bool = Field(False, alias="ENABLE_GPTCACHE")
+    enable_gptcache_analysis_shadow: bool = Field(False, alias="ENABLE_GPTCACHE_ANALYSIS_SHADOW")
+    enable_transcript_compression: bool = Field(False, alias="ENABLE_TRANSCRIPT_COMPRESSION")
+    enable_graph_memory: bool = Field(False, alias="ENABLE_GRAPH_MEMORY")
+    enable_ax_routing: bool = Field(False, alias="ENABLE_AX_ROUTING")
 
     # Provider + model routing
     rerank_provider: str | None = Field(None)
@@ -104,10 +112,23 @@ class Settings(BaseSettings):
     # Prompt compression parameters
     token_chunk_target_tokens: int = Field(220)
     prompt_compression_max_repeated_blank_lines: int = Field(1)
+    prompt_compression_default_target: float = Field(0.0)
+    prompt_compression_max_tokens: int | None = Field(None)
+    transcript_compression_min_tokens: int = Field(1200)
+    transcript_compression_target_ratio: float = Field(0.35)
+    transcript_compression_max_tokens: int | None = Field(None)
+
+    # LLMLingua configuration
+    llmlingua_target_ratio: float = Field(0.35)
+    llmlingua_target_tokens: int = Field(1200)
+    llmlingua_min_tokens: int = Field(600)
+    llmlingua_stage: str = Field("round2")
+    llmlingua_device: str | None = Field(None)
 
     # Semantic cache params
     semantic_cache_threshold: float = Field(0.85)
     semantic_cache_ttl_seconds: int = Field(3600)
+    semantic_cache_shadow_tasks: str | None = Field(None)
 
     # Misc ingestion
     download_quality_default: str = Field("1080p")
@@ -115,6 +136,18 @@ class Settings(BaseSettings):
     # Secrets (never log these)
     archive_api_token: str | None = Field(None)
     discord_bot_token: str | None = Field(None)
+
+    # Vector store (Qdrant) configuration
+    # These are intentionally simple so other modules (memory.qdrant_provider) can
+    # pick them up via get_settings() and environment overlay without importing
+    # heavy config layers.
+    qdrant_url: str = Field("")
+    qdrant_api_key: str = Field("")
+    qdrant_prefer_grpc: bool = Field(False)
+    qdrant_grpc_port: int | None = Field(None)
+
+    # Vector ingest tuning
+    vector_batch_size: int = Field(128)
 
 
 _BOOL_TRUE = {"1", "true", "yes", "on"}
@@ -183,6 +216,13 @@ def get_settings() -> Settings:
     s = Settings()
     _apply_env_overrides(s)
     return s
+
+
+def _reset_cache_for_tests() -> None:  # pragma: no cover - simple test seam
+    try:
+        get_settings.cache_clear()  # type: ignore[attr-defined]
+    except Exception:
+        pass
 
 
 __all__ = ["Settings", "get_settings", "BaseSettings", "Field", "AliasChoices"]

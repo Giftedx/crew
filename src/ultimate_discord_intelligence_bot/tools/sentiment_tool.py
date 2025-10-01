@@ -14,7 +14,7 @@ POSITIVE_THRESHOLD = 0.05
 NEGATIVE_THRESHOLD = -0.05
 
 
-class SentimentTool(BaseTool):
+class SentimentTool(BaseTool[StepResult]):
     """Classify text as positive, neutral or negative using a lexical heuristic.
 
     Rationale: A deterministic, dependency‑free heuristic keeps unit tests fast and

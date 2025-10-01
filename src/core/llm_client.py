@@ -20,6 +20,7 @@ from typing import Any
 
 from core.llm_cache import get_llm_cache
 from core.token_meter import cost_guard, estimate_tokens
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 
 # Type alias for provider function: messages -> response dict/str
 ProviderFn = Callable[[Sequence[dict[str, Any]]], Any]
@@ -86,6 +87,10 @@ class LLMClient:
         self.provider = provider
         self.model = model
         self._cache = get_llm_cache()
+        try:
+            self._metrics = get_metrics()
+        except Exception:  # pragma: no cover - inert fallback
+            self._metrics = None  # type: ignore[assignment]
 
     def chat(self, messages: Sequence[dict[str, Any]]) -> LLMCallResult:
         """Execute chat call with semantic cache and budget protection.
@@ -118,6 +123,12 @@ class LLMClient:
                     transformed = cached_resp + " (cached)"
             except Exception:  # pragma: no cover
                 transformed = cached_resp
+            try:
+                if self._metrics:
+                    self._metrics.counter("llm_calls_total", labels={"model": self.model, "cache": "hit"}).inc()
+                    self._metrics.counter("llm_tokens_estimated_total", labels={"model": self.model}).add(tokens)
+            except Exception:
+                pass
             return LLMCallResult(response=transformed, cached=True, estimated_tokens=tokens, model=self.model)
 
         # Miss path
@@ -125,7 +136,20 @@ class LLMClient:
         # Heuristic: assume output tokens roughly 25% of input tokens initially
         est_out = max(16, int(tokens * 0.25))
         with cost_guard(tokens, est_out, self.model):  # enforce budgets
+            import time as _t
+
+            _t0 = _t.monotonic()
             resp = self.provider(messages)
+            duration = _t.monotonic() - _t0
+            try:
+                if self._metrics:
+                    self._metrics.counter("llm_calls_total", labels={"model": self.model, "cache": "miss"}).inc()
+                    self._metrics.counter("llm_tokens_estimated_total", labels={"model": self.model}).add(
+                        tokens + est_out
+                    )
+                    self._metrics.histogram("llm_call_seconds", duration, labels={"model": self.model})
+            except Exception:
+                pass
         # Fire-and-forget cache write
         try:
             self._cache.put(normalized, self.model, resp)

@@ -14,9 +14,9 @@ import os
 import tempfile
 from pathlib import Path
 
-from core.http_utils import resilient_get  # exposed for test monkeypatching
 from pydantic import AnyHttpUrl, BaseModel
 
+from core.http_utils import resilient_get  # exposed for test monkeypatching
 from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
@@ -42,7 +42,7 @@ def _resolve_download_dir(user_dir: Path | None) -> Path:
     return _resolve_download_dir._cached  # type: ignore[attr-defined]
 
 
-class DiscordDownloadTool(BaseTool):
+class DiscordDownloadTool(BaseTool[StepResult]):
     name: str = "Discord Download Tool"
     description: str = "Download a Discord attachment given its URL."
     platform = "Discord"
@@ -75,7 +75,7 @@ class DiscordDownloadTool(BaseTool):
     def _run(self, attachment_url: str, filename: str | None = None) -> StepResult:
         if not attachment_url:
             self._metrics.counter("tool_runs_total", labels={"tool": "discord_download", "outcome": "skipped"}).inc()
-            return StepResult.ok(skipped=True, reason="No attachment URL provided")
+            return StepResult.skip(reason="No attachment URL provided")
         try:
             # Use resilient_get internally but preserve legacy provenance string expected by tests.
             response = resilient_get(attachment_url, stream=True, timeout_seconds=30)

@@ -17,7 +17,7 @@ from ultimate_discord_intelligence_bot.step_result import StepResult
 from ._base import BaseTool
 
 
-class SocialMediaMonitorTool(BaseTool):
+class SocialMediaMonitorTool(BaseTool[StepResult]):
     """Collect posts mentioning a keyword across platforms.
 
     Returns StepResult with data:
@@ -35,7 +35,7 @@ class SocialMediaMonitorTool(BaseTool):
             self._metrics.counter(
                 "tool_runs_total", labels={"tool": "social_media_monitor", "outcome": "skipped"}
             ).inc()
-            return StepResult.ok(skipped=True, reason="No keyword provided")
+            return StepResult.skip(reason="No keyword provided")
         try:
             matches: dict[str, list[str]] = {}
             lower = keyword.lower()

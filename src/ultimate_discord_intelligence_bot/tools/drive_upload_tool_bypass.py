@@ -15,7 +15,7 @@ from ._base import BaseTool
 logger = logging.getLogger(__name__)
 
 
-class DriveUploadTool(BaseTool):
+class DriveUploadTool(BaseTool[StepResult]):
     """Drive upload tool that works without Google credentials (bypass)."""
 
     name: str = "Google Drive Upload Tool (Bypass)"

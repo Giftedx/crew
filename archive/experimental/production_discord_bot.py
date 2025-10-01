@@ -27,8 +27,9 @@ from datetime import datetime, timedelta
 from typing import Any
 
 import aiohttp
-import discord
 from discord.ext import commands, tasks
+
+import discord
 
 # Setup logging
 logger = logging.getLogger(__name__)

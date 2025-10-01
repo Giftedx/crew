@@ -1,0 +1,35 @@
+{
+  "dataset": "/home/crew/tests/data/trajectories/regression.json",
+  "evaluations": [
+    {
+      "accuracy_score": 0.8,
+      "efficiency_score": 0.85,
+      "error_handling_score": 0.9,
+      "evaluator": "LLMHeuristic",
+      "reasoning": "Trajectory succeeded with 3 steps",
+      "score": true,
+      "session_id": "regression_s1",
+      "status": "success",
+      "success": true,
+      "trajectory_id": "regression_s1"
+    },
+    {
+      "accuracy_score": 0.8,
+      "efficiency_score": 0.85,
+      "error_handling_score": 0.9,
+      "evaluator": "LLMHeuristic",
+      "reasoning": "Trajectory succeeded with 3 steps",
+      "score": true,
+      "session_id": "regression_s2",
+      "status": "success",
+      "success": true,
+      "trajectory_id": "regression_s2"
+    }
+  ],
+  "summary": {
+    "average_accuracy_score": 0.8,
+    "generated_at": "2025-09-25T16:06:25.580771+00:00",
+    "successful_evaluations": 2,
+    "total_evaluations": 2
+  }
+}

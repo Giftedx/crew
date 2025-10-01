@@ -22,9 +22,8 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 
-from obs import metrics
-
 from core.time import default_utc_now
+from obs import metrics
 
 from ..security.events import log_security_event
 from .error_handling import log_error

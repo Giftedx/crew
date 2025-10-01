@@ -1,5 +1,6 @@
 """Shared services for prompt engineering, routing and learning."""
 
+from . import openrouter_service as openrouter_service  # re-export module for monkeypatch compatibility
 from .cache import LLMCache
 from .evaluation_harness import EvaluationHarness
 from .learning_engine import LearningEngine  # Deprecated import path; prefer core.learning_engine.LearningEngine

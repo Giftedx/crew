@@ -26,7 +26,7 @@ class TruthScoringTool(BaseTool[StepResult]):
         values = list(verdicts)
         if not values:
             self._metrics.counter("tool_runs_total", labels={"tool": "truth_scoring", "outcome": "skipped"}).inc()
-            return StepResult.ok(skipped=True, reason="no verdicts provided", data={"score": 0.0})
+            return StepResult.skip(reason="no verdicts provided", data={"score": 0.0})
         score = mean(1 if v else 0 for v in values)
         self._metrics.counter("tool_runs_total", labels={"tool": "truth_scoring", "outcome": "success"}).inc()
         return StepResult.ok(data={"score": score})

@@ -1,160 +1,214 @@
-process_video:
-  description:
-    Use the pipeline tool to download {url}, transcribe and analyse the
-    audio, then post the summary and Drive links to Discord.
-  expected_output: Summary of the processed video posted to Discord.
-  agent: content_manager
-  context:
-    - execute_multi_platform_downloads
+plan_autonomy_mission:
+  description: >-
+    Launch or resume the end-to-end intelligence mission for {request}. Sequence
+    acquisition, transcription, analysis, verification, and memory stages using the
+    pipeline tool while tracking budgets and documenting key decisions.
+  expected_output: Mission run log including staged plan, tool usage, and final routing instructions.
+  agent: mission_orchestrator
   human_input: false
   async_execution: false
-  output_file: output/processed_video_{url_hash}.md
-execute_multi_platform_downloads:
-  description:
-    Retrieve media from a list of URLs spanning YouTube, Twitch, Kick,
-    Twitter, Instagram, TikTok, Reddit and Discord. Return metadata for each successful
-    download.
-  expected_output: Local file paths and metadata for downloaded media.
-  agent: content_downloader
-identify_new_content:
-  description:
-    Given candidate items from platform feeds (YouTube, Twitch, Kick, Twitter,
-    Instagram, TikTok, Reddit, Discord), return only those that have not been previously
-    seen.
-  expected_output: List of new content items annotated with platform and URL.
-  agent: multi_platform_monitor
-monitor_system:
-  description: Gather basic system metrics and post them to the private Discord channel.
-  expected_output: Confirmation that the alert and metrics were posted.
-  agent: system_alert_manager
-gather_cross_platform_intelligence:
-  description:
-    Use the social media monitor tool to collect posts mentioning {keyword}
-    across Reddit, X and Discord.
-  expected_output: Aggregated posts grouped by platform.
-  agent: cross_platform_intelligence_gatherer
-fact_check_content:
-  description:
-    Analyse {text} for logical fallacies and combine external perspectives
-    to verify claims.
-  expected_output: Summary of detected fallacies and supporting context.
-  agent: enhanced_fact_checker
-  context:
-    - gather_cross_platform_intelligence
+  output_file: output/mission_plan_{timestamp}.md
+capture_source_media:
+  description: >-
+    Resolve and download the highest-quality media for {url} across all supported
+    platforms, capturing rich metadata and uploading artefacts when size limits are hit.
+  expected_output: Download manifest containing file paths, formats, durations, and resolver notes.
+  agent: acquisition_specialist
   human_input: false
   async_execution: false
-  output_file: output/fact_check_{timestamp}.json
-score_truthfulness:
-  description:
-    Convert a list of fact-check verdicts about {person} into a numerical
-    trust score and update their historical profile.
-  expected_output:
-    Updated profile with counts of truths and lies plus a score between
-    0 and 1.
-  agent: truth_scoring_specialist
+  output_file: output/download_manifest_{url_hash}.json
+transcribe_and_index_media:
+  description: >-
+    Produce accurate transcripts, searchable indices, and aligned timelines for the
+    captured media package.
+  expected_output: Transcript bundle with timestamps, quality indicators, and index references.
+  agent: transcription_engineer
   context:
-    - fact_check_content
+    - capture_source_media
   human_input: false
   async_execution: false
-  output_file: output/truthfulness_score_{person}_{timestamp}.json
-steelman_argument:
-  description:
-    Generate the strongest possible argument for {claim} using evidence
-    snippets.
-  expected_output: Steelman argument text.
-  agent: steelman_argument_generator
+  output_file: output/transcript_{url_hash}.json
+map_transcript_insights:
+  description: >-
+    Analyse transcripts for sentiment shifts, topical clusters, and noteworthy excerpts
+    that downstream teams must review.
+  expected_output: Structured insight report containing themes, sentiment summary, and highlighted excerpts.
+  agent: analysis_cartographer
   context:
-    - fact_check_content
+    - transcribe_and_index_media
   human_input: false
   async_execution: false
-  output_file: output/steelman_{claim_hash}.md
-analyze_claim:
-  description:
-    Run the debate analysis pipeline on {url} at timestamp {ts} for {person}.
-    Produce context, fact-check results and score updates.
-  expected_output: Analysis report with defender blurbs and scoreboard deltas.
-  agent: content_manager
+  output_file: output/insight_map_{url_hash}.json
+verify_priority_claims:
+  description: >-
+    Extract and fact-check consequential claims from the analysed content, capturing
+    verdicts, confidence levels, and supporting evidence.
+  expected_output: Verification dossier with claim list, verdicts, fallacy notes, and citations.
+  agent: verification_director
   context:
-    - get_context
+    - map_transcript_insights
   human_input: false
   async_execution: false
-  output_file: output/claim_analysis_{person}_{timestamp}.json
-get_context:
-  description: Retrieve transcript context around {ts} in {video_id}.
-  expected_output: Surrounding transcript text.
-  agent: content_manager
-fact_check_claim:
-  description: Fact-check the statement {claim} and return a verdict with evidence.
-  expected_output: Verdict and supporting citations.
-  agent: enhanced_fact_checker
-update_leaderboard:
-  description: Update the lie, misquote and misinfo counts for {person}.
-  expected_output: Confirmation scores were persisted.
-  agent: truth_scoring_specialist
-answer_question:
-  description: Retrieve relevant memory snippets to answer {question}.
-  expected_output: List of context snippets.
-  agent: discord_qa_manager
-get_timeline:
-  description: Retrieve timeline events for {video_id}.
-  expected_output: Chronological list of events with sources.
-  agent: content_manager
-get_profile:
-  description: Retrieve stored profile information for {person}.
-  expected_output: Profile with trust metrics and event history.
-  agent: character_profile_manager
-synthesize_personality:
-  description:
-    Analyse historical events and trust metrics to summarise {person}'s
-    personality.
-  expected_output: Concise personality profile.
-  agent: personality_synthesis_manager
+  output_file: output/verification_{url_hash}.json
+score_risk_and_truth:
+  description: >-
+    Update deception and truthfulness metrics for {subject}, blending new verification
+    results with historical baselines and leaderboard entries.
+  expected_output: Risk scorecard showing deception indices, truth deltas, and leaderboard adjustments.
+  agent: risk_intelligence_analyst
+  context:
+    - verify_priority_claims
+  human_input: false
+  async_execution: false
+  output_file: output/risk_score_{subject}_{timestamp}.json
+update_persona_dossiers:
+  description: >-
+    Merge the latest mission findings into persona dossiers, timelines, and trust
+    narratives so future missions inherit current context.
+  expected_output: Updated persona dossier with timeline annotations and sentiment highlights.
+  agent: persona_archivist
+  context:
+    - score_risk_and_truth
+  human_input: false
+  async_execution: false
+  output_file: output/persona_update_{subject}_{timestamp}.md
+persist_mission_intelligence:
+  description: >-
+    Store mission artefacts across vector, graph, and continual memory systems while
+    pruning duplicates and documenting compaction results.
+  expected_output: Memory persistence log with namespaces, stored payload counts, and compaction summary.
+  agent: knowledge_integrator
+  context:
+    - map_transcript_insights
+    - verify_priority_claims
+    - score_risk_and_truth
+  human_input: false
+  async_execution: false
+  output_file: output/memory_persistence_{timestamp}.json
+curate_intelligence_briefing:
+  description: >-
+    Merge mission context, timelines, and references into a concise intelligence briefing for stakeholders.
+  expected_output: Briefing packet outlining findings, supporting evidence, timeline, and action recommendations.
+  agent: intelligence_briefing_curator
+  context:
+    - verify_priority_claims
+    - score_risk_and_truth
+    - update_persona_dossiers
+    - persist_mission_intelligence
+  human_input: false
+  async_execution: false
+  output_file: output/intel_briefing_{timestamp}.md
+monitor_signal_landscape:
+  description: >-
+    Track cross-platform discourse for {keyword} across Reddit, X, and Discord, surfacing
+    sentiment spikes or viral artefacts that require investigation.
+  expected_output: Cross-platform signal report with sentiment metrics and escalation recommendations.
+  agent: signal_recon_specialist
+  human_input: false
+  async_execution: true
+  output_file: output/signal_landscape_{keyword}_{timestamp}.json
+scout_trending_targets:
+  description: >-
+    Scan multi-platform feeds and research connectors to identify unprocessed content
+    that meets mission relevance thresholds.
+  expected_output: Ranked queue of candidate targets with provenance notes and suggested next actions.
+  agent: trend_intelligence_scout
+  human_input: false
+  async_execution: false
+  output_file: output/trending_targets_{timestamp}.json
+respond_to_community:
+  description: >-
+    Answer the community question "{question}" using current, verified intelligence and
+    post the response to the appropriate Discord channel.
+  expected_output: Posted Discord response with supporting references and follow-up actions if needed.
+  agent: community_liaison
+  context:
+    - verify_priority_claims
+    - update_persona_dossiers
+    - curate_intelligence_briefing
+  human_input: false
+  async_execution: false
+craft_argument_brief:
+  description: >-
+    Construct a steelman argument for {claim}, anticipating counterpoints and linking
+    to verified evidence.
+  expected_output: Debate-ready argument brief with structure, citations, and counter-argument prep.
+  agent: argument_strategist
+  context:
+    - verify_priority_claims
+    - map_transcript_insights
+  human_input: false
+  async_execution: false
+  output_file: output/argument_brief_{claim_hash}.md
+system_health_watch:
+  description: >-
+    Audit current pipeline performance, budget consumption, and incident status, alerting
+    the private Discord channel when anomalies surface.
+  expected_output: Health audit summary and notification confirmation with remediation guidance.
+  agent: system_reliability_officer
+  human_input: false
+  async_execution: true
+  output_file: output/system_health_{timestamp}.json
+produce_research_brief:
+  description: >-
+    Compile a multi-source research brief for {topic}, harmonising references, gaps, and
+    recommended follow-up questions.
+  expected_output: Research brief with source list, synthesis, and open research questions.
+  agent: research_synthesist
+  human_input: false
+  async_execution: false
+  output_file: output/research_brief_{topic_hash}.md
 
 # Advanced Performance Analytics Tasks
 run_performance_analytics:
-  description:
-    Execute comprehensive performance analytics analysis for the specified
-    time period and generate insights about system performance, trends, and optimization
-    opportunities.
+  description: >-
+    Execute comprehensive performance analytics analysis for the specified time period
+    and generate insights about system performance, trends, and optimization opportunities.
   expected_output: Performance analytics report with health scores, trends, and recommendations.
-  agent: system_alert_manager
+  agent: system_reliability_officer
   human_input: false
   async_execution: true
   output_file: output/performance_analytics_{timestamp}.json
-
 monitor_performance_alerts:
-  description:
-    Evaluate current performance analytics data against alert rules and
-    generate notifications for any threshold violations or anomalies detected.
+  description: >-
+    Evaluate current performance analytics data against alert rules and generate notifications
+    for any threshold violations or anomalies detected.
   expected_output: List of performance alerts generated and notification status.
-  agent: system_alert_manager
+  agent: system_reliability_officer
   human_input: false
   async_execution: true
-
 send_performance_executive_summary:
-  description:
-    Generate and send executive-level performance summary covering system
-    health, alert activity, and strategic recommendations to leadership channels.
+  description: >-
+    Generate and send executive-level performance summaries covering system health, alert activity,
+    and strategic recommendations to leadership channels.
   expected_output: Executive summary delivered to appropriate Discord channels.
-  agent: system_alert_manager
+  agent: system_reliability_officer
   human_input: false
   async_execution: false
-
 optimize_system_performance:
-  description:
-    Execute automated performance optimization strategies based on analytics
-    insights and predictive recommendations to improve system efficiency.
+  description: >-
+    Execute automated performance optimization strategies based on analytics insights and predictive
+    recommendations to improve system efficiency.
   expected_output: Optimization actions executed with performance impact measurements.
-  agent: system_alert_manager
+  agent: system_reliability_officer
   human_input: false
   async_execution: true
   output_file: output/performance_optimization_{timestamp}.json
-
 predictive_performance_analysis:
-  description: Run predictive performance analysis to forecast potential issues,
-    capacity requirements, and proactive optimization opportunities.
+  description: >-
+    Run predictive performance analysis to forecast potential issues, capacity requirements,
+    and proactive optimization opportunities.
   expected_output: Predictive insights with forecasts and early warning alerts.
-  agent: system_alert_manager
+  agent: system_reliability_officer
   human_input: false
   async_execution: true
   output_file: output/predictive_analysis_{timestamp}.json
+
+synthesize_personality:
+  description: >-
+    Harmonize tone, style, and persona across outputs for {subject} based on mission context and guidelines.
+  expected_output: Persona synthesis guideline with examples and consistency checklist.
+  agent: personality_synthesis_manager
+  human_input: false
+  async_execution: false
+  output_file: output/persona_synthesis_{subject}_{timestamp}.md

@@ -11,11 +11,12 @@ import logging
 import time
 from collections import Counter
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import timedelta
 from typing import Any
 
 from core.cache.semantic_cache import create_semantic_cache
 from core.settings import get_settings
+from core.time import default_utc_now, ensure_utc
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +39,8 @@ class PredictiveCacheWarmer:
         self.settings = get_settings()
         self.cache = create_semantic_cache(fallback_enabled=True)
         self.request_patterns: Counter[str] = Counter()
-        self.last_warming = datetime.now()
+        # Use UTC-aware timestamps to avoid naive/aware comparison issues
+        self.last_warming = default_utc_now()
         self.warming_stats = CacheWarmingStats()
 
     async def analyze_request_patterns(self, recent_requests: list[dict[str, Any]]) -> list[str]:
@@ -158,7 +160,7 @@ class PredictiveCacheWarmer:
     async def auto_warm_cache(self, request_history: list[dict[str, Any]]) -> CacheWarmingStats:
         """Automatically warm cache based on request history."""
         # Only warm if enough time has passed
-        if datetime.now() - self.last_warming < timedelta(minutes=15):
+        if ensure_utc(default_utc_now()) - self.last_warming < timedelta(minutes=15):
             return self.warming_stats
 
         try:
@@ -166,7 +168,7 @@ class PredictiveCacheWarmer:
             candidates = await self.analyze_request_patterns(request_history)
             await self.warm_cache_predictively(candidates)
 
-            self.last_warming = datetime.now()
+            self.last_warming = default_utc_now()
 
             logger.info(f"Auto cache warming: {self.warming_stats.cache_entries_warmed} entries warmed")
 

@@ -1,6 +1,6 @@
 ---
 description: 'Comprehensive project review and polish mode with methodical analysis using sequential thinking and context tools'
-tools: ['think', 'sequentialthinking', 'Context7', 'file_search', 'grep_search', 'run_command']
+tools: ['runCommands', 'runTasks', 'edit', 'runNotebooks', 'search', 'new', 'extensions', 'todos', 'runTests', 'usages', 'vscodeAPI', 'think', 'problems', 'changes', 'testFailure', 'openSimpleBrowser', 'fetch', 'githubRepo', 'ref-tools-mcp', 'context7-mcp', 'mem0-mcp', 'brave-search', 'server-sequential-thinking', 'context7', 'sequentialthinking', 'playwright', 'memory', 'upstash/context7', 'pylance mcp server', 'renderMermaidDiagram', 'copilotCodingAgent', 'activePullRequest', 'openPullRequest', 'getPythonEnvironmentInfo', 'getPythonExecutableCommand', 'installPythonPackage', 'configurePythonEnvironment', 'websearch']
 ---
 
 # 🎯 Project Polish Mode

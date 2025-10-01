@@ -1,6 +1,7 @@
 """Tests for migrated LearningEngine functionality."""
 
 import pytest
+
 from core.learning_engine import LearningEngine
 
 

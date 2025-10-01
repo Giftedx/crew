@@ -7,7 +7,6 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from core.time import default_utc_now
-
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
 

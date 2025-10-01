@@ -3,6 +3,7 @@ from __future__ import annotations
 import types
 
 import pytest
+
 from ingest import pipeline as ip
 
 

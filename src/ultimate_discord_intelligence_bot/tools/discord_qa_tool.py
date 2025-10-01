@@ -38,9 +38,16 @@ class DiscordQATool(BaseTool[StepResult]):
         self._metrics = get_metrics()
 
     def _run(self, question: str, limit: int = 3) -> StepResult:
-        if not question or not question.strip():
+        # Enforce non-empty, meaningful questions to avoid agent spam
+        import os
+
+        try:
+            min_len = int(os.getenv("DISCORD_QA_MIN_LEN", "8").strip())
+        except Exception:
+            min_len = 8
+        if (not question) or (not question.strip()) or (len(question.strip()) < max(1, min_len)):
             self._metrics.counter("tool_runs_total", labels={"tool": "discord_qa", "outcome": "skipped"}).inc()
-            return StepResult.ok(skipped=True, reason="empty question", data={"snippets": []})
+            return StepResult.skip(reason="empty question", data={"snippets": []})
         if self.search is None:  # pragma: no cover - defensive
             self._metrics.counter("tool_runs_total", labels={"tool": "discord_qa", "outcome": "error"}).inc()
             return StepResult.fail(error="search tool not initialised")
@@ -60,8 +67,29 @@ class DiscordQATool(BaseTool[StepResult]):
         self._metrics.counter("tool_runs_total", labels={"tool": "discord_qa", "outcome": "success"}).inc()
         return StepResult.ok(data={"snippets": snippets})
 
-    def run(self, question: str, limit: int = 3) -> StepResult:  # pragma: no cover - thin wrapper
+    def run(self, *args, **kwargs) -> StepResult:  # pragma: no cover - thin wrapper
         try:
+            question = ""
+            limit = int(kwargs.get("limit", 3))
+            if args:
+                question = str(args[0])
+                if len(args) > 1:
+                    try:
+                        limit = int(args[1])
+                    except Exception:
+                        limit = int(kwargs.get("limit", 3))
+            else:
+                # Accept alias 'query' used by some agents
+                question = str(kwargs.get("question", kwargs.get("query", "")))
+            import os
+
+            try:
+                min_len = int(os.getenv("DISCORD_QA_MIN_LEN", "8").strip())
+            except Exception:
+                min_len = 8
+            if (not question) or (not question.strip()) or (len(question.strip()) < max(1, min_len)):
+                self._metrics.counter("tool_runs_total", labels={"tool": "discord_qa", "outcome": "skipped"}).inc()
+                return StepResult.skip(reason="empty question", data={"snippets": []})
             return self._run(question, limit=limit)
         except Exception as exc:  # pragma: no cover - unexpected
             self._metrics.counter("tool_runs_total", labels={"tool": "discord_qa", "outcome": "error"}).inc()

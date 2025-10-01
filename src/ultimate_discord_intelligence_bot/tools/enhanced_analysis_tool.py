@@ -10,7 +10,7 @@ from ultimate_discord_intelligence_bot.step_result import StepResult
 from ._base import BaseTool
 
 
-class EnhancedAnalysisTool(BaseTool):
+class EnhancedAnalysisTool(BaseTool[StepResult]):
     """Enhanced content analysis with fallback capabilities."""
 
     name: str = "Enhanced Content Analysis Tool"

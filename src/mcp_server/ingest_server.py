@@ -84,8 +84,7 @@ def _validate_https_public(url: str) -> str:
         return url
 
 
-@ingest_mcp.tool
-def extract_metadata(url: str) -> dict:
+def _extract_metadata_impl(url: str) -> dict:
     """Extract safe video metadata for an allowlisted provider (no download)."""
 
     try:
@@ -123,8 +122,7 @@ def extract_metadata(url: str) -> dict:
         return {"error": str(exc)}
 
 
-@ingest_mcp.tool
-def summarize_subtitles(url: str, lang: str | None = None, max_chars: int = 1000) -> dict:
+def _summarize_subtitles_impl(url: str, lang: str | None = None, max_chars: int = 1000) -> dict:
     """Fetch video metadata and summarize available subtitles text (no downloads).
 
     Returns first N characters of concatenated subtitle lines for the selected language
@@ -165,8 +163,7 @@ def summarize_subtitles(url: str, lang: str | None = None, max_chars: int = 1000
         return {"error": str(exc)}
 
 
-@ingest_mcp.tool
-def list_channel_videos(channel_url: str, limit: int = 50) -> dict:
+def _list_channel_videos_impl(channel_url: str, limit: int = 50) -> dict:
     """List YouTube channel videos using yt-dlp flat mode (capped)."""
 
     try:
@@ -194,8 +191,7 @@ def list_channel_videos(channel_url: str, limit: int = 50) -> dict:
         return {"error": str(exc)}
 
 
-@ingest_mcp.tool
-def fetch_transcript_local(path: str, model: str = "tiny", max_chars: int = 10000) -> dict:
+def _fetch_transcript_local_impl(path: str, model: str = "tiny", max_chars: int = 10000) -> dict:
     """Transcribe a local media file using lightweight Whisper wrappers.
 
     This tool does not download remote URLs. Provide a local file path.
@@ -232,6 +228,44 @@ def fetch_transcript_local(path: str, model: str = "tiny", max_chars: int = 1000
         return {"error": str(exc)}
 
 
+# Plain callables for direct imports (tests call these)
+def extract_metadata(url: str) -> dict:
+    return _extract_metadata_impl(url)
+
+
+def summarize_subtitles(url: str, lang: str | None = None, max_chars: int = 1000) -> dict:
+    return _summarize_subtitles_impl(url, lang=lang, max_chars=max_chars)
+
+
+def list_channel_videos(channel_url: str, limit: int = 50) -> dict:
+    return _list_channel_videos_impl(channel_url, limit=limit)
+
+
+def fetch_transcript_local(path: str, model: str = "tiny", max_chars: int = 10000) -> dict:
+    return _fetch_transcript_local_impl(path, model=model, max_chars=max_chars)
+
+
+# MCP-decorated wrappers under different names to avoid shadowing
+@ingest_mcp.tool
+def extract_metadata_tool(url: str) -> dict:  # pragma: no cover - thin MCP wrapper
+    return _extract_metadata_impl(url)
+
+
+@ingest_mcp.tool
+def summarize_subtitles_tool(url: str, lang: str | None = None, max_chars: int = 1000) -> dict:  # pragma: no cover
+    return _summarize_subtitles_impl(url, lang=lang, max_chars=max_chars)
+
+
+@ingest_mcp.tool
+def list_channel_videos_tool(channel_url: str, limit: int = 50) -> dict:  # pragma: no cover
+    return _list_channel_videos_impl(channel_url, limit=limit)
+
+
+@ingest_mcp.tool
+def fetch_transcript_local_tool(path: str, model: str = "tiny", max_chars: int = 10000) -> dict:  # pragma: no cover
+    return _fetch_transcript_local_impl(path, model=model, max_chars=max_chars)
+
+
 @ingest_mcp.resource("ingest://providers")
 def providers() -> dict:
     return {
@@ -244,8 +278,12 @@ def providers() -> dict:
 __all__ = [
     "ingest_mcp",
     "extract_metadata",
+    "extract_metadata_tool",
     "list_channel_videos",
+    "list_channel_videos_tool",
     "fetch_transcript_local",
+    "fetch_transcript_local_tool",
     "summarize_subtitles",
+    "summarize_subtitles_tool",
     "providers",
 ]

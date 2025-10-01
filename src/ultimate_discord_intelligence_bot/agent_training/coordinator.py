@@ -9,11 +9,12 @@ and autonomous reasoning capabilities using synthetic training data.
 import json
 import logging
 from dataclasses import dataclass
-from datetime import datetime
 from pathlib import Path
 from typing import Any
 
 import yaml
+
+from core.time import default_utc_now
 
 from .synthetic_data_generator import SyntheticDataGenerator, ToolUsageExample
 
@@ -395,7 +396,7 @@ QUALITY ASSURANCE:
             agent_config["tool_guidelines"] = enhancement.tool_usage_guidelines
             agent_config["performance_metrics"] = enhancement.performance_metrics
             agent_config["reasoning_framework"] = enhancement.reasoning_framework
-            agent_config["enhanced_at"] = datetime.now().isoformat()
+            agent_config["enhanced_at"] = default_utc_now().isoformat()
 
             # Save updated configuration
             self._save_yaml_config(self.agents_config, self.agents_config_path)
@@ -406,7 +407,7 @@ QUALITY ASSURANCE:
 
             training_data = {
                 "agent_name": enhancement.agent_name,
-                "enhanced_at": datetime.now().isoformat(),
+                "enhanced_at": default_utc_now().isoformat(),
                 "examples": [
                     {
                         "scenario": ex.scenario,
@@ -464,7 +465,7 @@ QUALITY ASSURANCE:
 
         report = f"""
 # CrewAI Agent Enhancement Report
-Generated: {datetime.now().isoformat()}
+Generated: {default_utc_now().isoformat()}
 
 ## Summary
 - **Total Agents**: {total}

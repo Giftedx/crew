@@ -60,8 +60,7 @@ def _open_store():
         return None
 
 
-@kg_mcp.tool
-def kg_query(tenant: str, entity: str, depth: int = 1) -> dict:
+def _kg_query_impl(tenant: str, entity: str, depth: int = 1) -> dict:
     """Return a small subgraph around the given entity name.
 
     Output shape: { nodes: [{id,type,name}], edges: [{src,dst,type}] }
@@ -96,8 +95,7 @@ def kg_query(tenant: str, entity: str, depth: int = 1) -> dict:
         return {"nodes": [], "edges": [], "error": str(exc)}
 
 
-@kg_mcp.tool
-def kg_timeline(tenant: str, entity: str) -> dict:
+def _kg_timeline_impl(tenant: str, entity: str) -> dict:
     """Return timeline events for an entity (best-effort; may be empty)."""
 
     store = _open_store()
@@ -111,6 +109,26 @@ def kg_timeline(tenant: str, entity: str) -> dict:
         return {"events": out[:200]}
     except Exception as exc:
         return {"events": [], "error": str(exc)}
+
+
+# Plain callables for direct imports
+def kg_query(tenant: str, entity: str, depth: int = 1) -> dict:
+    return _kg_query_impl(tenant, entity, depth)
+
+
+def kg_timeline(tenant: str, entity: str) -> dict:
+    return _kg_timeline_impl(tenant, entity)
+
+
+# MCP-decorated wrappers with distinct names
+@kg_mcp.tool
+def kg_query_tool(tenant: str, entity: str, depth: int = 1) -> dict:  # pragma: no cover
+    return _kg_query_impl(tenant, entity, depth)
+
+
+@kg_mcp.tool
+def kg_timeline_tool(tenant: str, entity: str) -> dict:  # pragma: no cover
+    return _kg_timeline_impl(tenant, entity)
 
 
 @kg_mcp.resource("policy://{key}")
@@ -132,9 +150,22 @@ def policy_resource(key: str) -> Any:
 
 
 @kg_mcp.tool
-def policy_keys() -> dict:
+def policy_keys_tool() -> dict:  # pragma: no cover - MCP wrapper
     """List top-level keys from config/policy.yaml for quick discovery."""
 
+    try:
+        import yaml  # type: ignore
+
+        with open("config/policy.yaml", encoding="utf-8") as f:
+            data = yaml.safe_load(f) or {}
+        keys = sorted([str(k) for k in data.keys()]) if isinstance(data, dict) else []
+        return {"keys": keys}
+    except Exception as exc:
+        return {"keys": [], "error": str(exc)}
+
+
+# Plain callable for tests
+def policy_keys() -> dict:
     try:
         import yaml  # type: ignore
 
@@ -162,8 +193,11 @@ def grounding_profiles() -> Any:
 __all__ = [
     "kg_mcp",
     "kg_query",
+    "kg_query_tool",
     "kg_timeline",
+    "kg_timeline_tool",
     "policy_resource",
     "grounding_profiles",
     "policy_keys",
+    "policy_keys_tool",
 ]

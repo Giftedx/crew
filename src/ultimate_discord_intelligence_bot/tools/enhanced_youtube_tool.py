@@ -16,7 +16,7 @@ from ._base import BaseTool
 from .yt_dlp_download_tool import YouTubeDownloadTool
 
 
-class EnhancedYouTubeDownloadTool(BaseTool):
+class EnhancedYouTubeDownloadTool(BaseTool[StepResult]):
     name: str = "Enhanced YouTube Download Tool"
     description: str = "Download YouTube videos using the unified yt-dlp wrapper"
 

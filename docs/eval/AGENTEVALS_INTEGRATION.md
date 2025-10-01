@@ -38,3 +38,7 @@ export AGENTEVALS_MODEL=openai:o3-mini
 
 - A lightweight adapter test is in `tests/test_trajectory_evaluator_agentevals.py`.
 - Quick CI sweep continues to pass without requiring agentevals installation.
+
+## CI Regression Sweep
+
+Run `make agent-evals-ci` (also part of `make ci-fast`) to execute the regression trajectory sweep via `scripts/run_agentevals_ci.py`. The command writes `reports/agentevals_ci.json` with evaluation summaries for CI inspection.

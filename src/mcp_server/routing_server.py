@@ -55,8 +55,7 @@ def _load_pricing() -> dict[str, float]:
         return {}
 
 
-@routing_mcp.tool
-def estimate_cost(model: str, input_tokens: int, output_tokens: int) -> dict:
+def _estimate_cost_impl(model: str, input_tokens: int, output_tokens: int) -> dict:
     """Estimate USD cost for a prospective call with given tokens and model.
 
     Returns: { usd: float, breakdown: { input_tokens, output_tokens, price_per_token } }
@@ -79,8 +78,7 @@ def estimate_cost(model: str, input_tokens: int, output_tokens: int) -> dict:
         return {"usd": 0.0, "error": str(exc)}
 
 
-@routing_mcp.tool
-def route_completion(task: str, tokens_hint: dict | None = None) -> dict:
+def _route_completion_impl(task: str, tokens_hint: dict | None = None) -> dict:
     """Suggest a model for a completion given a task description and optional token hints.
 
     Heuristic: pick lowest-cost available model when hints are small; otherwise prefer higher-quality
@@ -131,8 +129,7 @@ def route_completion(task: str, tokens_hint: dict | None = None) -> dict:
         return {"model": None, "reason": "error", "error": str(exc), "est_cost_usd": 0.0, "latency_class": "unknown"}
 
 
-@routing_mcp.tool
-def choose_embedding_model(dimensions_required: int | None = None) -> dict:
+def _choose_embedding_model_impl(dimensions_required: int | None = None) -> dict:
     """Return the embedding configuration used by this project.
 
     This project uses a deterministic 8-dim embedding helper for development and tests.
@@ -147,4 +144,41 @@ def choose_embedding_model(dimensions_required: int | None = None) -> dict:
     return {"model": model_id, "dimensions": dims, "note": note}
 
 
-__all__ = ["routing_mcp", "estimate_cost", "route_completion", "choose_embedding_model"]
+# Plain callables for direct imports
+def estimate_cost(model: str, input_tokens: int, output_tokens: int) -> dict:
+    return _estimate_cost_impl(model, input_tokens, output_tokens)
+
+
+def route_completion(task: str, tokens_hint: dict | None = None) -> dict:
+    return _route_completion_impl(task, tokens_hint)
+
+
+def choose_embedding_model(dimensions_required: int | None = None) -> dict:
+    return _choose_embedding_model_impl(dimensions_required)
+
+
+# MCP-decorated wrappers
+@routing_mcp.tool
+def estimate_cost_tool(model: str, input_tokens: int, output_tokens: int) -> dict:  # pragma: no cover
+    return _estimate_cost_impl(model, input_tokens, output_tokens)
+
+
+@routing_mcp.tool
+def route_completion_tool(task: str, tokens_hint: dict | None = None) -> dict:  # pragma: no cover
+    return _route_completion_impl(task, tokens_hint)
+
+
+@routing_mcp.tool
+def choose_embedding_model_tool(dimensions_required: int | None = None) -> dict:  # pragma: no cover
+    return _choose_embedding_model_impl(dimensions_required)
+
+
+__all__ = [
+    "routing_mcp",
+    "estimate_cost",
+    "estimate_cost_tool",
+    "route_completion",
+    "route_completion_tool",
+    "choose_embedding_model",
+    "choose_embedding_model_tool",
+]

@@ -15,7 +15,6 @@ from functools import cached_property
 from typing import Any, Protocol, TypedDict, cast
 
 from core.secure_config import get_config
-
 from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
@@ -38,7 +37,7 @@ class _WhisperModel(Protocol):
     def transcribe(self, path: str) -> dict[str, Any]: ...
 
 
-class AudioTranscriptionTool(BaseTool):
+class AudioTranscriptionTool(BaseTool[StepResult]):
     name: str = "Audio Transcription Tool"
     description: str = "Transcribe audio from a video file using Whisper."
 
@@ -47,6 +46,12 @@ class AudioTranscriptionTool(BaseTool):
         config = get_config()
         self._model_name = model_name or config.whisper_model
         self._metrics = get_metrics()
+
+    @property
+    def model_name(self) -> str:
+        """Return the configured Whisper model name."""
+
+        return self._model_name
 
     @cached_property
     def model(self) -> _WhisperModel:  # pragma: no cover - heavy initialisation

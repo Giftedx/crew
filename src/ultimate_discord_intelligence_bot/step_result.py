@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator, Mapping
 from dataclasses import dataclass, field
+from enum import Enum
 from typing import Any, cast
 
 """Lightweight helper to normalise tool responses across the pipeline.
@@ -14,6 +15,36 @@ existing code and tests.
 """
 
 
+class ErrorCategory(Enum):
+    """Categorization of error types for better handling and monitoring."""
+
+    # Input validation errors
+    VALIDATION = "validation"
+    AUTHENTICATION = "authentication"
+    AUTHORIZATION = "authorization"
+
+    # Service availability errors
+    NETWORK = "network"
+    TIMEOUT = "timeout"
+    RATE_LIMIT = "rate_limit"
+    SERVICE_UNAVAILABLE = "service_unavailable"
+
+    # Resource errors
+    NOT_FOUND = "not_found"
+    INSUFFICIENT_RESOURCES = "insufficient_resources"
+
+    # Processing errors
+    PROCESSING = "processing"
+    DEPENDENCY = "dependency"
+
+    # System errors
+    SYSTEM = "system"
+    CONFIGURATION = "configuration"
+
+    # Success with warnings
+    SUCCESS_WITH_WARNINGS = "success_with_warnings"
+
+
 @dataclass
 class StepResult(Mapping[str, Any]):
     """Container for the outcome of a pipeline step.
@@ -22,21 +53,38 @@ class StepResult(Mapping[str, Any]):
     patterns (e.g. tests expecting an "uncertain" status). If
     ``custom_status`` is provided it overrides the derived success/error
     mapping when accessing ``result["status"]`` or iterating.
+
+    Enhanced with error categorization for better error handling and monitoring.
     """
 
     success: bool
     data: dict[str, Any] = field(default_factory=dict)
     error: str | None = None
     custom_status: str | None = None
+    error_category: ErrorCategory | None = None
+    retryable: bool = False
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     @classmethod
-    def from_dict(cls, result: dict[str, Any]) -> StepResult:
-        """Create a ``StepResult`` from a legacy ``dict`` response."""
+    def from_dict(cls, result: Any) -> StepResult:
+        """Create a ``StepResult`` from a legacy ``dict``/``Mapping`` response.
+
+        If ``result`` is already a ``StepResult`` instance, return it unchanged.
+        Treat ``status in {'success', 'skipped', 'uncertain'}`` as non-error
+        (``success`` True) and preserve custom tri-states for compatibility.
+        """
+        if isinstance(result, StepResult):
+            return result
+        if not isinstance(result, Mapping):  # type: ignore[redundant-cast]
+            # Fallback: wrap any non-mapping object as an error string
+            return cls(success=False, error=str(result), data={})
         status = result.get("status")
-        success = status == "success"
+        non_error_statuses = {"success", "skipped", "uncertain"}
+        success = status in non_error_statuses
         error = result.get("error")
         data = {k: v for k, v in result.items() if k not in {"status", "error"}}
-        return cls(success=success, data=data, error=error)
+        custom_status = status if (status in {"skipped", "uncertain"}) else None
+        return cls(success=success, data=data, error=error, custom_status=custom_status)
 
     @classmethod
     def ok(cls, **data: Any) -> StepResult:
@@ -63,16 +111,72 @@ class StepResult(Mapping[str, Any]):
         return cls(success=True, data=data, custom_status="skipped")
 
     @classmethod
-    def fail(cls, error: str, **data: Any) -> StepResult:
-        """Shortcut for a failed result."""
-        return cls(success=False, error=str(error), data=data)
+    def fail(
+        cls, error: str, error_category: ErrorCategory | None = None, retryable: bool = False, **data: Any
+    ) -> StepResult:
+        """Shortcut for a failed result with enhanced error categorization."""
+        return cls(success=False, error=str(error), data=data, error_category=error_category, retryable=retryable)
+
+    @classmethod
+    def bad_request(cls, error: str, **data: Any) -> StepResult:
+        """Create a validation error result."""
+        return cls.fail(error, error_category=ErrorCategory.VALIDATION, retryable=False, **data)
+
+    @classmethod
+    def unauthorized(cls, error: str = "Unauthorized", **data: Any) -> StepResult:
+        """Create an authentication/authorization error result."""
+        return cls.fail(error, error_category=ErrorCategory.AUTHENTICATION, retryable=False, **data)
+
+    @classmethod
+    def not_found(cls, error: str = "Resource not found", **data: Any) -> StepResult:
+        """Create a not found error result."""
+        return cls.fail(error, error_category=ErrorCategory.NOT_FOUND, retryable=False, **data)
+
+    @classmethod
+    def rate_limited(cls, error: str = "Rate limit exceeded", **data: Any) -> StepResult:
+        """Create a rate limit error result."""
+        return cls.fail(error, error_category=ErrorCategory.RATE_LIMIT, retryable=True, **data)
+
+    @classmethod
+    def network_error(cls, error: str, **data: Any) -> StepResult:
+        """Create a network error result."""
+        return cls.fail(error, error_category=ErrorCategory.NETWORK, retryable=True, **data)
+
+    @classmethod
+    def timeout_error(cls, error: str = "Operation timed out", **data: Any) -> StepResult:
+        """Create a timeout error result."""
+        return cls.fail(error, error_category=ErrorCategory.TIMEOUT, retryable=True, **data)
+
+    @classmethod
+    def service_unavailable(cls, error: str = "Service unavailable", **data: Any) -> StepResult:
+        """Create a service unavailable error result."""
+        return cls.fail(error, error_category=ErrorCategory.SERVICE_UNAVAILABLE, retryable=True, **data)
+
+    @classmethod
+    def processing_error(cls, error: str, **data: Any) -> StepResult:
+        """Create a processing error result."""
+        return cls.fail(error, error_category=ErrorCategory.PROCESSING, retryable=False, **data)
+
+    @classmethod
+    def success_with_warnings(cls, warnings: list[str], **data: Any) -> StepResult:
+        """Create a success result with warnings."""
+        return cls(
+            success=True, data=data, error_category=ErrorCategory.SUCCESS_WITH_WARNINGS, metadata={"warnings": warnings}
+        )
 
     def to_dict(self) -> dict[str, Any]:
         """Convert the result back to a ``dict`` for backward compatibility."""
         result = dict(self.data)
-        result["status"] = "success" if self.success else "error"
+        status = self.custom_status or ("success" if self.success else "error")
+        result["status"] = status
         if self.error:
             result["error"] = self.error
+        if self.error_category:
+            result["error_category"] = self.error_category.value
+        if self.retryable:
+            result["retryable"] = self.retryable
+        if self.metadata:
+            result["metadata"] = self.metadata
         return result
 
     # --- Minimal Mapping interface to behave like a read-only dict in tests ---
@@ -83,6 +187,12 @@ class StepResult(Mapping[str, Any]):
             return "success" if self.success else "error"
         if key == "error":
             return self.error
+        if key == "error_category" and self.error_category:
+            return self.error_category.value
+        if key == "retryable":
+            return self.retryable
+        if key == "metadata":
+            return self.metadata
         # Direct lookup first
         if key in self.data:
             return self.data[key]
@@ -100,6 +210,12 @@ class StepResult(Mapping[str, Any]):
         base = {"status": base_status}
         if self.error is not None:
             base["error"] = self.error
+        if self.error_category is not None:
+            base["error_category"] = self.error_category.value
+        if self.retryable:
+            base["retryable"] = self.retryable
+        if self.metadata:
+            base["metadata"] = self.metadata
         yielded: list[str] = list(base.keys())
         # Top-level keys (excluding duplicated status/error already handled)
         for k in self.data:
@@ -119,7 +235,16 @@ class StepResult(Mapping[str, Any]):
         if isinstance(nested, dict):
             # count only keys not already represented at top-level
             nested_extra = sum(1 for k in nested if k not in self.data)
-        return len(self.data) + nested_extra + 1 + (1 if self.error is not None else 0)
+        base_fields = 1  # status
+        if self.error is not None:
+            base_fields += 1
+        if self.error_category is not None:
+            base_fields += 1
+        if self.retryable:
+            base_fields += 1
+        if self.metadata:
+            base_fields += 1
+        return len(self.data) + nested_extra + base_fields
 
     def get(self, key: str, default: Any = None) -> Any:  # pragma: no cover
         try:
@@ -173,3 +298,6 @@ class StepResult(Mapping[str, Any]):
         except TypeError:
             # Fallback when values are unhashable
             return id(self)
+
+
+__all__ = ["StepResult", "ErrorCategory"]

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import pytest
+
 from core.http_utils import validate_public_https_url
 
 

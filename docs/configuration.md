@@ -28,7 +28,6 @@ config/                    # Global configuration
 ├── ingest.yaml          # Content ingestion settings
 ├── policy.yaml          # Retention and governance policies
 ├── poller.yaml          # Scheduler and polling configuration
-├── retry.yaml           # HTTP retry/backoff policy (feature-flag controlled)
 ├── profiles.yaml        # Profiles directory (people/brands/shows) and seed handles
 ├── deprecations.yaml    # Deprecated flags/surfaces and planned removal dates
 └── security.yaml        # Security controls and permissions
@@ -167,6 +166,19 @@ toggles are exposed as environment variables:
 These flags are intentionally environment-driven (not YAML) to allow fast
 operational toggling without a config reload cycle. Keep them consistent across
 workers to avoid performance variability.
+
+### Transcript Compression
+
+The content pipeline can optionally compress long transcripts before LLM analysis by enabling LLMLingua-based optimization. Configure via environment variables:
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `ENABLE_TRANSCRIPT_COMPRESSION` | unset/false | Master switch for transcript compression inside the pipeline. |
+| `TRANSCRIPT_COMPRESSION_MIN_TOKENS` | `1200` | Minimum token count required before compression is attempted. |
+| `TRANSCRIPT_COMPRESSION_TARGET_RATIO` | `0.35` | Target reduction ratio for LLMLingua (e.g., `0.35` keeps ~65% of tokens). |
+| `TRANSCRIPT_COMPRESSION_MAX_TOKENS` | unset | Optional hard cap on the compressed transcript token count. |
+
+Compression metadata is attached to downstream `StepResult` payloads (analysis, fallacy, perspective) and persisted in the pipeline's memory payload for observability.
 
 ### Policy Configuration
 
@@ -797,25 +809,28 @@ ENABLE_PROFILING=false          # Performance profiling
 
 ### Retry Configuration
 
-**File:** `config/retry.yaml`
+**Environment Variable:** `RETRY_MAX_ATTEMPTS`
 
-Controls outbound HTTP retry attempts when `ENABLE_HTTP_RETRY` is active.
+Controls outbound HTTP retry attempts when `ENABLE_HTTP_RETRY` is active. Configuration is managed via environment variables and secure config rather than YAML files.
 
-**Simple Format:** The configuration parser supports a simple format with only the `max_attempts` setting:
+**Configuration Methods:**
 
-```yaml
-# HTTP retry and backoff policy configuration
-max_attempts: 3
+```bash
+# Set via environment variable (preferred)
+export RETRY_MAX_ATTEMPTS=5  # 1-20 acceptable
 ```
 
 **Precedence Order (highest to lowest):**
 
-1. Explicit call argument (sanity-checked range)
-1. This config file (key: `max_attempts`)
-1. Environment variable `RETRY_MAX_ATTEMPTS`
-1. Library constant `DEFAULT_HTTP_RETRY_ATTEMPTS` (3)
+1. Explicit call argument to `retrying_get()`/`retrying_post()` (sanity-checked range)
+2. Secure config (`retry_max_attempts` attribute)
+3. Tenant-specific config cache (if available)
+4. Environment variable `RETRY_MAX_ATTEMPTS`
+5. Library constant `DEFAULT_HTTP_RETRY_ATTEMPTS` (3)
 
 **Note:** Values must be integers in range [1, 20]. Invalid values fall back to the next precedence level.
+
+See [docs/retries.md](retries.md) for detailed documentation.
 
 ### Deprecations Registry
 

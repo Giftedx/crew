@@ -29,7 +29,6 @@ from typing import Any
 
 from fastapi import FastAPI, Request, Response
 from obs import metrics
-
 from server import middleware_shim
 
 ## Optional Starlette integration ---------------------------------------------------
@@ -97,27 +96,20 @@ class FixedWindowRateLimiter(BaseHTTPMiddleware):  # noqa: D401 - Starlette midd
         call_next: Callable[[Request], Awaitable[Response]],
     ) -> Any:
         now = time.monotonic()
-        scope_path = request.scope.get("path", "/")
-        raw_path = str(scope_path)
-        # Some environments (observed under BaseHTTPMiddleware) surfaced a scope path
-        # of '/' for every request, while request.url.path retained the real path.
-        # Fallback to request.url.path when scope path is root to preserve exclusion logic.
-        try:  # pragma: no cover - defensive; url should always exist
-            url_path = request.url.path
-            if raw_path == "/" and url_path != "/":
-                raw_path = url_path
-        except Exception:  # pragma: no cover - never expected
-            pass
-        # Determine metrics path: environment override or app state annotation
+        # Use the concrete URL path so metrics labels match tests (e.g., '/rltest')
+        raw_path = request.url.path
+        # Determine metrics path: prefer app.state set by router registration
         _app = getattr(request, "app", None)
         _state = getattr(_app, "state", None) if _app else None
-        metrics_path = (
-            os.getenv("PROMETHEUS_ENDPOINT_PATH")
-            or (getattr(_state, "metrics_path", None) if _state else None)
-            or "/metrics"
-        )
-        # Exclusions (exact or prefix for metrics)
-        mp_norm = metrics_path.rstrip("/") or "/metrics"
+        metrics_path = None
+        try:
+            metrics_path = getattr(_state, "metrics_path", None) if _state else None
+        except Exception:
+            metrics_path = None
+        if not metrics_path:
+            metrics_path = os.getenv("PROMETHEUS_ENDPOINT_PATH") or "/metrics"
+        # Exclusions (exact or prefix for metrics) — perform BEFORE any window accounting
+        mp_norm = str(metrics_path).rstrip("/") or "/metrics"
         rp_norm = raw_path.rstrip("/") or raw_path
         if (
             request.scope.get("_skip_rate_limit")
@@ -133,7 +125,9 @@ class FixedWindowRateLimiter(BaseHTTPMiddleware):  # noqa: D401 - Starlette midd
         # Enforce
         if self._remaining <= 0:
             try:
-                metrics.RATE_LIMIT_REJECTIONS.labels(rp_norm, getattr(request, "method", "?")).inc()  # noqa: E203
+                # Label strictly with the incoming request method; tests expect GET here
+                meth = getattr(request, "method", "GET")
+                metrics.RATE_LIMIT_REJECTIONS.labels(rp_norm, str(meth).upper()).inc()  # noqa: E203
             except Exception as exc:  # pragma: no cover - defensive
                 logging.debug("rate limit metrics error: %s", exc)
             return Response(status_code=429, content="Rate limit exceeded")

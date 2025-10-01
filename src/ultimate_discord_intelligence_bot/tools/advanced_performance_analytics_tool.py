@@ -33,7 +33,7 @@ from ._base import BaseTool
 logger = logging.getLogger(__name__)
 
 
-class AdvancedPerformanceAnalyticsTool(BaseTool[dict]):
+class AdvancedPerformanceAnalyticsTool(BaseTool[StepResult]):
     """Tool for running advanced performance analytics within crew workflows."""
 
     name: str = "Advanced Performance Analytics Tool"

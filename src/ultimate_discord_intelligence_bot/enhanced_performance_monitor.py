@@ -18,7 +18,6 @@ from pathlib import Path
 from typing import Any
 
 from core.time import default_utc_now
-
 from ultimate_discord_intelligence_bot.agent_training.performance_monitor import AgentPerformanceMonitor
 
 
@@ -221,6 +220,52 @@ class EnhancedPerformanceMonitor:
             "alerts": alerts,
             "recent_trend": self._calculate_recent_trend(recent),
         }
+
+    async def record_interaction_async(
+        self,
+        agent_name: str,
+        interaction_type: str,
+        quality_score: float,
+        response_time: float,
+        context: dict[str, Any] | None = None,
+        tools_used: list[str] | None = None,
+        error_occurred: bool = False,
+    ) -> dict[str, Any]:
+        """Asynchronously persist interaction details and refresh monitoring state."""
+
+        context = context or {}
+        interaction_payload = {
+            "task_type": interaction_type,
+            "tools_used": tools_used or context.get("tools_used", []),
+            "tool_sequence": context.get("tool_sequence", []),
+            "response_quality": quality_score,
+            "response_time": response_time,
+            "user_feedback": context.get("user_feedback", {}),
+            "error_occurred": error_occurred or context.get("error_occurred", False),
+            "error_details": context.get("error_details", {}),
+        }
+        # Merge any custom context values for downstream analytics
+        interaction_payload.update({k: v for k, v in context.items() if k not in interaction_payload})
+
+        # Update real-time dashboard first so alerts reflect this interaction
+        dashboard_state = await self.monitor_real_time_performance(agent_name, interaction_payload)
+
+        try:
+            self.base_monitor.record_agent_interaction(
+                agent_name=agent_name,
+                task_type=interaction_type,
+                tools_used=interaction_payload.get("tools_used", []),
+                tool_sequence=interaction_payload.get("tool_sequence", []),
+                response_quality=quality_score,
+                response_time=response_time,
+                user_feedback=interaction_payload.get("user_feedback"),
+                error_occurred=interaction_payload.get("error_occurred", False),
+                error_details=interaction_payload.get("error_details"),
+            )
+        except Exception as exc:  # pragma: no cover - defensive logging
+            self.logger.debug("Failed to persist interaction via base monitor: %s", exc)
+
+        return dashboard_state
 
     async def _check_performance_alerts(self, agent_name: str, recent_interactions: list[dict]) -> list[dict[str, Any]]:
         """Check for performance issues that require alerts."""

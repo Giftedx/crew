@@ -13,18 +13,35 @@ from contextlib import nullcontext
 from dataclasses import dataclass
 from typing import Any
 
-from obs import metrics, tracing
+from src.obs import metrics, tracing
 
-try:  # optional tenancy import
-    from ultimate_discord_intelligence_bot.tenancy.context import (
-        TenantContext,
-        current_tenant,
-        with_tenant,
-    )
-except Exception:  # pragma: no cover - tenancy optional in some contexts
-    TenantContext = None  # type: ignore[assignment]
-    current_tenant = None  # type: ignore[assignment]
-    with_tenant = None  # type: ignore[assignment]
+
+# Resolve tenancy helpers dynamically to ensure we use the same thread-local
+# context as the rest of the application/tests. Prefer installed package path
+# first, fallback to src path if running from source directly.
+def _resolve_tenancy():
+    try:
+        import importlib
+
+        for name in (
+            "ultimate_discord_intelligence_bot.tenancy.context",
+            "src.ultimate_discord_intelligence_bot.tenancy.context",
+        ):
+            try:
+                mod = importlib.import_module(name)
+                _TenantContext = getattr(mod, "TenantContext", None)
+                _current_tenant = getattr(mod, "current_tenant", None)
+                _with_tenant = getattr(mod, "with_tenant", None)
+                if _TenantContext and _current_tenant and _with_tenant:
+                    return _TenantContext, _current_tenant, _with_tenant
+            except Exception:
+                continue
+    except Exception:
+        pass
+    return None, None, None
+
+
+TenantContext, current_tenant, with_tenant = _resolve_tenancy()
 
 try:  # optional import – keep lightweight if library absent
     # Placeholder imports to illustrate structure without enforcing dependency
@@ -163,6 +180,15 @@ def run_ingest_analysis_pilot(
                 ).inc()
             except Exception:
                 pass
+
+        # If optional steps are not provided, record them as skipped regardless of orchestrator
+        try:
+            if segment_fn is None:
+                metrics.PIPELINE_STEPS_SKIPPED.labels(**metrics.label_ctx(), step="segment").inc()
+            if embed_fn is None:
+                metrics.PIPELINE_STEPS_SKIPPED.labels(**metrics.label_ctx(), step="embed").inc()
+        except Exception:
+            pass
 
     # Execute via tiny graph when enabled, else sequential fallback. Record step completions.
     start_time = time.monotonic()

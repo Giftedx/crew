@@ -8,7 +8,7 @@ from ultimate_discord_intelligence_bot.step_result import StepResult
 from ._base import BaseTool
 
 
-class TranscriptIndexTool(BaseTool):
+class TranscriptIndexTool(BaseTool[StepResult]):
     """Store transcript chunks for later context lookup.
 
     Returns
@@ -37,7 +37,7 @@ class TranscriptIndexTool(BaseTool):
         """
         try:
             if not transcript or not transcript.strip():  # treat empty input as skipped OK
-                result = StepResult.ok(skipped=True, reason="empty transcript")
+                result = StepResult.skip(reason="empty transcript")
                 self._metrics.counter(
                     "tool_runs_total",
                     labels={"tool": "transcript_index", "outcome": "skipped"},

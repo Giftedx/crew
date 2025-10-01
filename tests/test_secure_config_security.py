@@ -6,6 +6,7 @@ import os
 from unittest.mock import patch
 
 import pytest
+
 from core.secure_config import reload_config
 from security.net_guard import SecurityError
 from security.webhook_guard import verify_incoming

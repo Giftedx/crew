@@ -58,7 +58,7 @@ class _CompactionSummary(TypedDict, total=False):
     tenant_scoped: bool
 
 
-class MemoryCompactionTool(BaseTool):
+class MemoryCompactionTool(BaseTool[StepResult]):
     """Delete expired points from a tenant-scoped Qdrant collection."""
 
     name: str = "Qdrant Memory Compaction Tool"

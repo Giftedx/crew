@@ -86,3 +86,28 @@ def test_adapter_truthy_env_values(monkeypatch):
     adapter = _reload_adapter()
     out = adapter.maybe_compress_prompt("abcdefghijklmno")
     assert out.startswith("OK:")
+
+
+def test_compress_prompt_with_details_respects_enabled_override(monkeypatch):
+    monkeypatch.delenv("ENABLE_PROMPT_COMPRESSION", raising=False)
+
+    class _Compressor:
+        def compress_prompt(self, prompt, **_kwargs):  # noqa: D401 - stub success
+            return {"compressed_prompt": prompt.lower()}
+
+    module = _reload_adapter()
+    monkeypatch.setattr(module, "_get_compressor", lambda: _Compressor())
+
+    text, meta = module.compress_prompt_with_details("HELLO", enabled=True, target_tokens=128, ratio=0.25)
+    assert text == "hello"
+    assert meta["applied"] is True
+    assert "kwargs" in meta
+
+
+def test_compress_prompt_with_details_disabled(monkeypatch):
+    monkeypatch.delenv("ENABLE_PROMPT_COMPRESSION", raising=False)
+    module = _reload_adapter()
+
+    text, meta = module.compress_prompt_with_details("Sample", enabled=False)
+    assert text == "Sample"
+    assert meta["reason"] == "disabled"

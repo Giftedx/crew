@@ -1,6 +1,6 @@
 import pytest
-from eval.trajectory_evaluator import AgentTrajectory, TrajectoryEvaluator, TrajectoryStep
 
+from eval.trajectory_evaluator import AgentTrajectory, TrajectoryEvaluator, TrajectoryStep
 from src.obs import metrics
 
 

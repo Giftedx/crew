@@ -34,13 +34,43 @@ All detailed guides, architecture docs, and operational procedures have been org
    python -m ultimate_discord_intelligence_bot.setup_cli run discord
    ```
 
+### Enable quick-win enhancements
+
+See docs/enhancements_quick_start.md for a short guide to toggle on optional performance and quality features (semantic cache, prompt compression, graph memory, HippoRAG continual memory, and adaptive routing) using environment flags. These are off by default and can be enabled per-run without code changes.
+
 ### Discord run tips
 
-- Ensure `DISCORD_BOT_TOKEN` is set in your environment or `.env` before starting. The startup wizard will validate and fail fast if missing.
-- For notifications, set `DISCORD_WEBHOOK` (and optionally `DISCORD_PRIVATE_WEBHOOK`); these names must match exactly (no `_URL` suffix).
-- After first run, slash commands may take up to a minute to propagate globally; on dev servers they usually appear immediately.
-- If you don’t see commands, confirm the bot has the following intents enabled in the Developer Portal: Message Content and Server Members.
-- zsh tip: always quote extras during install, e.g., `pip install -e '.[dev]'`.
+- Export `DISCORD_BOT_TOKEN` and (optionally) `DISCORD_WEBHOOK` in your shell or `.env` before launching.
+- First-time command sync can take up to 60s globally. On dev servers, it’s usually immediate.
+- If commands don’t show, verify bot intents in the Developer Portal: Message Content and Server Members.
+- For vector memory, set `QDRANT_URL` (and `QDRANT_API_KEY` if cloud); otherwise a test stub is used.
+
+#### Run with enhancements (optional)
+
+```bash
+# zsh-safe exports (shadow-mode caches + compression; all default off)
+export ENABLE_GPTCACHE=true
+export ENABLE_SEMANTIC_CACHE_SHADOW=true
+export ENABLE_GPTCACHE_ANALYSIS_SHADOW=true
+export ENABLE_PROMPT_COMPRESSION=true
+export ENABLE_GRAPH_MEMORY=true
+export ENABLE_HIPPORAG_MEMORY=true
+
+# launch
+python -m ultimate_discord_intelligence_bot.setup_cli run discord
+```
+
+Or, run via Make (same flags applied transiently):
+
+```bash
+make run-discord-enhanced
+```
+
+To persist these defaults locally, copy the canonical `.env.example`:
+
+```bash
+cp .env.example .env
+```
 
 ### Optional Extras
 
@@ -66,6 +96,59 @@ Notes:
 - If `openai-whisper` fails to build on Python 3.12, create a Python 3.11 virtualenv for that extra.
 - `vllm` pulls in large GPU-oriented dependencies (`torch`, `triton`, `xformers`); use only if you plan local model serving.
 - You can layer extras after the initial install (e.g., `pip install '.[metrics]'`).
+
+### Enhanced Autonomous Intelligence (/autointel)
+
+The `/autointel` command has been transformed into a world-class autonomous intelligence system with **4 analysis depths** and **25 specialized stages**:
+
+#### 🎯 Analysis Depths
+
+- **Standard** (10 stages): Fast analysis with core intelligence features
+- **Deep** (15 stages): Comprehensive analysis with social intelligence
+- **Comprehensive** (20 stages): All features including behavioral profiling
+- **Experimental** (25 stages): Cutting-edge AI with autonomous learning
+
+#### 🤖 Advanced Capabilities
+
+- **11 Specialized AI Agents**: Mission orchestration, content acquisition, transcription, analysis, verification, threat assessment, social intelligence, behavioral profiling, knowledge integration, research synthesis, and community liaison
+- **50+ Advanced Tools**: Multi-platform downloading, fact-checking, fallacy detection, social monitoring, memory systems, performance analytics, and more
+- **Multi-Layer Intelligence**: Vector memory, graph relationships, continual learning, and cross-platform correlation
+- **AI-Enhanced Quality Assessment**: Real-time scoring, bias detection, credibility analysis, and confidence intervals
+- **Predictive Analytics**: Performance forecasting, trend analysis, and early warning systems
+
+#### 📊 Key Features
+
+- **Multi-Platform Support**: YouTube, Twitter/X, TikTok, Instagram, Reddit, Twitch, and more
+- **Real-Time Progress**: Live updates with detailed stage progression
+- **Comprehensive Scoring**: Advanced deception detection (0.00-1.00) with multi-dimensional analysis
+- **Knowledge Persistence**: Automatic storage across vector, graph, and continual memory systems
+- **Community Integration**: Automated reporting and stakeholder communication
+
+Example usage:
+
+```
+/autointel url:https://youtube.com/watch?v=example depth:Comprehensive
+```
+
+The enhanced system delivers enterprise-grade intelligence analysis with autonomous coordination, advanced AI capabilities, and comprehensive quality assurance.
+
+## 🔎 Vector store (Qdrant) readiness
+
+The bot uses Qdrant for semantic search (Similar Items) and memory persistence. If `QDRANT_URL` isn’t set, we fall back to an in-memory dummy vector store suitable for tests only.
+
+- Local: `docker run -p 6333:6333 qdrant/qdrant`
+- Cloud: create a cluster at <https://cloud.qdrant.io> and set `QDRANT_URL` and `QDRANT_API_KEY`.
+
+Readiness checks:
+
+- CLI doctor pings the vector store: `python -m ultimate_discord_intelligence_bot.setup_cli doctor`
+- Discord `/health` shows a Vector Store row (mode, dim, hits).
+
+Troubleshooting:
+
+- Verify `QDRANT_URL` is reachable from your environment (container/network).
+- For gRPC, set `QDRANT_PREFER_GRPC=true` and `QDRANT_GRPC_PORT` accordingly.
+- You can start in dummy mode and switch to a real backend later without code changes.
 
 ### MCP server (optional)
 

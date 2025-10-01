@@ -6,6 +6,7 @@ from collections.abc import Callable, Sequence
 from typing import Any, Protocol, TypedDict, cast, runtime_checkable
 
 from memory.qdrant_provider import get_qdrant_client
+from ultimate_discord_intelligence_bot.tenancy.context import current_tenant, mem_ns
 
 from ..obs.metrics import get_metrics
 from ..step_result import StepResult
@@ -39,7 +40,7 @@ class _VectorSearchResult(TypedDict, total=False):  # retained for backwards com
     error: str
 
 
-class VectorSearchTool(BaseTool):
+class VectorSearchTool(BaseTool[StepResult]):
     """Retrieve stored text snippets from a Qdrant collection.
 
     Returns a StepResult with ``hits`` list on success. Errors surface via
@@ -57,7 +58,16 @@ class VectorSearchTool(BaseTool):
         embedding_fn: Callable[[str], list[float]] | None = None,
     ) -> None:
         super().__init__()
-        self.collection = collection or "content"
+        # Default to tenant-scoped collection when available; fall back to global "content"
+        if collection:
+            self.collection = collection
+        else:
+            try:
+                ctx = current_tenant()
+                self.collection = mem_ns(ctx, "content") if ctx is not None else "content"
+            except Exception:
+                # Defensive: never fail construction due to tenancy issues
+                self.collection = "content"
         self.embedding_fn = embedding_fn or (lambda text: [float(len(text))])
         self._metrics = get_metrics()
         if client is not None:
@@ -105,6 +115,7 @@ class VectorSearchTool(BaseTool):
                     raise RuntimeError("Qdrant client does not support collection creation APIs")
 
     def _run(self, query: str, limit: int = 3, collection: str | None = None) -> StepResult:
+        # Prefer explicit collection, else tenant-scoped default computed at init time
         target = collection or self.collection
         physical = self._physical_name(target)
         vector = self.embedding_fn(query)
@@ -140,9 +151,16 @@ class VectorSearchTool(BaseTool):
             return StepResult.fail(error=str(exc))
 
     def run(self, *args: Any, **kwargs: Any) -> StepResult:  # pragma: no cover
-        query = str(args[0]) if args else str(kwargs.get("query", ""))
-        limit = int(kwargs.get("limit", 3))
+        # Accept alias 'question' used by QA agents
+        query = str(args[0]) if args else str(kwargs.get("query", kwargs.get("question", "")))
+        try:
+            limit = int(kwargs.get("limit", 3))
+        except Exception:
+            limit = 3
         collection = kwargs.get("collection")
+        if not query or not query.strip():
+            self._metrics.counter("tool_runs_total", labels={"tool": "vector_search", "outcome": "skipped"}).inc()
+            return StepResult.skip(reason="empty query", data={"hits": [], "results": []})
         return self._run(query, limit=limit, collection=collection)
 
 

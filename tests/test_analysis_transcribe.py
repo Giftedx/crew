@@ -4,6 +4,7 @@ import os
 import tempfile
 
 import pytest
+
 from analysis.transcribe import Segment, Transcript, run_whisper
 
 

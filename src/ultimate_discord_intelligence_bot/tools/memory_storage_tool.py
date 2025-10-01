@@ -8,7 +8,6 @@ from collections.abc import Callable, Sequence
 from typing import TYPE_CHECKING, Any, Protocol, TypedDict, cast, runtime_checkable
 
 from core.secure_config import get_config
-
 from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
@@ -66,7 +65,7 @@ class _MemoryStorageResult(TypedDict, total=False):  # retained for legacy ref u
     error: str
 
 
-class MemoryStorageTool(BaseTool):
+class MemoryStorageTool(BaseTool[StepResult]):
     """Persist text and metadata to a tenant-scoped Qdrant collection."""
 
     name: str = "Qdrant Memory Storage Tool"

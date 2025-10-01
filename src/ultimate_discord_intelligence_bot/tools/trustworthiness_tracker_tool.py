@@ -10,7 +10,6 @@ from threading import Lock
 from typing import TypedDict
 
 from core.time import default_utc_now
-
 from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
@@ -113,7 +112,7 @@ class TrustworthinessTrackerTool(BaseTool[StepResult]):
             self.metrics.counter(
                 "tool_runs_total", labels={"tool": "trustworthiness_tracker", "outcome": "skipped"}
             ).inc()
-            return StepResult.ok(skipped=True, reason="No person provided")
+            return StepResult.skip(reason="No person provided")
 
         try:
             with self._lock:
@@ -150,15 +149,30 @@ class TrustworthinessTrackerTool(BaseTool[StepResult]):
         Accepts positional or keyword args to remain compatible with orchestrators that
         call tools with variadic parameters.
         """
+
+        def _parse_bool(val: object) -> bool:
+            if isinstance(val, bool):
+                return val
+            if isinstance(val, (int, float)):
+                return bool(val)
+            if isinstance(val, str):
+                t = val.strip().lower()
+                if t in {"true", "yes", "y", "1"}:
+                    return True
+                if t in {"false", "no", "n", "0"}:
+                    return False
+            return False
+
         if args:
             try:
                 person = str(args[0])
-                verdict = bool(args[1]) if len(args) > 1 else bool(kwargs.get("verdict", False))
+                verdict_raw = args[1] if len(args) > 1 else kwargs.get("verdict", False)
+                verdict = _parse_bool(verdict_raw)
                 return self._run(person, verdict)
             except Exception:
                 return StepResult.fail(error="Invalid arguments for TrustworthinessTrackerTool.run")
-        person = str(kwargs.get("person", ""))
-        verdict = bool(kwargs.get("verdict", False))
+        person = str(kwargs.get("person", kwargs.get("source", "")))
+        verdict = _parse_bool(kwargs.get("verdict", False))
         return self._run(person, verdict)
 
     def get_report(self) -> StepResult:

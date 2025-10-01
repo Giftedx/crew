@@ -28,13 +28,19 @@ def _agent_tools(name: str) -> set[str]:
     return set()
 
 
-def test_content_manager_has_context_tools():
-    tools = _agent_tools("content_manager")
-    assert {"PipelineTool", "DebateCommandTool", "TranscriptIndexTool", "TimelineTool"} <= tools
+def test_mission_orchestrator_has_core_tools():
+    tools = _agent_tools("mission_orchestrator")
+    assert {
+        "PipelineTool",
+        "AdvancedPerformanceAnalyticsTool",
+        "TimelineTool",
+        "PerspectiveSynthesizerTool",
+        "MCPCallTool",
+    } <= tools
 
 
-def test_content_downloader_covers_all_platforms():
-    tools = _agent_tools("content_downloader")
+def test_acquisition_specialist_covers_platforms():
+    tools = _agent_tools("acquisition_specialist")
     expected = {
         "YouTubeDownloadTool",
         "TwitchDownloadTool",
@@ -44,36 +50,46 @@ def test_content_downloader_covers_all_platforms():
         "TikTokDownloadTool",
         "RedditDownloadTool",
         "DiscordDownloadTool",
+        "MultiPlatformDownloadTool",
+        "DriveUploadTool",
+        "DriveUploadToolBypass",
     }
     assert expected <= tools
 
 
-def test_monitor_and_alert_agents_have_tools():
-    assert _agent_tools("multi_platform_monitor") == {"MultiPlatformMonitorTool"}
-    # system_alert_manager recently enhanced with AdvancedPerformanceAnalyticsTool
-    assert _agent_tools("system_alert_manager") == {
+def test_signal_and_reliability_agents_have_tools():
+    signal_tools = _agent_tools("signal_recon_specialist")
+    assert {"SocialMediaMonitorTool", "XMonitorTool", "DiscordMonitorTool", "SentimentTool"} <= signal_tools
+
+    reliability_tools = _agent_tools("system_reliability_officer")
+    assert {
         "DiscordPrivateAlertTool",
         "SystemStatusTool",
         "AdvancedPerformanceAnalyticsTool",
-    }
+        "PipelineTool",
+    } <= reliability_tools
 
 
-def test_cross_platform_intelligence_gatherer_tools():
-    tools = _agent_tools("cross_platform_intelligence_gatherer")
+def test_trend_intelligence_scout_tools():
+    tools = _agent_tools("trend_intelligence_scout")
     assert {
-        "SocialMediaMonitorTool",
-        "XMonitorTool",
-        "DiscordMonitorTool",
+        "MultiPlatformMonitorTool",
+        "ResearchAndBriefTool",
+        "ResearchAndBriefMultiTool",
+        "SocialResolverTool",
     } <= tools
 
 
 def test_fact_checker_and_scoring_tools():
-    assert _agent_tools("enhanced_fact_checker") == {
-        "LogicalFallacyTool",
-        "PerspectiveSynthesizerTool",
+    assert _agent_tools("verification_director") == {
         "FactCheckTool",
+        "LogicalFallacyTool",
+        "ClaimExtractorTool",
+        "ContextVerificationTool",
+        "PerspectiveSynthesizerTool",
     }
-    assert _agent_tools("truth_scoring_specialist") == {
+    assert _agent_tools("risk_intelligence_analyst") == {
+        "DeceptionScoringTool",
         "TruthScoringTool",
         "TrustworthinessTrackerTool",
         "LeaderboardTool",
@@ -81,13 +97,49 @@ def test_fact_checker_and_scoring_tools():
 
 
 def test_misc_agent_tool_coverage():
-    assert _agent_tools("steelman_argument_generator") == {"SteelmanArgumentTool"}
-    assert _agent_tools("discord_qa_manager") == {"DiscordQATool"}
-    assert _agent_tools("character_profile_manager") == {"CharacterProfileTool"}
-    assert _agent_tools("personality_synthesis_manager") == {
-        "CharacterProfileTool",
-        "TextAnalysisTool",
+    assert _agent_tools("argument_strategist") == {
+        "SteelmanArgumentTool",
+        "DebateCommandTool",
+        "FactCheckTool",
         "PerspectiveSynthesizerTool",
+    }
+    assert _agent_tools("community_liaison") == {
+        "DiscordQATool",
+        "DiscordPostTool",
+        "VectorSearchTool",
+    }
+    assert _agent_tools("persona_archivist") == {
+        "CharacterProfileTool",
+        "TimelineTool",
+        "SentimentTool",
+        "TrustworthinessTrackerTool",
+    }
+    assert _agent_tools("knowledge_integrator") == {
+        "MemoryStorageTool",
+        "GraphMemoryTool",
+        "HippoRagContinualMemoryTool",
+        "MemoryCompactionTool",
+        "RagIngestTool",
+        "RagIngestUrlTool",
+        "RagHybridTool",
+        "VectorSearchTool",
+    }
+    assert _agent_tools("intelligence_briefing_curator") == {
+        "LCSummarizeTool",
+        "PerspectiveSynthesizerTool",
+        "RagQueryVectorStoreTool",
+        "VectorSearchTool",
+        "TimelineTool",
+        "DriveUploadTool",
+    }
+    assert _agent_tools("research_synthesist") == {
+        "ResearchAndBriefTool",
+        "ResearchAndBriefMultiTool",
+        "RagHybridTool",
+        "RagQueryVectorStoreTool",
+        "LCSummarizeTool",
+        "OfflineRAGTool",
+        "VectorSearchTool",
     }
 
 
@@ -143,11 +195,17 @@ def test_tasks_have_modern_config_fields():
     tasks_config = yaml.safe_load(Path("src/ultimate_discord_intelligence_bot/config/tasks.yaml").read_text())
 
     enhanced_tasks = {
-        "process_video",
-        "fact_check_content",
-        "score_truthfulness",
-        "steelman_argument",
-        "analyze_claim",
+        "plan_autonomy_mission",
+        "capture_source_media",
+        "transcribe_and_index_media",
+        "map_transcript_insights",
+        "verify_priority_claims",
+        "score_risk_and_truth",
+        "persist_mission_intelligence",
+        "curate_intelligence_briefing",
+        "respond_to_community",
+        "craft_argument_brief",
+        "system_health_watch",
     }
 
     for task_name in enhanced_tasks:
@@ -158,9 +216,9 @@ def test_tasks_have_modern_config_fields():
 
             if "context" in config:
                 assert isinstance(config["context"], list), f"Task {task_name}: context must be a list"
-                assert all(
-                    isinstance(dep, str) for dep in config["context"]
-                ), f"Task {task_name}: context items must be strings"
+                assert all(isinstance(dep, str) for dep in config["context"]), (
+                    f"Task {task_name}: context items must be strings"
+                )
 
             if "output_file" in config:
                 assert isinstance(config["output_file"], str), f"Task {task_name}: output_file must be string"
@@ -190,11 +248,24 @@ def test_task_context_dependencies():
 
     # Define expected dependencies
     expected_dependencies = {
-        "process_video": ["execute_multi_platform_downloads"],
-        "fact_check_content": ["gather_cross_platform_intelligence"],
-        "score_truthfulness": ["fact_check_content"],
-        "steelman_argument": ["fact_check_content"],
-        "analyze_claim": ["get_context"],
+        "transcribe_and_index_media": ["capture_source_media"],
+        "map_transcript_insights": ["transcribe_and_index_media"],
+        "verify_priority_claims": ["map_transcript_insights"],
+        "score_risk_and_truth": ["verify_priority_claims"],
+        "update_persona_dossiers": ["score_risk_and_truth"],
+        "persist_mission_intelligence": [
+            "map_transcript_insights",
+            "verify_priority_claims",
+            "score_risk_and_truth",
+        ],
+        "curate_intelligence_briefing": [
+            "verify_priority_claims",
+            "score_risk_and_truth",
+            "update_persona_dossiers",
+            "persist_mission_intelligence",
+        ],
+        "respond_to_community": ["verify_priority_claims", "update_persona_dossiers", "curate_intelligence_briefing"],
+        "craft_argument_brief": ["verify_priority_claims", "map_transcript_insights"],
     }
 
     for task_name, expected_deps in expected_dependencies.items():

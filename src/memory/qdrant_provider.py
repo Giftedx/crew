@@ -256,6 +256,29 @@ def get_qdrant_client() -> QdrantClient | _DummyClient:
     if grpc_port is not None:
         kwargs["grpc_port"] = grpc_port
     client = QdrantClient(**kwargs)  # type: ignore
+
+    # Optional secure fallback: if connectivity is broken, fall back to dummy
+    # to avoid hard failures in local/dev or air-gapped environments.
+    try:
+        import os
+
+        secure_fallback = str(os.getenv("ENABLE_SECURE_QDRANT_FALLBACK", "0")).strip().lower() in {
+            "1",
+            "true",
+            "yes",
+            "on",
+        }
+    except Exception:
+        secure_fallback = False
+
+    if secure_fallback:
+        try:
+            # Minimal probe; cheap call that exercises connectivity
+            _ = client.get_collections()
+        except Exception:
+            # Fall back to the in-memory client to keep the app operational
+            return _DummyClient()
+
     return client
 
 

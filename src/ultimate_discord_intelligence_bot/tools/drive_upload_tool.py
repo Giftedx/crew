@@ -3,7 +3,6 @@ import os
 from typing import Any
 
 from core.secure_config import get_config
-
 from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
@@ -12,13 +11,27 @@ from ._base import BaseTool
 # Optional heavy Google client dependencies. Tests monkeypatch `_setup_service`, so we
 # avoid import errors when these libraries are absent by deferring/failing gracefully.
 try:  # pragma: no cover - import guarding
+    from google.auth.transport.requests import Request as GoogleRequest  # pragma: no cover
     from google.oauth2 import service_account  # pragma: no cover
+    from google.oauth2.credentials import Credentials as OAuthCredentials  # pragma: no cover
     from googleapiclient.discovery import build  # pragma: no cover
+    from googleapiclient.errors import HttpError, ResumableUploadError  # pragma: no cover
     from googleapiclient.http import MediaFileUpload  # pragma: no cover
 
     _GOOGLE_LIBS_AVAILABLE = True
 except Exception:  # broad: any import error should mark feature unavailable
     service_account = build = MediaFileUpload = None  # type: ignore
+    OAuthCredentials = None  # type: ignore
+    GoogleRequest = None  # type: ignore
+
+    # Provide stubs so isinstance checks won't explode when libs are unavailable
+    class HttpError(Exception):  # type: ignore
+        status_code: int | None = None
+
+    class ResumableUploadError(Exception):  # type: ignore
+        resp: Any | None = None
+        error: Any | None = None
+
     _GOOGLE_LIBS_AVAILABLE = False
 
 # The Google client libraries make network requests, which are slow and can fail.
@@ -26,7 +39,7 @@ except Exception:  # broad: any import error should mark feature unavailable
 # before creating new ones and surface helpful error messages when credentials
 # are missing or invalid.
 
-from ..settings import GOOGLE_CREDENTIALS
+from ..settings import CONFIG_DIR, GOOGLE_CREDENTIALS
 
 
 class DriveUploadTool(BaseTool[StepResult]):
@@ -43,22 +56,80 @@ class DriveUploadTool(BaseTool[StepResult]):
         self.base_folder_id: str | None
         self.subfolders: dict[str, str]
         if self.service:
-            self.base_folder_id, self.subfolders = self._setup_folder_structure()
+            try:
+                self.base_folder_id, self.subfolders = self._setup_folder_structure()
+            except Exception as exc:
+                logging.warning("Drive folder setup failed; disabling uploads for this run: %s", exc)
+                self.base_folder_id = None
+                self.subfolders = {}
         else:
             self.base_folder_id = None
             self.subfolders = {}
 
     def _setup_service(self) -> Any:  # external client returns dynamic resource
-        """Initialise the Drive service using service account credentials."""
+        """Initialise the Drive service using either user OAuth or service account credentials.
+
+        Precedence:
+        - If PREFER_GOOGLE_OAUTH is true (1/true/yes) AND a token file exists, use OAuth.
+        - Otherwise attempt service account credentials (GOOGLE_CREDENTIALS).
+        """
         # Check if Google Drive is explicitly disabled
         config = get_config()
         if config.disable_google_drive:
-            print("⚠️  Google Drive disabled via environment variable")
+            print("ℹ️  Google Drive disabled via DISABLE_GOOGLE_DRIVE=1")
             return None
 
         if not _GOOGLE_LIBS_AVAILABLE:  # pragma: no cover - exercised via import path
             print("⚠️  Google client libraries not available - Drive uploads disabled")
             return None
+        # Reduce noisy info logs from discovery cache helper (emits an INFO about file_cache)
+        try:
+            logging.getLogger("googleapiclient.discovery_cache").setLevel(logging.ERROR)
+        except Exception:
+            pass
+
+        # Helper: try user OAuth credentials if requested
+        prefer_oauth = str(os.getenv("PREFER_GOOGLE_OAUTH", "0")).strip().lower() in {"1", "true", "yes", "on"}
+        if prefer_oauth and OAuthCredentials is not None and build is not None:
+            try:
+                import json
+
+                token_path = os.getenv("GOOGLE_OAUTH_TOKEN_PATH", str(CONFIG_DIR / "google-oauth-token.json"))
+                if os.path.exists(token_path):
+                    with open(token_path, encoding="utf-8") as f:
+                        token_data = json.load(f)
+                    # Normalize and construct credentials using google-auth helper to parse expiry correctly
+                    if "access_token" in token_data and "token" not in token_data:
+                        token_data["token"] = token_data["access_token"]
+                    credentials = OAuthCredentials.from_authorized_user_info(
+                        token_data, scopes=["https://www.googleapis.com/auth/drive"]
+                    )
+                    # Refresh if needed (requires refresh_token present)
+                    try:
+                        if (
+                            credentials
+                            and credentials.expired
+                            and getattr(credentials, "refresh_token", None)
+                            and GoogleRequest
+                        ):
+                            credentials.refresh(GoogleRequest())
+                    except Exception as exc:
+                        logging.warning("OAuth token refresh failed (continuing): %s", exc)
+                    print("🔐 Using Google OAuth user credentials for Drive uploads")
+                    try:
+                        # Disable discovery file cache to avoid oauth2client<4.0.0 warning
+                        svc = build("drive", "v3", credentials=credentials, cache_discovery=False)
+                        return svc
+                    except Exception as exc:
+                        logging.warning("Failed to build Drive client with OAuth creds: %s", exc)
+                        # Fall through to service account
+                else:
+                    print("ℹ️  PREFER_GOOGLE_OAUTH set but no token file found; falling back to service account")
+            except Exception as exc:  # pragma: no cover - defensive
+                logging.warning("Google OAuth credentials unavailable: %s", exc)
+                # Fall through to service account
+
+        # Service account path (default)
         credentials_path = str(GOOGLE_CREDENTIALS)
         if service_account is None or build is None:  # pragma: no cover - safety net
             return None
@@ -67,11 +138,21 @@ class DriveUploadTool(BaseTool[StepResult]):
                 credentials_path, scopes=["https://www.googleapis.com/auth/drive"]
             )
         except Exception as exc:  # pragma: no cover - exercised in integration env
-            logging.warning("Google credentials unavailable at %s: %s", credentials_path, exc)
-            print("⚠️  Google Drive credentials invalid - Drive uploads disabled")
+            # Only warn if user provided a custom, non-default path to avoid false alarms
+            default_path = str((CONFIG_DIR / "google-credentials.json").expanduser())
+            if os.getenv("GOOGLE_CREDENTIALS") and credentials_path != default_path:
+                logging.warning("Google credentials unavailable at %s: %s", credentials_path, exc)
+                print("⚠️  Google Drive credentials invalid - Drive uploads disabled")
+            else:
+                # Silent soft-disable when default path is missing and not explicitly configured
+                print("ℹ️  Google Drive not configured (no credentials provided)")
             return None
-
-        return build("drive", "v3", credentials=credentials)
+        # Disable discovery file cache to avoid oauth2client<4.0.0 warning
+        try:
+            return build("drive", "v3", credentials=credentials, cache_discovery=False)
+        except Exception as exc:
+            logging.warning("Failed to build Drive client with service account creds: %s", exc)
+            return None
 
     def _find_folder(self, name: str, parent_id: str | None = None) -> str | None:
         """Return folder id if a folder with ``name`` exists under ``parent_id``."""
@@ -164,6 +245,50 @@ class DriveUploadTool(BaseTool[StepResult]):
                 }
             )
         except Exception as e:
+            # Classify well-known Google Drive quota condition and convert to a non-error skip
+            try:
+                # storageQuotaExceeded can surface via ResumableUploadError(HttpError 403) or plain HttpError
+                is_quota = False
+                status_code: int | None = None
+                reason: str | None = None
+
+                if isinstance(e, ResumableUploadError):
+                    # googleapiclient.errors.ResumableUploadError has .resp with status and content
+                    resp = getattr(e, "resp", None)
+                    status_code = getattr(resp, "status", None)
+                    text = str(e)
+                    if "storageQuotaExceeded" in text or "Service Accounts do not have storage quota" in text:
+                        is_quota = True
+                        reason = "storageQuotaExceeded"
+                elif isinstance(e, HttpError):  # type: ignore[arg-type]
+                    status_code = getattr(e, "status_code", None) or getattr(getattr(e, "resp", None), "status", None)
+                    text = str(e)
+                    if "storageQuotaExceeded" in text:
+                        is_quota = True
+                        reason = "storageQuotaExceeded"
+
+                if is_quota and (status_code == 403 or status_code is None):
+                    logging.warning(
+                        "Google Drive quota unavailable for service account; skipping upload (status=%s)",
+                        status_code or "unknown",
+                    )
+                    self._metrics.counter(
+                        "tool_runs_total", labels={"tool": "drive_upload", "outcome": "skipped"}
+                    ).inc()
+                    return StepResult.skip(
+                        message=(
+                            "Drive upload skipped: service account has no storage quota. "
+                            "Use a shared drive or OAuth domain-wide delegation."
+                        ),
+                        status_code=403,
+                        reason=reason or "quota",
+                        platform="GoogleDrive",
+                        command=f"upload {os.path.basename(file_path)}",
+                        file_path=file_path,
+                    )
+            except Exception:  # pragma: no cover - classification best effort
+                pass
+
             logging.exception("Drive upload failed")
             self._metrics.counter("tool_runs_total", labels={"tool": "drive_upload", "outcome": "error"}).inc()
             return StepResult.fail(

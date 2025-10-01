@@ -21,7 +21,7 @@ class _DiscordMonitorResult(TypedDict):
     new_messages: list[dict[str, str]]
 
 
-class DiscordMonitorTool(BaseTool):
+class DiscordMonitorTool(BaseTool[StepResult]):
     """Return unseen Discord messages."""
 
     name: str = "Discord Monitor Tool"

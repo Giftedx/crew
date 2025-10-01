@@ -19,6 +19,6 @@ def test_lightweight_mode_skips_discord_import():
     assert hasattr(mod, "create_full_bot")
     # discord should not be in sys.modules if guarded
 
-    assert not any(
-        m for m in sys.modules if m == "discord" or m.startswith("discord.")
-    ), "discord imported despite LIGHTWEIGHT_IMPORT=1; guard may have regressed"
+    assert not any(m for m in sys.modules if m == "discord" or m.startswith("discord.")), (
+        "discord imported despite LIGHTWEIGHT_IMPORT=1; guard may have regressed"
+    )

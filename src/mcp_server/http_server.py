@@ -81,8 +81,7 @@ def _hostname(url: str) -> str:
         return ""
 
 
-@http_mcp.tool
-def http_get(
+def _http_get_impl(
     url: str,
     params: dict[str, Any] | None = None,
     use_cache: bool = True,
@@ -119,8 +118,7 @@ def http_get(
         return {"error": str(exc)}
 
 
-@http_mcp.tool
-def http_json_get(
+def _http_json_get_impl(
     url: str,
     params: dict[str, Any] | None = None,
     use_cache: bool = True,
@@ -159,6 +157,50 @@ def http_json_get(
         return {"error": str(exc)}
 
 
+# Plain callables for direct imports (tests call these symbols)
+def http_get(
+    url: str,
+    params: dict[str, Any] | None = None,
+    use_cache: bool = True,
+    ttl_seconds: int | None = None,
+    max_bytes: int = 10000,
+) -> dict:
+    return _http_get_impl(url, params=params, use_cache=use_cache, ttl_seconds=ttl_seconds, max_bytes=max_bytes)
+
+
+def http_json_get(
+    url: str,
+    params: dict[str, Any] | None = None,
+    use_cache: bool = True,
+    ttl_seconds: int | None = None,
+    max_bytes: int = 20000,
+) -> dict:
+    return _http_json_get_impl(url, params=params, use_cache=use_cache, ttl_seconds=ttl_seconds, max_bytes=max_bytes)
+
+
+# Decorated MCP tools under distinct names to avoid shadowing callables
+@http_mcp.tool
+def http_get_tool(
+    url: str,
+    params: dict[str, Any] | None = None,
+    use_cache: bool = True,
+    ttl_seconds: int | None = None,
+    max_bytes: int = 10000,
+) -> dict:  # pragma: no cover - thin wrapper for MCP
+    return _http_get_impl(url, params=params, use_cache=use_cache, ttl_seconds=ttl_seconds, max_bytes=max_bytes)
+
+
+@http_mcp.tool
+def http_json_get_tool(
+    url: str,
+    params: dict[str, Any] | None = None,
+    use_cache: bool = True,
+    ttl_seconds: int | None = None,
+    max_bytes: int = 20000,
+) -> dict:  # pragma: no cover - thin wrapper for MCP
+    return _http_json_get_impl(url, params=params, use_cache=use_cache, ttl_seconds=ttl_seconds, max_bytes=max_bytes)
+
+
 @http_mcp.resource("httpcfg://allowlist")
 def allowlist_resource() -> list[str]:
     return sorted(_allowed_hosts())
@@ -174,4 +216,12 @@ def example_header() -> dict:
     return {"env": {"MCP_HTTP_ALLOWLIST": "api.github.com,raw.githubusercontent.com"}}
 
 
-__all__ = ["http_mcp", "http_get", "http_json_get", "allowlist_resource", "example_header"]
+__all__ = [
+    "http_mcp",
+    "http_get",
+    "http_json_get",
+    "http_get_tool",
+    "http_json_get_tool",
+    "allowlist_resource",
+    "example_header",
+]

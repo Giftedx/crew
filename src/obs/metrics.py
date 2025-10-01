@@ -16,7 +16,36 @@ import logging
 from collections.abc import Callable, Sequence
 from typing import Any, Protocol, cast, runtime_checkable
 
-from ultimate_discord_intelligence_bot.tenancy import current_tenant  # moved to top for E402 compliance
+
+# Resolve current_tenant dynamically to work in both dev (tests import via 'src.*')
+# and installed package contexts (imports via 'ultimate_discord_intelligence_bot.*').
+def _resolve_current_tenant():
+    try:
+        import importlib
+
+        for name in (
+            # Prefer installed package path first to share the same thread-local with runtime/tests
+            "ultimate_discord_intelligence_bot.tenancy.context",
+            # Fallback to src path for direct execution contexts
+            "src.ultimate_discord_intelligence_bot.tenancy.context",
+        ):
+            try:
+                mod = importlib.import_module(name)
+                ct = getattr(mod, "current_tenant", None)
+                if callable(ct):
+                    return ct
+            except Exception:
+                continue
+    except Exception:
+        pass
+
+    def _none():  # pragma: no cover - trivial
+        return None
+
+    return _none
+
+
+_current_tenant_fn = _resolve_current_tenant()
 
 PROMETHEUS_AVAILABLE = False
 REGISTRY: Any  # will be bound below
@@ -89,533 +118,30 @@ except Exception:  # pragma: no cover - fallback path
 # Public alias retained for backward compatibility (some code imports registry)
 registry = REGISTRY
 
-_METRIC_SPECS: list[tuple[Callable[..., MetricLike], str, str, list[str]]] = [
-    (CounterFactory, "router_decisions_total", "Number of routing decisions made", ["tenant", "workspace"]),
-    (HistogramFactory, "llm_latency_ms", "Latency of LLM calls in milliseconds", ["tenant", "workspace"]),
-    (
-        CounterFactory,
-        "llm_model_selected_total",
-        "LLM model selections",
-        ["tenant", "workspace", "task", "model", "provider"],
-    ),
-    (
-        CounterFactory,
-        "llm_budget_rejections_total",
-        "LLM calls rejected due to budget",
-        ["tenant", "workspace", "task", "provider"],
-    ),
-    (
-        HistogramFactory,
-        "llm_estimated_cost_usd",
-        "Estimated cost (USD) of LLM calls",
-        ["tenant", "workspace", "model", "provider"],
-    ),
-    (CounterFactory, "llm_cache_hits_total", "Total LLM cache hits", ["tenant", "workspace", "model", "provider"]),
-    (CounterFactory, "llm_cache_misses_total", "Total LLM cache misses", ["tenant", "workspace", "model", "provider"]),
-    # Structured LLM metrics
-    (
-        CounterFactory,
-        "structured_llm_requests_total",
-        "Total structured LLM requests",
-        ["tenant", "workspace", "task", "method"],
-    ),
-    (
-        CounterFactory,
-        "structured_llm_success_total",
-        "Total successful structured LLM responses",
-        ["tenant", "workspace", "task", "method", "model"],
-    ),
-    (
-        CounterFactory,
-        "structured_llm_errors_total",
-        "Total structured LLM errors by type",
-        ["tenant", "workspace", "task", "method", "error_type"],
-    ),
-    (
-        CounterFactory,
-        "structured_llm_parsing_failures_total",
-        "Total JSON parsing failures in structured responses",
-        ["tenant", "workspace", "task", "method"],
-    ),
-    (
-        CounterFactory,
-        "structured_llm_validation_failures_total",
-        "Total Pydantic validation failures",
-        ["tenant", "workspace", "task", "method"],
-    ),
-    (
-        CounterFactory,
-        "structured_llm_instructor_usage_total",
-        "Total usage of Instructor for structured outputs",
-        ["tenant", "workspace", "task", "model"],
-    ),
-    (
-        CounterFactory,
-        "structured_llm_fallback_usage_total",
-        "Total fallback to manual parsing",
-        ["tenant", "workspace", "task", "model"],
-    ),
-    (
-        HistogramFactory,
-        "structured_llm_latency_ms",
-        "Latency of structured LLM operations",
-        ["tenant", "workspace", "task", "method"],
-    ),
-    (
-        HistogramFactory,
-        "structured_llm_parsing_latency_ms",
-        "Latency of JSON parsing operations",
-        ["tenant", "workspace", "task"],
-    ),
-    # Streaming-specific metrics
-    (
-        CounterFactory,
-        "structured_llm_streaming_requests_total",
-        "Total streaming structured LLM requests",
-        ["tenant", "workspace", "task", "method"],
-    ),
-    (
-        CounterFactory,
-        "structured_llm_streaming_chunks_total",
-        "Total streaming chunks processed",
-        ["tenant", "workspace", "task", "method"],
-    ),
-    (
-        HistogramFactory,
-        "structured_llm_streaming_latency_ms",
-        "Latency of streaming structured LLM operations",
-        ["tenant", "workspace", "task", "method"],
-    ),
-    (
-        HistogramFactory,
-        "structured_llm_streaming_progress_ratio",
-        "Progress ratio for streaming operations (0.0-1.0)",
-        ["tenant", "workspace", "task", "method"],
-    ),
-    (
-        CounterFactory,
-        "structured_llm_streaming_errors_total",
-        "Total streaming structured LLM errors",
-        ["tenant", "workspace", "task", "method", "error_type"],
-    ),
-    # Cache-specific metrics for structured LLM
-    (
-        CounterFactory,
-        "structured_llm_cache_hits_total",
-        "Total structured LLM cache hits",
-        ["tenant", "workspace", "task", "method"],
-    ),
-    (
-        CounterFactory,
-        "structured_llm_cache_misses_total",
-        "Total structured LLM cache misses",
-        ["tenant", "workspace", "task", "method"],
-    ),
-    (HistogramFactory, "http_request_latency_ms", "Latency of inbound HTTP requests (FastAPI)", ["route", "method"]),
-    (CounterFactory, "http_requests_total", "Total inbound HTTP requests", ["route", "method", "status"]),
-    (
-        CounterFactory,
-        "rate_limit_rejections_total",
-        "Total HTTP requests rejected due to rate limiting (429)",
-        ["route", "method"],
-    ),
-    (
-        CounterFactory,
-        "http_retry_attempts_total",
-        "Total HTTP retry attempts (excluding first attempt)",
-        ["tenant", "workspace", "method", "host"],
-    ),
-    (
-        CounterFactory,
-        "http_retry_giveups_total",
-        "Total HTTP operations that exhausted retries",
-        ["tenant", "workspace", "method", "host"],
-    ),
-    # Tenancy fallback visibility
-    (
-        CounterFactory,
-        "tenancy_fallback_total",
-        "Count of events where no TenantContext was set and default was used",
-        ["tenant", "workspace", "component"],
-    ),
-    # Pipeline-specific metrics
-    (
-        CounterFactory,
-        "pipeline_requests_total",
-        "Total pipeline processing requests",
-        ["tenant", "workspace"],
-    ),
-    (
-        CounterFactory,
-        "pipeline_steps_completed_total",
-        "Total pipeline steps completed successfully",
-        ["tenant", "workspace", "step"],
-    ),
-    (
-        CounterFactory,
-        "pipeline_steps_failed_total",
-        "Total pipeline steps that failed",
-        ["tenant", "workspace", "step"],
-    ),
-    (
-        CounterFactory,
-        "pipeline_steps_skipped_total",
-        "Total pipeline steps skipped",
-        ["tenant", "workspace", "step"],
-    ),
-    (
-        HistogramFactory,
-        "pipeline_duration_seconds",
-        "Duration of full pipeline processing",
-        ["tenant", "workspace", "status"],
-    ),
-    (
-        HistogramFactory,
-        "pipeline_step_duration_seconds",
-        "Duration of individual pipeline steps",
-        ["tenant", "workspace", "step", "orchestrator", "status"],
-    ),
-    (
-        HistogramFactory,
-        "pipeline_total_duration_seconds",
-        "Duration of full pipeline processing (orchestrator-specific)",
-        ["tenant", "workspace", "orchestrator", "status"],
-    ),
-    (
-        GaugeFactory,
-        "pipeline_inflight",
-        "Current number of inflight pipeline runs",
-        ["tenant", "workspace", "orchestrator"],
-    ),
-    (
-        CounterFactory,
-        "circuit_breaker_requests_total",
-        "Circuit breaker outcomes",
-        ["tenant", "workspace", "circuit", "result"],
-    ),
-    (
-        GaugeFactory,
-        "circuit_breaker_state",
-        "Circuit breaker state (0=closed,0.5=half-open,1=open)",
-        ["tenant", "workspace", "circuit"],
-    ),
-    # Ingest fallbacks (observability for resilience decisions)
-    (
-        CounterFactory,
-        "ingest_transcript_fallbacks_total",
-        "Count of transcript fallbacks to Whisper",
-        ["tenant", "workspace", "source"],
-    ),
-    (
-        CounterFactory,
-        "ingest_missing_id_fallbacks_total",
-        "Count of ingest runs missing episode_id (used URL-hash fallback)",
-        ["tenant", "workspace", "source"],
-    ),
-    # Scheduler metrics
-    (
-        CounterFactory,
-        "scheduler_enqueued_total",
-        "Jobs enqueued by scheduler",
-        ["tenant", "workspace", "source"],
-    ),
-    (
-        CounterFactory,
-        "scheduler_processed_total",
-        "Jobs processed successfully by worker",
-        ["tenant", "workspace", "source"],
-    ),
-    (
-        CounterFactory,
-        "scheduler_errors_total",
-        "Worker errors while processing jobs",
-        ["tenant", "workspace", "source"],
-    ),
-    (
-        GaugeFactory,
-        "scheduler_queue_backlog",
-        "Current number of pending jobs in queue",
-        ["tenant", "workspace"],
-    ),
-    (
-        GaugeFactory,
-        "system_health_score",
-        "Overall system health score (0-100)",
-        ["tenant", "workspace"],
-    ),
-    (
-        GaugeFactory,
-        "cost_per_interaction",
-        "Average cost per user interaction in USD",
-        ["tenant", "workspace"],
-    ),
-    # Cache performance metrics
-    (
-        CounterFactory,
-        "cache_hits_total",
-        "Total cache hits by cache and level",
-        ["tenant", "workspace", "cache_name", "cache_level"],
-    ),
-    (
-        CounterFactory,
-        "cache_misses_total",
-        "Total cache misses by cache and level",
-        ["tenant", "workspace", "cache_name", "cache_level"],
-    ),
-    (
-        CounterFactory,
-        "cache_promotions_total",
-        "Total entries promoted to higher cache level",
-        ["tenant", "workspace", "cache_name"],
-    ),
-    (
-        CounterFactory,
-        "cache_demotions_total",
-        "Total entries demoted to lower cache level",
-        ["tenant", "workspace", "cache_name"],
-    ),
-    (
-        CounterFactory,
-        "cache_evictions_total",
-        "Total entries evicted due to capacity limits",
-        ["tenant", "workspace", "cache_name", "cache_level"],
-    ),
-    (
-        CounterFactory,
-        "cache_compressions_total",
-        "Total entries compressed",
-        ["tenant", "workspace", "cache_name"],
-    ),
-    (
-        CounterFactory,
-        "cache_decompressions_total",
-        "Total entries decompressed",
-        ["tenant", "workspace", "cache_name"],
-    ),
-    (
-        CounterFactory,
-        "cache_errors_total",
-        "Total cache operation errors",
-        ["tenant", "workspace", "cache_name", "operation", "error_type"],
-    ),
-    (
-        GaugeFactory,
-        "cache_size_bytes",
-        "Current cache size in bytes",
-        ["tenant", "workspace", "cache_name", "cache_level"],
-    ),
-    (
-        GaugeFactory,
-        "cache_entries_count",
-        "Current number of entries in cache",
-        ["tenant", "workspace", "cache_name", "cache_level"],
-    ),
-    (
-        GaugeFactory,
-        "cache_hit_rate_ratio",
-        "Current cache hit rate (0.0-1.0)",
-        ["tenant", "workspace", "cache_name", "cache_level"],
-    ),
-    (
-        GaugeFactory,
-        "cache_memory_usage_ratio",
-        "Cache memory usage ratio (0.0-1.0)",
-        ["tenant", "workspace", "cache_name", "cache_level"],
-    ),
-    (
-        HistogramFactory,
-        "cache_operation_latency_ms",
-        "Latency of cache operations in milliseconds",
-        ["tenant", "workspace", "cache_name", "operation"],
-    ),
-    (
-        HistogramFactory,
-        "cache_compression_ratio",
-        "Compression effectiveness ratio (compressed/original)",
-        ["tenant", "workspace", "cache_name"],
-    ),
-    # Segmenter & embedding instrumentation (low cardinality)
-    (
-        HistogramFactory,
-        "segment_chunk_size_chars",
-        "Distribution of segment chunk sizes (characters)",
-        ["tenant", "workspace"],
-    ),
-    (
-        HistogramFactory,
-        "segment_chunk_size_tokens",
-        "Approximate distribution of segment chunk sizes (tokens, heuristic)",
-        ["tenant", "workspace"],
-    ),
-    (
-        CounterFactory,
-        "segment_chunk_merges_total",
-        "Number of chunk merges/flushes performed during segmentation",
-        ["tenant", "workspace"],
-    ),
-    (
-        CounterFactory,
-        "embed_deduplicates_skipped_total",
-        "Number of duplicate text segments skipped before embedding",
-        ["tenant", "workspace"],
-    ),
-    # Degradation / fallback reporting metrics (flag gated usage)
-    (
-        CounterFactory,
-        "degradation_events_total",
-        "Count of recorded degradation events (fallbacks, timeouts, partial failures)",
-        ["tenant", "workspace", "component", "event_type", "severity"],
-    ),
-    (
-        HistogramFactory,
-        "degradation_impact_latency_ms",
-        "Observed added latency (ms) attributed to degradation events when measurable",
-        ["tenant", "workspace", "component", "event_type"],
-    ),
-    # -------------------- New retrieval & RL / compression instrumentation --------------------
-    (
-        HistogramFactory,
-        "retrieval_selected_k",
-        "Distribution of selected retrieval k values (post-adaptive heuristic)",
-        ["tenant", "workspace", "strategy"],
-    ),
-    (
-        HistogramFactory,
-        "retrieval_latency_ms",
-        "Latency of retrieval phases (phase label: initial|post_rerank|prefetch)",
-        ["tenant", "workspace", "phase"],
-    ),
-    (
-        HistogramFactory,
-        "prompt_compression_ratio",
-        "Prompt compression ratio (compressed/original tokens)",
-        ["tenant", "workspace", "method"],
-    ),
-    (
-        HistogramFactory,
-        "semantic_cache_similarity",
-        "Similarity scores for semantic cache hits",
-        ["tenant", "workspace", "bucket"],
-    ),
-    (
-        CounterFactory,
-        "semantic_cache_prefetch_issued_total",
-        "Number of semantic cache prefetch attempts issued",
-        ["tenant", "workspace"],
-    ),
-    (
-        CounterFactory,
-        "semantic_cache_prefetch_used_total",
-        "Number of prefetched semantic cache entries actually used",
-        ["tenant", "workspace"],
-    ),
-    (
-        CounterFactory,
-        "semantic_cache_shadow_hits_total",
-        "Number of semantic cache hits in shadow mode (would have been cache hits)",
-        ["tenant", "workspace", "model"],
-    ),
-    (
-        CounterFactory,
-        "semantic_cache_shadow_misses_total",
-        "Number of semantic cache misses in shadow mode",
-        ["tenant", "workspace", "model"],
-    ),
-    (
-        GaugeFactory,
-        "semantic_cache_shadow_hit_ratio",
-        "Current semantic cache hit ratio in shadow mode",
-        ["tenant", "workspace"],
-    ),
-    (
-        HistogramFactory,
-        "rl_reward_latency_gap_ms",
-        "Latency between model response and reward recording",
-        ["tenant", "workspace", "domain"],
-    ),
-    (
-        GaugeFactory,
-        "active_bandit_policy",
-        "Current active bandit policy per domain (1 if active)",
-        ["tenant", "workspace", "domain", "policy"],
-    ),
-    # Experiment harness metrics for A/B testing
-    (
-        CounterFactory,
-        "experiment_variant_allocations_total",
-        "Total variant allocations by experiment",
-        ["tenant", "workspace", "experiment_id", "variant", "phase"],
-    ),
-    (
-        CounterFactory,
-        "experiment_rewards_total",
-        "Total rewards recorded by experiment variant",
-        ["tenant", "workspace", "experiment_id", "variant"],
-    ),
-    (
-        HistogramFactory,
-        "experiment_reward_value",
-        "Distribution of reward values by experiment variant",
-        ["tenant", "workspace", "experiment_id", "variant"],
-    ),
-    (
-        GaugeFactory,
-        "experiment_regret_total",
-        "Cumulative regret by experiment variant",
-        ["tenant", "workspace", "experiment_id", "variant"],
-    ),
-    (
-        GaugeFactory,
-        "experiment_phase_status",
-        "Experiment phase status (0=shadow, 1=active)",
-        ["tenant", "workspace", "experiment_id"],
-    ),
-    # Trajectory evaluation metrics
-    (
-        CounterFactory,
-        "trajectory_evaluations_total",
-        "Total trajectory evaluations performed",
-        ["tenant", "workspace", "success"],
-    ),
-    # Advanced bandit metrics
-    (
-        GaugeFactory,
-        "advanced_bandit_reward_model_mse",
-        "Mean squared error of DoublyRobust reward model",
-        ["tenant", "workspace", "experiment_id", "variant"],
-    ),
-    (
-        GaugeFactory,
-        "advanced_bandit_tree_depth",
-        "Average tree depth for OffsetTree bandit",
-        ["tenant", "workspace", "experiment_id", "variant"],
-    ),
-    (
-        GaugeFactory,
-        "advanced_bandit_importance_weight",
-        "Average importance weight for DoublyRobust bandit",
-        ["tenant", "workspace", "experiment_id", "variant"],
-    ),
-    (
-        GaugeFactory,
-        "advanced_bandit_confidence_interval",
-        "Average confidence interval width for advanced bandits",
-        ["tenant", "workspace", "experiment_id", "variant"],
-    ),
-    # Prompt-specific counters (appended to avoid index churn)
-    (
-        CounterFactory,
-        "prompt_compression_target_met_total",
-        "Number of times prompt compression met the configured target",
-        ["tenant", "workspace"],
-    ),
-    (
-        CounterFactory,
-        "prompt_emergency_truncations_total",
-        "Number of times emergency prompt truncation was applied",
-        ["tenant", "workspace"],
-    ),
-]
+try:
+    from .metric_specs import METRIC_SPECS as _SPEC_TUPLES  # type: ignore
+except Exception:  # pragma: no cover - fallback if relative import fails
+    from obs.metric_specs import METRIC_SPECS as _SPEC_TUPLES  # type: ignore
+
+# Build runtime specs mapping underlying factories based on 'kind'.
+_KIND_TO_FACTORY: dict[str, Callable[..., MetricLike]] = {
+    "counter": cast(Callable[..., MetricLike], None),  # fill below
+    "histogram": cast(Callable[..., MetricLike], None),
+    "gauge": cast(Callable[..., MetricLike], None),
+}
+_KIND_TO_FACTORY["counter"] = cast(Callable[..., MetricLike], "CounterFactory")  # type: ignore[assignment]
+_KIND_TO_FACTORY["histogram"] = cast(Callable[..., MetricLike], "HistogramFactory")  # type: ignore[assignment]
+_KIND_TO_FACTORY["gauge"] = cast(Callable[..., MetricLike], "GaugeFactory")  # type: ignore[assignment]
+
+
+def _resolve_factory(kind: str) -> Callable[..., MetricLike]:
+    if kind == "counter":
+        return cast(Callable[..., MetricLike], CounterFactory)
+    if kind == "histogram":
+        return cast(Callable[..., MetricLike], HistogramFactory)
+    if kind == "gauge":
+        return cast(Callable[..., MetricLike], GaugeFactory)
+    raise ValueError(f"Unknown metric kind: {kind}")
 
 
 def _purge_existing(metric_names: Sequence[str]) -> None:  # pragma: no cover - defensive
@@ -642,12 +168,13 @@ def _purge_existing(metric_names: Sequence[str]) -> None:  # pragma: no cover - 
 
 def _instantiate_metrics() -> list[MetricLike]:
     objs: list[MetricLike] = []
-    for ctor, name, help_text, labels in _METRIC_SPECS:
+    for kind, name, help_text, labels in _SPEC_TUPLES:
+        ctor = _resolve_factory(kind)
         try:
             obj = ctor(name, help_text, labels, registry=registry)
         except ValueError as e:  # duplicate series: purge then retry once
             if "Duplicated timeseries" in str(e):
-                _purge_existing([spec[1] for spec in _METRIC_SPECS])
+                _purge_existing([spec[1] for spec in _SPEC_TUPLES])
                 obj = ctor(name, help_text, labels, registry=registry)
             else:
                 raise
@@ -869,7 +396,7 @@ def reset() -> None:
                     registry.unregister(c)
                 except Exception as exc:  # pragma: no cover - defensive
                     logging.debug("metrics: reset unregister failed: %s", exc)
-        _purge_existing([spec[1] for spec in _METRIC_SPECS])
+    _purge_existing([spec[1] for spec in _SPEC_TUPLES])
     objs = _instantiate_metrics()
     (
         ROUTER_DECISIONS,
@@ -967,7 +494,7 @@ def reset() -> None:
 
 
 def label_ctx() -> dict[str, str]:
-    ctx = current_tenant()
+    ctx = _current_tenant_fn()
     if ctx:
         return {"tenant": ctx.tenant_id, "workspace": ctx.workspace_id}
     return {"tenant": "unknown", "workspace": "unknown"}

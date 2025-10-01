@@ -14,10 +14,9 @@ from analysis import segmenter, topics, transcribe
 from core.error_handling import handle_error_safely
 from core.privacy import privacy_filter
 from core.time import default_utc_now
+from ingest import models
 from memory import embeddings, vector_store
 from obs import metrics
-
-from ingest import models
 
 from .providers import twitch, youtube
 
@@ -100,7 +99,7 @@ def run(job: IngestJob, store: vector_store.VectorStore) -> dict:
     """
 
     provider_mod, creator_attr = _get_provider(job.source)
-    strict = bool(os.getenv("ENABLE_INGEST_STRICT"))
+    strict = os.getenv("ENABLE_INGEST_STRICT", "").lower() in {"1", "true", "yes", "on"}
     t0 = time.perf_counter()
     _status = "ok"
     try:

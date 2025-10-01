@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from kg.extract import extract
-
 from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
@@ -12,7 +11,7 @@ from ._base import BaseTool
 MIN_CLAIM_LEN = 5  # Minimum characters for a claim to be considered
 
 
-class ClaimExtractorTool(BaseTool):
+class ClaimExtractorTool(BaseTool[StepResult]):
     """Extract factual claims from text using regex patterns and NLP.
 
     Return schema (dict):

@@ -3,9 +3,8 @@ from __future__ import annotations
 from collections.abc import Iterable
 from typing import Any
 
-from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
-
 from core.time import default_utc_now
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 
 from .middleware import Middleware
 from .step import Step

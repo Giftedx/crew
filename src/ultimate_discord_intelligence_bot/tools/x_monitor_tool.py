@@ -31,7 +31,7 @@ class XMonitorTool(BaseTool[StepResult]):
         items = list(posts)
         if not items:
             self._metrics.counter("tool_runs_total", labels={"tool": "x_monitor", "outcome": "skipped"}).inc()
-            return StepResult.ok(skipped=True, reason="no posts provided", new_posts=[])
+            return StepResult.skip(reason="no posts provided", new_posts=[])
         result = self._monitor._run(items)
         # StepResult supports .get for safe access
         new_posts = result.get("new_items", [])

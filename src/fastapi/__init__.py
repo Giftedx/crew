@@ -113,6 +113,20 @@ class FastAPI:
         self._routes: dict[tuple[str, str], Callable[..., Any] | Coroutine[Any, Any, Any]] = {}
         self.service_name = kwargs.get("title", "app")
 
+        # Expose a router-like shim with a .routes attribute for compatibility
+        class _Router:
+            def __init__(self, outer: FastAPI) -> None:
+                self._outer = outer
+
+            @property
+            def routes(self) -> list[Any]:  # pragma: no cover - simple adapter
+                items = []
+                for (method, path), fn in getattr(self._outer, "_routes", {}).items():
+                    items.append(type("R", (), {"path": path, "methods": {method}, "endpoint": fn})())
+                return items
+
+        self.router = _Router(self)
+
     def include_router(self, router: APIRouter) -> None:
         self._routes.update(router._routes)
 
@@ -150,10 +164,21 @@ def header(default: Any, alias: str | None = None) -> Any:  # pragma: no cover -
     return default
 
 
+def body(default: Any = ..., *, embed: bool | None = None) -> Any:  # pragma: no cover - placeholder
+    """Mimic FastAPI's Body helper.
+
+    Tests only validate that ``Body`` is importable and returns the provided
+    sentinel/default value; argument handling is intentionally lightweight.
+    """
+
+    return default
+
+
 # Preserve original FastAPI-esque names for compatibility
 File = file
 Form = form
 Header = header
+Body = body
 
 
 class UploadFile:  # pragma: no cover - placeholder for typing only
@@ -168,3 +193,14 @@ class _ResponsesModule:
 
 
 responses = _ResponsesModule()
+
+
+# Minimal status constants used by the codebase/tests
+class _StatusModule:
+    HTTP_200_OK = 200
+    HTTP_422_UNPROCESSABLE_ENTITY = 422
+    HTTP_500_INTERNAL_SERVER_ERROR = 500
+    HTTP_502_BAD_GATEWAY = 502
+
+
+status = _StatusModule()

@@ -10,4 +10,24 @@ Provides minimal interfaces used by our code/tests:
 
 from . import trace  # re-export submodule for ``from opentelemetry import trace``
 
-__all__ = ["trace"]
+
+class _BaggageStub:
+    """Stub for OpenTelemetry baggage."""
+
+    @staticmethod
+    def set_baggage(key: str, value: str) -> None:
+        pass
+
+    @staticmethod
+    def get_baggage(key: str) -> str | None:
+        return None
+
+    @staticmethod
+    def get_all_baggage() -> dict:
+        return {}
+
+
+# Create baggage instance
+baggage = _BaggageStub()
+
+__all__ = ["trace", "baggage"]

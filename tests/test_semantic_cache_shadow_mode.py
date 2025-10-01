@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pytest
+
 from ultimate_discord_intelligence_bot.services.openrouter_service import OpenRouterService
 from ultimate_discord_intelligence_bot.tenancy.context import TenantContext, with_tenant
 
@@ -148,3 +149,47 @@ def test_semantic_cache_shadow_mode_namespace_isolation():
         assert result3["status"] == "success"
         # Even in shadow mode, cache is populated for this namespace
         assert result3.get("cached") is False  # But still returns fresh in shadow mode
+
+
+def test_analysis_only_shadow_mode(monkeypatch: pytest.MonkeyPatch):
+    """GPTCache can run in analysis-only shadow mode without affecting other tasks."""
+
+    # Override autouse fixture defaults for this test
+    monkeypatch.setenv("ENABLE_SEMANTIC_CACHE_SHADOW", "0")
+    monkeypatch.setenv("ENABLE_SEMANTIC_CACHE", "0")
+    monkeypatch.setenv("ENABLE_GPTCACHE", "1")
+    monkeypatch.setenv("ENABLE_GPTCACHE_ANALYSIS_SHADOW", "1")
+
+    from core import settings as settings_mod
+
+    if hasattr(settings_mod.get_settings, "cache_clear"):
+        settings_mod.get_settings.cache_clear()  # type: ignore[attr-defined]
+
+    # Reset metrics to ensure clean counters for this test
+    try:
+        from obs.metrics import reset
+
+        reset()
+    except Exception:
+        pass
+
+    svc = OpenRouterService(api_key="")
+    analysis_prompt = "analysis shadow prompt"
+    general_prompt = "general cache prompt"
+
+    with with_tenant(TenantContext("tenant-analysis", "shadow")):
+        first = svc.route(analysis_prompt, task_type="analysis")
+        assert first["cached"] is False
+        second = svc.route(analysis_prompt, task_type="analysis")
+        assert second["cached"] is False
+        cache_info = second.get("cache_info", {})
+        semantic_meta = cache_info.get("semantic", {})
+        assert semantic_meta.get("mode") == "shadow"
+        assert semantic_meta.get("status") in {"hit", "miss"}
+
+    with with_tenant(TenantContext("tenant-general", "active")):
+        first_general = svc.route(general_prompt, task_type="general")
+        assert first_general["cached"] is False
+        second_general = svc.route(general_prompt, task_type="general")
+        assert second_general.get("cached") is True
+        assert second_general.get("cache_type") == "semantic"

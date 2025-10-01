@@ -24,7 +24,6 @@ except ImportError:
     PSUTIL_AVAILABLE = False
 
 from core.time import default_utc_now
-
 from obs import metrics
 
 logger = logging.getLogger(__name__)

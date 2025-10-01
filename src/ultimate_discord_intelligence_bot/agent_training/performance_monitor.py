@@ -11,13 +11,26 @@ from __future__ import annotations
 
 import json
 import logging
-from collections import Counter, defaultdict
+from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from core.time import default_utc_now, ensure_utc
+from ultimate_discord_intelligence_bot.agent_training.perf import helpers as _perf
+from ultimate_discord_intelligence_bot.agent_training.perf.models import (
+    AgentPerformanceReport as _AgentPerformanceReport,
+)
+from ultimate_discord_intelligence_bot.agent_training.perf.models import (
+    AIRoutingMetrics as _AIRoutingMetrics,
+)
+from ultimate_discord_intelligence_bot.agent_training.perf.models import (
+    PerformanceMetric as _PerformanceMetric,
+)
+from ultimate_discord_intelligence_bot.agent_training.perf.models import (
+    ToolUsagePattern as _ToolUsagePattern,
+)
 
 if TYPE_CHECKING:  # type-only imports to avoid runtime dependencies
     from ai.adaptive_ai_router import AdaptiveAIRouter
@@ -31,35 +44,20 @@ try:
     AI_ROUTING_AVAILABLE = True
 except ImportError:
     AI_ROUTING_AVAILABLE = False
-    logging.warning("AI routing components not available - running in basic mode")
+    # Only warn if user explicitly enabled AI routing via env; otherwise stay quiet
+    import os as _os
+
+    if _os.getenv("ENABLE_AI_ROUTING", "0").lower() in {"1", "true", "yes"}:
+        logging.warning("AI routing components not available - running in basic mode")
+
+
+# Re-export base classes from perf.models to avoid type incompatibility
+PerformanceMetric = _PerformanceMetric
+ToolUsagePattern = _ToolUsagePattern
 
 
 @dataclass
-class PerformanceMetric:
-    """Performance metric for agent evaluation."""
-
-    metric_name: str
-    target_value: float
-    actual_value: float
-    trend: str  # "improving", "stable", "declining"
-    confidence: float
-    last_updated: str
-
-
-@dataclass
-class ToolUsagePattern:
-    """Tool usage pattern analysis."""
-
-    tool_name: str
-    usage_frequency: int
-    success_rate: float
-    average_quality_score: float
-    common_sequences: list[str]
-    error_patterns: list[str]
-
-
-@dataclass
-class AIRoutingMetrics:
+class AIRoutingMetrics(_AIRoutingMetrics):
     """Enhanced metrics specifically for AI routing performance."""
 
     routing_strategy: str
@@ -74,7 +72,7 @@ class AIRoutingMetrics:
 
 
 @dataclass
-class AgentPerformanceReport:
+class AgentPerformanceReport(_AgentPerformanceReport):
     """Comprehensive performance report for an agent with AI routing intelligence."""
 
     agent_name: str
@@ -391,130 +389,38 @@ class AgentPerformanceMonitor:
 
     def analyze_tool_usage_patterns(self, agent_name: str, days: int = 30) -> list[ToolUsagePattern]:
         """Analyze tool usage patterns for an agent over specified period."""
-        cutoff_date = default_utc_now() - timedelta(days=days)
-        recent_interactions = [
-            interaction
-            for interaction in self.performance_history[agent_name]
-            if ensure_utc(datetime.fromisoformat(interaction["timestamp"])) > cutoff_date
-        ]
-
+        recent_interactions = _perf.recent_interactions(self.performance_history, agent_name, days)
         if not recent_interactions:
             return []
-
-        # Analyze tool usage
-        tool_stats: dict[str, dict[str, Any]] = defaultdict(
-            lambda: {"usage_count": 0, "success_count": 0, "quality_scores": [], "sequences": [], "errors": []}
-        )
-
-        for interaction in recent_interactions:
-            tools_used = interaction.get("tools_used", [])
-            quality = interaction.get("response_quality", 0.0)
-            sequence = [step.get("tool", "") for step in interaction.get("tool_sequence", [])]
-
-            for tool in tools_used:
-                stats = tool_stats[tool]
-                stats["usage_count"] += 1
-
-                # Consider successful if quality > 0.7 and no errors
-                if quality > 0.7 and not interaction.get("error_occurred", False):
-                    stats["success_count"] += 1
-
-                stats["quality_scores"].append(quality)
-
-                if sequence:
-                    stats["sequences"].append(" -> ".join(sequence))
-
-                if interaction.get("error_occurred", False):
-                    error_details = interaction.get("error_details", {})
-                    if tool in str(error_details):
-                        stats["errors"].append(error_details.get("message", "Unknown error"))
-
-        # Convert to ToolUsagePattern objects
-        patterns = []
-        for tool_name, stats in tool_stats.items():
-            if stats["usage_count"] > 0:
-                success_rate = stats["success_count"] / stats["usage_count"]
-                avg_quality = sum(stats["quality_scores"]) / len(stats["quality_scores"])
-
-                # Find common sequences
-                sequence_counter = Counter(stats["sequences"])
-                common_sequences = [seq for seq, _ in sequence_counter.most_common(3)]
-
-                patterns.append(
-                    ToolUsagePattern(
-                        tool_name=tool_name,
-                        usage_frequency=stats["usage_count"],
-                        success_rate=success_rate,
-                        average_quality_score=avg_quality,
-                        common_sequences=common_sequences,
-                        error_patterns=list(set(stats["errors"])),
-                    )
-                )
-
-        # Sort by usage frequency
-        return sorted(patterns, key=lambda p: p.usage_frequency, reverse=True)
+        return _perf.analyze_tool_usage(recent_interactions)
 
     def calculate_performance_metrics(self, agent_name: str, days: int = 30) -> list[PerformanceMetric]:
         """Calculate comprehensive performance metrics for an agent."""
-        cutoff_date = default_utc_now() - timedelta(days=days)
-        recent_interactions = [
-            interaction
-            for interaction in self.performance_history[agent_name]
-            if ensure_utc(datetime.fromisoformat(interaction["timestamp"])) > cutoff_date
-        ]
+        recent_interactions = _perf.recent_interactions(self.performance_history, agent_name, days)
 
         if not recent_interactions:
             return []
 
-        metrics = []
-
-        # Accuracy/Quality metric
-        quality_scores = [i.get("response_quality", 0.0) for i in recent_interactions]
-        avg_quality = sum(quality_scores) / len(quality_scores)
-        quality_trend = self._calculate_trend(agent_name, "response_quality", days)
-
-        metrics.append(
-            PerformanceMetric(
-                metric_name="accuracy_target",
-                target_value=self.performance_thresholds["accuracy_target"],
-                actual_value=avg_quality,
-                trend=quality_trend,
-                confidence=0.9 if len(quality_scores) > 10 else 0.7,
-                last_updated=default_utc_now().isoformat(),
-            )
-        )
-
-        # Tool usage efficiency
-        tool_usage_efficiency = self._calculate_tool_efficiency(recent_interactions)
-        tool_trend = self._calculate_trend(agent_name, "tool_efficiency", days)
-
+        metrics = _perf.calculate_performance_metrics_for_interactions(recent_interactions, self.performance_thresholds)
+        trend_quality = _perf.calculate_trend(recent_interactions, "response_quality")
+        trend_time = _perf.calculate_trend(recent_interactions, "response_time", invert=True)
+        tool_eff = _perf.calculate_tool_efficiency(recent_interactions)
+        trend_tool = _perf.calculate_trend(recent_interactions, "tool_efficiency")
         metrics.append(
             PerformanceMetric(
                 metric_name="tool_usage_efficiency",
                 target_value=self.performance_thresholds["tool_usage_efficiency"],
-                actual_value=tool_usage_efficiency,
-                trend=tool_trend,
+                actual_value=tool_eff,
+                trend=trend_tool,
                 confidence=0.8,
                 last_updated=default_utc_now().isoformat(),
             )
         )
-
-        # Response time metric
-        response_times = [i.get("response_time", 0.0) for i in recent_interactions]
-        avg_response_time = sum(response_times) / len(response_times)
-        time_trend = self._calculate_trend(agent_name, "response_time", days, invert=True)
-
-        metrics.append(
-            PerformanceMetric(
-                metric_name="response_time",
-                target_value=self.performance_thresholds["response_time"],
-                actual_value=avg_response_time,
-                trend=time_trend,
-                confidence=0.9,
-                last_updated=default_utc_now().isoformat(),
-            )
-        )
-
+        for m in metrics:
+            if m.metric_name == "accuracy_target":
+                m.trend = trend_quality
+            if m.metric_name == "response_time":
+                m.trend = trend_time
         return metrics
 
     def _calculate_trend(self, agent_name: str, metric_name: str, days: int, invert: bool = False) -> str:

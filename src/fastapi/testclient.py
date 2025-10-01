@@ -26,6 +26,13 @@ class _Resp:
         except Exception:
             return None
 
+    @property
+    def text(self) -> str:  # pragma: no cover - simple accessor used in tests
+        try:
+            return self._content.decode("utf-8")
+        except Exception:
+            return ""
+
 
 class FastAPITestClient:
     """Custom test client for FastAPI applications.

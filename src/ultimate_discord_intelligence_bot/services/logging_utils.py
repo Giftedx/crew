@@ -7,11 +7,13 @@ records can be queried for offline analysis or reinforcement learning feedback.
 
 from __future__ import annotations
 
+import json
 import sqlite3
 from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 from core.time import default_utc_now
 
@@ -153,3 +155,24 @@ class AnalyticsStore:
 
     def close(self) -> None:  # pragma: no cover - trivial
         self.conn.close()
+
+    def log_bandit_event(self, event: dict[str, Any], ts: datetime | None = None) -> None:
+        """Persist adaptive routing or bandit feedback events."""
+
+        payload = {key: value for key, value in event.items() if key not in {"task_type", "model", "reward"}}
+        context_blob = json.dumps(payload, default=str)
+        cur = self.conn.cursor()
+        cur.execute(
+            """
+            INSERT INTO bandit_events (task, context, chosen_arm, reward, ts)
+            VALUES (?, ?, ?, ?, ?)
+            """,
+            (
+                str(event.get("task_type", "unknown")),
+                context_blob,
+                str(event.get("model", "")),
+                float(event.get("reward", 0.0) or 0.0),
+                (ts or default_utc_now()).isoformat(),
+            ),
+        )
+        self.conn.commit()

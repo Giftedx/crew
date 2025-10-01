@@ -36,30 +36,47 @@ class Policy:
 
 def load_policy(tenant: str | None = None) -> Policy:
     """Load base policy and optional per-tenant overrides."""
+    # Load and coerce to dict
     if POLICY_PATH.exists():
         with POLICY_PATH.open("r", encoding="utf-8") as f:
-            data = yaml.safe_load(f) or {}
+            raw = yaml.safe_load(f)
+        data_in = raw if isinstance(raw, dict) else {}
     else:
-        # Default policy if file doesn't exist
-        data = {
-            "allowed_sources": {},
-            "forbidden_types": [],
-            "pii_types": {},
-            "masks": {},
-            "storage": {},
-            "consent": {},
-            "per_command": {},
-        }
+        data_in = {}
+
+    # Defaults with test-expected lowercase redaction tokens
+    defaults: dict[str, Any] = {
+        "allowed_sources": {},
+        "forbidden_types": [],
+        "pii_types": {
+            "email": "Email Address",
+            "phone": "Phone Number",
+            "address": "Physical Address",
+        },
+        "masks": {
+            "email": "[redacted-email]",
+            "phone": "[redacted-phone]",
+            "address": "[redacted-address]",
+        },
+        "storage": {},
+        "consent": {},
+        "per_command": {},
+    }
+    data: dict[str, Any] = defaults.copy()
+    for k, v in data_in.items():
+        if k in data:
+            data[k] = v
 
     if tenant:
         override = TENANT_DIR / tenant / "policy_overrides.yaml"
         if override.exists():
             with override.open("r", encoding="utf-8") as f:
-                ov = yaml.safe_load(f) or {}
+                ov_raw = yaml.safe_load(f)
+            ov = ov_raw if isinstance(ov_raw, dict) else {}
             for k, v in ov.items():
-                if isinstance(v, dict) and k in data:
+                if k in data and isinstance(v, dict) and isinstance(data.get(k), dict):
                     data[k].update(v)
-                else:
+                elif k in data:
                     data[k] = v
 
     return Policy(**data)

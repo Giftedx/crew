@@ -4,6 +4,16 @@ from collections.abc import Iterable
 from typing import Any
 
 
+class SpanExportResult:
+    """Stub for SpanExportResult."""
+
+    SUCCESS = 0
+    FAILURE = 1
+
+    def __init__(self, status: int = 0):
+        self.status = status
+
+
 class SpanExporter:
     def export(self, spans: Iterable[Any]) -> None:  # pragma: no cover - base stub
         pass
@@ -27,4 +37,10 @@ class SimpleSpanProcessor:
             pass
 
 
-__all__ = ["SpanExporter", "ConsoleSpanExporter", "SimpleSpanProcessor"]
+class BatchSpanProcessor(SimpleSpanProcessor):
+    """Batch span processor stub - same as SimpleSpanProcessor for testing"""
+
+    pass
+
+
+__all__ = ["SpanExporter", "ConsoleSpanExporter", "SimpleSpanProcessor", "BatchSpanProcessor", "SpanExportResult"]

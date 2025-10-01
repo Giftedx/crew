@@ -26,9 +26,8 @@ from dataclasses import dataclass
 from threading import RLock
 from time import time
 
-from obs import metrics
-
 from core.settings import get_settings
+from obs import metrics
 
 __all__ = ["DegradationEvent", "DegradationReporter", "get_degradation_reporter", "record_degradation"]
 

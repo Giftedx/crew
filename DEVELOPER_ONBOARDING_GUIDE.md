@@ -1,6 +1,20 @@
+### ⚡ Test Collection & Full-Stack Test Opt-In
+
+By default, running `pytest` will **skip root-level test_*.py files** (such as `test_autointel.py`, `test_crew_fixes.py`, etc.) to ensure fast, reliable test runs. These files are typically heavy integration or end-to-end scripts that can take a long time to run or require external resources.
+
+**To run the full suite including these heavy tests, set the environment variable:**
+
+```sh
+FULL_STACK_TEST=1 pytest
+```
+
+You will see a message like `[pytest] Skipping root-level test_autointel.py (set FULL_STACK_TEST=1 to include)` if you run without the variable set.
+
+This ensures that day-to-day development is fast and stable, while still allowing full-stack/integration testing when needed.
+
 # Developer Onboarding Guide
 
-## Ultimate```
+## Ultimate Discord Intelligence Bot - Quick Start for New Developers
 
 **🧹 Repository Organization:**
 
@@ -9,15 +23,13 @@
 - Historical completion reports organized in `docs/history/`
 - Run `make organize-root` anytime to clean up clutter
 
-### 🛠 Quick SetupIntelligence Bot - Quick Start for New Developers
-
 ### 🚀 Welcome
 
 You're joining a well-organized, AI-guided development environment with clear structure and comprehensive documentation. This guide will get you productive quickly.
 
 ### 📁 Project Structure Overview
 
-```
+```text
 src/                               # Main source code
 ├── core/                          # 54+ foundational utilities
 │   ├── http_utils.py             # HTTP retry wrappers (REQUIRED for all requests)
@@ -59,23 +71,93 @@ docs/                              # Documentation
 
 ### 🛠️ Quick Setup (5 Minutes)
 
-1. **Install Dependencies**
+Tip: Prefer the one-liner if you're on Debian/Ubuntu or just want the fastest path.
 
-   ```bash
-   pip install -e '.[dev]'  # Note: Quote the extras for zsh
-   ```
+```bash
+make first-run
+```
 
-2. **Verify Installation**
+This will: create/activate a venv, install dev extras (prefers uv), set up git hooks, run doctor checks, and do a quick smoke test.
+
+If doctor reports missing secrets (e.g., DISCORD_BOT_TOKEN), initialize your env file and fill in values:
+
+```bash
+make init-env
+# then open .env and set DISCORD_BOT_TOKEN and at least one LLM key (OPENAI_API_KEY or OPENROUTER_API_KEY)
+make doctor
+```
+
+1. **Create a Virtual Environment (avoids PEP 668)**
+
+    Option A — recommended (uv):
+
+    ```bash
+    uv venv --python 3.11
+    . .venv/bin/activate
+    ```
+
+    Option B — standard Python venv:
+
+    ```bash
+    python3 -m venv .venv
+    . .venv/bin/activate
+    ```
+
+    Or use the built-in helpers (idempotent):
+
+    ```bash
+    make uv-bootstrap   # creates .venv (if missing) and installs dev extras with uv
+    make ensure-venv    # creates .venv and installs dev deps with pip
+    ```
+
+1. **Install Dependencies (inside venv)**
+
+    ```bash
+    uv pip install -e '.[dev]'   # preferred (fast, reproducible)
+    # or:
+    pip install -e '.[dev]'      # fallback if uv is unavailable
+    ```
+
+    Tip (zsh): keep the quotes around '.[dev]'. If prompted to correct 'venv' to '.venv', choose '.venv'.
+
+1. **Verify Installation**
 
    ```bash
    make test-fast                   # Run core tests (36 tests, ~8 seconds)
    ```
 
-3. **Setup Development Environment**
+1. **Setup Development Environment**
 
    ```bash
    make format lint type            # Auto-fix style, check types
    ```
+
+#### Troubleshooting (Debian/Ubuntu)
+
+If you see "externally-managed-environment" (PEP 668) or ensurepip errors when creating/using the venv:
+
+- Option A (recommended): use uv for a clean venv and install
+
+    ```bash
+    uv venv --python 3.11
+    . .venv/bin/activate
+    uv pip install -e '.[dev]'
+    ```
+
+- Option B (APT fallback): ensure system venv tools are present, then install inside venv
+
+    ```bash
+    sudo apt update
+    sudo apt install -y python3-venv python3-full
+    python3 -m venv .venv
+    . .venv/bin/activate
+    pip install -e '.[dev]'
+    ```
+
+Notes:
+
+- In zsh, keep the quotes around '.[dev]'.
+- If zsh asks to correct 'venv' to '.venv', choose '.venv'.
 
 ### 🏗️ Core Development Patterns
 
@@ -109,7 +191,7 @@ def my_tool() -> StepResult:
 ```python
 from ultimate_discord_intelligence_bot.tenancy import TenantContext, with_tenant
 
-with with_tenant(TenantContext("tenant", "workspace")):
+with with_tenant(TenantContext(tenant_id="tenant", workspace_id="workspace")):
     # All operations here are tenant-scoped
     # Memory namespaces automatically prefixed
     pass
@@ -173,8 +255,8 @@ def analyze_content(content: str) -> StepResult:
 #### Essential Reading (15 minutes)
 
 1. **`.github/copilot-instructions.md`** - Complete architectural guidance
-2. **`docs/conventions.md`** - Coding standards and patterns
-3. **`docs/feature_flags.md`** - Feature flag usage
+1. **`docs/conventions.md`** - Coding standards and patterns
+1. **`docs/feature_flags.md`** - Feature flag usage
 
 #### Reference Documentation
 
@@ -268,7 +350,7 @@ API_KEY = "secret"  # Use core.secure_config.get_config()
 
 #### Test Structure
 
-```
+```text
 tests/
 ├── test_core/           # Core module tests
 ├── test_analysis/       # Analysis pipeline tests
@@ -321,9 +403,9 @@ make type-guard  # Fail if mypy errors increase
 ### 📞 Getting Help
 
 1. **AI Assistance**: Enhanced copilot instructions provide comprehensive guidance
-2. **Documentation**: 50+ guides in `docs/` directory
-3. **Code Examples**: Search existing tools and modules for patterns
-4. **Architecture**: Follow the patterns in `core/` modules
+1. **Documentation**: 50+ guides in `docs/` directory
+1. **Code Examples**: Search existing tools and modules for patterns
+1. **Architecture**: Follow the patterns in `core/` modules
 
 ### 🎉 You're Ready
 
@@ -340,8 +422,8 @@ This codebase is optimized for AI-assisted development. The enhanced copilot ins
 **Next Steps**:
 
 1. Read `.github/copilot-instructions.md` for complete architectural guidance
-2. Explore existing tools and modules to understand patterns
-3. Start with small changes to get familiar with the structure
-4. Leverage AI assistance for development tasks
+1. Explore existing tools and modules to understand patterns
+1. Start with small changes to get familiar with the structure
+1. Leverage AI assistance for development tasks
 
 Welcome to the Ultimate Discord Intelligence Bot development team! 🚀

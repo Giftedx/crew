@@ -9,9 +9,10 @@ PKG := ultimate_discord_intelligence_bot
 .PHONY: install dev lint format format-check type test eval docs pre-commit deprecations deprecations-json deprecations-strict deprecations-badge guards ci-all clean deep-clean organize-root maintain-archive
 .PHONY: docs-strict
 .PHONY: ops-queue
-.PHONY: test-fast ci-fast
+.PHONY: test-fast ci-fast agent-evals-ci
 .PHONY: ensure-venv uv-lock uv-sync uv-bootstrap
 .PHONY: install dev lint format format-check type type-changed type-baseline type-baseline-update test eval docs pre-commit hooks deprecations deprecations-json deprecations-strict deprecations-badge guards ci-all clean clean-bytecode deep-clean warn-venv organize-root maintain-archive
+.PHONY: run-discord-enhanced
 
 # Target definitions are below to avoid duplicates
 
@@ -22,7 +23,7 @@ install:
 dev: install pre-commit
 
 pre-commit:
-	pre-commit install --install-hooks
+	$(PYTHON) -m pre_commit install --install-hooks
 
 bootstrap:
 	$(PYTHON) scripts/bootstrap_env.py
@@ -36,6 +37,33 @@ clean-bytecode:
 setup:
 	$(PYTHON) -m ultimate_discord_intelligence_bot.setup_cli wizard
 
+# Initialize local environment file from template (idempotent)
+.PHONY: init-env
+init-env:
+	@if [ -f .env ]; then \
+		echo "[init-env] .env already exists; skipping"; \
+	else \
+		cp .env.example .env && echo "[init-env] Created .env from .env.example"; \
+		echo "[init-env] Next: edit .env and set DISCORD_BOT_TOKEN and one of OPENAI_API_KEY/OPENROUTER_API_KEY"; \
+	fi
+
+# First-time developer bootstrap (prefers uv if available)
+.PHONY: first-run
+first-run:
+	@if command -v uv >/dev/null 2>&1; then \
+		echo "[first-run] Using uv for bootstrap"; \
+		if [ ! -d .venv ]; then uv venv --python 3.11; fi; \
+		. .venv/bin/activate && uv pip install -e '.[dev]'; \
+	else \
+		echo "[first-run] uv not found; falling back to ensure-venv (pip)"; \
+		$(MAKE) ensure-venv; \
+	fi
+	$(MAKE) setup-hooks
+	@echo "[first-run] Checking environment (doctor). If this fails due to secrets, we'll continue."
+	-$(MAKE) doctor || echo "[first-run] Doctor reported issues (likely missing DISCORD_BOT_TOKEN). Run 'make init-env' then edit .env."
+	$(MAKE) quick-check
+	@echo "[first-run] Complete. If doctor flagged secrets, run: make init-env && $$(command -v code >/dev/null 2>&1 && echo 'code .' || echo 'vim .env')"
+
 warn-venv:
 	@if [ -d venv ] && [ ! -L venv ]; then \
 		echo "[warn-venv] Detected legacy 'venv/' directory. Canonical environment is '.venv/'. Consider removing 'venv/' to avoid confusion."; \
@@ -47,6 +75,16 @@ doctor:
 	$(PYTHON) -m ultimate_discord_intelligence_bot.setup_cli doctor
 
 run-discord:
+	$(PYTHON) -m ultimate_discord_intelligence_bot.setup_cli run discord
+
+# Convenience: run Discord with enhancement flags (shadow-safe by default)
+run-discord-enhanced:
+	ENABLE_GPTCACHE=true \
+	ENABLE_SEMANTIC_CACHE_SHADOW=true \
+	ENABLE_GPTCACHE_ANALYSIS_SHADOW=true \
+	ENABLE_PROMPT_COMPRESSION=true \
+	ENABLE_GRAPH_MEMORY=true \
+	ENABLE_HIPPORAG_MEMORY=true \
 	$(PYTHON) -m ultimate_discord_intelligence_bot.setup_cli run discord
 
 run-crew:
@@ -111,7 +149,10 @@ test-fast:
 test-fast-clean-env:
 	env -u RETRY_MAX_ATTEMPTS $(PYTHON) -m pytest -q -c config/pytest.ini -k "http_utils or guards_http_requests or vector_store_dimension or vector_store_namespace"
 
-ci-fast: docs guards test-fast
+ci-fast: docs guards test-fast agent-evals-ci
+
+agent-evals-ci:
+	$(PYTHON) scripts/run_agentevals_ci.py
 
 # Quick A2A test sweep (router + client)
 .PHONY: test-a2a

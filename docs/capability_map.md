@@ -127,7 +127,7 @@ Ingestion → Transcription → Analysis (segment, topics, rerank) → Memory (s
 - Analysis: `enable_token_aware_chunker`, `token_chunk_target_tokens`, `enable_reranker`, `rerank_provider`, `enable_faster_whisper`, `whisper_model`
 - Memory/Cache: `ENABLE_CACHE_GLOBAL`, `ENABLE_CACHE_TRANSCRIPT`, `ENABLE_CACHE_VECTOR`, `ENABLE_HTTP_CACHE`, `enable_http_negative_cache`
 - Routing/RL: `ENABLE_RL_GLOBAL`, `ENABLE_RL_ROUTING`, `ENABLE_RL_PROMPT`, `ENABLE_RL_RETRIEVAL`, `ENABLE_EXPERIMENT_HARNESS`, `ENABLE_RL_SHADOW`, `ENABLE_RL_LINTS`
-- HTTP Retry: `ENABLE_HTTP_RETRY`, `RETRY_MAX_ATTEMPTS` (with `config/retry.yaml` overrides)
+- HTTP Retry: `ENABLE_HTTP_RETRY`, `RETRY_MAX_ATTEMPTS` (environment variable or secure config)
 - Observability: `ENABLE_TRACING`, `ENABLE_PROMETHEUS_ENDPOINT`, `ENABLE_DEGRADATION_REPORTER`
 - Security/Rate limiting: `ENABLE_RATE_LIMITING` (+ Redis url), moderation and network policies via `config/security.yaml`
 

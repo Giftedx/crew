@@ -13,9 +13,8 @@ import logging
 from pathlib import Path
 from typing import Any
 
-from ultimate_discord_intelligence_bot.step_result import StepResult
-
 from core.time import default_utc_now
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 from .code_intelligence import CodeIntelligenceEngine
 from .predictive_operations import PerformanceMetric, PredictiveOperationsEngine, ResourceType

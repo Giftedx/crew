@@ -9,9 +9,8 @@ import json
 import sqlite3
 from datetime import datetime, timedelta
 
-from policy import policy_engine
-
 from core.time import default_utc_now
+from policy import policy_engine
 
 
 def sweep(conn: sqlite3.Connection, *, tenant: str | None = None, now: datetime | None = None) -> int:

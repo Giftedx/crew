@@ -20,7 +20,7 @@ class _MonitorResult(TypedDict):
     new_items: list[dict[str, str]]
 
 
-class MultiPlatformMonitorTool(BaseTool):
+class MultiPlatformMonitorTool(BaseTool[StepResult]):
     """Return unseen content items.
 
     The tool keeps an in-memory set of identifiers for items it has already

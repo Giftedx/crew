@@ -1,4 +1,5 @@
 import pytest
+
 from ultimate_discord_intelligence_bot.services.openrouter_service import OpenRouterService
 
 

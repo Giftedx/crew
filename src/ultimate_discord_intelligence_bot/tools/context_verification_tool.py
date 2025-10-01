@@ -18,7 +18,7 @@ class _ContextVerificationResult(TypedDict):
     notes: str
 
 
-class ContextVerificationTool(BaseTool):
+class ContextVerificationTool(BaseTool[StepResult]):
     """Check if provided clip text appears in transcript around a timestamp."""
 
     name: str = "Context Verification Tool"
@@ -39,7 +39,7 @@ class ContextVerificationTool(BaseTool):
                 self._metrics.counter(
                     "tool_runs_total", labels={"tool": "context_verification", "outcome": "skipped"}
                 ).inc()
-                return StepResult.ok(skipped=True, verdict="uncertain", context="", notes="no transcript indexed")
+                return StepResult.skip(verdict="uncertain", context="", notes="no transcript indexed")
             if clip_text and clip_text.strip() in context:
                 verdict = "in-context"
                 notes = "clip text matches context"

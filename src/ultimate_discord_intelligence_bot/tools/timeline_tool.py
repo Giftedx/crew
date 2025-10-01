@@ -34,7 +34,7 @@ class TimelineEvent(TypedDict, total=False):
     evidence: list[Any]
 
 
-class TimelineTool(BaseTool):
+class TimelineTool(BaseTool[StepResult]):
     """Store timeline events per video with sources."""
 
     name: str = "Timeline Tool"
@@ -106,7 +106,7 @@ class TimelineTool(BaseTool):
 
     def _run(self, action: str, **kwargs: object) -> StepResult:
         try:
-            if action == "add":
+            if action in {"add", "record"}:
                 video_id = cast(str, kwargs["video_id"])  # Expect caller contract
                 event = cast(TimelineEvent, kwargs.get("event", {}))
                 self.add_event(video_id, event)
@@ -118,7 +118,7 @@ class TimelineTool(BaseTool):
                 self._metrics.counter("tool_runs_total", labels={"tool": "timeline", "outcome": "success"}).inc()
                 return StepResult.ok(events=events)
             self._metrics.counter("tool_runs_total", labels={"tool": "timeline", "outcome": "skipped"}).inc()
-            return StepResult.ok(skipped=True, reason="unknown action")
+            return StepResult.skip(reason="unknown action", action=action)
         except Exception as exc:  # pragma: no cover - defensive
             self._metrics.counter("tool_runs_total", labels={"tool": "timeline", "outcome": "error"}).inc()
             return StepResult.fail(error=str(exc))

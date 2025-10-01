@@ -116,8 +116,7 @@ class LogicalFallacyTool(BaseTool[StepResult]):
 
         if not text or not text.strip():
             self._metrics.counter("tool_runs_total", labels={"tool": "logical_fallacy", "outcome": "skipped"}).inc()
-            return StepResult.ok(
-                skipped=True,
+            return StepResult.skip(
                 reason="empty text",
                 fallacies=[],
                 count=0,

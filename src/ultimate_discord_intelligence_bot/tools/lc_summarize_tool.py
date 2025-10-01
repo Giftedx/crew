@@ -129,12 +129,29 @@ class LCSummarizeTool(BaseTool[StepResult]):
         super().__init__()
         self._metrics = get_metrics()
 
-    def run(self, text: str, max_sentences: int = 3) -> StepResult:  # pragma: no cover - thin wrapper
+    def run(self, *args, **kwargs) -> StepResult:  # pragma: no cover - thin wrapper
+        # Accept flexible args to tolerate agent mis-specification
+        text = ""
+        if args and len(args) > 0:
+            text = str(args[0])
+        else:
+            # Accept alias 'content' used by some agents
+            text = str(kwargs.get("text", kwargs.get("content", "")))
         try:
-            max_sentences = int(max(1, min(10, max_sentences)))
+            max_sentences = int(max(1, min(10, int(kwargs.get("max_sentences", 3)))))
         except Exception:
             max_sentences = 3
         try:
+            if not text.strip():
+                try:
+                    self._metrics.counter(
+                        "tool_runs_total", labels={"tool": "lc_summarize", "outcome": "skipped"}
+                    ).inc()
+                except Exception:
+                    pass
+
+            if not text.strip():
+                return StepResult.skip(reason="empty text", data={"summary": "", "sentences": [], "count": 0})
             res = _summarize(text or "", max_sentences)
             data = {"summary": res.summary, "sentences": res.sentences, "count": len(res.sentences)}
             try:

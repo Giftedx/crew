@@ -5,7 +5,7 @@ from pathlib import Path
 # absence on subsequent reloads (importlib.reload). Without this, load_dotenv()
 # would re-populate deleted variables, preventing override-clearing tests.
 _DOTENV_LOADED = globals().get("_DOTENV_LOADED", False)
-_DISABLE_DOTENV = os.getenv("CREW_DISABLE_DOTENV") == "1"
+_DISABLE_DOTENV = os.getenv("CREW_DISABLE_DOTENV") == "1" or (os.getenv("PYTEST_CURRENT_TEST") is not None)
 if not _DOTENV_LOADED and not _DISABLE_DOTENV:
     try:
         from dotenv import load_dotenv
@@ -14,6 +14,9 @@ if not _DOTENV_LOADED and not _DISABLE_DOTENV:
     except ImportError:
         pass  # dotenv is optional
     _DOTENV_LOADED = True
+
+# In CI/tests where a committed .env may exist, honor the sentinel to prevent reloading on module reloads.
+globals()["_DOTENV_LOADED"] = _DOTENV_LOADED
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
@@ -57,11 +60,19 @@ def _get_path_setting(key: str, default_path: Path) -> Path:
 
 
 def _get_setting(key: str, default: str = "") -> str:
-    """Get string setting with fallback to environment variable."""
+    """Get string setting preferring environment variable, then secure config.
+
+    Tests rely on environment taking precedence over any secure-config defaults.
+    """
+    # Highest priority: environment variable
+    env_val = os.getenv(key.upper())
+    if env_val is not None:
+        return env_val
+    # Fallback: optional secure config
     config = _get_config()
     if config:
         return config.get_setting(key, default)
-    return os.getenv(key.upper(), default)
+    return default
 
 
 # Base directories (computed lazily)

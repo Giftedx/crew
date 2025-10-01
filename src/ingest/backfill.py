@@ -17,9 +17,8 @@ from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from core.time import default_utc_now
-from scheduler.priority_queue import PriorityQueue
-
 from ingest import pipeline as ingest_pipeline
+from scheduler.priority_queue import PriorityQueue
 
 logger = logging.getLogger(__name__)
 

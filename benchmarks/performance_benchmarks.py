@@ -13,6 +13,7 @@ from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
+
 from ultimate_discord_intelligence_bot.pipeline import ContentPipeline
 from ultimate_discord_intelligence_bot.tenancy import TenantContext, with_tenant
 

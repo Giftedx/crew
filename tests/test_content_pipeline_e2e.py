@@ -8,6 +8,7 @@ import asyncio
 from unittest.mock import MagicMock, patch
 
 import pytest
+
 from ultimate_discord_intelligence_bot.pipeline import ContentPipeline
 from ultimate_discord_intelligence_bot.tenancy import TenantContext, with_tenant
 
@@ -129,6 +130,7 @@ class TestContentPipelineE2E:
         assert "fallacy" in result
         assert "perspective" in result
         assert "memory" in result
+        assert "graph_memory" in result
 
         # Verify all tools were called
         pipeline.downloader.run.assert_called_once_with(test_url, quality="720p")
@@ -139,6 +141,40 @@ class TestContentPipelineE2E:
         pipeline.fallacy_detector.run.assert_called_once()
         pipeline.perspective.run.assert_called_once()
         pipeline.memory.run.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_pipeline_graph_memory_enabled(self, mock_tools):
+        graph_memory = MagicMock()
+        graph_memory.run.return_value = {
+            "status": "success",
+            "graph_id": "graph123",
+            "node_count": 4,
+            "edge_count": 3,
+        }
+        mock_tools["perspective"].run.return_value["summary"] = "Concise narrative summary"
+
+        pipeline = ContentPipeline(
+            webhook_url="https://discord.com/api/webhooks/test",
+            downloader=mock_tools["downloader"],
+            transcriber=mock_tools["transcriber"],
+            analyzer=mock_tools["analyzer"],
+            drive=mock_tools["drive"],
+            discord=mock_tools["discord"],
+            fallacy_detector=mock_tools["fallacy_detector"],
+            perspective=mock_tools["perspective"],
+            memory=mock_tools["memory"],
+            graph_memory=graph_memory,
+            pipeline_rate_limit=60.0,
+            tool_rate_limit=60.0,
+        )
+
+        test_url = "https://www.youtube.com/watch?v=test123"
+
+        with with_tenant(TenantContext("test_tenant", "test_workspace")):
+            result = await pipeline.process_video(test_url)
+
+        graph_memory.run.assert_called_once()
+        assert result["graph_memory"].get("graph_id") == "graph123"
 
     @pytest.mark.asyncio
     async def test_pipeline_download_failure(self, pipeline):

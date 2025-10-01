@@ -1,18 +1,29 @@
-"""Shim package that exposes command helpers and discord.py classes.
+"""Local discord shim for ops/testing utilities.
 
-The actual ``discord`` import is performed lazily via ``import_module`` so
-tests that do not install the optional dependency still import this shim
-without failing (tools using the real client will provide it in prod).
+This lightweight package only exists to satisfy unit tests that import
+``from discord import commands`` and call helper functions like
+``ops_incident_open`` or ``ops_ingest_queue_status``. It is not a
+replacement for the real ``discord.py`` library used by the runtime.
+
+At runtime, the bot imports the genuine library via
+``ultimate_discord_intelligence_bot.discord_bot.discord_env`` which
+explicitly avoids this shim. Tests, however, purposefully use this shim
+to avoid bringing in the heavy gateway dependency.
 """
 
-from importlib import import_module
+from typing import Any
 
-from . import commands  # re-export lightweight command helpers
+from . import commands as commands  # re-export for ``from discord import commands``
 
-_discord = import_module("discord")  # noqa: PLC0415 - dynamic optional dependency load
+__all__ = ["commands"]
+"""Local 'discord' shim disabled.
 
-Client = getattr(_discord, "Client", object)
-Intents = getattr(_discord, "Intents", object)
-File = getattr(_discord, "File", object)
+This repository previously contained a test-only shim at ``src/discord`` that
+shadowed the real ``discord.py`` package. To prevent accidental shadowing and
+restore full gateway functionality, the shim now raises on access. Install the
+official dependency instead: ``pip install discord.py``.
+"""
 
-__all__ = ["commands", "Client", "Intents", "File"]
+
+def __getattr__(name: str) -> Any:  # pragma: no cover - shim should not be used
+    raise ImportError("Local 'src/discord' shim is disabled. Install 'discord.py' and import the real package.")

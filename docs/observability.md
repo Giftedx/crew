@@ -158,7 +158,7 @@ tool_runs_total{tool="<tool_name>", outcome="success|error|skipped"}
 Guidelines:
 
 1. Always increment exactly one outcome per invocation (including skips).
-1. Use `skipped` (not a separate status code) by returning `StepResult.ok(skipped=True, reason=...)`.
+1. Use `skipped` (not a separate status code) by returning `StepResult.skip(...)` with contextual metadata.
 1. Add a latency histogram *only* for materially expensive operations (network/multi‑step / long CPU). Current name:
 
 - `tool_run_seconds{tool="<tool_name>"}`
@@ -179,7 +179,7 @@ class ExampleTool:
   def run(self, payload: str) -> StepResult:
     if not payload:
       self._metrics.counter("tool_runs_total", labels={"tool": "example", "outcome": "skipped"}).inc()
-      return StepResult.ok(skipped=True, reason="empty payload")
+      return StepResult.skip(state="skipped", reason="empty payload")
     try:
       # ... work ...
       self._metrics.counter("tool_runs_total", labels={"tool": "example", "outcome": "success"}).inc()
@@ -208,13 +208,15 @@ except Exception as e:
 
 ### Skip Semantics
 
-Legacy `StepResult.skip(...)` is deprecated. Always express skips as:
+Use `StepResult.skip(...)` for intentional skip paths so the pipeline automatically records a `skipped` outcome and the serialized payload surfaces `status="skipped"`.
+
+When including additional metadata, avoid embedding another `status` key inside the data payload; prefer neutral fields such as `state` or `reason`:
 
 ```python
-return StepResult.ok(skipped=True, reason="No XYZ provided")
+return StepResult.skip(state="skipped", reason="No XYZ provided")
 ```
 
-This keeps the success path uniform while still allowing downstream logic / dashboards to distinguish skipped executions via a boolean flag or the `outcome="skipped"` counter label.
+Downstream dashboards rely on the StepResult's own status field, so keeping the payload free of conflicting `status` values prevents ambiguity while still communicating context.
 
 ### Enforcement Guard
 

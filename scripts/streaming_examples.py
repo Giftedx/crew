@@ -10,6 +10,8 @@ import asyncio
 import traceback
 from unittest.mock import MagicMock
 
+from pydantic import BaseModel
+
 # Import the streaming components
 from core.structured_llm_service import (
     ProgressCallback,
@@ -17,7 +19,6 @@ from core.structured_llm_service import (
     StreamingStructuredRequest,
     StructuredLLMService,
 )
-from pydantic import BaseModel
 
 
 def create_mock_openrouter_service():

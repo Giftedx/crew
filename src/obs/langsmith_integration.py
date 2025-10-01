@@ -17,9 +17,8 @@ from dataclasses import asdict, dataclass
 from typing import TYPE_CHECKING, Any
 
 from core.secure_config import get_config
-from ultimate_discord_intelligence_bot.tenancy.context import current_tenant
-
 from obs import metrics
+from ultimate_discord_intelligence_bot.tenancy.context import current_tenant
 
 # Optional LangSmith dependency handling.
 # We define LANGSMITH_AVAILABLE in all branches to avoid NameError at runtime

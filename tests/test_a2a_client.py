@@ -4,6 +4,7 @@ import json
 from typing import Any
 
 import pytest
+
 from client.a2a_client import A2AClient, A2AClientConfig, JsonRpcError
 
 

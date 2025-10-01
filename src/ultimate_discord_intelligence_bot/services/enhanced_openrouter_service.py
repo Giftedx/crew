@@ -581,7 +581,7 @@ class EnhancedOpenRouterService:
 
     def _build_cache_key(self, prompt: str, model: str, provider_opts: dict | None) -> str:
         """Build semantic cache key."""
-        norm_prompt = self.prompt_engine.optimise(prompt)
+        norm_prompt = prompt
         opts_str = str(sorted(provider_opts.items())) if provider_opts else ""
         # Use canonical key function for compatibility with RedisLLMCache/BoundedLRUCache
         return make_key(f"{norm_prompt}|opts={opts_str}", model)

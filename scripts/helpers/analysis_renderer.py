@@ -1,5 +1,6 @@
 """Helper functions for rendering analysis results in Discord."""
 
+from collections.abc import Mapping
 from typing import Any
 
 import discord
@@ -12,21 +13,49 @@ MAX_KEYWORD_TEXT_LENGTH = 200
 
 
 def extract_result_data(result) -> tuple[str, dict, str | None, float]:
-    """Extract status, data, error, and processing time from result."""
-    if hasattr(result, "status"):
-        status = getattr(result, "status", "unknown")
-        data = getattr(result, "data", {})
+    """Extract status, data, error, and processing time from a variety of result shapes.
+
+    Supports:
+    - StepResult-like objects (have `.success`, `.data`, `.error`)
+    - Mapping/dict shapes with keys: status/data/error/processing_time
+    - Fallback to attribute-based `status/data/error` if present
+    """
+    # StepResult-like (preferred): expose success/error/data consistently
+    if hasattr(result, "success") and hasattr(result, "data"):
+        status = "success" if bool(getattr(result, "success", False)) else "error"
+        data = getattr(result, "data", {}) or {}
         error = getattr(result, "error", None)
         processing_time = getattr(result, "processing_time", 0) or 0
-    elif isinstance(result, dict):
-        status = result.get("status", "unknown")
-        data = result.get("data", {})
-        error = result.get("error", None)
-        processing_time = result.get("processing_time", 0) or 0
-    else:
-        raise ValueError(f"Unexpected result format: {str(result)[:200]}")
+        return status, data, error, processing_time
 
-    return status, data, error, processing_time
+    # Mapping/dict-like (including StepResult acting as Mapping)
+    if isinstance(result, Mapping):
+        # Try to derive a sensible status when missing
+        status = result.get("status")  # type: ignore[index]
+        if not status:
+            if result.get("error") is not None:  # type: ignore[index]
+                status = "error"
+            elif bool(result.get("success")):  # type: ignore[index]
+                status = "success"
+            else:
+                status = "unknown"
+        data = result.get("data", {})  # type: ignore[index]
+        error = result.get("error", None)  # type: ignore[index]
+        processing_time = result.get("processing_time", 0) or 0  # type: ignore[index]
+        # Ensure mapping for data
+        if not isinstance(data, dict):
+            data = {}
+        return str(status), data, error, processing_time
+
+    # Attribute fallback (rare)
+    if hasattr(result, "status") or hasattr(result, "data"):
+        status = getattr(result, "status", "unknown")
+        data = getattr(result, "data", {}) or {}
+        error = getattr(result, "error", None)
+        processing_time = getattr(result, "processing_time", 0) or 0
+        return status, data, error, processing_time
+
+    raise ValueError(f"Unexpected result format: {str(result)[:200]}")
 
 
 def create_base_embed(platform: str, url: str, processing_time: float) -> Any:

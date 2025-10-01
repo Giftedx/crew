@@ -4,6 +4,8 @@ import json
 import os
 from pathlib import Path
 
+from pydantic import Field
+
 from core.http_utils import (
     DEFAULT_RATE_LIMIT_RETRY,
     HTTP_RATE_LIMITED,
@@ -12,9 +14,8 @@ from core.http_utils import (
     resilient_post,
     validate_public_https_url,
 )
+from core.secure_config import get_config
 from core.time import default_utc_now
-from pydantic import Field
-
 from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
@@ -40,12 +41,18 @@ class DiscordPostTool(BaseTool[StepResult]):
     name: str = "Discord Post Tool"
     description: str = "Post content notifications to Discord with proper formatting"
 
-    webhook_url: str = Field(default="")
+    webhook_url: str | None = Field(default=None)
 
-    def __init__(self, webhook_url: str):
-        # Use BaseTool/Pydantic init for proper field setup then override value
+    def __init__(self, webhook_url: str | None = None):
         super().__init__()
-        object.__setattr__(self, "webhook_url", validate_public_https_url(webhook_url))
+        # If no webhook_url is provided, it will default to the one from settings.
+        self.webhook_url = webhook_url or get_config("DISCORD_WEBHOOK")
+        if not self.webhook_url:
+            # Raise a more informative error if the config is missing.
+            raise ValueError(
+                "Discord webhook URL is not configured. Please set DISCORD_WEBHOOK in your environment or config."
+            )
+        validate_public_https_url(self.webhook_url)
         self._metrics = get_metrics()
         # Optional env switch to force embed-only posts regardless of file size
         self._force_embeds = os.getenv("DISCORD_FORCE_EMBEDS", "0").strip() in {"1", "true", "True"}
@@ -64,7 +71,7 @@ class DiscordPostTool(BaseTool[StepResult]):
         """
         if not content_data:
             self._metrics.counter("tool_runs_total", labels={"tool": "discord_post", "outcome": "skipped"}).inc()
-            return StepResult.ok(skipped=True, reason="empty content data")
+            return StepResult.skip(reason="empty content data")
 
         # Prefer real on-disk size if we have a local path; fallback to metadata
         local_file_path = content_data.get("local_path")
@@ -99,6 +106,11 @@ class DiscordPostTool(BaseTool[StepResult]):
 
     def _post_with_embed_links(self, content_data: dict, drive_links: dict) -> StepResult:
         """Post using structured embeds with links (recommended approach)"""
+        # Detect Drive skip and craft a helpful note instead of empty links
+        drive_skipped = isinstance(drive_links, dict) and drive_links.get("status") == "skipped"
+        skip_message = (
+            (str(drive_links.get("message")) if drive_skipped else "") if isinstance(drive_links, dict) else ""
+        )
 
         embed = {
             "title": content_data.get("title", "New Content Available"),
@@ -111,22 +123,32 @@ class DiscordPostTool(BaseTool[StepResult]):
                 # Drive metadata may be missing if upload failed but we still
                 # want to send a notification. Using ``get`` avoids KeyError
                 # while allowing Discord to render an empty thumbnail slot.
-                "url": drive_links.get("thumbnail", "")
+                "url": "" if drive_skipped else drive_links.get("thumbnail", "")
             },
-            "fields": [
-                {
-                    "name": "🎥 Watch Online",
-                    # Safely access links; an empty string renders a plain label
-                    # rather than raising an exception and losing the update.
-                    "value": f"[Google Drive Preview]({drive_links.get('preview_link', '')})",
-                    "inline": True,
-                },
-                {
-                    "name": "💾 Download",
-                    "value": f"[Direct Download]({drive_links.get('direct_link', '')})",
-                    "inline": True,
-                },
-            ],
+            "fields": (
+                [
+                    {
+                        "name": "ℹ️ Drive Upload",
+                        "value": skip_message or "Drive upload skipped",
+                        "inline": False,
+                    }
+                ]
+                if drive_skipped
+                else [
+                    {
+                        "name": "🎥 Watch Online",
+                        # Safely access links; an empty string renders a plain label
+                        # rather than raising an exception and losing the update.
+                        "value": f"[Google Drive Preview]({drive_links.get('preview_link', '')})",
+                        "inline": True,
+                    },
+                    {
+                        "name": "💾 Download",
+                        "value": f"[Direct Download]({drive_links.get('direct_link', '')})",
+                        "inline": True,
+                    },
+                ]
+            ),
             "footer": {
                 "text": "CrewAI Content Monitor",
                 "icon_url": "https://example.com/crewai-icon.png",
@@ -176,6 +198,20 @@ class DiscordPostTool(BaseTool[StepResult]):
 
         return self._handle_response(response)
 
+    def _post_simple_message(self, message: str, embeds: list[dict] | None = None) -> StepResult:
+        """Post a simple content-only message (optionally with embeds).
+
+        This path supports lightweight notifications and is tolerant of agents
+        that pass just a message string instead of the richer content_data structure.
+        """
+        if not isinstance(message, str) or not message.strip():
+            self._metrics.counter("tool_runs_total", labels={"tool": "discord_post", "outcome": "skipped"}).inc()
+            return StepResult.skip(reason="empty message")
+        payload: dict[str, object] = {"content": message}
+        if isinstance(embeds, list) and embeds:
+            payload["embeds"] = embeds
+        return self._send_webhook(payload)
+
     def _send_webhook(self, payload: dict) -> StepResult:
         """Send webhook with rate limiting"""
         try:
@@ -217,7 +253,7 @@ class DiscordPostTool(BaseTool[StepResult]):
                     # Non-numeric retry_after -> fallback to default; explicit except avoids blanket swallow
                     ...
             self._metrics.counter("tool_runs_total", labels={"tool": "discord_post", "outcome": "skipped"}).inc()
-            return StepResult.ok(skipped=True, reason="rate_limited", data={"retry_after": retry_after})
+            return StepResult.skip(reason="rate_limited", data={"retry_after": retry_after})
         else:
             self._metrics.counter("tool_runs_total", labels={"tool": "discord_post", "outcome": "error"}).inc()
             return StepResult.fail(
@@ -227,7 +263,43 @@ class DiscordPostTool(BaseTool[StepResult]):
     # Public run method to align with pipeline expectations
     def run(self, *args, **kwargs) -> StepResult:  # pragma: no cover - thin wrapper
         try:
-            return self._run(*args, **kwargs)
+            # Flexible dispatch:
+            # - run(message="...") or run("...")
+            # - run(content_data, drive_links) (legacy)
+            # - run(content_data) with drive_links kw (tolerated)
+            if "message" in kwargs or (args and isinstance(args[0], str)):
+                message = str(kwargs.get("message", args[0] if args else ""))
+                embeds = kwargs.get("embeds")
+                if not isinstance(embeds, list):
+                    embeds = None
+                return self._post_simple_message(message, embeds=embeds)
+
+            # Legacy structured path
+            content_data: dict = {}
+            drive_links: dict = {}
+            if args:
+                if len(args) == 1 and isinstance(args[0], dict):
+                    content_data = args[0]
+                    drive_links = kwargs.get("drive_links", {}) or {}
+                elif len(args) >= 2 and isinstance(args[0], dict) and isinstance(args[1], dict):
+                    content_data = args[0]
+                    drive_links = args[1]
+                else:
+                    # Unsupported shape → try to coerce or skip gracefully
+                    self._metrics.counter(
+                        "tool_runs_total", labels={"tool": "discord_post", "outcome": "skipped"}
+                    ).inc()
+                    return StepResult.skip(reason="unsupported arguments")
+            else:
+                content_data = kwargs.get("content_data", {}) or {}
+                drive_links = kwargs.get("drive_links", {}) or {}
+                if not isinstance(content_data, dict) or not isinstance(drive_links, dict):
+                    self._metrics.counter(
+                        "tool_runs_total", labels={"tool": "discord_post", "outcome": "skipped"}
+                    ).inc()
+                    return StepResult.skip(reason="invalid payloads")
+
+            return self._run(content_data, drive_links)
         except Exception as exc:  # pragma: no cover - unexpected
             self._metrics.counter("tool_runs_total", labels={"tool": "discord_post", "outcome": "error"}).inc()
             return StepResult.fail(error=str(exc))

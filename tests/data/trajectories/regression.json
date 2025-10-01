@@ -1,0 +1,64 @@
+[
+    {
+        "session_id": "regression_s1",
+        "user_input": "Summarize the marketing video transcript and flag key risks.",
+        "final_output": "The agent provided a concise summary with two highlighted risk points.",
+        "total_duration": 38.4,
+        "success": true,
+        "steps": [
+            {
+                "timestamp": 0.0,
+                "agent_role": "analyst",
+                "action_type": "reasoning",
+                "content": "Reviewing transcript and extracting major themes."
+            },
+            {
+                "timestamp": 12.2,
+                "agent_role": "analyst",
+                "action_type": "tool_call",
+                "tool_name": "knowledge_base_search",
+                "tool_args": {
+                    "query": "marketing risks"
+                },
+                "content": "Retrieved reference material on marketing campaign risks."
+            },
+            {
+                "timestamp": 22.9,
+                "agent_role": "analyst",
+                "action_type": "response",
+                "content": "Drafting summary with identified risk factors."
+            }
+        ]
+    },
+    {
+        "session_id": "regression_s2",
+        "user_input": "Provide a fact check on the product claims.",
+        "final_output": "All product claims are accurate based on the knowledge base.",
+        "total_duration": 24.5,
+        "success": true,
+        "steps": [
+            {
+                "timestamp": 0.0,
+                "agent_role": "fact_checker",
+                "action_type": "reasoning",
+                "content": "Reading transcript for product claims."
+            },
+            {
+                "timestamp": 6.1,
+                "agent_role": "fact_checker",
+                "action_type": "tool_call",
+                "tool_name": "product_database_lookup",
+                "tool_args": {
+                    "sku": "ABC-123"
+                },
+                "content": "Verified claim details in product database."
+            },
+            {
+                "timestamp": 15.3,
+                "agent_role": "fact_checker",
+                "action_type": "response",
+                "content": "Summarizing factual verification results."
+            }
+        ]
+    }
+]

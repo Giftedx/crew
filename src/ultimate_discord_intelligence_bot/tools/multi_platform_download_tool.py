@@ -25,7 +25,7 @@ from .yt_dlp_download_tool import (
 logger = logging.getLogger(__name__)
 
 
-class MultiPlatformDownloadTool(BaseTool):
+class MultiPlatformDownloadTool(BaseTool[StepResult]):
     """Dispatch to the correct platform downloader per instruction #3."""
 
     name: str = "Multi-Platform Download Tool"
@@ -62,7 +62,7 @@ class MultiPlatformDownloadTool(BaseTool):
             self._metrics.counter(
                 "tool_runs_total", labels={"tool": "multi_platform_download", "outcome": "skipped"}
             ).inc()
-            return StepResult.ok(skipped=True, reason="No URL provided")
+            return StepResult.skip(reason="No URL provided")
 
         try:
             # Parse URL to determine platform

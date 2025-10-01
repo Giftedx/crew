@@ -54,7 +54,7 @@ def generate_summary():
     print("   - Import: from ultimate_discord_intelligence_bot.step_result import StepResult")
     print("   - Success: return StepResult.ok(data={...})")
     print("   - Error: return StepResult.fail(error='...')")
-    print("   - Skip: return StepResult.ok(skipped=True, reason='...')")
+    print("   - Skip: return StepResult.skip(reason='...')")
 
     # Migration Priority
     print("\n📝 MIGRATION PRIORITY (High-Impact Tools):")

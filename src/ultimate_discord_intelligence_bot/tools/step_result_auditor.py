@@ -188,7 +188,7 @@ class StepResultAuditor:
             return "All tools are compliant!"
 
         guide = "# StepResult Migration Guide\n"
-        guide += "Per Copilot instruction #3: Every external/system step should yield StepResult.ok|fail (skips via ok(skipped=True)).\n\n"
+        guide += "Per Copilot instruction #3: Every external/system step should yield StepResult.ok|fail (skips via StepResult.skip(...)).\n\n"
 
         sample = (self.error_tools + self.advisory_tools)[:5]
         for tool_info in sample:  # Show first 5 as examples
@@ -228,7 +228,7 @@ class StepResultAuditor:
     return StepResult.fail(error="Error message", data={"details": ...})
 
    # For skipped operations:
-    return StepResult.ok(skipped=True, reason="Not applicable")
+        return StepResult.skip(reason="Not applicable")
    ```
 
 3. **Exception handling (per instruction #3):**

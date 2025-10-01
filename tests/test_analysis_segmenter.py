@@ -1,6 +1,7 @@
 """Tests for analysis.segmenter module."""
 
 import pytest
+
 from analysis.segmenter import Chunk, chunk_transcript
 from analysis.transcribe import Segment, Transcript
 

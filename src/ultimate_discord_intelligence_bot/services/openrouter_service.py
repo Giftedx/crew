@@ -1,19 +1,24 @@
-"""Dynamic model routing via the OpenRouter API.
-
-In production this service would query https://openrouter.ai to select a model
-and execute the request.  For testing and offline development we keep the
-implementation lightweight and fall back to a deterministic echo response when
-no API key is configured.
-"""
+"""Compatibility shim forwarding to the modular OpenRouter service package."""
 
 from __future__ import annotations
 
-import copy
-import logging
-import os as _os  # used for dynamic offline detection
-import time
-from collections.abc import Mapping
-from typing import Any
+import os as _os
+import time as _time
+
+from core.http_utils import resilient_post as _default_resilient_post
+
+__path__ = [_os.path.join(_os.path.dirname(__file__), "openrouter_service")]
+
+from .openrouter_service.service import OpenRouterService
+
+resilient_post = _default_resilient_post
+time = _time
+_semantic_cache_get = None
+
+__all__ = ["OpenRouterService", "_semantic_cache_get", "resilient_post", "time"]
+
+# Legacy implementation retained for reference only (unused at runtime).
+legacy_source = '''
 
 # Optional dependencies (graceful degradation if unavailable)
 try:  # pragma: no cover - optional distributed cache
@@ -53,7 +58,6 @@ except Exception:
         get_settings = _get_settings_fallback  # type: ignore[assignment]
 
 
-from core.flags import enabled  # tenancy strictness flags
 from obs import metrics
 
 try:
@@ -67,11 +71,23 @@ except Exception:  # pragma: no cover
         return None
 
 
-from ultimate_discord_intelligence_bot.tenancy.context import TenantContext, current_tenant
+from ultimate_discord_intelligence_bot.tenancy.context import TenantContext
 from ultimate_discord_intelligence_bot.tenancy.registry import TenantRegistry
 
 from .cache import RedisLLMCache, make_key
 from .logging_utils import AnalyticsStore
+from .openrouter_helpers import (
+    choose_model_from_map as _choose_model_from_map_helper,
+)
+from .openrouter_helpers import (
+    ctx_or_fallback as _ctx_or_fallback_helper,
+)
+from .openrouter_helpers import (
+    deep_merge as _deep_merge_helper,
+)
+from .openrouter_helpers import (
+    update_shadow_hit_ratio as _update_shadow_hit_ratio_helper,
+)
 from .prompt_engine import PromptEngine
 from .request_budget import current_request_tracker as _crt
 from .token_meter import TokenMeter
@@ -265,82 +281,21 @@ class OpenRouterService:
     # --- Tenancy helpers -------------------------------------------------
     @staticmethod
     def _ctx_or_fallback(component: str) -> TenantContext | None:
-        """Return current tenant or fallback/default according to flags.
-
-        If strict tenancy is enabled and no context is set, raise. Otherwise,
-        log a warning, increment the tenancy fallback metric, and return a
-        default context ("default:main").
-        """
-        ctx = current_tenant()
-        if ctx is not None:
-            return ctx
-        # Strict mode gates
-        if enabled("ENABLE_TENANCY_STRICT", False) or enabled("ENABLE_INGEST_STRICT", False):
-            raise RuntimeError("TenantContext required but not set (strict mode)")
-        logging.getLogger("tenancy").warning(
-            "TenantContext missing; defaulting to 'default:main' namespace (non-strict mode)",
-        )
-        try:
-            metrics.TENANCY_FALLBACKS.labels(**{**metrics.label_ctx(), "component": component}).inc()
-        except Exception as exc:  # pragma: no cover - metrics optional
-            logging.debug("tenancy metric increment failed: %s", exc)
-        return TenantContext("default", "main")
+        """Delegate to shared helper for tenancy fallback logic."""
+        return _ctx_or_fallback_helper(component)
 
     @staticmethod
     def _deep_merge(base: dict[str, Any], overrides: Mapping[str, Any]) -> dict[str, Any]:
-        """Recursively merge ``overrides`` into ``base``.
-
-        Args:
-            base: Dictionary to merge values into. Modified in place.
-            overrides: Mapping providing override values.
-
-        Returns:
-            The merged dictionary (identical to ``base``).
-        """
-        for key, value in overrides.items():
-            if key in base and isinstance(base[key], dict) and isinstance(value, Mapping):
-                base[key] = OpenRouterService._deep_merge(base[key], value)
-            else:
-                base[key] = copy.deepcopy(value)
-        return base
+        """Delegate to shared helper for deep merge logic."""
+        return _deep_merge_helper(base, overrides)
 
     def _update_shadow_hit_ratio(self, labels: dict[str, str], is_hit: bool) -> None:
-        """Update the semantic cache shadow mode hit ratio metric.
-
-        This calculates and updates a running hit ratio for observability.
-        """
-        try:
-            # This is a simplified hit ratio calculation
-            # In a production system, you might want a more sophisticated sliding window
-            # For now, we'll just track the instantaneous ratio via the gauge
-            if is_hit:
-                # For gauge metrics, we could track the ratio over time
-                # This is a basic implementation - in practice you might want to use
-                # a sliding window or more sophisticated ratio calculation
-                metrics.SEMANTIC_CACHE_SHADOW_HIT_RATIO.labels(**labels).set(1.0)
-            else:
-                metrics.SEMANTIC_CACHE_SHADOW_HIT_RATIO.labels(**labels).set(0.0)
-        except Exception:  # pragma: no cover
-            pass
+        """Delegate to shared helper for shadow hit ratio metric updates."""
+        _update_shadow_hit_ratio_helper(labels, is_hit)
 
     def _choose_model_from_map(self, task_type: str, models_map: dict[str, list[str]]) -> str:
-        """Pick a model for a given task type from the provided map.
-
-        Preference order:
-          1) task_type list
-          2) general list
-          3) conservative default
-        """
-        candidates = models_map.get(task_type) or models_map.get("general") or []
-        if candidates:
-            # Delegate to learning engine if multiple candidates exist
-            if len(candidates) > 1:
-                try:
-                    return self.learning.select_model(task_type, candidates)
-                except Exception:
-                    return candidates[0]
-            return candidates[0]
-        return "openai/gpt-3.5-turbo"
+        """Delegate to shared helper for model selection from map (keeps signature)."""
+        return _choose_model_from_map_helper(task_type, models_map, self.learning)
 
     def route(  # noqa: PLR0912, PLR0913, PLR0915, C901 - complex orchestrator; slated for helper extraction
         self,
@@ -656,7 +611,7 @@ class OpenRouterService:
                 # Conservative: ignore semantic cache errors
                 pass
         if self.cache:
-            norm_prompt = self.prompt_engine.optimise(prompt)
+            norm_prompt = prompt
 
             def _sig(obj: Any) -> str:
                 if isinstance(obj, dict):
@@ -1040,3 +995,4 @@ class OpenRouterService:
                 exc_info=True,
             )
             return {"status": "error", "error": str(exc), "model": chosen, "tokens": tokens_in, "provider": provider}
+'''

@@ -85,15 +85,16 @@ class DebateCommandTool(BaseTool[StepResult]):
                 analysis["status"] = "success"
             return analysis  # type: ignore[return-value]
 
-        def context() -> _DebateCommandResult:
-            return {"status": "success", "context": self.index.get_context(kwargs["video_id"], kwargs.get("ts", 0.0))}
+        def context() -> StepResult:
+            ctx = self.index.get_context(kwargs["video_id"], kwargs.get("ts", 0.0))
+            return StepResult.ok(data={"context": ctx})
 
-        def claim() -> _DebateCommandResult:
+        def claim() -> StepResult:
             # Normalize backend result into a StepResult for consistent handling
             res = self.fact_checker.run(kwargs["claim"])  # declared to return StepResult
             raw = res if isinstance(res, StepResult) else StepResult.from_dict(res)
             if not raw.success:
-                return {"status": "error", "error": raw.error or "fact checker failed"}
+                return StepResult.fail(error=raw.error or "fact checker failed")
             result: dict[str, Any] = dict(raw.data or {})
             person = kwargs.get("person")
             if person:
@@ -113,20 +114,18 @@ class DebateCommandTool(BaseTool[StepResult]):
                         "evidence": result.get("evidence", []),
                     },
                 )
-            if "status" not in result:
-                result["status"] = "success"
-            return result  # type: ignore[return-value]
+            return StepResult.ok(data=result)
 
-        def leaderboard() -> _DebateCommandResult:
-            return {"status": "success", "results": self.leaderboard.get_top(kwargs.get("n", 10))}
+        def leaderboard() -> StepResult:
+            return StepResult.ok(data={"results": self.leaderboard.get_top(kwargs.get("n", 10))})
 
-        def timeline() -> _DebateCommandResult:
-            return {"status": "success", "events": self.timeline.get_timeline(kwargs["video_id"])}
+        def timeline() -> StepResult:
+            return StepResult.ok(data={"events": self.timeline.get_timeline(kwargs["video_id"])})
 
-        def profile() -> _DebateCommandResult:
-            return {"status": "success", "profile": self.profile_tool.get_profile(kwargs["person"])}
+        def profile() -> StepResult:
+            return StepResult.ok(data={"profile": self.profile_tool.get_profile(kwargs["person"])})
 
-        def latest() -> _DebateCommandResult:
+        def latest() -> StepResult:
             prof = self.profile_tool.get_profile(kwargs["person"])  # may be None
             raw_events = prof.get("events", [])
 
@@ -143,26 +142,27 @@ class DebateCommandTool(BaseTool[StepResult]):
                 key=_key,
                 reverse=True,
             )
-            return {"status": "success", "events": events[: kwargs.get("n", 5)]}
+            return StepResult.ok(data={"events": events[: kwargs.get("n", 5)]})
 
-        def collabs() -> _DebateCommandResult:
-            return {"status": "success", "collabs": self.profile_store.get_collaborators(kwargs["person"])}
+        def collabs() -> StepResult:
+            return StepResult.ok(data={"collabs": self.profile_store.get_collaborators(kwargs["person"])})
 
-        def trends() -> _DebateCommandResult:
-            return {"status": "success", "trends": []}
+        def trends() -> StepResult:
+            return StepResult.ok(data={"trends": []})
 
-        def compare() -> _DebateCommandResult:
+        def compare() -> StepResult:
             a_key = kwargs["a"]
             b_key = kwargs["b"]
-            return {
-                "status": "success",
-                "compare": {
-                    a_key: self.profile_store.get_collaborators(a_key),
-                    b_key: self.profile_store.get_collaborators(b_key),
-                },
-            }
+            return StepResult.ok(
+                data={
+                    "compare": {
+                        a_key: self.profile_store.get_collaborators(a_key),
+                        b_key: self.profile_store.get_collaborators(b_key),
+                    }
+                }
+            )
 
-        def verify_profiles() -> _DebateCommandResult:
+        def verify_profiles() -> StepResult:
             # Allow overriding seed file path; fall back to repo config directory when a relative
             # local file is not present (tests rely on shipping config/profiles.yaml).
             seed_path = kwargs.get("seeds", "profiles.yaml")
@@ -175,7 +175,7 @@ class DebateCommandTool(BaseTool[StepResult]):
                             seed_path = str(candidate)
                 seeds = load_seeds(seed_path)
             except Exception as exc:  # pragma: no cover - unexpected seed load error
-                return {"status": "error", "error": f"Failed loading seeds: {exc}"}
+                return StepResult.fail(error=f"Failed loading seeds: {exc}")
             verified: list[str] = []
             for seed in seeds:
                 handles = seed.seed_handles
@@ -199,7 +199,7 @@ class DebateCommandTool(BaseTool[StepResult]):
                 )
                 self.profile_store.upsert_profile(profile_obj)
                 verified.append(seed.name)
-            return {"status": "success", "verified": verified}
+            return StepResult.ok(data={"verified": verified})
 
         registry: dict[str, Callable[[], Any]] = {
             "analyze": analyze,
@@ -219,18 +219,18 @@ class DebateCommandTool(BaseTool[StepResult]):
         handler = registry.get(command)
         if handler is None:
             self._metrics.counter("tool_runs_total", labels={"tool": "debate_command", "outcome": "skipped"}).inc()
-            return StepResult.ok(skipped=True, reason="unknown command", data={"command": command})
+            return StepResult.skip(reason="unknown command", data={"command": command})
         try:
             result = handler()
         except Exception as exc:  # pragma: no cover - unexpected handler failure
             self._metrics.counter("tool_runs_total", labels={"tool": "debate_command", "outcome": "error"}).inc()
             return StepResult.fail(error=str(exc))
+        if isinstance(result, StepResult):
+            return result
         if not isinstance(result, dict):
             self._metrics.counter("tool_runs_total", labels={"tool": "debate_command", "outcome": "error"}).inc()
             return StepResult.fail(error="handler returned unexpected type")
-        if "status" not in result:
-            result["status"] = "success"
-        # Success path
+        # Wrap legacy dicts
         self._metrics.counter("tool_runs_total", labels={"tool": "debate_command", "outcome": "success"}).inc()
         return StepResult.ok(data=result)
 

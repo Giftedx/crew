@@ -12,7 +12,7 @@ from ultimate_discord_intelligence_bot.step_result import StepResult
 from ._base import BaseTool
 
 
-class MockVectorSearchTool(BaseTool):
+class MockVectorSearchTool(BaseTool[StepResult]):
     """Mock vector search that works without external dependencies."""
 
     name: str = "Mock Vector Search Tool"

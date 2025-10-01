@@ -1,19 +1,31 @@
-# FastMCP server (optional)
+# FastMCP 2.0 Server (Enhanced Integration)
 
-This repository now includes an optional Model Context Protocol (MCP) server powered by FastMCP.
+This repository includes an advanced Model Context Protocol (MCP) server powered by FastMCP 2.0, with deep CrewAI integration for autonomous AI workflows.
 
-What you get (modular, feature-flagged):
+## New in FastMCP 2.0 Integration
+
+**Enhanced CrewAI Integration:**
+
+- CrewAI MCP Server: Expose CrewAI crew execution, monitoring, and control via MCP
+- FastMCP Client Tools: Enable CrewAI agents to call external MCP servers  
+- Bidirectional workflows: MCP clients can trigger CrewAI crews, crews can call MCP servers
+- Production-ready patterns with enterprise authentication and advanced routing
+
+**Core servers** (always available):
 
 - Core tools: `health_check()`, `echo(message, uppercase=False)`, `get_config_flag(name, default=None)`
 - Core resource: `settings://service_name`
-- Optional servers (enable with env flags):
-  - memory (ENABLE_MCP_MEMORY=1): vector search/list/sample
-  - router (ENABLE_MCP_ROUTER=1): cost estimates and advisory routing
-  - obs (ENABLE_MCP_OBS=1): health/counters; full metrics resource gated by ENABLE_MCP_OBS_PROM_RESOURCE=1
-  - kg (ENABLE_MCP_KG=1): KG subgraph/timeline; policy and grounding resources
-  - ingest (ENABLE_MCP_INGEST=1): safe YouTube/Twitch metadata, local transcript
-  - http (ENABLE_MCP_HTTP=1): allowlisted HTTPS GET with optional cache (set MCP_HTTP_ALLOWLIST)
-  - a2a (ENABLE_MCP_A2A=1): bridge to selected A2A tools (`tools.*`) via a single `a2a_call` tool
+
+**Optional servers** (enable with env flags):
+
+- memory (ENABLE_MCP_MEMORY=1): vector search/list/sample
+- router (ENABLE_MCP_ROUTER=1): cost estimates and advisory routing
+- obs (ENABLE_MCP_OBS=1): health/counters; full metrics resource gated by ENABLE_MCP_OBS_PROM_RESOURCE=1
+- kg (ENABLE_MCP_KG=1): KG subgraph/timeline; policy and grounding resources
+- ingest (ENABLE_MCP_INGEST=1): safe YouTube/Twitch metadata, local transcript
+- http (ENABLE_MCP_HTTP=1): allowlisted HTTPS GET with optional cache (set MCP_HTTP_ALLOWLIST)
+- a2a (ENABLE_MCP_A2A=1): bridge to selected A2A tools (`tools.*`) via a single `a2a_call` tool
+- **crewai (ENABLE_MCP_CREWAI=1): CrewAI crew execution, monitoring, and agent management**
 
 ## Install
 
@@ -94,6 +106,7 @@ crew_mcp
 | ingest (ENABLE_MCP_INGEST) | extract_metadata, list_channel_videos, fetch_transcript_local, summarize_subtitles | ingest://providers |
 | http (ENABLE_MCP_HTTP) | http_get, http_json_get | httpcfg://allowlist, httpcfg://example-header |
 | a2a (ENABLE_MCP_A2A) | a2a_call | a2a://skills, a2a://skills_full |
+| **crewai (ENABLE_MCP_CREWAI)** | **execute_crew, get_crew_status, list_available_crews, get_agent_performance, abort_crew_execution** | **crewai://agents, crewai://tasks, crewai://metrics/{execution_id}** |
 
 Tip: To discover resources in a client, request them by URI (many return JSON-like text).
 

@@ -8,11 +8,11 @@ return a mapping (dict‑like) containing:
     * evidence: list of {title, url, snippet}
 
 Behavior requirements inferred from tests:
-    * If a backend raises ``RequestException`` it is skipped silently and
-      the tool still returns success with remaining evidence.
-    * If the claim is empty we treat it as a skipped invocation (return
-      success with ``skipped=True`` metadata) to align with broader tool
-      conventions adopted in the migration.
+        * If a backend raises ``RequestException`` it is skipped silently and
+            the tool still returns success with remaining evidence.
+        * If the claim is empty we treat it as a skipped invocation using
+            ``StepResult.skip`` so the pipeline records a "skipped" outcome while
+            preserving the contract for downstream callers.
 
 Instrumentation (Copilot migration spec):
     * tool_runs_total{tool="fact_check", outcome=success|error|skipped}
@@ -46,7 +46,7 @@ class FactCheckTool:
         """
         if not claim:
             self._metrics.counter("tool_runs_total", labels={"tool": "fact_check", "outcome": "skipped"}).inc()
-            return StepResult.ok(skipped=True, reason="No claim provided", evidence=[], claim=claim)
+            return StepResult.skip(reason="No claim provided", evidence=[], claim=claim)
 
         evidence: list[dict] = []
         successful_backends: list[str] = []

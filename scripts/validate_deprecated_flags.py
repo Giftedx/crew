@@ -30,6 +30,7 @@ DOCS = ROOT / "docs"
 
 ALLOWED_PATH_SUBSTRINGS = {
     str(ROOT / "src" / "core" / "http_utils.py"),
+    str(ROOT / "src" / "core" / "http" / "retry.py"),
     str(ROOT / "docs" / "configuration.md"),
     str(ROOT / "docs" / "feature_flags.md"),
     str(ROOT / "docs" / "retries.md"),

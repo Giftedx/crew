@@ -9,9 +9,10 @@ tool usage patterns, reasoning workflows, and autonomous decision-making.
 import json
 import random
 from dataclasses import dataclass
-from datetime import datetime
 from pathlib import Path
 from typing import Any
+
+from core.time import default_utc_now
 
 
 @dataclass
@@ -199,7 +200,7 @@ class SyntheticDataGenerator:
     def _generate_context(self, agent_role: str, scenario: str, complexity: str) -> dict[str, Any]:
         """Generate realistic context for the scenario."""
         base_context = {
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": default_utc_now().isoformat(),
             "agent_role": agent_role,
             "complexity_level": complexity,
             "available_tools": self.tools_available,
@@ -524,7 +525,7 @@ class SyntheticDataGenerator:
 
         training_data = {
             "metadata": {
-                "generated_at": datetime.now().isoformat(),
+                "generated_at": default_utc_now().isoformat(),
                 "generator_version": "1.0",
                 "total_examples": len(examples),
                 "tools_available": self.tools_available,

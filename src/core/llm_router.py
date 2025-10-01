@@ -22,7 +22,7 @@ from typing import Any
 from ai.routing.bandit_router import ThompsonBanditRouter
 from ai.routing.linucb_router import LinUCBRouter
 from ai.routing.router_registry import RewardNormalizer, get_tenant_router, record_selection
-
+from ai.routing.vw_bandit_router import VWBanditRouter
 from core.llm_client import LLMCallResult, LLMClient
 
 try:  # metrics optional
@@ -52,15 +52,27 @@ class LLMRouter:
         self._feature_quality_min = float(os.getenv("FEATURE_QUALITY_MIN", "0.5") or 0.5)
         self._feature_min_norm = float(os.getenv("FEATURE_MIN_NORM", "0.0") or 0.0)
         self._feature_max_norm = float(os.getenv("FEATURE_MAX_NORM", "10.0") or 10.0)
+        self._vw_enabled = os.getenv("ENABLE_VW_BANDIT", "0").lower() in {"1", "true", "yes", "on"} or os.getenv(
+            "ENABLE_VOWPAL_WABBIT_BANDIT", "0"
+        ).lower() in {"1", "true", "yes", "on"}
+        # Type annotation for bandit router
+        self._bandit: VWBanditRouter | ThompsonBanditRouter
+
         if self._contextual_enabled:
             if self._linucb_dimension <= 0:
                 raise ValueError("LINUCB_DIMENSION must be > 0 when ENABLE_CONTEXTUAL_BANDIT=1")
             self._ctx_router: LinUCBRouter | None = LinUCBRouter(dimension=self._linucb_dimension)
             # In pure contextual mode we could disable classic bandit; for hybrid we keep one for fallback
-            self._bandit = get_tenant_router() if self._tenant_mode else ThompsonBanditRouter()
+            if self._vw_enabled:
+                self._bandit = VWBanditRouter()
+            else:
+                self._bandit = get_tenant_router() if self._tenant_mode else ThompsonBanditRouter()
         else:
             self._ctx_router = None
-            self._bandit = get_tenant_router() if self._tenant_mode else ThompsonBanditRouter()
+            if self._vw_enabled:
+                self._bandit = VWBanditRouter()
+            else:
+                self._bandit = get_tenant_router() if self._tenant_mode else ThompsonBanditRouter()
         self._reward_normalizer = RewardNormalizer()
         self._metrics = _obtain_metrics()
         if self._metrics:

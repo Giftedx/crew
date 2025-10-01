@@ -4,6 +4,7 @@ import types
 from dataclasses import dataclass
 
 import pytest
+
 from ingest import pipeline as ip
 
 

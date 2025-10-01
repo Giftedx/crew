@@ -99,6 +99,7 @@ def install_middleware_support() -> None:
             return original_request(self, method, path, **kw)
 
         async def terminal(req: Request):  # noqa: D401
+            # Call the original TestClient request which returns a Response
             return original_request(self, method, path, **kw)
 
         async def invoke(i: int, req: Request):
@@ -141,9 +142,13 @@ def install_middleware_support() -> None:
             "root_path": "",
             "http_version": "1.1",
         }
-        # Starlette style Request expects only scope; shim Request expects expanded params.
+
+        # Starlette style Request expects scope + receive; build a minimal receive callable.
+        async def _dummy_receive():  # type: ignore[return-value]
+            return {"type": "http.request", "body": b"", "more_body": False}
+
         try:
-            req = Request(scope)
+            req = Request(scope, receive=_dummy_receive)  # type: ignore[arg-type]
             if isinstance(getattr(req, "scope", None), dict):  # augment for limiter path lookup
                 req.scope.setdefault("path", path)
         except TypeError:  # shim path
@@ -154,7 +159,9 @@ def install_middleware_support() -> None:
                 else:
                     req.scope.setdefault("path", path)
             except Exception:  # fallback last resort
-                req = Request(scope)
+                req = Request(scope)  # type: ignore[call-arg]
+
+        # Ensure the middleware chain returns a FastAPI Response
         return asyncio.run(invoke(0, req))
 
     # Patch both public and private entry points to be safe across client variants

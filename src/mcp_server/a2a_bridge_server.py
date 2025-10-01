@@ -74,8 +74,8 @@ def _to_result(obj: Any) -> dict[str, Any]:
         return {"status": "error", "error": str(exc), "data": None}
 
 
-@a2a_mcp.tool
-def a2a_call(method: str, params: dict[str, Any] | None = None) -> dict:
+# Internal implementation kept undecorated so tests can import and call it directly
+def _a2a_call_impl(method: str, params: dict[str, Any] | None = None) -> dict:
     """Call an A2A tool by name (must start with 'tools.')."""
 
     name = str(method or "").strip()
@@ -95,6 +95,17 @@ def a2a_call(method: str, params: dict[str, Any] | None = None) -> dict:
         return {"status": "error", "error": str(exc)}
 
 
+# Expose plain callable for direct imports (tests call this symbol)
+def a2a_call(method: str, params: dict[str, Any] | None = None) -> dict:
+    return _a2a_call_impl(method, params)
+
+
+# Register decorated wrapper for MCP runtime under a distinct name to avoid shadowing the callable
+@a2a_mcp.tool
+def a2a_call_tool(method: str, params: dict[str, Any] | None = None) -> dict:  # pragma: no cover - thin wrapper
+    return _a2a_call_impl(method, params)
+
+
 @a2a_mcp.resource("a2a://skills")
 def skills_simple() -> list[str]:
     return sorted(list(_get_tools().keys()))
@@ -110,4 +121,4 @@ def skills_full() -> Any:
         return {"error": str(exc)}
 
 
-__all__ = ["a2a_mcp", "a2a_call", "skills_simple", "skills_full"]
+__all__ = ["a2a_mcp", "a2a_call", "a2a_call_tool", "skills_simple", "skills_full"]

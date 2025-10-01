@@ -50,6 +50,10 @@ _SAFE_REGISTRY: dict[str, tuple[str, list[str]]] = {
         "mcp_server.a2a_bridge_server",
         ["a2a_call"],
     ),
+    "crewai": (
+        "mcp_server.crewai_server",
+        ["list_available_crews", "get_crew_status", "execute_crew", "get_agent_performance", "abort_crew_execution"],
+    ),
 }
 
 

@@ -58,6 +58,7 @@ def get_comprehensive_tool_specs(tools_module) -> list[tuple]:
         (get_tool_class(tools_module, "MultiPlatformDownloadTool"), "multi_platform_download_tool", (), {}),
         (get_tool_class(tools_module, "MultiPlatformMonitorTool"), "multi_platform_monitor_tool", (), {}),
         (get_tool_class(tools_module, "PerspectiveSynthesizerTool"), "perspective_synthesizer_tool", (), {}),
+        (get_tool_class(tools_module, "DeceptionScoringTool"), "deception_scoring_tool", (), {}),
         (get_tool_class(tools_module, "PodcastResolverTool"), "podcast_resolver_tool", (), {}),
         (get_tool_class(tools_module, "RedditDownloadTool"), "reddit_download_tool", (), {}),
         (get_tool_class(tools_module, "SentimentTool"), "sentiment_tool", (), {}),

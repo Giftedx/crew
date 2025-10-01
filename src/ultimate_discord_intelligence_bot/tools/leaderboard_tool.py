@@ -138,7 +138,7 @@ class LeaderboardTool(BaseTool[StepResult]):
             self._metrics.counter("tool_runs_total", labels={"tool": "leaderboard", "outcome": "success"}).inc()
             return StepResult.ok(data={"action": "get", "result": result})
         self._metrics.counter("tool_runs_total", labels={"tool": "leaderboard", "outcome": "skipped"}).inc()
-        return StepResult.ok(skipped=True, reason="unknown action", data={"action": action})
+        return StepResult.skip(reason="unknown action", data={"action": action})
 
     def run(self, action: str, **kwargs: object) -> StepResult:  # pragma: no cover - thin wrapper
         try:

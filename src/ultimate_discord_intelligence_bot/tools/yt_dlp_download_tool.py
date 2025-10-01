@@ -24,7 +24,7 @@ from ..settings import DOWNLOADS_DIR, TEMP_DIR, YTDLP_ARCHIVE, YTDLP_CONFIG
 from ._base import BaseTool
 
 
-class YtDlpDownloadTool(BaseTool):
+class YtDlpDownloadTool(BaseTool[StepResult]):
     """Reusable yt-dlp wrapper.
 
     Subclasses only need to provide ``platform`` metadata. The command and
@@ -53,6 +53,52 @@ class YtDlpDownloadTool(BaseTool):
 
         str(YTDLP_CONFIG)
 
+        def _find_repo_root() -> Path | None:
+            current = Path(__file__).resolve()
+            for candidate in (current,) + tuple(current.parents):
+                try:
+                    if (candidate / "pyproject.toml").exists():
+                        return candidate
+                except Exception:
+                    continue
+            return None
+
+        def _iter_candidate_commands() -> list[list[str]]:
+            candidates: list[list[str]] = []
+
+            try:
+                cli_path = shutil.which("yt-dlp")
+            except Exception:
+                cli_path = None
+            if cli_path:
+                candidates.append([cli_path])
+
+            repo_root = _find_repo_root()
+            potential_bins = (
+                ".venv/bin/yt-dlp",
+                ".venv/Scripts/yt-dlp.exe",
+                "venv/bin/yt-dlp",
+                "venv/Scripts/yt-dlp.exe",
+            )
+            potential_pythons = (
+                ".venv/bin/python",
+                ".venv/Scripts/python.exe",
+                "venv/bin/python",
+                "venv/Scripts/python.exe",
+            )
+
+            if repo_root:
+                for rel in potential_bins:
+                    candidate_path = repo_root / rel
+                    if candidate_path.exists():
+                        candidates.append([str(candidate_path)])
+                for rel in potential_pythons:
+                    python_path = repo_root / rel
+                    if python_path.exists():
+                        candidates.append([str(python_path), "-m", "yt_dlp"])
+
+            return candidates
+
         match = re.match(r"(\d+)", quality)
         height = match.group(1) if match else "1080"
         format_selector = f"bv*[height<={height}]+ba/b[height<={height}]"
@@ -60,12 +106,16 @@ class YtDlpDownloadTool(BaseTool):
         # Use a simplified output template that doesn't require environment variables
         output_template = str(DOWNLOADS_DIR / "%(title)s [%(id)s].%(ext)s")
 
-        # Resolve yt-dlp path; fall back to `python -m yt_dlp` if CLI not on PATH
-        ytdlp_bin = shutil.which("yt-dlp")
-        if ytdlp_bin:
-            base_cmd = [ytdlp_bin]
-        else:
+        # Resolve yt-dlp path using multiple strategies so the tool works even when
+        # the script is executed outside the project virtualenv.
+        candidate_commands = _iter_candidate_commands()
+        base_cmd: list[str] | None = None
+        if candidate_commands:
+            base_cmd = candidate_commands[0]
+        if base_cmd is None:
             base_cmd = [sys.executable, "-m", "yt_dlp"]
+
+        resolved_runner = " ".join(base_cmd)
 
         command = [
             *base_cmd,
@@ -107,11 +157,11 @@ class YtDlpDownloadTool(BaseTool):
 
         def _success(**fields: Any) -> StepResult:
             self._metrics.counter("tool_runs_total", labels={"tool": "yt_dlp_download", "outcome": "success"}).inc()
-            return StepResult.ok(platform=self.platform, command=command_str, **fields)
+            return StepResult.ok(platform=self.platform, command=command_str, runner=resolved_runner, **fields)
 
         def _error(message: str) -> StepResult:
             self._metrics.counter("tool_runs_total", labels={"tool": "yt_dlp_download", "outcome": "error"}).inc()
-            return StepResult.fail(error=message, platform=self.platform, command=command_str)
+            return StepResult.fail(error=message, platform=self.platform, command=command_str, runner=resolved_runner)
 
         start = time.monotonic()
         try:

@@ -45,7 +45,7 @@ Legend: TBI = To Be Investigated.
 - HTTP & Caching:
   - [ ] No direct `requests`/`httpx` calls; use `src/core/http_utils.py` wrappers.
   - [ ] Use `cached_get` for cacheable GETs.
-  - [ ] Retry config via `config/retry.yaml` respected.
+  - [ ] Retry config via `RETRY_MAX_ATTEMPTS` env var or secure config respected.
 
 - Feature Flags & Deprecations:
   - [ ] `ENABLE_*` flags default off; documented.

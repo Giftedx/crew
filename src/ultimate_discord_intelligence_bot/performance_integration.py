@@ -221,6 +221,70 @@ class PerformanceIntegrationManager:
             self.logger.error(f"Alert checking failed: {e}")
             return []
 
+    async def track_crew_execution(
+        self,
+        execution_id: str,
+        agents_used: list[str],
+        tools_used: list[str],
+        quality_score: float,
+        execution_time: float,
+        result: Any,
+        metadata: dict[str, Any] | None = None,
+    ) -> None:
+        """Persist a consolidated record for a complete crew execution run."""
+
+        metadata = metadata or {}
+        context = {
+            "execution_id": execution_id,
+            "agents_used": agents_used,
+            "tools_used": tools_used,
+            "result_digest": str(result)[:512] if result is not None else "",
+            "user_feedback": metadata.get("user_feedback"),
+            "tool_sequence": metadata.get("tool_sequence", []),
+            "error_details": metadata.get("error_details"),
+            "error_occurred": metadata.get("error_occurred", False),
+            "task_type": metadata.get("task_type", "crew_execution"),
+        }
+
+        if self.enhanced_monitor:
+            try:
+                await self.enhanced_monitor.record_interaction_async(
+                    agent_name="crew_orchestrator",
+                    interaction_type=context["task_type"],
+                    quality_score=quality_score,
+                    response_time=execution_time,
+                    context=context,
+                    tools_used=tools_used,
+                    error_occurred=context.get("error_occurred", False),
+                )
+            except Exception as exc:  # pragma: no cover - defensive logging
+                self.logger.debug("Enhanced monitor failed to capture crew execution: %s", exc)
+
+        per_agent_time = execution_time / max(len(agents_used) or 1, 1)
+        for agent in agents_used or ["crew_orchestrator"]:
+            try:
+                self.base_monitor.record_agent_interaction(
+                    agent_name=agent,
+                    task_type=context["task_type"],
+                    tools_used=tools_used,
+                    tool_sequence=context.get("tool_sequence", []),
+                    response_quality=quality_score,
+                    response_time=per_agent_time,
+                    user_feedback=context.get("user_feedback"),
+                    error_occurred=context.get("error_occurred", False),
+                    error_details={"execution_id": execution_id},
+                )
+            except Exception as exc:  # pragma: no cover - defensive logging
+                self.logger.debug("Base monitor failed to log interaction for %s: %s", agent, exc)
+
+        self.logger.info(
+            "Recorded crew execution %s (agents=%d, tools=%d, quality=%.2f)",
+            execution_id,
+            len(agents_used),
+            len(tools_used),
+            quality_score,
+        )
+
     async def generate_weekly_report(self, agent_names: list[str] | None = None) -> dict[str, Any]:
         """Generate comprehensive weekly performance report."""
 

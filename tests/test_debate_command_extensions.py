@@ -4,6 +4,7 @@ from datetime import datetime
 from unittest.mock import AsyncMock, Mock
 
 import pytest
+
 from ultimate_discord_intelligence_bot.debate_analysis_pipeline import DebateAnalysisPipeline
 from ultimate_discord_intelligence_bot.profiles.store import ProfileStore
 from ultimate_discord_intelligence_bot.tools.character_profile_tool import (

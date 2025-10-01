@@ -56,6 +56,14 @@ except Exception:  # pragma: no cover - defensive fallback
 
 from .memory_service import MemoryService
 
+try:  # optional LLMLingua integration
+    from prompt_engine.llmlingua_adapter import compress_prompt_with_details  # type: ignore
+except Exception:  # pragma: no cover - fallback when dependency or module is missing
+
+    def compress_prompt_with_details(prompt: str, **_: Any) -> tuple[str, dict[str, Any]]:  # type: ignore[override]
+        return prompt, {"applied": False, "reason": "unavailable"}
+
+
 try:  # pragma: no cover - optional heavy dependency (performance tokenization fallback)
     import tiktoken as _tiktoken  # noqa: F401
 except Exception:  # pragma: no cover
@@ -129,43 +137,57 @@ class PromptEngine:
             tokens = approx
         return tokens
 
-    def optimise(self, prompt: str, target_token_reduction: float = 0.0, max_tokens: int | None = None) -> str:
-        """Return an optimised variant of ``prompt`` with intelligent context trimming.
+    def optimise(
+        self,
+        prompt: str,
+        target_token_reduction: float = 0.0,
+        max_tokens: int | None = None,
+        *,
+        model: str | None = None,
+        force_enable: bool = False,
+    ) -> str:
+        text, _ = self.optimise_with_metadata(
+            prompt,
+            model=model,
+            target_token_reduction=target_token_reduction,
+            max_tokens=max_tokens,
+            force_enable=force_enable,
+        )
+        return text
 
-        This implementation performs multiple passes of compression techniques to achieve
-        the target token reduction while preserving important information:
+    def optimise_with_metadata(
+        self,
+        prompt: str,
+        *,
+        model: str | None = None,
+        target_token_reduction: float = 0.0,
+        max_tokens: int | None = None,
+        llmlingua_ratio: float | None = None,
+        force_enable: bool = False,
+    ) -> tuple[str, dict[str, Any]]:
+        """Optimise ``prompt`` returning the compressed text and observability metadata."""
 
-        1. Basic compression (blank lines, deduplication, whitespace)
-        2. Context-aware section summarisation (only if target_token_reduction > 0)
-        3. Intelligent truncation with fallback strategies (only if max_tokens specified)
-
-        Parameters
-        ----------
-        prompt:
-            The input prompt text to optimize
-        target_token_reduction:
-            Target reduction ratio (0.15 = 15% reduction). If 0, only basic compression.
-        max_tokens:
-            Optional hard limit on output token count
-
-        Compression enablement
-        ----------------------
-        Controlled by the following environment and settings flags:
-
-        - ENABLE_PROMPT_COMPRESSION (env bool): primary switch when source is 'env'
-        - settings.enable_prompt_compression / settings.enable_prompt_compression_flag
-        - PROMPT_COMPRESSION_SOURCE (env str): 'env' | 'settings' | 'both'
-
-        Semantics:
-        - 'env' (default, backward compatible): enabled if env is truthy; if the
-          env var exists but is falsy, settings may enable it. If the env var is
-          absent, settings are ignored (historical behavior to avoid lru-cached
-          settings making tests order-dependent).
-        - 'settings': enabled only by settings flags (env ignored).
-        - 'both': enabled if either env or settings enable it.
-        """
+        truthy = {"1", "true", "yes", "on"}
         tracer = trace.get_tracer(__name__)
+        metadata: dict[str, Any] = {"stages": []}
+        settings = get_settings()
+
         with tracer.start_as_current_span("prompt.optimise") as span:
+            original = prompt
+            text = original
+
+            default_reduction = float(getattr(settings, "prompt_compression_default_target", 0.0) or 0.0)
+            if target_token_reduction <= 0 and default_reduction > 0:
+                target_token_reduction = default_reduction
+
+            if max_tokens is None:
+                cfg_max_tokens = getattr(settings, "prompt_compression_max_tokens", None)
+                if cfg_max_tokens not in (None, "", 0):
+                    try:
+                        max_tokens = int(cfg_max_tokens)
+                    except Exception:
+                        max_tokens = None
+
             if span:
                 try:
                     span.set_attribute("target_token_reduction", float(target_token_reduction))
@@ -173,107 +195,243 @@ class PromptEngine:
                 except Exception:
                     pass
 
-            original = prompt
-            text = original  # preserve internal structure initially
-            settings = get_settings()
+            env_present = "ENABLE_PROMPT_COMPRESSION" in os.environ
+            env_enabled = os.getenv("ENABLE_PROMPT_COMPRESSION", "").lower() in truthy
+            settings_enabled = bool(getattr(settings, "enable_prompt_compression", False)) or bool(
+                getattr(settings, "enable_prompt_compression_flag", False)
+            )
+            source_policy = os.getenv("PROMPT_COMPRESSION_SOURCE", "env").strip().lower()
+            if source_policy == "settings":
+                effective_enabled = settings_enabled
+            elif source_policy == "both":
+                effective_enabled = env_enabled or settings_enabled
+            else:
+                effective_enabled = env_enabled or (env_present and settings_enabled)
 
-        # Determine compression enablement per configurable source policy.
-        # Default preserves historical semantics: prefer ENV and ignore settings
-        # unless the env var is present (even if falsy), to avoid lru-cached
-        # settings causing order-dependent behavior.
-        env_present = "ENABLE_PROMPT_COMPRESSION" in os.environ
-        env_enabled = os.getenv("ENABLE_PROMPT_COMPRESSION", "").lower() in {"1", "true", "yes", "on"}
-        settings_enabled = bool(getattr(settings, "enable_prompt_compression", False)) or bool(
-            getattr(settings, "enable_prompt_compression_flag", False)
-        )
-        source_policy = os.getenv("PROMPT_COMPRESSION_SOURCE", "env").strip().lower()
-        if source_policy == "settings":
-            effective_enabled = settings_enabled
-        elif source_policy == "both":
-            effective_enabled = env_enabled or settings_enabled
-        else:  # "env" (default): env governs; settings only if env var is present
-            effective_enabled = env_enabled or (env_present and settings_enabled)
-        try:
-            # Add attributes for observability
-            span.set_attribute("prompt_compression.source_policy", source_policy)
-            span.set_attribute("prompt_compression.env_present", bool(env_present))
-            span.set_attribute("prompt_compression.env_enabled", bool(env_enabled))
-            span.set_attribute("prompt_compression.settings_enabled", bool(settings_enabled))
-            span.set_attribute("prompt_compression.enabled", bool(effective_enabled))
-        except Exception:
-            pass
-        if not effective_enabled:
-            return original.strip()
+            if force_enable:
+                effective_enabled = True
 
-        lbl = metrics.label_ctx()
-
-        # Phase 1: Basic compression (always applied when compression is enabled)
-        with tracer.start_as_current_span("prompt.compress.basic"):
-            text = self._apply_basic_compression(text, settings)
-
-        # Phase 2: Intelligent context trimming (only if target reduction specified)
-        if target_token_reduction > 0:
-            original_tokens = self.count_tokens(original)
-            target_tokens = int(original_tokens * (1.0 - target_token_reduction))
-            if max_tokens:
-                target_tokens = min(target_tokens, max_tokens)
+            metadata.update(
+                {
+                    "source_policy": source_policy,
+                    "env_present": bool(env_present),
+                    "env_enabled": bool(env_enabled),
+                    "settings_enabled": bool(settings_enabled),
+                    "enabled": bool(effective_enabled),
+                    "forced": bool(force_enable),
+                    "target_token_reduction": float(target_token_reduction),
+                    "max_tokens": int(max_tokens) if max_tokens is not None else None,
+                }
+            )
             if span:
                 try:
-                    span.set_attribute("prompt.tokens.original", int(original_tokens))
-                    span.set_attribute("prompt.tokens.target", int(target_tokens))
+                    span.set_attribute("prompt_compression.source_policy", source_policy)
+                    span.set_attribute("prompt_compression.env_present", bool(env_present))
+                    span.set_attribute("prompt_compression.env_enabled", bool(env_enabled))
+                    span.set_attribute("prompt_compression.settings_enabled", bool(settings_enabled))
+                    span.set_attribute("prompt_compression.enabled", bool(effective_enabled))
+                    span.set_attribute("prompt_compression.forced", bool(force_enable))
                 except Exception:
                     pass
 
-            current_tokens = self.count_tokens(text)
-            if current_tokens > target_tokens:
-                with tracer.start_as_current_span("prompt.compress.context_trimming") as subspan:
-                    if subspan:
-                        try:
-                            subspan.set_attribute("current_tokens", int(current_tokens))
-                            subspan.set_attribute("target_tokens", int(target_tokens))
-                        except Exception:
-                            pass
-                    text = self._apply_context_trimming(text, target_tokens, current_tokens)
+            original_tokens = self.count_tokens(original, model)
+            metadata["original_tokens"] = original_tokens
 
-        # Phase 3: Emergency truncation if hard limit specified and still over
-        if max_tokens:
-            current_tokens = self.count_tokens(text)
-            if current_tokens > max_tokens:
-                with tracer.start_as_current_span("prompt.compress.emergency_truncation") as subspan:
-                    if subspan:
-                        try:
-                            subspan.set_attribute("current_tokens", int(current_tokens))
-                            subspan.set_attribute("max_tokens", int(max_tokens))
-                        except Exception:
-                            pass
-                    text = self._apply_emergency_truncation(text, max_tokens)
+            if not effective_enabled:
+                metadata["final_tokens"] = original_tokens
+                metadata["reduction"] = 0.0
+                if span:
+                    try:
+                        span.set_attribute("prompt.compress.forced", bool(force_enable))
+                    except Exception:
+                        pass
+                return original.strip(), metadata
 
-        try:  # metrics emission best-effort
-            original_tokens = max(1, self.count_tokens(original))
-            final_tokens = max(1, self.count_tokens(text))
-            ratio = final_tokens / original_tokens
-            reduction_achieved = 1.0 - ratio
+            lbl = metrics.label_ctx()
 
-            metrics.PROMPT_COMPRESSION_RATIO.labels(lbl["tenant"], lbl["workspace"], "optimise").observe(ratio)
+            # Phase 1: Basic compression
+            with tracer.start_as_current_span("prompt.compress.basic"):
+                text = self._apply_basic_compression(text, settings)
+            basic_tokens = self.count_tokens(text, model)
+            metadata["stages"].append(
+                {
+                    "stage": "basic",
+                    "before_tokens": original_tokens,
+                    "after_tokens": basic_tokens,
+                }
+            )
 
-            # Track if we achieved target reduction (only if target was set)
-            if target_token_reduction > 0 and hasattr(metrics, "PROMPT_COMPRESSION_TARGET_MET"):
-                target_met = reduction_achieved >= (target_token_reduction * 0.9)  # 90% of target
-                if target_met:
-                    metrics.PROMPT_COMPRESSION_TARGET_MET.labels(lbl["tenant"], lbl["workspace"]).inc()
+            current_tokens = basic_tokens
+            target_tokens = None
 
-            # Add span attributes
-            if span:
-                try:
-                    span.set_attribute("prompt.tokens.final", int(final_tokens))
-                    span.set_attribute("prompt.compress.ratio", float(ratio))
-                    span.set_attribute("prompt.compress.reduction_achieved", float(reduction_achieved))
-                except Exception:
-                    pass
-        except Exception:
-            pass
+            # Phase 2: Intelligent context trimming
+            if target_token_reduction > 0 and original_tokens > 0:
+                target_tokens = int(original_tokens * (1.0 - target_token_reduction))
+                if max_tokens is not None:
+                    target_tokens = min(target_tokens, max_tokens)
+                if span:
+                    try:
+                        span.set_attribute("prompt.tokens.original", int(original_tokens))
+                        span.set_attribute("prompt.tokens.target", int(target_tokens))
+                    except Exception:
+                        pass
+                metadata["target_tokens"] = target_tokens
+                current_tokens = self.count_tokens(text, model)
+                if current_tokens > target_tokens:
+                    with tracer.start_as_current_span("prompt.compress.context_trimming") as subspan:
+                        if subspan:
+                            try:
+                                subspan.set_attribute("current_tokens", int(current_tokens))
+                                subspan.set_attribute("target_tokens", int(target_tokens))
+                            except Exception:
+                                pass
+                        text = self._apply_context_trimming(text, target_tokens, current_tokens)
+                    trimmed_tokens = self.count_tokens(text, model)
+                    metadata["stages"].append(
+                        {
+                            "stage": "context_trim",
+                            "before_tokens": current_tokens,
+                            "after_tokens": trimmed_tokens,
+                            "target_tokens": target_tokens,
+                        }
+                    )
+                    current_tokens = trimmed_tokens
 
-        return text
+            # Phase 3: Emergency truncation
+            if max_tokens is not None:
+                current_tokens = self.count_tokens(text, model)
+                if current_tokens > max_tokens:
+                    with tracer.start_as_current_span("prompt.compress.emergency_truncation") as subspan:
+                        if subspan:
+                            try:
+                                subspan.set_attribute("current_tokens", int(current_tokens))
+                                subspan.set_attribute("max_tokens", int(max_tokens))
+                            except Exception:
+                                pass
+                        text = self._apply_emergency_truncation(text, max_tokens)
+                    emergency_tokens = self.count_tokens(text, model)
+                    metadata["stages"].append(
+                        {
+                            "stage": "emergency_truncation",
+                            "before_tokens": current_tokens,
+                            "after_tokens": emergency_tokens,
+                            "max_tokens": max_tokens,
+                        }
+                    )
+                    current_tokens = emergency_tokens
+
+            # Phase 4: LLMLingua compression (optional)
+            llmlingua_env_present = "ENABLE_LLMLINGUA" in os.environ
+            llmlingua_env_enabled = os.getenv("ENABLE_LLMLINGUA", "").lower() in truthy
+            llmlingua_shadow_env = os.getenv("ENABLE_LLMLINGUA_SHADOW", "")
+            llmlingua_shadow_enabled = bool(getattr(settings, "enable_llmlingua_shadow", False)) or (
+                bool(llmlingua_shadow_env) and llmlingua_shadow_env.lower() in truthy
+            )
+            if llmlingua_env_present:
+                llmlingua_active = llmlingua_env_enabled
+            else:
+                llmlingua_active = bool(getattr(settings, "enable_llmlingua", False))
+
+            llmlingua_mode = "disabled"
+            if llmlingua_active:
+                llmlingua_mode = "active"
+            elif llmlingua_shadow_enabled:
+                llmlingua_mode = "shadow"
+
+            llmlingua_info: dict[str, Any] = {"mode": llmlingua_mode, "applied": False}
+            metadata["llmlingua"] = llmlingua_info
+
+            if llmlingua_mode != "disabled":
+                before_tokens = self.count_tokens(text, model)
+                llmlingua_info["before_tokens"] = before_tokens
+                min_tokens = int(getattr(settings, "llmlingua_min_tokens", 600) or 600)
+                if before_tokens >= max(1, min_tokens):
+                    ratio_effective = (
+                        llmlingua_ratio
+                        if llmlingua_ratio is not None
+                        else float(getattr(settings, "llmlingua_target_ratio", target_token_reduction or 0.0) or 0.0)
+                    )
+                    if ratio_effective <= 0 and target_token_reduction > 0:
+                        ratio_effective = target_token_reduction
+                    ratio_effective = max(0.05, min(0.95, ratio_effective or 0.35))
+                    target_budget = getattr(settings, "llmlingua_target_tokens", None)
+                    llmlingua_target_tokens = (
+                        int(target_budget)
+                        if target_budget not in (None, "", 0)
+                        else int(before_tokens * (1.0 - ratio_effective))
+                    )
+                    if max_tokens is not None:
+                        llmlingua_target_tokens = min(llmlingua_target_tokens, max_tokens)
+
+                    extra_kwargs: dict[str, Any] = {}
+                    stage = getattr(settings, "llmlingua_stage", None)
+                    if stage:
+                        extra_kwargs["stage"] = stage
+                    device = getattr(settings, "llmlingua_device", None)
+                    if device:
+                        extra_kwargs["device"] = device
+
+                    compressed, details = compress_prompt_with_details(
+                        text,
+                        enabled=True,
+                        target_tokens=llmlingua_target_tokens,
+                        ratio=ratio_effective,
+                        extra_kwargs=extra_kwargs,
+                    )
+                    after_tokens_llm = self.count_tokens(compressed, model)
+                    llmlingua_stage_meta: dict[str, Any] = {
+                        "stage": "llmlingua",
+                        "mode": llmlingua_mode,
+                        "before_tokens": before_tokens,
+                        "after_tokens": after_tokens_llm if llmlingua_mode == "active" else before_tokens,
+                        "shadow_after_tokens": after_tokens_llm if llmlingua_mode == "shadow" else None,
+                        "details": details,
+                    }
+                    metadata["stages"].append(llmlingua_stage_meta)
+
+                    llmlingua_info.update(
+                        {
+                            "applied": bool(details.get("applied")),
+                            "details": details,
+                            "target_tokens": llmlingua_target_tokens,
+                            "ratio": ratio_effective,
+                            "after_tokens": after_tokens_llm,
+                        }
+                    )
+                    if llmlingua_mode == "shadow":
+                        llmlingua_info["shadow_after_tokens"] = after_tokens_llm
+
+                    if llmlingua_mode == "active" and details.get("applied") and compressed.strip():
+                        text = compressed
+                        current_tokens = after_tokens_llm
+                else:
+                    llmlingua_info["reason"] = "below_min_tokens"
+
+            final_tokens = self.count_tokens(text, model)
+            metadata["final_tokens"] = final_tokens
+            metadata["reduction"] = 0.0 if original_tokens == 0 else 1.0 - (final_tokens / max(1, original_tokens))
+
+            try:
+                original_tokens_safe = max(1, original_tokens)
+                final_tokens_safe = max(1, final_tokens)
+                ratio = final_tokens_safe / original_tokens_safe
+                reduction_achieved = 1.0 - ratio
+                metrics.PROMPT_COMPRESSION_RATIO.labels(lbl["tenant"], lbl["workspace"], "optimise").observe(ratio)
+                if target_token_reduction > 0 and hasattr(metrics, "PROMPT_COMPRESSION_TARGET_MET"):
+                    target_met = reduction_achieved >= (target_token_reduction * 0.9)
+                    if target_met:
+                        metrics.PROMPT_COMPRESSION_TARGET_MET.labels(lbl["tenant"], lbl["workspace"]).inc()
+                if span:
+                    try:
+                        span.set_attribute("prompt.tokens.final", int(final_tokens))
+                        span.set_attribute("prompt.compress.ratio", float(ratio))
+                        span.set_attribute("prompt.compress.reduction_achieved", float(reduction_achieved))
+                    except Exception:
+                        pass
+            except Exception:
+                pass
+
+        return text, metadata
 
     def _apply_basic_compression(self, text: str, settings: Any) -> str:
         """Apply basic compression techniques (existing optimise logic)."""

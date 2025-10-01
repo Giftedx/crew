@@ -48,8 +48,7 @@ class _StubMCP:  # pragma: no cover
 obs_mcp = FastMCP("Observability Server") if _FASTMCP_AVAILABLE else _StubMCP("Observability Server")
 
 
-@obs_mcp.tool
-def summarize_health() -> dict:
+def _summarize_health_impl() -> dict:
     """Return a simple health summary based on metrics availability and render()."""
 
     try:
@@ -72,8 +71,7 @@ def summarize_health() -> dict:
         return {"status": "degraded", "error": str(exc)}
 
 
-@obs_mcp.tool
-def get_counters(sample_bytes: int = 1000) -> dict:
+def _get_counters_impl(sample_bytes: int = 1000) -> dict:
     """Return a safe counters snapshot using Prometheus exposition text (truncated)."""
 
     try:
@@ -96,8 +94,7 @@ def get_counters(sample_bytes: int = 1000) -> dict:
         return {"prometheus_available": False, "scrape_bytes": 0, "error": str(exc)}
 
 
-@obs_mcp.tool
-def recent_degradations(limit: int = 50) -> dict:
+def _recent_degradations_impl(limit: int = 50) -> dict:
     """Return a recent snapshot of degradation events (if enabled).
 
     Uses core.degradation_reporter singleton; returns at most ``limit`` events
@@ -127,6 +124,35 @@ def recent_degradations(limit: int = 50) -> dict:
         return {"events": out}
     except Exception as exc:
         return {"events": [], "error": str(exc)}
+
+
+# Plain callables for direct imports
+def summarize_health() -> dict:
+    return _summarize_health_impl()
+
+
+def get_counters(sample_bytes: int = 1000) -> dict:
+    return _get_counters_impl(sample_bytes)
+
+
+def recent_degradations(limit: int = 50) -> dict:
+    return _recent_degradations_impl(limit)
+
+
+# MCP-decorated wrappers under distinct names
+@obs_mcp.tool
+def summarize_health_tool() -> dict:  # pragma: no cover - thin MCP wrapper
+    return _summarize_health_impl()
+
+
+@obs_mcp.tool
+def get_counters_tool(sample_bytes: int = 1000) -> dict:  # pragma: no cover
+    return _get_counters_impl(sample_bytes)
+
+
+@obs_mcp.tool
+def recent_degradations_tool(limit: int = 50) -> dict:  # pragma: no cover
+    return _recent_degradations_impl(limit)
 
 
 @obs_mcp.resource("metrics://prom")
@@ -161,8 +187,11 @@ def degradations_recent() -> dict:
 __all__ = [
     "obs_mcp",
     "summarize_health",
+    "summarize_health_tool",
     "get_counters",
+    "get_counters_tool",
     "recent_degradations",
+    "recent_degradations_tool",
     "metrics_prom",
     "degradations_recent",
 ]

@@ -15,7 +15,6 @@ import html
 import re
 
 from core.http_utils import REQUEST_TIMEOUT_SECONDS, cached_get, validate_public_https_url
-
 from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
