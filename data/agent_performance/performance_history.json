@@ -3387,6 +3387,32 @@
       },
       "error_occurred": false,
       "error_details": {}
+    },
+    {
+      "timestamp": "2025-10-01T04:31:30.978249+00:00",
+      "agent_name": "test_agent",
+      "task_type": "test_analysis",
+      "tools_used": [
+        "fact_check_tool",
+        "vector_tool"
+      ],
+      "tool_sequence": [
+        {
+          "tool": "fact_check_tool",
+          "action": "verify_claim"
+        },
+        {
+          "tool": "vector_tool",
+          "action": "semantic_search"
+        }
+      ],
+      "response_quality": 0.85,
+      "response_time": 12.5,
+      "user_feedback": {
+        "satisfaction": 0.9
+      },
+      "error_occurred": false,
+      "error_details": {}
     }
   ],
   "enhanced_fact_checker": [

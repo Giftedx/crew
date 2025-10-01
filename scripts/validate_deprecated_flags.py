@@ -47,10 +47,13 @@ ALLOWED_PATH_SUBSTRINGS = {
     str(ROOT / "docs" / "network_conventions.md"),
     str(ROOT / "docs" / "tools_reference.md"),
     str(ROOT / "COMPREHENSIVE_PROJECT_REVIEW.md"),  # added due to legacy mention
+    str(ROOT / "COMPREHENSIVE_REPOSITORY_REVIEW.md"),  # repository review with historical references
     str(ROOT / "COMPREHENSIVE_BANDIT_BENCHMARK_RESULTS_SUMMARY.md"),  # legacy historical report
     str(ROOT / "COMPLETE_SYSTEM_DOCUMENTATION.md"),  # aggregate doc referencing deprecated flag
     str(ROOT / "COMPREHENSIVE_CODEBASE_ASSESSMENT.md"),  # assessment doc includes deprecation status
     str(ROOT / "REVIEW_README.md"),  # review summary containing legacy flag reference
+    str(ROOT / "REPOSITORY_REVIEW_README.md"),  # repository review readme
+    str(ROOT / "REVIEW_EXECUTIVE_SUMMARY.md"),  # executive summary
     # Migration + dashboard tooling explicitly allowed (contain educational references)
     str(ROOT / "scripts" / "migrate_http_retry_flag.py"),
     str(ROOT / "scripts" / "deprecation_dashboard.py"),

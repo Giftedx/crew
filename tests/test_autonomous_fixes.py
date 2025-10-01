@@ -5,12 +5,16 @@ import asyncio
 import sys
 from pathlib import Path
 
+import pytest
+
 # Add the src directory to the path
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
 from ultimate_discord_intelligence_bot.autonomous_orchestrator import AutonomousIntelligenceOrchestrator
 
 
+@pytest.mark.asyncio
+@pytest.mark.integration
 async def test_deception_analysis():
     """Test the deception analysis that was previously broken."""
     print("🧪 Testing fixed autonomous orchestrator deception analysis...")
@@ -69,6 +73,8 @@ async def test_deception_analysis():
     return True
 
 
+@pytest.mark.asyncio
+@pytest.mark.integration
 async def test_cross_platform_intelligence():
     """Test the cross-platform intelligence gathering that had interface mismatches."""
     print("\n🌐 Testing fixed cross-platform intelligence gathering...")

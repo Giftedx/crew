@@ -1,3 +1,10 @@
+# Active Tasks (Implemented in crew.py)
+#
+# These tasks correspond to @task methods in crew.py and are actively used
+# by the CrewAI system. Additional planned tasks are in future_tasks.yaml.
+#
+# Core workflow tasks for autonomous intelligence processing
+
 plan_autonomy_mission:
   description: >-
     Launch or resume the end-to-end intelligence mission for {request}. Sequence
@@ -8,6 +15,7 @@ plan_autonomy_mission:
   human_input: false
   async_execution: false
   output_file: output/mission_plan_{timestamp}.md
+
 capture_source_media:
   description: >-
     Resolve and download the highest-quality media for {url} across all supported
@@ -17,6 +25,7 @@ capture_source_media:
   human_input: false
   async_execution: false
   output_file: output/download_manifest_{url_hash}.json
+
 transcribe_and_index_media:
   description: >-
     Produce accurate transcripts, searchable indices, and aligned timelines for the
@@ -28,6 +37,7 @@ transcribe_and_index_media:
   human_input: false
   async_execution: false
   output_file: output/transcript_{url_hash}.json
+
 map_transcript_insights:
   description: >-
     Analyse transcripts for sentiment shifts, topical clusters, and noteworthy excerpts
@@ -39,6 +49,7 @@ map_transcript_insights:
   human_input: false
   async_execution: false
   output_file: output/insight_map_{url_hash}.json
+
 verify_priority_claims:
   description: >-
     Extract and fact-check consequential claims from the analysed content, capturing
@@ -50,165 +61,3 @@ verify_priority_claims:
   human_input: false
   async_execution: false
   output_file: output/verification_{url_hash}.json
-score_risk_and_truth:
-  description: >-
-    Update deception and truthfulness metrics for {subject}, blending new verification
-    results with historical baselines and leaderboard entries.
-  expected_output: Risk scorecard showing deception indices, truth deltas, and leaderboard adjustments.
-  agent: risk_intelligence_analyst
-  context:
-    - verify_priority_claims
-  human_input: false
-  async_execution: false
-  output_file: output/risk_score_{subject}_{timestamp}.json
-update_persona_dossiers:
-  description: >-
-    Merge the latest mission findings into persona dossiers, timelines, and trust
-    narratives so future missions inherit current context.
-  expected_output: Updated persona dossier with timeline annotations and sentiment highlights.
-  agent: persona_archivist
-  context:
-    - score_risk_and_truth
-  human_input: false
-  async_execution: false
-  output_file: output/persona_update_{subject}_{timestamp}.md
-persist_mission_intelligence:
-  description: >-
-    Store mission artefacts across vector, graph, and continual memory systems while
-    pruning duplicates and documenting compaction results.
-  expected_output: Memory persistence log with namespaces, stored payload counts, and compaction summary.
-  agent: knowledge_integrator
-  context:
-    - map_transcript_insights
-    - verify_priority_claims
-    - score_risk_and_truth
-  human_input: false
-  async_execution: false
-  output_file: output/memory_persistence_{timestamp}.json
-curate_intelligence_briefing:
-  description: >-
-    Merge mission context, timelines, and references into a concise intelligence briefing for stakeholders.
-  expected_output: Briefing packet outlining findings, supporting evidence, timeline, and action recommendations.
-  agent: intelligence_briefing_curator
-  context:
-    - verify_priority_claims
-    - score_risk_and_truth
-    - update_persona_dossiers
-    - persist_mission_intelligence
-  human_input: false
-  async_execution: false
-  output_file: output/intel_briefing_{timestamp}.md
-monitor_signal_landscape:
-  description: >-
-    Track cross-platform discourse for {keyword} across Reddit, X, and Discord, surfacing
-    sentiment spikes or viral artefacts that require investigation.
-  expected_output: Cross-platform signal report with sentiment metrics and escalation recommendations.
-  agent: signal_recon_specialist
-  human_input: false
-  async_execution: true
-  output_file: output/signal_landscape_{keyword}_{timestamp}.json
-scout_trending_targets:
-  description: >-
-    Scan multi-platform feeds and research connectors to identify unprocessed content
-    that meets mission relevance thresholds.
-  expected_output: Ranked queue of candidate targets with provenance notes and suggested next actions.
-  agent: trend_intelligence_scout
-  human_input: false
-  async_execution: false
-  output_file: output/trending_targets_{timestamp}.json
-respond_to_community:
-  description: >-
-    Answer the community question "{question}" using current, verified intelligence and
-    post the response to the appropriate Discord channel.
-  expected_output: Posted Discord response with supporting references and follow-up actions if needed.
-  agent: community_liaison
-  context:
-    - verify_priority_claims
-    - update_persona_dossiers
-    - curate_intelligence_briefing
-  human_input: false
-  async_execution: false
-craft_argument_brief:
-  description: >-
-    Construct a steelman argument for {claim}, anticipating counterpoints and linking
-    to verified evidence.
-  expected_output: Debate-ready argument brief with structure, citations, and counter-argument prep.
-  agent: argument_strategist
-  context:
-    - verify_priority_claims
-    - map_transcript_insights
-  human_input: false
-  async_execution: false
-  output_file: output/argument_brief_{claim_hash}.md
-system_health_watch:
-  description: >-
-    Audit current pipeline performance, budget consumption, and incident status, alerting
-    the private Discord channel when anomalies surface.
-  expected_output: Health audit summary and notification confirmation with remediation guidance.
-  agent: system_reliability_officer
-  human_input: false
-  async_execution: true
-  output_file: output/system_health_{timestamp}.json
-produce_research_brief:
-  description: >-
-    Compile a multi-source research brief for {topic}, harmonising references, gaps, and
-    recommended follow-up questions.
-  expected_output: Research brief with source list, synthesis, and open research questions.
-  agent: research_synthesist
-  human_input: false
-  async_execution: false
-  output_file: output/research_brief_{topic_hash}.md
-
-# Advanced Performance Analytics Tasks
-run_performance_analytics:
-  description: >-
-    Execute comprehensive performance analytics analysis for the specified time period
-    and generate insights about system performance, trends, and optimization opportunities.
-  expected_output: Performance analytics report with health scores, trends, and recommendations.
-  agent: system_reliability_officer
-  human_input: false
-  async_execution: true
-  output_file: output/performance_analytics_{timestamp}.json
-monitor_performance_alerts:
-  description: >-
-    Evaluate current performance analytics data against alert rules and generate notifications
-    for any threshold violations or anomalies detected.
-  expected_output: List of performance alerts generated and notification status.
-  agent: system_reliability_officer
-  human_input: false
-  async_execution: true
-send_performance_executive_summary:
-  description: >-
-    Generate and send executive-level performance summaries covering system health, alert activity,
-    and strategic recommendations to leadership channels.
-  expected_output: Executive summary delivered to appropriate Discord channels.
-  agent: system_reliability_officer
-  human_input: false
-  async_execution: false
-optimize_system_performance:
-  description: >-
-    Execute automated performance optimization strategies based on analytics insights and predictive
-    recommendations to improve system efficiency.
-  expected_output: Optimization actions executed with performance impact measurements.
-  agent: system_reliability_officer
-  human_input: false
-  async_execution: true
-  output_file: output/performance_optimization_{timestamp}.json
-predictive_performance_analysis:
-  description: >-
-    Run predictive performance analysis to forecast potential issues, capacity requirements,
-    and proactive optimization opportunities.
-  expected_output: Predictive insights with forecasts and early warning alerts.
-  agent: system_reliability_officer
-  human_input: false
-  async_execution: true
-  output_file: output/predictive_analysis_{timestamp}.json
-
-synthesize_personality:
-  description: >-
-    Harmonize tone, style, and persona across outputs for {subject} based on mission context and guidelines.
-  expected_output: Persona synthesis guideline with examples and consistency checklist.
-  agent: personality_synthesis_manager
-  human_input: false
-  async_execution: false
-  output_file: output/persona_synthesis_{subject}_{timestamp}.md

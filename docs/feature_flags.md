@@ -2,7 +2,6 @@
 ## Feature Flags & Environment Toggles
 
 (Do not edit by hand; regenerate instead.)
-
 ### Api / Runtime
 
 | Flag | Referenced In (sample) |
@@ -21,9 +20,13 @@
 | `ENABLE_A2A_STREAMING_DEMO` | server/a2a_streaming.py |
 | `ENABLE_ACTIVITIES_ECHO` | server/routes/activities.py, ultimate_discord_intelligence_bot/setup_cli.py |
 | `ENABLE_CORS` | server/middleware.py, ultimate_discord_intelligence_bot/setup_cli.py |
+| `ENABLE_CREW_CONFIG_VALIDATION` | mcp_server/crewai_server.py, ultimate_discord_intelligence_bot/crew.py |
+| `ENABLE_CREW_STEP_VERBOSE` | mcp_server/crewai_server.py, ultimate_discord_intelligence_bot/crew.py |
 | `ENABLE_LANGGRAPH_PILOT` | graphs/langgraph_pilot.py, server/routes/pilot.py |
 | `ENABLE_LANGGRAPH_PILOT_API` | server/routes/pilot.py |
 | `ENABLE_MCP_A2A` | mcp_server/server.py |
+| `ENABLE_MCP_CREWAI` | mcp_server/crewai_server.py, mcp_server/server.py |
+| `ENABLE_MCP_CREWAI_EXECUTION` | mcp_server/crewai_server.py |
 | `ENABLE_MCP_HTTP` | mcp_server/server.py |
 | `ENABLE_MCP_INGEST` | mcp_server/server.py |
 | `ENABLE_MCP_KG` | mcp_server/server.py |
@@ -31,8 +34,6 @@
 | `ENABLE_MCP_OBS` | mcp_server/obs_server.py, mcp_server/server.py |
 | `ENABLE_MCP_OBS_PROM_RESOURCE` | mcp_server/obs_server.py |
 | `ENABLE_MCP_ROUTER` | mcp_server/server.py |
-| `ENABLE_MCP_CREWAI` | ultimate_discord_intelligence_bot/discord_bot/runner.py |
-| `ENABLE_MCP_CREWAI_EXECUTION` | ultimate_discord_intelligence_bot/discord_bot/runner.py |
 | `ENABLE_PIPELINE_RUN_API` | core/settings.py, server/routes/pipeline_api.py |
 | `ENABLE_PROMETHEUS_ENDPOINT` | core/secure_config.py, core/settings.py |
 | `ENABLE_RATE_LIMITING` | core/secure_config.py, core/settings.py |
@@ -60,7 +61,7 @@
 |------|------------------------|
 | `ENABLE_INGEST_CONCURRENT` | ingest/pipeline.py, ultimate_discord_intelligence_bot/setup_cli.py |
 | `ENABLE_INGEST_STRICT` | ingest/pipeline.py, ultimate_discord_intelligence_bot/services/memory_service.py |
-| `ENABLE_UPLOADER_BACKFILL` | discord/commands.py, ingest/backfill.py |
+| `ENABLE_UPLOADER_BACKFILL` | ingest/backfill.py |
 | `ENABLE_YOUTUBE_CHANNEL_BACKFILL_AFTER_INGEST` | ingest/pipeline.py |
 
 ### Misc
@@ -68,12 +69,13 @@
 | Flag | Referenced In (sample) |
 |------|------------------------|
 | `ENABLE_ADVANCED_CACHE` | core/settings.py |
+| `ENABLE_ADVANCED_PERF` | ultimate_discord_intelligence_bot/autonomous_orchestrator.py |
 | `ENABLE_AGENT_EVALS` | eval/trajectory_evaluator.py |
 | `ENABLE_AI_ROUTING` | ultimate_discord_intelligence_bot/agent_training/performance_monitor.py, ultimate_discord_intelligence_bot/agent_training/performance_monitor_final.py |
 | `ENABLE_API` | core/secure_config.py, core/settings.py |
 | `ENABLE_API_CACHE` | core/settings.py |
 | `ENABLE_AUDIT_LOGGING` | core/secure_config.py, core/settings.py |
-| `ENABLE_AUTO_FOLLOW_UPLOADER` | discord/commands.py, ultimate_discord_intelligence_bot/auto_follow.py |
+| `ENABLE_AUTO_FOLLOW_UPLOADER` | ultimate_discord_intelligence_bot/auto_follow.py |
 | `ENABLE_AUTO_URL_ANALYSIS` | ultimate_discord_intelligence_bot/discord_bot/registrations.py |
 | `ENABLE_AX_ROUTING` | core/settings.py, ultimate_discord_intelligence_bot/services/openrouter_service/service.py |
 | `ENABLE_BANDIT_PERSIST` | ai/routing/bandit_router.py, ai/routing/linucb_router.py |
@@ -96,16 +98,15 @@
 | `ENABLE_DISCORD_USER_COMMANDS` | ultimate_discord_intelligence_bot/discord_bot/registrations.py, ultimate_discord_intelligence_bot/discord_bot/runner.py |
 | `ENABLE_DISTRIBUTED_RATE_LIMITING` | core/secure_config.py, core/settings.py |
 | `ENABLE_ENHANCED_CREW_EVALUATION` | eval/config.py, eval/trajectory_evaluator.py |
-| `ENABLE_CREW_CONFIG_VALIDATION` | scripts/validate_feature_flags.py |
-| `ENABLE_CREW_STEP_VERBOSE` | ultimate_discord_intelligence_bot/crew.py |
+| `ENABLE_EXPERIMENTAL_DEPTH` | ultimate_discord_intelligence_bot/autonomous_orchestrator.py |
 | `ENABLE_EXPERIMENT_HARNESS` | core/learning_engine.py, core/rl/advanced_experiments.py |
 | `ENABLE_FASTER_WHISPER` | core/secure_config.py |
 | `ENABLE_GPTCACHE` | core/settings.py, ultimate_discord_intelligence_bot/services/openrouter_service/service.py |
 | `ENABLE_GPTCACHE_ANALYSIS_SHADOW` | core/settings.py, ultimate_discord_intelligence_bot/services/openrouter_service/service.py |
 | `ENABLE_GRAPH_MEMORY` | core/settings.py, ultimate_discord_intelligence_bot/pipeline_components/base.py |
-| `ENABLE_HIPPORAG_MEMORY` | ultimate_discord_intelligence_bot/tools/hipporag_continual_memory_tool.py |
-| `ENABLE_HIPPORAG_CONTINUAL_MEMORY` | ultimate_discord_intelligence_bot/tools/hipporag_continual_memory_tool.py |
 | `ENABLE_GROUNDING` | ultimate_discord_intelligence_bot/setup_cli.py |
+| `ENABLE_HIPPORAG_CONTINUAL_MEMORY` | ultimate_discord_intelligence_bot/pipeline_components/base.py, ultimate_discord_intelligence_bot/tools/hipporag_continual_memory_tool.py |
+| `ENABLE_HIPPORAG_MEMORY` | ultimate_discord_intelligence_bot/pipeline_components/base.py, ultimate_discord_intelligence_bot/tools/hipporag_continual_memory_tool.py |
 | `ENABLE_INGEST_TIKTOK` | ultimate_discord_intelligence_bot/setup_cli.py |
 | `ENABLE_INGEST_TWITCH` | ultimate_discord_intelligence_bot/setup_cli.py |
 | `ENABLE_INGEST_WORKER` | ultimate_discord_intelligence_bot/discord_bot/registrations.py, ultimate_discord_intelligence_bot/discord_bot/runner.py |
@@ -118,18 +119,19 @@
 | `ENABLE_MEMORY_TTL` | ultimate_discord_intelligence_bot/tools/memory_storage_tool.py |
 | `ENABLE_METRICS` | ultimate_discord_intelligence_bot/discord_bot/scoped/env.py, ultimate_discord_intelligence_bot/setup_cli.py |
 | `ENABLE_PII_DETECTION` | core/secure_config.py, ultimate_discord_intelligence_bot/setup_cli.py |
+| `ENABLE_PLACEHOLDER_SOCIAL_INTEL` | ultimate_discord_intelligence_bot/autonomous_orchestrator.py |
 | `ENABLE_PROMPT_COMPRESSION` | core/settings.py, prompt_engine/llmlingua_adapter.py |
 | `ENABLE_RAG_CONTEXT` | core/settings.py, ultimate_discord_intelligence_bot/setup_cli.py |
 | `ENABLE_RERANKER` | core/secure_config.py, ultimate_discord_intelligence_bot/tools/rag_hybrid_tool.py |
 | `ENABLE_RESEARCH_AND_BRIEF_MULTI_AGENT` | ultimate_discord_intelligence_bot/tools/research_and_brief_multi_tool.py |
 | `ENABLE_RETRIEVAL_ADAPTIVE_K` | ultimate_discord_intelligence_bot/services/memory_service.py |
 | `ENABLE_SECURE_PATH_FALLBACK` | core/settings.py, ultimate_discord_intelligence_bot/settings.py |
-| `ENABLE_SECURE_QDRANT_FALLBACK` | core/settings.py, ultimate_discord_intelligence_bot/settings.py |
-| `ENABLE_TRANSCRIPT_CACHE` | ultimate_discord_intelligence_bot/pipeline_components/base.py |
+| `ENABLE_SECURE_QDRANT_FALLBACK` | core/settings.py, memory/qdrant_provider.py |
 | `ENABLE_SEMANTIC_CACHE` | core/cache/semantic_cache.py, ultimate_discord_intelligence_bot/discord_bot/scoped/env.py |
 | `ENABLE_SEMANTIC_CACHE_PROMOTION` | ultimate_discord_intelligence_bot/services/openrouter_service.py, ultimate_discord_intelligence_bot/services/openrouter_service/service.py |
 | `ENABLE_SEMANTIC_CACHE_SHADOW` | ultimate_discord_intelligence_bot/services/openrouter_service.py, ultimate_discord_intelligence_bot/services/openrouter_service/service.py |
 | `ENABLE_SEMANTIC_LLM_CACHE` | core/llm_cache.py, core/llm_client.py |
+| `ENABLE_SOCIAL_INTEL` | ultimate_discord_intelligence_bot/autonomous_orchestrator.py |
 | `ENABLE_TENANCY_STRICT` | ultimate_discord_intelligence_bot/services/memory_service.py, ultimate_discord_intelligence_bot/services/openrouter_helpers.py |
 | `ENABLE_TRACING` | core/secure_config.py, core/settings.py |
 | `ENABLE_TRAJECTORY_EVALUATION` | eval/config.py, eval/trajectory_evaluator.py |
@@ -137,11 +139,11 @@
 | `ENABLE_TRAJECTORY_EVALUATION_METRICS` | eval/config.py |
 | `ENABLE_TRAJECTORY_MATCHING` | eval/config.py |
 | `ENABLE_TRAJECTORY_SHADOW_EVALUATION` | eval/config.py |
+| `ENABLE_TRANSCRIPT_CACHE` | ultimate_discord_intelligence_bot/pipeline_components/base.py |
 | `ENABLE_TRANSCRIPT_COMPRESSION` | core/settings.py, ultimate_discord_intelligence_bot/pipeline_components/base.py |
 | `ENABLE_VECTOR_SEARCH` | core/settings.py, ultimate_discord_intelligence_bot/setup_cli.py |
-| `ENABLE_VOWPAL_WABBIT_BANDIT` | ai/routing/vw_bandit_router.py |
-| `ENABLE_VW_BANDIT` | ai/routing/vw_bandit_router.py |
-| `ENABLE_PLACEHOLDER_SOCIAL_INTEL` | ultimate_discord_intelligence_bot/autonomous_orchestrator.py |
+| `ENABLE_VOWPAL_WABBIT_BANDIT` | ai/routing/vw_bandit_router.py, core/llm_router.py |
+| `ENABLE_VW_BANDIT` | ai/routing/vw_bandit_router.py, core/llm_router.py |
 
 ### Privacy
 
@@ -176,4 +178,5 @@ The following items are deprecated or superseded; see configuration docs for tim
 - `ENABLE_ANALYSIS_HTTP_RETRY` — replacement: `ENABLE_HTTP_RETRY`; Legacy analysis-scoped retry flag superseded by global ENABLE_HTTP_RETRY.
 - `services.learning_engine.LearningEngine` — replacement: `core.learning_engine.LearningEngine`; Shim retained for backward compatibility; remove after grace period.
 
-_Generated digest: `1a9feb0b85d2`_
+
+_Generated digest: `16fd3d67d48a`_
