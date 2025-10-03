@@ -9,7 +9,8 @@ def test_memory_storage_tool_upsert_called():
     client.recreate_collection.return_value = None
     client.upsert.return_value = None
 
-    tool = MemoryStorageTool(client=client, embedding_fn=lambda t: [0.1])
+    # Use multi-dimension embedding (Fix #6: single-dimension vectors are rejected)
+    tool = MemoryStorageTool(client=client, embedding_fn=lambda t: [0.1, 0.2, 0.3])
     result = tool.run("hello", {"meta": 1}, collection="analysis")
 
     assert result["status"] == "success"

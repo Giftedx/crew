@@ -161,7 +161,14 @@ def test_rest_api(monkeypatch, tmp_path):
 
     monkeypatch.setattr(api.uploader, "upload_file_sync", _fake_upload)
     monkeypatch.setattr(api.compress, "Image", None)
-    client = TestClient(api.api_router)
+
+    # Create a minimal FastAPI app to properly initialize middleware stack
+    from fastapi import FastAPI
+
+    test_app = FastAPI()
+    test_app.include_router(api.api_router)
+    client = TestClient(test_app)
+
     with f.open("rb") as fh:
         resp = client.post(
             "/api/archive/",

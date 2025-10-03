@@ -58,7 +58,8 @@ def test_mem_ns_composes_and_physical_name(monkeypatch):
 def test_memory_storage_uses_tenant_namespace(monkeypatch):
     _stub_config(monkeypatch)
     client = _FakeQdrantClient()
-    tool = MemoryStorageTool(client=client, collection="analysis", embedding_fn=lambda text: [float(len(text))])
+    # Use multi-dimension embedding (Fix #6: single-dimension vectors are rejected)
+    tool = MemoryStorageTool(client=client, collection="analysis", embedding_fn=lambda text: [0.1, 0.2, 0.3])
 
     tenant_ctx = TenantContext("tenant", "space")
     with with_tenant(tenant_ctx):

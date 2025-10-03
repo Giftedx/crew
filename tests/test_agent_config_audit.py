@@ -8,6 +8,7 @@ MODULE = ast.parse(CREW_FILE.read_text())
 
 
 def _agent_tools(name: str) -> set[str]:
+    """Extract tool names from an agent method, handling wrap_tool_for_crewai() wrappers."""
     for node in MODULE.body:
         if isinstance(node, ast.ClassDef) and node.name == "UltimateDiscordIntelligenceBotCrew":
             for item in node.body:
@@ -18,9 +19,20 @@ def _agent_tools(name: str) -> set[str]:
                                 if kw.arg == "tools" and isinstance(kw.value, ast.List):
                                     names: set[str] = set()
                                     for elt in kw.value.elts:
+                                        # Handle wrap_tool_for_crewai(ToolClass()) pattern
                                         if isinstance(elt, ast.Call):
                                             fn = elt.func
-                                            if isinstance(fn, ast.Name):
+                                            # If it's wrap_tool_for_crewai, extract the inner tool
+                                            if isinstance(fn, ast.Name) and fn.id == "wrap_tool_for_crewai":
+                                                if elt.args and isinstance(elt.args[0], ast.Call):
+                                                    inner_call = elt.args[0]
+                                                    inner_fn = inner_call.func
+                                                    if isinstance(inner_fn, ast.Name):
+                                                        names.add(inner_fn.id)
+                                                    elif isinstance(inner_fn, ast.Attribute):
+                                                        names.add(inner_fn.attr)
+                                            # Handle direct tool calls (backward compatibility)
+                                            elif isinstance(fn, ast.Name):
                                                 names.add(fn.id)
                                             elif isinstance(fn, ast.Attribute):
                                                 names.add(fn.attr)

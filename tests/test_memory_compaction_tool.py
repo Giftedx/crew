@@ -14,8 +14,9 @@ def _set_flags(tmp_enable_ttl=True):
 
 def test_compaction_deletes_expired_points(monkeypatch):
     _set_flags()
-    # Use default in-memory client via provider
-    store = MemoryStorageTool(collection="test_compact")
+    # Use default in-memory client via provider with multi-dimension embedding
+    # (Fix #6: single-dimension vectors are rejected for semantic search integrity)
+    store = MemoryStorageTool(collection="test_compact", embedding_fn=lambda t: [0.1, 0.2, 0.3])
 
     # Insert two items: one already expired, one fresh
     now = int(time.time())
