@@ -349,7 +349,9 @@ class TestCoreSynthesisMethods:
 
         assert isinstance(result, dict)
         # Verify insights were integrated (now includes logger parameter)
-        orchestrator._generate_specialized_insights.assert_called_once_with(sample_complete_results, orchestrator.logger)
+        orchestrator._generate_specialized_insights.assert_called_once_with(
+            sample_complete_results, orchestrator.logger
+        )
 
     @pytest.mark.asyncio
     async def test_synthesize_specialized_intelligence_results_error_handling(self, orchestrator):

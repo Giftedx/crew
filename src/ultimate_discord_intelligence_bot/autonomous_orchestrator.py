@@ -1553,127 +1553,23 @@ class AutonomousIntelligenceOrchestrator:
     ) -> StepResult:
         """Synthesize content analysis directly from ContentPipeline outputs.
 
-        When the pipeline already produced rich analysis artifacts, prefer them over
-        launching additional agent workloads. This consolidates sentiment,
-        perspective, and fallacy insights into the step result expected by
-        downstream stages.
+        Delegates to orchestrator.pipeline_result_builders module.
         """
+        from ultimate_discord_intelligence_bot.orchestrator.pipeline_result_builders import (
+            build_pipeline_content_analysis_result,
+        )
 
-        try:
-            keywords: list[str] = []
-            if isinstance(pipeline_analysis.get("keywords"), list):
-                keywords = [str(kw) for kw in pipeline_analysis.get("keywords", [])]
-            elif isinstance(pipeline_analysis.get("key_phrases"), list):
-                keywords = [str(kw) for kw in pipeline_analysis.get("key_phrases", [])]
-
-            structured = pipeline_analysis.get("structured")
-            if not isinstance(structured, dict):
-                structured = {}
-
-            sentiment_details = pipeline_analysis.get("sentiment_details")
-            sentiment_payload: dict[str, Any] = {}
-            if isinstance(sentiment_details, dict):
-                sentiment_payload = dict(sentiment_details)
-            sentiment_label = pipeline_analysis.get("sentiment")
-            sentiment_score = pipeline_analysis.get("sentiment_score")
-            if sentiment_label and "label" not in sentiment_payload:
-                sentiment_payload["label"] = sentiment_label
-            if sentiment_score is not None and "score" not in sentiment_payload:
-                sentiment_payload["score"] = sentiment_score
-            sentiment_payload.setdefault("label", sentiment_label or "neutral")
-
-            word_count = None
-            if isinstance(structured.get("word_count"), int):
-                word_count = structured["word_count"]
-            elif isinstance(pipeline_analysis.get("word_count"), int):
-                word_count = pipeline_analysis["word_count"]
-            if word_count is None:
-                word_count = len(transcript.split())
-
-            summary = pipeline_analysis.get("summary")
-            if not summary and isinstance(pipeline_perspective, dict):
-                summary = pipeline_perspective.get("summary")
-
-            content_metadata: dict[str, Any] = {
-                "word_count": word_count,
-                "quality_score": transcription_data.get("quality_score", 0.5),
-                "analysis_timestamp": time.time(),
-                "analysis_method": pipeline_analysis.get("analysis_method", "content_pipeline_analysis"),
-                "analysis_source": "content_pipeline",
-            }
-
-            if isinstance(media_info, dict):
-                for key in ("title", "platform", "duration", "uploader", "video_id"):
-                    if key in media_info and media_info[key] is not None:
-                        content_metadata.setdefault(key, media_info[key])
-                if not source_url and media_info.get("source_url"):
-                    source_url = media_info.get("source_url")
-
-            if isinstance(pipeline_metadata, dict):
-                for key in ("source_url", "workflow_type", "acquisition_timestamp"):
-                    if key in pipeline_metadata and pipeline_metadata[key] is not None:
-                        content_metadata.setdefault(key, pipeline_metadata[key])
-                if not source_url and pipeline_metadata.get("source_url"):
-                    source_url = str(pipeline_metadata.get("source_url"))
-
-            thematic_insights = list(keywords)
-            if isinstance(pipeline_perspective, dict):
-                additional_perspectives = pipeline_perspective.get("perspectives")
-                if isinstance(additional_perspectives, list):
-                    for item in additional_perspectives:
-                        if isinstance(item, str) and item not in thematic_insights:
-                            thematic_insights.append(item)
-
-            analysis_results = {
-                "message": "Content analysis derived from ContentPipeline output",
-                "transcript": transcript,
-                "crew_analysis": pipeline_analysis,
-                "keywords": keywords,
-                "sentiment": sentiment_payload.get("label"),
-                "sentiment_score": sentiment_payload.get("score"),
-                "linguistic_patterns": {"keywords": keywords, "key_phrases": keywords},
-                "sentiment_analysis": sentiment_payload,
-                "thematic_insights": thematic_insights,
-                "content_metadata": content_metadata,
-                "timeline_anchors": transcription_data.get("timeline_anchors", []),
-                "transcript_index": transcription_data.get("transcript_index", {}),
-                "summary": summary,
-                "source_url": source_url,
-                "pipeline_analysis": pipeline_analysis,
-                "pipeline_fallacy": pipeline_fallacy,
-                "pipeline_perspective": pipeline_perspective,
-                "pipeline_metadata": pipeline_metadata,
-                "media_info": media_info,
-            }
-
-            if pipeline_fallacy is not None:
-                analysis_results.setdefault("fallacy_analysis", pipeline_fallacy)
-            if pipeline_perspective is not None:
-                analysis_results.setdefault("perspective_analysis", pipeline_perspective)
-
-            return StepResult.ok(**analysis_results)
-        except Exception as exc:  # pragma: no cover - defensive
-            self.logger.warning("Failed to construct pipeline-derived analysis payload: %s", exc)
-            return StepResult.ok(
-                message="ContentPipeline analysis extraction degraded",
-                transcript=transcript,
-                linguistic_patterns={"keywords": []},
-                sentiment_analysis={"label": "neutral"},
-                thematic_insights=[],
-                content_metadata={
-                    "word_count": len(transcript.split()),
-                    "analysis_timestamp": time.time(),
-                    "analysis_method": "content_pipeline_analysis_degraded",
-                },
-                timeline_anchors=transcription_data.get("timeline_anchors", []),
-                transcript_index=transcription_data.get("transcript_index", {}),
-                source_url=source_url,
-                pipeline_analysis=pipeline_analysis,
-                pipeline_fallacy=pipeline_fallacy,
-                pipeline_perspective=pipeline_perspective,
-                pipeline_metadata=pipeline_metadata,
-                media_info=media_info,
-            )
+        return build_pipeline_content_analysis_result(
+            transcript=transcript,
+            transcription_data=transcription_data,
+            pipeline_analysis=pipeline_analysis,
+            media_info=media_info,
+            pipeline_fallacy=pipeline_fallacy,
+            pipeline_perspective=pipeline_perspective,
+            pipeline_metadata=pipeline_metadata,
+            source_url=source_url,
+            logger=self.logger,
+        )
 
     async def _execute_specialized_information_verification(
         self, analysis_data: dict[str, Any], fact_data: dict[str, Any] | None = None
