@@ -116,8 +116,8 @@ class OpenRouterService:
         env_general = config.get_setting("openrouter_general_model")
         env_analysis = config.get_setting("openrouter_analysis_model")
         default_map = {
-            "general": [env_general or "openai/gpt-3.5-turbo"],
-            "analysis": [env_analysis or env_general or "openai/gpt-3.5-turbo"],
+            "general": [env_general or "openai/gpt-4o-mini"],
+            "analysis": [env_analysis or env_general or "openai/gpt-4o-mini"],
         }
         if models_map:
             default_map.update(models_map)

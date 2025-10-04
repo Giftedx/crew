@@ -18,10 +18,12 @@ Instrumentation (Copilot migration spec):
     * tool_runs_total{tool="fact_check", outcome=success|error|skipped}
 """
 
+import os
 from collections.abc import Callable
 
 from requests import RequestException  # http-compliance: allow-direct-requests (exception type import only)
 
+from core.http_utils import resilient_get, resilient_post
 from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
@@ -82,18 +84,185 @@ class FactCheckTool:
             evidence_count=len(evidence),
         )
 
-    # --- Backend stubs (monkeypatched in tests) ------------------------
-    def _search_duckduckgo(self, _query: str) -> list[dict]:  # pragma: no cover - replaced in tests
-        return []
+    # --- Backend implementations (production-ready) --------------------
+    def _search_duckduckgo(self, query: str) -> list[dict]:
+        """Search DuckDuckGo for evidence (no API key required)."""
+        try:
+            # DuckDuckGo Instant Answer API - free, no auth required
+            url = "https://api.duckduckgo.com/"
+            params = {"q": query, "format": "json", "no_html": "1", "skip_disambig": "1"}
 
-    def _search_serply(self, _query: str) -> list[dict]:  # pragma: no cover - replaced in tests
-        return []
+            response = resilient_get(url, params=params, timeout_seconds=10)
+            if not response or response.status_code != 200:
+                return []
 
-    def _search_exa(self, _query: str) -> list[dict]:  # pragma: no cover - replaced in tests
-        return []
+            data = response.json()
+            evidence = []
 
-    def _search_perplexity(self, _query: str) -> list[dict]:  # pragma: no cover - replaced in tests
-        return []
+            # Extract abstract (primary answer)
+            if data.get("Abstract"):
+                evidence.append(
+                    {
+                        "title": data.get("Heading", "DuckDuckGo Answer"),
+                        "url": data.get("AbstractURL", ""),
+                        "snippet": data.get("Abstract", ""),
+                    }
+                )
 
-    def _search_wolfram(self, _query: str) -> list[dict]:  # pragma: no cover - replaced in tests
-        return []
+            # Extract related topics
+            for topic in data.get("RelatedTopics", [])[:3]:  # Limit to 3
+                if isinstance(topic, dict) and topic.get("Text"):
+                    evidence.append(
+                        {
+                            "title": topic.get("Text", "")[:100],  # Use first 100 chars as title
+                            "url": topic.get("FirstURL", ""),
+                            "snippet": topic.get("Text", ""),
+                        }
+                    )
+
+            return evidence
+        except Exception:  # pragma: no cover - network errors should be caught as RequestException
+            raise RequestException("DuckDuckGo search failed")
+
+    def _search_serply(self, query: str) -> list[dict]:
+        """Search via Serply API (requires API key)."""
+        api_key = os.getenv("SERPLY_API_KEY")
+        if not api_key:
+            return []  # Skip if no API key configured
+
+        try:
+            url = "https://api.serply.io/v1/search"
+            headers = {"X-API-KEY": api_key, "Content-Type": "application/json"}
+            params = {"q": query, "num": 5}  # Limit to 5 results
+
+            response = resilient_get(url, headers=headers, params=params, timeout_seconds=15)
+            if not response or response.status_code != 200:
+                return []
+
+            data = response.json()
+            evidence = []
+
+            # Extract organic results
+            for result in data.get("organic_results", [])[:5]:
+                evidence.append(
+                    {
+                        "title": result.get("title", ""),
+                        "url": result.get("link", ""),
+                        "snippet": result.get("snippet", ""),
+                    }
+                )
+
+            return evidence
+        except Exception:  # pragma: no cover - network errors
+            raise RequestException("Serply search failed")
+
+    def _search_exa(self, query: str) -> list[dict]:
+        """Search via Exa AI (requires API key)."""
+        api_key = os.getenv("EXA_API_KEY")
+        if not api_key:
+            return []
+
+        try:
+            url = "https://api.exa.ai/search"
+            headers = {"x-api-key": api_key, "Content-Type": "application/json"}
+            payload = {"query": query, "numResults": 5, "useAutoprompt": True}
+
+            response = resilient_post(url, json_payload=payload, headers=headers, timeout_seconds=15)
+            if not response or response.status_code != 200:
+                return []
+
+            data = response.json()
+            evidence = []
+
+            # Extract results
+            for result in data.get("results", [])[:5]:
+                evidence.append(
+                    {
+                        "title": result.get("title", ""),
+                        "url": result.get("url", ""),
+                        "snippet": result.get("text", "")[:300],  # Limit snippet length
+                    }
+                )
+
+            return evidence
+        except Exception:  # pragma: no cover - network errors
+            raise RequestException("Exa search failed")
+
+    def _search_perplexity(self, query: str) -> list[dict]:
+        """Search via Perplexity API (requires API key)."""
+        api_key = os.getenv("PERPLEXITY_API_KEY")
+        if not api_key:
+            return []
+
+        try:
+            url = "https://api.perplexity.ai/chat/completions"
+            headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
+            payload = {
+                "model": "llama-3.1-sonar-small-128k-online",  # Fast, affordable online model
+                "messages": [{"role": "user", "content": f"Find evidence for or against this claim: {query}"}],
+                "max_tokens": 500,
+                "temperature": 0.2,
+                "return_citations": True,
+            }
+
+            response = resilient_post(url, json_payload=payload, headers=headers, timeout_seconds=20)
+            if not response or response.status_code != 200:
+                return []
+
+            data = response.json()
+            evidence = []
+
+            # Extract response and citations
+            if data.get("choices"):
+                message = data["choices"][0].get("message", {})
+                content = message.get("content", "")
+
+                # Extract citations if available
+                citations = data.get("citations", [])
+                if citations:
+                    for citation in citations[:5]:  # Limit to 5
+                        evidence.append({"title": citation, "url": citation, "snippet": content[:300]})
+                else:
+                    # Fallback: use the response itself
+                    evidence.append({"title": "Perplexity AI Response", "url": "", "snippet": content[:300]})
+
+            return evidence
+        except Exception:  # pragma: no cover - network errors
+            raise RequestException("Perplexity search failed")
+
+    def _search_wolfram(self, query: str) -> list[dict]:
+        """Search via Wolfram Alpha API (requires App ID)."""
+        app_id = os.getenv("WOLFRAM_ALPHA_APP_ID")
+        if not app_id:
+            return []
+
+        try:
+            url = "http://api.wolframalpha.com/v2/query"
+            params = {"input": query, "format": "plaintext", "output": "json", "appid": app_id}
+
+            response = resilient_get(url, params=params, timeout_seconds=15)
+            if not response or response.status_code != 200:
+                return []
+
+            data = response.json()
+            evidence = []
+
+            # Extract pods (answer units)
+            pods = data.get("queryresult", {}).get("pods", [])
+            for pod in pods[:3]:  # Limit to 3 pods
+                title = pod.get("title", "")
+                subpods = pod.get("subpods", [])
+                for subpod in subpods[:1]:  # Take first subpod only
+                    text = subpod.get("plaintext", "")
+                    if text:
+                        evidence.append(
+                            {
+                                "title": title,
+                                "url": f"https://www.wolframalpha.com/input/?i={query.replace(' ', '+')}",
+                                "snippet": text[:300],
+                            }
+                        )
+
+            return evidence
+        except Exception:  # pragma: no cover - network errors
+            raise RequestException("Wolfram Alpha search failed")

@@ -62,128 +62,112 @@ def check_caches(service: OpenRouterService, state: RouteState) -> dict[str, Any
         cache_meta_sem = cache_meta.setdefault("semantic", {"status": "pending"})
         cache_meta_sem.setdefault("mode", "shadow" if shadow_mode else "active")
         try:
-            import asyncio as _asyncio
-            import threading as _threading
-
-            holder: dict[str, Any] = {}
             log.debug(
                 "semantic_cache_get attempting (ns=%s, model=%s, type=%s)", ns, chosen, type(service.semantic_cache)
             )
 
             sc = service.semantic_cache
+            # Call cache.get() directly - no longer async
+            sem_res = sc.get(prompt, chosen, namespace=ns) if sc is not None else None
 
-            def _runner() -> None:
+            if sem_res is not None:
+                log.debug("semantic_cache_get HIT for model=%s ns=%s", chosen, ns)
                 try:
-                    if sc is not None:
-                        holder["result"] = _asyncio.run(sc.get(prompt, chosen, namespace=ns))
-                except Exception as exc:  # pragma: no cover - defensive
-                    holder["error"] = exc
+                    cache_meta_sem.update(
+                        {
+                            "status": "hit",
+                            "cache_type": "semantic",
+                            "similarity": float(sem_res.get("similarity", 0.0) if isinstance(sem_res, dict) else 0.0),
+                        }
+                    )
+                except Exception:
+                    cache_meta_sem["status"] = "hit"
 
-            t = _threading.Thread(target=_runner, daemon=True)
-            t.start()
-            t.join()
-            if "error" not in holder:
-                sem_res = holder.get("result")
-                if sem_res is not None:
-                    log.debug("semantic_cache_get HIT for model=%s ns=%s", chosen, ns)
+                if shadow_mode:
                     try:
-                        cache_meta_sem.update(
-                            {
-                                "status": "hit",
-                                "cache_type": "semantic",
-                                "similarity": float(
-                                    sem_res.get("similarity", 0.0) if isinstance(sem_res, dict) else 0.0
-                                ),
-                            }
-                        )
+                        metrics.SEMANTIC_CACHE_SHADOW_HITS.labels(**labels, model=chosen).inc()
+                        service._update_shadow_hit_ratio(labels, is_hit=True)
+                    except Exception:  # pragma: no cover
+                        pass
+                    try:
+                        sim_val = float(sem_res.get("similarity", 0.0)) if isinstance(sem_res, dict) else 0.0
                     except Exception:
-                        cache_meta_sem["status"] = "hit"
-
-                    if shadow_mode:
-                        try:
-                            metrics.SEMANTIC_CACHE_SHADOW_HITS.labels(**labels, model=chosen).inc()
-                            service._update_shadow_hit_ratio(labels, is_hit=True)
-                        except Exception:  # pragma: no cover
-                            pass
-                        try:
-                            sim_val = float(sem_res.get("similarity", 0.0)) if isinstance(sem_res, dict) else 0.0
-                        except Exception:
-                            sim_val = 0.0
-                        promote = bool(
-                            getattr(service, "semantic_cache_promotion_enabled", False)
-                        ) and sim_val >= float(getattr(service, "semantic_cache_promotion_threshold", 0.9))
-                        if promote:
-                            result = dict(sem_res) if isinstance(sem_res, dict) else {"response": str(sem_res)}
-                            result["cached"] = True
-                            result["cache_type"] = "semantic"
-                            result["cache_info"] = cache_meta
-                            _record_similarity(labels, chosen, sim_val)
-                            _record_cache_hit(labels, chosen, provider_family, shadow_promoted=True)
-                            service._adaptive_record_outcome(
-                                state,
-                                reward=0.0,
-                                status="cache_hit",
-                                metadata={
-                                    "cache_type": "semantic_shadow",
-                                    "similarity": sim_val,
-                                    "cache_info": cache_meta,
-                                    "promotion": True,
-                                },
-                            )
-                            state.result = result
-                            return result
-                        log.debug(
-                            "semantic_cache SHADOW HIT (no promotion) tracked for model=%s ns=%s sim=%.3f",
-                            chosen,
-                            ns,
-                            sim_val,
-                        )
-                    else:
-                        result = dict(sem_res)
+                        sim_val = 0.0
+                    promote = bool(getattr(service, "semantic_cache_promotion_enabled", False)) and sim_val >= float(
+                        getattr(service, "semantic_cache_promotion_threshold", 0.9)
+                    )
+                    if promote:
+                        result = dict(sem_res) if isinstance(sem_res, dict) else {"response": str(sem_res)}
                         result["cached"] = True
                         result["cache_type"] = "semantic"
                         result["cache_info"] = cache_meta
-                        _record_similarity(labels, chosen, float(result.get("similarity", 0.0)))
-                        try:
-                            metrics.SEMANTIC_CACHE_PREFETCH_USED.labels(**labels).inc()
-                        except Exception:  # pragma: no cover
-                            pass
-                        metrics.LLM_CACHE_HITS.labels(**labels, model=chosen, provider=provider_family).inc()
-                        try:
-                            similarity_val = float(result.get("similarity", 0.0))
-                        except Exception:
-                            similarity_val = 0.0
+                        _record_similarity(labels, chosen, sim_val)
+                        _record_cache_hit(labels, chosen, provider_family, shadow_promoted=True)
                         service._adaptive_record_outcome(
                             state,
                             reward=0.0,
                             status="cache_hit",
                             metadata={
-                                "cache_type": "semantic",
-                                "similarity": similarity_val,
+                                "cache_type": "semantic_shadow",
+                                "similarity": sim_val,
                                 "cache_info": cache_meta,
+                                "promotion": True,
                             },
                         )
                         state.result = result
                         return result
+                    log.debug(
+                        "semantic_cache SHADOW HIT (no promotion) tracked for model=%s ns=%s sim=%.3f",
+                        chosen,
+                        ns,
+                        sim_val,
+                    )
                 else:
-                    log.debug("semantic_cache_get MISS for model=%s ns=%s", chosen, ns)
-                    if shadow_mode:
-                        try:
-                            metrics.SEMANTIC_CACHE_SHADOW_MISSES.labels(**labels, model=chosen).inc()
-                            service._update_shadow_hit_ratio(labels, is_hit=False)
-                        except Exception:
-                            pass
-                        cache_meta_sem["status"] = "miss"
-                    else:
-                        try:
-                            metrics.LLM_CACHE_MISSES.labels(**labels, model=chosen, provider=provider_family).inc()
-                        except Exception:
-                            pass
-                        try:
-                            metrics.SEMANTIC_CACHE_PREFETCH_ISSUED.labels(**labels).inc()
-                        except Exception:
-                            pass
-                        cache_meta_sem["status"] = "miss"
+                    result = dict(sem_res)
+                    result["cached"] = True
+                    result["cache_type"] = "semantic"
+                    result["cache_info"] = cache_meta
+                    _record_similarity(labels, chosen, float(result.get("similarity", 0.0)))
+                    try:
+                        metrics.SEMANTIC_CACHE_PREFETCH_USED.labels(**labels).inc()
+                    except Exception:  # pragma: no cover
+                        pass
+                    metrics.LLM_CACHE_HITS.labels(**labels, model=chosen, provider=provider_family).inc()
+                    try:
+                        similarity_val = float(result.get("similarity", 0.0))
+                    except Exception:
+                        similarity_val = 0.0
+                    service._adaptive_record_outcome(
+                        state,
+                        reward=0.0,
+                        status="cache_hit",
+                        metadata={
+                            "cache_type": "semantic",
+                            "similarity": similarity_val,
+                            "cache_info": cache_meta,
+                        },
+                    )
+                    state.result = result
+                    return result
+            else:
+                log.debug("semantic_cache_get MISS for model=%s ns=%s", chosen, ns)
+                if shadow_mode:
+                    try:
+                        metrics.SEMANTIC_CACHE_SHADOW_MISSES.labels(**labels, model=chosen).inc()
+                        service._update_shadow_hit_ratio(labels, is_hit=False)
+                    except Exception:
+                        pass
+                    cache_meta_sem["status"] = "miss"
+                else:
+                    try:
+                        metrics.LLM_CACHE_MISSES.labels(**labels, model=chosen, provider=provider_family).inc()
+                    except Exception:
+                        pass
+                    try:
+                        metrics.SEMANTIC_CACHE_PREFETCH_ISSUED.labels(**labels).inc()
+                    except Exception:
+                        pass
+                    cache_meta_sem["status"] = "miss"
         except Exception:  # pragma: no cover - conservative fallback
             cache_meta_sem["status"] = "error"
             pass

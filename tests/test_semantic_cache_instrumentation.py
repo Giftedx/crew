@@ -1,5 +1,6 @@
 import os
 
+from src.core.cache.semantic_cache import CacheStats
 from src.core.settings import get_settings
 from src.obs import metrics
 from src.ultimate_discord_intelligence_bot.services.openrouter_service import OpenRouterService
@@ -10,14 +11,17 @@ class _FakeSemanticCache:
         self.store = {}
         self.calls = []
 
-    async def get(self, prompt: str, model: str, namespace: str | None = None):  # noqa: D401
+    def get(self, prompt: str, model: str, namespace: str | None = None):  # noqa: D401
         self.calls.append(("get", prompt, model, namespace))
         entry = self.store.get((namespace, model, prompt))
         return entry
 
-    async def set(self, prompt: str, model: str, value, namespace: str | None = None):  # noqa: D401
+    def set(self, prompt: str, model: str, value, namespace: str | None = None):  # noqa: D401
         self.calls.append(("set", prompt, model, namespace))
         self.store[(namespace, model, prompt)] = value
+
+    def get_stats(self) -> CacheStats:  # noqa: D401
+        return CacheStats()
 
 
 def _enable_semantic_cache():

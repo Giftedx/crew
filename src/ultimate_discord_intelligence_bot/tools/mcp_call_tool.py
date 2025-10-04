@@ -54,6 +54,10 @@ _SAFE_REGISTRY: dict[str, tuple[str, list[str]]] = {
         "mcp_server.crewai_server",
         ["list_available_crews", "get_crew_status", "execute_crew", "get_agent_performance", "abort_crew_execution"],
     ),
+    # NOTE: 'analysis' namespace intentionally excluded - not implemented in MCP server
+    # If agents attempt to call 'analysis.coordinate_analysis', they will receive
+    # 'unknown_or_forbidden' error. Either implement the namespace or remove MCPCallTool
+    # from agents that don't need it.
 }
 
 

@@ -151,9 +151,11 @@ def test_claim_extractor_tool_deduplicates_claims(mock_extract, claim_extractor_
     result = claim_extractor_tool._run("The sky is blue and water is wet.")
 
     assert result["status"] == "success"
-    # Should contain duplicates as returned by extract - deduplication not implemented yet
-    # This test documents current behavior
-    assert len(result["claims"]) == 4  # All claims included, including duplicates
+    # UPDATED: Our enhanced version deduplicates claims (improvement over original behavior)
+    # Should only have 2 unique claims, not 4 with duplicates
+    assert len(result["claims"]) == 2  # Duplicates removed
+    assert "The sky is blue" in result["claims"]
+    assert "Water is wet" in result["claims"]
 
 
 def test_claim_extractor_tool_properties():

@@ -38,14 +38,12 @@ async def test_enhanced_orchestrator():
             for error in orchestrator.system_health["errors"][:3]:
                 print(f"     - {error}")
 
-        return True
-
     except ImportError as e:
         print(f"❌ Failed to import enhanced orchestrator: {e}")
-        return False
+        pytest.fail(f"Failed to import enhanced orchestrator: {e}")
     except Exception as e:
         print(f"❌ Error testing enhanced orchestrator: {e}")
-        return False
+        pytest.fail(f"Error testing enhanced orchestrator: {e}")
 
 
 def test_crewai_tool_wrappers():
@@ -87,14 +85,12 @@ def test_crewai_tool_wrappers():
         result = wrapper._run("test input")
         print(f"✅ Wrapper execution test: {result.success if hasattr(result, 'success') else 'unknown'}")
 
-        return True
-
     except ImportError as e:
         print(f"❌ Failed to import tool wrapper: {e}")
-        return False
+        pytest.fail(f"Failed to import tool wrapper: {e}")
     except Exception as e:
         print(f"❌ Error testing tool wrapper: {e}")
-        return False
+        pytest.fail(f"Error testing tool wrapper: {e}")
 
 
 def test_fallback_orchestrator():
@@ -110,18 +106,21 @@ def test_fallback_orchestrator():
         _ = FallbackAutonomousOrchestrator()
         print("✅ Fallback orchestrator initialized")
 
-        return True
-
     except ImportError as e:
         print(f"❌ Failed to import fallback orchestrator: {e}")
-        return False
+        pytest.fail(f"Failed to import fallback orchestrator: {e}")
     except Exception as e:
         print(f"❌ Error testing fallback orchestrator: {e}")
-        return False
+        pytest.fail(f"Error testing fallback orchestrator: {e}")
 
 
 def test_system_health():
-    """Test system health and dependencies."""
+    """Test system health and dependencies.
+
+    Note: This function is called from main() which captures the return value,
+    so it's allowed to return data for the summary. When run via pytest directly,
+    the return value is ignored.
+    """
     print("\n🧪 Testing System Health and Dependencies")
     print("=" * 50)
 
@@ -175,10 +174,25 @@ async def main():
     # Test system health first
     health_results = test_system_health()
 
-    # Test components
-    orchestrator_ok = await test_enhanced_orchestrator()
-    wrapper_ok = test_crewai_tool_wrappers()
-    fallback_ok = test_fallback_orchestrator()
+    # Test components - these now raise exceptions on failure via pytest.fail
+    orchestrator_ok = True
+    wrapper_ok = True
+    fallback_ok = True
+
+    try:
+        await test_enhanced_orchestrator()
+    except Exception:
+        orchestrator_ok = False
+
+    try:
+        test_crewai_tool_wrappers()
+    except Exception:
+        wrapper_ok = False
+
+    try:
+        test_fallback_orchestrator()
+    except Exception:
+        fallback_ok = False
 
     # Summary
     print("\n📋 Test Summary")

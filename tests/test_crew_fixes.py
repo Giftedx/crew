@@ -42,14 +42,12 @@ def test_pipeline_tool_wrapper():
         assert hasattr(wrapper._wrapped_tool, "_run_async")
         print("✅ Async method available on wrapped tool")
 
-        return True
-
     except Exception as e:
         print(f"❌ PipelineToolWrapper test failed: {e}")
         import traceback
 
         traceback.print_exc()
-        return False
+        pytest.fail(f"PipelineToolWrapper test failed: {e}")
 
 
 def test_tool_wrapper_context():
@@ -72,14 +70,12 @@ def test_tool_wrapper_context():
         assert wrapper._shared_context["url"] == "https://example.com"
         print("✅ Context sharing mechanism working")
 
-        return True
-
     except Exception as e:
         print(f"❌ Tool wrapper context test failed: {e}")
         import traceback
 
         traceback.print_exc()
-        return False
+        pytest.fail(f"Tool wrapper context test failed: {e}")
 
 
 def test_orchestrator_imports():
@@ -105,14 +101,12 @@ def test_orchestrator_imports():
         except Exception as crew_error:
             print(f"⚠️ Crew orchestrator import failed (may be expected): {crew_error}")
 
-        return True
-
     except Exception as e:
         print(f"❌ Orchestrator import test failed: {e}")
         import traceback
 
         traceback.print_exc()
-        return False
+        pytest.fail(f"Orchestrator import test failed: {e}")
 
 
 def test_step_result_handling():
@@ -138,17 +132,16 @@ def test_step_result_handling():
         print("✅ StepResult.fail() working")
 
         skip_result = StepResult.skip(reason="test skip")
-        assert skip_result.success is not True
+        assert skip_result.success is True  # skip is treated as success for control flow
+        assert skip_result.custom_status == "skipped"  # but has custom_status marker
         print("✅ StepResult.skip() working")
-
-        return True
 
     except Exception as e:
         print(f"❌ StepResult test failed: {e}")
         import traceback
 
         traceback.print_exc()
-        return False
+        pytest.fail(f"StepResult test failed: {e}")
 
 
 @pytest.mark.asyncio
@@ -170,14 +163,12 @@ async def test_async_pipeline_execution():
         # to avoid network calls and dependencies during testing
         print("✅ Async pipeline execution method available")
 
-        return True
-
     except Exception as e:
         print(f"❌ Async pipeline test failed: {e}")
         import traceback
 
         traceback.print_exc()
-        return False
+        pytest.fail(f"Async pipeline test failed: {e}")
 
 
 def main():

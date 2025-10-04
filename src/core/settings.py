@@ -55,6 +55,8 @@ class Settings(BaseSettings):
     enable_api_cache: bool = Field(False, alias="ENABLE_API_CACHE")
     enable_dependency_tracking: bool = Field(False, alias="ENABLE_DEPENDENCY_TRACKING")
     enable_pipeline_run_api: bool = Field(False, alias="ENABLE_PIPELINE_RUN_API")
+    enable_pipeline_job_queue: bool = Field(False, alias="ENABLE_PIPELINE_JOB_QUEUE")
+    enable_autointel_api: bool = Field(False, alias="ENABLE_AUTOINTEL_API")
     enable_http_cache: bool = Field(False, alias="ENABLE_HTTP_CACHE")
     enable_llm_cache: bool = Field(False, alias="ENABLE_LLM_CACHE")
     enable_degradation_reporter: bool = Field(False, alias="ENABLE_DEGRADATION_REPORTER")
@@ -132,6 +134,10 @@ class Settings(BaseSettings):
 
     # Misc ingestion
     download_quality_default: str = Field("1080p")
+
+    # Pipeline job queue configuration
+    pipeline_max_concurrent_jobs: int = Field(5)
+    pipeline_job_ttl_seconds: int = Field(3600)
 
     # Secrets (never log these)
     archive_api_token: str | None = Field(None)

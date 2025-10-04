@@ -8,6 +8,7 @@ from .a2a import register_a2a_router
 from .activities import register_activities_echo
 from .alerts import register_alert_routes
 from .archive import register_archive_routes
+from .autointel import register_autointel_routes
 from .health import register_health_routes
 from .metrics import register_metrics_endpoint
 from .pilot import register_pilot_route
@@ -22,4 +23,5 @@ __all__ = [
     "register_archive_routes",
     "register_alert_routes",
     "register_pipeline_routes",
+    "register_autointel_routes",
 ]

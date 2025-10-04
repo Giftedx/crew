@@ -90,7 +90,13 @@ class MemoryStorageTool(BaseTool[StepResult]):
         config = get_config()
         env_collection = config.get_setting("qdrant_collection")
         base_collection = collection or env_collection or "content"
-        embed = embedding_fn or (lambda text: [float(len(text))])
+
+        # CRITICAL FIX: Do NOT use single-dimension fallback embedding
+        # Single-dimension vectors like [float(len(text))] break semantic search
+        # If no proper embedding function is provided, we'll skip vector storage
+        # and return StepResult.skip() to maintain pipeline flow
+        embed = embedding_fn  # No fallback - require proper embedding or skip
+
         if client is not None:
             qclient = cast(_QdrantLike, client)
         else:
@@ -104,7 +110,11 @@ class MemoryStorageTool(BaseTool[StepResult]):
         object.__setattr__(self, "embedding_fn", embed)
         object.__setattr__(self, "client", qclient)
         self._metrics = get_metrics()
-        self._ensure_collection(base_collection)
+
+        # Only ensure collection if we have a valid embedding function
+        if embed is not None:
+            self._ensure_collection(base_collection)
+
         # feature flags
         self._enable_ttl = str(os.getenv("ENABLE_MEMORY_TTL", "0")).lower() in {"1", "true", "yes", "on"}
         self._ttl_seconds = int(os.getenv("MEMORY_TTL_SECONDS", "0") or 0)
@@ -191,6 +201,24 @@ class MemoryStorageTool(BaseTool[StepResult]):
         return base
 
     def _run(self, text: str, metadata: dict[str, object], collection: str | None = None) -> StepResult:
+        # Check if we have a proper embedding function
+        if self.embedding_fn is None:
+            # Skip vector storage if no proper embedding available
+            # This prevents breaking semantic search with invalid single-dimension vectors
+            self._metrics.counter(
+                "tool_runs_total",
+                labels={
+                    "tool": "memory_storage",
+                    "outcome": "skipped",
+                    "reason": "no_embedding_fn",
+                },
+            ).inc()
+            return StepResult.skip(
+                reason="No embedding function configured - vector storage skipped to prevent semantic search degradation",
+                text_length=len(text),
+                metadata_keys=list(metadata.keys()),
+            )
+
         # Use tenant-scoped collection if available
         if collection is None:
             target = self._get_tenant_collection()
@@ -200,12 +228,33 @@ class MemoryStorageTool(BaseTool[StepResult]):
 
         try:
             self._ensure_collection(target)
-            if self.embedding_fn is None:
-                raise RuntimeError("embedding_fn not initialised")
             vector = self.embedding_fn(text)
-            # strict dimension validation against existing collection if known
-            if isinstance(vector, list) and vector and not all(isinstance(v, (float, int)) for v in vector):
-                return StepResult.fail("embedding vector must be numeric list")
+
+            # Validate embedding vector quality
+            if not isinstance(vector, list) or not vector:
+                return StepResult.fail(
+                    "embedding function returned invalid vector (must be non-empty list)",
+                    collection=target,
+                )
+
+            if not all(isinstance(v, (float, int)) for v in vector):
+                return StepResult.fail("embedding vector must contain only numeric values", collection=target)
+
+            # CRITICAL: Reject single-dimension vectors that break semantic search
+            if len(vector) == 1:
+                self._metrics.counter(
+                    "tool_runs_total",
+                    labels={
+                        "tool": "memory_storage",
+                        "outcome": "skipped",
+                        "reason": "invalid_embedding_dimension",
+                    },
+                ).inc()
+                return StepResult.skip(
+                    reason="Single-dimension embedding vector rejected (breaks semantic search). Use proper embedding model with 384+ dimensions.",
+                    vector_dimension=len(vector),
+                    collection=target,
+                )
 
             # Enhance metadata with tenant context
             enhanced_metadata = dict(metadata)
@@ -256,7 +305,11 @@ class MemoryStorageTool(BaseTool[StepResult]):
                     "tenant_scoped": str(tenant_ctx is not None).lower(),
                 },
             ).inc()
-            return StepResult.ok(collection=target, tenant_scoped=tenant_ctx is not None)
+            return StepResult.ok(
+                collection=target,
+                tenant_scoped=tenant_ctx is not None,
+                vector_dimension=len(vector),
+            )
         except Exception as exc:  # pragma: no cover - network/errors
             self._metrics.counter(
                 "tool_runs_total",

@@ -1,5 +1,6 @@
 import pytest
 
+from src.core.cache.semantic_cache import CacheStats
 from src.obs import metrics
 from src.ultimate_discord_intelligence_bot.services.openrouter_service import OpenRouterService
 
@@ -8,11 +9,14 @@ class _FakeSemanticCache:
     def __init__(self):
         self.store = {}
 
-    async def get(self, prompt: str, model: str, namespace: str | None = None):
+    def get(self, prompt: str, model: str, namespace: str | None = None):
         return self.store.get((namespace, model, prompt))
 
-    async def set(self, prompt: str, model: str, value, namespace: str | None = None):
+    def set(self, prompt: str, model: str, value, namespace: str | None = None):
         self.store[(namespace, model, prompt)] = value
+
+    def get_stats(self) -> CacheStats:
+        return CacheStats()
 
 
 def test_semantic_cache_promotion_increments_counter(monkeypatch: pytest.MonkeyPatch):

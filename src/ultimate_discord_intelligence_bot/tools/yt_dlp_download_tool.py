@@ -99,6 +99,10 @@ class YtDlpDownloadTool(BaseTool[StepResult]):
 
             return candidates
 
+        # CRITICAL FIX: Handle None quality parameter gracefully
+        if quality is None:
+            quality = "1080p"  # Fallback to default
+
         match = re.match(r"(\d+)", quality)
         height = match.group(1) if match else "1080"
         format_selector = f"bv*[height<={height}]+ba/b[height<={height}]"
@@ -128,6 +132,7 @@ class YtDlpDownloadTool(BaseTool[StepResult]):
             "--print-json",
             "--retries",
             "3",
+            "--no-cache-dir",  # Force fresh downloads, disable caching
             video_url,
         ]
         # For user-facing and tests, normalize to a stable command string beginning with 'yt-dlp'
@@ -142,6 +147,7 @@ class YtDlpDownloadTool(BaseTool[StepResult]):
             "--print-json",
             "--retries",
             "3",
+            "--no-cache-dir",  # Force fresh downloads, disable caching
             video_url,
         ]
         command_str = " ".join(display_cmd)

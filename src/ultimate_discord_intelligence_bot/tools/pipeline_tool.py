@@ -3,6 +3,7 @@
 import asyncio
 import logging
 import time
+from enum import Enum
 from typing import Any, TypedDict
 
 from core.settings import get_settings
@@ -13,6 +14,116 @@ from ..step_result import StepResult
 from ._base import BaseTool
 
 logger = logging.getLogger(__name__)
+
+
+class CircuitState(Enum):
+    """Circuit breaker states."""
+
+    CLOSED = "closed"  # Normal operation
+    OPEN = "open"  # Failing - reject requests
+    HALF_OPEN = "half_open"  # Testing - allow one request
+
+
+class CircuitBreaker:
+    """Circuit breaker pattern for pipeline fault tolerance.
+
+    Prevents cascading failures by tracking error rates and temporarily
+    stopping requests when failure threshold is exceeded.
+
+    States:
+        CLOSED: Normal operation (failures < threshold)
+        OPEN: Failing (reject all requests)
+        HALF_OPEN: Testing recovery (allow 1 request)
+
+    Configuration:
+        failure_threshold: Number of failures before opening circuit (default: 5)
+        recovery_timeout: Seconds to wait before testing recovery (default: 60)
+        success_threshold: Successes needed to close circuit from half-open (default: 2)
+    """
+
+    def __init__(
+        self,
+        failure_threshold: int = 5,
+        recovery_timeout: float = 60.0,
+        success_threshold: int = 2,
+    ):
+        self.failure_threshold = failure_threshold
+        self.recovery_timeout = recovery_timeout
+        self.success_threshold = success_threshold
+
+        self.state = CircuitState.CLOSED
+        self.failure_count = 0
+        self.success_count = 0
+        self.last_failure_time: float | None = None
+        self._metrics = get_metrics()
+
+    def record_success(self) -> None:
+        """Record successful operation."""
+        if self.state == CircuitState.HALF_OPEN:
+            self.success_count += 1
+            if self.success_count >= self.success_threshold:
+                # Recovery successful - close circuit
+                self._transition_to(CircuitState.CLOSED)
+                self.failure_count = 0
+                self.success_count = 0
+        elif self.state == CircuitState.CLOSED:
+            # Reset failure count on success
+            self.failure_count = 0
+
+    def record_failure(self) -> None:
+        """Record failed operation."""
+        self.last_failure_time = time.time()
+
+        if self.state == CircuitState.HALF_OPEN:
+            # Test failed - reopen circuit
+            self._transition_to(CircuitState.OPEN)
+            self.success_count = 0
+        elif self.state == CircuitState.CLOSED:
+            self.failure_count += 1
+            if self.failure_count >= self.failure_threshold:
+                # Too many failures - open circuit
+                self._transition_to(CircuitState.OPEN)
+
+    def can_execute(self) -> tuple[bool, str]:
+        """Check if request can be executed.
+
+        Returns:
+            (allowed, reason) tuple
+        """
+        if self.state == CircuitState.CLOSED:
+            return True, "circuit_closed"
+
+        if self.state == CircuitState.OPEN:
+            # Check if recovery timeout elapsed
+            if self.last_failure_time and (time.time() - self.last_failure_time) >= self.recovery_timeout:
+                # Try half-open state
+                self._transition_to(CircuitState.HALF_OPEN)
+                self.success_count = 0
+                return True, "circuit_half_open"
+            return False, "circuit_open"
+
+        # HALF_OPEN state - allow request
+        return True, "circuit_half_open"
+
+    def _transition_to(self, new_state: CircuitState) -> None:
+        """Transition to new state with logging and metrics."""
+        old_state = self.state
+        self.state = new_state
+        logger.info(f"Circuit breaker state transition: {old_state.value} → {new_state.value}")
+        self._metrics.counter(
+            "circuit_breaker_state_transitions",
+            labels={"from_state": old_state.value, "to_state": new_state.value},
+        ).inc()
+        self._metrics.gauge("circuit_breaker_state", 1.0, labels={"state": new_state.value})
+
+    def get_status(self) -> dict[str, Any]:
+        """Get current circuit breaker status."""
+        return {
+            "state": self.state.value,
+            "failure_count": self.failure_count,
+            "success_count": self.success_count,
+            "last_failure_time": self.last_failure_time,
+        }
 
 
 class _PipelineResult(TypedDict, total=False):
@@ -26,16 +137,38 @@ class _PipelineResult(TypedDict, total=False):
 
 
 class PipelineTool(BaseTool[StepResult]):
-    """Tool wrapping the content pipeline."""
+    """Tool wrapping the content pipeline with circuit breaker protection."""
 
     name: str = "Content Pipeline Tool"
     description: str = "Download, transcribe, analyse and post a video to Discord. Provide url and optional quality."
+
+    # Class-level circuit breaker shared across all instances
+    _circuit_breaker: CircuitBreaker | None = None
 
     def __init__(self, pipeline: Any | None = None):
         # Retain attribute for potential future dependency injection, though current code
         # constructs its own ContentPipeline instance per run.
         self.pipeline = pipeline
         self._metrics = get_metrics()
+
+        # Initialize shared circuit breaker on first instantiation
+        if PipelineTool._circuit_breaker is None:
+            settings = get_settings()
+            failure_threshold = getattr(settings, "pipeline_circuit_failure_threshold", 5)
+            recovery_timeout = getattr(settings, "pipeline_circuit_recovery_timeout", 60.0)
+            success_threshold = getattr(settings, "pipeline_circuit_success_threshold", 2)
+
+            PipelineTool._circuit_breaker = CircuitBreaker(
+                failure_threshold=failure_threshold,
+                recovery_timeout=recovery_timeout,
+                success_threshold=success_threshold,
+            )
+            logger.info(
+                f"Initialized pipeline circuit breaker: "
+                f"failure_threshold={failure_threshold}, "
+                f"recovery_timeout={recovery_timeout}s, "
+                f"success_threshold={success_threshold}"
+            )
 
     async def _run(
         self,
@@ -45,8 +178,34 @@ class PipelineTool(BaseTool[StepResult]):
         tenant_id: str | None = None,
         workspace_id: str | None = None,
     ) -> StepResult:
-        """Process video with comprehensive error handling and tenancy."""
+        """Process video with comprehensive error handling, tenancy, and circuit breaker protection."""
         start_time = time.time()
+
+        # Check circuit breaker before executing
+        if self._circuit_breaker:
+            can_execute, reason = self._circuit_breaker.can_execute()
+            if not can_execute:
+                duration = time.time() - start_time
+                self._metrics.histogram("tool_run_seconds", duration, labels={"tool": "pipeline"})
+                self._metrics.counter(
+                    "tool_runs_total",
+                    labels={"tool": "pipeline", "outcome": "circuit_breaker_open"},
+                ).inc()
+
+                error_msg = (
+                    f"Pipeline circuit breaker is open (too many recent failures). "
+                    f"Service temporarily unavailable. Retry after {self._circuit_breaker.recovery_timeout}s."
+                )
+                logger.warning(f"Pipeline request rejected by circuit breaker: {url}")
+
+                return StepResult.fail(
+                    error=error_msg,
+                    url=url,
+                    quality=quality,
+                    processing_time=duration,
+                    timestamp=time.time(),
+                    circuit_breaker_status=self._circuit_breaker.get_status() if self._circuit_breaker else None,
+                )
 
         try:
             # Validate inputs
@@ -54,6 +213,8 @@ class PipelineTool(BaseTool[StepResult]):
                 duration = time.time() - start_time
                 self._metrics.histogram("tool_run_seconds", duration, labels={"tool": "pipeline"})
                 self._metrics.counter("tool_runs_total", labels={"tool": "pipeline", "outcome": "error"}).inc()
+                if self._circuit_breaker:
+                    self._circuit_breaker.record_failure()
                 return StepResult.fail(error="URL is required and must be a string", url=url, quality=quality)
 
             if not quality or not isinstance(quality, str) or not quality.strip():
@@ -91,6 +252,11 @@ class PipelineTool(BaseTool[StepResult]):
                 logger.error(f"Pipeline processing failed for URL {url}: {error_msg}")
                 self._metrics.counter("tool_runs_total", labels={"tool": "pipeline", "outcome": "error"}).inc()
                 self._metrics.histogram("tool_run_seconds", processing_time, labels={"tool": "pipeline"})
+
+                # Record failure in circuit breaker
+                if self._circuit_breaker:
+                    self._circuit_breaker.record_failure()
+
                 return StepResult.fail(
                     error=error_msg,
                     url=url,
@@ -98,18 +264,25 @@ class PipelineTool(BaseTool[StepResult]):
                     processing_time=processing_time,
                     timestamp=time.time(),
                     data=payload,
+                    circuit_breaker_status=self._circuit_breaker.get_status() if self._circuit_breaker else None,
                 )
 
             # Success path
             logger.info(f"Pipeline processing completed successfully in {processing_time:.2f}s")
             self._metrics.counter("tool_runs_total", labels={"tool": "pipeline", "outcome": "success"}).inc()
             self._metrics.histogram("tool_run_seconds", processing_time, labels={"tool": "pipeline"})
+
+            # Record success in circuit breaker
+            if self._circuit_breaker:
+                self._circuit_breaker.record_success()
+
             return StepResult.ok(
                 url=url,
                 quality=quality,
                 processing_time=processing_time,
                 timestamp=time.time(),
                 data=payload,
+                circuit_breaker_status=self._circuit_breaker.get_status() if self._circuit_breaker else None,
             )
 
         except Exception as e:  # pragma: no cover - error path
@@ -118,12 +291,18 @@ class PipelineTool(BaseTool[StepResult]):
             logger.error(f"Pipeline processing failed for URL {url}: {error_msg}")
             self._metrics.counter("tool_runs_total", labels={"tool": "pipeline", "outcome": "error"}).inc()
             self._metrics.histogram("tool_run_seconds", processing_time, labels={"tool": "pipeline"})
+
+            # Record failure in circuit breaker
+            if self._circuit_breaker:
+                self._circuit_breaker.record_failure()
+
             return StepResult.fail(
                 error=error_msg,
                 url=url,
                 quality=quality,
                 processing_time=processing_time,
                 timestamp=time.time(),
+                circuit_breaker_status=self._circuit_breaker.get_status() if self._circuit_breaker else None,
             )
 
     def run(

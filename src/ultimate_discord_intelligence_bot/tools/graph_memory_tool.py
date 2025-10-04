@@ -203,5 +203,260 @@ class GraphMemoryTool(BaseTool[StepResult]):
                 pass
             return StepResult.fail(str(exc), namespace=namespace)
 
+    def list_graphs(self, *, namespace: str = "graph") -> StepResult:
+        """List all graph IDs in a namespace.
+
+        Args:
+            namespace: Logical namespace (will be tenant-scoped if context available).
+
+        Returns:
+            StepResult with graph_ids list, count, and resolved namespace.
+        """
+        namespace, tenant_scoped = self._resolve_namespace(namespace)
+        ns_path = self._namespace_path(namespace)
+
+        if not ns_path.exists():
+            return StepResult.ok(graph_ids=[], count=0, namespace=namespace, tenant_scoped=tenant_scoped)
+
+        graph_ids = [f.stem for f in ns_path.glob("*.json")]
+
+        try:
+            self._metrics.counter(
+                "graph_memory_lists_total",
+                labels={"namespace": namespace, "tenant_scoped": str(tenant_scoped).lower()},
+            ).inc()
+        except Exception:
+            pass
+
+        return StepResult.ok(
+            graph_ids=graph_ids,
+            count=len(graph_ids),
+            namespace=namespace,
+            tenant_scoped=tenant_scoped,
+        )
+
+    def search_graphs(
+        self,
+        *,
+        query: str | None = None,
+        namespace: str = "graph",
+        tags: list[str] | None = None,
+        limit: int = 10,
+    ) -> StepResult:
+        """Search for graphs matching query/tags.
+
+        Args:
+            query: Text query to match against keywords, node labels.
+            namespace: Logical namespace (will be tenant-scoped if context available).
+            tags: Filter by specific tags (must match at least one).
+            limit: Maximum number of results to return.
+
+        Returns:
+            StepResult with list of matching graphs (metadata), count, and namespace.
+        """
+        namespace, tenant_scoped = self._resolve_namespace(namespace)
+        ns_path = self._namespace_path(namespace)
+
+        if not ns_path.exists() or not any(ns_path.glob("*.json")):
+            return StepResult.ok(graphs=[], count=0, namespace=namespace, tenant_scoped=tenant_scoped)
+
+        matches: list[dict[str, Any]] = []
+        query_keywords = set(_extract_keywords(query)) if query else set()
+
+        for json_file in ns_path.glob("*.json"):
+            try:
+                with json_file.open("r", encoding="utf-8") as f:
+                    graph_data = json.load(f)
+
+                metadata = graph_data.get("metadata", {})
+
+                # Tag filter (exact match required if specified)
+                if tags:
+                    graph_tags = set(metadata.get("tags", []))
+                    if not graph_tags.intersection(tags):
+                        continue
+
+                # Keyword scoring
+                score = 0.0
+                if query_keywords:
+                    graph_keywords = set(metadata.get("keywords", []))
+                    overlap = query_keywords.intersection(graph_keywords)
+                    score = len(overlap) / len(query_keywords) if query_keywords else 0.0
+                else:
+                    score = 1.0  # No query = all graphs match equally
+
+                matches.append(
+                    {
+                        "graph_id": json_file.stem,
+                        "score": score,
+                        "keywords": metadata.get("keywords", []),
+                        "tags": metadata.get("tags", []),
+                        "node_count": metadata.get("node_count", 0),
+                        "edge_count": metadata.get("edge_count", 0),
+                        "tenant_scoped": metadata.get("tenant_scoped", False),
+                    }
+                )
+            except Exception:
+                continue  # Skip corrupted files
+
+        # Sort by score (descending) and limit
+        matches.sort(key=lambda x: x["score"], reverse=True)
+        results = matches[:limit]
+
+        try:
+            self._metrics.counter(
+                "graph_memory_searches_total",
+                labels={"namespace": namespace, "tenant_scoped": str(tenant_scoped).lower()},
+            ).inc()
+        except Exception:
+            pass
+
+        return StepResult.ok(
+            graphs=results,
+            count=len(results),
+            namespace=namespace,
+            tenant_scoped=tenant_scoped,
+        )
+
+    def get_graph(self, *, graph_id: str, namespace: str = "graph") -> StepResult:
+        """Retrieve a specific graph by ID.
+
+        Args:
+            graph_id: UUID hex string of the graph to retrieve.
+            namespace: Logical namespace (will be tenant-scoped if context available).
+
+        Returns:
+            StepResult with full graph structure (nodes, edges, keywords, metadata).
+        """
+        namespace, tenant_scoped = self._resolve_namespace(namespace)
+        ns_path = self._namespace_path(namespace)
+
+        file_path = ns_path / f"{graph_id}.json"
+        if not file_path.exists():
+            return StepResult.fail(
+                f"Graph not found: {graph_id}",
+                namespace=namespace,
+                graph_id=graph_id,
+            )
+
+        try:
+            with file_path.open("r", encoding="utf-8") as f:
+                graph_data = json.load(f)
+
+            try:
+                self._metrics.counter(
+                    "graph_memory_retrievals_total",
+                    labels={"namespace": namespace, "tenant_scoped": str(tenant_scoped).lower()},
+                ).inc()
+            except Exception:
+                pass
+
+            return StepResult.ok(
+                graph_id=graph_id,
+                nodes=graph_data.get("nodes", []),
+                edges=graph_data.get("edges", []),
+                keywords=graph_data.get("keywords", []),
+                metadata=graph_data.get("metadata", {}),
+                namespace=namespace,
+                tenant_scoped=tenant_scoped,
+            )
+        except Exception as exc:
+            return StepResult.fail(
+                f"Failed to load graph: {exc}",
+                namespace=namespace,
+                graph_id=graph_id,
+            )
+
+    def traverse_graph(
+        self,
+        *,
+        graph_id: str,
+        start_node: str,
+        max_depth: int = 3,
+        relation_filter: list[str] | None = None,
+        namespace: str = "graph",
+    ) -> StepResult:
+        """Traverse graph from a starting node using BFS.
+
+        Args:
+            graph_id: UUID hex string of the graph.
+            start_node: Node ID to start from (e.g., "keyword_AI", "sentence_1").
+            max_depth: Maximum number of edge hops from start node.
+            relation_filter: Only follow edges with these relation types.
+            namespace: Logical namespace (will be tenant-scoped if context available).
+
+        Returns:
+            StepResult with visited_nodes, paths, and extracted subgraph.
+        """
+        # First retrieve the graph
+        graph_result = self.get_graph(graph_id=graph_id, namespace=namespace)
+        if not graph_result.success:
+            return graph_result
+
+        nodes = graph_result.data["nodes"]
+        edges = graph_result.data["edges"]
+
+        # Build adjacency list
+        adjacency: dict[str, list[dict[str, Any]]] = {}
+        for edge in edges:
+            src = edge.get("source")
+            dst = edge.get("target")
+            rel = edge.get("relation")
+
+            # Apply relation filter
+            if relation_filter and rel not in relation_filter:
+                continue
+
+            if src not in adjacency:
+                adjacency[src] = []
+            adjacency[src].append({"target": dst, "relation": rel})
+
+        # BFS traversal
+        from collections import deque
+
+        visited: set[str] = {start_node}
+        queue: deque[tuple[str, int, list[str]]] = deque([(start_node, 0, [start_node])])
+        paths: dict[str, list[str]] = {start_node: [start_node]}
+
+        while queue:
+            current, depth, path = queue.popleft()
+
+            if depth >= max_depth:
+                continue
+
+            for neighbor_info in adjacency.get(current, []):
+                neighbor = neighbor_info["target"]
+
+                if neighbor not in visited:
+                    visited.add(neighbor)
+                    new_path = path + [neighbor]
+                    paths[neighbor] = new_path
+                    queue.append((neighbor, depth + 1, new_path))
+
+        # Extract subgraph
+        visited_nodes = [n for n in nodes if n.get("id") in visited]
+        visited_edges = [e for e in edges if e.get("source") in visited and e.get("target") in visited]
+
+        try:
+            self._metrics.counter(
+                "graph_memory_traversals_total",
+                labels={"namespace": graph_result.data["namespace"]},
+            ).inc()
+        except Exception:
+            pass
+
+        return StepResult.ok(
+            graph_id=graph_id,
+            start_node=start_node,
+            visited_nodes=visited_nodes,
+            paths=paths,
+            subgraph={"nodes": visited_nodes, "edges": visited_edges},
+            node_count=len(visited_nodes),
+            edge_count=len(visited_edges),
+            max_depth=max_depth,
+            namespace=graph_result.data["namespace"],
+            tenant_scoped=graph_result.data.get("tenant_scoped", False),
+        )
+
 
 __all__ = ["GraphMemoryTool"]

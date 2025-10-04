@@ -19,6 +19,7 @@
 | `ENABLE_A2A_SKILL_SUMMARIZE` | server/a2a_tools.py |
 | `ENABLE_A2A_STREAMING_DEMO` | server/a2a_streaming.py |
 | `ENABLE_ACTIVITIES_ECHO` | server/routes/activities.py, ultimate_discord_intelligence_bot/setup_cli.py |
+| `ENABLE_AUTOINTEL_API` | core/settings.py, server/routes/autointel.py |
 | `ENABLE_CORS` | server/middleware.py, ultimate_discord_intelligence_bot/setup_cli.py |
 | `ENABLE_CREW_CONFIG_VALIDATION` | mcp_server/crewai_server.py, ultimate_discord_intelligence_bot/crew.py |
 | `ENABLE_CREW_STEP_VERBOSE` | mcp_server/crewai_server.py, ultimate_discord_intelligence_bot/crew.py |
@@ -69,7 +70,6 @@
 | Flag | Referenced In (sample) |
 |------|------------------------|
 | `ENABLE_ADVANCED_CACHE` | core/settings.py |
-| `ENABLE_ADVANCED_PERF` | ultimate_discord_intelligence_bot/autonomous_orchestrator.py |
 | `ENABLE_AGENT_EVALS` | eval/trajectory_evaluator.py |
 | `ENABLE_AI_ROUTING` | ultimate_discord_intelligence_bot/agent_training/performance_monitor.py, ultimate_discord_intelligence_bot/agent_training/performance_monitor_final.py |
 | `ENABLE_API` | core/secure_config.py, core/settings.py |
@@ -119,6 +119,7 @@
 | `ENABLE_MEMORY_TTL` | ultimate_discord_intelligence_bot/tools/memory_storage_tool.py |
 | `ENABLE_METRICS` | ultimate_discord_intelligence_bot/discord_bot/scoped/env.py, ultimate_discord_intelligence_bot/setup_cli.py |
 | `ENABLE_PII_DETECTION` | core/secure_config.py, ultimate_discord_intelligence_bot/setup_cli.py |
+| `ENABLE_PIPELINE_JOB_QUEUE` | core/settings.py |
 | `ENABLE_PLACEHOLDER_SOCIAL_INTEL` | ultimate_discord_intelligence_bot/autonomous_orchestrator.py |
 | `ENABLE_PROMPT_COMPRESSION` | core/settings.py, prompt_engine/llmlingua_adapter.py |
 | `ENABLE_RAG_CONTEXT` | core/settings.py, ultimate_discord_intelligence_bot/setup_cli.py |
@@ -131,7 +132,6 @@
 | `ENABLE_SEMANTIC_CACHE_PROMOTION` | ultimate_discord_intelligence_bot/services/openrouter_service.py, ultimate_discord_intelligence_bot/services/openrouter_service/service.py |
 | `ENABLE_SEMANTIC_CACHE_SHADOW` | ultimate_discord_intelligence_bot/services/openrouter_service.py, ultimate_discord_intelligence_bot/services/openrouter_service/service.py |
 | `ENABLE_SEMANTIC_LLM_CACHE` | core/llm_cache.py, core/llm_client.py |
-| `ENABLE_SOCIAL_INTEL` | ultimate_discord_intelligence_bot/autonomous_orchestrator.py |
 | `ENABLE_TENANCY_STRICT` | ultimate_discord_intelligence_bot/services/memory_service.py, ultimate_discord_intelligence_bot/services/openrouter_helpers.py |
 | `ENABLE_TRACING` | core/secure_config.py, core/settings.py |
 | `ENABLE_TRAJECTORY_EVALUATION` | eval/config.py, eval/trajectory_evaluator.py |
@@ -179,4 +179,4 @@ The following items are deprecated or superseded; see configuration docs for tim
 - `services.learning_engine.LearningEngine` — replacement: `core.learning_engine.LearningEngine`; Shim retained for backward compatibility; remove after grace period.
 
 
-_Generated digest: `16fd3d67d48a`_
+_Generated digest: `38810a7e6a70`_

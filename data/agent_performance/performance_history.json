@@ -3491,6 +3491,188 @@
       },
       "error_occurred": false,
       "error_details": {}
+    },
+    {
+      "timestamp": "2025-10-03T04:42:12.274356+00:00",
+      "agent_name": "test_agent",
+      "task_type": "test_analysis",
+      "tools_used": [
+        "fact_check_tool",
+        "vector_tool"
+      ],
+      "tool_sequence": [
+        {
+          "tool": "fact_check_tool",
+          "action": "verify_claim"
+        },
+        {
+          "tool": "vector_tool",
+          "action": "semantic_search"
+        }
+      ],
+      "response_quality": 0.85,
+      "response_time": 12.5,
+      "user_feedback": {
+        "satisfaction": 0.9
+      },
+      "error_occurred": false,
+      "error_details": {}
+    },
+    {
+      "timestamp": "2025-10-03T05:38:19.516837+00:00",
+      "agent_name": "test_agent",
+      "task_type": "test_analysis",
+      "tools_used": [
+        "fact_check_tool",
+        "vector_tool"
+      ],
+      "tool_sequence": [
+        {
+          "tool": "fact_check_tool",
+          "action": "verify_claim"
+        },
+        {
+          "tool": "vector_tool",
+          "action": "semantic_search"
+        }
+      ],
+      "response_quality": 0.85,
+      "response_time": 12.5,
+      "user_feedback": {
+        "satisfaction": 0.9
+      },
+      "error_occurred": false,
+      "error_details": {}
+    },
+    {
+      "timestamp": "2025-10-03T06:22:03.737375+00:00",
+      "agent_name": "test_agent",
+      "task_type": "test_analysis",
+      "tools_used": [
+        "fact_check_tool",
+        "vector_tool"
+      ],
+      "tool_sequence": [
+        {
+          "tool": "fact_check_tool",
+          "action": "verify_claim"
+        },
+        {
+          "tool": "vector_tool",
+          "action": "semantic_search"
+        }
+      ],
+      "response_quality": 0.85,
+      "response_time": 12.5,
+      "user_feedback": {
+        "satisfaction": 0.9
+      },
+      "error_occurred": false,
+      "error_details": {}
+    },
+    {
+      "timestamp": "2025-10-03T06:40:53.547269+00:00",
+      "agent_name": "test_agent",
+      "task_type": "test_analysis",
+      "tools_used": [
+        "fact_check_tool",
+        "vector_tool"
+      ],
+      "tool_sequence": [
+        {
+          "tool": "fact_check_tool",
+          "action": "verify_claim"
+        },
+        {
+          "tool": "vector_tool",
+          "action": "semantic_search"
+        }
+      ],
+      "response_quality": 0.85,
+      "response_time": 12.5,
+      "user_feedback": {
+        "satisfaction": 0.9
+      },
+      "error_occurred": false,
+      "error_details": {}
+    },
+    {
+      "timestamp": "2025-10-03T06:45:49.630460+00:00",
+      "agent_name": "test_agent",
+      "task_type": "test_analysis",
+      "tools_used": [
+        "fact_check_tool",
+        "vector_tool"
+      ],
+      "tool_sequence": [
+        {
+          "tool": "fact_check_tool",
+          "action": "verify_claim"
+        },
+        {
+          "tool": "vector_tool",
+          "action": "semantic_search"
+        }
+      ],
+      "response_quality": 0.85,
+      "response_time": 12.5,
+      "user_feedback": {
+        "satisfaction": 0.9
+      },
+      "error_occurred": false,
+      "error_details": {}
+    },
+    {
+      "timestamp": "2025-10-03T06:48:56.588542+00:00",
+      "agent_name": "test_agent",
+      "task_type": "test_analysis",
+      "tools_used": [
+        "fact_check_tool",
+        "vector_tool"
+      ],
+      "tool_sequence": [
+        {
+          "tool": "fact_check_tool",
+          "action": "verify_claim"
+        },
+        {
+          "tool": "vector_tool",
+          "action": "semantic_search"
+        }
+      ],
+      "response_quality": 0.85,
+      "response_time": 12.5,
+      "user_feedback": {
+        "satisfaction": 0.9
+      },
+      "error_occurred": false,
+      "error_details": {}
+    },
+    {
+      "timestamp": "2025-10-03T06:51:40.041066+00:00",
+      "agent_name": "test_agent",
+      "task_type": "test_analysis",
+      "tools_used": [
+        "fact_check_tool",
+        "vector_tool"
+      ],
+      "tool_sequence": [
+        {
+          "tool": "fact_check_tool",
+          "action": "verify_claim"
+        },
+        {
+          "tool": "vector_tool",
+          "action": "semantic_search"
+        }
+      ],
+      "response_quality": 0.85,
+      "response_time": 12.5,
+      "user_feedback": {
+        "satisfaction": 0.9
+      },
+      "error_occurred": false,
+      "error_details": {}
     }
   ],
   "enhanced_fact_checker": [
@@ -4037,6 +4219,114 @@
       "tool_sequence": [],
       "response_quality": 0.0,
       "response_time": 1.8596649169921875e-05,
+      "user_feedback": {},
+      "error_occurred": false,
+      "error_details": {}
+    },
+    {
+      "timestamp": "2025-10-01T22:54:19.372486+00:00",
+      "agent_name": "crew_orchestrator",
+      "task_type": "failed_execution",
+      "tools_used": [],
+      "tool_sequence": [],
+      "response_quality": 0.0,
+      "response_time": 8.58306884765625e-06,
+      "user_feedback": {},
+      "error_occurred": false,
+      "error_details": {}
+    },
+    {
+      "timestamp": "2025-10-01T23:09:38.396899+00:00",
+      "agent_name": "crew_orchestrator",
+      "task_type": "failed_execution",
+      "tools_used": [],
+      "tool_sequence": [],
+      "response_quality": 0.0,
+      "response_time": 9.775161743164062e-06,
+      "user_feedback": {},
+      "error_occurred": false,
+      "error_details": {}
+    },
+    {
+      "timestamp": "2025-10-01T23:09:51.904157+00:00",
+      "agent_name": "crew_orchestrator",
+      "task_type": "failed_execution",
+      "tools_used": [],
+      "tool_sequence": [],
+      "response_quality": 0.0,
+      "response_time": 5.245208740234375e-06,
+      "user_feedback": {},
+      "error_occurred": false,
+      "error_details": {}
+    },
+    {
+      "timestamp": "2025-10-02T20:15:34.648235+00:00",
+      "agent_name": "crew_orchestrator",
+      "task_type": "failed_execution",
+      "tools_used": [],
+      "tool_sequence": [],
+      "response_quality": 0.0,
+      "response_time": 8.821487426757812e-06,
+      "user_feedback": {},
+      "error_occurred": false,
+      "error_details": {}
+    },
+    {
+      "timestamp": "2025-10-02T22:15:30.399838+00:00",
+      "agent_name": "crew_orchestrator",
+      "task_type": "failed_execution",
+      "tools_used": [],
+      "tool_sequence": [],
+      "response_quality": 0.0,
+      "response_time": 9.059906005859375e-06,
+      "user_feedback": {},
+      "error_occurred": false,
+      "error_details": {}
+    },
+    {
+      "timestamp": "2025-10-02T22:24:55.704155+00:00",
+      "agent_name": "crew_orchestrator",
+      "task_type": "failed_execution",
+      "tools_used": [],
+      "tool_sequence": [],
+      "response_quality": 0.0,
+      "response_time": 1.1444091796875e-05,
+      "user_feedback": {},
+      "error_occurred": false,
+      "error_details": {}
+    },
+    {
+      "timestamp": "2025-10-02T22:25:04.288851+00:00",
+      "agent_name": "crew_orchestrator",
+      "task_type": "failed_execution",
+      "tools_used": [],
+      "tool_sequence": [],
+      "response_quality": 0.0,
+      "response_time": 7.3909759521484375e-06,
+      "user_feedback": {},
+      "error_occurred": false,
+      "error_details": {}
+    },
+    {
+      "timestamp": "2025-10-02T22:25:15.399662+00:00",
+      "agent_name": "crew_orchestrator",
+      "task_type": "failed_execution",
+      "tools_used": [],
+      "tool_sequence": [],
+      "response_quality": 0.0,
+      "response_time": 9.059906005859375e-06,
+      "user_feedback": {},
+      "error_occurred": false,
+      "error_details": {}
+    },
+    {
+      "timestamp": "2025-10-02T22:25:27.738548+00:00",
+      "agent_name": "crew_orchestrator",
+      "task_type": "failed_execution",
+      "tools_used": [],
+      "tool_sequence": [],
+      "response_quality": 0.0,
+      "response_time": 1.1920928955078125e-05,
       "user_feedback": {},
       "error_occurred": false,
       "error_details": {}

@@ -1,0 +1,19 @@
+{
+  "id": "3e5e9c01db9d4061ad6dedb9b4602073",
+  "text": "Machine learning algorithms are revolutionizing artificial intelligence. Deep neural networks enable pattern recognition and complex decision making. These systems can learn from experience and adapt to new situations.",
+  "namespace": "continual_memory",
+  "metadata": {
+    "source": "integration_test",
+    "timestamp": 1759466417.952334,
+    "domain": "ai_ml"
+  },
+  "tags": [
+    "ml",
+    "ai",
+    "neural_networks",
+    "learning"
+  ],
+  "timestamp": 1759466417.9523628,
+  "type": "fallback_memory",
+  "backend": "lightweight"
+}

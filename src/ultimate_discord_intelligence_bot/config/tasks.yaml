@@ -18,17 +18,21 @@ plan_autonomy_mission:
 
 capture_source_media:
   description: >-
-    Resolve and download the highest-quality media for {url} across all supported
-    platforms, capturing rich metadata and uploading artefacts when size limits are hit.
+    Use the MultiPlatformDownloadTool to resolve and download the highest-quality media for {url} 
+    across all supported platforms. Call MultiPlatformDownloadTool with the URL to download the video
+    and capture rich metadata including file paths, formats, durations, and resolver notes.
+    The tool will handle platform detection and download the content.
   expected_output: Download manifest containing file paths, formats, durations, and resolver notes.
   agent: acquisition_specialist
   human_input: false
-  async_execution: false
+  async_execution: true # Enable parallel execution - no dependencies
   output_file: output/download_manifest_{url_hash}.json
 
 transcribe_and_index_media:
   description: >-
-    Produce accurate transcripts, searchable indices, and aligned timelines for the
+    Use the AudioTranscriptionTool to produce accurate transcripts from the downloaded media.
+    Call AudioTranscriptionTool with the file path from the previous acquisition task to transcribe
+    the audio content. The tool will generate searchable indices and aligned timelines for the
     captured media package.
   expected_output: Transcript bundle with timestamps, quality indicators, and index references.
   agent: transcription_engineer
@@ -40,8 +44,10 @@ transcribe_and_index_media:
 
 map_transcript_insights:
   description: >-
-    Analyse transcripts for sentiment shifts, topical clusters, and noteworthy excerpts
-    that downstream teams must review.
+    Use the EnhancedAnalysisTool and TextAnalysisTool to analyse the transcript from the previous task.
+    Call EnhancedAnalysisTool with the transcript text to identify sentiment shifts, topical clusters, 
+    and noteworthy excerpts. Use TextAnalysisTool to extract themes and perspectives.
+    The transcript should be available from the previous transcription task.
   expected_output: Structured insight report containing themes, sentiment summary, and highlighted excerpts.
   agent: analysis_cartographer
   context:
@@ -52,8 +58,10 @@ map_transcript_insights:
 
 verify_priority_claims:
   description: >-
-    Extract and fact-check consequential claims from the analysed content, capturing
-    verdicts, confidence levels, and supporting evidence.
+    Use the ClaimExtractorTool to extract factual claims from the transcript, then use FactCheckTool 
+    to verify them. First call ClaimExtractorTool with the transcript text to extract key claims.
+    Then call FactCheckTool for each significant claim to capture verdicts, confidence levels, 
+    and supporting evidence. The transcript should be available from the transcription task.
   expected_output: Verification dossier with claim list, verdicts, fallacy notes, and citations.
   agent: verification_director
   context:

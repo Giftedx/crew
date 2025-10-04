@@ -17,6 +17,25 @@ import time
 from textwrap import dedent
 from typing import TYPE_CHECKING, Any
 
+# Third-party imports for validation
+try:
+    from pydantic import BaseModel, Field, ValidationError, field_validator
+except ImportError:
+    # Fallback if pydantic not available (shouldn't happen in production)
+    BaseModel = object  # type: ignore
+
+    def Field(*a, **k):  # type: ignore
+        return None
+
+    ValidationError = Exception  # type: ignore
+
+    def field_validator(*a, **k):  # type: ignore
+        def decorator(f):
+            return f
+
+        return decorator
+
+
 # Third-party imports (optional): provide light fallbacks when crewai isn't installed
 try:  # pragma: no cover - prefer real library when present
     from crewai import Crew, Process, Task  # type: ignore
@@ -43,6 +62,14 @@ from .crew_error_handler import CrewErrorHandler
 from .crew_insight_helpers import CrewInsightExtractor
 from .multi_modal_synthesizer import MultiModalSynthesizer
 from .obs.metrics import get_metrics
+from .orchestrator import (
+    crew_builders,
+    data_transformers,
+    error_handlers,
+    extractors,
+    quality_assessors,
+    system_validators,
+)
 from .step_result import StepResult
 
 # Local imports - Tools (only the ones actually used in imports)
@@ -69,6 +96,72 @@ if TYPE_CHECKING:  # pragma: no cover - typing only
 logger = logging.getLogger(__name__)
 
 
+# ========================================
+# TASK OUTPUT VALIDATION SCHEMAS
+# ========================================
+
+
+class AcquisitionOutput(BaseModel):
+    """Schema for content acquisition task output."""
+
+    file_path: str = Field(..., description="Path to downloaded media file")
+    title: str = Field(default="", description="Media title")
+    description: str = Field(default="", description="Media description")
+    author: str = Field(default="", description="Content author/creator")
+    duration: float | None = Field(default=None, description="Media duration in seconds")
+    platform: str = Field(default="unknown", description="Source platform")
+
+
+class TranscriptionOutput(BaseModel):
+    """Schema for transcription task output."""
+
+    transcript: str = Field(..., description="Full transcribed text")
+    timeline_anchors: list[dict[str, Any]] = Field(default_factory=list, description="Timeline markers with timestamps")
+    transcript_length: int = Field(default=0, description="Character count of transcript")
+    quality_score: float = Field(default=0.0, ge=0.0, le=1.0, description="Transcription quality (0-1)")
+
+
+class AnalysisOutput(BaseModel):
+    """Schema for content analysis task output."""
+
+    insights: list[str] = Field(default_factory=list, description="Key insights extracted")
+    themes: list[str] = Field(default_factory=list, description="Major themes identified")
+    fallacies: list[dict[str, Any]] = Field(default_factory=list, description="Logical fallacies detected")
+    perspectives: list[dict[str, Any]] = Field(default_factory=list, description="Different viewpoints")
+
+
+class VerificationOutput(BaseModel):
+    """Schema for verification task output."""
+
+    verified_claims: list[str] = Field(default_factory=list, description="Claims extracted for verification")
+    fact_check_results: list[dict[str, Any]] = Field(default_factory=list, description="Fact-check outcomes")
+    trustworthiness_score: float = Field(default=50.0, ge=0.0, le=100.0, description="Source trust score (0-100)")
+
+
+class IntegrationOutput(BaseModel):
+    """Schema for knowledge integration task output."""
+
+    executive_summary: str = Field(..., description="High-level summary of all findings")
+    key_takeaways: list[str] = Field(default_factory=list, description="Main conclusions")
+    recommendations: list[str] = Field(default_factory=list, description="Suggested actions")
+    confidence_score: float = Field(default=0.5, ge=0.0, le=1.0, description="Overall confidence (0-1)")
+
+
+# Task name to schema mapping
+TASK_OUTPUT_SCHEMAS: dict[str, type[BaseModel]] = {
+    "acquisition": AcquisitionOutput,
+    "capture": AcquisitionOutput,  # Alias
+    "transcription": TranscriptionOutput,
+    "transcribe": TranscriptionOutput,  # Alias
+    "analysis": AnalysisOutput,
+    "map": AnalysisOutput,  # Alias for map_transcript_insights
+    "verification": VerificationOutput,
+    "verify": VerificationOutput,  # Alias
+    "integration": IntegrationOutput,
+    "knowledge": IntegrationOutput,  # Alias
+}
+
+
 class AutonomousIntelligenceOrchestrator:
     """Enhanced orchestrator that coordinates specialized autonomous intelligence agents through strategic workflows."""
 
@@ -92,6 +185,70 @@ class AutonomousIntelligenceOrchestrator:
         except Exception:
             self._llm_available = False
 
+    def _get_budget_limits(self, depth: str) -> dict[str, Any]:
+        """Get budget limits based on analysis depth.
+
+        Budget tiers reflect the complexity and cost of each depth level.
+        Higher depths use more expensive models and produce longer outputs.
+
+        Args:
+            depth: Analysis depth (quick/standard/deep/comprehensive/experimental)
+
+        Returns:
+            Dictionary with 'total' budget and 'per_task' limits
+        """
+        budgets = {
+            "quick": {
+                "total": 0.50,  # $0.50 total
+                "per_task": {
+                    "acquisition": 0.05,
+                    "transcription": 0.15,
+                    "analysis": 0.30,
+                },
+            },
+            "standard": {
+                "total": 1.50,  # $1.50 total
+                "per_task": {
+                    "acquisition": 0.05,
+                    "transcription": 0.30,
+                    "analysis": 0.75,
+                    "verification": 0.40,
+                },
+            },
+            "deep": {
+                "total": 3.00,  # $3.00 total
+                "per_task": {
+                    "acquisition": 0.05,
+                    "transcription": 0.50,
+                    "analysis": 1.20,
+                    "verification": 0.75,
+                    "knowledge": 0.50,
+                },
+            },
+            "comprehensive": {
+                "total": 5.00,  # $5.00 total
+                "per_task": {
+                    "acquisition": 0.10,
+                    "transcription": 0.75,
+                    "analysis": 2.00,
+                    "verification": 1.00,
+                    "knowledge": 1.15,
+                },
+            },
+            "experimental": {
+                "total": 10.00,  # $10.00 total
+                "per_task": {
+                    "acquisition": 0.10,
+                    "transcription": 1.50,
+                    "analysis": 4.00,
+                    "verification": 2.00,
+                    "knowledge": 2.40,
+                },
+            },
+        }
+
+        return budgets.get(depth, budgets["standard"])
+
     # ========================================
     # DATA FLOW HELPERS (Critical Fix)
     # ========================================
@@ -106,157 +263,104 @@ class AutonomousIntelligenceOrchestrator:
             agent: CrewAI Agent instance with tools attribute
             context_data: Dictionary of data to make available to all tools
         """
-        if not hasattr(agent, "tools"):
-            self.logger.warning(f"Agent {getattr(agent, 'role', 'unknown')} has no tools attribute")
-            return
+        return crew_builders.populate_agent_tool_context(
+            agent, context_data, logger_instance=self.logger, metrics_instance=self.metrics
+        )
 
-        populated_count = 0
-        for tool in agent.tools:
-            if hasattr(tool, "update_context"):
-                tool.update_context(context_data)
-                populated_count += 1
-                self.logger.debug(
-                    f"Populated context for {getattr(tool, 'name', tool.__class__.__name__)}: "
-                    f"{list(context_data.keys())}"
-                )
+    def _get_or_create_agent(self, agent_name: str) -> Any:
+        """Get agent from coordinators cache or create and cache it.
 
-        if populated_count > 0:
-            self.logger.info(
-                f"Populated shared context on {populated_count} tools for agent {getattr(agent, 'role', 'unknown')}"
-            )
-            # Track context population for monitoring
-            try:
-                self.metrics.counter(
-                    "autointel_context_populated",
-                    labels={
-                        "agent": getattr(agent, "role", "unknown"),
-                        "tools_count": populated_count,
-                        "has_transcript": "transcript" in context_data or "text" in context_data,
-                    },
-                ).inc()
-            except Exception:
-                pass
-
-    def _validate_stage_data(self, stage_name: str, required_keys: list[str], data: dict[str, Any]) -> None:
-        """Validate that required data keys are present before stage execution.
-
-        Raises ValueError with clear diagnostic if data is missing, preventing
-        cascading failures from propagating through the workflow.
+        CRITICAL: This ensures agents are created ONCE and reused across stages.
+        Repeated calls to crew_instance.agent_method() create FRESH agents with
+        EMPTY tools, bypassing context population. Always use this method.
 
         Args:
-            stage_name: Name of the stage for error messages
-            required_keys: List of required keys that must be present and non-empty
-            data: Data dictionary to validate
+            agent_name: Name of agent method (e.g., 'analysis_cartographer')
 
-        Raises:
-            ValueError: If any required keys are missing or empty
+        Returns:
+            Cached agent instance with persistent tool context
         """
-        missing = []
-        for key in required_keys:
-            if key not in data:
-                missing.append(f"{key} (not present)")
-            elif not data[key]:
-                missing.append(f"{key} (empty)")
+        return crew_builders.get_or_create_agent(
+            agent_name, self.agent_coordinators, self.crew_instance, logger_instance=self.logger
+        )
 
-        if missing:
-            available = list(data.keys())
-            error_msg = f"Stage '{stage_name}' missing required data: {missing}. Available keys: {available}"
-            self.logger.error(error_msg)
-            raise ValueError(error_msg)
-        # Validation passed; no side-effects here
+    def _task_completion_callback(self, task_output: Any) -> None:
+        """Callback executed after each task to extract and propagate structured data.
+
+        CRITICAL FIX: CrewAI task context passes TEXT to LLM prompts, NOT structured
+        data to tools. This callback extracts tool results and updates global crew
+        context so subsequent tasks can access the data.
+
+        Now includes Pydantic validation to prevent invalid data propagation.
+
+        Args:
+            task_output: TaskOutput object from completed task
+        """
+        return crew_builders.task_completion_callback(
+            task_output,
+            populate_agent_context_callback=self._populate_agent_tool_context,
+            detect_placeholder_callback=self._detect_placeholder_responses,
+            repair_json_callback=self._repair_json,
+            extract_key_values_callback=self._extract_key_values_from_text,
+            logger_instance=self.logger,
+            metrics_instance=self.metrics,
+            agent_coordinators=self.agent_coordinators,
+        )
+
+    def _extract_key_values_from_text(self, text: str) -> dict[str, Any]:
+        """Fallback extraction when JSON parsing fails."""
+        return error_handlers.extract_key_values_from_text(text)
+
+    def _repair_json(self, json_text: str) -> str:
+        """Attempt to repair common JSON malformations."""
+        return error_handlers.repair_json(json_text)
+
+    def _detect_placeholder_responses(self, task_name: str, output_data: dict[str, Any]) -> None:
+        """Detect when agents generate placeholder/mock responses instead of calling tools."""
+        return quality_assessors.detect_placeholder_responses(task_name, output_data, self.logger, self.metrics)
+
+    def _build_intelligence_crew(self, url: str, depth: str) -> Crew:
+        """Build a single chained CrewAI crew for the complete intelligence workflow.
+
+        This is the CORRECT CrewAI pattern: one crew with multiple chained tasks using
+        the context parameter to pass data between stages. This replaces the previous
+        broken pattern of creating 25 separate single-task crews with data embedded
+        in task descriptions.
+
+        Args:
+            url: URL to analyze
+            depth: Analysis depth (standard, deep, comprehensive, experimental)
+
+        Returns:
+            Configured Crew with chained tasks
+        """
+        return crew_builders.build_intelligence_crew(
+            url,
+            depth,
+            agent_getter_callback=self._get_or_create_agent,
+            task_completion_callback=self._task_completion_callback,
+            logger_instance=self.logger,
+        )
+
+    def _validate_stage_data(self, stage_name: str, required_keys: list[str], data: dict[str, Any]) -> None:
+        """Validate that required keys are present in stage data."""
+        return quality_assessors.validate_stage_data(stage_name, required_keys, data)
 
     def _validate_system_prerequisites(self) -> dict[str, Any]:
         """Validate system dependencies and return health status."""
-        health = {
-            "healthy": True,
-            "warnings": [],
-            "errors": [],
-            "available_capabilities": [],
-            "degraded_capabilities": [],
-        }
-
-        # Check critical dependencies
-        critical_deps = {
-            "yt-dlp": self._check_ytdlp_available(),
-            "llm_api": self._check_llm_api_available(),
-            "discord_integration": self._check_discord_available(),
-        }
-
-        for dep, available in critical_deps.items():
-            if not available:
-                health["errors"].append(f"Critical dependency missing: {dep}")
-                health["healthy"] = False
-
-        # Check optional services
-        optional_services = {
-            "qdrant": os.getenv("QDRANT_URL") is not None,
-            "vector_search": os.getenv("QDRANT_URL") is not None,
-            "drive_upload": os.getenv("GOOGLE_DRIVE_CREDENTIALS") is not None,
-            "advanced_analytics": os.getenv("PROMETHEUS_ENDPOINT_PATH") is not None,
-        }
-
-        for service, available in optional_services.items():
-            if available:
-                health["available_capabilities"].append(service)
-            else:
-                health["degraded_capabilities"].append(service)
-                health["warnings"].append(f"Optional service unavailable: {service}")
-
-        # Determine workflow capabilities based on available dependencies
-        if critical_deps["yt-dlp"] and critical_deps["llm_api"]:
-            health["available_capabilities"].extend(
-                ["content_acquisition", "transcription_processing", "content_analysis"]
-            )
-
-        if not critical_deps["discord_integration"]:
-            health["degraded_capabilities"].append("community_engagement")
-            health["warnings"].append("Discord integration disabled - community engagement limited")
-
-        return health
+        return system_validators.validate_system_prerequisites()
 
     def _check_ytdlp_available(self) -> bool:
         """Check if yt-dlp is available without importing it directly (guard-safe)."""
-        try:
-            # Use PATH probing to detect presence; avoid direct downloader-imports here
-            import shutil
-
-            if shutil.which("yt-dlp"):
-                return True
-            # Check configured directory hint
-            try:
-                from .settings import YTDLP_DIR  # noqa: PLC0415
-
-                return bool(YTDLP_DIR)
-            except Exception:
-                return False
-        except Exception:
-            return False
+        return system_validators.check_ytdlp_available()
 
     def _check_llm_api_available(self) -> bool:
         """Check if LLM API keys are configured."""
-        openai_key = os.getenv("OPENAI_API_KEY", "")
-        openrouter_key = os.getenv("OPENROUTER_API_KEY", "")
-
-        # Dummy keys don't count as available
-        dummy_patterns = ["dummy_", "your-", "sk-your-"]
-
-        valid_openai = openai_key and not any(pattern in openai_key for pattern in dummy_patterns)
-        valid_openrouter = openrouter_key and not any(pattern in openrouter_key for pattern in dummy_patterns)
-
-        return valid_openai or valid_openrouter
+        return system_validators.check_llm_api_available()
 
     def _check_discord_available(self) -> bool:
         """Check if Discord integration is properly configured."""
-        token = os.getenv("DISCORD_BOT_TOKEN", "")
-        webhook = os.getenv("DISCORD_WEBHOOK", "")
-
-        # Dummy values don't count
-        dummy_patterns = ["dummy_", "your-", "https://discord.com/api/webhooks/YOUR_"]
-
-        valid_token = token and not any(pattern in token for pattern in dummy_patterns)
-        valid_webhook = webhook and not any(pattern in webhook for pattern in dummy_patterns)
-
-        return valid_token or valid_webhook
+        return system_validators.check_discord_available()
 
     async def _to_thread_with_tenant(self, fn, *args, **kwargs):
         """Run a sync function in a thread while preserving TenantContext.
@@ -281,23 +385,30 @@ class AutonomousIntelligenceOrchestrator:
             return await asyncio.to_thread(fn, *args, **kwargs)
 
     def _initialize_agent_coordination_system(self):
-        """Initialize the agent coordination system with specialized workflows mapped to redesigned agent roster."""
+        """Initialize the agent coordination system with specialized workflows mapped to redesigned agent roster.
+
+        CRITICAL: This method MUST NOT create agent instances. Agent creation is handled exclusively
+        by _get_or_create_agent() to ensure context is populated before use. This method only
+        defines the workflow structure and dependencies.
+        """
+        # Map workflow names to agent method names (strings, not instances!)
+        # Agents will be lazy-loaded via _get_or_create_agent() when needed
         self.agent_workflow_map = {
-            "mission_coordination": self.crew.autonomous_mission_coordinator,
-            "content_acquisition": self.crew.multi_platform_acquisition_specialist,
-            "transcription_processing": self.crew.advanced_transcription_engineer,
-            "content_analysis": self.crew.comprehensive_linguistic_analyst,
-            "information_verification": self.crew.information_verification_director,
-            "threat_analysis": self.crew.threat_intelligence_analyst,
-            "behavioral_profiling": self.crew.behavioral_profiling_specialist,
-            "social_intelligence": self.crew.social_intelligence_coordinator,
-            "trend_analysis": self.crew.trend_analysis_scout,
-            "knowledge_integration": self.crew.knowledge_integration_architect,
-            "research_synthesis": self.crew.research_synthesis_specialist,
-            "intelligence_briefing": self.crew.intelligence_briefing_director,
-            "strategic_argumentation": self.crew.strategic_argument_analyst,
-            "system_operations": self.crew.system_operations_manager,
-            "community_engagement": self.crew.community_engagement_coordinator,
+            "mission_coordination": "autonomous_mission_coordinator",
+            "content_acquisition": "multi_platform_acquisition_specialist",
+            "transcription_processing": "advanced_transcription_engineer",
+            "content_analysis": "comprehensive_linguistic_analyst",
+            "information_verification": "information_verification_director",
+            "threat_analysis": "threat_intelligence_analyst",
+            "behavioral_profiling": "behavioral_profiling_specialist",
+            "social_intelligence": "social_intelligence_coordinator",
+            "trend_analysis": "trend_analysis_scout",
+            "knowledge_integration": "knowledge_integration_architect",
+            "research_synthesis": "research_synthesis_specialist",
+            "intelligence_briefing": "intelligence_briefing_director",
+            "strategic_argumentation": "strategic_argument_analyst",
+            "system_operations": "system_operations_manager",
+            "community_engagement": "community_engagement_coordinator",
         }
 
         self.workflow_dependencies = {
@@ -318,57 +429,15 @@ class AutonomousIntelligenceOrchestrator:
             "community_engagement": ["intelligence_briefing"],  # Final stage
         }
 
-        # Agent coordination references for optimized crew execution
-        self.agent_coordinators = {
-            "mission_orchestrator": self.crew.autonomous_mission_coordinator,
-            "acquisition_specialist": self.crew.multi_platform_acquisition_specialist,
-            "transcription_engineer": self.crew.advanced_transcription_engineer,
-            "analysis_cartographer": self.crew.comprehensive_linguistic_analyst,
-            "verification_director": self.crew.information_verification_director,
-            "threat_analyst": self.crew.threat_intelligence_analyst,
-            "behavioral_profiler": self.crew.behavioral_profiling_specialist,
-            "social_intelligence": self.crew.social_intelligence_coordinator,
-            "trend_scout": self.crew.trend_analysis_scout,
-            "knowledge_architect": self.crew.knowledge_integration_architect,
-            "research_synthesist": self.crew.research_synthesis_specialist,
-            "intelligence_curator": self.crew.intelligence_briefing_director,
-            "argument_strategist": self.crew.strategic_argument_analyst,
-            "system_manager": self.crew.system_operations_manager,
-            "community_coordinator": self.crew.community_engagement_coordinator,
-        }
+        # CRITICAL FIX: Initialize agent_coordinators as EMPTY dict
+        # Agents will be lazy-created and cached by _get_or_create_agent()
+        # This ensures context is populated BEFORE agent use, preventing data flow failures
+        self.agent_coordinators = {}
 
     @staticmethod
     def _normalize_acquisition_data(acquisition: StepResult | dict[str, Any] | None) -> dict[str, Any]:
-        """Return a flattened ContentPipeline payload for downstream stages.
-
-        The ContentPipeline tool historically wrapped results inside nested ``data``
-        structures.  This helper unifies both legacy and new shapes so all stages
-        can reliably access ``download`` / ``transcription`` / ``analysis`` blocks
-        without duplicating guard logic.
-        """
-
-        if isinstance(acquisition, StepResult):
-            data = acquisition.data
-        elif isinstance(acquisition, dict):
-            data = acquisition
-        else:
-            return {}
-
-        if not isinstance(data, dict):
-            return {}
-
-        if any(key in data for key in ("transcription", "analysis", "download", "fallacy", "perspective")):
-            return data
-
-        nested = data.get("data")
-        if isinstance(nested, dict):
-            return nested
-
-        raw_payload = data.get("raw_pipeline_payload")
-        if isinstance(raw_payload, dict):
-            return raw_payload
-
-        return data
+        """Return a flattened ContentPipeline payload for downstream stages."""
+        return data_transformers.normalize_acquisition_data(acquisition)
 
     async def _execute_stage_with_recovery(
         self, stage_function, stage_name: str, agent_name: str, workflow_depth: str, *args, **kwargs
@@ -445,43 +514,8 @@ class AutonomousIntelligenceOrchestrator:
 
     @staticmethod
     def _merge_threat_and_deception_data(threat_result: StepResult, deception_result: StepResult) -> StepResult:
-        """Combine threat analysis output with deception scoring metrics (StepResult inputs).
-
-        Note: Retained for backward compatibility where StepResult objects are used.
-        """
-
-        if not isinstance(threat_result, StepResult):
-            return threat_result
-        if not threat_result.success:
-            return threat_result
-
-        combined_data: dict[str, Any] = dict(threat_result.data)
-        original_message = combined_data.get("message")
-
-        if isinstance(deception_result, StepResult) and deception_result.success:
-            deception_payload = dict(deception_result.data)
-            if deception_payload:
-                combined_data["deception_metrics"] = deception_payload
-                if "deception_score" not in combined_data and "deception_score" in deception_payload:
-                    combined_data["deception_score"] = deception_payload.get("deception_score")
-        else:
-            status = None
-            error_message = None
-            if isinstance(deception_result, StepResult):
-                status = deception_result.custom_status
-                error_message = deception_result.error
-
-            if status == "skipped":
-                combined_data.setdefault("deception_metrics_status", "skipped")
-            elif error_message:
-                combined_data.setdefault("deception_metrics_error", error_message)
-            elif status == "error":
-                combined_data.setdefault("deception_metrics_error", "deception scoring failed")
-
-        if original_message is not None:
-            combined_data["message"] = original_message
-
-        return StepResult.ok(**combined_data)
+        """Combine threat analysis output with deception scoring metrics."""
+        return data_transformers.merge_threat_and_deception_data(threat_result, deception_result)
 
     @staticmethod
     def _merge_threat_payload(
@@ -656,60 +690,36 @@ class AutonomousIntelligenceOrchestrator:
     async def execute_autonomous_intelligence_workflow(
         self, interaction: Any, url: str, depth: str = "standard", tenant_ctx: Any = None
     ) -> None:
-        """Execute the complete autonomous intelligence workflow with ALL advanced capabilities.
+        """Execute the complete autonomous intelligence workflow using proper CrewAI architecture.
 
-        This is the single entry point that orchestrates the true 25-stage workflow:
-        1. Agent Coordination Setup - Initialize CrewAI Multi-Agent System
-        2. Mission Planning and Resource Allocation
-        3. Advanced Content Acquisition with Multi-Platform Support
-        4. Enhanced Transcription and Indexing
-        5. Comprehensive Content Analysis with Sentiment Mapping
-        6. Multi-Source Information Verification
-        7. Advanced Threat and Deception Analysis
-        8. Social Intelligence and Cross-Platform Monitoring
-        9. Behavioral Profiling and Persona Analysis
-        10. Advanced Knowledge Integration (Multi-Layer Memory Systems)
-        11. Research Synthesis and Context Building
-        12. Advanced Performance Analytics and Predictive Analysis
-        13. AI-Enhanced Quality Assessment (Experimental)
-        14. Advanced Pattern Recognition (Experimental)
-        15. Cross-Reference Intelligence Network (Experimental)
-        16. Predictive Threat Assessment (Experimental)
-        17. Multi-Modal Content Synthesis (Experimental)
-        18. Dynamic Knowledge Graph Construction (Experimental)
-        19. Autonomous Learning Integration (Experimental)
-        20. Advanced Contextual Bandits Optimization (Experimental)
-        21. Community Intelligence Synthesis (Experimental)
-        22. Real-Time Adaptive Workflow (Experimental)
-        23. Enhanced Memory Consolidation (Experimental)
-        24. Intelligence Briefing Curation
-        25. Enhanced Result Synthesis with Multi-Modal Integration
+        ARCHITECTURE CHANGE (2025-10-03):
+        Previously, this method created 25 separate single-task crews with data embedded
+        in task descriptions. This violated CrewAI's design and caused critical data flow
+        failures where tools received empty/placeholder parameters.
+
+        NEW PATTERN:
+        - Builds ONE crew with chained tasks using context parameter
+        - Task descriptions are high-level instructions ("Analyze transcript")
+        - Data flows via crew.kickoff(inputs={...}) and task context chaining
+        - No data embedded in f-strings like description=f"Analyze: {transcript[:500]}"
 
         Analysis Depths:
-        - standard: Stages 1-10 (Core intelligence processing)
-        - deep: Stages 1-15 (Enhanced with research and analytics)
-        - comprehensive: Stages 1-20 (Advanced processing with quality assessment)
-        - experimental: All 25 stages (Full sophisticated multi-agent orchestration)
-
-        Advanced Features:
-        - True CrewAI multi-agent coordination with 11 specialized agents
-        - Adaptive workflow planning based on content complexity
-        - Real-time performance monitoring with AI routing optimization
-        - Predictive analytics for capacity and reliability forecasting
-        - Enhanced crew execution with trajectory analysis
-        - Autonomous learning and continuous improvement
-        - Cross-tenant capabilities through MCP integration
-        - Advanced contextual bandits for optimal decision making
-        - Multimodal analysis for text, audio, video, and metadata
-        - Dynamic knowledge graph construction and maintenance
+        - standard: 3 tasks (acquisition → transcription → analysis)
+        - deep: 4 tasks (adds verification)
+        - comprehensive/experimental: 5 tasks (adds knowledge integration)
 
         Args:
             interaction: Discord interaction object
             url: URL to analyze
             depth: Analysis depth (standard, deep, comprehensive, experimental)
+            tenant_ctx: Optional tenant context for isolation
         """
         start_time = time.time()
         workflow_id = f"autointel_{int(start_time)}_{hash(url) % 10000}"
+
+        # Store workflow ID and tenant context for cost tracking
+        self._workflow_id = workflow_id
+        self._tenant_ctx = tenant_ctx
 
         # Set up tenant context for memory services
         if tenant_ctx is None:
@@ -760,477 +770,182 @@ class AutonomousIntelligenceOrchestrator:
             except Exception:
                 pass
 
-        # Determine workflow complexity and stage count based on depth
-        if depth == "standard":
-            total_stages = 10  # Stages 1-10
-        elif depth == "deep":
-            total_stages = 15  # Stages 1-15
-        elif depth == "comprehensive":
-            total_stages = 20  # Stages 1-20
-        elif depth == "experimental":
-            total_stages = 25  # All 25 stages
-        else:
-            total_stages = 10  # Default to standard
+        # Initialize progress tracking
+        await self._send_progress_update(interaction, f"🚀 Starting {depth} intelligence analysis for: {url}", 0, 5)
+
+        # Get budget limits for this depth level
+        budget_limits = self._get_budget_limits(depth)
 
         try:
-            # Execute workflow within tenant context if available
-            if tenant_ctx:
-                try:
-                    from .tenancy import with_tenant
+            # Import cost tracking modules
+            from core.cost_tracker import initialize_cost_tracking
+            from ultimate_discord_intelligence_bot.services.request_budget import (
+                current_request_tracker,
+                track_request_budget,
+            )
 
-                    with with_tenant(tenant_ctx):
-                        await self._execute_workflow_stages(
-                            interaction, url, depth, total_stages, workflow_id, start_time
-                        )
-                    return
-                except Exception as tenancy_error:
-                    self.logger.warning(f"Tenant context execution failed: {tenancy_error}")
-                    # Fall back to execution without tenant context
+            # Initialize cost tracking if not already done
+            try:
+                initialize_cost_tracking()
+            except Exception:
+                pass  # Already initialized or not available
 
-            # Execute without tenant context as fallback
-            await self._execute_workflow_stages(interaction, url, depth, total_stages, workflow_id, start_time)
+            # Wrap execution with request budget tracking
+            with track_request_budget(total_limit=budget_limits["total"], per_task_limits=budget_limits["per_task"]):
+                # Execute workflow within tenant context if available
+                if tenant_ctx:
+                    try:
+                        from .tenancy import with_tenant
+
+                        with with_tenant(tenant_ctx):
+                            await self._execute_crew_workflow(interaction, url, depth, workflow_id, start_time)
+                    except Exception as tenancy_error:
+                        self.logger.warning(f"Tenant context execution failed: {tenancy_error}")
+                        # Fall back to execution without tenant context
+                        await self._execute_crew_workflow(interaction, url, depth, workflow_id, start_time)
+                else:
+                    # Execute without tenant context as fallback
+                    await self._execute_crew_workflow(interaction, url, depth, workflow_id, start_time)
+
+                # Get cost summary after execution
+                tracker = current_request_tracker()
+                if tracker and tracker.total_spent > 0:
+                    cost_msg = (
+                        f"💰 **Cost Tracking:**\n"
+                        f"• Total: ${tracker.total_spent:.3f}\n"
+                        f"• Budget: ${budget_limits['total']:.2f}\n"
+                        f"• Utilization: {(tracker.total_spent / budget_limits['total'] * 100):.1f}%"
+                    )
+
+                    # Send cost info if significant
+                    if tracker.total_spent > 0.10:  # > $0.10
+                        try:
+                            await interaction.followup.send(cost_msg)
+                        except Exception:
+                            self.logger.info(cost_msg)
 
         except Exception as e:
-            self.logger.error(f"Enhanced autonomous intelligence workflow failed: {e}", exc_info=True)
-            await self._send_error_response(interaction, "Enhanced Autonomous Workflow", str(e))
+            self.logger.error(f"Autonomous intelligence workflow failed: {e}", exc_info=True)
+            await self._send_error_response(interaction, "Autonomous Workflow", str(e))
             self.metrics.counter("autointel_workflows_total", labels={"depth": depth, "outcome": "error"}).inc()
 
-    async def _execute_workflow_stages(
-        self, interaction: Any, url: str, depth: str, total_stages: int, workflow_id: str, start_time: float
+    async def _execute_crew_workflow(
+        self, interaction: Any, url: str, depth: str, workflow_id: str, start_time: float
     ) -> None:
-        """Execute the actual workflow stages with graceful degradation."""
+        """Execute workflow using proper CrewAI architecture with task chaining.
+
+        This method builds ONE crew with chained tasks instead of 25 separate crews.
+        Tasks use context=[previous_task] for data flow, not embedded f-strings.
+        """
+        import asyncio
+
+        from crewai import CrewOutput
+
         try:
-            # Debug logging for workflow execution
-            print(f"🚀 Starting autonomous workflow with {total_stages} stages")
-            print(f"  URL: {url}")
-            print(f"  Depth: {depth}")
-            print(f"  Workflow ID: {workflow_id}")
-
-            # Check system health and adapt workflow accordingly
-            if not self.system_health["healthy"]:
-                print(f"⚠️ System health issues detected: {self.system_health['errors'][:3]}")
-                await self._send_progress_update(
-                    interaction, "⚠️ System operating in degraded mode due to missing dependencies...", 0, total_stages
-                )
-                for error in self.system_health["errors"][:3]:  # Show first 3 errors
-                    await self._send_progress_update(interaction, f"❌ {error}", 0, total_stages)
-
-                # Attempt limited workflow with available capabilities
-                if not self.system_health["available_capabilities"]:
-                    await self._send_error_response(
-                        interaction,
-                        "System Health Check",
-                        "No core capabilities available. Please check configuration and try again.",
-                    )
-                    return
-
-                await self._send_progress_update(
-                    interaction,
-                    f"🔧 Continuing with available capabilities: {', '.join(self.system_health['available_capabilities'][:5])}",
-                    0,
-                    total_stages,
-                )  # Stage 1: Agent Coordination Setup - Initialize CrewAI Multi-Agent System
-            await self._send_progress_update(
-                interaction, "🤖 Initializing CrewAI multi-agent coordination system...", 1, total_stages
-            )
-            coordination_result = await self._execute_agent_coordination_setup(url, depth)
-
-            if not coordination_result.get("success", False):
-                await self._send_progress_update(
-                    interaction,
-                    "⚠️ Agent coordination partially failed, continuing with simplified workflow...",
-                    1,
-                    total_stages,
-                )
-
-            # Stage 2: Mission Planning and Resource Allocation
-            await self._send_progress_update(
-                interaction, "🎯 Planning autonomous intelligence mission...", 2, total_stages
-            )
-            mission_plan = await self._execute_mission_planning(url, depth)
-            # Stage 3: Advanced Content Acquisition with Multi-Platform Support
-            print(f"📥 Stage 3: Content Acquisition for {url}")
-            await self._send_progress_update(
-                interaction, "📥 Executing specialized content acquisition...", 3, total_stages
-            )
-            acquisition_result = await self._execute_specialized_content_acquisition(url)
-            if not acquisition_result.success:
-                print(f"❌ Content acquisition failed: {acquisition_result.error}")
-                self.logger.error(f"Content acquisition failed: {acquisition_result.error}")
-                await self._handle_acquisition_failure(interaction, acquisition_result, url)
-                return
-            else:
-                print("✅ Content acquisition successful")
-                self.logger.info("Content acquisition completed successfully")
-
-            # Stage 4: Enhanced Transcription and Indexing
-            print("🎙️ Stage 4: Transcription Analysis")
-            await self._send_progress_update(
-                interaction, "🎙️ Performing advanced transcription and indexing...", 4, total_stages
-            )
-            transcription_result = await self._execute_specialized_transcription_analysis(acquisition_result)
-            print(f"  Transcription result: {'✅ Success' if transcription_result.success else '❌ Failed'}")
-
-            # Stage 5: Comprehensive Content Analysis with Sentiment Mapping
-            print("🗺️ Stage 5: Content Analysis")
-            await self._send_progress_update(
-                interaction, "🗺️ Mapping linguistic and sentiment insights...", 5, total_stages
-            )
-            analysis_result = await self._execute_specialized_content_analysis(transcription_result)
-            print(f"  Analysis result: {'✅ Success' if analysis_result.success else '❌ Failed'}")
-            if hasattr(analysis_result, "data") and isinstance(analysis_result.data, dict):
-                metadata = analysis_result.data.get("content_metadata", {})
-                print(f"  Video title: {metadata.get('title', 'Unknown')}")
-                print(f"  Platform: {metadata.get('platform', 'Unknown')}")
-
-            # Prepare fact analysis result placeholder for downstream merging
-            fact_analysis_result = StepResult.skip(reason="fact_analysis_not_executed")
-
-            # Stage 6: Multi-Source Information Verification
-            await self._send_progress_update(
-                interaction, "✅ Running specialized information verification...", 6, total_stages
-            )
-            # Execute fact analysis to support verification stage with structured evidence
-            fact_analysis_input: dict[str, Any] = {}
-            acquisition_transcription = (
-                acquisition_result.data.get("transcription", {}) if isinstance(acquisition_result.data, dict) else {}
-            )
-            if isinstance(acquisition_transcription, dict) and acquisition_transcription:
-                fact_analysis_input["transcription"] = dict(acquisition_transcription)
-            transcript_for_fact_checks = None
-            if isinstance(transcription_result.data, dict):
-                transcript_for_fact_checks = transcription_result.data.get(
-                    "enhanced_transcript"
-                ) or transcription_result.data.get("transcript")
-            if transcript_for_fact_checks:
-                transcription_payload = fact_analysis_input.setdefault("transcription", {})
-                transcription_payload["transcript"] = transcript_for_fact_checks
-            fact_analysis_input["analysis"] = analysis_result.data if isinstance(analysis_result.data, dict) else {}
-
-            fact_analysis_result = await self._execute_fact_analysis(fact_analysis_input)
-            if not fact_analysis_result.success:
-                self.logger.warning(f"Fact analysis failed: {fact_analysis_result.error}")
-            else:
-                self.logger.info("Fact analysis completed successfully")
-
-            fact_data: dict[str, Any] = fact_analysis_result.data if isinstance(fact_analysis_result.data, dict) else {}
-            if not fact_data and isinstance(analysis_result.data, dict):
-                maybe_fact = analysis_result.data.get("fact_analysis")
-                if isinstance(maybe_fact, dict):
-                    fact_data = maybe_fact
-
-            # Perform comprehensive information verification based on content analysis
-            verification_result = await self._execute_specialized_information_verification(
-                analysis_result.data, fact_data
-            )
-
-            # Stage 7: Advanced Threat and Deception Analysis
-            await self._send_progress_update(
-                interaction, "🛡️ Analyzing deception patterns and threat levels...", 7, total_stages
-            )
-            # Execute comprehensive deception/threat analysis (method is named _execute_specialized_deception_analysis)
-            threat_analysis_result = await self._execute_specialized_deception_analysis(
-                analysis_result.data, verification_result.data
-            )
-            threat_data_payload: dict[str, Any] = (
-                threat_analysis_result.data if isinstance(threat_analysis_result.data, dict) else {}
-            )
-            if threat_data_payload:
-                vdata = verification_result.data if isinstance(verification_result.data, dict) else None
-                threat_data_payload = self._merge_threat_payload(threat_data_payload, vdata, fact_data)
-
-            # Additionally compute structured deception/truth/trust scoring using dedicated tools
-            # so downstream consumers have a consistent numeric deception score and components.
+            # CRITICAL FIX: Reset global crew context at workflow start
+            # This ensures clean state between /autointel invocations
             try:
-                deception_scoring_result = await self._execute_deception_scoring(
-                    analysis_result.data, {**(fact_data or {})}
-                )
-            except Exception as _deception_exc:
-                self.logger.warning(f"Deception scoring threw exception: {_deception_exc}")
-                deception_scoring_result = StepResult.skip(reason="deception_scoring_error")
+                from .crewai_tool_wrappers import reset_global_crew_context
 
-            if isinstance(deception_scoring_result, StepResult) and deception_scoring_result.success:
-                # Ensure a top-level deception_score exists for UI and storage
-                try:
-                    dscore = deception_scoring_result.data.get("score")  # type: ignore[assignment]
-                    if isinstance(dscore, (int, float)):
-                        threat_data_payload.setdefault("deception_score", float(dscore))
-                    # Attach detailed metrics non-destructively
-                    threat_data_payload.setdefault("deception_metrics", deception_scoring_result.data)
-                except Exception:
-                    pass
+                reset_global_crew_context()
+            except Exception as ctx_reset_error:
+                self.logger.warning(f"Failed to reset global crew context: {ctx_reset_error}")
 
-            # Stage 8: Social Intelligence and Cross-Platform Monitoring
-            social_intel_result = StepResult.skip(reason="Skipped for basic analysis")
-            if depth in ["deep", "comprehensive", "experimental"]:
-                # Require meaningful content context before enabling social intel to prevent irrelevant chatter
-                content_ok = False
-                try:
-                    meta = (
-                        analysis_result.data.get("content_metadata", {})
-                        if isinstance(analysis_result.data, dict)
-                        else {}
-                    )
-                    title_ok = bool((meta.get("title") or "").strip())
-                    tx = analysis_result.data.get("transcript", "") if isinstance(analysis_result.data, dict) else ""
-                    keywords = (
-                        analysis_result.data.get("thematic_insights", [])
-                        if isinstance(analysis_result.data, dict)
-                        else []
-                    )
-                    content_ok = (
-                        title_ok
-                        or (isinstance(tx, str) and len(tx.strip()) > 40)
-                        or (isinstance(keywords, list) and len(keywords) > 0)
-                    )
-                except Exception:
-                    content_ok = False
-                await self._send_progress_update(interaction, "🌐 Gathering social intelligence...", 8, total_stages)
-                # Global gate to prevent accidental connector usage unless explicitly enabled
-                social_enabled = os.getenv("ENABLE_SOCIAL_INTEL", "0").lower() in {"1", "true", "yes", "on"}
-                if content_ok and social_enabled:
-                    social_intel_result = await self._execute_specialized_social_intelligence(
-                        analysis_result.data, verification_result.data
-                    )
-                else:
-                    reason = "insufficient_content_context" if content_ok is False else "disabled_by_config"
-                    message = (
-                        "Skipping social intelligence due to missing title/keywords/transcript. "
-                        "This prevents off-topic or placeholder monitoring."
-                        if content_ok is False
-                        else "Social intelligence disabled (ENABLE_SOCIAL_INTEL=0)."
-                    )
-                    social_intel_result = StepResult.skip(reason=reason, message=message)
+            # Build the crew with properly chained tasks
+            await self._send_progress_update(interaction, "🤖 Building CrewAI multi-agent system...", 1, 5)
+            crew = self._build_intelligence_crew(url, depth)
 
-            # Stage 9: Behavioral Profiling and Persona Analysis
-            behavioral_result = StepResult.skip(reason="Skipped for basic analysis")
-            if depth in ["comprehensive", "experimental"]:
-                await self._send_progress_update(interaction, "👤 Profiling behavioral patterns...", 9, total_stages)
-                behavioral_result = await self._execute_specialized_behavioral_profiling(
-                    analysis_result.data, threat_data_payload
-                )
+            # CRITICAL FIX: Populate initial context on all agents' tools BEFORE execution
+            # This ensures the first task (acquisition) has access to the URL parameter
+            initial_context = {
+                "url": url,
+                "depth": depth,
+            }
+            self.logger.info(f"🔧 Populating initial context on all agents: {initial_context}")
+            for agent in crew.agents:
+                self._populate_agent_tool_context(agent, initial_context)
 
-            # Stage 10: Advanced Knowledge Integration (Multi-Layer Memory Systems)
-            await self._send_progress_update(
-                interaction, "🧠 Integrating with advanced knowledge systems...", 10, total_stages
-            )
-            # Pass all required parameters in correct order: acquisition, intelligence, verification, deception, behavioral
-            if behavioral_result.success:
-                knowledge_integration_result = await self._execute_specialized_knowledge_integration(
-                    acquisition_result.data,
-                    analysis_result.data,
-                    verification_result.data,
-                    fact_data,
-                    threat_data_payload,
-                    behavioral_result.data,
-                )
-            else:
-                knowledge_integration_result = await self._execute_specialized_knowledge_integration(
-                    acquisition_result.data,
-                    analysis_result.data,
-                    verification_result.data,
-                    fact_data,
-                    threat_data_payload,
-                    {},
-                )
+            # Execute the crew with proper inputs
+            await self._send_progress_update(interaction, "⚙️ Executing intelligence workflow...", 2, 5)
+            self.logger.info(f"Kickoff crew with inputs: url={url}, depth={depth}")
 
-            # Stage 11: Research Synthesis and Context Building
-            research_result = StepResult.skip(reason="Skipped for basic analysis")
-            if depth in ["deep", "comprehensive", "experimental"]:
-                await self._send_progress_update(interaction, "📚 Synthesizing research context...", 11, total_stages)
-                research_result = await self._execute_specialized_research_synthesis(
-                    analysis_result.data, verification_result.data
-                )
+            # Run crew in thread pool to avoid blocking async loop
+            result: CrewOutput = await asyncio.to_thread(crew.kickoff, inputs={"url": url, "depth": depth})
 
-            # Stage 12: Advanced Performance Analytics and Predictive Analysis
-            analytics_result = StepResult.skip(reason="Skipped for standard analysis")
-            if depth in ["comprehensive", "experimental"]:
-                perf_enabled = os.getenv("ENABLE_ADVANCED_PERF", "0").lower() in {"1", "true", "yes", "on"}
-                if not perf_enabled:
-                    analytics_result = StepResult.skip(
-                        reason="disabled_by_config",
-                        message="Advanced performance analytics disabled (ENABLE_ADVANCED_PERF=0).",
-                    )
-                else:
-                    await self._send_progress_update(
-                        interaction, "📊 Running predictive performance analytics...", 12, total_stages
-                    )
-                    analytics_result = await self._execute_specialized_performance_optimization()
+            await self._send_progress_update(interaction, "📊 Processing crew results...", 3, 5)
 
-            # Stage 13: AI-Enhanced Quality Assessment (Experimental)
-            quality_assessment_result = StepResult.skip(reason="Skipped for non-experimental analysis")
-            if depth == "experimental":
-                await self._send_progress_update(
-                    interaction, "🤖 Running AI-enhanced quality assessment...", 13, total_stages
-                )
-                try:
-                    quality_assessment_result = await self._execute_ai_enhanced_quality_assessment(
-                        analysis_result.data,
-                        verification_result.data,
-                        threat_data_payload,
-                        knowledge_integration_result.data,
-                        fact_data,
-                    )
-                    self.logger.info(f"Quality assessment result: success={quality_assessment_result.success}")
-                    if not quality_assessment_result.success:
-                        self.logger.warning(f"Quality assessment failed: {quality_assessment_result.error}")
-                except Exception as e:
-                    self.logger.error(f"Quality assessment exception: {e}", exc_info=True)
-                    quality_assessment_result = StepResult.fail(f"Quality assessment error: {e}")
-
-            # Stage 14: Advanced Pattern Recognition (Experimental)
-            pattern_result = StepResult.skip(reason="Skipped for non-experimental analysis")
-            if depth == "experimental":
-                await self._send_progress_update(
-                    interaction, "🔍 Executing advanced pattern recognition...", 14, total_stages
-                )
-                pattern_result = await self._execute_advanced_pattern_recognition(
-                    analysis_result.data, behavioral_result.data
-                )
-
-            # Stage 15: Cross-Reference Intelligence Network (Experimental)
-            network_result = StepResult.skip(reason="Skipped for non-experimental analysis")
-            if depth == "experimental":
-                await self._send_progress_update(
-                    interaction, "🕸️ Building cross-reference intelligence network...", 15, total_stages
-                )
-                network_result = await self._execute_cross_reference_network(
-                    verification_result.data, research_result.data
-                )
-
-            # Stage 16: Predictive Threat Assessment (Experimental)
-            _ = StepResult.skip(reason="Skipped for non-experimental analysis")
-            if depth == "experimental":
-                await self._send_progress_update(
-                    interaction, "🔮 Performing predictive threat assessment...", 16, total_stages
-                )
-                _ = await self._execute_predictive_threat_assessment(
-                    threat_data_payload, behavioral_result.data, pattern_result.data
-                )
-
-            # Stage 17: Multi-Modal Content Synthesis (Experimental)
-            _ = StepResult.skip(reason="Skipped for non-experimental analysis")
-            if depth == "experimental":
-                await self._send_progress_update(
-                    interaction, "🎭 Synthesizing multi-modal content analysis...", 17, total_stages
-                )
-                _ = await self._execute_multimodal_synthesis(
-                    acquisition_result.data, analysis_result.data, behavioral_result.data
-                )
-
-            # Stage 18: Dynamic Knowledge Graph Construction (Experimental)
-            graph_result = StepResult.skip(reason="Skipped for non-experimental analysis")
-            if depth == "experimental":
-                await self._send_progress_update(
-                    interaction, "🗺️ Constructing dynamic knowledge graphs...", 18, total_stages
-                )
-                graph_result = await self._execute_knowledge_graph_construction(
-                    knowledge_integration_result.data, network_result.data
-                )
-
-            # Stage 19: Autonomous Learning Integration (Experimental)
-            learning_result = StepResult.skip(reason="Skipped for non-experimental analysis")
-            if depth == "experimental":
-                await self._send_progress_update(
-                    interaction, "🧪 Integrating autonomous learning systems...", 19, total_stages
-                )
-                learning_result = await self._execute_autonomous_learning_integration(
-                    quality_assessment_result.data, analytics_result.data
-                )
-
-            # Stage 20: Advanced Contextual Bandits Optimization (Experimental)
-            bandit_result = StepResult.skip(reason="Skipped for non-experimental analysis")
-            if depth == "experimental":
-                await self._send_progress_update(
-                    interaction, "🎲 Optimizing contextual bandits decision system...", 20, total_stages
-                )
-                bandit_result = await self._execute_contextual_bandits_optimization(
-                    analytics_result.data, learning_result.data
-                )
-
-            # Stage 21: Community Intelligence Synthesis (Experimental)
-            _ = StepResult.skip(reason="Skipped for non-experimental analysis")
-            if depth == "experimental":
-                await self._send_progress_update(
-                    interaction, "👥 Synthesizing community intelligence...", 21, total_stages
-                )
-                _ = await self._execute_community_intelligence_synthesis(social_intel_result.data, network_result.data)
-
-            # Stage 22: Real-Time Adaptive Workflow (Experimental)
-            _ = StepResult.skip(reason="Skipped for non-experimental analysis")
-            if depth == "experimental":
-                await self._send_progress_update(
-                    interaction, "⚡ Executing real-time adaptive workflow...", 22, total_stages
-                )
-                _ = await self._execute_adaptive_workflow_optimization(bandit_result.data, learning_result.data)
-
-            # Stage 23: Enhanced Memory Consolidation (Experimental)
-            _ = StepResult.skip(reason="Skipped for non-experimental analysis")
-            if depth == "experimental":
-                await self._send_progress_update(
-                    interaction, "💾 Consolidating enhanced memory systems...", 23, total_stages
-                )
-                _ = await self._execute_enhanced_memory_consolidation(
-                    knowledge_integration_result.data, graph_result.data
-                )
-
-            # Stage 24: Intelligence Briefing Curation
-            briefing_stage = 24 if depth == "experimental" else total_stages - 1
-            await self._send_progress_update(
-                interaction, "📋 Curating intelligence briefing...", briefing_stage, total_stages
-            )
-            briefing_result = await self._execute_specialized_intelligence_briefing(
-                analysis_result.data,
-                verification_result.data,
-                threat_data_payload,
-                knowledge_integration_result.data,
-                research_result.data,
-            )
-
-            # Stage 25: Enhanced Result Synthesis with Multi-Modal Integration
-            synthesis_stage = 25 if depth == "experimental" else total_stages
-            await self._send_progress_update(
-                interaction, "🔬 Synthesizing comprehensive intelligence results...", synthesis_stage, total_stages
-            )
-            synthesis_result = await self._synthesize_enhanced_autonomous_results(
-                {
-                    "mission_plan": mission_plan.data if mission_plan.success else {},
-                    "acquisition": acquisition_result.data,
-                    "transcription": transcription_result.data,
-                    "content_analysis": analysis_result.data,
-                    "information_verification": verification_result.data,
-                    "threat_analysis": threat_data_payload,
-                    # Expose raw deception scoring for downstream synthesis/embeds
-                    "deception_scoring": (
-                        deception_scoring_result.data
-                        if isinstance(deception_scoring_result, StepResult) and deception_scoring_result.success
-                        else {}
-                    ),
-                    "fact_analysis": fact_analysis_result.data if fact_analysis_result.success else {},
-                    "social_intelligence": social_intel_result.data if social_intel_result.success else {},
-                    "behavioral_profiling": behavioral_result.data if behavioral_result.success else {},
-                    "knowledge_integration": knowledge_integration_result.data,
-                    "research_synthesis": research_result.data if research_result.success else {},
-                    "performance_analytics": analytics_result.data if analytics_result.success else {},
-                    "quality_assessment": quality_assessment_result.data if quality_assessment_result.success else {},
-                    "intelligence_briefing": briefing_result.data,
-                    "workflow_metadata": {
-                        "workflow_id": workflow_id,
-                        "depth": depth,
-                        "total_stages": total_stages,
-                        "processing_time": time.time() - start_time,
-                        "url": url,
-                        "capabilities_used": self._get_capabilities_summary(depth),
-                        "ai_enhancement_level": self._calculate_ai_enhancement_level(depth),
-                    },
+            # Extract results from CrewOutput
+            if hasattr(result, "tasks_output") and result.tasks_output:
+                # Get outputs from each task
+                task_outputs = {
+                    "acquisition": None,
+                    "transcription": None,
+                    "analysis": None,
+                    "verification": None,
+                    "integration": None,
                 }
-            )
 
-            # Final Stage: Deliver Enhanced Comprehensive Results with Community Communication
-            await self._send_progress_update(
-                interaction, "✅ Enhanced autonomous intelligence analysis complete!", total_stages, total_stages
-            )
-            await self._execute_specialized_communication_reporting(interaction, synthesis_result.data, depth)
+                for i, task_output in enumerate(result.tasks_output):
+                    if i == 0:
+                        task_outputs["acquisition"] = (
+                            task_output.raw if hasattr(task_output, "raw") else str(task_output)
+                        )
+                    elif i == 1:
+                        task_outputs["transcription"] = (
+                            task_output.raw if hasattr(task_output, "raw") else str(task_output)
+                        )
+                    elif i == 2:
+                        task_outputs["analysis"] = task_output.raw if hasattr(task_output, "raw") else str(task_output)
+                    elif i == 3 and depth in ["deep", "comprehensive", "experimental"]:
+                        task_outputs["verification"] = (
+                            task_output.raw if hasattr(task_output, "raw") else str(task_output)
+                        )
+                    elif i == 4 and depth in ["comprehensive", "experimental"]:
+                        task_outputs["integration"] = (
+                            task_output.raw if hasattr(task_output, "raw") else str(task_output)
+                        )
+
+                self.logger.info(f"Extracted {len([v for v in task_outputs.values() if v])} task outputs")
+
+            # Format and send results to Discord
+            await self._send_progress_update(interaction, "📝 Formatting intelligence report...", 4, 5)
+
+            # Build comprehensive result message
+            result_message = "## Intelligence Analysis Complete\n\n"
+            result_message += f"**URL:** {url}\n"
+            result_message += f"**Depth:** {depth}\n"
+            result_message += f"**Processing Time:** {time.time() - start_time:.1f}s\n\n"
+
+            # Add crew output
+            if hasattr(result, "raw"):
+                result_message += f"**Analysis:**\n{result.raw}\n\n"
+            elif hasattr(result, "final_output"):
+                result_message += f"**Analysis:**\n{result.final_output}\n\n"
+            else:
+                result_message += f"**Analysis:**\n{str(result)}\n\n"
+
+            # Send results
+            await self._send_progress_update(interaction, "✅ Intelligence analysis complete!", 5, 5)
+
+            # Split message if too long for Discord (2000 char limit)
+            if len(result_message) > 1900:
+                chunks = [result_message[i : i + 1900] for i in range(0, len(result_message), 1900)]
+                for chunk in chunks:
+                    try:
+                        if hasattr(interaction, "followup"):
+                            await interaction.followup.send(chunk)
+                        elif hasattr(interaction, "channel"):
+                            await interaction.channel.send(chunk)
+                    except Exception as send_error:
+                        self.logger.warning(f"Failed to send message chunk: {send_error}")
+            else:
+                try:
+                    if hasattr(interaction, "followup"):
+                        await interaction.followup.send(result_message)
+                    elif hasattr(interaction, "channel"):
+                        await interaction.channel.send(result_message)
+                except Exception as send_error:
+                    self.logger.warning(f"Failed to send result message: {send_error}")
 
             # Record metrics
             processing_time = time.time() - start_time
@@ -1238,8 +953,8 @@ class AutonomousIntelligenceOrchestrator:
             self.metrics.histogram("autointel_workflow_duration", processing_time, labels={"depth": depth})
 
         except Exception as e:
-            self.logger.error(f"Enhanced autonomous intelligence workflow failed: {e}", exc_info=True)
-            await self._send_error_response(interaction, "Enhanced Autonomous Workflow", str(e))
+            self.logger.error(f"Crew workflow execution failed: {e}", exc_info=True)
+            await self._send_error_response(interaction, "Crew Workflow", str(e))
             self.metrics.counter("autointel_workflows_total", labels={"depth": depth, "outcome": "error"}).inc()
 
     # ========================================
@@ -1466,8 +1181,9 @@ class AutonomousIntelligenceOrchestrator:
             if not getattr(self, "_llm_available", False):
                 return StepResult.skip(reason="llm_unavailable", message="Mission planning skipped (no API key)")
             # Use the mission orchestrator agent to plan the autonomous workflow
-            if hasattr(self, "agent_coordinators") and "mission_orchestrator" in self.agent_coordinators:
-                mission_agent = self.agent_coordinators["mission_orchestrator"]
+            if getattr(self, "_llm_available", False):
+                # CRITICAL FIX: Use _get_or_create_agent to ensure agent exists
+                mission_agent = self._get_or_create_agent("mission_orchestrator")
 
                 # Critical data propagation: ensure tools on this agent receive structured context
                 try:
@@ -1657,14 +1373,10 @@ class AutonomousIntelligenceOrchestrator:
                 )
 
             # Use CrewAI transcription engineer agent if available
-            if (
-                hasattr(self, "agent_coordinators")
-                and "transcription_engineer" in self.agent_coordinators
-                and hasattr(self, "crew")
-                and self.crew is not None
-            ):
+            if hasattr(self, "crew") and self.crew is not None:
                 try:
-                    transcription_agent = self.agent_coordinators["transcription_engineer"]
+                    # CRITICAL FIX: Use _get_or_create_agent to ensure agent exists
+                    transcription_agent = self._get_or_create_agent("transcription_engineer")
 
                     # Populate shared tool context so CrewAI wrappers receive structured data
                     try:
@@ -1684,7 +1396,9 @@ class AutonomousIntelligenceOrchestrator:
                         }
                         self._populate_agent_tool_context(transcription_agent, context_payload)
                     except Exception as _ctx_err:  # pragma: no cover - defensive
-                        self.logger.debug(f"Transcription agent context population skipped: {_ctx_err}")
+                        self.logger.warning(
+                            f"⚠️ Transcription agent context population FAILED: {_ctx_err}", exc_info=True
+                        )
 
                     # Create transcription enhancement task
                     transcription_task = Task(
@@ -1861,34 +1575,44 @@ class AutonomousIntelligenceOrchestrator:
                 )
 
             # Use CrewAI analysis cartographer agent if available
-            if (
-                getattr(self, "_llm_available", False)
-                and hasattr(self, "agent_coordinators")
-                and "analysis_cartographer" in self.agent_coordinators
-                and hasattr(self, "crew")
-                and self.crew is not None
-            ):
+            if getattr(self, "_llm_available", False) and hasattr(self, "crew") and self.crew is not None:
                 try:
-                    analysis_agent = self.agent_coordinators["analysis_cartographer"]
+                    # CRITICAL FIX: Use _get_or_create_agent to ensure agent exists
+                    analysis_agent = self._get_or_create_agent("analysis_cartographer")
 
                     # Ensure CrewAI tools have full context before kickoff
                     try:
-                        self._populate_agent_tool_context(
-                            analysis_agent,
-                            {
-                                "transcript": transcript,
-                                "media_info": media_info,
-                                "timeline_anchors": transcription_data.get("timeline_anchors", []),
-                                "transcript_index": transcription_data.get("transcript_index", {}),
-                                "pipeline_analysis": pipeline_analysis_block,
-                                "pipeline_fallacy": pipeline_fallacy_block,
-                                "pipeline_perspective": pipeline_perspective_block,
-                                "pipeline_metadata": pipeline_metadata,
-                                "source_url": source_url or media_info.get("source_url"),
+                        context_data = {
+                            "transcript": transcript,
+                            "text": transcript,  # Explicit alias for TextAnalysisTool
+                            "enhanced_transcript": transcription_data.get("enhanced_transcript", transcript),
+                            "media_info": media_info,
+                            "timeline_anchors": transcription_data.get("timeline_anchors", []),
+                            "transcript_index": transcription_data.get("transcript_index", {}),
+                            "pipeline_analysis": pipeline_analysis_block,
+                            "pipeline_fallacy": pipeline_fallacy_block,
+                            "pipeline_perspective": pipeline_perspective_block,
+                            "pipeline_metadata": pipeline_metadata,
+                            "source_url": source_url or media_info.get("source_url"),
+                            "content_metadata": {
+                                "title": media_info.get("title"),
+                                "platform": media_info.get("platform"),
+                                "duration": media_info.get("duration"),
+                                "uploader": media_info.get("uploader"),
                             },
+                        }
+                        self.logger.info(
+                            f"📝 Populating analysis context: transcript={len(transcript)} chars, "
+                            f"title={media_info.get('title', 'N/A')}, platform={media_info.get('platform', 'N/A')}"
                         )
+                        self._populate_agent_tool_context(analysis_agent, context_data)
+                        self.logger.info("✅ Analysis context populated successfully")
                     except Exception as _ctx_err:  # pragma: no cover - defensive
-                        self.logger.debug(f"Analysis agent context population skipped: {_ctx_err}")
+                        self.logger.error(f"❌ Analysis agent context population FAILED: {_ctx_err}", exc_info=True)
+                        # Return early instead of continuing with empty data
+                        return StepResult.fail(
+                            error=f"Analysis context preparation failed: {_ctx_err}", step="analysis_context_population"
+                        )
 
                     # Create comprehensive content analysis task with full context
                     source_url = transcription_data.get("source_url") or "unknown"
@@ -1902,13 +1626,36 @@ class AutonomousIntelligenceOrchestrator:
                             Analyze content from {platform} video: '{title}' (URL: {source_url})
 
                             Duration: {duration}
-                            Transcript Preview: {transcript[:500]}...
 
-                            Task: Map linguistic patterns, sentiment signals, and thematic insights from the complete transcript.
-                            Quality Score: {transcription_data.get("quality_score", 0)}
-                            Timeline Data: {transcription_data.get("timeline_anchors", [])}
+                            ⚠️ CRITICAL INSTRUCTIONS - DATA IS PRE-LOADED:
 
-                            Provide comprehensive analysis including sentiment, themes, key points, and contextual insights.
+                            The complete transcript ({len(transcript)} characters) and ALL media metadata are
+                            ALREADY AVAILABLE in the tool's shared context. You MUST NOT pass these as parameters.
+
+                            ❌ WRONG - DO NOT DO THIS:
+                            - TextAnalysisTool(text="transcript content here...")  # NEVER pass text parameter!
+                            - FactCheckTool(claim="some claim...")  # NEVER pass claim parameter!
+
+                            ✅ CORRECT - DO THIS INSTEAD:
+                            - TextAnalysisTool()  # Tools auto-access data from shared context
+                            - FactCheckTool()  # No parameters needed - data is pre-loaded
+
+                            When calling ANY tool, OMIT the text/transcript/content/claim parameters.
+                            The tools have DIRECT ACCESS to:
+                            - Full transcript ({len(transcript)} chars) - accessible as 'text' parameter internally
+                            - Media metadata (title, platform, duration, uploader)
+                            - Timeline anchors: {len(transcription_data.get("timeline_anchors", []))} available
+                            - Quality score: {transcription_data.get("quality_score", 0)}
+
+                            YOUR TASK:
+                            Use TextAnalysisTool (WITH NO PARAMETERS) to analyze linguistic patterns, sentiment,
+                            and thematic insights. The tool will automatically access the transcript from shared context.
+
+                            Provide comprehensive analysis including:
+                            - Sentiment analysis
+                            - Key themes and topics
+                            - Important contextual insights
+                            - Linguistic patterns
                             """
                         ).strip(),
                         expected_output="Comprehensive content analysis with linguistic mapping, sentiment analysis, thematic insights, and structured annotations for the specified video content",
@@ -2152,30 +1899,34 @@ class AutonomousIntelligenceOrchestrator:
                 return payload
 
             # Use CrewAI verification director agent for comprehensive verification
-            if (
-                getattr(self, "_llm_available", False)
-                and hasattr(self, "agent_coordinators")
-                and "verification_director" in self.agent_coordinators
-            ):
-                verification_agent = self.agent_coordinators["verification_director"]
+            if getattr(self, "_llm_available", False):
+                # CRITICAL FIX: Use _get_or_create_agent to ensure agent exists
+                verification_agent = self._get_or_create_agent("verification_director")
 
                 # Provide full structured context to the agent tools prior to kickoff
                 try:
-                    self._populate_agent_tool_context(
-                        verification_agent,
-                        {
-                            "transcript": transcript,
-                            "linguistic_patterns": linguistic_patterns,
-                            "sentiment_analysis": sentiment_analysis,
-                            "fact_data": fact_data or {},
-                        },
+                    context_data = {
+                        "transcript": transcript,
+                        "text": transcript,  # Explicit alias for fact-checking tools
+                        "linguistic_patterns": linguistic_patterns,
+                        "sentiment_analysis": sentiment_analysis,
+                        "fact_data": fact_data or {},
+                        "claims": (fact_data or {}).get("claims", []),
+                        "analysis_data": analysis_data,
+                    }
+                    self.logger.info(
+                        f"📝 Verification context: transcript={len(transcript)} chars, "
+                        f"claims={len(context_data['claims'])}"
                     )
+                    self._populate_agent_tool_context(verification_agent, context_data)
                 except Exception as _ctx_err:  # pragma: no cover - defensive
-                    self.logger.debug(f"Verification agent context population skipped: {_ctx_err}")
+                    self.logger.warning(f"⚠️ Verification agent context population FAILED: {_ctx_err}", exc_info=True)
 
                 # Create comprehensive verification task
+                # CRITICAL: Description should be INSTRUCTIONS for the agent, not content to analyze
+                # All data (transcript, linguistic_patterns, sentiment_analysis) is available in shared_context
                 verification_task = Task(
-                    description=f"Conduct comprehensive information verification including fact-checking, logical analysis, credibility assessment, and bias detection for transcript: {transcript[:1000]}... Linguistic patterns: {linguistic_patterns} Sentiment: {sentiment_analysis}",
+                    description="You are the Verification Director. Your role is to orchestrate comprehensive verification of the provided content. The transcript and analysis data are available in your shared context. Use your tools to: (1) Extract specific factual claims from the transcript, (2) Verify each claim using fact-checking tools, (3) Analyze logical structure for fallacies, (4) Assess source credibility, (5) Detect bias indicators. Synthesize findings into a structured verification report.",
                     expected_output="Comprehensive verification report with fact-checks, logical fallacy analysis, credibility scores, bias indicators, and source validation",
                     agent=verification_agent,
                 )
@@ -2239,24 +1990,39 @@ class AutonomousIntelligenceOrchestrator:
             content_metadata = intelligence_data.get("content_metadata", {})
             _ = intelligence_data.get("linguistic_patterns", {})
             sentiment_analysis = intelligence_data.get("sentiment_analysis", {})
-            fact_checks = verification_data.get("fact_checks", {})
-            logical_analysis = verification_data.get("logical_analysis", {})
+            # fact_checks, logical_analysis, credibility_assessment now passed via shared context instead of task description
+            _ = verification_data.get("fact_checks", {})
+            _ = verification_data.get("logical_analysis", {})
             credibility_assessment = verification_data.get("credibility_assessment", {})
 
             if not transcript and not content_metadata:
                 return StepResult.skip(reason="No content available for deception analysis")
 
             # Use CrewAI verification director for comprehensive threat analysis
-            if (
-                getattr(self, "_llm_available", False)
-                and hasattr(self, "agent_coordinators")
-                and "verification_director" in self.agent_coordinators
-            ):
-                threat_agent = self.agent_coordinators["verification_director"]
+            if getattr(self, "_llm_available", False):
+                # CRITICAL FIX: Use _get_or_create_agent to ensure agent exists
+                threat_agent = self._get_or_create_agent("verification_director")
+
+                # Populate threat analysis context before crew execution
+                context_data = {
+                    "transcript": transcript,
+                    "text": transcript,  # Explicit alias for deception analysis tools
+                    "content_metadata": content_metadata,
+                    "sentiment_analysis": sentiment_analysis,
+                    "fact_checks": verification_data.get("fact_checks", {}),
+                    "logical_analysis": verification_data.get("logical_analysis", {}),
+                    "credibility_assessment": credibility_assessment,
+                    "verification_data": verification_data,
+                    "analysis_data": intelligence_data,
+                }
+                self.logger.info(f"📝 Threat analysis context: transcript={len(transcript)} chars")
+                self._populate_agent_tool_context(threat_agent, context_data)
 
                 # Create comprehensive threat analysis task
+                # CRITICAL: Description should be INSTRUCTIONS for the agent, not content to analyze
+                # All data is available in shared_context (transcript, metadata, fact_checks, logical_analysis, etc.)
                 threat_task = Task(
-                    description=f"Conduct comprehensive deception and threat analysis including manipulation detection, narrative integrity assessment, psychological profiling, and threat scoring. Content: {transcript[:800]}... Metadata: {content_metadata} Fact-checks: {fact_checks} Logic: {logical_analysis} Credibility: {credibility_assessment} Sentiment: {sentiment_analysis}",
+                    description="You are the Threat Analysis Director. Your role is to assess deception, manipulation, and information threats in the provided content. All analysis data (transcript, fact-checks, logical analysis, credibility scores, sentiment) is available in your shared context. Use your tools to: (1) Score deception indicators in the transcript, (2) Identify manipulation techniques and psychological influence patterns, (3) Assess narrative integrity and consistency, (4) Build psychological threat profile, (5) Generate actionable threat intelligence. Synthesize into a comprehensive threat assessment.",
                     expected_output="Comprehensive threat assessment with deception scores, manipulation indicators, narrative integrity analysis, psychological threat profiling, and actionable threat intelligence",
                     agent=threat_agent,
                 )
@@ -2345,27 +2111,30 @@ class AutonomousIntelligenceOrchestrator:
                 return StepResult.skip(reason="No content available for social intelligence analysis")
 
             # Use CrewAI signal recon specialist for comprehensive social intelligence
-            if (
-                getattr(self, "_llm_available", False)
-                and hasattr(self, "agent_coordinators")
-                and "signal_recon_specialist" in self.agent_coordinators
-            ):
-                social_intel_agent = self.agent_coordinators["signal_recon_specialist"]
+            if getattr(self, "_llm_available", False):
+                # CRITICAL FIX: Use _get_or_create_agent to ensure agent exists
+                social_intel_agent = self._get_or_create_agent("signal_recon_specialist")
 
                 # Populate structured context for social intelligence tools
                 try:
-                    self._populate_agent_tool_context(
-                        social_intel_agent,
-                        {
-                            "transcript": transcript,
-                            "content_metadata": content_metadata,
-                            "linguistic_patterns": linguistic_patterns,
-                            "sentiment_analysis": sentiment_analysis,
-                            "keywords": keywords,
-                        },
+                    context_data = {
+                        "transcript": transcript,
+                        "text": transcript,  # Explicit alias for social monitoring tools
+                        "content_metadata": content_metadata,
+                        "linguistic_patterns": linguistic_patterns,
+                        "sentiment_analysis": sentiment_analysis,
+                        "keywords": keywords,
+                        "title": title,
+                        "analysis_data": intelligence_data,
+                        "verification_data": verification_data,
+                    }
+                    self.logger.info(
+                        f"📝 Social intel context: transcript={len(transcript)} chars, "
+                        f"keywords={len(keywords)}, title={title[:50] if title else 'N/A'}"
                     )
+                    self._populate_agent_tool_context(social_intel_agent, context_data)
                 except Exception as _ctx_err:  # pragma: no cover - defensive
-                    self.logger.debug(f"Social agent context population skipped: {_ctx_err}")
+                    self.logger.warning(f"⚠️ Social agent context population FAILED: {_ctx_err}", exc_info=True)
 
                 # Create comprehensive social intelligence task
                 social_intel_task = Task(
@@ -2498,32 +2267,31 @@ class AutonomousIntelligenceOrchestrator:
                 )
 
             # Initialize CrewAI team for knowledge integration
-            from .crew import UltimateDiscordIntelligenceBotCrew
-
-            crew_instance = UltimateDiscordIntelligenceBotCrew()
-
-            # Create knowledge integration crew with multiple specialists
-            knowledge_agent = crew_instance.knowledge_integrator()
-            persona_agent = crew_instance.persona_archivist()
-            mission_agent = crew_instance.mission_orchestrator()
+            # CRITICAL: Use cached agents to preserve context across stages
+            knowledge_agent = self._get_or_create_agent("knowledge_integrator")
+            persona_agent = self._get_or_create_agent("persona_archivist")
+            mission_agent = self._get_or_create_agent("mission_orchestrator")
 
             # Define comprehensive knowledge integration task
+            # CRITICAL: Use concise descriptions - data passed via shared context to avoid rate limits
             integration_task = Task(
-                description=f"Integrate comprehensive intelligence across vector, graph, and continual memory systems: {knowledge_payload}",
+                description="Integrate comprehensive intelligence across vector, graph, and continual memory systems using the knowledge payload from shared context",
                 expected_output="Multi-system knowledge integration with vector storage, graph relationships, and continual memory consolidation",
                 agent=knowledge_agent,
             )
 
             # Define persona archival task
+            # CRITICAL: Use concise descriptions - data passed via shared context to avoid rate limits
             persona_task = Task(
-                description=f"Archive behavioral and threat profiles in persona management system: {behavioral_data} | {deception_data}",
+                description="Archive behavioral and threat profiles in persona management system using behavioral_data and threat_data from shared context",
                 expected_output="Comprehensive persona dossier with behavioral history, threat correlation, and trust metrics",
                 agent=persona_agent,
             )
 
             # Define mission orchestration task
+            # CRITICAL: Use concise descriptions - data passed via shared context to avoid rate limits
             orchestration_task = Task(
-                description=f"Orchestrate knowledge consolidation across all intelligence systems for mission continuity: {intelligence_data}",
+                description="Orchestrate knowledge consolidation across all intelligence systems for mission continuity using intelligence_data from shared context",
                 expected_output="Mission intelligence coordination with system integration status and consolidation metrics",
                 agent=mission_agent,
             )
@@ -2613,13 +2381,9 @@ class AutonomousIntelligenceOrchestrator:
                 return StepResult.skip(reason="No transcript available for threat analysis")
 
             # Initialize CrewAI team for threat analysis
-            from .crew import UltimateDiscordIntelligenceBotCrew
-
-            crew_instance = UltimateDiscordIntelligenceBotCrew()
-
-            # Create threat analysis crew with verification director and signal recon specialist
-            verification_agent = crew_instance.verification_director()
-            recon_agent = crew_instance.signal_recon_specialist()
+            # CRITICAL: Use cached agents to preserve context across stages
+            verification_agent = self._get_or_create_agent("verification_director")
+            recon_agent = self._get_or_create_agent("signal_recon_specialist")
 
             # Share structured context with both agents' tools
             try:
@@ -2634,15 +2398,17 @@ class AutonomousIntelligenceOrchestrator:
                 self.logger.debug(f"Threat agents context population skipped: {_ctx_err}")
 
             # Define threat analysis task
+            # CRITICAL: Use concise description - data passed via shared context to avoid rate limits
             threat_task = Task(
-                description=f"Analyze transcript for deception, logical fallacies, and threat indicators: {transcript[:1000]}...",
+                description="Analyze transcript for deception, logical fallacies, and threat indicators using transcript from shared context",
                 expected_output="Comprehensive threat assessment with deception scores, fallacy analysis, and risk indicators",
                 agent=verification_agent,
             )
 
             # Define signal intelligence task
+            # CRITICAL: Use concise description - data passed via shared context to avoid rate limits
             signal_task = Task(
-                description=f"Perform signal intelligence analysis to detect narrative manipulation: {transcript[:1000]}...",
+                description="Perform signal intelligence analysis to detect narrative manipulation using transcript from shared context",
                 expected_output="Signal intelligence report with sentiment shifts and narrative manipulation indicators",
                 agent=recon_agent,
             )
@@ -2681,24 +2447,33 @@ class AutonomousIntelligenceOrchestrator:
                 return StepResult.skip(reason="No transcript available for behavioral profiling")
 
             # Initialize CrewAI team for behavioral profiling
-            from .crew import UltimateDiscordIntelligenceBotCrew
+            # CRITICAL: Use cached agents to preserve context across stages
+            analysis_agent = self._get_or_create_agent("analysis_cartographer")
+            persona_agent = self._get_or_create_agent("persona_archivist")
 
-            crew_instance = UltimateDiscordIntelligenceBotCrew()
-
-            # Create behavioral analysis crew
-            analysis_agent = crew_instance.analysis_cartographer()
-            persona_agent = crew_instance.persona_archivist()
+            # Populate behavioral profiling context for both agents
+            shared_context = {
+                "transcript": transcript,
+                "analysis_data": analysis_data,
+                "threat_data": threat_data,
+                "threat_level": threat_data.get("threat_level", "unknown"),
+                "content_metadata": analysis_data.get("content_metadata", {}),
+            }
+            self._populate_agent_tool_context(analysis_agent, shared_context)
+            self._populate_agent_tool_context(persona_agent, shared_context)
 
             # Define behavioral analysis task
+            # CRITICAL: Use concise description - data passed via shared context to avoid rate limits
             behavioral_task = Task(
-                description=f"Perform comprehensive behavioral analysis on transcript with threat context: {transcript[:1000]}... Threat level: {threat_data.get('threat_level', 'unknown')}",
+                description=f"Perform comprehensive behavioral analysis on transcript with threat context (threat_level: {threat_data.get('threat_level', 'unknown')}) using transcript and threat_data from shared context",
                 expected_output="Detailed behavioral profile with personality traits, communication patterns, and risk indicators",
                 agent=analysis_agent,
             )
 
             # Define persona profiling task
+            # CRITICAL: Use concise description - data passed via shared context to avoid rate limits
             persona_task = Task(
-                description=f"Create detailed persona profile integrating behavioral patterns with threat indicators: {threat_data}",
+                description="Create detailed persona profile integrating behavioral patterns with threat indicators using threat_data from shared context",
                 expected_output="Comprehensive persona dossier with behavioral history, sentiment analysis, and trust metrics",
                 agent=persona_agent,
             )
@@ -2744,13 +2519,19 @@ class AutonomousIntelligenceOrchestrator:
                 return StepResult.skip(reason="No content available for research synthesis")
 
             # Initialize CrewAI team for research synthesis
-            from .crew import UltimateDiscordIntelligenceBotCrew
+            # CRITICAL: Use cached agents to preserve context across stages
+            trend_agent = self._get_or_create_agent("trend_intelligence_scout")
+            knowledge_agent = self._get_or_create_agent("knowledge_integrator")
 
-            crew_instance = UltimateDiscordIntelligenceBotCrew()
-
-            # Create research synthesis crew
-            trend_agent = crew_instance.trend_intelligence_scout()
-            knowledge_agent = crew_instance.knowledge_integrator()
+            # Populate research synthesis context for both agents
+            research_context = {
+                "transcript": transcript,
+                "claims": claims,
+                "analysis_data": analysis_data,
+                "verification_data": verification_data,
+            }
+            self._populate_agent_tool_context(trend_agent, research_context)
+            self._populate_agent_tool_context(knowledge_agent, research_context)
 
             # Define research intelligence task
             research_task = Task(
@@ -2844,13 +2625,71 @@ class AutonomousIntelligenceOrchestrator:
     async def _execute_specialized_communication_reporting(
         self, interaction: Any, synthesis_result: dict[str, Any], depth: str
     ) -> None:
-        """Execute communication and reporting using the Communication & Reporting Coordinator."""
+        """Execute communication and reporting using the Communication & Reporting Coordinator.
+
+        Implements session resilience:
+        - Validates session before sending
+        - Persists results if session is closed
+        - Gracefully degrades to logging
+        - Provides retrieval instructions
+        """
         try:
+            # Extract workflow ID for tracking
+            workflow_id = synthesis_result.get("workflow_id", f"wf_{int(time.time())}")
+            url = synthesis_result.get("workflow_metadata", {}).get("url", "unknown")
+
+            # Check if session is still valid BEFORE creating embeds
+            if not self._is_session_valid(interaction):
+                self.logger.warning(
+                    f"⚠️ Discord session closed before reporting results. Persisting results for workflow {workflow_id}..."
+                )
+
+                # Persist results to disk for later retrieval
+                result_file = await self._persist_workflow_results(workflow_id, synthesis_result, url, depth)
+
+                if result_file:
+                    self.logger.info(
+                        f"📁 Results saved to {result_file}. "
+                        f"Retrieval command: /retrieve_results workflow_id:{workflow_id}"
+                    )
+                else:
+                    # Fallback: at least log the results
+                    self.logger.info(
+                        f"Specialized Intelligence Results (session closed, persistence failed):\n{synthesis_result}"
+                    )
+
+                # Track metric
+                get_metrics().counter(
+                    "discord_session_closed_total", labels={"stage": "communication_reporting", "depth": depth}
+                )
+                return
+
             # Create specialized result embeds
             main_embed = await self._create_specialized_main_results_embed(synthesis_result, depth)
             details_embed = await self._create_specialized_details_embed(synthesis_result)
 
-            await interaction.followup.send(embeds=[main_embed, details_embed], ephemeral=False)
+            try:
+                await interaction.followup.send(embeds=[main_embed, details_embed], ephemeral=False)
+            except RuntimeError as e:
+                if "Session is closed" in str(e):
+                    self.logger.warning(f"⚠️ Session closed while sending main results for workflow {workflow_id}")
+
+                    # Persist results since send failed
+                    result_file = await self._persist_workflow_results(workflow_id, synthesis_result, url, depth)
+
+                    if result_file:
+                        self.logger.info(
+                            f"📁 Results saved to {result_file} after send failure. "
+                            f"Retrieval command: /retrieve_results workflow_id:{workflow_id}"
+                        )
+
+                    # Track metric
+                    get_metrics().counter(
+                        "discord_session_closed_total", labels={"stage": "communication_reporting_send", "depth": depth}
+                    )
+                    return
+                else:
+                    raise
 
             # Send knowledge integration confirmation
             knowledge_data = synthesis_result.get("knowledge", {})
@@ -2860,87 +2699,64 @@ class AutonomousIntelligenceOrchestrator:
                 if not knowledge_data:
                     knowledge_data = synthesis_result.get("detailed_results", {}).get("knowledge_integration", {})
             if isinstance(knowledge_data, dict) and knowledge_data.get("knowledge_systems"):
-                kb_embed = await self._create_specialized_knowledge_embed(knowledge_data)
-                await interaction.followup.send(embed=kb_embed, ephemeral=True)
+                if self._is_session_valid(interaction):
+                    kb_embed = await self._create_specialized_knowledge_embed(knowledge_data)
+                    try:
+                        await interaction.followup.send(embed=kb_embed, ephemeral=True)
+                    except RuntimeError as e:
+                        if "Session is closed" in str(e):
+                            self.logger.warning("Session closed, cannot send knowledge integration confirmation")
+                        else:
+                            raise
+                else:
+                    self.logger.warning("Session closed, cannot send knowledge integration confirmation")
 
             self.logger.info("Communication & Reporting Coordinator delivered specialized results")
 
         except Exception as e:
+            # Don't log session closed errors (already handled)
+            if "Session is closed" in str(e):
+                self.logger.warning("Session closed during communication/reporting")
+                self.logger.info(f"Specialized Intelligence Results (session closed):\n{synthesis_result}")
+                return
+
             self.logger.error(f"Communication & Reporting Coordinator failed: {e}")
-            # Fallback to simple text response
-            summary = synthesis_result.get("workflow_metadata", {})
-            await interaction.followup.send(
-                f"✅ **Specialized Autonomous Intelligence Analysis Complete**\n\n"
-                f"**URL:** {summary.get('url', 'N/A')}\n"
-                f"**Threat Score:** {synthesis_result.get('deception', {}).get('threat_score', 0.0):.2f}/1.00\n"
-                f"**Processing Time:** {summary.get('processing_time', 0.0):.1f}s\n"
-                f"**Specialized Agents:** {summary.get('specialized_agents_used', 0)}\n\n"
-                f"*Analysis completed using specialized autonomous intelligence agents.*",
-                ephemeral=False,
-            )
+            # Fallback to simple text response if session is still valid
+            if self._is_session_valid(interaction):
+                try:
+                    summary = synthesis_result.get("workflow_metadata", {})
+                    await interaction.followup.send(
+                        f"✅ **Specialized Autonomous Intelligence Analysis Complete**\n\n"
+                        f"**URL:** {summary.get('url', 'N/A')}\n"
+                        f"**Threat Score:** {synthesis_result.get('deception', {}).get('threat_score', 0.0):.2f}/1.00\n"
+                        f"**Processing Time:** {summary.get('processing_time', 0.0):.1f}s\n"
+                        f"**Specialized Agents:** {summary.get('specialized_agents_used', 0)}\n\n"
+                        f"*Analysis completed using specialized autonomous intelligence agents.*",
+                        ephemeral=False,
+                    )
+                except RuntimeError as fallback_error:
+                    if "Session is closed" in str(fallback_error):
+                        self.logger.warning("Session closed during fallback response")
+                    else:
+                        self.logger.error(f"Fallback response failed: {fallback_error}")
+                except Exception as fallback_error:
+                    self.logger.error(f"Fallback response failed: {fallback_error}")
+            else:
+                self.logger.warning("Session closed, cannot send fallback response. Results logged above.")
 
     # ========================================
     # SPECIALIZED HELPER METHODS
     # ========================================
 
     def _assess_content_coherence(self, analysis_data: dict[str, Any]) -> float:
-        """Assess the coherence of the analyzed content based on transcript structure and logical flow."""
-        try:
-            # Extract transcript and analysis data
-            transcript = analysis_data.get("transcript", "")
-            linguistic_patterns = analysis_data.get("linguistic_patterns", {})
-            sentiment_analysis = analysis_data.get("sentiment_analysis", {})
-            content_metadata = analysis_data.get("content_metadata", {})
+        """Assess the coherence of the analyzed content."""
+        return quality_assessors.assess_content_coherence(analysis_data, self.logger)
 
-            coherence_score = 0.5  # Base neutral score
-
-            # Factor 1: Transcript length and structure (longer, well-structured content tends to be more coherent)
-            if transcript:
-                word_count = len(transcript.split())
-                # Content with reasonable length gets higher base score
-                if word_count > 100:
-                    coherence_score += 0.1
-                elif word_count < 20:
-                    coherence_score -= 0.2
-
-                # Check for structured content (paragraphs, sentences)
-                sentences = transcript.split(".")
-                if len(sentences) > 3:
-                    coherence_score += 0.1
-
-            # Factor 2: Linguistic patterns consistency
-            if linguistic_patterns and isinstance(linguistic_patterns, dict):
-                # Presence of linguistic analysis suggests structured content
-                coherence_score += 0.1
-
-            # Factor 3: Sentiment consistency (extreme sentiment swings might indicate incoherence)
-            if sentiment_analysis and isinstance(sentiment_analysis, dict):
-                # Consistent sentiment analysis available
-                coherence_score += 0.05
-
-            # Factor 4: Content metadata completeness
-            metadata_completeness = sum(
-                1
-                for key in ["title", "platform", "word_count", "quality_score"]
-                if content_metadata.get(key) is not None
-            )
-            metadata_bonus = (metadata_completeness / 4) * 0.1
-            coherence_score += metadata_bonus
-
-            # Ensure score is within valid range
-            return max(0.0, min(1.0, coherence_score))
-
-        except Exception:
-            # Return neutral score on any error
-            return 0.5
-
+    @staticmethod
     @staticmethod
     def _clamp_score(value: float, minimum: float = 0.0, maximum: float = 1.0) -> float:
         """Clamp helper to keep quality metrics within expected bounds."""
-        try:
-            return max(minimum, min(maximum, float(value)))
-        except Exception:
-            return minimum
+        return quality_assessors.clamp_score(value, minimum, maximum)
 
     def _assess_factual_accuracy(
         self,
@@ -2948,59 +2764,7 @@ class AutonomousIntelligenceOrchestrator:
         fact_data: dict[str, Any] | None = None,
     ) -> float:
         """Derive a factual accuracy score from verification and fact analysis outputs."""
-        score = 0.5
-        try:
-            total_verified = 0
-            total_disputed = 0
-            evidence_count = 0
-            sources: list[dict[str, Any]] = []
-
-            if isinstance(verification_data, dict):
-                for key in ("fact_checks", "fact_verification"):
-                    candidate = verification_data.get(key)
-                    if isinstance(candidate, dict):
-                        sources.append(candidate)
-            if isinstance(fact_data, dict):
-                candidate = fact_data.get("fact_checks")
-                if isinstance(candidate, dict):
-                    sources.append(candidate)
-
-            for candidate in sources:
-                verified = candidate.get("verified_claims")
-                disputed = candidate.get("disputed_claims")
-                evidence = candidate.get("evidence")
-
-                if isinstance(verified, int):
-                    total_verified += verified
-                elif isinstance(verified, list):
-                    total_verified += len(verified)
-
-                if isinstance(disputed, int):
-                    total_disputed += disputed
-                elif isinstance(disputed, list):
-                    total_disputed += len(disputed)
-
-                if isinstance(evidence, list):
-                    evidence_count += len(evidence)
-
-            total_claims = total_verified + total_disputed
-            if total_claims > 0:
-                score = total_verified / total_claims
-            elif evidence_count > 0:
-                score = 0.55 + min(0.35, evidence_count * 0.05)
-
-            credibility = None
-            if isinstance(verification_data, dict):
-                credibility = verification_data.get("credibility_assessment")
-            if isinstance(credibility, dict):
-                cred_score = credibility.get("score") or credibility.get("confidence")
-                if isinstance(cred_score, (int, float)):
-                    score = (score * 0.6) + (self._clamp_score(float(cred_score)) * 0.4)
-
-            return self._clamp_score(round(score, 3))
-        except Exception as exc:
-            self.logger.debug("Factual accuracy assessment fallback due to error: %s", exc)
-            return 0.5
+        return quality_assessors.assess_factual_accuracy(verification_data, fact_data, self.logger)
 
     def _assess_source_credibility(
         self,
@@ -3008,45 +2772,7 @@ class AutonomousIntelligenceOrchestrator:
         verification_data: dict[str, Any] | None,
     ) -> float:
         """Estimate source credibility using knowledge payload and verification metadata."""
-        score = 0.5
-        try:
-            if isinstance(verification_data, dict):
-                validation = verification_data.get("source_validation")
-                if isinstance(validation, dict):
-                    if validation.get("validated") is True:
-                        score = 0.85
-                    elif validation.get("validated") is False:
-                        score = 0.35
-
-            if isinstance(knowledge_data, dict):
-                fact_results = knowledge_data.get("fact_check_results")
-                if isinstance(fact_results, dict):
-                    reliability = fact_results.get("source_reliability")
-                    if isinstance(reliability, (int, float)):
-                        score = (score * 0.5) + (self._clamp_score(float(reliability)) * 0.5)
-                    elif isinstance(reliability, str):
-                        mapping = {"high": 0.85, "medium": 0.6, "low": 0.3}
-                        score = (score * 0.5) + (mapping.get(reliability.lower(), 0.5) * 0.5)
-
-                metadata = knowledge_data.get("content_metadata")
-                if isinstance(metadata, dict):
-                    if metadata.get("source_url"):
-                        score = min(1.0, score + 0.05)
-                    if metadata.get("platform"):
-                        score = min(1.0, score + 0.05)
-
-            credibility = None
-            if isinstance(verification_data, dict):
-                credibility = verification_data.get("credibility_assessment")
-            if isinstance(credibility, dict):
-                cred_score = credibility.get("score") or credibility.get("overall")
-                if isinstance(cred_score, (int, float)):
-                    score = (score * 0.5) + (self._clamp_score(float(cred_score)) * 0.5)
-
-            return self._clamp_score(round(score, 3))
-        except Exception as exc:
-            self.logger.debug("Source credibility assessment fallback due to error: %s", exc)
-            return 0.5
+        return quality_assessors.assess_source_credibility(knowledge_data, verification_data, self.logger)
 
     def _assess_bias_levels(
         self,
@@ -3054,101 +2780,19 @@ class AutonomousIntelligenceOrchestrator:
         verification_data: dict[str, Any] | None,
     ) -> float:
         """Score how balanced the content is based on bias indicators and sentiment spread."""
-        try:
-            base_score = 0.7
-            bias_signals = []
-
-            if isinstance(verification_data, dict):
-                indicators = verification_data.get("bias_indicators")
-                if isinstance(indicators, list):
-                    bias_signals = indicators
-                elif isinstance(indicators, dict):
-                    extracted = indicators.get("signals")
-                    if isinstance(extracted, list):
-                        bias_signals = extracted
-
-            bias_penalty = min(0.5, len(bias_signals) * 0.1)
-
-            sentiment = analysis_data.get("sentiment_analysis") if isinstance(analysis_data, dict) else {}
-            if isinstance(sentiment, dict):
-                positive = sentiment.get("positive") or sentiment.get("positives")
-                negative = sentiment.get("negative") or sentiment.get("negatives")
-                if isinstance(positive, (int, float)) and isinstance(negative, (int, float)):
-                    total = positive + negative
-                    if total:
-                        swing = abs(positive - negative) / total
-                        bias_penalty += min(0.3, swing * 0.3)
-                if sentiment.get("overall_sentiment") == "neutral":
-                    bias_penalty = max(0.0, bias_penalty - 0.05)
-
-            score = base_score - bias_penalty
-            return self._clamp_score(round(score, 3))
-        except Exception as exc:
-            self.logger.debug("Bias assessment fallback due to error: %s", exc)
-            return 0.5
+        return quality_assessors.assess_bias_levels(analysis_data, verification_data, self.logger)
 
     def _assess_emotional_manipulation(self, analysis_data: dict[str, Any] | None) -> float:
         """Estimate the level of emotional manipulation present in the content."""
-        try:
-            sentiment = analysis_data.get("sentiment_analysis") if isinstance(analysis_data, dict) else {}
-            if not isinstance(sentiment, dict) or not sentiment:
-                return 0.6
-
-            intensity = sentiment.get("intensity")
-            if isinstance(intensity, (int, float)):
-                score = 1.0 - min(0.8, float(intensity) * 0.5)
-            else:
-                positive = sentiment.get("positive") or sentiment.get("positives") or 0.0
-                negative = sentiment.get("negative") or sentiment.get("negatives") or 0.0
-                if not isinstance(positive, (int, float)):
-                    positive = 0.0
-                if not isinstance(negative, (int, float)):
-                    negative = 0.0
-                total = positive + negative
-                swing = abs(positive - negative)
-                score = 1.0 - (min(0.8, (swing / max(total, 1.0)) * 0.7) if total else 0.3)
-
-            keywords = sentiment.get("keywords")
-            if isinstance(keywords, list):
-                score -= min(0.2, len(keywords) * 0.02)
-
-            return self._clamp_score(round(score, 3))
-        except Exception as exc:
-            self.logger.debug("Emotional manipulation assessment fallback due to error: %s", exc)
-            return 0.5
+        return quality_assessors.assess_emotional_manipulation(analysis_data, self.logger)
 
     def _assess_logical_consistency(
         self,
         verification_data: dict[str, Any] | None,
-        threat_data: dict[str, Any] | None,
+        logical_analysis: dict[str, Any] | None = None,
     ) -> float:
-        """Evaluate logical consistency based on fallacies and deception indicators."""
-        try:
-            fallacies_detected = []
-            if isinstance(verification_data, dict):
-                logical = verification_data.get("logical_analysis")
-                if isinstance(logical, dict):
-                    fallacies_detected = logical.get("fallacies_detected") or []
-
-            fallacy_penalty = min(0.6, len(fallacies_detected) * 0.1)
-
-            deception_score = 0.0
-            if isinstance(threat_data, dict):
-                deception_score = threat_data.get("deception_score") or 0.0
-                metrics = threat_data.get("deception_metrics")
-                if isinstance(metrics, dict):
-                    deception_score = metrics.get("deception_score", deception_score)
-                if isinstance(deception_score, dict):
-                    deception_score = deception_score.get("score", 0.0)
-
-            if isinstance(deception_score, (int, float)):
-                fallacy_penalty += min(0.3, float(deception_score) * 0.3)
-
-            score = 0.85 - fallacy_penalty
-            return self._clamp_score(round(score, 3))
-        except Exception as exc:
-            self.logger.debug("Logical consistency assessment fallback due to error: %s", exc)
-            return 0.5
+        """Evaluate logical consistency based on verification and logical analysis."""
+        return quality_assessors.assess_logical_consistency(verification_data, logical_analysis, self.logger)
 
     def _calculate_ai_quality_score(self, quality_dimensions: dict[str, float]) -> float:
         """Calculate a composite AI quality score from the assessed dimensions."""
@@ -3300,15 +2944,8 @@ class AutonomousIntelligenceOrchestrator:
             }
 
     def _assess_quality_trend(self, ai_quality_score: float) -> str:
-        """Translate the composite score into a human-friendly quality trend."""
-        score = self._clamp_score(ai_quality_score)
-        if score >= 0.8:
-            return "improving"
-        if score >= 0.6:
-            return "stable"
-        if score >= 0.4:
-            return "monitor"
-        return "declining"
+        """Assess the quality trend based on AI quality score."""
+        return quality_assessors.assess_quality_trend(ai_quality_score)
 
     def _calculate_comprehensive_threat_score(
         self, deception_result: Any, truth_result: Any, trust_result: Any, verification_data: dict[str, Any]
@@ -4404,9 +4041,105 @@ class AutonomousIntelligenceOrchestrator:
         except Exception as e:
             return [f"❌ Insight generation failed: {e}"]
 
+    def _is_session_valid(self, interaction: Any) -> bool:
+        """Check if Discord session is still valid for sending messages.
+
+        Returns:
+            True if session is valid and can receive messages
+            False if session is closed or invalid
+        """
+        try:
+            # Check if interaction has a webhook and if the session is open
+            if not hasattr(interaction, "followup"):
+                self.logger.debug("Interaction missing 'followup' attribute")
+                return False
+
+            # Check if the underlying webhook has a valid session
+            if hasattr(interaction.followup, "_adapter"):
+                adapter = interaction.followup._adapter
+                if hasattr(adapter, "_session") and adapter._session:
+                    session = adapter._session
+                    # aiohttp session has a 'closed' property
+                    if hasattr(session, "closed"):
+                        is_open = not session.closed
+                        if not is_open:
+                            self.logger.warning("Discord aiohttp session detected as closed")
+                        return is_open
+
+            # Additional validation: try to access interaction properties
+            try:
+                _ = interaction.id  # Will fail if interaction is invalid
+            except Exception as e:
+                self.logger.debug(f"Interaction ID access failed: {e}")
+                return False
+
+            # If we can't determine session state definitively, assume it might work
+            return True
+        except Exception as e:
+            # If any check fails, assume session is invalid
+            self.logger.debug(f"Session validation failed with exception: {e}")
+            return False
+
+    async def _persist_workflow_results(self, workflow_id: str, results: dict[str, Any], url: str, depth: str) -> str:
+        """Persist workflow results to disk when Discord session closes.
+
+        This allows users to retrieve results even after the interaction timeout.
+        Results are stored in data/orphaned_results/ with workflow_id as filename.
+
+        Args:
+            workflow_id: Unique identifier for the workflow
+            results: Complete workflow results dictionary
+            url: Original URL that was analyzed
+            depth: Analysis depth used
+
+        Returns:
+            Path to the persisted result file, or empty string on failure
+        """
+        try:
+            import json
+            from pathlib import Path
+
+            results_dir = Path("data/orphaned_results")
+            results_dir.mkdir(parents=True, exist_ok=True)
+
+            result_file = results_dir / f"{workflow_id}.json"
+
+            result_data = {
+                "workflow_id": workflow_id,
+                "timestamp": time.time(),
+                "url": url,
+                "depth": depth,
+                "results": results,
+                "retrieval_info": {
+                    "command": f"/retrieve_results workflow_id:{workflow_id}",
+                    "file_path": str(result_file),
+                    "status": "session_closed_during_workflow",
+                },
+            }
+
+            with open(result_file, "w") as f:
+                json.dump(result_data, f, indent=2, default=str)
+
+            self.logger.info(f"✅ Workflow results persisted to {result_file} (workflow_id={workflow_id})")
+
+            # Track metric
+            get_metrics().counter(
+                "workflow_results_persisted_total", labels={"reason": "session_closed", "depth": depth}
+            )
+
+            return str(result_file)
+        except Exception as e:
+            self.logger.error(f"❌ Failed to persist workflow results: {e}", exc_info=True)
+            return ""
+
     async def _send_progress_update(self, interaction: Any, message: str, current: int, total: int) -> None:
         """Send real-time progress updates to Discord."""
         try:
+            # Check if session is still valid before attempting to send
+            if not self._is_session_valid(interaction):
+                self.logger.warning(f"Session closed, cannot send progress update: {message}")
+                return
+
             # Prevent division by zero
             if total <= 0:
                 total = 1
@@ -4416,15 +4149,18 @@ class AutonomousIntelligenceOrchestrator:
             progress_text = f"{message}\n{progress_bar} {current}/{total} ({progress_percentage}%)"
 
             # Always use followup.send for progress updates since interaction.response.defer() was called
-            await interaction.followup.send(progress_text, ephemeral=False)
+            try:
+                await interaction.followup.send(progress_text, ephemeral=False)
+            except RuntimeError as e:
+                if "Session is closed" in str(e):
+                    self.logger.warning(f"Session closed during progress update: {message}")
+                else:
+                    raise
 
         except Exception as e:
-            self.logger.error(f"Progress update failed: {e}", exc_info=True)
-            # Try to send a simple fallback message
-            try:
-                await interaction.followup.send(f"⚠️ {message}", ephemeral=False)
-            except Exception:
-                pass  # If all fails, continue silently
+            # Only log if it's not a session closed error (already handled above)
+            if "Session is closed" not in str(e):
+                self.logger.error(f"Progress update failed: {e}", exc_info=True)
 
     async def _handle_acquisition_failure(self, interaction: Any, acquisition_result: StepResult, url: str) -> None:
         """Handle content acquisition failures with specialized guidance."""
@@ -4476,19 +4212,65 @@ class AutonomousIntelligenceOrchestrator:
             )
 
     async def _send_error_response(self, interaction: Any, stage: str, error: str) -> None:
-        """Send error response to Discord."""
+        """Send error response to Discord with session resilience.
+
+        Args:
+            interaction: Discord interaction object
+            stage: Stage name where error occurred
+            error: Error message to send
+
+        Note:
+            If session is closed, error is logged instead of sent.
+            This prevents cascading RuntimeError exceptions.
+        """
         try:
+            # Check if session is still valid
+            if not self._is_session_valid(interaction):
+                self.logger.error(
+                    f"❌ Session closed, cannot send error response to Discord.\nStage: {stage}\nError: {error}"
+                )
+                # Track metric for session closure during error handling
+                get_metrics().counter(
+                    "discord_session_closed_total",
+                    labels={"stage": f"error_response_{stage.lower().replace(' ', '_')}"},
+                )
+                return
+
             error_embed = await self._create_error_embed(stage, error)
-            await interaction.followup.send(embed=error_embed, ephemeral=False)
-        except Exception:
-            # Fallback to text response
-            await interaction.followup.send(
-                f"❌ Autonomous Intelligence Error\n"
-                f"**Stage:** {stage}\n"
-                f"**Error:** {error}\n\n"
-                f"The autonomous workflow encountered an issue during processing.",
-                ephemeral=False,
-            )
+            try:
+                await interaction.followup.send(embed=error_embed, ephemeral=False)
+            except RuntimeError as e:
+                if "Session is closed" in str(e):
+                    self.logger.error(f"❌ Session closed while sending error embed.\nStage: {stage}\nError: {error}")
+                    # Track metric
+                    get_metrics().counter(
+                        "discord_session_closed_total",
+                        labels={"stage": f"error_response_send_{stage.lower().replace(' ', '_')}"},
+                    )
+                    return
+                else:
+                    raise
+        except Exception as e:
+            # Don't log session closed errors (already handled)
+            if "Session is closed" in str(e):
+                self.logger.error(f"Session closed during error response for {stage}: {error}")
+                return
+
+            # Fallback to text response for other errors
+            try:
+                if self._is_session_valid(interaction):
+                    await interaction.followup.send(
+                        f"❌ Autonomous Intelligence Error\n"
+                        f"**Stage:** {stage}\n"
+                        f"**Error:** {error}\n\n"
+                        f"The autonomous workflow encountered an issue during processing.",
+                        ephemeral=False,
+                    )
+                else:
+                    self.logger.error(f"Session closed during error fallback for {stage}: {error}")
+            except Exception as fallback_error:
+                if "Session is closed" not in str(fallback_error):
+                    self.logger.error(f"All error reporting failed for {stage}: {error}")
 
     async def _send_enhanced_error_response(self, interaction: Any, stage: str, enhanced_message: str) -> None:
         """Send enhanced user-friendly error response to Discord."""
@@ -4733,88 +4515,11 @@ class AutonomousIntelligenceOrchestrator:
 
     def _transform_evidence_to_verdicts(self, fact_verification_data: dict[str, Any]) -> list[dict[str, Any]]:
         """Transform fact-check evidence into verdict format for deception scoring."""
-        # Prefer explicit per-claim items if present
-        items = fact_verification_data.get("items")
-        out: list[dict[str, Any]] = []
-        if isinstance(items, list) and items:
-            for it in items:
-                if isinstance(it, dict):
-                    verdict = it.get("verdict")
-                    if isinstance(verdict, str) and verdict.strip():
-                        try:
-                            conf_raw = it.get("confidence", 0.5)
-                            conf = float(conf_raw) if isinstance(conf_raw, (int, float, str)) else 0.5
-                        except Exception:
-                            conf = 0.5
-                        out.append(
-                            {
-                                "verdict": verdict.strip().lower(),
-                                "confidence": max(0.0, min(conf, 1.0)),
-                                "claim": it.get("claim"),
-                                "source": it.get("source", "factcheck"),
-                                "source_trust": it.get("source_trust"),
-                                "salience": 1.0,
-                            }
-                        )
-            if out:
-                return out
-
-        # Fallback: synthesize verdicts from evidence quantity
-        evidence = fact_verification_data.get("evidence", [])
-        factchecks: list[dict[str, Any]] = []
-        claim = fact_verification_data.get("claim", "Unknown claim")
-        evidence_count = len(evidence) if isinstance(evidence, list) else 0
-        if evidence_count <= 0:
-            factchecks.append(
-                {
-                    "verdict": "uncertain",
-                    "confidence": 0.3,
-                    "claim": claim,
-                    "source": "evidence_search",
-                    "salience": 1.0,
-                }
-            )
-        elif evidence_count >= 3:
-            factchecks.append(
-                {
-                    "verdict": "needs context",
-                    "confidence": 0.6,
-                    "claim": claim,
-                    "source": "multi_source_evidence",
-                    "salience": 1.0,
-                }
-            )
-        else:
-            factchecks.append(
-                {
-                    "verdict": "uncertain",
-                    "confidence": 0.4,
-                    "claim": claim,
-                    "source": "limited_evidence",
-                    "salience": 1.0,
-                }
-            )
-        return factchecks
+        return data_transformers.transform_evidence_to_verdicts(fact_verification_data, self.logger)
 
     def _extract_fallacy_data(self, logical_analysis_data: dict[str, Any]) -> list[dict[str, Any]]:
         """Extract fallacy data from logical analysis results."""
-        fallacies = []
-
-        # Look for fallacies in various possible formats
-        if isinstance(logical_analysis_data.get("fallacies"), list):
-            for fallacy in logical_analysis_data["fallacies"]:
-                if isinstance(fallacy, dict):
-                    fallacies.append(fallacy)
-                elif isinstance(fallacy, str):
-                    fallacies.append({"type": fallacy, "confidence": 0.7})
-        elif isinstance(logical_analysis_data.get("fallacies_detected"), list):
-            for fallacy in logical_analysis_data["fallacies_detected"]:
-                if isinstance(fallacy, dict):
-                    fallacies.append(fallacy)
-                elif isinstance(fallacy, str):
-                    fallacies.append({"type": fallacy, "confidence": 0.7})
-
-        return fallacies
+        return data_transformers.extract_fallacy_data(logical_analysis_data)
 
     async def _create_error_embed(self, stage: str, error: str) -> Any:
         """Create error embed for Discord."""
@@ -5162,194 +4867,29 @@ class AutonomousIntelligenceOrchestrator:
 
     def _calculate_overall_confidence(self, *data_sources) -> float:
         """Calculate overall confidence across all data sources."""
-        try:
-            valid_sources = sum(1 for source in data_sources if source and isinstance(source, dict))
-            return min(valid_sources * 0.15, 0.9)
-        except Exception:
-            return 0.5
+        return quality_assessors.calculate_overall_confidence(*data_sources, logger_instance=self.logger)
 
     def _calculate_data_completeness(self, *data_sources) -> float:
         """Calculate data completeness across all sources."""
-        try:
-            non_empty_sources = sum(
-                1 for source in data_sources if source and isinstance(source, dict) and len(source) > 0
-            )
-            total_sources = len(data_sources)
-            return non_empty_sources / total_sources if total_sources > 0 else 0.0
-        except Exception:
-            return 0.0
+        return data_transformers.calculate_data_completeness(*data_sources)
 
     def _assign_intelligence_grade(
         self, analysis_data: dict[str, Any], threat_data: dict[str, Any], verification_data: dict[str, Any]
     ) -> str:
         """Assign intelligence grade based on analysis quality."""
-        try:
-            threat_level = threat_data.get("threat_level", "unknown")
-            has_verification = bool(verification_data.get("fact_checks"))
-            has_analysis = bool(analysis_data.get("transcript"))
-
-            if threat_level != "unknown" and has_verification and has_analysis:
-                return "A"  # High quality
-            elif (threat_level != "unknown" and has_verification) or (has_verification and has_analysis):
-                return "B"  # Good quality
-            elif has_analysis:
-                return "C"  # Acceptable quality
-            else:
-                return "D"  # Limited quality
-        except Exception:
-            return "C"
+        return data_transformers.assign_intelligence_grade(analysis_data, threat_data, verification_data)
 
     def _assess_transcript_quality(self, transcript: str) -> float:
         """Assess the quality of a transcript based on various metrics."""
-        try:
-            if not transcript:
-                return 0.0
-
-            # Basic quality metrics
-            word_count = len(transcript.split())
-            char_count = len(transcript)
-
-            # Quality factors
-            quality_score = 0.0
-
-            # Length factor (longer transcripts are generally better)
-            if word_count > 100:
-                quality_score += 0.3
-            elif word_count > 50:
-                quality_score += 0.2
-            elif word_count > 10:
-                quality_score += 0.1
-
-            # Character density (reasonable character to word ratio)
-            if word_count > 0:
-                char_per_word = char_count / word_count
-                if 4 <= char_per_word <= 8:  # Reasonable range
-                    quality_score += 0.2
-
-            # Sentence structure (presence of punctuation)
-            punctuation_count = sum(1 for char in transcript if char in ".!?")
-            if punctuation_count > word_count / 20:  # At least one sentence marker per 20 words
-                quality_score += 0.2
-
-            # Capitalization (proper nouns, sentence starts)
-            capital_count = sum(1 for char in transcript if char.isupper())
-            if capital_count > word_count / 30:  # Some capitals expected
-                quality_score += 0.1
-
-            # Coherence factor (not too many repeated words)
-            words = transcript.lower().split()
-            unique_words = set(words)
-            if len(words) > 0:
-                uniqueness_ratio = len(unique_words) / len(words)
-                if uniqueness_ratio > 0.3:  # At least 30% unique words
-                    quality_score += 0.2
-
-            return min(quality_score, 1.0)  # Cap at 1.0
-        except Exception:
-            return 0.5  # Default moderate quality if assessment fails
+        return quality_assessors.assess_transcript_quality(transcript, self.logger)
 
     def _calculate_enhanced_summary_statistics(self, all_results: dict[str, Any]) -> dict[str, Any]:
         """Calculate enhanced summary statistics from all analysis results."""
-        try:
-            stats = {}
-
-            # Count successful analysis stages
-            successful_stages = sum(
-                1 for result in all_results.values() if isinstance(result, dict) and len(result) > 0
-            )
-            stats["successful_stages"] = successful_stages
-            stats["total_stages_attempted"] = len(all_results)
-
-            # Calculate processing metrics
-            metadata = all_results.get("workflow_metadata", {})
-            stats["processing_time"] = metadata.get("processing_time", 0.0)
-            stats["capabilities_used"] = len(metadata.get("capabilities_used", []))
-
-            # Extract content metrics
-            transcription_data = all_results.get("transcription", {})
-            if transcription_data:
-                stats["transcript_length"] = len(transcription_data.get("transcript", ""))
-
-            # Calculate analysis depth metrics
-            verification_data = all_results.get("information_verification", {})
-            if verification_data:
-                stats["fact_checks_performed"] = len(verification_data.get("fact_checks", {}))
-
-            threat_data = all_results.get("threat_analysis", {})
-            if threat_data:
-                stats["threat_indicators_found"] = len(threat_data.get("deception_analysis", {}))
-
-            return stats
-        except Exception as e:
-            return {"error": f"Statistics calculation failed: {e}"}
+        return data_transformers.calculate_enhanced_summary_statistics(all_results, self.logger)
 
     def _generate_comprehensive_intelligence_insights(self, all_results: dict[str, Any]) -> list[str]:
         """Generate comprehensive intelligence insights from all analysis results."""
-        try:
-            insights = []
-
-            # Add threat assessment insights
-            threat_data = all_results.get("threat_analysis", {})
-            if threat_data:
-                threat_level = threat_data.get("threat_level", "unknown")
-                insights.append(f"🛡️ Threat Assessment: {threat_level.upper()} level detected")
-
-            # Add verification insights
-            verification_data = all_results.get("information_verification", {})
-            if verification_data:
-                fact_checks = verification_data.get("fact_checks", {})
-                if fact_checks:
-                    insights.append(f"✅ Information Verification: {len(fact_checks)} claims analyzed")
-
-            # Add behavioral insights
-            behavioral_data = all_results.get("behavioral_profiling", {})
-            if behavioral_data:
-                risk_score = behavioral_data.get("behavioral_risk_score", 0.0)
-                insights.append(f"👤 Behavioral Risk Score: {risk_score:.2f}")
-
-            # Add research insights
-            research_data = all_results.get("research_synthesis", {})
-            if research_data:
-                research_topics = research_data.get("research_topics", [])
-                if research_topics:
-                    insights.append(f"📚 Research Topics Analyzed: {len(research_topics)}")
-
-            # Add knowledge integration insights
-            knowledge_data = all_results.get("knowledge_integration", {})
-            if knowledge_data:
-                insights.append("🧠 Advanced knowledge systems integrated")
-
-            # Add social intelligence insights
-            social_data = all_results.get("social_intelligence", {})
-            if social_data:
-                insights.append("🌐 Cross-platform social intelligence gathered")
-
-            # Add performance insights
-            analytics_data = all_results.get("performance_analytics", {})
-            if analytics_data:
-                insights.append("📊 Performance analytics completed")
-
-            # Add quality assessment insights
-            quality_data = all_results.get("quality_assessment", {})
-            if quality_data:
-                insights.append("🤖 AI-enhanced quality assessment performed")
-
-            # Add briefing insights
-            briefing_data = all_results.get("intelligence_briefing", {})
-            if briefing_data:
-                intelligence_grade = briefing_data.get("intelligence_grade", "C")
-                insights.append(f"📋 Intelligence Grade: {intelligence_grade}")
-
-            if not insights:
-                insights.append("🔍 Standard enhanced analysis completed")
-
-            return insights
-        except Exception as e:
-            return [f"❌ Insight generation failed: {e}"]
-
-    # ========================================
-    # ENHANCED CAPABILITY HELPER METHODS
-    # ========================================
+        return data_transformers.generate_comprehensive_intelligence_insights(all_results, self.logger)
 
     def _get_available_capabilities(self) -> list[str]:
         """Get list of all available autonomous capabilities."""
@@ -5471,8 +5011,8 @@ class AutonomousIntelligenceOrchestrator:
     ) -> StepResult:
         """Execute advanced pattern recognition using CrewAI comprehensive linguistic analyst."""
         try:
-            # Use the comprehensive linguistic analyst for advanced pattern recognition
-            pattern_agent = self.crew.comprehensive_linguistic_analyst
+            # CRITICAL: Use _get_or_create_agent to ensure agent has persistent context
+            pattern_agent = self._get_or_create_agent("comprehensive_linguistic_analyst")
 
             # Ensure tools receive full structured context
             try:
@@ -5483,6 +5023,7 @@ class AutonomousIntelligenceOrchestrator:
                         "behavioral_data": behavioral_data,
                     },
                 )
+                self.logger.info("✅ Pattern recognition context populated successfully")
             except Exception as _ctx_err:  # pragma: no cover - defensive
                 self.logger.debug(f"Pattern agent context population skipped: {_ctx_err}")
 
@@ -5542,8 +5083,9 @@ class AutonomousIntelligenceOrchestrator:
                         "research_data": research_data,
                     },
                 )
+                self.logger.info("✅ Cross-reference network context populated successfully")
             except Exception as _ctx_err:  # pragma: no cover - defensive
-                self.logger.debug(f"Network agent context population skipped: {_ctx_err}")
+                self.logger.debug(f"Cross-reference network context population skipped: {_ctx_err}")
 
             network_task = Task(
                 description=(
@@ -5604,6 +5146,7 @@ class AutonomousIntelligenceOrchestrator:
                         "pattern_data": pattern_data,
                     },
                 )
+                self.logger.info("✅ Predictive threat context populated successfully")
             except Exception as _ctx_err:  # pragma: no cover - defensive
                 self.logger.debug(f"Predictive threat context population skipped: {_ctx_err}")
 
@@ -5653,8 +5196,9 @@ class AutonomousIntelligenceOrchestrator:
     ) -> StepResult:
         """Execute multi-modal content synthesis using CrewAI agents."""
         try:
-            if hasattr(self, "agent_coordinators") and "knowledge_integrator" in self.agent_coordinators:
-                synthesis_agent = self.agent_coordinators["knowledge_integrator"]
+            if getattr(self, "_llm_available", False):
+                # CRITICAL FIX: Use _get_or_create_agent to ensure agent exists
+                synthesis_agent = self._get_or_create_agent("knowledge_integrator")
 
                 # Populate structured multi-modal context
                 try:
@@ -5667,7 +5211,7 @@ class AutonomousIntelligenceOrchestrator:
                         },
                     )
                 except Exception as _ctx_err:  # pragma: no cover - defensive
-                    self.logger.debug(f"Multimodal agent context population skipped: {_ctx_err}")
+                    self.logger.warning(f"⚠️ Multimodal agent context population FAILED: {_ctx_err}", exc_info=True)
 
                 multimodal_task = Task(
                     description=f"Synthesize multi-modal content from acquisition: {acquisition_data}, analysis: {analysis_data}, and behavioral data: {behavioral_data}",
@@ -5692,8 +5236,9 @@ class AutonomousIntelligenceOrchestrator:
     ) -> StepResult:
         """Execute dynamic knowledge graph construction using CrewAI agents."""
         try:
-            if hasattr(self, "agent_coordinators") and "knowledge_integrator" in self.agent_coordinators:
-                graph_agent = self.agent_coordinators["knowledge_integrator"]
+            if getattr(self, "_llm_available", False):
+                # CRITICAL FIX: Use _get_or_create_agent to ensure agent exists
+                graph_agent = self._get_or_create_agent("knowledge_integrator")
 
                 # Provide knowledge and network contexts
                 try:
@@ -5705,7 +5250,7 @@ class AutonomousIntelligenceOrchestrator:
                         },
                     )
                 except Exception as _ctx_err:  # pragma: no cover - defensive
-                    self.logger.debug(f"Graph agent context population skipped: {_ctx_err}")
+                    self.logger.warning(f"⚠️ Graph agent context population FAILED: {_ctx_err}", exc_info=True)
 
                 graph_task = Task(
                     description=f"Construct dynamic knowledge graphs from knowledge data: {knowledge_data} and network intelligence: {network_data}",
@@ -5728,8 +5273,9 @@ class AutonomousIntelligenceOrchestrator:
     ) -> StepResult:
         """Execute autonomous learning system integration using CrewAI agents."""
         try:
-            if hasattr(self, "agent_coordinators") and "performance_analyst" in self.agent_coordinators:
-                learning_agent = self.agent_coordinators["performance_analyst"]
+            if getattr(self, "_llm_available", False):
+                # CRITICAL FIX: Use _get_or_create_agent to ensure agent exists
+                learning_agent = self._get_or_create_agent("performance_analyst")
 
                 # Provide learning-related contexts
                 try:
@@ -5741,7 +5287,7 @@ class AutonomousIntelligenceOrchestrator:
                         },
                     )
                 except Exception as _ctx_err:  # pragma: no cover - defensive
-                    self.logger.debug(f"Learning agent context population skipped: {_ctx_err}")
+                    self.logger.warning(f"⚠️ Learning agent context population FAILED: {_ctx_err}", exc_info=True)
 
                 learning_task = Task(
                     description=f"Integrate autonomous learning systems with quality data: {quality_data} and analytics: {analytics_data}",
@@ -5766,8 +5312,9 @@ class AutonomousIntelligenceOrchestrator:
     ) -> StepResult:
         """Execute contextual bandits optimization using CrewAI agents."""
         try:
-            if hasattr(self, "agent_coordinators") and "performance_analyst" in self.agent_coordinators:
-                bandits_agent = self.agent_coordinators["performance_analyst"]
+            if getattr(self, "_llm_available", False):
+                # CRITICAL FIX: Use _get_or_create_agent to ensure agent exists
+                bandits_agent = self._get_or_create_agent("performance_analyst")
 
                 # Provide optimization input context
                 try:
@@ -5779,7 +5326,7 @@ class AutonomousIntelligenceOrchestrator:
                         },
                     )
                 except Exception as _ctx_err:  # pragma: no cover - defensive
-                    self.logger.debug(f"Bandits agent context population skipped: {_ctx_err}")
+                    self.logger.warning(f"⚠️ Bandits agent context population FAILED: {_ctx_err}", exc_info=True)
 
                 bandits_task = Task(
                     description=f"Optimize contextual bandits decision system with analytics: {analytics_data} and learning data: {learning_data}",
@@ -5804,8 +5351,18 @@ class AutonomousIntelligenceOrchestrator:
     ) -> StepResult:
         """Execute community intelligence synthesis using CrewAI agents."""
         try:
-            if hasattr(self, "agent_coordinators") and "community_liaison" in self.agent_coordinators:
-                community_agent = self.agent_coordinators["community_liaison"]
+            if getattr(self, "_llm_available", False):
+                # CRITICAL FIX: Use _get_or_create_agent to ensure agent exists
+                community_agent = self._get_or_create_agent("community_liaison")
+
+                # Populate community intelligence context
+                self._populate_agent_tool_context(
+                    community_agent,
+                    {
+                        "social_data": social_data,
+                        "network_data": network_data,
+                    },
+                )
 
                 community_task = Task(
                     description=f"Synthesize community intelligence from social data: {social_data} and network intelligence: {network_data}",
@@ -5830,8 +5387,18 @@ class AutonomousIntelligenceOrchestrator:
     ) -> StepResult:
         """Execute real-time adaptive workflow optimization using CrewAI agents."""
         try:
-            if hasattr(self, "agent_coordinators") and "mission_orchestrator" in self.agent_coordinators:
-                adaptive_agent = self.agent_coordinators["mission_orchestrator"]
+            if getattr(self, "_llm_available", False):
+                # CRITICAL FIX: Use _get_or_create_agent to ensure agent exists
+                adaptive_agent = self._get_or_create_agent("mission_orchestrator")
+
+                # Populate adaptive workflow context
+                self._populate_agent_tool_context(
+                    adaptive_agent,
+                    {
+                        "bandits_data": bandits_data,
+                        "learning_data": learning_data,
+                    },
+                )
 
                 adaptive_task = Task(
                     description=f"Execute real-time adaptive workflow optimization with bandits data: {bandits_data} and learning systems: {learning_data}",
@@ -5856,8 +5423,18 @@ class AutonomousIntelligenceOrchestrator:
     ) -> StepResult:
         """Execute enhanced memory consolidation using CrewAI agents."""
         try:
-            if hasattr(self, "agent_coordinators") and "knowledge_integrator" in self.agent_coordinators:
-                memory_agent = self.agent_coordinators["knowledge_integrator"]
+            if getattr(self, "_llm_available", False):
+                # CRITICAL FIX: Use _get_or_create_agent to ensure agent exists
+                memory_agent = self._get_or_create_agent("knowledge_integrator")
+
+                # Populate memory consolidation context
+                self._populate_agent_tool_context(
+                    memory_agent,
+                    {
+                        "knowledge_data": knowledge_data,
+                        "graph_data": graph_data,
+                    },
+                )
 
                 memory_task = Task(
                     description=f"Consolidate enhanced memory systems with knowledge data: {knowledge_data} and graph structures: {graph_data}",
@@ -5877,60 +5454,15 @@ class AutonomousIntelligenceOrchestrator:
 
     def _extract_timeline_from_crew(self, crew_result: Any) -> list[dict[str, Any]]:
         """Extract timeline anchors from CrewAI crew results."""
-        try:
-            if not crew_result:
-                return []
-
-            crew_output = str(crew_result).lower()
-
-            # Simple timeline extraction based on time patterns
-            timeline_anchors = []
-            if "timeline" in crew_output or "timestamp" in crew_output:
-                timeline_anchors.append(
-                    {
-                        "type": "crew_generated",
-                        "timestamp": "00:00",
-                        "description": "CrewAI timeline analysis available",
-                    }
-                )
-
-            return timeline_anchors
-        except Exception:
-            return []
+        return extractors.extract_timeline_from_crew(crew_result)
 
     def _extract_index_from_crew(self, crew_result: Any) -> dict[str, Any]:
         """Extract transcript index from CrewAI crew results."""
-        try:
-            if not crew_result:
-                return {}
-
-            crew_output = str(crew_result)
-
-            # Simple index extraction
-            index = {
-                "crew_analysis": True,
-                "content_length": len(crew_output),
-                "keywords": self._extract_keywords_from_text(crew_output),
-                "topics": [],
-            }
-
-            return index
-        except Exception:
-            return {}
+        return extractors.extract_index_from_crew(crew_result)
 
     def _calculate_transcript_quality(self, crew_result: Any) -> float:
         """Calculate transcript quality from CrewAI analysis."""
-        try:
-            if not crew_result:
-                return 0.0
-
-            crew_output = str(crew_result).lower()
-            quality_indicators = ["high quality", "accurate", "clear", "comprehensive", "detailed"]
-            quality_count = sum(1 for indicator in quality_indicators if indicator in crew_output)
-
-            return min(quality_count * 0.2, 1.0)
-        except Exception:
-            return 0.5
+        return extractors.calculate_transcript_quality(crew_result)
 
     def _extract_keywords_from_text(self, text: str) -> list[str]:
         """Extract keywords from text using simple word frequency."""
@@ -5948,527 +5480,55 @@ class AutonomousIntelligenceOrchestrator:
 
     def _extract_linguistic_patterns_from_crew(self, crew_result: Any) -> dict[str, Any]:
         """Extract linguistic patterns from CrewAI analysis."""
-        try:
-            if not crew_result:
-                return {}
-
-            crew_output = str(crew_result).lower()
-
-            patterns = {
-                "crew_detected_patterns": True,
-                "complexity_indicators": self._analyze_text_complexity(crew_output),
-                "language_features": self._extract_language_features(crew_output),
-                "structural_elements": [],
-            }
-
-            return patterns
-        except Exception:
-            return {}
+        return extractors.extract_linguistic_patterns_from_crew(crew_result)
 
     def _extract_sentiment_from_crew(self, crew_result: Any) -> dict[str, Any]:
         """Extract sentiment analysis from CrewAI results."""
-        try:
-            if not crew_result:
-                return {}
-
-            crew_output = str(crew_result).lower()
-
-            # Simple sentiment indicators
-            positive_indicators = ["positive", "good", "excellent", "successful", "effective"]
-            negative_indicators = ["negative", "bad", "poor", "unsuccessful", "problematic"]
-            neutral_indicators = ["neutral", "balanced", "moderate", "average"]
-
-            pos_count = sum(1 for word in positive_indicators if word in crew_output)
-            neg_count = sum(1 for word in negative_indicators if word in crew_output)
-            neu_count = sum(1 for word in neutral_indicators if word in crew_output)
-
-            sentiment = {
-                "overall_sentiment": "positive"
-                if pos_count > neg_count
-                else "negative"
-                if neg_count > pos_count
-                else "neutral",
-                "confidence": min(
-                    (max(pos_count, neg_count, neu_count) / max(1, pos_count + neg_count + neu_count)) * 1.0, 1.0
-                ),
-                "positive_score": pos_count,
-                "negative_score": neg_count,
-                "neutral_score": neu_count,
-            }
-
-            return sentiment
-        except Exception:
-            return {"overall_sentiment": "unknown", "confidence": 0.0}
+        return extractors.extract_sentiment_from_crew(crew_result)
 
     def _extract_themes_from_crew(self, crew_result: Any) -> list[dict[str, Any]]:
         """Extract thematic insights from CrewAI analysis."""
-        try:
-            if not crew_result:
-                return []
-
-            crew_output = str(crew_result)
-
-            # Simple theme extraction
-            themes = []
-            if len(crew_output) > 100:
-                themes.append(
-                    {
-                        "theme": "crew_analysis",
-                        "confidence": 0.8,
-                        "description": "Comprehensive analysis performed by CrewAI agent",
-                        "keywords": self._extract_keywords_from_text(crew_output)[:5],
-                    }
-                )
-
-            return themes
-        except Exception:
-            return []
+        return extractors.extract_themes_from_crew(crew_result)
 
     def _calculate_analysis_confidence_from_crew(self, crew_result: Any) -> float:
         """Calculate analysis confidence from CrewAI results."""
-        try:
-            if not crew_result:
-                return 0.0
-
-            crew_output = str(crew_result)
-
-            # Base confidence on analysis depth and quality indicators
-            confidence_indicators = ["analysis", "detailed", "comprehensive", "thorough", "insights"]
-            confidence_count = sum(1 for indicator in confidence_indicators if indicator in crew_output.lower())
-
-            base_confidence = min(len(crew_output) / 1000, 0.7)  # Length factor
-            indicator_confidence = min(confidence_count * 0.1, 0.3)  # Quality indicator factor
-
-            return min(base_confidence + indicator_confidence, 0.9)
-        except Exception:
-            return 0.5
+        return extractors.calculate_analysis_confidence_from_crew(crew_result)
 
     def _analyze_text_complexity(self, text: str) -> dict[str, Any]:
         """Analyze text complexity metrics."""
-        try:
-            words = text.split()
-            sentences = text.split(".")
-
-            complexity = {
-                "word_count": len(words),
-                "sentence_count": len(sentences),
-                "avg_words_per_sentence": len(words) / max(1, len(sentences)),
-                "complexity_score": min(len(words) / 100, 1.0),
-            }
-
-            return complexity
-        except Exception:
-            return {}
+        return extractors.analyze_text_complexity(text)
 
     def _extract_language_features(self, text: str) -> dict[str, Any]:
         """Extract language features from text."""
-        try:
-            features = {
-                "has_questions": "?" in text,
-                "has_exclamations": "!" in text,
-                "formal_language": any(word in text.lower() for word in ["furthermore", "however", "therefore"]),
-                "technical_language": any(word in text.lower() for word in ["analysis", "system", "process", "data"]),
-            }
-
-            return features
-        except Exception:
-            return {}
+        return extractors.extract_language_features(text)
 
     def _extract_fact_checks_from_crew(self, crew_result: Any) -> dict[str, Any]:
         """Extract fact-checking results from CrewAI verification analysis."""
-        try:
-            if not crew_result:
-                return {}
-
-            crew_output = str(crew_result).lower()
-
-            # Extract fact-checking indicators from crew analysis
-            fact_indicators = ["verified", "factual", "accurate", "confirmed", "disputed", "false", "misleading"]
-            detected_indicators = [indicator for indicator in fact_indicators if indicator in crew_output]
-
-            fact_checks = {
-                "verified_claims": len(
-                    [i for i in detected_indicators if i in ["verified", "factual", "accurate", "confirmed"]]
-                ),
-                "disputed_claims": len([i for i in detected_indicators if i in ["disputed", "false", "misleading"]]),
-                "fact_indicators": detected_indicators,
-                "overall_credibility": "high"
-                if "verified" in crew_output
-                else "medium"
-                if "factual" in crew_output
-                else "low",
-                "crew_analysis_available": True,
-            }
-
-            return fact_checks
-        except Exception:
-            return {"error": "extraction_failed", "crew_analysis_available": False}
+        return extractors.extract_fact_checks_from_crew(crew_result)
 
     def _extract_logical_analysis_from_crew(self, crew_result: Any) -> dict[str, Any]:
         """Extract logical analysis results from CrewAI verification."""
-        try:
-            if not crew_result:
-                return {}
-
-            crew_output = str(crew_result).lower()
-
-            # Identify logical fallacy indicators
-            fallacy_indicators = [
-                "fallacy",
-                "bias",
-                "logical error",
-                "flawed reasoning",
-                "contradiction",
-                "inconsistency",
-            ]
-            detected_fallacies = [indicator for indicator in fallacy_indicators if indicator in crew_output]
-
-            logical_analysis = {
-                "fallacies_detected": detected_fallacies,
-                "fallacy_count": len(detected_fallacies),
-                "logical_consistency": "low"
-                if len(detected_fallacies) > 2
-                else "medium"
-                if len(detected_fallacies) > 0
-                else "high",
-                "reasoning_quality": "strong" if not detected_fallacies else "weak",
-                "crew_analysis_depth": len(crew_output),
-            }
-
-            return logical_analysis
-        except Exception:
-            return {"fallacies_detected": [], "error": "analysis_failed"}
+        return extractors.extract_logical_analysis_from_crew(crew_result)
 
     def _extract_credibility_from_crew(self, crew_result: Any) -> dict[str, Any]:
         """Extract credibility assessment from CrewAI verification."""
-        try:
-            if not crew_result:
-                return {"score": 0.0, "factors": []}
-
-            crew_output = str(crew_result).lower()
-
-            # Credibility indicators
-            high_cred = ["authoritative", "reliable", "credible", "trustworthy", "verified source"]
-            low_cred = ["unreliable", "questionable", "dubious", "unverified", "biased source"]
-
-            high_count = sum(1 for indicator in high_cred if indicator in crew_output)
-            low_count = sum(1 for indicator in low_cred if indicator in crew_output)
-
-            credibility_score = max(0.0, min(1.0, (high_count - low_count + 2) / 4))
-
-            credibility = {
-                "score": credibility_score,
-                "factors": {
-                    "positive_indicators": high_count,
-                    "negative_indicators": low_count,
-                    "analysis_depth": len(crew_output),
-                },
-                "assessment": "high" if credibility_score > 0.7 else "medium" if credibility_score > 0.4 else "low",
-            }
-
-            return credibility
-        except Exception:
-            return {"score": 0.5, "factors": [], "error": "assessment_failed"}
+        return extractors.extract_credibility_from_crew(crew_result)
 
     def _extract_bias_indicators_from_crew(self, crew_result: Any) -> list[dict[str, Any]]:
         """Extract bias indicators from CrewAI verification."""
-        try:
-            if not crew_result:
-                return []
-
-            crew_output = str(crew_result).lower()
-
-            bias_types = {
-                "confirmation_bias": ["confirmation bias", "selective information"],
-                "selection_bias": ["cherry picking", "selective evidence"],
-                "cognitive_bias": ["cognitive bias", "mental shortcut"],
-                "political_bias": ["political bias", "partisan", "ideological"],
-            }
-
-            detected_biases = []
-            for bias_type, indicators in bias_types.items():
-                if any(indicator in crew_output for indicator in indicators):
-                    detected_biases.append(
-                        {
-                            "type": bias_type,
-                            "confidence": 0.8,
-                            "indicators": [ind for ind in indicators if ind in crew_output],
-                        }
-                    )
-
-            return detected_biases
-        except Exception:
-            return []
+        return extractors.extract_bias_indicators_from_crew(crew_result)
 
     def _extract_source_validation_from_crew(self, crew_result: Any) -> dict[str, Any]:
         """Extract source validation results from CrewAI verification."""
-        try:
-            if not crew_result:
-                return {"validated": False, "reason": "no_analysis"}
-
-            crew_output = str(crew_result).lower()
-
-            # Source validation indicators
-            valid_indicators = ["verified source", "authoritative", "primary source", "credible publication"]
-            invalid_indicators = ["unverified", "questionable source", "unreliable", "no source"]
-
-            valid_count = sum(1 for indicator in valid_indicators if indicator in crew_output)
-            invalid_count = sum(1 for indicator in invalid_indicators if indicator in crew_output)
-
-            validation = {
-                "validated": valid_count > invalid_count,
-                "confidence": min(max(valid_count - invalid_count, 0) / 3, 1.0),
-                "validation_factors": {"positive_signals": valid_count, "negative_signals": invalid_count},
-                "source_quality": "high" if valid_count > 2 else "medium" if valid_count > 0 else "unknown",
-            }
-
-            return validation
-        except Exception:
-            return {"validated": False, "reason": "validation_failed"}
+        return extractors.extract_source_validation_from_crew(crew_result)
 
     def _calculate_verification_confidence_from_crew(self, crew_result: Any) -> float:
         """Calculate overall verification confidence from CrewAI analysis."""
-        try:
-            if not crew_result:
-                return 0.0
-
-            crew_output = str(crew_result).lower()
-
-            # Confidence indicators
-            high_conf = ["verified", "confirmed", "certain", "definitive", "clear evidence"]
-            medium_conf = ["likely", "probable", "suggests", "indicates"]
-            low_conf = ["uncertain", "unclear", "insufficient evidence", "questionable"]
-
-            high_count = sum(1 for indicator in high_conf if indicator in crew_output)
-            medium_count = sum(1 for indicator in medium_conf if indicator in crew_output)
-            low_count = sum(1 for indicator in low_conf if indicator in crew_output)
-
-            # Calculate weighted confidence
-            confidence = (high_count * 0.9 + medium_count * 0.6 - low_count * 0.3) / max(
-                1, high_count + medium_count + low_count
-            )
-
-            return max(0.0, min(1.0, confidence))
-        except Exception:
-            return 0.5
+        return extractors.calculate_verification_confidence_from_crew(crew_result)
 
     def _calculate_agent_confidence_from_crew(self, crew_result: Any) -> float:
         """Calculate agent confidence from CrewAI analysis quality."""
-        try:
-            if not crew_result:
-                return 0.0
-
-            crew_output = str(crew_result)
-
-            # Quality indicators for agent performance
-            quality_indicators = ["comprehensive", "thorough", "detailed", "analysis", "assessment"]
-            quality_count = sum(1 for indicator in quality_indicators if indicator in crew_output.lower())
-
-            # Base confidence on analysis depth and quality
-            length_factor = min(len(crew_output) / 500, 0.5)  # Up to 0.5 for length
-            quality_factor = min(quality_count * 0.1, 0.4)  # Up to 0.4 for quality indicators
-
-            return min(length_factor + quality_factor, 0.9)
-        except Exception:
-            return 0.5
-
-    def _extract_fact_checks_from_crew(self, crew_result: Any) -> dict[str, Any]:
-        """Extract fact-checking results from CrewAI verification analysis."""
-        try:
-            if not crew_result:
-                return {}
-
-            crew_output = str(crew_result).lower()
-
-            # Extract fact-checking indicators from crew analysis
-            fact_indicators = ["verified", "factual", "accurate", "confirmed", "disputed", "false", "misleading"]
-            detected_indicators = [indicator for indicator in fact_indicators if indicator in crew_output]
-
-            fact_checks = {
-                "verified_claims": len(
-                    [i for i in detected_indicators if i in ["verified", "factual", "accurate", "confirmed"]]
-                ),
-                "disputed_claims": len([i for i in detected_indicators if i in ["disputed", "false", "misleading"]]),
-                "fact_indicators": detected_indicators,
-                "overall_credibility": "high"
-                if "verified" in crew_output
-                else "medium"
-                if "factual" in crew_output
-                else "low",
-                "crew_analysis_available": True,
-            }
-
-            return fact_checks
-        except Exception:
-            return {"error": "extraction_failed", "crew_analysis_available": False}
-
-    def _extract_logical_analysis_from_crew(self, crew_result: Any) -> dict[str, Any]:
-        """Extract logical analysis results from CrewAI verification."""
-        try:
-            if not crew_result:
-                return {}
-
-            crew_output = str(crew_result).lower()
-
-            # Identify logical fallacy indicators
-            fallacy_indicators = [
-                "fallacy",
-                "bias",
-                "logical error",
-                "flawed reasoning",
-                "contradiction",
-                "inconsistency",
-            ]
-            detected_fallacies = [indicator for indicator in fallacy_indicators if indicator in crew_output]
-
-            logical_analysis = {
-                "fallacies_detected": detected_fallacies,
-                "fallacy_count": len(detected_fallacies),
-                "logical_consistency": "low"
-                if len(detected_fallacies) > 2
-                else "medium"
-                if len(detected_fallacies) > 0
-                else "high",
-                "reasoning_quality": "strong" if not detected_fallacies else "weak",
-                "crew_analysis_depth": len(crew_output),
-            }
-
-            return logical_analysis
-        except Exception:
-            return {"fallacies_detected": [], "error": "analysis_failed"}
-
-    def _extract_credibility_from_crew(self, crew_result: Any) -> dict[str, Any]:
-        """Extract credibility assessment from CrewAI verification."""
-        try:
-            if not crew_result:
-                return {"score": 0.0, "factors": []}
-
-            crew_output = str(crew_result).lower()
-
-            # Credibility indicators
-            high_cred = ["authoritative", "reliable", "credible", "trustworthy", "verified source"]
-            low_cred = ["unreliable", "questionable", "dubious", "unverified", "biased source"]
-
-            high_count = sum(1 for indicator in high_cred if indicator in crew_output)
-            low_count = sum(1 for indicator in low_cred if indicator in crew_output)
-
-            credibility_score = max(0.0, min(1.0, (high_count - low_count + 2) / 4))
-
-            credibility = {
-                "score": credibility_score,
-                "factors": {
-                    "positive_indicators": high_count,
-                    "negative_indicators": low_count,
-                    "analysis_depth": len(crew_output),
-                },
-                "assessment": "high" if credibility_score > 0.7 else "medium" if credibility_score > 0.4 else "low",
-            }
-
-            return credibility
-        except Exception:
-            return {"score": 0.5, "factors": [], "error": "assessment_failed"}
-
-    def _extract_bias_indicators_from_crew(self, crew_result: Any) -> list[dict[str, Any]]:
-        """Extract bias indicators from CrewAI verification."""
-        try:
-            if not crew_result:
-                return []
-
-            crew_output = str(crew_result).lower()
-
-            bias_types = {
-                "confirmation_bias": ["confirmation bias", "selective information"],
-                "selection_bias": ["cherry picking", "selective evidence"],
-                "cognitive_bias": ["cognitive bias", "mental shortcut"],
-                "political_bias": ["political bias", "partisan", "ideological"],
-            }
-
-            detected_biases = []
-            for bias_type, indicators in bias_types.items():
-                if any(indicator in crew_output for indicator in indicators):
-                    detected_biases.append(
-                        {
-                            "type": bias_type,
-                            "confidence": 0.8,
-                            "indicators": [ind for ind in indicators if ind in crew_output],
-                        }
-                    )
-
-            return detected_biases
-        except Exception:
-            return []
-
-    def _extract_source_validation_from_crew(self, crew_result: Any) -> dict[str, Any]:
-        """Extract source validation results from CrewAI verification."""
-        try:
-            if not crew_result:
-                return {"validated": False, "reason": "no_analysis"}
-
-            crew_output = str(crew_result).lower()
-
-            # Source validation indicators
-            valid_indicators = ["verified source", "authoritative", "primary source", "credible publication"]
-            invalid_indicators = ["unverified", "questionable source", "unreliable", "no source"]
-
-            valid_count = sum(1 for indicator in valid_indicators if indicator in crew_output)
-            invalid_count = sum(1 for indicator in invalid_indicators if indicator in crew_output)
-
-            validation = {
-                "validated": valid_count > invalid_count,
-                "confidence": min(max(valid_count - invalid_count, 0) / 3, 1.0),
-                "validation_factors": {"positive_signals": valid_count, "negative_signals": invalid_count},
-                "source_quality": "high" if valid_count > 2 else "medium" if valid_count > 0 else "unknown",
-            }
-
-            return validation
-        except Exception:
-            return {"validated": False, "reason": "validation_failed"}
-
-    def _calculate_verification_confidence_from_crew(self, crew_result: Any) -> float:
-        """Calculate overall verification confidence from CrewAI analysis."""
-        try:
-            if not crew_result:
-                return 0.0
-
-            crew_output = str(crew_result).lower()
-
-            # Confidence indicators
-            high_conf = ["verified", "confirmed", "certain", "definitive", "clear evidence"]
-            medium_conf = ["likely", "probable", "suggests", "indicates"]
-            low_conf = ["uncertain", "unclear", "insufficient evidence", "questionable"]
-
-            high_count = sum(1 for indicator in high_conf if indicator in crew_output)
-            medium_count = sum(1 for indicator in medium_conf if indicator in crew_output)
-            low_count = sum(1 for indicator in low_conf if indicator in crew_output)
-
-            # Calculate weighted confidence
-            confidence = (high_count * 0.9 + medium_count * 0.6 - low_count * 0.3) / max(
-                1, high_count + medium_count + low_count
-            )
-
-            return max(0.0, min(1.0, confidence))
-        except Exception:
-            return 0.5
-
-    def _calculate_agent_confidence_from_crew(self, crew_result: Any) -> float:
-        """Calculate agent confidence from CrewAI analysis quality."""
-        try:
-            if not crew_result:
-                return 0.0
-
-            crew_output = str(crew_result)
-
-            # Quality indicators for agent performance
-            quality_indicators = ["comprehensive", "thorough", "detailed", "analysis", "assessment"]
-            quality_count = sum(1 for indicator in quality_indicators if indicator in crew_output.lower())
-
-            # Base confidence on analysis depth and quality
-            length_factor = min(len(crew_output) / 500, 0.5)  # Up to 0.5 for length
-            quality_factor = min(quality_count * 0.1, 0.4)  # Up to 0.4 for quality indicators
-
-            return min(length_factor + quality_factor, 0.9)
-        except Exception:
-            return 0.5
+        return extractors.calculate_agent_confidence_from_crew(crew_result)
 
     def _extract_deception_analysis_from_crew(self, crew_result: Any) -> dict[str, Any]:
         """Extract comprehensive deception analysis from CrewAI threat assessment."""

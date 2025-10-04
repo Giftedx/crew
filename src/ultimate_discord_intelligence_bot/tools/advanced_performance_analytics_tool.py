@@ -54,6 +54,39 @@ class AdvancedPerformanceAnalyticsTool(BaseTool[StepResult]):
         self.discord_integration = AdvancedPerformanceAnalyticsDiscordIntegration()
         self._metrics = get_metrics()
 
+    def run(
+        self,
+        action: str | None = None,
+        lookback_hours: int = 24,
+        include_optimization: bool = False,
+        send_notifications: bool = True,
+        **kwargs: Any,
+    ) -> StepResult:
+        """Public wrapper delegating to :meth:`_run`."""
+        # Handle case where LLM passes args/kwargs in nested structure
+        if action is None and "args" in kwargs:
+            args_dict = kwargs.get("args", {})
+            action = args_dict.get("action")
+        if action is None and "kwargs" in kwargs:
+            nested_kwargs = kwargs.get("kwargs", {})
+            action = nested_kwargs.get("action")
+        if action is None:
+            return StepResult.fail(
+                error="Missing required parameter: action",
+                details="Supported actions: analyze, alerts, optimize, predict, executive_summary, dashboard",
+            )
+
+        try:
+            return self._run(action, lookback_hours, include_optimization, send_notifications, **kwargs)
+        except Exception as exc:
+            try:
+                self._metrics.counter(
+                    "tool_runs_total", labels={"tool": "advanced_performance_analytics", "outcome": "error"}
+                ).inc()
+            except Exception:
+                pass
+            return StepResult.fail(error=str(exc))
+
     def _run(
         self,
         action: str,

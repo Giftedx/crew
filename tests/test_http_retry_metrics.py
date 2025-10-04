@@ -1,8 +1,19 @@
 import pytest
 import requests
 
+from core.http import reset_circuit_breakers
 from core.http_utils import http_request_with_retry
 from obs import metrics as m
+
+
+@pytest.fixture(autouse=True)
+def reset_metrics():
+    """Reset metrics and circuit breaker state between tests to avoid cross-test contamination."""
+    m.reset()
+    reset_circuit_breakers()
+    yield
+    m.reset()
+    reset_circuit_breakers()
 
 
 def _counter_value(counter, **label_match):  # helper resilient to missing prometheus
@@ -23,7 +34,6 @@ def test_http_retry_metrics_giveup(monkeypatch):
     monkeypatch.setenv("ENABLE_HTTP_CIRCUIT_BREAKER", "1")  # Metrics require circuit breaker path
     # speed: eliminate real sleeping
     monkeypatch.setattr("time.sleep", lambda _x: None)
-    m.reset()
 
     calls = {"n": 0}
 
@@ -58,7 +68,6 @@ def test_http_retry_metrics_success_after_retries(monkeypatch):
     monkeypatch.setenv("ENABLE_HTTP_RETRY", "1")
     monkeypatch.setenv("ENABLE_HTTP_CIRCUIT_BREAKER", "1")  # Metrics require circuit breaker path
     monkeypatch.setattr("time.sleep", lambda _x: None)
-    m.reset()
 
     calls = {"n": 0}
 

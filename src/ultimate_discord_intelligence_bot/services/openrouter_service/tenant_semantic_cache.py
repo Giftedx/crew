@@ -107,17 +107,17 @@ class TenantSemanticCache(SemanticCacheInterface):
             return cache
 
     # ------------------------------------------------------------------
-    async def get(self, prompt: str, model: str, **kwargs: Any) -> dict[str, Any] | None:  # noqa: D401
+    def get(self, prompt: str, model: str, **kwargs: Any) -> dict[str, Any] | None:  # noqa: D401
         cache = self._get_cache(kwargs.get("namespace"))
         cache_kwargs = dict(kwargs)
         cache_kwargs.setdefault("namespace", kwargs.get("namespace"))
-        return await cache.get(prompt, model, **cache_kwargs)
+        return cache.get(prompt, model, **cache_kwargs)
 
-    async def set(self, prompt: str, model: str, response: dict[str, Any], **kwargs: Any) -> None:  # noqa: D401
+    def set(self, prompt: str, model: str, response: dict[str, Any], **kwargs: Any) -> None:  # noqa: D401
         cache = self._get_cache(kwargs.get("namespace"))
         cache_kwargs = dict(kwargs)
         cache_kwargs.setdefault("namespace", kwargs.get("namespace"))
-        await cache.set(prompt, model, response, **cache_kwargs)
+        cache.set(prompt, model, response, **cache_kwargs)
 
     # ------------------------------------------------------------------
     def get_stats(self) -> CacheStats:  # noqa: D401

@@ -403,21 +403,10 @@ def _post_success(
 def _persist_caches(service: OpenRouterService, state: RouteState, result: dict[str, Any]) -> None:
     if service.semantic_cache is not None:
         try:
-            import asyncio as _asyncio
-            import threading as _threading
-
             sc = service.semantic_cache
-
-            def _runner_set() -> None:
-                try:
-                    if sc is not None:
-                        _asyncio.run(sc.set(state.prompt, state.chosen_model, result, namespace=state.namespace))
-                except Exception:
-                    pass
-
-            t_set = _threading.Thread(target=_runner_set, daemon=True)
-            t_set.start()
-            t_set.join()
+            # Call cache.set() directly - no longer async
+            if sc is not None:
+                sc.set(state.prompt, state.chosen_model, result, namespace=state.namespace)
             log.debug("semantic_cache_set completed for model=%s ns=%s", state.chosen_model, state.namespace)
         except Exception:
             pass

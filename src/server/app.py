@@ -29,6 +29,7 @@ from server.routes import (
     register_activities_echo,
     register_alert_routes,
     register_archive_routes,
+    register_autointel_routes,
     register_health_routes,
     register_metrics_endpoint,
     register_pilot_route,
@@ -116,6 +117,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     register_alert_routes(app)
     register_a2a_router(app, settings)
     register_pipeline_routes(app, settings)
+    register_autointel_routes(app, settings)
 
     # Optional: CORS for local Activities or web clients (inline middleware)
     # Register CORS EARLY so preflight (OPTIONS) can be intercepted reliably before other middlewares

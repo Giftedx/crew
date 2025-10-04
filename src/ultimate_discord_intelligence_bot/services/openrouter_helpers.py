@@ -68,7 +68,7 @@ def choose_model_from_map(task_type: str, models_map: dict[str, list[str]], lear
             except Exception:
                 return candidates[0]
         return candidates[0]
-    return "openai/gpt-3.5-turbo"
+    return "openai/gpt-4o-mini"
 
 
 __all__ = [

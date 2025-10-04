@@ -20,7 +20,8 @@ Before making changes, verify you understand:
 - **Tenancy**: `src/ultimate_discord_intelligence_bot/tenancy/` (`with_tenant(TenantContext(...))`, `mem_ns()` to derive `<tenant>:<workspace>:<suffix>` namespaces).
 - **Server**: `src/server/app.py` (feature-flagged middleware + routers; pipeline routes behind `ENABLE_PIPELINE_RUN_API=1`; A2A behind `ENABLE_A2A_API=1`).
 - **Model routing**: `src/ultimate_discord_intelligence_bot/services/openrouter_service.py` (adaptive routing, semantic cache, Redis integration; respects `ENABLE_SEMANTIC_CACHE*`).
-- **Settings/flags**: `src/core/settings.py` (simple, env-driven; many `ENABLE_*` toggles). Vector store: Qdrant; if `QDRANT_URL` missing, tests use in‑memory fallback.
+- **Settings/flags**: `src/core/settings.py` (simple, env-driven; 80+ `ENABLE_*` toggles; see `.env.example` for catalog). Vector store: Qdrant; if `QDRANT_URL` missing, tests use in‑memory fallback.
+- **Modular src/ layout**: Packages are split by concern (`core/`, `obs/`, `memory/`, `ingest/`, `analysis/`, `security/`, `scheduler/`, `server/`, etc.). All must be listed in `pyproject.toml` `[tool.hatch.build.targets.wheel].packages` for distribution.
 
 ### Do this (repo conventions)
 
@@ -91,6 +92,92 @@ async def _analysis_phase(self, ctx, download_info, transcription_bundle):
         # Bubble error with step name for retry accounting
         return None, self._fail(ctx.span, ctx.start_time, "analysis", {"error": str(e)})
 ```
+
+### ⚠️ CRITICAL: CrewAI Tool Data Flow Pattern
+
+**The `/autointel` command was completely rewritten (2025-01-03)** to use proper CrewAI architecture. See implementation in `src/ultimate_discord_intelligence_bot/autonomous_orchestrator.py`.
+
+**✅ CORRECT PATTERN - Task Chaining (ALWAYS USE THIS)**:
+
+CrewAI is designed for task chaining via the `context` parameter. Task outputs automatically flow to dependent tasks.
+
+```python
+# ✅ CORRECT: Build ONE crew with chained tasks
+def _build_intelligence_crew(self, url: str, depth: str) -> Crew:
+    # Get cached agents (created once, reused across all tasks)
+    acquisition_agent = self._get_or_create_agent("acquisition_specialist")
+    transcription_agent = self._get_or_create_agent("transcription_engineer")
+    analysis_agent = self._get_or_create_agent("analysis_cartographer")
+    
+    # Create tasks with high-level descriptions (NO embedded data!)
+    acquisition_task = Task(
+        description="Acquire and download content from {url}",  # Uses {url} placeholder for kickoff inputs
+        agent=acquisition_agent,
+        expected_output="Complete media file with metadata"
+    )
+    
+    # Chain tasks via context parameter (data flows automatically)
+    transcription_task = Task(
+        description="Enhance and index the acquired media transcript",  # High-level instruction
+        agent=transcription_agent,
+        context=[acquisition_task],  # ✅ CRITICAL: Receives acquisition output automatically
+        expected_output="Enhanced transcript with timeline anchors"
+    )
+    
+    analysis_task = Task(
+        description="Analyze linguistic patterns and sentiment in transcript",
+        agent=analysis_agent,
+        context=[transcription_task],  # ✅ Receives transcription output automatically
+        expected_output="Comprehensive content analysis"
+    )
+    
+    # Return ONE crew with all tasks
+    return Crew(
+        agents=[acquisition_agent, transcription_agent, analysis_agent],
+        tasks=[acquisition_task, transcription_task, analysis_task],
+        process=Process.sequential
+    )
+
+# Execute crew with initial inputs
+result = await asyncio.to_thread(crew.kickoff, inputs={"url": url, "depth": depth})
+```
+
+**❌ BROKEN PATTERNS (NEVER DO THIS)**:
+
+```python
+# ❌ WRONG: Creating separate crews per stage
+for stage in stages:
+    crew = Crew(agents=[agent], tasks=[Task(...)])  # Breaks data flow!
+    result = crew.kickoff()
+
+# ❌ WRONG: Embedding data in task descriptions
+task = Task(
+    description=f"Analyze this transcript: {transcript[:500]}...",  # LLMs can't extract this!
+    agent=agent
+)
+
+# ❌ WRONG: Creating fresh agent instances mid-workflow
+crew_instance = UltimateDiscordIntelligenceBotCrew()
+agent = crew_instance.analysis_cartographer()  # Bypasses caching and context population!
+```
+
+**Why This Matters**:
+- CrewAI LLMs **cannot** extract structured data from task descriptions
+- When you write `description=f"Analyze: {transcript}"`, the LLM sees text but provides placeholder params like `"the transcript"` when calling tools
+- Task chaining via `context=[previous_task]` makes outputs flow automatically through CrewAI's internal context system
+- Creating separate crews breaks the data pipeline between stages
+
+**Agent Caching Pattern**:
+- ALWAYS use `self._get_or_create_agent("agent_name")` to get agents
+- Agents are created ONCE and cached in `self.agent_coordinators`
+- `_populate_agent_tool_context(agent, context_data)` populates tools' `_shared_context` as a fallback mechanism
+- Same agent instance is reused across all tasks, preserving context
+
+**When adding /autointel features**:
+1. Add tasks to `_build_intelligence_crew()` with proper `context=[previous_task]` chaining
+2. Use high-level task descriptions like "Analyze transcript" NOT "Analyze: {data}"
+3. Get agents via `self._get_or_create_agent("agent_name")`, never create fresh instances
+4. Pass initial data through `crew.kickoff(inputs={...})`, not task descriptions
 
 #### Tenant context (multi-tenancy)
 ```python
@@ -170,9 +257,10 @@ export ENABLE_MCP_MEMORY=1 ENABLE_MCP_ROUTER=1 ENABLE_MCP_OBS=1
 ```
 
 ### Testing, compliance, and docs
-- **Guards bundle**: `make guards` (dispatcher usage, http wrapper usage, metrics instrumentation, tools exports).
-- **Compliance surfaces**: `make compliance` / `compliance-fix` when touching HTTP wrappers or `StepResult` handling.
-- **Feature flags doc**: `make docs-flags-write` regenerates `docs/feature_flags.md` (manual edits are overwritten).
+- **Guards bundle**: `make guards` (dispatcher usage, http wrapper usage, metrics instrumentation, tools exports). These enforce repo conventions—run after adding/modifying tools, HTTP clients, or downloaders.
+- **Compliance surfaces**: `make compliance` / `compliance-fix` when touching HTTP wrappers or `StepResult` handling. Auto-migration scripts available for bulk fixes.
+- **Feature flags doc**: `make docs-flags-write` regenerates `docs/feature_flags.md` (manual edits are overwritten). Always regenerate after adding/changing flags in `core/settings.py`.
+- **Type guard**: `make type-guard` fails if mypy error count increases vs baseline. Fix errors instead of updating baseline; only run `make type-guard-update` after reducing errors.
 
 ### Integration notes and examples
 - **OpenRouterService**: prefer `with_tenant(...)` around calls so routing, caches, and bandits are tenant‑aware; semantic cache controlled by `ENABLE_SEMANTIC_CACHE(_PROMOTION|_SHADOW)`.
@@ -287,29 +375,91 @@ Questions or gaps? Open a PR comment or ask for clarifications; we'll iterate on
 - Never call `yt-dlp` or `requests` directly—use `MultiPlatformDownloadTool` and `core/http_utils` wrappers; guard scripts (`validate_dispatcher_usage.py`, `validate_http_wrappers_usage.py`) will fail otherwise.
 - When scheduling concurrent steps (analysis, fallacy, perspective, Discord, graph memory) cancel pending tasks if any branch errors and surface `StepResult.fail(..., step="<name>")` to preserve retry accounting.
 
-### ⚠️ CRITICAL: CrewAI Tool Data Flow Issue
+### ⚠️ CRITICAL: CrewAI Tool Data Flow Pattern
 
-**The `/autointel` command has a critical architectural flaw** - see `docs/AUTOINTEL_CRITICAL_ISSUES.md` for full analysis.
+**The `/autointel` command was completely rewritten (2025-01-03)** to use proper CrewAI architecture. See implementation in `src/ultimate_discord_intelligence_bot/autonomous_orchestrator.py`.
 
-**Problem**: CrewAI agents don't receive structured data. Tool wrappers have `_shared_context` mechanism but orchestrator never populates it.
+**✅ CORRECT PATTERN - Task Chaining (ALWAYS USE THIS)**:
+
+CrewAI is designed for task chaining via the `context` parameter. Task outputs automatically flow to dependent tasks.
 
 ```python
-# ❌ BROKEN PATTERN (current /autointel implementation)
-task = Task(description=f"Analyze: {transcript[:500]}...", agent=agent)
-crew_result = await asyncio.to_thread(crew.kickoff)  # Tools get empty data!
+# ✅ CORRECT: Build ONE crew with chained tasks
+def _build_intelligence_crew(self, url: str, depth: str) -> Crew:
+    # Get cached agents (created once, reused across all tasks)
+    acquisition_agent = self._get_or_create_agent("acquisition_specialist")
+    transcription_agent = self._get_or_create_agent("transcription_engineer")
+    analysis_agent = self._get_or_create_agent("analysis_cartographer")
+    
+    # Create tasks with high-level descriptions (NO embedded data!)
+    acquisition_task = Task(
+        description="Acquire and download content from {url}",  # Uses {url} placeholder for kickoff inputs
+        agent=acquisition_agent,
+        expected_output="Complete media file with metadata"
+    )
+    
+    # Chain tasks via context parameter (data flows automatically)
+    transcription_task = Task(
+        description="Enhance and index the acquired media transcript",  # High-level instruction
+        agent=transcription_agent,
+        context=[acquisition_task],  # ✅ CRITICAL: Receives acquisition output automatically
+        expected_output="Enhanced transcript with timeline anchors"
+    )
+    
+    analysis_task = Task(
+        description="Analyze linguistic patterns and sentiment in transcript",
+        agent=analysis_agent,
+        context=[transcription_task],  # ✅ Receives transcription output automatically
+        expected_output="Comprehensive content analysis"
+    )
+    
+    # Return ONE crew with all tasks
+    return Crew(
+        agents=[acquisition_agent, transcription_agent, analysis_agent],
+        tasks=[acquisition_task, transcription_task, analysis_task],
+        process=Process.sequential
+    )
 
-# ✅ WORKING PATTERN (direct tool calls)
-tool = TextAnalysisTool()
-result = tool.run(text=full_transcript)  # Tool gets actual data
-
-# ✅ WORKING PATTERN (with shared context - requires implementation)
-for tool in agent.tools:
-    if hasattr(tool, 'update_context'):
-        tool.update_context({"text": transcript, "metadata": metadata})
-crew_result = await asyncio.to_thread(crew.kickoff)  # Tools now have data
+# Execute crew with initial inputs
+result = await asyncio.to_thread(crew.kickoff, inputs={"url": url, "depth": depth})
 ```
 
-**When adding /autointel stages**: Call tools directly OR populate shared context before crew.kickoff(). Never rely on task descriptions to pass structured data.
+**❌ BROKEN PATTERNS (NEVER DO THIS)**:
+
+```python
+# ❌ WRONG: Creating separate crews per stage
+for stage in stages:
+    crew = Crew(agents=[agent], tasks=[Task(...)])  # Breaks data flow!
+    result = crew.kickoff()
+
+# ❌ WRONG: Embedding data in task descriptions
+task = Task(
+    description=f"Analyze this transcript: {transcript[:500]}...",  # LLMs can't extract this!
+    agent=agent
+)
+
+# ❌ WRONG: Creating fresh agent instances mid-workflow
+crew_instance = UltimateDiscordIntelligenceBotCrew()
+agent = crew_instance.analysis_cartographer()  # Bypasses caching and context population!
+```
+
+**Why This Matters**:
+- CrewAI LLMs **cannot** extract structured data from task descriptions
+- When you write `description=f"Analyze: {transcript}"`, the LLM sees text but provides placeholder params like `"the transcript"` when calling tools
+- Task chaining via `context=[previous_task]` makes outputs flow automatically through CrewAI's internal context system
+- Creating separate crews breaks the data pipeline between stages
+
+**Agent Caching Pattern**:
+- ALWAYS use `self._get_or_create_agent("agent_name")` to get agents
+- Agents are created ONCE and cached in `self.agent_coordinators`
+- `_populate_agent_tool_context(agent, context_data)` populates tools' `_shared_context` as a fallback mechanism
+- Same agent instance is reused across all tasks, preserving context
+
+**When adding /autointel features**:
+1. Add tasks to `_build_intelligence_crew()` with proper `context=[previous_task]` chaining
+2. Use high-level task descriptions like "Analyze transcript" NOT "Analyze: {data}"
+3. Get agents via `self._get_or_create_agent("agent_name")`, never create fresh instances
+4. Pass initial data through `crew.kickoff(inputs={...})`, not task descriptions
 
 ## HTTP, config, and time
 - Use `core/http_utils` (`resilient_get`, `resilient_post`, `http_request_with_retry`) for outbound calls; retry precedence is call args → tenant `retry.yaml` → `config/retry.yaml` → `RETRY_MAX_ATTEMPTS` env → secure-config defaults.

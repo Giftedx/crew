@@ -254,7 +254,7 @@ class EnhancedOpenRouterService:
             except Exception as e:
                 logger.debug(f"Provider {provider.name} not configured: {e}")
 
-        return enabled_providers or [ProviderConfig(name="openrouter", models=["openai/gpt-3.5-turbo"], priority=1)]
+        return enabled_providers or [ProviderConfig(name="openrouter", models=["openai/gpt-4o-mini"], priority=1)]
 
     def _build_enhanced_model_map(self, models_map: dict[str, list[str]] | None) -> dict[str, list[str]]:
         """Build enhanced model mapping with provider prefixes."""
@@ -575,7 +575,7 @@ class EnhancedOpenRouterService:
         candidates = self._get_fallback_candidates(task_type)
 
         if not candidates:
-            return "openai/gpt-3.5-turbo"  # Ultimate fallback
+            return "openai/gpt-4o-mini"  # Ultimate fallback
 
         return self.learning.select_model(task_type, candidates)
 
