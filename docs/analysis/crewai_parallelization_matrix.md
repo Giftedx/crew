@@ -17,6 +17,7 @@ Based on comprehensive analysis of CrewAI documentation and our workflow depende
 **Recommendation:** **Hybrid approach** using `async_execution=True` for independent CrewAI tasks + `asyncio.gather()` for parallel tool calls within analysis stage.
 
 **Projected Performance:**
+
 - Current: 10.5 min (629s) sequential
 - Target: 5-6 min (300-360s) with parallelization
 - Conservative estimate: 7-8 min (420-480s) = **30-35% improvement**
@@ -28,6 +29,7 @@ Based on comprehensive analysis of CrewAI documentation and our workflow depende
 ### Approach 1: async_execution=True (RECOMMENDED for Independent Tasks)
 
 **How It Works:**
+
 ```python
 # Tasks with async_execution=True run in parallel
 task1 = Task(
@@ -56,6 +58,7 @@ crew = Crew(
 ```
 
 **Pros:**
+
 - ✅ Lightweight (no manager overhead)
 - ✅ Stays within CrewAI framework
 - ✅ Simple to implement (just add flag)
@@ -63,16 +66,19 @@ crew = Crew(
 - ✅ No architectural changes needed
 
 **Cons:**
+
 - ⚠️ Only works for tasks that DON'T depend on each other
 - ⚠️ All async tasks must complete before dependent task starts
 - ⚠️ Limited to CrewAI task-level parallelization (can't parallelize within a task)
 
 **Performance Characteristics:**
+
 - **Overhead:** Minimal (~10-50ms per async task)
 - **Speedup:** Near-linear for CPU-bound tasks, excellent for I/O-bound
 - **Scalability:** Handles 2-10 parallel tasks efficiently
 
 **Use Cases (from our workflow):**
+
 - ✅ **Analysis subtasks:** TextAnalysis ‖ FallacyDetection ‖ PerspectiveSynthesis
 - ❌ **Acquisition → Transcription** (hard dependency on file_path)
 - ❌ **Transcription → Analysis** (hard dependency on transcript)
@@ -82,6 +88,7 @@ crew = Crew(
 ### Approach 2: Process.hierarchical (Manager-Worker Pattern)
 
 **How It Works:**
+
 ```python
 # Manager agent delegates tasks to worker agents
 manager = Agent(
@@ -110,12 +117,14 @@ crew = Crew(
 ```
 
 **Pros:**
+
 - ✅ Automatic task breakdown and delegation
 - ✅ Manager validates results before returning
 - ✅ Stays within CrewAI framework
 - ✅ Natural for complex workflows with multiple specialists
 
 **Cons:**
+
 - ❌ **HIGH OVERHEAD:** Manager LLM calls add latency (extra API calls)
 - ❌ Manager must plan, delegate, AND validate (3 LLM calls per task)
 - ❌ Less predictable performance (manager decides parallelization)
@@ -123,6 +132,7 @@ crew = Crew(
 - ❌ Additional cost (manager LLM calls on every task)
 
 **Performance Characteristics:**
+
 - **Overhead:** HIGH (~2-5 seconds per manager decision)
 - **Speedup:** Variable (manager decides what to parallelize)
 - **Scalability:** Good for 3-5 specialist agents
@@ -132,6 +142,7 @@ crew = Crew(
 > Hierarchical processes add complexity and overhead - only use when needed.
 
 **Use Cases (from our workflow):**
+
 - ⚠️ **NOT RECOMMENDED** for our workflow
 - Better for: Complex multi-agent workflows with many specialists
 - Our workflow: Already optimized task chain, adding manager would slow it down
@@ -141,6 +152,7 @@ crew = Crew(
 ### Approach 3: Hybrid (asyncio.gather for Tool Calls)
 
 **How It Works:**
+
 ```python
 # Inside CrewAI task execution, break out for parallel tool calls
 class AnalysisAgent(Agent):
@@ -162,6 +174,7 @@ analysis_task = Task(
 ```
 
 **Pros:**
+
 - ✅ **MAXIMUM CONTROL:** Explicit parallelization where needed
 - ✅ **LOWEST OVERHEAD:** Direct asyncio, no framework overhead
 - ✅ Can parallelize tool calls WITHIN a single task
@@ -169,17 +182,20 @@ analysis_task = Task(
 - ✅ Works with existing sequential CrewAI workflow
 
 **Cons:**
+
 - ⚠️ Breaks out of pure CrewAI pattern (hybrid approach)
 - ⚠️ Requires custom async code in tools/agents
 - ⚠️ More complex implementation
 - ⚠️ Need to handle cancellation on errors
 
 **Performance Characteristics:**
+
 - **Overhead:** MINIMAL (~5-10ms for asyncio.gather)
 - **Speedup:** Near-optimal (limited only by slowest parallel task)
 - **Scalability:** Excellent (handles 10+ parallel operations)
 
 **Use Cases (from our workflow):**
+
 - ✅ **Analysis subtasks:** 3 parallel tool calls (saves 1-2 min)
 - ✅ **Fact-checking:** 5 parallel FactCheckTool calls (saves 0.5-1 min)
 - ✅ **Memory operations:** MemoryStorage ‖ GraphMemory (saves 0.5-1 min)
@@ -299,6 +315,7 @@ async def _parallel_fact_check(self, claims: list[str]) -> list[dict]:
 ## Performance Projections
 
 ### Current Baseline (Sequential)
+
 ```
 Acquisition:      2-3 min  (120-180s)
 Transcription:    3-4 min  (180-240s)
@@ -310,6 +327,7 @@ Total:           ~10.5 min (629s measured)
 ```
 
 ### After Optimization (Parallel)
+
 ```
 Acquisition:      2-3 min  (120-180s)  [No change - starting point]
 Transcription:    3-4 min  (180-240s)  [No change - depends on file]
@@ -343,15 +361,18 @@ Improvement:     ~30-35%
 
 ## Final Recommendation
 
-### Use **Hybrid Approach**:
+### Use **Hybrid Approach**
+
 1. **async_execution=True** for memory/graph operations (Phase 1)
 2. **asyncio.gather()** for analysis subtasks (Phase 2)
 3. **asyncio.gather()** for parallel fact-checking (Phase 3)
 
-### Do NOT Use:
+### Do NOT Use
+
 - ❌ **Process.hierarchical** - Too much overhead for our linear workflow
 
-### Rationale:
+### Rationale
+
 - Our workflow is **already well-structured** with clear task boundaries
 - We need **parallelization WITHIN stages**, not task delegation
 - Hybrid approach gives us **maximum performance** with **minimal overhead**
@@ -363,11 +384,13 @@ Improvement:     ~30-35%
 ## Implementation Timeline
 
 **Week 2 (Implementation):**
+
 - Days 1-2: Memory operations parallelization (async_execution)
 - Days 3-5: Analysis subtasks parallelization (asyncio.gather)
 - Days 6-7: Fact-checking parallelization (asyncio.gather)
 
 **Week 3 (Validation):**
+
 - Days 1-2: Performance validation (run benchmarks)
 - Days 3-4: Documentation updates
 - Day 5: Feature flag rollout (ENABLE_PARALLEL_AUTOINTEL)
@@ -409,16 +432,19 @@ ENABLE_PARALLEL_FACT_CHECK = env_bool("ENABLE_PARALLEL_FACT_CHECK", default=Fals
 ## Success Metrics
 
 **Performance:**
+
 - ✅ Experimental depth: <8 min (from 10.5 min)
 - ✅ Deep depth: <5 min (from ~7 min)
 - ✅ Standard depth: <4 min (from ~5 min)
 
 **Quality:**
+
 - ✅ Zero regressions in output quality (compare with baseline)
 - ✅ Same number of insights/fallacies/perspectives
 - ✅ Same memory storage success rate
 
 **Reliability:**
+
 - ✅ Error rate <1% (same as baseline)
 - ✅ All benchmark tests passing
 - ✅ No race conditions detected
@@ -438,8 +464,9 @@ ENABLE_PARALLEL_FACT_CHECK = env_bool("ENABLE_PARALLEL_FACT_CHECK", default=Fals
 ---
 
 **References:**
-- CrewAI Sequential Process: https://docs.crewai.com/en/learn/sequential-process
-- CrewAI Task async_execution: https://docs.crewai.com/en/concepts/tasks
-- CrewAI Hierarchical Process: https://docs.crewai.com/en/concepts/processes
+
+- CrewAI Sequential Process: <https://docs.crewai.com/en/learn/sequential-process>
+- CrewAI Task async_execution: <https://docs.crewai.com/en/concepts/tasks>
+- CrewAI Hierarchical Process: <https://docs.crewai.com/en/concepts/processes>
 - Task Dependency Analysis: docs/analysis/autointel_task_dependencies.md
 - Performance Baselines: tests/benchmarks/test_autointel_performance.py

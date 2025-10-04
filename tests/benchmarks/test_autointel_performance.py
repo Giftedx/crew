@@ -131,9 +131,7 @@ class TestPhasePerformance:
         """Benchmark: Crew building should complete in <1 second."""
         start = time.time()
 
-        crew = orchestrator._build_intelligence_crew(
-            url="https://youtube.com/watch?v=test", depth="standard"
-        )
+        crew = orchestrator._build_intelligence_crew(url="https://youtube.com/watch?v=test", depth="standard")
 
         duration = time.time() - start
 
@@ -156,7 +154,9 @@ class TestPhasePerformance:
         duration2 = time.time() - start2
 
         # Cached retrieval should be at least 10x faster
-        assert duration2 < duration1 / 10, f"Cache retrieval ({duration2:.4f}s) not significantly faster than creation ({duration1:.4f}s)"
+        assert duration2 < duration1 / 10, (
+            f"Cache retrieval ({duration2:.4f}s) not significantly faster than creation ({duration1:.4f}s)"
+        )
         assert agent1 is agent2, "Agent caching not working - different instances returned"
 
     @pytest.mark.asyncio
@@ -188,7 +188,9 @@ class TestAutointelWorkflowPerformance:
     @pytest.mark.slow
     @pytest.mark.asyncio
     @patch("asyncio.to_thread")
-    async def test_autointel_experimental_baseline(self, mock_to_thread, orchestrator, mock_interaction, mock_crew_output):
+    async def test_autointel_experimental_baseline(
+        self, mock_to_thread, orchestrator, mock_interaction, mock_crew_output
+    ):
         """BASELINE: Experimental depth execution time (current: ~10.5 min).
 
         This test establishes the pre-optimization baseline for experimental depth.
@@ -243,7 +245,9 @@ class TestAutointelWorkflowPerformance:
 
     @pytest.mark.asyncio
     @patch("asyncio.to_thread")
-    async def test_autointel_deep_depth_performance(self, mock_to_thread, orchestrator, mock_interaction, mock_crew_output):
+    async def test_autointel_deep_depth_performance(
+        self, mock_to_thread, orchestrator, mock_interaction, mock_crew_output
+    ):
         """Benchmark: Deep depth (4 tasks) performance."""
         mock_to_thread.return_value = mock_crew_output
         orchestrator._send_progress_update = AsyncMock()

@@ -9,6 +9,8 @@ from typing import Any
 
 from crewai import Crew, Process, Task
 
+from core.settings import get_settings
+
 # Module-level logger
 logger = logging.getLogger(__name__)
 
@@ -139,6 +141,7 @@ def build_intelligence_crew(
     agent_getter_callback,
     task_completion_callback: Any | None = None,
     logger_instance: logging.Logger | None = None,
+    enable_parallel_memory_ops: bool | None = None,
 ) -> Crew:
     """Build a single chained CrewAI crew for the complete intelligence workflow.
 
@@ -153,11 +156,18 @@ def build_intelligence_crew(
         agent_getter_callback: Callable that takes agent_name and returns agent instance
         task_completion_callback: Optional callback for task completion
         logger_instance: Optional logger instance
+        enable_parallel_memory_ops: Enable parallel memory operations (default: from settings)
 
     Returns:
         Configured Crew with chained tasks
     """
     _logger = logger_instance or logger
+
+    # Get feature flag from settings if not explicitly provided
+    if enable_parallel_memory_ops is None:
+        settings = get_settings()
+        enable_parallel_memory_ops = settings.enable_parallel_memory_ops
+
     _logger.info(f"🏗️  Building chained intelligence crew for depth: {depth}")
 
     # Get or create all agents ONCE (they'll be cached and reused)
@@ -284,51 +294,142 @@ def build_intelligence_crew(
     )
 
     # Stage 5: Knowledge Integration (depends on ALL previous tasks)
-    integration_task = Task(
-        description=(
-            "⚠️ CRITICAL TOOL EXECUTION REQUIREMENTS - READ CAREFULLY ⚠️\n\n"
-            "This task requires you to CALL SPECIFIC TOOLS. You CANNOT complete this task by just "
-            "writing JSON - you MUST execute the tools and wait for their responses.\n\n"
-            "STEP 1: Store the full transcript in vector memory\n"
-            "→ REQUIRED ACTION: Use MemoryStorageTool with the full transcript text\n"
-            "→ You MUST wait for the tool to execute and return a result\n"
-            "→ DO NOT claim 'memory_stored': true until the tool confirms success\n\n"
-            "STEP 2: Create a knowledge graph from the analysis\n"
-            "→ REQUIRED ACTION: Use GraphMemoryTool with entity-relationship data\n"
-            "→ Extract key entities (people, organizations, topics) from the analysis\n"
-            "→ Define relationships between entities\n"
-            "→ You MUST wait for the tool to execute and return a result\n"
-            "→ DO NOT claim 'graph_created': true until the tool confirms success\n\n"
-            "STEP 3: Generate intelligence briefing\n"
-            "→ After both tools succeed, synthesize ALL findings into a comprehensive briefing\n"
-            "→ Include sections: Overview, Key Insights, Themes, Perspectives, Verified Claims, Conclusion\n"
-            "→ Use specific quotes, insights, and claims from previous tasks\n\n"
-            "⛔ FORBIDDEN: Generating the final JSON without calling the tools first\n"
-            "✅ REQUIRED: Call MemoryStorageTool, wait for response, call GraphMemoryTool, "
-            "wait for response, THEN provide final answer\n\n"
-            "If a tool fails, set its flag to false and explain the error in your final answer."
-        ),
-        expected_output=(
-            "Final JSON object containing:\n"
-            "- memory_stored: boolean (true ONLY if MemoryStorageTool executed successfully)\n"
-            "- graph_created: boolean (true ONLY if GraphMemoryTool executed successfully)\n"
-            "- briefing: markdown string with comprehensive intelligence analysis\n\n"
-            "You MUST call the tools before providing this answer."
-        ),
-        agent=knowledge_agent,
-        context=[acquisition_task, transcription_task, analysis_task, verification_task],
-        callback=task_completion_callback,
-    )
+    # Can use parallel memory operations if enabled
+    if enable_parallel_memory_ops:
+        _logger.info("⚡ Using PARALLEL memory operations (async_execution=True)")
+
+        # Parallel Stage 5a: Vector Memory Storage (runs independently)
+        memory_storage_task = Task(
+            description=(
+                "⚠️ CRITICAL TOOL EXECUTION REQUIREMENT ⚠️\n\n"
+                "STEP 1: Extract the FULL transcript from the transcription task output.\n"
+                "The transcript is typically 1000+ characters of actual spoken words.\n\n"
+                "STEP 2: YOU MUST CALL MemoryStorageTool(text=<full_transcript>).\n"
+                "→ DO NOT respond until the tool returns a result\n"
+                "→ DO NOT claim success until the tool confirms storage\n\n"
+                "Return JSON with: memory_stored (boolean), storage_details (dict)."
+            ),
+            expected_output=(
+                "JSON with memory_stored: true/false, storage_details: {...}.\n"
+                "You MUST call MemoryStorageTool before responding."
+            ),
+            agent=knowledge_agent,
+            context=[transcription_task],  # Only needs transcript
+            callback=task_completion_callback,
+            async_execution=True,  # ⚡ RUNS IN PARALLEL
+        )
+
+        # Parallel Stage 5b: Knowledge Graph Creation (runs independently)
+        graph_memory_task = Task(
+            description=(
+                "⚠️ CRITICAL TOOL EXECUTION REQUIREMENT ⚠️\n\n"
+                "STEP 1: Extract insights, themes, and entities from the analysis task output.\n\n"
+                "STEP 2: YOU MUST CALL GraphMemoryTool with entity-relationship data.\n"
+                "→ Extract key entities (people, organizations, topics)\n"
+                "→ Define relationships between entities\n"
+                "→ DO NOT respond until the tool returns a result\n\n"
+                "Return JSON with: graph_created (boolean), graph_details (dict)."
+            ),
+            expected_output=(
+                "JSON with graph_created: true/false, graph_details: {...}.\n"
+                "You MUST call GraphMemoryTool before responding."
+            ),
+            agent=knowledge_agent,
+            context=[analysis_task],  # Only needs analysis
+            callback=task_completion_callback,
+            async_execution=True,  # ⚡ RUNS IN PARALLEL
+        )
+
+        # Stage 5c: Briefing Generation (waits for both parallel tasks)
+        integration_task = Task(
+            description=(
+                "Generate comprehensive intelligence briefing after memory and graph operations complete.\n\n"
+                "You will receive outputs from TWO parallel tasks:\n"
+                "1. Memory storage task - confirms vector memory storage\n"
+                "2. Graph memory task - confirms knowledge graph creation\n\n"
+                "STEP 1: Verify both operations completed successfully\n"
+                "STEP 2: Synthesize ALL findings into a comprehensive briefing\n"
+                "Include sections: Overview, Key Insights, Themes, Perspectives, Verified Claims, Conclusion\n"
+                "Use specific quotes, insights, and claims from previous tasks.\n\n"
+                "Return JSON with: memory_stored (boolean), graph_created (boolean), "
+                "briefing (markdown string)."
+            ),
+            expected_output=(
+                "Final JSON with memory_stored, graph_created (from parallel tasks), "
+                "and briefing (comprehensive markdown analysis)."
+            ),
+            agent=knowledge_agent,
+            context=[
+                memory_storage_task,
+                graph_memory_task,
+                acquisition_task,
+                transcription_task,
+                analysis_task,
+                verification_task,
+            ],
+            callback=task_completion_callback,
+        )
+    else:
+        # Sequential integration (original pattern)
+        integration_task = Task(
+            description=(
+                "⚠️ CRITICAL TOOL EXECUTION REQUIREMENTS - READ CAREFULLY ⚠️\n\n"
+                "This task requires you to CALL SPECIFIC TOOLS. You CANNOT complete this task by just "
+                "writing JSON - you MUST execute the tools and wait for their responses.\n\n"
+                "STEP 1: Store the full transcript in vector memory\n"
+                "→ REQUIRED ACTION: Use MemoryStorageTool with the full transcript text\n"
+                "→ You MUST wait for the tool to execute and return a result\n"
+                "→ DO NOT claim 'memory_stored': true until the tool confirms success\n\n"
+                "STEP 2: Create a knowledge graph from the analysis\n"
+                "→ REQUIRED ACTION: Use GraphMemoryTool with entity-relationship data\n"
+                "→ Extract key entities (people, organizations, topics) from the analysis\n"
+                "→ Define relationships between entities\n"
+                "→ You MUST wait for the tool to execute and return a result\n"
+                "→ DO NOT claim 'graph_created': true until the tool confirms success\n\n"
+                "STEP 3: Generate intelligence briefing\n"
+                "→ After both tools succeed, synthesize ALL findings into a comprehensive briefing\n"
+                "→ Include sections: Overview, Key Insights, Themes, Perspectives, Verified Claims, Conclusion\n"
+                "→ Use specific quotes, insights, and claims from previous tasks\n\n"
+                "⛔ FORBIDDEN: Generating the final JSON without calling the tools first\n"
+                "✅ REQUIRED: Call MemoryStorageTool, wait for response, call GraphMemoryTool, "
+                "wait for response, THEN provide final answer\n\n"
+                "If a tool fails, set its flag to false and explain the error in your final answer."
+            ),
+            expected_output=(
+                "Final JSON object containing:\n"
+                "- memory_stored: boolean (true ONLY if MemoryStorageTool executed successfully)\n"
+                "- graph_created: boolean (true ONLY if GraphMemoryTool executed successfully)\n"
+                "- briefing: markdown string with comprehensive intelligence analysis\n\n"
+                "You MUST call the tools before providing this answer."
+            ),
+            agent=knowledge_agent,
+            context=[acquisition_task, transcription_task, analysis_task, verification_task],
+            callback=task_completion_callback,
+        )
 
     # Determine which tasks to include based on depth
-    all_tasks = [acquisition_task, transcription_task, analysis_task, verification_task, integration_task]
+    if enable_parallel_memory_ops:
+        # With parallel memory operations, we have additional tasks
+        base_tasks = [acquisition_task, transcription_task, analysis_task, verification_task]
+        memory_tasks = [memory_storage_task, graph_memory_task]  # Parallel tasks
+        final_task = [integration_task]  # Waits for parallel tasks
 
-    if depth == "standard":
-        tasks = all_tasks[:3]  # Acquisition, transcription, analysis
-    elif depth == "deep":
-        tasks = all_tasks[:4]  # Add verification
-    else:  # comprehensive or experimental
-        tasks = all_tasks  # All 5 tasks
+        if depth == "standard":
+            tasks = base_tasks[:3]  # Acquisition, transcription, analysis only
+        elif depth == "deep":
+            tasks = base_tasks[:4]  # Add verification
+        else:  # comprehensive or experimental
+            tasks = base_tasks + memory_tasks + final_task  # All tasks with parallelization
+    else:
+        # Sequential pattern (original)
+        all_tasks = [acquisition_task, transcription_task, analysis_task, verification_task, integration_task]
+
+        if depth == "standard":
+            tasks = all_tasks[:3]  # Acquisition, transcription, analysis
+        elif depth == "deep":
+            tasks = all_tasks[:4]  # Add verification
+        else:  # comprehensive or experimental
+            tasks = all_tasks  # All 5 tasks
 
     # Build single crew with all agents and chained tasks
     crew = Crew(
@@ -345,7 +446,12 @@ def build_intelligence_crew(
         memory=True,  # Enable cross-task memory
     )
 
-    _logger.info(f"✅ Built crew with {len(tasks)} chained tasks for {depth} analysis")
+    parallel_status = (
+        "PARALLEL memory ops"
+        if enable_parallel_memory_ops and depth in ["comprehensive", "experimental"]
+        else "SEQUENTIAL"
+    )
+    _logger.info(f"✅ Built crew with {len(tasks)} chained tasks for {depth} analysis ({parallel_status})")
     return crew
 
 

@@ -99,6 +99,9 @@ class Settings(BaseSettings):
     enable_graph_memory: bool = Field(False, alias="ENABLE_GRAPH_MEMORY")
     enable_ax_routing: bool = Field(False, alias="ENABLE_AX_ROUTING")
 
+    # Performance optimization flags
+    enable_parallel_memory_ops: bool = Field(False, alias="ENABLE_PARALLEL_MEMORY_OPS")
+
     # Provider + model routing
     rerank_provider: str | None = Field(None)
     local_llm_url: str | None = Field(None)

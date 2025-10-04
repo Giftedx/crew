@@ -140,18 +140,22 @@ Total: ~10.5 min sequential (current baseline)
 **Task:** Download media content from URL
 
 **Dependencies:**
+
 - ✅ **NONE** - Can start immediately
 
 **Tool Calls:**
+
 - `MultiPlatformDownloadTool(url=<url>)`
 
 **Output:**
+
 - `file_path` (required by transcription)
 - `title`, `description`, `author`, `duration`, `platform`
 
 **Parallelization Potential:** ❌ **NONE** (starting point)
 
 **Optimization Potential:** ⚠️ **MEDIUM**
+
 - Could implement concurrent download retry attempts
 - Could prefetch metadata while downloading
 - Limited by network I/O and platform rate limits
@@ -163,18 +167,22 @@ Total: ~10.5 min sequential (current baseline)
 **Task:** Transcribe audio from acquired media file
 
 **Hard Dependencies:**
+
 - ❌ **MUST have `file_path` from Acquisition** (cannot start until Stage 1 completes)
 
 **Tool Calls:**
+
 - `AudioTranscriptionTool(file_path=<acquisition.file_path>)`
 
 **Output:**
+
 - `transcript` (required by analysis AND verification)
 - `timeline_anchors`, `transcript_length`, `quality_score`
 
 **Parallelization Potential:** ❌ **NONE** (hard dependency on file_path)
 
 **Optimization Potential:** ⚠️ **MEDIUM**
+
 - Could use faster transcription models (Whisper small vs base)
 - Could implement streaming transcription (partial results)
 - Limited by audio processing time (CPU/GPU bound)
@@ -188,14 +196,17 @@ Total: ~10.5 min sequential (current baseline)
 **Task:** Analyze transcript content
 
 **Hard Dependencies:**
+
 - ❌ **MUST have `transcript` from Transcription** (cannot start until Stage 2 completes)
 
 **Tool Calls (ALL SEQUENTIAL in current implementation):**
+
 1. `TextAnalysisTool(text=<transcript>)` → insights, themes
 2. `LogicalFallacyTool(text=<transcript>)` → fallacies list
 3. `PerspectiveSynthesizerTool(text=<transcript>)` → perspectives
 
 **Output:**
+
 - `insights`, `themes`, `fallacies`, `perspectives`
 
 **Parallelization Potential:** ✅ **HIGH** (within stage)
@@ -204,6 +215,7 @@ Total: ~10.5 min sequential (current baseline)
 These 3 tool calls are **INDEPENDENT** - they all receive the same transcript and don't depend on each other's results.
 
 **Current Sequential Execution:**
+
 ```python
 # In analysis_task description:
 "STEP 2: YOU MUST CALL TextAnalysisTool(text=<transcript>)..."
@@ -212,6 +224,7 @@ These 3 tool calls are **INDEPENDENT** - they all receive the same transcript an
 ```
 
 **Optimized Parallel Execution:**
+
 ```python
 # Run 3 independent analyses concurrently
 results = await asyncio.gather(
@@ -230,10 +243,12 @@ results = await asyncio.gather(
 **Task:** Extract claims and verify facts
 
 **Hard Dependencies:**
+
 - ❌ **MUST have `transcript` from Transcription** (for claim extraction)
 - ⚠️ **SHOULD have `analysis` results** (for comprehensive verification)
 
 **Tool Calls (SEQUENTIAL in current implementation):**
+
 1. `ClaimExtractorTool(text=<transcript>, max_claims=10)` → 3-10 claims
 2. `FactCheckTool(claim=<claim1>)` → verification result
 3. `FactCheckTool(claim=<claim2>)` → verification result
@@ -241,6 +256,7 @@ results = await asyncio.gather(
    (... repeat for 3-5 claims)
 
 **Output:**
+
 - `verified_claims`, `fact_check_results`, `trustworthiness_score`
 
 **Parallelization Potential:** ✅ **HIGH** (within stage)
@@ -249,12 +265,14 @@ results = await asyncio.gather(
 Fact-checking individual claims is **INDEPENDENT** - each FactCheckTool call is isolated.
 
 **Current Sequential Execution:**
+
 ```python
 # In verification_task description:
 "STEP 4: YOU MUST CALL FactCheckTool(claim=<claim_text>) for each selected claim."
 ```
 
 **Optimized Parallel Execution:**
+
 ```python
 # After extracting claims sequentially:
 claims = ClaimExtractorTool(text=transcript, max_claims=10)
@@ -278,14 +296,17 @@ results = await asyncio.gather(*fact_check_tasks)
 **Task:** Store results in memory/graph and generate briefing
 
 **Hard Dependencies:**
+
 - ❌ **MUST have ALL previous results** (acquisition, transcription, analysis, verification)
 
 **Tool Calls (SEQUENTIAL in current implementation):**
+
 1. `MemoryStorageTool(text=<transcript>)` → memory_stored flag
 2. `GraphMemoryTool(entities=<...>, relationships=<...>)` → graph_created flag
 3. Generate comprehensive briefing markdown
 
 **Output:**
+
 - `memory_stored`, `graph_created`, `briefing`
 
 **Parallelization Potential:** ✅ **MEDIUM** (within stage)
@@ -294,6 +315,7 @@ results = await asyncio.gather(*fact_check_tasks)
 Memory storage and graph creation are **POTENTIALLY INDEPENDENT** (need to verify no shared state issues).
 
 **Current Sequential Execution:**
+
 ```python
 # In integration_task description:
 "STEP 1: Store the full transcript in vector memory..."
@@ -301,6 +323,7 @@ Memory storage and graph creation are **POTENTIALLY INDEPENDENT** (need to verif
 ```
 
 **Optimized Parallel Execution:**
+
 ```python
 # Run memory operations concurrently
 memory_result, graph_result = await asyncio.gather(
@@ -327,12 +350,15 @@ briefing = generate_briefing(memory_result, graph_result, all_previous_results)
 **Impact:** 🔥 **HIGH** - Saves ~1-2 minutes (~10-20% of total time)
 
 **Current:** 3 sequential tool calls (~2-3 min total)
+
 - TextAnalysisTool → LogicalFallacyTool → PerspectiveSynthesizerTool
 
 **Optimized:** 3 concurrent tool calls (~1 min total)
+
 - All 3 tools receive same transcript, run in parallel
 
 **Implementation Complexity:** ⚠️ **MEDIUM**
+
 - Need to modify CrewAI task description to allow parallel tool calls
 - Alternatively, bypass CrewAI for this stage and call tools directly via asyncio.gather()
 
@@ -345,12 +371,15 @@ briefing = generate_briefing(memory_result, graph_result, all_previous_results)
 **Impact:** 🔥 **HIGH** - Saves ~0.5-1 minute (~5-10% of total time)
 
 **Current:** Sequential fact-checking (5 calls × 12-24s = 60-120s)
+
 - FactCheckTool(claim1) → FactCheckTool(claim2) → ...
 
 **Optimized:** Concurrent fact-checking (max(5 calls) = 12-24s)
+
 - All 5 fact-checks run in parallel
 
 **Implementation Complexity:** ⚠️ **MEDIUM**
+
 - Same as Opportunity 1 - modify task description or bypass CrewAI
 
 **Risk:** 🟢 **LOW** - Each fact-check is independent
@@ -364,12 +393,15 @@ briefing = generate_briefing(memory_result, graph_result, all_previous_results)
 **Impact:** ⚡ **MEDIUM** - Saves ~0.5-1 minute (~5-10% of total time)
 
 **Current:** Sequential memory writes (~1-2 min total)
+
 - MemoryStorageTool → GraphMemoryTool → briefing
 
 **Optimized:** Concurrent memory writes (~0.5-1 min total)
+
 - MemoryStorageTool ‖ GraphMemoryTool → briefing
 
 **Implementation Complexity:** ⚠️ **MEDIUM-HIGH**
+
 - Need to verify Qdrant thread-safety
 - Check for write conflicts between vector and graph storage
 - Briefing generation must wait for both to complete
@@ -383,6 +415,7 @@ briefing = generate_briefing(memory_result, graph_result, all_previous_results)
 #### Cross-Stage Parallelization
 
 **Why it's NOT feasible:**
+
 - Transcription MUST wait for `file_path` from acquisition
 - Analysis MUST wait for `transcript` from transcription
 - Verification MUST wait for `transcript` from transcription
@@ -406,6 +439,7 @@ crew = Crew(
 ```
 
 **Behavior:**
+
 - CrewAI executes tasks in strict order
 - Each task waits for previous task to complete
 - Task context (via `context=[previous_task]`) passes TEXT output to next task's LLM prompt
@@ -431,10 +465,12 @@ crew = Crew(
 ```
 
 **Pros:**
+
 - Manager could delegate TextAnalysis, FallacyDetection, PerspectiveSynthesis to 3 workers in parallel
 - CrewAI handles coordination
 
 **Cons:**
+
 - Adds complexity (need manager agent + worker agents)
 - Manager LLM overhead (decides what to delegate)
 - Less control over exact parallelization strategy
@@ -488,11 +524,13 @@ crew_phase3 = Crew(
 ```
 
 **Pros:**
+
 - Full control over parallelization
 - No CrewAI constraints
 - Cleaner separation of sequential vs parallel stages
 
 **Cons:**
+
 - More complex orchestration logic
 - Loses some CrewAI benefits (memory, context management)
 - Need to manually handle data flow between stages
@@ -546,6 +584,7 @@ async def _execute_crew_workflow_optimized(self, interaction, url, depth, workfl
 ```
 
 **Benefits:**
+
 - Saves ~2-3 minutes (parallel analysis + fact-checking)
 - Keeps CrewAI for appropriate stages (sequential data flow)
 - Feature-flaggable (can fall back to full CrewAI if issues)
@@ -557,6 +596,7 @@ async def _execute_crew_workflow_optimized(self, interaction, url, depth, workfl
 **Goal:** Investigate if hierarchical crews can replace direct parallelization for cleaner architecture.
 
 **Research:**
+
 - Can hierarchical manager delegate 3 analysis tasks in parallel?
 - Does CrewAI execute delegated tasks concurrently or sequentially?
 - What's the overhead of manager LLM decision-making?
@@ -583,6 +623,7 @@ def _build_hierarchical_analysis_crew(self, transcript):
 ```
 
 **Decision Criteria:**
+
 - If hierarchical execution is <10% slower than asyncio.gather: ✅ Use hierarchical (cleaner)
 - If hierarchical execution is >10% slower: ❌ Stick with hybrid approach
 

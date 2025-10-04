@@ -54,6 +54,8 @@ except Exception:  # pragma: no cover - tests/environment without crewai
 
 
 # Local imports - Core
+from core.settings import get_settings
+
 from .config import prompts as prompt_config
 from .crew import UltimateDiscordIntelligenceBotCrew
 from .crew_error_handler import CrewErrorHandler
@@ -235,12 +237,14 @@ class AutonomousIntelligenceOrchestrator:
 
     def _build_intelligence_crew(self, url: str, depth: str) -> Crew:
         """Build a single chained CrewAI crew for the complete intelligence workflow (delegates to crew_builders)."""
+        settings = get_settings()
         return crew_builders.build_intelligence_crew(
             url,
             depth,
             agent_getter_callback=self._get_or_create_agent,
             task_completion_callback=self._task_completion_callback,
             logger_instance=self.logger,
+            enable_parallel_memory_ops=settings.enable_parallel_memory_ops,
         )
 
     def _validate_stage_data(self, stage_name: str, required_keys: list[str], data: dict[str, Any]) -> None:
