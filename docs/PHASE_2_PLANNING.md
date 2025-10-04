@@ -51,6 +51,7 @@ Phase 2 continues the orchestrator decomposition work, building on Phase 1's suc
 ### Lessons Learned from Phase 1
 
 **What Worked:**
+
 - ✅ Test-first extraction (write tests, then extract)
 - ✅ Small, atomic commits (one module per commit)
 - ✅ Incremental approach (avoid big-bang changes)
@@ -58,11 +59,13 @@ Phase 2 continues the orchestrator decomposition work, building on Phase 1's suc
 - ✅ Clear naming conventions (module purpose evident from name)
 
 **Challenges Overcome:**
+
 - Async testing patterns (learned pytest.mark.asyncio)
 - Large module extraction (analytics: 1,015 lines in one go)
 - Circular dependency risks (careful import ordering)
 
 **Best Practices:**
+
 - Module size target: <1,000 lines per module
 - Test coverage: 100% for all extracted modules
 - Naming: Descriptive, action-oriented names
@@ -133,6 +136,7 @@ This will result in a lean, focused orchestrator that delegates most complexity 
 15. `_archive_workflow_execution()` - Archive completed workflows
 
 **Test Requirements:**
+
 - 60 tests (4 per method)
 - State transition testing
 - Progress calculation validation
@@ -162,6 +166,7 @@ This will result in a lean, focused orchestrator that delegates most complexity 
 10. `_compress_results()` - Reduce result size for storage
 
 **Test Requirements:**
+
 - 40 tests (4 per method)
 - Format validation
 - Merge/dedupe logic
@@ -189,6 +194,7 @@ This will result in a lean, focused orchestrator that delegates most complexity 
 8. `_build_memory_context()` - Create context for memory operations
 
 **Test Requirements:**
+
 - 32 tests (4 per method)
 - Mock memory backends
 - Write/read cycles
@@ -214,6 +220,7 @@ This will result in a lean, focused orchestrator that delegates most complexity 
 6. `_enforce_budget_limit()` - Hard budget enforcement
 
 **Test Requirements:**
+
 - 24 tests (4 per method)
 - Budget calculation validation
 - Threshold enforcement
@@ -241,6 +248,7 @@ This will result in a lean, focused orchestrator that delegates most complexity 
 8. `_determine_retry_delay()` - Calculate backoff delays
 
 **Test Requirements:**
+
 - 32 tests (4 per method)
 - Retry logic validation
 - Fallback scenarios
@@ -263,6 +271,7 @@ This will result in a lean, focused orchestrator that delegates most complexity 
 3. `_optimize_parallel_execution()` - Identify parallelization opportunities
 
 **Test Requirements:**
+
 - 19 tests (6-7 per method)
 - Duration estimation accuracy
 - Optimization effectiveness
@@ -276,11 +285,13 @@ This will result in a lean, focused orchestrator that delegates most complexity 
 ### Week 5: Workflow State Managers (Oct 7-13)
 
 **Goals:**
+
 - Extract `workflow_state.py` (~300 lines)
 - Create `test_workflow_state_unit.py` (60 tests)
 - Reduce orchestrator: 4,960 → 4,660 lines
 
 **Tasks:**
+
 1. **Day 1-2:** Write comprehensive tests (60 tests)
    - State transition tests
    - Progress calculation tests
@@ -303,6 +314,7 @@ This will result in a lean, focused orchestrator that delegates most complexity 
    - Record lessons learned
 
 **Success Criteria:**
+
 - ✅ Orchestrator: 4,660 lines (-300)
 - ✅ 60 new tests (all passing)
 - ✅ Zero breaking changes
@@ -312,11 +324,13 @@ This will result in a lean, focused orchestrator that delegates most complexity 
 ### Week 6: Result Processors (Oct 14-20)
 
 **Goals:**
+
 - Extract `result_processors.py` (~200 lines)
 - Create `test_result_processors_unit.py` (40 tests)
 - Reduce orchestrator: 4,660 → 4,460 lines
 
 **Tasks:**
+
 1. **Day 1-2:** Write comprehensive tests (40 tests)
    - Format validation tests
    - Merge/filter/dedupe tests
@@ -338,6 +352,7 @@ This will result in a lean, focused orchestrator that delegates most complexity 
    - Record progress
 
 **Success Criteria:**
+
 - ✅ Orchestrator: 4,460 lines (-200)
 - ✅ 40 new tests (all passing)
 - ✅ Zero breaking changes
@@ -347,12 +362,14 @@ This will result in a lean, focused orchestrator that delegates most complexity 
 ### Week 7: Memory Integration + Budget Tracking (Oct 21-27)
 
 **Goals:**
+
 - Extract `memory_integrators.py` (~150 lines)
 - Extract `budget_trackers.py` (~100 lines)
 - Create 2 test files (56 tests total)
 - Reduce orchestrator: 4,460 → 4,210 lines
 
 **Tasks:**
+
 1. **Day 1-2:** Write memory integration tests (32 tests)
    - Mock memory backends
    - Write/read cycle tests
@@ -375,6 +392,7 @@ This will result in a lean, focused orchestrator that delegates most complexity 
    - Atomic commits (2 separate commits)
 
 **Success Criteria:**
+
 - ✅ Orchestrator: 4,210 lines (-250)
 - ✅ 56 new tests (all passing)
 - ✅ Zero breaking changes
@@ -384,12 +402,14 @@ This will result in a lean, focused orchestrator that delegates most complexity 
 ### Week 8: Error Recovery + Workflow Optimization (Oct 28 - Nov 3)
 
 **Goals:**
+
 - Extract `recovery_coordinators.py` (~150 lines)
 - Extract `workflow_optimizers.py` (~60 lines)
 - Create 2 test files (51 tests total)
 - Reduce orchestrator: 4,210 → 4,000 lines
 
 **Tasks:**
+
 1. **Day 1-2:** Write recovery tests (32 tests)
    - Retry logic tests
    - Fallback scenario tests
@@ -411,6 +431,7 @@ This will result in a lean, focused orchestrator that delegates most complexity 
    - Atomic commits (2 separate commits)
 
 **Success Criteria:**
+
 - ✅ Orchestrator: 4,000 lines (-210)
 - ✅ 51 new tests (all passing)
 - ✅ **<4,000 LINE TARGET ACHIEVED!** 🎯
@@ -420,11 +441,13 @@ This will result in a lean, focused orchestrator that delegates most complexity 
 ### Week 9: Buffer Week + Phase 2 Completion (Nov 4-10)
 
 **Goals:**
+
 - Address any issues from Weeks 5-8
 - Performance optimization
 - Create Phase 2 completion documentation
 
 **Tasks:**
+
 1. **Day 1-2:** Clean up and optimization
    - Address any technical debt
    - Optimize slow tests
@@ -447,6 +470,7 @@ This will result in a lean, focused orchestrator that delegates most complexity 
    - Plan Phase 3 kickoff
 
 **Success Criteria:**
+
 - ✅ All tests passing (100% coverage)
 - ✅ Performance maintained/improved
 - ✅ Comprehensive documentation
@@ -571,17 +595,20 @@ test_aggregate_stage_results_empty_returns_empty_dict()
 **Module:** `src/ultimate_discord_intelligence_bot/orchestrator/workflow_state.py`
 
 **Responsibilities:**
+
 - Track workflow execution state
 - Persist results and checkpoints
 - Calculate progress metrics
 - Manage state transitions
 
 **Dependencies:**
+
 - `orchestrator_utilities` (for tenant context)
 - `obs.metrics` (for metrics)
 - `step_result` (for result handling)
 
 **Public API:**
+
 ```python
 def persist_workflow_results(workflow_id: str, results: dict, url: str, depth: str) -> str
 def track_workflow_progress(workflow_id: str, stage: str, completion: float) -> None
@@ -597,17 +624,20 @@ def restore_workflow_checkpoint(workflow_id: str) -> dict | None
 **Module:** `src/ultimate_discord_intelligence_bot/orchestrator/result_processors.py`
 
 **Responsibilities:**
+
 - Process raw crew outputs
 - Format results for storage/display
 - Validate result integrity
 - Merge/filter/dedupe results
 
 **Dependencies:**
+
 - `extractors` (for data extraction)
 - `data_transformers` (for transformations)
 - `quality_assessors` (for validation)
 
 **Public API:**
+
 ```python
 def process_crew_output(crew_output: Any) -> dict
 def enrich_results(results: dict, metadata: dict) -> dict
@@ -623,17 +653,20 @@ def merge_partial_results(results_list: list[dict]) -> dict
 **Module:** `src/ultimate_discord_intelligence_bot/orchestrator/memory_integrators.py`
 
 **Responsibilities:**
+
 - Coordinate memory storage
 - Sync vector/graph memory
 - Validate memory writes
 - Build memory contexts
 
 **Dependencies:**
+
 - `tools.MemoryStorageTool`
 - `tools.GraphMemoryTool`
 - `tools.HippoRagContinualMemoryTool`
 
 **Public API:**
+
 ```python
 async def store_to_memory(data: dict, namespace: str) -> bool
 async def store_to_graph(data: dict, relationships: list) -> bool
@@ -648,16 +681,19 @@ def build_memory_context(workflow_id: str) -> dict
 **Module:** `src/ultimate_discord_intelligence_bot/orchestrator/budget_trackers.py`
 
 **Responsibilities:**
+
 - Monitor budget usage
 - Calculate/estimate costs
 - Enforce budget limits
 - Generate cost reports
 
 **Dependencies:**
+
 - `orchestrator_utilities` (for budget limits)
 - `obs.metrics` (for cost metrics)
 
 **Public API:**
+
 ```python
 def track_request_budget(workflow_id: str, operation: str, cost: float) -> None
 def calculate_estimated_cost(depth: str, operations: list) -> float
@@ -672,17 +708,20 @@ def generate_cost_report(workflow_id: str) -> dict
 **Module:** `src/ultimate_discord_intelligence_bot/orchestrator/recovery_coordinators.py`
 
 **Responsibilities:**
+
 - Execute with retry logic
 - Implement fallback strategies
 - Circuit breaker management
 - Failure escalation
 
 **Dependencies:**
+
 - `error_handlers` (for error handling)
 - `obs.metrics` (for retry metrics)
 - `core.http_utils` (for retry patterns)
 
 **Public API:**
+
 ```python
 async def execute_stage_with_recovery(stage_fn: Callable, max_retries: int = 3) -> Any
 async def retry_failed_stage(stage_fn: Callable, delay: float) -> Any
@@ -697,15 +736,18 @@ def circuit_breaker_check(operation: str) -> bool
 **Module:** `src/ultimate_discord_intelligence_bot/orchestrator/workflow_optimizers.py`
 
 **Responsibilities:**
+
 - Estimate workflow duration
 - Identify parallelization opportunities
 - Optimize execution paths
 
 **Dependencies:**
+
 - `workflow_state` (for progress tracking)
 - `analytics_calculators` (for estimations)
 
 **Public API:**
+
 ```python
 def estimate_workflow_duration(depth: str) -> dict
 def identify_parallel_tasks(workflow: dict) -> list[list[str]]
@@ -734,6 +776,7 @@ async def execute_adaptive_workflow_optimization(workflow_id: str) -> dict
 | Experimental | ~10.5 min | ~7 min | -33% |
 
 **Optimization Strategies:**
+
 - Parallel task execution where possible
 - Caching transcription results
 - Optimized LLM routing
@@ -829,6 +872,7 @@ After achieving <4,000 line orchestrator, Phase 3 will focus on:
 Phase 2 builds on Phase 1's proven approach to reduce the orchestrator from 4,960 to <4,000 lines through systematic extraction of 5-6 focused modules. With comprehensive testing, careful planning, and incremental execution, we'll achieve our target while maintaining 100% test coverage and zero breaking changes.
 
 **Next Steps:**
+
 1. ✅ Review and approve this plan
 2. 📋 Begin Week 5 preparation (workflow state tests)
 3. 🚀 Execute Phase 2 roadmap

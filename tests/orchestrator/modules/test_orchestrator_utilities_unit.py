@@ -11,7 +11,6 @@ import pytest
 
 from ultimate_discord_intelligence_bot.orchestrator import orchestrator_utilities
 
-
 # ===================================
 # get_budget_limits() Tests
 # ===================================
