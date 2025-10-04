@@ -67,6 +67,7 @@ from .orchestrator import (
     discord_helpers,
     error_handlers,
     extractors,
+    orchestrator_utilities,
     quality_assessors,
     system_validators,
     workflow_planners,
@@ -187,68 +188,8 @@ class AutonomousIntelligenceOrchestrator:
             self._llm_available = False
 
     def _get_budget_limits(self, depth: str) -> dict[str, Any]:
-        """Get budget limits based on analysis depth.
-
-        Budget tiers reflect the complexity and cost of each depth level.
-        Higher depths use more expensive models and produce longer outputs.
-
-        Args:
-            depth: Analysis depth (quick/standard/deep/comprehensive/experimental)
-
-        Returns:
-            Dictionary with 'total' budget and 'per_task' limits
-        """
-        budgets = {
-            "quick": {
-                "total": 0.50,  # $0.50 total
-                "per_task": {
-                    "acquisition": 0.05,
-                    "transcription": 0.15,
-                    "analysis": 0.30,
-                },
-            },
-            "standard": {
-                "total": 1.50,  # $1.50 total
-                "per_task": {
-                    "acquisition": 0.05,
-                    "transcription": 0.30,
-                    "analysis": 0.75,
-                    "verification": 0.40,
-                },
-            },
-            "deep": {
-                "total": 3.00,  # $3.00 total
-                "per_task": {
-                    "acquisition": 0.05,
-                    "transcription": 0.50,
-                    "analysis": 1.20,
-                    "verification": 0.75,
-                    "knowledge": 0.50,
-                },
-            },
-            "comprehensive": {
-                "total": 5.00,  # $5.00 total
-                "per_task": {
-                    "acquisition": 0.10,
-                    "transcription": 0.75,
-                    "analysis": 2.00,
-                    "verification": 1.00,
-                    "knowledge": 1.15,
-                },
-            },
-            "experimental": {
-                "total": 10.00,  # $10.00 total
-                "per_task": {
-                    "acquisition": 0.10,
-                    "transcription": 1.50,
-                    "analysis": 4.00,
-                    "verification": 2.00,
-                    "knowledge": 2.40,
-                },
-            },
-        }
-
-        return budgets.get(depth, budgets["standard"])
+        """Get budget limits based on analysis depth."""
+        return orchestrator_utilities.get_budget_limits(depth)
 
     # ========================================
     # DATA FLOW HELPERS (Critical Fix)
@@ -364,75 +305,20 @@ class AutonomousIntelligenceOrchestrator:
         return system_validators.check_discord_available()
 
     async def _to_thread_with_tenant(self, fn, *args, **kwargs):
-        """Run a sync function in a thread while preserving TenantContext.
-
-        Many tools rely on tenant-scoped services. Ensure we propagate the
-        current TenantContext into worker threads so data reads/writes hit the
-        right namespaces.
-        """
-        try:
-            from .tenancy import current_tenant, with_tenant
-
-            ctx = current_tenant()
-
-            def _call():
-                if ctx is not None:
-                    with with_tenant(ctx):
-                        return fn(*args, **kwargs)
-                return fn(*args, **kwargs)
-
-            return await asyncio.to_thread(_call)
-        except Exception:
-            return await asyncio.to_thread(fn, *args, **kwargs)
+        """Run a sync function in a thread while preserving TenantContext."""
+        return await orchestrator_utilities.to_thread_with_tenant(fn, *args, **kwargs)
 
     def _initialize_agent_coordination_system(self):
-        """Initialize the agent coordination system with specialized workflows mapped to redesigned agent roster.
+        """Initialize the agent coordination system with specialized workflows.
 
         CRITICAL: This method MUST NOT create agent instances. Agent creation is handled exclusively
-        by _get_or_create_agent() to ensure context is populated before use. This method only
-        defines the workflow structure and dependencies.
+        by _get_or_create_agent() to ensure context is populated before use.
         """
-        # Map workflow names to agent method names (strings, not instances!)
-        # Agents will be lazy-loaded via _get_or_create_agent() when needed
-        self.agent_workflow_map = {
-            "mission_coordination": "autonomous_mission_coordinator",
-            "content_acquisition": "multi_platform_acquisition_specialist",
-            "transcription_processing": "advanced_transcription_engineer",
-            "content_analysis": "comprehensive_linguistic_analyst",
-            "information_verification": "information_verification_director",
-            "threat_analysis": "threat_intelligence_analyst",
-            "behavioral_profiling": "behavioral_profiling_specialist",
-            "social_intelligence": "social_intelligence_coordinator",
-            "trend_analysis": "trend_analysis_scout",
-            "knowledge_integration": "knowledge_integration_architect",
-            "research_synthesis": "research_synthesis_specialist",
-            "intelligence_briefing": "intelligence_briefing_director",
-            "strategic_argumentation": "strategic_argument_analyst",
-            "system_operations": "system_operations_manager",
-            "community_engagement": "community_engagement_coordinator",
-        }
-
-        self.workflow_dependencies = {
-            "mission_coordination": [],  # Entry point - coordinates all other workflows
-            "content_acquisition": ["mission_coordination"],
-            "transcription_processing": ["content_acquisition"],
-            "content_analysis": ["transcription_processing"],
-            "information_verification": ["content_analysis"],
-            "threat_analysis": ["content_analysis", "information_verification"],
-            "behavioral_profiling": ["content_analysis", "threat_analysis"],
-            "social_intelligence": ["content_analysis"],  # Can run in parallel
-            "trend_analysis": ["social_intelligence"],  # Depends on social intelligence
-            "knowledge_integration": ["information_verification", "threat_analysis", "behavioral_profiling"],
-            "research_synthesis": ["content_analysis", "information_verification"],
-            "intelligence_briefing": ["knowledge_integration", "research_synthesis"],
-            "strategic_argumentation": ["information_verification", "research_synthesis"],
-            "system_operations": [],  # Monitoring workflow - runs independently
-            "community_engagement": ["intelligence_briefing"],  # Final stage
-        }
+        self.agent_workflow_map = orchestrator_utilities.initialize_agent_workflow_map()
+        self.workflow_dependencies = orchestrator_utilities.initialize_workflow_dependencies()
 
         # CRITICAL FIX: Initialize agent_coordinators as EMPTY dict
         # Agents will be lazy-created and cached by _get_or_create_agent()
-        # This ensures context is populated BEFORE agent use, preventing data flow failures
         self.agent_coordinators = {}
 
     @staticmethod
