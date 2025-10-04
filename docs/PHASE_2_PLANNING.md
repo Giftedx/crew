@@ -359,122 +359,223 @@ This will result in a lean, focused orchestrator that delegates most complexity 
 
 ---
 
-### Week 7: Memory Integration + Budget Tracking (Oct 21-27)
+### Week 7: Pipeline Result Builder Extraction (Jan 5-11, 2025)
 
 **Goals:**
 
-- Extract `memory_integrators.py` (~150 lines)
-- Extract `budget_trackers.py` (~100 lines)
-- Create 2 test files (56 tests total)
-- Reduce orchestrator: 4,460 → 4,210 lines
+- Extract `pipeline_result_builders.py` (~1,000 lines) ⚠️ **MONSTER METHOD**
+- Create comprehensive test file (50-100 tests)
+- Reduce orchestrator: 4,807 → 3,807 lines (-1,000, -20.8%)
+- **ACHIEVE <4,000 LINE TARGET!** 🎯
+
+**Primary Target:**
+
+- `_build_pipeline_content_analysis_result` (line 1542, ~1,000 lines)
+  - Constructs complete pipeline analysis result payloads
+  - Integrates all workflow outputs (transcript, analysis, fallacy, perspective)
+  - Merges threat detection, deception analysis
+  - Builds knowledge graph payloads
+  - CRITICAL: Touches many orchestrator internals
 
 **Tasks:**
 
-1. **Day 1-2:** Write memory integration tests (32 tests)
-   - Mock memory backends
-   - Write/read cycle tests
-   - Sync validation tests
+1. **Day 1-2:** Write comprehensive tests FIRST (50-100 tests)
+   - Test all input combinations (empty, partial, complete)
+   - Test all output formats (pipeline, autointel, experimental)
+   - Test error paths and edge cases
+   - Test null/missing data handling
+   - Mock all orchestrator dependencies
 
-2. **Day 2-3:** Write budget tracking tests (24 tests)
-   - Budget calculation tests
-   - Threshold enforcement tests
-   - Cost reporting tests
+2. **Day 3:** Design extraction approach
+   - Document method dependencies (what bound methods needed?)
+   - Plan delegation pattern (pass orchestrator methods as parameters)
+   - Identify risk areas (circular imports, state mutations)
+   - Create rollback plan (feature flag?)
 
-3. **Day 4:** Extract both modules
-   - Create memory_integrators.py (8 methods)
-   - Create budget_trackers.py (6 methods)
-   - Update orchestrator imports
+3. **Day 4:** Execute extraction
+   - Create `pipeline_result_builders.py`
+   - Move `_build_pipeline_content_analysis_result` to module
+   - Update orchestrator to delegate (~10 line wrapper)
+   - Update imports
 
-4. **Day 5:** Integration testing and commit
-   - Run full test suite
-   - Verify memory operations
-   - Verify budget tracking
-   - Atomic commits (2 separate commits)
+4. **Day 5:** Validation and documentation
+   - Run full test suite (all 759+ tests)
+   - Verify zero regressions
+   - Performance check (should be same or better)
+   - Create WEEK_7_COMPLETE.md
+   - Atomic commit
 
 **Success Criteria:**
 
-- ✅ Orchestrator: 4,210 lines (-250)
-- ✅ 56 new tests (all passing)
+- ✅ Orchestrator: 3,807 lines (-1,000, -20.8%)
+- ✅ **<4,000 LINE TARGET ACHIEVED IN WEEK 7** (2 weeks early!)
+- ✅ 50-100 new tests (all passing)
+- ✅ Zero breaking changes
+- ✅ No performance regression
+
+**Risk Level:** 🔴 **HIGH**
+
+- Large extraction (1,000 lines in single method)
+- Complex logic with many dependencies
+- Critical path for all pipeline executions
+
+**Mitigation:**
+
+- Test-first approach (write ALL tests before extraction)
+- Incremental extraction if needed (break into sub-methods first)
+- Feature flag for rollback if issues discovered
+- Extra validation time (Day 5 full testing)
+
+---
+
+### Week 8: Result Processors Extraction (Jan 12-18, 2025)
+
+**Goals:**
+
+- Extract `result_processors.py` (~475 lines)
+- Create comprehensive test file (30-40 tests)
+- Reduce orchestrator: 3,807 → 3,332 lines (-475, -12.5%)
+- Further exceed <4,000 target (668 lines under!)
+
+**Primary Targets:**
+
+- `_merge_threat_and_deception_data` (~40 lines)
+  - Merges threat detection and deception analysis results
+  - Combines multiple data sources
+  
+- `_merge_threat_payload` (~35 lines)
+  - Constructs threat payload for pipeline results
+  
+- `_build_knowledge_payload` (~400 lines) ⚠️ **LARGE METHOD**
+  - Builds knowledge graph payload from crew results
+  - Extracts entities, relationships, insights
+  - Formats for graph memory storage
+
+**Tasks:**
+
+1. **Day 1-2:** Write comprehensive tests (30-40 tests)
+   - Test merge logic (threat + deception data)
+   - Test knowledge payload construction
+   - Test null/missing data handling
+   - Mock crew result structures
+
+2. **Day 3:** Design extraction
+   - Document method dependencies
+   - Plan delegation pattern
+   - Identify shared utilities
+
+3. **Day 4:** Execute extraction
+   - Create `result_processors.py`
+   - Move 3 methods to module
+   - Update orchestrator delegates
+   - Update imports
+
+4. **Day 5:** Validation and documentation
+   - Run full test suite
+   - Verify zero regressions
+   - Create WEEK_8_COMPLETE.md
+   - Atomic commit
+
+**Success Criteria:**
+
+- ✅ Orchestrator: 3,332 lines (-475, -12.5%)
+- ✅ 668 lines UNDER <4,000 target (18.2% margin!)
+- ✅ 30-40 new tests (all passing)
 - ✅ Zero breaking changes
 
----
+**Risk Level:** 🟡 **MEDIUM**
 
-### Week 8: Error Recovery + Workflow Optimization (Oct 28 - Nov 3)
+- `_build_knowledge_payload` is large but well-bounded
+- Clear interfaces (crew result → knowledge graph)
 
-**Goals:**
+**Mitigation:**
 
-- Extract `recovery_coordinators.py` (~150 lines)
-- Extract `workflow_optimizers.py` (~60 lines)
-- Create 2 test files (51 tests total)
-- Reduce orchestrator: 4,210 → 4,000 lines
-
-**Tasks:**
-
-1. **Day 1-2:** Write recovery tests (32 tests)
-   - Retry logic tests
-   - Fallback scenario tests
-   - Circuit breaker tests
-
-2. **Day 2-3:** Write optimization tests (19 tests)
-   - Duration estimation tests
-   - Parallelization tests
-
-3. **Day 4:** Extract both modules
-   - Create recovery_coordinators.py (8 methods)
-   - Create workflow_optimizers.py (3 methods)
-   - Update orchestrator imports
-
-4. **Day 5:** Integration testing and commit
-   - Run full test suite
-   - Verify recovery mechanisms
-   - Verify optimizations
-   - Atomic commits (2 separate commits)
-
-**Success Criteria:**
-
-- ✅ Orchestrator: 4,000 lines (-210)
-- ✅ 51 new tests (all passing)
-- ✅ **<4,000 LINE TARGET ACHIEVED!** 🎯
+- Test-first approach
+- Validate knowledge graph outputs carefully
 
 ---
 
-### Week 9: Buffer Week + Phase 2 Completion (Nov 4-10)
+### Week 9: Summary Generators + Phase 2 Completion (Jan 19-25, 2025)
 
 **Goals:**
 
-- Address any issues from Weeks 5-8
-- Performance optimization
-- Create Phase 2 completion documentation
+- Extract `summary_generators.py` (~60 lines)
+- Create test file (10-15 tests)
+- Reduce orchestrator: 3,332 → 3,272 lines (-60, -1.8%)
+- Create comprehensive Phase 2 completion documentation
+- **FINAL TARGET: 728 lines UNDER <4,000 goal!** 🎉
+
+**Primary Targets:**
+
+- `_create_executive_summary` (~8 lines)
+  - Creates high-level summary from analysis results
+  
+- `_extract_key_findings` (~25 lines)
+  - Extracts important findings from crew outputs
+  
+- `_generate_strategic_recommendations` (~8 lines)
+  - Generates actionable recommendations
+  
+- `_extract_system_status_from_crew` (~20 lines)
+  - Extracts system status information
 
 **Tasks:**
 
-1. **Day 1-2:** Clean up and optimization
-   - Address any technical debt
-   - Optimize slow tests
-   - Refactor duplicated code
+1. **Day 1-2:** Write tests and extract (10-15 tests)
+   - Test summary generation logic
+   - Test key findings extraction
+   - Test recommendations generation
+   - Extract to `summary_generators.py`
+   - Update orchestrator delegates
 
 2. **Day 3:** Performance validation
    - Run full `/autointel` experimental depth test
    - Measure timing improvements
    - Validate memory usage
+   - Verify all features working
 
 3. **Day 4:** Create PHASE_2_COMPLETE.md
-   - Document all achievements
-   - Record final metrics
+   - Document all achievements (Weeks 5-9)
+   - Record final metrics (3,272 lines, 728 under target)
    - Capture lessons learned
-   - Plan Phase 3 preview
+   - Compare Phase 1 vs Phase 2 approaches
+   - Calculate total reduction (7,834 → 3,272, -58.2%)
 
 4. **Day 5:** Final review and celebration
-   - Update INDEX.md
+   - Update INDEX.md with Phase 2 completion
    - Create celebration summary
-   - Plan Phase 3 kickoff
+   - Plan Phase 3 preview (if applicable)
+   - Final atomic commit
 
 **Success Criteria:**
 
-- ✅ All tests passing (100% coverage)
-- ✅ Performance maintained/improved
+- ✅ Orchestrator: 3,272 lines (-60, -1.8%)
+- ✅ **728 lines UNDER <4,000 target (18.2% margin)** 🎯
+- ✅ 10-15 new tests (all passing)
+- ✅ **Phase 2 COMPLETE**
 - ✅ Comprehensive documentation
-- ✅ Ready for Phase 3 planning
+
+**Risk Level:** 🟢 **LOW**
+
+- Small, simple methods with clear boundaries
+- Low complexity extractions
+- Proven extraction pattern
+
+**Phase 2 Final Stats:**
+
+| Metric | Week 5 Start | Week 9 End | Change |
+|--------|--------------|------------|--------|
+| **Orchestrator Size** | 4,960 lines | 3,272 lines | -1,688 (-34.0%) |
+| **Modules Extracted** | 10 | 14 | +4 modules |
+| **Tests Written** | ~743 | ~850+ | +107+ tests |
+| **Target Gap** | +960 over | -728 under | **1,688 line swing!** |
+
+**Combined Phase 1 + Phase 2:**
+
+- Original orchestrator: 7,834 lines
+- Final orchestrator: 3,272 lines
+- **Total reduction: -4,562 lines (-58.2%)**
+- **Margin under <4,000:** 728 lines (18.2%)
 
 ---
 
