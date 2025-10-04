@@ -1,17 +1,12 @@
 """Result synthesis functions for autonomous intelligence workflows.
 
-This module provides functions for synthesizing intelligence analysis results
-from CrewAI workflow execution. Extracted from autonomous_orchestrator.py as
-part of Phase 2 Week 5 refactoring.
+This module provides functions for synthesizing intelligence analysis results from CrewAI
+workflow execution. It handles both normal synthesis, specialized synthesis, enhanced multi-modal
+synthesis, and fallback scenarios when advanced synthesis fails.
 
-Functions handle:
-- Basic fallback synthesis when advanced synthesis fails
-- Autonomous results synthesis with summary statistics
-- Enhanced multi-modal synthesis coordination
-- Specialized intelligence results synthesis
-
-All functions maintain the delegation pattern established in Phase 1,
-calling analytics_calculators for insights and statistics generation.
+**Delegation Pattern:**
+These functions delegate to `analytics_calculators` for complex computations like
+summary statistics and insight generation, maintaining the Phase 1 delegation architecture.
 """
 
 from typing import Any
@@ -190,3 +185,223 @@ def synthesize_autonomous_results(
     except Exception as e:
         logger.error(f"Result synthesis failed: {e}", exc_info=True)
         return {"error": f"Result synthesis failed: {e}", "raw_results": all_results}
+
+
+def synthesize_specialized_intelligence_results(
+    all_results: dict[str, Any],
+    generate_specialized_insights_fn: Any,
+    logger: Any,
+) -> dict[str, Any]:
+    """Synthesize all specialized intelligence results into comprehensive analysis.
+
+    This function aggregates results from specialized autonomous agents performing
+    acquisition, intelligence extraction, verification, deception analysis, behavioral
+    analysis, and knowledge integration. It extracts 9 result types and generates
+    specialized insights via the analytics_calculators delegate function.
+
+    Args:
+        all_results: Complete workflow results containing specialized analysis data with keys:
+            - acquisition: Content acquisition data
+            - intelligence: Intelligence extraction results
+            - verification: Verification results
+            - deception: Deception analysis with threat_score and threat_level
+            - behavioral: Behavioral analysis data
+            - knowledge: Knowledge integration results
+            - social: Social media analysis (optional)
+            - research: Research findings (optional)
+            - performance: Performance metrics (optional)
+            - workflow_metadata: Workflow execution metadata (url, workflow_id, processing_time)
+        generate_specialized_insights_fn: Function to generate specialized insights
+            (delegates to analytics_calculators.generate_specialized_insights)
+        logger: Logger instance for error reporting
+
+    Returns:
+        Dictionary with three keys:
+            - specialized_analysis_summary: High-level summary with:
+                * url, workflow_id, analysis_approach, processing_time
+                * threat_score, threat_level (from deception analysis)
+                * summary_statistics (completion flags for all 9 analysis types)
+                * specialized_insights (generated via delegate function)
+            - detailed_results: Full results for all 9 analysis types
+            - workflow_metadata: Original workflow metadata
+
+        On error, returns:
+            - error: Error message
+            - raw_results: Original all_results dict
+
+    Example:
+        >>> def my_insights_fn(results, logger):
+        ...     return ["Insight 1", "Insight 2"]
+        >>> result = synthesize_specialized_intelligence_results(
+        ...     all_results={"deception": {"threat_score": 0.75, "threat_level": "high"}, ...},
+        ...     generate_specialized_insights_fn=my_insights_fn,
+        ...     logger=my_logger
+        ... )
+        >>> result["specialized_analysis_summary"]["threat_score"]
+        0.75
+    """
+    try:
+        metadata = all_results.get("workflow_metadata", {})
+
+        # Extract key components from specialized analysis (9 result types)
+        acquisition_data = all_results.get("acquisition", {})
+        intelligence_data = all_results.get("intelligence", {})
+        verification_data = all_results.get("verification", {})
+        deception_data = all_results.get("deception", {})
+        behavioral_data = all_results.get("behavioral", {})
+        knowledge_data = all_results.get("knowledge", {})
+
+        # Generate specialized insights via delegate function
+        specialized_insights = generate_specialized_insights_fn(all_results, logger)
+
+        # Calculate summary statistics (completion flags for all analysis types)
+        summary_stats = {
+            "content_processed": bool(acquisition_data),
+            "intelligence_extracted": bool(intelligence_data),
+            "verification_completed": bool(verification_data),
+            "threat_assessment_done": bool(deception_data),
+            "behavioral_analysis_done": bool(behavioral_data),
+            "knowledge_integrated": bool(knowledge_data),
+            "threat_score": deception_data.get("threat_score", 0.0),
+            "threat_level": deception_data.get("threat_level", "unknown"),
+        }
+
+        synthesis = {
+            "specialized_analysis_summary": {
+                "url": metadata.get("url"),
+                "workflow_id": metadata.get("workflow_id"),
+                "analysis_approach": "specialized_autonomous_agents",
+                "processing_time": metadata.get("processing_time"),
+                "threat_score": deception_data.get("threat_score", 0.0),
+                "threat_level": deception_data.get("threat_level", "unknown"),
+                "summary_statistics": summary_stats,
+                "specialized_insights": specialized_insights,
+            },
+            "detailed_results": {
+                "acquisition": acquisition_data,
+                "intelligence": intelligence_data,
+                "verification": verification_data,
+                "deception": deception_data,
+                "behavioral": behavioral_data,
+                "knowledge": knowledge_data,
+                "social": all_results.get("social", {}),
+                "research": all_results.get("research", {}),
+                "performance": all_results.get("performance", {}),
+            },
+            "workflow_metadata": metadata,
+        }
+
+        return synthesis
+
+    except Exception as e:
+        logger.error(f"Specialized result synthesis failed: {e}", exc_info=True)
+        return {"error": f"Specialized synthesis failed: {e}", "raw_results": all_results}
+
+
+async def synthesize_enhanced_autonomous_results(
+    all_results: dict[str, Any],
+    synthesizer: Any,
+    error_handler: Any,
+    fallback_basic_synthesis_fn: Any,
+    logger: Any,
+) -> StepResult:
+    """Synthesize enhanced autonomous analysis results using advanced multi-modal synthesis.
+
+    This is the most sophisticated synthesis method, using the MultiModalSynthesizer to
+    coordinate agent results with quality assessment. Falls back to basic synthesis on failure.
+
+    **CRITICAL:** Sets production_ready=True when successful (unlike fallback which sets False).
+
+    Args:
+        all_results: Complete workflow results dictionary
+        synthesizer: MultiModalSynthesizer instance for advanced synthesis
+        error_handler: Error handler for recovery metrics
+        fallback_basic_synthesis_fn: Function to call for fallback synthesis
+            (delegates to fallback_basic_synthesis when multi-modal synthesis fails)
+        logger: Logger instance for status reporting
+
+    Returns:
+        StepResult with:
+            On success:
+                - All data from synthesizer.synthesize_intelligence_results()
+                - orchestrator_metadata: {synthesis_method, agent_coordination, error_recovery_metrics, synthesis_quality}
+                - production_ready: True (CRITICAL - indicates production-ready output)
+                - quality_assurance: {all_stages_validated, no_placeholders, comprehensive_analysis, agent_coordination_verified}
+                - message or orchestrator_message: Quality summary
+
+            On failure:
+                - Falls back to fallback_basic_synthesis_fn with error context
+                - production_ready: False (set by fallback function)
+
+    Example:
+        >>> result = await synthesize_enhanced_autonomous_results(
+        ...     all_results={"workflow_metadata": {"depth": "comprehensive"}, ...},
+        ...     synthesizer=my_synthesizer,
+        ...     error_handler=my_error_handler,
+        ...     fallback_basic_synthesis_fn=my_fallback_fn,
+        ...     logger=my_logger
+        ... )
+        >>> result.data["production_ready"]
+        True
+    """
+    try:
+        logger.info("Starting advanced multi-modal intelligence synthesis")
+
+        # Extract workflow metadata
+        workflow_metadata = all_results.get("workflow_metadata", {})
+        analysis_depth = workflow_metadata.get("depth", "standard")
+
+        # Use the advanced multi-modal synthesizer
+        synthesized_result, quality_assessment = await synthesizer.synthesize_intelligence_results(
+            workflow_results=all_results,
+            analysis_depth=analysis_depth,
+            workflow_metadata=workflow_metadata,
+        )
+
+        if synthesized_result.success:
+            logger.info(
+                f"Multi-modal synthesis completed successfully - "
+                f"Quality: {quality_assessment.get('overall_grade', 'unknown')}, "
+                f"Confidence: {quality_assessment.get('confidence_score', 0.0):.2f}"
+            )
+
+            # Enhance the result with additional orchestrator context
+            enhanced_result_data = synthesized_result.data.copy()
+            enhanced_result_data.update(
+                {
+                    "orchestrator_metadata": {
+                        "synthesis_method": "advanced_multi_modal",
+                        "agent_coordination": True,
+                        "error_recovery_metrics": error_handler.get_recovery_metrics(),
+                        "synthesis_quality": quality_assessment,
+                    },
+                    "production_ready": True,
+                    "quality_assurance": {
+                        "all_stages_validated": True,
+                        "no_placeholders": True,
+                        "comprehensive_analysis": analysis_depth in ["comprehensive", "experimental"],
+                        "agent_coordination_verified": True,
+                    },
+                }
+            )
+
+            # Avoid duplicate 'message' kwarg collisions if the synthesized_result already
+            # contained a 'message' field in its data. Prefer keeping the original
+            # synthesizer message in the payload and expose our orchestrator note under a
+            # distinct key.
+            orchestrator_note = f"Advanced autonomous intelligence synthesis completed - Quality: {quality_assessment.get('overall_grade', 'unknown')}"
+            # Ensure we don't pass "message" twice
+            if "message" in enhanced_result_data:
+                enhanced_result_data["orchestrator_message"] = orchestrator_note
+            else:
+                enhanced_result_data["message"] = orchestrator_note
+            return StepResult.ok(**enhanced_result_data)
+        else:
+            # If synthesis failed, fall back to basic synthesis with error context
+            logger.warning(f"Multi-modal synthesis failed: {synthesized_result.error}")
+            return await fallback_basic_synthesis_fn(all_results, synthesized_result.error)
+
+    except Exception as e:
+        logger.error(f"Enhanced synthesis failed: {e}", exc_info=True)
+        # Fall back to basic synthesis in case of critical failure
+        return await fallback_basic_synthesis_fn(all_results, str(e))

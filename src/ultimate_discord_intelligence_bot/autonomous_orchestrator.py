@@ -2733,63 +2733,15 @@ class AutonomousIntelligenceOrchestrator:
             return {"pattern_analysis": "unavailable"}
 
     async def _synthesize_specialized_intelligence_results(self, all_results: dict[str, Any]) -> dict[str, Any]:
-        """Synthesize all specialized intelligence results into comprehensive analysis."""
-        try:
-            metadata = all_results.get("workflow_metadata", {})
+        """Synthesize all specialized intelligence results into comprehensive analysis.
 
-            # Extract key components from specialized analysis
-            acquisition_data = all_results.get("acquisition", {})
-            intelligence_data = all_results.get("intelligence", {})
-            verification_data = all_results.get("verification", {})
-            deception_data = all_results.get("deception", {})
-            behavioral_data = all_results.get("behavioral", {})
-            knowledge_data = all_results.get("knowledge", {})
-
-            # Generate specialized insights
-            specialized_insights = self._generate_specialized_insights(all_results)
-
-            # Calculate summary statistics
-            summary_stats = {
-                "content_processed": bool(acquisition_data),
-                "intelligence_extracted": bool(intelligence_data),
-                "verification_completed": bool(verification_data),
-                "threat_assessment_done": bool(deception_data),
-                "behavioral_analysis_done": bool(behavioral_data),
-                "knowledge_integrated": bool(knowledge_data),
-                "threat_score": deception_data.get("threat_score", 0.0),
-                "threat_level": deception_data.get("threat_level", "unknown"),
-            }
-
-            synthesis = {
-                "specialized_analysis_summary": {
-                    "url": metadata.get("url"),
-                    "workflow_id": metadata.get("workflow_id"),
-                    "analysis_approach": "specialized_autonomous_agents",
-                    "processing_time": metadata.get("processing_time"),
-                    "threat_score": deception_data.get("threat_score", 0.0),
-                    "threat_level": deception_data.get("threat_level", "unknown"),
-                    "summary_statistics": summary_stats,
-                    "specialized_insights": specialized_insights,
-                },
-                "detailed_results": {
-                    "acquisition": acquisition_data,
-                    "intelligence": intelligence_data,
-                    "verification": verification_data,
-                    "deception": deception_data,
-                    "behavioral": behavioral_data,
-                    "knowledge": knowledge_data,
-                    "social": all_results.get("social", {}),
-                    "research": all_results.get("research", {}),
-                    "performance": all_results.get("performance", {}),
-                },
-                "workflow_metadata": metadata,
-            }
-
-            return synthesis
-
-        except Exception as e:
-            self.logger.error(f"Specialized result synthesis failed: {e}", exc_info=True)
-            return {"error": f"Specialized synthesis failed: {e}", "raw_results": all_results}
+        Delegates to result_synthesizers.synthesize_specialized_intelligence_results.
+        """
+        return result_synthesizers.synthesize_specialized_intelligence_results(
+            all_results=all_results,
+            generate_specialized_insights_fn=self._generate_specialized_insights,
+            logger=self.logger,
+        )
 
     def _generate_specialized_insights(self, results: dict[str, Any]) -> list[str]:
         """Delegates to analytics_calculators.generate_specialized_insights."""
@@ -3465,68 +3417,17 @@ class AutonomousIntelligenceOrchestrator:
         )
 
     async def _synthesize_enhanced_autonomous_results(self, all_results: dict[str, Any]) -> StepResult:
-        """Synthesize enhanced autonomous analysis results using advanced multi-modal synthesis."""
-        try:
-            self.logger.info("Starting advanced multi-modal intelligence synthesis")
+        """Synthesize enhanced autonomous analysis results using advanced multi-modal synthesis.
 
-            # Extract workflow metadata
-            workflow_metadata = all_results.get("workflow_metadata", {})
-            analysis_depth = workflow_metadata.get("depth", "standard")
-
-            # Use the advanced multi-modal synthesizer
-            synthesized_result, quality_assessment = await self.synthesizer.synthesize_intelligence_results(
-                workflow_results=all_results,
-                analysis_depth=analysis_depth,
-                workflow_metadata=workflow_metadata,
-            )
-
-            if synthesized_result.success:
-                self.logger.info(
-                    f"Multi-modal synthesis completed successfully - "
-                    f"Quality: {quality_assessment.get('overall_grade', 'unknown')}, "
-                    f"Confidence: {quality_assessment.get('confidence_score', 0.0):.2f}"
-                )
-
-                # Enhance the result with additional orchestrator context
-                enhanced_result_data = synthesized_result.data.copy()
-                enhanced_result_data.update(
-                    {
-                        "orchestrator_metadata": {
-                            "synthesis_method": "advanced_multi_modal",
-                            "agent_coordination": True,
-                            "error_recovery_metrics": self.error_handler.get_recovery_metrics(),
-                            "synthesis_quality": quality_assessment,
-                        },
-                        "production_ready": True,
-                        "quality_assurance": {
-                            "all_stages_validated": True,
-                            "no_placeholders": True,
-                            "comprehensive_analysis": analysis_depth in ["comprehensive", "experimental"],
-                            "agent_coordination_verified": True,
-                        },
-                    }
-                )
-
-                # Avoid duplicate 'message' kwarg collisions if the synthesized_result already
-                # contained a 'message' field in its data. Prefer keeping the original
-                # synthesizer message in the payload and expose our orchestrator note under a
-                # distinct key.
-                orchestrator_note = f"Advanced autonomous intelligence synthesis completed - Quality: {quality_assessment.get('overall_grade', 'unknown')}"
-                # Ensure we don't pass "message" twice
-                if "message" in enhanced_result_data:
-                    enhanced_result_data["orchestrator_message"] = orchestrator_note
-                else:
-                    enhanced_result_data["message"] = orchestrator_note
-                return StepResult.ok(**enhanced_result_data)
-            else:
-                # If synthesis failed, fall back to basic synthesis with error context
-                self.logger.warning(f"Multi-modal synthesis failed: {synthesized_result.error}")
-                return await self._fallback_basic_synthesis(all_results, synthesized_result.error)
-
-        except Exception as e:
-            self.logger.error(f"Enhanced synthesis failed: {e}", exc_info=True)
-            # Fall back to basic synthesis in case of critical failure
-            return await self._fallback_basic_synthesis(all_results, str(e))
+        Delegates to result_synthesizers.synthesize_enhanced_autonomous_results.
+        """
+        return await result_synthesizers.synthesize_enhanced_autonomous_results(
+            all_results=all_results,
+            synthesizer=self.synthesizer,
+            error_handler=self.error_handler,
+            fallback_basic_synthesis_fn=self._fallback_basic_synthesis,
+            logger=self.logger,
+        )
 
     async def _fallback_basic_synthesis(self, all_results: dict[str, Any], error_context: str) -> StepResult:
         """Fallback basic synthesis when advanced synthesis fails.

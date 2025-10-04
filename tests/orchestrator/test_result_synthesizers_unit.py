@@ -65,9 +65,7 @@ def orchestrator(mock_logger, mock_synthesizer, mock_error_handler):
     real_instance.error_handler = mock_error_handler
 
     # Bind real methods to our mock
-    orchestrator._synthesize_autonomous_results = real_instance._synthesize_autonomous_results.__get__(
-        orchestrator
-    )
+    orchestrator._synthesize_autonomous_results = real_instance._synthesize_autonomous_results.__get__(orchestrator)
     orchestrator._synthesize_enhanced_autonomous_results = (
         real_instance._synthesize_enhanced_autonomous_results.__get__(orchestrator)
     )
@@ -350,8 +348,8 @@ class TestCoreSynthesisMethods:
         result = await orchestrator._synthesize_specialized_intelligence_results(sample_complete_results)
 
         assert isinstance(result, dict)
-        # Verify insights were integrated
-        orchestrator._generate_specialized_insights.assert_called_once_with(sample_complete_results)
+        # Verify insights were integrated (now includes logger parameter)
+        orchestrator._generate_specialized_insights.assert_called_once_with(sample_complete_results, orchestrator.logger)
 
     @pytest.mark.asyncio
     async def test_synthesize_specialized_intelligence_results_error_handling(self, orchestrator):
