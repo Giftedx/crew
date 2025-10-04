@@ -2383,32 +2383,11 @@ class AutonomousIntelligenceOrchestrator:
         verification_data: dict[str, Any],
         fact_data: dict[str, Any] | None = None,
     ) -> list[str]:
-        """Highlight opportunities for future workflow improvements."""
-        opportunities: list[str] = []
+        """Highlight opportunities for future workflow improvements.
 
-        transcript_index = analysis_data.get("transcript_index") if isinstance(analysis_data, dict) else {}
-        if not transcript_index:
-            opportunities.append("Generate a transcript index to accelerate follow-up investigations.")
-
-        if isinstance(analysis_data, dict) and not analysis_data.get("timeline_anchors"):
-            opportunities.append("Add timeline anchors to support multi-agent temporal reasoning.")
-
-        fact_checks = None
-        if isinstance(verification_data, dict):
-            fact_checks = verification_data.get("fact_checks")
-        if fact_checks is None and isinstance(fact_data, dict):
-            fact_checks = fact_data.get("fact_checks")
-        if not fact_checks:
-            opportunities.append("Expand fact-check coverage to strengthen factual accuracy metrics.")
-
-        bias_indicators = verification_data.get("bias_indicators") if isinstance(verification_data, dict) else None
-        if bias_indicators:
-            opportunities.append("Review detected bias indicators and adjust sourcing diversity.")
-
-        if not opportunities:
-            opportunities.append("Capture analyst retrospectives to preserve implicit learnings.")
-
-        return opportunities
+        Delegates to quality_assessors.identify_learning_opportunities.
+        """
+        return quality_assessors.identify_learning_opportunities(analysis_data, verification_data, fact_data)
 
     def _generate_enhancement_suggestions(
         self,
@@ -2416,34 +2395,11 @@ class AutonomousIntelligenceOrchestrator:
         analysis_data: dict[str, Any],
         verification_data: dict[str, Any],
     ) -> dict[str, Any]:
-        """Convert dimension scores into actionable follow-up items."""
-        priority_actions: list[str] = []
-        watch_items: list[str] = []
+        """Convert dimension scores into actionable follow-up items.
 
-        for dimension, value in quality_dimensions.items():
-            if not isinstance(value, (int, float)):
-                continue
-            label = dimension.replace("_", " ").title()
-            if value < 0.4:
-                priority_actions.append(f"{label}: urgent remediation required (score {value:.2f}).")
-            elif value < 0.6:
-                watch_items.append(f"{label}: monitor for drift (score {value:.2f}).")
-
-        if not priority_actions and not watch_items and quality_dimensions:
-            priority_actions.append("All quality metrics above targets – maintain current strategy.")
-
-        metadata = analysis_data.get("content_metadata") if isinstance(analysis_data, dict) else {}
-        source_validation = verification_data.get("source_validation") if isinstance(verification_data, dict) else {}
-
-        return {
-            "priority_actions": priority_actions,
-            "watch_items": watch_items,
-            "context": {
-                "title": metadata.get("title"),
-                "platform": metadata.get("platform"),
-                "validated_sources": bool(source_validation),
-            },
-        }
+        Delegates to quality_assessors.generate_enhancement_suggestions.
+        """
+        return quality_assessors.generate_enhancement_suggestions(quality_dimensions, analysis_data, verification_data)
 
     def _calculate_confidence_interval(
         self, quality_dimensions: dict[str, float], ai_quality_score: float
@@ -2513,179 +2469,25 @@ class AutonomousIntelligenceOrchestrator:
         return analytics_calculators.generate_specialized_insights(results, self.logger)
 
     async def _create_specialized_main_results_embed(self, results: dict[str, Any], depth: str) -> Any:
-        """Create specialized main results embed for Discord."""
-        try:
-            from .discord_bot.discord_env import discord
+        """Create specialized main results embed for Discord.
 
-            summary = results.get("specialized_analysis_summary", {})
-            stats = summary.get("summary_statistics", {})
-            insights = summary.get("specialized_insights", [])
-
-            threat_score = summary.get("threat_score", 0.0)
-            threat_level = summary.get("threat_level", "unknown")
-
-            # Color coding based on threat level
-            color = 0x00FF00 if threat_level == "low" else 0xFF6600 if threat_level == "medium" else 0xFF0000
-            threat_emoji = "🟢" if threat_level == "low" else "🟡" if threat_level == "medium" else "🔴"
-
-            embed = discord.Embed(
-                title="🤖 Specialized Autonomous Intelligence Analysis",
-                description=f"**URL:** {summary.get('url', 'N/A')}",
-                color=color,
-            )
-
-            # Threat assessment (primary metric)
-            embed.add_field(
-                name="🎯 Threat Assessment",
-                value=f"{threat_emoji} {threat_score:.2f}/1.00 ({threat_level.upper()})",
-                inline=True,
-            )
-
-            # Processing performance
-            embed.add_field(name="⚡ Processing Time", value=f"{summary.get('processing_time', 0.0):.1f}s", inline=True)
-
-            embed.add_field(name="🧠 Analysis Method", value="Specialized Agents", inline=True)
-
-            # Verification status
-            if stats.get("verification_completed"):
-                embed.add_field(name="✅ Information Verification", value="Completed by Specialist", inline=True)
-
-            # Behavioral analysis
-            if stats.get("behavioral_analysis_done"):
-                embed.add_field(name="📊 Behavioral Analysis", value="Pattern Analysis Complete", inline=True)
-
-            # Knowledge integration
-            if stats.get("knowledge_integrated"):
-                embed.add_field(name="💾 Knowledge Integration", value="Multi-System Storage", inline=True)
-
-            # Specialized insights
-            if insights:
-                embed.add_field(
-                    name="🧠 Specialized Intelligence Insights",
-                    value="\n".join(insights[:4]),  # Show top 4 insights
-                    inline=False,
-                )
-
-            # Footer with specialized workflow info
-            embed.set_footer(
-                text=f"Analysis: {summary.get('workflow_id', 'N/A')} | Specialized Autonomous Intelligence v2.0"
-            )
-
-            return embed
-
-        except Exception as e:
-            # Fallback embed
-            return {"title": "Specialized Analysis Complete", "description": f"Results available (embed error: {e})"}
+        Delegates to discord_helpers.create_specialized_main_results_embed.
+        """
+        return await discord_helpers.create_specialized_main_results_embed(results, depth)
 
     async def _create_specialized_details_embed(self, results: dict[str, Any]) -> Any:
-        """Create specialized detailed results embed."""
-        try:
-            from .discord_bot.discord_env import discord
+        """Create specialized detailed results embed.
 
-            detailed = results.get("detailed_results", {})
-            intelligence_data = detailed.get("intelligence", {})
-            verification_data = detailed.get("verification", {})
-            deception_data = detailed.get("deception", {})
-
-            embed = discord.Embed(title="📋 Specialized Analysis Details", color=0x0099FF)
-
-            # Content intelligence details
-            content_metadata = intelligence_data.get("content_metadata", {})
-            if content_metadata:
-                embed.add_field(
-                    name="📺 Content Intelligence",
-                    value=f"**Platform:** {content_metadata.get('platform', 'Unknown')}\n"
-                    f"**Title:** {content_metadata.get('title', 'N/A')[:50]}...\n"
-                    f"**Duration:** {content_metadata.get('duration', 'N/A')}",
-                    inline=False,
-                )
-
-            # Verification details (support both 'fact_checks' and legacy 'fact_verification')
-            fact_checks = None
-            if isinstance(verification_data.get("fact_checks"), dict):
-                fact_checks = verification_data["fact_checks"]
-            elif isinstance(verification_data.get("fact_verification"), dict):
-                fact_checks = verification_data["fact_verification"]
-            if isinstance(fact_checks, dict):
-                verified = fact_checks.get("verified_claims")
-                disputed = fact_checks.get("disputed_claims")
-                evidence_count = fact_checks.get("evidence_count")
-                claims = fact_checks.get("claims")
-                claim_count = len(claims) if isinstance(claims, list) else fact_checks.get("claims_count")
-                if isinstance(verified, int) or isinstance(disputed, int):
-                    fact_line = f"**Fact Checks:** {int(verified or 0)} verified, {int(disputed or 0)} disputed\n"
-                else:
-                    fact_line = (
-                        f"**Fact Checks:** {int(claim_count or 0)} claims, {int(evidence_count or 0)} evidence\n"
-                    )
-                embed.add_field(
-                    name="🔬 Information Verification",
-                    value=fact_line + f"**Confidence:** {verification_data.get('verification_confidence', 0.0):.2f}",
-                    inline=True,
-                )
-
-            # Threat analysis details
-            if deception_data.get("deception_analysis"):
-                embed.add_field(
-                    name="⚖️ Threat Analysis",
-                    value=f"**Threat Level:** {deception_data.get('threat_level', 'unknown').upper()}\n"
-                    f"**Score:** {deception_data.get('threat_score', 0.0):.2f}/1.00\n"
-                    f"**Assessment:** Specialized Analysis",
-                    inline=True,
-                )
-
-            # Logical analysis
-            logical_analysis = verification_data.get("logical_analysis", {})
-            if logical_analysis.get("fallacies_detected"):
-                fallacies = logical_analysis["fallacies_detected"]
-                embed.add_field(
-                    name="⚠️ Logical Analysis",
-                    value="\n".join([f"• {fallacy}" for fallacy in fallacies[:3]]),
-                    inline=False,
-                )
-
-            return embed
-
-        except Exception:
-            return {"title": "Analysis Details", "description": "Specialized analysis details available"}
+        Delegates to discord_helpers.create_specialized_details_embed.
+        """
+        return await discord_helpers.create_specialized_details_embed(results)
 
     async def _create_specialized_knowledge_embed(self, knowledge_data: dict[str, Any]) -> Any:
-        """Create specialized knowledge integration embed."""
-        try:
-            from .discord_bot.discord_env import discord
+        """Create specialized knowledge integration embed.
 
-            systems = knowledge_data.get("knowledge_systems", {})
-
-            embed = discord.Embed(
-                title="💾 Specialized Knowledge Integration",
-                description="Intelligence integrated by Knowledge Integration Manager",
-                color=0x00FF99,
-            )
-
-            # Integration systems
-            integrated_systems = []
-            if systems.get("vector_memory"):
-                integrated_systems.append("✅ Vector Memory System")
-            if systems.get("graph_memory"):
-                integrated_systems.append("✅ Graph Memory System")
-            if systems.get("continual_memory"):
-                integrated_systems.append("✅ Continual Learning System")
-
-            if integrated_systems:
-                embed.add_field(name="🔧 Integrated Systems", value="\n".join(integrated_systems), inline=True)
-
-            embed.add_field(
-                name="📊 Integration Status",
-                value=f"**Method:** Specialized Agent\n**Status:** {knowledge_data.get('integration_status', 'unknown').title()}\n**Approach:** Multi-System",
-                inline=True,
-            )
-
-            embed.set_footer(text="Specialized intelligence available for future queries and analysis")
-
-            return embed
-
-        except Exception:
-            return {"title": "Knowledge Integration", "description": "Specialized integration completed successfully"}
+        Delegates to discord_helpers.create_specialized_knowledge_embed.
+        """
+        return await discord_helpers.create_specialized_knowledge_embed(knowledge_data)
 
     async def _execute_content_pipeline(self, url: str) -> StepResult:
         """Execute the core content pipeline with minimal wrapping for autonomous workflow."""
@@ -3374,25 +3176,11 @@ class AutonomousIntelligenceOrchestrator:
         return analytics_calculators.calculate_persona_confidence_from_crew(crew_result, self.logger)
 
     def _extract_research_topics(self, transcript: str, claims: dict[str, Any]) -> list[str]:
-        """Extract research topics from transcript and claims."""
-        try:
-            topics = []
+        """Extract research topics from transcript and claims.
 
-            # Extract key topics from claims
-            if isinstance(claims, dict):
-                for claim in claims.get("fact_checks", []):
-                    if isinstance(claim, dict) and "topic" in claim:
-                        topics.append(claim["topic"])
-
-            # Simple keyword extraction from transcript
-            import re
-
-            words = re.findall(r"\b[A-Z][a-z]+\b", transcript)
-            topics.extend(words[:5])  # Add first 5 capitalized words as potential topics
-
-            return list(set(topics[:10]))  # Return unique topics, max 10
-        except Exception:
-            return []
+        Delegates to extractors.extract_research_topics.
+        """
+        return extractors.extract_research_topics(transcript, claims)
 
     def _calculate_contextual_relevance(self, research_results: dict[str, Any], analysis_data: dict[str, Any]) -> float:
         """Calculate contextual relevance of research to analysis.
@@ -3406,48 +3194,28 @@ class AutonomousIntelligenceOrchestrator:
         return analytics_calculators.calculate_synthesis_confidence(research_results, self.logger)
 
     def _extract_research_topics_from_crew(self, crew_result: Any) -> list[str]:
-        """Extract research topics from CrewAI crew analysis."""
-        try:
-            if not crew_result:
-                return []
+        """Extract research topics from CrewAI crew analysis.
 
-            crew_output = str(crew_result).lower()
-
-            # Extract topics using keyword analysis
-            import re
-
-            topics = re.findall(r"\b[a-zA-Z]{3,}\b", crew_output)
-
-            # Filter for meaningful topics (longer words)
-            meaningful_topics = [topic for topic in topics if len(topic) > 4][:10]
-
-            return list(set(meaningful_topics))
-        except Exception:
-            return []
+        Delegates to extractors.extract_research_topics_from_crew.
+        """
+        return extractors.extract_research_topics_from_crew(crew_result)
 
     def _calculate_contextual_relevance_from_crew(self, crew_result: Any, analysis_data: dict[str, Any]) -> float:
         """Delegates to analytics_calculators.calculate_contextual_relevance_from_crew."""
         return analytics_calculators.calculate_contextual_relevance_from_crew(crew_result, analysis_data, self.logger)
 
     def _calculate_synthesis_confidence_from_crew(self, crew_result: Any) -> float:
-        """Calculate synthesis confidence from CrewAI crew results."""
-        try:
-            if not crew_result:
-                return 0.0
+        """Calculate synthesis confidence from CrewAI crew results.
 
-            crew_output = str(crew_result)
-
-            # Calculate confidence based on analysis depth and quality indicators
-            confidence_indicators = ["comprehensive", "thorough", "detailed", "verified", "confirmed"]
-            confidence_count = sum(1 for indicator in confidence_indicators if indicator in crew_output.lower())
-
-            return min(confidence_count * 0.15, 0.8)
-        except Exception:
-            return 0.0
+        Delegates to extractors.calculate_synthesis_confidence_from_crew.
+        """
+        return extractors.calculate_synthesis_confidence_from_crew(crew_result)
 
     def _extract_system_status_from_crew(self, crew_result: Any) -> dict[str, Any]:
         """Delegate to pipeline_result_builders.extract_system_status_from_crew."""
-        from ultimate_discord_intelligence_bot.orchestrator.pipeline_result_builders import extract_system_status_from_crew
+        from ultimate_discord_intelligence_bot.orchestrator.pipeline_result_builders import (
+            extract_system_status_from_crew,
+        )
 
         return extract_system_status_from_crew(crew_result)
 
@@ -4036,273 +3804,60 @@ class AutonomousIntelligenceOrchestrator:
         return analytics_calculators.calculate_agent_confidence_from_crew(crew_result, self.logger)
 
     def _extract_deception_analysis_from_crew(self, crew_result: Any) -> dict[str, Any]:
-        """Extract comprehensive deception analysis from CrewAI threat assessment."""
-        try:
-            if not crew_result:
-                return {}
+        """Extract comprehensive deception analysis from CrewAI threat assessment.
 
-            crew_output = str(crew_result).lower()
-
-            # Deception indicators
-            deception_indicators = [
-                "deceptive",
-                "misleading",
-                "manipulative",
-                "false narrative",
-                "propaganda",
-                "disinformation",
-            ]
-            authenticity_indicators = ["authentic", "genuine", "truthful", "honest", "transparent"]
-
-            deception_count = sum(1 for indicator in deception_indicators if indicator in crew_output)
-            authenticity_count = sum(1 for indicator in authenticity_indicators if indicator in crew_output)
-
-            deception_score = max(0.0, min(1.0, (deception_count - authenticity_count + 2) / 5))
-
-            deception_analysis = {
-                "deception_score": deception_score,
-                "deception_indicators": [ind for ind in deception_indicators if ind in crew_output],
-                "authenticity_indicators": [ind for ind in authenticity_indicators if ind in crew_output],
-                "assessment": "high_deception"
-                if deception_score > 0.7
-                else "moderate_deception"
-                if deception_score > 0.4
-                else "low_deception",
-                "confidence": min(abs(deception_count - authenticity_count) / 3, 1.0),
-                "crew_detected": True,
-            }
-
-            return deception_analysis
-        except Exception:
-            return {"deception_score": 0.5, "error": "extraction_failed"}
+        Delegates to extractors.extract_deception_analysis_from_crew.
+        """
+        return extractors.extract_deception_analysis_from_crew(crew_result)
 
     def _extract_manipulation_indicators_from_crew(self, crew_result: Any) -> list[dict[str, Any]]:
-        """Extract manipulation indicators from CrewAI threat analysis."""
-        try:
-            if not crew_result:
-                return []
+        """Extract manipulation indicators from CrewAI threat analysis.
 
-            crew_output = str(crew_result).lower()
-
-            manipulation_types = {
-                "emotional_manipulation": ["emotional appeal", "fear mongering", "emotional triggers"],
-                "logical_manipulation": ["false logic", "strawman", "ad hominem", "slippery slope"],
-                "information_manipulation": ["selective facts", "cherry picking", "context removal"],
-                "social_manipulation": ["bandwagon", "appeal to authority", "social proof"],
-                "narrative_manipulation": ["framing", "spin", "narrative control", "agenda pushing"],
-            }
-
-            detected_manipulation = []
-            for manipulation_type, indicators in manipulation_types.items():
-                detected_indicators = [ind for ind in indicators if ind in crew_output]
-                if detected_indicators:
-                    detected_manipulation.append(
-                        {
-                            "type": manipulation_type,
-                            "indicators": detected_indicators,
-                            "confidence": min(len(detected_indicators) / 2, 1.0),
-                            "severity": "high"
-                            if len(detected_indicators) > 2
-                            else "medium"
-                            if len(detected_indicators) > 1
-                            else "low",
-                        }
-                    )
-
-            return detected_manipulation
-        except Exception:
-            return []
+        Delegates to extractors.extract_manipulation_indicators_from_crew.
+        """
+        return extractors.extract_manipulation_indicators_from_crew(crew_result)
 
     def _extract_narrative_integrity_from_crew(self, crew_result: Any) -> dict[str, Any]:
-        """Extract narrative integrity assessment from CrewAI analysis."""
-        try:
-            if not crew_result:
-                return {"score": 0.5, "assessment": "unknown"}
+        """Extract narrative integrity assessment from CrewAI analysis.
 
-            crew_output = str(crew_result).lower()
-
-            # Narrative integrity indicators
-            consistent_indicators = ["consistent", "coherent", "logical flow", "clear narrative"]
-            inconsistent_indicators = ["inconsistent", "contradictory", "fragmented", "incoherent"]
-
-            consistent_count = sum(1 for indicator in consistent_indicators if indicator in crew_output)
-            inconsistent_count = sum(1 for indicator in inconsistent_indicators if indicator in crew_output)
-
-            integrity_score = max(0.0, min(1.0, (consistent_count - inconsistent_count + 2) / 4))
-
-            narrative_integrity = {
-                "score": integrity_score,
-                "assessment": "high_integrity"
-                if integrity_score > 0.7
-                else "medium_integrity"
-                if integrity_score > 0.4
-                else "low_integrity",
-                "consistency_indicators": consistent_count,
-                "inconsistency_indicators": inconsistent_count,
-                "narrative_quality": "strong" if integrity_score > 0.6 else "weak",
-            }
-
-            return narrative_integrity
-        except Exception:
-            return {"score": 0.5, "assessment": "analysis_failed"}
+        Delegates to extractors.extract_narrative_integrity_from_crew.
+        """
+        return extractors.extract_narrative_integrity_from_crew(crew_result)
 
     def _extract_psychological_threats_from_crew(self, crew_result: Any) -> dict[str, Any]:
-        """Extract psychological threat profiling from CrewAI analysis."""
-        try:
-            if not crew_result:
-                return {}
+        """Extract psychological threat profiling from CrewAI analysis.
 
-            crew_output = str(crew_result).lower()
-
-            # Psychological threat indicators
-            threat_patterns = {
-                "cognitive_bias_exploitation": ["bias exploitation", "cognitive shortcut", "mental heuristic"],
-                "emotional_manipulation": ["emotional trigger", "fear appeal", "anger induction"],
-                "social_engineering": ["social pressure", "group think", "conformity pressure"],
-                "persuasion_techniques": ["persuasion", "influence tactics", "compliance techniques"],
-            }
-
-            psychological_profile = {}
-            for pattern_type, indicators in threat_patterns.items():
-                detected = [ind for ind in indicators if ind in crew_output]
-                if detected:
-                    psychological_profile[pattern_type] = {
-                        "detected_indicators": detected,
-                        "threat_level": "high" if len(detected) > 2 else "medium" if len(detected) > 1 else "low",
-                        "confidence": min(len(detected) / 2, 1.0),
-                    }
-
-            # Overall psychological threat score
-            total_indicators = sum(
-                len(profile.get("detected_indicators", [])) for profile in psychological_profile.values()
-            )
-            psychological_threat_score = min(total_indicators / 5, 1.0)
-
-            psychological_profiling = {
-                "psychological_threat_score": psychological_threat_score,
-                "threat_patterns": psychological_profile,
-                "overall_assessment": "high_psychological_threat"
-                if psychological_threat_score > 0.7
-                else "moderate_psychological_threat"
-                if psychological_threat_score > 0.4
-                else "low_psychological_threat",
-            }
-
-            return psychological_profiling
-        except Exception:
-            return {"psychological_threat_score": 0.0, "threat_patterns": {}}
+        Delegates to extractors.extract_psychological_threats_from_crew.
+        """
+        return extractors.extract_psychological_threats_from_crew(crew_result)
 
     def _calculate_comprehensive_threat_score_from_crew(self, crew_result: Any) -> float:
-        """Calculate comprehensive threat score from CrewAI analysis."""
-        try:
-            if not crew_result:
-                return 0.0
+        """Calculate comprehensive threat score from CrewAI analysis.
 
-            crew_output = str(crew_result).lower()
-
-            # Comprehensive threat indicators
-            high_threat = ["high threat", "dangerous", "severe risk", "critical threat", "immediate danger"]
-            medium_threat = ["moderate threat", "concerning", "potential risk", "caution needed"]
-            low_threat = ["low threat", "minimal risk", "safe", "no significant threat"]
-
-            high_count = sum(1 for indicator in high_threat if indicator in crew_output)
-            medium_count = sum(1 for indicator in medium_threat if indicator in crew_output)
-            low_count = sum(1 for indicator in low_threat if indicator in crew_output)
-
-            # Calculate weighted threat score
-            threat_score = (high_count * 0.9 + medium_count * 0.6 - low_count * 0.2) / max(
-                1, high_count + medium_count + low_count
-            )
-
-            return max(0.0, min(1.0, threat_score))
-        except Exception:
-            return 0.5
+        Delegates to extractors.calculate_comprehensive_threat_score_from_crew.
+        """
+        return extractors.calculate_comprehensive_threat_score_from_crew(crew_result)
 
     def _classify_threat_level_from_crew(self, crew_result: Any) -> str:
-        """Classify threat level from CrewAI analysis."""
-        try:
-            threat_score = self._calculate_comprehensive_threat_score_from_crew(crew_result)
+        """Classify threat level from CrewAI analysis.
 
-            if threat_score > 0.8:
-                return "critical"
-            elif threat_score > 0.6:
-                return "high"
-            elif threat_score > 0.4:
-                return "medium"
-            elif threat_score > 0.2:
-                return "low"
-            else:
-                return "minimal"
-        except Exception:
-            return "unknown"
+        Delegates to extractors.classify_threat_level_from_crew.
+        """
+        return extractors.classify_threat_level_from_crew(crew_result)
 
     def _extract_truth_assessment_from_crew(self, crew_result: Any) -> dict[str, Any]:
-        """Extract truth assessment from CrewAI analysis."""
-        try:
-            if not crew_result:
-                return {"confidence": 0.0, "verdict": "unknown"}
+        """Extract truth assessment from CrewAI analysis.
 
-            crew_output = str(crew_result).lower()
-
-            # Truth indicators
-            true_indicators = ["true", "accurate", "verified", "factual", "confirmed"]
-            false_indicators = ["false", "inaccurate", "unverified", "misleading", "debunked"]
-            uncertain_indicators = ["uncertain", "unclear", "insufficient evidence", "mixed evidence"]
-
-            true_count = sum(1 for indicator in true_indicators if indicator in crew_output)
-            false_count = sum(1 for indicator in false_indicators if indicator in crew_output)
-            uncertain_count = sum(1 for indicator in uncertain_indicators if indicator in crew_output)
-
-            if true_count > false_count and true_count > uncertain_count:
-                verdict = "true"
-                confidence = min(true_count / (true_count + false_count + uncertain_count + 1), 0.9)
-            elif false_count > true_count and false_count > uncertain_count:
-                verdict = "false"
-                confidence = min(false_count / (true_count + false_count + uncertain_count + 1), 0.9)
-            else:
-                verdict = "uncertain"
-                confidence = 0.3
-
-            truth_assessment = {
-                "verdict": verdict,
-                "confidence": confidence,
-                "evidence_strength": {"supporting": true_count, "refuting": false_count, "uncertain": uncertain_count},
-            }
-
-            return truth_assessment
-        except Exception:
-            return {"confidence": 0.0, "verdict": "analysis_failed"}
+        Delegates to extractors.extract_truth_assessment_from_crew.
+        """
+        return extractors.extract_truth_assessment_from_crew(crew_result)
 
     def _extract_trustworthiness_from_crew(self, crew_result: Any) -> dict[str, Any]:
-        """Extract trustworthiness evaluation from CrewAI analysis."""
-        try:
-            if not crew_result:
-                return {"score": 0.5, "factors": []}
+        """Extract trustworthiness evaluation from CrewAI analysis.
 
-            crew_output = str(crew_result).lower()
-
-            # Trustworthiness factors
-            trust_factors = ["trustworthy", "reliable", "credible", "authoritative", "reputable"]
-            distrust_factors = ["untrustworthy", "unreliable", "questionable", "dubious", "discredited"]
-
-            trust_count = sum(1 for factor in trust_factors if factor in crew_output)
-            distrust_count = sum(1 for factor in distrust_factors if factor in crew_output)
-
-            trustworthiness_score = max(0.0, min(1.0, (trust_count - distrust_count + 2) / 4))
-
-            trustworthiness = {
-                "score": trustworthiness_score,
-                "assessment": "high_trust"
-                if trustworthiness_score > 0.7
-                else "medium_trust"
-                if trustworthiness_score > 0.4
-                else "low_trust",
-                "factors": {"positive_indicators": trust_count, "negative_indicators": distrust_count},
-            }
-
-            return trustworthiness
-        except Exception:
-            return {"score": 0.5, "factors": [], "error": "evaluation_failed"}
+        Delegates to extractors.extract_trustworthiness_from_crew.
+        """
+        return extractors.extract_trustworthiness_from_crew(crew_result)
 
     def _calculate_basic_threat_from_data(
         self, verification_data: dict, sentiment_data: dict, credibility_data: dict

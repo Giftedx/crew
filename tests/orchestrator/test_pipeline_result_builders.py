@@ -836,6 +836,7 @@ class TestExtractSystemStatusFromCrew:
 
     def test_exception_handling_returns_empty_dict(self):
         """Test that exceptions are caught and return empty dict."""
+
         # Pass object that will cause exception when converted to string
         class BadObject:
             def __str__(self):
@@ -975,4 +976,3 @@ class TestExtractKeyFindings:
         assert "Threat assessment: critical" == result[0]
         assert "10 claims analyzed" in result[1]
         assert "1000 characters completed" in result[2]
-

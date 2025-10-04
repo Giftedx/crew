@@ -564,6 +564,428 @@ def calculate_agent_confidence_from_crew(crew_result: Any) -> float:
         return 0.5
 
 
+def extract_deception_analysis_from_crew(crew_result: Any) -> dict[str, Any]:
+    """Extract comprehensive deception analysis from CrewAI threat assessment.
+
+    Args:
+        crew_result: CrewAI crew execution result
+
+    Returns:
+        Dictionary with deception_score, indicators, assessment, and confidence
+    """
+    try:
+        if not crew_result:
+            return {}
+
+        crew_output = str(crew_result).lower()
+
+        # Deception indicators
+        deception_indicators = [
+            "deceptive",
+            "misleading",
+            "manipulative",
+            "false narrative",
+            "propaganda",
+            "disinformation",
+        ]
+        authenticity_indicators = ["authentic", "genuine", "truthful", "honest", "transparent"]
+
+        deception_count = sum(1 for indicator in deception_indicators if indicator in crew_output)
+        authenticity_count = sum(1 for indicator in authenticity_indicators if indicator in crew_output)
+
+        deception_score = max(0.0, min(1.0, (deception_count - authenticity_count + 2) / 5))
+
+        deception_analysis = {
+            "deception_score": deception_score,
+            "deception_indicators": [ind for ind in deception_indicators if ind in crew_output],
+            "authenticity_indicators": [ind for ind in authenticity_indicators if ind in crew_output],
+            "assessment": "high_deception"
+            if deception_score > 0.7
+            else "moderate_deception"
+            if deception_score > 0.4
+            else "low_deception",
+            "confidence": min(abs(deception_count - authenticity_count) / 3, 1.0),
+            "crew_detected": True,
+        }
+
+        return deception_analysis
+    except Exception as exc:
+        logger.exception("Failed to extract deception analysis: %s", exc)
+        return {"deception_score": 0.5, "error": "extraction_failed"}
+
+
+def extract_manipulation_indicators_from_crew(crew_result: Any) -> list[dict[str, Any]]:
+    """Extract manipulation indicators from CrewAI threat analysis.
+
+    Args:
+        crew_result: CrewAI crew execution result
+
+    Returns:
+        List of manipulation indicator dictionaries with type, indicators, confidence, severity
+    """
+    try:
+        if not crew_result:
+            return []
+
+        crew_output = str(crew_result).lower()
+
+        manipulation_types = {
+            "emotional_manipulation": ["emotional appeal", "fear mongering", "emotional triggers"],
+            "logical_manipulation": ["false logic", "strawman", "ad hominem", "slippery slope"],
+            "information_manipulation": ["selective facts", "cherry picking", "context removal"],
+            "social_manipulation": ["bandwagon", "appeal to authority", "social proof"],
+            "narrative_manipulation": ["framing", "spin", "narrative control", "agenda pushing"],
+        }
+
+        detected_manipulation = []
+        for manipulation_type, indicators in manipulation_types.items():
+            detected_indicators = [ind for ind in indicators if ind in crew_output]
+            if detected_indicators:
+                detected_manipulation.append(
+                    {
+                        "type": manipulation_type,
+                        "indicators": detected_indicators,
+                        "confidence": min(len(detected_indicators) / 2, 1.0),
+                        "severity": "high"
+                        if len(detected_indicators) > 2
+                        else "medium"
+                        if len(detected_indicators) > 1
+                        else "low",
+                    }
+                )
+
+        return detected_manipulation
+    except Exception as exc:
+        logger.exception("Failed to extract manipulation indicators: %s", exc)
+        return []
+
+
+def extract_narrative_integrity_from_crew(crew_result: Any) -> dict[str, Any]:
+    """Extract narrative integrity assessment from CrewAI analysis.
+
+    Args:
+        crew_result: CrewAI crew execution result
+
+    Returns:
+        Dictionary with score, assessment, consistency indicators, and narrative quality
+    """
+    try:
+        if not crew_result:
+            return {"score": 0.5, "assessment": "unknown"}
+
+        crew_output = str(crew_result).lower()
+
+        # Narrative integrity indicators
+        consistent_indicators = ["consistent", "coherent", "logical flow", "clear narrative"]
+        inconsistent_indicators = ["inconsistent", "contradictory", "fragmented", "incoherent"]
+
+        consistent_count = sum(1 for indicator in consistent_indicators if indicator in crew_output)
+        inconsistent_count = sum(1 for indicator in inconsistent_indicators if indicator in crew_output)
+
+        integrity_score = max(0.0, min(1.0, (consistent_count - inconsistent_count + 2) / 4))
+
+        narrative_integrity = {
+            "score": integrity_score,
+            "assessment": "high_integrity"
+            if integrity_score > 0.7
+            else "medium_integrity"
+            if integrity_score > 0.4
+            else "low_integrity",
+            "consistency_indicators": consistent_count,
+            "inconsistency_indicators": inconsistent_count,
+            "narrative_quality": "strong" if integrity_score > 0.6 else "weak",
+        }
+
+        return narrative_integrity
+    except Exception as exc:
+        logger.exception("Failed to extract narrative integrity: %s", exc)
+        return {"score": 0.5, "assessment": "analysis_failed"}
+
+
+def extract_psychological_threats_from_crew(crew_result: Any) -> dict[str, Any]:
+    """Extract psychological threat profiling from CrewAI analysis.
+
+    Args:
+        crew_result: CrewAI crew execution result
+
+    Returns:
+        Dictionary with psychological_threat_score, threat_patterns, and overall assessment
+    """
+    try:
+        if not crew_result:
+            return {}
+
+        crew_output = str(crew_result).lower()
+
+        # Psychological threat indicators
+        threat_patterns = {
+            "cognitive_bias_exploitation": ["bias exploitation", "cognitive shortcut", "mental heuristic"],
+            "emotional_manipulation": ["emotional trigger", "fear appeal", "anger induction"],
+            "social_engineering": ["social pressure", "group think", "conformity pressure"],
+            "persuasion_techniques": ["persuasion", "influence tactics", "compliance techniques"],
+        }
+
+        psychological_profile = {}
+        for pattern_type, indicators in threat_patterns.items():
+            detected = [ind for ind in indicators if ind in crew_output]
+            if detected:
+                psychological_profile[pattern_type] = {
+                    "detected_indicators": detected,
+                    "threat_level": "high" if len(detected) > 2 else "medium" if len(detected) > 1 else "low",
+                    "confidence": min(len(detected) / 2, 1.0),
+                }
+
+        # Overall psychological threat score
+        total_indicators = sum(
+            len(profile.get("detected_indicators", [])) for profile in psychological_profile.values()
+        )
+        psychological_threat_score = min(total_indicators / 5, 1.0)
+
+        psychological_profiling = {
+            "psychological_threat_score": psychological_threat_score,
+            "threat_patterns": psychological_profile,
+            "overall_assessment": "high_psychological_threat"
+            if psychological_threat_score > 0.7
+            else "moderate_psychological_threat"
+            if psychological_threat_score > 0.4
+            else "low_psychological_threat",
+        }
+
+        return psychological_profiling
+    except Exception as exc:
+        logger.exception("Failed to extract psychological threats: %s", exc)
+        return {"psychological_threat_score": 0.0, "threat_patterns": {}}
+
+
+def calculate_comprehensive_threat_score_from_crew(crew_result: Any) -> float:
+    """Calculate comprehensive threat score from CrewAI analysis.
+
+    Args:
+        crew_result: CrewAI crew execution result
+
+    Returns:
+        Threat score between 0.0 and 1.0
+    """
+    try:
+        if not crew_result:
+            return 0.0
+
+        crew_output = str(crew_result).lower()
+
+        # Comprehensive threat indicators
+        high_threat = ["high threat", "dangerous", "severe risk", "critical threat", "immediate danger"]
+        medium_threat = ["moderate threat", "concerning", "potential risk", "caution needed"]
+        low_threat = ["low threat", "minimal risk", "safe", "no significant threat"]
+
+        high_count = sum(1 for indicator in high_threat if indicator in crew_output)
+        medium_count = sum(1 for indicator in medium_threat if indicator in crew_output)
+        low_count = sum(1 for indicator in low_threat if indicator in crew_output)
+
+        # Calculate weighted threat score
+        threat_score = (high_count * 0.9 + medium_count * 0.6 - low_count * 0.2) / max(
+            1, high_count + medium_count + low_count
+        )
+
+        return max(0.0, min(1.0, threat_score))
+    except Exception as exc:
+        logger.exception("Failed to calculate comprehensive threat score: %s", exc)
+        return 0.5
+
+
+def classify_threat_level_from_crew(crew_result: Any) -> str:
+    """Classify threat level from CrewAI analysis.
+
+    Args:
+        crew_result: CrewAI crew execution result
+
+    Returns:
+        Threat level classification: critical, high, medium, low, minimal, or unknown
+    """
+    try:
+        threat_score = calculate_comprehensive_threat_score_from_crew(crew_result)
+
+        if threat_score > 0.8:
+            return "critical"
+        elif threat_score > 0.6:
+            return "high"
+        elif threat_score > 0.4:
+            return "medium"
+        elif threat_score > 0.2:
+            return "low"
+        else:
+            return "minimal"
+    except Exception as exc:
+        logger.exception("Failed to classify threat level: %s", exc)
+        return "unknown"
+
+
+def extract_truth_assessment_from_crew(crew_result: Any) -> dict[str, Any]:
+    """Extract truth assessment from CrewAI analysis.
+
+    Args:
+        crew_result: CrewAI crew execution result
+
+    Returns:
+        Dictionary with verdict, confidence, and evidence strength
+    """
+    try:
+        if not crew_result:
+            return {"confidence": 0.0, "verdict": "unknown"}
+
+        crew_output = str(crew_result).lower()
+
+        # Truth indicators
+        true_indicators = ["true", "accurate", "verified", "factual", "confirmed"]
+        false_indicators = ["false", "inaccurate", "unverified", "misleading", "debunked"]
+        uncertain_indicators = ["uncertain", "unclear", "insufficient evidence", "mixed evidence"]
+
+        true_count = sum(1 for indicator in true_indicators if indicator in crew_output)
+        false_count = sum(1 for indicator in false_indicators if indicator in crew_output)
+        uncertain_count = sum(1 for indicator in uncertain_indicators if indicator in crew_output)
+
+        if true_count > false_count and true_count > uncertain_count:
+            verdict = "true"
+            confidence = min(true_count / (true_count + false_count + uncertain_count + 1), 0.9)
+        elif false_count > true_count and false_count > uncertain_count:
+            verdict = "false"
+            confidence = min(false_count / (true_count + false_count + uncertain_count + 1), 0.9)
+        else:
+            verdict = "uncertain"
+            confidence = 0.3
+
+        truth_assessment = {
+            "verdict": verdict,
+            "confidence": confidence,
+            "evidence_strength": {"supporting": true_count, "refuting": false_count, "uncertain": uncertain_count},
+        }
+
+        return truth_assessment
+    except Exception as exc:
+        logger.exception("Failed to extract truth assessment: %s", exc)
+        return {"confidence": 0.0, "verdict": "analysis_failed"}
+
+
+def extract_trustworthiness_from_crew(crew_result: Any) -> dict[str, Any]:
+    """Extract trustworthiness evaluation from CrewAI analysis.
+
+    Args:
+        crew_result: CrewAI crew execution result
+
+    Returns:
+        Dictionary with score, assessment, and positive/negative indicator counts
+    """
+    try:
+        if not crew_result:
+            return {"score": 0.5, "factors": []}
+
+        crew_output = str(crew_result).lower()
+
+        # Trustworthiness factors
+        trust_factors = ["trustworthy", "reliable", "credible", "authoritative", "reputable"]
+        distrust_factors = ["untrustworthy", "unreliable", "questionable", "dubious", "discredited"]
+
+        trust_count = sum(1 for factor in trust_factors if factor in crew_output)
+        distrust_count = sum(1 for factor in distrust_factors if factor in crew_output)
+
+        trustworthiness_score = max(0.0, min(1.0, (trust_count - distrust_count + 2) / 4))
+
+        trustworthiness = {
+            "score": trustworthiness_score,
+            "assessment": "high_trust"
+            if trustworthiness_score > 0.7
+            else "medium_trust"
+            if trustworthiness_score > 0.4
+            else "low_trust",
+            "factors": {"positive_indicators": trust_count, "negative_indicators": distrust_count},
+        }
+
+        return trustworthiness
+    except Exception as exc:
+        logger.exception("Failed to extract trustworthiness: %s", exc)
+        return {"score": 0.5, "factors": [], "error": "evaluation_failed"}
+
+
+def extract_research_topics(transcript: str, claims: dict[str, Any]) -> list[str]:
+    """Extract research topics from transcript and claims.
+
+    Args:
+        transcript: Content transcript
+        claims: Fact-checking claims dictionary
+
+    Returns:
+        List of unique research topics (max 10)
+    """
+    try:
+        topics = []
+
+        # Extract key topics from claims
+        if isinstance(claims, dict):
+            for claim in claims.get("fact_checks", []):
+                if isinstance(claim, dict) and "topic" in claim:
+                    topics.append(claim["topic"])
+
+        # Simple keyword extraction from transcript
+        words = re.findall(r"\b[A-Z][a-z]+\b", transcript)
+        topics.extend(words[:5])  # Add first 5 capitalized words as potential topics
+
+        return list(set(topics[:10]))  # Return unique topics, max 10
+    except Exception as exc:
+        logger.exception("Failed to extract research topics: %s", exc)
+        return []
+
+
+def extract_research_topics_from_crew(crew_result: Any) -> list[str]:
+    """Extract research topics from CrewAI crew analysis.
+
+    Args:
+        crew_result: CrewAI crew execution result
+
+    Returns:
+        List of meaningful research topics (max 10)
+    """
+    try:
+        if not crew_result:
+            return []
+
+        crew_output = str(crew_result).lower()
+
+        # Extract topics using keyword analysis
+        topics = re.findall(r"\b[a-zA-Z]{3,}\b", crew_output)
+
+        # Filter for meaningful topics (longer words)
+        meaningful_topics = [topic for topic in topics if len(topic) > 4][:10]
+
+        return list(set(meaningful_topics))
+    except Exception as exc:
+        logger.exception("Failed to extract research topics from crew: %s", exc)
+        return []
+
+
+def calculate_synthesis_confidence_from_crew(crew_result: Any) -> float:
+    """Calculate synthesis confidence from CrewAI crew results.
+
+    Args:
+        crew_result: CrewAI crew execution result
+
+    Returns:
+        Confidence score between 0.0 and 0.8
+    """
+    try:
+        if not crew_result:
+            return 0.0
+
+        crew_output = str(crew_result)
+
+        # Calculate confidence based on analysis depth and quality indicators
+        confidence_indicators = ["comprehensive", "thorough", "detailed", "verified", "confirmed"]
+        confidence_count = sum(1 for indicator in confidence_indicators if indicator in crew_output.lower())
+
+        return min(confidence_count * 0.15, 0.8)
+    except Exception as exc:
+        logger.exception("Failed to calculate synthesis confidence: %s", exc)
+        return 0.0
+
+
 # Public API - all extraction functions
 __all__ = [
     "extract_timeline_from_crew",
@@ -583,4 +1005,16 @@ __all__ = [
     "extract_source_validation_from_crew",
     "calculate_verification_confidence_from_crew",
     "calculate_agent_confidence_from_crew",
+    # Week 7 Day 5 additions - crew result processors
+    "extract_deception_analysis_from_crew",
+    "extract_manipulation_indicators_from_crew",
+    "extract_narrative_integrity_from_crew",
+    "extract_psychological_threats_from_crew",
+    "calculate_comprehensive_threat_score_from_crew",
+    "classify_threat_level_from_crew",
+    "extract_truth_assessment_from_crew",
+    "extract_trustworthiness_from_crew",
+    "extract_research_topics",
+    "extract_research_topics_from_crew",
+    "calculate_synthesis_confidence_from_crew",
 ]

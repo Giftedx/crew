@@ -561,3 +561,184 @@ class TestAssessTranscriptQuality:
         score = quality_assessors.assess_transcript_quality(None)  # type: ignore
 
         assert score == 0.0  # None/empty returns 0.0 before exception handling
+
+
+class TestIdentifyLearningOpportunities:
+    """Test identify_learning_opportunities function."""
+
+    def test_suggests_transcript_index_when_missing(self):
+        """Test suggests transcript index when not present."""
+        analysis_data = {}
+        verification_data = {}
+
+        opportunities = quality_assessors.identify_learning_opportunities(analysis_data, verification_data)
+
+        assert any("transcript index" in opp.lower() for opp in opportunities)
+
+    def test_suggests_timeline_anchors_when_missing(self):
+        """Test suggests timeline anchors when not present."""
+        analysis_data = {"transcript_index": {"some": "data"}}
+        verification_data = {}
+
+        opportunities = quality_assessors.identify_learning_opportunities(analysis_data, verification_data)
+
+        assert any("timeline anchor" in opp.lower() for opp in opportunities)
+
+    def test_suggests_fact_check_expansion_when_missing(self):
+        """Test suggests fact-check expansion when not present."""
+        analysis_data = {
+            "transcript_index": {"some": "data"},
+            "timeline_anchors": [{"time": 0}],
+        }
+        verification_data = {}
+
+        opportunities = quality_assessors.identify_learning_opportunities(analysis_data, verification_data)
+
+        assert any("fact-check" in opp.lower() for opp in opportunities)
+
+    def test_checks_fact_data_fallback(self):
+        """Test uses fact_data as fallback for fact_checks."""
+        analysis_data = {
+            "transcript_index": {"some": "data"},
+            "timeline_anchors": [{"time": 0}],
+        }
+        verification_data = {}
+        fact_data = {"fact_checks": {"verified_claims": 5}}
+
+        opportunities = quality_assessors.identify_learning_opportunities(
+            analysis_data, verification_data, fact_data
+        )
+
+        # Should NOT suggest fact-check expansion since fact_checks present in fact_data
+        assert not any("fact-check" in opp.lower() for opp in opportunities)
+
+    def test_suggests_bias_review_when_indicators_present(self):
+        """Test suggests bias review when indicators detected."""
+        analysis_data = {
+            "transcript_index": {"some": "data"},
+            "timeline_anchors": [{"time": 0}],
+        }
+        verification_data = {
+            "fact_checks": {"verified": 5},
+            "bias_indicators": ["confirmation_bias"],
+        }
+
+        opportunities = quality_assessors.identify_learning_opportunities(analysis_data, verification_data)
+
+        assert any("bias indicator" in opp.lower() for opp in opportunities)
+
+    def test_returns_default_when_no_opportunities(self):
+        """Test returns default message when all checks pass."""
+        analysis_data = {
+            "transcript_index": {"some": "data"},
+            "timeline_anchors": [{"time": 0}],
+        }
+        verification_data = {"fact_checks": {"verified": 5}}
+
+        opportunities = quality_assessors.identify_learning_opportunities(analysis_data, verification_data)
+
+        assert len(opportunities) == 1
+        assert "retrospective" in opportunities[0].lower()
+
+    def test_handles_none_values(self):
+        """Test handles None values gracefully."""
+        opportunities = quality_assessors.identify_learning_opportunities(None, None)  # type: ignore
+
+        assert len(opportunities) > 0  # Should return opportunities, not crash
+
+
+class TestGenerateEnhancementSuggestions:
+    """Test generate_enhancement_suggestions function."""
+
+    def test_creates_priority_actions_for_low_scores(self):
+        """Test creates priority actions for scores below 0.4."""
+        quality_dimensions = {
+            "factual_accuracy": 0.3,
+            "source_credibility": 0.2,
+        }
+        analysis_data = {}
+        verification_data = {}
+
+        result = quality_assessors.generate_enhancement_suggestions(
+            quality_dimensions, analysis_data, verification_data
+        )
+
+        assert len(result["priority_actions"]) == 2
+        assert "urgent remediation" in result["priority_actions"][0].lower()
+
+    def test_creates_watch_items_for_medium_scores(self):
+        """Test creates watch items for scores 0.4-0.6."""
+        quality_dimensions = {
+            "factual_accuracy": 0.5,
+            "source_credibility": 0.55,
+        }
+        analysis_data = {}
+        verification_data = {}
+
+        result = quality_assessors.generate_enhancement_suggestions(
+            quality_dimensions, analysis_data, verification_data
+        )
+
+        assert len(result["watch_items"]) == 2
+        assert "monitor for drift" in result["watch_items"][0].lower()
+
+    def test_no_actions_for_high_scores(self):
+        """Test no actions/watch items for scores above 0.6."""
+        quality_dimensions = {
+            "factual_accuracy": 0.8,
+            "source_credibility": 0.9,
+        }
+        analysis_data = {}
+        verification_data = {}
+
+        result = quality_assessors.generate_enhancement_suggestions(
+            quality_dimensions, analysis_data, verification_data
+        )
+
+        assert len(result["priority_actions"]) == 1
+        assert "maintain current strategy" in result["priority_actions"][0].lower()
+        assert len(result["watch_items"]) == 0
+
+    def test_includes_context_metadata(self):
+        """Test includes context from analysis/verification data."""
+        quality_dimensions = {"factual_accuracy": 0.8}
+        analysis_data = {"content_metadata": {"title": "Test Video", "platform": "YouTube"}}
+        verification_data = {"source_validation": {"sources": ["credible.com"]}}
+
+        result = quality_assessors.generate_enhancement_suggestions(
+            quality_dimensions, analysis_data, verification_data
+        )
+
+        assert result["context"]["title"] == "Test Video"
+        assert result["context"]["platform"] == "YouTube"
+        assert result["context"]["validated_sources"] is True
+
+    def test_skips_non_numeric_dimensions(self):
+        """Test skips non-numeric dimension values."""
+        quality_dimensions = {
+            "factual_accuracy": 0.3,
+            "invalid_score": "not_a_number",  # type: ignore
+        }
+        analysis_data = {}
+        verification_data = {}
+
+        result = quality_assessors.generate_enhancement_suggestions(
+            quality_dimensions, analysis_data, verification_data
+        )
+
+        # Should only process factual_accuracy
+        assert len(result["priority_actions"]) == 1
+
+    def test_handles_empty_dimensions(self):
+        """Test handles empty quality dimensions."""
+        quality_dimensions = {}
+        analysis_data = {}
+        verification_data = {}
+
+        result = quality_assessors.generate_enhancement_suggestions(
+            quality_dimensions, analysis_data, verification_data
+        )
+
+        assert "priority_actions" in result
+        assert "watch_items" in result
+        assert "context" in result
