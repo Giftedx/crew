@@ -230,6 +230,7 @@ All fix reports, analysis documents, and implementation summaries from January 2
 **`docs/fixes/archive/2025-01/`**
 
 This includes:
+
 - AUTOINTEL_* fix reports (30+ files)
 - FIX_* implementation reports (15+ files)
 - Analysis and review documents

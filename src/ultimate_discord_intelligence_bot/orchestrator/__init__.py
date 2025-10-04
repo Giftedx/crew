@@ -3,6 +3,7 @@
 from . import (
     crew_builders,
     data_transformers,
+    discord_helpers,
     error_handlers,
     extractors,
     quality_assessors,
@@ -10,10 +11,11 @@ from . import (
 )
 
 __all__ = [
+    "crew_builders",
+    "data_transformers",
+    "discord_helpers",
+    "error_handlers",
     "extractors",
     "quality_assessors",
-    "data_transformers",
-    "crew_builders",
-    "error_handlers",
     "system_validators",
 ]
