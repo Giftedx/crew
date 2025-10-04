@@ -1,0 +1,35 @@
+{
+  "4": [
+    {
+      "combination_id": 4,
+      "combination_name": "fact_checking_only",
+      "iteration": 1,
+      "url": "https://www.youtube.com/watch?v=xtFiJ8AVdW0",
+      "depth": "experimental",
+      "flags": {
+        "ENABLE_PARALLEL_MEMORY_OPS": "0",
+        "ENABLE_PARALLEL_ANALYSIS": "0",
+        "ENABLE_PARALLEL_FACT_CHECKING": "1"
+      },
+      "timing": {
+        "start": "2025-10-04T23:35:45.363636",
+        "end": "2025-10-04T23:42:12.500330",
+        "duration_seconds": 387.13669323921204,
+        "duration_minutes": 6.452278220653534
+      },
+      "expected_savings": {
+        "min_minutes": 0.5,
+        "max_minutes": 1.0
+      },
+      "quality": {
+        "transcript_length": null,
+        "quality_score": null,
+        "trustworthiness_score": null,
+        "insights_count": null,
+        "verified_claims_count": null
+      },
+      "success": true,
+      "error": null
+    }
+  ]
+}

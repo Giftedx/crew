@@ -237,6 +237,14 @@ class AutonomousIntelligenceOrchestrator:
 
     def _build_intelligence_crew(self, url: str, depth: str) -> Crew:
         """Build a single chained CrewAI crew for the complete intelligence workflow (delegates to crew_builders)."""
+        # CRITICAL FIX (2025-10-04): Ensure crew_instance is initialized before agent creation
+        # The agent_getter_callback needs self.crew_instance to be available
+        if self.crew_instance is None:
+            from .crew import UltimateDiscordIntelligenceBotCrew
+
+            self.crew_instance = UltimateDiscordIntelligenceBotCrew()
+            self.logger.debug("✨ Initialized crew_instance for agent creation")
+
         settings = get_settings()
         return crew_builders.build_intelligence_crew(
             url,
@@ -281,6 +289,11 @@ class AutonomousIntelligenceOrchestrator:
         # CRITICAL FIX: Initialize agent_coordinators as EMPTY dict
         # Agents will be lazy-created and cached by _get_or_create_agent()
         self.agent_coordinators = {}
+
+        # CRITICAL FIX (2025-10-04): Initialize crew_instance to None
+        # Will be populated later in _execute_agent_coordination_setup() (line 759)
+        # Required by _get_or_create_agent() callback (line 210)
+        self.crew_instance = None
 
     @staticmethod
     def _normalize_acquisition_data(acquisition: StepResult | dict[str, Any] | None) -> dict[str, Any]:

@@ -1,0 +1,97 @@
+{
+  "1": [
+    {
+      "combination_id": 1,
+      "combination_name": "sequential_baseline",
+      "iteration": 1,
+      "url": "https://www.youtube.com/watch?v=xtFiJ8AVdW0",
+      "depth": "experimental",
+      "flags": {
+        "ENABLE_PARALLEL_MEMORY_OPS": "0",
+        "ENABLE_PARALLEL_ANALYSIS": "0",
+        "ENABLE_PARALLEL_FACT_CHECKING": "0"
+      },
+      "timing": {
+        "start": "2025-10-04T21:25:40.961405",
+        "end": "2025-10-04T21:32:27.503362",
+        "duration_seconds": 406.541955947876,
+        "duration_minutes": 6.775699265797933
+      },
+      "expected_savings": {
+        "min_minutes": 0.0,
+        "max_minutes": 0.0
+      },
+      "quality": {
+        "transcript_length": null,
+        "quality_score": null,
+        "trustworthiness_score": null,
+        "insights_count": null,
+        "verified_claims_count": null
+      },
+      "success": true,
+      "error": null
+    },
+    {
+      "combination_id": 1,
+      "combination_name": "sequential_baseline",
+      "iteration": 2,
+      "url": "https://www.youtube.com/watch?v=xtFiJ8AVdW0",
+      "depth": "experimental",
+      "flags": {
+        "ENABLE_PARALLEL_MEMORY_OPS": "0",
+        "ENABLE_PARALLEL_ANALYSIS": "0",
+        "ENABLE_PARALLEL_FACT_CHECKING": "0"
+      },
+      "timing": {
+        "start": "2025-10-04T21:32:27.504296",
+        "end": "2025-10-04T21:37:23.400520",
+        "duration_seconds": 295.8962233066559,
+        "duration_minutes": 4.931603721777598
+      },
+      "expected_savings": {
+        "min_minutes": 0.0,
+        "max_minutes": 0.0
+      },
+      "quality": {
+        "transcript_length": null,
+        "quality_score": null,
+        "trustworthiness_score": null,
+        "insights_count": null,
+        "verified_claims_count": null
+      },
+      "success": true,
+      "error": null
+    },
+    {
+      "combination_id": 1,
+      "combination_name": "sequential_baseline",
+      "iteration": 3,
+      "url": "https://www.youtube.com/watch?v=xtFiJ8AVdW0",
+      "depth": "experimental",
+      "flags": {
+        "ENABLE_PARALLEL_MEMORY_OPS": "0",
+        "ENABLE_PARALLEL_ANALYSIS": "0",
+        "ENABLE_PARALLEL_FACT_CHECKING": "0"
+      },
+      "timing": {
+        "start": "2025-10-04T21:37:23.401806",
+        "end": "2025-10-04T21:41:03.000918",
+        "duration_seconds": 219.59911227226257,
+        "duration_minutes": 3.6599852045377097
+      },
+      "expected_savings": {
+        "min_minutes": 0.0,
+        "max_minutes": 0.0
+      },
+      "quality": {
+        "transcript_length": null,
+        "quality_score": null,
+        "trustworthiness_score": null,
+        "insights_count": null,
+        "verified_claims_count": null
+      },
+      "success": true,
+      "error": null
+    }
+  ]
+}

@@ -344,9 +344,10 @@ def build_intelligence_crew(
 
     # Parallel fact-checking pattern (when enabled)
     if enable_parallel_fact_checking:
-        _logger.info("⚡ Using PARALLEL fact-checking (async_execution=True)")
+        _logger.info("⚡ Using PARALLEL fact-checking (async_execution=True) - OPTIMIZED: 2 concurrent tasks")
 
         # Step 1: Claim Extraction (sequential, must complete first)
+        # OPTIMIZATION: Reduced from 5 to 2 claims to limit concurrent API calls
         claim_extraction_task = Task(
             description=(
                 "CRITICAL DATA EXTRACTION INSTRUCTIONS:\n"
@@ -365,12 +366,12 @@ def build_intelligence_crew(
                 "   - The tool will return 3-10 claims extracted from the transcript\n"
                 "   - Call this tool EXACTLY ONCE\n"
                 "\n"
-                "STEP 3: Select the 5 most significant claims from the extracted list.\n"
+                "STEP 3: Select the 2 most significant claims from the extracted list.\n"
                 "\n"
-                "Return results as JSON with key: claims (array of exactly 5 claim texts)."
+                "Return results as JSON with key: claims (array of exactly 2 claim texts)."
             ),
             expected_output=(
-                "JSON with claims (array of exactly 5 claim texts from ClaimExtractorTool). "
+                "JSON with claims (array of exactly 2 claim texts from ClaimExtractorTool). "
                 "❌ REJECT: Empty arrays. ❌ REJECT: Placeholder claims. "
                 "✅ ACCEPT: Real claims about actual video content."
             ),
@@ -379,7 +380,8 @@ def build_intelligence_crew(
             callback=task_completion_callback,
         )
 
-        # Step 2: Parallel Fact-Checking (5 independent fact-check tasks)
+        # Step 2: Parallel Fact-Checking (2 independent fact-check tasks)
+        # OPTIMIZATION: Reduced from 5 to 2 to limit concurrent API calls and prevent rate limiting
         fact_check_1_task = Task(
             description=(
                 "Extract claim #1 from previous task output and verify it.\n"
@@ -410,56 +412,11 @@ def build_intelligence_crew(
             async_execution=True,  # ⚡ RUNS IN PARALLEL
         )
 
-        fact_check_3_task = Task(
-            description=(
-                "Extract claim #3 from previous task output and verify it.\n"
-                "STEP 1: Extract the third claim from the claims array.\n"
-                "STEP 2: YOU MUST CALL FactCheckTool(claim=<claim_text>).\n"
-                "   - DO NOT respond until the tool returns a verification result.\n"
-                "Return JSON with: claim (text), fact_check_result (dict from tool)."
-            ),
-            expected_output="JSON with claim (text) and fact_check_result (dict from FactCheckTool).",
-            agent=verification_agent,
-            context=[claim_extraction_task],
-            callback=task_completion_callback,
-            async_execution=True,  # ⚡ RUNS IN PARALLEL
-        )
-
-        fact_check_4_task = Task(
-            description=(
-                "Extract claim #4 from previous task output and verify it.\n"
-                "STEP 1: Extract the fourth claim from the claims array.\n"
-                "STEP 2: YOU MUST CALL FactCheckTool(claim=<claim_text>).\n"
-                "   - DO NOT respond until the tool returns a verification result.\n"
-                "Return JSON with: claim (text), fact_check_result (dict from tool)."
-            ),
-            expected_output="JSON with claim (text) and fact_check_result (dict from FactCheckTool).",
-            agent=verification_agent,
-            context=[claim_extraction_task],
-            callback=task_completion_callback,
-            async_execution=True,  # ⚡ RUNS IN PARALLEL
-        )
-
-        fact_check_5_task = Task(
-            description=(
-                "Extract claim #5 from previous task output and verify it.\n"
-                "STEP 1: Extract the fifth claim from the claims array.\n"
-                "STEP 2: YOU MUST CALL FactCheckTool(claim=<claim_text>).\n"
-                "   - DO NOT respond until the tool returns a verification result.\n"
-                "Return JSON with: claim (text), fact_check_result (dict from tool)."
-            ),
-            expected_output="JSON with claim (text) and fact_check_result (dict from FactCheckTool).",
-            agent=verification_agent,
-            context=[claim_extraction_task],
-            callback=task_completion_callback,
-            async_execution=True,  # ⚡ RUNS IN PARALLEL
-        )
-
         # Step 3: Verification Integration (waits for all fact-checks, combines results)
         verification_integration_task = Task(
             description=(
-                "Combine results from all 5 parallel fact-checking tasks.\n"
-                "STEP 1: Extract claim and fact_check_result from each of the 5 previous tasks.\n"
+                "Combine results from both parallel fact-checking tasks.\n"
+                "STEP 1: Extract claim and fact_check_result from each of the 2 previous tasks.\n"
                 "STEP 2: Combine into unified arrays:\n"
                 "   - verified_claims: array of all claim texts\n"
                 "   - fact_check_results: array of all verification outcomes\n"
@@ -469,18 +426,15 @@ def build_intelligence_crew(
                 "Return JSON with: verified_claims (array), fact_check_results (array), trustworthiness_score (0-100)."
             ),
             expected_output=(
-                "JSON with verified_claims (array of 5 claims), "
-                "fact_check_results (array of 5 outcomes), "
+                "JSON with verified_claims (array of 2 claims), "
+                "fact_check_results (array of 2 outcomes), "
                 "trustworthiness_score (0-100)."
             ),
             agent=verification_agent,
             context=[
                 fact_check_1_task,
                 fact_check_2_task,
-                fact_check_3_task,
-                fact_check_4_task,
-                fact_check_5_task,
-            ],  # Waits for ALL parallel fact-checks
+            ],  # Waits for both parallel fact-checks
             callback=task_completion_callback,
         )
     else:
@@ -657,13 +611,11 @@ def build_intelligence_crew(
 
     # Build verification_tasks list based on fact-checking flag
     if enable_parallel_fact_checking:
+        # OPTIMIZATION: Reduced from 7 tasks (1 extraction + 5 fact-checks + 1 integration) to 4 tasks (1 extraction + 2 fact-checks + 1 integration)
         verification_tasks = [
             claim_extraction_task,
             fact_check_1_task,
             fact_check_2_task,
-            fact_check_3_task,
-            fact_check_4_task,
-            fact_check_5_task,
             verification_integration_task,
         ]
     else:
@@ -721,9 +673,10 @@ def build_intelligence_crew(
         if depth == "standard":
             tasks = all_tasks[:3]
         elif depth == "deep":
+            # OPTIMIZATION: Changed from all_tasks[:10] to all_tasks[:7] due to reduction from 7 to 4 verification tasks
             tasks = (
-                all_tasks[:4] if not enable_parallel_fact_checking else all_tasks[:10]
-            )  # Include all verification tasks if parallel
+                all_tasks[:4] if not enable_parallel_fact_checking else all_tasks[:7]
+            )  # Include all verification tasks if parallel (4 tasks: extraction + 2 fact-checks + integration)
         else:  # comprehensive or experimental
             tasks = all_tasks
 

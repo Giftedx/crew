@@ -1,0 +1,95 @@
+[
+  {
+    "combination_id": 7,
+    "combination_name": "analysis_fact_checking",
+    "iteration": 1,
+    "url": "https://www.youtube.com/watch\\?v\\=xtFiJ8AVdW0",
+    "depth": "experimental",
+    "flags": {
+      "ENABLE_PARALLEL_MEMORY_OPS": "0",
+      "ENABLE_PARALLEL_ANALYSIS": "1",
+      "ENABLE_PARALLEL_FACT_CHECKING": "1"
+    },
+    "timing": {
+      "start": "2025-10-04T20:48:36.252591",
+      "end": "2025-10-04T20:48:36.254947",
+      "duration_seconds": 0.002356290817260742,
+      "duration_minutes": 3.927151362101237e-05
+    },
+    "expected_savings": {
+      "min_minutes": 1.5,
+      "max_minutes": 3.0
+    },
+    "quality": {
+      "transcript_length": null,
+      "quality_score": null,
+      "trustworthiness_score": null,
+      "insights_count": null,
+      "verified_claims_count": null
+    },
+    "success": true,
+    "error": null
+  },
+  {
+    "combination_id": 7,
+    "combination_name": "analysis_fact_checking",
+    "iteration": 2,
+    "url": "https://www.youtube.com/watch\\?v\\=xtFiJ8AVdW0",
+    "depth": "experimental",
+    "flags": {
+      "ENABLE_PARALLEL_MEMORY_OPS": "0",
+      "ENABLE_PARALLEL_ANALYSIS": "1",
+      "ENABLE_PARALLEL_FACT_CHECKING": "1"
+    },
+    "timing": {
+      "start": "2025-10-04T20:48:36.255860",
+      "end": "2025-10-04T20:48:36.257781",
+      "duration_seconds": 0.0019199848175048828,
+      "duration_minutes": 3.1999746958414714e-05
+    },
+    "expected_savings": {
+      "min_minutes": 1.5,
+      "max_minutes": 3.0
+    },
+    "quality": {
+      "transcript_length": null,
+      "quality_score": null,
+      "trustworthiness_score": null,
+      "insights_count": null,
+      "verified_claims_count": null
+    },
+    "success": true,
+    "error": null
+  },
+  {
+    "combination_id": 7,
+    "combination_name": "analysis_fact_checking",
+    "iteration": 3,
+    "url": "https://www.youtube.com/watch\\?v\\=xtFiJ8AVdW0",
+    "depth": "experimental",
+    "flags": {
+      "ENABLE_PARALLEL_MEMORY_OPS": "0",
+      "ENABLE_PARALLEL_ANALYSIS": "1",
+      "ENABLE_PARALLEL_FACT_CHECKING": "1"
+    },
+    "timing": {
+      "start": "2025-10-04T20:48:36.258741",
+      "end": "2025-10-04T20:48:36.261051",
+      "duration_seconds": 0.0023097991943359375,
+      "duration_minutes": 3.849665323893229e-05
+    },
+    "expected_savings": {
+      "min_minutes": 1.5,
+      "max_minutes": 3.0
+    },
+    "quality": {
+      "transcript_length": null,
+      "quality_score": null,
+      "trustworthiness_score": null,
+      "insights_count": null,
+      "verified_claims_count": null
+    },
+    "success": true,
+    "error": null
+  }
+]

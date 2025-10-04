@@ -18,6 +18,7 @@ Instrumentation (Copilot migration spec):
     * tool_runs_total{tool="fact_check", outcome=success|error|skipped}
 """
 
+import logging
 import os
 from collections.abc import Callable
 
@@ -26,6 +27,8 @@ from requests import RequestException  # http-compliance: allow-direct-requests 
 from core.http_utils import resilient_get, resilient_post
 from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 from ultimate_discord_intelligence_bot.step_result import StepResult
+
+_logger = logging.getLogger(__name__)
 
 
 class FactCheckTool:
@@ -50,8 +53,11 @@ class FactCheckTool:
             self._metrics.counter("tool_runs_total", labels={"tool": "fact_check", "outcome": "skipped"}).inc()
             return StepResult.skip(reason="No claim provided", evidence=[], claim=claim)
 
+        _logger.info(f"FactCheckTool: Checking claim: {claim[:100]}...")
+
         evidence: list[dict] = []
         successful_backends: list[str] = []
+        failed_backends: list[str] = []
 
         backends: list[tuple[str, Callable[[str], list[dict]]]] = [
             ("duckduckgo", self._search_duckduckgo),
@@ -63,24 +69,39 @@ class FactCheckTool:
 
         for name, fn in backends:
             try:
+                _logger.debug(f"FactCheckTool: Calling backend '{name}'...")
                 results = fn(claim) or []
                 if results:
                     successful_backends.append(name)
                     evidence.extend(results)
-            except RequestException:
+                    _logger.info(f"FactCheckTool: Backend '{name}' returned {len(results)} evidence items")
+                else:
+                    _logger.debug(f"FactCheckTool: Backend '{name}' returned no results (likely no API key or no data)")
+            except RequestException as e:
                 # Backend unavailable – skip silently per tests expecting overall success
+                failed_backends.append(name)
+                _logger.warning(
+                    f"FactCheckTool: Backend '{name}' failed (RequestException): {e} - possibly rate limited or unavailable"
+                )
                 continue
             except Exception as e:  # pragma: no cover - defensive guard
                 # Unexpected error – treat whole tool as failed for visibility
+                failed_backends.append(name)
+                _logger.error(f"FactCheckTool: Backend '{name}' encountered unexpected error: {e}")
                 self._metrics.counter("tool_runs_total", labels={"tool": "fact_check", "outcome": "error"}).inc()
                 return StepResult.fail(error=str(e), claim=claim)
 
         # Always success even if evidence list empty (tests assert success with empty list)
+        _logger.info(
+            f"FactCheckTool: Completed - {len(evidence)} total evidence items from {len(successful_backends)} backends. "
+            f"Successful: {successful_backends}, Failed: {failed_backends or 'None'}"
+        )
         self._metrics.counter("tool_runs_total", labels={"tool": "fact_check", "outcome": "success"}).inc()
         return StepResult.ok(
             claim=claim,
             evidence=evidence,
             backends_used=successful_backends,
+            backends_failed=failed_backends,
             evidence_count=len(evidence),
         )
 

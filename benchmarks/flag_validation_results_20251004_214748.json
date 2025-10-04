@@ -1,0 +1,287 @@
+{
+  "2": [
+    {
+      "combination_id": 2,
+      "combination_name": "memory_only",
+      "iteration": 1,
+      "url": "https://www.youtube.com/watch?v=xtFiJ8AVdW0",
+      "depth": "experimental",
+      "flags": {
+        "ENABLE_PARALLEL_MEMORY_OPS": "1",
+        "ENABLE_PARALLEL_ANALYSIS": "0",
+        "ENABLE_PARALLEL_FACT_CHECKING": "0"
+      },
+      "timing": {
+        "start": "2025-10-04T21:47:48.339278",
+        "end": "2025-10-04T21:52:09.274838",
+        "duration_seconds": 260.9355595111847,
+        "duration_minutes": 4.348925991853078
+      },
+      "expected_savings": {
+        "min_minutes": 0.5,
+        "max_minutes": 1.0
+      },
+      "quality": {
+        "transcript_length": null,
+        "quality_score": null,
+        "trustworthiness_score": null,
+        "insights_count": null,
+        "verified_claims_count": null
+      },
+      "success": true,
+      "error": null
+    },
+    {
+      "combination_id": 2,
+      "combination_name": "memory_only",
+      "iteration": 2,
+      "url": "https://www.youtube.com/watch?v=xtFiJ8AVdW0",
+      "depth": "experimental",
+      "flags": {
+        "ENABLE_PARALLEL_MEMORY_OPS": "1",
+        "ENABLE_PARALLEL_ANALYSIS": "0",
+        "ENABLE_PARALLEL_FACT_CHECKING": "0"
+      },
+      "timing": {
+        "start": "2025-10-04T21:52:09.276242",
+        "end": "2025-10-04T22:00:35.719914",
+        "duration_seconds": 506.44367122650146,
+        "duration_minutes": 8.440727853775025
+      },
+      "expected_savings": {
+        "min_minutes": 0.5,
+        "max_minutes": 1.0
+      },
+      "quality": {
+        "transcript_length": null,
+        "quality_score": null,
+        "trustworthiness_score": null,
+        "insights_count": null,
+        "verified_claims_count": null
+      },
+      "success": true,
+      "error": null
+    },
+    {
+      "combination_id": 2,
+      "combination_name": "memory_only",
+      "iteration": 3,
+      "url": "https://www.youtube.com/watch?v=xtFiJ8AVdW0",
+      "depth": "experimental",
+      "flags": {
+        "ENABLE_PARALLEL_MEMORY_OPS": "1",
+        "ENABLE_PARALLEL_ANALYSIS": "0",
+        "ENABLE_PARALLEL_FACT_CHECKING": "0"
+      },
+      "timing": {
+        "start": "2025-10-04T22:00:35.720790",
+        "end": "2025-10-04T22:08:40.798835",
+        "duration_seconds": 485.078045129776,
+        "duration_minutes": 8.084634085496267
+      },
+      "expected_savings": {
+        "min_minutes": 0.5,
+        "max_minutes": 1.0
+      },
+      "quality": {
+        "transcript_length": null,
+        "quality_score": null,
+        "trustworthiness_score": null,
+        "insights_count": null,
+        "verified_claims_count": null
+      },
+      "success": true,
+      "error": null
+    }
+  ],
+  "3": [
+    {
+      "combination_id": 3,
+      "combination_name": "analysis_only",
+      "iteration": 1,
+      "url": "https://www.youtube.com/watch?v=xtFiJ8AVdW0",
+      "depth": "experimental",
+      "flags": {
+        "ENABLE_PARALLEL_MEMORY_OPS": "0",
+        "ENABLE_PARALLEL_ANALYSIS": "1",
+        "ENABLE_PARALLEL_FACT_CHECKING": "0"
+      },
+      "timing": {
+        "start": "2025-10-04T22:08:40.800142",
+        "end": "2025-10-04T22:16:50.415909",
+        "duration_seconds": 489.61576652526855,
+        "duration_minutes": 8.160262775421142
+      },
+      "expected_savings": {
+        "min_minutes": 1.0,
+        "max_minutes": 2.0
+      },
+      "quality": {
+        "transcript_length": null,
+        "quality_score": null,
+        "trustworthiness_score": null,
+        "insights_count": null,
+        "verified_claims_count": null
+      },
+      "success": true,
+      "error": null
+    },
+    {
+      "combination_id": 3,
+      "combination_name": "analysis_only",
+      "iteration": 2,
+      "url": "https://www.youtube.com/watch?v=xtFiJ8AVdW0",
+      "depth": "experimental",
+      "flags": {
+        "ENABLE_PARALLEL_MEMORY_OPS": "0",
+        "ENABLE_PARALLEL_ANALYSIS": "1",
+        "ENABLE_PARALLEL_FACT_CHECKING": "0"
+      },
+      "timing": {
+        "start": "2025-10-04T22:16:50.416845",
+        "end": "2025-10-04T22:19:29.590232",
+        "duration_seconds": 159.1733865737915,
+        "duration_minutes": 2.652889776229858
+      },
+      "expected_savings": {
+        "min_minutes": 1.0,
+        "max_minutes": 2.0
+      },
+      "quality": {
+        "transcript_length": null,
+        "quality_score": null,
+        "trustworthiness_score": null,
+        "insights_count": null,
+        "verified_claims_count": null
+      },
+      "success": true,
+      "error": null
+    },
+    {
+      "combination_id": 3,
+      "combination_name": "analysis_only",
+      "iteration": 3,
+      "url": "https://www.youtube.com/watch?v=xtFiJ8AVdW0",
+      "depth": "experimental",
+      "flags": {
+        "ENABLE_PARALLEL_MEMORY_OPS": "0",
+        "ENABLE_PARALLEL_ANALYSIS": "1",
+        "ENABLE_PARALLEL_FACT_CHECKING": "0"
+      },
+      "timing": {
+        "start": "2025-10-04T22:19:29.591318",
+        "end": "2025-10-04T22:22:29.479678",
+        "duration_seconds": 179.88835978507996,
+        "duration_minutes": 2.9981393297513326
+      },
+      "expected_savings": {
+        "min_minutes": 1.0,
+        "max_minutes": 2.0
+      },
+      "quality": {
+        "transcript_length": null,
+        "quality_score": null,
+        "trustworthiness_score": null,
+        "insights_count": null,
+        "verified_claims_count": null
+      },
+      "success": true,
+      "error": null
+    }
+  ],
+  "4": [
+    {
+      "combination_id": 4,
+      "combination_name": "fact_checking_only",
+      "iteration": 1,
+      "url": "https://www.youtube.com/watch?v=xtFiJ8AVdW0",
+      "depth": "experimental",
+      "flags": {
+        "ENABLE_PARALLEL_MEMORY_OPS": "0",
+        "ENABLE_PARALLEL_ANALYSIS": "0",
+        "ENABLE_PARALLEL_FACT_CHECKING": "1"
+      },
+      "timing": {
+        "start": "2025-10-04T22:22:29.481644",
+        "end": "2025-10-04T22:59:24.000914",
+        "duration_seconds": 2214.519268989563,
+        "duration_minutes": 36.90865448315938
+      },
+      "expected_savings": {
+        "min_minutes": 0.5,
+        "max_minutes": 1.0
+      },
+      "quality": {
+        "transcript_length": null,
+        "quality_score": null,
+        "trustworthiness_score": null,
+        "insights_count": null,
+        "verified_claims_count": null
+      },
+      "success": true,
+      "error": null
+    },
+    {
+      "combination_id": 4,
+      "combination_name": "fact_checking_only",
+      "iteration": 2,
+      "url": "https://www.youtube.com/watch?v=xtFiJ8AVdW0",
+      "depth": "experimental",
+      "flags": {
+        "ENABLE_PARALLEL_MEMORY_OPS": "0",
+        "ENABLE_PARALLEL_ANALYSIS": "0",
+        "ENABLE_PARALLEL_FACT_CHECKING": "1"
+      },
+      "timing": {
+        "start": "2025-10-04T22:59:24.005454",
+        "end": "2025-10-04T23:15:26.361304",
+        "duration_seconds": 962.3558490276337,
+        "duration_minutes": 16.03926415046056
+      },
+      "expected_savings": {
+        "min_minutes": 0.5,
+        "max_minutes": 1.0
+      },
+      "quality": {
+        "transcript_length": null,
+        "quality_score": null,
+        "trustworthiness_score": null,
+        "insights_count": null,
+        "verified_claims_count": null
+      },
+      "success": true,
+      "error": null
+    },
+    {
+      "combination_id": 4,
+      "combination_name": "fact_checking_only",
+      "iteration": 3,
+      "url": "https://www.youtube.com/watch?v=xtFiJ8AVdW0",
+      "depth": "experimental",
+      "flags": {
+        "ENABLE_PARALLEL_MEMORY_OPS": "0",
+        "ENABLE_PARALLEL_ANALYSIS": "0",
+        "ENABLE_PARALLEL_FACT_CHECKING": "1"
+      },
+      "timing": {
+        "start": "2025-10-04T23:15:26.362941",
+        "end": "2025-10-04T23:18:53.347926",
+        "duration_seconds": 206.98498487472534,
+        "duration_minutes": 3.449749747912089
+      },
+      "expected_savings": {
+        "min_minutes": 0.5,
+        "max_minutes": 1.0
+      },
+      "quality": {
+        "transcript_length": null,
+        "quality_score": null,
+        "trustworthiness_score": null,
+        "insights_count": null,
+        "verified_claims_count": null
+      },
+      "success": true,
+      "error": null
+    }
+  ]
+}

@@ -17,6 +17,8 @@ import re
 from collections.abc import Iterable
 from typing import Any, Optional, Union
 
+from ultimate_discord_intelligence_bot.step_result import StepResult
+
 # CRITICAL FIX: Global shared context registry for cross-task data flow
 # CrewAI tasks execute with separate agent instances, so tool-level shared_context
 # doesn't propagate between tasks. This global registry ensures data from Task 1

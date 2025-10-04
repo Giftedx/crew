@@ -1,0 +1,35 @@
+{
+  "1": [
+    {
+      "combination_id": 1,
+      "combination_name": "sequential_baseline",
+      "iteration": 1,
+      "url": "https://www.youtube.com/watch?v=xtFiJ8AVdW0",
+      "depth": "experimental",
+      "flags": {
+        "ENABLE_PARALLEL_MEMORY_OPS": "0",
+        "ENABLE_PARALLEL_ANALYSIS": "0",
+        "ENABLE_PARALLEL_FACT_CHECKING": "0"
+      },
+      "timing": {
+        "start": "2025-10-04T20:53:49.623336",
+        "end": "2025-10-04T20:53:49.627548",
+        "duration_seconds": 0.004212617874145508,
+        "duration_minutes": 7.021029790242513e-05
+      },
+      "expected_savings": {
+        "min_minutes": 0.0,
+        "max_minutes": 0.0
+      },
+      "quality": {
+        "transcript_length": null,
+        "quality_score": null,
+        "trustworthiness_score": null,
+        "insights_count": null,
+        "verified_claims_count": null
+      },
+      "success": true,
+      "error": null
+    }
+  ]
+}
