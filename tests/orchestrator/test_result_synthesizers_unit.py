@@ -12,12 +12,11 @@ zero regressions during the refactoring.
 """
 
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock
 
 import pytest
 
 from ultimate_discord_intelligence_bot.step_result import StepResult
-
 
 # ========================================
 # FIXTURES
@@ -45,30 +44,66 @@ def mock_error_handler():
 
 
 @pytest.fixture
+def orchestrator(mock_logger, mock_synthesizer, mock_error_handler):
+    """Create mock AutonomousIntelligenceOrchestrator with necessary dependencies."""
+    from ultimate_discord_intelligence_bot.autonomous_orchestrator import AutonomousIntelligenceOrchestrator
+
+    # Create minimal orchestrator instance
+    orchestrator = MagicMock(spec=AutonomousIntelligenceOrchestrator)
+    orchestrator.logger = mock_logger
+    orchestrator.synthesizer = mock_synthesizer
+    orchestrator.error_handler = mock_error_handler
+
+    # Import actual methods we want to test
+    from ultimate_discord_intelligence_bot.autonomous_orchestrator import (
+        AutonomousIntelligenceOrchestrator as RealOrchestrator,
+    )
+
+    real_instance = RealOrchestrator.__new__(RealOrchestrator)
+    real_instance.logger = mock_logger
+    real_instance.synthesizer = mock_synthesizer
+    real_instance.error_handler = mock_error_handler
+
+    # Bind real methods to our mock
+    orchestrator._synthesize_autonomous_results = real_instance._synthesize_autonomous_results.__get__(
+        orchestrator
+    )
+    orchestrator._synthesize_enhanced_autonomous_results = (
+        real_instance._synthesize_enhanced_autonomous_results.__get__(orchestrator)
+    )
+    orchestrator._synthesize_specialized_intelligence_results = (
+        real_instance._synthesize_specialized_intelligence_results.__get__(orchestrator)
+    )
+    orchestrator._fallback_basic_synthesis = real_instance._fallback_basic_synthesis.__get__(orchestrator)
+
+    return orchestrator
+
+
+@pytest.fixture
 def sample_complete_results() -> dict[str, Any]:
     """Sample complete results with all stages."""
     return {
-        "pipeline_data": {
+        "pipeline": {
             "status": "success",
             "transcript": "Sample transcript content",
             "duration": 120,
         },
-        "fact_checking": {
+        "fact_analysis": {
             "verified_claims": 5,
             "false_claims": 1,
             "accuracy_score": 0.85,
         },
-        "deception_analysis": {
+        "deception_score": {
             "deception_detected": False,
             "confidence": 0.92,
             "indicators": [],
         },
-        "intelligence_analysis": {
+        "cross_platform_intel": {
             "key_themes": ["technology", "innovation"],
             "sentiment": "positive",
             "complexity": "medium",
         },
-        "knowledge_data": {
+        "knowledge_integration": {
             "entities": ["AI", "Machine Learning"],
             "relationships": [{"from": "AI", "to": "Machine Learning", "type": "includes"}],
         },
@@ -79,11 +114,11 @@ def sample_complete_results() -> dict[str, Any]:
 def sample_partial_results() -> dict[str, Any]:
     """Sample partial results with some stages missing."""
     return {
-        "pipeline_data": {
+        "pipeline": {
             "status": "success",
             "transcript": "Sample transcript",
         },
-        "intelligence_analysis": {
+        "cross_platform_intel": {
             "key_themes": ["technology"],
             "sentiment": "neutral",
         },
@@ -112,14 +147,10 @@ class TestCoreSynthesisMethods:
     """Test core synthesis methods."""
 
     @pytest.mark.asyncio
-    async def test_synthesize_autonomous_results_complete_data(
-        self, orchestrator, sample_complete_results
-    ):
+    async def test_synthesize_autonomous_results_complete_data(self, orchestrator, sample_complete_results):
         """Test synthesis with all stages present."""
         # Mock the delegate methods
-        orchestrator._calculate_summary_statistics = Mock(
-            return_value={"total_claims": 6, "accuracy": 0.85}
-        )
+        orchestrator._calculate_summary_statistics = Mock(return_value={"total_claims": 6, "accuracy": 0.85})
         orchestrator._generate_autonomous_insights = Mock(
             return_value=[
                 "High accuracy in fact checking",
@@ -130,21 +161,18 @@ class TestCoreSynthesisMethods:
 
         result = await orchestrator._synthesize_autonomous_results(sample_complete_results)
 
-        # Verify structure
+        # Verify structure matches actual implementation
         assert isinstance(result, dict)
-        assert "summary" in result
-        assert "statistics" in result
-        assert "insights" in result
-        assert "stages_completed" in result
+        assert "autonomous_analysis_summary" in result
+        assert "detailed_results" in result
+        assert "workflow_metadata" in result
 
         # Verify delegate calls
         orchestrator._calculate_summary_statistics.assert_called_once()
         orchestrator._generate_autonomous_insights.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_synthesize_autonomous_results_partial_data(
-        self, orchestrator, sample_partial_results
-    ):
+    async def test_synthesize_autonomous_results_partial_data(self, orchestrator, sample_partial_results):
         """Test synthesis with some stages missing."""
         orchestrator._calculate_summary_statistics = Mock(return_value={})
         orchestrator._generate_autonomous_insights = Mock(return_value=[])
@@ -153,7 +181,7 @@ class TestCoreSynthesisMethods:
 
         assert isinstance(result, dict)
         # Should still return structure even with partial data
-        assert "summary" in result or "statistics" in result
+        assert "autonomous_analysis_summary" in result or "detailed_results" in result
 
     @pytest.mark.asyncio
     async def test_synthesize_autonomous_results_empty_results(self, orchestrator):
@@ -164,16 +192,14 @@ class TestCoreSynthesisMethods:
         result = await orchestrator._synthesize_autonomous_results({})
 
         assert isinstance(result, dict)
-        # Should gracefully handle empty input
-        orchestrator.logger.warning.assert_called()
+        # Should gracefully handle empty input (no error raised)
+        assert "autonomous_analysis_summary" in result or "error" in result
 
     @pytest.mark.asyncio
     async def test_synthesize_autonomous_results_error_handling(self, orchestrator):
         """Test error handling in synthesis."""
         # Make delegate raise exception
-        orchestrator._calculate_summary_statistics = Mock(
-            side_effect=ValueError("Invalid data")
-        )
+        orchestrator._calculate_summary_statistics = Mock(side_effect=ValueError("Invalid data"))
         orchestrator._generate_autonomous_insights = Mock(return_value=[])
 
         # Should not raise, should log error
@@ -183,45 +209,42 @@ class TestCoreSynthesisMethods:
         orchestrator.logger.error.assert_called()
 
     @pytest.mark.asyncio
-    async def test_synthesize_enhanced_autonomous_results_success(
-        self, orchestrator, sample_complete_results
-    ):
+    async def test_synthesize_enhanced_autonomous_results_success(self, orchestrator, sample_complete_results):
         """Test successful enhanced synthesis."""
-        # Mock synthesizer success
+        # Mock synthesizer success - returns (StepResult, quality_assessment)
+        synthesized_data = {
+            "enhanced_summary": "Comprehensive analysis",
+            "key_findings": ["Finding 1", "Finding 2"],
+        }
         orchestrator.synthesizer.synthesize_intelligence_results = AsyncMock(
             return_value=(
-                {
-                    "enhanced_summary": "Comprehensive analysis",
-                    "key_findings": ["Finding 1", "Finding 2"],
-                },
-                {"overall_quality": 0.92, "completeness": 0.88},
+                StepResult.ok(data=synthesized_data),
+                {"overall_quality": 0.92, "completeness": 0.88, "overall_grade": "high"},
             )
         )
-        orchestrator.error_handler.get_recovery_metrics = Mock(
-            return_value={"recovery_count": 0}
-        )
+        orchestrator.error_handler.get_recovery_metrics = Mock(return_value={"recovery_count": 0})
 
-        result = await orchestrator._synthesize_enhanced_autonomous_results(
-            sample_complete_results
-        )
+        result = await orchestrator._synthesize_enhanced_autonomous_results(sample_complete_results)
 
-        # Should be StepResult
+        # Should be StepResult with orchestrator_metadata
         assert isinstance(result, StepResult)
         assert result.success is True
-        assert "enhanced_summary" in result.data
+        # The synthesized data gets merged into enhanced_result_data
+        # Check for either top-level or nested under 'data' key
+        assert "enhanced_summary" in result.data or (
+            "data" in result.data and "enhanced_summary" in result.data["data"]
+        )
+        assert "orchestrator_metadata" in result.data
+        assert result.data.get("production_ready") is True
 
         # Verify synthesizer was called
         orchestrator.synthesizer.synthesize_intelligence_results.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_synthesize_enhanced_autonomous_results_fallback(
-        self, orchestrator, sample_complete_results
-    ):
+    async def test_synthesize_enhanced_autonomous_results_fallback(self, orchestrator, sample_complete_results):
         """Test fallback to basic synthesis on failure."""
         # Mock synthesizer failure
-        orchestrator.synthesizer.synthesize_intelligence_results = AsyncMock(
-            side_effect=Exception("Synthesis failed")
-        )
+        orchestrator.synthesizer.synthesize_intelligence_results = AsyncMock(side_effect=Exception("Synthesis failed"))
         # Mock fallback
         orchestrator._fallback_basic_synthesis = AsyncMock(
             return_value=StepResult.ok(
@@ -230,9 +253,7 @@ class TestCoreSynthesisMethods:
             )
         )
 
-        result = await orchestrator._synthesize_enhanced_autonomous_results(
-            sample_complete_results
-        )
+        result = await orchestrator._synthesize_enhanced_autonomous_results(sample_complete_results)
 
         # Should fallback
         assert isinstance(result, StepResult)
@@ -244,28 +265,26 @@ class TestCoreSynthesisMethods:
         self, orchestrator, sample_complete_results
     ):
         """Test quality assessment integration."""
-        quality_assessment = {"overall_quality": 0.95, "completeness": 0.90}
+        quality_assessment = {"overall_quality": 0.95, "completeness": 0.90, "overall_grade": "excellent"}
         orchestrator.synthesizer.synthesize_intelligence_results = AsyncMock(
             return_value=(
-                {"enhanced_summary": "High quality analysis"},
+                StepResult.ok(data={"enhanced_summary": "High quality analysis"}),
                 quality_assessment,
             )
         )
         orchestrator.error_handler.get_recovery_metrics = Mock(return_value={})
 
-        result = await orchestrator._synthesize_enhanced_autonomous_results(
-            sample_complete_results
-        )
+        result = await orchestrator._synthesize_enhanced_autonomous_results(sample_complete_results)
 
         assert isinstance(result, StepResult)
         assert result.success is True
-        # Quality assessment should be included
-        assert "quality_assessment" in result.data or "overall_quality" in result.data
+        # Quality assessment should be in orchestrator_metadata
+        assert "orchestrator_metadata" in result.data
+        metadata = result.data["orchestrator_metadata"]
+        assert "synthesis_quality" in metadata or "quality_assurance" in metadata
 
     @pytest.mark.asyncio
-    async def test_synthesize_enhanced_autonomous_results_message_conflict(
-        self, orchestrator, sample_complete_results
-    ):
+    async def test_synthesize_enhanced_autonomous_results_message_conflict(self, orchestrator, sample_complete_results):
         """Test message conflict handling (duplicate 'message' key)."""
         # Synthesizer returns result with 'message' key
         orchestrator.synthesizer.synthesize_intelligence_results = AsyncMock(
@@ -279,9 +298,7 @@ class TestCoreSynthesisMethods:
         )
         orchestrator.error_handler.get_recovery_metrics = Mock(return_value={})
 
-        result = await orchestrator._synthesize_enhanced_autonomous_results(
-            sample_complete_results
-        )
+        result = await orchestrator._synthesize_enhanced_autonomous_results(sample_complete_results)
 
         # Should handle message key conflict gracefully
         assert isinstance(result, StepResult)
@@ -289,9 +306,7 @@ class TestCoreSynthesisMethods:
         # Should not have duplicate 'message' keys causing errors
 
     @pytest.mark.asyncio
-    async def test_synthesize_specialized_intelligence_results_complete(
-        self, orchestrator, sample_complete_results
-    ):
+    async def test_synthesize_specialized_intelligence_results_complete(self, orchestrator, sample_complete_results):
         """Test specialized synthesis with complete results."""
         orchestrator._generate_specialized_insights = Mock(
             return_value=[
@@ -301,29 +316,24 @@ class TestCoreSynthesisMethods:
             ]
         )
 
-        result = await orchestrator._synthesize_specialized_intelligence_results(
-            sample_complete_results
-        )
+        result = await orchestrator._synthesize_specialized_intelligence_results(sample_complete_results)
 
         assert isinstance(result, dict)
-        assert "insights" in result or "specialized_analysis" in result
+        assert "specialized_analysis_summary" in result
+        assert "detailed_results" in result
+        assert "workflow_metadata" in result
         orchestrator._generate_specialized_insights.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_synthesize_specialized_intelligence_results_partial(
-        self, orchestrator, sample_partial_results
-    ):
+    async def test_synthesize_specialized_intelligence_results_partial(self, orchestrator, sample_partial_results):
         """Test specialized synthesis with partial results."""
-        orchestrator._generate_specialized_insights = Mock(
-            return_value=["Limited insight"]
-        )
+        orchestrator._generate_specialized_insights = Mock(return_value=["Limited insight"])
 
-        result = await orchestrator._synthesize_specialized_intelligence_results(
-            sample_partial_results
-        )
+        result = await orchestrator._synthesize_specialized_intelligence_results(sample_partial_results)
 
         assert isinstance(result, dict)
-        # Should handle partial data gracefully
+        # Should handle partial data gracefully, still has required keys
+        assert "specialized_analysis_summary" in result or "detailed_results" in result
 
     @pytest.mark.asyncio
     async def test_synthesize_specialized_intelligence_results_insights_generation(
@@ -337,24 +347,16 @@ class TestCoreSynthesisMethods:
         ]
         orchestrator._generate_specialized_insights = Mock(return_value=expected_insights)
 
-        result = await orchestrator._synthesize_specialized_intelligence_results(
-            sample_complete_results
-        )
+        result = await orchestrator._synthesize_specialized_intelligence_results(sample_complete_results)
 
         assert isinstance(result, dict)
         # Verify insights were integrated
-        orchestrator._generate_specialized_insights.assert_called_once_with(
-            sample_complete_results
-        )
+        orchestrator._generate_specialized_insights.assert_called_once_with(sample_complete_results)
 
     @pytest.mark.asyncio
-    async def test_synthesize_specialized_intelligence_results_error_handling(
-        self, orchestrator
-    ):
+    async def test_synthesize_specialized_intelligence_results_error_handling(self, orchestrator):
         """Test error handling in specialized synthesis."""
-        orchestrator._generate_specialized_insights = Mock(
-            side_effect=RuntimeError("Insight generation failed")
-        )
+        orchestrator._generate_specialized_insights = Mock(side_effect=RuntimeError("Insight generation failed"))
 
         result = await orchestrator._synthesize_specialized_intelligence_results({})
 
@@ -371,73 +373,68 @@ class TestFallbackSynthesis:
     """Test fallback synthesis methods."""
 
     @pytest.mark.asyncio
-    async def test_fallback_basic_synthesis_valid_results(
-        self, orchestrator, sample_complete_results
-    ):
+    async def test_fallback_basic_synthesis_valid_results(self, orchestrator, sample_complete_results):
         """Test basic synthesis with valid results."""
-        result = await orchestrator._fallback_basic_synthesis(
-            sample_complete_results, "Synthesizer unavailable"
-        )
+        result = await orchestrator._fallback_basic_synthesis(sample_complete_results, "Synthesizer unavailable")
 
         assert isinstance(result, StepResult)
         assert result.success is True
-        assert "summary" in result.data or "basic_synthesis" in result.data
-        # Should include error context
-        assert result.data.get("error_context") == "Synthesizer unavailable" or orchestrator.logger.warning.called
+        # CRITICAL: fallback must have production_ready=False
+        assert result.data.get("production_ready") is False
+        assert result.data.get("fallback_synthesis") is True
+        assert result.data.get("quality_grade") == "limited"
+        # Should include fallback_reason
+        assert result.data.get("fallback_reason") == "Synthesizer unavailable"
 
     @pytest.mark.asyncio
     async def test_fallback_basic_synthesis_minimal_results(self, orchestrator):
         """Test basic synthesis with minimal results."""
-        minimal_results = {"pipeline_data": {"status": "success"}}
+        minimal_results = {"pipeline": {"status": "success"}}
 
-        result = await orchestrator._fallback_basic_synthesis(
-            minimal_results, "Partial failure"
-        )
+        result = await orchestrator._fallback_basic_synthesis(minimal_results, "Partial failure")
 
         assert isinstance(result, StepResult)
         assert result.success is True
-        # Should handle minimal data
+        # CRITICAL: fallback always has production_ready=False
+        assert result.data.get("production_ready") is False
 
     @pytest.mark.asyncio
-    async def test_fallback_basic_synthesis_error_context(
-        self, orchestrator, sample_complete_results
-    ):
+    async def test_fallback_basic_synthesis_error_context(self, orchestrator, sample_complete_results):
         """Test error context inclusion."""
         error_msg = "Advanced synthesis timed out after 30s"
 
-        result = await orchestrator._fallback_basic_synthesis(
-            sample_complete_results, error_msg
-        )
+        result = await orchestrator._fallback_basic_synthesis(sample_complete_results, error_msg)
 
         assert isinstance(result, StepResult)
-        # Error context should be logged or included
-        orchestrator.logger.warning.assert_called()
+        # Error context should be in fallback_reason or message
+        assert result.data.get("fallback_reason") == error_msg or error_msg in result.data.get("message", "")
 
     @pytest.mark.asyncio
-    async def test_fallback_basic_synthesis_production_ready_flag(
-        self, orchestrator, sample_complete_results
-    ):
-        """Test production_ready flag (should be False)."""
-        result = await orchestrator._fallback_basic_synthesis(
-            sample_complete_results, "Fallback triggered"
-        )
+    async def test_fallback_basic_synthesis_production_ready_flag(self, orchestrator, sample_complete_results):
+        """Test production_ready flag (CRITICAL: should always be False)."""
+        result = await orchestrator._fallback_basic_synthesis(sample_complete_results, "Fallback triggered")
 
         assert isinstance(result, StepResult)
-        # Fallback results should not be marked as production-ready
-        assert result.data.get("production_ready", True) is False or "fallback" in str(result.data).lower()
+        # CRITICAL: Fallback results are NEVER production-ready
+        assert result.data.get("production_ready") is False
+        assert result.data.get("fallback_synthesis") is True
+        assert result.data.get("requires_manual_review") is True
 
 
 # Placeholder for remaining test classes (to be implemented in next iteration)
 class TestInsightGeneration:
     """Test insight generation methods."""
+
     pass
 
 
 class TestConfidenceCalculation:
     """Test confidence calculation methods."""
+
     pass
 
 
 class TestSpecializedExecution:
     """Test specialized execution methods."""
+
     pass
