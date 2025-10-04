@@ -605,9 +605,7 @@ class TestIdentifyLearningOpportunities:
         verification_data = {}
         fact_data = {"fact_checks": {"verified_claims": 5}}
 
-        opportunities = quality_assessors.identify_learning_opportunities(
-            analysis_data, verification_data, fact_data
-        )
+        opportunities = quality_assessors.identify_learning_opportunities(analysis_data, verification_data, fact_data)
 
         # Should NOT suggest fact-check expansion since fact_checks present in fact_data
         assert not any("fact-check" in opp.lower() for opp in opportunities)

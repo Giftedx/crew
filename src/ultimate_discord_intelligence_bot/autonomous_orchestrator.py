@@ -197,48 +197,19 @@ class AutonomousIntelligenceOrchestrator:
     # ========================================
 
     def _populate_agent_tool_context(self, agent: Any, context_data: dict[str, Any]) -> None:
-        """Populate shared context on all tool wrappers for an agent.
-
-        This is CRITICAL for CrewAI agents to receive structured data. Without this,
-        tools receive empty parameters and fail or return meaningless results.
-
-        Args:
-            agent: CrewAI Agent instance with tools attribute
-            context_data: Dictionary of data to make available to all tools
-        """
+        """Populate shared context on all tool wrappers for an agent (delegates to crew_builders)."""
         return crew_builders.populate_agent_tool_context(
             agent, context_data, logger_instance=self.logger, metrics_instance=self.metrics
         )
 
     def _get_or_create_agent(self, agent_name: str) -> Any:
-        """Get agent from coordinators cache or create and cache it.
-
-        CRITICAL: This ensures agents are created ONCE and reused across stages.
-        Repeated calls to crew_instance.agent_method() create FRESH agents with
-        EMPTY tools, bypassing context population. Always use this method.
-
-        Args:
-            agent_name: Name of agent method (e.g., 'analysis_cartographer')
-
-        Returns:
-            Cached agent instance with persistent tool context
-        """
+        """Get agent from coordinators cache or create and cache it (delegates to crew_builders)."""
         return crew_builders.get_or_create_agent(
             agent_name, self.agent_coordinators, self.crew_instance, logger_instance=self.logger
         )
 
     def _task_completion_callback(self, task_output: Any) -> None:
-        """Callback executed after each task to extract and propagate structured data.
-
-        CRITICAL FIX: CrewAI task context passes TEXT to LLM prompts, NOT structured
-        data to tools. This callback extracts tool results and updates global crew
-        context so subsequent tasks can access the data.
-
-        Now includes Pydantic validation to prevent invalid data propagation.
-
-        Args:
-            task_output: TaskOutput object from completed task
-        """
+        """Callback to extract and propagate structured data after each task (delegates to crew_builders)."""
         return crew_builders.task_completion_callback(
             task_output,
             populate_agent_context_callback=self._populate_agent_tool_context,
@@ -263,20 +234,7 @@ class AutonomousIntelligenceOrchestrator:
         return quality_assessors.detect_placeholder_responses(task_name, output_data, self.logger, self.metrics)
 
     def _build_intelligence_crew(self, url: str, depth: str) -> Crew:
-        """Build a single chained CrewAI crew for the complete intelligence workflow.
-
-        This is the CORRECT CrewAI pattern: one crew with multiple chained tasks using
-        the context parameter to pass data between stages. This replaces the previous
-        broken pattern of creating 25 separate single-task crews with data embedded
-        in task descriptions.
-
-        Args:
-            url: URL to analyze
-            depth: Analysis depth (standard, deep, comprehensive, experimental)
-
-        Returns:
-            Configured Crew with chained tasks
-        """
+        """Build a single chained CrewAI crew for the complete intelligence workflow (delegates to crew_builders)."""
         return crew_builders.build_intelligence_crew(
             url,
             depth,
@@ -310,11 +268,7 @@ class AutonomousIntelligenceOrchestrator:
         return await orchestrator_utilities.to_thread_with_tenant(fn, *args, **kwargs)
 
     def _initialize_agent_coordination_system(self):
-        """Initialize the agent coordination system with specialized workflows.
-
-        CRITICAL: This method MUST NOT create agent instances. Agent creation is handled exclusively
-        by _get_or_create_agent() to ensure context is populated before use.
-        """
+        """Initialize the agent coordination system with specialized workflows (delegates to orchestrator_utilities)."""
         self.agent_workflow_map = orchestrator_utilities.initialize_agent_workflow_map()
         self.workflow_dependencies = orchestrator_utilities.initialize_workflow_dependencies()
 
@@ -2469,24 +2423,15 @@ class AutonomousIntelligenceOrchestrator:
         return analytics_calculators.generate_specialized_insights(results, self.logger)
 
     async def _create_specialized_main_results_embed(self, results: dict[str, Any], depth: str) -> Any:
-        """Create specialized main results embed for Discord.
-
-        Delegates to discord_helpers.create_specialized_main_results_embed.
-        """
+        """Create specialized main results embed for Discord (delegates to discord_helpers)."""
         return await discord_helpers.create_specialized_main_results_embed(results, depth)
 
     async def _create_specialized_details_embed(self, results: dict[str, Any]) -> Any:
-        """Create specialized detailed results embed.
-
-        Delegates to discord_helpers.create_specialized_details_embed.
-        """
+        """Create specialized detailed results embed (delegates to discord_helpers)."""
         return await discord_helpers.create_specialized_details_embed(results)
 
     async def _create_specialized_knowledge_embed(self, knowledge_data: dict[str, Any]) -> Any:
-        """Create specialized knowledge integration embed.
-
-        Delegates to discord_helpers.create_specialized_knowledge_embed.
-        """
+        """Create specialized knowledge integration embed (delegates to discord_helpers)."""
         return await discord_helpers.create_specialized_knowledge_embed(knowledge_data)
 
     async def _execute_content_pipeline(self, url: str) -> StepResult:
@@ -3027,70 +2972,31 @@ class AutonomousIntelligenceOrchestrator:
         return analytics_calculators.generate_autonomous_insights(results, self.logger)
 
     def _is_session_valid(self, interaction: Any) -> bool:
-        """Check if Discord session is still valid for sending messages.
-
-        Delegates to discord_helpers.is_session_valid for implementation.
-
-        Returns:
-            True if session is valid and can receive messages
-            False if session is closed or invalid
-        """
+        """Check if Discord session is still valid for sending messages (delegates to discord_helpers)."""
         return discord_helpers.is_session_valid(interaction, self.logger)
 
     async def _persist_workflow_results(self, workflow_id: str, results: dict[str, Any], url: str, depth: str) -> str:
-        """Persist workflow results to disk when Discord session closes.
-
-        Delegates to discord_helpers.persist_workflow_results for implementation.
-
-        Args:
-            workflow_id: Unique identifier for the workflow
-            results: Complete workflow results dictionary
-            url: Original URL that was analyzed
-            depth: Analysis depth used
-
-        Returns:
-            Path to the persisted result file, or empty string on failure
-        """
+        """Persist workflow results to disk when Discord session closes (delegates to discord_helpers)."""
         return await discord_helpers.persist_workflow_results(workflow_id, results, url, depth, self.logger)
 
     async def _send_progress_update(self, interaction: Any, message: str, current: int, total: int) -> None:
-        """Send real-time progress updates to Discord.
-
-        Delegates to discord_helpers.send_progress_update for implementation.
-        """
+        """Send real-time progress updates to Discord (delegates to discord_helpers)."""
         await discord_helpers.send_progress_update(interaction, message, current, total, self.logger)
 
     async def _handle_acquisition_failure(self, interaction: Any, acquisition_result: StepResult, url: str) -> None:
-        """Handle content acquisition failures with specialized guidance.
-
-        Delegates to discord_helpers.handle_acquisition_failure for implementation.
-        """
+        """Handle content acquisition failures with specialized guidance (delegates to discord_helpers)."""
         await discord_helpers.handle_acquisition_failure(interaction, acquisition_result, url, self.logger)
 
     async def _send_error_response(self, interaction: Any, stage: str, error: str) -> None:
-        """Send error response to Discord with session resilience.
-
-        Delegates to discord_helpers.send_error_response for implementation.
-
-        Args:
-            interaction: Discord interaction object
-            stage: Stage name where error occurred
-            error: Error message to send
-        """
+        """Send error response to Discord with session resilience (delegates to discord_helpers)."""
         await discord_helpers.send_error_response(interaction, stage, error, self.logger)
 
     async def _send_enhanced_error_response(self, interaction: Any, stage: str, enhanced_message: str) -> None:
-        """Send enhanced user-friendly error response to Discord.
-
-        Delegates to discord_helpers.send_enhanced_error_response for implementation.
-        """
+        """Send enhanced user-friendly error response to Discord (delegates to discord_helpers)."""
         await discord_helpers.send_enhanced_error_response(interaction, stage, enhanced_message, self.logger)
 
     async def _deliver_autonomous_results(self, interaction: Any, results: dict[str, Any], depth: str) -> None:
-        """Deliver comprehensive autonomous analysis results to Discord.
-
-        Delegates to discord_helpers.deliver_autonomous_results for implementation.
-        """
+        """Deliver comprehensive autonomous analysis results to Discord (delegates to discord_helpers)."""
         await discord_helpers.deliver_autonomous_results(interaction, results, depth, self.logger)
 
     async def _create_main_results_embed(self, results: dict[str, Any], depth: str) -> Any:
@@ -3101,17 +3007,11 @@ class AutonomousIntelligenceOrchestrator:
         return await discord_helpers.create_main_results_embed(results, depth)
 
     async def _create_details_embed(self, results: dict[str, Any]) -> Any:
-        """Create detailed results embed.
-
-        Delegates to discord_helpers.create_details_embed for implementation.
-        """
+        """Create detailed results embed (delegates to discord_helpers)."""
         return await discord_helpers.create_details_embed(results)
 
     async def _create_knowledge_base_embed(self, knowledge_data: dict[str, Any]) -> Any:
-        """Create knowledge base integration embed.
-
-        Delegates to discord_helpers.create_knowledge_base_embed for implementation.
-        """
+        """Create knowledge base integration embed (delegates to discord_helpers)."""
         return await discord_helpers.create_knowledge_base_embed(knowledge_data)
 
     def _transform_evidence_to_verdicts(self, fact_verification_data: dict[str, Any]) -> list[dict[str, Any]]:

@@ -827,9 +827,7 @@ async def create_specialized_details_embed(results: dict[str, Any]) -> Any:
             if isinstance(verified, int) or isinstance(disputed, int):
                 fact_line = f"**Fact Checks:** {int(verified or 0)} verified, {int(disputed or 0)} disputed\n"
             else:
-                fact_line = (
-                    f"**Fact Checks:** {int(claim_count or 0)} claims, {int(evidence_count or 0)} evidence\n"
-                )
+                fact_line = f"**Fact Checks:** {int(claim_count or 0)} claims, {int(evidence_count or 0)} evidence\n"
             embed.add_field(
                 name="🔬 Information Verification",
                 value=fact_line + f"**Confidence:** {verification_data.get('verification_confidence', 0.0):.2f}",
