@@ -9,6 +9,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from ultimate_discord_intelligence_bot.orchestrator.pipeline_result_builders import (
+    build_knowledge_payload,
     build_pipeline_content_analysis_result,
     merge_threat_payload,
 )
@@ -427,3 +428,343 @@ class TestMergeThreatPayload:
         result = merge_threat_payload(base_threat_payload, None, "not a dict")
 
         assert result == base_threat_payload
+
+
+class TestBuildKnowledgePayload:
+    """Test suite for build_knowledge_payload function."""
+
+    @pytest.fixture
+    def minimal_inputs(self) -> dict[str, Any]:
+        """Minimal valid inputs for the function."""
+        return {
+            "acquisition_data": {},
+            "intelligence_data": {},
+            "verification_data": {},
+            "threat_data": {},
+            "fact_data": {},
+            "behavioral_data": {},
+        }
+
+    def test_basic_result_structure(self, minimal_inputs):
+        """Test that basic result has all required keys."""
+        result = build_knowledge_payload(**minimal_inputs)
+
+        assert "url" in result
+        assert "source_url" in result
+        assert "title" in result
+        assert "platform" in result
+        assert "analysis_summary" in result
+        assert "content_metadata" in result
+        assert "fact_check_results" in result
+        assert "detected_fallacies" in result
+        assert "verification_results" in result
+        assert "threat_assessment" in result
+        assert "behavioral_profile" in result
+        assert "perspective" in result
+        assert "keywords" in result
+
+    def test_source_url_fallback_chain(self, minimal_inputs):
+        """Test source_url fallback chain: acquisition -> pipeline_meta -> fallback_url -> download_block."""
+        # Test acquisition_data.source_url (highest priority)
+        inputs = minimal_inputs.copy()
+        inputs["acquisition_data"] = {"source_url": "https://from-acquisition.com"}
+        result = build_knowledge_payload(**inputs)
+        assert result["source_url"] == "https://from-acquisition.com"
+
+        # Test pipeline_metadata.url (second priority)
+        inputs["acquisition_data"] = {"pipeline_metadata": {"url": "https://from-pipeline.com"}}
+        result = build_knowledge_payload(**inputs)
+        assert result["source_url"] == "https://from-pipeline.com"
+
+        # Test fallback_url parameter (third priority)
+        inputs["acquisition_data"] = {}
+        result = build_knowledge_payload(**inputs, fallback_url="https://from-fallback.com")
+        assert result["source_url"] == "https://from-fallback.com"
+
+        # Test download_block.source_url (fourth priority)
+        inputs["acquisition_data"] = {"download": {"source_url": "https://from-download.com"}}
+        result = build_knowledge_payload(**inputs)
+        assert result["source_url"] == "https://from-download.com"
+
+    def test_title_fallback_chain(self, minimal_inputs):
+        """Test title extraction: download -> content_metadata -> pipeline_meta."""
+        # Test download_block.title (highest priority)
+        inputs = minimal_inputs.copy()
+        inputs["acquisition_data"] = {"download": {"title": "Title from Download"}}
+        result = build_knowledge_payload(**inputs)
+        assert result["title"] == "Title from Download"
+
+        # Test content_metadata.title (second priority)
+        inputs["acquisition_data"] = {}
+        inputs["intelligence_data"] = {"content_metadata": {"title": "Title from Content"}}
+        result = build_knowledge_payload(**inputs)
+        assert result["title"] == "Title from Content"
+
+        # Test pipeline_metadata.title (third priority)
+        inputs["intelligence_data"] = {}
+        inputs["acquisition_data"] = {"pipeline_metadata": {"title": "Title from Pipeline"}}
+        result = build_knowledge_payload(**inputs)
+        assert result["title"] == "Title from Pipeline"
+
+        # Test None when no title available
+        inputs["acquisition_data"] = {}
+        result = build_knowledge_payload(**inputs)
+        assert result["title"] is None
+
+    def test_platform_fallback_chain(self, minimal_inputs):
+        """Test platform extraction: download -> content_metadata -> pipeline_meta -> transcription."""
+        # Test download_block.platform (highest priority)
+        inputs = minimal_inputs.copy()
+        inputs["acquisition_data"] = {"download": {"platform": "youtube"}}
+        result = build_knowledge_payload(**inputs)
+        assert result["platform"] == "youtube"
+
+        # Test content_metadata.platform (second priority)
+        inputs["acquisition_data"] = {}
+        inputs["intelligence_data"] = {"content_metadata": {"platform": "vimeo"}}
+        result = build_knowledge_payload(**inputs)
+        assert result["platform"] == "vimeo"
+
+        # Test pipeline_metadata.platform (third priority)
+        inputs["intelligence_data"] = {}
+        inputs["acquisition_data"] = {"pipeline_metadata": {"platform": "twitter"}}
+        result = build_knowledge_payload(**inputs)
+        assert result["platform"] == "twitter"
+
+        # Test transcription_block.platform (fourth priority)
+        inputs["acquisition_data"] = {"transcription": {"platform": "podcast"}}
+        result = build_knowledge_payload(**inputs)
+        assert result["platform"] == "podcast"
+
+    def test_perspective_data_extraction(self, minimal_inputs):
+        """Test perspective data extraction from fact_data or acquisition_data."""
+        # Test fact_data.perspective_synthesis (highest priority)
+        inputs = minimal_inputs.copy()
+        inputs["fact_data"] = {"perspective_synthesis": {"summary": "From fact data"}}
+        result = build_knowledge_payload(**inputs)
+        assert result["perspective"] == {"summary": "From fact data"}
+
+        # Test acquisition_data.perspective (second priority)
+        inputs["fact_data"] = {}
+        inputs["acquisition_data"] = {"perspective": {"summary": "From acquisition"}}
+        result = build_knowledge_payload(**inputs)
+        assert result["perspective"] == {"summary": "From acquisition"}
+
+        # Test empty dict when no perspective available
+        inputs["acquisition_data"] = {}
+        result = build_knowledge_payload(**inputs)
+        assert result["perspective"] == {}
+
+    def test_summary_fallback_chain(self, minimal_inputs):
+        """Test summary fallback: perspective -> content_metadata -> transcript[:400] -> 'Summary unavailable'."""
+        # Test perspective_data.summary (highest priority)
+        inputs = minimal_inputs.copy()
+        inputs["fact_data"] = {"perspective_synthesis": {"summary": "Summary from perspective"}}
+        result = build_knowledge_payload(**inputs)
+        assert result["analysis_summary"] == "Summary from perspective"
+
+        # Test content_metadata.summary (second priority)
+        inputs["fact_data"] = {}
+        inputs["intelligence_data"] = {"content_metadata": {"summary": "Summary from content"}}
+        result = build_knowledge_payload(**inputs)
+        assert result["analysis_summary"] == "Summary from content"
+
+        # Test transcript fallback (third priority, truncated to 400 chars)
+        long_transcript = "A" * 500
+        inputs["intelligence_data"] = {"enhanced_transcript": long_transcript}
+        result = build_knowledge_payload(**inputs)
+        assert result["analysis_summary"] == "A" * 400
+
+        # Test 'Summary unavailable' (fourth priority)
+        inputs["intelligence_data"] = {}
+        result = build_knowledge_payload(**inputs)
+        assert result["analysis_summary"] == "Summary unavailable"
+
+    def test_fact_checks_extraction(self, minimal_inputs):
+        """Test fact_checks extraction from verification_data or fact_data."""
+        # Test verification_data.fact_checks (highest priority)
+        inputs = minimal_inputs.copy()
+        inputs["verification_data"] = {"fact_checks": {"claim1": "verified"}}
+        result = build_knowledge_payload(**inputs)
+        assert result["fact_check_results"] == {"claim1": "verified"}
+
+        # Test fact_data.fact_checks (second priority)
+        inputs["verification_data"] = {}
+        inputs["fact_data"] = {"fact_checks": {"claim2": "disputed"}}
+        result = build_knowledge_payload(**inputs)
+        assert result["fact_check_results"] == {"claim2": "disputed"}
+
+        # Test empty dict when no fact checks available
+        inputs["fact_data"] = {}
+        result = build_knowledge_payload(**inputs)
+        assert result["fact_check_results"] == {}
+
+    def test_logical_fallacies_extraction(self, minimal_inputs):
+        """Test logical_fallacies extraction from verification_data or fact_data."""
+        # Test verification_data.logical_analysis (highest priority)
+        inputs = minimal_inputs.copy()
+        inputs["verification_data"] = {"logical_analysis": {"fallacy1": "ad hominem"}}
+        result = build_knowledge_payload(**inputs)
+        assert result["detected_fallacies"] == {"fallacy1": "ad hominem"}
+
+        # Test fact_data.logical_fallacies (second priority)
+        inputs["verification_data"] = {}
+        inputs["fact_data"] = {"logical_fallacies": {"fallacy2": "straw man"}}
+        result = build_knowledge_payload(**inputs)
+        assert result["detected_fallacies"] == {"fallacy2": "straw man"}
+
+        # Test empty dict when no fallacies available
+        inputs["fact_data"] = {}
+        result = build_knowledge_payload(**inputs)
+        assert result["detected_fallacies"] == {}
+
+    def test_deception_score_extraction(self, minimal_inputs):
+        """Test deception_score extraction from threat_data and deception_metrics."""
+        # Test threat_data.deception_score (highest priority)
+        inputs = minimal_inputs.copy()
+        inputs["threat_data"] = {"deception_score": 0.85}
+        result = build_knowledge_payload(**inputs)
+        assert result["deception_score"] == 0.85
+
+        # Test threat_data.deception_metrics.deception_score (second priority)
+        inputs["threat_data"] = {"deception_metrics": {"deception_score": 0.65}}
+        result = build_knowledge_payload(**inputs)
+        assert result["deception_score"] == 0.65
+
+        # Test that deception_score is not added when None
+        inputs["threat_data"] = {}
+        result = build_knowledge_payload(**inputs)
+        assert "deception_score" not in result
+
+    def test_keywords_extraction(self, minimal_inputs):
+        """Test keywords extraction from intelligence_data.thematic_insights."""
+        # Test with valid list
+        inputs = minimal_inputs.copy()
+        inputs["intelligence_data"] = {"thematic_insights": ["keyword1", "keyword2"]}
+        result = build_knowledge_payload(**inputs)
+        assert result["keywords"] == ["keyword1", "keyword2"]
+
+        # Test with empty list
+        inputs["intelligence_data"] = {"thematic_insights": []}
+        result = build_knowledge_payload(**inputs)
+        assert result["keywords"] == []
+
+        # Test with non-list value (should default to [])
+        inputs["intelligence_data"] = {"thematic_insights": "not a list"}
+        result = build_knowledge_payload(**inputs)
+        assert result["keywords"] == []
+
+    def test_transcript_index_conditional_inclusion(self, minimal_inputs):
+        """Test that transcript_index is only included when present and non-empty."""
+        # Test with valid transcript_index
+        inputs = minimal_inputs.copy()
+        inputs["intelligence_data"] = {"transcript_index": {"word1": [0, 10]}}
+        result = build_knowledge_payload(**inputs)
+        assert result["transcript_index"] == {"word1": [0, 10]}
+
+        # Test with empty dict (should not be included)
+        inputs["intelligence_data"] = {"transcript_index": {}}
+        result = build_knowledge_payload(**inputs)
+        assert "transcript_index" not in result
+
+        # Test with non-dict value (should not be included)
+        inputs["intelligence_data"] = {"transcript_index": "not a dict"}
+        result = build_knowledge_payload(**inputs)
+        assert "transcript_index" not in result
+
+    def test_timeline_anchors_conditional_inclusion(self, minimal_inputs):
+        """Test that timeline_anchors is only included when present and non-empty."""
+        # Test with valid timeline_anchors
+        inputs = minimal_inputs.copy()
+        inputs["intelligence_data"] = {"timeline_anchors": [{"time": 0, "text": "intro"}]}
+        result = build_knowledge_payload(**inputs)
+        assert result["timeline_anchors"] == [{"time": 0, "text": "intro"}]
+
+        # Test with empty list (should not be included)
+        inputs["intelligence_data"] = {"timeline_anchors": []}
+        result = build_knowledge_payload(**inputs)
+        assert "timeline_anchors" not in result
+
+        # Test with non-list value (should not be included)
+        inputs["intelligence_data"] = {"timeline_anchors": "not a list"}
+        result = build_knowledge_payload(**inputs)
+        assert "timeline_anchors" not in result
+
+    def test_isinstance_type_checking(self, minimal_inputs):
+        """Test that isinstance checks prevent errors with non-dict inputs."""
+        # Test with non-dict acquisition_data
+        inputs = minimal_inputs.copy()
+        inputs["acquisition_data"] = "not a dict"
+        result = build_knowledge_payload(**inputs)
+        assert result["source_url"] is None
+        assert result["title"] is None
+
+        # Test with non-dict intelligence_data
+        inputs = minimal_inputs.copy()
+        inputs["intelligence_data"] = "not a dict"
+        result = build_knowledge_payload(**inputs)
+        assert result["content_metadata"] == {}
+        assert result["keywords"] == []
+
+        # Test with non-dict verification_data
+        inputs = minimal_inputs.copy()
+        inputs["verification_data"] = "not a dict"
+        result = build_knowledge_payload(**inputs)
+        assert result["verification_results"] == "not a dict"  # Passed through as-is
+
+        # Test with non-dict threat_data
+        inputs = minimal_inputs.copy()
+        inputs["threat_data"] = "not a dict"
+        result = build_knowledge_payload(**inputs)
+        assert result["threat_assessment"] == "not a dict"  # Passed through as-is
+
+    def test_complete_integration_scenario(self):
+        """Test a complete integration scenario with all fields populated."""
+        acquisition_data = {
+            "source_url": "https://example.com/video",
+            "download": {"title": "Test Video", "platform": "youtube"},
+            "transcription": {"quality_score": 0.9},
+            "pipeline_metadata": {"url": "https://fallback.com"},
+        }
+        intelligence_data = {
+            "content_metadata": {"summary": "Content summary", "duration": 300},
+            "thematic_insights": ["keyword1", "keyword2"],
+            "transcript_index": {"word1": [0, 10]},
+            "timeline_anchors": [{"time": 0, "text": "intro"}],
+        }
+        verification_data = {
+            "fact_checks": {"claim1": "verified"},
+            "logical_analysis": {"fallacy1": "ad hominem"},
+        }
+        threat_data = {"deception_score": 0.75, "deception_metrics": {"confidence": 0.8}}
+        fact_data = {"perspective_synthesis": {"summary": "Perspective summary"}}
+        behavioral_data = {"profile": "analytical"}
+
+        result = build_knowledge_payload(
+            acquisition_data,
+            intelligence_data,
+            verification_data,
+            threat_data,
+            fact_data,
+            behavioral_data,
+        )
+
+        # Verify all core fields
+        assert result["source_url"] == "https://example.com/video"
+        assert result["title"] == "Test Video"
+        assert result["platform"] == "youtube"
+        assert result["analysis_summary"] == "Perspective summary"
+        assert result["content_metadata"] == {"summary": "Content summary", "duration": 300}
+        assert result["fact_check_results"] == {"claim1": "verified"}
+        assert result["detected_fallacies"] == {"fallacy1": "ad hominem"}
+        assert result["verification_results"] == verification_data
+        assert result["threat_assessment"] == threat_data
+        assert result["behavioral_profile"] == behavioral_data
+        assert result["perspective"] == {"summary": "Perspective summary"}
+        assert result["keywords"] == ["keyword1", "keyword2"]
+
+        # Verify conditional fields
+        assert result["deception_score"] == 0.75
+        assert result["transcript_index"] == {"word1": [0, 10]}
+        assert result["timeline_anchors"] == [{"time": 0, "text": "intro"}]
+

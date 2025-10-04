@@ -431,127 +431,18 @@ class AutonomousIntelligenceOrchestrator:
         *,
         fallback_url: str | None = None,
     ) -> dict[str, Any]:
-        """Construct a normalized payload for downstream knowledge storage."""
+        """Delegate to pipeline_result_builders.build_knowledge_payload."""
+        from ultimate_discord_intelligence_bot.orchestrator.pipeline_result_builders import build_knowledge_payload
 
-        download_block = acquisition_data.get("download") if isinstance(acquisition_data.get("download"), dict) else {}
-        transcription_block = (
-            acquisition_data.get("transcription") if isinstance(acquisition_data.get("transcription"), dict) else {}
+        return build_knowledge_payload(
+            acquisition_data,
+            intelligence_data,
+            verification_data,
+            threat_data,
+            fact_data,
+            behavioral_data,
+            fallback_url=fallback_url,
         )
-        pipeline_meta = (
-            acquisition_data.get("pipeline_metadata")
-            if isinstance(acquisition_data.get("pipeline_metadata"), dict)
-            else {}
-        )
-        content_metadata = (
-            intelligence_data.get("content_metadata")
-            if isinstance(intelligence_data.get("content_metadata"), dict)
-            else {}
-        )
-
-        source_url = (
-            acquisition_data.get("source_url")
-            or pipeline_meta.get("url")
-            or fallback_url
-            or (download_block.get("source_url") if isinstance(download_block, dict) else None)
-        )
-
-        title = None
-        if isinstance(download_block, dict):
-            title = download_block.get("title")
-        if not title and isinstance(content_metadata, dict):
-            title = content_metadata.get("title")
-        if not title:
-            title = pipeline_meta.get("title")
-
-        platform = None
-        if isinstance(download_block, dict):
-            platform = download_block.get("platform")
-        if not platform and isinstance(content_metadata, dict):
-            platform = content_metadata.get("platform")
-        if not platform:
-            platform = pipeline_meta.get("platform") or transcription_block.get("platform")
-
-        perspective_data: dict[str, Any] = {}
-        if isinstance(fact_data, dict):
-            maybe_perspective = fact_data.get("perspective_synthesis")
-            if isinstance(maybe_perspective, dict):
-                perspective_data = maybe_perspective
-        if not perspective_data and isinstance(acquisition_data.get("perspective"), dict):
-            perspective_data = acquisition_data.get("perspective", {})
-
-        summary = ""
-        if isinstance(perspective_data, dict):
-            summary = str(perspective_data.get("summary") or "").strip()
-        if not summary and isinstance(content_metadata, dict):
-            summary = str(content_metadata.get("summary") or "").strip()
-        if not summary and isinstance(intelligence_data, dict):
-            transcript = str(intelligence_data.get("enhanced_transcript") or intelligence_data.get("transcript") or "")
-            summary = transcript[:400].strip()
-        if not summary:
-            summary = "Summary unavailable"
-
-        fact_checks: dict[str, Any] = {}
-        if isinstance(verification_data, dict):
-            maybe_fact_checks = verification_data.get("fact_checks")
-            if isinstance(maybe_fact_checks, dict):
-                fact_checks = maybe_fact_checks
-        if not fact_checks and isinstance(fact_data, dict):
-            maybe_fact_checks = fact_data.get("fact_checks")
-            if isinstance(maybe_fact_checks, dict):
-                fact_checks = maybe_fact_checks
-
-        logical_fallacies: dict[str, Any] = {}
-        if isinstance(verification_data, dict):
-            maybe_fallacies = verification_data.get("logical_analysis")
-            if isinstance(maybe_fallacies, dict):
-                logical_fallacies = maybe_fallacies
-        if not logical_fallacies and isinstance(fact_data, dict):
-            maybe_fallacies = fact_data.get("logical_fallacies")
-            if isinstance(maybe_fallacies, dict):
-                logical_fallacies = maybe_fallacies
-
-        deception_score = None
-        if isinstance(threat_data, dict):
-            deception_score = threat_data.get("deception_score")
-            if deception_score is None:
-                metrics = threat_data.get("deception_metrics")
-                if isinstance(metrics, dict):
-                    deception_score = metrics.get("deception_score")
-
-        keywords: list[Any] = []
-        if isinstance(intelligence_data, dict):
-            maybe_keywords = intelligence_data.get("thematic_insights")
-            if isinstance(maybe_keywords, list):
-                keywords = maybe_keywords
-
-        knowledge_payload: dict[str, Any] = {
-            "url": source_url,
-            "source_url": source_url,
-            "title": title,
-            "platform": platform,
-            "analysis_summary": summary,
-            "content_metadata": content_metadata if isinstance(content_metadata, dict) else {},
-            "fact_check_results": fact_checks,
-            "detected_fallacies": logical_fallacies,
-            "verification_results": verification_data,
-            "threat_assessment": threat_data,
-            "behavioral_profile": behavioral_data,
-            "perspective": perspective_data if isinstance(perspective_data, dict) else {},
-            "keywords": keywords,
-        }
-
-        if deception_score is not None:
-            knowledge_payload["deception_score"] = deception_score
-
-        transcript_index = intelligence_data.get("transcript_index") if isinstance(intelligence_data, dict) else {}
-        if isinstance(transcript_index, dict) and transcript_index:
-            knowledge_payload["transcript_index"] = transcript_index
-
-        timeline_anchors = intelligence_data.get("timeline_anchors") if isinstance(intelligence_data, dict) else None
-        if isinstance(timeline_anchors, list) and timeline_anchors:
-            knowledge_payload["timeline_anchors"] = timeline_anchors
-
-        return knowledge_payload
 
     async def execute_autonomous_intelligence_workflow(
         self, interaction: Any, url: str, depth: str = "standard", tenant_ctx: Any = None

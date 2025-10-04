@@ -59,6 +59,179 @@ def merge_threat_payload(
     return merged
 
 
+def build_knowledge_payload(
+    acquisition_data: dict[str, Any],
+    intelligence_data: dict[str, Any],
+    verification_data: dict[str, Any],
+    threat_data: dict[str, Any],
+    fact_data: dict[str, Any],
+    behavioral_data: dict[str, Any],
+    *,
+    fallback_url: str | None = None,
+) -> dict[str, Any]:
+    """Construct a normalized payload for downstream knowledge storage.
+
+    This function aggregates data from multiple workflow stages (acquisition, intelligence,
+    verification, threat, fact, behavioral) into a unified knowledge graph payload suitable
+    for persistent storage and retrieval.
+
+    Args:
+        acquisition_data: Download and transcription data from acquisition stage
+        intelligence_data: Analysis results including content metadata
+        verification_data: Verification and fact-checking results
+        threat_data: Threat detection and deception analysis
+        fact_data: Fact-checking and logical analysis results
+        behavioral_data: Behavioral profiling and pattern analysis
+        fallback_url: Optional fallback source URL if not found in data
+
+    Returns:
+        Normalized knowledge payload with source, metadata, analysis, and assessments
+    """
+    # Extract acquisition blocks
+    download_block = {}
+    if isinstance(acquisition_data, dict):
+        maybe_download = acquisition_data.get("download")
+        if isinstance(maybe_download, dict):
+            download_block = maybe_download
+
+    transcription_block = {}
+    if isinstance(acquisition_data, dict):
+        maybe_transcription = acquisition_data.get("transcription")
+        if isinstance(maybe_transcription, dict):
+            transcription_block = maybe_transcription
+
+    pipeline_meta = {}
+    if isinstance(acquisition_data, dict):
+        maybe_pipeline = acquisition_data.get("pipeline_metadata")
+        if isinstance(maybe_pipeline, dict):
+            pipeline_meta = maybe_pipeline
+
+    content_metadata = {}
+    if isinstance(intelligence_data, dict):
+        maybe_content = intelligence_data.get("content_metadata")
+        if isinstance(maybe_content, dict):
+            content_metadata = maybe_content
+
+    # Determine source URL with fallback chain
+    source_url = None
+    if isinstance(acquisition_data, dict):
+        source_url = acquisition_data.get("source_url")
+    if not source_url:
+        source_url = pipeline_meta.get("url") or fallback_url
+    if not source_url and isinstance(download_block, dict):
+        source_url = download_block.get("source_url")
+
+    # Extract title from multiple sources
+    title = None
+    if isinstance(download_block, dict):
+        title = download_block.get("title")
+    if not title and isinstance(content_metadata, dict):
+        title = content_metadata.get("title")
+    if not title:
+        title = pipeline_meta.get("title")
+
+    # Extract platform from multiple sources
+    platform = None
+    if isinstance(download_block, dict):
+        platform = download_block.get("platform")
+    if not platform and isinstance(content_metadata, dict):
+        platform = content_metadata.get("platform")
+    if not platform:
+        platform = pipeline_meta.get("platform") or transcription_block.get("platform")
+
+    # Extract perspective data
+    perspective_data: dict[str, Any] = {}
+    if isinstance(fact_data, dict):
+        maybe_perspective = fact_data.get("perspective_synthesis")
+        if isinstance(maybe_perspective, dict):
+            perspective_data = maybe_perspective
+    if not perspective_data and isinstance(acquisition_data, dict):
+        maybe_acquisition_perspective = acquisition_data.get("perspective")
+        if isinstance(maybe_acquisition_perspective, dict):
+            perspective_data = maybe_acquisition_perspective
+
+    # Build summary with fallback chain
+    summary = ""
+    if isinstance(perspective_data, dict):
+        summary = str(perspective_data.get("summary") or "").strip()
+    if not summary and isinstance(content_metadata, dict):
+        summary = str(content_metadata.get("summary") or "").strip()
+    if not summary and isinstance(intelligence_data, dict):
+        transcript = str(intelligence_data.get("enhanced_transcript") or intelligence_data.get("transcript") or "")
+        summary = transcript[:400].strip()
+    if not summary:
+        summary = "Summary unavailable"
+
+    # Extract fact checks from verification or fact data
+    fact_checks: dict[str, Any] = {}
+    if isinstance(verification_data, dict):
+        maybe_fact_checks = verification_data.get("fact_checks")
+        if isinstance(maybe_fact_checks, dict):
+            fact_checks = maybe_fact_checks
+    if not fact_checks and isinstance(fact_data, dict):
+        maybe_fact_checks = fact_data.get("fact_checks")
+        if isinstance(maybe_fact_checks, dict):
+            fact_checks = maybe_fact_checks
+
+    # Extract logical fallacies from verification or fact data
+    logical_fallacies: dict[str, Any] = {}
+    if isinstance(verification_data, dict):
+        maybe_fallacies = verification_data.get("logical_analysis")
+        if isinstance(maybe_fallacies, dict):
+            logical_fallacies = maybe_fallacies
+    if not logical_fallacies and isinstance(fact_data, dict):
+        maybe_fallacies = fact_data.get("logical_fallacies")
+        if isinstance(maybe_fallacies, dict):
+            logical_fallacies = maybe_fallacies
+
+    # Extract deception score from threat data
+    deception_score = None
+    if isinstance(threat_data, dict):
+        deception_score = threat_data.get("deception_score")
+        if deception_score is None:
+            metrics = threat_data.get("deception_metrics")
+            if isinstance(metrics, dict):
+                deception_score = metrics.get("deception_score")
+
+    # Extract keywords/thematic insights
+    keywords: list[Any] = []
+    if isinstance(intelligence_data, dict):
+        maybe_keywords = intelligence_data.get("thematic_insights")
+        if isinstance(maybe_keywords, list):
+            keywords = maybe_keywords
+
+    # Build knowledge payload
+    knowledge_payload: dict[str, Any] = {
+        "url": source_url,
+        "source_url": source_url,
+        "title": title,
+        "platform": platform,
+        "analysis_summary": summary,
+        "content_metadata": content_metadata if isinstance(content_metadata, dict) else {},
+        "fact_check_results": fact_checks,
+        "detected_fallacies": logical_fallacies,
+        "verification_results": verification_data,
+        "threat_assessment": threat_data,
+        "behavioral_profile": behavioral_data,
+        "perspective": perspective_data if isinstance(perspective_data, dict) else {},
+        "keywords": keywords,
+    }
+
+    # Add optional fields if present
+    if deception_score is not None:
+        knowledge_payload["deception_score"] = deception_score
+
+    transcript_index = intelligence_data.get("transcript_index") if isinstance(intelligence_data, dict) else {}
+    if isinstance(transcript_index, dict) and transcript_index:
+        knowledge_payload["transcript_index"] = transcript_index
+
+    timeline_anchors = intelligence_data.get("timeline_anchors") if isinstance(intelligence_data, dict) else None
+    if isinstance(timeline_anchors, list) and timeline_anchors:
+        knowledge_payload["timeline_anchors"] = timeline_anchors
+
+    return knowledge_payload
+
+
 def build_pipeline_content_analysis_result(
     *,
     transcript: str,
