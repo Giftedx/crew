@@ -102,6 +102,7 @@ class Settings(BaseSettings):
     # Performance optimization flags
     enable_parallel_memory_ops: bool = Field(False, alias="ENABLE_PARALLEL_MEMORY_OPS")
     enable_parallel_analysis: bool = Field(False, alias="ENABLE_PARALLEL_ANALYSIS")
+    enable_parallel_fact_checking: bool = Field(False, alias="ENABLE_PARALLEL_FACT_CHECKING")
 
     # Provider + model routing
     rerank_provider: str | None = Field(None)

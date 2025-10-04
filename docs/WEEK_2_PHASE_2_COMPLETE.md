@@ -38,6 +38,7 @@ enable_parallel_analysis: bool = Field(False, alias="ENABLE_PARALLEL_ANALYSIS") 
 ```
 
 **Behavior:**
+
 - **Default:** `False` (opt-in for safety)
 - **Environment:** Set `ENABLE_PARALLEL_ANALYSIS=1` to activate
 - **Scope:** All analysis depths (standard, deep, comprehensive, experimental)
@@ -49,6 +50,7 @@ enable_parallel_analysis: bool = Field(False, alias="ENABLE_PARALLEL_ANALYSIS") 
 **Pattern:** Split single analysis_task into 4 tasks when flag enabled
 
 **Parallel Tasks (3):**
+
 ```python
 # Task 1: Text Analysis (insights, themes)
 text_analysis_task = Task(
@@ -76,6 +78,7 @@ perspective_synthesis_task = Task(
 ```
 
 **Integration Task (1):**
+
 ```python
 # Task 4: Analysis Integration (waits for all 3)
 analysis_integration_task = Task(
@@ -87,6 +90,7 @@ analysis_integration_task = Task(
 ```
 
 **Key Features:**
+
 - Each parallel task calls ONE tool with focused description
 - Integration task receives outputs via `context` parameter
 - CrewAI automatically synchronizes - no custom async code needed
@@ -94,12 +98,14 @@ analysis_integration_task = Task(
 
 **Task List Construction:**
 Handles 4 combinations of flags:
+
 1. **Both enabled:** 6 base tasks + 4 analysis tasks + 3 memory tasks = 13 total
 2. **Analysis only:** 6 base tasks + 4 analysis tasks + integration = 11 total
 3. **Memory only:** 4 base tasks + 3 memory tasks = 7 total (Phase 1)
 4. **Neither:** 5 sequential tasks (original pattern)
 
 **Parallel Status Logging:**
+
 ```python
 parallel_features = []
 if enable_parallel_analysis:
@@ -155,6 +161,7 @@ Regressions: ZERO ✅
 ```
 
 **What was validated:**
+
 - ✅ HTTP utils tests pass
 - ✅ Guards HTTP requests tests pass
 - ✅ Vector store dimension tests pass
@@ -178,12 +185,14 @@ Regressions: ZERO ✅
 ### Expected Savings
 
 **Analysis Stage Breakdown (Sequential):**
+
 - TextAnalysisTool: ~30-40 seconds
 - LogicalFallacyTool: ~20-30 seconds
 - PerspectiveSynthesizerTool: ~20-30 seconds
 - **Total Sequential:** ~70-100 seconds (~1-1.7 min)
 
 **Analysis Stage (Parallel):**
+
 - All 3 tools run concurrently: ~30-40 seconds (limited by slowest tool)
 - Integration overhead: ~5-10 seconds
 - **Total Parallel:** ~35-50 seconds (~0.6-0.8 min)
@@ -195,11 +204,13 @@ Regressions: ZERO ✅
 ### Overhead Analysis
 
 **Additional Overhead:**
+
 - 3 async tasks vs 1 sequential task: ~30-150ms
 - Integration task (new): ~5-10 seconds
 - Total overhead: ~5-10 seconds
 
 **Why This is Acceptable:**
+
 - Overhead (~10s) << Savings (~60-100s)
 - Net gain: ~50-90 seconds faster
 - Ratio: ~10:1 benefit-to-cost
@@ -207,6 +218,7 @@ Regressions: ZERO ✅
 ### Combined with Phase 1
 
 **Both Flags Enabled:**
+
 - Phase 1 savings: 0.5-1 min (memory parallelization)
 - Phase 2 savings: 1-2 min (analysis parallelization)
 - **Total:** 1.5-3 min faster (~85-180 seconds)
@@ -246,6 +258,7 @@ Regressions: ZERO ✅
 ### Immediate (Week 2 Phase 3)
 
 **Fact-Checking Parallelization (Days 6-7):**
+
 - Target: Parallelize 5 sequential fact-check calls in verification_task
 - Expected savings: 0.5-1 min
 - Pattern: Similar to Phase 2 (split verification into parallel + integration)
@@ -254,12 +267,14 @@ Regressions: ZERO ✅
 ### After Phase 3
 
 **Benchmarking:**
+
 1. Measure actual performance with both flags enabled
 2. Compare: Sequential vs Analysis-only vs Memory-only vs Both
 3. Validate: Total improvement meets 30-35% conservative target
 4. Document: Actual vs expected savings per phase
 
 **Rollout Strategy:**
+
 1. Enable Phase 1 only (memory parallelization) for 10% of traffic
 2. Monitor stability for 1 week
 3. Enable Phase 2 (analysis parallelization) for 10% of traffic
@@ -273,13 +288,14 @@ Regressions: ZERO ✅
 ### This Phase
 
 **Commit:** `8ce8f4a` - "feat(performance): Implement Phase 2 parallel analysis subtasks"
+
 - **Files:** 5 modified (+188 insertions, -42 deletions)
 - **Key Changes:**
-  * settings.py: Added ENABLE_PARALLEL_ANALYSIS flag
-  * crew_builders.py: Split analysis into 4 tasks (3 parallel + integration)
-  * autonomous_orchestrator.py: Wired flag from settings
-  * Updated task list construction for 4 flag combinations
-  * Enhanced parallel status logging
+  - settings.py: Added ENABLE_PARALLEL_ANALYSIS flag
+  - crew_builders.py: Split analysis into 4 tasks (3 parallel + integration)
+  - autonomous_orchestrator.py: Wired flag from settings
+  - Updated task list construction for 4 flag combinations
+  - Enhanced parallel status logging
 - **Testing:** 36 tests passed, zero regressions
 - **Pre-commit:** All checks passed
 
@@ -317,6 +333,7 @@ Regressions: ZERO ✅
 ✨ **Largest Single Performance Optimization Implemented!** ✨
 
 Phase 2 delivers the biggest bang for the buck in the Phase 3 plan:
+
 - **1-2 min savings** from parallelizing 3 analysis tool calls
 - **~10-20%** of total execution time
 - **Stays in CrewAI framework** (no custom async complexity)

@@ -143,6 +143,7 @@ def build_intelligence_crew(
     logger_instance: logging.Logger | None = None,
     enable_parallel_memory_ops: bool | None = None,
     enable_parallel_analysis: bool | None = None,
+    enable_parallel_fact_checking: bool | None = None,
 ) -> Crew:
     """Build a single chained CrewAI crew for the complete intelligence workflow.
 
@@ -159,6 +160,7 @@ def build_intelligence_crew(
         logger_instance: Optional logger instance
         enable_parallel_memory_ops: Enable parallel memory operations (default: from settings)
         enable_parallel_analysis: Enable parallel analysis subtasks (default: from settings)
+        enable_parallel_fact_checking: Enable parallel fact-checking (default: from settings)
 
     Returns:
         Configured Crew with chained tasks
@@ -171,6 +173,8 @@ def build_intelligence_crew(
         enable_parallel_memory_ops = settings.enable_parallel_memory_ops
     if enable_parallel_analysis is None:
         enable_parallel_analysis = settings.enable_parallel_analysis
+    if enable_parallel_fact_checking is None:
+        enable_parallel_fact_checking = settings.enable_parallel_fact_checking
 
     _logger.info(f"🏗️  Building chained intelligence crew for depth: {depth}")
 
@@ -338,53 +342,201 @@ def build_intelligence_crew(
     # Determine which analysis task to reference based on parallel flag
     analysis_ref = analysis_integration_task if enable_parallel_analysis else analysis_task
 
-    verification_task = Task(
-        description=(
-            "CRITICAL DATA EXTRACTION INSTRUCTIONS:\n"
-            "You will receive TWO previous task outputs in your context:\n"
-            "1. Transcription task output - a JSON containing the 'transcript' field\n"
-            "2. Analysis task output - a JSON containing 'insights', 'themes', etc.\n"
-            "\n"
-            "STEP 1: MANDATORY - Locate and extract the FULL TRANSCRIPT from the transcription task output.\n"
-            "The transcript field contains the ACTUAL SPOKEN WORDS from the video.\n"
-            "This is typically a LONG text (1000+ characters) with real quotes and conversation.\n"
-            "DO NOT use task descriptions, instructions, or any other text as the transcript!\n"
-            "\n"
-            "STEP 2: YOU MUST CALL ClaimExtractorTool(text=<full_transcript_text>, max_claims=10).\n"
-            "   - DO NOT respond until the tool returns actual claims.\n"
-            "   - DO NOT generate empty arrays or placeholder claims.\n"
-            "   - The tool will return 3-10 claims extracted from the transcript\n"
-            "   - Call this tool EXACTLY ONCE\n"
-            "\n"
-            "STEP 3: Select the 3-5 most significant claims from the extracted list.\n"
-            "\n"
-            "STEP 4: YOU MUST CALL FactCheckTool(claim=<claim_text>) for each selected claim.\n"
-            "   - Call the tool ONCE PER CLAIM (3-5 calls total).\n"
-            "   - DO NOT respond until all tools return verification results.\n"
-            "\n"
-            "STEP 5: Assess overall source trustworthiness based on verified facts.\n"
-            "\n"
-            "VALIDATION CHECK:\n"
-            "- If you're analyzing a video about Twitch/streaming, claims should mention Twitch, streamers, platform issues\n"
-            "- If claims are about 'methodologies' or 'environmental issues', you're using the WRONG TEXT!\n"
-            "- Claims should reflect the ACTUAL content discussed in the video, not generic topics\n"
-            "\n"
-            "Return results as JSON with keys:\n"
-            "verified_claims (array of claim texts),\n"
-            "fact_check_results (array of verification outcomes),\n"
-            "trustworthiness_score (0-100)."
-        ),
-        expected_output=(
-            "JSON with verified_claims (non-empty array from ClaimExtractorTool), "
-            "fact_check_results (non-empty array from FactCheckTool), "
-            "trustworthiness_score (0-100). "
-            "❌ REJECT: Empty arrays. ❌ REJECT: Placeholder claims. "
-            "✅ ACCEPT: Real claims about actual video content."
-        ),
-        agent=verification_agent,
-        context=[transcription_task, analysis_ref],  # Need both for comprehensive verification
-        callback=task_completion_callback,
-    )
+    # Parallel fact-checking pattern (when enabled)
+    if enable_parallel_fact_checking:
+        _logger.info("⚡ Using PARALLEL fact-checking (async_execution=True)")
+
+        # Step 1: Claim Extraction (sequential, must complete first)
+        claim_extraction_task = Task(
+            description=(
+                "CRITICAL DATA EXTRACTION INSTRUCTIONS:\n"
+                "You will receive TWO previous task outputs in your context:\n"
+                "1. Transcription task output - a JSON containing the 'transcript' field\n"
+                "2. Analysis task output - a JSON containing 'insights', 'themes', etc.\n"
+                "\n"
+                "STEP 1: MANDATORY - Locate and extract the FULL TRANSCRIPT from the transcription task output.\n"
+                "The transcript field contains the ACTUAL SPOKEN WORDS from the video.\n"
+                "This is typically a LONG text (1000+ characters) with real quotes and conversation.\n"
+                "DO NOT use task descriptions, instructions, or any other text as the transcript!\n"
+                "\n"
+                "STEP 2: YOU MUST CALL ClaimExtractorTool(text=<full_transcript_text>, max_claims=10).\n"
+                "   - DO NOT respond until the tool returns actual claims.\n"
+                "   - DO NOT generate empty arrays or placeholder claims.\n"
+                "   - The tool will return 3-10 claims extracted from the transcript\n"
+                "   - Call this tool EXACTLY ONCE\n"
+                "\n"
+                "STEP 3: Select the 5 most significant claims from the extracted list.\n"
+                "\n"
+                "Return results as JSON with key: claims (array of exactly 5 claim texts)."
+            ),
+            expected_output=(
+                "JSON with claims (array of exactly 5 claim texts from ClaimExtractorTool). "
+                "❌ REJECT: Empty arrays. ❌ REJECT: Placeholder claims. "
+                "✅ ACCEPT: Real claims about actual video content."
+            ),
+            agent=verification_agent,
+            context=[transcription_task, analysis_ref],
+            callback=task_completion_callback,
+        )
+
+        # Step 2: Parallel Fact-Checking (5 independent fact-check tasks)
+        fact_check_1_task = Task(
+            description=(
+                "Extract claim #1 from previous task output and verify it.\n"
+                "STEP 1: Extract the first claim from the claims array.\n"
+                "STEP 2: YOU MUST CALL FactCheckTool(claim=<claim_text>).\n"
+                "   - DO NOT respond until the tool returns a verification result.\n"
+                "Return JSON with: claim (text), fact_check_result (dict from tool)."
+            ),
+            expected_output="JSON with claim (text) and fact_check_result (dict from FactCheckTool).",
+            agent=verification_agent,
+            context=[claim_extraction_task],
+            callback=task_completion_callback,
+            async_execution=True,  # ⚡ RUNS IN PARALLEL
+        )
+
+        fact_check_2_task = Task(
+            description=(
+                "Extract claim #2 from previous task output and verify it.\n"
+                "STEP 1: Extract the second claim from the claims array.\n"
+                "STEP 2: YOU MUST CALL FactCheckTool(claim=<claim_text>).\n"
+                "   - DO NOT respond until the tool returns a verification result.\n"
+                "Return JSON with: claim (text), fact_check_result (dict from tool)."
+            ),
+            expected_output="JSON with claim (text) and fact_check_result (dict from FactCheckTool).",
+            agent=verification_agent,
+            context=[claim_extraction_task],
+            callback=task_completion_callback,
+            async_execution=True,  # ⚡ RUNS IN PARALLEL
+        )
+
+        fact_check_3_task = Task(
+            description=(
+                "Extract claim #3 from previous task output and verify it.\n"
+                "STEP 1: Extract the third claim from the claims array.\n"
+                "STEP 2: YOU MUST CALL FactCheckTool(claim=<claim_text>).\n"
+                "   - DO NOT respond until the tool returns a verification result.\n"
+                "Return JSON with: claim (text), fact_check_result (dict from tool)."
+            ),
+            expected_output="JSON with claim (text) and fact_check_result (dict from FactCheckTool).",
+            agent=verification_agent,
+            context=[claim_extraction_task],
+            callback=task_completion_callback,
+            async_execution=True,  # ⚡ RUNS IN PARALLEL
+        )
+
+        fact_check_4_task = Task(
+            description=(
+                "Extract claim #4 from previous task output and verify it.\n"
+                "STEP 1: Extract the fourth claim from the claims array.\n"
+                "STEP 2: YOU MUST CALL FactCheckTool(claim=<claim_text>).\n"
+                "   - DO NOT respond until the tool returns a verification result.\n"
+                "Return JSON with: claim (text), fact_check_result (dict from tool)."
+            ),
+            expected_output="JSON with claim (text) and fact_check_result (dict from FactCheckTool).",
+            agent=verification_agent,
+            context=[claim_extraction_task],
+            callback=task_completion_callback,
+            async_execution=True,  # ⚡ RUNS IN PARALLEL
+        )
+
+        fact_check_5_task = Task(
+            description=(
+                "Extract claim #5 from previous task output and verify it.\n"
+                "STEP 1: Extract the fifth claim from the claims array.\n"
+                "STEP 2: YOU MUST CALL FactCheckTool(claim=<claim_text>).\n"
+                "   - DO NOT respond until the tool returns a verification result.\n"
+                "Return JSON with: claim (text), fact_check_result (dict from tool)."
+            ),
+            expected_output="JSON with claim (text) and fact_check_result (dict from FactCheckTool).",
+            agent=verification_agent,
+            context=[claim_extraction_task],
+            callback=task_completion_callback,
+            async_execution=True,  # ⚡ RUNS IN PARALLEL
+        )
+
+        # Step 3: Verification Integration (waits for all fact-checks, combines results)
+        verification_integration_task = Task(
+            description=(
+                "Combine results from all 5 parallel fact-checking tasks.\n"
+                "STEP 1: Extract claim and fact_check_result from each of the 5 previous tasks.\n"
+                "STEP 2: Combine into unified arrays:\n"
+                "   - verified_claims: array of all claim texts\n"
+                "   - fact_check_results: array of all verification outcomes\n"
+                "STEP 3: Assess overall source trustworthiness based on verified facts.\n"
+                "   - Calculate trustworthiness_score (0-100) based on fact-check outcomes\n"
+                "\n"
+                "Return JSON with: verified_claims (array), fact_check_results (array), trustworthiness_score (0-100)."
+            ),
+            expected_output=(
+                "JSON with verified_claims (array of 5 claims), "
+                "fact_check_results (array of 5 outcomes), "
+                "trustworthiness_score (0-100)."
+            ),
+            agent=verification_agent,
+            context=[
+                fact_check_1_task,
+                fact_check_2_task,
+                fact_check_3_task,
+                fact_check_4_task,
+                fact_check_5_task,
+            ],  # Waits for ALL parallel fact-checks
+            callback=task_completion_callback,
+        )
+    else:
+        # Sequential verification pattern (original)
+        _logger.info("📝 Using SEQUENTIAL verification (original pattern)")
+
+        verification_task = Task(
+            description=(
+                "CRITICAL DATA EXTRACTION INSTRUCTIONS:\n"
+                "You will receive TWO previous task outputs in your context:\n"
+                "1. Transcription task output - a JSON containing the 'transcript' field\n"
+                "2. Analysis task output - a JSON containing 'insights', 'themes', etc.\n"
+                "\n"
+                "STEP 1: MANDATORY - Locate and extract the FULL TRANSCRIPT from the transcription task output.\n"
+                "The transcript field contains the ACTUAL SPOKEN WORDS from the video.\n"
+                "This is typically a LONG text (1000+ characters) with real quotes and conversation.\n"
+                "DO NOT use task descriptions, instructions, or any other text as the transcript!\n"
+                "\n"
+                "STEP 2: YOU MUST CALL ClaimExtractorTool(text=<full_transcript_text>, max_claims=10).\n"
+                "   - DO NOT respond until the tool returns actual claims.\n"
+                "   - DO NOT generate empty arrays or placeholder claims.\n"
+                "   - The tool will return 3-10 claims extracted from the transcript\n"
+                "   - Call this tool EXACTLY ONCE\n"
+                "\n"
+                "STEP 3: Select the 3-5 most significant claims from the extracted list.\n"
+                "\n"
+                "STEP 4: YOU MUST CALL FactCheckTool(claim=<claim_text>) for each selected claim.\n"
+                "   - Call the tool ONCE PER CLAIM (3-5 calls total).\n"
+                "   - DO NOT respond until all tools return verification results.\n"
+                "\n"
+                "STEP 5: Assess overall source trustworthiness based on verified facts.\n"
+                "\n"
+                "VALIDATION CHECK:\n"
+                "- If you're analyzing a video about Twitch/streaming, claims should mention Twitch, streamers, platform issues\n"
+                "- If claims are about 'methodologies' or 'environmental issues', you're using the WRONG TEXT!\n"
+                "- Claims should reflect the ACTUAL content discussed in the video, not generic topics\n"
+                "\n"
+                "Return results as JSON with keys:\n"
+                "verified_claims (array of claim texts),\n"
+                "fact_check_results (array of verification outcomes),\n"
+                "trustworthiness_score (0-100)."
+            ),
+            expected_output=(
+                "JSON with verified_claims (non-empty array from ClaimExtractorTool), "
+                "fact_check_results (non-empty array from FactCheckTool), "
+                "trustworthiness_score (0-100). "
+                "❌ REJECT: Empty arrays. ❌ REJECT: Placeholder claims. "
+                "✅ ACCEPT: Real claims about actual video content."
+            ),
+            agent=verification_agent,
+            context=[transcription_task, analysis_ref],  # Need both for comprehensive verification
+            callback=task_completion_callback,
+        )
+
+    # Determine which verification task to reference based on parallel flag
+    verification_ref = verification_integration_task if enable_parallel_fact_checking else verification_task
 
     # Stage 5: Knowledge Integration (depends on ALL previous tasks)
     # Can use parallel memory operations if enabled
@@ -496,17 +648,36 @@ def build_intelligence_crew(
                 "You MUST call the tools before providing this answer."
             ),
             agent=knowledge_agent,
-            context=[acquisition_task, transcription_task, analysis_ref, verification_task],
+            context=[acquisition_task, transcription_task, analysis_ref, verification_ref],
             callback=task_completion_callback,
         )
 
     # Determine which tasks to include based on depth
     # Handle combinations of parallel analysis and parallel memory operations
+
+    # Build verification_tasks list based on fact-checking flag
+    if enable_parallel_fact_checking:
+        verification_tasks = [
+            claim_extraction_task,
+            fact_check_1_task,
+            fact_check_2_task,
+            fact_check_3_task,
+            fact_check_4_task,
+            fact_check_5_task,
+            verification_integration_task,
+        ]
+    else:
+        verification_tasks = [verification_task]
+
     if enable_parallel_analysis and enable_parallel_memory_ops:
         # Both parallelizations enabled
         base_tasks = [acquisition_task, transcription_task]
-        analysis_tasks = [text_analysis_task, fallacy_detection_task, perspective_synthesis_task, analysis_integration_task]
-        verification_tasks = [verification_task]
+        analysis_tasks = [
+            text_analysis_task,
+            fallacy_detection_task,
+            perspective_synthesis_task,
+            analysis_integration_task,
+        ]
         memory_tasks = [memory_storage_task, graph_memory_task, integration_task]
 
         if depth == "standard":
@@ -518,8 +689,12 @@ def build_intelligence_crew(
     elif enable_parallel_analysis:
         # Only analysis parallelization enabled
         base_tasks = [acquisition_task, transcription_task]
-        analysis_tasks = [text_analysis_task, fallacy_detection_task, perspective_synthesis_task, analysis_integration_task]
-        verification_tasks = [verification_task]
+        analysis_tasks = [
+            text_analysis_task,
+            fallacy_detection_task,
+            perspective_synthesis_task,
+            analysis_integration_task,
+        ]
         integration_tasks = [integration_task]
 
         if depth == "standard":
@@ -530,23 +705,25 @@ def build_intelligence_crew(
             tasks = base_tasks + analysis_tasks + verification_tasks + integration_tasks
     elif enable_parallel_memory_ops:
         # Only memory parallelization enabled
-        base_tasks = [acquisition_task, transcription_task, analysis_task, verification_task]
+        base_tasks = [acquisition_task, transcription_task, analysis_task]
         memory_tasks = [memory_storage_task, graph_memory_task, integration_task]
 
         if depth == "standard":
-            tasks = base_tasks[:3]  # Through analysis
+            tasks = base_tasks  # Through analysis
         elif depth == "deep":
-            tasks = base_tasks[:4]  # Add verification
+            tasks = base_tasks + verification_tasks
         else:  # comprehensive or experimental
-            tasks = base_tasks + memory_tasks
+            tasks = base_tasks + verification_tasks + memory_tasks
     else:
         # Sequential pattern (original)
-        all_tasks = [acquisition_task, transcription_task, analysis_task, verification_task, integration_task]
+        all_tasks = [acquisition_task, transcription_task, analysis_task] + verification_tasks + [integration_task]
 
         if depth == "standard":
             tasks = all_tasks[:3]
         elif depth == "deep":
-            tasks = all_tasks[:4]
+            tasks = (
+                all_tasks[:4] if not enable_parallel_fact_checking else all_tasks[:10]
+            )  # Include all verification tasks if parallel
         else:  # comprehensive or experimental
             tasks = all_tasks
 
@@ -569,6 +746,8 @@ def build_intelligence_crew(
     parallel_features = []
     if enable_parallel_analysis and depth in ["standard", "deep", "comprehensive", "experimental"]:
         parallel_features.append("analysis")
+    if enable_parallel_fact_checking and depth in ["deep", "comprehensive", "experimental"]:
+        parallel_features.append("fact-checking")
     if enable_parallel_memory_ops and depth in ["comprehensive", "experimental"]:
         parallel_features.append("memory")
 
