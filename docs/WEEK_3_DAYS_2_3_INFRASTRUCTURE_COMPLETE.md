@@ -191,6 +191,7 @@ Based on Week 2 implementation expectations:
 **Task:** Run Combination 1 (sequential baseline) with 3 iterations
 
 **Command:**
+
 ```bash
 python3 scripts/benchmark_autointel_flags.py \
   --url "https://youtube.com/watch?v=YOUR_URL" \
@@ -204,6 +205,7 @@ python3 scripts/benchmark_autointel_flags.py \
 **Expected Duration:** ~35 minutes (3 × 10.5 min + overhead)
 
 **Success Criteria:**
+
 - ✅ 3 successful iterations
 - ✅ Mean: 600-660 seconds
 - ✅ Std dev: <30 seconds
@@ -216,6 +218,7 @@ python3 scripts/benchmark_autointel_flags.py \
 **Task:** Run Combinations 2-4 (one optimization each)
 
 **Commands:**
+
 ```bash
 # Combination 2 (Memory)
 python3 scripts/benchmark_autointel_flags.py --url "..." --combinations 2 --iterations 3
@@ -230,6 +233,7 @@ python3 scripts/benchmark_autointel_flags.py --url "..." --combinations 4 --iter
 **Expected Duration:** ~1.5-2 hours total
 
 **Success Criteria:**
+
 - ✅ All combinations show savings vs baseline
 - ✅ Combination 3 shows largest savings (1-2 min)
 - ✅ Quality metrics maintained
@@ -244,6 +248,7 @@ python3 scripts/benchmark_autointel_flags.py --url "..." --combinations 4 --iter
 **Risk:** Script fails due to missing dependencies (crewai, orchestrator)
 
 **Mitigation:**
+
 - ✅ Comprehensive prerequisites section in execution guide
 - ✅ Import checks at script startup
 - ✅ Clear error messages with troubleshooting steps
@@ -257,6 +262,7 @@ python3 scripts/benchmark_autointel_flags.py --url "..." --combinations 4 --iter
 **Risk:** Video too long/short, poor quality, geo-blocked
 
 **Mitigation:**
+
 - ✅ Video selection criteria in guide (5-10 min, public, English)
 - ✅ Examples provided
 - ✅ Verification command (`yt-dlp --list-formats`)
@@ -270,6 +276,7 @@ python3 scripts/benchmark_autointel_flags.py --url "..." --combinations 4 --iter
 **Risk:** 24 runs (full suite) takes 4-6 hours, discouraging execution
 
 **Mitigation:**
+
 - ✅ Support for running individual combinations
 - ✅ Quick test option (1 iteration, 2 combinations)
 - ✅ Interim saves allow resumption
@@ -284,6 +291,7 @@ python3 scripts/benchmark_autointel_flags.py --url "..." --combinations 4 --iter
 **Risk:** High variance makes it hard to determine if optimizations work
 
 **Mitigation:**
+
 - ✅ 3 iterations minimum (can increase to 5+)
 - ✅ Statistical analysis (std dev tracking)
 - ✅ Pass criteria allows 20% margin
@@ -372,18 +380,21 @@ Phase 3 Performance Optimization - Week 3 Days 2-3 Infrastructure"
 ## What's Next: Actual Execution
 
 **Tomorrow (Day 2):**
+
 1. Select test video URL (5-10 min, public, educational)
 2. Run Combination 1 baseline (3 iterations, ~35 min)
 3. Verify results: 600-660s mean, <30s std dev
 4. Save baseline for comparison
 
 **Day 3:**
+
 1. Run Combinations 2-4 (individual optimizations, ~2 hours)
 2. Analyze results vs baseline
 3. Verify expected savings achieved
 4. Generate completion report
 
 **Days 4-5:**
+
 1. Run Combinations 5-8 (combined optimizations)
 2. Validate additive savings
 3. Test Combination 8 (all parallel) hits 2-4 min target

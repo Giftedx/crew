@@ -189,15 +189,13 @@ async def run_single_benchmark(
         logger.info(f"  Starting execution at {start_datetime.isoformat()}")
 
         # Execute workflow
-        await orchestrator.execute_autonomous_intelligence_workflow(
-            interaction=interaction, url=url, depth=depth
-        )
+        await orchestrator.execute_autonomous_intelligence_workflow(interaction=interaction, url=url, depth=depth)
 
         end_time = time.time()
         end_datetime = datetime.now()
         duration_seconds = end_time - start_time
 
-        logger.info(f"  Completed in {duration_seconds:.2f}s ({duration_seconds/60:.2f} min)")
+        logger.info(f"  Completed in {duration_seconds:.2f}s ({duration_seconds / 60:.2f} min)")
 
         # Collect results (extract from orchestrator state if available)
         # Note: This requires orchestrator to expose results, which may need enhancement
@@ -340,7 +338,7 @@ def generate_summary_report(all_results: dict[int, list[dict[str, Any]]], output
         "# Flag Combination Validation Results",
         "",
         f"**Generated:** {datetime.now().isoformat()}",
-        f"**Baseline Mean:** {baseline_mean:.2f}s ({baseline_mean/60:.2f} min)",
+        f"**Baseline Mean:** {baseline_mean:.2f}s ({baseline_mean / 60:.2f} min)",
         "",
         "---",
         "",
@@ -439,7 +437,10 @@ async def main():
     parser = argparse.ArgumentParser(description="Benchmark /autointel flag combinations")
     parser.add_argument("--url", required=True, help="YouTube URL to process")
     parser.add_argument(
-        "--depth", default="experimental", choices=["standard", "deep", "comprehensive", "experimental"], help="Analysis depth"
+        "--depth",
+        default="experimental",
+        choices=["standard", "deep", "comprehensive", "experimental"],
+        help="Analysis depth",
     )
     parser.add_argument("--iterations", type=int, default=3, help="Iterations per combination (default: 3)")
     parser.add_argument(

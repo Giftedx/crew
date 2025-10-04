@@ -10,6 +10,7 @@
 ## 🎯 What We're Validating
 
 We've implemented **3 parallelization phases** in Week 2:
+
 - ✅ **Phase 1:** Memory ops parallelization (`ENABLE_PARALLEL_MEMORY_OPS`)
 - ✅ **Phase 2:** Analysis parallelization (`ENABLE_PARALLEL_ANALYSIS`)
 - ✅ **Phase 3:** Fact-checking parallelization (`ENABLE_PARALLEL_FACT_CHECKING`)
@@ -25,21 +26,25 @@ We've implemented **3 parallelization phases** in Week 2:
 ### 1. Environment Setup
 
 - [ ] **Python 3.11+ installed** and accessible as `python3`
+
   ```bash
   python3 --version  # Should show 3.11 or higher
   ```
 
 - [ ] **Virtual environment activated**
+
   ```bash
   source .venv/bin/activate
   ```
 
 - [ ] **All dependencies installed**
+
   ```bash
   pip install -e '.[dev]'
   ```
 
 - [ ] **Environment variables configured**
+
   ```bash
   # Check required API keys are set
   echo $OPENROUTER_API_KEY  # Should not be empty
@@ -57,6 +62,7 @@ Select a video meeting these criteria:
 - [ ] **Availability:** Reliable hosting (no copyright strikes pending)
 
 **Example URLs** (verified working):
+
 - Educational: `https://www.youtube.com/watch?v=dQw4w9WgXcQ` (example only)
 - Tech talks, conference presentations, tutorials all work well
 
@@ -65,11 +71,13 @@ Select a video meeting these criteria:
 ### 3. Disk Space Verification
 
 - [ ] **At least 2GB free disk space**
+
   ```bash
   df -h .  # Check current directory filesystem
   ```
 
 - [ ] **`benchmarks/results/` directory will be created** (or exists)
+
   ```bash
   ls -la benchmarks/results/ 2>/dev/null || echo "Will be created"
   ```
@@ -79,6 +87,7 @@ Select a video meeting these criteria:
 Run a quick baseline test (Combination 1 - all flags OFF):
 
 - [ ] **Execute baseline test**
+
   ```bash
   python3 scripts/benchmark_autointel_flags.py \
     --url "YOUR_SELECTED_URL" \
@@ -96,6 +105,7 @@ Run a quick baseline test (Combination 1 - all flags OFF):
 The benchmark script uses **mock Discord interactions** by default, so no live Discord setup is required. However, if you want to test with real Discord:
 
 - [ ] **Discord bot token configured** (optional)
+
   ```bash
   echo $DISCORD_BOT_TOKEN  # Should not be empty if using real Discord
   ```
@@ -124,6 +134,7 @@ python3 scripts/benchmark_autointel_flags.py \
 ```
 
 **What this does:**
+
 1. Combination 1: All flags OFF (baseline) - 3 iterations
 2. Combination 2: Only MEMORY parallelization ON - 3 iterations
 3. Combination 3: Only ANALYSIS parallelization ON - 3 iterations
@@ -257,6 +268,7 @@ cat benchmarks/results/benchmark_summary_YYYYMMDD_HHMMSS.md
 ```
 
 **Expected content:**
+
 - Performance comparison table (all 8 combinations)
 - Statistical analysis (mean, median, std dev)
 - Savings calculations vs baseline
@@ -405,6 +417,7 @@ After successful execution:
 4. **Week 3 Day 7:** Final documentation + Phase 3 completion report
 
 **Expected Timeline:**
+
 - Execution: 4 hours (today)
 - Analysis: 1 hour (today/tomorrow)
 - Documentation: 1 hour (tomorrow)

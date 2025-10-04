@@ -43,6 +43,7 @@ enable_parallel_fact_checking: bool = Field(False, alias="ENABLE_PARALLEL_FACT_C
 ```
 
 **Behavior:**
+
 - `False` (default): Uses sequential verification_task (original pattern)
 - `True`: Splits into 7 tasks with 5 parallel fact-checks
 
@@ -54,6 +55,7 @@ enable_parallel_fact_checking: bool = Field(False, alias="ENABLE_PARALLEL_FACT_C
 #### Pattern: 7-Task Split (When Flag Enabled)
 
 **Sequential Stage (Task 1):**
+
 ```python
 claim_extraction_task = Task(
     description="Extract 5 most significant claims using ClaimExtractorTool",
@@ -64,6 +66,7 @@ claim_extraction_task = Task(
 ```
 
 **Parallel Stage (Tasks 2-6):**
+
 ```python
 fact_check_1_task = Task(
     description="Extract claim #1 and verify using FactCheckTool",
@@ -80,6 +83,7 @@ fact_check_5_task = Task(...)
 ```
 
 **Integration Stage (Task 7):**
+
 ```python
 verification_integration_task = Task(
     description="Combine all 5 fact-check results, calculate trustworthiness_score",
@@ -183,6 +187,7 @@ def _build_intelligence_crew(self, url: str, depth: str) -> Crew:
 ### Common Pattern Across All 3 Phases
 
 **CrewAI async_execution=True:**
+
 1. ✅ Stays within CrewAI framework (no custom async code)
 2. ✅ Automatic synchronization via `context` parameter
 3. ✅ Minimal overhead (~10-50ms per async task)
@@ -203,6 +208,7 @@ make test-fast
 ```
 
 **Coverage:**
+
 - ✅ HTTP utils tests
 - ✅ Guards HTTP requests tests  
 - ✅ Vector store dimension tests
@@ -213,6 +219,7 @@ make test-fast
 ### Pre-Commit Checks
 
 All checks passed:
+
 - ✅ Format (ruff format - 923 files unchanged)
 - ✅ Lint (ruff check - no issues)
 - ✅ Tests (36 passed, zero failures)
@@ -252,11 +259,13 @@ Verification Stage (~20-30s total):
 ### Expected Savings
 
 **Conservative Estimate:**
+
 - Sequential: ~75s average (5 fact-checks × 15s each)
 - Parallel: ~20s average (limited by slowest fact-check + overhead)
 - **Savings: ~45-60s (0.75-1 min)**
 
 **Factors:**
+
 - ✅ I/O-bound operations (external API calls) benefit most from parallelization
 - ✅ Near-linear speedup for 5 concurrent calls
 - ⚠️ Limited by slowest fact-check (worst-case ~20s)
@@ -282,6 +291,7 @@ Verification Stage (~20-30s total):
 **Expected After Week 2:** 6.5-8.5 min (with all 3 flags enabled)
 
 **Progress:**
+
 - Best case: 10.5 min → 6.5 min = 38% improvement ✅ (EXCEEDS GOAL)
 - Conservative: 10.5 min → 8.5 min = 19% improvement ⚠️ (needs Week 3 validation)
 

@@ -14,6 +14,7 @@
 **File:** `scripts/benchmark_autointel_flags.py` (650 lines)
 
 **Capabilities:**
+
 - Executes all 8 flag combinations with real orchestrator
 - Multi-iteration support (default 3, configurable)
 - Environment variable management (backup/restore)
@@ -23,6 +24,7 @@
 - Flexible CLI for selective execution
 
 **Key Features:**
+
 ```python
 # Run full suite (24 runs)
 python scripts/benchmark_autointel_flags.py --url "..." --iterations 3 --combinations 1 2 3 4 5 6 7 8
@@ -41,6 +43,7 @@ python scripts/benchmark_autointel_flags.py --url "..." --combinations 3 --verbo
 **File:** `docs/WEEK_3_DAYS_2_3_EXECUTION_GUIDE.md` (500+ lines)
 
 **Sections:**
+
 - Prerequisites (environment, test video, secrets, disk space)
 - Execution steps (baseline → individual optimizations → monitoring)
 - Data collection & analysis
@@ -57,6 +60,7 @@ python scripts/benchmark_autointel_flags.py --url "..." --combinations 3 --verbo
 **File:** `docs/WEEK_3_DAYS_2_3_INFRASTRUCTURE_COMPLETE.md` (400+ lines)
 
 **Contents:**
+
 - Executive summary of deliverables
 - Technical implementation details
 - Expected performance matrix (all 8 combinations)
@@ -71,6 +75,7 @@ python scripts/benchmark_autointel_flags.py --url "..." --combinations 3 --verbo
 ### Benchmark Script Architecture
 
 **Design Principles:**
+
 1. **Real Execution:** Uses actual `AutonomousIntelligenceOrchestrator` (no mocks)
 2. **Env Management:** Backs up/restores environment variables per run
 3. **Crash-Safe:** Interim JSON files saved after each iteration
@@ -78,6 +83,7 @@ python scripts/benchmark_autointel_flags.py --url "..." --combinations 3 --verbo
 5. **Mock Discord:** Avoids Discord API calls while maintaining compatibility
 
 **Performance Matrix:**
+
 | Combination | Expected Time | Expected Savings | Pass Criteria |
 |-------------|---------------|------------------|---------------|
 | 1 (Baseline) | 10.5 min | 0 (baseline) | 600-660s, std <30s |
@@ -103,12 +109,14 @@ python scripts/benchmark_autointel_flags.py --url "..." --combinations 3 --verbo
 ## Quality Checks
 
 ### Pre-Commit Hooks ✅
+
 - ✅ Ruff formatting (1 file reformatted)
 - ✅ Ruff linting (all checks passed)
 - ✅ Fast tests (36 passed, zero regressions)
 - ✅ Compliance checks (all passed)
 
 ### Code Quality ✅
+
 - ✅ Type hints throughout
 - ✅ Comprehensive docstrings
 - ✅ Error handling (try/finally for env restoration)
@@ -116,6 +124,7 @@ python scripts/benchmark_autointel_flags.py --url "..." --combinations 3 --verbo
 - ✅ CLI argument validation
 
 ### Documentation Quality ✅
+
 - ✅ Prerequisites clearly documented
 - ✅ Execution steps detailed
 - ✅ Success criteria defined
@@ -136,6 +145,7 @@ Deletions: 0
 ```
 
 **Previous commits this week:**
+
 - `3801416` - Week 3 Day 1: Validation plan (700+ lines)
 - `7c196b4` - Week 2 Phase 3: Fact-checking parallelization
 - `8ce8f4a` - Week 2 Phase 2: Analysis parallelization
@@ -146,6 +156,7 @@ Deletions: 0
 ## What's Ready
 
 ### ✅ Infrastructure Complete
+
 - Benchmark harness with 8-combination support
 - Statistical analysis framework
 - JSON + markdown reporting
@@ -153,6 +164,7 @@ Deletions: 0
 - Flexible CLI interface
 
 ### ✅ Documentation Complete
+
 - Execution guide (500+ lines)
 - Prerequisites checklist
 - Troubleshooting section
@@ -160,6 +172,7 @@ Deletions: 0
 - Quick reference commands
 
 ### ✅ Testing Framework
+
 - Real orchestrator execution
 - Mock Discord integration
 - Environment variable management
@@ -185,12 +198,14 @@ python3 scripts/benchmark_autointel_flags.py \
 ```
 
 **Expected:**
+
 - Duration: ~35 min (3 × 10.5 min + overhead)
 - Mean: 600-660 seconds (10-11 min)
 - Std dev: <30 seconds
 - Files: JSON results, markdown summary, logs
 
 **Success Criteria:**
+
 - ✅ 3 successful iterations
 - ✅ Consistent performance (low variance)
 - ✅ No errors in logs
@@ -217,12 +232,14 @@ python3 scripts/benchmark_autointel_flags.py --url "..." --combinations 4 --iter
 ```
 
 **Expected:**
+
 - Duration: ~1.5-2 hours total
 - Combination 2: 9.5-10 min (0.5-1 min savings)
 - Combination 3: 8.5-9.5 min (1-2 min savings) ← Largest
 - Combination 4: 9.5-10 min (0.5-1 min savings)
 
 **Success Criteria:**
+
 - ✅ All combinations show savings vs baseline
 - ✅ Combination 3 shows largest improvement
 - ✅ Quality metrics maintained
@@ -235,10 +252,12 @@ python3 scripts/benchmark_autointel_flags.py --url "..." --combinations 4 --iter
 **Task:** Run Combinations 5-8 (multi-flag combinations)
 
 **Expected:**
+
 - Combinations 5-7: Additive savings (1.5-3 min)
 - Combination 8: Target achievement (2-4 min savings)
 
 **Success Criteria:**
+
 - ✅ Additive savings observed (not sub-additive)
 - ✅ Combination 8 achieves ≥2 min savings (conservative target)
 - ✅ No quality degradation
@@ -249,18 +268,21 @@ python3 scripts/benchmark_autointel_flags.py --url "..." --combinations 4 --iter
 ## Risk Assessment
 
 ### Low Risk ✅
+
 - Infrastructure tested (git pre-commit hooks passed)
 - Documentation comprehensive (500+ lines execution guide)
 - Error handling robust (try/finally, interim saves)
 - CLI tested (help output works)
 
 ### Medium Risk ⚠️
+
 - Real execution requires full environment (crewai, orchestrator)
 - Video selection critical (5-10 min, public, English)
 - API rate limits could affect timing
 - Variance could obscure results (mitigated: 3+ iterations)
 
 ### Mitigations Applied
+
 - ✅ Prerequisites checklist in guide
 - ✅ Video selection criteria documented
 - ✅ Troubleshooting section included
@@ -272,6 +294,7 @@ python3 scripts/benchmark_autointel_flags.py --url "..." --combinations 4 --iter
 ## Success Metrics (Infrastructure Phase)
 
 ### Code Metrics ✅
+
 - ✅ 650 lines benchmark harness
 - ✅ 8 flag combinations supported
 - ✅ Statistical analysis implemented
@@ -279,6 +302,7 @@ python3 scripts/benchmark_autointel_flags.py --url "..." --combinations 4 --iter
 - ✅ Zero regressions (36 tests passing)
 
 ### Documentation Metrics ✅
+
 - ✅ 500+ lines execution guide
 - ✅ 400+ lines completion report
 - ✅ Prerequisites documented
@@ -286,11 +310,13 @@ python3 scripts/benchmark_autointel_flags.py --url "..." --combinations 4 --iter
 - ✅ Success criteria defined
 
 ### Readiness Assessment ✅
+
 **Question:** Can we execute validation tests now?
 
 **Answer:** ✅ **YES!**
 
 With the following:
+
 - Test video URL (5-10 min, public, English)
 - Full Python environment (crewai, orchestrator)
 - API keys configured (OPENROUTER_API_KEY)
@@ -302,6 +328,7 @@ With the following:
 ## Lessons Learned
 
 ### What Worked Well ✅
+
 1. **Incremental approach:** Infrastructure → execution guide → completion report
 2. **Comprehensive documentation:** 500+ lines means self-service execution
 3. **Flexible CLI:** Can run individual combinations or full suite
@@ -309,6 +336,7 @@ With the following:
 5. **Crash-safe design:** Interim saves allow resumption
 
 ### What Could Improve
+
 1. **Quality metrics extraction:** Orchestrator doesn't currently expose results
    - Future enhancement: Add result accessors to orchestrator
 2. **Environment detection:** Could auto-detect missing dependencies
@@ -331,6 +359,7 @@ Week 3 Days 2-3 infrastructure is **production-ready**. The validation framework
 **Next session** will focus on actual benchmark execution and results analysis.
 
 **Estimated timeline:**
+
 - Day 2: 35 min (Combination 1 baseline)
 - Day 3: 1.5-2 hours (Combinations 2-4)
 - Days 4-5: 1.5-2 hours (Combinations 5-8)

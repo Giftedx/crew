@@ -46,12 +46,14 @@ python -c "from crewai import Crew, Task, Agent; print('✅ CrewAI import succes
 Choose a YouTube video with the following characteristics:
 
 **Recommended Properties:**
+
 - **Length:** 5-10 minutes (not too short, not too long)
 - **Content:** Educational or interview content (good for analysis)
 - **Availability:** Publicly accessible (not age-restricted or geo-blocked)
 - **Language:** English (for best transcription quality)
 
 **Example URLs:**
+
 ```bash
 # Example 1: TED Talk (~10 min)
 URL="https://youtube.com/watch?v=8jPQjjsBbIc"
@@ -123,18 +125,21 @@ python scripts/benchmark_autointel_flags.py \
 ```
 
 **Success Criteria:**
+
 - ✅ All 3 iterations complete successfully
 - ✅ Mean time: 600-660 seconds (10-11 min)
 - ✅ Standard deviation <30 seconds (consistent performance)
 - ✅ No errors in logs
 
 **If Baseline Fails:**
+
 1. Check logs in `benchmarks/logs/benchmark_run_*.log`
 2. Verify URL is accessible: `yt-dlp --list-formats "YOUR_URL"`
 3. Check API keys are valid
 4. Ensure sufficient disk space
 
 **Expected Files Created:**
+
 ```
 benchmarks/
 ├── logs/
@@ -228,6 +233,7 @@ htop  # Check CPU/memory usage
 ```
 
 **Warning Signs to Watch For:**
+
 - ⚠️ Duration >12 min (720s) → Performance regression
 - ⚠️ Errors in logs → Check API keys, network, disk space
 - ⚠️ High variance (std >60s) → Inconsistent performance, may need more iterations
@@ -332,11 +338,13 @@ for combo_id in [2, 3, 4]:
 ### Issue: Runs Taking Too Long (>12 min)
 
 **Possible Causes:**
+
 1. Network latency (slow YouTube download)
 2. API rate limiting (OpenRouter throttling)
 3. Insufficient CPU/memory resources
 
 **Solutions:**
+
 ```bash
 # Check network speed
 curl -o /dev/null https://youtube.com  # Should be fast
@@ -353,11 +361,13 @@ free -h  # Check available memory
 ### Issue: Errors During Execution
 
 **Common Errors:**
+
 1. `ImportError: No module named 'crewai'` → Run `pip install -e '.[dev]'`
 2. `KeyError: 'OPENROUTER_API_KEY'` → Set API key in `.env`
 3. `yt-dlp error` → Check YouTube URL accessibility
 
 **Debug Steps:**
+
 ```bash
 # Test orchestrator import
 python -c "from ultimate_discord_intelligence_bot.autonomous_orchestrator import AutonomousIntelligenceOrchestrator; print('OK')"
@@ -372,11 +382,13 @@ cat benchmarks/logs/benchmark_run_*.log | grep -A 20 "ERROR"
 ### Issue: Inconsistent Results (High Variance)
 
 **Possible Causes:**
+
 1. Different video caching states
 2. API response time variance
 3. System load fluctuations
 
 **Solutions:**
+
 - Run more iterations (5 instead of 3)
 - Use isolated environment (close other apps)
 - Cache warm-up run before benchmarks
@@ -487,6 +499,7 @@ with open('benchmarks/flag_validation_results_*.json') as f:
 **Ready to Execute?** ✅
 
 Start with:
+
 ```bash
 python scripts/benchmark_autointel_flags.py --url "YOUR_URL" --combinations 1 --iterations 3 --verbose
 ```
