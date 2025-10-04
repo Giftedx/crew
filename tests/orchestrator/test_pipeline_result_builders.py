@@ -1,4 +1,6 @@
-"""Unit tests for pipeline_result_builders module."""
+"""Unit tests for pipeline result builder utilities."""
+
+from __future__ import annotations
 
 import time
 from typing import Any
@@ -8,6 +10,7 @@ import pytest
 
 from ultimate_discord_intelligence_bot.orchestrator.pipeline_result_builders import (
     build_pipeline_content_analysis_result,
+    merge_threat_payload,
 )
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
@@ -266,3 +269,161 @@ class TestBuildPipelineContentAnalysisResult:
         result = build_pipeline_content_analysis_result(**minimal_inputs)
 
         assert result.data["content_metadata"]["quality_score"] == 0.5
+
+
+# ========== merge_threat_payload Tests ==========
+
+
+class TestMergeThreatPayload:
+    """Tests for merge_threat_payload function."""
+
+    @pytest.fixture
+    def base_threat_payload(self) -> dict[str, Any]:
+        """Fixture for a minimal threat payload."""
+        return {
+            "threat_level": "high",
+            "threats_detected": ["malware", "phishing"],
+        }
+
+    def test_empty_inputs_returns_copy(self, base_threat_payload):
+        """Test merge with no verification/fact data returns copy of base."""
+        result = merge_threat_payload(base_threat_payload, None, None)
+
+        assert result == base_threat_payload
+        assert result is not base_threat_payload  # Should be a copy
+
+    def test_verification_deception_metrics_merged(self, base_threat_payload):
+        """Test deception_metrics from verification_data is merged."""
+        verification_data = {
+            "deception_metrics": {"score": 0.8, "indicators": ["inconsistency"]},
+        }
+
+        result = merge_threat_payload(base_threat_payload, verification_data, None)
+
+        assert result["deception_metrics"] == {"score": 0.8, "indicators": ["inconsistency"]}
+
+    def test_verification_credibility_assessment_merged(self, base_threat_payload):
+        """Test credibility_assessment from verification_data is merged."""
+        verification_data = {
+            "credibility_assessment": {"rating": "low", "reasons": ["unverified source"]},
+        }
+
+        result = merge_threat_payload(base_threat_payload, verification_data, None)
+
+        assert result["credibility_assessment"] == {"rating": "low", "reasons": ["unverified source"]}
+
+    def test_verification_deception_score_merged(self, base_threat_payload):
+        """Test deception_score from verification_data is merged."""
+        verification_data = {"deception_score": 0.75}
+
+        result = merge_threat_payload(base_threat_payload, verification_data, None)
+
+        assert result["deception_score"] == 0.75
+
+    def test_verification_logical_analysis_as_fallacies(self, base_threat_payload):
+        """Test logical_analysis from verification becomes logical_fallacies."""
+        verification_data = {
+            "logical_analysis": ["ad hominem", "straw man"],
+        }
+
+        result = merge_threat_payload(base_threat_payload, verification_data, None)
+
+        assert result["logical_fallacies"] == ["ad hominem", "straw man"]
+
+    def test_fact_data_fact_checks_merged(self, base_threat_payload):
+        """Test fact_checks from fact_data is merged."""
+        fact_data = {
+            "fact_checks": [{"claim": "X", "verdict": "false"}],
+        }
+
+        result = merge_threat_payload(base_threat_payload, None, fact_data)
+
+        assert result["fact_checks"] == [{"claim": "X", "verdict": "false"}]
+
+    def test_fact_data_logical_fallacies_merged(self, base_threat_payload):
+        """Test logical_fallacies from fact_data is merged."""
+        fact_data = {
+            "logical_fallacies": ["false dichotomy"],
+        }
+
+        result = merge_threat_payload(base_threat_payload, None, fact_data)
+
+        assert result["logical_fallacies"] == ["false dichotomy"]
+
+    def test_fact_data_perspective_synthesis_as_perspective(self, base_threat_payload):
+        """Test perspective_synthesis from fact_data becomes perspective."""
+        fact_data = {
+            "perspective_synthesis": "This content shows bias toward...",
+        }
+
+        result = merge_threat_payload(base_threat_payload, None, fact_data)
+
+        assert result["perspective"] == "This content shows bias toward..."
+
+    def test_does_not_override_existing_values(self, base_threat_payload):
+        """Test that existing keys in threat_payload are not overridden."""
+        base_threat_payload["deception_metrics"] = {"existing": "value"}
+        verification_data = {
+            "deception_metrics": {"new": "should not override"},
+        }
+
+        result = merge_threat_payload(base_threat_payload, verification_data, None)
+
+        # Should keep original value
+        assert result["deception_metrics"] == {"existing": "value"}
+
+    def test_multiple_sources_merged_without_conflict(self, base_threat_payload):
+        """Test merging from both verification and fact data when no conflicts."""
+        verification_data = {
+            "deception_metrics": {"score": 0.9},
+        }
+        fact_data = {
+            "fact_checks": [{"claim": "Y", "verdict": "true"}],
+        }
+
+        result = merge_threat_payload(base_threat_payload, verification_data, fact_data)
+
+        assert result["deception_metrics"] == {"score": 0.9}
+        assert result["fact_checks"] == [{"claim": "Y", "verdict": "true"}]
+
+    def test_fact_data_logical_fallacies_does_not_override_verification(self, base_threat_payload):
+        """Test that fact_data logical_fallacies doesn't override verification logical_analysis."""
+        verification_data = {
+            "logical_analysis": ["from verification"],
+        }
+        fact_data = {
+            "logical_fallacies": ["from fact data"],
+        }
+
+        result = merge_threat_payload(base_threat_payload, verification_data, fact_data)
+
+        # Should use verification_data's logical_analysis
+        assert result["logical_fallacies"] == ["from verification"]
+
+    def test_invalid_deception_score_type_ignored(self, base_threat_payload):
+        """Test that non-numeric deception_score is ignored."""
+        verification_data = {
+            "deception_score": "not a number",
+        }
+
+        result = merge_threat_payload(base_threat_payload, verification_data, None)
+
+        assert "deception_score" not in result
+
+    def test_non_dict_threat_payload_returns_empty_dict(self):
+        """Test that non-dict threat_payload is handled gracefully."""
+        result = merge_threat_payload("not a dict", None, None)
+
+        assert result == {}
+
+    def test_non_dict_verification_data_ignored(self, base_threat_payload):
+        """Test that non-dict verification_data is ignored."""
+        result = merge_threat_payload(base_threat_payload, "not a dict", None)
+
+        assert result == base_threat_payload
+
+    def test_non_dict_fact_data_ignored(self, base_threat_payload):
+        """Test that non-dict fact_data is ignored."""
+        result = merge_threat_payload(base_threat_payload, None, "not a dict")
+
+        assert result == base_threat_payload

@@ -406,6 +406,7 @@ class AutonomousIntelligenceOrchestrator:
         return data_transformers.merge_threat_and_deception_data(threat_result, deception_result)
 
     @staticmethod
+    @staticmethod
     def _merge_threat_payload(
         threat_payload: dict[str, Any],
         verification_data: dict[str, Any] | None,
@@ -413,34 +414,11 @@ class AutonomousIntelligenceOrchestrator:
     ) -> dict[str, Any]:
         """Augment a plain threat payload dict with relevant verification/fact data.
 
-        This helper is used when we have already-materialized dict payloads rather than StepResult objects.
-        It attaches deception_score, logical fallacies, and fact checks if present, without overriding
-        existing values.
+        Delegates to orchestrator.pipeline_result_builders.merge_threat_payload.
         """
-        merged = dict(threat_payload) if isinstance(threat_payload, dict) else {}
-        # From verification results
-        if isinstance(verification_data, dict):
-            if "deception_metrics" in verification_data and "deception_metrics" not in merged:
-                merged["deception_metrics"] = verification_data.get("deception_metrics")
-            if "credibility_assessment" in verification_data and "credibility_assessment" not in merged:
-                merged["credibility_assessment"] = verification_data.get("credibility_assessment")
-            # Deception score may live under various keys; don't clobber if already present
-            for k in ("deception_score",):
-                if k not in merged and isinstance(verification_data.get(k), (int, float)):
-                    merged[k] = verification_data.get(k)
-            if "logical_analysis" in verification_data and "logical_fallacies" not in merged:
-                merged["logical_fallacies"] = verification_data.get("logical_analysis")
+        from ultimate_discord_intelligence_bot.orchestrator.pipeline_result_builders import merge_threat_payload
 
-        # From fact analysis data
-        if isinstance(fact_data, dict):
-            if "fact_checks" in fact_data and "fact_checks" not in merged:
-                merged["fact_checks"] = fact_data.get("fact_checks")
-            if "logical_fallacies" in fact_data and "logical_fallacies" not in merged:
-                merged["logical_fallacies"] = fact_data.get("logical_fallacies")
-            if "perspective_synthesis" in fact_data and "perspective" not in merged:
-                merged["perspective"] = fact_data.get("perspective_synthesis")
-
-        return merged
+        return merge_threat_payload(threat_payload, verification_data, fact_data)
 
     @staticmethod
     def _build_knowledge_payload(
