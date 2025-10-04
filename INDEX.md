@@ -114,10 +114,12 @@ make test-fast
 .
 ├── src/
 │   ├── ultimate_discord_intelligence_bot/  # Main bot + orchestrator
-│   │   ├── autonomous_orchestrator.py      # 6,055 lines (from 7,834)
-│   │   ├── orchestrator/                   # Extracted modules
+│   │   ├── autonomous_orchestrator.py      # 5,217 lines (from 7,834)
+│   │   ├── orchestrator/                   # Extracted modules (7 modules)
+│   │   │   ├── analytics_calculators.py    # Analytics & calculations (NEW - Week 3)
 │   │   │   ├── crew_builders.py            # CrewAI crew construction
 │   │   │   ├── data_transformers.py        # Data transformation
+│   │   │   ├── discord_helpers.py          # Discord integration (Week 2)
 │   │   │   ├── error_handlers.py           # Error handling
 │   │   │   ├── quality_assessors.py        # Quality assessment
 │   │   │   ├── result_extractors.py        # Result extraction
