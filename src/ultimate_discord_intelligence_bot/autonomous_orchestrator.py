@@ -69,6 +69,7 @@ from .orchestrator import (
     extractors,
     orchestrator_utilities,
     quality_assessors,
+    result_synthesizers,
     system_validators,
     workflow_planners,
 )
@@ -3452,47 +3453,16 @@ class AutonomousIntelligenceOrchestrator:
             return StepResult.fail(f"Performance analytics failed: {e}")
 
     async def _synthesize_autonomous_results(self, all_results: dict[str, Any]) -> dict[str, Any]:
-        """Synthesize all autonomous analysis results into a comprehensive summary."""
-        try:
-            # Extract key metrics and insights
-            pipeline_data = all_results.get("pipeline", {})
-            fact_data = all_results.get("fact_analysis", {})
-            deception_data = all_results.get("deception_score", {})
-            intel_data = all_results.get("cross_platform_intel", {})
-            knowledge_data = all_results.get("knowledge_integration", {})
-            metadata = all_results.get("workflow_metadata", {})
+        """Synthesize all autonomous analysis results into a comprehensive summary.
 
-            # Calculate summary statistics
-            summary_stats = self._calculate_summary_statistics(all_results)
-
-            # Generate autonomous insights
-            insights = self._generate_autonomous_insights(all_results)
-
-            synthesis = {
-                "autonomous_analysis_summary": {
-                    "url": metadata.get("url"),
-                    "workflow_id": metadata.get("workflow_id"),
-                    "analysis_depth": metadata.get("depth"),
-                    "processing_time": metadata.get("processing_time"),
-                    "deception_score": deception_data.get("deception_score", 0.0),
-                    "summary_statistics": summary_stats,
-                    "autonomous_insights": insights,
-                },
-                "detailed_results": {
-                    "content_analysis": pipeline_data,
-                    "fact_checking": fact_data,
-                    "cross_platform_intelligence": intel_data,
-                    "deception_analysis": deception_data,
-                    "knowledge_base_integration": knowledge_data,
-                },
-                "workflow_metadata": metadata,
-            }
-
-            return synthesis
-
-        except Exception as e:
-            self.logger.error(f"Result synthesis failed: {e}", exc_info=True)
-            return {"error": f"Result synthesis failed: {e}", "raw_results": all_results}
+        Delegates to result_synthesizers.synthesize_autonomous_results.
+        """
+        return result_synthesizers.synthesize_autonomous_results(
+            all_results=all_results,
+            calculate_summary_statistics_fn=self._calculate_summary_statistics,
+            generate_autonomous_insights_fn=self._generate_autonomous_insights,
+            logger=self.logger,
+        )
 
     async def _synthesize_enhanced_autonomous_results(self, all_results: dict[str, Any]) -> StepResult:
         """Synthesize enhanced autonomous analysis results using advanced multi-modal synthesis."""
@@ -3559,39 +3529,15 @@ class AutonomousIntelligenceOrchestrator:
             return await self._fallback_basic_synthesis(all_results, str(e))
 
     async def _fallback_basic_synthesis(self, all_results: dict[str, Any], error_context: str) -> StepResult:
-        """Fallback basic synthesis when advanced synthesis fails."""
-        try:
-            # Extract basic components
-            metadata = all_results.get("workflow_metadata", {})
+        """Fallback basic synthesis when advanced synthesis fails.
 
-            # Create basic synthesis result
-            basic_synthesis = {
-                "fallback_synthesis": True,
-                "fallback_reason": error_context,
-                "basic_summary": {
-                    "url": metadata.get("url"),
-                    "workflow_id": metadata.get("workflow_id"),
-                    "analysis_depth": metadata.get("depth"),
-                    "processing_time": metadata.get("processing_time"),
-                    "total_stages": metadata.get("total_stages"),
-                },
-                "available_results": {
-                    stage: bool(data) for stage, data in all_results.items() if stage != "workflow_metadata"
-                },
-                "quality_grade": "limited",
-                "requires_manual_review": True,
-                "production_ready": False,
-            }
-
-            return StepResult.ok(
-                message=f"Basic synthesis completed due to advanced synthesis failure: {error_context}",
-                **basic_synthesis,
-            )
-
-        except Exception as fallback_error:
-            return StepResult.fail(
-                f"Both advanced and basic synthesis failed. Advanced: {error_context}, Basic: {fallback_error}"
-            )
+        Delegates to result_synthesizers.fallback_basic_synthesis.
+        """
+        return result_synthesizers.fallback_basic_synthesis(
+            all_results=all_results,
+            error_context=error_context,
+            logger=self.logger,
+        )
 
     def _calculate_composite_deception_score(
         self, deception_result: Any, truth_result: Any, trust_result: Any, fact_data: dict[str, Any]
