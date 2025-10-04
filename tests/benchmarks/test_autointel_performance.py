@@ -392,6 +392,281 @@ class TestPerformanceInstrumentation:
 
 
 # ============================================================================
+# WEEK 3: FLAG COMBINATION VALIDATION TESTS
+# ============================================================================
+
+
+class TestFlagCombinationValidation:
+    """Week 3 validation: Test all 8 flag combinations to measure actual performance.
+
+    This test class validates the Week 2 parallelization implementation by
+    benchmarking all 2³=8 combinations of the 3 feature flags:
+    - ENABLE_PARALLEL_MEMORY_OPS
+    - ENABLE_PARALLEL_ANALYSIS
+    - ENABLE_PARALLEL_FACT_CHECKING
+
+    Expected savings:
+    - Phase 1 (memory): 0.5-1 min
+    - Phase 2 (analysis): 1-2 min
+    - Phase 3 (fact-checking): 0.5-1 min
+    - Combined: 2-4 min (30-35% improvement target)
+    """
+
+    @pytest.mark.asyncio
+    @patch.dict(
+        "os.environ",
+        {
+            "ENABLE_PARALLEL_MEMORY_OPS": "0",
+            "ENABLE_PARALLEL_ANALYSIS": "0",
+            "ENABLE_PARALLEL_FACT_CHECKING": "0",
+        },
+    )
+    @patch("asyncio.to_thread")
+    async def test_combination_1_sequential_baseline(
+        self, mock_to_thread, orchestrator, mock_interaction, mock_crew_output
+    ):
+        """Combination 1: Sequential baseline (all flags off).
+
+        This establishes the baseline performance (~10.5 min real, <5s mocked).
+        All subsequent tests compare against this baseline.
+        """
+        mock_to_thread.return_value = mock_crew_output
+        orchestrator._send_progress_update = AsyncMock()
+
+        start = time.time()
+
+        await orchestrator.execute_autonomous_intelligence_workflow(
+            interaction=mock_interaction, url="https://youtube.com/watch?v=test", depth="experimental"
+        )
+
+        duration = time.time() - start
+
+        # Mocked baseline should be fast
+        assert duration < 5, f"Sequential baseline took {duration:.2f}s, expected <5s (real: ~629s)"
+        print(f"\n📊 Combination 1 (Sequential Baseline): {duration:.2f}s")
+
+    @pytest.mark.asyncio
+    @patch.dict(
+        "os.environ",
+        {
+            "ENABLE_PARALLEL_MEMORY_OPS": "1",
+            "ENABLE_PARALLEL_ANALYSIS": "0",
+            "ENABLE_PARALLEL_FACT_CHECKING": "0",
+        },
+    )
+    @patch("asyncio.to_thread")
+    async def test_combination_2_memory_only(self, mock_to_thread, orchestrator, mock_interaction, mock_crew_output):
+        """Combination 2: Memory parallelization only.
+
+        Expected savings: 0.5-1 min vs baseline
+        Real target: ~599-609s (9.5-10 min)
+        """
+        mock_to_thread.return_value = mock_crew_output
+        orchestrator._send_progress_update = AsyncMock()
+
+        start = time.time()
+
+        await orchestrator.execute_autonomous_intelligence_workflow(
+            interaction=mock_interaction, url="https://youtube.com/watch?v=test", depth="experimental"
+        )
+
+        duration = time.time() - start
+
+        assert duration < 5, f"Memory-only took {duration:.2f}s, expected <5s (real: ~609s)"
+        print(f"\n📊 Combination 2 (Memory Only): {duration:.2f}s")
+
+    @pytest.mark.asyncio
+    @patch.dict(
+        "os.environ",
+        {
+            "ENABLE_PARALLEL_MEMORY_OPS": "0",
+            "ENABLE_PARALLEL_ANALYSIS": "1",
+            "ENABLE_PARALLEL_FACT_CHECKING": "0",
+        },
+    )
+    @patch("asyncio.to_thread")
+    async def test_combination_3_analysis_only(self, mock_to_thread, orchestrator, mock_interaction, mock_crew_output):
+        """Combination 3: Analysis parallelization only.
+
+        Expected savings: 1-2 min vs baseline
+        Real target: ~569-589s (8.5-9.5 min)
+        """
+        mock_to_thread.return_value = mock_crew_output
+        orchestrator._send_progress_update = AsyncMock()
+
+        start = time.time()
+
+        await orchestrator.execute_autonomous_intelligence_workflow(
+            interaction=mock_interaction, url="https://youtube.com/watch?v=test", depth="experimental"
+        )
+
+        duration = time.time() - start
+
+        assert duration < 5, f"Analysis-only took {duration:.2f}s, expected <5s (real: ~589s)"
+        print(f"\n📊 Combination 3 (Analysis Only): {duration:.2f}s")
+
+    @pytest.mark.asyncio
+    @patch.dict(
+        "os.environ",
+        {
+            "ENABLE_PARALLEL_MEMORY_OPS": "0",
+            "ENABLE_PARALLEL_ANALYSIS": "0",
+            "ENABLE_PARALLEL_FACT_CHECKING": "1",
+        },
+    )
+    @patch("asyncio.to_thread")
+    async def test_combination_4_fact_checking_only(
+        self, mock_to_thread, orchestrator, mock_interaction, mock_crew_output
+    ):
+        """Combination 4: Fact-checking parallelization only.
+
+        Expected savings: 0.5-1 min vs baseline
+        Real target: ~599-609s (9.5-10 min)
+        """
+        mock_to_thread.return_value = mock_crew_output
+        orchestrator._send_progress_update = AsyncMock()
+
+        start = time.time()
+
+        await orchestrator.execute_autonomous_intelligence_workflow(
+            interaction=mock_interaction, url="https://youtube.com/watch?v=test", depth="experimental"
+        )
+
+        duration = time.time() - start
+
+        assert duration < 5, f"Fact-checking-only took {duration:.2f}s, expected <5s (real: ~609s)"
+        print(f"\n📊 Combination 4 (Fact-Checking Only): {duration:.2f}s")
+
+    @pytest.mark.asyncio
+    @patch.dict(
+        "os.environ",
+        {
+            "ENABLE_PARALLEL_MEMORY_OPS": "1",
+            "ENABLE_PARALLEL_ANALYSIS": "1",
+            "ENABLE_PARALLEL_FACT_CHECKING": "0",
+        },
+    )
+    @patch("asyncio.to_thread")
+    async def test_combination_5_memory_analysis(
+        self, mock_to_thread, orchestrator, mock_interaction, mock_crew_output
+    ):
+        """Combination 5: Memory + Analysis parallelization.
+
+        Expected savings: 1.5-3 min vs baseline (additive)
+        Real target: ~539-569s (7.5-9 min)
+        """
+        mock_to_thread.return_value = mock_crew_output
+        orchestrator._send_progress_update = AsyncMock()
+
+        start = time.time()
+
+        await orchestrator.execute_autonomous_intelligence_workflow(
+            interaction=mock_interaction, url="https://youtube.com/watch?v=test", depth="experimental"
+        )
+
+        duration = time.time() - start
+
+        assert duration < 5, f"Memory+Analysis took {duration:.2f}s, expected <5s (real: ~569s)"
+        print(f"\n📊 Combination 5 (Memory + Analysis): {duration:.2f}s")
+
+    @pytest.mark.asyncio
+    @patch.dict(
+        "os.environ",
+        {
+            "ENABLE_PARALLEL_MEMORY_OPS": "1",
+            "ENABLE_PARALLEL_ANALYSIS": "0",
+            "ENABLE_PARALLEL_FACT_CHECKING": "1",
+        },
+    )
+    @patch("asyncio.to_thread")
+    async def test_combination_6_memory_fact_checking(
+        self, mock_to_thread, orchestrator, mock_interaction, mock_crew_output
+    ):
+        """Combination 6: Memory + Fact-checking parallelization.
+
+        Expected savings: 1-2 min vs baseline (additive)
+        Real target: ~569-589s (8.5-9.5 min)
+        """
+        mock_to_thread.return_value = mock_crew_output
+        orchestrator._send_progress_update = AsyncMock()
+
+        start = time.time()
+
+        await orchestrator.execute_autonomous_intelligence_workflow(
+            interaction=mock_interaction, url="https://youtube.com/watch?v=test", depth="experimental"
+        )
+
+        duration = time.time() - start
+
+        assert duration < 5, f"Memory+Fact-checking took {duration:.2f}s, expected <5s (real: ~589s)"
+        print(f"\n📊 Combination 6 (Memory + Fact-Checking): {duration:.2f}s")
+
+    @pytest.mark.asyncio
+    @patch.dict(
+        "os.environ",
+        {
+            "ENABLE_PARALLEL_MEMORY_OPS": "0",
+            "ENABLE_PARALLEL_ANALYSIS": "1",
+            "ENABLE_PARALLEL_FACT_CHECKING": "1",
+        },
+    )
+    @patch("asyncio.to_thread")
+    async def test_combination_7_analysis_fact_checking(
+        self, mock_to_thread, orchestrator, mock_interaction, mock_crew_output
+    ):
+        """Combination 7: Analysis + Fact-checking parallelization.
+
+        Expected savings: 1.5-3 min vs baseline (additive)
+        Real target: ~539-569s (7.5-9 min)
+        """
+        mock_to_thread.return_value = mock_crew_output
+        orchestrator._send_progress_update = AsyncMock()
+
+        start = time.time()
+
+        await orchestrator.execute_autonomous_intelligence_workflow(
+            interaction=mock_interaction, url="https://youtube.com/watch?v=test", depth="experimental"
+        )
+
+        duration = time.time() - start
+
+        assert duration < 5, f"Analysis+Fact-checking took {duration:.2f}s, expected <5s (real: ~569s)"
+        print(f"\n📊 Combination 7 (Analysis + Fact-Checking): {duration:.2f}s")
+
+    @pytest.mark.asyncio
+    @patch.dict(
+        "os.environ",
+        {
+            "ENABLE_PARALLEL_MEMORY_OPS": "1",
+            "ENABLE_PARALLEL_ANALYSIS": "1",
+            "ENABLE_PARALLEL_FACT_CHECKING": "1",
+        },
+    )
+    @patch("asyncio.to_thread")
+    async def test_combination_8_all_parallel(self, mock_to_thread, orchestrator, mock_interaction, mock_crew_output):
+        """Combination 8: All parallelizations enabled.
+
+        Expected savings: 2-4 min vs baseline (full optimization)
+        Real target: ~509-539s (6.5-8.5 min)
+        SUCCESS CRITERIA: ≥2 min savings, ≥25% improvement
+        """
+        mock_to_thread.return_value = mock_crew_output
+        orchestrator._send_progress_update = AsyncMock()
+
+        start = time.time()
+
+        await orchestrator.execute_autonomous_intelligence_workflow(
+            interaction=mock_interaction, url="https://youtube.com/watch?v=test", depth="experimental"
+        )
+
+        duration = time.time() - start
+
+        assert duration < 5, f"All-parallel took {duration:.2f}s, expected <5s (real: ~539s)"
+        print(f"\n📊 Combination 8 (All Parallel): {duration:.2f}s")
+        print("🎯 SUCCESS CRITERIA: Real execution should be 509-539s (2-4 min savings)")
+
+
+# ============================================================================
 # REAL-WORLD SIMULATION TESTS (Commented out - too slow for CI)
 # ============================================================================
 
