@@ -142,6 +142,7 @@ def build_intelligence_crew(
     task_completion_callback: Any | None = None,
     logger_instance: logging.Logger | None = None,
     enable_parallel_memory_ops: bool | None = None,
+    enable_parallel_analysis: bool | None = None,
 ) -> Crew:
     """Build a single chained CrewAI crew for the complete intelligence workflow.
 
@@ -157,16 +158,19 @@ def build_intelligence_crew(
         task_completion_callback: Optional callback for task completion
         logger_instance: Optional logger instance
         enable_parallel_memory_ops: Enable parallel memory operations (default: from settings)
+        enable_parallel_analysis: Enable parallel analysis subtasks (default: from settings)
 
     Returns:
         Configured Crew with chained tasks
     """
     _logger = logger_instance or logger
 
-    # Get feature flag from settings if not explicitly provided
+    # Get feature flags from settings if not explicitly provided
+    settings = get_settings()
     if enable_parallel_memory_ops is None:
-        settings = get_settings()
         enable_parallel_memory_ops = settings.enable_parallel_memory_ops
+    if enable_parallel_analysis is None:
+        enable_parallel_analysis = settings.enable_parallel_analysis
 
     _logger.info(f"🏗️  Building chained intelligence crew for depth: {depth}")
 
@@ -221,30 +225,119 @@ def build_intelligence_crew(
     )
 
     # Stage 3: Content Analysis (depends on transcription)
-    analysis_task = Task(
-        description=(
-            "STEP 1: Extract the 'transcript' field from the previous task's JSON output. "
-            "STEP 2: YOU MUST CALL TextAnalysisTool(text=<transcript>) to analyze insights and themes. "
-            "STEP 3: YOU MUST CALL LogicalFallacyTool(text=<transcript>) to detect fallacies. "
-            "STEP 4: YOU MUST CALL PerspectiveSynthesizerTool(text=<transcript>) for perspectives. "
-            "DO NOT generate placeholder values like '<extracted_insights>'. "
-            "DO NOT respond until all tools return actual results. "
-            "\n\nCRITICAL: Pass the FULL transcript as the 'text' parameter to these tools. "
-            "Return results as JSON with keys: insights, themes, fallacies, perspectives."
-        ),
-        expected_output=(
-            "JSON with insights (list from TextAnalysisTool), "
-            "themes (list from TextAnalysisTool), fallacies (list from LogicalFallacyTool), "
-            "perspectives (list from PerspectiveSynthesizerTool). "
-            "❌ REJECT: Placeholder values. ❌ REJECT: Invalid JSON. "
-            "✅ ACCEPT: Real analysis from actual tool executions."
-        ),
-        agent=analysis_agent,
-        context=[transcription_task],
-        callback=task_completion_callback,
-    )
+    # Can use parallel analysis subtasks if enabled
+    if enable_parallel_analysis:
+        _logger.info("⚡ Using PARALLEL analysis subtasks (async_execution=True)")
+
+        # Parallel Stage 3a: Text Analysis (linguistic patterns, themes, insights)
+        text_analysis_task = Task(
+            description=(
+                "STEP 1: Extract the 'transcript' field from the transcription task output. "
+                "STEP 2: YOU MUST CALL TextAnalysisTool(text=<transcript>) to analyze insights and themes. "
+                "DO NOT generate placeholder values. "
+                "DO NOT respond until the tool returns actual results. "
+                "\n\nReturn results as JSON with keys: insights (list), themes (list)."
+            ),
+            expected_output=(
+                "JSON with insights (list from TextAnalysisTool), "
+                "themes (list from TextAnalysisTool). "
+                "❌ REJECT: Placeholder values. ✅ ACCEPT: Real analysis from tool."
+            ),
+            agent=analysis_agent,
+            context=[transcription_task],
+            callback=task_completion_callback,
+            async_execution=True,  # ⚡ RUNS IN PARALLEL
+        )
+
+        # Parallel Stage 3b: Logical Fallacy Detection
+        fallacy_detection_task = Task(
+            description=(
+                "STEP 1: Extract the 'transcript' field from the transcription task output. "
+                "STEP 2: YOU MUST CALL LogicalFallacyTool(text=<transcript>) to detect fallacies. "
+                "DO NOT generate placeholder values. "
+                "DO NOT respond until the tool returns actual results. "
+                "\n\nReturn results as JSON with key: fallacies (list)."
+            ),
+            expected_output=(
+                "JSON with fallacies (list from LogicalFallacyTool). "
+                "❌ REJECT: Placeholder values. ✅ ACCEPT: Real fallacies from tool."
+            ),
+            agent=analysis_agent,
+            context=[transcription_task],
+            callback=task_completion_callback,
+            async_execution=True,  # ⚡ RUNS IN PARALLEL
+        )
+
+        # Parallel Stage 3c: Perspective Synthesis
+        perspective_synthesis_task = Task(
+            description=(
+                "STEP 1: Extract the 'transcript' field from the transcription task output. "
+                "STEP 2: YOU MUST CALL PerspectiveSynthesizerTool(text=<transcript>) for perspectives. "
+                "DO NOT generate placeholder values. "
+                "DO NOT respond until the tool returns actual results. "
+                "\n\nReturn results as JSON with key: perspectives (list)."
+            ),
+            expected_output=(
+                "JSON with perspectives (list from PerspectiveSynthesizerTool). "
+                "❌ REJECT: Placeholder values. ✅ ACCEPT: Real perspectives from tool."
+            ),
+            agent=analysis_agent,
+            context=[transcription_task],
+            callback=task_completion_callback,
+            async_execution=True,  # ⚡ RUNS IN PARALLEL
+        )
+
+        # Stage 3d: Analysis Integration (waits for all 3 parallel tasks)
+        analysis_integration_task = Task(
+            description=(
+                "Combine analysis results from three parallel tasks into unified output.\n\n"
+                "You will receive outputs from THREE parallel tasks:\n"
+                "1. Text analysis task - insights and themes\n"
+                "2. Fallacy detection task - logical fallacies\n"
+                "3. Perspective synthesis task - multiple perspectives\n\n"
+                "STEP 1: Extract insights and themes from text analysis output\n"
+                "STEP 2: Extract fallacies from fallacy detection output\n"
+                "STEP 3: Extract perspectives from perspective synthesis output\n"
+                "STEP 4: Combine all into unified JSON\n\n"
+                "Return JSON with ALL keys: insights, themes, fallacies, perspectives."
+            ),
+            expected_output=(
+                "JSON with insights (list), themes (list), fallacies (list), "
+                "perspectives (list). Combined from all 3 parallel analysis tasks."
+            ),
+            agent=analysis_agent,
+            context=[text_analysis_task, fallacy_detection_task, perspective_synthesis_task],
+            callback=task_completion_callback,
+        )
+    else:
+        # Sequential analysis (original pattern)
+        analysis_task = Task(
+            description=(
+                "STEP 1: Extract the 'transcript' field from the previous task's JSON output. "
+                "STEP 2: YOU MUST CALL TextAnalysisTool(text=<transcript>) to analyze insights and themes. "
+                "STEP 3: YOU MUST CALL LogicalFallacyTool(text=<transcript>) to detect fallacies. "
+                "STEP 4: YOU MUST CALL PerspectiveSynthesizerTool(text=<transcript>) for perspectives. "
+                "DO NOT generate placeholder values like '<extracted_insights>'. "
+                "DO NOT respond until all tools return actual results. "
+                "\n\nCRITICAL: Pass the FULL transcript as the 'text' parameter to these tools. "
+                "Return results as JSON with keys: insights, themes, fallacies, perspectives."
+            ),
+            expected_output=(
+                "JSON with insights (list from TextAnalysisTool), "
+                "themes (list from TextAnalysisTool), fallacies (list from LogicalFallacyTool), "
+                "perspectives (list from PerspectiveSynthesizerTool). "
+                "❌ REJECT: Placeholder values. ❌ REJECT: Invalid JSON. "
+                "✅ ACCEPT: Real analysis from actual tool executions."
+            ),
+            agent=analysis_agent,
+            context=[transcription_task],
+            callback=task_completion_callback,
+        )
 
     # Stage 4: Verification (depends on analysis)
+    # Determine which analysis task to reference based on parallel flag
+    analysis_ref = analysis_integration_task if enable_parallel_analysis else analysis_task
+
     verification_task = Task(
         description=(
             "CRITICAL DATA EXTRACTION INSTRUCTIONS:\n"
@@ -289,7 +382,7 @@ def build_intelligence_crew(
             "✅ ACCEPT: Real claims about actual video content."
         ),
         agent=verification_agent,
-        context=[transcription_task, analysis_task],  # Need both for comprehensive verification
+        context=[transcription_task, analysis_ref],  # Need both for comprehensive verification
         callback=task_completion_callback,
     )
 
@@ -335,7 +428,7 @@ def build_intelligence_crew(
                 "You MUST call GraphMemoryTool before responding."
             ),
             agent=knowledge_agent,
-            context=[analysis_task],  # Only needs analysis
+            context=[analysis_ref],  # Only needs analysis
             callback=task_completion_callback,
             async_execution=True,  # ⚡ RUNS IN PARALLEL
         )
@@ -364,7 +457,7 @@ def build_intelligence_crew(
                 graph_memory_task,
                 acquisition_task,
                 transcription_task,
-                analysis_task,
+                analysis_ref,
                 verification_task,
             ],
             callback=task_completion_callback,
@@ -403,33 +496,59 @@ def build_intelligence_crew(
                 "You MUST call the tools before providing this answer."
             ),
             agent=knowledge_agent,
-            context=[acquisition_task, transcription_task, analysis_task, verification_task],
+            context=[acquisition_task, transcription_task, analysis_ref, verification_task],
             callback=task_completion_callback,
         )
 
     # Determine which tasks to include based on depth
-    if enable_parallel_memory_ops:
-        # With parallel memory operations, we have additional tasks
-        base_tasks = [acquisition_task, transcription_task, analysis_task, verification_task]
-        memory_tasks = [memory_storage_task, graph_memory_task]  # Parallel tasks
-        final_task = [integration_task]  # Waits for parallel tasks
+    # Handle combinations of parallel analysis and parallel memory operations
+    if enable_parallel_analysis and enable_parallel_memory_ops:
+        # Both parallelizations enabled
+        base_tasks = [acquisition_task, transcription_task]
+        analysis_tasks = [text_analysis_task, fallacy_detection_task, perspective_synthesis_task, analysis_integration_task]
+        verification_tasks = [verification_task]
+        memory_tasks = [memory_storage_task, graph_memory_task, integration_task]
 
         if depth == "standard":
-            tasks = base_tasks[:3]  # Acquisition, transcription, analysis only
+            tasks = base_tasks + analysis_tasks  # Through analysis integration
+        elif depth == "deep":
+            tasks = base_tasks + analysis_tasks + verification_tasks
+        else:  # comprehensive or experimental
+            tasks = base_tasks + analysis_tasks + verification_tasks + memory_tasks
+    elif enable_parallel_analysis:
+        # Only analysis parallelization enabled
+        base_tasks = [acquisition_task, transcription_task]
+        analysis_tasks = [text_analysis_task, fallacy_detection_task, perspective_synthesis_task, analysis_integration_task]
+        verification_tasks = [verification_task]
+        integration_tasks = [integration_task]
+
+        if depth == "standard":
+            tasks = base_tasks + analysis_tasks
+        elif depth == "deep":
+            tasks = base_tasks + analysis_tasks + verification_tasks
+        else:  # comprehensive or experimental
+            tasks = base_tasks + analysis_tasks + verification_tasks + integration_tasks
+    elif enable_parallel_memory_ops:
+        # Only memory parallelization enabled
+        base_tasks = [acquisition_task, transcription_task, analysis_task, verification_task]
+        memory_tasks = [memory_storage_task, graph_memory_task, integration_task]
+
+        if depth == "standard":
+            tasks = base_tasks[:3]  # Through analysis
         elif depth == "deep":
             tasks = base_tasks[:4]  # Add verification
         else:  # comprehensive or experimental
-            tasks = base_tasks + memory_tasks + final_task  # All tasks with parallelization
+            tasks = base_tasks + memory_tasks
     else:
         # Sequential pattern (original)
         all_tasks = [acquisition_task, transcription_task, analysis_task, verification_task, integration_task]
 
         if depth == "standard":
-            tasks = all_tasks[:3]  # Acquisition, transcription, analysis
+            tasks = all_tasks[:3]
         elif depth == "deep":
-            tasks = all_tasks[:4]  # Add verification
+            tasks = all_tasks[:4]
         else:  # comprehensive or experimental
-            tasks = all_tasks  # All 5 tasks
+            tasks = all_tasks
 
     # Build single crew with all agents and chained tasks
     crew = Crew(
@@ -446,11 +565,14 @@ def build_intelligence_crew(
         memory=True,  # Enable cross-task memory
     )
 
-    parallel_status = (
-        "PARALLEL memory ops"
-        if enable_parallel_memory_ops and depth in ["comprehensive", "experimental"]
-        else "SEQUENTIAL"
-    )
+    # Build parallel status message
+    parallel_features = []
+    if enable_parallel_analysis and depth in ["standard", "deep", "comprehensive", "experimental"]:
+        parallel_features.append("analysis")
+    if enable_parallel_memory_ops and depth in ["comprehensive", "experimental"]:
+        parallel_features.append("memory")
+
+    parallel_status = f"PARALLEL {'+'.join(parallel_features)}" if parallel_features else "SEQUENTIAL"
     _logger.info(f"✅ Built crew with {len(tasks)} chained tasks for {depth} analysis ({parallel_status})")
     return crew
 

@@ -245,6 +245,7 @@ class AutonomousIntelligenceOrchestrator:
             task_completion_callback=self._task_completion_callback,
             logger_instance=self.logger,
             enable_parallel_memory_ops=settings.enable_parallel_memory_ops,
+            enable_parallel_analysis=settings.enable_parallel_analysis,
         )
 
     def _validate_stage_data(self, stage_name: str, required_keys: list[str], data: dict[str, Any]) -> None:
