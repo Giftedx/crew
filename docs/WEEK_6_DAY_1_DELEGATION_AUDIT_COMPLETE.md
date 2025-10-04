@@ -52,6 +52,7 @@ grep -n "discord_helpers\." src/ultimate_discord_intelligence_bot/autonomous_orc
 ### Sample Delegation Calls
 
 **extractors module:**
+
 ```python
 return extractors.extract_timeline_from_crew(crew_result)
 return extractors.extract_index_from_crew(crew_result)
@@ -61,6 +62,7 @@ return extractors.extract_themes_from_crew(crew_result)
 ```
 
 **crew_builders module:**
+
 ```python
 return crew_builders.populate_agent_tool_context(...)
 return crew_builders.get_or_create_agent(...)
@@ -69,6 +71,7 @@ return crew_builders.build_intelligence_crew(...)
 ```
 
 **result_synthesizers module (Week 5):**
+
 ```python
 # Line 2738
 return result_synthesizers.synthesize_specialized_intelligence_results(...)
@@ -112,19 +115,23 @@ return result_synthesizers.fallback_basic_synthesis(...)
 ### 📊 Delegation Distribution
 
 **High delegation (20+ calls):**
+
 - analytics_calculators: 58 calls (most used)
 - discord_helpers: 44 calls (second most used)
 
 **Medium delegation (10-19 calls):**
+
 - extractors: 12 calls
 - quality_assessors: 11 calls
 
 **Low delegation (5-9 calls):**
+
 - result_synthesizers: 8 calls (Week 5)
 - workflow_planners: 8 calls
 - data_transformers: 6 calls
 
 **Minimal delegation (1-4 calls):**
+
 - crew_builders: 4 calls
 - orchestrator_utilities: 4 calls
 - system_validators: 4 calls
@@ -274,6 +281,7 @@ The orchestrator still contains **108 private methods** that need to be categori
 - **Savings:** 50% faster than planned
 
 **Why faster:**
+
 - Clear audit plan made execution straightforward
 - No issues found (no debugging needed)
 - Good tooling (grep searches very fast)
