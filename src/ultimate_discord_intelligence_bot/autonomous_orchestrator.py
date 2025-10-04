@@ -69,6 +69,7 @@ from .orchestrator import (
     extractors,
     quality_assessors,
     system_validators,
+    workflow_planners,
 )
 from .step_result import StepResult
 
@@ -962,88 +963,24 @@ class AutonomousIntelligenceOrchestrator:
     # ========================================
 
     def _get_available_capabilities(self) -> list[str]:
-        """Get list of all available autonomous capabilities."""
-        return [
-            "multi_platform_content_acquisition",
-            "advanced_transcription_indexing",
-            "comprehensive_linguistic_analysis",
-            "multi_source_fact_verification",
-            "advanced_threat_deception_analysis",
-            "cross_platform_social_intelligence",
-            "behavioral_profiling_persona_analysis",
-            "multi_layer_knowledge_integration",
-            "research_synthesis_context_building",
-            "predictive_performance_analytics",
-            "ai_enhanced_quality_assessment",
-            "intelligence_briefing_curation",
-            "autonomous_learning_adaptation",
-            "real_time_monitoring_alerts",
-            "community_liaison_communication",
-        ]
+        """Delegates to workflow_planners.get_available_capabilities."""
+        return workflow_planners.get_available_capabilities()
 
     def _calculate_resource_requirements(self, depth: str) -> dict[str, Any]:
         """Delegates to analytics_calculators.calculate_resource_requirements."""
         return analytics_calculators.calculate_resource_requirements(depth, self.logger)
 
     def _estimate_workflow_duration(self, depth: str) -> dict[str, Any]:
-        """Estimate workflow duration based on depth and complexity."""
-        base_duration_minutes = {
-            "standard": 3,
-            "deep": 8,
-            "comprehensive": 15,
-            "experimental": 25,
-        }
-
-        return {
-            "estimated_minutes": base_duration_minutes.get(depth, 5),
-            "confidence_interval": "±20%",
-            "factors": ["content_complexity", "network_latency", "ai_model_response_times"],
-        }
+        """Delegates to workflow_planners.estimate_workflow_duration."""
+        return workflow_planners.estimate_workflow_duration(depth)
 
     def _get_planned_stages(self, depth: str) -> list[dict[str, Any]]:
-        """Get planned workflow stages based on analysis depth."""
-        all_stages = [
-            {"name": "Mission Planning", "agent": "mission_orchestrator", "priority": "critical"},
-            {"name": "Content Acquisition", "agent": "acquisition_specialist", "priority": "critical"},
-            {"name": "Transcription Analysis", "agent": "transcription_engineer", "priority": "high"},
-            {"name": "Content Analysis", "agent": "analysis_cartographer", "priority": "critical"},
-            {"name": "Information Verification", "agent": "verification_director", "priority": "high"},
-            {"name": "Threat Analysis", "agent": "risk_intelligence_analyst", "priority": "high"},
-            {"name": "Social Intelligence", "agent": "signal_recon_specialist", "priority": "medium"},
-            {"name": "Behavioral Profiling", "agent": "persona_archivist", "priority": "medium"},
-            {"name": "Knowledge Integration", "agent": "knowledge_integrator", "priority": "high"},
-            {"name": "Research Synthesis", "agent": "research_synthesist", "priority": "medium"},
-            {"name": "Performance Analytics", "agent": "system_reliability_officer", "priority": "low"},
-            {"name": "Quality Assessment", "agent": "intelligence_briefing_curator", "priority": "low"},
-            {"name": "Intelligence Briefing", "agent": "intelligence_briefing_curator", "priority": "high"},
-            {"name": "Communication Reporting", "agent": "community_liaison", "priority": "medium"},
-        ]
-
-        stage_filters = {
-            "standard": lambda s: s["priority"] in ["critical", "high"],
-            "deep": lambda s: s["priority"] in ["critical", "high", "medium"],
-            "comprehensive": lambda s: True,
-            "experimental": lambda s: True,
-        }
-
-        filter_func = stage_filters.get(depth, stage_filters["standard"])
-        return [stage for stage in all_stages if filter_func(stage)]
+        """Delegates to workflow_planners.get_planned_stages."""
+        return workflow_planners.get_planned_stages(depth)
 
     def _get_capabilities_summary(self, depth: str) -> dict[str, Any]:
-        """Get summary of capabilities used in this workflow."""
-        return {
-            "total_agents": len(self._get_planned_stages(depth)),
-            "total_tools": len(self._get_available_capabilities()),
-            "ai_enhancement_features": [
-                "adaptive_workflow_planning",
-                "real_time_performance_monitoring",
-                "multi_agent_coordination",
-                "predictive_analytics",
-                "autonomous_learning",
-            ],
-            "depth_level": depth,
-            "experimental_features_enabled": depth == "experimental",
-        }
+        """Delegates to workflow_planners.get_capabilities_summary."""
+        return workflow_planners.get_capabilities_summary(depth)
 
     def _calculate_ai_enhancement_level(self, depth: str) -> float:
         """Delegates to analytics_calculators.calculate_ai_enhancement_level."""
@@ -4099,86 +4036,6 @@ class AutonomousIntelligenceOrchestrator:
     def _generate_comprehensive_intelligence_insights(self, all_results: dict[str, Any]) -> list[str]:
         """Generate comprehensive intelligence insights from all analysis results."""
         return data_transformers.generate_comprehensive_intelligence_insights(all_results, self.logger)
-
-    def _get_available_capabilities(self) -> list[str]:
-        """Get list of all available autonomous capabilities."""
-        return [
-            "multi_platform_content_acquisition",
-            "advanced_transcription_indexing",
-            "comprehensive_linguistic_analysis",
-            "multi_source_fact_verification",
-            "advanced_threat_deception_analysis",
-            "cross_platform_social_intelligence",
-            "behavioral_profiling_persona_analysis",
-            "multi_layer_knowledge_integration",
-            "research_synthesis_context_building",
-            "predictive_performance_analytics",
-            "ai_enhanced_quality_assessment",
-            "intelligence_briefing_curation",
-            "autonomous_learning_adaptation",
-            "real_time_monitoring_alerts",
-            "community_liaison_communication",
-        ]
-
-    def _estimate_workflow_duration(self, depth: str) -> dict[str, Any]:
-        """Estimate workflow duration based on depth and complexity."""
-        base_duration_minutes = {
-            "standard": 3,
-            "deep": 8,
-            "comprehensive": 15,
-            "experimental": 25,
-        }
-
-        return {
-            "estimated_minutes": base_duration_minutes.get(depth, 5),
-            "confidence_interval": "±20%",
-            "factors": ["content_complexity", "network_latency", "ai_model_response_times"],
-        }
-
-    def _get_planned_stages(self, depth: str) -> list[dict[str, Any]]:
-        """Get planned workflow stages based on analysis depth."""
-        all_stages = [
-            {"name": "Mission Planning", "agent": "mission_orchestrator", "priority": "critical"},
-            {"name": "Content Acquisition", "agent": "acquisition_specialist", "priority": "critical"},
-            {"name": "Transcription Analysis", "agent": "transcription_engineer", "priority": "high"},
-            {"name": "Content Analysis", "agent": "analysis_cartographer", "priority": "critical"},
-            {"name": "Information Verification", "agent": "verification_director", "priority": "high"},
-            {"name": "Threat Analysis", "agent": "risk_intelligence_analyst", "priority": "high"},
-            {"name": "Social Intelligence", "agent": "signal_recon_specialist", "priority": "medium"},
-            {"name": "Behavioral Profiling", "agent": "persona_archivist", "priority": "medium"},
-            {"name": "Knowledge Integration", "agent": "knowledge_integrator", "priority": "high"},
-            {"name": "Research Synthesis", "agent": "research_synthesist", "priority": "medium"},
-            {"name": "Performance Analytics", "agent": "system_reliability_officer", "priority": "low"},
-            {"name": "Quality Assessment", "agent": "intelligence_briefing_curator", "priority": "low"},
-            {"name": "Intelligence Briefing", "agent": "intelligence_briefing_curator", "priority": "high"},
-            {"name": "Communication Reporting", "agent": "community_liaison", "priority": "medium"},
-        ]
-
-        stage_filters = {
-            "standard": lambda s: s["priority"] in ["critical", "high"],
-            "deep": lambda s: s["priority"] in ["critical", "high", "medium"],
-            "comprehensive": lambda s: True,
-            "experimental": lambda s: True,
-        }
-
-        filter_func = stage_filters.get(depth, stage_filters["standard"])
-        return [stage for stage in all_stages if filter_func(stage)]
-
-    def _get_capabilities_summary(self, depth: str) -> dict[str, Any]:
-        """Get summary of capabilities used in this workflow."""
-        return {
-            "total_agents": len(self._get_planned_stages(depth)),
-            "total_tools": len(self._get_available_capabilities()),
-            "ai_enhancement_features": [
-                "adaptive_workflow_planning",
-                "real_time_performance_monitoring",
-                "multi_agent_coordination",
-                "predictive_analytics",
-                "autonomous_learning",
-            ],
-            "depth_level": depth,
-            "experimental_features_enabled": depth == "experimental",
-        }
 
     # ========================================
     # ADVANCED 25-STAGE WORKFLOW METHODS

@@ -61,6 +61,7 @@ Progress:     95.7%
 **Target Module:** `workflow_planners.py`
 
 **Rationale:**
+
 - These are configuration/planning methods (stateless)
 - No complex dependencies
 - Clear separation of concerns
@@ -80,6 +81,7 @@ Progress:     95.7%
 **Target Module:** `orchestrator_utils.py` (or add to existing modules)
 
 **Rationale:**
+
 - Small utility methods
 - Can be grouped logically
 - May fit into existing modules
@@ -105,6 +107,7 @@ Progress:     95.7%
 **Tasks:**
 
 1. **Locate workflow planning methods** (15 min)
+
    ```bash
    grep -n "def _.*workflow\|def _.*stage\|def _.*capabilities" autonomous_orchestrator.py
    grep -n "def _estimate\|def _plan" autonomous_orchestrator.py
@@ -121,6 +124,7 @@ Progress:     95.7%
    - Verify no circular imports
 
 4. **Test & validate** (15 min)
+
    ```bash
    make test-fast
    wc -l autonomous_orchestrator.py
@@ -136,6 +140,7 @@ Progress:     95.7%
 **Tasks:**
 
 1. **Identify utility methods** (10 min)
+
    ```bash
    grep -n "def _get_\|def _format_\|def _parse_" autonomous_orchestrator.py | head -20
    ```
@@ -150,6 +155,7 @@ Progress:     95.7%
    - Distribute to appropriate existing modules
 
 4. **Validation & celebration** (10 min)
+
    ```bash
    make test-fast
    wc -l autonomous_orchestrator.py
