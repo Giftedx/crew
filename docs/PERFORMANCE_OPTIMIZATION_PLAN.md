@@ -64,6 +64,7 @@ async def execute_autonomous_intelligence_workflow():
 ```
 
 **Dependencies:**
+
 - ✅ **Transcription depends on Acquisition** (needs downloaded file)
 - ✅ **Analysis depends on Transcription** (needs transcript)
 - ❓ **Verification depends on Analysis?** (need to verify - may be parallelizable)
@@ -87,6 +88,7 @@ def _build_intelligence_crew(self, url: str, depth: str) -> Crew:
 ```
 
 **Questions to Answer:**
+
 1. Can verification tasks run in parallel with memory storage?
 2. Can graph memory creation run concurrently with vector storage?
 3. Can some analysis subtasks (fallacy detection, perspective analysis) run in parallel?
@@ -135,6 +137,7 @@ async def _timed_phase(self, phase_name: str, phase_func, *args, **kwargs):
 **Target:** Analysis phase subtasks (currently sequential)
 
 **Current:**
+
 ```python
 # Sequential analysis subtasks
 analysis_result = await run_analysis()
@@ -143,6 +146,7 @@ perspective_result = await run_perspective_analysis()
 ```
 
 **Optimized:**
+
 ```python
 # Parallel analysis subtasks (already implemented in ContentPipeline!)
 tasks = [
@@ -162,6 +166,7 @@ results = await asyncio.gather(*tasks)  # Run concurrently
 **Target:** Memory storage and graph creation (currently sequential?)
 
 **Current:**
+
 ```python
 # Sequential memory operations
 await memory_tool.store(data)
@@ -169,6 +174,7 @@ await graph_tool.create_nodes(data)
 ```
 
 **Optimized:**
+
 ```python
 # Parallel memory operations
 await asyncio.gather(
@@ -209,6 +215,7 @@ else:
 #### Optimization 3.1: Batch Vector Writes
 
 **Current (assumed):**
+
 ```python
 # Individual writes (slow)
 for item in items:
@@ -216,6 +223,7 @@ for item in items:
 ```
 
 **Optimized:**
+
 ```python
 # Batch write (fast)
 await qdrant_client.upsert(collection, items)  # Single network call
@@ -279,6 +287,7 @@ async def test_autointel_end_to_end_performance():
 ```
 
 **Usage:**
+
 ```bash
 # Run benchmark
 pytest tests/benchmarks/test_autointel_performance.py -v -s
@@ -334,24 +343,28 @@ async def test_phase_performance(phase: str):
 ### Week 1: Analysis & Planning (5-7 days)
 
 **Days 1-2: Dependency Analysis**
+
 - Map task dependencies
 - Identify parallelization opportunities
 - Document findings
 
-**Days 3-4: Benchmarking Setup**
-- Create performance test infrastructure
-- Establish baseline metrics
-- Set up regression detection
+**Days 3-4: Benchmarking Setup** ✅ COMPLETE
+
+- ✅ Create performance test infrastructure
+- ✅ Establish baseline metrics
+- ✅ Set up regression detection
 
 **Days 5-7: Implementation Planning**
+
 - Design parallel execution architecture
 - Plan feature flag strategy
 - Review with stakeholders (if needed)
 
 **Deliverables:**
-- [ ] Task dependency graph
+
+- [x] Task dependency graph (autointel_task_dependencies.md)
 - [ ] Parallelization matrix
-- [ ] Baseline performance benchmarks
+- [x] Baseline performance benchmarks (test_autointel_performance.py)
 - [ ] Implementation design document
 
 ---
@@ -359,21 +372,25 @@ async def test_phase_performance(phase: str):
 ### Week 2: Implementation (5-7 days)
 
 **Days 1-3: Parallel Execution**
+
 - Implement fan-out pattern for analysis subtasks
 - Add pipeline parallelism for memory operations
 - Feature-flag parallel paths
 
 **Days 4-5: Memory Optimization**
+
 - Implement batch vector writes
 - Optimize graph operations
 - Profile memory usage
 
 **Days 6-7: Testing & Validation**
+
 - Run performance benchmarks
 - Validate correctness (no regressions)
 - Compare before/after metrics
 
 **Deliverables:**
+
 - [ ] Parallel execution implementation
 - [ ] Memory operation optimizations
 - [ ] Performance benchmark results
@@ -384,21 +401,25 @@ async def test_phase_performance(phase: str):
 ### Week 3: Validation & Rollout (3-5 days)
 
 **Days 1-2: Performance Validation**
+
 - Run extended performance tests
 - Validate 50% improvement target
 - Check for edge cases
 
 **Days 3-4: Documentation**
+
 - Update architecture docs
 - Document performance improvements
 - Create rollout guide
 
 **Day 5: Gradual Rollout**
+
 - Enable feature flag for testing
 - Monitor metrics
 - Adjust if needed
 
 **Deliverables:**
+
 - [ ] Performance validation report
 - [ ] Updated documentation
 - [ ] Rollout plan
