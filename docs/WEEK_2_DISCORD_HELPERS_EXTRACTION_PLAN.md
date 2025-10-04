@@ -133,6 +133,7 @@ For each Discord method in orchestrator:
 
 1. Copy method to discord_helpers.py
 2. Convert from instance method to module function:
+
    ```python
    # BEFORE (in orchestrator)
    def _send_progress_update(self, interaction, status):
@@ -142,6 +143,7 @@ For each Discord method in orchestrator:
    def send_progress_update(interaction, status, orchestrator_ref=None):
        # ... receives orchestrator_ref if needed
    ```
+
 3. Update dependencies (remove `self`, add explicit parameters)
 4. Add type hints and docstring
 
@@ -294,16 +296,19 @@ Part of Week 2 decomposition plan (target: <5,000 lines)"
 ## Risk Mitigation
 
 ### Risk 1: Discord Client Dependencies
+
 **Problem:** Methods may tightly couple to Discord client  
 **Mitigation:** Use dependency injection, pass Discord client as parameter  
 **Fallback:** Keep wrapper methods in orchestrator for backward compatibility
 
 ### Risk 2: Hidden State Dependencies
+
 **Problem:** Methods may rely on orchestrator instance state  
 **Mitigation:** Make dependencies explicit via parameters  
 **Fallback:** Pass orchestrator reference if absolutely needed
 
 ### Risk 3: Breaking Discord Commands
+
 **Problem:** Changes might break `/autointel` command  
 **Mitigation:** Comprehensive integration tests before commit  
 **Fallback:** Keep git checkpoint before changes

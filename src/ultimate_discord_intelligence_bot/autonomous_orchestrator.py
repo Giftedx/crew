@@ -10,9 +10,7 @@ from __future__ import annotations
 # Standard library imports
 import asyncio
 import logging
-import math
 import os
-import statistics
 import time
 from textwrap import dedent
 from typing import TYPE_CHECKING, Any
@@ -63,6 +61,7 @@ from .crew_insight_helpers import CrewInsightExtractor
 from .multi_modal_synthesizer import MultiModalSynthesizer
 from .obs.metrics import get_metrics
 from .orchestrator import (
+    analytics_calculators,
     crew_builders,
     data_transformers,
     discord_helpers,
@@ -983,24 +982,8 @@ class AutonomousIntelligenceOrchestrator:
         ]
 
     def _calculate_resource_requirements(self, depth: str) -> dict[str, Any]:
-        """Calculate resource requirements based on analysis depth."""
-        base_requirements = {
-            "cpu_cores": 2,
-            "memory_gb": 4,
-            "storage_gb": 10,
-            "network_bandwidth": "moderate",
-            "ai_model_calls": 50,
-        }
-
-        multipliers = {
-            "standard": 1.0,
-            "deep": 2.0,
-            "comprehensive": 3.5,
-            "experimental": 5.0,
-        }
-
-        multiplier = multipliers.get(depth, 1.0)
-        return {k: (v * multiplier if isinstance(v, (int, float)) else v) for k, v in base_requirements.items()}
+        """Delegates to analytics_calculators.calculate_resource_requirements."""
+        return analytics_calculators.calculate_resource_requirements(depth, self.logger)
 
     def _estimate_workflow_duration(self, depth: str) -> dict[str, Any]:
         """Estimate workflow duration based on depth and complexity."""
@@ -1063,14 +1046,8 @@ class AutonomousIntelligenceOrchestrator:
         }
 
     def _calculate_ai_enhancement_level(self, depth: str) -> float:
-        """Calculate the level of AI enhancement applied."""
-        enhancement_levels = {
-            "standard": 0.3,
-            "deep": 0.6,
-            "comprehensive": 0.8,
-            "experimental": 1.0,
-        }
-        return enhancement_levels.get(depth, 0.3)
+        """Delegates to analytics_calculators.calculate_ai_enhancement_level."""
+        return analytics_calculators.calculate_ai_enhancement_level(depth, self.logger)
 
     # ========================================
     # ENHANCED SPECIALIZED AGENT EXECUTION METHODS
@@ -2796,11 +2773,8 @@ class AutonomousIntelligenceOrchestrator:
         return quality_assessors.assess_logical_consistency(verification_data, logical_analysis, self.logger)
 
     def _calculate_ai_quality_score(self, quality_dimensions: dict[str, float]) -> float:
-        """Calculate a composite AI quality score from the assessed dimensions."""
-        values = [float(v) for v in quality_dimensions.values() if isinstance(v, (int, float))]
-        if not values:
-            return 0.0
-        return self._clamp_score(round(sum(values) / len(values), 3))
+        """Delegates to analytics_calculators.calculate_ai_quality_score."""
+        return analytics_calculators.calculate_ai_quality_score(quality_dimensions, self.logger)
 
     def _generate_ai_recommendations(
         self,
@@ -2809,43 +2783,10 @@ class AutonomousIntelligenceOrchestrator:
         analysis_data: dict[str, Any],
         verification_data: dict[str, Any],
     ) -> list[str]:
-        """Produce targeted recommendations based on low-scoring dimensions."""
-        recommendations: list[str] = []
-        friendly_labels = {
-            "content_coherence": "Improve transcript structuring and segmentation.",
-            "factual_accuracy": "Collect additional evidence or re-run fact checks.",
-            "source_credibility": "Augment source validation with trusted references.",
-            "bias_detection": "Expand bias detection prompts or diversify sources.",
-            "emotional_manipulation": "Balance emotional framing with neutral summaries.",
-            "logical_consistency": "Address detected fallacies with clarifying evidence.",
-        }
-
-        for dimension, value in quality_dimensions.items():
-            if not isinstance(value, (int, float)):
-                continue
-            if value < 0.4:
-                recommendations.append(f"⚠️ {friendly_labels.get(dimension, dimension)} (score {value:.2f})")
-            elif value < 0.6:
-                recommendations.append(f"🔍 Monitor {dimension.replace('_', ' ')} (score {value:.2f})")
-
-        if ai_quality_score >= 0.8:
-            title = None
-            if isinstance(analysis_data, dict):
-                metadata = analysis_data.get("content_metadata")
-                if isinstance(metadata, dict):
-                    title = metadata.get("title")
-            if title:
-                recommendations.append(f"✅ Maintain current quality controls for '{title}'.")
-            else:
-                recommendations.append("✅ Maintain current quality controls; overall quality is strong.")
-
-        if not recommendations:
-            if isinstance(verification_data, dict) and verification_data.get("fact_checks"):
-                recommendations.append("✅ Verification coverage is comprehensive; keep existing workflow.")
-            else:
-                recommendations.append("ℹ️ Add more fact-checking coverage to reinforce confidence.")
-
-        return recommendations
+        """Delegates to analytics_calculators.generate_ai_recommendations."""
+        return analytics_calculators.generate_ai_recommendations(
+            quality_dimensions, ai_quality_score, analysis_data, verification_data, self.logger
+        )
 
     def _identify_learning_opportunities(
         self,
@@ -2918,31 +2859,8 @@ class AutonomousIntelligenceOrchestrator:
     def _calculate_confidence_interval(
         self, quality_dimensions: dict[str, float], ai_quality_score: float
     ) -> dict[str, float]:
-        """Provide a simple confidence interval for the composite quality score."""
-        try:
-            values = [float(v) for v in quality_dimensions.values() if isinstance(v, (int, float))]
-            if not values:
-                margin = 0.2
-                confidence = 0.5
-            elif len(values) == 1:
-                margin = 0.1
-                confidence = 0.68
-            else:
-                spread = statistics.pstdev(values)
-                margin = max(0.05, spread / math.sqrt(len(values)))
-                confidence = 0.9
-
-            lower = self._clamp_score(ai_quality_score - margin)
-            upper = self._clamp_score(ai_quality_score + margin)
-
-            return {"lower": lower, "upper": upper, "confidence": confidence}
-        except Exception as exc:
-            self.logger.debug("Confidence interval calculation fallback due to error: %s", exc)
-            return {
-                "lower": self._clamp_score(ai_quality_score - 0.1),
-                "upper": self._clamp_score(ai_quality_score + 0.1),
-                "confidence": 0.5,
-            }
+        """Delegates to analytics_calculators.calculate_confidence_interval."""
+        return analytics_calculators.calculate_confidence_interval(quality_dimensions, ai_quality_score, self.logger)
 
     def _assess_quality_trend(self, ai_quality_score: float) -> str:
         """Assess the quality trend based on AI quality score."""
@@ -2951,43 +2869,13 @@ class AutonomousIntelligenceOrchestrator:
     def _calculate_comprehensive_threat_score(
         self, deception_result: Any, truth_result: Any, trust_result: Any, verification_data: dict[str, Any]
     ) -> float:
-        """Calculate comprehensive threat score from multiple analysis sources."""
-        try:
-            threat_score = 0.5  # Base threat level
+        """Calculate comprehensive threat score from multiple analysis sources.
 
-            # Factor in deception analysis
-            if isinstance(deception_result, StepResult) and deception_result.success:
-                threat_score = deception_result.data.get("deception_score", 0.5)
-
-            # Factor in verification results (support both 'fact_checks' and legacy 'fact_verification')
-            fact_block = None
-            if isinstance(verification_data.get("fact_checks"), dict):
-                fact_block = verification_data.get("fact_checks", {})
-            elif isinstance(verification_data.get("fact_verification"), dict):
-                fact_block = verification_data.get("fact_verification", {})
-            if isinstance(fact_block, dict) and fact_block:
-                verified = fact_block.get("verified_claims")
-                disputed = fact_block.get("disputed_claims")
-                if isinstance(verified, int) and isinstance(disputed, int) and (verified + disputed) > 0:
-                    total = verified + disputed
-                    dispute_ratio = disputed / total
-                    threat_score = (threat_score * 0.6) + (dispute_ratio * 0.4)
-                else:
-                    # Heuristic when only evidence is present: more evidence tends to reduce uncertainty
-                    ev_ct = fact_block.get("evidence_count")
-                    if isinstance(ev_ct, int) and ev_ct > 0:
-                        threat_score = max(0.0, threat_score - min(0.1, ev_ct * 0.01))
-
-            # Factor in logical fallacies
-            logical_analysis = verification_data.get("logical_analysis", {})
-            fallacies = logical_analysis.get("fallacies_detected", [])
-            if fallacies:
-                fallacy_penalty = min(0.3, len(fallacies) * 0.1)
-                threat_score = min(1.0, threat_score + fallacy_penalty)
-
-            return max(0.0, min(1.0, threat_score))
-        except Exception:
-            return 0.5
+        Delegates to analytics_calculators.calculate_comprehensive_threat_score.
+        """
+        return analytics_calculators.calculate_comprehensive_threat_score(
+            deception_result, truth_result, trust_result, verification_data, self.logger
+        )
 
     def _classify_threat_level(self, threat_score: float) -> str:
         """Classify threat level based on threat score."""
@@ -3080,55 +2968,8 @@ class AutonomousIntelligenceOrchestrator:
             return {"error": f"Specialized synthesis failed: {e}", "raw_results": all_results}
 
     def _generate_specialized_insights(self, results: dict[str, Any]) -> list[str]:
-        """Generate specialized insights from comprehensive autonomous analysis."""
-        insights = []
-
-        try:
-            # Threat assessment insights
-            deception_data = results.get("deception", {})
-            threat_level = deception_data.get("threat_level", "unknown")
-
-            if threat_level == "low":
-                insights.append(
-                    "🟢 Specialized threat analysis indicates low deception risk with high content reliability"
-                )
-            elif threat_level == "medium":
-                insights.append("🟡 Specialized analysis detected mixed reliability signals requiring verification")
-            elif threat_level == "high":
-                insights.append("🔴 Specialized threat analysis indicates high deception risk - exercise caution")
-
-            # Verification insights
-            verification_data = results.get("verification", {})
-            logical_analysis = verification_data.get("logical_analysis", {})
-            fallacies = logical_analysis.get("fallacies_detected", [])
-            if fallacies:
-                insights.append(f"⚠️ Information Verification Specialist detected {len(fallacies)} logical fallacies")
-
-            # Knowledge integration insights
-            knowledge_data = results.get("knowledge", {})
-            if knowledge_data.get("knowledge_systems"):
-                insights.append(
-                    "💾 Knowledge Integration Manager successfully stored intelligence across all memory systems"
-                )
-
-            # Behavioral insights
-            behavioral_data = results.get("behavioral", {})
-            if behavioral_data.get("behavioral_indicators"):
-                consistency = behavioral_data.get("behavioral_indicators", {}).get("consistency_score", 0.5)
-                if consistency > 0.7:
-                    insights.append("📊 Behavioral Pattern Analyst found high consistency indicators")
-                elif consistency < 0.3:
-                    insights.append("⚠️ Behavioral Pattern Analyst detected consistency anomalies")
-
-            # Social intelligence insights
-            social_data = results.get("social", {})
-            if social_data and social_data != {}:
-                insights.append("🌐 Social Intelligence Coordinator gathered cross-platform context")
-
-            return insights
-
-        except Exception as e:
-            return [f"❌ Specialized insight generation encountered an error: {e}"]
+        """Delegates to analytics_calculators.generate_specialized_insights."""
+        return analytics_calculators.generate_specialized_insights(results, self.logger)
 
     async def _create_specialized_main_results_embed(self, results: dict[str, Any], depth: str) -> Any:
         """Create specialized main results embed for Discord."""
@@ -3932,115 +3773,21 @@ class AutonomousIntelligenceOrchestrator:
     def _calculate_composite_deception_score(
         self, deception_result: Any, truth_result: Any, trust_result: Any, fact_data: dict[str, Any]
     ) -> float:
-        """Calculate a composite deception score from multiple analysis sources."""
-        try:
-            # Base score from deception tool
-            base_score = 0.5  # neutral
-            if isinstance(deception_result, StepResult) and deception_result.success:
-                # DeceptionScoringTool returns key 'score'
-                base_score = float(deception_result.data.get("score", 0.5))
+        """Calculate a composite deception score from multiple analysis sources.
 
-            # Factor in fact-check results
-            fact_checks = fact_data.get("fact_checks", {})
-            if fact_checks:
-                verified_claims = fact_checks.get("verified_claims", 0)
-                disputed_claims = fact_checks.get("disputed_claims", 0)
-                total_claims = verified_claims + disputed_claims
-                if total_claims > 0:
-                    fact_score = disputed_claims / total_claims
-                    base_score = (base_score * 0.6) + (fact_score * 0.4)
-
-            # Factor in logical fallacies
-            fallacies = fact_data.get("logical_fallacies", {}).get("fallacies_detected", [])
-            if fallacies:
-                fallacy_penalty = min(0.3, len(fallacies) * 0.1)
-                base_score = min(1.0, base_score + fallacy_penalty)
-
-            # Ensure score is in valid range
-            return max(0.0, min(1.0, base_score))
-
-        except Exception:
-            return 0.5  # Return neutral score on calculation error
+        Delegates to analytics_calculators.calculate_composite_deception_score.
+        """
+        return analytics_calculators.calculate_composite_deception_score(
+            deception_result, truth_result, trust_result, fact_data, self.logger
+        )
 
     def _calculate_summary_statistics(self, results: dict[str, Any]) -> dict[str, Any]:
-        """Calculate summary statistics from all analysis results."""
-        try:
-            pipeline_data = results.get("pipeline", {})
-            fact_data = results.get("fact_analysis", {})
-            # Prefer explicit deception_scoring stage, fallback to threat_analysis.deception_score
-            deception_stage = results.get("deception_scoring", {})
-            if isinstance(deception_stage, dict) and "score" in deception_stage:
-                deception_score_val = deception_stage.get("score", 0.0)
-            else:
-                ta = results.get("threat_analysis", {})
-                deception_score_val = ta.get("deception_score", 0.0) if isinstance(ta, dict) else 0.0
-
-            # Derive a more accurate count of fact-checks performed
-            fc = fact_data.get("fact_checks", {}) if isinstance(fact_data, dict) else {}
-            checks_performed = 0
-            if isinstance(fc, dict):
-                items = fc.get("items")
-                claims = fc.get("claims")
-                if isinstance(items, list):
-                    checks_performed = len(items)
-                elif isinstance(claims, list):
-                    checks_performed = len(claims)
-                else:
-                    # fallback to evidence count if available
-                    ev_ct = fc.get("evidence_count")
-                    if isinstance(ev_ct, int):
-                        checks_performed = ev_ct
-
-            stats = {
-                "content_processed": bool(pipeline_data),
-                "fact_checks_performed": checks_performed,
-                "fallacies_detected": len(fact_data.get("logical_fallacies", {}).get("fallacies_detected", [])),
-                "deception_score": deception_score_val if isinstance(deception_score_val, (int, float)) else 0.0,
-                "cross_platform_sources": len(results.get("cross_platform_intel", {})),
-                "knowledge_base_entries": 1 if results.get("knowledge_integration", {}).get("knowledge_storage") else 0,
-            }
-
-            return stats
-
-        except Exception as e:
-            return {"error": f"Statistics calculation failed: {e}"}
+        """Delegates to analytics_calculators.calculate_summary_statistics."""
+        return analytics_calculators.calculate_summary_statistics(results, self.logger)
 
     def _generate_autonomous_insights(self, results: dict[str, Any]) -> list[str]:
-        """Generate autonomous insights based on comprehensive analysis results."""
-        insights = []
-
-        try:
-            # Deception score insights
-            deception_score = results.get("deception_score", {}).get("deception_score", 0.5)
-            if deception_score < 0.3:
-                insights.append("🟢 Content shows high reliability with minimal deception indicators")
-            elif deception_score < 0.7:
-                insights.append("🟡 Content shows mixed reliability signals requiring further verification")
-            else:
-                insights.append(
-                    "🔴 Content shows significant deception indicators and should be approached with caution"
-                )
-
-            # Fact-checking insights
-            fact_data = results.get("fact_analysis", {})
-            fallacies = fact_data.get("logical_fallacies", {}).get("fallacies_detected", [])
-            if fallacies:
-                insights.append(f"⚠️ Detected {len(fallacies)} logical fallacies: {', '.join(fallacies[:3])}")
-
-            # Cross-platform intelligence insights
-            intel_data = results.get("cross_platform_intel", {})
-            if intel_data and intel_data != {}:
-                insights.append("🌐 Cross-platform intelligence gathered from multiple sources")
-
-            # Knowledge base integration insights
-            knowledge_data = results.get("knowledge_integration", {})
-            if knowledge_data.get("knowledge_storage"):
-                insights.append("💾 Analysis results successfully integrated into knowledge base for future reference")
-
-            return insights
-
-        except Exception as e:
-            return [f"❌ Insight generation failed: {e}"]
+        """Delegates to analytics_calculators.generate_autonomous_insights."""
+        return analytics_calculators.generate_autonomous_insights(results, self.logger)
 
     def _is_session_valid(self, interaction: Any) -> bool:
         """Check if Discord session is still valid for sending messages.
@@ -4150,129 +3897,46 @@ class AutonomousIntelligenceOrchestrator:
     # ========================================
 
     def _calculate_threat_level(self, deception_result: Any, fallacy_result: Any) -> str:
-        """Calculate threat level based on deception and fallacy analysis."""
-        try:
-            deception_score = 0.0
-            fallacy_count = 0
+        """Calculate threat level based on deception and fallacy analysis.
 
-            if isinstance(deception_result, StepResult) and deception_result.success:
-                deception_data = deception_result.data
-                deception_score = deception_data.get("threat_score", 0.0)
-
-            if isinstance(fallacy_result, StepResult) and fallacy_result.success:
-                fallacy_data = fallacy_result.data
-                fallacy_count = len(fallacy_data.get("fallacies", []))
-
-            # Calculate combined threat level
-            if deception_score > 0.7 or fallacy_count > 5:
-                return "high"
-            elif deception_score > 0.4 or fallacy_count > 2:
-                return "medium"
-            else:
-                return "low"
-        except Exception:
-            return "unknown"
+        Delegates to analytics_calculators.calculate_threat_level.
+        """
+        return analytics_calculators.calculate_threat_level(deception_result, fallacy_result, self.logger)
 
     def _calculate_threat_level_from_crew(self, crew_result: Any) -> str:
-        """Calculate threat level from CrewAI crew analysis results."""
-        try:
-            if not crew_result:
-                return "unknown"
+        """Calculate threat level from CrewAI crew analysis results.
 
-            # Extract analysis from crew result
-            crew_output = str(crew_result).lower()
-
-            # Look for threat indicators in crew output
-            high_indicators = ["high risk", "severe threat", "critical", "dangerous", "manipulation", "deception"]
-            medium_indicators = ["moderate risk", "medium threat", "concerning", "suspicious", "misleading"]
-
-            high_count = sum(1 for indicator in high_indicators if indicator in crew_output)
-            medium_count = sum(1 for indicator in medium_indicators if indicator in crew_output)
-
-            if high_count > 0:
-                return "high"
-            elif medium_count > 0:
-                return "medium"
-            else:
-                return "low"
-        except Exception:
-            return "unknown"
+        Delegates to analytics_calculators.calculate_threat_level_from_crew.
+        """
+        return analytics_calculators.calculate_threat_level_from_crew(crew_result, self.logger)
 
     def _calculate_behavioral_risk(self, behavioral_data: dict[str, Any], threat_data: dict[str, Any]) -> float:
-        """Calculate behavioral risk score."""
-        try:
-            base_risk = 0.0
+        """Calculate behavioral risk score.
 
-            # Factor in threat level
-            threat_level = threat_data.get("threat_level", "unknown")
-            if threat_level == "high":
-                base_risk += 0.4
-            elif threat_level == "medium":
-                base_risk += 0.2
-
-            # Factor in behavioral patterns
-            perspectives = behavioral_data.get("perspectives", {})
-            if isinstance(perspectives, dict):
-                negative_indicators = sum(1 for p in perspectives.values() if "concerning" in str(p).lower())
-                base_risk += min(negative_indicators * 0.1, 0.3)
-
-            return min(base_risk, 1.0)
-        except Exception:
-            return 0.5
+        Delegates to analytics_calculators.calculate_behavioral_risk.
+        """
+        return analytics_calculators.calculate_behavioral_risk(behavioral_data, threat_data, self.logger)
 
     def _calculate_persona_confidence(self, behavioral_data: dict[str, Any]) -> float:
-        """Calculate confidence in persona analysis."""
-        try:
-            perspectives = behavioral_data.get("perspectives", {})
-            if isinstance(perspectives, dict) and len(perspectives) > 0:
-                # Higher confidence with more consistent perspectives
-                return min(len(perspectives) * 0.2, 0.9)
-            return 0.1
-        except Exception:
-            return 0.1
+        """Calculate confidence in persona analysis.
+
+        Delegates to analytics_calculators.calculate_persona_confidence.
+        """
+        return analytics_calculators.calculate_persona_confidence(behavioral_data, self.logger)
 
     def _calculate_behavioral_risk_from_crew(self, crew_result: Any, threat_data: dict[str, Any]) -> float:
-        """Calculate behavioral risk score from CrewAI crew analysis."""
-        try:
-            base_risk = 0.0
+        """Calculate behavioral risk score from CrewAI crew analysis.
 
-            # Factor in threat level
-            threat_level = threat_data.get("threat_level", "unknown")
-            if threat_level == "high":
-                base_risk += 0.4
-            elif threat_level == "medium":
-                base_risk += 0.2
-
-            # Analyze crew output for risk indicators
-            crew_output = str(crew_result).lower()
-            risk_indicators = ["aggressive", "deceptive", "manipulative", "concerning", "suspicious", "high risk"]
-            risk_count = sum(1 for indicator in risk_indicators if indicator in crew_output)
-
-            base_risk += min(risk_count * 0.1, 0.4)
-
-            return min(base_risk, 1.0)
-        except Exception:
-            return 0.5
+        Delegates to analytics_calculators.calculate_behavioral_risk_from_crew.
+        """
+        return analytics_calculators.calculate_behavioral_risk_from_crew(crew_result, threat_data, self.logger)
 
     def _calculate_persona_confidence_from_crew(self, crew_result: Any) -> float:
-        """Calculate confidence in persona analysis from CrewAI crew results."""
-        try:
-            if not crew_result:
-                return 0.1
+        """Calculate confidence in persona analysis from CrewAI crew results.
 
-            crew_output = str(crew_result)
-
-            # Higher confidence with more detailed analysis
-            confidence_indicators = ["detailed", "comprehensive", "analysis", "profile", "behavior", "pattern"]
-            confidence_count = sum(1 for indicator in confidence_indicators if indicator in crew_output.lower())
-
-            # Base confidence on output length and detail indicators
-            base_confidence = min(len(crew_output) / 1000, 0.5)  # Length factor
-            detail_confidence = min(confidence_count * 0.1, 0.4)  # Detail factor
-
-            return min(base_confidence + detail_confidence, 0.9)
-        except Exception:
-            return 0.1
+        Delegates to analytics_calculators.calculate_persona_confidence_from_crew.
+        """
+        return analytics_calculators.calculate_persona_confidence_from_crew(crew_result, self.logger)
 
     def _extract_research_topics(self, transcript: str, claims: dict[str, Any]) -> list[str]:
         """Extract research topics from transcript and claims."""
@@ -4296,25 +3960,15 @@ class AutonomousIntelligenceOrchestrator:
             return []
 
     def _calculate_contextual_relevance(self, research_results: dict[str, Any], analysis_data: dict[str, Any]) -> float:
-        """Calculate contextual relevance of research to analysis."""
-        try:
-            if not research_results:
-                return 0.0
+        """Calculate contextual relevance of research to analysis.
 
-            # Simple relevance calculation based on result count and quality
-            total_results = sum(len(results) for results in research_results.values() if isinstance(results, list))
-            return min(total_results * 0.1, 0.9)
-        except Exception:
-            return 0.0
+        Delegates to analytics_calculators.calculate_contextual_relevance.
+        """
+        return analytics_calculators.calculate_contextual_relevance(research_results, analysis_data, self.logger)
 
     def _calculate_synthesis_confidence(self, research_results: dict[str, Any]) -> float:
-        """Calculate confidence in research synthesis."""
-        try:
-            if not research_results:
-                return 0.0
-            return min(len(research_results) * 0.2, 0.8)
-        except Exception:
-            return 0.0
+        """Delegates to analytics_calculators.calculate_synthesis_confidence."""
+        return analytics_calculators.calculate_synthesis_confidence(research_results, self.logger)
 
     def _extract_research_topics_from_crew(self, crew_result: Any) -> list[str]:
         """Extract research topics from CrewAI crew analysis."""
@@ -4337,23 +3991,8 @@ class AutonomousIntelligenceOrchestrator:
             return []
 
     def _calculate_contextual_relevance_from_crew(self, crew_result: Any, analysis_data: dict[str, Any]) -> float:
-        """Calculate contextual relevance from CrewAI crew results."""
-        try:
-            if not crew_result:
-                return 0.0
-
-            crew_output = str(crew_result)
-
-            # Calculate relevance based on output quality and length
-            relevance_indicators = ["relevant", "related", "connected", "context", "significant"]
-            relevance_count = sum(1 for indicator in relevance_indicators if indicator in crew_output.lower())
-
-            base_relevance = min(len(crew_output) / 2000, 0.5)  # Length factor
-            indicator_relevance = min(relevance_count * 0.1, 0.4)  # Indicator factor
-
-            return min(base_relevance + indicator_relevance, 0.9)
-        except Exception:
-            return 0.0
+        """Delegates to analytics_calculators.calculate_contextual_relevance_from_crew."""
+        return analytics_calculators.calculate_contextual_relevance_from_crew(crew_result, analysis_data, self.logger)
 
     def _calculate_synthesis_confidence_from_crew(self, crew_result: Any) -> float:
         """Calculate synthesis confidence from CrewAI crew results."""
@@ -4391,27 +4030,8 @@ class AutonomousIntelligenceOrchestrator:
             return {}
 
     def _calculate_consolidation_metrics_from_crew(self, crew_result: Any) -> dict[str, Any]:
-        """Calculate knowledge consolidation metrics from CrewAI crew results."""
-        try:
-            if not crew_result:
-                return {}
-
-            crew_output = str(crew_result)
-
-            # Calculate metrics based on crew output quality and depth
-            consolidation_indicators = ["integrated", "consolidated", "archived", "stored", "processed"]
-            consolidation_count = sum(1 for indicator in consolidation_indicators if indicator in crew_output.lower())
-
-            metrics = {
-                "consolidation_score": min(consolidation_count * 0.2, 1.0),
-                "integration_depth": min(len(crew_output) / 1000, 1.0),
-                "system_coverage": min(consolidation_count / 5, 1.0),
-                "knowledge_persistence": True,
-            }
-
-            return metrics
-        except Exception:
-            return {}
+        """Delegates to analytics_calculators.calculate_consolidation_metrics_from_crew."""
+        return analytics_calculators.calculate_consolidation_metrics_from_crew(crew_result, self.logger)
 
     def _create_executive_summary(self, analysis_data: dict[str, Any], threat_data: dict[str, Any]) -> str:
         """Create executive summary for intelligence briefing."""
@@ -4449,29 +4069,18 @@ class AutonomousIntelligenceOrchestrator:
     def _generate_strategic_recommendations(
         self, analysis_data: dict[str, Any], threat_data: dict[str, Any], verification_data: dict[str, Any]
     ) -> list[str]:
-        """Generate strategic recommendations based on analysis."""
-        try:
-            recommendations = []
-
-            threat_level = threat_data.get("threat_level", "unknown")
-            if threat_level == "high":
-                recommendations.append("Recommend enhanced scrutiny and additional verification")
-            elif threat_level == "medium":
-                recommendations.append("Suggest moderate caution and cross-referencing")
-            else:
-                recommendations.append("Standard content handling protocols apply")
-
-            return recommendations
-        except Exception:
-            return ["Apply standard intelligence protocols"]
+        """Delegates to analytics_calculators.generate_strategic_recommendations."""
+        return analytics_calculators.generate_strategic_recommendations(
+            analysis_data, threat_data, verification_data, self.logger
+        )
 
     def _calculate_overall_confidence(self, *data_sources) -> float:
-        """Calculate overall confidence across all data sources."""
-        return quality_assessors.calculate_overall_confidence(*data_sources, logger_instance=self.logger)
+        """Delegates to analytics_calculators.calculate_overall_confidence."""
+        return analytics_calculators.calculate_overall_confidence(*data_sources, log=self.logger)
 
     def _calculate_data_completeness(self, *data_sources) -> float:
-        """Calculate data completeness across all sources."""
-        return data_transformers.calculate_data_completeness(*data_sources)
+        """Delegates to analytics_calculators.calculate_data_completeness."""
+        return analytics_calculators.calculate_data_completeness(*data_sources, log=self.logger)
 
     def _assign_intelligence_grade(
         self, analysis_data: dict[str, Any], threat_data: dict[str, Any], verification_data: dict[str, Any]
@@ -4484,8 +4093,8 @@ class AutonomousIntelligenceOrchestrator:
         return quality_assessors.assess_transcript_quality(transcript, self.logger)
 
     def _calculate_enhanced_summary_statistics(self, all_results: dict[str, Any]) -> dict[str, Any]:
-        """Calculate enhanced summary statistics from all analysis results."""
-        return data_transformers.calculate_enhanced_summary_statistics(all_results, self.logger)
+        """Delegates to analytics_calculators.calculate_enhanced_summary_statistics."""
+        return analytics_calculators.calculate_enhanced_summary_statistics(all_results, self.logger)
 
     def _generate_comprehensive_intelligence_insights(self, all_results: dict[str, Any]) -> list[str]:
         """Generate comprehensive intelligence insights from all analysis results."""
@@ -4510,26 +4119,6 @@ class AutonomousIntelligenceOrchestrator:
             "real_time_monitoring_alerts",
             "community_liaison_communication",
         ]
-
-    def _calculate_resource_requirements(self, depth: str) -> dict[str, Any]:
-        """Calculate resource requirements based on analysis depth."""
-        base_requirements = {
-            "cpu_cores": 2,
-            "memory_gb": 4,
-            "storage_gb": 10,
-            "network_bandwidth": "moderate",
-            "ai_model_calls": 50,
-        }
-
-        multipliers = {
-            "standard": 1.0,
-            "deep": 2.0,
-            "comprehensive": 3.5,
-            "experimental": 5.0,
-        }
-
-        multiplier = multipliers.get(depth, 1.0)
-        return {k: (v * multiplier if isinstance(v, (int, float)) else v) for k, v in base_requirements.items()}
 
     def _estimate_workflow_duration(self, depth: str) -> dict[str, Any]:
         """Estimate workflow duration based on depth and complexity."""
@@ -4590,16 +4179,6 @@ class AutonomousIntelligenceOrchestrator:
             "depth_level": depth,
             "experimental_features_enabled": depth == "experimental",
         }
-
-    def _calculate_ai_enhancement_level(self, depth: str) -> float:
-        """Calculate the level of AI enhancement applied."""
-        enhancement_levels = {
-            "standard": 0.3,
-            "deep": 0.6,
-            "comprehensive": 0.8,
-            "experimental": 1.0,
-        }
-        return enhancement_levels.get(depth, 0.3)
 
     # ========================================
     # ADVANCED 25-STAGE WORKFLOW METHODS
@@ -5061,8 +4640,8 @@ class AutonomousIntelligenceOrchestrator:
         return extractors.extract_index_from_crew(crew_result)
 
     def _calculate_transcript_quality(self, crew_result: Any) -> float:
-        """Calculate transcript quality from CrewAI analysis."""
-        return extractors.calculate_transcript_quality(crew_result)
+        """Delegates to analytics_calculators.calculate_transcript_quality."""
+        return analytics_calculators.calculate_transcript_quality(crew_result, self.logger)
 
     def _extract_keywords_from_text(self, text: str) -> list[str]:
         """Extract keywords from text using simple word frequency."""
@@ -5091,8 +4670,8 @@ class AutonomousIntelligenceOrchestrator:
         return extractors.extract_themes_from_crew(crew_result)
 
     def _calculate_analysis_confidence_from_crew(self, crew_result: Any) -> float:
-        """Calculate analysis confidence from CrewAI results."""
-        return extractors.calculate_analysis_confidence_from_crew(crew_result)
+        """Delegates to analytics_calculators.calculate_analysis_confidence_from_crew."""
+        return analytics_calculators.calculate_analysis_confidence_from_crew(crew_result, self.logger)
 
     def _analyze_text_complexity(self, text: str) -> dict[str, Any]:
         """Analyze text complexity metrics."""
@@ -5123,12 +4702,15 @@ class AutonomousIntelligenceOrchestrator:
         return extractors.extract_source_validation_from_crew(crew_result)
 
     def _calculate_verification_confidence_from_crew(self, crew_result: Any) -> float:
-        """Calculate overall verification confidence from CrewAI analysis."""
-        return extractors.calculate_verification_confidence_from_crew(crew_result)
+        """Delegates to analytics_calculators.calculate_verification_confidence_from_crew."""
+        return analytics_calculators.calculate_verification_confidence_from_crew(crew_result, self.logger)
 
     def _calculate_agent_confidence_from_crew(self, crew_result: Any) -> float:
-        """Calculate agent confidence from CrewAI analysis quality."""
-        return extractors.calculate_agent_confidence_from_crew(crew_result)
+        """Calculate agent confidence from CrewAI analysis quality.
+
+        Delegates to analytics_calculators.calculate_agent_confidence_from_crew.
+        """
+        return analytics_calculators.calculate_agent_confidence_from_crew(crew_result, self.logger)
 
     def _extract_deception_analysis_from_crew(self, crew_result: Any) -> dict[str, Any]:
         """Extract comprehensive deception analysis from CrewAI threat assessment."""
@@ -5402,33 +4984,13 @@ class AutonomousIntelligenceOrchestrator:
     def _calculate_basic_threat_from_data(
         self, verification_data: dict, sentiment_data: dict, credibility_data: dict
     ) -> float:
-        """Calculate basic threat score from available data when agent unavailable."""
-        try:
-            base_threat = 0.0
+        """Calculate basic threat score from available data when agent unavailable.
 
-            # Factor in verification results
-            fact_checks = verification_data.get("fact_checks", {})
-            if isinstance(fact_checks, dict):
-                disputed_claims = fact_checks.get("disputed_claims", 0)
-                verified_claims = fact_checks.get("verified_claims", 1)
-                base_threat += min(disputed_claims / max(verified_claims, 1), 0.4)
-
-            # Factor in sentiment
-            if isinstance(sentiment_data, dict):
-                sentiment = sentiment_data.get("overall_sentiment", "neutral")
-                if sentiment == "negative":
-                    base_threat += 0.2
-                elif sentiment == "positive":
-                    base_threat -= 0.1
-
-            # Factor in credibility
-            if isinstance(credibility_data, dict):
-                credibility_score = credibility_data.get("score", 0.5)
-                base_threat += (1.0 - credibility_score) * 0.3
-
-            return max(0.0, min(1.0, base_threat))
-        except Exception:
-            return 0.5
+        Delegates to analytics_calculators.calculate_basic_threat_from_data.
+        """
+        return analytics_calculators.calculate_basic_threat_from_data(
+            verification_data, sentiment_data, credibility_data, self.logger
+        )
 
     def _classify_basic_threat_level(self, threat_score: float) -> str:
         """Classify basic threat level from score."""

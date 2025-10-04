@@ -102,6 +102,7 @@ Successfully extracted all Discord-specific integration logic from the monolithi
 ## Module Design Principles
 
 ### 1. **Stateless Functions**
+
 All methods are module-level functions (not instance methods). No orchestrator state dependencies.
 
 ```python
@@ -115,12 +116,14 @@ def send_progress_update(interaction, message, current, total, log=None):
 ```
 
 ### 2. **Clear Separation of Concerns**
+
 - **Discord I/O** → discord_helpers.py
 - **Business logic** → autonomous_orchestrator.py
 - **Validation** → system_validators.py
 - **Error handling** → error_handlers.py
 
 ### 3. **Easy Testing**
+
 All functions accept mocked Discord interactions:
 
 ```python
@@ -135,6 +138,7 @@ def test_send_progress_update():
 ```
 
 ### 4. **Lazy Metrics Import**
+
 Avoided circular dependencies with lazy import pattern:
 
 ```python
@@ -152,6 +156,7 @@ def _get_metrics():
 ```
 
 ### 5. **Backward Compatibility**
+
 Orchestrator keeps wrapper methods for gradual migration:
 
 ```python
@@ -205,11 +210,13 @@ async def _send_progress_update(self, interaction, message, current, total):
 ### Challenge 1: Circular Import with Metrics
 
 **Problem:**
+
 ```python
 from obs.metrics import get_metrics  # ImportError in module context
 ```
 
 **Solution:** Lazy import pattern
+
 ```python
 def _get_metrics():
     try:
@@ -226,6 +233,7 @@ def _get_metrics():
 **Problem:** Discord client only available at runtime (not at import time)
 
 **Solution:** Dynamic import inside functions
+
 ```python
 async def create_main_results_embed(results, depth):
     from ..discord_bot.discord_env import discord
@@ -239,6 +247,7 @@ async def create_main_results_embed(results, depth):
 **Problem:** Methods relied on `self.logger`
 
 **Solution:** Optional logger parameter
+
 ```python
 def is_session_valid(interaction, log=None):
     _logger = log or logger  # Module logger fallback
@@ -273,6 +282,7 @@ tests/orchestrator/test_system_validators.py::... PASSED               [100%]
 ```
 
 **Results:**
+
 - ✅ 280 tests passing (99.6%)
 - ✅ 1 test skipped (expected)
 - ✅ Execution time: 1.37s (maintained performance)
@@ -289,6 +299,7 @@ $ ruff format src/ultimate_discord_intelligence_bot/orchestrator/discord_helpers
 ```
 
 **Results:**
+
 - ✅ No lint errors
 - ✅ Formatting compliant
 - ✅ Import organization correct
@@ -403,6 +414,7 @@ $ ruff format src/ultimate_discord_intelligence_bot/orchestrator/discord_helpers
 **Estimated Methods:** 20-25 methods (~450 lines)
 
 **Key Methods to Extract:**
+
 - `_build_autonomous_analysis_summary()`
 - `_build_detailed_results()`
 - `_build_comprehensive_intelligence_payload()`
@@ -410,6 +422,7 @@ $ ruff format src/ultimate_discord_intelligence_bot/orchestrator/discord_helpers
 - `_prepare_knowledge_base_payload()`
 
 **Expected Impact:**
+
 - Orchestrator: 5,655 → ~5,200 lines (-455 lines, -8% more)
 - Total reduction: 27.9% → 33.6% (+5.7%)
 - Progress to target: 87% → 96% (+9%)
@@ -423,6 +436,7 @@ $ ruff format src/ultimate_discord_intelligence_bot/orchestrator/discord_helpers
 **Estimated Methods:** 15-20 methods (~250 lines)
 
 **Key Methods to Extract:**
+
 - `_calculate_threat_level()`
 - `_calculate_verification_confidence()`
 - `_calculate_research_quality()`
@@ -430,6 +444,7 @@ $ ruff format src/ultimate_discord_intelligence_bot/orchestrator/discord_helpers
 - `_calculate_statistical_summary()`
 
 **Expected Impact:**
+
 - Orchestrator: ~5,200 → **<5,000 lines** 🎯 **TARGET ACHIEVED**
 - Total reduction: 33.6% → **36.2%**
 - Progress to target: 96% → **100%** ✅
@@ -542,16 +557,19 @@ discord_helpers.py (691 lines)
 ### Import Dependencies
 
 **External:**
+
 - `logging` - Standard library
 - `time` - Standard library
 - `typing` - Standard library
 
 **Internal:**
+
 - `ultimate_discord_intelligence_bot.step_result.StepResult`
 - `obs.metrics.get_metrics` (lazy import)
 - `discord_bot.discord_env.discord` (dynamic import in functions)
 
 **Zero dependencies on:**
+
 - Orchestrator instance
 - Tool imports
 - CrewAI

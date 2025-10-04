@@ -298,7 +298,9 @@ async def handle_acquisition_failure(
 
     except Exception as e:
         # Fallback error handling
-        await send_error_response(interaction, "Content Acquisition", f"Failed to acquire content from {url}: {e}", _logger)
+        await send_error_response(
+            interaction, "Content Acquisition", f"Failed to acquire content from {url}: {e}", _logger
+        )
 
 
 async def send_error_response(
@@ -695,14 +697,12 @@ async def create_error_embed(stage: str, error: str) -> Any:
 
         embed.add_field(name="🔧 Failed Stage", value=stage, inline=True)
 
-        embed.add_field(
-            name="⚠️ Error Details", value=error[:500] + ("..." if len(error) > 500 else ""), inline=False
-        )
+        embed.add_field(name="⚠️ Error Details", value=error[:500] + ("..." if len(error) > 500 else ""), inline=False)
 
         embed.set_footer(text="Please try again or contact support if the issue persists")
 
         return embed
 
-    except Exception as e:
+    except Exception:
         # Fallback to minimal embed on error
         return {"title": "Error", "description": f"Error in stage: {stage}. Details: {error[:100]}"}
