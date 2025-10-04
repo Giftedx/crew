@@ -11,6 +11,9 @@ import pytest
 from ultimate_discord_intelligence_bot.orchestrator.pipeline_result_builders import (
     build_knowledge_payload,
     build_pipeline_content_analysis_result,
+    create_executive_summary,
+    extract_key_findings,
+    extract_system_status_from_crew,
     merge_threat_payload,
 )
 from ultimate_discord_intelligence_bot.step_result import StepResult
@@ -767,4 +770,209 @@ class TestBuildKnowledgePayload:
         assert result["deception_score"] == 0.75
         assert result["transcript_index"] == {"word1": [0, 10]}
         assert result["timeline_anchors"] == [{"time": 0, "text": "intro"}]
+
+
+class TestExtractSystemStatusFromCrew:
+    """Test suite for extract_system_status_from_crew function."""
+
+    def test_empty_crew_result_returns_empty_dict(self):
+        """Test that empty crew result returns empty dict."""
+        result = extract_system_status_from_crew(None)
+        assert result == {}
+
+    def test_crew_result_with_all_systems(self):
+        """Test crew result containing all memory system keywords."""
+        crew_result = "Successfully integrated vector memory, graph memory, and continual memory systems."
+        result = extract_system_status_from_crew(crew_result)
+
+        assert result["vector_memory"]["status"] == "integrated"
+        assert result["graph_memory"]["status"] == "integrated"
+        assert result["continual_memory"]["status"] == "integrated"
+
+    def test_crew_result_with_vector_only(self):
+        """Test crew result with only vector memory mentioned."""
+        crew_result = "Vector embeddings stored successfully."
+        result = extract_system_status_from_crew(crew_result)
+
+        assert result["vector_memory"]["status"] == "integrated"
+        assert result["graph_memory"]["status"] == "pending"
+        assert result["continual_memory"]["status"] == "pending"
+
+    def test_crew_result_with_graph_only(self):
+        """Test crew result with only graph memory mentioned."""
+        crew_result = "Graph relationships created and indexed."
+        result = extract_system_status_from_crew(crew_result)
+
+        assert result["vector_memory"]["status"] == "pending"
+        assert result["graph_memory"]["status"] == "integrated"
+        assert result["continual_memory"]["status"] == "pending"
+
+    def test_crew_result_with_continual_only(self):
+        """Test crew result with only continual memory mentioned."""
+        crew_result = "Continual learning patterns established."
+        result = extract_system_status_from_crew(crew_result)
+
+        assert result["vector_memory"]["status"] == "pending"
+        assert result["graph_memory"]["status"] == "pending"
+        assert result["continual_memory"]["status"] == "integrated"
+
+    def test_crew_result_with_no_systems(self):
+        """Test crew result with no memory system keywords."""
+        crew_result = "Analysis completed without memory integration."
+        result = extract_system_status_from_crew(crew_result)
+
+        assert result["vector_memory"]["status"] == "pending"
+        assert result["graph_memory"]["status"] == "pending"
+        assert result["continual_memory"]["status"] == "pending"
+
+    def test_case_insensitive_detection(self):
+        """Test that system detection is case-insensitive."""
+        crew_result = "VECTOR and GRAPH systems ready, CONTINUAL learning active."
+        result = extract_system_status_from_crew(crew_result)
+
+        assert result["vector_memory"]["status"] == "integrated"
+        assert result["graph_memory"]["status"] == "integrated"
+        assert result["continual_memory"]["status"] == "integrated"
+
+    def test_exception_handling_returns_empty_dict(self):
+        """Test that exceptions are caught and return empty dict."""
+        # Pass object that will cause exception when converted to string
+        class BadObject:
+            def __str__(self):
+                raise ValueError("Cannot convert to string")
+
+        result = extract_system_status_from_crew(BadObject())
+        assert result == {}
+
+
+class TestCreateExecutiveSummary:
+    """Test suite for create_executive_summary function."""
+
+    def test_basic_summary_with_threat_level(self):
+        """Test basic summary generation with threat level."""
+        analysis_data = {}
+        threat_data = {"threat_level": "low"}
+
+        result = create_executive_summary(analysis_data, threat_data)
+
+        assert "low threat assessment" in result
+        assert "Content analysis completed" in result
+
+    def test_high_threat_level(self):
+        """Test summary with high threat level."""
+        analysis_data = {}
+        threat_data = {"threat_level": "high"}
+
+        result = create_executive_summary(analysis_data, threat_data)
+
+        assert "high threat assessment" in result
+
+    def test_unknown_threat_level(self):
+        """Test summary with missing threat_level defaults to 'unknown'."""
+        analysis_data = {}
+        threat_data = {}
+
+        result = create_executive_summary(analysis_data, threat_data)
+
+        assert "unknown threat assessment" in result
+
+    def test_non_dict_threat_data_returns_default(self):
+        """Test that non-dict threat_data returns default summary."""
+        analysis_data = {}
+        threat_data = "not a dict"
+
+        result = create_executive_summary(analysis_data, threat_data)
+
+        assert result == "Intelligence briefing generated with standard analysis parameters."
+
+    def test_exception_handling(self):
+        """Test that exceptions return fallback summary."""
+        # Pass None to trigger exception
+        result = create_executive_summary(None, None)
+
+        assert result == "Intelligence briefing generated with standard analysis parameters."
+
+
+class TestExtractKeyFindings:
+    """Test suite for extract_key_findings function."""
+
+    def test_basic_findings_extraction(self):
+        """Test basic findings from all three data sources."""
+        analysis_data = {"transcript": "Test transcript with 50 characters in total here."}
+        verification_data = {"fact_checks": {"claim1": "verified", "claim2": "disputed"}}
+        threat_data = {"threat_level": "medium"}
+
+        result = extract_key_findings(analysis_data, verification_data, threat_data)
+
+        assert len(result) == 3
+        assert "Threat assessment: medium" in result
+        assert "Fact verification completed with 2 claims analyzed" in result
+        assert "Content analysis of" in result[2]
+        assert "characters completed" in result[2]
+
+    def test_findings_with_no_fact_checks(self):
+        """Test findings when no fact checks present."""
+        analysis_data = {"transcript": "Short"}
+        verification_data = {}
+        threat_data = {"threat_level": "low"}
+
+        result = extract_key_findings(analysis_data, verification_data, threat_data)
+
+        # Should only have 2 findings (threat + analysis, no fact checks)
+        assert len(result) == 2
+        assert "Threat assessment: low" in result
+        assert any("Content analysis" in finding for finding in result)
+
+    def test_findings_with_empty_transcript(self):
+        """Test findings with empty transcript."""
+        analysis_data = {"transcript": ""}
+        verification_data = {"fact_checks": {"claim1": "verified"}}
+        threat_data = {"threat_level": "high"}
+
+        result = extract_key_findings(analysis_data, verification_data, threat_data)
+
+        # Should only have 2 findings (threat + fact checks, no transcript)
+        assert len(result) == 2
+        assert "Threat assessment: high" in result
+        assert "Fact verification completed" in result[1]
+
+    def test_unknown_threat_level(self):
+        """Test findings with missing threat_level."""
+        analysis_data = {"transcript": "Test"}
+        verification_data = {}
+        threat_data = {}
+
+        result = extract_key_findings(analysis_data, verification_data, threat_data)
+
+        assert "Threat assessment: unknown" in result
+
+    def test_fact_checks_non_dict(self):
+        """Test that non-dict fact_checks is handled gracefully."""
+        analysis_data = {"transcript": "Test"}
+        verification_data = {"fact_checks": "not a dict"}
+        threat_data = {"threat_level": "low"}
+
+        result = extract_key_findings(analysis_data, verification_data, threat_data)
+
+        # Should not include fact checks finding
+        assert len(result) == 2  # Only threat + analysis
+
+    def test_exception_handling(self):
+        """Test that exceptions return default finding."""
+        result = extract_key_findings(None, None, None)
+
+        assert result == ["Standard intelligence analysis completed"]
+
+    def test_comprehensive_findings(self):
+        """Test comprehensive findings with all data present."""
+        analysis_data = {"transcript": "A" * 1000}  # 1000 character transcript
+        verification_data = {"fact_checks": {f"claim{i}": "verified" for i in range(10)}}
+        threat_data = {"threat_level": "critical"}
+
+        result = extract_key_findings(analysis_data, verification_data, threat_data)
+
+        assert len(result) == 3
+        assert "Threat assessment: critical" == result[0]
+        assert "10 claims analyzed" in result[1]
+        assert "1000 characters completed" in result[2]
 

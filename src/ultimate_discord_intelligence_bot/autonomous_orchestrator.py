@@ -3446,60 +3446,28 @@ class AutonomousIntelligenceOrchestrator:
             return 0.0
 
     def _extract_system_status_from_crew(self, crew_result: Any) -> dict[str, Any]:
-        """Extract system integration status from CrewAI crew results."""
-        try:
-            if not crew_result:
-                return {}
+        """Delegate to pipeline_result_builders.extract_system_status_from_crew."""
+        from ultimate_discord_intelligence_bot.orchestrator.pipeline_result_builders import extract_system_status_from_crew
 
-            crew_output = str(crew_result).lower()
-
-            # Simulate system status based on crew output analysis
-            system_status = {
-                "vector_memory": {"status": "integrated" if "vector" in crew_output else "pending"},
-                "graph_memory": {"status": "integrated" if "graph" in crew_output else "pending"},
-                "continual_memory": {"status": "integrated" if "continual" in crew_output else "pending"},
-            }
-
-            return system_status
-        except Exception:
-            return {}
+        return extract_system_status_from_crew(crew_result)
 
     def _calculate_consolidation_metrics_from_crew(self, crew_result: Any) -> dict[str, Any]:
         """Delegates to analytics_calculators.calculate_consolidation_metrics_from_crew."""
         return analytics_calculators.calculate_consolidation_metrics_from_crew(crew_result, self.logger)
 
     def _create_executive_summary(self, analysis_data: dict[str, Any], threat_data: dict[str, Any]) -> str:
-        """Create executive summary for intelligence briefing."""
-        try:
-            threat_level = threat_data.get("threat_level", "unknown")
-            return f"Content analysis completed with {threat_level} threat assessment. Key intelligence indicators processed and verified."
-        except Exception:
-            return "Intelligence briefing generated with standard analysis parameters."
+        """Delegate to pipeline_result_builders.create_executive_summary."""
+        from ultimate_discord_intelligence_bot.orchestrator.pipeline_result_builders import create_executive_summary
+
+        return create_executive_summary(analysis_data, threat_data)
 
     def _extract_key_findings(
         self, analysis_data: dict[str, Any], verification_data: dict[str, Any], threat_data: dict[str, Any]
     ) -> list[str]:
-        """Extract key findings from all analysis sources."""
-        try:
-            findings = []
+        """Delegate to pipeline_result_builders.extract_key_findings."""
+        from ultimate_discord_intelligence_bot.orchestrator.pipeline_result_builders import extract_key_findings
 
-            # Add threat findings
-            threat_level = threat_data.get("threat_level", "unknown")
-            findings.append(f"Threat assessment: {threat_level}")
-
-            # Add verification findings
-            fact_checks = verification_data.get("fact_checks", {})
-            if fact_checks:
-                findings.append(f"Fact verification completed with {len(fact_checks)} claims analyzed")
-
-            # Add analysis findings
-            transcript_length = len(analysis_data.get("transcript", ""))
-            if transcript_length > 0:
-                findings.append(f"Content analysis of {transcript_length} characters completed")
-
-            return findings
-        except Exception:
-            return ["Standard intelligence analysis completed"]
+        return extract_key_findings(analysis_data, verification_data, threat_data)
 
     def _generate_strategic_recommendations(
         self, analysis_data: dict[str, Any], threat_data: dict[str, Any], verification_data: dict[str, Any]
