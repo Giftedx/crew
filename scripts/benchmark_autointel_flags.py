@@ -150,6 +150,18 @@ def create_mock_interaction():
 # ============================================================================
 
 
+EXTRA_FLAG_NAMES = [
+    # Phase 2 / alternative optimization flags we want to record for analysis
+    "ENABLE_SEMANTIC_CACHE",
+    "ENABLE_PROMPT_COMPRESSION",
+    # Future-proof: harmless to include; present if user experiments manually
+    "ENABLE_SEMANTIC_CACHE_SHADOW",
+    "ENABLE_SEMANTIC_CACHE_PROMOTION",
+    "ENABLE_LLMLINGUA",
+    "ENABLE_TRANSCRIPT_COMPRESSION",
+]
+
+
 async def run_single_benchmark(
     combination_id: int, iteration: int, url: str, depth: str, output_dir: Path, logger: logging.Logger
 ) -> dict[str, Any]:
@@ -169,11 +181,15 @@ async def run_single_benchmark(
     combo = FLAG_COMBINATIONS[combination_id]
     logger.info(f"Running Combination {combination_id} ({combo['name']}) - Iteration {iteration}")
 
-    # Set environment variables for this combination
-    env_backup = {}
-    for flag in ["ENABLE_PARALLEL_MEMORY_OPS", "ENABLE_PARALLEL_ANALYSIS", "ENABLE_PARALLEL_FACT_CHECKING"]:
+    # Set core parallelization environment variables for this combination while preserving originals
+    env_backup: dict[str, str | None] = {}
+    core_flags = ["ENABLE_PARALLEL_MEMORY_OPS", "ENABLE_PARALLEL_ANALYSIS", "ENABLE_PARALLEL_FACT_CHECKING"]
+    for flag in core_flags:
         env_backup[flag] = os.environ.get(flag)
         os.environ[flag] = combo[flag]
+
+    # Capture (but do not mutate) extra optimization flags so we can record them
+    extra_flag_snapshot: dict[str, str | None] = {name: os.environ.get(name) for name in EXTRA_FLAG_NAMES}
 
     try:
         # Create orchestrator instance
@@ -205,10 +221,12 @@ async def run_single_benchmark(
             "iteration": iteration,
             "url": url,
             "depth": depth,
+            # Record both the controlled (core) flags and passive extra flags state
             "flags": {
                 "ENABLE_PARALLEL_MEMORY_OPS": combo["ENABLE_PARALLEL_MEMORY_OPS"],
                 "ENABLE_PARALLEL_ANALYSIS": combo["ENABLE_PARALLEL_ANALYSIS"],
                 "ENABLE_PARALLEL_FACT_CHECKING": combo["ENABLE_PARALLEL_FACT_CHECKING"],
+                **{k: ("" if v is None else v) for k, v in extra_flag_snapshot.items()},
             },
             "timing": {
                 "start": start_datetime.isoformat(),
