@@ -178,5 +178,20 @@ The following items are deprecated or superseded; see configuration docs for tim
 - `ENABLE_ANALYSIS_HTTP_RETRY` — replacement: `ENABLE_HTTP_RETRY`; Legacy analysis-scoped retry flag superseded by global ENABLE_HTTP_RETRY.
 - `services.learning_engine.LearningEngine` — replacement: `core.learning_engine.LearningEngine`; Shim retained for backward compatibility; remove after grace period.
 
+#### 🚨 Week 3 Parallelization Flags (Deprecated - Do Not Use)
+
+The following performance optimization flags were empirically validated (Week 3 Phase 1, 12 iterations across 4 combinations) to introduce severe runtime regressions (+76% to +329% slower) and are now formally deprecated. Root cause: API rate limiting + CrewAI async coordination overhead (60–100s per phase) exceeded any theoretical concurrency benefit for short‑form workloads.
+
+- `ENABLE_PARALLEL_MEMORY_OPS` — Adds +108% mean overhead (5.91 min vs 2.84 min baseline). No true concurrency due to serialized embedding + vector writes.
+- `ENABLE_PARALLEL_ANALYSIS` — Catastrophic +329% overhead (12.19 min mean; 21.48 min outlier; 57% CV). Largest context payloads amplify coordination + rate limit penalties.
+- `ENABLE_PARALLEL_FACT_CHECKING` — Adds +76% overhead (5.00 min vs 2.84 min baseline). Limited by external API / LLM call serialization.
+
+Status: Marked HARMFUL. These flags should remain disabled in all environments. See `docs/WEEK_3_PHASE_1_FINAL_REPORT.md` and `docs/WEEK_3_PHASE_1_EXECUTIVE_SUMMARY.md` for full statistical methodology and root cause analysis.
+
+Recommended Alternatives (Week 3 Phase 2 pivot):
+1. `ENABLE_SEMANTIC_CACHE` – Leverage semantic reuse to reduce duplicate LLM calls (expected 20–30% improvement).
+2. `ENABLE_PROMPT_COMPRESSION` – Reduce token + latency footprint for large context payloads (expected 10–20% improvement).
+3. Combined cache + compression (expected 30–40% total improvement) without instability risk.
+
 
 _Generated digest: `38810a7e6a70`_

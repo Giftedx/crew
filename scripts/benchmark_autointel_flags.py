@@ -331,8 +331,37 @@ def generate_summary_report(all_results: dict[int, list[dict[str, Any]]], output
         output_file: Path to write markdown report
     """
     # Calculate baseline (Combination 1)
+    # Baseline (Combination 1). Previous implementation used a static 629s (~10.5 min)
+    # fallback which became misleading once true baseline improved (e.g. ~170s).
+    # New logic:
+    # 1. If combination 1 present with successful runs -> use its mean
+    # 2. Else: find earliest successful run across any combination and use that
+    # 3. Else: retain conservative 629s sentinel
     baseline_stats = calculate_statistics(all_results.get(1, []))
-    baseline_mean = baseline_stats.get("mean_seconds", 629)  # Default to 10.5 min if not run
+    baseline_mean: float
+    if all_results.get(1) and "mean_seconds" in baseline_stats:
+        baseline_mean = float(baseline_stats["mean_seconds"])  # true baseline
+    else:
+        # Fallback scan for earliest successful duration
+        candidate = None
+        earliest_ts = None
+        for combo_id, runs in all_results.items():
+            for r in runs:
+                if r.get("success") and r.get("timing", {}).get("duration_seconds"):
+                    # Parse start time if available
+                    start_iso = r.get("timing", {}).get("start")
+                    duration = r["timing"]["duration_seconds"]
+                    if start_iso:
+                        try:
+                            ts = datetime.fromisoformat(start_iso)
+                        except Exception:  # pragma: no cover - defensive
+                            ts = None
+                    else:
+                        ts = None
+                    if candidate is None or (ts and earliest_ts and ts < earliest_ts) or (ts and earliest_ts is None):
+                        candidate = duration
+                        earliest_ts = ts
+        baseline_mean = float(candidate) if candidate is not None else 629.0
 
     report_lines = [
         "# Flag Combination Validation Results",
