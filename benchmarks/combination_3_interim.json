@@ -11,10 +11,10 @@
       "ENABLE_PARALLEL_FACT_CHECKING": "0"
     },
     "timing": {
-      "start": "2025-10-04T22:08:40.800142",
-      "end": "2025-10-04T22:16:50.415909",
-      "duration_seconds": 489.61576652526855,
-      "duration_minutes": 8.160262775421142
+      "start": "2025-10-05T00:46:36.728522",
+      "end": "2025-10-05T00:51:26.329969",
+      "duration_seconds": 289.60144686698914,
+      "duration_minutes": 4.826690781116485
     },
     "expected_savings": {
       "min_minutes": 1.0,
@@ -42,10 +42,10 @@
       "ENABLE_PARALLEL_FACT_CHECKING": "0"
     },
     "timing": {
-      "start": "2025-10-04T22:16:50.416845",
-      "end": "2025-10-04T22:19:29.590232",
-      "duration_seconds": 159.1733865737915,
-      "duration_minutes": 2.652889776229858
+      "start": "2025-10-05T00:51:26.402670",
+      "end": "2025-10-05T01:12:55.149156",
+      "duration_seconds": 1288.7464876174927,
+      "duration_minutes": 21.479108126958213
     },
     "expected_savings": {
       "min_minutes": 1.0,
@@ -73,10 +73,10 @@
       "ENABLE_PARALLEL_FACT_CHECKING": "0"
     },
     "timing": {
-      "start": "2025-10-04T22:19:29.591318",
-      "end": "2025-10-04T22:22:29.479678",
-      "duration_seconds": 179.88835978507996,
-      "duration_minutes": 2.9981393297513326
+      "start": "2025-10-05T01:12:55.220947",
+      "end": "2025-10-05T01:23:10.526922",
+      "duration_seconds": 615.3059749603271,
+      "duration_minutes": 10.25509958267212
     },
     "expected_savings": {
       "min_minutes": 1.0,
