@@ -2,6 +2,7 @@
 ## Feature Flags & Environment Toggles
 
 (Do not edit by hand; regenerate instead.)
+
 ### Api / Runtime
 
 | Flag | Referenced In (sample) |
@@ -189,9 +190,9 @@ The following performance optimization flags were empirically validated (Week 3 
 Status: Marked HARMFUL. These flags should remain disabled in all environments. See `docs/WEEK_3_PHASE_1_FINAL_REPORT.md` and `docs/WEEK_3_PHASE_1_EXECUTIVE_SUMMARY.md` for full statistical methodology and root cause analysis.
 
 Recommended Alternatives (Week 3 Phase 2 pivot):
+
 1. `ENABLE_SEMANTIC_CACHE` – Leverage semantic reuse to reduce duplicate LLM calls (expected 20–30% improvement).
 2. `ENABLE_PROMPT_COMPRESSION` – Reduce token + latency footprint for large context payloads (expected 10–20% improvement).
 3. Combined cache + compression (expected 30–40% total improvement) without instability risk.
-
 
 _Generated digest: `38810a7e6a70`_

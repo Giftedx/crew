@@ -1,0 +1,1081 @@
+{
+  "validation_type": "direct_tool_testing",
+  "timestamp": "20251006_005754",
+  "test_parameters": {
+    "iterations": 3,
+    "test_scenarios": 5,
+    "tools_tested": [
+      "quality_filtering",
+      "content_routing",
+      "early_exit",
+      "combined"
+    ]
+  },
+  "performance_summary": {
+    "quality_filtering_avg": 75.0,
+    "content_routing_avg": 16.444444444444443,
+    "early_exit_avg": 8.666666666666664,
+    "combined_optimization_avg": 75.0,
+    "targets_achieved": 2,
+    "total_targets": 4,
+    "overall_success_rate": 50.0
+  },
+  "detailed_results": [
+    {
+      "iteration": 1,
+      "timestamp": "2025-10-06T00:57:54.677034",
+      "quality_filtering": {
+        "test_name": "quality_filtering",
+        "total_tests": 5,
+        "bypassed_count": 5,
+        "bypass_rate_percent": 100.0,
+        "average_processing_time": 11.25,
+        "baseline_time": 45.0,
+        "time_savings_percent": 75.0,
+        "individual_results": [
+          {
+            "title": "Machine Learning Fundamentals Tutorial",
+            "overall_score": 0.6125093896713615,
+            "should_process": false,
+            "recommendation": "basic_analysis",
+            "bypass_reason": "insufficient_content (words: 30 < 500); fragmented_content (sentences: 3 < 10); low_overall_quality (score: 0.61 < 0.65)",
+            "processing_time": 0.00023651123046875
+          },
+          {
+            "title": "Random Short Video",
+            "overall_score": 0.5866820013841957,
+            "should_process": false,
+            "recommendation": "basic_analysis",
+            "bypass_reason": "insufficient_content (words: 14 < 500); fragmented_content (sentences: 3 < 10); low_overall_quality (score: 0.59 < 0.65)",
+            "processing_time": 5.316734313964844e-05
+          },
+          {
+            "title": "Market Update - Stock Volatility",
+            "overall_score": 0.6241520467836257,
+            "should_process": false,
+            "recommendation": "basic_analysis",
+            "bypass_reason": "insufficient_content (words: 21 < 500); fragmented_content (sentences: 2 < 10); low_overall_quality (score: 0.62 < 0.65)",
+            "processing_time": 5.14984130859375e-05
+          },
+          {
+            "title": "Comedy Sketch - Family Fun",
+            "overall_score": 0.6226367847931991,
+            "should_process": false,
+            "recommendation": "basic_analysis",
+            "bypass_reason": "insufficient_content (words: 20 < 500); fragmented_content (sentences: 2 < 10); low_overall_quality (score: 0.62 < 0.65)",
+            "processing_time": 8.225440979003906e-05
+          },
+          {
+            "title": "AI Philosophy Discussion",
+            "overall_score": 0.5923052261306533,
+            "should_process": false,
+            "recommendation": "basic_analysis",
+            "bypass_reason": "insufficient_content (words: 25 < 500); fragmented_content (sentences: 2 < 10); low_overall_quality (score: 0.59 < 0.65)",
+            "processing_time": 5.507469177246094e-05
+          }
+        ]
+      },
+      "content_routing": {
+        "test_name": "content_routing",
+        "total_tests": 5,
+        "routing_decisions": {
+          "deep_analysis": 2,
+          "standard_pipeline": 1,
+          "fast_summary": 1,
+          "light_analysis": 1
+        },
+        "average_processing_time": 37.6,
+        "baseline_time": 45.0,
+        "time_savings_percent": 16.444444444444443,
+        "individual_results": [
+          {
+            "title": "Machine Learning Fundamentals Tutorial",
+            "content_type": "educational",
+            "confidence": 1.0,
+            "pipeline": "deep_analysis",
+            "estimated_speedup": 0.9,
+            "baseline_time": 45.0,
+            "optimized_time": 50.0,
+            "time_saved": -5.0,
+            "processing_time": 0.0010521411895751953
+          },
+          {
+            "title": "Random Short Video",
+            "content_type": "general",
+            "confidence": 0.5,
+            "pipeline": "standard_pipeline",
+            "estimated_speedup": 1.0,
+            "baseline_time": 45.0,
+            "optimized_time": 45.0,
+            "time_saved": 0.0,
+            "processing_time": 7.891654968261719e-05
+          },
+          {
+            "title": "Market Update - Stock Volatility",
+            "content_type": "news",
+            "confidence": 1.0,
+            "pipeline": "fast_summary",
+            "estimated_speedup": 2.5,
+            "baseline_time": 45.0,
+            "optimized_time": 18.0,
+            "time_saved": 27.0,
+            "processing_time": 7.2479248046875e-05
+          },
+          {
+            "title": "Comedy Sketch - Family Fun",
+            "content_type": "entertainment",
+            "confidence": 1.0,
+            "pipeline": "light_analysis",
+            "estimated_speedup": 1.8,
+            "baseline_time": 45.0,
+            "optimized_time": 25.0,
+            "time_saved": 20.0,
+            "processing_time": 8.749961853027344e-05
+          },
+          {
+            "title": "AI Philosophy Discussion",
+            "content_type": "technology",
+            "confidence": 1.0,
+            "pipeline": "deep_analysis",
+            "estimated_speedup": 0.9,
+            "baseline_time": 45.0,
+            "optimized_time": 50.0,
+            "time_saved": -5.0,
+            "processing_time": 7.581710815429688e-05
+          }
+        ]
+      },
+      "early_exit_conditions": {
+        "test_name": "early_exit_conditions",
+        "total_tests": 15,
+        "early_exits": 3,
+        "exit_rate_percent": 20.0,
+        "average_processing_time": 41.1,
+        "baseline_time": 45.0,
+        "time_savings_percent": 8.666666666666664,
+        "individual_results": [
+          {
+            "title": "Machine Learning Fundamentals Tutorial",
+            "stage": "transcription",
+            "overall_confidence": 0.42999999999999994,
+            "should_exit": false,
+            "exit_reason": null,
+            "processing_time": 45.0,
+            "time_saved": 0,
+            "tool_duration": 0.000978708267211914
+          },
+          {
+            "title": "Machine Learning Fundamentals Tutorial",
+            "stage": "analysis",
+            "overall_confidence": 0.5799999999999998,
+            "should_exit": false,
+            "exit_reason": null,
+            "processing_time": 45.0,
+            "time_saved": 0,
+            "tool_duration": 7.987022399902344e-05
+          },
+          {
+            "title": "Machine Learning Fundamentals Tutorial",
+            "stage": "final",
+            "overall_confidence": 0.52,
+            "should_exit": false,
+            "exit_reason": null,
+            "processing_time": 45.0,
+            "time_saved": 0,
+            "tool_duration": 6.556510925292969e-05
+          },
+          {
+            "title": "Random Short Video",
+            "stage": "transcription",
+            "overall_confidence": 0.4,
+            "should_exit": false,
+            "exit_reason": null,
+            "processing_time": 45.0,
+            "time_saved": 0,
+            "tool_duration": 5.984306335449219e-05
+          },
+          {
+            "title": "Random Short Video",
+            "stage": "analysis",
+            "overall_confidence": 0.5499999999999999,
+            "should_exit": false,
+            "exit_reason": null,
+            "processing_time": 45.0,
+            "time_saved": 0,
+            "tool_duration": 4.57763671875e-05
+          },
+          {
+            "title": "Random Short Video",
+            "stage": "final",
+            "overall_confidence": 0.49,
+            "should_exit": false,
+            "exit_reason": null,
+            "processing_time": 45.0,
+            "time_saved": 0,
+            "tool_duration": 4.267692565917969e-05
+          },
+          {
+            "title": "Market Update - Stock Volatility",
+            "stage": "transcription",
+            "overall_confidence": 0.63,
+            "should_exit": true,
+            "exit_reason": "Short content with adequate confidence",
+            "processing_time": 9.0,
+            "time_saved": 36.0,
+            "tool_duration": 6.556510925292969e-05
+          },
+          {
+            "title": "Market Update - Stock Volatility",
+            "stage": "analysis",
+            "overall_confidence": 0.7799999999999999,
+            "should_exit": true,
+            "exit_reason": "High confidence (0.78) exceeds threshold (0.70)",
+            "processing_time": 27.0,
+            "time_saved": 18.0,
+            "tool_duration": 5.91278076171875e-05
+          },
+          {
+            "title": "Market Update - Stock Volatility",
+            "stage": "final",
+            "overall_confidence": 0.72,
+            "should_exit": true,
+            "exit_reason": "High confidence (0.72) exceeds threshold (0.60)",
+            "processing_time": 40.5,
+            "time_saved": 4.499999999999999,
+            "tool_duration": 0.0001232624053955078
+          },
+          {
+            "title": "Comedy Sketch - Family Fun",
+            "stage": "transcription",
+            "overall_confidence": 0.42999999999999994,
+            "should_exit": false,
+            "exit_reason": null,
+            "processing_time": 45.0,
+            "time_saved": 0,
+            "tool_duration": 7.843971252441406e-05
+          },
+          {
+            "title": "Comedy Sketch - Family Fun",
+            "stage": "analysis",
+            "overall_confidence": 0.5799999999999998,
+            "should_exit": false,
+            "exit_reason": null,
+            "processing_time": 45.0,
+            "time_saved": 0,
+            "tool_duration": 4.673004150390625e-05
+          },
+          {
+            "title": "Comedy Sketch - Family Fun",
+            "stage": "final",
+            "overall_confidence": 0.52,
+            "should_exit": false,
+            "exit_reason": null,
+            "processing_time": 45.0,
+            "time_saved": 0,
+            "tool_duration": 4.291534423828125e-05
+          },
+          {
+            "title": "AI Philosophy Discussion",
+            "stage": "transcription",
+            "overall_confidence": 0.42999999999999994,
+            "should_exit": false,
+            "exit_reason": null,
+            "processing_time": 45.0,
+            "time_saved": 0,
+            "tool_duration": 6.508827209472656e-05
+          },
+          {
+            "title": "AI Philosophy Discussion",
+            "stage": "analysis",
+            "overall_confidence": 0.5799999999999998,
+            "should_exit": false,
+            "exit_reason": null,
+            "processing_time": 45.0,
+            "time_saved": 0,
+            "tool_duration": 5.221366882324219e-05
+          },
+          {
+            "title": "AI Philosophy Discussion",
+            "stage": "final",
+            "overall_confidence": 0.52,
+            "should_exit": false,
+            "exit_reason": null,
+            "processing_time": 45.0,
+            "time_saved": 0,
+            "tool_duration": 4.9591064453125e-05
+          }
+        ]
+      },
+      "combined_optimization": {
+        "test_name": "combined_optimization",
+        "total_tests": 5,
+        "optimizations_applied": {
+          "quality": 5,
+          "routing": 0,
+          "early_exit": 0
+        },
+        "average_processing_time": 11.25,
+        "baseline_time": 45.0,
+        "overall_savings_percent": 75.0,
+        "target_savings": 50.0,
+        "target_achieved": true,
+        "individual_results": [
+          {
+            "title": "Machine Learning Fundamentals Tutorial",
+            "baseline_time": 45.0,
+            "optimized_time": 11.25,
+            "time_saved": 33.75,
+            "savings_percent": 75.0,
+            "optimizations_applied": [
+              "quality_bypass"
+            ]
+          },
+          {
+            "title": "Random Short Video",
+            "baseline_time": 45.0,
+            "optimized_time": 11.25,
+            "time_saved": 33.75,
+            "savings_percent": 75.0,
+            "optimizations_applied": [
+              "quality_bypass"
+            ]
+          },
+          {
+            "title": "Market Update - Stock Volatility",
+            "baseline_time": 45.0,
+            "optimized_time": 11.25,
+            "time_saved": 33.75,
+            "savings_percent": 75.0,
+            "optimizations_applied": [
+              "quality_bypass"
+            ]
+          },
+          {
+            "title": "Comedy Sketch - Family Fun",
+            "baseline_time": 45.0,
+            "optimized_time": 11.25,
+            "time_saved": 33.75,
+            "savings_percent": 75.0,
+            "optimizations_applied": [
+              "quality_bypass"
+            ]
+          },
+          {
+            "title": "AI Philosophy Discussion",
+            "baseline_time": 45.0,
+            "optimized_time": 11.25,
+            "time_saved": 33.75,
+            "savings_percent": 75.0,
+            "optimizations_applied": [
+              "quality_bypass"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "iteration": 2,
+      "timestamp": "2025-10-06T00:57:54.679542",
+      "quality_filtering": {
+        "test_name": "quality_filtering",
+        "total_tests": 5,
+        "bypassed_count": 5,
+        "bypass_rate_percent": 100.0,
+        "average_processing_time": 11.25,
+        "baseline_time": 45.0,
+        "time_savings_percent": 75.0,
+        "individual_results": [
+          {
+            "title": "Machine Learning Fundamentals Tutorial",
+            "overall_score": 0.6125093896713615,
+            "should_process": false,
+            "recommendation": "basic_analysis",
+            "bypass_reason": "insufficient_content (words: 30 < 500); fragmented_content (sentences: 3 < 10); low_overall_quality (score: 0.61 < 0.65)",
+            "processing_time": 5.1021575927734375e-05
+          },
+          {
+            "title": "Random Short Video",
+            "overall_score": 0.5866820013841957,
+            "should_process": false,
+            "recommendation": "basic_analysis",
+            "bypass_reason": "insufficient_content (words: 14 < 500); fragmented_content (sentences: 3 < 10); low_overall_quality (score: 0.59 < 0.65)",
+            "processing_time": 4.410743713378906e-05
+          },
+          {
+            "title": "Market Update - Stock Volatility",
+            "overall_score": 0.6241520467836257,
+            "should_process": false,
+            "recommendation": "basic_analysis",
+            "bypass_reason": "insufficient_content (words: 21 < 500); fragmented_content (sentences: 2 < 10); low_overall_quality (score: 0.62 < 0.65)",
+            "processing_time": 4.38690185546875e-05
+          },
+          {
+            "title": "Comedy Sketch - Family Fun",
+            "overall_score": 0.6226367847931991,
+            "should_process": false,
+            "recommendation": "basic_analysis",
+            "bypass_reason": "insufficient_content (words: 20 < 500); fragmented_content (sentences: 2 < 10); low_overall_quality (score: 0.62 < 0.65)",
+            "processing_time": 4.3392181396484375e-05
+          },
+          {
+            "title": "AI Philosophy Discussion",
+            "overall_score": 0.5923052261306533,
+            "should_process": false,
+            "recommendation": "basic_analysis",
+            "bypass_reason": "insufficient_content (words: 25 < 500); fragmented_content (sentences: 2 < 10); low_overall_quality (score: 0.59 < 0.65)",
+            "processing_time": 4.792213439941406e-05
+          }
+        ]
+      },
+      "content_routing": {
+        "test_name": "content_routing",
+        "total_tests": 5,
+        "routing_decisions": {
+          "deep_analysis": 2,
+          "standard_pipeline": 1,
+          "fast_summary": 1,
+          "light_analysis": 1
+        },
+        "average_processing_time": 37.6,
+        "baseline_time": 45.0,
+        "time_savings_percent": 16.444444444444443,
+        "individual_results": [
+          {
+            "title": "Machine Learning Fundamentals Tutorial",
+            "content_type": "educational",
+            "confidence": 1.0,
+            "pipeline": "deep_analysis",
+            "estimated_speedup": 0.9,
+            "baseline_time": 45.0,
+            "optimized_time": 50.0,
+            "time_saved": -5.0,
+            "processing_time": 8.225440979003906e-05
+          },
+          {
+            "title": "Random Short Video",
+            "content_type": "general",
+            "confidence": 0.5,
+            "pipeline": "standard_pipeline",
+            "estimated_speedup": 1.0,
+            "baseline_time": 45.0,
+            "optimized_time": 45.0,
+            "time_saved": 0.0,
+            "processing_time": 6.198883056640625e-05
+          },
+          {
+            "title": "Market Update - Stock Volatility",
+            "content_type": "news",
+            "confidence": 1.0,
+            "pipeline": "fast_summary",
+            "estimated_speedup": 2.5,
+            "baseline_time": 45.0,
+            "optimized_time": 18.0,
+            "time_saved": 27.0,
+            "processing_time": 7.462501525878906e-05
+          },
+          {
+            "title": "Comedy Sketch - Family Fun",
+            "content_type": "entertainment",
+            "confidence": 1.0,
+            "pipeline": "light_analysis",
+            "estimated_speedup": 1.8,
+            "baseline_time": 45.0,
+            "optimized_time": 25.0,
+            "time_saved": 20.0,
+            "processing_time": 6.699562072753906e-05
+          },
+          {
+            "title": "AI Philosophy Discussion",
+            "content_type": "technology",
+            "confidence": 1.0,
+            "pipeline": "deep_analysis",
+            "estimated_speedup": 0.9,
+            "baseline_time": 45.0,
+            "optimized_time": 50.0,
+            "time_saved": -5.0,
+            "processing_time": 0.00012087821960449219
+          }
+        ]
+      },
+      "early_exit_conditions": {
+        "test_name": "early_exit_conditions",
+        "total_tests": 15,
+        "early_exits": 3,
+        "exit_rate_percent": 20.0,
+        "average_processing_time": 41.1,
+        "baseline_time": 45.0,
+        "time_savings_percent": 8.666666666666664,
+        "individual_results": [
+          {
+            "title": "Machine Learning Fundamentals Tutorial",
+            "stage": "transcription",
+            "overall_confidence": 0.42999999999999994,
+            "should_exit": false,
+            "exit_reason": null,
+            "processing_time": 45.0,
+            "time_saved": 0,
+            "tool_duration": 0.00011801719665527344
+          },
+          {
+            "title": "Machine Learning Fundamentals Tutorial",
+            "stage": "analysis",
+            "overall_confidence": 0.5799999999999998,
+            "should_exit": false,
+            "exit_reason": null,
+            "processing_time": 45.0,
+            "time_saved": 0,
+            "tool_duration": 6.270408630371094e-05
+          },
+          {
+            "title": "Machine Learning Fundamentals Tutorial",
+            "stage": "final",
+            "overall_confidence": 0.52,
+            "should_exit": false,
+            "exit_reason": null,
+            "processing_time": 45.0,
+            "time_saved": 0,
+            "tool_duration": 5.7697296142578125e-05
+          },
+          {
+            "title": "Random Short Video",
+            "stage": "transcription",
+            "overall_confidence": 0.4,
+            "should_exit": false,
+            "exit_reason": null,
+            "processing_time": 45.0,
+            "time_saved": 0,
+            "tool_duration": 5.340576171875e-05
+          },
+          {
+            "title": "Random Short Video",
+            "stage": "analysis",
+            "overall_confidence": 0.5499999999999999,
+            "should_exit": false,
+            "exit_reason": null,
+            "processing_time": 45.0,
+            "time_saved": 0,
+            "tool_duration": 4.124641418457031e-05
+          },
+          {
+            "title": "Random Short Video",
+            "stage": "final",
+            "overall_confidence": 0.49,
+            "should_exit": false,
+            "exit_reason": null,
+            "processing_time": 45.0,
+            "time_saved": 0,
+            "tool_duration": 3.886222839355469e-05
+          },
+          {
+            "title": "Market Update - Stock Volatility",
+            "stage": "transcription",
+            "overall_confidence": 0.63,
+            "should_exit": true,
+            "exit_reason": "Short content with adequate confidence",
+            "processing_time": 9.0,
+            "time_saved": 36.0,
+            "tool_duration": 7.152557373046875e-05
+          },
+          {
+            "title": "Market Update - Stock Volatility",
+            "stage": "analysis",
+            "overall_confidence": 0.7799999999999999,
+            "should_exit": true,
+            "exit_reason": "High confidence (0.78) exceeds threshold (0.70)",
+            "processing_time": 27.0,
+            "time_saved": 18.0,
+            "tool_duration": 5.8650970458984375e-05
+          },
+          {
+            "title": "Market Update - Stock Volatility",
+            "stage": "final",
+            "overall_confidence": 0.72,
+            "should_exit": true,
+            "exit_reason": "High confidence (0.72) exceeds threshold (0.60)",
+            "processing_time": 40.5,
+            "time_saved": 4.499999999999999,
+            "tool_duration": 4.792213439941406e-05
+          },
+          {
+            "title": "Comedy Sketch - Family Fun",
+            "stage": "transcription",
+            "overall_confidence": 0.42999999999999994,
+            "should_exit": false,
+            "exit_reason": null,
+            "processing_time": 45.0,
+            "time_saved": 0,
+            "tool_duration": 5.4836273193359375e-05
+          },
+          {
+            "title": "Comedy Sketch - Family Fun",
+            "stage": "analysis",
+            "overall_confidence": 0.5799999999999998,
+            "should_exit": false,
+            "exit_reason": null,
+            "processing_time": 45.0,
+            "time_saved": 0,
+            "tool_duration": 7.367134094238281e-05
+          },
+          {
+            "title": "Comedy Sketch - Family Fun",
+            "stage": "final",
+            "overall_confidence": 0.52,
+            "should_exit": false,
+            "exit_reason": null,
+            "processing_time": 45.0,
+            "time_saved": 0,
+            "tool_duration": 5.245208740234375e-05
+          },
+          {
+            "title": "AI Philosophy Discussion",
+            "stage": "transcription",
+            "overall_confidence": 0.42999999999999994,
+            "should_exit": false,
+            "exit_reason": null,
+            "processing_time": 45.0,
+            "time_saved": 0,
+            "tool_duration": 0.00010156631469726562
+          },
+          {
+            "title": "AI Philosophy Discussion",
+            "stage": "analysis",
+            "overall_confidence": 0.5799999999999998,
+            "should_exit": false,
+            "exit_reason": null,
+            "processing_time": 45.0,
+            "time_saved": 0,
+            "tool_duration": 5.2928924560546875e-05
+          },
+          {
+            "title": "AI Philosophy Discussion",
+            "stage": "final",
+            "overall_confidence": 0.52,
+            "should_exit": false,
+            "exit_reason": null,
+            "processing_time": 45.0,
+            "time_saved": 0,
+            "tool_duration": 4.935264587402344e-05
+          }
+        ]
+      },
+      "combined_optimization": {
+        "test_name": "combined_optimization",
+        "total_tests": 5,
+        "optimizations_applied": {
+          "quality": 5,
+          "routing": 0,
+          "early_exit": 0
+        },
+        "average_processing_time": 11.25,
+        "baseline_time": 45.0,
+        "overall_savings_percent": 75.0,
+        "target_savings": 50.0,
+        "target_achieved": true,
+        "individual_results": [
+          {
+            "title": "Machine Learning Fundamentals Tutorial",
+            "baseline_time": 45.0,
+            "optimized_time": 11.25,
+            "time_saved": 33.75,
+            "savings_percent": 75.0,
+            "optimizations_applied": [
+              "quality_bypass"
+            ]
+          },
+          {
+            "title": "Random Short Video",
+            "baseline_time": 45.0,
+            "optimized_time": 11.25,
+            "time_saved": 33.75,
+            "savings_percent": 75.0,
+            "optimizations_applied": [
+              "quality_bypass"
+            ]
+          },
+          {
+            "title": "Market Update - Stock Volatility",
+            "baseline_time": 45.0,
+            "optimized_time": 11.25,
+            "time_saved": 33.75,
+            "savings_percent": 75.0,
+            "optimizations_applied": [
+              "quality_bypass"
+            ]
+          },
+          {
+            "title": "Comedy Sketch - Family Fun",
+            "baseline_time": 45.0,
+            "optimized_time": 11.25,
+            "time_saved": 33.75,
+            "savings_percent": 75.0,
+            "optimizations_applied": [
+              "quality_bypass"
+            ]
+          },
+          {
+            "title": "AI Philosophy Discussion",
+            "baseline_time": 45.0,
+            "optimized_time": 11.25,
+            "time_saved": 33.75,
+            "savings_percent": 75.0,
+            "optimizations_applied": [
+              "quality_bypass"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "iteration": 3,
+      "timestamp": "2025-10-06T00:57:54.683381",
+      "quality_filtering": {
+        "test_name": "quality_filtering",
+        "total_tests": 5,
+        "bypassed_count": 5,
+        "bypass_rate_percent": 100.0,
+        "average_processing_time": 11.25,
+        "baseline_time": 45.0,
+        "time_savings_percent": 75.0,
+        "individual_results": [
+          {
+            "title": "Machine Learning Fundamentals Tutorial",
+            "overall_score": 0.6125093896713615,
+            "should_process": false,
+            "recommendation": "basic_analysis",
+            "bypass_reason": "insufficient_content (words: 30 < 500); fragmented_content (sentences: 3 < 10); low_overall_quality (score: 0.61 < 0.65)",
+            "processing_time": 4.9114227294921875e-05
+          },
+          {
+            "title": "Random Short Video",
+            "overall_score": 0.5866820013841957,
+            "should_process": false,
+            "recommendation": "basic_analysis",
+            "bypass_reason": "insufficient_content (words: 14 < 500); fragmented_content (sentences: 3 < 10); low_overall_quality (score: 0.59 < 0.65)",
+            "processing_time": 4.506111145019531e-05
+          },
+          {
+            "title": "Market Update - Stock Volatility",
+            "overall_score": 0.6241520467836257,
+            "should_process": false,
+            "recommendation": "basic_analysis",
+            "bypass_reason": "insufficient_content (words: 21 < 500); fragmented_content (sentences: 2 < 10); low_overall_quality (score: 0.62 < 0.65)",
+            "processing_time": 5.888938903808594e-05
+          },
+          {
+            "title": "Comedy Sketch - Family Fun",
+            "overall_score": 0.6226367847931991,
+            "should_process": false,
+            "recommendation": "basic_analysis",
+            "bypass_reason": "insufficient_content (words: 20 < 500); fragmented_content (sentences: 2 < 10); low_overall_quality (score: 0.62 < 0.65)",
+            "processing_time": 6.771087646484375e-05
+          },
+          {
+            "title": "AI Philosophy Discussion",
+            "overall_score": 0.5923052261306533,
+            "should_process": false,
+            "recommendation": "basic_analysis",
+            "bypass_reason": "insufficient_content (words: 25 < 500); fragmented_content (sentences: 2 < 10); low_overall_quality (score: 0.59 < 0.65)",
+            "processing_time": 4.792213439941406e-05
+          }
+        ]
+      },
+      "content_routing": {
+        "test_name": "content_routing",
+        "total_tests": 5,
+        "routing_decisions": {
+          "deep_analysis": 2,
+          "standard_pipeline": 1,
+          "fast_summary": 1,
+          "light_analysis": 1
+        },
+        "average_processing_time": 37.6,
+        "baseline_time": 45.0,
+        "time_savings_percent": 16.444444444444443,
+        "individual_results": [
+          {
+            "title": "Machine Learning Fundamentals Tutorial",
+            "content_type": "educational",
+            "confidence": 1.0,
+            "pipeline": "deep_analysis",
+            "estimated_speedup": 0.9,
+            "baseline_time": 45.0,
+            "optimized_time": 50.0,
+            "time_saved": -5.0,
+            "processing_time": 0.00013709068298339844
+          },
+          {
+            "title": "Random Short Video",
+            "content_type": "general",
+            "confidence": 0.5,
+            "pipeline": "standard_pipeline",
+            "estimated_speedup": 1.0,
+            "baseline_time": 45.0,
+            "optimized_time": 45.0,
+            "time_saved": 0.0,
+            "processing_time": 0.00010728836059570312
+          },
+          {
+            "title": "Market Update - Stock Volatility",
+            "content_type": "news",
+            "confidence": 1.0,
+            "pipeline": "fast_summary",
+            "estimated_speedup": 2.5,
+            "baseline_time": 45.0,
+            "optimized_time": 18.0,
+            "time_saved": 27.0,
+            "processing_time": 9.274482727050781e-05
+          },
+          {
+            "title": "Comedy Sketch - Family Fun",
+            "content_type": "entertainment",
+            "confidence": 1.0,
+            "pipeline": "light_analysis",
+            "estimated_speedup": 1.8,
+            "baseline_time": 45.0,
+            "optimized_time": 25.0,
+            "time_saved": 20.0,
+            "processing_time": 0.00010919570922851562
+          },
+          {
+            "title": "AI Philosophy Discussion",
+            "content_type": "technology",
+            "confidence": 1.0,
+            "pipeline": "deep_analysis",
+            "estimated_speedup": 0.9,
+            "baseline_time": 45.0,
+            "optimized_time": 50.0,
+            "time_saved": -5.0,
+            "processing_time": 8.916854858398438e-05
+          }
+        ]
+      },
+      "early_exit_conditions": {
+        "test_name": "early_exit_conditions",
+        "total_tests": 15,
+        "early_exits": 3,
+        "exit_rate_percent": 20.0,
+        "average_processing_time": 41.1,
+        "baseline_time": 45.0,
+        "time_savings_percent": 8.666666666666664,
+        "individual_results": [
+          {
+            "title": "Machine Learning Fundamentals Tutorial",
+            "stage": "transcription",
+            "overall_confidence": 0.42999999999999994,
+            "should_exit": false,
+            "exit_reason": null,
+            "processing_time": 45.0,
+            "time_saved": 0,
+            "tool_duration": 9.512901306152344e-05
+          },
+          {
+            "title": "Machine Learning Fundamentals Tutorial",
+            "stage": "analysis",
+            "overall_confidence": 0.5799999999999998,
+            "should_exit": false,
+            "exit_reason": null,
+            "processing_time": 45.0,
+            "time_saved": 0,
+            "tool_duration": 6.031990051269531e-05
+          },
+          {
+            "title": "Machine Learning Fundamentals Tutorial",
+            "stage": "final",
+            "overall_confidence": 0.52,
+            "should_exit": false,
+            "exit_reason": null,
+            "processing_time": 45.0,
+            "time_saved": 0,
+            "tool_duration": 5.6743621826171875e-05
+          },
+          {
+            "title": "Random Short Video",
+            "stage": "transcription",
+            "overall_confidence": 0.4,
+            "should_exit": false,
+            "exit_reason": null,
+            "processing_time": 45.0,
+            "time_saved": 0,
+            "tool_duration": 6.961822509765625e-05
+          },
+          {
+            "title": "Random Short Video",
+            "stage": "analysis",
+            "overall_confidence": 0.5499999999999999,
+            "should_exit": false,
+            "exit_reason": null,
+            "processing_time": 45.0,
+            "time_saved": 0,
+            "tool_duration": 8.654594421386719e-05
+          },
+          {
+            "title": "Random Short Video",
+            "stage": "final",
+            "overall_confidence": 0.49,
+            "should_exit": false,
+            "exit_reason": null,
+            "processing_time": 45.0,
+            "time_saved": 0,
+            "tool_duration": 7.510185241699219e-05
+          },
+          {
+            "title": "Market Update - Stock Volatility",
+            "stage": "transcription",
+            "overall_confidence": 0.63,
+            "should_exit": true,
+            "exit_reason": "Short content with adequate confidence",
+            "processing_time": 9.0,
+            "time_saved": 36.0,
+            "tool_duration": 9.918212890625e-05
+          },
+          {
+            "title": "Market Update - Stock Volatility",
+            "stage": "analysis",
+            "overall_confidence": 0.7799999999999999,
+            "should_exit": true,
+            "exit_reason": "High confidence (0.78) exceeds threshold (0.70)",
+            "processing_time": 27.0,
+            "time_saved": 18.0,
+            "tool_duration": 9.298324584960938e-05
+          },
+          {
+            "title": "Market Update - Stock Volatility",
+            "stage": "final",
+            "overall_confidence": 0.72,
+            "should_exit": true,
+            "exit_reason": "High confidence (0.72) exceeds threshold (0.60)",
+            "processing_time": 40.5,
+            "time_saved": 4.499999999999999,
+            "tool_duration": 0.00010180473327636719
+          },
+          {
+            "title": "Comedy Sketch - Family Fun",
+            "stage": "transcription",
+            "overall_confidence": 0.42999999999999994,
+            "should_exit": false,
+            "exit_reason": null,
+            "processing_time": 45.0,
+            "time_saved": 0,
+            "tool_duration": 9.202957153320312e-05
+          },
+          {
+            "title": "Comedy Sketch - Family Fun",
+            "stage": "analysis",
+            "overall_confidence": 0.5799999999999998,
+            "should_exit": false,
+            "exit_reason": null,
+            "processing_time": 45.0,
+            "time_saved": 0,
+            "tool_duration": 4.696846008300781e-05
+          },
+          {
+            "title": "Comedy Sketch - Family Fun",
+            "stage": "final",
+            "overall_confidence": 0.52,
+            "should_exit": false,
+            "exit_reason": null,
+            "processing_time": 45.0,
+            "time_saved": 0,
+            "tool_duration": 0.00010514259338378906
+          },
+          {
+            "title": "AI Philosophy Discussion",
+            "stage": "transcription",
+            "overall_confidence": 0.42999999999999994,
+            "should_exit": false,
+            "exit_reason": null,
+            "processing_time": 45.0,
+            "time_saved": 0,
+            "tool_duration": 0.00023365020751953125
+          },
+          {
+            "title": "AI Philosophy Discussion",
+            "stage": "analysis",
+            "overall_confidence": 0.5799999999999998,
+            "should_exit": false,
+            "exit_reason": null,
+            "processing_time": 45.0,
+            "time_saved": 0,
+            "tool_duration": 0.00021076202392578125
+          },
+          {
+            "title": "AI Philosophy Discussion",
+            "stage": "final",
+            "overall_confidence": 0.52,
+            "should_exit": false,
+            "exit_reason": null,
+            "processing_time": 45.0,
+            "time_saved": 0,
+            "tool_duration": 0.00012373924255371094
+          }
+        ]
+      },
+      "combined_optimization": {
+        "test_name": "combined_optimization",
+        "total_tests": 5,
+        "optimizations_applied": {
+          "quality": 5,
+          "routing": 0,
+          "early_exit": 0
+        },
+        "average_processing_time": 11.25,
+        "baseline_time": 45.0,
+        "overall_savings_percent": 75.0,
+        "target_savings": 50.0,
+        "target_achieved": true,
+        "individual_results": [
+          {
+            "title": "Machine Learning Fundamentals Tutorial",
+            "baseline_time": 45.0,
+            "optimized_time": 11.25,
+            "time_saved": 33.75,
+            "savings_percent": 75.0,
+            "optimizations_applied": [
+              "quality_bypass"
+            ]
+          },
+          {
+            "title": "Random Short Video",
+            "baseline_time": 45.0,
+            "optimized_time": 11.25,
+            "time_saved": 33.75,
+            "savings_percent": 75.0,
+            "optimizations_applied": [
+              "quality_bypass"
+            ]
+          },
+          {
+            "title": "Market Update - Stock Volatility",
+            "baseline_time": 45.0,
+            "optimized_time": 11.25,
+            "time_saved": 33.75,
+            "savings_percent": 75.0,
+            "optimizations_applied": [
+              "quality_bypass"
+            ]
+          },
+          {
+            "title": "Comedy Sketch - Family Fun",
+            "baseline_time": 45.0,
+            "optimized_time": 11.25,
+            "time_saved": 33.75,
+            "savings_percent": 75.0,
+            "optimizations_applied": [
+              "quality_bypass"
+            ]
+          },
+          {
+            "title": "AI Philosophy Discussion",
+            "baseline_time": 45.0,
+            "optimized_time": 11.25,
+            "time_saved": 33.75,
+            "savings_percent": 75.0,
+            "optimizations_applied": [
+              "quality_bypass"
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

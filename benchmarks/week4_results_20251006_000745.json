@@ -1,0 +1,86 @@
+{
+  "benchmark_info": {
+    "suite": "week4_algorithmic_optimization",
+    "url": "https://www.youtube.com/watch?v=xtFiJ8AVdW0",
+    "depth": "experimental",
+    "start_time": "2025-10-06T00:06:41.050458",
+    "end_time": "2025-10-06T00:07:45.561301",
+    "duration_minutes": 1.0751807500000001,
+    "tests_run": [
+      "quality_filtering"
+    ],
+    "iterations_per_test": 1,
+    "total_iterations": 1
+  },
+  "week4_flags_snapshot": {
+    "ENABLE_QUALITY_THRESHOLD_FILTERING": "not_set",
+    "ENABLE_CONTENT_TYPE_ROUTING": "not_set",
+    "ENABLE_EARLY_EXIT_CONDITIONS": "not_set",
+    "QUALITY_MIN_WORD_COUNT": "not_set",
+    "QUALITY_MIN_SENTENCE_COUNT": "not_set",
+    "QUALITY_MIN_COHERENCE": "not_set",
+    "QUALITY_MIN_OVERALL": "not_set",
+    "EARLY_EXIT_CONFIDENCE_THRESHOLD": "not_set",
+    "EARLY_EXIT_MIN_ANALYSIS_TASKS": "not_set"
+  },
+  "individual_results": [
+    {
+      "test_name": "quality_filtering",
+      "iteration": 1,
+      "duration_seconds": 64.50988245010376,
+      "duration_minutes": 1.0751647075017294,
+      "success": true,
+      "timestamp": "2025-10-06T00:07:45.561205",
+      "flags": {
+        "ENABLE_QUALITY_THRESHOLD_FILTERING": "1",
+        "ENABLE_CONTENT_TYPE_ROUTING": "0",
+        "ENABLE_EARLY_EXIT_CONDITIONS": "0",
+        "QUALITY_MIN_WORD_COUNT": "500",
+        "QUALITY_MIN_SENTENCE_COUNT": "10",
+        "QUALITY_MIN_COHERENCE": "0.6",
+        "QUALITY_MIN_OVERALL": "0.65"
+      },
+      "expected_improvement": 0.2,
+      "target_time_min": 2.27,
+      "log_file": "benchmarks/week4_logs/test_quality_filtering_iter_1.log"
+    }
+  ],
+  "test_statistics": {
+    "quality_filtering": {
+      "name": "quality_filtering",
+      "description": "Quality threshold filtering (skip low-quality content)",
+      "iterations": 1,
+      "successful_iterations": 1,
+      "success_rate": 1.0,
+      "mean_seconds": 64.50988245010376,
+      "mean_minutes": 1.0751647075017294,
+      "median_seconds": 64.50988245010376,
+      "median_minutes": 1.0751647075017294,
+      "min_seconds": 64.50988245010376,
+      "max_seconds": 64.50988245010376,
+      "std_dev_seconds": 0.0,
+      "expected_improvement": 0.2,
+      "target_time_min": 2.27,
+      "flags": {
+        "ENABLE_QUALITY_THRESHOLD_FILTERING": "1",
+        "ENABLE_CONTENT_TYPE_ROUTING": "0",
+        "ENABLE_EARLY_EXIT_CONDITIONS": "0",
+        "QUALITY_MIN_WORD_COUNT": "500",
+        "QUALITY_MIN_SENTENCE_COUNT": "10",
+        "QUALITY_MIN_COHERENCE": "0.6",
+        "QUALITY_MIN_OVERALL": "0.65"
+      }
+    }
+  },
+  "baseline_comparison": {
+    "quality_filtering": {
+      "status": "EXCELLENT",
+      "vs_baseline_minutes": -1.7648352924982704,
+      "vs_baseline_percent": -62.142087764023614,
+      "met_expectations": true,
+      "expected_improvement_percent": 20.0,
+      "expected_time_min": 2.272,
+      "actual_time_min": 1.0751647075017294
+    }
+  }
+}

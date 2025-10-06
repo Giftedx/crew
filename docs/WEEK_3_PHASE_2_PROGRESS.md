@@ -46,6 +46,7 @@ From Week 3 Phase 1 comprehensive testing (12 iterations, 4 combinations):
 ## 📊 Test 1: Semantic Cache Only
 
 **Configuration:**
+
 ```bash
 ENABLE_SEMANTIC_CACHE=1
 ENABLE_PROMPT_COMPRESSION=0
@@ -55,12 +56,14 @@ ENABLE_PARALLEL_FACT_CHECKING=0
 ```
 
 **Hypothesis:** Semantic cache will reduce duplicate LLM calls for similar content patterns, especially beneficial for:
+
 - Repeated transcription analysis patterns
 - Similar fact-checking queries  
 - Common memory storage operations
 - Standardized prompt templates
 
 **Expected Mechanism:**
+
 1. First iteration: Full execution (cache misses) ≈ 2.84 min
 2. Second iteration: Partial cache hits → 2.2-2.5 min  
 3. Third iteration: Higher cache hit rate → 2.0-2.3 min
@@ -93,6 +96,7 @@ ENABLE_PARALLEL_FACT_CHECKING=0
 ## 📈 Test 2: Prompt Compression Only
 
 **Configuration:**
+
 ```bash
 ENABLE_SEMANTIC_CACHE=0
 ENABLE_PROMPT_COMPRESSION=1
@@ -104,12 +108,14 @@ ENABLE_PARALLEL_FACT_CHECKING=0
 **Status:** ⏸️ Queued (pending Test 1 completion)
 
 **Hypothesis:** Prompt compression will reduce token count and latency for large context payloads, especially:
+
 - Long transcript processing
 - Multi-stage analysis prompts
 - Context-heavy fact-checking queries
 - Large memory retrieval contexts
 
 **Expected Benefits:**
+
 - 30-50% token reduction per prompt
 - 10-20% latency improvement (smaller payloads)
 - Maintained semantic fidelity
@@ -124,6 +130,7 @@ ENABLE_PARALLEL_FACT_CHECKING=0
 ## 🚀 Test 3: Combined Optimization
 
 **Configuration:**
+
 ```bash
 ENABLE_SEMANTIC_CACHE=1
 ENABLE_PROMPT_COMPRESSION=1
@@ -135,6 +142,7 @@ ENABLE_PARALLEL_FACT_CHECKING=0
 **Status:** ⏸️ Queued (pending Tests 1-2 completion)
 
 **Hypothesis:** Synergistic effects from cache + compression:
+
 - Cache hits benefit from compressed lookups (faster retrieval)
 - Cache misses benefit from compressed requests (faster execution)
 - Additive performance improvements (30-40% total)
@@ -160,6 +168,7 @@ semantic_cache_shadow_tasks: str = None   # Shadow mode disabled
 ```
 
 **Cache Hit Logic:**
+
 1. Generate embedding for incoming prompt
 2. Search cache for similar embeddings (cosine similarity > 0.85)
 3. If hit: return cached response + metadata
@@ -178,6 +187,7 @@ transcript_compression_min_tokens: int = 1200  # Only compress large transcripts
 ```
 
 **Compression Logic:**
+
 1. Check if prompt exceeds `transcript_compression_min_tokens`
 2. If yes: apply LLMLingua compression to `llmlingua_target_ratio`
 3. Preserve critical semantic elements (entities, timestamps, key phrases)
@@ -188,18 +198,21 @@ transcript_compression_min_tokens: int = 1200  # Only compress large transcripts
 ## 📝 Next Steps
 
 ### Immediate (Test 1 completion)
+
 1. ✅ Parse Test 1 results when benchmark completes
 2. ✅ Calculate statistics vs baseline (2.84 min)
 3. ✅ Analyze cache hit rates and API call reduction
 4. ✅ Document performance pattern across 3 iterations
 
 ### Short-term (Tests 2-3)
+
 1. ⏸️ Execute Test 2 (compression only) if Test 1 shows promise
 2. ⏸️ Execute Test 3 (combined) regardless of individual results
 3. ⏸️ Generate comprehensive Phase 2 final report
 4. ⏸️ Update production config with optimal settings
 
 ### Strategic (Phase 3 planning)
+
 1. ⏸️ If Phase 2 succeeds: document production rollout plan
 2. ⏸️ If Phase 2 fails: investigate alternative optimizations (batching, model routing)
 3. ⏸️ Create Week 3 complete summary with recommendations

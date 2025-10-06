@@ -305,7 +305,7 @@
         "ENABLE_DETAILED_LOGGING": true,
         "ENABLE_EXPERIMENTAL_FEATURES": false,
         "ENABLE_DEBUG_MODE": false,
-        "ENABLE_PARALLEL_MEMORY_OPS": false,      
+        "ENABLE_PARALLEL_MEMORY_OPS": false,
         "ENABLE_PARALLEL_ANALYSIS": false,
         "ENABLE_PARALLEL_FACT_CHECKING": false,
         "ENABLE_SEMANTIC_CACHE": false,

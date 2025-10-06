@@ -1,0 +1,115 @@
+{
+  "1": [
+    {
+      "combination_id": 1,
+      "combination_name": "sequential_baseline",
+      "iteration": 1,
+      "url": "https://www.youtube.com/watch?v=xtFiJ8AVdW0",
+      "depth": "experimental",
+      "flags": {
+        "ENABLE_PARALLEL_MEMORY_OPS": "0",
+        "ENABLE_PARALLEL_ANALYSIS": "0",
+        "ENABLE_PARALLEL_FACT_CHECKING": "0",
+        "ENABLE_SEMANTIC_CACHE": "0",
+        "ENABLE_PROMPT_COMPRESSION": "1",
+        "ENABLE_SEMANTIC_CACHE_SHADOW": "true",
+        "ENABLE_SEMANTIC_CACHE_PROMOTION": "true",
+        "ENABLE_LLMLINGUA": "true",
+        "ENABLE_TRANSCRIPT_COMPRESSION": "true"
+      },
+      "timing": {
+        "start": "2025-10-05T23:35:54.534776",
+        "end": "2025-10-05T23:38:02.550307",
+        "duration_seconds": 128.01553177833557,
+        "duration_minutes": 2.133592196305593
+      },
+      "expected_savings": {
+        "min_minutes": 0.0,
+        "max_minutes": 0.0
+      },
+      "quality": {
+        "transcript_length": null,
+        "quality_score": null,
+        "trustworthiness_score": null,
+        "insights_count": null,
+        "verified_claims_count": null
+      },
+      "success": true,
+      "error": null
+    },
+    {
+      "combination_id": 1,
+      "combination_name": "sequential_baseline",
+      "iteration": 2,
+      "url": "https://www.youtube.com/watch?v=xtFiJ8AVdW0",
+      "depth": "experimental",
+      "flags": {
+        "ENABLE_PARALLEL_MEMORY_OPS": "0",
+        "ENABLE_PARALLEL_ANALYSIS": "0",
+        "ENABLE_PARALLEL_FACT_CHECKING": "0",
+        "ENABLE_SEMANTIC_CACHE": "0",
+        "ENABLE_PROMPT_COMPRESSION": "1",
+        "ENABLE_SEMANTIC_CACHE_SHADOW": "true",
+        "ENABLE_SEMANTIC_CACHE_PROMOTION": "true",
+        "ENABLE_LLMLINGUA": "true",
+        "ENABLE_TRANSCRIPT_COMPRESSION": "true"
+      },
+      "timing": {
+        "start": "2025-10-05T23:38:02.628147",
+        "end": "2025-10-05T23:39:40.561248",
+        "duration_seconds": 97.93310284614563,
+        "duration_minutes": 1.6322183807690938
+      },
+      "expected_savings": {
+        "min_minutes": 0.0,
+        "max_minutes": 0.0
+      },
+      "quality": {
+        "transcript_length": null,
+        "quality_score": null,
+        "trustworthiness_score": null,
+        "insights_count": null,
+        "verified_claims_count": null
+      },
+      "success": true,
+      "error": null
+    },
+    {
+      "combination_id": 1,
+      "combination_name": "sequential_baseline",
+      "iteration": 3,
+      "url": "https://www.youtube.com/watch?v=xtFiJ8AVdW0",
+      "depth": "experimental",
+      "flags": {
+        "ENABLE_PARALLEL_MEMORY_OPS": "0",
+        "ENABLE_PARALLEL_ANALYSIS": "0",
+        "ENABLE_PARALLEL_FACT_CHECKING": "0",
+        "ENABLE_SEMANTIC_CACHE": "0",
+        "ENABLE_PROMPT_COMPRESSION": "1",
+        "ENABLE_SEMANTIC_CACHE_SHADOW": "true",
+        "ENABLE_SEMANTIC_CACHE_PROMOTION": "true",
+        "ENABLE_LLMLINGUA": "true",
+        "ENABLE_TRANSCRIPT_COMPRESSION": "true"
+      },
+      "timing": {
+        "start": "2025-10-05T23:39:40.638660",
+        "end": "2025-10-05T23:45:53.221110",
+        "duration_seconds": 372.58245062828064,
+        "duration_minutes": 6.209707510471344
+      },
+      "expected_savings": {
+        "min_minutes": 0.0,
+        "max_minutes": 0.0
+      },
+      "quality": {
+        "transcript_length": null,
+        "quality_score": null,
+        "trustworthiness_score": null,
+        "insights_count": null,
+        "verified_claims_count": null
+      },
+      "success": true,
+      "error": null
+    }
+  ]
+}
