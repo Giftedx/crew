@@ -11,6 +11,7 @@ from .archive import register_archive_routes
 from .autointel import register_autointel_routes
 from .health import register_health_routes
 from .metrics import register_metrics_endpoint
+from .performance_dashboard import register_performance_dashboard
 from .pilot import register_pilot_route
 from .pipeline_api import register_pipeline_routes
 
@@ -24,4 +25,5 @@ __all__ = [
     "register_alert_routes",
     "register_pipeline_routes",
     "register_autointel_routes",
+    "register_performance_dashboard",
 ]
