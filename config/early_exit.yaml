@@ -9,7 +9,7 @@ enabled: true
 # Global settings
 global:
   # Minimum confidence required to trigger early exit
-  min_exit_confidence: 0.80
+  min_exit_confidence: 0.70 # Tuned from 0.80 for Week 4 validation
 
   # Log all early exit decisions
   log_exit_decisions: true

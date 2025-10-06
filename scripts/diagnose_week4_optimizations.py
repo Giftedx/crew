@@ -34,14 +34,14 @@ def show_current_thresholds():
     print(f"  → Content with quality < {quality_min} will be bypassed")
 
     print("\n🚪 Early Exit:")
-    print(f"  min_exit_confidence: 0.80 (from config/early_exit.yaml)")
-    print(f"  → Exits require ≥0.80 confidence in condition")
-    print(f"  → Our test content had 0.60 confidence (too low to exit)")
+    print("  min_exit_confidence: 0.80 (from config/early_exit.yaml)")
+    print("  → Exits require ≥0.80 confidence in condition")
+    print("  → Our test content had 0.60 confidence (too low to exit)")
 
     print("\n🔀 Content Routing:")
-    print(f"  No explicit threshold (pattern matching)")
-    print(f"  → Routes: standard_pipeline, deep_analysis, fast_summary, light_analysis")
-    print(f"  → Our test content classified as 'discussion' → deep_analysis")
+    print("  No explicit threshold (pattern matching)")
+    print("  → Routes: standard_pipeline, deep_analysis, fast_summary, light_analysis")
+    print("  → Our test content classified as 'discussion' → deep_analysis")
 
 
 async def test_content_classification():
@@ -91,8 +91,10 @@ async def test_content_classification():
     result = routing_tool.run(test_data)
 
     if result.custom_status == "ok" or result.get("status") == "ok":
-        classification = result.data.get("classification", {}) if hasattr(result, 'data') else result.get("classification", {})
-        routing = result.data.get("routing", {}) if hasattr(result, 'data') else result.get("routing", {})
+        classification = (
+            result.data.get("classification", {}) if hasattr(result, "data") else result.get("classification", {})
+        )
+        routing = result.data.get("routing", {}) if hasattr(result, "data") else result.get("routing", {})
 
         print("\n🎯 Classification Results:")
         print(f"  Primary Type: {classification.get('primary_type')}")
@@ -147,28 +149,28 @@ def analyze_validation_results():
     print("\n1️⃣  Quality Filtering (-42% WORSE):")
     bypass_rate = results["tests"]["quality_filtering"].get("bypass_rate", 0)
     print(f"   Bypass rate: {bypass_rate * 100:.1f}%")
-    print(f"   ❌ Added analysis overhead (~15s) with zero bypasses")
-    print(f"   Root cause: High-quality content (readability 83.75)")
-    print(f"   → Test content quality > 0.65 threshold")
+    print("   ❌ Added analysis overhead (~15s) with zero bypasses")
+    print("   Root cause: High-quality content (readability 83.75)")
+    print("   → Test content quality > 0.65 threshold")
 
     print("\n2️⃣  Early Exit (+8.9% better):")
     exit_rate = results["tests"]["early_exit"].get("exit_rate", 0)
     print(f"   Exit rate: {exit_rate * 100:.1f}%")
-    print(f"   ⚠️  Small improvement but no actual early exits")
-    print(f"   Root cause: Confidence 0.60 < 0.80 threshold")
-    print(f"   → Content too complex for confident early termination")
+    print("   ⚠️  Small improvement but no actual early exits")
+    print("   Root cause: Confidence 0.60 < 0.80 threshold")
+    print("   → Content too complex for confident early termination")
 
     print("\n3️⃣  Content Routing (+8.4% better):")
     routes = results["tests"]["content_routing"].get("routes_used", [])
     print(f"   Routes used: {routes}")
-    print(f"   ⚠️  Only standard pipeline used")
-    print(f"   Root cause: Discussion content → deep_analysis → standard")
-    print(f"   → Complex political commentary requires full analysis")
+    print("   ⚠️  Only standard pipeline used")
+    print("   Root cause: Discussion content → deep_analysis → standard")
+    print("   → Complex political commentary requires full analysis")
 
     print("\n4️⃣  Combined (+1.2%):")
-    print(f"   ❌ Quality overhead canceled routing savings")
-    print(f"   ❌ No synergy between optimizations")
-    print(f"   → Net result: essentially unchanged from baseline")
+    print("   ❌ Quality overhead canceled routing savings")
+    print("   ❌ No synergy between optimizations")
+    print("   → Net result: essentially unchanged from baseline")
 
 
 def provide_recommendations():
@@ -180,16 +182,16 @@ def provide_recommendations():
     print("\n🎯 Option 1: TUNE THRESHOLDS (Recommended)")
     print("\nChanges needed:")
     print("  1. Quality filtering threshold:")
-    print(f"     export QUALITY_MIN_OVERALL=0.55  # Was 0.65")
-    print(f"     → Will bypass more low/medium quality content")
+    print("     export QUALITY_MIN_OVERALL=0.55  # Was 0.65")
+    print("     → Will bypass more low/medium quality content")
 
     print("\n  2. Early exit confidence (edit config/early_exit.yaml):")
-    print(f"     min_exit_confidence: 0.70  # Was 0.80")
-    print(f"     → Will trigger more early exits on medium-confidence content")
+    print("     min_exit_confidence: 0.70  # Was 0.80")
+    print("     → Will trigger more early exits on medium-confidence content")
 
     print("\n  3. Content routing (no threshold to tune):")
-    print(f"     → Working as designed")
-    print(f"     → Need different content types to see fast_summary/light_analysis")
+    print("     → Working as designed")
+    print("     → Need different content types to see fast_summary/light_analysis")
 
     print("\n Expected impact after tuning:")
     print("  • Bypass rate: 0% → 20-30%")
