@@ -1,0 +1,56 @@
+{
+  "timestamp": "2025-10-06T04:58:55.462165",
+  "url": "https://www.youtube.com/watch?v=xtFiJ8AVdW0",
+  "iterations": 1,
+  "validation_method": "ContentPipeline",
+  "tests": {
+    "baseline": {
+      "times": [
+        0
+      ],
+      "average": 0.0,
+      "iterations": 1
+    },
+    "quality_filtering": {
+      "times": [
+        0
+      ],
+      "average": 0.0,
+      "iterations": 1,
+      "bypass_count": 0,
+      "bypass_rate": 0.0
+    },
+    "content_routing": {
+      "times": [
+        0
+      ],
+      "average": 0.0,
+      "iterations": 1,
+      "routes_used": [
+        "error"
+      ]
+    },
+    "early_exit": {
+      "times": [
+        0
+      ],
+      "average": 0.0,
+      "iterations": 1,
+      "exit_count": 0,
+      "exit_rate": 0.0
+    },
+    "combined": {
+      "times": [
+        0
+      ],
+      "average": 0.0,
+      "iterations": 1,
+      "bypass_count": 0,
+      "bypass_rate": 0.0,
+      "exit_count": 0,
+      "exit_rate": 0.0,
+      "routes_used": []
+    }
+  },
+  "combined_improvement": 0
+}
