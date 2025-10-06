@@ -1,0 +1,134 @@
+# Content Type Routing Configuration for Week 4 Phase 2
+# 
+# This configuration defines content-type specific processing profiles
+# to enable adaptive quality thresholds and processing optimizations.
+
+# Feature flag to enable/disable content type routing
+enabled: true
+
+# Content type definitions with processing profiles
+content_types:
+  educational:
+    description: "Educational and instructional content (tutorials, lectures, courses)"
+    quality_threshold: 0.70
+    coherence_threshold: 0.65
+    completeness_threshold: 0.70
+    informativeness_threshold: 0.75
+    early_exit_enabled: true
+    early_exit_confidence: 0.85
+    estimated_bypass_rate: 0.50
+    processing_flags:
+      enable_deep_analysis: true
+      enable_fallacy_detection: true
+      enable_topic_extraction: true
+      enable_sentiment_analysis: false
+      skip_perspective_api: false
+      use_fast_transcription: false
+    
+  technology:
+    description: "Technology, programming, and technical content"
+    quality_threshold: 0.68
+    coherence_threshold: 0.63
+    completeness_threshold: 0.68
+    informativeness_threshold: 0.73
+    early_exit_enabled: true
+    early_exit_confidence: 0.83
+    estimated_bypass_rate: 0.48
+    processing_flags:
+      enable_deep_analysis: true
+      enable_fallacy_detection: true
+      enable_topic_extraction: true
+      enable_sentiment_analysis: false
+      skip_perspective_api: false
+      use_fast_transcription: false
+
+  news:
+    description: "News, current events, and reporting"
+    quality_threshold: 0.75
+    coherence_threshold: 0.70
+    completeness_threshold: 0.70
+    informativeness_threshold: 0.78
+    early_exit_enabled: true
+    early_exit_confidence: 0.88
+    estimated_bypass_rate: 0.70
+    processing_flags:
+      enable_deep_analysis: false
+      enable_fallacy_detection: false
+      enable_topic_extraction: true
+      enable_sentiment_analysis: true
+      skip_perspective_api: false
+      use_fast_transcription: true
+
+  entertainment:
+    description: "Entertainment, comedy, gaming, and casual content"
+    quality_threshold: 0.55
+    coherence_threshold: 0.50
+    completeness_threshold: 0.50
+    informativeness_threshold: 0.55
+    early_exit_enabled: true
+    early_exit_confidence: 0.75
+    estimated_bypass_rate: 0.85
+    processing_flags:
+      enable_deep_analysis: false
+      enable_fallacy_detection: false
+      enable_topic_extraction: false
+      enable_sentiment_analysis: true
+      skip_perspective_api: true
+      use_fast_transcription: true
+
+  discussion:
+    description: "Debates, interviews, panel discussions, and conversations"
+    quality_threshold: 0.65
+    coherence_threshold: 0.60
+    completeness_threshold: 0.65
+    informativeness_threshold: 0.68
+    early_exit_enabled: false  # Never skip discussions - analysis is critical
+    early_exit_confidence: 0.90
+    estimated_bypass_rate: 0.40
+    processing_flags:
+      enable_deep_analysis: true
+      enable_fallacy_detection: true
+      enable_topic_extraction: true
+      enable_sentiment_analysis: true
+      skip_perspective_api: false
+      use_fast_transcription: false
+
+  general:
+    description: "General content or unclassified"
+    quality_threshold: 0.65
+    coherence_threshold: 0.60
+    completeness_threshold: 0.60
+    informativeness_threshold: 0.65
+    early_exit_enabled: true
+    early_exit_confidence: 0.80
+    estimated_bypass_rate: 0.55
+    processing_flags:
+      enable_deep_analysis: false
+      enable_fallacy_detection: false
+      enable_topic_extraction: true
+      enable_sentiment_analysis: true
+      skip_perspective_api: false
+      use_fast_transcription: false
+
+# Default thresholds (used when routing is disabled or classification fails)
+default_thresholds:
+  quality_threshold: 0.65
+  coherence_threshold: 0.60
+  completeness_threshold: 0.60
+  informativeness_threshold: 0.65
+  early_exit_enabled: true
+  early_exit_confidence: 0.80
+
+# Performance tracking configuration
+performance:
+  log_routing_decisions: true
+  track_bypass_rates_by_type: true
+  collect_accuracy_metrics: true
+  alert_on_low_confidence: true
+  low_confidence_threshold: 0.30
+
+# Fallback behavior
+fallback:
+  on_classification_error: "use_default_thresholds"
+  on_low_confidence: "use_general_profile"
+  min_confidence_for_routing: 0.20

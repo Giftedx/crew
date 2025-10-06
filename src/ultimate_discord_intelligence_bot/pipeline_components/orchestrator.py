@@ -122,9 +122,12 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
             return failure
         assert transcription_bundle is not None
 
-        # Week 4 Optimization: Quality filtering phase
+        # Week 4 Phase 2: Content type routing phase
+        routing_result = await self._content_routing_phase(ctx, download_info, transcription_bundle)
+
+        # Week 4 Phase 1: Quality filtering phase (now uses routing thresholds)
         quality_result, should_skip_analysis = await self._quality_filtering_phase(
-            ctx, transcription_bundle.filtered_transcript
+            ctx, transcription_bundle.filtered_transcript, routing_result
         )
 
         if should_skip_analysis:
@@ -137,8 +140,139 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
 
         return await self._finalize_phase(ctx, download_info, transcription_bundle, analysis_bundle)
 
-    async def _quality_filtering_phase(self, ctx: _PipelineContext, transcript: str) -> tuple[StepResult, bool]:
-        """Assess transcript quality and determine processing path."""
+    async def _content_routing_phase(
+        self, ctx: _PipelineContext, download_info: StepResult, transcription_bundle: _TranscriptionArtifacts
+    ) -> StepResult:
+        """Route content based on type classification (Week 4 Phase 2)."""
+        import os
+
+        routing_enabled = os.getenv("ENABLE_CONTENT_ROUTING", "1") == "1"
+        if not routing_enabled:
+            self.logger.debug("Content routing disabled, using default thresholds")
+            return StepResult.ok(result={"routing_enabled": False, "content_type": "general"})
+
+        try:
+            from ultimate_discord_intelligence_bot.tools import ContentTypeRoutingTool
+
+            # Prepare input for routing tool
+            routing_input = {
+                "transcript": transcription_bundle.filtered_transcript,
+                "title": download_info.data.get("title", ""),
+                "description": download_info.data.get("description", ""),
+                "metadata": download_info.data.get("metadata", {}),
+            }
+
+            routing_tool = ContentTypeRoutingTool()
+            routing_result = routing_tool.run(routing_input)
+
+            if not routing_result.success:
+                self.logger.warning("Content routing failed, using default thresholds: %s", routing_result.error)
+                return StepResult.ok(result={"routing_enabled": False, "content_type": "general"})
+
+            # Extract routing data
+            routing_data = routing_result.data
+            if "result" in routing_data and isinstance(routing_data["result"], dict):
+                routing_data = routing_data["result"]
+
+            content_type = routing_data.get("classification", {}).get("primary_type", "general")
+            confidence = routing_data.get("classification", {}).get("confidence", 0.0)
+            pipeline = routing_data.get("routing", {}).get("pipeline", "standard_pipeline")
+
+            # Log routing decision
+            self.logger.info(
+                f"Content routed as '{content_type}' (confidence: {confidence:.2f}, pipeline: {pipeline})"
+            )
+            ctx.span.set_attribute("content_type", content_type)
+            ctx.span.set_attribute("routing_confidence", confidence)
+            ctx.span.set_attribute("routing_pipeline", pipeline)
+
+            # Best-effort metrics
+            try:
+                if hasattr(metrics, "CONTENT_TYPE_ROUTED"):
+                    metrics.CONTENT_TYPE_ROUTED.labels(**metrics.label_ctx(), content_type=content_type).inc()
+            except Exception:
+                pass
+
+            return routing_result
+
+        except Exception as e:
+            self.logger.warning("Content routing failed with exception, using default thresholds: %s", str(e))
+            return StepResult.ok(result={"routing_enabled": False, "content_type": "general", "error": str(e)})
+
+    def _load_content_type_thresholds(self, routing_result: StepResult | None) -> dict[str, float]:
+        """Load content-type specific quality thresholds from config."""
+        import os
+        from pathlib import Path
+
+        import yaml
+
+        # Default thresholds (fallback if config loading fails)
+        default_thresholds = {
+            "quality_threshold": float(os.getenv("QUALITY_MIN_OVERALL", "0.65")),
+            "coherence_threshold": float(os.getenv("QUALITY_MIN_COHERENCE", "0.60")),
+            "completeness_threshold": float(os.getenv("QUALITY_MIN_COMPLETENESS", "0.60")),
+            "informativeness_threshold": float(os.getenv("QUALITY_MIN_INFORMATIVENESS", "0.65")),
+        }
+
+        # If no routing result, use defaults
+        if routing_result is None or not routing_result.success:
+            return default_thresholds
+
+        # Extract content type from routing result
+        routing_data = routing_result.data
+        if "result" in routing_data and isinstance(routing_data["result"], dict):
+            routing_data = routing_data["result"]
+
+        content_type = routing_data.get("classification", {}).get("primary_type", "general")
+
+        # Try to load content type config
+        try:
+            config_path = Path("config/content_types.yaml")
+            if not config_path.exists():
+                self.logger.debug("Content types config not found, using defaults")
+                return default_thresholds
+
+            with config_path.open("r") as f:
+                config = yaml.safe_load(f)
+
+            # Check if routing is enabled in config
+            if not config.get("enabled", True):
+                self.logger.debug("Content routing disabled in config")
+                return default_thresholds
+
+            # Get content type specific thresholds
+            content_types = config.get("content_types", {})
+            if content_type not in content_types:
+                self.logger.warning(f"Content type '{content_type}' not in config, using defaults")
+                return default_thresholds
+
+            type_config = content_types[content_type]
+            thresholds = {
+                "quality_threshold": type_config.get("quality_threshold", default_thresholds["quality_threshold"]),
+                "coherence_threshold": type_config.get(
+                    "coherence_threshold", default_thresholds["coherence_threshold"]
+                ),
+                "completeness_threshold": type_config.get(
+                    "completeness_threshold", default_thresholds["completeness_threshold"]
+                ),
+                "informativeness_threshold": type_config.get(
+                    "informativeness_threshold", default_thresholds["informativeness_threshold"]
+                ),
+            }
+
+            self.logger.info(
+                f"Loaded thresholds for content type '{content_type}': quality={thresholds['quality_threshold']:.2f}"
+            )
+            return thresholds
+
+        except Exception as e:
+            self.logger.warning(f"Failed to load content type config: {e}, using defaults")
+            return default_thresholds
+
+    async def _quality_filtering_phase(
+        self, ctx: _PipelineContext, transcript: str, routing_result: StepResult | None = None
+    ) -> tuple[StepResult, bool]:
+        """Assess transcript quality and determine processing path (now with content-type aware thresholds)."""
         # Check if quality filtering is enabled
         import os
 
@@ -147,11 +281,21 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
             # Return dummy success result and continue with full processing
             return StepResult.ok(result={"should_process": True, "bypass_reason": "quality_filtering_disabled"}), False
 
+        # Load content-type specific thresholds if routing result available
+        content_type_thresholds = self._load_content_type_thresholds(routing_result)
+
         try:
             from ultimate_discord_intelligence_bot.tools import ContentQualityAssessmentTool
 
+            # Create quality tool with content-type specific thresholds
             quality_tool = ContentQualityAssessmentTool()
-            quality_result = quality_tool.run({"transcript": transcript})
+            
+            # Pass transcript with content-type thresholds
+            quality_input = {
+                "transcript": transcript,
+                "thresholds": content_type_thresholds,
+            }
+            quality_result = quality_tool.run(quality_input)
 
             if not quality_result.success:
                 # Quality assessment failed - proceed with full analysis (safe fallback)

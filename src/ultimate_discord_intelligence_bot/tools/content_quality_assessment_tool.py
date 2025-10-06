@@ -55,7 +55,7 @@ class ContentQualityAssessmentTool(BaseTool[dict[str, Any]]):
         Assess transcript quality and return quality metrics.
 
         Args:
-            input_data: Dictionary containing transcript and metadata
+            input_data: Dictionary containing transcript, metadata, and optional custom thresholds
 
         Returns:
             StepResult containing quality metrics and processing recommendation
@@ -67,11 +67,14 @@ class ContentQualityAssessmentTool(BaseTool[dict[str, Any]]):
                     error="Invalid transcript provided for quality assessment", error_category="input_validation"
                 )
 
+            # Get custom thresholds if provided (Week 4 Phase 2: content-type aware)
+            custom_thresholds = input_data.get("thresholds", {})
+
             # Calculate quality metrics
             metrics = self._calculate_quality_metrics(transcript)
 
-            # Determine processing recommendation
-            should_process_fully = self._should_process_fully(metrics)
+            # Determine processing recommendation (with custom thresholds if provided)
+            should_process_fully = self._should_process_fully(metrics, custom_thresholds)
 
             result = {
                 "quality_metrics": metrics.to_dict(),
@@ -275,14 +278,34 @@ class ContentQualityAssessmentTool(BaseTool[dict[str, Any]]):
 
         return min(1.0, overall_score)
 
-    def _should_process_fully(self, metrics: QualityMetrics) -> bool:
-        """Determine if content should receive full processing based on quality metrics."""
+    def _should_process_fully(self, metrics: QualityMetrics, custom_thresholds: dict | None = None) -> bool:
+        """Determine if content should receive full processing based on quality metrics.
+
+        Args:
+            metrics: Quality metrics calculated from transcript
+            custom_thresholds: Optional content-type specific thresholds (Week 4 Phase 2)
+
+        Returns:
+            True if content should receive full processing
+        """
+        # Use custom thresholds if provided, otherwise use defaults
+        if custom_thresholds:
+            min_overall = custom_thresholds.get("quality_threshold", self.MIN_OVERALL_SCORE)
+            min_coherence = custom_thresholds.get("coherence_threshold", self.MIN_COHERENCE_SCORE)
+            min_word_count = custom_thresholds.get("min_word_count", self.MIN_WORD_COUNT)
+            min_sentence_count = custom_thresholds.get("min_sentence_count", self.MIN_SENTENCE_COUNT)
+        else:
+            min_overall = self.MIN_OVERALL_SCORE
+            min_coherence = self.MIN_COHERENCE_SCORE
+            min_word_count = self.MIN_WORD_COUNT
+            min_sentence_count = self.MIN_SENTENCE_COUNT
+
         # Multiple threshold checks
         checks = [
-            metrics.word_count >= self.MIN_WORD_COUNT,
-            metrics.sentence_count >= self.MIN_SENTENCE_COUNT,
-            metrics.coherence_score >= self.MIN_COHERENCE_SCORE,
-            metrics.overall_quality_score >= self.MIN_OVERALL_SCORE,
+            metrics.word_count >= min_word_count,
+            metrics.sentence_count >= min_sentence_count,
+            metrics.coherence_score >= min_coherence,
+            metrics.overall_quality_score >= min_overall,
         ]
 
         # Require majority of checks to pass
