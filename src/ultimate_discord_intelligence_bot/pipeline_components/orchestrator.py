@@ -397,7 +397,6 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
 
     def _load_early_exit_config(self) -> dict[str, Any]:
         """Load early exit configuration from config/early_exit.yaml."""
-        import os
         import yaml
 
         # Default config (used if file doesn't exist or loading fails)
@@ -530,9 +529,7 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
                         return True, condition_reason, condition_confidence
 
                 except Exception as e:
-                    self.logger.warning(
-                        f"Failed to evaluate condition '{condition_name}' at {checkpoint_name}: {e}"
-                    )
+                    self.logger.warning(f"Failed to evaluate condition '{condition_name}' at {checkpoint_name}: {e}")
                     # Continue to next condition on evaluation error
                     if not global_config.get("continue_on_error", True):
                         raise

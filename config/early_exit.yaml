@@ -10,13 +10,13 @@ enabled: true
 global:
   # Minimum confidence required to trigger early exit
   min_exit_confidence: 0.80
-  
+
   # Log all early exit decisions
   log_exit_decisions: true
-  
+
   # Track exit rates by checkpoint
   track_checkpoint_metrics: true
-  
+
   # Continue on checkpoint evaluation errors
   continue_on_error: true
 
@@ -27,7 +27,7 @@ checkpoints:
     enabled: true
     priority: 1
     description: "Evaluate content quality from metadata before transcription"
-    
+
     # Exit if these conditions are met
     exit_conditions:
       # Duration-based exits
@@ -36,26 +36,26 @@ checkpoints:
         condition: "duration < 30"
         confidence: 0.95
         reason: "Video too short for meaningful analysis"
-        
+
       - name: "too_long"
         enabled: true
-        condition: "duration > 14400"  # 4 hours
+        condition: "duration > 14400" # 4 hours
         confidence: 0.90
         reason: "Video too long, likely low information density"
-      
+
       # Metadata quality indicators
       - name: "low_view_count"
-        enabled: false  # Disabled by default - view count doesn't indicate quality
+        enabled: false # Disabled by default - view count doesn't indicate quality
         condition: "view_count < 100 and age_days > 30"
         confidence: 0.70
         reason: "Low engagement suggests low quality"
-      
+
       - name: "spam_indicators"
         enabled: true
         condition: "title_spam_score > 0.80"
         confidence: 0.85
         reason: "Spam indicators detected in title/description"
-    
+
     # Action on exit
     on_exit:
       create_minimal_summary: true
@@ -67,7 +67,7 @@ checkpoints:
     enabled: true
     priority: 2
     description: "Evaluate transcript quality before expensive analysis"
-    
+
     exit_conditions:
       # Transcript completeness
       - name: "empty_transcript"
@@ -75,39 +75,39 @@ checkpoints:
         condition: "transcript_length == 0"
         confidence: 1.00
         reason: "No transcript available"
-      
+
       - name: "very_short_transcript"
         enabled: true
         condition: "transcript_length < 100"
         confidence: 0.95
         reason: "Transcript too short for analysis"
-      
+
       # Language quality
       - name: "poor_transcription_quality"
         enabled: true
         condition: "transcription_confidence < 0.40"
         confidence: 0.90
         reason: "Low transcription confidence suggests poor audio quality"
-      
+
       - name: "non_intelligible"
         enabled: true
         condition: "word_error_rate > 0.60"
         confidence: 0.85
         reason: "High word error rate, content not intelligible"
-      
+
       # Content signals
       - name: "repetitive_content"
         enabled: true
         condition: "repetition_ratio > 0.70"
         confidence: 0.80
         reason: "Highly repetitive content detected"
-      
+
       - name: "low_information_density"
         enabled: true
         condition: "unique_word_ratio < 0.15"
         confidence: 0.75
         reason: "Low vocabulary diversity suggests low information content"
-    
+
     on_exit:
       create_minimal_summary: true
       store_in_memory: true
@@ -119,7 +119,7 @@ checkpoints:
     enabled: true
     priority: 3
     description: "Evaluate quality assessment results before deep analysis"
-    
+
     exit_conditions:
       # Overall quality
       - name: "very_low_quality"
@@ -127,32 +127,32 @@ checkpoints:
         condition: "overall_quality < 0.30"
         confidence: 0.95
         reason: "Quality score far below acceptable threshold"
-      
+
       - name: "low_quality_high_confidence"
         enabled: true
         condition: "overall_quality < 0.50 and assessment_confidence > 0.85"
         confidence: 0.90
         reason: "High confidence that content is low quality"
-      
+
       # Specific quality dimensions
       - name: "incoherent_content"
         enabled: true
         condition: "coherence_score < 0.35"
         confidence: 0.85
         reason: "Content lacks coherence"
-      
+
       - name: "incomplete_content"
         enabled: true
         condition: "completeness_score < 0.30"
         confidence: 0.80
         reason: "Content appears incomplete or fragmented"
-      
+
       - name: "uninformative_content"
         enabled: true
         condition: "informativeness_score < 0.35"
         confidence: 0.80
         reason: "Content lacks informative value"
-    
+
     on_exit:
       create_minimal_summary: true
       store_in_memory: true
@@ -164,34 +164,34 @@ checkpoints:
     enabled: true
     priority: 4
     description: "Evaluate initial analysis to skip perspective/fallacy if warranted"
-    
+
     exit_conditions:
       # Sentiment indicates low-value content
       - name: "extreme_negative_sentiment"
-        enabled: false  # Disabled - negative content can be valuable
+        enabled: false # Disabled - negative content can be valuable
         condition: "sentiment_score < -0.80"
         confidence: 0.70
         reason: "Extremely negative sentiment"
-      
+
       # Topic relevance
       - name: "off_topic"
-        enabled: false  # Disabled - requires predefined topic list
+        enabled: false # Disabled - requires predefined topic list
         condition: "topic_relevance_score < 0.30"
         confidence: 0.75
         reason: "Content off-topic or irrelevant"
-      
+
       # Analysis confidence
       - name: "low_analysis_confidence"
         enabled: true
         condition: "analysis_confidence < 0.40"
         confidence: 0.70
         reason: "Low confidence in analysis results"
-    
+
     on_exit:
       create_minimal_summary: true
       store_in_memory: true
       store_transcript: true
-      notify_discord: true  # Still notify since we got this far
+      notify_discord: true # Still notify since we got this far
       skip_fallacy_detection: true
       skip_perspective_api: true
 
@@ -208,11 +208,11 @@ content_type_overrides:
         enabled: false
       post_initial_analysis:
         enabled: false
-  
+
   # Aggressive early exit for entertainment
   entertainment:
     global:
-      min_exit_confidence: 0.70  # Lower bar for entertainment
+      min_exit_confidence: 0.70 # Lower bar for entertainment
     checkpoints:
       post_quality_filtering:
         exit_conditions:
@@ -220,7 +220,7 @@ content_type_overrides:
             condition: "overall_quality < 0.45"
             confidence: 0.75
             reason: "Entertainment content below quality threshold"
-  
+
   # Moderate early exit for news
   news:
     checkpoints:
@@ -235,17 +235,17 @@ content_type_overrides:
 performance:
   # Expected early exit rates by checkpoint
   expected_exit_rates:
-    post_download: 0.05  # 5% exit after download
-    post_transcription: 0.15  # 15% exit after transcription
-    post_quality_filtering: 0.30  # 30% exit after quality filtering
-    post_initial_analysis: 0.10  # 10% exit after initial analysis
-    total: 0.40  # 40% total early exit rate
-  
+    post_download: 0.05 # 5% exit after download
+    post_transcription: 0.15 # 15% exit after transcription
+    post_quality_filtering: 0.30 # 30% exit after quality filtering
+    post_initial_analysis: 0.10 # 10% exit after initial analysis
+    total: 0.40 # 40% total early exit rate
+
   # Alert thresholds
   alerts:
-    too_many_exits: 0.60  # Alert if >60% exit
-    too_few_exits: 0.10   # Alert if <10% exit
-    checkpoint_error_rate: 0.05  # Alert if >5% checkpoint errors
+    too_many_exits: 0.60 # Alert if >60% exit
+    too_few_exits: 0.10 # Alert if <10% exit
+    checkpoint_error_rate: 0.05 # Alert if >5% checkpoint errors
 
 # Fallback behavior
 fallback:
