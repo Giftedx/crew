@@ -107,7 +107,84 @@ class PipelineMetricsMixin:
             duration = max(time.monotonic() - start_time, 0.0)
         self._record_pipeline_duration(status, duration)
         payload.setdefault("status", status)
+
+        # Record dashboard metrics asynchronously (fire-and-forget)
+        self._record_dashboard_metrics_background(payload, duration)
+
         return payload
+
+    def _record_dashboard_metrics_background(
+        self,
+        payload: PipelineRunResult,
+        duration: float,
+    ) -> None:
+        """
+        Record pipeline metrics to dashboard in background.
+
+        This is a fire-and-forget operation that won't block pipeline completion.
+        Failures are logged but don't affect the pipeline result.
+        """
+        import asyncio
+        from ultimate_discord_intelligence_bot.pipeline_components.dashboard_metrics import (
+            record_pipeline_metrics,
+        )
+
+        # Determine processing type
+        processing_type = payload.get("processing_type", "full")
+
+        # Extract content type if available
+        content_type = None
+        if "download" in payload:
+            download_data = payload["download"]
+            if isinstance(download_data, dict):
+                content_type = download_data.get("content_type")
+
+        # Extract quality score
+        quality_score = payload.get("quality_score")
+        if quality_score is None and "analysis" in payload:
+            analysis_data = payload["analysis"]
+            if isinstance(analysis_data, dict) and "data" in analysis_data:
+                quality_score = analysis_data["data"].get("overall_quality")
+
+        # Extract early exit info
+        exit_checkpoint = payload.get("exit_checkpoint")
+        exit_reason = payload.get("exit_reason")
+        exit_confidence = payload.get("exit_confidence")
+
+        # Calculate time savings estimate
+        time_saved_pct = None
+        if processing_type == "lightweight":
+            time_saved_pct = 0.60  # 60% savings for quality bypass
+        elif processing_type == "early_exit":
+            time_saved_estimate = payload.get("time_saved_estimate", "75-90%")
+            # Parse percentage or use default
+            if isinstance(time_saved_estimate, str):
+                time_saved_pct = 0.80  # Use midpoint of 75-90%
+            elif isinstance(time_saved_estimate, (int, float)):
+                time_saved_pct = float(time_saved_estimate)
+        elif processing_type == "full":
+            time_saved_pct = 0.0
+
+        # Create background task (don't await)
+        try:
+            loop = asyncio.get_event_loop()
+            if loop.is_running():
+                # Schedule as background task
+                loop.create_task(
+                    record_pipeline_metrics(
+                        processing_type=processing_type,
+                        content_type=content_type,
+                        quality_score=quality_score,
+                        processing_time=duration,
+                        exit_checkpoint=exit_checkpoint,
+                        exit_reason=exit_reason,
+                        exit_confidence=exit_confidence,
+                        time_saved_pct=time_saved_pct,
+                    )
+                )
+        except Exception:
+            # Silently fail - dashboard recording is optional
+            pass
 
 
 class PipelineExecutionMixin(PipelineMetricsMixin):

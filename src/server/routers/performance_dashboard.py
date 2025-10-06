@@ -13,8 +13,9 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from typing import Any
 
-from fastapi import APIRouter, Query
 from pydantic import BaseModel, Field
+
+from fastapi import APIRouter, Query
 
 # Import metrics module
 try:

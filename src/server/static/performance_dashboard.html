@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -278,15 +279,16 @@
             border-radius: 50%;
         }
 
-        input:checked + .slider {
+        input:checked+.slider {
             background-color: #667eea;
         }
 
-        input:checked + .slider:before {
+        input:checked+.slider:before {
             transform: translateX(24px);
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <header>
@@ -398,7 +400,7 @@
 
                 // Update overall metrics
                 document.getElementById('total-processed').textContent = data.overall_metrics.total_processed.toLocaleString();
-                
+
                 const bypassRate = (data.overall_metrics.bypass_rate * 100).toFixed(1);
                 document.getElementById('bypass-rate').textContent = `${bypassRate}%`;
                 document.getElementById('bypass-progress').style.width = `${bypassRate}%`;
@@ -414,7 +416,7 @@
                 document.getElementById('quality-bypassed').textContent = data.overall_metrics.quality_bypassed.toLocaleString();
                 document.getElementById('early-exits').textContent = data.overall_metrics.early_exits.toLocaleString();
                 document.getElementById('full-processing').textContent = data.overall_metrics.full_processing.toLocaleString();
-                
+
                 const exitRate = (data.overall_metrics.early_exit_rate * 100).toFixed(1);
                 document.getElementById('early-exit-rate').textContent = `${exitRate}%`;
 
@@ -479,7 +481,7 @@
 
         function toggleAutoRefresh() {
             const toggle = document.getElementById('auto-refresh-toggle');
-            
+
             if (toggle.checked) {
                 // Start auto-refresh every 30 seconds
                 autoRefreshInterval = setInterval(loadDashboard, 30000);
@@ -498,4 +500,5 @@
         window.addEventListener('DOMContentLoaded', loadDashboard);
     </script>
 </body>
+
 </html>

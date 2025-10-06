@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
-
 from server.routers.performance_dashboard import router as performance_router
 
 

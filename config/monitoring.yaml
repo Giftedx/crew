@@ -1,0 +1,252 @@
+# Week 4 Production Monitoring Configuration
+#
+# This configuration defines alert thresholds and monitoring rules for
+# the performance dashboard in production deployment.
+#
+# Usage:
+#   1. Deploy dashboard with ENABLE_DASHBOARD_METRICS=1
+#   2. Configure alerts based on these thresholds
+#   3. Monitor dashboard at http://your-server:8000/dashboard
+#   4. Adjust thresholds based on 48h of production data
+
+# =============================================================================
+# ALERT THRESHOLDS
+# =============================================================================
+
+# Overall Performance Alerts
+overall_metrics:
+  bypass_rate:
+    target: 0.60  # 60% bypass rate (quality + early exit combined)
+    warning_low: 0.50  # Alert if < 50%
+    critical_low: 0.40  # Critical if < 40%
+    warning_high: 0.80  # Alert if > 80% (may indicate too aggressive filtering)
+    
+  early_exit_rate:
+    target: 0.40  # 40% early exit rate
+    warning_low: 0.30  # Alert if < 30%
+    critical_low: 0.20  # Critical if < 20%
+    warning_high: 0.60  # Alert if > 60% (too many exits)
+    
+  avg_time_savings:
+    target: 0.70  # 70% average time savings
+    warning_low: 0.60  # Alert if < 60%
+    critical_low: 0.50  # Critical if < 50%
+    
+  quality_score_avg:
+    target: 0.75  # Maintain > 0.75 average quality
+    warning_low: 0.70  # Alert if < 0.70
+    critical_low: 0.65  # Critical if < 0.65
+
+# Content Type Performance
+content_type_alerts:
+  discussion:
+    bypass_rate:
+      max: 0.20  # Discussion should have low bypass (high value content)
+      alert_threshold: 0.30  # Alert if > 30% bypassed
+    quality_score:
+      min: 0.75  # Discussion should maintain high quality
+      alert_threshold: 0.70  # Alert if < 0.70
+      
+  entertainment:
+    bypass_rate:
+      min: 0.80  # Entertainment should have high bypass (low value)
+      alert_threshold: 0.70  # Alert if < 70% bypassed
+    quality_score:
+      max: 0.50  # Expected to be low quality
+      
+  news:
+    bypass_rate:
+      target: 0.40  # Moderate bypass for news
+      tolerance: 0.15  # +/- 15% tolerance
+    quality_score:
+      min: 0.65  # News should be moderately high quality
+      alert_threshold: 0.60
+
+# Checkpoint Performance
+checkpoint_alerts:
+  post_download:
+    exit_rate:
+      target: 0.05  # 5% exit at download checkpoint
+      max: 0.10  # Alert if > 10%
+    confidence:
+      min: 0.85  # High confidence required for early exits
+      
+  post_transcription:
+    exit_rate:
+      target: 0.15  # 15% exit at transcription checkpoint
+      max: 0.25  # Alert if > 25%
+    confidence:
+      min: 0.80
+      
+  post_quality_filtering:
+    exit_rate:
+      target: 0.30  # 30% exit at quality checkpoint (highest)
+      max: 0.45  # Alert if > 45%
+    confidence:
+      min: 0.75
+      
+  post_initial_analysis:
+    exit_rate:
+      target: 0.10  # 10% exit at analysis checkpoint
+      max: 0.20  # Alert if > 20%
+    confidence:
+      min: 0.80
+
+# =============================================================================
+# MONITORING RULES
+# =============================================================================
+
+monitoring_intervals:
+  dashboard_refresh: 30  # seconds (auto-refresh interval)
+  metrics_aggregation: 3600  # seconds (1 hour buckets for trends)
+  alert_check: 300  # seconds (5 minutes between alert checks)
+  
+data_retention:
+  quality_trends: 168  # hours (1 week of hourly trends)
+  detailed_metrics: 48  # hours (2 days of detailed data)
+  
+alert_cooldown:
+  warning: 1800  # seconds (30 minutes before re-alerting)
+  critical: 600  # seconds (10 minutes before re-alerting)
+
+# =============================================================================
+# WEEK 4 TUNING TARGETS
+# =============================================================================
+
+week4_targets:
+  day1_2_data_collection:
+    goal: "Collect 48 hours of production metrics"
+    metrics_to_track:
+      - overall_bypass_rate
+      - content_type_distribution
+      - checkpoint_exit_rates
+      - quality_score_trends
+      - processing_time_distribution
+    success_criteria:
+      - min_items_processed: 100
+      - min_content_types: 3
+      - all_checkpoints_tested: true
+      
+  day3_4_threshold_tuning:
+    goal: "Optimize thresholds based on real data"
+    parameters_to_tune:
+      - quality_min_overall  # config/quality_filtering.yaml
+      - early_exit_confidence  # config/early_exit.yaml
+      - content_type_overrides  # config/content_routing.yaml
+    validation:
+      - maintain_quality_score: 0.75
+      - improve_time_savings: 0.05  # +5% improvement
+      
+  day5_ab_testing:
+    goal: "Validate configurations with A/B testing"
+    test_groups:
+      conservative:
+        quality_min_overall: 0.70
+        early_exit_confidence: 0.85
+        expected_bypass_rate: 0.50
+      aggressive:
+        quality_min_overall: 0.60
+        early_exit_confidence: 0.75
+        expected_bypass_rate: 0.70
+    comparison_metrics:
+      - time_savings_diff
+      - quality_degradation
+      - user_satisfaction
+      
+  day6_documentation:
+    goal: "Document optimal production settings"
+    deliverables:
+      - production_deployment_guide.md
+      - optimal_thresholds.yaml
+      - troubleshooting_playbook.md
+      - monitoring_dashboard_guide.md
+      
+  day7_alerts:
+    goal: "Configure production monitoring alerts"
+    alert_channels:
+      - dashboard_ui_indicators
+      - log_warnings
+      - slack_notifications  # optional
+      - discord_notifications  # optional
+    runbooks:
+      - high_bypass_rate_runbook.md
+      - low_quality_score_runbook.md
+      - checkpoint_failure_runbook.md
+
+# =============================================================================
+# DASHBOARD UI INDICATORS
+# =============================================================================
+
+ui_indicators:
+  color_coding:
+    green: "Metric within target range"
+    yellow: "Metric at warning threshold"
+    red: "Metric at critical threshold"
+    
+  badge_rules:
+    bypass_rate:
+      green: [0.55, 0.75]  # 55-75% is optimal
+      yellow: [0.45, 0.85]  # 45-55% or 75-85% is warning
+      red: "outside yellow range"
+      
+    quality_score:
+      green: [0.75, 1.00]  # >= 0.75 is optimal
+      yellow: [0.70, 0.75]  # 0.70-0.75 is warning
+      red: [0.00, 0.70]  # < 0.70 is critical
+      
+  trend_indicators:
+    improving: "↑ green arrow"
+    stable: "→ gray dash"
+    degrading: "↓ red arrow"
+
+# =============================================================================
+# PRODUCTION DEPLOYMENT CHECKLIST
+# =============================================================================
+
+deployment_checklist:
+  pre_deployment:
+    - "✅ Week 1-3 code deployed and tested"
+    - "✅ Dashboard API endpoints validated"
+    - "✅ Dashboard UI accessible"
+    - "✅ Metrics recording integrated"
+    - "Configure ENABLE_DASHBOARD_METRICS=1"
+    - "Configure DASHBOARD_API_URL"
+    - "Set initial alert thresholds"
+    - "Configure log aggregation"
+    
+  deployment:
+    - "Enable all optimization features"
+    - "Start dashboard monitoring"
+    - "Verify metrics recording"
+    - "Monitor for errors"
+    
+  post_deployment:
+    - "Collect 48h baseline metrics"
+    - "Validate alert thresholds"
+    - "Tune based on real data"
+    - "Document final configuration"
+
+# =============================================================================
+# EXPECTED OUTCOMES
+# =============================================================================
+
+expected_outcomes:
+  time_reduction:
+    phase1_quality: 0.50  # 50% from quality filtering
+    week1_routing: 0.15  # +15% from content routing
+    week2_early_exit: 0.20  # +20% from early exit
+    total_combined: 0.70  # 70% total (accounting for overlap)
+    
+  quality_maintenance:
+    avg_quality_score: 0.75  # Maintain >= 0.75
+    quality_degradation: 0.05  # < 5% degradation allowed
+    
+  cost_savings:
+    api_calls_reduced: 0.60  # 60% fewer API calls
+    processing_time_saved: 0.70  # 70% time saved
+    infrastructure_cost: 0.00  # Zero infrastructure cost
+    
+  production_stability:
+    uptime_target: 0.999  # 99.9% uptime
+    error_rate: 0.01  # < 1% error rate
+    p95_latency_improvement: 0.50  # 50% latency reduction at p95
