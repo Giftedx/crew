@@ -7,6 +7,7 @@
 ## What We've Done
 
 ### 1. Diagnostic Analysis ✅
+
 - Created `scripts/diagnose_week4_optimizations.py`
 - Identified exact current thresholds:
   - Quality filtering: 0.65
@@ -14,16 +15,19 @@
   - Content routing: pattern-based (no threshold)
 
 ### 2. Root Cause Confirmed ✅
+
 - **Quality filtering**: Test content scored 0.8375 quality > 0.65 threshold → no bypass
 - **Early exit**: Test content had 0.60 confidence < 0.80 threshold → no exit
 - **Content routing**: Discussion content correctly routed to deep_analysis/standard
 
 ### 3. Threshold Tuning Applied ✅
+
 - **Quality filtering**: 0.65 → 0.55 (via `QUALITY_MIN_OVERALL` env var)
 - **Early exit**: 0.80 → 0.70 (in `config/early_exit.yaml`)
 - Expected impact: 45-60% combined improvement (vs 1.2% baseline)
 
 ### 4. Validation Running 🔄
+
 - Script: `scripts/run_tuned_validation.py`
 - Tests: Baseline → Quality (0.55) → Early Exit (0.70) → Combined
 - Expected duration: ~5-10 minutes
@@ -32,18 +36,21 @@
 ## Expected Outcomes
 
 ### Optimistic (65%+ improvement)
+
 - Bypass rate: 20-30% of content
 - Exit rate: 15-25% of content
 - Quality filtering now helps instead of hurts
 - **Action**: Deploy to production immediately
 
 ### Realistic (45-60% improvement)
+
 - Moderate bypass and exit rates
 - Significant improvement over 1.2% baseline
 - May need slight further tuning
 - **Action**: Consider additional tuning or deploy with monitoring
 
 ### Pessimistic (<45% improvement)
+
 - Thresholds still too conservative
 - Need more aggressive tuning OR diverse test content
 - **Action**: Lower thresholds further or expand test suite
@@ -51,6 +58,7 @@
 ## Configuration Changes
 
 ### Before Tuning
+
 ```yaml
 # Quality Filtering
 QUALITY_MIN_OVERALL: 0.65
@@ -60,6 +68,7 @@ min_exit_confidence: 0.80
 ```
 
 ### After Tuning
+
 ```yaml
 # Quality Filtering
 QUALITY_MIN_OVERALL: 0.55  # -0.10 (more aggressive)
@@ -69,6 +78,7 @@ min_exit_confidence: 0.70  # -0.10 (more aggressive)
 ```
 
 ### Rationale
+
 - Test content quality: 0.8375 (very high)
 - Lowering to 0.55 allows bypassing mid-range quality content
 - Test confidence: 0.60 (medium)
@@ -79,6 +89,7 @@ min_exit_confidence: 0.70  # -0.10 (more aggressive)
 ### When Validation Completes
 
 1. **Check results file**:
+
    ```bash
    cat benchmarks/week4_tuned_validation_*.json | jq .
    ```
@@ -90,6 +101,7 @@ min_exit_confidence: 0.70  # -0.10 (more aggressive)
    - Combined improvement < 30%: ❌ Investigate why tuning didn't work
 
 3. **Production Deployment** (if ≥65%):
+
    ```bash
    export ENABLE_QUALITY_FILTERING=1
    export QUALITY_MIN_OVERALL=0.55

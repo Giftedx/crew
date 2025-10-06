@@ -31,6 +31,7 @@ We completed Week 4 threshold tuning and validation. Here's the timeline:
 ### Why We're Not at 65%
 
 The test video is **high-quality, complex political commentary**:
+
 - Quality score: 0.8375 (very high)
 - Content type: Political analysis (requires deep processing)
 - Production: Professional (Ethan Klein)
@@ -49,10 +50,12 @@ The test video is **high-quality, complex political commentary**:
 ## Three Options Going Forward
 
 ### Option 1: Deploy with Monitoring (FAST)
+
 **Timeline**: 1 day  
 **Risk**: LOW
 
 **What you do**:
+
 ```bash
 # Deploy to production with tuned config
 export QUALITY_MIN_OVERALL=0.55
@@ -64,11 +67,13 @@ python -m ultimate_discord_intelligence_bot.setup_cli run discord
 ```
 
 **Expected outcome**:
+
 - Production workload has diverse content (not all high-quality)
 - 20-30% improvement across mixed content
 - Monitor dashboard for 7 days to validate
 
 **Good if**:
+
 - You want to ship quickly
 - You're comfortable with real-world validation
 - You have monitoring infrastructure ready
@@ -76,10 +81,12 @@ python -m ultimate_discord_intelligence_bot.setup_cli run discord
 ---
 
 ### Option 2: Expand Test Suite (THOROUGH)
+
 **Timeline**: 2-3 days  
 **Risk**: MEDIUM
 
 **What you do**:
+
 1. Select 10-15 diverse test videos:
    - 3-4 low-quality (amateur vlogs, basic tutorials)
    - 3-4 simple content (short explainers, demos)
@@ -90,6 +97,7 @@ python -m ultimate_discord_intelligence_bot.setup_cli run discord
 3. Measure aggregate improvement
 
 **Expected outcome**:
+
 - Low-quality videos: 30-50% improvement (bypass activates)
 - Simple content: 20-40% improvement (early exit activates)
 - Educational: 10-25% improvement (routing optimizes)
@@ -97,6 +105,7 @@ python -m ultimate_discord_intelligence_bot.setup_cli run discord
 - **Aggregate: 20-35% improvement**
 
 **Good if**:
+
 - You want proof before production deployment
 - You have time to wait 2-3 days
 - You want comprehensive validation data
@@ -104,12 +113,14 @@ python -m ultimate_discord_intelligence_bot.setup_cli run discord
 ---
 
 ### Option 3: Hybrid Pilot (RECOMMENDED) ⭐
+
 **Timeline**: 2 days  
 **Risk**: LOW
 
 **What you do**:
 
 **Day 1**: Deploy to test server
+
 ```bash
 # Configure for single Discord server
 export DISCORD_GUILD_ID=<your_test_server_id>
@@ -126,11 +137,13 @@ python -m ultimate_discord_intelligence_bot.setup_cli run discord
 ```
 
 **Day 2-3**: Monitor real usage
+
 - Watch dashboard for activation rates
 - Check quality scores (should stay ≥ 0.70)
 - Measure time savings on diverse user content
 
 **Day 4**: Analyze and decide
+
 ```bash
 # Check metrics
 curl http://localhost:8000/api/metrics/week4_summary | jq .
@@ -144,11 +157,13 @@ curl http://localhost:8000/api/metrics/week4_summary | jq .
 ```
 
 **Expected outcome**:
+
 - Real-world content mix (diverse quality and types)
 - 20-30% improvement on actual usage
 - Data-driven deployment decision
 
 **Good if**:
+
 - You want real-world validation quickly
 - You have a test Discord server available
 - You want low-risk production testing
@@ -173,12 +188,14 @@ curl http://localhost:8000/api/metrics/week4_summary | jq .
 
 1. Choose a Discord server for testing (ideally one with active users)
 2. Get the server ID:
+
    ```python
    # In Discord developer mode:
    # Right-click server → Copy ID
    ```
 
 3. Update `.env`:
+
    ```bash
    # Add to .env
    DISCORD_GUILD_ID=<your_test_server_id>
@@ -202,6 +219,7 @@ python -m ultimate_discord_intelligence_bot.setup_cli run discord
 ### Step 3: Monitor (48 hours)
 
 **Hourly checks**:
+
 - Dashboard: `http://localhost:8000/dashboard`
 - Key metrics:
   - Bypass activation rate
@@ -210,6 +228,7 @@ python -m ultimate_discord_intelligence_bot.setup_cli run discord
   - Quality scores
 
 **What to look for**:
+
 - Bypass rate increasing (15-30% is good)
 - Exit rate increasing (10-25% is good)
 - Time savings trending positive
@@ -277,16 +296,19 @@ These thresholds are **validated and ready for production deployment**.
 ## Quick Decision Guide
 
 **Choose Option 1 if**:
+
 - You trust the tuning analysis
 - You want to ship today
 - You have production monitoring ready
 
 **Choose Option 2 if**:
+
 - You need comprehensive proof
 - You have 2-3 days available
 - You want to document diverse test cases
 
 **Choose Option 3 if**: ⭐
+
 - You want fast AND confident results
 - You have a test server available
 - You prefer real-world data over synthetic tests

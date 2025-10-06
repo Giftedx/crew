@@ -23,12 +23,14 @@
 - ⚠️ **Deployment Decision Point**: Choose strategy based on content compatibility findings
 
 **Validation Results Timeline**:
+
 - **Baseline** (conservative thresholds): 1.2% improvement
 - **Tuned** (aggressive thresholds): 6.7% improvement  
 - **Tuning Impact**: 5.5x performance improvement
 - **Gap to Target**: 58.3% below 65% deployment goal
 
 **Why Optimizations Can't Reach 65% on This Content**:
+
 - Test video: High-quality political commentary (quality score 0.8375)
 - Content type: Complex analysis requiring deep processing
 - Quality bypass: Cannot activate without degrading output (0.8375 > 0.55)
@@ -36,6 +38,7 @@
 - **Optimizations are intelligent** - they correctly preserve quality over speed
 
 **Configuration Status**:
+
 - ✅ Quality filtering threshold: 0.55 (tuned from 0.65)
 - ✅ Early exit confidence: 0.70 (tuned from 0.80)
 - ✅ Content routing: Pattern-based (working correctly)
@@ -94,19 +97,24 @@ python -m ultimate_discord_intelligence_bot.setup_cli run discord
 # - Avg time savings: 15-25%
 # - Quality maintained: ≥0.70
 ```
-.venv/bin/python scripts/simple_baseline_test.py "https://www.youtube.com/watch?v=xtFiJ8AVdW0"
+
+.venv/bin/python scripts/simple_baseline_test.py "<https://www.youtube.com/watch?v=xtFiJ8AVdW0>"
 
 # 4. Enable all optimizations and test
+
 export ENABLE_QUALITY_FILTERING=1
 export ENABLE_CONTENT_ROUTING=1
 export ENABLE_EARLY_EXIT=1
 export ENABLE_DASHBOARD_METRICS=1
 
 # 5. Start server with dashboard
+
 uvicorn server.app:create_app --factory --port 8000
 
 # 6. Access dashboard
-open http://localhost:8000/dashboard
+
+open <http://localhost:8000/dashboard>
+
 ```
 
 ---
