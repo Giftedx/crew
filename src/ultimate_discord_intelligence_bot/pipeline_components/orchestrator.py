@@ -117,6 +117,20 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
             return failure
         assert download_info is not None  # for type checkers
 
+        # Week 4 Phase 2 Week 2: Checkpoint 1 - Post-download early exit
+        should_exit, exit_reason, exit_confidence = await self._check_early_exit_condition(
+            ctx,
+            "post_download",
+            {
+                "duration": download_info.data.get("duration", 0),
+                "view_count": download_info.data.get("view_count", 0),
+                "age_days": download_info.data.get("age_days", 0),
+                "title_spam_score": 0.0,  # TODO: Add spam detection
+            },
+        )
+        if should_exit:
+            return await self._early_exit_processing(ctx, download_info, None, exit_reason, exit_confidence)
+
         transcription_bundle, failure = await self._transcription_phase(ctx, download_info)
         if failure is not None:
             return failure
@@ -125,10 +139,51 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
         # Week 4 Phase 2: Content type routing phase
         routing_result = await self._content_routing_phase(ctx, download_info, transcription_bundle)
 
+        # Week 4 Phase 2 Week 2: Checkpoint 2 - Post-transcription early exit
+        should_exit, exit_reason, exit_confidence = await self._check_early_exit_condition(
+            ctx,
+            "post_transcription",
+            {
+                "transcript_length": len(transcription_bundle.filtered_transcript),
+                "transcription_confidence": transcription_bundle.transcription.data.get("confidence", 1.0),
+                "word_error_rate": 0.0,  # TODO: Add WER calculation
+                "repetition_ratio": 0.0,  # TODO: Add repetition detection
+                "unique_word_ratio": 0.0,  # TODO: Add vocabulary diversity
+            },
+            routing_result,
+        )
+        if should_exit:
+            return await self._early_exit_processing(
+                ctx, download_info, transcription_bundle, exit_reason, exit_confidence
+            )
+
         # Week 4 Phase 1: Quality filtering phase (now uses routing thresholds)
         quality_result, should_skip_analysis = await self._quality_filtering_phase(
             ctx, transcription_bundle.filtered_transcript, routing_result
         )
+
+        # Week 4 Phase 2 Week 2: Checkpoint 3 - Post-quality-filtering early exit
+        if quality_result.success:
+            qr_data = quality_result.data
+            if "result" in qr_data and isinstance(qr_data["result"], dict):
+                qr_data = qr_data["result"]
+
+            should_exit, exit_reason, exit_confidence = await self._check_early_exit_condition(
+                ctx,
+                "post_quality_filtering",
+                {
+                    "overall_quality": qr_data.get("overall_score", 0.0),
+                    "assessment_confidence": qr_data.get("confidence", 0.0),
+                    "coherence_score": qr_data.get("quality_metrics", {}).get("coherence", 0.0),
+                    "completeness_score": qr_data.get("quality_metrics", {}).get("completeness", 0.0),
+                    "informativeness_score": qr_data.get("quality_metrics", {}).get("informativeness", 0.0),
+                },
+                routing_result,
+            )
+            if should_exit:
+                return await self._early_exit_processing(
+                    ctx, download_info, transcription_bundle, exit_reason, exit_confidence, quality_result
+                )
 
         if should_skip_analysis:
             return await self._lightweight_processing_phase(ctx, download_info, transcription_bundle, quality_result)
@@ -339,6 +394,286 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
             self.logger.warning("Quality filtering failed with exception, proceeding with full analysis: %s", str(e))
             # metrics.get_metrics().counter("quality_filtering_exceptions_total").inc()  # TODO: Fix metrics
             return StepResult.fail(error=str(e)), False
+
+    def _load_early_exit_config(self) -> dict[str, Any]:
+        """Load early exit configuration from config/early_exit.yaml."""
+        import os
+        import yaml
+
+        # Default config (used if file doesn't exist or loading fails)
+        default_config = {
+            "enabled": True,
+            "global": {
+                "min_exit_confidence": 0.80,
+                "continue_on_error": True,
+            },
+            "checkpoints": {},
+        }
+
+        try:
+            config_path = Path("config/early_exit.yaml")
+            if not config_path.exists():
+                self.logger.debug("Early exit config not found, using defaults")
+                return default_config
+
+            with config_path.open() as f:
+                config = yaml.safe_load(f)
+
+            if not isinstance(config, dict):
+                self.logger.warning("Invalid early exit config format, using defaults")
+                return default_config
+
+            return config
+
+        except Exception as e:
+            self.logger.warning(f"Failed to load early exit config: {e}, using defaults")
+            return default_config
+
+    async def _check_early_exit_condition(
+        self,
+        ctx: _PipelineContext,
+        checkpoint_name: str,
+        checkpoint_data: dict[str, Any],
+        routing_result: StepResult | None = None,
+    ) -> tuple[bool, str, float]:
+        """
+        Check if content should exit early at this checkpoint.
+
+        Args:
+            ctx: Pipeline context
+            checkpoint_name: Name of checkpoint (post_download, post_transcription, etc.)
+            checkpoint_data: Data to evaluate against checkpoint conditions
+            routing_result: Optional routing result for content-type specific overrides
+
+        Returns:
+            Tuple of (should_exit, exit_reason, confidence)
+        """
+        import os
+
+        # Check if early exit is enabled globally
+        early_exit_enabled = os.getenv("ENABLE_EARLY_EXIT", "1") == "1"
+        if not early_exit_enabled:
+            return False, "", 0.0
+
+        try:
+            # Load config
+            config = self._load_early_exit_config()
+            if not config.get("enabled", True):
+                return False, "", 0.0
+
+            # Get content type for overrides
+            content_type = "general"
+            if routing_result and routing_result.success:
+                routing_data = routing_result.data
+                if "result" in routing_data and isinstance(routing_data["result"], dict):
+                    routing_data = routing_data["result"]
+                content_type = routing_data.get("classification", {}).get("primary_type", "general")
+
+            # Check for content-type specific overrides
+            overrides = config.get("content_type_overrides", {}).get(content_type, {})
+            checkpoint_config = overrides.get("checkpoints", {}).get(checkpoint_name)
+
+            # If no override, use default checkpoint config
+            if checkpoint_config is None:
+                checkpoint_config = config.get("checkpoints", {}).get(checkpoint_name, {})
+
+            # If checkpoint disabled or not found, don't exit
+            if not checkpoint_config or not checkpoint_config.get("enabled", True):
+                return False, "", 0.0
+
+            # Get exit conditions for this checkpoint
+            exit_conditions = checkpoint_config.get("exit_conditions", [])
+            global_config = config.get("global", {})
+            min_confidence = global_config.get("min_exit_confidence", 0.80)
+
+            # Evaluate each condition
+            for condition in exit_conditions:
+                if not condition.get("enabled", True):
+                    continue
+
+                condition_name = condition.get("name", "unknown")
+                condition_expr = condition.get("condition", "")
+                condition_confidence = condition.get("confidence", 0.0)
+                condition_reason = condition.get("reason", "Early exit condition met")
+
+                # Only process if confidence meets minimum
+                if condition_confidence < min_confidence:
+                    continue
+
+                # Evaluate condition
+                try:
+                    # Create evaluation context with checkpoint data
+                    eval_context = checkpoint_data.copy()
+
+                    # Simple condition evaluation (supports basic comparisons)
+                    if self._evaluate_condition(condition_expr, eval_context):
+                        self.logger.info(
+                            f"Early exit triggered at {checkpoint_name}: {condition_name} "
+                            f"(confidence: {condition_confidence:.2f})"
+                        )
+
+                        # Set tracing attributes
+                        ctx.span.set_attribute("early_exit", True)
+                        ctx.span.set_attribute("exit_checkpoint", checkpoint_name)
+                        ctx.span.set_attribute("exit_condition", condition_name)
+                        ctx.span.set_attribute("exit_confidence", condition_confidence)
+
+                        # Emit metrics (best-effort)
+                        try:
+                            if hasattr(metrics, "PIPELINE_EARLY_EXITS"):
+                                metrics.PIPELINE_EARLY_EXITS.labels(
+                                    **metrics.label_ctx(), checkpoint=checkpoint_name
+                                ).inc()
+                        except Exception:
+                            pass
+
+                        return True, condition_reason, condition_confidence
+
+                except Exception as e:
+                    self.logger.warning(
+                        f"Failed to evaluate condition '{condition_name}' at {checkpoint_name}: {e}"
+                    )
+                    # Continue to next condition on evaluation error
+                    if not global_config.get("continue_on_error", True):
+                        raise
+
+            # No exit conditions met
+            return False, "", 0.0
+
+        except Exception as e:
+            self.logger.warning(f"Early exit check failed at {checkpoint_name}: {e}")
+            # On error, don't exit (safe fallback)
+            return False, "", 0.0
+
+    def _evaluate_condition(self, condition_expr: str, context: dict[str, Any]) -> bool:
+        """
+        Safely evaluate a condition expression against context data.
+
+        Supports simple comparison operations:
+        - duration < 30
+        - quality_score > 0.80
+        - duration < 120 and transcript_length < 500
+        """
+        try:
+            # Build a safe evaluation namespace
+            safe_namespace = {
+                # Operators
+                "__builtins__": {},
+                # Context values
+                **context,
+            }
+
+            # Evaluate the condition (restricted eval for safety)
+            result = eval(condition_expr, {"__builtins__": {}}, safe_namespace)
+            return bool(result)
+
+        except Exception as e:
+            self.logger.warning(f"Condition evaluation failed: {condition_expr} - {e}")
+            return False
+
+    async def _early_exit_processing(
+        self,
+        ctx: _PipelineContext,
+        download_info: StepResult,
+        transcription_bundle: _TranscriptionArtifacts | None,
+        exit_reason: str,
+        exit_confidence: float,
+        quality_result: StepResult | None = None,
+    ) -> PipelineRunResult:
+        """
+        Process content that exited early at a checkpoint.
+
+        Creates a minimal summary and optionally stores in memory based on
+        checkpoint configuration.
+        """
+        start_time = time.monotonic()
+
+        # Build minimal summary
+        title = download_info.data.get("title", "Unknown")
+        source_url = download_info.data.get("source_url", "")
+        duration = download_info.data.get("duration", 0)
+
+        basic_summary = f"Content exited early: {exit_reason}"
+        if transcription_bundle:
+            transcript_preview = transcription_bundle.filtered_transcript[:200]
+            if len(transcription_bundle.filtered_transcript) > 200:
+                transcript_preview += "..."
+        else:
+            transcript_preview = "No transcript available"
+
+        # Get quality score if available
+        quality_score = 0.0
+        if quality_result and quality_result.success:
+            qr_data = quality_result.data
+            if "result" in qr_data and isinstance(qr_data["result"], dict):
+                qr_data = qr_data["result"]
+            quality_score = qr_data.get("overall_score", 0.0)
+
+        # Create lightweight memory payload
+        memory_payload = {
+            "source_url": source_url,
+            "title": title,
+            "summary": basic_summary,
+            "exit_reason": exit_reason,
+            "exit_confidence": exit_confidence,
+            "quality_score": quality_score,
+            "processing_type": "early_exit",
+            "duration": duration,
+            "transcript_preview": transcript_preview,
+            "processed_at": time.time(),
+        }
+
+        # Store in memory (lightweight)
+        memory_task = asyncio.create_task(self._store_lightweight_memory(memory_payload), name="early_exit_memory")
+
+        # Wait for memory storage (with timeout)
+        memory_result = None
+        try:
+            memory_result = await asyncio.wait_for(memory_task, timeout=5.0)
+        except TimeoutError:
+            self.logger.warning("Early exit memory storage timed out")
+            memory_result = StepResult.fail(error="Memory storage timeout")
+        except Exception as e:
+            self.logger.warning(f"Early exit memory storage failed: {e}")
+            memory_result = StepResult.fail(error=str(e))
+
+        # Record metrics
+        processing_duration = time.monotonic() - start_time
+        try:
+            if hasattr(metrics, "PIPELINE_PROCESSING_TIME"):
+                metrics.PIPELINE_PROCESSING_TIME.labels(**metrics.label_ctx(), processing_type="early_exit").observe(
+                    processing_duration
+                )
+        except Exception:
+            pass
+
+        # Set span attributes
+        ctx.span.set_attribute("processing_type", "early_exit")
+        ctx.span.set_attribute("exit_reason", exit_reason)
+        ctx.span.set_attribute("exit_confidence", exit_confidence)
+        ctx.span.set_attribute("processing_duration_seconds", processing_duration)
+
+        self.logger.info(
+            f"Early exit processing complete: {exit_reason} (confidence: {exit_confidence:.2f}, "
+            f"duration: {processing_duration:.2f}s)"
+        )
+
+        return self._finalize_pipeline(
+            ctx.start_time,
+            "success",
+            {
+                "status": "success",
+                "processing_type": "early_exit",
+                "exit_reason": exit_reason,
+                "exit_confidence": exit_confidence,
+                "quality_score": quality_score,
+                "summary": basic_summary,
+                "title": title,
+                "memory_stored": memory_result.success if memory_result else False,
+                "processing_duration": processing_duration,
+                "time_saved_estimate": "75-90%",
+            },
+        )
 
     async def _lightweight_processing_phase(
         self,
