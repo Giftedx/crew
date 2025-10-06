@@ -33,6 +33,7 @@
 | **General** | 0.65 | 55% | Standard processing |
 
 **Configuration Features**:
+
 - Content-type specific thresholds (quality, coherence, completeness, informativeness)
 - Early exit configuration per type
 - Processing flags for each type
@@ -59,6 +60,7 @@
    - Environment variable override support
 
 **Pipeline Flow Update**:
+
 ```
 Download → Transcription → [NEW: Content Routing] → Quality Filtering* → Analysis
                                                       (*now uses routing thresholds)
@@ -67,12 +69,14 @@ Download → Transcription → [NEW: Content Routing] → Quality Filtering* →
 ### 3. Quality Tool Enhancement
 
 **`ContentQualityAssessmentTool` Updates**:
+
 - `run()` method now accepts `thresholds` parameter
 - `_should_process_fully()` uses custom thresholds if provided
 - Backward compatible (falls back to env vars if no thresholds)
 - Supports content-type aware decision making
 
 **Changes**:
+
 - +26 lines (threshold parameter handling)
 - Maintains full backward compatibility
 - Safe fallback to default thresholds
@@ -80,9 +84,11 @@ Download → Transcription → [NEW: Content Routing] → Quality Filtering* →
 ### 4. Feature Flags
 
 **New Flag**:
+
 - `ENABLE_CONTENT_ROUTING=1` (default enabled)
 
 **Existing Flags** (still supported):
+
 - `ENABLE_QUALITY_FILTERING=1` (Phase 1)
 - `QUALITY_MIN_OVERALL=0.65` (default, overridden by routing)
 
@@ -155,6 +161,7 @@ async def _quality_filtering_phase(self, ctx, transcript, routing_result):
 ### Content-Specific Optimization
 
 **Entertainment Content** (85% bypass):
+
 - Threshold: 0.55 (vs 0.65 default)
 - Fast transcription enabled
 - Skip deep analysis
@@ -162,12 +169,14 @@ async def _quality_filtering_phase(self, ctx, transcript, routing_result):
 - **Result**: Much faster processing, high bypass rate
 
 **News Content** (70% bypass):
+
 - Threshold: 0.75 (vs 0.65 default)
 - Fast transcription enabled
 - Topic extraction only
 - **Result**: Quick summarization, high quality bar
 
 **Discussion Content** (40% bypass, never skip):
+
 - Threshold: 0.65
 - Deep analysis always enabled
 - Fallacy detection critical
@@ -176,6 +185,7 @@ async def _quality_filtering_phase(self, ctx, transcript, routing_result):
 ### Performance Improvements
 
 **Estimated Impact**:
+
 - **Entertainment**: 60-70% time reduction (most content)
 - **News**: 50-60% time reduction
 - **Educational/Tech**: 30-40% time reduction (deeper analysis)
@@ -183,6 +193,7 @@ async def _quality_filtering_phase(self, ctx, transcript, routing_result):
 - **Overall**: 15-25% additional time reduction beyond Phase 1
 
 **Combined Phase 1 + Phase 2**:
+
 - **Phase 1 alone**: 45-60% time reduction
 - **Phase 2 added**: +15-25% reduction
 - **Total**: 60-75% time reduction (as planned)
@@ -192,6 +203,7 @@ async def _quality_filtering_phase(self, ctx, transcript, routing_result):
 ## ✅ Success Criteria - ALL MET
 
 **Implementation**:
+
 - ✅ Routing phase integrated into pipeline
 - ✅ Content type config complete (6 types)
 - ✅ Threshold loading implemented
@@ -199,6 +211,7 @@ async def _quality_filtering_phase(self, ctx, transcript, routing_result):
 - ✅ Syntax check passed
 
 **Code Quality**:
+
 - ✅ Backward compatible
 - ✅ Safe fallback on errors
 - ✅ Feature flag controlled
@@ -206,6 +219,7 @@ async def _quality_filtering_phase(self, ctx, transcript, routing_result):
 - ✅ Best-effort metrics
 
 **Documentation**:
+
 - ✅ Configuration well-documented
 - ✅ Content type profiles defined
 - ✅ Code comments added
@@ -218,6 +232,7 @@ async def _quality_filtering_phase(self, ctx, transcript, routing_result):
 ### Manual Testing
 
 **Test Each Content Type**:
+
 ```bash
 # Entertainment (expect high bypass)
 export ENABLE_CONTENT_ROUTING=1
@@ -235,6 +250,7 @@ export ENABLE_QUALITY_FILTERING=1
 ```
 
 **Validate Routing**:
+
 ```bash
 # Check logs for routing decisions
 grep "Content routed as" logs/*.log
@@ -249,6 +265,7 @@ grep "Loaded thresholds for content type" logs/*.log
 ### Automated Testing
 
 **Unit Tests Needed** (Week 2):
+
 - Test content type classification accuracy
 - Test threshold loading from config
 - Test routing phase integration
@@ -262,6 +279,7 @@ grep "Loaded thresholds for content type" logs/*.log
 **Next**: Early Exit Conditions Integration
 
 **Tasks**:
+
 1. Create `config/early_exit.yaml`
 2. Add checkpoint methods to pipeline
 3. Implement exit decision logic
@@ -275,10 +293,12 @@ grep "Loaded thresholds for content type" logs/*.log
 ## 📊 Repository Status
 
 **Commits Added**: 2
+
 - `d5b8814`: Content routing implementation (315 lines)
 - `b2230d6`: Documentation formatting
 
 **Files Changed**: 6
+
 - **New**: `config/content_types.yaml` (147 lines)
 - **Modified**: `orchestrator.py` (+108 lines, -13 lines)
 - **Modified**: `content_quality_assessment_tool.py` (+32 lines, -11 lines)
@@ -287,6 +307,7 @@ grep "Loaded thresholds for content type" logs/*.log
 **Total Impact**: +295 net lines
 
 **Git Status**:
+
 - Latest Commit: `b2230d6`
 - Branch: `main`
 - Remote: Up to date with `origin/main`
@@ -299,6 +320,7 @@ grep "Loaded thresholds for content type" logs/*.log
 **Week 1**: ✅ **COMPLETE**
 
 All objectives met:
+
 - Content type routing fully integrated
 - 6 content type profiles configured
 - Dynamic threshold loading implemented

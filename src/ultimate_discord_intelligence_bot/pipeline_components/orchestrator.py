@@ -179,9 +179,7 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
             pipeline = routing_data.get("routing", {}).get("pipeline", "standard_pipeline")
 
             # Log routing decision
-            self.logger.info(
-                f"Content routed as '{content_type}' (confidence: {confidence:.2f}, pipeline: {pipeline})"
-            )
+            self.logger.info(f"Content routed as '{content_type}' (confidence: {confidence:.2f}, pipeline: {pipeline})")
             ctx.span.set_attribute("content_type", content_type)
             ctx.span.set_attribute("routing_confidence", confidence)
             ctx.span.set_attribute("routing_pipeline", pipeline)
@@ -289,7 +287,7 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
 
             # Create quality tool with content-type specific thresholds
             quality_tool = ContentQualityAssessmentTool()
-            
+
             # Pass transcript with content-type thresholds
             quality_input = {
                 "transcript": transcript,
