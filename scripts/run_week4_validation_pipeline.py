@@ -54,7 +54,7 @@ class Week4PipelineValidator:
             pipeline = ContentPipeline()
             start = time.time()
             try:
-                result = await pipeline.run(url=self.url)
+                result = await pipeline.process_video(url=self.url)
                 duration = time.time() - start
                 times.append(duration)
                 success = result.get("success", True) if isinstance(result, dict) else True
@@ -84,7 +84,7 @@ class Week4PipelineValidator:
             pipeline = ContentPipeline()
             start = time.time()
             try:
-                result = await pipeline.run(url=self.url)
+                result = await pipeline.process_video(url=self.url)
                 duration = time.time() - start
                 times.append(duration)
 
@@ -127,7 +127,7 @@ class Week4PipelineValidator:
             pipeline = ContentPipeline()
             start = time.time()
             try:
-                result = await pipeline.run(url=self.url)
+                result = await pipeline.process_video(url=self.url)
                 duration = time.time() - start
                 times.append(duration)
 
@@ -170,7 +170,7 @@ class Week4PipelineValidator:
             pipeline = ContentPipeline()
             start = time.time()
             try:
-                result = await pipeline.run(url=self.url)
+                result = await pipeline.process_video(url=self.url)
                 duration = time.time() - start
                 times.append(duration)
 
@@ -216,7 +216,7 @@ class Week4PipelineValidator:
             pipeline = ContentPipeline()
             start = time.time()
             try:
-                result = await pipeline.run(url=self.url)
+                result = await pipeline.process_video(url=self.url)
                 duration = time.time() - start
                 times.append(duration)
 
@@ -262,7 +262,7 @@ class Week4PipelineValidator:
     async def run_all_tests(self):
         """Run all validation tests."""
         print(f"{'=' * 70}")
-        print(f"Week 4 Validation Suite - ContentPipeline Method")
+        print("Week 4 Validation Suite - ContentPipeline Method")
         print(f"URL: {self.url}")
         print(f"Iterations: {self.iterations}")
         print(f"{'=' * 70}\n")
