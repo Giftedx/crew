@@ -124,13 +124,16 @@ cat WEEK4_VALIDATION_SUMMARY.md
 **Next Action**: Review configuration files and apply threshold adjustments per `docs/WEEK4_VALIDATION_RESULTS_ANALYSIS.md` recommendations.
 
 # Run pipeline to generate metrics
+
 export ENABLE_QUALITY_FILTERING=1
 export ENABLE_CONTENT_ROUTING=1
 export ENABLE_EARLY_EXIT=1
 python -m ultimate_discord_intelligence_bot.setup_cli run discord
 
 # Access dashboard
-open http://localhost:8000/dashboard
+
+open <http://localhost:8000/dashboard>
+
 ```
 
 ---
