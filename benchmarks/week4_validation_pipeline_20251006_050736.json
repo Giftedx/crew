@@ -1,0 +1,62 @@
+{
+  "timestamp": "2025-10-06T05:04:45.518986",
+  "url": "https://www.youtube.com/watch?v=xtFiJ8AVdW0",
+  "iterations": 1,
+  "validation_method": "ContentPipeline",
+  "tests": {
+    "baseline": {
+      "times": [
+        34.51247954368591
+      ],
+      "average": 34.51247954368591,
+      "iterations": 1
+    },
+    "quality_filtering": {
+      "times": [
+        34.51079535484314
+      ],
+      "average": 34.51079535484314,
+      "iterations": 1,
+      "bypass_count": 0,
+      "bypass_rate": 0.0,
+      "improvement_percent": 0.00487994158936506
+    },
+    "content_routing": {
+      "times": [
+        34.02457785606384
+      ],
+      "average": 34.02457785606384,
+      "iterations": 1,
+      "routes_used": [
+        "standard"
+      ],
+      "improvement_percent": 1.413696419593626
+    },
+    "early_exit": {
+      "times": [
+        33.69641900062561
+      ],
+      "average": 33.69641900062561,
+      "iterations": 1,
+      "exit_count": 0,
+      "exit_rate": 0.0,
+      "improvement_percent": 2.364537563947942
+    },
+    "combined": {
+      "times": [
+        33.757893085479736
+      ],
+      "average": 33.757893085479736,
+      "iterations": 1,
+      "bypass_count": 0,
+      "bypass_rate": 0.0,
+      "exit_count": 0,
+      "exit_rate": 0.0,
+      "routes_used": [
+        "standard"
+      ],
+      "improvement_percent": 2.1864162418438258
+    }
+  },
+  "combined_improvement": 2.1864162418438258
+}
