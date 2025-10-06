@@ -172,6 +172,7 @@ thresholds:
 ```
 
 **Tuning Tips**:
+
 - Lower `min_overall` (0.60) for more aggressive bypassing
 - Raise `min_overall` (0.70) for conservative filtering
 - Monitor dashboard quality score trends
@@ -192,6 +193,7 @@ content_types:
 ```
 
 **Tuning Tips**:
+
 - Adjust `processing_mode` per content type
 - Add custom types in `custom_types` section
 - Monitor content type bypass rates in dashboard
@@ -211,6 +213,7 @@ checkpoints:
 ```
 
 **Tuning Tips**:
+
 - Adjust `min_confidence` per checkpoint
 - Add/remove exit conditions
 - Monitor checkpoint exit rates in dashboard
@@ -439,11 +442,13 @@ logs/dashboard.log    # Dashboard API
 ### Dashboard Not Recording Metrics
 
 **Symptoms**:
+
 - Total processed = 0
 - No content types shown
 - No checkpoint data
 
 **Diagnosis**:
+
 ```bash
 # Check flag is set
 echo $ENABLE_DASHBOARD_METRICS
@@ -456,6 +461,7 @@ grep "dashboard" logs/*.log
 ```
 
 **Solution**:
+
 ```bash
 export ENABLE_DASHBOARD_METRICS=1
 export DASHBOARD_API_URL=http://localhost:8000
@@ -467,11 +473,13 @@ python -m ultimate_discord_intelligence_bot.setup_cli run discord
 ### Bypass Rate Too Low
 
 **Symptoms**:
+
 - Bypass rate < 50%
 - Most content going through full processing
 - Low time savings
 
 **Diagnosis**:
+
 ```bash
 # Check quality filtering is enabled
 echo $ENABLE_QUALITY_FILTERING
@@ -484,6 +492,7 @@ grep "processing_mode" config/content_routing.yaml
 ```
 
 **Solution**:
+
 ```yaml
 # In config/quality_filtering.yaml
 thresholds:
@@ -497,11 +506,13 @@ default_routing:
 ### Quality Score Degrading
 
 **Symptoms**:
+
 - Quality score < 0.70
 - Dashboard shows red alert
 - User complaints about output quality
 
 **Diagnosis**:
+
 ```bash
 # Check content type distribution
 curl http://localhost:8000/api/performance/content-types | jq
@@ -511,6 +522,7 @@ grep "lightweight" logs/pipeline.log | wc -l
 ```
 
 **Solution**:
+
 ```yaml
 # In config/quality_filtering.yaml
 thresholds:
@@ -525,11 +537,13 @@ content_types:
 ### Early Exits Not Working
 
 **Symptoms**:
+
 - Early exit rate = 0%
 - All non-bypassed going to full processing
 - No checkpoint analytics data
 
 **Diagnosis**:
+
 ```bash
 # Check flag
 echo $ENABLE_EARLY_EXIT
@@ -542,6 +556,7 @@ grep "early_exit" logs/pipeline.log
 ```
 
 **Solution**:
+
 ```bash
 export ENABLE_EARLY_EXIT=1
 
@@ -552,11 +567,13 @@ python -m ultimate_discord_intelligence_bot.setup_cli run discord
 ### Dashboard API Errors
 
 **Symptoms**:
+
 - 500 errors on dashboard
 - POST /api/performance/record failing
 - Metrics not updating
 
 **Diagnosis**:
+
 ```bash
 # Check server logs
 tail -f logs/dashboard.log
@@ -566,6 +583,7 @@ curl -X POST "http://localhost:8000/api/performance/record?processing_type=full&
 ```
 
 **Solution**:
+
 ```bash
 # Restart dashboard server
 pkill -f uvicorn
@@ -581,18 +599,21 @@ uvicorn server.app:create_app --factory --port 8000
 **Goal**: Collect 48 hours of production baseline metrics
 
 **Actions**:
+
 1. Deploy with all features enabled
 2. Run normal workload
 3. Monitor dashboard every 6 hours
 4. Export metrics snapshots
 
 **Success Criteria**:
+
 - ✅ 100+ items processed
 - ✅ 3+ content types observed
 - ✅ All checkpoints tested
 - ✅ No critical errors
 
 **Export Metrics**:
+
 ```bash
 # Every 6 hours, save snapshot
 curl http://localhost:8000/api/performance/ > metrics_$(date +%Y%m%d_%H%M).json
@@ -603,6 +624,7 @@ curl http://localhost:8000/api/performance/ > metrics_$(date +%Y%m%d_%H%M).json
 **Goal**: Optimize thresholds based on collected data
 
 **Analysis**:
+
 ```bash
 # Analyze metrics
 cd benchmarks
@@ -613,6 +635,7 @@ python recommend_thresholds.py
 ```
 
 **Tuning Process**:
+
 1. Review content type bypass rates
 2. Adjust `min_overall` if needed
 3. Review checkpoint exit rates
@@ -622,6 +645,7 @@ python recommend_thresholds.py
 7. Iterate if needed
 
 **Example Adjustments**:
+
 ```yaml
 # Before (conservative)
 thresholds:
@@ -643,6 +667,7 @@ checkpoints:
 **Goal**: Validate optimal configuration
 
 **Setup**:
+
 ```bash
 # Group A: Conservative (50% of traffic)
 export QUALITY_MIN_OVERALL=0.70
@@ -656,12 +681,14 @@ export CONFIG_VERSION=aggressive
 ```
 
 **Comparison Metrics**:
+
 - Time savings difference
 - Quality score difference
 - User satisfaction (if tracked)
 - Error rate
 
 **Decision Criteria**:
+
 - If quality_diff < 0.05 AND time_savings_diff > 0.05: Choose aggressive
 - If quality_diff > 0.05: Choose conservative
 - Else: Choose balanced
@@ -671,6 +698,7 @@ export CONFIG_VERSION=aggressive
 **Goal**: Document optimal production settings
 
 **Deliverables**:
+
 1. **optimal_config.yaml**: Final tuned configuration
 2. **deployment_guide.md**: Updated with findings
 3. **troubleshooting_runbooks.md**: Common issues and fixes
@@ -681,6 +709,7 @@ export CONFIG_VERSION=aggressive
 **Goal**: Set up production monitoring alerts
 
 **Implementation**:
+
 ```python
 # In server/routers/performance_dashboard.py
 # Add alert checking logic
@@ -701,6 +730,7 @@ def check_alerts(metrics):
 ```
 
 **Alert Channels**:
+
 - Dashboard UI indicators (red/yellow/green)
 - Log warnings
 - Slack notifications (optional)
@@ -751,6 +781,7 @@ This deployment guide provides everything needed to deploy Phase 2 optimizations
 **Expected Outcome**: **65-80% time reduction** while maintaining quality > 0.70
 
 **Next Steps**:
+
 1. Review prerequisites
 2. Choose deployment option (quick vs gradual)
 3. Start services

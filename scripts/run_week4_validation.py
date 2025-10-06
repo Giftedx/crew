@@ -50,9 +50,7 @@ class Week4Validator:
             orchestrator = AutonomousIntelligenceOrchestrator()
             start = time.time()
             try:
-                result = await orchestrator.execute_autonomous_intelligence_workflow(
-                    self.url, "experimental"
-                )
+                result = await orchestrator.execute_autonomous_intelligence_workflow(self.url, "experimental")
                 duration = time.time() - start
                 times.append(duration)
                 success = result.success if hasattr(result, "success") else True
@@ -62,7 +60,7 @@ class Week4Validator:
                 times.append(0)
 
         avg_time = sum(times) / len(times) if times else 0
-        print(f"  📊 Baseline average: {avg_time:.2f}s ({avg_time/60:.2f} min)\n")
+        print(f"  📊 Baseline average: {avg_time:.2f}s ({avg_time / 60:.2f} min)\n")
 
         return {"times": times, "average": avg_time, "iterations": self.iterations}
 
@@ -80,9 +78,7 @@ class Week4Validator:
             orchestrator = AutonomousIntelligenceOrchestrator()
             start = time.time()
             try:
-                result = await orchestrator.execute_autonomous_intelligence_workflow(
-                    self.url, "experimental"
-                )
+                result = await orchestrator.execute_autonomous_intelligence_workflow(self.url, "experimental")
                 duration = time.time() - start
                 times.append(duration)
                 success = result.success if hasattr(result, "success") else True
@@ -92,7 +88,7 @@ class Week4Validator:
                 times.append(0)
 
         avg_time = sum(times) / len(times) if times else 0
-        print(f"  📊 Quality filtering average: {avg_time:.2f}s ({avg_time/60:.2f} min)\n")
+        print(f"  📊 Quality filtering average: {avg_time:.2f}s ({avg_time / 60:.2f} min)\n")
 
         return {"times": times, "average": avg_time, "iterations": self.iterations}
 
@@ -110,9 +106,7 @@ class Week4Validator:
             orchestrator = AutonomousIntelligenceOrchestrator()
             start = time.time()
             try:
-                result = await orchestrator.execute_autonomous_intelligence_workflow(
-                    self.url, "experimental"
-                )
+                result = await orchestrator.execute_autonomous_intelligence_workflow(self.url, "experimental")
                 duration = time.time() - start
                 times.append(duration)
                 success = result.success if hasattr(result, "success") else True
@@ -122,7 +116,7 @@ class Week4Validator:
                 times.append(0)
 
         avg_time = sum(times) / len(times) if times else 0
-        print(f"  📊 Content routing average: {avg_time:.2f}s ({avg_time/60:.2f} min)\n")
+        print(f"  📊 Content routing average: {avg_time:.2f}s ({avg_time / 60:.2f} min)\n")
 
         return {"times": times, "average": avg_time, "iterations": self.iterations}
 
@@ -140,9 +134,7 @@ class Week4Validator:
             orchestrator = AutonomousIntelligenceOrchestrator()
             start = time.time()
             try:
-                result = await orchestrator.execute_autonomous_intelligence_workflow(
-                    self.url, "experimental"
-                )
+                result = await orchestrator.execute_autonomous_intelligence_workflow(self.url, "experimental")
                 duration = time.time() - start
                 times.append(duration)
                 success = result.success if hasattr(result, "success") else True
@@ -152,7 +144,7 @@ class Week4Validator:
                 times.append(0)
 
         avg_time = sum(times) / len(times) if times else 0
-        print(f"  📊 Early exit average: {avg_time:.2f}s ({avg_time/60:.2f} min)\n")
+        print(f"  📊 Early exit average: {avg_time:.2f}s ({avg_time / 60:.2f} min)\n")
 
         return {"times": times, "average": avg_time, "iterations": self.iterations}
 
@@ -170,9 +162,7 @@ class Week4Validator:
             orchestrator = AutonomousIntelligenceOrchestrator()
             start = time.time()
             try:
-                result = await orchestrator.execute_autonomous_intelligence_workflow(
-                    self.url, "experimental"
-                )
+                result = await orchestrator.execute_autonomous_intelligence_workflow(self.url, "experimental")
                 duration = time.time() - start
                 times.append(duration)
                 success = result.success if hasattr(result, "success") else True
@@ -182,7 +172,7 @@ class Week4Validator:
                 times.append(0)
 
         avg_time = sum(times) / len(times) if times else 0
-        print(f"  📊 Combined average: {avg_time:.2f}s ({avg_time/60:.2f} min)\n")
+        print(f"  📊 Combined average: {avg_time:.2f}s ({avg_time / 60:.2f} min)\n")
 
         return {"times": times, "average": avg_time, "iterations": self.iterations}
 
@@ -231,7 +221,7 @@ class Week4Validator:
         print("")
 
         baseline_avg = self.results["tests"]["baseline"]["average"]
-        print(f"Baseline: {baseline_avg:.2f}s ({baseline_avg/60:.2f} min)")
+        print(f"Baseline: {baseline_avg:.2f}s ({baseline_avg / 60:.2f} min)")
         print("")
 
         print("Improvements:")

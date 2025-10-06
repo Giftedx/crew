@@ -34,26 +34,31 @@
 ## 🎯 What We're Testing
 
 ### Baseline (Currently Running)
+
 - **Purpose**: Establish reference time without any optimizations
 - **Flags**: All disabled (ENABLE_QUALITY_FILTERING=0, etc.)
 - **Expected**: Full pipeline execution (~170s based on earlier tests)
 
 ### Quality Filtering (Next)
+
 - **Purpose**: Measure impact of quality-based bypass
 - **Flags**: ENABLE_QUALITY_FILTERING=1, others=0
 - **Expected**: ~75% improvement if content is low-quality (simulated: 75%)
 
 ### Content Routing (After Quality)
+
 - **Purpose**: Measure impact of content-type-based routing
 - **Flags**: ENABLE_CONTENT_ROUTING=1, others=0
 - **Expected**: ~16% improvement (simulated: 16.4%)
 
 ### Early Exit (After Routing)
+
 - **Purpose**: Measure impact of confidence-based early exits
 - **Flags**: ENABLE_EARLY_EXIT=1, others=0
 - **Expected**: ~20% improvement target (simulated: 8.7%, underperformed)
 
 ### Combined (Final Test)
+
 - **Purpose**: Measure total impact with all optimizations
 - **Flags**: All enabled (ENABLE_QUALITY_FILTERING=1, ENABLE_CONTENT_ROUTING=1, ENABLE_EARLY_EXIT=1)
 - **Expected**: ~65-75% improvement (simulated: 75%)
@@ -63,11 +68,13 @@
 ## 📁 Results Location
 
 Results will be saved to:
+
 ```
 benchmarks/week4_validation_YYYYMMDD_HHMMSS.json
 ```
 
 Log file:
+
 ```
 benchmarks/week4_real_validation_YYYYMMDD_HHMMSS.log
 ```
@@ -88,6 +95,7 @@ benchmarks/week4_real_validation_YYYYMMDD_HHMMSS.log
 ## 🔍 Monitoring
 
 To check progress:
+
 ```bash
 # View running log
 tail -f benchmarks/week4_real_validation_*.log
@@ -101,16 +109,19 @@ ls -lht benchmarks/week4_validation_*.json | head -1
 ## 📋 Next Steps After Completion
 
 ### If Combined ≥ 65% ✅
+
 1. Review quality scores
 2. Test with multiple content types
 3. **Deploy to production**
 
 ### If Combined 50-65% ⚙️
+
 1. Analyze which optimizations underperformed
 2. Tune thresholds in config files
 3. Re-run validation
 
 ### If Combined < 50% 🔍
+
 1. Review logs for errors
 2. Check feature flag activation
 3. Investigate unexpected behavior

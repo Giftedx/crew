@@ -125,6 +125,7 @@ class PipelineMetricsMixin:
         Failures are logged but don't affect the pipeline result.
         """
         import asyncio
+
         from ultimate_discord_intelligence_bot.pipeline_components.dashboard_metrics import (
             record_pipeline_metrics,
         )

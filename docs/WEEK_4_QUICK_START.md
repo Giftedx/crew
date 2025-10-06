@@ -89,6 +89,7 @@ Improvements:
 - **Target**: 65-80% combined improvement
 
 **Success Criteria**:
+
 - ✅ Combined improvement ≥ 65%
 - ✅ Quality score ≥ 0.70 (separate validation)
 - ✅ No errors during testing
@@ -98,11 +99,13 @@ Improvements:
 ## 📁 Results Location
 
 Results are saved to:
+
 ```
 benchmarks/week4_validation_YYYYMMDD_HHMMSS.json
 ```
 
 Example:
+
 ```json
 {
   "timestamp": "2025-10-06T12:00:00",
@@ -141,6 +144,7 @@ python scripts/week4_analysis.py benchmarks/
 ```
 
 This generates:
+
 - Performance comparison vs baseline
 - Configuration recommendations
 - Quality vs speed tradeoffs
@@ -161,6 +165,7 @@ cat benchmarks/ANALYSIS.md
 1. **Review quality scores** (ensure ≥ 0.70)
 2. **Test with multiple content types**
 3. **Deploy to production**:
+
    ```bash
    export ENABLE_QUALITY_FILTERING=1
    export ENABLE_CONTENT_ROUTING=1
@@ -194,6 +199,7 @@ cat benchmarks/ANALYSIS.md
 ### Test Takes Too Long
 
 **Solution**: Run with 1 iteration first:
+
 ```bash
 ./scripts/quick_week4_test.sh "URL" 1
 ```
@@ -201,6 +207,7 @@ cat benchmarks/ANALYSIS.md
 ### Imports Fail
 
 **Solution**: Ensure you're in the venv:
+
 ```bash
 source .venv/bin/activate
 ./scripts/quick_week4_test.sh
@@ -211,13 +218,15 @@ source .venv/bin/activate
 **Cause**: Errors during execution
 
 **Solution**: Check logs:
+
 ```bash
 grep ERROR logs/*.log
 ```
 
 ### Results Don't Match Expectations
 
-**Solution**: 
+**Solution**:
+
 1. Verify feature flags are being set (check script output)
 2. Ensure config files exist in `config/`
 3. Try different URL (current one may be edge case)
@@ -227,22 +236,26 @@ grep ERROR logs/*.log
 ## 📅 Week 4 Timeline
 
 **Days 1-2** (Current): Data Collection
+
 - ✅ Initial validation: 62.1% improvement
 - ⏳ Run comprehensive validation (3+ iterations)
 - ⏳ Test with multiple content types
 - ⏳ Validate quality scores
 
 **Days 3-4**: Threshold Tuning
+
 - Analyze aggregated results
 - Adjust configuration files
 - Re-validate with tuned settings
 
 **Day 5**: A/B Testing
+
 - Test 3 configuration profiles
 - Compare quality vs speed
 - Select optimal production config
 
 **Days 6-7**: Production Deployment
+
 - Deploy optimal configuration
 - Configure dashboard monitoring
 - Set up alerts

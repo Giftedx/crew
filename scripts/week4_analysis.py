@@ -11,10 +11,10 @@ Analyzes benchmark results from Week 4 testing and generates:
 
 import json
 import sys
-from pathlib import Path
-from datetime import datetime
-from typing import Dict, List, Any
 from collections import defaultdict
+from datetime import datetime
+from pathlib import Path
+from typing import Any
 
 
 class Week4Analyzer:
@@ -25,7 +25,7 @@ class Week4Analyzer:
         self.results_files = list(self.results_dir.glob("week4_results_*.json"))
         self.validation_files = list(self.results_dir.glob("week4_direct_validation_*.json"))
 
-    def load_results(self) -> List[Dict[str, Any]]:
+    def load_results(self) -> list[dict[str, Any]]:
         """Load all results files."""
         all_results = []
 
@@ -41,7 +41,7 @@ class Week4Analyzer:
 
         return all_results
 
-    def analyze_performance(self, results: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def analyze_performance(self, results: list[dict[str, Any]]) -> dict[str, Any]:
         """Analyze performance across all tests."""
         analysis = defaultdict(
             lambda: {
@@ -85,7 +85,7 @@ class Week4Analyzer:
 
         return dict(analysis)
 
-    def generate_recommendations(self, analysis: Dict[str, Any]) -> Dict[str, Any]:
+    def generate_recommendations(self, analysis: dict[str, Any]) -> dict[str, Any]:
         """Generate configuration recommendations based on analysis."""
         recommendations = {"deploy": [], "tune": [], "investigate": []}
 
@@ -123,7 +123,7 @@ class Week4Analyzer:
 
         return recommendations
 
-    def calculate_combined_impact(self, analysis: Dict[str, Any]) -> Dict[str, float]:
+    def calculate_combined_impact(self, analysis: dict[str, Any]) -> dict[str, float]:
         """Calculate projected combined impact of all optimizations."""
         # Get individual improvements
         quality_improvement = 0

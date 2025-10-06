@@ -18,12 +18,14 @@ The Week 4 validation test began executing:
 4. ✅ **Transcription Began**: AudioTranscriptionTool executed, ~4394 chars transcribed
 5. ⚠️ **Interrupted**: Test was stopped (Ctrl+C) before completion
 
-### Test Was Interrupted During:
+### Test Was Interrupted During
+
 - Baseline test execution (test 1 of 5)
 - Transcription phase (agent: Transcription & Index Engineer)
 - Before completing full pipeline and timing measurement
 
-### Tests Not Run:
+### Tests Not Run
+
 - ⏳ Quality filtering test (test 2/5)
 - ⏳ Content routing test (test 3/5)
 - ⏳ Early exit test (test 4/5)
@@ -56,6 +58,7 @@ The Week 4 validation test began executing:
 ### Why Was It Interrupted?
 
 Looking at the terminal output, the test was interrupted via **Ctrl+C** (signal 130) during:
+
 - Git commit operation that was trying to run simultaneously
 - Baseline test transcription phase
 
@@ -64,6 +67,7 @@ Looking at the terminal output, the test was interrupted via **Ctrl+C** (signal 
 The validation test was running in the terminal when a git commit command was attempted in the same terminal, causing the interruption.
 
 **Lesson**: Long-running validation tests should either:
+
 1. Run in background with proper process isolation
 2. Complete before running other terminal commands
 3. Save incremental results to avoid total data loss
@@ -85,6 +89,7 @@ The validation test was running in the terminal when a git commit command was at
 ### Downloaded File Can Be Reused
 
 The video file is already downloaded:
+
 ```
 /root/crew_data/Downloads/Twitch_Has_a_Major_Problem [xtFiJ8AVdW0].webm
 ```
@@ -98,6 +103,7 @@ This means a rerun will be **faster** since it can skip the download phase!
 ### Option 1: Quick Retry (Recommended)
 
 Run the test again immediately. It will be faster because:
+
 - Video already downloaded (skips download time ~30-60s)
 - Tools are warmed up
 - Agents are initialized
@@ -170,12 +176,14 @@ Improvements:
 ## 💡 Key Learnings
 
 ### What Worked ✅
+
 - Script execution and initialization
 - Agent creation and tool setup
 - Content download and transcription
 - File path handling
 
 ### What Needs Improvement ⚙️
+
 - Process isolation for long tests
 - Graceful handling of interrupts
 - Incremental result saving
@@ -213,6 +221,7 @@ Improvements:
 **Status**: Ready to retry ✅ | Video pre-downloaded 🎬 | Est. time: ~12 min ⏱️
 
 **Recommended command**:
+
 ```bash
 cd /home/crew && ./scripts/quick_week4_test.sh "https://www.youtube.com/watch?v=xtFiJ8AVdW0" 1
 ```

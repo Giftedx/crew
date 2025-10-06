@@ -47,21 +47,25 @@ Initial validation tests have been completed using **simulated tool testing** (d
 **Performance**: Exceptional - bypassed 100% of test content
 
 **Key Findings**:
+
 - **Bypass Rate**: 100% (5/5 items bypassed)
 - **Average Time**: 11.25s vs 45.0s baseline
 - **Time Savings**: 33.75s per item
 
 **Why It Works**:
+
 - All test content was low-quality (< 500 words, < 10 sentences)
 - Quality scores ranged from 0.59-0.62 (all below 0.65 threshold)
 - Fast bypass decisions (< 0.001s processing time)
 
 **Bypass Reasons**:
+
 1. Insufficient content (< 500 words)
 2. Fragmented content (< 10 sentences)
 3. Low overall quality score (< 0.65)
 
 **Quality Validation**:
+
 - ✅ All items correctly identified as low-quality
 - ✅ Bypass recommendations appropriate
 - ✅ Processing time negligible (< 1ms)
@@ -73,6 +77,7 @@ Initial validation tests have been completed using **simulated tool testing** (d
 **Performance**: Good - met target range
 
 **Key Findings**:
+
 - **Routing Decisions**:
   - Deep analysis: 2 items (educational, technology)
   - Fast summary: 1 item (news)
@@ -80,11 +85,13 @@ Initial validation tests have been completed using **simulated tool testing** (d
   - Standard: 1 item (general)
   
 **Time Impact by Route**:
+
 - News → Fast summary: 27s saved (2.5× speedup)
 - Entertainment → Light: 20s saved (1.8× speedup)
 - Educational → Deep: -5s (0.9× slower, but higher quality)
 
 **Routing Accuracy**:
+
 - ✅ 100% confidence on 4/5 items
 - ✅ Appropriate pipeline selection
 - ⚠️ Deep analysis routes took slightly longer (expected tradeoff)
@@ -96,22 +103,26 @@ Initial validation tests have been completed using **simulated tool testing** (d
 **Performance**: Below target - needs investigation
 
 **Key Findings**:
+
 - **Exit Rate**: 20% (3/15 stage checks)
 - **Average Time**: 41.1s vs 45.0s baseline
 - **Time Savings**: Only 3.9s per item
 
 **Why It Underperformed**:
+
 1. Only 20% of content triggered early exit (low confidence scores)
 2. Most items had confidence < 0.60 threshold at each stage
 3. Only news content met confidence thresholds
 
 **Successful Exits**:
+
 - Market Update (news):
   - Transcription stage: 0.63 confidence → 36s saved
   - Analysis stage: 0.78 confidence → 18s saved
   - Final stage: 0.72 confidence → 4.5s saved
 
 **Failed Exits** (12/15 checks):
+
 - Educational content: 0.43-0.58 confidence (too low)
 - Entertainment: 0.43-0.58 confidence (too low)
 - General: 0.40-0.55 confidence (too low)
@@ -127,16 +138,18 @@ Initial validation tests have been completed using **simulated tool testing** (d
 **Key Finding**: Combined result matched quality filtering alone (75%)
 
 **Why They Match**:
+
 - All 5 test items were bypassed by quality filtering
 - Once bypassed, routing and early exit don't apply
 - Combined = quality filtering dominates for low-quality content
 
 **Optimization Application**:
+
 - Quality bypass: 5/5 items (100%)
 - Routing: 0/5 items (bypassed first)
 - Early exit: 0/5 items (bypassed first)
 
-**Strategic Insight**: 
+**Strategic Insight**:
 Quality filtering provides the largest wins for low-quality content. For high-quality content that passes filtering, routing and early exit will provide additional gains.
 
 ---
@@ -175,6 +188,7 @@ Quality filtering provides the largest wins for low-quality content. For high-qu
 ### Immediate (Today)
 
 1. **Run Real Validation** using `scripts/run_week4_validation.py`:
+
    ```bash
    # Quick 1-iteration test (~5 minutes)
    ./scripts/quick_week4_test.sh "https://www.youtube.com/watch?v=xtFiJ8AVdW0" 1
@@ -229,6 +243,7 @@ Quality filtering provides the largest wins for low-quality content. For high-qu
 ### If Real Results Match Simulated (75%+)
 
 ✅ **Deploy to production** immediately with current settings:
+
 - `ENABLE_QUALITY_FILTERING=1`
 - `ENABLE_CONTENT_ROUTING=1`
 - `ENABLE_EARLY_EXIT=1`
@@ -238,6 +253,7 @@ Quality filtering provides the largest wins for low-quality content. For high-qu
 ### If Real Results 50-65%
 
 ⚙️ **Tune thresholds**:
+
 1. Lower quality threshold to 0.60 (more aggressive filtering)
 2. Lower early exit to 0.65 (earlier exits)
 3. Re-test and measure quality impact
@@ -245,6 +261,7 @@ Quality filtering provides the largest wins for low-quality content. For high-qu
 ### If Real Results < 50%
 
 🔍 **Investigate**:
+
 1. Check if optimizations are activating correctly
 2. Review logs for bypass/routing decisions
 3. Test with different content types
@@ -265,6 +282,7 @@ All tests used 5 low-quality synthetic items:
 5. **AI Philosophy**: 25 words, 2 sentences, 0.59 score
 
 **Important**: This is **worst-case content** (all low-quality). Real content will have a mix of quality levels, which should show:
+
 - Quality filtering: ~60% bypass rate (not 100%)
 - Content routing: More varied routing decisions
 - Early exit: Higher exit rate on confident content
@@ -288,6 +306,7 @@ cd /home/crew
 ```
 
 This will:
+
 1. Run 5 tests (baseline + 4 optimizations)
 2. Use real autonomous orchestrator
 3. Make real API calls
