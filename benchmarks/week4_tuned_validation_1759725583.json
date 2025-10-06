@@ -1,0 +1,28 @@
+{
+  "timestamp": 1759725444.5325959,
+  "url": "https://www.youtube.com/watch?v=xtFiJ8AVdW0",
+  "tuning_applied": {
+    "quality_min_overall": "0.55 (was 0.65)",
+    "min_exit_confidence": "0.70 (was 0.80)"
+  },
+  "tests": {
+    "baseline": {
+      "time": 36.72434449195862
+    },
+    "quality_filtering": {
+      "time": 34.6858115196228,
+      "improvement_percent": 5.550903632281809,
+      "threshold": 0.55
+    },
+    "early_exit": {
+      "time": 33.49868631362915,
+      "improvement_percent": 8.783432959670055,
+      "confidence_threshold": 0.7
+    },
+    "combined": {
+      "time": 34.27830624580383,
+      "improvement_percent": 6.660536164751379
+    }
+  },
+  "recommendation": "investigate"
+}
