@@ -9,12 +9,13 @@
 
 - **Script**: `scripts/simple_baseline_test.py`
 - **Test Type**: Baseline (no optimizations)
-- **URL**: https://www.youtube.com/watch?v=xtFiJ8AVdW0
+- **URL**: <https://www.youtube.com/watch?v=xtFiJ8AVdW0>
 - **Timeout**: 600 seconds (10 minutes)
 
 ## Configuration
 
 Optimization flags are explicitly disabled:
+
 ```bash
 ENABLE_QUALITY_FILTERING=0
 ENABLE_CONTENT_ROUTING=0
@@ -24,6 +25,7 @@ ENABLE_EARLY_EXIT=0
 ## Progress Tracking
 
 To check current status:
+
 ```bash
 # View terminal output
 tail -f benchmarks/baseline_test_*.json 2>/dev/null || echo "Test still running..."
@@ -45,12 +47,14 @@ ls -lth benchmarks/baseline_test_*.json | head -1
 ## Output
 
 Results will be saved to:
+
 - **JSON**: `benchmarks/baseline_test_<timestamp>.json`
 - **Metrics**: Execution time, bypass rates, routing decisions
 
 ## Next Steps
 
 Once baseline completes:
+
 1. Run quality filtering test
 2. Run content routing test
 3. Run early exit test
@@ -60,6 +64,7 @@ Once baseline completes:
 ## Interruption Recovery
 
 If test is interrupted:
+
 - Video may be cached in `crew_data/Downloads/`
 - Can resume with cached video
 - Transcription API calls may need retry
