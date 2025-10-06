@@ -29,11 +29,63 @@ class TestContentPipelineE2E:
             "platform": "youtube",
         }
 
-        # Mock transcriber
+        # Mock transcriber - Use a longer transcript to pass quality filtering (needs 500+ words, 10+ sentences)
         transcriber = MagicMock()
+        long_transcript = (
+            "This is a comprehensive test transcript with substantial content to analyze. "
+            "The speaker discusses various important topics in great detail throughout the presentation. "
+            "First, they introduce the main theme and provide essential background context. "
+            "Then, they explore multiple perspectives on the subject matter, offering nuanced insights. "
+            "The analysis includes both theoretical frameworks and practical applications. "
+            "Several key points are emphasized to help the audience understand the core concepts. "
+            "The presenter also addresses common misconceptions and clarifies complex ideas. "
+            "Throughout the discussion, evidence is provided to support the main arguments. "
+            "Multiple examples illustrate the principles being explained in the presentation. "
+            "The speaker connects these ideas to real-world scenarios and current events. "
+            "Additional context is provided about the historical development of these concepts. "
+            "The presentation builds upon foundational knowledge while introducing new insights. "
+            "Critical thinking is encouraged as the speaker explores different viewpoints. "
+            "The audience is guided through a logical progression of interconnected ideas. "
+            "Key terminology is defined clearly to ensure common understanding. "
+            "The speaker acknowledges limitations and areas requiring further research. "
+            "Practical implications are discussed for implementing these concepts effectively. "
+            "The presentation maintains academic rigor while remaining accessible to the audience. "
+            "Various stakeholders and their perspectives are considered in the analysis. "
+            "The speaker concludes by summarizing the main points and suggesting next steps. "
+            "This comprehensive approach ensures that the content meets quality standards for processing. "
+            "The transcript demonstrates coherent structure, topical clarity, and substantive depth. "
+            "All quality metrics should indicate this is high-quality content worthy of full analysis. "
+            "The word count exceeds the minimum threshold of five hundred words required. "
+            "Sentence count also surpasses the minimum of ten sentences needed for processing. "
+            "Language quality is maintained throughout with proper grammar and vocabulary. "
+            "Coherence between sentences creates a logical flow of information. "
+            "Topic clarity is evident as the speaker maintains focus on the central theme. "
+            "This ensures the content will bypass the lightweight processing path. "
+            "Instead, it will proceed through the complete pipeline for thorough analysis. "
+            "All downstream tools will receive this rich content for processing. "
+            "The analysis phase will extract sentiment, keywords, and generate insights. "
+            "Fallacy detection will examine the logical structure of the arguments. "
+            "Perspective synthesis will identify alternative viewpoints and considerations. "
+            "Memory storage will preserve this valuable content for future retrieval. "
+            "Graph memory will map relationships between concepts and entities. "
+            "Discord posting will share the complete analysis with the community. "
+            "Every pipeline stage will contribute to comprehensive content understanding. "
+            "This test validates the full end-to-end integration of all components. "
+            "The quality filtering mechanism correctly identifies this as high-quality content. "
+            "Processing continues through all stages without triggering lightweight bypass. "
+            "This ensures the test accurately reflects production pipeline behavior. "
+            "All assertions will verify the expected behavior of each pipeline component. "
+            "The test demonstrates the system's ability to handle substantial content effectively. "
+            "Integration between components is validated through this comprehensive test case. "
+            "The final result will include outputs from all pipeline stages as expected. "
+            "This transcript provides the foundation for thorough integration testing. "
+            "Quality thresholds are exceeded, ensuring full pipeline execution occurs. "
+            "The content is sufficiently rich to warrant complete analytical processing. "
+            "All quality metrics indicate this material deserves comprehensive treatment."
+        )
         transcriber.run.return_value = {
             "status": "success",
-            "transcript": "This is a test transcript with some content to analyze.",
+            "transcript": long_transcript,
         }
 
         # Mock analyzer
@@ -113,8 +165,11 @@ class TestContentPipelineE2E:
         )
 
     @pytest.mark.asyncio
-    async def test_complete_pipeline_success(self, pipeline):
+    async def test_complete_pipeline_success(self, pipeline, monkeypatch):
         """Test successful execution of the complete pipeline."""
+        # Disable quality filtering for this test to focus on pipeline integration
+        monkeypatch.setenv("ENABLE_QUALITY_FILTERING", "0")
+
         test_url = "https://www.youtube.com/watch?v=test123"
 
         with with_tenant(TenantContext("test_tenant", "test_workspace")):
@@ -143,7 +198,10 @@ class TestContentPipelineE2E:
         pipeline.memory.run.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_pipeline_graph_memory_enabled(self, mock_tools):
+    async def test_pipeline_graph_memory_enabled(self, mock_tools, monkeypatch):
+        # Disable quality filtering for this test to focus on graph memory integration
+        monkeypatch.setenv("ENABLE_QUALITY_FILTERING", "0")
+
         graph_memory = MagicMock()
         graph_memory.run.return_value = {
             "status": "success",
@@ -280,8 +338,11 @@ class TestContentPipelineE2E:
         assert processing_time < 0.18  # Allow some overhead
 
     @pytest.mark.asyncio
-    async def test_pipeline_tenant_isolation(self, pipeline):
+    async def test_pipeline_tenant_isolation(self, pipeline, monkeypatch):
         """Test that pipeline operations respect tenant isolation."""
+        # Disable quality filtering for this test to focus on tenant isolation
+        monkeypatch.setenv("ENABLE_QUALITY_FILTERING", "0")
+
         test_url = "https://www.youtube.com/watch?v=test123"
 
         # Test with tenant context

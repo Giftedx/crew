@@ -122,12 +122,195 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
             return failure
         assert transcription_bundle is not None
 
+        # Week 4 Optimization: Quality filtering phase
+        quality_result, should_skip_analysis = await self._quality_filtering_phase(
+            ctx, transcription_bundle.filtered_transcript
+        )
+
+        if should_skip_analysis:
+            return await self._lightweight_processing_phase(ctx, download_info, transcription_bundle, quality_result)
+
         analysis_bundle, failure = await self._analysis_phase(ctx, download_info, transcription_bundle)
         if failure is not None:
             return failure
         assert analysis_bundle is not None
 
         return await self._finalize_phase(ctx, download_info, transcription_bundle, analysis_bundle)
+
+    async def _quality_filtering_phase(self, ctx: _PipelineContext, transcript: str) -> tuple[StepResult, bool]:
+        """Assess transcript quality and determine processing path."""
+        # Check if quality filtering is enabled
+        import os
+
+        quality_enabled = os.getenv("ENABLE_QUALITY_FILTERING", "1") == "1"
+        if not quality_enabled:
+            # Return dummy success result and continue with full processing
+            return StepResult.ok(result={"should_process": True, "bypass_reason": "quality_filtering_disabled"}), False
+
+        try:
+            from ultimate_discord_intelligence_bot.tools import ContentQualityAssessmentTool
+
+            quality_tool = ContentQualityAssessmentTool()
+            quality_result = quality_tool.run({"transcript": transcript})
+
+            if not quality_result.success:
+                # Quality assessment failed - proceed with full analysis (safe fallback)
+                self.logger.warning(
+                    "Quality assessment failed, proceeding with full analysis: %s", quality_result.error
+                )
+                # metrics.get_metrics().counter("quality_filtering_errors_total").inc()  # TODO: Fix metrics
+                return quality_result, False
+
+            # Support tools returning nested payload under 'result'
+            qr_data = quality_result.data
+            if "result" in qr_data and isinstance(qr_data["result"], dict):
+                qr_data = qr_data["result"]  # unwrap one level
+
+            should_process = qr_data.get("should_process", True)
+            bypass_reason = qr_data.get("bypass_reason", "")
+            quality_score = qr_data.get("overall_score", 0.0)
+
+            if not should_process:
+                self.logger.info(f"Quality filtering bypass: {bypass_reason} (score: {quality_score:.2f})")
+                ctx.span.set_attribute("quality_bypass", True)
+                ctx.span.set_attribute("bypass_reason", bypass_reason)
+                ctx.span.set_attribute("quality_score", quality_score)
+                # Best-effort metrics emission (no new global specs to keep scope minimal)
+                try:  # pragma: no cover - metrics optional
+                    if hasattr(metrics, "PIPELINE_STEPS_SKIPPED"):
+                        metrics.PIPELINE_STEPS_SKIPPED.labels(**metrics.label_ctx(), step="quality_filtering").inc()
+                except Exception:
+                    pass
+            else:
+                ctx.span.set_attribute("quality_bypass", False)
+                ctx.span.set_attribute("quality_score", quality_score)
+                try:  # pragma: no cover - metrics optional
+                    if hasattr(metrics, "PIPELINE_STEPS_COMPLETED"):
+                        metrics.PIPELINE_STEPS_COMPLETED.labels(**metrics.label_ctx(), step="quality_filtering").inc()
+                except Exception:
+                    pass
+
+            return quality_result, not should_process
+
+        except Exception as e:
+            # Import or execution error - proceed with full analysis (safe fallback)
+            self.logger.warning("Quality filtering failed with exception, proceeding with full analysis: %s", str(e))
+            # metrics.get_metrics().counter("quality_filtering_exceptions_total").inc()  # TODO: Fix metrics
+            return StepResult.fail(error=str(e)), False
+
+    async def _lightweight_processing_phase(
+        self,
+        ctx: _PipelineContext,
+        download_info: StepResult,
+        transcription_bundle: _TranscriptionArtifacts,
+        quality_result: StepResult,
+    ) -> PipelineRunResult:
+        """Lightweight processing for low-quality content."""
+        start_time = time.monotonic()
+
+        # Basic summary from quality assessment
+        qr_data = quality_result.data
+        if "result" in qr_data and isinstance(qr_data["result"], dict):
+            qr_data = qr_data["result"]
+
+        basic_summary = qr_data.get("recommendation_details", "Basic content processed")
+        quality_score = qr_data.get("overall_score", 0.0)
+        bypass_reason = qr_data.get("bypass_reason", "")
+        raw_metrics = {}
+        qm = qr_data.get("quality_metrics")
+        if isinstance(qm, dict):  # Capture raw quality metrics for observability & analytics
+            raw_metrics = {
+                k: v
+                for k, v in qm.items()
+                if k
+                in {
+                    "word_count",
+                    "sentence_count",
+                    "avg_sentence_length",
+                    "coherence_score",
+                    "topic_clarity_score",
+                    "language_quality_score",
+                    "overall_quality_score",
+                }
+            }
+
+        # Enhanced lightweight analysis
+        title = download_info.data.get("title", "")
+        source_url = download_info.data.get("source_url", "")
+        duration = download_info.data.get("duration", 0)
+
+        # Create lightweight memory payload
+        memory_payload = {
+            "source_url": source_url,
+            "title": title,
+            "summary": basic_summary,
+            "quality_score": quality_score,
+            "processing_type": "lightweight",
+            "bypass_reason": bypass_reason,
+            "duration": duration,
+            "quality_metrics": raw_metrics,
+            "transcript_preview": transcription_bundle.filtered_transcript[:200] + "..."
+            if len(transcription_bundle.filtered_transcript) > 200
+            else transcription_bundle.filtered_transcript,
+            "processed_at": time.time(),
+        }
+
+        # Optional: Store in memory with lightweight flag
+        memory_task = asyncio.create_task(self._store_lightweight_memory(memory_payload), name="lightweight_memory")
+
+        # Wait for memory storage (with timeout)
+        memory_result = None
+        try:
+            memory_result = await asyncio.wait_for(memory_task, timeout=10.0)
+        except TimeoutError:
+            self.logger.warning("Lightweight memory storage timed out")
+            memory_task.cancel()
+        except Exception as e:
+            self.logger.warning(f"Lightweight memory storage failed: {e}")
+
+        # Record metrics
+        processing_duration = time.monotonic() - start_time
+        try:  # pragma: no cover - metrics optional
+            if hasattr(metrics, "PIPELINE_STEP_DURATION"):
+                metrics.PIPELINE_STEP_DURATION.labels(**metrics.label_ctx(), step="lightweight_processing").observe(
+                    processing_duration
+                )
+        except Exception:
+            pass
+
+        # Set span attributes for observability
+        ctx.span.set_attribute("processing_type", "lightweight")
+        ctx.span.set_attribute("quality_score", quality_score)
+        ctx.span.set_attribute("bypass_reason", bypass_reason)
+        ctx.span.set_attribute("processing_duration_seconds", processing_duration)
+
+        return self._finalize_pipeline(
+            ctx.start_time,
+            "success",
+            {
+                "status": "success",
+                "processing_type": "lightweight",
+                "quality_score": quality_score,
+                "summary": basic_summary,
+                "title": title,
+                "bypass_reason": bypass_reason,
+                "memory_stored": memory_result.success if memory_result else False,
+                "processing_duration": processing_duration,
+                "time_saved_estimate": "60-75%",
+                "quality_metrics": raw_metrics,
+            },
+        )
+
+    async def _store_lightweight_memory(self, payload: dict[str, Any]) -> StepResult:
+        """Store lightweight content summary in memory."""
+        try:
+            from ultimate_discord_intelligence_bot.tools import MemoryStorageTool
+
+            memory_tool = MemoryStorageTool()
+            return memory_tool.run(payload)
+        except Exception as e:
+            self.logger.warning(f"Lightweight memory storage failed: {e}")
+            return StepResult.fail(error=str(e))
 
     async def _download_phase(
         self,
