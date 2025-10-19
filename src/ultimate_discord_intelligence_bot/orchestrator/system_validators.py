@@ -157,3 +157,38 @@ def check_discord_available() -> bool:
     valid_webhook = webhook and not any(pattern in webhook for pattern in dummy_patterns)
 
     return valid_token or valid_webhook
+
+
+def get_system_health(
+    error_handler: Any = None, last_successful_stage: str | None = None, logger_instance: Any = None
+) -> dict[str, Any]:
+    """Get current system health metrics for error analysis.
+
+    Args:
+        error_handler: Optional error handler with error_history attribute
+        last_successful_stage: Optional name of last successful stage
+        logger_instance: Optional logger for warnings
+
+    Returns:
+        Dictionary with system health metrics
+    """
+    try:
+        health_data = {
+            "memory_usage": "normal",  # Could integrate with actual system monitoring
+            "cpu_usage": "normal",
+            "active_connections": "stable",
+            "error_rate": 0,
+            "uptime": "healthy",
+            "last_successful_stage": last_successful_stage,
+        }
+
+        # Include error history if available
+        if error_handler and hasattr(error_handler, "error_history"):
+            health_data["error_rate"] = len(error_handler.error_history)
+
+        return health_data
+
+    except Exception as e:
+        if logger_instance:
+            logger_instance.warning(f"Could not get system health: {e}")
+        return {"status": "unknown", "error": str(e)}

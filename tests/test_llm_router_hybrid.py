@@ -1,7 +1,7 @@
 import importlib
 import os
 
-from core.llm_router import LLMRouter
+from ultimate_discord_intelligence_bot.core.llm_router import LLMRouter
 
 
 class DummyClient:

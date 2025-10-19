@@ -292,7 +292,6 @@ class Week4BenchmarkRunner:
                 continue
 
             durations = [r["duration_seconds"] for r in successful_results]
-            durations_min = [d / 60 for d in durations]
 
             # Basic statistics
             mean_duration = sum(durations) / len(durations)

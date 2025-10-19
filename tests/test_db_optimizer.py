@@ -4,7 +4,7 @@ import asyncio
 
 import pytest
 
-from src.core.db_optimizer import (
+from ultimate_discord_intelligence_bot.core.db_optimizer import (
     ConnectionPoolMetrics,
     ConnectionPoolOptimizer,
     DatabaseOptimizer,

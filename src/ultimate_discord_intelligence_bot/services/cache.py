@@ -12,7 +12,6 @@ try:  # optional Redis-backed cache adapter
 except Exception:  # pragma: no cover
     RedisCache = None
 
-
 LLMCache = create_llm_cache()
 
 
@@ -21,7 +20,9 @@ def make_key(prompt: str, model: str) -> str:
     return f"{model}:{digest}"
 
 
-class RedisLLMCache(BoundedLRUCache):  # pragma: no cover - networked cache, exercised in integration
+class RedisLLMCache(
+    BoundedLRUCache
+):  # pragma: no cover - networked cache, exercised in integration
     """LLMCache-compatible adapter backed by Redis."""
 
     def __init__(self, url: str, ttl: int = 300, namespace: str = "llm") -> None:

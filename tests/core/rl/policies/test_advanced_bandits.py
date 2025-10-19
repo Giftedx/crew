@@ -2,7 +2,7 @@
 
 import pytest
 
-from core.rl.policies.advanced_bandits import DoublyRobustBandit, OffsetTreeBandit
+from ultimate_discord_intelligence_bot.core.rl.policies.advanced_bandits import DoublyRobustBandit, OffsetTreeBandit
 
 
 class TestDoublyRobustBandit:

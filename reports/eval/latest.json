@@ -1,0 +1,27 @@
+{
+  "summarize": {
+    "quality": 1.0,
+    "cost_usd": 0.0,
+    "latency_ms": 0.0
+  },
+  "rag_qa": {
+    "quality": 1.0,
+    "cost_usd": 0.0,
+    "latency_ms": 0.0
+  },
+  "tool_tasks": {
+    "quality": 1.0,
+    "cost_usd": 0.0,
+    "latency_ms": 0.0
+  },
+  "classification": {
+    "quality": 1.0,
+    "cost_usd": 0.0,
+    "latency_ms": 0.0
+  },
+  "claimcheck": {
+    "quality": 1.0,
+    "cost_usd": 0.0,
+    "latency_ms": 0.0
+  }
+}

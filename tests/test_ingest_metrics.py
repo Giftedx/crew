@@ -1,9 +1,14 @@
 from __future__ import annotations
 
+import sys
 import types
+from pathlib import Path
 
-from ingest import pipeline as ip
-from obs import metrics
+sys.path.insert(0, str(Path(__file__).parents[1] / "src"))
+
+from ultimate_discord_intelligence_bot.ingest import pipeline as ip
+
+from ultimate_discord_intelligence_bot.obs import metrics
 
 
 class _CounterStub:
@@ -32,8 +37,12 @@ def test_ingest_transcript_fallback_metric(monkeypatch):
 
     store = types.SimpleNamespace(upsert=lambda ns, recs: None)
     # Stub whisper fallback to avoid file IO
-    monkeypatch.setattr(ip.transcribe, "run_whisper", lambda path: types.SimpleNamespace(segments=[]))
-    job = ip.IngestJob(source="youtube", external_id="e", url="u", tenant="t", workspace="w", tags=[])
+    monkeypatch.setattr(
+        ip.transcribe, "run_whisper", lambda path: types.SimpleNamespace(segments=[])
+    )
+    job = ip.IngestJob(
+        source="youtube", external_id="e", url="u", tenant="t", workspace="w", tags=[]
+    )
     ip.run(job, store)
 
     assert stub.incs == 1
@@ -52,7 +61,9 @@ def test_ingest_missing_id_fallback_metric(monkeypatch):
     monkeypatch.setattr(metrics, "INGEST_MISSING_ID_FALLBACKS", stub)
 
     store = types.SimpleNamespace(upsert=lambda ns, recs: None)
-    job = ip.IngestJob(source="twitch", external_id="e", url="u", tenant="t", workspace="w", tags=[])
+    job = ip.IngestJob(
+        source="twitch", external_id="e", url="u", tenant="t", workspace="w", tags=[]
+    )
     ip.run(job, store)
 
     assert stub.incs == 1

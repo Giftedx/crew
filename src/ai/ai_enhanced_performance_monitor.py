@@ -52,7 +52,9 @@ class EnhancedPerformanceReport(AgentPerformanceReport):
     """Extended performance report with AI routing intelligence."""
 
     ai_routing_metrics: BaseAIRoutingMetrics | None = None
-    model_usage_distribution: dict[str, dict[str, float | int]] = field(default_factory=dict)
+    model_usage_distribution: dict[str, dict[str, float | int]] = field(
+        default_factory=dict
+    )
     optimization_insights: dict[str, Any] = field(default_factory=dict)
     routing_recommendations: list[str] = field(default_factory=list)
 
@@ -97,9 +99,11 @@ class AIEnhancedPerformanceMonitor(AgentPerformanceMonitor):
             logger.info("✅ Adaptive AI router initialized")
 
             try:
-                from ai.ab_testing_framework import AIRouterABTester as _AIRouterABTester
+                from ai.ab_testing_framework import (
+                    AIRouterABTester as _AIRouterABTester,
+                )
 
-                self.ab_tester = _AIRouterABTester()  # type: ignore[no-untyped-call]
+                self.ab_tester = _AIRouterABTester()
                 logger.info("✅ A/B testing framework initialized")
             except Exception:
                 self.ab_tester = None
@@ -123,14 +127,22 @@ class AIEnhancedPerformanceMonitor(AgentPerformanceMonitor):
         """Record an AI routing interaction with enhanced metrics."""
 
         # Record standard interaction
-        tools_used = [f"ai_router_{routing_strategy}", f"model_{selected_model.split('/')[-1]}"]
+        tools_used = [
+            f"ai_router_{routing_strategy}",
+            f"model_{selected_model.split('/')[-1]}",
+        ]
         tool_sequence = [
             {"tool": f"ai_router_{routing_strategy}", "action": "model_selection"},
-            {"tool": f"model_{selected_model.split('/')[-1]}", "action": "generate_response"},
+            {
+                "tool": f"model_{selected_model.split('/')[-1]}",
+                "action": "generate_response",
+            },
         ]
 
         quality_score = actual_metrics.get("quality", 0.0)
-        response_time = actual_metrics.get("latency_ms", 0.0) / 1000.0  # Convert to seconds
+        response_time = (
+            actual_metrics.get("latency_ms", 0.0) / 1000.0
+        )  # Convert to seconds
 
         # Record standard interaction
         self.record_agent_interaction(
@@ -156,9 +168,11 @@ class AIEnhancedPerformanceMonitor(AgentPerformanceMonitor):
             "expected_metrics": expected_metrics,
             "actual_metrics": actual_metrics,
             "performance_delta": {
-                "latency": actual_metrics.get("latency_ms", 0) - expected_metrics.get("latency_ms", 0),
+                "latency": actual_metrics.get("latency_ms", 0)
+                - expected_metrics.get("latency_ms", 0),
                 "cost": actual_metrics.get("cost", 0) - expected_metrics.get("cost", 0),
-                "quality": actual_metrics.get("quality", 0) - expected_metrics.get("quality", 0),
+                "quality": actual_metrics.get("quality", 0)
+                - expected_metrics.get("quality", 0),
             },
             "fallback_used": fallback_used,
             "user_feedback": user_feedback or {},
@@ -179,7 +193,9 @@ class AIEnhancedPerformanceMonitor(AgentPerformanceMonitor):
                 success=bool(actual_metrics.get("success", True)),
                 quality_score=quality_score,
                 task_type=task_type,
-                user_feedback=user_feedback.get("satisfaction") if user_feedback else None,
+                user_feedback=user_feedback.get("satisfaction")
+                if user_feedback
+                else None,
             )
 
         logger.info(
@@ -187,7 +203,9 @@ class AIEnhancedPerformanceMonitor(AgentPerformanceMonitor):
             f"(confidence: {routing_confidence:.2f}, quality: {quality_score:.2f})"
         )
 
-    def _update_model_performance_cache(self, model: str, metrics: dict[str, float]) -> None:
+    def _update_model_performance_cache(
+        self, model: str, metrics: dict[str, float]
+    ) -> None:
         """Update cached model performance for quick access."""
         if model not in self.model_performance_cache:
             self.model_performance_cache[model] = {
@@ -215,7 +233,9 @@ class AIEnhancedPerformanceMonitor(AgentPerformanceMonitor):
 
         cache["last_updated"] = default_utc_now().isoformat()
 
-    def calculate_ai_routing_metrics(self, agent_name: str, days: int = 30) -> BaseAIRoutingMetrics | None:
+    def calculate_ai_routing_metrics(
+        self, agent_name: str, days: int = 30
+    ) -> BaseAIRoutingMetrics | None:
         """Calculate comprehensive AI routing performance metrics."""
         cutoff_date = default_utc_now() - timedelta(days=days)
 
@@ -250,7 +270,11 @@ class AIEnhancedPerformanceMonitor(AgentPerformanceMonitor):
         fallback_count = 0
 
         # Performance tracking
-        optimization_scores: dict[str, list[float]] = {"cost": [], "latency": [], "quality": []}
+        optimization_scores: dict[str, list[float]] = {
+            "cost": [],
+            "latency": [],
+            "quality": [],
+        }
         accuracy_samples: list[float] = []
         model_usage_counts: dict[str, int] = {}
 
@@ -271,12 +295,16 @@ class AIEnhancedPerformanceMonitor(AgentPerformanceMonitor):
 
             # Cost optimization (lower actual cost vs expected = better)
             if expected.get("cost", 0) > 0:
-                cost_ratio = min(1.0, expected["cost"] / max(actual.get("cost", 0.001), 0.001))
+                cost_ratio = min(
+                    1.0, expected["cost"] / max(actual.get("cost", 0.001), 0.001)
+                )
                 optimization_scores["cost"].append(cost_ratio)
 
             # Latency optimization (lower actual latency vs expected = better)
             if expected.get("latency_ms", 0) > 0:
-                latency_ratio = min(1.0, expected["latency_ms"] / max(actual.get("latency_ms", 1), 1))
+                latency_ratio = min(
+                    1.0, expected["latency_ms"] / max(actual.get("latency_ms", 1), 1)
+                )
                 optimization_scores["latency"].append(latency_ratio)
 
             # Quality optimization (higher actual quality vs expected = better)
@@ -292,14 +320,20 @@ class AIEnhancedPerformanceMonitor(AgentPerformanceMonitor):
 
         # Calculate metrics
         primary_strategy = (
-            max(strategy_counts.keys(), key=lambda k: strategy_counts[k]) if strategy_counts else "unknown"
+            max(strategy_counts.keys(), key=lambda k: strategy_counts[k])
+            if strategy_counts
+            else "unknown"
         )
         avg_confidence = total_confidence / len(ai_interactions)
         # fallback_rate intentionally not computed for base metrics compatibility
 
-        model_accuracy = sum(accuracy_samples) / len(accuracy_samples) if accuracy_samples else 0.0
+        model_accuracy = (
+            sum(accuracy_samples) / len(accuracy_samples) if accuracy_samples else 0.0
+        )
         cost_score = (
-            sum(optimization_scores["cost"]) / len(optimization_scores["cost"]) if optimization_scores["cost"] else 0.0
+            sum(optimization_scores["cost"]) / len(optimization_scores["cost"])
+            if optimization_scores["cost"]
+            else 0.0
         )
         latency_score = (
             sum(optimization_scores["latency"]) / len(optimization_scores["latency"])
@@ -338,7 +372,11 @@ class AIEnhancedPerformanceMonitor(AgentPerformanceMonitor):
 
         # Compare average performance
         def avg_performance(group: list[dict[str, Any]]) -> float:
-            scores = [float(i["actual_metrics"].get("quality", 0)) * float(i["routing_confidence"]) for i in group]
+            scores = [
+                float(i["actual_metrics"].get("quality", 0))
+                * float(i["routing_confidence"])
+                for i in group
+            ]
             return float(sum(scores) / len(scores)) if scores else 0.0
 
         first_perf = avg_performance(first_quarter)
@@ -350,7 +388,9 @@ class AIEnhancedPerformanceMonitor(AgentPerformanceMonitor):
 
         return 0.0
 
-    def analyze_model_usage_patterns(self, agent_name: str, days: int = 30) -> dict[str, Any]:
+    def analyze_model_usage_patterns(
+        self, agent_name: str, days: int = 30
+    ) -> dict[str, Any]:
         """Analyze model usage patterns and effectiveness."""
         cutoff_date = default_utc_now() - timedelta(days=days)
 
@@ -387,7 +427,8 @@ class AIEnhancedPerformanceMonitor(AgentPerformanceMonitor):
                 model_performance[model] = {
                     "usage_count": data["count"],
                     "usage_percentage": data["count"] / len(ai_interactions) * 100,
-                    "avg_quality": sum(data["quality_scores"]) / len(data["quality_scores"]),
+                    "avg_quality": sum(data["quality_scores"])
+                    / len(data["quality_scores"]),
                     "avg_cost": sum(data["costs"]) / len(data["costs"]),
                     "avg_latency": sum(data["latencies"]) / len(data["latencies"]),
                     "quality_std": self._calculate_std(data["quality_scores"]),
@@ -397,11 +438,20 @@ class AIEnhancedPerformanceMonitor(AgentPerformanceMonitor):
             "total_interactions": len(ai_interactions),
             "unique_models_used": len(model_usage),
             "model_performance": model_performance,
-            "most_used_model": max(model_usage.keys(), key=lambda m: model_usage[m]["count"]) if model_usage else None,
-            "best_quality_model": max(model_performance.keys(), key=lambda m: model_performance[m]["avg_quality"])
+            "most_used_model": max(
+                model_usage.keys(), key=lambda m: model_usage[m]["count"]
+            )
+            if model_usage
+            else None,
+            "best_quality_model": max(
+                model_performance.keys(),
+                key=lambda m: model_performance[m]["avg_quality"],
+            )
             if model_performance
             else None,
-            "most_cost_effective": min(model_performance.keys(), key=lambda m: model_performance[m]["avg_cost"])
+            "most_cost_effective": min(
+                model_performance.keys(), key=lambda m: model_performance[m]["avg_cost"]
+            )
             if model_performance
             else None,
         }
@@ -415,7 +465,9 @@ class AIEnhancedPerformanceMonitor(AgentPerformanceMonitor):
         variance = sum((x - mean) ** 2 for x in values) / len(values)
         return float(variance**0.5)
 
-    def generate_enhanced_performance_report(self, agent_name: str, days: int = 30) -> EnhancedPerformanceReport:
+    def generate_enhanced_performance_report(
+        self, agent_name: str, days: int = 30
+    ) -> EnhancedPerformanceReport:
         """Generate enhanced performance report with AI routing intelligence."""
 
         # Get base performance report
@@ -429,8 +481,12 @@ class AIEnhancedPerformanceMonitor(AgentPerformanceMonitor):
 
         # Generate optimization insights and recommendations (only if metrics available)
         if ai_metrics is not None:
-            optimization_insights = self._generate_optimization_insights(agent_name, ai_metrics, model_analysis)
-            routing_recommendations = self._generate_routing_recommendations(ai_metrics, model_analysis)
+            optimization_insights = self._generate_optimization_insights(
+                agent_name, ai_metrics, model_analysis
+            )
+            routing_recommendations = self._generate_routing_recommendations(
+                ai_metrics, model_analysis
+            )
         else:
             optimization_insights = {}
             routing_recommendations = []
@@ -454,38 +510,68 @@ class AIEnhancedPerformanceMonitor(AgentPerformanceMonitor):
         return enhanced_report
 
     def _generate_optimization_insights(
-        self, agent_name: str, ai_metrics: BaseAIRoutingMetrics, model_analysis: dict[str, Any]
+        self,
+        agent_name: str,
+        ai_metrics: BaseAIRoutingMetrics,
+        model_analysis: dict[str, Any],
     ) -> dict[str, Any]:
         """Generate optimization insights based on AI routing performance."""
         insights = {}
 
         # Routing strategy effectiveness
-        if ai_metrics.routing_confidence < self.ai_performance_thresholds["routing_confidence"]:
-            insights["routing_confidence"] = "LOW - Consider switching to adaptive routing strategy"
+        if (
+            ai_metrics.routing_confidence
+            < self.ai_performance_thresholds["routing_confidence"]
+        ):
+            insights["routing_confidence"] = (
+                "LOW - Consider switching to adaptive routing strategy"
+            )
         else:
             insights["routing_confidence"] = "GOOD - Routing decisions are confident"
 
         # Model selection accuracy
-        if ai_metrics.model_selection_accuracy < self.ai_performance_thresholds["model_selection_accuracy"]:
-            insights["model_selection"] = "NEEDS IMPROVEMENT - Review model selection criteria"
+        if (
+            ai_metrics.model_selection_accuracy
+            < self.ai_performance_thresholds["model_selection_accuracy"]
+        ):
+            insights["model_selection"] = (
+                "NEEDS IMPROVEMENT - Review model selection criteria"
+            )
         else:
             insights["model_selection"] = "EXCELLENT - Model selection is accurate"
 
         # Cost optimization
-        if ai_metrics.cost_optimization_score < self.ai_performance_thresholds["cost_optimization"]:
-            insights["cost_optimization"] = "OPPORTUNITY - Enable cost-optimized routing strategy"
+        if (
+            ai_metrics.cost_optimization_score
+            < self.ai_performance_thresholds["cost_optimization"]
+        ):
+            insights["cost_optimization"] = (
+                "OPPORTUNITY - Enable cost-optimized routing strategy"
+            )
         else:
             insights["cost_optimization"] = "OPTIMAL - Cost management is effective"
 
         # Quality optimization
-        if ai_metrics.quality_optimization_score < self.ai_performance_thresholds["quality_optimization"]:
-            insights["quality_optimization"] = "FOCUS NEEDED - Prioritize quality in routing decisions"
+        if (
+            ai_metrics.quality_optimization_score
+            < self.ai_performance_thresholds["quality_optimization"]
+        ):
+            insights["quality_optimization"] = (
+                "FOCUS NEEDED - Prioritize quality in routing decisions"
+            )
         else:
-            insights["quality_optimization"] = "STRONG - Quality optimization is working well"
+            insights["quality_optimization"] = (
+                "STRONG - Quality optimization is working well"
+            )
 
         # Learning progress
-        if ai_metrics.adaptive_learning_progress < self.ai_performance_thresholds["adaptive_learning_rate"]:
-            insights["learning"] = "STATIC - Consider enabling adaptive learning features"
+        if (
+            ai_metrics.adaptive_learning_progress
+            < self.ai_performance_thresholds["adaptive_learning_rate"]
+        ):
+            insights["learning"] = (
+                "STATIC - Consider enabling adaptive learning features"
+            )
         else:
             insights["learning"] = "ACTIVE - System is learning and improving"
 
@@ -493,7 +579,9 @@ class AIEnhancedPerformanceMonitor(AgentPerformanceMonitor):
         if model_analysis.get("unique_models_used", 0) < 3:
             insights["model_diversity"] = "LIMITED - Consider expanding model options"
         else:
-            insights["model_diversity"] = "DIVERSE - Good variety of models being utilized"
+            insights["model_diversity"] = (
+                "DIVERSE - Good variety of models being utilized"
+            )
 
         return insights
 
@@ -509,27 +597,39 @@ class AIEnhancedPerformanceMonitor(AgentPerformanceMonitor):
                 "🤖 CRITICAL: Low routing confidence. Enable adaptive learning and increase training data."
             )
         elif ai_metrics.routing_confidence < 0.8:
-            recommendations.append("🤖 Enable A/B testing to validate routing strategy effectiveness.")
+            recommendations.append(
+                "🤖 Enable A/B testing to validate routing strategy effectiveness."
+            )
 
         # Optimization recommendations
         if ai_metrics.cost_optimization_score < 0.6:
-            recommendations.append("💰 Enable cost-optimized routing for budget-conscious tasks.")
+            recommendations.append(
+                "💰 Enable cost-optimized routing for budget-conscious tasks."
+            )
 
         if ai_metrics.latency_optimization_score < 0.6:
-            recommendations.append("⚡ Consider speed-optimized routing for time-sensitive operations.")
+            recommendations.append(
+                "⚡ Consider speed-optimized routing for time-sensitive operations."
+            )
 
         if ai_metrics.quality_optimization_score < 0.7:
-            recommendations.append("🎯 Prioritize quality-optimized routing for critical analysis tasks.")
+            recommendations.append(
+                "🎯 Prioritize quality-optimized routing for critical analysis tasks."
+            )
 
         # Fallback usage not available in base metrics; compute separately if needed.
 
         # Learning recommendations
         if ai_metrics.adaptive_learning_progress < 0.1:
-            recommendations.append("📚 Enable adaptive learning to improve routing decisions over time.")
+            recommendations.append(
+                "📚 Enable adaptive learning to improve routing decisions over time."
+            )
 
         # Model usage recommendations
         if model_analysis.get("unique_models_used", 0) < 3:
-            recommendations.append("🔄 Consider adding more model options to improve routing flexibility.")
+            recommendations.append(
+                "🔄 Consider adding more model options to improve routing flexibility."
+            )
 
         # Strategy-specific recommendations
         if ai_metrics.routing_strategy == "random_baseline":
@@ -557,7 +657,9 @@ class AIEnhancedPerformanceMonitor(AgentPerformanceMonitor):
         print("🤖 AI Routing Performance Metrics:")
         print(f"   • Strategy: {ai_metrics.routing_strategy}")
         print(f"   • Routing Confidence: {ai_metrics.routing_confidence:.2f}")
-        print(f"   • Model Selection Accuracy: {ai_metrics.model_selection_accuracy:.2f}")
+        print(
+            f"   • Model Selection Accuracy: {ai_metrics.model_selection_accuracy:.2f}"
+        )
         print(f"   • Cost Optimization: {ai_metrics.cost_optimization_score:.2f}")
         print(f"   • Latency Optimization: {ai_metrics.latency_optimization_score:.2f}")
         print(f"   • Quality Optimization: {ai_metrics.quality_optimization_score:.2f}")
@@ -567,7 +669,9 @@ class AIEnhancedPerformanceMonitor(AgentPerformanceMonitor):
         print("\n📊 Model Usage Analysis:")
         for model, perf in report.model_usage_distribution.items():
             model_name = model.split("/")[-1] if "/" in model else model
-            print(f"   • {model_name}: {perf['usage_percentage']:.1f}% usage, Q:{perf['avg_quality']:.2f}")
+            print(
+                f"   • {model_name}: {perf['usage_percentage']:.1f}% usage, Q:{perf['avg_quality']:.2f}"
+            )
 
         print("\n💡 Optimization Insights:")
         for category, insight in report.optimization_insights.items():
@@ -627,9 +731,19 @@ if __name__ == "__main__":
 
         # Simulate various routing scenarios
         scenarios = [
-            ("analysis", "adaptive_learning", "anthropic/claude-3-5-sonnet-20241022", 0.92),
+            (
+                "analysis",
+                "adaptive_learning",
+                "anthropic/claude-3-5-sonnet-20241022",
+                0.92,
+            ),
             ("general", "performance_based", "openai/gpt-4o", 0.85),
-            ("creative", "quality_optimized", "anthropic/claude-3-5-sonnet-20241022", 0.88),
+            (
+                "creative",
+                "quality_optimized",
+                "anthropic/claude-3-5-sonnet-20241022",
+                0.88,
+            ),
             ("fast", "speed_optimized", "google/gemini-1.5-flash", 0.78),
             ("cost", "cost_optimized", "openai/gpt-4o-mini", 0.82),
         ]
@@ -657,7 +771,9 @@ if __name__ == "__main__":
                 routing_confidence=confidence,
                 expected_metrics=expected_metrics,
                 actual_metrics=actual_metrics,
-                optimization_target=strategy.replace("_optimized", "").replace("_based", ""),
+                optimization_target=strategy.replace("_optimized", "").replace(
+                    "_based", ""
+                ),
                 user_feedback={"satisfaction": 0.8 + (i % 3) * 0.1},
             )
 
@@ -670,7 +786,9 @@ if __name__ == "__main__":
 
         print(f"\n🎯 Analysis Status: {analysis_result['status']}")
         print(f"📊 AI Enhancement Score: {analysis_result['ai_enhancement_score']:.2f}")
-        print(f"💡 Recommendations Generated: {analysis_result['recommendations_count']}")
+        print(
+            f"💡 Recommendations Generated: {analysis_result['recommendations_count']}"
+        )
 
         print("\n✨ AI-Enhanced Performance Monitoring: OPERATIONAL! ✨")
 

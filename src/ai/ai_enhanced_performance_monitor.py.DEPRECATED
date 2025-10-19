@@ -1,0 +1,123 @@
+"""
+DEPRECATED: ai_enhanced_performance_monitor.py
+
+This AI-enhanced monitor was deprecated in Phase 7 (Performance Consolidation - October 2025).
+All features have been migrated to canonical AgentPerformanceMonitor with AnalyticsService facade.
+
+DEPRECATION DATE: October 19, 2025
+REMOVAL TARGET: After Phase 7 validation (Week 12)
+DO NOT ADD NEW CODE TO THIS FILE.
+
+=============================================================================
+MIGRATION GUIDE
+=============================================================================
+
+AIEnhancedPerformanceMonitor provided AI routing integration. The canonical
+AgentPerformanceMonitor already includes these features. Use AnalyticsService facade:
+
+BEFORE (ai_enhanced_performance_monitor.py):
+```python
+from ai.ai_enhanced_performance_monitor import AIEnhancedPerformanceMonitor
+
+monitor = AIEnhancedPerformanceMonitor()
+monitor.record_ai_routing_interaction(
+    agent_name="agent",
+    task_type="analysis",
+    routing_strategy="adaptive",
+    selected_model="claude-3-5-sonnet",
+    routing_confidence=0.92,
+    expected_metrics={...},
+    actual_metrics={...}
+)
+report = monitor.generate_enhanced_performance_report("agent")
+```
+
+AFTER (Use canonical monitor directly for AI routing):
+```python
+from ultimate_discord_intelligence_bot.agent_training.performance_monitor import (
+    AgentPerformanceMonitor
+)
+
+# Canonical monitor already has AI routing support
+monitor = AgentPerformanceMonitor()
+monitor.record_ai_routing_interaction(
+    agent_name="agent",
+    task_type="analysis",
+    routing_strategy="adaptive",
+    selected_model="claude-3-5-sonnet",
+    routing_confidence=0.92,
+    expected_metrics={...},
+    actual_metrics={...}
+)
+report = monitor.generate_performance_report("agent")  # Includes AI metrics
+```
+
+OR (Use AnalyticsService for general monitoring - RECOMMENDED):
+```python
+from ultimate_discord_intelligence_bot.observability import get_analytics_service
+
+analytics = get_analytics_service()
+
+# For standard agent performance (non-routing-specific)
+analytics.record_agent_performance(
+    agent_name="agent",
+    task_type="analysis",
+    quality_score=0.87,
+    response_time=2.5,
+    tools_used=["ai_router_adaptive", "model_claude"]
+)
+
+# For detailed reporting including AI routing metrics
+# Use canonical monitor directly (accessed via analytics._get_agent_monitor())
+```
+
+=============================================================================
+FEATURE MAPPING
+=============================================================================
+
+| AIEnhancedPerformanceMonitor              | Canonical Monitor / AnalyticsService    |
+|-------------------------------------------|-----------------------------------------|
+| record_ai_routing_interaction()           | AgentPerformanceMonitor (direct use)    |
+| calculate_ai_routing_metrics()            | AgentPerformanceMonitor (direct use)    |
+| analyze_model_usage_patterns()            | AgentPerformanceMonitor (direct use)    |
+| generate_enhanced_performance_report()    | AgentPerformanceMonitor.generate_*      |
+| run_ai_routing_optimization_analysis()    | AgentPerformanceMonitor (direct use)    |
+| Standard performance tracking             | AnalyticsService.record_agent_*         |
+
+=============================================================================
+RATIONALE
+=============================================================================
+
+- ai_enhanced_performance_monitor.py extended base AgentPerformanceMonitor
+- Canonical agent_training/performance_monitor.py already includes AI routing features
+- This was a duplicate implementation created during experimental AI routing work
+- Phase 7 eliminates duplicate implementations
+- AnalyticsService provides unified facade for general monitoring
+
+=============================================================================
+AFFECTED COMPONENTS
+=============================================================================
+
+Known usages (to be migrated):
+- AI routing experiments (use canonical monitor directly)
+- Custom AI routing dashboards (use AnalyticsService facade)
+
+=============================================================================
+REFERENCES
+=============================================================================
+
+- ADR-0005: Analytics Consolidation Strategy
+- ADR-0003: Routing Consolidation (AI routing unified in Phase 6)
+- PHASE7_PERFORMANCE_CONSOLIDATION_COMPLETE.md
+- Canonical monitor: agent_training/performance_monitor.py (includes AI routing)
+- Unified facade: observability/analytics_service.py
+
+For questions, see Phase 7 documentation.
+"""
+
+raise ImportError(
+    "ai_enhanced_performance_monitor.py is deprecated. "
+    "Use agent_training/performance_monitor.py for AI routing features "
+    "or observability.AnalyticsService for general monitoring. "
+    "See this file's docstring for migration guide."
+)

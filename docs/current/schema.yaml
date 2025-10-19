@@ -1,0 +1,625 @@
+# Knowledge Graph Schema for Creator Intelligence System
+# Formal entity and relationship definitions for multi-platform content analysis
+
+entities:
+  # Primary Creators
+  - name: Creator
+    description: A content creator with presence across multiple platforms
+    properties:
+      id:
+        type: string
+        required: true
+        description: Unique identifier for the creator
+      name:
+        type: string
+        required: true
+        description: Display name of the creator
+      platform_handles:
+        type: map<string, string>
+        required: false
+        description: Map of platform names to handles (e.g., {"youtube": "@h3podcast", "twitch": "hasanabi"})
+      primary_platform:
+        type: string
+        required: false
+        description: The creator's primary content platform
+      verified:
+        type: boolean
+        required: false
+        description: Platform verification status
+      metadata:
+        type: map<string, any>
+        required: false
+        description: Additional creator metadata
+
+  # Content Channels
+  - name: Channel
+    description: A platform-specific channel or account
+    properties:
+      id:
+        type: string
+        required: true
+      platform:
+        type: string
+        required: true
+        description: Platform name (youtube, twitch, tiktok, twitter, reddit)
+      handle:
+        type: string
+        required: true
+        description: Platform-specific handle or username
+      url:
+        type: string
+        required: true
+        description: Canonical URL to the channel
+      subscriber_count:
+        type: integer
+        required: false
+      created_at:
+        type: datetime
+        required: false
+
+  # Staff and Team Members
+  - name: StaffMember
+    description: Production staff, moderators, or team members
+    properties:
+      id:
+        type: string
+        required: true
+      name:
+        type: string
+        required: true
+      roles:
+        type: list<string>
+        required: true
+        description: List of roles (e.g., ["producer", "editor", "moderator"])
+      employment_type:
+        type: string
+        required: false
+        description: full_time, part_time, contractor, volunteer
+
+  # Episodes and Videos
+  - name: Episode
+    description: A complete episode or video production
+    properties:
+      id:
+        type: string
+        required: true
+      title:
+        type: string
+        required: true
+      description:
+        type: string
+        required: false
+      published_at:
+        type: datetime
+        required: true
+      duration_seconds:
+        type: integer
+        required: true
+      url:
+        type: string
+        required: true
+      platform:
+        type: string
+        required: true
+      view_count:
+        type: integer
+        required: false
+      like_count:
+        type: integer
+        required: false
+      comment_count:
+        type: integer
+        required: false
+      thumbnail_url:
+        type: string
+        required: false
+
+  # Episode Segments
+  - name: Segment
+    description: A timestamped segment within an episode
+    properties:
+      id:
+        type: string
+        required: true
+      episode_id:
+        type: string
+        required: true
+        description: Reference to parent episode
+      start_time_seconds:
+        type: integer
+        required: true
+      end_time_seconds:
+        type: integer
+        required: true
+      title:
+        type: string
+        required: false
+        description: Segment title or chapter name
+      segment_type:
+        type: string
+        required: false
+        description: intro, discussion, debate, interview, outro, sponsor, etc.
+
+  # Clips
+  - name: Clip
+    description: A short-form clip extracted from an episode
+    properties:
+      id:
+        type: string
+        required: true
+      source_episode_id:
+        type: string
+        required: true
+      url:
+        type: string
+        required: true
+      platform:
+        type: string
+        required: true
+        description: Platform where clip is hosted (tiktok, youtube_shorts, twitter)
+      created_at:
+        type: datetime
+        required: true
+      view_count:
+        type: integer
+        required: false
+      engagement_score:
+        type: float
+        required: false
+        description: Calculated engagement metric
+
+  # Livestreams
+  - name: Livestream
+    description: A live streaming session
+    properties:
+      id:
+        type: string
+        required: true
+      title:
+        type: string
+        required: true
+      platform:
+        type: string
+        required: true
+      start_time:
+        type: datetime
+        required: true
+      end_time:
+        type: datetime
+        required: false
+        description: Null if currently live
+      peak_viewers:
+        type: integer
+        required: false
+      url:
+        type: string
+        required: true
+
+  # Guests and Collaborators
+  - name: Guest
+    description: A guest or collaborator appearing in content
+    properties:
+      id:
+        type: string
+        required: true
+      name:
+        type: string
+        required: true
+      affiliation:
+        type: string
+        required: false
+        description: Organization or affiliation
+      expertise_areas:
+        type: list<string>
+        required: false
+      platform_handles:
+        type: map<string, string>
+        required: false
+
+  # Topics and Themes
+  - name: Topic
+    description: A topic or theme discussed in content
+    properties:
+      id:
+        type: string
+        required: true
+      name:
+        type: string
+        required: true
+      description:
+        type: string
+        required: false
+      category:
+        type: string
+        required: false
+        description: politics, entertainment, technology, gaming, etc.
+      aliases:
+        type: list<string>
+        required: false
+        description: Alternative names or spellings
+
+  # Claims and Statements
+  - name: Claim
+    description: A factual claim or statement requiring verification
+    properties:
+      id:
+        type: string
+        required: true
+      text:
+        type: string
+        required: true
+        description: The verbatim claim text
+      speaker:
+        type: string
+        required: true
+        description: Who made the claim
+      timestamp:
+        type: datetime
+        required: true
+      verification_status:
+        type: string
+        required: false
+        description: verified, disputed, false, unverified
+      confidence_score:
+        type: float
+        required: false
+        description: Confidence in verification (0.0 to 1.0)
+
+  # Quotes
+  - name: Quote
+    description: A notable or canonical quote
+    properties:
+      id:
+        type: string
+        required: true
+      text:
+        type: string
+        required: true
+      speaker:
+        type: string
+        required: true
+      timestamp:
+        type: datetime
+        required: true
+      context:
+        type: string
+        required: false
+        description: Surrounding context for the quote
+
+  # Source Documents
+  - name: Source
+    description: External source document for fact-checking
+    properties:
+      id:
+        type: string
+        required: true
+      title:
+        type: string
+        required: true
+      url:
+        type: string
+        required: true
+      source_type:
+        type: string
+        required: true
+        description: academic, news, government, social_media, etc.
+      publication_date:
+        type: datetime
+        required: false
+      credibility_score:
+        type: float
+        required: false
+        description: Source credibility rating (0.0 to 1.0)
+
+  # Transcripts
+  - name: Transcript
+    description: Full transcript of spoken content
+    properties:
+      id:
+        type: string
+        required: true
+      episode_id:
+        type: string
+        required: true
+      text:
+        type: string
+        required: true
+        description: Full transcript text
+      language:
+        type: string
+        required: true
+      generated_by:
+        type: string
+        required: false
+        description: ASR model or service used
+      confidence_score:
+        type: float
+        required: false
+        description: Average ASR confidence
+
+  # Sponsors and Advertising
+  - name: Sponsor
+    description: A sponsor or advertiser
+    properties:
+      id:
+        type: string
+        required: true
+      name:
+        type: string
+        required: true
+      industry:
+        type: string
+        required: false
+      brand_safety_guidelines:
+        type: map<string, any>
+        required: false
+        description: Sponsor-specific content requirements
+
+relationships:
+  # Creator relationships
+  - name: manages
+    source: Creator
+    target: Channel
+    properties:
+      role:
+        type: string
+        required: false
+        description: owner, co-host, contributor
+
+  - name: employs
+    source: Creator
+    target: StaffMember
+    properties:
+      since:
+        type: datetime
+        required: false
+      capacity:
+        type: string
+        required: false
+
+  - name: collaborates_with
+    source: Creator
+    target: Creator
+    properties:
+      collaboration_type:
+        type: string
+        required: false
+        description: regular, occasional, one-time
+      frequency:
+        type: integer
+        required: false
+        description: Number of collaborations
+
+  # Content relationships
+  - name: publishes
+    source: Channel
+    target: Episode
+    properties:
+      platform:
+        type: string
+        required: true
+      publication_timestamp:
+        type: datetime
+        required: true
+
+  - name: contains
+    source: Episode
+    target: Segment
+    properties:
+      sequence_number:
+        type: integer
+        required: false
+
+  - name: extracted_from
+    source: Clip
+    target: Episode
+    properties:
+      source_start_time:
+        type: integer
+        required: true
+      source_end_time:
+        type: integer
+        required: true
+
+  - name: features
+    source: Episode
+    target: Guest
+    properties:
+      appearance_duration_seconds:
+        type: integer
+        required: false
+      guest_role:
+        type: string
+        required: false
+        description: interviewee, debate_opponent, panelist, etc.
+
+  - name: transcribes
+    source: Transcript
+    target: Episode
+    properties:
+      transcription_date:
+        type: datetime
+        required: false
+
+  # Topic relationships
+  - name: discusses
+    source: Episode
+    target: Topic
+    properties:
+      prominence_score:
+        type: float
+        required: false
+        description: How prominently this topic features (0.0 to 1.0)
+      duration_seconds:
+        type: integer
+        required: false
+
+  - name: mentions
+    source: Segment
+    target: Topic
+    properties:
+      mention_count:
+        type: integer
+        required: false
+
+  # Claim and verification relationships
+  - name: makes_claim
+    source: Creator
+    target: Claim
+    properties:
+      timestamp:
+        type: datetime
+        required: true
+
+  - name: verifies
+    source: Source
+    target: Claim
+    properties:
+      verification_type:
+        type: string
+        required: true
+        description: supports, refutes, contextualizes
+      relevance_score:
+        type: float
+        required: false
+
+  - name: quotes
+    source: Episode
+    target: Quote
+    properties:
+      timestamp_seconds:
+        type: integer
+        required: true
+
+  # Sponsorship relationships
+  - name: sponsors
+    source: Sponsor
+    target: Episode
+    properties:
+      sponsorship_type:
+        type: string
+        required: false
+        description: pre-roll, mid-roll, post-roll, integration
+      duration_seconds:
+        type: integer
+        required: false
+
+  - name: complies_with
+    source: Segment
+    target: Sponsor
+    properties:
+      compliance_status:
+        type: string
+        required: true
+        description: approved, flagged, under_review
+      flagged_reason:
+        type: string
+        required: false
+
+  # Narrative tracking
+  - name: continues
+    source: Episode
+    target: Episode
+    properties:
+      narrative_topic:
+        type: string
+        required: true
+        description: The ongoing topic or story being continued
+      time_gap_hours:
+        type: integer
+        required: false
+
+  - name: references
+    source: Claim
+    target: Claim
+    properties:
+      reference_type:
+        type: string
+        required: true
+        description: supports, contradicts, updates, clarifies
+
+  # Cross-platform tracking
+  - name: cross_posted_as
+    source: Episode
+    target: Episode
+    properties:
+      original_platform:
+        type: string
+        required: true
+      repost_platform:
+        type: string
+        required: true
+      modifications:
+        type: list<string>
+        required: false
+        description: List of modifications (edited, clipped, reformatted)
+
+indexes:
+  # Performance optimization indexes
+  - entity: Episode
+    fields: [published_at, platform]
+    type: composite
+    description: Fast queries by publication date and platform
+
+  - entity: Claim
+    fields: [verification_status, timestamp]
+    type: composite
+    description: Query claims by verification status and time
+
+  - entity: Topic
+    fields: [category, name]
+    type: composite
+    description: Fast topic lookups by category
+
+  - entity: Channel
+    fields: [platform, handle]
+    type: unique_composite
+    description: Unique platform-handle combinations
+
+  # Full-text search indexes
+  - entity: Transcript
+    fields: [text]
+    type: fulltext
+    description: Full-text search on transcript content
+
+  - entity: Claim
+    fields: [text]
+    type: fulltext
+    description: Full-text search on claim text
+
+constraints:
+  # Data integrity constraints
+  - entity: Episode
+    field: duration_seconds
+    constraint: positive_integer
+    description: Duration must be positive
+
+  - entity: Claim
+    field: confidence_score
+    constraint: range
+    range: [0.0, 1.0]
+    description: Confidence scores must be between 0 and 1
+
+  - entity: Source
+    field: credibility_score
+    constraint: range
+    range: [0.0, 1.0]
+    description: Credibility scores must be between 0 and 1
+
+  - relationship: publishes
+    constraint: unique
+    fields: [Channel.id, Episode.url]
+    description: A channel cannot publish the same episode URL twice
+
+metadata:
+  version: "1.0.0"
+  created_date: "2025-01-17"
+  description: "Creator Intelligence Knowledge Graph Schema"
+  author: "AI Agent - Creator Intelligence System"
+  notes: |
+    This schema supports multi-platform creator intelligence with focus on:
+    - Cross-platform content tracking
+    - Debate and claim verification
+    - Narrative evolution across time
+    - Brand safety and compliance
+    - Guest and collaborator tracking

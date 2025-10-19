@@ -26,7 +26,7 @@ def _reset_settings_cache(monkeypatch: pytest.MonkeyPatch):
 
     # Reset metrics to start fresh
     try:
-        from obs.metrics import reset
+        from ultimate_discord_intelligence_bot.obs.metrics import reset
 
         reset()
     except Exception:
@@ -77,7 +77,7 @@ def test_semantic_cache_shadow_mode_tracks_but_no_return():
 def test_semantic_cache_shadow_mode_metrics():
     """Test that shadow mode tracks hit/miss metrics."""
     # Import to verify metrics exist
-    from obs.metrics import SEMANTIC_CACHE_SHADOW_MISSES
+    from ultimate_discord_intelligence_bot.obs.metrics import SEMANTIC_CACHE_SHADOW_MISSES
 
     svc = OpenRouterService(api_key="")
     prompt = "metrics test prompt"
@@ -167,7 +167,7 @@ def test_analysis_only_shadow_mode(monkeypatch: pytest.MonkeyPatch):
 
     # Reset metrics to ensure clean counters for this test
     try:
-        from obs.metrics import reset
+        from ultimate_discord_intelligence_bot.obs.metrics import reset
 
         reset()
     except Exception:

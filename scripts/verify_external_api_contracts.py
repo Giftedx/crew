@@ -18,7 +18,7 @@ _sys.path.append(str(Path(__file__).resolve().parents[1] / "src"))
 # isort: off - local path mutation requires nearby import for stability
 try:
     # Prefer centralized HTTP wrappers per repository policy
-    from core.http_utils import REQUEST_TIMEOUT_SECONDS, cached_get
+    from ultimate_discord_intelligence_bot.core.http_utils import REQUEST_TIMEOUT_SECONDS, cached_get
 except Exception:  # pragma: no cover - fallback in environments without src path
     cached_get = None  # type: ignore
     REQUEST_TIMEOUT_SECONDS = 15  # sensible default

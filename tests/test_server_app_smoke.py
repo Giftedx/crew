@@ -1,4 +1,4 @@
-from server.app import create_app
+from ultimate_discord_intelligence_bot.server.app import create_app
 
 
 def _route_paths(app) -> set[str]:

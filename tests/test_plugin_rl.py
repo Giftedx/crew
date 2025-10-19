@@ -3,7 +3,7 @@ from __future__ import annotations
 import pathlib
 
 from core import rl
-from core.rl.policies.bandit_base import EpsilonGreedyBandit
+from ultimate_discord_intelligence_bot.core.rl.policies.bandit_base import EpsilonGreedyBandit
 from ultimate_discord_intelligence_bot.plugins.runtime.executor import PluginExecutor
 
 

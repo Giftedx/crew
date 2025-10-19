@@ -1,0 +1,21 @@
+{
+  "workflow_id": "ee99eed5-8737-4ad9-8e9e-ca3a295d6204",
+  "url": "https://youtu.be/ZSUDHx-1_ww",
+  "depth": "comprehensive",
+  "webhook_url": "https://discord.com/api/webhooks/1411495146561998878/PUTk4WSgy5OvNTccr6ufLQkpyw5Z3x8GgURQvUP_RWsydVP4odjlMp-oHcABdxNne79X",
+  "user_id": "258276274726895617",
+  "channel_id": "1389030635271753830",
+  "metadata": {
+    "guild_id": "1389030634592407695",
+    "command": "/autointel"
+  },
+  "status": "initiated",
+  "start_time": 1759773381.7103531,
+  "start_timestamp": "2025-10-06T17:56:21.710355",
+  "progress": {
+    "stage": "execution",
+    "percentage": 20,
+    "message": "Running multi-agent intelligence analysis...",
+    "timestamp": 1759773381.9265995
+  }
+}

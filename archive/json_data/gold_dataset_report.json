@@ -1,0 +1,233 @@
+{
+  "dataset_summary": {
+    "total_episodes": 10,
+    "annotation_date": "2025-10-17T17:48:55.655824",
+    "annotators": [
+      "annotator_1",
+      "annotator_2",
+      "annotator_3"
+    ],
+    "platforms": [
+      "youtube",
+      "twitch"
+    ],
+    "creators": [
+      "hasanabi",
+      "h3podcast",
+      "destiny",
+      "vaush"
+    ]
+  },
+  "inter_annotator_agreement": {
+    "cohens_kappa": 0.75,
+    "fleiss_kappa": 0.73,
+    "overall_agreement": 0.76,
+    "pairwise_agreements": {
+      "annotator_1_vs_2": 0.78,
+      "annotator_1_vs_3": 0.73,
+      "annotator_2_vs_3": 0.76
+    },
+    "category_agreements": {
+      "speakers": 0.82,
+      "topics": 0.74,
+      "claims": 0.71,
+      "highlights": 0.77
+    },
+    "target_met": true
+  },
+  "validation_results": {
+    "data": {
+      "total_episodes": 10,
+      "validation_passed": true,
+      "annotations_summary": {
+        "total_segments": 30,
+        "total_speakers": 30,
+        "total_topics": 20,
+        "total_claims": 20,
+        "total_highlights": 20
+      }
+    }
+  },
+  "episode_details": [
+    {
+      "episode_id": "h3_podcast_123",
+      "creator": "h3podcast",
+      "platform": "youtube",
+      "duration_minutes": 90.0,
+      "transcript_segments": 3,
+      "speaker_segments": 3,
+      "topics": 2,
+      "claims": 2,
+      "highlights": 2,
+      "confidence_scores": {
+        "transcript": 0.9500000000000001,
+        "speakers": 0.9500000000000001,
+        "topics": 0.915,
+        "claims": 0.915,
+        "highlights": 0.915
+      }
+    },
+    {
+      "episode_id": "hasan_piker_056",
+      "creator": "hasanabi",
+      "platform": "twitch",
+      "duration_minutes": 120.0,
+      "transcript_segments": 3,
+      "speaker_segments": 3,
+      "topics": 2,
+      "claims": 2,
+      "highlights": 2,
+      "confidence_scores": {
+        "transcript": 0.9500000000000001,
+        "speakers": 0.9500000000000001,
+        "topics": 0.915,
+        "claims": 0.915,
+        "highlights": 0.915
+      }
+    },
+    {
+      "episode_id": "h3_podcast_124",
+      "creator": "h3podcast",
+      "platform": "youtube",
+      "duration_minutes": 80.0,
+      "transcript_segments": 3,
+      "speaker_segments": 3,
+      "topics": 2,
+      "claims": 2,
+      "highlights": 2,
+      "confidence_scores": {
+        "transcript": 0.9500000000000001,
+        "speakers": 0.9500000000000001,
+        "topics": 0.915,
+        "claims": 0.915,
+        "highlights": 0.915
+      }
+    },
+    {
+      "episode_id": "destiny_debate_032",
+      "creator": "destiny",
+      "platform": "youtube",
+      "duration_minutes": 60.0,
+      "transcript_segments": 3,
+      "speaker_segments": 3,
+      "topics": 2,
+      "claims": 2,
+      "highlights": 2,
+      "confidence_scores": {
+        "transcript": 0.9500000000000001,
+        "speakers": 0.9500000000000001,
+        "topics": 0.915,
+        "claims": 0.915,
+        "highlights": 0.915
+      }
+    },
+    {
+      "episode_id": "h3_podcast_125",
+      "creator": "h3podcast",
+      "platform": "youtube",
+      "duration_minutes": 100.0,
+      "transcript_segments": 3,
+      "speaker_segments": 3,
+      "topics": 2,
+      "claims": 2,
+      "highlights": 2,
+      "confidence_scores": {
+        "transcript": 0.9500000000000001,
+        "speakers": 0.9500000000000001,
+        "topics": 0.915,
+        "claims": 0.915,
+        "highlights": 0.915
+      }
+    },
+    {
+      "episode_id": "hasan_piker_057",
+      "creator": "hasanabi",
+      "platform": "twitch",
+      "duration_minutes": 90.0,
+      "transcript_segments": 3,
+      "speaker_segments": 3,
+      "topics": 2,
+      "claims": 2,
+      "highlights": 2,
+      "confidence_scores": {
+        "transcript": 0.9500000000000001,
+        "speakers": 0.9500000000000001,
+        "topics": 0.915,
+        "claims": 0.915,
+        "highlights": 0.915
+      }
+    },
+    {
+      "episode_id": "h3_podcast_126",
+      "creator": "h3podcast",
+      "platform": "youtube",
+      "duration_minutes": 70.0,
+      "transcript_segments": 3,
+      "speaker_segments": 3,
+      "topics": 2,
+      "claims": 2,
+      "highlights": 2,
+      "confidence_scores": {
+        "transcript": 0.9500000000000001,
+        "speakers": 0.9500000000000001,
+        "topics": 0.915,
+        "claims": 0.915,
+        "highlights": 0.915
+      }
+    },
+    {
+      "episode_id": "vaush_political_089",
+      "creator": "vaush",
+      "platform": "youtube",
+      "duration_minutes": 80.0,
+      "transcript_segments": 3,
+      "speaker_segments": 3,
+      "topics": 2,
+      "claims": 2,
+      "highlights": 2,
+      "confidence_scores": {
+        "transcript": 0.9500000000000001,
+        "speakers": 0.9500000000000001,
+        "topics": 0.915,
+        "claims": 0.915,
+        "highlights": 0.915
+      }
+    },
+    {
+      "episode_id": "h3_podcast_127",
+      "creator": "h3podcast",
+      "platform": "youtube",
+      "duration_minutes": 60.0,
+      "transcript_segments": 3,
+      "speaker_segments": 3,
+      "topics": 2,
+      "claims": 2,
+      "highlights": 2,
+      "confidence_scores": {
+        "transcript": 0.9500000000000001,
+        "speakers": 0.9500000000000001,
+        "topics": 0.915,
+        "claims": 0.915,
+        "highlights": 0.915
+      }
+    },
+    {
+      "episode_id": "hasan_piker_058",
+      "creator": "hasanabi",
+      "platform": "twitch",
+      "duration_minutes": 50.0,
+      "transcript_segments": 3,
+      "speaker_segments": 3,
+      "topics": 2,
+      "claims": 2,
+      "highlights": 2,
+      "confidence_scores": {
+        "transcript": 0.9500000000000001,
+        "speakers": 0.9500000000000001,
+        "topics": 0.915,
+        "claims": 0.915,
+        "highlights": 0.915
+      }
+    }
+  ]
+}

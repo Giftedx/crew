@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
-from core.rl.advanced_config import (
+from ultimate_discord_intelligence_bot.core.rl.advanced_config import (
     AdvancedBanditConfigManager,
     AdvancedBanditGlobalConfig,
     DoublyRobustConfig,

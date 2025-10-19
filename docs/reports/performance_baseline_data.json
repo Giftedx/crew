@@ -1,0 +1,97 @@
+{
+  "health": {
+    "timestamp": 1760751800.39589,
+    "services": {
+      "qdrant": {
+        "status": "unhealthy",
+        "error": "No module named 'src'"
+      },
+      "llm_api": {
+        "status": "not_configured",
+        "error": "No API key found"
+      },
+      "discord": {
+        "status": "not_configured",
+        "error": "No bot token found"
+      }
+    },
+    "overall_status": "unhealthy"
+  },
+  "evaluation": {
+    "timestamp": 1760751800.5963058,
+    "tasks": {
+      "summarize": {
+        "quality": 1.0,
+        "cost_usd": 0.002,
+        "latency_ms": 200.08039474487305
+      },
+      "rag_qa": {
+        "quality": 1.0,
+        "cost_usd": 0.001,
+        "latency_ms": 100.07905960083008
+      },
+      "tool_tasks": {
+        "quality": 1.0,
+        "cost_usd": 0.003,
+        "latency_ms": 300.09961128234863
+      },
+      "classification": {
+        "quality": 1.0,
+        "cost_usd": 0.001,
+        "latency_ms": 100.02422332763672
+      },
+      "claimcheck": {
+        "quality": 1.0,
+        "cost_usd": 0.0015,
+        "latency_ms": 150.0697135925293
+      }
+    },
+    "overall_metrics": {
+      "average_quality": 1.0,
+      "total_cost_usd": 0.0085,
+      "average_latency_ms": 170.07060050964355,
+      "task_count": 5
+    }
+  },
+  "tools": {
+    "timestamp": 1760751801.449255,
+    "tools": {
+      "content_ingestion": {
+        "status": "failed",
+        "error": "No module named 'ultimate_discord_intelligence_bot.tools.content_ingestion'",
+        "class_name": "MultiPlatformDownloadTool"
+      },
+      "debate_analysis": {
+        "status": "failed",
+        "error": "No module named 'ultimate_discord_intelligence_bot.tools.debate_analysis'",
+        "class_name": "DebateAnalysisTool"
+      },
+      "fact_checking": {
+        "status": "failed",
+        "error": "No module named 'ultimate_discord_intelligence_bot.tools.fact_checking'",
+        "class_name": "FactCheckingTool"
+      },
+      "claim_verifier": {
+        "status": "failed",
+        "error": "No module named 'ultimate_discord_intelligence_bot.tools.claim_verifier'",
+        "class_name": "ClaimVerifierTool"
+      }
+    },
+    "overall_metrics": {}
+  },
+  "memory": {
+    "timestamp": 1760751801.4496927,
+    "memory_systems": {
+      "qdrant": {
+        "status": "failed",
+        "error": "No module named 'src'"
+      },
+      "embedding": {
+        "status": "failed",
+        "error": "No module named 'src'"
+      }
+    },
+    "overall_metrics": {}
+  },
+  "timestamp": 1760751801.4515026
+}

@@ -113,7 +113,7 @@ class BatchStepResultMigration:
             return False
 
 
-def main():
+def main() -> int:
     """Run batch migration."""
     print("=" * 60)
     print("Batch StepResult Migration")

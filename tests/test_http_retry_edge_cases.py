@@ -2,7 +2,7 @@
 
 import pytest
 
-from core.http_utils import is_retry_enabled, resilient_get
+from ultimate_discord_intelligence_bot.core.http_utils import is_retry_enabled, resilient_get
 
 
 def test_retry_enabled_flag():

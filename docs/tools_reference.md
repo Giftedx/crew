@@ -95,6 +95,44 @@ Provides enhanced analysis capabilities, including political topic extraction an
 
 ## Data Management Tools
 
+### Mem0 Memory Tool
+
+**File:** `src/ultimate_discord_intelligence_bot/tools/mem0_memory_tool.py`
+
+Manages persistent user preferences and learned patterns across sessions using Mem0. Integrates with the existing Qdrant vector store to provide a powerful, tenant-aware memory layer.
+
+**Features:**
+
+- **User Preference Learning:** Remembers user choices and style preferences.
+- **Semantic Retrieval:** Recalls relevant memories based on conversational context.
+- **Tenant Isolation:** All memories are partitioned by tenant and workspace.
+- **Automatic Structuring:** Converts natural language into structured memory objects.
+
+**Usage:**
+
+```python
+from ultimate_discord_intelligence_bot.tools.mem0_memory_tool import Mem0MemoryTool
+
+tool = Mem0MemoryTool()
+
+# Remember a user preference
+tool._run(
+    action="remember",
+    content="The user prefers concise, bulleted lists for summaries.",
+    tenant="tenant_123",
+    workspace="project_x"
+)
+
+# Recall relevant preferences
+result = tool._run(
+    action="recall",
+    query="How should I format the final report?",
+    tenant="tenant_123",
+    workspace="project_x"
+)
+# result.data will contain relevant memories
+```
+
 ### Memory Storage Tool
 
 **File:** `src/ultimate_discord_intelligence_bot/tools/memory_storage_tool.py`
@@ -107,6 +145,19 @@ Handles storage and retrieval of memory items in the unified memory layer.
 - Tenant-aware storage
 - Retention policy enforcement
 - Pinning and archival support
+
+### DSPy Optimization Tool (Coming Soon)
+
+**File:** `src/ultimate_discord_intelligence_bot/tools/dspy_optimization_tool.py`
+
+Automatically optimizes agent prompts using the DSPy framework. This tool will enable metric-driven prompt engineering to improve agent performance and reduce manual tuning.
+
+**Features (Planned):**
+
+- Automatic prompt compilation and optimization.
+- Support for multiple optimizers (MIPROv2, BootstrapFewShot).
+- Integration with historical performance data for training.
+- Feature-flagged deployment of optimized prompts.
 
 ### Timeline Tool
 

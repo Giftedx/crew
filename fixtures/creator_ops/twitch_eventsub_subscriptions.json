@@ -1,0 +1,21 @@
+{
+  "data": [
+    {
+      "id": "subscription_123456789",
+      "type": "stream.online",
+      "version": "1",
+      "status": "enabled",
+      "created_at": "2024-01-15T10:00:00Z",
+      "condition": {
+        "broadcaster_user_id": "123456789"
+      },
+      "transport": {
+        "method": "webhook",
+        "callback": "https://example.com/webhook"
+      },
+      "cost": 0
+    }
+  ],
+  "total": 1,
+  "pagination": {}
+}

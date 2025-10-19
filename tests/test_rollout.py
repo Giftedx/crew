@@ -1,4 +1,4 @@
-from core.rollout import RolloutController
+from ultimate_discord_intelligence_bot.core.rollout import RolloutController
 
 
 def test_rollout_promotes_candidate():

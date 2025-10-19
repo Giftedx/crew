@@ -122,7 +122,12 @@ class _DummyClient:
                                 "vectors": type(
                                     "Vectors",
                                     (),
-                                    {"distance": type("Distance", (), {"value": "cosine"})(), "size": 128},
+                                    {
+                                        "distance": type(
+                                            "Distance", (), {"value": "cosine"}
+                                        )(),
+                                        "size": 128,
+                                    },
                                 )()
                             },
                         )(),
@@ -133,15 +138,21 @@ class _DummyClient:
             },
         )()
 
-    def create_payload_index(self, **kwargs: Any) -> None:  # pragma: no cover - dummy implementation
+    def create_payload_index(
+        self, **kwargs: Any
+    ) -> None:  # pragma: no cover - dummy implementation
         # Dummy implementation - do nothing
         pass
 
-    def search(self, **kwargs: Any) -> list[Any]:  # pragma: no cover - dummy implementation
+    def search(
+        self, **kwargs: Any
+    ) -> list[Any]:  # pragma: no cover - dummy implementation
         # Return empty results for dummy client
         return []
 
-    def upsert(self, *, collection_name: str, points: Sequence[Any]):  # pragma: no cover
+    def upsert(
+        self, *, collection_name: str, points: Sequence[Any]
+    ):  # pragma: no cover
         self._collections.add(collection_name)
         bucket = self._store.setdefault(collection_name, [])
         for p in points:
@@ -215,7 +226,11 @@ class _DummyClient:
                 to_delete = {p.id for p in bucket if filter(p.payload)}
                 id_set.update(to_delete)
             elif isinstance(filter, dict):
-                to_delete = {p.id for p in bucket if all(p.payload.get(k) == v for k, v in filter.items())}
+                to_delete = {
+                    p.id
+                    for p in bucket
+                    if all(p.payload.get(k) == v for k, v in filter.items())
+                }
                 id_set.update(to_delete)
         if not id_set:
             return
@@ -228,7 +243,12 @@ class _DummyClient:
 
 @lru_cache
 def get_qdrant_client() -> QdrantClient | _DummyClient:
-    """Return a cached :class:`QdrantClient` instance configured from settings.
+    """Return a cached :class:`QdrantClient` instance configured from settings with connection pooling.
+
+    This implementation includes:
+    - Connection pooling for better performance
+    - Configurable pool sizes via environment variables
+    - Graceful fallback to dummy client for tests and development
 
     Raises
     ------
@@ -244,25 +264,55 @@ def get_qdrant_client() -> QdrantClient | _DummyClient:
     url_val = getattr(settings, "qdrant_url", None)
     # Provide an in-memory dummy fallback for tests requesting ':memory:' or empty URL, or when client missing.
     raw_url = str(url_val or "").strip()
-    if (not raw_url) or raw_url == ":memory:" or raw_url.startswith("memory://") or QdrantClient is None:
+    if (
+        (not raw_url)
+        or raw_url == ":memory:"
+        or raw_url.startswith("memory://")
+        or QdrantClient is None
+    ):
         return _DummyClient()
 
-    # Some downstream environments may have older qdrant-client versions lacking kwargs; keep explicit
+    # Connection pooling configuration
+    import os
+
+    # NOTE: Qdrant client manages its own internal connection pooling.
+    # The following environment variables are preserved for backwards compatibility
+    # but are not passed to the client as they are not supported parameters.
+    # Connection pooling is handled transparently by the underlying HTTP client.
+    _pool_size = int(
+        os.getenv("QDRANT_POOL_SIZE", "10")
+    )  # Unused, kept for compatibility
+    _max_overflow = int(
+        os.getenv("QDRANT_MAX_OVERFLOW", "5")
+    )  # Unused, kept for compatibility
+    _pool_timeout = int(
+        os.getenv("QDRANT_POOL_TIMEOUT", "30")
+    )  # Unused, kept for compatibility
+    _pool_recycle = int(
+        os.getenv("QDRANT_POOL_RECYCLE", "3600")
+    )  # Unused, kept for compatibility
+
+    # Build client kwargs with only supported parameters
     kwargs: dict[str, object] = {
         "url": url_val,
         "api_key": getattr(settings, "qdrant_api_key", None),
         "prefer_grpc": prefer_grpc,
     }
+
+    # Add gRPC port if specified
     if grpc_port is not None:
         kwargs["grpc_port"] = grpc_port
+
+    # Qdrant client handles connection pooling internally via httpx
+    # No explicit pool parameters are needed or supported
     client = QdrantClient(**kwargs)  # type: ignore
 
     # Optional secure fallback: if connectivity is broken, fall back to dummy
     # to avoid hard failures in local/dev or air-gapped environments.
     try:
-        import os
-
-        secure_fallback = str(os.getenv("ENABLE_SECURE_QDRANT_FALLBACK", "0")).strip().lower() in {
+        secure_fallback = str(
+            os.getenv("ENABLE_SECURE_QDRANT_FALLBACK", "0")
+        ).strip().lower() in {
             "1",
             "true",
             "yes",

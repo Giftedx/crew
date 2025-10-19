@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 
 from core import alerts, learning_engine, reliability, router, token_meter
-from core.cache.bounded_cache import BoundedLRUCache
+from ultimate_discord_intelligence_bot.core.cache.bounded_cache import BoundedLRUCache
 from discord import commands
 
 

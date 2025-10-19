@@ -1,0 +1,126 @@
+=== LLM Router Performance Analysis ===
+
+Top 30 Functions by Cumulative Time:
+==================================================
+         3107 function calls in 0.042 seconds
+
+   Ordered by: cumulative time
+   List reduced from 42 to 30 due to restriction <30>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.001    0.001    0.042    0.042 profile_routing.py:178(profile_routing_decisions)
+      209    0.039    0.000    0.039    0.000 {built-in method time.sleep}
+      100    0.000    0.000    0.022    0.000 profile_routing.py:119(select_model)
+      100    0.001    0.000    0.019    0.000 profile_routing.py:105(_generate_routing_cache_key)
+      100    0.000    0.000    0.018    0.000 profile_routing.py:156(update_rewards)
+        3    0.000    0.000    0.002    0.001 profile_routing.py:71(_thompson_sampling_selection)
+        3    0.000    0.000    0.001    0.000 profile_routing.py:47(_calculate_complexity_score)
+        3    0.000    0.000    0.001    0.000 profile_routing.py:38(_estimate_token_count)
+      100    0.000    0.000    0.000    0.000 random.py:358(randint)
+      103    0.000    0.000    0.000    0.000 {method 'join' of 'str' objects}
+      100    0.000    0.000    0.000    0.000 random.py:284(randrange)
+      200    0.000    0.000    0.000    0.000 random.py:520(uniform)
+      200    0.000    0.000    0.000    0.000 profile_routing.py:110(<genexpr>)
+        9    0.000    0.000    0.000    0.000 random.py:737(betavariate)
+      100    0.000    0.000    0.000    0.000 random.py:235(_randbelow_with_getrandbits)
+       18    0.000    0.000    0.000    0.000 random.py:672(gammavariate)
+        1    0.000    0.000    0.000    0.000 profile_routing.py:196(<listcomp>)
+      312    0.000    0.000    0.000    0.000 {method 'get' of 'dict' objects}
+      260    0.000    0.000    0.000    0.000 {method 'random' of '_random.Random' objects}
+      300    0.000    0.000    0.000    0.000 {built-in method time.time}
+      300    0.000    0.000    0.000    0.000 {built-in method _operator.index}
+      111    0.000    0.000    0.000    0.000 {built-in method builtins.len}
+        1    0.000    0.000    0.000    0.000 profile_routing.py:190(<listcomp>)
+        1    0.000    0.000    0.000    0.000 profile_routing.py:202(<listcomp>)
+      100    0.000    0.000    0.000    0.000 {method 'append' of 'list' objects}
+      115    0.000    0.000    0.000    0.000 {method 'getrandbits' of '_random.Random' objects}
+       48    0.000    0.000    0.000    0.000 {built-in method math.log}
+      100    0.000    0.000    0.000    0.000 {method 'bit_length' of 'int' objects}
+        3    0.000    0.000    0.000    0.000 {built-in method builtins.sum}
+        3    0.000    0.000    0.000    0.000 {built-in method builtins.max}
+
+
+
+
+=== Top 20 by Total Time ===
+==================================================
+         3107 function calls in 0.042 seconds
+
+   Ordered by: internal time
+   List reduced from 42 to 20 due to restriction <20>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+      209    0.039    0.000    0.039    0.000 {built-in method time.sleep}
+      100    0.001    0.000    0.019    0.000 profile_routing.py:105(_generate_routing_cache_key)
+        1    0.001    0.001    0.042    0.042 profile_routing.py:178(profile_routing_decisions)
+      100    0.000    0.000    0.022    0.000 profile_routing.py:119(select_model)
+      100    0.000    0.000    0.018    0.000 profile_routing.py:156(update_rewards)
+      103    0.000    0.000    0.000    0.000 {method 'join' of 'str' objects}
+      100    0.000    0.000    0.000    0.000 random.py:284(randrange)
+      200    0.000    0.000    0.000    0.000 random.py:520(uniform)
+      200    0.000    0.000    0.000    0.000 profile_routing.py:110(<genexpr>)
+      100    0.000    0.000    0.000    0.000 random.py:235(_randbelow_with_getrandbits)
+       18    0.000    0.000    0.000    0.000 random.py:672(gammavariate)
+      100    0.000    0.000    0.000    0.000 random.py:358(randint)
+        1    0.000    0.000    0.000    0.000 profile_routing.py:196(<listcomp>)
+      312    0.000    0.000    0.000    0.000 {method 'get' of 'dict' objects}
+      260    0.000    0.000    0.000    0.000 {method 'random' of '_random.Random' objects}
+      300    0.000    0.000    0.000    0.000 {built-in method time.time}
+      300    0.000    0.000    0.000    0.000 {built-in method _operator.index}
+      111    0.000    0.000    0.000    0.000 {built-in method builtins.len}
+        3    0.000    0.000    0.002    0.001 profile_routing.py:71(_thompson_sampling_selection)
+        1    0.000    0.000    0.000    0.000 profile_routing.py:190(<listcomp>)
+
+
+
+
+=== Most Called Functions ===
+==================================================
+         3107 function calls in 0.042 seconds
+
+   Ordered by: call count
+   List reduced from 42 to 20 due to restriction <20>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+      312    0.000    0.000    0.000    0.000 {method 'get' of 'dict' objects}
+      300    0.000    0.000    0.000    0.000 {built-in method time.time}
+      300    0.000    0.000    0.000    0.000 {built-in method _operator.index}
+      260    0.000    0.000    0.000    0.000 {method 'random' of '_random.Random' objects}
+      209    0.039    0.000    0.039    0.000 {built-in method time.sleep}
+      200    0.000    0.000    0.000    0.000 random.py:520(uniform)
+      200    0.000    0.000    0.000    0.000 profile_routing.py:110(<genexpr>)
+      115    0.000    0.000    0.000    0.000 {method 'getrandbits' of '_random.Random' objects}
+      111    0.000    0.000    0.000    0.000 {built-in method builtins.len}
+      103    0.000    0.000    0.000    0.000 {method 'join' of 'str' objects}
+      100    0.000    0.000    0.022    0.000 profile_routing.py:119(select_model)
+      100    0.000    0.000    0.000    0.000 random.py:284(randrange)
+      100    0.000    0.000    0.000    0.000 random.py:358(randint)
+      100    0.000    0.000    0.000    0.000 random.py:235(_randbelow_with_getrandbits)
+      100    0.001    0.000    0.019    0.000 profile_routing.py:105(_generate_routing_cache_key)
+      100    0.000    0.000    0.018    0.000 profile_routing.py:156(update_rewards)
+      100    0.000    0.000    0.000    0.000 {method 'append' of 'list' objects}
+      100    0.000    0.000    0.000    0.000 {method 'bit_length' of 'int' objects}
+       48    0.000    0.000    0.000    0.000 {built-in method math.log}
+       30    0.000    0.000    0.000    0.000 {method 'lower' of 'str' objects}
+
+
+
+
+=== Routing Performance Metrics ===
+==================================================
+- Total routing decisions: 100
+- Cache size: 3
+- Cache hit rate: 80.0%
+- Average decision time: 0.50ms
+- Bandit weights:
+  - gpt-4: 0.800
+  - claude-3-sonnet: 0.700
+  - gpt-3.5-turbo: 0.813
+
+
+=== Analysis Summary ===
+==================================================
+- Total functions called: 3107
+- Total execution time: 0.0422s
+- Profile data saved to: routing.prof
+- Use 'snakeviz profiling/routing.prof' for visualization

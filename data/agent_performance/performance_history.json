@@ -3673,6 +3673,37 @@
       },
       "error_occurred": false,
       "error_details": {}
+    },
+    {
+      "timestamp": "2025-10-19T05:07:41.226685+00:00",
+      "agent_name": "test_agent",
+      "task_type": "analysis",
+      "tools_used": [
+        "tool1",
+        "tool2"
+      ],
+      "tool_sequence": [],
+      "response_quality": 0.87,
+      "response_time": 2.5,
+      "user_feedback": {},
+      "error_occurred": false,
+      "error_details": {}
+    },
+    {
+      "timestamp": "2025-10-19T05:07:41.237541+00:00",
+      "agent_name": "test_agent",
+      "task_type": "analysis",
+      "tools_used": [
+        "tool1"
+      ],
+      "tool_sequence": [],
+      "response_quality": 0.92,
+      "response_time": 1.8,
+      "user_feedback": {
+        "satisfaction": 0.9
+      },
+      "error_occurred": false,
+      "error_details": {}
     }
   ],
   "enhanced_fact_checker": [
@@ -4327,6 +4358,277 @@
       "tool_sequence": [],
       "response_quality": 0.0,
       "response_time": 1.1920928955078125e-05,
+      "user_feedback": {},
+      "error_occurred": false,
+      "error_details": {}
+    },
+    {
+      "timestamp": "2025-10-18T01:56:30.652833+00:00",
+      "agent_name": "crew_orchestrator",
+      "task_type": "failed_execution",
+      "tools_used": [],
+      "tool_sequence": [],
+      "response_quality": 0.0,
+      "response_time": 5.459785461425781e-05,
+      "user_feedback": {},
+      "error_occurred": false,
+      "error_details": {}
+    },
+    {
+      "timestamp": "2025-10-18T01:56:42.052735+00:00",
+      "agent_name": "crew_orchestrator",
+      "task_type": "failed_execution",
+      "tools_used": [],
+      "tool_sequence": [],
+      "response_quality": 0.0,
+      "response_time": 2.2172927856445312e-05,
+      "user_feedback": {},
+      "error_occurred": false,
+      "error_details": {}
+    }
+  ],
+  "failing_agent": [
+    {
+      "timestamp": "2025-10-19T05:07:41.242962+00:00",
+      "agent_name": "failing_agent",
+      "task_type": "analysis",
+      "tools_used": [
+        "tool1"
+      ],
+      "tool_sequence": [],
+      "response_quality": 0.4,
+      "response_time": 8.0,
+      "user_feedback": {},
+      "error_occurred": true,
+      "error_details": {
+        "error_type": "timeout"
+      }
+    }
+  ],
+  "report_test_agent": [
+    {
+      "timestamp": "2025-10-19T05:07:41.247951+00:00",
+      "agent_name": "report_test_agent",
+      "task_type": "analysis",
+      "tools_used": [
+        "tool1",
+        "tool2"
+      ],
+      "tool_sequence": [],
+      "response_quality": 0.8,
+      "response_time": 2.0,
+      "user_feedback": {},
+      "error_occurred": false,
+      "error_details": {}
+    },
+    {
+      "timestamp": "2025-10-19T05:07:41.251827+00:00",
+      "agent_name": "report_test_agent",
+      "task_type": "analysis",
+      "tools_used": [
+        "tool1",
+        "tool2"
+      ],
+      "tool_sequence": [],
+      "response_quality": 0.8500000000000001,
+      "response_time": 2.2,
+      "user_feedback": {},
+      "error_occurred": false,
+      "error_details": {}
+    },
+    {
+      "timestamp": "2025-10-19T05:07:41.256507+00:00",
+      "agent_name": "report_test_agent",
+      "task_type": "analysis",
+      "tools_used": [
+        "tool1",
+        "tool2"
+      ],
+      "tool_sequence": [],
+      "response_quality": 0.9,
+      "response_time": 2.4,
+      "user_feedback": {},
+      "error_occurred": false,
+      "error_details": {}
+    }
+  ],
+  "agent_a": [
+    {
+      "timestamp": "2025-10-19T05:07:41.264778+00:00",
+      "agent_name": "agent_a",
+      "task_type": "analysis",
+      "tools_used": [
+        "tool1"
+      ],
+      "tool_sequence": [],
+      "response_quality": 0.75,
+      "response_time": 2.0,
+      "user_feedback": {},
+      "error_occurred": false,
+      "error_details": {}
+    }
+  ],
+  "agent_b": [
+    {
+      "timestamp": "2025-10-19T05:07:41.270115+00:00",
+      "agent_name": "agent_b",
+      "task_type": "analysis",
+      "tools_used": [
+        "tool1"
+      ],
+      "tool_sequence": [],
+      "response_quality": 0.8,
+      "response_time": 2.0,
+      "user_feedback": {},
+      "error_occurred": false,
+      "error_details": {}
+    }
+  ],
+  "agent_c": [
+    {
+      "timestamp": "2025-10-19T05:07:41.274431+00:00",
+      "agent_name": "agent_c",
+      "task_type": "analysis",
+      "tools_used": [
+        "tool1"
+      ],
+      "tool_sequence": [],
+      "response_quality": 0.85,
+      "response_time": 2.0,
+      "user_feedback": {},
+      "error_occurred": false,
+      "error_details": {}
+    }
+  ],
+  "solo_agent": [
+    {
+      "timestamp": "2025-10-19T05:07:41.288790+00:00",
+      "agent_name": "solo_agent",
+      "task_type": "analysis",
+      "tools_used": [],
+      "tool_sequence": [],
+      "response_quality": 0.85,
+      "response_time": 2.0,
+      "user_feedback": {},
+      "error_occurred": false,
+      "error_details": {}
+    }
+  ],
+  "integration_test_agent": [
+    {
+      "timestamp": "2025-10-19T05:14:09.284356+00:00",
+      "agent_name": "integration_test_agent",
+      "task_type": "integration_test",
+      "tools_used": [
+        "test_tool"
+      ],
+      "tool_sequence": [],
+      "response_quality": 0.8,
+      "response_time": 2.0,
+      "user_feedback": {},
+      "error_occurred": false,
+      "error_details": {}
+    },
+    {
+      "timestamp": "2025-10-19T05:14:09.289307+00:00",
+      "agent_name": "integration_test_agent",
+      "task_type": "integration_test",
+      "tools_used": [
+        "test_tool"
+      ],
+      "tool_sequence": [],
+      "response_quality": 0.8200000000000001,
+      "response_time": 2.1,
+      "user_feedback": {},
+      "error_occurred": false,
+      "error_details": {}
+    },
+    {
+      "timestamp": "2025-10-19T05:14:09.293807+00:00",
+      "agent_name": "integration_test_agent",
+      "task_type": "integration_test",
+      "tools_used": [
+        "test_tool"
+      ],
+      "tool_sequence": [],
+      "response_quality": 0.8400000000000001,
+      "response_time": 2.2,
+      "user_feedback": {},
+      "error_occurred": false,
+      "error_details": {}
+    },
+    {
+      "timestamp": "2025-10-19T05:14:09.298051+00:00",
+      "agent_name": "integration_test_agent",
+      "task_type": "integration_test",
+      "tools_used": [
+        "test_tool"
+      ],
+      "tool_sequence": [],
+      "response_quality": 0.8600000000000001,
+      "response_time": 2.3,
+      "user_feedback": {},
+      "error_occurred": false,
+      "error_details": {}
+    },
+    {
+      "timestamp": "2025-10-19T05:14:09.302408+00:00",
+      "agent_name": "integration_test_agent",
+      "task_type": "integration_test",
+      "tools_used": [
+        "test_tool"
+      ],
+      "tool_sequence": [],
+      "response_quality": 0.88,
+      "response_time": 2.4,
+      "user_feedback": {},
+      "error_occurred": false,
+      "error_details": {}
+    }
+  ],
+  "integration_agent_a": [
+    {
+      "timestamp": "2025-10-19T05:14:09.307600+00:00",
+      "agent_name": "integration_agent_a",
+      "task_type": "integration_test",
+      "tools_used": [
+        "test_tool"
+      ],
+      "tool_sequence": [],
+      "response_quality": 0.7,
+      "response_time": 2.0,
+      "user_feedback": {},
+      "error_occurred": false,
+      "error_details": {}
+    }
+  ],
+  "integration_agent_b": [
+    {
+      "timestamp": "2025-10-19T05:14:09.311484+00:00",
+      "agent_name": "integration_agent_b",
+      "task_type": "integration_test",
+      "tools_used": [
+        "test_tool"
+      ],
+      "tool_sequence": [],
+      "response_quality": 0.75,
+      "response_time": 2.0,
+      "user_feedback": {},
+      "error_occurred": false,
+      "error_details": {}
+    }
+  ],
+  "integration_agent_c": [
+    {
+      "timestamp": "2025-10-19T05:14:09.315903+00:00",
+      "agent_name": "integration_agent_c",
+      "task_type": "integration_test",
+      "tools_used": [
+        "test_tool"
+      ],
+      "tool_sequence": [],
+      "response_quality": 0.7999999999999999,
+      "response_time": 2.0,
       "user_feedback": {},
       "error_occurred": false,
       "error_details": {}

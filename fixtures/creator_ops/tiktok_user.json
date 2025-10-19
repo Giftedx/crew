@@ -1,0 +1,16 @@
+{
+    "data": {
+        "user": {
+            "open_id": "tiktok_user_123",
+            "union_id": "union_123",
+            "avatar_url": "https://example.com/avatar.jpg",
+            "display_name": "Test Creator",
+            "follower_count": 1000000,
+            "following_count": 500,
+            "likes_count": 5000000,
+            "video_count": 150,
+            "is_verified": true
+        }
+    },
+    "error": null
+}

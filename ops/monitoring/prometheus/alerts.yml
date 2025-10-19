@@ -1,0 +1,112 @@
+groups:
+  - name: discord-intelligence-bot
+    rules:
+      # High Error Rate Alert
+      - alert: HighErrorRate
+        expr: rate(app_error_count_total[5m]) / rate(app_request_count_total[5m]) > 0.01
+        for: 2m
+        labels:
+          severity: warning
+          service: discord-intelligence-bot
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is {{ $value | humanizePercentage }} for the last 5 minutes"
+
+      # High Latency Alert
+      - alert: HighLatency
+        expr: histogram_quantile(0.95, rate(app_request_latency_seconds_bucket[5m])) > 2
+        for: 2m
+        labels:
+          severity: warning
+          service: discord-intelligence-bot
+        annotations:
+          summary: "High latency detected"
+          description: "P95 latency is {{ $value }}s for the last 5 minutes"
+
+      # Vector Search Latency Alert
+      - alert: VectorSearchLatency
+        expr: histogram_quantile(0.95, rate(app_vector_search_latency_seconds_bucket[5m])) > 0.05
+        for: 2m
+        labels:
+          severity: warning
+          service: discord-intelligence-bot
+        annotations:
+          summary: "High vector search latency"
+          description: "Vector search P95 latency is {{ $value }}s for the last 5 minutes"
+
+      # Low Cache Hit Rate Alert
+      - alert: LowCacheHitRate
+        expr: rate(app_cache_hit_count_total[5m]) / (rate(app_cache_hit_count_total[5m]) + rate(app_cache_miss_count_total[5m])) < 0.6
+        for: 5m
+        labels:
+          severity: warning
+          service: discord-intelligence-bot
+        annotations:
+          summary: "Low cache hit rate"
+          description: "Cache hit rate is {{ $value | humanizePercentage }} for the last 5 minutes"
+
+      # OAuth Token Refresh Failures
+      - alert: OAuthTokenRefreshFailures
+        expr: rate(app_oauth_token_refresh_error_count_total[5m]) > 0
+        for: 1m
+        labels:
+          severity: critical
+          service: discord-intelligence-bot
+        annotations:
+          summary: "OAuth token refresh failures"
+          description: "OAuth token refresh error rate is {{ $value }} for the last 5 minutes"
+
+      # MCP Tool Call Failures
+      - alert: MCPToolCallFailures
+        expr: rate(app_mcp_tool_call_error_count_total[5m]) > 0.1
+        for: 2m
+        labels:
+          severity: warning
+          service: discord-intelligence-bot
+        annotations:
+          summary: "High MCP tool call failure rate"
+          description: "MCP tool call error rate is {{ $value }} for the last 5 minutes"
+
+      # Discord Message Failures
+      - alert: DiscordMessageFailures
+        expr: rate(app_discord_message_error_count_total[5m]) > 0.05
+        for: 2m
+        labels:
+          severity: warning
+          service: discord-intelligence-bot
+        annotations:
+          summary: "High Discord message failure rate"
+          description: "Discord message error rate is {{ $value }} for the last 5 minutes"
+
+      # Content Ingestion Failures
+      - alert: ContentIngestionFailures
+        expr: rate(app_content_ingestion_error_count_total[5m]) > 0.1
+        for: 2m
+        labels:
+          severity: warning
+          service: discord-intelligence-bot
+        annotations:
+          summary: "High content ingestion failure rate"
+          description: "Content ingestion error rate is {{ $value }} for the last 5 minutes"
+
+      # Memory Store Failures
+      - alert: MemoryStoreFailures
+        expr: rate(app_memory_store_error_count_total[5m]) > 0.05
+        for: 2m
+        labels:
+          severity: warning
+          service: discord-intelligence-bot
+        annotations:
+          summary: "High memory store failure rate"
+          description: "Memory store error rate is {{ $value }} for the last 5 minutes"
+
+      # Model Routing Failures
+      - alert: ModelRoutingFailures
+        expr: rate(app_model_routing_error_count_total[5m]) > 0.1
+        for: 2m
+        labels:
+          severity: warning
+          service: discord-intelligence-bot
+        annotations:
+          summary: "High model routing failure rate"
+          description: "Model routing error rate is {{ $value }} for the last 5 minutes"

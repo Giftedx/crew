@@ -1,4 +1,4 @@
-from core.http_utils import resilient_get
+from ultimate_discord_intelligence_bot.core.http_utils import resilient_get
 
 
 def test_resilient_get_streaming_forwards_flag_and_iter_content():

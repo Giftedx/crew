@@ -1,0 +1,71 @@
+{
+    "data": [
+        {
+            "id": "18000000000000000",
+            "text": "This is amazing! 🔥",
+            "timestamp": "2024-01-15T10:35:00+0000",
+            "like_count": 25,
+            "hidden": false,
+            "user": {
+                "id": "17841400000000001",
+                "username": "fan_account_1",
+                "account_type": "PERSONAL",
+                "media_count": 50,
+                "followers_count": 1000,
+                "follows_count": 500,
+                "name": "Fan Account",
+                "is_verified": false,
+                "is_private": false,
+                "is_business": false,
+                "is_creator": false
+            }
+        },
+        {
+            "id": "18000000000000001",
+            "text": "What game is this? Looks so cool!",
+            "timestamp": "2024-01-15T10:40:00+0000",
+            "like_count": 15,
+            "hidden": false,
+            "user": {
+                "id": "17841400000000002",
+                "username": "gamer_dude",
+                "account_type": "PERSONAL",
+                "media_count": 25,
+                "followers_count": 500,
+                "follows_count": 200,
+                "name": "Gamer Dude",
+                "is_verified": false,
+                "is_private": false,
+                "is_business": false,
+                "is_creator": false
+            }
+        },
+        {
+            "id": "18000000000000002",
+            "text": "Love your content! Keep it up! 💪",
+            "timestamp": "2024-01-15T10:45:00+0000",
+            "like_count": 8,
+            "hidden": false,
+            "user": {
+                "id": "17841400000000003",
+                "username": "supportive_fan",
+                "account_type": "PERSONAL",
+                "media_count": 10,
+                "followers_count": 200,
+                "follows_count": 100,
+                "name": "Supportive Fan",
+                "is_verified": false,
+                "is_private": false,
+                "is_business": false,
+                "is_creator": false
+            }
+        }
+    ],
+    "paging": {
+        "cursors": {
+            "before": "before_comment_cursor_12345",
+            "after": "after_comment_cursor_67890"
+        },
+        "next": "https://graph.facebook.com/v18.0/17900000000000000/comments?access_token=...&after=after_comment_cursor_67890"
+    }
+}

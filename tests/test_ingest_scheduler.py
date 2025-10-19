@@ -1,8 +1,8 @@
-from core.learning_engine import LearningEngine
-from discord import commands
-from ingest import models, pipeline
-from ingest.sources.youtube import YouTubeConnector
-from scheduler import PriorityQueue, Scheduler
+from ultimate_discord_intelligence_bot.core.learning_engine import LearningEngine
+from ultimate_discord_intelligence_bot.discord import commands
+from ultimate_discord_intelligence_bot.ingest import models, pipeline
+from ultimate_discord_intelligence_bot.ingest.sources.youtube import YouTubeConnector
+from ultimate_discord_intelligence_bot.scheduler import PriorityQueue, Scheduler
 
 
 def test_scheduler_enqueues_and_processes(tmp_path, monkeypatch):

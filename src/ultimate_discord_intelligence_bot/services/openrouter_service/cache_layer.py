@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Any
 
 from obs import metrics
 
-from ..cache import make_key
+from ..cache import combine_keys, generate_key_from_params
 from .state import RouteState
 
 log = logging.getLogger(__name__)
@@ -16,7 +16,9 @@ if TYPE_CHECKING:  # pragma: no cover
     from .service import OpenRouterService
 
 
-def check_caches(service: OpenRouterService, state: RouteState) -> dict[str, Any] | None:
+def check_caches(
+    service: OpenRouterService, state: RouteState
+) -> dict[str, Any] | None:
     """Return cached response if semantic or Redis cache hits occur."""
 
     labels = state.labels()
@@ -48,7 +50,9 @@ def check_caches(service: OpenRouterService, state: RouteState) -> dict[str, Any
     normalized_shadow_tasks: set[str] | None = None
     if shadow_tasks:
         try:
-            normalized_shadow_tasks = {str(t).strip().lower() for t in shadow_tasks if str(t).strip()}
+            normalized_shadow_tasks = {
+                str(t).strip().lower() for t in shadow_tasks if str(t).strip()
+            }
         except Exception:
             normalized_shadow_tasks = None
         if normalized_shadow_tasks:
@@ -63,7 +67,10 @@ def check_caches(service: OpenRouterService, state: RouteState) -> dict[str, Any
         cache_meta_sem.setdefault("mode", "shadow" if shadow_mode else "active")
         try:
             log.debug(
-                "semantic_cache_get attempting (ns=%s, model=%s, type=%s)", ns, chosen, type(service.semantic_cache)
+                "semantic_cache_get attempting (ns=%s, model=%s, type=%s)",
+                ns,
+                chosen,
+                type(service.semantic_cache),
             )
 
             sc = service.semantic_cache
@@ -77,7 +84,11 @@ def check_caches(service: OpenRouterService, state: RouteState) -> dict[str, Any
                         {
                             "status": "hit",
                             "cache_type": "semantic",
-                            "similarity": float(sem_res.get("similarity", 0.0) if isinstance(sem_res, dict) else 0.0),
+                            "similarity": float(
+                                sem_res.get("similarity", 0.0)
+                                if isinstance(sem_res, dict)
+                                else 0.0
+                            ),
                         }
                     )
                 except Exception:
@@ -85,24 +96,38 @@ def check_caches(service: OpenRouterService, state: RouteState) -> dict[str, Any
 
                 if shadow_mode:
                     try:
-                        metrics.SEMANTIC_CACHE_SHADOW_HITS.labels(**labels, model=chosen).inc()
+                        metrics.SEMANTIC_CACHE_SHADOW_HITS.labels(
+                            **labels, model=chosen
+                        ).inc()
                         service._update_shadow_hit_ratio(labels, is_hit=True)
                     except Exception:  # pragma: no cover
                         pass
                     try:
-                        sim_val = float(sem_res.get("similarity", 0.0)) if isinstance(sem_res, dict) else 0.0
+                        sim_val = (
+                            float(sem_res.get("similarity", 0.0))
+                            if isinstance(sem_res, dict)
+                            else 0.0
+                        )
                     except Exception:
                         sim_val = 0.0
-                    promote = bool(getattr(service, "semantic_cache_promotion_enabled", False)) and sim_val >= float(
+                    promote = bool(
+                        getattr(service, "semantic_cache_promotion_enabled", False)
+                    ) and sim_val >= float(
                         getattr(service, "semantic_cache_promotion_threshold", 0.9)
                     )
                     if promote:
-                        result = dict(sem_res) if isinstance(sem_res, dict) else {"response": str(sem_res)}
+                        result = (
+                            dict(sem_res)
+                            if isinstance(sem_res, dict)
+                            else {"response": str(sem_res)}
+                        )
                         result["cached"] = True
                         result["cache_type"] = "semantic"
                         result["cache_info"] = cache_meta
                         _record_similarity(labels, chosen, sim_val)
-                        _record_cache_hit(labels, chosen, provider_family, shadow_promoted=True)
+                        _record_cache_hit(
+                            labels, chosen, provider_family, shadow_promoted=True
+                        )
                         service._adaptive_record_outcome(
                             state,
                             reward=0.0,
@@ -127,12 +152,16 @@ def check_caches(service: OpenRouterService, state: RouteState) -> dict[str, Any
                     result["cached"] = True
                     result["cache_type"] = "semantic"
                     result["cache_info"] = cache_meta
-                    _record_similarity(labels, chosen, float(result.get("similarity", 0.0)))
+                    _record_similarity(
+                        labels, chosen, float(result.get("similarity", 0.0))
+                    )
                     try:
                         metrics.SEMANTIC_CACHE_PREFETCH_USED.labels(**labels).inc()
                     except Exception:  # pragma: no cover
                         pass
-                    metrics.LLM_CACHE_HITS.labels(**labels, model=chosen, provider=provider_family).inc()
+                    metrics.LLM_CACHE_HITS.labels(
+                        **labels, model=chosen, provider=provider_family
+                    ).inc()
                     try:
                         similarity_val = float(result.get("similarity", 0.0))
                     except Exception:
@@ -153,14 +182,18 @@ def check_caches(service: OpenRouterService, state: RouteState) -> dict[str, Any
                 log.debug("semantic_cache_get MISS for model=%s ns=%s", chosen, ns)
                 if shadow_mode:
                     try:
-                        metrics.SEMANTIC_CACHE_SHADOW_MISSES.labels(**labels, model=chosen).inc()
+                        metrics.SEMANTIC_CACHE_SHADOW_MISSES.labels(
+                            **labels, model=chosen
+                        ).inc()
                         service._update_shadow_hit_ratio(labels, is_hit=False)
                     except Exception:
                         pass
                     cache_meta_sem["status"] = "miss"
                 else:
                     try:
-                        metrics.LLM_CACHE_MISSES.labels(**labels, model=chosen, provider=provider_family).inc()
+                        metrics.LLM_CACHE_MISSES.labels(
+                            **labels, model=chosen, provider=provider_family
+                        ).inc()
                     except Exception:
                         pass
                     try:
@@ -179,20 +212,36 @@ def check_caches(service: OpenRouterService, state: RouteState) -> dict[str, Any
 
         def _sig(obj: Any) -> str:
             if isinstance(obj, dict):
-                return "{" + ",".join(f"{key}:{_sig(obj[key])}" for key in sorted(obj)) + "}"
+                return (
+                    "{"
+                    + ",".join(f"{key}:{_sig(obj[key])}" for key in sorted(obj))
+                    + "}"
+                )
             if isinstance(obj, list):
                 return "[" + ",".join(_sig(item) for item in obj) + "]"
             return str(obj)
 
         provider_sig = _sig(provider) if provider else "{}"
-        cache_key = make_key(f"{task_type}|{norm_prompt}|provider={provider_sig}", chosen)
+        cache_key = combine_keys(
+            generate_key_from_params(
+                task_type=task_type,
+                prompt=norm_prompt,
+                provider=provider_sig,
+                namespace=state.namespace or "default:main",
+            ),
+            generate_key_from_params(
+                system_prompt=getattr(service, "system_prompt", "") or ""
+            ),
+        )
         state.cache_key = cache_key
         cached = service.cache.get(cache_key)
         cache_meta_redis = cache_meta.setdefault("redis", {"status": "pending"})
         if cached:
             result = dict(cached)
             result["cached"] = True
-            metrics.LLM_CACHE_HITS.labels(**labels, model=result.get("model", chosen), provider=provider_family).inc()
+            metrics.LLM_CACHE_HITS.labels(
+                **labels, model=result.get("model", chosen), provider=provider_family
+            ).inc()
             result.setdefault("cache_info", cache_meta)
             cache_meta_redis.update({"status": "hit", "cache_type": "redis"})
             service._adaptive_record_outcome(
@@ -222,18 +271,26 @@ def _record_similarity(labels: dict[str, str], model: str, similarity: float) ->
             bucket = "0.75-0.9"
         else:
             bucket = "<0.75"
-        metrics.SEMANTIC_CACHE_SIMILARITY.labels(**labels, bucket=bucket).observe(similarity)
+        metrics.SEMANTIC_CACHE_SIMILARITY.labels(**labels, bucket=bucket).observe(
+            similarity
+        )
     except Exception:  # pragma: no cover - best effort
         pass
 
 
 def _record_cache_hit(
-    labels: dict[str, str], model: str, provider_family: str, *, shadow_promoted: bool = False
+    labels: dict[str, str],
+    model: str,
+    provider_family: str,
+    *,
+    shadow_promoted: bool = False,
 ) -> None:
     try:
         if shadow_promoted:
             metrics.CACHE_PROMOTIONS.labels(**labels, cache_name="semantic").inc()
             metrics.SEMANTIC_CACHE_PREFETCH_USED.labels(**labels).inc()
-        metrics.LLM_CACHE_HITS.labels(**labels, model=model, provider=provider_family).inc()
+        metrics.LLM_CACHE_HITS.labels(
+            **labels, model=model, provider=provider_family
+        ).inc()
     except Exception:  # pragma: no cover
         pass

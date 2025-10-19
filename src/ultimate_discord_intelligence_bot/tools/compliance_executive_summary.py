@@ -10,7 +10,7 @@ from core.time import default_utc_now
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
-def main():
+def main() -> None:
     """Generate executive compliance summary."""
 
     # Header

@@ -37,6 +37,7 @@ MAPPING = {
     "HippoRagContinualMemoryTool": ".hipporag_continual_memory_tool",
     "LeaderboardTool": ".leaderboard_tool",
     "LogicalFallacyTool": ".logical_fallacy_tool",
+    "Mem0MemoryTool": ".mem0_memory_tool",
     "MemoryStorageTool": ".memory_storage_tool",
     "MemoryCompactionTool": ".memory_compaction_tool",
     "MockVectorSearchTool": ".mock_vector_tool",
@@ -50,6 +51,7 @@ MAPPING = {
     "ResearchAndBriefMultiTool": ".research_and_brief_multi_tool",
     "PerspectiveSynthesizerTool": ".perspective_synthesizer_tool",
     "PipelineTool": ".pipeline_tool",
+    "PromptCompressionTool": ".prompt_compression_tool",
     "DeceptionScoringTool": ".deception_scoring_tool",
     "SystemStatusTool": ".system_status_tool",
     "TextAnalysisTool": ".text_analysis_tool",
@@ -58,6 +60,9 @@ MAPPING = {
     "TrustworthinessTrackerTool": ".trustworthiness_tracker_tool",
     "TruthScoringTool": ".truth_scoring_tool",
     "VectorSearchTool": ".vector_search_tool",
+    "VowpalWabbitBanditTool": ".vowpal_wabbit_bandit_tool",
+    "DSPyOptimizationTool": ".dspy_optimization_tool",
+    "CheckpointManagementTool": ".checkpoint_management_tool",
     # Resolvers under platform_resolver
     "PodcastResolverTool": ".platform_resolver.podcast_resolver",
     "SocialResolverTool": ".platform_resolver.social_resolver",
@@ -76,6 +81,27 @@ MAPPING = {
     "XMonitorTool": ".x_monitor_tool",
     "YouTubeDownloadTool": ".yt_dlp_download_tool",
     "YtDlpDownloadTool": ".yt_dlp_download_tool",
+    # Computer Vision & Multimodal AI Tools
+    "VideoFrameAnalysisTool": ".video_frame_analysis_tool",
+    "ImageAnalysisTool": ".image_analysis_tool",
+    "VisualSummaryTool": ".visual_summary_tool",
+    "AdvancedAudioAnalysisTool": ".advanced_audio_analysis_tool",
+    "MultimodalAnalysisTool": ".multimodal_analysis_tool",
+    "ContentGenerationTool": ".content_generation_tool",
+    # Real-Time AI Processing Tools
+    "LiveStreamAnalysisTool": ".live_stream_analysis_tool",
+    "TrendAnalysisTool": ".trend_analysis_tool",
+    "ViralityPredictionTool": ".virality_prediction_tool",
+    # Predictive Analytics Tools
+    "TrendForecastingTool": ".trend_forecasting_tool",
+    "EngagementPredictionTool": ".engagement_prediction_tool",
+    "ContentRecommendationTool": ".content_recommendation_tool",
+    # Creator Network Intelligence Tools
+    "SocialGraphAnalysisTool": ".social_graph_analysis_tool",
+    "InstagramStoriesArchiverTool": ".instagram_stories_archiver_tool",
+    "TikTokEnhancedDownloadTool": ".tiktok_enhanced_download_tool",
+    "TwitterThreadReconstructorTool": ".twitter_thread_reconstructor_tool",
+    "CrossPlatformNarrativeTrackingTool": ".cross_platform_narrative_tool",
 }
 
 __all__ = [
@@ -109,6 +135,7 @@ __all__ = [
     "HippoRagContinualMemoryTool",
     "LeaderboardTool",
     "LogicalFallacyTool",
+    "Mem0MemoryTool",
     "MemoryCompactionTool",
     "MemoryStorageTool",
     "MockVectorSearchTool",
@@ -122,6 +149,7 @@ __all__ = [
     "ResearchAndBriefMultiTool",
     "PerspectiveSynthesizerTool",
     "PipelineTool",
+    "PromptCompressionTool",
     "DeceptionScoringTool",
     "SystemStatusTool",
     "TextAnalysisTool",
@@ -133,7 +161,10 @@ __all__ = [
     "PodcastResolverTool",
     "SocialResolverTool",
     "TwitchResolverTool",
-    "YouTubeResolverTool",
+    "YoutubeTranscriptTool",
+    "VowpalWabbitBanditTool",
+    "DSPyOptimizationTool",
+] + [
     "InstagramDownloadTool",
     "KickDownloadTool",
     "RedditDownloadTool",
@@ -146,6 +177,27 @@ __all__ = [
     "XMonitorTool",
     "YouTubeDownloadTool",
     "YtDlpDownloadTool",
+    # Computer Vision & Multimodal AI Tools
+    "VideoFrameAnalysisTool",
+    "ImageAnalysisTool",
+    "VisualSummaryTool",
+    "AdvancedAudioAnalysisTool",
+    "MultimodalAnalysisTool",
+    "ContentGenerationTool",
+    # Real-Time AI Processing Tools
+    "LiveStreamAnalysisTool",
+    "TrendAnalysisTool",
+    "ViralityPredictionTool",
+    # Predictive Analytics Tools
+    "TrendForecastingTool",
+    "EngagementPredictionTool",
+    "ContentRecommendationTool",
+    # Creator Network Intelligence Tools
+    "SocialGraphAnalysisTool",
+    "InstagramStoriesArchiverTool",
+    "TikTokEnhancedDownloadTool",
+    "TwitterThreadReconstructorTool",
+    "CrossPlatformNarrativeTrackingTool",
 ]
 
 
@@ -161,22 +213,20 @@ def __getattr__(name: str):  # PEP 562: lazy attribute loading
         # Provide a soft-fail stub so imports don’t break across frameworks/scaffolds.
         # The stub mirrors a minimal tool surface and returns a StepResult.fail() when run.
         def _make_stub(_tool_name: str, _error: Exception):  # noqa: D401 - tiny helper
-            try:
-                from ..step_result import StepResult  # lazy import to avoid cycles
-            except Exception:
-                StepResult = None  # type: ignore[assignment]
-
             class _MissingDependencyTool:
                 name = _tool_name
                 description = f"{_tool_name} unavailable: optional dependencies missing ({type(_error).__name__})"
 
                 def run(self, *args, **kwargs):  # pragma: no cover - trivial
-                    if StepResult is None:
+                    try:
+                        from ..step_result import (
+                            StepResult as _StepResult,  # lazy import per call
+                        )
+                    except Exception:
                         # Last-resort preserve original import error
                         raise _error
-                    return StepResult.fail(
-                        error=f"{_tool_name} is unavailable",
-                        details=str(_error),
+                    return _StepResult.fail(
+                        error=f"{_tool_name} is unavailable", details=str(_error)
                     )
 
             _MissingDependencyTool.__name__ = _tool_name

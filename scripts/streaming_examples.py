@@ -13,7 +13,7 @@ from unittest.mock import MagicMock
 from pydantic import BaseModel
 
 # Import the streaming components
-from core.structured_llm_service import (
+from ultimate_discord_intelligence_bot.core.structured_llm_service import (
     ProgressCallback,
     ProgressEvent,
     StreamingStructuredRequest,

@@ -306,6 +306,28 @@ async def _execute_autointel(interaction: Any, url: str, depth: str = "standard"
 
         depth = _normalize_depth(depth)
 
+        # Check if background worker is available
+        background_worker = getattr(interaction.client, "background_worker", None)
+        orchestrator = getattr(interaction.client, "orchestrator", None)
+
+        # If background worker is available, use it for unlimited time processing
+        if background_worker and orchestrator:
+            print("🚀 Using background worker for unlimited analysis time")
+            try:
+                from ..background_autointel_handler import handle_autointel_background
+
+                await handle_autointel_background(
+                    interaction=interaction,
+                    orchestrator=orchestrator,
+                    background_worker=background_worker,
+                    url=url,
+                    depth=depth,
+                )
+                return
+            except Exception as bg_error:
+                print(f"⚠️ Background worker failed, falling back to synchronous: {bg_error}")
+                # Fall through to synchronous execution
+
         print("🔄 Attempting to import autonomous orchestrator...")
 
         # Simplified robust orchestrator loading
@@ -552,15 +574,53 @@ def _register_slash_commands(bot: Any) -> None:
             📋 Intelligence Briefing Curation
             💬 Community Communication & Reporting
             """
-            # Immediately defer to prevent timeout and run the shared executor
+            print(f"🤖 /autointel command started: URL={url}, Depth={depth}")
+            await _execute_autointel(interaction, url, depth)
+
+        @bot.tree.command(name="retrieve_results", description="Retrieve completed intelligence analysis results")
+        @app_commands.describe(workflow_id="Workflow ID from the /autointel acknowledgment message")
+        async def _retrieve_results(interaction, workflow_id: str):  # type: ignore
+            """Retrieve results from a background intelligence analysis workflow."""
             try:
                 await interaction.response.defer()
-                print(f"🤖 /autointel command started: URL={url}, Depth={depth}")
+                print(f"🔍 /retrieve_results command started: workflow_id={workflow_id}")
             except Exception as defer_error:
                 print(f"❌ Failed to defer response: {defer_error}")
                 return
 
-            await _execute_autointel(interaction, url, depth)
+            # Get background worker
+            background_worker = getattr(interaction.client, "background_worker", None)
+
+            if not background_worker:
+                try:
+                    await interaction.followup.send(
+                        "❌ **Background Worker Not Available**\n\n"
+                        "The background processing system is not enabled. "
+                        "Results retrieval is only available when background processing is active.",
+                        ephemeral=True,
+                    )
+                except Exception:
+                    pass
+                return
+
+            # Use the handler
+            try:
+                from ..background_autointel_handler import handle_retrieve_results
+
+                await handle_retrieve_results(
+                    interaction=interaction,
+                    background_worker=background_worker,
+                    workflow_id=workflow_id,
+                )
+            except Exception as e:
+                print(f"❌ Result retrieval failed: {e}")
+                try:
+                    await interaction.followup.send(
+                        f"❌ **Retrieval Error**\n\nFailed to retrieve results: {str(e)}",
+                        ephemeral=True,
+                    )
+                except Exception:
+                    pass
 
         if os.getenv("ENABLE_DISCORD_USER_COMMANDS", "0").lower() in {"1", "true", "yes"}:
 

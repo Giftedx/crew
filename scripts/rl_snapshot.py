@@ -17,10 +17,10 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from core.learning_engine import LearningEngine
-from core.rl.policies.bandit_base import EpsilonGreedyBandit, ThompsonSamplingBandit, UCB1Bandit
-from core.rl.policies.linucb import LinUCBDiagBandit
-from core.rl.registry import PolicyRegistry
+from ultimate_discord_intelligence_bot.core.learning_engine import LearningEngine
+from ultimate_discord_intelligence_bot.core.rl.policies.bandit_base import EpsilonGreedyBandit, ThompsonSamplingBandit, UCB1Bandit
+from ultimate_discord_intelligence_bot.core.rl.policies.linucb import LinUCBDiagBandit
+from ultimate_discord_intelligence_bot.core.rl.registry import PolicyRegistry
 
 # Minimal domain seed list for snapshotting; adjust to match production usage.
 DEFAULT_DOMAINS = {

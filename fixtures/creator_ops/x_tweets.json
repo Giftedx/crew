@@ -1,0 +1,114 @@
+{
+    "data": [
+        {
+            "id": "1234567890123456789",
+            "text": "Just finished an epic gaming session! 🎮 What's your favorite game right now? #gaming #gamer #epic",
+            "author_id": "1234567890123456789",
+            "created_at": "2024-01-15T10:30:00.000Z",
+            "public_metrics": {
+                "retweet_count": 150,
+                "reply_count": 50,
+                "like_count": 1000,
+                "quote_count": 25
+            },
+            "context_annotations": [
+                {
+                    "domain": {
+                        "id": "47",
+                        "name": "Brand",
+                        "description": "Brands and Companies"
+                    },
+                    "entity": {
+                        "id": "1000000000000000000",
+                        "name": "Gaming",
+                        "description": "Gaming industry"
+                    }
+                }
+            ],
+            "entities": {
+                "hashtags": [
+                    {
+                        "start": 75,
+                        "end": 82,
+                        "tag": "gaming"
+                    },
+                    {
+                        "start": 83,
+                        "end": 89,
+                        "tag": "gamer"
+                    },
+                    {
+                        "start": 90,
+                        "end": 95,
+                        "tag": "epic"
+                    }
+                ],
+                "mentions": [],
+                "urls": []
+            },
+            "lang": "en",
+            "possibly_sensitive": false,
+            "reply_settings": "everyone",
+            "source": "Twitter for iPhone",
+            "conversation_id": "1234567890123456789"
+        },
+        {
+            "id": "1234567890123456790",
+            "text": "Behind the scenes of my latest video! 📹 The editing process is always so satisfying. #behindthescenes #editing #contentcreator",
+            "author_id": "1234567890123456789",
+            "created_at": "2024-01-14T18:45:00.000Z",
+            "public_metrics": {
+                "retweet_count": 200,
+                "reply_count": 80,
+                "like_count": 1500,
+                "quote_count": 30
+            },
+            "context_annotations": [
+                {
+                    "domain": {
+                        "id": "47",
+                        "name": "Brand",
+                        "description": "Brands and Companies"
+                    },
+                    "entity": {
+                        "id": "1000000000000000001",
+                        "name": "Content Creation",
+                        "description": "Content creation industry"
+                    }
+                }
+            ],
+            "entities": {
+                "hashtags": [
+                    {
+                        "start": 95,
+                        "end": 110,
+                        "tag": "behindthescenes"
+                    },
+                    {
+                        "start": 111,
+                        "end": 119,
+                        "tag": "editing"
+                    },
+                    {
+                        "start": 120,
+                        "end": 136,
+                        "tag": "contentcreator"
+                    }
+                ],
+                "mentions": [],
+                "urls": []
+            },
+            "lang": "en",
+            "possibly_sensitive": false,
+            "reply_settings": "everyone",
+            "source": "Twitter for iPhone",
+            "conversation_id": "1234567890123456790"
+        }
+    ],
+    "meta": {
+        "result_count": 2,
+        "newest_id": "1234567890123456789",
+        "oldest_id": "1234567890123456790",
+        "next_token": "next_token_12345"
+    }
+}

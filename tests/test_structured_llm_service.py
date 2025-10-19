@@ -8,7 +8,7 @@ from unittest.mock import Mock, patch
 import pytest
 from pydantic import BaseModel
 
-from core.structured_llm_service import (
+from ultimate_discord_intelligence_bot.core.structured_llm_service import (
     CacheEntry,
     CacheKeyGenerator,
     ProgressCallback,

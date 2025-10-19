@@ -1,7 +1,7 @@
 import os
 
-from src.core.cache.semantic_cache import CacheStats
-from src.core.settings import get_settings
+from ultimate_discord_intelligence_bot.core.cache.semantic_cache import CacheStats
+from ultimate_discord_intelligence_bot.core.settings import get_settings
 from src.obs import metrics
 from src.ultimate_discord_intelligence_bot.services.openrouter_service import OpenRouterService
 

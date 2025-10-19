@@ -12,7 +12,9 @@ from typing import Any, cast
 
 from ai.performance_router import create_performance_router
 from core.learning_engine import LearningEngine
-from ultimate_discord_intelligence_bot.agent_training.performance_monitor import AgentPerformanceMonitor
+from ultimate_discord_intelligence_bot.agent_training.performance_monitor import (
+    AgentPerformanceMonitor,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -52,7 +54,9 @@ class EnhancedAIRouter:
             # Use performance-based routing if no specific model requested
             if model is None:
                 routing_decision = self.performance_router.select_optimal_model(
-                    task_type=task_type, available_models=available_models, optimization_target=optimization_target
+                    task_type=task_type,
+                    available_models=available_models,
+                    optimization_target=optimization_target,
                 )
                 selected_model = routing_decision.selected_model
                 decision_reasoning = routing_decision.reasoning
@@ -99,7 +103,9 @@ class EnhancedAIRouter:
             # Update performance metrics
             if success:
                 # Simple quality assessment (could be enhanced with actual quality scoring)
-                quality_score = self._assess_response_quality(result.get("response", ""), task_type)
+                quality_score = self._assess_response_quality(
+                    result.get("response", ""), task_type
+                )
 
                 self.performance_router.update_model_performance(
                     model=selected_model,
@@ -110,7 +116,9 @@ class EnhancedAIRouter:
                 )
 
                 # Update learning engine
-                reward = self._calculate_reward(actual_cost, actual_latency_ms, quality_score, optimization_target)
+                reward = self._calculate_reward(
+                    actual_cost, actual_latency_ms, quality_score, optimization_target
+                )
                 self.learning_engine.update(task_type, selected_model, reward=reward)
 
             # Enhance result with routing information
@@ -149,7 +157,10 @@ class EnhancedAIRouter:
                 fallback_result = cast(
                     dict[str, Any],
                     await self.openrouter_service.route_async(
-                        prompt=prompt, task_type=task_type, model=model, provider_opts=provider_opts
+                        prompt=prompt,
+                        task_type=task_type,
+                        model=model,
+                        provider_opts=provider_opts,
                     ),
                 )
                 return fallback_result
@@ -194,7 +205,9 @@ class EnhancedAIRouter:
 
         # Task-specific adjustments
         task_bonus = 0.0
-        if task_type == "analysis" and any(word in response.lower() for word in ["analyze", "evidence", "conclusion"]):
+        if task_type == "analysis" and any(
+            word in response.lower() for word in ["analyze", "evidence", "conclusion"]
+        ):
             task_bonus = 0.1
         elif task_type == "creative" and len(response) > 100:
             task_bonus = 0.1
@@ -202,7 +215,11 @@ class EnhancedAIRouter:
         return min(1.0, length_score * 0.3 + coherence_score * 0.6 + task_bonus)
 
     def _calculate_reward(
-        self, cost: float, latency_ms: float, quality_score: float, optimization_target: str
+        self,
+        cost: float,
+        latency_ms: float,
+        quality_score: float,
+        optimization_target: str,
     ) -> float:
         """Calculate reward for learning engine based on optimization target."""
 
@@ -234,7 +251,9 @@ class EnhancedAIRouter:
         success_rate = successful_routes / total_routes
 
         # Performance statistics
-        avg_latency = sum(r["actual_latency_ms"] for r in self.route_history) / total_routes
+        avg_latency = (
+            sum(r["actual_latency_ms"] for r in self.route_history) / total_routes
+        )
         avg_cost = sum(r["actual_cost"] for r in self.route_history) / total_routes
 
         # Model usage distribution
@@ -271,7 +290,9 @@ def create_enhanced_ai_router(
     learning_engine: LearningEngine | None = None,
 ) -> EnhancedAIRouter:
     """Create an enhanced AI router instance."""
-    return EnhancedAIRouter(enhanced_openrouter_service, performance_monitor, learning_engine)
+    return EnhancedAIRouter(
+        enhanced_openrouter_service, performance_monitor, learning_engine
+    )
 
 
 if __name__ == "__main__":
@@ -295,7 +316,9 @@ if __name__ == "__main__":
             print(f"\n📝 Prompt: {prompt[:40]}...")
             print(f"🎯 Task: {task_type} | Target: {target}")
 
-            result = await router.intelligent_route(prompt=prompt, task_type=task_type, optimization_target=target)
+            result = await router.intelligent_route(
+                prompt=prompt, task_type=task_type, optimization_target=target
+            )
 
             print(f"✅ Model: {result.get('model', 'unknown')}")
             print(f"📊 Reasoning: {result.get('routing_decision', 'N/A')}")

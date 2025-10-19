@@ -1,10 +1,13 @@
-"""Utility for transcribing audio using Whisper.
+"""
+Utility for transcribing audio using the faster Distil-Whisper model.
 
-The original implementation eagerly loaded the Whisper model at import time which
-adds significant overhead and makes tests harder to run on systems without the
-dependency installed.  The tool now performs a lazy import and model
-initialisation so that the model is only loaded when the tool is executed.  This
-also allows unit tests to mock out the behaviour without importing Whisper.
+This implementation uses the Hugging Face transformers library to run the
+distil-whisper/distil-large-v3 model, which offers a 6x speed improvement over
+traditional Whisper with minimal degradation in transcription quality.
+
+The tool lazy-loads the model on first use to reduce initial application startup
+time and memory overhead. It's designed to be a drop-in replacement for the
+previous Whisper tool.
 """
 
 import importlib
@@ -12,138 +15,183 @@ import logging
 import os
 import time
 from functools import cached_property
-from typing import Any, Protocol, TypedDict, cast
+from typing import Any
+
+import torch
 
 from core.secure_config import get_config
+from ultimate_discord_intelligence_bot.cache import EnhancedTranscriptionCache
 from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
 from ._base import BaseTool
 
-# Optional dependency loaded dynamically to avoid hard import errors during typing/linting
-whisper: Any | None
-try:  # pragma: no cover - optional dependency
-    whisper = importlib.import_module("whisper")
-except Exception:  # pragma: no cover - handled in runtime
-    whisper = None
-
-
-class _TranscribeResult(TypedDict, total=False):
-    text: str
-    segments: list[dict[str, object]]
-
-
-class _WhisperModel(Protocol):
-    def transcribe(self, path: str) -> dict[str, Any]: ...
+# Lazy load transformers to avoid import errors if not installed and to speed up startup
+transformers: Any | None
+try:  # pragma: no cover
+    transformers = importlib.import_module("transformers")
+except ImportError:  # pragma: no cover
+    transformers = None
 
 
 class AudioTranscriptionTool(BaseTool[StepResult]):
-    name: str = "Audio Transcription Tool"
-    description: str = "Transcribe audio from a video file using Whisper."
+    name: str = "Enhanced Whisper Audio Transcription"
+    description: str = "Transcribes audio from a file using the high-performance Distil-Whisper model."
 
-    def __init__(self, model_name: str | None = None):
+    def __init__(
+        self,
+        model_id: str | None = None,
+        device: str | None = None,
+        chunk_length_s: int = 30,
+        torch_dtype: torch.dtype | None = None,
+        enable_caching: bool = True,
+    ):
         super().__init__()
         config = get_config()
-        self._model_name = model_name or config.whisper_model
+        self._model_id = model_id or config.get("DISTIL_WHISPER_MODEL_ID", "distil-whisper/distil-large-v3")
+
+        # Determine device, defaulting to CUDA if available
+        if device:
+            self._device = device
+        else:
+            self._device = "cuda:0" if torch.cuda.is_available() else "cpu"
+
+        self._chunk_length_s = chunk_length_s
+        self._torch_dtype = torch_dtype or torch.float16
         self._metrics = get_metrics()
 
-    @property
-    def model_name(self) -> str:
-        """Return the configured Whisper model name."""
-
-        return self._model_name
+        # Initialize cache if enabled
+        self._cache = EnhancedTranscriptionCache(enabled=enable_caching) if enable_caching else None
 
     @cached_property
-    def model(self) -> _WhisperModel:  # pragma: no cover - heavy initialisation
-        if whisper is None:
-            raise RuntimeError("whisper package is not installed")
-        logging.info("Loading Whisper model %s", self._model_name)
-        return cast(_WhisperModel, whisper.load_model(self._model_name))
-
-    def _load_corrections(self) -> dict[str, str]:
-        """Load optional transcript corrections from config file.
-
-        File format (JSON): {"sobra": "sabra", ...}
+    def transcriber(self) -> Any:
         """
-        try:
-            from ultimate_discord_intelligence_bot.settings import CONFIG_DIR  # noqa: PLC0415
-
-            path = os.path.join(str(CONFIG_DIR), "transcript_corrections.json")
-            if os.path.exists(path):
-                import json
-
-                with open(path, encoding="utf-8") as f:
-                    data = json.load(f)
-                if isinstance(data, dict):
-                    # normalize keys to lowercase
-                    return {str(k).lower(): str(v) for k, v in data.items()}
-        except Exception:
-            pass
-        return {}
-
-    def _apply_corrections(self, text: str, corrections: dict[str, str]) -> str:
-        if not corrections or not text:
-            return text
-        import re
-
-        out = text
-        for wrong, right in corrections.items():
-            # Replace whole words only, ignore case, handle punctuation adjacency
-            pattern = re.compile(rf"\b{re.escape(wrong)}\b", flags=re.IGNORECASE)
-            out = pattern.sub(right, out)
-        return out
-
-    def _run(self, video_path: str) -> StepResult:
-        """Transcribe audio from a video file.
-
-        Returns a StepResult; errors are captured rather than raised so the
-        pipeline can continue gracefully.
+        Lazy-loads and initializes the transcription pipeline from the transformers library.
+        This property is cached, so the model is only loaded once per tool instance.
         """
-        start = time.monotonic()
-        try:
-            if not os.path.exists(video_path):
-                self._metrics.counter(
-                    "tool_runs_total", labels={"tool": "audio_transcription", "outcome": "error"}
-                ).inc()
-                return StepResult.fail(error="Video file not found.")
+        if transformers is None:
+            raise RuntimeError(
+                "The 'transformers' package is not installed. Please install it with `pip install '.[distil_whisper]'`."
+            )
 
-            # Provide language hint and stable decoding settings to improve proper nouns
-            # If model ignores language, it will auto-detect; otherwise it guides decoding.
-            opts = {"language": "en", "fp16": False}
-            result = self.model.transcribe(video_path, **opts)
-            text = str(result.get("text", ""))
-            # Extract segments when available (start/end/text) for timestamped navigation
-            raw_segments = result.get("segments", []) if isinstance(result, dict) else []
-            segments: list[dict[str, object]] = []
-            if isinstance(raw_segments, list):
-                for seg in raw_segments:
-                    if not isinstance(seg, dict):
-                        continue
-                    try:
-                        start = float(seg.get("start", 0.0))
-                    except Exception:
-                        start = 0.0
-                    try:
-                        end = float(seg.get("end", start))
-                    except Exception:
-                        end = start
-                    txt = str(seg.get("text", "")).strip()
-                    segments.append({"start": start, "end": end, "text": txt})
-            # Optional post-correction pass
-            text = self._apply_corrections(text, self._load_corrections())
-            self._metrics.counter("tool_runs_total", labels={"tool": "audio_transcription", "outcome": "success"}).inc()
+        logging.info(f"Loading Distil-Whisper model '{self._model_id}' on device '{self._device}'")
+
+        # Initialize the ASR pipeline
+        return transformers.pipeline(
+            "automatic-speech-recognition",
+            model=self._model_id,
+            torch_dtype=self._torch_dtype,
+            device=self._device,
+        )
+
+    def _run(self, audio_path: str, video_id: str | None = None, **metadata: Any) -> StepResult:
+        """
+        Performs transcription on the given audio file with caching support.
+
+        Args:
+            audio_path: The absolute path to the audio file to be transcribed.
+            video_id: Optional video identifier for cache key generation
+            **metadata: Additional metadata for cache key generation
+
+        Returns:
+            A StepResult containing the transcription text and segment data, or an error.
+        """
+        start_time = time.monotonic()
+        try:
+            if not os.path.exists(audio_path):
+                self._metrics.counter("tool_runs_total", labels={"tool": self.name, "outcome": "error"}).inc()
+                return StepResult.fail(error=f"Audio file not found at path: {audio_path}")
+
+            # Generate cache key if video_id is provided
+            if self._cache and video_id:
+                # Check cache first
+                cached_result = self._cache.get_transcription(
+                    video_id=video_id, model_name=self._model_id, file_path=audio_path, **metadata
+                )
+                if cached_result:
+                    self._metrics.counter("tool_runs_total", labels={"tool": self.name, "outcome": "cache_hit"}).inc()
+                    return StepResult.ok(
+                        transcript=cached_result["transcript"], segments=cached_result.get("segments", []), cached=True
+                    )
+
+            # Perform transcription
+            result = self.transcriber(
+                audio_path,
+                chunk_length_s=self._chunk_length_s,
+                batch_size=8,  # Small batch size for CPU, can be increased for GPU
+                return_timestamps=True,
+            )
+
+            text = result.get("text", "").strip()
+
+            # Process segments for structured output
+            segments = [
+                {
+                    "start": chunk["timestamp"][0],
+                    "end": chunk["timestamp"][1],
+                    "text": chunk["text"].strip(),
+                }
+                for chunk in result.get("chunks", [])
+                if chunk.get("timestamp") and chunk.get("text")
+            ]
+
+            # Store in cache if available and video_id provided
+            if self._cache and video_id:
+                quality_score = self._calculate_transcript_quality(text, segments)
+                self._cache.store_transcription(
+                    video_id=video_id,
+                    model_name=self._model_id,
+                    transcript=text,
+                    segments=segments,
+                    quality_score=quality_score,
+                    file_path=audio_path,
+                    **metadata,
+                )
+
+            self._metrics.counter("tool_runs_total", labels={"tool": self.name, "outcome": "success"}).inc()
             return StepResult.ok(transcript=text, segments=segments)
-        except Exception as e:  # pragma: no cover - exercised in integration
-            logging.exception("Transcription failed")
-            self._metrics.counter("tool_runs_total", labels={"tool": "audio_transcription", "outcome": "error"}).inc()
-            return StepResult.fail(error=str(e))
-        finally:  # record latency regardless of outcome
-            try:  # defensive: histogram may no-op
-                duration = time.monotonic() - start
-                self._metrics.histogram("tool_run_seconds", duration, labels={"tool": "audio_transcription"})
-            except Exception as exc:  # pragma: no cover - metrics backend failure should not break tool
-                logging.debug("audio_transcription metrics emit failed: %s", exc)
 
-    # Expose a public run method for pipeline compatibility
-    def run(self, video_path: str) -> StepResult:  # pragma: no cover - thin wrapper
-        return self._run(video_path)
+        except Exception as e:
+            logging.exception(f"Enhanced Whisper transcription failed for {audio_path}")
+            self._metrics.counter("tool_runs_total", labels={"tool": self.name, "outcome": "error"}).inc()
+            return StepResult.fail(error=str(e))
+        finally:
+            duration = time.monotonic() - start_time
+            self._metrics.histogram("tool_run_seconds", duration, labels={"tool": self.name})
+
+    def _calculate_transcript_quality(self, text: str, segments: list[dict[str, Any]]) -> float:
+        """Calculate a simple quality score for the transcript.
+
+        Args:
+            text: The transcript text
+            segments: List of transcript segments with timestamps
+
+        Returns:
+            Quality score between 0.0 and 1.0
+        """
+        if not text:
+            return 0.0
+
+        quality_score = 0.5  # Base score
+
+        # Length factor (longer transcripts are generally better)
+        if len(text) > 1000:
+            quality_score += 0.2
+        elif len(text) > 500:
+            quality_score += 0.1
+
+        # Segment count factor (more segments indicate better segmentation)
+        if segments:
+            quality_score += min(0.2, len(segments) / 100)
+
+        # Basic text quality indicators
+        word_count = len(text.split())
+        if word_count > 100:
+            quality_score += 0.1
+
+        # Cap at 1.0
+        return min(1.0, quality_score)
+
+    def run(self, audio_path: str, video_id: str | None = None, **metadata: Any) -> StepResult:
+        """Public run method for pipeline compatibility."""
+        return self._run(audio_path, video_id, **metadata)

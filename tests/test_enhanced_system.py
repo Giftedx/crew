@@ -6,9 +6,9 @@ import time
 from unittest.mock import Mock
 
 sys.path.insert(0, "src")
-from core.db_optimizer import DatabaseOptimizer
-from core.llm_cache import QuantizedEmbedding, VectorIndex, get_llm_cache
-from core.llm_router import LLMRouter, TaskComplexityMetrics
+from ultimate_discord_intelligence_bot.core.db_optimizer import DatabaseOptimizer
+from ultimate_discord_intelligence_bot.core.llm_cache import QuantizedEmbedding, VectorIndex, get_llm_cache
+from ultimate_discord_intelligence_bot.core.llm_router import LLMRouter, TaskComplexityMetrics
 from memory.vector_store import VectorStore
 from ultimate_discord_intelligence_bot.performance_dashboard import PerformanceDashboard
 from ultimate_discord_intelligence_bot.step_result import (
@@ -176,13 +176,13 @@ class TestEnhancedSystemIntegration:
     def test_system_integration_end_to_end(self):
         """Test end-to-end integration of all enhanced components."""
         # Test that all modules can be imported and instantiated together
-        from core.llm_cache import get_llm_cache
-        from core.llm_router import LLMRouter
+        from ultimate_discord_intelligence_bot.core.llm_cache import get_llm_cache
+        from ultimate_discord_intelligence_bot.core.llm_router import LLMRouter
         from ultimate_discord_intelligence_bot.performance_dashboard import get_performance_dashboard
         from ultimate_discord_intelligence_bot.step_result import ErrorCategory, StepResult
 
         # Initialize all components
-        cache = get_llm_cache()
+        get_llm_cache()
         dashboard = get_performance_dashboard()
 
         # Mock clients for router
@@ -190,7 +190,7 @@ class TestEnhancedSystemIntegration:
         mock_client.chat.return_value = Mock(cost_usd=0.01, latency_ms=100)
 
         # Test router integration
-        router = LLMRouter({"test_model": mock_client})
+        LLMRouter({"test_model": mock_client})
 
         # Test error handling integration
         error_result = StepResult.fail("Test error", ErrorCategory.PROCESSING)

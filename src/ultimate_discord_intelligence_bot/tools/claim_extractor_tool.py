@@ -22,7 +22,9 @@ class ClaimExtractorTool(BaseTool[StepResult]):
     """
 
     name: str = "Claim Extractor Tool"
-    description: str = "Extract potential factual claims from text using linguistic patterns."
+    description: str = (
+        "Extract potential factual claims from text using linguistic patterns."
+    )
 
     def __init__(self) -> None:
         super().__init__()
@@ -42,11 +44,18 @@ class ClaimExtractorTool(BaseTool[StepResult]):
         import logging
 
         logger = logging.getLogger(__name__)
-        text_preview = (text[:500] + "...") if text and len(text) > 500 else (text or "")
-        logger.warning(f"🔍 ClaimExtractorTool received {len(text or '')} chars of text. Preview: {text_preview}")
+        text_preview = (
+            (text[:500] + "...") if text and len(text) > 500 else (text or "")
+        )
+        logger.warning(
+            f"🔍 ClaimExtractorTool received {len(text or '')} chars of text. Preview: {text_preview}"
+        )
 
         if not text or not text.strip():
-            self._metrics.counter("tool_runs_total", labels={"tool": "claim_extractor", "outcome": "success"}).inc()
+            self._metrics.counter(
+                "tool_runs_total",
+                labels={"tool": "claim_extractor", "outcome": "success"},
+            ).inc()
             return StepResult.ok(claims=[], count=0)
 
         try:
@@ -74,7 +83,8 @@ class ClaimExtractorTool(BaseTool[StepResult]):
                 if chunk_claims is None:
                     # Handle None return from extract (test case requirement)
                     self._metrics.counter(
-                        "tool_runs_total", labels={"tool": "claim_extractor", "outcome": "error"}
+                        "tool_runs_total",
+                        labels={"tool": "claim_extractor", "outcome": "error"},
                     ).inc()
                     return StepResult.fail(error="KG extract returned None", claims=[])
 
@@ -82,7 +92,11 @@ class ClaimExtractorTool(BaseTool[StepResult]):
                     claim_text = claim.text.strip()
                     # Use lowercase for dedup but preserve original casing
                     claim_lower = claim_text.lower()
-                    if claim_text and len(claim_text) > MIN_CLAIM_LEN and claim_lower not in seen_claims:
+                    if (
+                        claim_text
+                        and len(claim_text) > MIN_CLAIM_LEN
+                        and claim_lower not in seen_claims
+                    ):
                         all_claims.append(claim_text)
                         seen_claims.add(claim_lower)
                         if len(all_claims) >= max_claims:
@@ -91,13 +105,21 @@ class ClaimExtractorTool(BaseTool[StepResult]):
                 if len(all_claims) >= max_claims:
                     break
 
-            self._metrics.counter("tool_runs_total", labels={"tool": "claim_extractor", "outcome": "success"}).inc()
+            self._metrics.counter(
+                "tool_runs_total",
+                labels={"tool": "claim_extractor", "outcome": "success"},
+            ).inc()
             return StepResult.ok(claims=all_claims, count=len(all_claims))
         except Exception as e:  # pragma: no cover - defensive
-            self._metrics.counter("tool_runs_total", labels={"tool": "claim_extractor", "outcome": "error"}).inc()
+            self._metrics.counter(
+                "tool_runs_total",
+                labels={"tool": "claim_extractor", "outcome": "error"},
+            ).inc()
             return StepResult.fail(error=str(e), claims=[])
 
-    def run(self, text: str, max_claims: int = 10) -> StepResult:  # pragma: no cover - thin wrapper
+    def run(
+        self, text: str, max_claims: int = 10
+    ) -> StepResult:  # pragma: no cover - thin wrapper
         return self._run(text, max_claims)
 
 

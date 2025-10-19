@@ -1,0 +1,88 @@
+{
+    "data": [
+        {
+            "name": "impressions",
+            "period": "day",
+            "values": [
+                {
+                    "value": 50000,
+                    "end_time": "2024-01-15T00:00:00+0000"
+                },
+                {
+                    "value": 45000,
+                    "end_time": "2024-01-14T00:00:00+0000"
+                },
+                {
+                    "value": 55000,
+                    "end_time": "2024-01-13T00:00:00+0000"
+                }
+            ],
+            "title": "Impressions",
+            "description": "Total number of times your content was viewed",
+            "id": "17841400000000000/insights/impressions/day"
+        },
+        {
+            "name": "reach",
+            "period": "day",
+            "values": [
+                {
+                    "value": 45000,
+                    "end_time": "2024-01-15T00:00:00+0000"
+                },
+                {
+                    "value": 40000,
+                    "end_time": "2024-01-14T00:00:00+0000"
+                },
+                {
+                    "value": 48000,
+                    "end_time": "2024-01-13T00:00:00+0000"
+                }
+            ],
+            "title": "Reach",
+            "description": "Total number of unique accounts that viewed your content",
+            "id": "17841400000000000/insights/reach/day"
+        },
+        {
+            "name": "profile_views",
+            "period": "day",
+            "values": [
+                {
+                    "value": 2500,
+                    "end_time": "2024-01-15T00:00:00+0000"
+                },
+                {
+                    "value": 2200,
+                    "end_time": "2024-01-14T00:00:00+0000"
+                },
+                {
+                    "value": 2800,
+                    "end_time": "2024-01-13T00:00:00+0000"
+                }
+            ],
+            "title": "Profile Views",
+            "description": "Total number of times your profile was viewed",
+            "id": "17841400000000000/insights/profile_views/day"
+        },
+        {
+            "name": "website_clicks",
+            "period": "day",
+            "values": [
+                {
+                    "value": 150,
+                    "end_time": "2024-01-15T00:00:00+0000"
+                },
+                {
+                    "value": 120,
+                    "end_time": "2024-01-14T00:00:00+0000"
+                },
+                {
+                    "value": 180,
+                    "end_time": "2024-01-13T00:00:00+0000"
+                }
+            ],
+            "title": "Website Clicks",
+            "description": "Total number of clicks on your website link",
+            "id": "17841400000000000/insights/website_clicks/day"
+        }
+    ]
+}

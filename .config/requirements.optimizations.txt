@@ -1,0 +1,4 @@
+# Additional dependencies for platform optimizations
+redis>=4.5.0
+sentence-transformers>=2.2.0
+numpy>=1.21.0

@@ -1,7 +1,33 @@
 ---
+alwaysApply: true
+description: Project structure and key file index
+---
+### Project Structure Overview
+
+- Entry: [main.py](mdc:src/ultimate_discord_intelligence_bot/main.py)
+- Crew: [crew.py](mdc:src/ultimate_discord_intelligence_bot/crew.py)
+- Agents: [config/agents.yaml](mdc:src/ultimate_discord_intelligence_bot/config/agents.yaml)
+- Tasks: [config/tasks.yaml](mdc:src/ultimate_discord_intelligence_bot/config/tasks.yaml)
+- Tools: [tools/](mdc:src/ultimate_discord_intelligence_bot/tools/)
+- Services: [services/](mdc:src/ultimate_discord_intelligence_bot/services/)
+- Settings: [settings.py](mdc:src/ultimate_discord_intelligence_bot/settings.py)
+- Pipeline: [pipeline.py](mdc:src/ultimate_discord_intelligence_bot/pipeline.py)
+- Tenancy: [tenancy/context.py](mdc:src/ultimate_discord_intelligence_bot/tenancy/context.py)
+- Docs: [docs/](mdc:docs/)
+- Top-level: [README.md](mdc:README.md), [pyproject.toml](mdc:pyproject.toml), [requirements.lock](mdc:requirements.lock)
+
+### Conventions
+
+- Python 3.10+, line length 120, double quotes
+- Import order: stdlib → third-party → local
+- UTC timestamps only
+
+---
+
 alwaysApply: false
 description: Project structure and organization overview for the Ultimate Discord Intelligence Bot
 ---
+
 # Ultimate Discord Intelligence Bot - Project Structure
 
 ## Core Architecture

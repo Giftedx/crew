@@ -3,12 +3,12 @@
 import os
 from unittest.mock import Mock, patch
 
-from core.rl.advanced_experiments import (
+from ultimate_discord_intelligence_bot.core.rl.advanced_experiments import (
     AdvancedBanditExperimentManager,
     AdvancedBanditStats,
     create_default_advanced_bandit_experiments,
 )
-from core.rl.policies.advanced_bandits import DoublyRobustBandit, OffsetTreeBandit
+from ultimate_discord_intelligence_bot.core.rl.policies.advanced_bandits import DoublyRobustBandit, OffsetTreeBandit
 
 
 class TestAdvancedBanditStats:

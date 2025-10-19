@@ -16,7 +16,7 @@ class CrewInsightExtractor:
         """Extract pattern recognition insights from crew result."""
         result_text = str(crew_result).lower()
 
-        patterns = {
+        patterns: dict[str, list[str]] = {
             "linguistic_patterns": [],
             "behavioral_patterns": [],
             "recurring_themes": [],
@@ -158,7 +158,7 @@ class CrewInsightExtractor:
         """Extract relationship mappings from crew result."""
         result_text = str(crew_result).lower()
 
-        mappings = {
+        mappings: dict[str, list[str]] = {
             "entity_relationships": [],
             "source_relationships": [],
             "topic_relationships": [],

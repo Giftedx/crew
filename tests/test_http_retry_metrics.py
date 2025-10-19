@@ -1,8 +1,8 @@
 import pytest
 import requests
 
-from core.http import reset_circuit_breakers
-from core.http_utils import http_request_with_retry
+from ultimate_discord_intelligence_bot.core.http import reset_circuit_breakers
+from ultimate_discord_intelligence_bot.core.http_utils import http_request_with_retry
 from obs import metrics as m
 
 

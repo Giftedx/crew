@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from core.settings import get_settings
+from ultimate_discord_intelligence_bot.core.settings import get_settings
 
 
 def _reset_cache():

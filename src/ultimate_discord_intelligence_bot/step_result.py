@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import logging
+import time
+from collections import defaultdict, deque
 from collections.abc import Iterator, Mapping
 from dataclasses import dataclass, field
 from enum import Enum
@@ -20,10 +23,6 @@ Enhanced Features:
 - Performance impact tracking for error scenarios
 - Integration with observability systems
 """
-
-import logging
-import time
-from collections import defaultdict, deque
 
 logger = logging.getLogger(__name__)
 
@@ -212,7 +211,7 @@ class StepResult(Mapping[str, Any]):
         """
         if isinstance(result, StepResult):
             return result
-        if not isinstance(result, Mapping):  # type: ignore[redundant-cast]
+        if not isinstance(result, Mapping):
             # Fallback: wrap any non-mapping object as an error string
             enhanced_result = cls(success=False, error=str(result), data={})
             if context:
@@ -495,16 +494,6 @@ class StepResult(Mapping[str, Any]):
         return cls.fail(error, error_category=ErrorCategory.RATE_LIMIT, retryable=True, **data)
 
     @classmethod
-    def network_error(cls, error: str, **data: Any) -> StepResult:
-        """Create a network error result."""
-        return cls.fail(error, error_category=ErrorCategory.NETWORK, retryable=True, **data)
-
-    @classmethod
-    def timeout_error(cls, error: str = "Operation timed out", **data: Any) -> StepResult:
-        """Create a timeout error result."""
-        return cls.fail(error, error_category=ErrorCategory.TIMEOUT, retryable=True, **data)
-
-    @classmethod
     def service_unavailable(cls, error: str = "Service unavailable", **data: Any) -> StepResult:
         """Create a service unavailable error result."""
         return cls.fail(error, error_category=ErrorCategory.SERVICE_UNAVAILABLE, retryable=True, **data)
@@ -554,7 +543,7 @@ class StepResult(Mapping[str, Any]):
         if not self.retryable:
             return False
 
-        if self.recovery_strategy:
+        if self.recovery_strategy and self.error_category:
             return self.recovery_strategy.should_retry(attempt, self.error_category)
 
         # Default retry logic based on error category
@@ -574,7 +563,7 @@ class StepResult(Mapping[str, Any]):
 
         # Default exponential backoff
         base_delay = 1.0
-        return base_delay * (2 ** (attempt - 1))
+        return float(base_delay * (2 ** (attempt - 1)))
 
     def is_critical(self) -> bool:
         """Check if this error is critical and requires immediate attention."""
@@ -625,13 +614,13 @@ class StepResult(Mapping[str, Any]):
 
     def __iter__(self) -> Iterator[str]:  # pragma: no cover
         base_status = self.custom_status or ("success" if self.success else "error")
-        base = {"status": base_status}
+        base: dict[str, Any] = {"status": base_status}
         if self.error is not None:
             base["error"] = self.error
         if self.error_category is not None:
             base["error_category"] = self.error_category.value
         if self.retryable:
-            base["retryable"] = self.retryable
+            base["retryable"] = True
         if self.metadata:
             base["metadata"] = self.metadata
         yielded: list[str] = list(base.keys())
@@ -681,15 +670,15 @@ class StepResult(Mapping[str, Any]):
                 inner = inner["data"]
             # Accept 'results' only mapping
             if set(inner.keys()) == {"results"} and isinstance(inner.get("results"), list):
-                return inner["results"] == other
+                return bool(inner["results"] == other)
             # Accept 'hits' only mapping (legacy vector search)
             if set(inner.keys()) == {"hits"} and isinstance(inner.get("hits"), list):
-                return inner["hits"] == other
+                return bool(inner["hits"] == other)
             # Accept combined mapping where hits/results both present – prefer 'results'
             if "results" in inner and isinstance(inner.get("results"), list):
-                return inner["results"] == other
+                return bool(inner["results"] == other)
             if "hits" in inner and isinstance(inner.get("hits"), list):
-                return inner["hits"] == other
+                return bool(inner["hits"] == other)
         if isinstance(other, dict):
             flat: dict[str, Any] = {}
             # merge nested mapping first (so top-level overrides win)
@@ -724,8 +713,8 @@ class StepResult(Mapping[str, Any]):
 class ErrorAnalyzer:
     """Utility class for analyzing error patterns and trends."""
 
-    def __init__(self):
-        self.error_history: deque = deque(maxlen=1000)
+    def __init__(self) -> None:
+        self.error_history: deque[StepResult] = deque(maxlen=1000)
         self.error_patterns: dict[str, int] = defaultdict(int)
         self.category_counts: dict[str, int] = defaultdict(int)
 
@@ -749,13 +738,12 @@ class ErrorAnalyzer:
             return {"total_errors": 0}
 
         recent_errors = list(self.error_history)
-        error_categories = [r.error_category.value for r in recent_errors if r.error_category]
 
         return {
             "total_errors": len(recent_errors),
             "error_rate": len(recent_errors) / max(1, len(self.error_history)),
-            "most_common_errors": dict(list(self.error_patterns.most_common(10))),
-            "error_categories": dict(list(self.category_counts.most_common(10))),
+            "most_common_errors": dict(sorted(self.error_patterns.items(), key=lambda x: x[1], reverse=True)[:10]),
+            "error_categories": dict(sorted(self.category_counts.items(), key=lambda x: x[1], reverse=True)[:10]),
             "critical_errors": len([r for r in recent_errors if r.is_critical()]),
             "retryable_errors": len([r for r in recent_errors if r.retryable]),
         }
@@ -766,7 +754,7 @@ class ErrorAnalyzer:
             return {"insufficient_data": True}
 
         # Group errors by hour for trend analysis
-        hourly_errors = defaultdict(int)
+        hourly_errors: dict[int, int] = defaultdict(int)
         for result in self.error_history:
             if result.error_context:
                 hour = int(result.error_context.timestamp // 3600)
@@ -785,7 +773,7 @@ class ErrorAnalyzer:
 class ErrorRecoveryManager:
     """Manages error recovery strategies and circuit breakers."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.circuit_breakers: dict[str, dict[str, Any]] = {}
         self.recovery_strategies: dict[str, ErrorRecoveryStrategy] = {}
 
@@ -822,8 +810,8 @@ class ErrorRecoveryManager:
 
 
 # Global error analysis instances
-_error_analyzer = ErrorAnalyzer()
-_recovery_manager = ErrorRecoveryManager()
+_error_analyzer: ErrorAnalyzer = ErrorAnalyzer()
+_recovery_manager: ErrorRecoveryManager = ErrorRecoveryManager()
 
 
 def get_error_analyzer() -> ErrorAnalyzer:

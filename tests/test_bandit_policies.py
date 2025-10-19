@@ -1,7 +1,7 @@
 import random
 import unittest
 
-from core.rl.policies.bandit_base import EpsilonGreedyBandit, ThompsonSamplingBandit, UCB1Bandit
+from ultimate_discord_intelligence_bot.core.rl.policies.bandit_base import EpsilonGreedyBandit, ThompsonSamplingBandit, UCB1Bandit
 
 
 class TestBanditPolicies(unittest.TestCase):

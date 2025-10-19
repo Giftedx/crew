@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from fastapi.testclient import TestClient
-from server.app import create_app
+from ultimate_discord_intelligence_bot.server.app import create_app
 
 
 def test_metrics_not_rate_limited(monkeypatch):

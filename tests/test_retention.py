@@ -1,6 +1,6 @@
 from datetime import UTC, datetime, timedelta
 
-from core.privacy import retention
+from ultimate_discord_intelligence_bot.core.privacy import retention
 from ingest import models
 
 

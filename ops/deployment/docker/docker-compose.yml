@@ -1,94 +1,238 @@
-version: "3.8"
+version: '3.8'
 
 services:
-  # Qdrant vector database
+  # Core Infrastructure Services
+  postgresql:
+    image: postgres:15-alpine
+    container_name: discord-intelligence-postgres
+    environment:
+      POSTGRES_DB: discord_intelligence
+      POSTGRES_USER: ${POSTGRES_USER:-discord_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-secure_password}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-discord_user} -d discord_intelligence" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - discord-intelligence-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: discord-intelligence-redis
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-secure_redis_password}
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - discord-intelligence-network
+
   qdrant:
-    image: qdrant/qdrant:v1.7.3
-    restart: always
-    container_name: qdrant
+    image: qdrant/qdrant:v1.7.0
+    container_name: discord-intelligence-qdrant
+    environment:
+      QDRANT__SERVICE__HTTP_PORT: 6333
+      QDRANT__SERVICE__GRPC_PORT: 6334
+    volumes:
+      - qdrant_data:/qdrant/storage
     ports:
       - "6333:6333"
       - "6334:6334"
-    volumes:
-      - ./qdrant_data:/qdrant/storage:rw
-    environment:
-      - QDRANT__SERVICE__HTTP_PORT=6333
-      - QDRANT__SERVICE__GRPC_PORT=6334
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:6333/"]
+      test: [ "CMD", "curl", "-f", "http://localhost:6333/health" ]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 40s
+    networks:
+      - discord-intelligence-network
 
-  # Optional: Redis for caching
-  redis:
-    image: redis:7-alpine
-    restart: always
-    container_name: redis
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    command: redis-server --appendonly yes
-    profiles:
-      - full  # Only start with --profile full
-
-  # Optional: PostgreSQL for metadata storage
-  postgres:
-    image: postgres:15-alpine
-    restart: always
-    container_name: postgres
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+  minio:
+    image: minio/minio:latest
+    container_name: discord-intelligence-minio
+    command: server /data --console-address ":9001"
     environment:
-      POSTGRES_DB: ultimate_discord_bot
-      POSTGRES_USER: bot_user
-      POSTGRES_PASSWORD: change_this_password
-    profiles:
-      - full  # Only start with --profile full
-
-  api:
-    build: .
-    container_name: udi-api
-    command: uvicorn server.app:create_app --factory --host 0.0.0.0 --port 8000
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-minioadmin}
+    volumes:
+      - minio_data:/data
     ports:
-      - "8000:8000"
+      - "9000:9000"
+      - "9001:9001"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - discord-intelligence-network
+
+  # Application Services
+  discord-bot:
+    build:
+      context: ../../../
+      dockerfile: ops/deployment/docker/Dockerfile.discord-bot
+    container_name: discord-intelligence-bot
     environment:
-      - ENABLE_HTTP_RETRY=1
-      - ENABLE_PROMETHEUS_ENDPOINT=1
-      - PROMETHEUS_ENDPOINT_PATH=/metrics
-      - HTTP_TIMEOUT=30
-    env_file:
-      - .env
+      - DISCORD_BOT_TOKEN=${DISCORD_BOT_TOKEN}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - QDRANT_URL=http://qdrant:6333
+      - POSTGRES_URL=postgresql://${POSTGRES_USER:-discord_user}:${POSTGRES_PASSWORD:-secure_password}@postgresql:5432/discord_intelligence
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-secure_redis_password}@redis:6379
+      - MINIO_ENDPOINT=http://minio:9000
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY:-minioadmin}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY:-minioadmin}
+      - ENVIRONMENT=${ENVIRONMENT:-production}
     depends_on:
-      - qdrant
+      postgresql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - discord-intelligence-network
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8000/health"]
+      test: [ "CMD", "python", "-c", "import requests; requests.get('http://localhost:8080/health')" ]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 20s
+
+  api-server:
+    build:
+      context: ../../../
+      dockerfile: ops/deployment/docker/Dockerfile.api-server
+    container_name: discord-intelligence-api
+    environment:
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - QDRANT_URL=http://qdrant:6333
+      - POSTGRES_URL=postgresql://${POSTGRES_USER:-discord_user}:${POSTGRES_PASSWORD:-secure_password}@postgresql:5432/discord_intelligence
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-secure_redis_password}@redis:6379
+      - MINIO_ENDPOINT=http://minio:9000
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY:-minioadmin}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY:-minioadmin}
+      - ENVIRONMENT=${ENVIRONMENT:-production}
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgresql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - discord-intelligence-network
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  worker-processes:
+    build:
+      context: ../../../
+      dockerfile: ops/deployment/docker/Dockerfile.worker
+    container_name: discord-intelligence-worker
+    environment:
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - QDRANT_URL=http://qdrant:6333
+      - POSTGRES_URL=postgresql://${POSTGRES_USER:-discord_user}:${POSTGRES_PASSWORD:-secure_password}@postgresql:5432/discord_intelligence
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-secure_redis_password}@redis:6379
+      - MINIO_ENDPOINT=http://minio:9000
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY:-minioadmin}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY:-minioadmin}
+      - ENVIRONMENT=${ENVIRONMENT:-production}
+    depends_on:
+      postgresql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - discord-intelligence-network
+    deploy:
+      replicas: 2
+    healthcheck:
+      test: [ "CMD", "python", "-c", "import sys; sys.exit(0)" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Monitoring Services
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: discord-intelligence-prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - discord-intelligence-network
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: discord-intelligence-grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+    ports:
+      - "3000:3000"
+    networks:
+      - discord-intelligence-network
+
+  alertmanager:
+    image: prom/alertmanager:latest
+    container_name: discord-intelligence-alertmanager
+    volumes:
+      - ./alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml
+      - alertmanager_data:/alertmanager
+    ports:
+      - "9093:9093"
+    networks:
+      - discord-intelligence-network
 
 volumes:
-  redis_data:
   postgres_data:
+  redis_data:
+  qdrant_data:
+  minio_data:
+  prometheus_data:
+  grafana_data:
+  alertmanager_data:
 
-# Usage Examples:
-#
-# Start only Qdrant (recommended for development):
-#   docker-compose up -d qdrant
-#
-# Start all services (full stack):
-#   docker-compose --profile full up -d
-#
-# View logs:
-#   docker-compose logs -f qdrant
-#
-# Stop services:
-#   docker-compose down
-#
-# Reset data (WARNING: deletes all data):
-#   docker-compose down -v
+
+networks:
+  discord-intelligence-network:
+    driver: bridge

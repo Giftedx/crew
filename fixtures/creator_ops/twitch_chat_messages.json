@@ -1,0 +1,28 @@
+{
+  "data": [
+    {
+      "id": "message_123456789",
+      "user_id": "987654321",
+      "user_name": "ChatUser",
+      "user_login": "chatuser",
+      "message": "This is an amazing take!",
+      "timestamp": "2024-01-15T15:30:00Z",
+      "color": "#FF0000",
+      "badges": [
+        {
+          "id": "subscriber",
+          "set_id": "subscriber",
+          "info": "12"
+        }
+      ],
+      "emotes": [],
+      "is_moderator": false,
+      "is_subscriber": true,
+      "is_vip": false,
+      "is_turbo": false,
+      "is_first_message": false,
+      "is_returning_chatter": true
+    }
+  ],
+  "pagination": {}
+}

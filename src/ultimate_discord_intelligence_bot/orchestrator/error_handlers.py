@@ -3,10 +3,18 @@
 This module provides utilities for:
 - Repairing malformed JSON
 - Extracting key-value pairs from plain text fallback
+- Stage execution with error recovery
 """
 
+import asyncio
+import logging
 import re
+from collections.abc import Callable
 from typing import Any
+
+from ..step_result import StepResult
+
+logger = logging.getLogger(__name__)
 
 
 def repair_json(json_text: str) -> str:
@@ -115,3 +123,88 @@ def extract_key_values_from_text(text: str) -> dict[str, Any]:
                 extracted[field] = match.group(1).strip()
 
     return extracted
+
+
+async def execute_stage_with_recovery(
+    stage_function: Callable,
+    stage_name: str,
+    agent_name: str,
+    workflow_depth: str,
+    error_handler: Any,
+    get_system_health: Callable[[], dict[str, Any]],
+    logger_instance: logging.Logger | None = None,
+    *args,
+    **kwargs,
+) -> StepResult:
+    """Execute a workflow stage with intelligent error handling and recovery.
+
+    Args:
+        stage_function: The async function to execute
+        stage_name: Name of the stage for logging
+        agent_name: Name of the agent executing the stage
+        workflow_depth: Current workflow depth level
+        error_handler: Error handler instance with handle_crew_error method
+        get_system_health: Callback to get system health metrics
+        logger_instance: Optional logger instance
+        *args: Positional arguments for stage_function
+        **kwargs: Keyword arguments for stage_function
+
+    Returns:
+        StepResult from stage execution or error recovery
+    """
+    if logger_instance is None:
+        logger_instance = logger
+
+    retry_count = 0
+    max_retries = 3
+
+    while retry_count <= max_retries:
+        try:
+            # Execute the stage function
+            result = await stage_function(*args, **kwargs)
+
+            # If successful, return result
+            if result.success:
+                return result
+
+            # If stage failed but returned a result, handle as controlled failure
+            if not result.success and retry_count < max_retries:
+                retry_count += 1
+                await asyncio.sleep(0.5 * retry_count)  # Exponential backoff
+                continue
+
+            return result
+
+        except Exception as e:
+            logger_instance.warning(f"Stage {stage_name} failed (attempt {retry_count + 1}): {e}")
+
+            # Use error handler for recovery planning
+            recovery_plan, interim_result = await error_handler.handle_crew_error(
+                error=e,
+                stage_name=stage_name,
+                agent_name=agent_name,
+                workflow_depth=workflow_depth,
+                retry_count=retry_count,
+                preceding_results=kwargs.get("preceding_results", {}),
+                system_health=get_system_health(),
+            )
+
+            # Execute recovery based on plan
+            if not recovery_plan.continue_workflow:
+                return interim_result
+
+            if retry_count >= max_retries or retry_count >= recovery_plan.max_retries:
+                return interim_result
+
+            retry_count += 1
+
+            # Apply recovery strategy modifications for next attempt
+            if recovery_plan.simplified_parameters:
+                kwargs.update(recovery_plan.simplified_parameters)
+
+            await asyncio.sleep(0.5 * retry_count)  # Exponential backoff
+
+    # Final fallback
+    return StepResult.fail(
+        f"Stage {stage_name} failed after {max_retries} retries", step=f"{stage_name}_max_retries_exceeded"
+    )

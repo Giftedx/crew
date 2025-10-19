@@ -6,12 +6,12 @@ PYTHON := .venv/bin/python
 endif
 PKG := ultimate_discord_intelligence_bot
 
-.PHONY: install dev lint format format-check type test eval docs pre-commit deprecations deprecations-json deprecations-strict deprecations-badge guards ci-all clean deep-clean organize-root maintain-archive
+.PHONY: install dev lint format format-check type test eval docs pre-commit deprecations deprecations-json deprecations-strict deprecations-badge guards ci-all clean clean-dry-run deep-clean organize-root maintain-archive
 .PHONY: docs-strict
 .PHONY: ops-queue
 .PHONY: test-fast ci-fast agent-evals-ci
 .PHONY: ensure-venv uv-lock uv-sync uv-bootstrap
-.PHONY: install dev lint format format-check type type-changed type-baseline type-baseline-update test eval docs pre-commit hooks deprecations deprecations-json deprecations-strict deprecations-badge guards ci-all clean clean-bytecode deep-clean warn-venv organize-root maintain-archive
+.PHONY: install dev lint format format-check type type-changed type-baseline type-baseline-update test eval docs pre-commit hooks deprecations deprecations-json deprecations-strict deprecations-badge guards ci-all clean clean-dry-run clean-bytecode deep-clean warn-venv organize-root maintain-archive
 .PHONY: run-discord-enhanced
 
 # Target definitions are below to avoid duplicates
@@ -138,16 +138,16 @@ type-guard-json:
 	fi
 
 test:
-	$(PYTHON) -m pytest -q -c config/pytest.ini
+	PYTHONPATH=src $(PYTHON) -m pytest -q -c .config/pytest.ini
 
 # Fast local CI sweep (quick feedback loop)
 test-fast:
-	$(PYTHON) -m pytest -q -c config/pytest.ini -k "http_utils or guards_http_requests or vector_store_dimension or vector_store_namespace"
+	$(PYTHON) -m pytest -q -c .config/pytest.ini -k "http_utils or guards_http_requests or vector_store_dimension or vector_store_namespace"
 
 # Run the fast test sweep with a clean environment for retry precedence tests
 .PHONY: test-fast-clean-env
 test-fast-clean-env:
-	env -u RETRY_MAX_ATTEMPTS $(PYTHON) -m pytest -q -c config/pytest.ini -k "http_utils or guards_http_requests or vector_store_dimension or vector_store_namespace"
+	env -u RETRY_MAX_ATTEMPTS PYTHONPATH=src $(PYTHON) -m pytest -q -c .config/pytest.ini -k "http_utils or guards_http_requests or vector_store_dimension or vector_store_namespace"
 
 ci-fast: docs guards test-fast agent-evals-ci
 
@@ -157,7 +157,7 @@ agent-evals-ci:
 # Quick A2A test sweep (router + client)
 .PHONY: test-a2a
 test-a2a:
-	$(PYTHON) -m pytest -q -c config/pytest.ini -k "a2a_router or a2a_client or a2a_collections_json"
+	PYTHONPATH=src $(PYTHON) -m pytest -q -c .config/pytest.ini -k "a2a_router or a2a_client or a2a_collections_json"
 
 # Golden evaluation harness (fast path)
 eval:
@@ -195,7 +195,7 @@ deprecations-strict:
 ci-all: doctor format-check lint type ci-type-guard guards test compliance deprecations-strict
 
 guards:
-	$(PYTHON) scripts/validate_dispatcher_usage.py && $(PYTHON) scripts/validate_http_wrappers_usage.py && $(PYTHON) scripts/metrics_instrumentation_guard.py && $(PYTHON) scripts/validate_tools_exports.py
+	$(PYTHON) scripts/validate_dispatcher_usage.py && $(PYTHON) scripts/validate_http_wrappers_usage.py && $(PYTHON) scripts/metrics_instrumentation_guard.py && $(PYTHON) scripts/validate_tools_exports.py && $(PYTHON) scripts/guards/deprecated_directories_guard.py
 
 deprecations:
 	$(PYTHON) scripts/check_deprecations.py
@@ -205,16 +205,14 @@ deprecations-json:
 
 # Remove typical transient build/test/cache artifacts
 clean:
-	rm -rf __pycache__ */__pycache__ */*/__pycache__
-	rm -rf .pytest_cache .mypy_cache .ruff_cache htmlcov coverage/ *.coverage *.cover *.py,cover
-	rm -rf build dist *.egg-info
-	rm -rf reports/*.tmp ruff_results
-	rm -rf .gemini gha-creds-*.json
-	find . -name '*.py[co]' -delete || true
-	find . -name '*.orig' -delete || true
-	find . -name '*.rej' -delete || true
-	find . -name '*~' -delete || true
-	echo "Workspace cleaned"
+	@bash scripts/cleanup.sh
+	@rm -rf reports/*.tmp ruff_results
+	@rm -rf .gemini gha-creds-*.json
+	@echo "Workspace cleaned"
+
+# Preview cleanup without making changes
+clean-dry-run:
+	@bash scripts/cleanup.sh --dry-run
 
 # Organize root directory by moving clutter to archive
 organize-root:
@@ -299,7 +297,7 @@ test-mcp:
 	@if $(PYTHON) -c "import importlib.util,sys; sys.exit(0 if importlib.util.find_spec('fastmcp') is None else 1)"; then \
 		echo "[test-mcp] fastmcp not installed; skipping MCP tests (install with 'pip install .[mcp]')"; \
 	else \
-		$(PYTHON) -m pytest -q -c config/pytest.ini -k "mcp_"; \
+		PYTHONPATH=src $(PYTHON) -m pytest -q -c .config/pytest.ini -k "mcp_"; \
 	fi
 
 # Demo: LangGraph pilot orchestration
@@ -318,4 +316,4 @@ run-a2a-client-demo:
 # Smoke: MCP imports always safe (stub or real)
 .PHONY: test-mcp-smoke
 test-mcp-smoke:
-	$(PYTHON) -m pytest -q -c config/pytest.ini tests/test_mcp_imports.py
+	PYTHONPATH=src $(PYTHON) -m pytest -q -c .config/pytest.ini tests/test_mcp_imports.py

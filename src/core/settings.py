@@ -59,7 +59,9 @@ class Settings(BaseSettings):
     enable_autointel_api: bool = Field(False, alias="ENABLE_AUTOINTEL_API")
     enable_http_cache: bool = Field(False, alias="ENABLE_HTTP_CACHE")
     enable_llm_cache: bool = Field(False, alias="ENABLE_LLM_CACHE")
-    enable_degradation_reporter: bool = Field(False, alias="ENABLE_DEGRADATION_REPORTER")
+    enable_degradation_reporter: bool = Field(
+        False, alias="ENABLE_DEGRADATION_REPORTER"
+    )
     enable_discord_archiver: bool = Field(False, alias="ENABLE_DISCORD_ARCHIVER")
     enable_rag_context: bool = Field(False, alias="ENABLE_RAG_CONTEXT")
     enable_vector_search: bool = Field(False, alias="ENABLE_VECTOR_SEARCH")
@@ -69,15 +71,22 @@ class Settings(BaseSettings):
     enable_cache_global: bool = Field(False, alias="ENABLE_CACHE_GLOBAL")
     enable_cache_transcript: bool = Field(False, alias="ENABLE_CACHE_TRANSCRIPT")
     enable_cache_vector: bool = Field(False, alias="ENABLE_CACHE_VECTOR")
-    enable_distr_rate_limiting: bool = Field(False, alias="ENABLE_DISTRIBUTED_RATE_LIMITING")
+    enable_distr_rate_limiting: bool = Field(
+        False, alias="ENABLE_DISTRIBUTED_RATE_LIMITING"
+    )
     enable_rl_global: bool = Field(False, alias="ENABLE_RL_GLOBAL")
     enable_rl_routing: bool = Field(False, alias="ENABLE_RL_ROUTING")
     enable_rl_prompt: bool = Field(False, alias="ENABLE_RL_PROMPT")
     enable_rl_retrieval: bool = Field(False, alias="ENABLE_RL_RETRIEVAL")
+    enable_rl_vowpal: bool = Field(False, alias="ENABLE_RL_VOWPAL")
     enable_experiment_harness: bool = Field(False, alias="ENABLE_EXPERIMENT_HARNESS")
     enable_rl_lints: bool = Field(False, alias="ENABLE_RL_LINTS")
-    enable_secure_path_fallback: bool = Field(False, alias="ENABLE_SECURE_PATH_FALLBACK")
-    enable_secure_qdrant_fallback: bool = Field(False, alias="ENABLE_SECURE_QDRANT_FALLBACK")
+    enable_secure_path_fallback: bool = Field(
+        False, alias="ENABLE_SECURE_PATH_FALLBACK"
+    )
+    enable_secure_qdrant_fallback: bool = Field(
+        False, alias="ENABLE_SECURE_QDRANT_FALLBACK"
+    )
 
     # Caching toggles
     cache_compression_enabled: bool = Field(True)
@@ -87,22 +96,32 @@ class Settings(BaseSettings):
     enable_reranker: bool = Field(False)
     enable_faster_whisper: bool = Field(False)
     enable_local_llm: bool = Field(False)
-    enable_prompt_compression: bool = Field(False)
-    enable_prompt_compression_flag: bool = Field(False, alias="ENABLE_PROMPT_COMPRESSION")  # doc sync
+    enable_prompt_compression: bool = Field(False, alias="ENABLE_PROMPT_COMPRESSION")
+    enable_prompt_compression_flag: bool = Field(
+        False, alias="ENABLE_PROMPT_COMPRESSION"
+    )  # doc sync
     enable_llmlingua: bool = Field(False, alias="ENABLE_LLMLINGUA")
     enable_llmlingua_shadow: bool = Field(False, alias="ENABLE_LLMLINGUA_SHADOW")
     enable_token_aware_chunker: bool = Field(False)
     enable_semantic_cache: bool = Field(False)
     enable_gptcache: bool = Field(False, alias="ENABLE_GPTCACHE")
-    enable_gptcache_analysis_shadow: bool = Field(False, alias="ENABLE_GPTCACHE_ANALYSIS_SHADOW")
-    enable_transcript_compression: bool = Field(False, alias="ENABLE_TRANSCRIPT_COMPRESSION")
+    enable_gptcache_analysis_shadow: bool = Field(
+        False, alias="ENABLE_GPTCACHE_ANALYSIS_SHADOW"
+    )
+    enable_transcript_compression: bool = Field(
+        False, alias="ENABLE_TRANSCRIPT_COMPRESSION"
+    )
     enable_graph_memory: bool = Field(False, alias="ENABLE_GRAPH_MEMORY")
     enable_ax_routing: bool = Field(False, alias="ENABLE_AX_ROUTING")
+    enable_agent_ops: bool = Field(False, alias="ENABLE_AGENT_OPS")
+    enable_enhanced_memory: bool = Field(False, alias="ENABLE_ENHANCED_MEMORY")
 
     # Performance optimization flags
     enable_parallel_memory_ops: bool = Field(False, alias="ENABLE_PARALLEL_MEMORY_OPS")
     enable_parallel_analysis: bool = Field(False, alias="ENABLE_PARALLEL_ANALYSIS")
-    enable_parallel_fact_checking: bool = Field(False, alias="ENABLE_PARALLEL_FACT_CHECKING")
+    enable_parallel_fact_checking: bool = Field(
+        False, alias="ENABLE_PARALLEL_FACT_CHECKING"
+    )
 
     # Provider + model routing
     rerank_provider: str | None = Field(None)
@@ -115,6 +134,7 @@ class Settings(BaseSettings):
     reward_latency_weight: float = Field(0.5)
     reward_latency_ms_window: int = Field(2000)
     rl_policy_model_selection: str = Field("epsilon_greedy")
+    vw_bandit_args: str | None = Field(None, alias="VW_BANDIT_ARGS")
 
     # Prompt compression parameters
     token_chunk_target_tokens: int = Field(220)
@@ -145,6 +165,8 @@ class Settings(BaseSettings):
     pipeline_job_ttl_seconds: int = Field(3600)
 
     # Secrets (never log these)
+    agent_ops_api_key: str | None = Field(None, alias="AGENT_OPS_API_KEY")
+    mem0_api_key: str | None = Field(None, alias="MEM0_API_KEY")
     archive_api_token: str | None = Field(None)
     discord_bot_token: str | None = Field(None)
 
@@ -174,7 +196,9 @@ def _coerce_env(raw: str, current: Any) -> Any:
     try:
         if isinstance(current, bool):
             return raw.lower() in _BOOL_TRUE
-        if isinstance(current, int) and not isinstance(current, bool):  # bool is subclass of int
+        if isinstance(current, int) and not isinstance(
+            current, bool
+        ):  # bool is subclass of int
             return int(raw)
         if isinstance(current, float):
             return float(raw)

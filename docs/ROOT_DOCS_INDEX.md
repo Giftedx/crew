@@ -72,6 +72,18 @@ The following optimization-focused documents have been added post-migration and 
 | Prompt Compression | `docs/prompt_compression.md` | Multi-pass whitespace / duplication / summarisation pipeline with metrics (`prompt_compression_ratio`). |
 | Semantic Cache Prefetch | `docs/semantic_cache.md` | Similarity-based response reuse with prefetch issued/used counters and similarity histogram. |
 
+## AI Model Documentation (Official Best Practices)
+
+**Added:** 2025-10-09
+
+Official documentation and best practices from OpenAI, Anthropic, and Google AI for immediate reference:
+
+| Topic | Location | Summary |
+|-------|----------|---------|
+| Official Prompt Engineering Guide | `docs/ai_models/official_prompt_engineering_guide.md` | Comprehensive best practices from OpenAI, Anthropic, Google with structured templates and examples |
+| Model Configuration Reference | `docs/ai_models/model_configuration_reference.md` | Complete model comparison matrix, configuration patterns, cost optimization strategies |
+| Quick Reference Guide | `docs/ai_models/QUICK_REFERENCE.md` | At-a-glance guide for model selection, configuration templates, performance benchmarks |
+
 ## A2A Adapter & Client
 
 | Topic | Location | Summary |

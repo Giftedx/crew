@@ -1,0 +1,60 @@
+{
+    "data": [
+        {
+            "id": "17900000000000000",
+            "media_type": "IMAGE",
+            "media_url": "https://scontent.cdninstagram.com/v/t51.2885-15/123456789_123456789_123456789_n.jpg",
+            "permalink": "https://www.instagram.com/p/ABC123DEF456/",
+            "caption": "Just finished an epic gaming session! 🎮 What's your favorite game right now? #gaming #gamer #epic",
+            "timestamp": "2024-01-15T10:30:00+0000",
+            "like_count": 15000,
+            "comments_count": 500,
+            "thumbnail_url": "https://scontent.cdninstagram.com/v/t51.2885-15/123456789_123456789_123456789_n.jpg"
+        },
+        {
+            "id": "17900000000000001",
+            "media_type": "VIDEO",
+            "media_url": "https://scontent.cdninstagram.com/v/t50.2886-16/123456789_123456789_123456789_n.mp4",
+            "permalink": "https://www.instagram.com/p/DEF456GHI789/",
+            "caption": "Behind the scenes of my latest video! 📹 The editing process is always so satisfying. #behindthescenes #editing #contentcreator",
+            "timestamp": "2024-01-14T18:45:00+0000",
+            "like_count": 25000,
+            "comments_count": 800,
+            "thumbnail_url": "https://scontent.cdninstagram.com/v/t51.2885-15/987654321_987654321_987654321_n.jpg",
+            "video_title": "Behind the Scenes: Video Editing Process",
+            "video_description": "A quick look at how I edit my videos"
+        },
+        {
+            "id": "17900000000000002",
+            "media_type": "CAROUSEL_ALBUM",
+            "media_url": "https://scontent.cdninstagram.com/v/t51.2885-15/111111111_111111111_111111111_n.jpg",
+            "permalink": "https://www.instagram.com/p/GHI789JKL012/",
+            "caption": "Swipe to see my gaming setup evolution! 🖥️ From my first setup to now - what a journey! #gaming #setup #evolution #tech",
+            "timestamp": "2024-01-13T14:20:00+0000",
+            "like_count": 30000,
+            "comments_count": 1200,
+            "thumbnail_url": "https://scontent.cdninstagram.com/v/t51.2885-15/111111111_111111111_111111111_n.jpg",
+            "children": {
+                "data": [
+                    {
+                        "id": "17900000000000003",
+                        "media_type": "IMAGE",
+                        "media_url": "https://scontent.cdninstagram.com/v/t51.2885-15/222222222_222222222_222222222_n.jpg"
+                    },
+                    {
+                        "id": "17900000000000004",
+                        "media_type": "IMAGE",
+                        "media_url": "https://scontent.cdninstagram.com/v/t51.2885-15/333333333_333333333_333333333_n.jpg"
+                    }
+                ]
+            }
+        }
+    ],
+    "paging": {
+        "cursors": {
+            "before": "before_cursor_12345",
+            "after": "after_cursor_67890"
+        },
+        "next": "https://graph.facebook.com/v18.0/17841400000000000/media?access_token=...&after=after_cursor_67890"
+    }
+}

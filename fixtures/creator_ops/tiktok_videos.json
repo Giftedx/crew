@@ -1,0 +1,59 @@
+{
+    "data": {
+        "videos": [
+            {
+                "id": "tiktok_video_1",
+                "title": "Amazing Dance Video",
+                "description": "Check out this incredible dance routine! #dance #viral",
+                "duration": 30,
+                "cover_image_url": "https://example.com/cover1.jpg",
+                "embed_url": "https://www.tiktok.com/embed/tiktok_video_1",
+                "share_url": "https://www.tiktok.com/@testcreator/video/tiktok_video_1",
+                "view_count": 1000000,
+                "like_count": 50000,
+                "comment_count": 2500,
+                "share_count": 1000,
+                "created_time": "2024-01-15T10:30:00Z",
+                "updated_time": "2024-01-15T10:30:00Z",
+                "privacy_level": "PUBLIC_TO_EVERYONE",
+                "status": "PUBLISHED",
+                "video_url": "https://example.com/video1.mp4",
+                "hashtags": [
+                    "dance",
+                    "viral",
+                    "trending"
+                ],
+                "mentions": [
+                    "@dancepartner"
+                ]
+            },
+            {
+                "id": "tiktok_video_2",
+                "title": "Cooking Tutorial",
+                "description": "Learn how to make the perfect pasta! #cooking #tutorial",
+                "duration": 60,
+                "cover_image_url": "https://example.com/cover2.jpg",
+                "embed_url": "https://www.tiktok.com/embed/tiktok_video_2",
+                "share_url": "https://www.tiktok.com/@testcreator/video/tiktok_video_2",
+                "view_count": 500000,
+                "like_count": 25000,
+                "comment_count": 1200,
+                "share_count": 500,
+                "created_time": "2024-01-14T15:45:00Z",
+                "updated_time": "2024-01-14T15:45:00Z",
+                "privacy_level": "PUBLIC_TO_EVERYONE",
+                "status": "PUBLISHED",
+                "video_url": "https://example.com/video2.mp4",
+                "hashtags": [
+                    "cooking",
+                    "tutorial",
+                    "pasta"
+                ],
+                "mentions": []
+            }
+        ],
+        "cursor": "next_page_cursor",
+        "has_more": true
+    },
+    "error": null
+}

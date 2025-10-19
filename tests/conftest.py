@@ -6,6 +6,7 @@ import os
 import sys
 import types
 from pathlib import Path
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 
@@ -172,3 +173,227 @@ def pytest_runtest_setup(item):  # noqa: D401
             os.environ.pop("DISABLE_TRANSCRIPT_MEMORY", None)
     except Exception:
         pass
+
+
+# Shared async fixtures for testing
+@pytest.fixture
+async def async_test_helper():
+    """Provide async test helper utilities."""
+    from tests.utils import AsyncTestHelper
+
+    return AsyncTestHelper()
+
+
+@pytest.fixture
+def mock_builder():
+    """Provide mock builder utilities."""
+    from tests.utils import MockBuilder
+
+    return MockBuilder()
+
+
+@pytest.fixture
+def test_data_generator():
+    """Provide test data generator utilities."""
+    from tests.utils import TestDataGenerator
+
+    return TestDataGenerator()
+
+
+@pytest.fixture
+def performance_helper():
+    """Provide performance testing utilities."""
+    from tests.utils import PerformanceTestHelper
+
+    return PerformanceTestHelper()
+
+
+@pytest.fixture
+def assertion_helper():
+    """Provide custom assertion utilities."""
+    from tests.utils import TestAssertionHelper
+
+    return TestAssertionHelper()
+
+
+@pytest.fixture
+def sample_tenants():
+    """Provide sample tenant data for testing."""
+    return [
+        {"tenant": "tenant_a", "workspace": "workspace_a"},
+        {"tenant": "tenant_b", "workspace": "workspace_b"},
+        {"tenant": "tenant_c", "workspace": "workspace_c"},
+    ]
+
+
+@pytest.fixture
+def sample_urls():
+    """Provide sample URLs for testing."""
+    return [
+        "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        "https://www.twitch.tv/videos/123456789",
+        "https://www.tiktok.com/@user/video/123456789",
+        "https://www.reddit.com/r/technology/comments/abc123",
+        "https://www.linkedin.com/posts/activity-123456789",
+    ]
+
+
+@pytest.fixture
+async def mock_vector_store():
+    """Provide a mock vector store for testing."""
+    mock_store = Mock()
+    mock_store.store = AsyncMock(return_value={"success": True, "data": {"stored": True}})
+    mock_store.retrieve = AsyncMock(return_value={"success": True, "data": {"content": "retrieved"}})
+    mock_store.search = AsyncMock(return_value={"success": True, "data": {"results": []}})
+    return mock_store
+
+
+@pytest.fixture
+async def mock_memory_service():
+    """Provide a mock memory service for testing."""
+    mock_service = Mock()
+    mock_service.store_content = AsyncMock(return_value={"success": True, "data": {"stored": True}})
+    mock_service.retrieve_content = AsyncMock(return_value={"success": True, "data": {"content": "retrieved"}})
+    mock_service.search_content = AsyncMock(return_value={"success": True, "data": {"results": []}})
+    return mock_service
+
+
+@pytest.fixture
+async def mock_llm_client():
+    """Provide a mock LLM client for testing."""
+    mock_client = Mock()
+    mock_client.generate = AsyncMock(return_value={"success": True, "data": {"text": "Generated response"}})
+    mock_client.embed = AsyncMock(return_value={"success": True, "data": {"embeddings": [0.1, 0.2, 0.3]}})
+    return mock_client
+
+
+@pytest.fixture
+async def mock_discord_bot():
+    """Provide a mock Discord bot for testing."""
+    mock_bot = Mock()
+    mock_bot.send_message = AsyncMock(return_value={"success": True, "data": {"sent": True}})
+    mock_bot.get_channel = AsyncMock(return_value=Mock())
+    mock_bot.get_user = AsyncMock(return_value=Mock())
+    return mock_bot
+
+
+@pytest.fixture
+def mock_redis_client():
+    """Provide a mock Redis client for testing."""
+    mock_redis = Mock()
+    mock_redis.get = Mock(return_value=None)
+    mock_redis.set = Mock(return_value=True)
+    mock_redis.delete = Mock(return_value=1)
+    mock_redis.exists = Mock(return_value=False)
+    return mock_redis
+
+
+@pytest.fixture
+def mock_database():
+    """Provide a mock database for testing."""
+    mock_db = Mock()
+    mock_db.execute = Mock(return_value=[])
+    mock_db.fetchall = Mock(return_value=[])
+    mock_db.fetchone = Mock(return_value=None)
+    return mock_db
+
+
+@pytest.fixture
+def mock_file_system():
+    """Provide a mock file system for testing."""
+    mock_fs = Mock()
+    mock_fs.read_file = Mock(return_value="")
+    mock_fs.write_file = Mock(return_value=True)
+    mock_fs.file_exists = Mock(return_value=False)
+    return mock_fs
+
+
+@pytest.fixture
+def mock_http_client():
+    """Provide a mock HTTP client for testing."""
+    mock_client = Mock()
+    mock_client.get = AsyncMock(return_value=Mock(status_code=200, json=lambda: {"success": True}))
+    mock_client.post = AsyncMock(return_value=Mock(status_code=201, json=lambda: {"created": True}))
+    mock_client.put = AsyncMock(return_value=Mock(status_code=200, json=lambda: {"updated": True}))
+    mock_client.delete = AsyncMock(return_value=Mock(status_code=204, json=lambda: {"deleted": True}))
+    return mock_client
+
+
+@pytest.fixture
+def mock_rate_limiter():
+    """Provide a mock rate limiter for testing."""
+    mock_limiter = Mock()
+    mock_limiter.check_rate_limit = AsyncMock(return_value={"success": True, "data": {"allowed": True}})
+    mock_limiter.get_remaining_requests = Mock(return_value=100)
+    mock_limiter.reset_rate_limit = AsyncMock(return_value={"success": True})
+    return mock_limiter
+
+
+@pytest.fixture
+def mock_audit_logger():
+    """Provide a mock audit logger for testing."""
+    mock_logger = Mock()
+    mock_logger.log_operation = AsyncMock(return_value={"success": True, "data": {"logged": True}})
+    mock_logger.log_authentication = AsyncMock(return_value={"success": True, "data": {"logged": True}})
+    mock_logger.log_data_access = AsyncMock(return_value={"success": True, "data": {"logged": True}})
+    mock_logger.log_data_modification = AsyncMock(return_value={"success": True, "data": {"logged": True}})
+    mock_logger.log_admin_action = AsyncMock(return_value={"success": True, "data": {"logged": True}})
+    return mock_logger
+
+
+@pytest.fixture
+def mock_pii_detector():
+    """Provide a mock PII detector for testing."""
+    mock_detector = Mock()
+    mock_detector.detect_emails = Mock(return_value=[])
+    mock_detector.detect_phones = Mock(return_value=[])
+    mock_detector.detect_ssns = Mock(return_value=[])
+    mock_detector.detect_credit_cards = Mock(return_value=[])
+    mock_detector.detect_addresses = Mock(return_value=[])
+    mock_detector.detect_names = Mock(return_value=[])
+    mock_detector.detect_ip_addresses = Mock(return_value=[])
+    mock_detector.detect_urls = Mock(return_value=[])
+    mock_detector.redact_pii = Mock(return_value="Redacted text")
+    mock_detector.detect_all_pii = Mock(return_value={"emails": [], "phones": [], "ssns": []})
+    return mock_detector
+
+
+# StepResult factory fixtures
+@pytest.fixture
+def stepresult_factory():
+    """Provide StepResult factory for testing."""
+    from tests.factories import StepResultFactory
+
+    return StepResultFactory()
+
+
+@pytest.fixture
+def transcript_factory():
+    """Provide Transcript factory for testing."""
+    from tests.factories import TranscriptFactory
+
+    return TranscriptFactory()
+
+
+@pytest.fixture
+def analysis_factory():
+    """Provide Analysis factory for testing."""
+    from tests.factories import AnalysisFactory
+
+    return AnalysisFactory()
+
+
+@pytest.fixture
+def mock_factory():
+    """Provide Mock factory for testing."""
+    from tests.factories import MockFactory
+
+    return MockFactory()
+
+
+@pytest.fixture
+def test_data_factory():
+    """Provide TestData factory for testing."""
+    from tests.factories import TestDataFactory
+
+    return TestDataFactory()

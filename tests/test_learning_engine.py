@@ -1,5 +1,5 @@
-from core.learning_engine import LearningEngine
-from core.rl.policies.bandit_base import EpsilonGreedyBandit
+from ultimate_discord_intelligence_bot.core.learning_engine import LearningEngine
+from ultimate_discord_intelligence_bot.core.rl.policies.bandit_base import EpsilonGreedyBandit
 
 
 def test_bandit_recommend_and_update():

@@ -2,7 +2,10 @@ from __future__ import annotations
 
 import time
 
-from src.core.llm_cache import get_llm_cache, reset_llm_cache_for_tests
+from ultimate_discord_intelligence_bot.core.llm_cache import (
+    get_llm_cache,
+    reset_llm_cache_for_tests,
+)
 
 
 def test_llm_cache_disabled_returns_none(monkeypatch):

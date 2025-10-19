@@ -17,7 +17,9 @@ from ultimate_discord_intelligence_bot.step_result import StepResult
 from ultimate_discord_intelligence_bot.tenancy import current_tenant
 
 if TYPE_CHECKING:  # pragma: no cover - typing only
-    from ultimate_discord_intelligence_bot.services.request_budget import RequestCostTracker
+    from ultimate_discord_intelligence_bot.services.request_budget import (
+        RequestCostTracker,
+    )
 
 from .base import PipelineBase
 from .mixins import PipelineExecutionMixin
@@ -73,14 +75,18 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
     # Public API
     # ------------------------------------------------------------------
 
-    async def process_video(self, url: str, quality: str = "1080p") -> PipelineRunResult:
+    async def process_video(
+        self, url: str, quality: str = "1080p"
+    ) -> PipelineRunResult:
         rate_limit_error = self._rate_limit_failure()
         if rate_limit_error is not None:
             return rate_limit_error
 
         pipeline_start = time.monotonic()
         total_limit, per_task_limits = self._resolve_budget_limits()
-        with self._pipeline_context(url, quality, pipeline_start, total_limit, per_task_limits) as ctx:
+        with self._pipeline_context(
+            url, quality, pipeline_start, total_limit, per_task_limits
+        ) as ctx:
             return await self._run_pipeline(ctx, url, quality)
 
     # ------------------------------------------------------------------
@@ -104,21 +110,31 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
                 )
             )
             stack.enter_context(self._pipeline_inflight())
-            span = stack.enter_context(tracing_module.start_span("pipeline.process_video"))
+            span = stack.enter_context(
+                tracing_module.start_span("pipeline.process_video")
+            )
             span.set_attribute("url", url)
             span.set_attribute("quality", quality)
-            self.logger.info("Starting concurrent pipeline for %s (quality: %s)", url, quality)
+            self.logger.info(
+                "Starting concurrent pipeline for %s (quality: %s)", url, quality
+            )
             self._increment_pipeline_requests()
             yield _PipelineContext(span=span, start_time=start_time, tracker=tracker)
 
-    async def _run_pipeline(self, ctx: _PipelineContext, url: str, quality: str) -> PipelineRunResult:
+    async def _run_pipeline(
+        self, ctx: _PipelineContext, url: str, quality: str
+    ) -> PipelineRunResult:
         download_info, failure = await self._download_phase(ctx, url, quality)
         if failure is not None:
             return failure
         assert download_info is not None  # for type checkers
 
         # Week 4 Phase 2 Week 2: Checkpoint 1 - Post-download early exit
-        should_exit, exit_reason, exit_confidence = await self._check_early_exit_condition(
+        (
+            should_exit,
+            exit_reason,
+            exit_confidence,
+        ) = await self._check_early_exit_condition(
             ctx,
             "post_download",
             {
@@ -129,23 +145,35 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
             },
         )
         if should_exit:
-            return await self._early_exit_processing(ctx, download_info, None, exit_reason, exit_confidence)
+            return await self._early_exit_processing(
+                ctx, download_info, None, exit_reason, exit_confidence
+            )
 
-        transcription_bundle, failure = await self._transcription_phase(ctx, download_info)
+        transcription_bundle, failure = await self._transcription_phase(
+            ctx, download_info
+        )
         if failure is not None:
             return failure
         assert transcription_bundle is not None
 
         # Week 4 Phase 2: Content type routing phase
-        routing_result = await self._content_routing_phase(ctx, download_info, transcription_bundle)
+        routing_result = await self._content_routing_phase(
+            ctx, download_info, transcription_bundle
+        )
 
         # Week 4 Phase 2 Week 2: Checkpoint 2 - Post-transcription early exit
-        should_exit, exit_reason, exit_confidence = await self._check_early_exit_condition(
+        (
+            should_exit,
+            exit_reason,
+            exit_confidence,
+        ) = await self._check_early_exit_condition(
             ctx,
             "post_transcription",
             {
                 "transcript_length": len(transcription_bundle.filtered_transcript),
-                "transcription_confidence": transcription_bundle.transcription.data.get("confidence", 1.0),
+                "transcription_confidence": transcription_bundle.transcription.data.get(
+                    "confidence", 1.0
+                ),
                 "word_error_rate": 0.0,  # TODO: Add WER calculation
                 "repetition_ratio": 0.0,  # TODO: Add repetition detection
                 "unique_word_ratio": 0.0,  # TODO: Add vocabulary diversity
@@ -168,35 +196,59 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
             if "result" in qr_data and isinstance(qr_data["result"], dict):
                 qr_data = qr_data["result"]
 
-            should_exit, exit_reason, exit_confidence = await self._check_early_exit_condition(
+            (
+                should_exit,
+                exit_reason,
+                exit_confidence,
+            ) = await self._check_early_exit_condition(
                 ctx,
                 "post_quality_filtering",
                 {
                     "overall_quality": qr_data.get("overall_score", 0.0),
                     "assessment_confidence": qr_data.get("confidence", 0.0),
-                    "coherence_score": qr_data.get("quality_metrics", {}).get("coherence", 0.0),
-                    "completeness_score": qr_data.get("quality_metrics", {}).get("completeness", 0.0),
-                    "informativeness_score": qr_data.get("quality_metrics", {}).get("informativeness", 0.0),
+                    "coherence_score": qr_data.get("quality_metrics", {}).get(
+                        "coherence", 0.0
+                    ),
+                    "completeness_score": qr_data.get("quality_metrics", {}).get(
+                        "completeness", 0.0
+                    ),
+                    "informativeness_score": qr_data.get("quality_metrics", {}).get(
+                        "informativeness", 0.0
+                    ),
                 },
                 routing_result,
             )
             if should_exit:
                 return await self._early_exit_processing(
-                    ctx, download_info, transcription_bundle, exit_reason, exit_confidence, quality_result
+                    ctx,
+                    download_info,
+                    transcription_bundle,
+                    exit_reason,
+                    exit_confidence,
+                    quality_result,
                 )
 
         if should_skip_analysis:
-            return await self._lightweight_processing_phase(ctx, download_info, transcription_bundle, quality_result)
+            return await self._lightweight_processing_phase(
+                ctx, download_info, transcription_bundle, quality_result
+            )
 
-        analysis_bundle, failure = await self._analysis_phase(ctx, download_info, transcription_bundle)
+        analysis_bundle, failure = await self._analysis_phase(
+            ctx, download_info, transcription_bundle
+        )
         if failure is not None:
             return failure
         assert analysis_bundle is not None
 
-        return await self._finalize_phase(ctx, download_info, transcription_bundle, analysis_bundle)
+        return await self._finalize_phase(
+            ctx, download_info, transcription_bundle, analysis_bundle
+        )
 
     async def _content_routing_phase(
-        self, ctx: _PipelineContext, download_info: StepResult, transcription_bundle: _TranscriptionArtifacts
+        self,
+        ctx: _PipelineContext,
+        download_info: StepResult,
+        transcription_bundle: _TranscriptionArtifacts,
     ) -> StepResult:
         """Route content based on type classification (Week 4 Phase 2)."""
         import os
@@ -204,7 +256,9 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
         routing_enabled = os.getenv("ENABLE_CONTENT_ROUTING", "1") == "1"
         if not routing_enabled:
             self.logger.debug("Content routing disabled, using default thresholds")
-            return StepResult.ok(result={"routing_enabled": False, "content_type": "general"})
+            return StepResult.ok(
+                result={"routing_enabled": False, "content_type": "general"}
+            )
 
         try:
             from ultimate_discord_intelligence_bot.tools import ContentTypeRoutingTool
@@ -221,20 +275,31 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
             routing_result = routing_tool.run(routing_input)
 
             if not routing_result.success:
-                self.logger.warning("Content routing failed, using default thresholds: %s", routing_result.error)
-                return StepResult.ok(result={"routing_enabled": False, "content_type": "general"})
+                self.logger.warning(
+                    "Content routing failed, using default thresholds: %s",
+                    routing_result.error,
+                )
+                return StepResult.ok(
+                    result={"routing_enabled": False, "content_type": "general"}
+                )
 
             # Extract routing data
             routing_data = routing_result.data
             if "result" in routing_data and isinstance(routing_data["result"], dict):
                 routing_data = routing_data["result"]
 
-            content_type = routing_data.get("classification", {}).get("primary_type", "general")
+            content_type = routing_data.get("classification", {}).get(
+                "primary_type", "general"
+            )
             confidence = routing_data.get("classification", {}).get("confidence", 0.0)
-            pipeline = routing_data.get("routing", {}).get("pipeline", "standard_pipeline")
+            pipeline = routing_data.get("routing", {}).get(
+                "pipeline", "standard_pipeline"
+            )
 
             # Log routing decision
-            self.logger.info(f"Content routed as '{content_type}' (confidence: {confidence:.2f}, pipeline: {pipeline})")
+            self.logger.info(
+                f"Content routed as '{content_type}' (confidence: {confidence:.2f}, pipeline: {pipeline})"
+            )
             ctx.span.set_attribute("content_type", content_type)
             ctx.span.set_attribute("routing_confidence", confidence)
             ctx.span.set_attribute("routing_pipeline", pipeline)
@@ -242,17 +307,30 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
             # Best-effort metrics
             try:
                 if hasattr(metrics, "CONTENT_TYPE_ROUTED"):
-                    metrics.CONTENT_TYPE_ROUTED.labels(**metrics.label_ctx(), content_type=content_type).inc()
+                    metrics.CONTENT_TYPE_ROUTED.labels(
+                        **metrics.label_ctx(), content_type=content_type
+                    ).inc()
             except Exception:
                 pass
 
             return routing_result
 
         except Exception as e:
-            self.logger.warning("Content routing failed with exception, using default thresholds: %s", str(e))
-            return StepResult.ok(result={"routing_enabled": False, "content_type": "general", "error": str(e)})
+            self.logger.warning(
+                "Content routing failed with exception, using default thresholds: %s",
+                str(e),
+            )
+            return StepResult.ok(
+                result={
+                    "routing_enabled": False,
+                    "content_type": "general",
+                    "error": str(e),
+                }
+            )
 
-    def _load_content_type_thresholds(self, routing_result: StepResult | None) -> dict[str, float]:
+    def _load_content_type_thresholds(
+        self, routing_result: StepResult | None
+    ) -> dict[str, float]:
         """Load content-type specific quality thresholds from config."""
         import os
         from pathlib import Path
@@ -263,8 +341,12 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
         default_thresholds = {
             "quality_threshold": float(os.getenv("QUALITY_MIN_OVERALL", "0.65")),
             "coherence_threshold": float(os.getenv("QUALITY_MIN_COHERENCE", "0.60")),
-            "completeness_threshold": float(os.getenv("QUALITY_MIN_COMPLETENESS", "0.60")),
-            "informativeness_threshold": float(os.getenv("QUALITY_MIN_INFORMATIVENESS", "0.65")),
+            "completeness_threshold": float(
+                os.getenv("QUALITY_MIN_COMPLETENESS", "0.60")
+            ),
+            "informativeness_threshold": float(
+                os.getenv("QUALITY_MIN_INFORMATIVENESS", "0.65")
+            ),
         }
 
         # If no routing result, use defaults
@@ -276,7 +358,9 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
         if "result" in routing_data and isinstance(routing_data["result"], dict):
             routing_data = routing_data["result"]
 
-        content_type = routing_data.get("classification", {}).get("primary_type", "general")
+        content_type = routing_data.get("classification", {}).get(
+            "primary_type", "general"
+        )
 
         # Try to load content type config
         try:
@@ -296,20 +380,26 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
             # Get content type specific thresholds
             content_types = config.get("content_types", {})
             if content_type not in content_types:
-                self.logger.warning(f"Content type '{content_type}' not in config, using defaults")
+                self.logger.warning(
+                    f"Content type '{content_type}' not in config, using defaults"
+                )
                 return default_thresholds
 
             type_config = content_types[content_type]
             thresholds = {
-                "quality_threshold": type_config.get("quality_threshold", default_thresholds["quality_threshold"]),
+                "quality_threshold": type_config.get(
+                    "quality_threshold", default_thresholds["quality_threshold"]
+                ),
                 "coherence_threshold": type_config.get(
                     "coherence_threshold", default_thresholds["coherence_threshold"]
                 ),
                 "completeness_threshold": type_config.get(
-                    "completeness_threshold", default_thresholds["completeness_threshold"]
+                    "completeness_threshold",
+                    default_thresholds["completeness_threshold"],
                 ),
                 "informativeness_threshold": type_config.get(
-                    "informativeness_threshold", default_thresholds["informativeness_threshold"]
+                    "informativeness_threshold",
+                    default_thresholds["informativeness_threshold"],
                 ),
             }
 
@@ -319,11 +409,16 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
             return thresholds
 
         except Exception as e:
-            self.logger.warning(f"Failed to load content type config: {e}, using defaults")
+            self.logger.warning(
+                f"Failed to load content type config: {e}, using defaults"
+            )
             return default_thresholds
 
     async def _quality_filtering_phase(
-        self, ctx: _PipelineContext, transcript: str, routing_result: StepResult | None = None
+        self,
+        ctx: _PipelineContext,
+        transcript: str,
+        routing_result: StepResult | None = None,
     ) -> tuple[StepResult, bool]:
         """Assess transcript quality and determine processing path (now with content-type aware thresholds)."""
         # Check if quality filtering is enabled
@@ -332,13 +427,20 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
         quality_enabled = os.getenv("ENABLE_QUALITY_FILTERING", "1") == "1"
         if not quality_enabled:
             # Return dummy success result and continue with full processing
-            return StepResult.ok(result={"should_process": True, "bypass_reason": "quality_filtering_disabled"}), False
+            return StepResult.ok(
+                result={
+                    "should_process": True,
+                    "bypass_reason": "quality_filtering_disabled",
+                }
+            ), False
 
         # Load content-type specific thresholds if routing result available
         content_type_thresholds = self._load_content_type_thresholds(routing_result)
 
         try:
-            from ultimate_discord_intelligence_bot.tools import ContentQualityAssessmentTool
+            from ultimate_discord_intelligence_bot.tools import (
+                ContentQualityAssessmentTool,
+            )
 
             # Create quality tool with content-type specific thresholds
             quality_tool = ContentQualityAssessmentTool()
@@ -353,9 +455,10 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
             if not quality_result.success:
                 # Quality assessment failed - proceed with full analysis (safe fallback)
                 self.logger.warning(
-                    "Quality assessment failed, proceeding with full analysis: %s", quality_result.error
+                    "Quality assessment failed, proceeding with full analysis: %s",
+                    quality_result.error,
                 )
-                # metrics.get_metrics().counter("quality_filtering_errors_total").inc()  # TODO: Fix metrics
+                metrics.get_metrics().counter("quality_filtering_errors_total").inc()
                 return quality_result, False
 
             # Support tools returning nested payload under 'result'
@@ -368,14 +471,18 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
             quality_score = qr_data.get("overall_score", 0.0)
 
             if not should_process:
-                self.logger.info(f"Quality filtering bypass: {bypass_reason} (score: {quality_score:.2f})")
+                self.logger.info(
+                    f"Quality filtering bypass: {bypass_reason} (score: {quality_score:.2f})"
+                )
                 ctx.span.set_attribute("quality_bypass", True)
                 ctx.span.set_attribute("bypass_reason", bypass_reason)
                 ctx.span.set_attribute("quality_score", quality_score)
                 # Best-effort metrics emission (no new global specs to keep scope minimal)
                 try:  # pragma: no cover - metrics optional
                     if hasattr(metrics, "PIPELINE_STEPS_SKIPPED"):
-                        metrics.PIPELINE_STEPS_SKIPPED.labels(**metrics.label_ctx(), step="quality_filtering").inc()
+                        metrics.PIPELINE_STEPS_SKIPPED.labels(
+                            **metrics.label_ctx(), step="quality_filtering"
+                        ).inc()
                 except Exception:
                     pass
             else:
@@ -383,7 +490,9 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
                 ctx.span.set_attribute("quality_score", quality_score)
                 try:  # pragma: no cover - metrics optional
                     if hasattr(metrics, "PIPELINE_STEPS_COMPLETED"):
-                        metrics.PIPELINE_STEPS_COMPLETED.labels(**metrics.label_ctx(), step="quality_filtering").inc()
+                        metrics.PIPELINE_STEPS_COMPLETED.labels(
+                            **metrics.label_ctx(), step="quality_filtering"
+                        ).inc()
                 except Exception:
                     pass
 
@@ -391,8 +500,11 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
 
         except Exception as e:
             # Import or execution error - proceed with full analysis (safe fallback)
-            self.logger.warning("Quality filtering failed with exception, proceeding with full analysis: %s", str(e))
-            # metrics.get_metrics().counter("quality_filtering_exceptions_total").inc()  # TODO: Fix metrics
+            self.logger.warning(
+                "Quality filtering failed with exception, proceeding with full analysis: %s",
+                str(e),
+            )
+            metrics.get_metrics().counter("quality_filtering_exceptions_total").inc()
             return StepResult.fail(error=str(e)), False
 
     def _load_early_exit_config(self) -> dict[str, Any]:
@@ -425,7 +537,9 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
             return config
 
         except Exception as e:
-            self.logger.warning(f"Failed to load early exit config: {e}, using defaults")
+            self.logger.warning(
+                f"Failed to load early exit config: {e}, using defaults"
+            )
             return default_config
 
     async def _check_early_exit_condition(
@@ -464,9 +578,13 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
             content_type = "general"
             if routing_result and routing_result.success:
                 routing_data = routing_result.data
-                if "result" in routing_data and isinstance(routing_data["result"], dict):
+                if "result" in routing_data and isinstance(
+                    routing_data["result"], dict
+                ):
                     routing_data = routing_data["result"]
-                content_type = routing_data.get("classification", {}).get("primary_type", "general")
+                content_type = routing_data.get("classification", {}).get(
+                    "primary_type", "general"
+                )
 
             # Check for content-type specific overrides
             overrides = config.get("content_type_overrides", {}).get(content_type, {})
@@ -474,7 +592,9 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
 
             # If no override, use default checkpoint config
             if checkpoint_config is None:
-                checkpoint_config = config.get("checkpoints", {}).get(checkpoint_name, {})
+                checkpoint_config = config.get("checkpoints", {}).get(
+                    checkpoint_name, {}
+                )
 
             # If checkpoint disabled or not found, don't exit
             if not checkpoint_config or not checkpoint_config.get("enabled", True):
@@ -529,7 +649,9 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
                         return True, condition_reason, condition_confidence
 
                 except Exception as e:
-                    self.logger.warning(f"Failed to evaluate condition '{condition_name}' at {checkpoint_name}: {e}")
+                    self.logger.warning(
+                        f"Failed to evaluate condition '{condition_name}' at {checkpoint_name}: {e}"
+                    )
                     # Continue to next condition on evaluation error
                     if not global_config.get("continue_on_error", True):
                         raise
@@ -621,7 +743,9 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
         }
 
         # Store in memory (lightweight)
-        memory_task = asyncio.create_task(self._store_lightweight_memory(memory_payload), name="early_exit_memory")
+        memory_task = asyncio.create_task(
+            self._store_lightweight_memory(memory_payload), name="early_exit_memory"
+        )
 
         # Wait for memory storage (with timeout)
         memory_result = None
@@ -638,9 +762,9 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
         processing_duration = time.monotonic() - start_time
         try:
             if hasattr(metrics, "PIPELINE_PROCESSING_TIME"):
-                metrics.PIPELINE_PROCESSING_TIME.labels(**metrics.label_ctx(), processing_type="early_exit").observe(
-                    processing_duration
-                )
+                metrics.PIPELINE_PROCESSING_TIME.labels(
+                    **metrics.label_ctx(), processing_type="early_exit"
+                ).observe(processing_duration)
         except Exception:
             pass
 
@@ -692,7 +816,9 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
         bypass_reason = qr_data.get("bypass_reason", "")
         raw_metrics = {}
         qm = qr_data.get("quality_metrics")
-        if isinstance(qm, dict):  # Capture raw quality metrics for observability & analytics
+        if isinstance(
+            qm, dict
+        ):  # Capture raw quality metrics for observability & analytics
             raw_metrics = {
                 k: v
                 for k, v in qm.items()
@@ -730,7 +856,9 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
         }
 
         # Optional: Store in memory with lightweight flag
-        memory_task = asyncio.create_task(self._store_lightweight_memory(memory_payload), name="lightweight_memory")
+        memory_task = asyncio.create_task(
+            self._store_lightweight_memory(memory_payload), name="lightweight_memory"
+        )
 
         # Wait for memory storage (with timeout)
         memory_result = None
@@ -746,9 +874,9 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
         processing_duration = time.monotonic() - start_time
         try:  # pragma: no cover - metrics optional
             if hasattr(metrics, "PIPELINE_STEP_DURATION"):
-                metrics.PIPELINE_STEP_DURATION.labels(**metrics.label_ctx(), step="lightweight_processing").observe(
-                    processing_duration
-                )
+                metrics.PIPELINE_STEP_DURATION.labels(
+                    **metrics.label_ctx(), step="lightweight_processing"
+                ).observe(processing_duration)
         except Exception:
             pass
 
@@ -794,12 +922,16 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
     ) -> tuple[StepResult | None, PipelineRunResult | None]:
         download_info = await self._run_download(url, quality)
         if not download_info.success:
-            return None, self._fail(ctx.span, ctx.start_time, "download", download_info.to_dict())
+            return None, self._fail(
+                ctx.span, ctx.start_time, "download", download_info.to_dict()
+            )
 
         local_path = download_info.data["local_path"]
         download_info.data.setdefault("source_url", url)
         if not download_info.data.get("platform"):
-            extractor = download_info.data.get("extractor") or download_info.data.get("tool")
+            extractor = download_info.data.get("extractor") or download_info.data.get(
+                "tool"
+            )
             if extractor:
                 download_info.data["platform"] = str(extractor).lower()
         ctx.span.set_attribute("local_path", local_path)
@@ -812,12 +944,16 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
     ) -> tuple[_TranscriptionArtifacts | None, PipelineRunResult | None]:
         local_path = download_info.data["local_path"]
         video_id = download_info.data.get("video_id")
-        transcription_task = asyncio.create_task(self._run_transcription(local_path, video_id), name="transcription")
+        transcription_task = asyncio.create_task(
+            self._run_transcription(local_path, video_id), name="transcription"
+        )
         drive_task, drive_info = self._start_drive_upload(download_info, local_path)
 
         transcription = await transcription_task
         if not transcription.success:
-            fallback = await self._attempt_transcription_fallback(download_info, transcription)
+            fallback = await self._attempt_transcription_fallback(
+                download_info, transcription
+            )
             if fallback is not None:
                 self.logger.warning(
                     "Transcription unavailable (%s); using %s-derived fallback",
@@ -828,9 +964,13 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
             else:
                 if drive_task and not drive_task.done():
                     drive_task.cancel()
-                return None, self._fail(ctx.span, ctx.start_time, "transcription", transcription.to_dict())
+                return None, self._fail(
+                    ctx.span, ctx.start_time, "transcription", transcription.to_dict()
+                )
 
-        drive_artifacts = await self._await_drive_result(drive_task, drive_info, ctx.span, ctx.start_time)
+        drive_artifacts = await self._await_drive_result(
+            drive_task, drive_info, ctx.span, ctx.start_time
+        )
         if isinstance(drive_artifacts, dict):
             return None, drive_artifacts
         drive_artifacts = cast(_DriveArtifacts, drive_artifacts)
@@ -869,18 +1009,28 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
         if isinstance(analysis, Exception) or not analysis.success:
             # Ensure transcript storage is attempted even if analysis fails
             if transcript_task is None:
-                transcript_task = self._schedule_transcript_storage(filtered_transcript, download_info)
+                transcript_task = self._schedule_transcript_storage(
+                    filtered_transcript, download_info
+                )
             if transcript_task is not None and not transcript_task.done():
                 await self._await_transcript_best_effort(transcript_task)
-            error_msg = str(analysis) if isinstance(analysis, Exception) else analysis.error or "analysis failed"
+            error_msg = (
+                str(analysis)
+                if isinstance(analysis, Exception)
+                else analysis.error or "analysis failed"
+            )
             error_payload = {"status": "error", "error": error_msg, "step": "analysis"}
             return None, self._fail(ctx.span, ctx.start_time, "analysis", error_payload)
 
-        compressed_transcript, compression_meta = self._maybe_compress_transcript(filtered_transcript)
+        compressed_transcript, compression_meta = self._maybe_compress_transcript(
+            filtered_transcript
+        )
         if compression_meta:
             analysis.data.setdefault("transcript_compression", compression_meta)
 
-        fallacy_task = asyncio.create_task(self._run_fallacy(compressed_transcript), name="fallacy")
+        fallacy_task = asyncio.create_task(
+            self._run_fallacy(compressed_transcript), name="fallacy"
+        )
         perspective_task = asyncio.create_task(
             self._run_perspective(compressed_transcript, analysis.data),
             name="perspective",
@@ -912,13 +1062,17 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
         if not perspective.success:
             perspective_payload = perspective.to_dict()
             perspective_payload["step"] = "perspective"
-            return None, self._fail(ctx.span, ctx.start_time, "perspective", perspective_payload)
+            return None, self._fail(
+                ctx.span, ctx.start_time, "perspective", perspective_payload
+            )
 
         if compression_meta:
             fallacy.data.setdefault("transcript_compression", compression_meta)
             perspective.data.setdefault("transcript_compression", compression_meta)
 
-        summary = self._apply_pii_filtering(perspective.data.get("summary", ""), "summary")
+        summary = self._apply_pii_filtering(
+            perspective.data.get("summary", ""), "summary"
+        )
         perspective.data["summary"] = summary
 
         memory_payload = {
@@ -938,14 +1092,22 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
         )
 
         if transcript_task is None:
-            transcript_task = self._schedule_transcript_storage(filtered_transcript, download_info)
+            transcript_task = self._schedule_transcript_storage(
+                filtered_transcript, download_info
+            )
 
         graph_task: asyncio.Task[StepResult] | None = None
-        graph_placeholder = StepResult.skip(data={"state": "skipped", "reason": "graph_memory_disabled"})
+        graph_placeholder = StepResult.skip(
+            data={"state": "skipped", "reason": "graph_memory_disabled"}
+        )
         hipporag_task: asyncio.Task[StepResult] | None = None
-        hipporag_placeholder = StepResult.skip(data={"state": "skipped", "reason": "hipporag_memory_disabled"})
+        hipporag_placeholder = StepResult.skip(
+            data={"state": "skipped", "reason": "hipporag_memory_disabled"}
+        )
 
-        if getattr(self, "graph_memory", None) is not None and getattr(self, "_graph_memory_enabled", False):
+        if getattr(self, "graph_memory", None) is not None and getattr(
+            self, "_graph_memory_enabled", False
+        ):
             tags: set[str] = set()
             platform = memory_payload.get("platform")
             if isinstance(platform, str) and platform:
@@ -974,7 +1136,9 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
             self._record_step_skip("graph_memory")
 
         # HippoRAG continual memory integration
-        if getattr(self, "hipporag_memory", None) is not None and getattr(self, "_hipporag_memory_enabled", False):
+        if getattr(self, "hipporag_memory", None) is not None and getattr(
+            self, "_hipporag_memory_enabled", False
+        ):
             # Create consolidated tags for continual memory
             hippo_tags = []
             platform = memory_payload.get("platform")
@@ -1065,11 +1229,17 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
         graph_step = analysis_bundle.graph_placeholder
         if graph_result is not None:
             if isinstance(graph_result, Exception):
-                self.logger.warning("Graph memory task raised exception: %s", graph_result)
+                self.logger.warning(
+                    "Graph memory task raised exception: %s", graph_result
+                )
                 graph_step = StepResult.fail(str(graph_result))
             else:
                 graph_step = cast(StepResult, graph_result)
-        if graph_step is not None and not graph_step.success and graph_step.custom_status != "skipped":
+        if (
+            graph_step is not None
+            and not graph_step.success
+            and graph_step.custom_status != "skipped"
+        ):
             self.logger.warning("Graph memory storage failed: %s", graph_step.error)
         elif graph_step is not None and graph_step.success:
             graph_id = graph_step.data.get("graph_id")
@@ -1080,16 +1250,26 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
         hipporag_step = analysis_bundle.hipporag_placeholder
         if hipporag_result is not None:
             if isinstance(hipporag_result, Exception):
-                self.logger.warning("HippoRAG memory task raised exception: %s", hipporag_result)
+                self.logger.warning(
+                    "HippoRAG memory task raised exception: %s", hipporag_result
+                )
                 hipporag_step = StepResult.fail(str(hipporag_result))
             else:
                 hipporag_step = cast(StepResult, hipporag_result)
-        if hipporag_step is not None and not hipporag_step.success and hipporag_step.custom_status != "skipped":
-            self.logger.warning("HippoRAG memory storage failed: %s", hipporag_step.error)
+        if (
+            hipporag_step is not None
+            and not hipporag_step.success
+            and hipporag_step.custom_status != "skipped"
+        ):
+            self.logger.warning(
+                "HippoRAG memory storage failed: %s", hipporag_step.error
+            )
         elif hipporag_step is not None and hipporag_step.success:
             memory_id = hipporag_step.data.get("memory_id")
             if memory_id:
-                analysis_bundle.memory_payload.setdefault("hipporag_memory_id", memory_id)
+                analysis_bundle.memory_payload.setdefault(
+                    "hipporag_memory_id", memory_id
+                )
 
         discord_result = analysis_bundle.discord_placeholder
         if analysis_bundle.discord_task:
@@ -1116,7 +1296,9 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
                 "perspective": analysis_bundle.perspective.to_dict(),
                 "memory": memory_step.to_dict(),
                 "graph_memory": graph_step.to_dict() if graph_step is not None else {},
-                "hipporag_memory": hipporag_step.to_dict() if hipporag_step is not None else {},
+                "hipporag_memory": hipporag_step.to_dict()
+                if hipporag_step is not None
+                else {},
                 "discord": discord_result.to_dict(),
                 "transcript_compression": analysis_bundle.compression,
             },
@@ -1181,7 +1363,10 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
             return self._fail(span, pipeline_start, "drive", payload)
 
         if outcome == "skipped":
-            self.logger.info("Drive upload skipped: %s", drive_info.data.get("message", "quota or disabled"))
+            self.logger.info(
+                "Drive upload skipped: %s",
+                drive_info.data.get("message", "quota or disabled"),
+            )
         else:
             self.logger.info("Drive upload completed successfully")
         return _DriveArtifacts(result=drive_info, outcome=outcome)
@@ -1202,13 +1387,17 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
             return None
 
         source_url = download_info.data.get("source_url")
-        provider_text, provider_source = await self._fetch_provider_transcript(download_info, source_url)
+        provider_text, provider_source = await self._fetch_provider_transcript(
+            download_info, source_url
+        )
 
         transcript_text = provider_text
         transcript_source = provider_source
         if not transcript_text:
             metadata = self._load_download_metadata(download_info)
-            transcript_text = self._compose_metadata_transcript(download_info, metadata, source_url)
+            transcript_text = self._compose_metadata_transcript(
+                download_info, metadata, source_url
+            )
             transcript_source = "metadata"
 
         if not transcript_text:
@@ -1270,7 +1459,9 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
         if presenter:
             lines.append(f"Presenter: {presenter}")
 
-        description = metadata.get("description") or download_info.data.get("description")
+        description = metadata.get("description") or download_info.data.get(
+            "description"
+        )
         if isinstance(description, str) and description.strip():
             lines.append(description.strip())
 
@@ -1279,7 +1470,9 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
             lines.append(summary.strip())
 
         if not lines and source_url:
-            lines.append(f"Transcript unavailable automatically. Review manually: {source_url}")
+            lines.append(
+                f"Transcript unavailable automatically. Review manually: {source_url}"
+            )
 
         transcript_text = "\n".join(line for line in lines if line)
         return transcript_text.strip() or None
@@ -1327,7 +1520,9 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
         transcript: str,
         download_info: StepResult,
     ) -> asyncio.Task[StepResult] | None:
-        disable_transcript = bool(get_config().get_setting("disable_transcript_memory", False))
+        disable_transcript = bool(
+            get_config().get_setting("disable_transcript_memory", False)
+        )
         if disable_transcript:
             self._record_step_skip("transcript_memory")
             return None
@@ -1347,10 +1542,14 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
             name="transcript_storage",
         )
 
-    async def _await_transcript_best_effort(self, task: asyncio.Task[StepResult]) -> None:
+    async def _await_transcript_best_effort(
+        self, task: asyncio.Task[StepResult]
+    ) -> None:
         try:
             await asyncio.wait_for(task, timeout=2)
-        except Exception:  # pragma: no cover - best effort logging already handled elsewhere
+        except (
+            Exception
+        ):  # pragma: no cover - best effort logging already handled elsewhere
             pass
 
     def _schedule_discord_post(
@@ -1370,7 +1569,9 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
 
         if not self.discord:
             self.logger.info("Discord posting skipped - no webhook configured")
-            skip = StepResult.skip(data={"state": "skipped", "reason": "no webhook configured"})
+            skip = StepResult.skip(
+                data={"state": "skipped", "reason": "no webhook configured"}
+            )
             self._record_step_skip("discord")
             return None, skip
 
@@ -1378,14 +1579,22 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
             drive_links = {
                 "status": "skipped",
                 "reason": drive_artifacts.result.data.get("reason", "quota"),
-                "message": drive_artifacts.result.data.get("message", "Drive upload skipped"),
+                "message": drive_artifacts.result.data.get(
+                    "message", "Drive upload skipped"
+                ),
             }
         else:
-            drive_links = drive_artifacts.result.data.get("links", {}) if drive_artifacts.result.success else {}
+            drive_links = (
+                drive_artifacts.result.data.get("links", {})
+                if drive_artifacts.result.success
+                else {}
+            )
 
         return (
             asyncio.create_task(
-                self._execute_step("discord", self.discord.run, content_data, drive_links),
+                self._execute_step(
+                    "discord", self.discord.run, content_data, drive_links
+                ),
                 name="discord",
             ),
             StepResult.skip(data={"state": "pending"}),
@@ -1397,7 +1606,11 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
         transcript_task: asyncio.Task[StepResult] | None,
         graph_task: asyncio.Task[StepResult] | None,
         hipporag_task: asyncio.Task[StepResult] | None,
-    ) -> tuple[StepResult | Exception, StepResult | Exception | None, StepResult | Exception | None]:
+    ) -> tuple[
+        StepResult | Exception,
+        StepResult | Exception | None,
+        StepResult | Exception | None,
+    ]:
         awaitables: list[asyncio.Task[StepResult]] = [analysis_memory_task]
         if transcript_task is not None:
             awaitables.append(transcript_task)
@@ -1428,11 +1641,15 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
 
         if transcript_result is not None:
             if isinstance(transcript_result, Exception):
-                self.logger.warning("Transcript storage task raised exception: %s", transcript_result)
+                self.logger.warning(
+                    "Transcript storage task raised exception: %s", transcript_result
+                )
             else:
                 transcript_result = cast(StepResult, transcript_result)
                 if not transcript_result.success:
-                    self.logger.warning("Transcript storage failed: %s", transcript_result.error)
+                    self.logger.warning(
+                        "Transcript storage failed: %s", transcript_result.error
+                    )
 
         return memory_result, graph_result, hipporag_result
 
@@ -1456,9 +1673,13 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
         return self._finalize_pipeline(pipeline_start, "error", payload)
 
     async def _run_download(self, url: str, quality: str) -> StepResult:
-        return await self._execute_step("download", self.downloader.run, url, quality=quality)
+        return await self._execute_step(
+            "download", self.downloader.run, url, quality=quality
+        )
 
-    async def _run_transcription(self, local_path: str, video_id: str | None) -> StepResult:
+    async def _run_transcription(
+        self, local_path: str, video_id: str | None
+    ) -> StepResult:
         model_name = self._transcriber_model_name()
         return await self._execute_step(
             "transcription",
@@ -1472,12 +1693,20 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
         return await self._execute_step("analysis", self.analyzer.run, transcript)
 
     async def _run_fallacy(self, transcript: str) -> StepResult:
-        return await self._execute_step("fallacy", self.fallacy_detector.run, transcript)
+        return await self._execute_step(
+            "fallacy", self.fallacy_detector.run, transcript
+        )
 
-    async def _run_perspective(self, transcript: str, analysis_data: dict[str, Any]) -> StepResult:
-        return await self._execute_step("perspective", self.perspective.run, transcript, str(analysis_data))
+    async def _run_perspective(
+        self, transcript: str, analysis_data: dict[str, Any]
+    ) -> StepResult:
+        return await self._execute_step(
+            "perspective", self.perspective.run, transcript, str(analysis_data)
+        )
 
-    async def _run_analysis_memory(self, summary: str, payload: dict[str, Any]) -> StepResult:
+    async def _run_analysis_memory(
+        self, summary: str, payload: dict[str, Any]
+    ) -> StepResult:
         return await self._execute_step(
             "analysis_memory",
             self.memory.run,

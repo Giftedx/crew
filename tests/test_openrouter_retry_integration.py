@@ -61,7 +61,7 @@ def test_openrouter_retry_giveup(monkeypatch, enable_retry):
 
     monkeypatch.setattr(mod, "resilient_post", always_fail)
 
-    from obs.metrics import HTTP_RETRY_GIVEUPS, label_ctx
+    from ultimate_discord_intelligence_bot.obs.metrics import HTTP_RETRY_GIVEUPS, label_ctx
 
     # capture pre value (prom client may not be installed; counter exposes internal _value for fallback registry)
     before = None

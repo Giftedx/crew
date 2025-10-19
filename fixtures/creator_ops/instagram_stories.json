@@ -1,0 +1,32 @@
+{
+    "data": [
+        {
+            "id": "18100000000000000",
+            "media_type": "IMAGE",
+            "media_url": "https://scontent.cdninstagram.com/v/t51.2885-15/444444444_444444444_444444444_n.jpg",
+            "permalink": "https://www.instagram.com/stories/creatorx_official/18100000000000000/",
+            "timestamp": "2024-01-15T09:00:00+0000",
+            "expires_at": "2024-01-16T09:00:00+0000",
+            "impressions": 50000,
+            "reach": 45000,
+            "replies": 25,
+            "taps_forward": 100,
+            "taps_back": 50,
+            "exits": 200
+        },
+        {
+            "id": "18100000000000001",
+            "media_type": "VIDEO",
+            "media_url": "https://scontent.cdninstagram.com/v/t50.2886-16/555555555_555555555_555555555_n.mp4",
+            "permalink": "https://www.instagram.com/stories/creatorx_official/18100000000000001/",
+            "timestamp": "2024-01-15T09:30:00+0000",
+            "expires_at": "2024-01-16T09:30:00+0000",
+            "impressions": 75000,
+            "reach": 65000,
+            "replies": 40,
+            "taps_forward": 150,
+            "taps_back": 75,
+            "exits": 300
+        }
+    ]
+}

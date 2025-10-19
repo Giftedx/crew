@@ -1,10 +1,10 @@
 import os
 
 import pytest
+from ultimate_discord_intelligence_bot.server.app import create_app
 
 from fastapi.testclient import TestClient
-from obs import metrics
-from server.app import create_app
+from ultimate_discord_intelligence_bot.obs import metrics
 
 
 @pytest.mark.skipif("fastapi" not in globals(), reason="fastapi not available")

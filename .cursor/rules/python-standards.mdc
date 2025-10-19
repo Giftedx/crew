@@ -1,4 +1,63 @@
 ---
+alwaysApply: true
+description: Python coding standards and conventions for the Ultimate Discord Intelligence Bot
+---
+### Python Standards
+
+- **Version & Style**
+  - Python 3.10+
+  - Line length 120, double quotes for strings
+  - Import order: stdlib → third-party → local
+
+- **Naming & Readability**
+  - Prefer descriptive, full-word names; avoid 1–2 character identifiers
+  - Functions: verb/verb-phrase; variables: noun/noun-phrase
+  - Capture meaning of complex conditions in well-named variables
+
+- **Typing (mandatory)**
+  - Full type hints on all public functions and tool methods
+  - Avoid `Any` and unsafe casts; use precise types
+  - Exported/public APIs must have explicit return types
+
+- **Control Flow**
+  - Prefer guard clauses and early returns over deep nesting
+  - Avoid unnecessary try/except; only catch when you can handle meaningfully
+  - Do not swallow exceptions; convert to `StepResult.fail(...)` with context
+
+- **Comments & Docs**
+  - No comments for obvious code; document non-obvious rationale and invariants
+  - Concise docstrings for public APIs with Args/Returns examples
+
+- **Formatting**
+  - Match project formatting; wrap long lines; avoid unrelated reformatting
+
+- **Tools Pattern**
+  - All tools inherit from [tools/_base.py](mdc:src/ultimate_discord_intelligence_bot/tools/_base.py) and return `StepResult`
+
+```python
+from __future__ import annotations
+from ultimate_discord_intelligence_bot.step_result import StepResult
+
+def process_content(content: str, tenant: str, workspace: str) -> StepResult:
+    """Process content with full typing and StepResult returns."""
+    try:
+        if not content or not tenant or not workspace:
+            return StepResult.fail("Missing required parameters")
+        # ... implementation ...
+        return StepResult.ok(data={"status": "processed"})
+    except Exception as e:
+        return StepResult.fail(f"Processing failed: {str(e)}")
+```
+
+- **Testing**
+  - Unit tests for tools/services; mock external calls
+  - Validate tenant isolation and error paths
+
+See also: [error-handling.mdc](mdc:.cursor/rules/error-handling.mdc),
+[core-architecture.mdc](mdc:.cursor/rules/core-architecture.mdc).
+
+---
+
 globs: "*.py"
 description: "Python coding standards and conventions for the Ultimate Discord Intelligence Bot"
 ---
@@ -109,6 +168,7 @@ class ProcessedContent:
 ## Baseline Tracking
 
 The project uses incremental improvement:
+
 - MyPy baseline tracked in [mypy_baseline.json](mdc:mypy_baseline.json)
 - Only update baseline when error count decreases
 - Use `./scripts/dev.sh type-baseline-update` to update baseline

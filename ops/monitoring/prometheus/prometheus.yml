@@ -1,0 +1,65 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - "alerts.yml"
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093
+
+scrape_configs:
+  # Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Discord Intelligence Bot Application
+  - job_name: 'discord-intelligence-bot'
+    static_configs:
+      - targets: ['discord-bot:8080']
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+
+  # API Server
+  - job_name: 'discord-intelligence-api'
+    static_configs:
+      - targets: ['api-server:8080']
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+
+  # Worker Processes
+  - job_name: 'discord-intelligence-worker'
+    static_configs:
+      - targets: ['worker-processes:8080']
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+
+  # PostgreSQL
+  - job_name: 'postgresql'
+    static_configs:
+      - targets: ['postgresql:5432']
+    scrape_interval: 30s
+
+  # Redis
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis:6379']
+    scrape_interval: 30s
+
+  # Qdrant
+  - job_name: 'qdrant'
+    static_configs:
+      - targets: ['qdrant:6333']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+
+  # MinIO
+  - job_name: 'minio'
+    static_configs:
+      - targets: ['minio:9000']
+    metrics_path: '/minio/v2/metrics/cluster'
+    scrape_interval: 30s

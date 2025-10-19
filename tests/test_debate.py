@@ -1,5 +1,5 @@
-from core.learning_engine import LearningEngine
-from core.router import Router
+from ultimate_discord_intelligence_bot.core.learning_engine import LearningEngine
+from ultimate_discord_intelligence_bot.core.router import Router
 from debate.panel import PanelConfig, run_panel
 from debate.store import Debate, DebateStore
 from discord import commands as dc

@@ -12,7 +12,11 @@ from core.time import default_utc_now
 from .discord_env import _DISCORD_AVAILABLE, LIGHTWEIGHT_IMPORT, build_intents, commands
 from .env import check_environment, enable_autonomous_defaults
 from .ingest import start_ingest_workers
-from .registrations import _register_events, _register_prefix_commands, _register_slash_commands
+from .registrations import (
+    _register_events,
+    _register_prefix_commands,
+    _register_slash_commands,
+)
 from .tools_bootstrap import attach_tools, load_tools
 
 
@@ -27,10 +31,44 @@ def create_full_bot():
     tools = load_tools()
     attach_tools(bot, tools)
 
+    # Initialize background worker for unlimited analysis time
+    try:
+        from ultimate_discord_intelligence_bot.background_intelligence_worker import (
+            BackgroundIntelligenceWorker,
+        )
+        from ultimate_discord_intelligence_bot.orchestration import (
+            OrchestrationStrategy,
+            get_orchestrator,
+        )
+
+        # Use unified orchestrator facade with autonomous strategy
+        orchestrator = get_orchestrator(OrchestrationStrategy.AUTONOMOUS)
+        background_worker = BackgroundIntelligenceWorker(
+            orchestrator=orchestrator,
+            storage_dir="data/background_workflows",
+        )
+        bot.background_worker = background_worker  # type: ignore[attr-defined]
+        bot.orchestrator = orchestrator  # type: ignore[attr-defined]
+        print(
+            "✅ Background worker initialized with unified orchestrator (unlimited analysis time enabled)"
+        )
+    except Exception as e:
+        print(f"⚠️ Background worker not available: {e}")
+        bot.background_worker = None  # type: ignore[attr-defined]
+        bot.orchestrator = None  # type: ignore[attr-defined]
+
     _register_events(bot)
 
-    user_cmds_enabled = os.getenv("ENABLE_DISCORD_USER_COMMANDS", "0").lower() in {"1", "true", "yes"}
-    admin_cmds_enabled = os.getenv("ENABLE_DISCORD_ADMIN_COMMANDS", "0").lower() in {"1", "true", "yes"}
+    user_cmds_enabled = os.getenv("ENABLE_DISCORD_USER_COMMANDS", "0").lower() in {
+        "1",
+        "true",
+        "yes",
+    }
+    admin_cmds_enabled = os.getenv("ENABLE_DISCORD_ADMIN_COMMANDS", "0").lower() in {
+        "1",
+        "true",
+        "yes",
+    }
     mode = "agent-only" if not user_cmds_enabled else "user-commands"
     print(f"🧭 Startup mode: {mode} (admin={'on' if admin_cmds_enabled else 'off'})")
 
@@ -42,13 +80,25 @@ def create_full_bot():
 async def main():
     print("🚀 Starting Full Discord Intelligence Bot...")
 
-    gateway_enabled = os.getenv("ENABLE_DISCORD_GATEWAY", "1").lower() in {"1", "true", "yes"}
+    gateway_enabled = os.getenv("ENABLE_DISCORD_GATEWAY", "1").lower() in {
+        "1",
+        "true",
+        "yes",
+    }
     # If the Discord library isn't available (shim mode), force headless mode
     if LIGHTWEIGHT_IMPORT or not _DISCORD_AVAILABLE:
         print("⚠️  Discord gateway library not available; switching to headless mode.")
         gateway_enabled = False
-    user_cmds_enabled = os.getenv("ENABLE_DISCORD_USER_COMMANDS", "0").lower() in {"1", "true", "yes"}
-    admin_cmds_enabled = os.getenv("ENABLE_DISCORD_ADMIN_COMMANDS", "0").lower() in {"1", "true", "yes"}
+    user_cmds_enabled = os.getenv("ENABLE_DISCORD_USER_COMMANDS", "0").lower() in {
+        "1",
+        "true",
+        "yes",
+    }
+    admin_cmds_enabled = os.getenv("ENABLE_DISCORD_ADMIN_COMMANDS", "0").lower() in {
+        "1",
+        "true",
+        "yes",
+    }
 
     if not check_environment():
         sys.exit(1)
@@ -64,7 +114,9 @@ async def main():
             await start_ingest_workers(asyncio.get_running_loop())
         else:
             print("ℹ️  Ingest workers disabled (ENABLE_INGEST_WORKER=0)")
-        print("📨 Discord posts will use webhooks if configured; no gateway commands are exposed.")
+        print(
+            "📨 Discord posts will use webhooks if configured; no gateway commands are exposed."
+        )
 
         async def _heartbeat_loop():
             try:
@@ -81,7 +133,9 @@ async def main():
                         ts = default_utc_now().isoformat()
                         retrying_post(
                             webhook,
-                            json_payload={"content": f"🫀 Heartbeat: headless agent alive @ {ts}"},
+                            json_payload={
+                                "content": f"🫀 Heartbeat: headless agent alive @ {ts}"
+                            },
                             headers={"Content-Type": "application/json"},
                             timeout_seconds=REQUEST_TIMEOUT_SECONDS,
                         )
@@ -119,15 +173,24 @@ async def main():
         except Exception as e:
             print(f"❌ Failed to start bot: {e}")
             traceback.print_exc()
-            auto_fb = os.getenv("AUTO_FALLBACK_HEADLESS", "1").lower() in {"1", "true", "yes", "on"}
+            auto_fb = os.getenv("AUTO_FALLBACK_HEADLESS", "1").lower() in {
+                "1",
+                "true",
+                "yes",
+                "on",
+            }
             try:
                 cfg = _get_secure_config()
                 try:
                     webhook = cfg.get_webhook("discord_private")
                 except Exception:
-                    webhook = os.getenv("DISCORD_PRIVATE_WEBHOOK") or os.getenv("DISCORD_WEBHOOK")
+                    webhook = os.getenv("DISCORD_PRIVATE_WEBHOOK") or os.getenv(
+                        "DISCORD_WEBHOOK"
+                    )
                 if webhook:
-                    content = "⚠️ Gateway connection failed; falling back to headless mode"
+                    content = (
+                        "⚠️ Gateway connection failed; falling back to headless mode"
+                    )
                     retrying_post(
                         webhook,
                         json_payload={"content": content[:1900]},
@@ -143,7 +206,9 @@ async def main():
             except Exception:
                 pass
             if auto_fb:
-                print("↩️  Falling back to headless agent mode (AUTO_FALLBACK_HEADLESS=1)")
+                print(
+                    "↩️  Falling back to headless agent mode (AUTO_FALLBACK_HEADLESS=1)"
+                )
                 await _run_headless_agent(user_cmds_enabled, admin_cmds_enabled)
             else:
                 sys.exit(1)

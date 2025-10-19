@@ -1,3 +1,5 @@
+from core.circuit_breaker_canonical import CircuitBreaker, CircuitState
+
 """Pipeline tool for orchestrating multi-step operations per Copilot instructions."""
 
 import asyncio
@@ -204,7 +206,7 @@ class PipelineTool(BaseTool[StepResult]):
                     quality=quality,
                     processing_time=duration,
                     timestamp=time.time(),
-                    circuit_breaker_status=self._circuit_breaker.get_status() if self._circuit_breaker else None,
+                    circuit_breaker_status=self._circuit_breaker.get_health_status() if self._circuit_breaker else None,
                 )
 
         try:
@@ -264,7 +266,7 @@ class PipelineTool(BaseTool[StepResult]):
                     processing_time=processing_time,
                     timestamp=time.time(),
                     data=payload,
-                    circuit_breaker_status=self._circuit_breaker.get_status() if self._circuit_breaker else None,
+                    circuit_breaker_status=self._circuit_breaker.get_health_status() if self._circuit_breaker else None,
                 )
 
             # Success path
@@ -282,7 +284,7 @@ class PipelineTool(BaseTool[StepResult]):
                 processing_time=processing_time,
                 timestamp=time.time(),
                 data=payload,
-                circuit_breaker_status=self._circuit_breaker.get_status() if self._circuit_breaker else None,
+                circuit_breaker_status=self._circuit_breaker.get_health_status() if self._circuit_breaker else None,
             )
 
         except Exception as e:  # pragma: no cover - error path
@@ -302,7 +304,7 @@ class PipelineTool(BaseTool[StepResult]):
                 quality=quality,
                 processing_time=processing_time,
                 timestamp=time.time(),
-                circuit_breaker_status=self._circuit_breaker.get_status() if self._circuit_breaker else None,
+                circuit_breaker_status=self._circuit_breaker.get_health_status() if self._circuit_breaker else None,
             )
 
     def run(

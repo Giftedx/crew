@@ -1,0 +1,241 @@
+"""
+DEPRECATED: Legacy Memory Tools
+
+The following memory tools have been deprecated in favor of unified memory facades:
+
+DEPRECATED TOOLS:
+
+- mem0_memory_tool.py → Use Mem0Plugin via UnifiedMemoryService
+- memory_storage_tool.py → Use UnifiedMemoryService directly
+- graph_memory_tool.py → Use GraphPlugin via UnifiedMemoryService  
+- hipporag_continual_memory_tool.py → Use HippoRAGPlugin via UnifiedMemoryService
+- memory_compaction_tool.py → Use UnifiedMemoryService.compact()
+
+RECOMMENDED TOOL:
+
+- memory_v2_tool.py (already uses UnifiedMemoryService)
+- unified_memory_tool.py (if exists, uses UnifiedMemoryService)
+
+DEPRECATION DATE: October 19, 2025
+REMOVAL TARGET: Phase 8 cleanup
+DO NOT USE THESE TOOLS IN NEW CODE.
+
+=============================================================================
+MIGRATION GUIDE
+=============================================================================
+
+**BEFORE** (mem0_memory_tool.py):
+
+```python
+from ultimate_discord_intelligence_bot.tools.mem0_memory_tool import Mem0MemoryTool
+
+tool = Mem0MemoryTool()
+result = tool.run(action="remember", content="User prefers dark mode")
+```
+
+**AFTER** (Use Mem0Plugin via UnifiedMemoryService):
+
+```python
+from ultimate_discord_intelligence_bot.memory import get_unified_memory
+
+memory = get_unified_memory()
+
+# Upsert with Mem0Plugin (automatically routed)
+result = await memory.upsert(
+    collection="user_preferences",
+    documents=["User prefers dark mode"],
+    metadatas=[{"type": "preference", "timestamp": "2025-10-19"}],
+    ids=["pref_001"],
+    plugin="mem0"  # Explicitly use Mem0Plugin
+)
+
+# Query
+results = await memory.query(
+    collection="user_preferences",
+    query_texts=["user preferences"],
+    n_results=5,
+    plugin="mem0"
+)
+```
+
+**BEFORE** (graph_memory_tool.py):
+
+```python
+from ultimate_discord_intelligence_bot.tools.graph_memory_tool import GraphMemoryTool
+
+tool = GraphMemoryTool()
+result = tool.run(action="add_entity", entity_name="John", entity_type="person")
+```
+
+**AFTER** (Use GraphPlugin via UnifiedMemoryService):
+
+```python
+from ultimate_discord_intelligence_bot.memory import get_unified_memory
+
+memory = get_unified_memory()
+
+# Add entity via GraphPlugin
+result = await memory.upsert(
+    collection="knowledge_graph",
+    documents=["John is a person"],
+    metadatas=[{
+        "entity_name": "John",
+        "entity_type": "person",
+        "graph_operation": "add_entity"
+    }],
+    ids=["entity_john"],
+    plugin="graph"  # Explicitly use GraphPlugin
+)
+```
+
+**BEFORE** (hipporag_continual_memory_tool.py):
+
+```python
+from ultimate_discord_intelligence_bot.tools.hipporag_continual_memory_tool import HippoRAGTool
+
+tool = HippoRAGTool()
+result = tool.run(action="consolidate", content="User feedback data")
+```
+
+**AFTER** (Use HippoRAGPlugin via UnifiedMemoryService):
+
+```python
+from ultimate_discord_intelligence_bot.memory import get_unified_memory
+
+memory = get_unified_memory()
+
+# Consolidate via HippoRAGPlugin
+result = await memory.upsert(
+    collection="continual_learning",
+    documents=["User feedback data"],
+    metadatas=[{
+        "operation": "consolidate",
+        "timestamp": "2025-10-19"
+    }],
+    ids=["feedback_001"],
+    plugin="hipporag"  # Explicitly use HippoRAGPlugin
+)
+```
+
+**BEFORE** (memory_storage_tool.py - generic storage):
+
+```python
+from ultimate_discord_intelligence_bot.tools.memory_storage_tool import MemoryStorageTool
+
+tool = MemoryStorageTool()
+result = tool.run(action="store", collection="facts", content="Sky is blue")
+```
+
+**AFTER** (Use UnifiedMemoryService directly):
+
+```python
+from ultimate_discord_intelligence_bot.memory import get_unified_memory
+
+memory = get_unified_memory()
+
+# Generic storage (no plugin specified = default backend)
+result = await memory.upsert(
+    collection="facts",
+    documents=["Sky is blue"],
+    metadatas=[{"type": "fact", "verified": True}],
+    ids=["fact_001"]
+)
+
+# Query
+results = await memory.query(
+    collection="facts",
+    query_texts=["color of sky"],
+    n_results=5
+)
+```
+
+**RECOMMENDED: Use memory_v2_tool.py** (already updated):
+
+```python
+from ultimate_discord_intelligence_bot.tools.memory_v2_tool import MemoryV2Tool
+
+# This tool already uses UnifiedMemoryService internally
+tool = MemoryV2Tool()
+result = tool.run(
+    action="store",
+    content="Important information",
+    collection="facts",
+    metadata={"type": "fact"}
+)
+```
+
+=============================================================================
+PLUGIN SELECTION GUIDE
+=============================================================================
+
+UnifiedMemoryService automatically routes to appropriate plugins based on:
+
+1. Explicit plugin parameter: `plugin="mem0"`, `plugin="graph"`, `plugin="hipporag"`
+2. Collection name patterns (automatic routing)
+3. Metadata hints (operation type)
+
+**Plugin Selection**:
+
+- `mem0`: Long-term user preferences, personalization, episodic memory
+- `graph`: Knowledge graph operations, entity relationships, structured knowledge
+- `hipporag`: Continual learning, memory consolidation, pattern recognition
+- Default: Direct Qdrant operations (when no plugin specified)
+
+**Feature Mapping**:
+
+| Old Tool | Operation | New Method | Plugin |
+|----------|-----------|------------|--------|
+| Mem0MemoryTool | remember | upsert() | mem0 |
+| Mem0MemoryTool | recall | query() | mem0 |
+| GraphMemoryTool | add_entity | upsert() | graph |
+| GraphMemoryTool | add_relation | upsert() | graph |
+| GraphMemoryTool | query_graph | query() | graph |
+| HippoRAGTool | consolidate | upsert() | hipporag |
+| HippoRAGTool | retrieve | query() | hipporag |
+| MemoryStorageTool | store | upsert() | (default) |
+| MemoryStorageTool | retrieve | query() | (default) |
+| MemoryCompactionTool | compact | compact() | N/A |
+
+=============================================================================
+RATIONALE
+=============================================================================
+
+- 5 separate memory tools created fragmentation
+- Each tool duplicated core storage/retrieval logic
+- Plugin architecture (Phase 4) provides unified interface
+- Metadata-driven routing eliminates need for separate tools
+- UnifiedMemoryService provides consistent API across all memory types
+- memory_v2_tool.py demonstrates proper usage pattern
+
+=============================================================================
+MIGRATION CHECKLIST
+=============================================================================
+
+For each deprecated tool usage:
+
+1. ✅ Replace import with `get_unified_memory()`
+2. ✅ Convert tool actions to `upsert()` or `query()` calls
+3. ✅ Add explicit `plugin` parameter if needed
+4. ✅ Update metadata structure to match plugin expectations
+5. ✅ Handle async interfaces (add `await`)
+6. ✅ Test with UnifiedMemoryService
+7. ✅ Remove old tool import
+
+=============================================================================
+REFERENCES
+=============================================================================
+
+- ADR-0002: Memory Unification Strategy
+- PHASE4_MEMORY_PLUGINS_COMPLETE.md
+- examples/unified_memory_plugins_example.py (comprehensive examples)
+- memory_v2_tool.py (reference implementation)
+- ultimate_discord_intelligence_bot/memory/**init**.py (UnifiedMemoryService)
+
+For questions, see Phase 4 documentation or memory plugin examples.
+"""
+
+raise ImportError(
+    "Legacy memory tools deprecated. "
+    "Use UnifiedMemoryService with plugin routing or memory_v2_tool.py. "
+    "See .DEPRECATED_PHASE4_MEMORY_TOOLS for migration guide."
+)

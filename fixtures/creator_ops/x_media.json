@@ -1,0 +1,41 @@
+{
+    "data": [
+        {
+            "media_key": "3_1234567890123456789",
+            "type": "photo",
+            "url": "https://pbs.twimg.com/media/ABC123DEF456.jpg",
+            "preview_image_url": "https://pbs.twimg.com/media/ABC123DEF456.jpg",
+            "alt_text": "Screenshot of a gaming session showing high scores",
+            "height": 1080,
+            "width": 1920,
+            "public_metrics": {
+                "view_count": 5000
+            }
+        },
+        {
+            "media_key": "7_1234567890123456790",
+            "type": "video",
+            "url": "https://video.twimg.com/ext_tw_video/1234567890123456790/pu/vid/1280x720/ABC123DEF456.mp4",
+            "preview_image_url": "https://pbs.twimg.com/ext_tw_video_thumb/1234567890123456790/pu/img/ABC123DEF456.jpg",
+            "alt_text": "Video showing behind the scenes of content creation",
+            "duration_ms": 30000,
+            "height": 720,
+            "width": 1280,
+            "public_metrics": {
+                "view_count": 15000
+            },
+            "variants": [
+                {
+                    "bit_rate": 832000,
+                    "content_type": "video/mp4",
+                    "url": "https://video.twimg.com/ext_tw_video/1234567890123456790/pu/vid/640x360/ABC123DEF456.mp4"
+                },
+                {
+                    "bit_rate": 2176000,
+                    "content_type": "video/mp4",
+                    "url": "https://video.twimg.com/ext_tw_video/1234567890123456790/pu/vid/1280x720/ABC123DEF456.mp4"
+                }
+            ]
+        }
+    ]
+}

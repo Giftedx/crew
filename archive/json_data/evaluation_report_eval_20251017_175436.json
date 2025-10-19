@@ -1,0 +1,141 @@
+{
+  "report_id": "eval_20251017_175436",
+  "evaluation_timestamp": "2025-10-17T17:54:36.490852",
+  "dataset_version": "1.0",
+  "episodes_evaluated": 10,
+  "metrics": {
+    "wer": 0.10666666666666666,
+    "cer": 0.128,
+    "der": 0.19,
+    "jer": 0.20900000000000002,
+    "topic_seg_rouge": 0.85,
+    "topic_seg_nmi": 0.82,
+    "claim_extraction_f1": 0.82,
+    "claim_extraction_precision": 0.85,
+    "claim_extraction_recall": 0.79,
+    "source_retrieval_r3": 0.8800000000000001,
+    "source_retrieval_ndcg": 0.9099999999999999,
+    "highlight_kendall_tau": 0.76,
+    "highlight_precision": 0.78,
+    "safety_classification_f1": 0.9399999999999998,
+    "dedup_precision": 0.89,
+    "dedup_recall": 0.86,
+    "avg_cost_usd": 2.0,
+    "avg_latency_seconds": 480.0,
+    "throughput_per_hour": 100.0
+  },
+  "trends": {
+    "wer_trend": "improving",
+    "der_trend": "stable",
+    "cost_trend": "stable",
+    "latency_trend": "stable",
+    "claim_f1_trend": "stable",
+    "source_r3_trend": "stable"
+  },
+  "regression_alerts": [],
+  "improvement_opportunities": [
+    "Improve ASR accuracy through better acoustic models or training data",
+    "Enhance speaker diarization with better clustering algorithms",
+    "Optimize token usage in LLM calls and implement caching",
+    "Parallelize processing stages and optimize I/O operations",
+    "Improve claim extraction with better prompt engineering"
+  ],
+  "summary": "Evaluated 10 episodes successfully. WER: 10.7%, DER: 19.0%, Cost: $2.00/episode, Latency: 480s/episode. Claim F1: 82.0%, Source R@3: 88.0%.",
+  "recommendations": [
+    "Review ASR pipeline for accuracy improvements",
+    "Tune speaker diarization parameters",
+    "Implement aggressive caching and token optimization"
+  ],
+  "episode_results": [
+    {
+      "episode_id": "h3_podcast_123",
+      "wer": 0.11,
+      "der": 0.195,
+      "cost_usd": 2.25,
+      "latency_seconds": 540.0,
+      "success": true,
+      "error_message": null
+    },
+    {
+      "episode_id": "hasan_piker_056",
+      "wer": 0.12,
+      "der": 0.21,
+      "cost_usd": 3.0,
+      "latency_seconds": 720.0,
+      "success": true,
+      "error_message": null
+    },
+    {
+      "episode_id": "h3_podcast_124",
+      "wer": 0.10666666666666666,
+      "der": 0.19,
+      "cost_usd": 2.0,
+      "latency_seconds": 480.0,
+      "success": true,
+      "error_message": null
+    },
+    {
+      "episode_id": "destiny_debate_032",
+      "wer": 0.1,
+      "der": 0.18,
+      "cost_usd": 1.5,
+      "latency_seconds": 360.0,
+      "success": true,
+      "error_message": null
+    },
+    {
+      "episode_id": "h3_podcast_125",
+      "wer": 0.11333333333333334,
+      "der": 0.2,
+      "cost_usd": 2.5,
+      "latency_seconds": 600.0,
+      "success": true,
+      "error_message": null
+    },
+    {
+      "episode_id": "hasan_piker_057",
+      "wer": 0.11,
+      "der": 0.195,
+      "cost_usd": 2.25,
+      "latency_seconds": 540.0,
+      "success": true,
+      "error_message": null
+    },
+    {
+      "episode_id": "h3_podcast_126",
+      "wer": 0.10333333333333333,
+      "der": 0.185,
+      "cost_usd": 1.75,
+      "latency_seconds": 420.0,
+      "success": true,
+      "error_message": null
+    },
+    {
+      "episode_id": "vaush_political_089",
+      "wer": 0.10666666666666666,
+      "der": 0.19,
+      "cost_usd": 2.0,
+      "latency_seconds": 480.0,
+      "success": true,
+      "error_message": null
+    },
+    {
+      "episode_id": "h3_podcast_127",
+      "wer": 0.1,
+      "der": 0.18,
+      "cost_usd": 1.5,
+      "latency_seconds": 360.0,
+      "success": true,
+      "error_message": null
+    },
+    {
+      "episode_id": "hasan_piker_058",
+      "wer": 0.09666666666666666,
+      "der": 0.175,
+      "cost_usd": 1.25,
+      "latency_seconds": 300.0,
+      "success": true,
+      "error_message": null
+    }
+  ]
+}

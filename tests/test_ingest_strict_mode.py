@@ -3,8 +3,7 @@ from __future__ import annotations
 import types
 
 import pytest
-
-from ingest import pipeline as ip
+from ultimate_discord_intelligence_bot.ingest import pipeline as ip
 
 
 def test_strict_mode_missing_both_raises(monkeypatch):
@@ -15,7 +14,9 @@ def test_strict_mode_missing_both_raises(monkeypatch):
     )
     monkeypatch.setattr(ip, "_get_provider", lambda src: (prov, "channel"))
     store = types.SimpleNamespace(upsert=lambda ns, recs: None)
-    job = ip.IngestJob(source="youtube", external_id="e", url="u", tenant="t", workspace="w", tags=[])
+    job = ip.IngestJob(
+        source="youtube", external_id="e", url="u", tenant="t", workspace="w", tags=[]
+    )
     with pytest.raises(ValueError):
         ip.run(job, store)
 
@@ -28,7 +29,9 @@ def test_strict_mode_missing_creator_raises(monkeypatch):
     )
     monkeypatch.setattr(ip, "_get_provider", lambda src: (prov, "channel"))
     store = types.SimpleNamespace(upsert=lambda ns, recs: None)
-    job = ip.IngestJob(source="youtube", external_id="e", url="u", tenant="t", workspace="w", tags=[])
+    job = ip.IngestJob(
+        source="youtube", external_id="e", url="u", tenant="t", workspace="w", tags=[]
+    )
     with pytest.raises(ValueError):
         ip.run(job, store)
 
@@ -41,6 +44,8 @@ def test_strict_mode_missing_id_raises(monkeypatch):
     )
     monkeypatch.setattr(ip, "_get_provider", lambda src: (prov, "channel"))
     store = types.SimpleNamespace(upsert=lambda ns, recs: None)
-    job = ip.IngestJob(source="youtube", external_id="e", url="u", tenant="t", workspace="w", tags=[])
+    job = ip.IngestJob(
+        source="youtube", external_id="e", url="u", tenant="t", workspace="w", tags=[]
+    )
     with pytest.raises(ValueError):
         ip.run(job, store)

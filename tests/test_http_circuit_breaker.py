@@ -1,6 +1,6 @@
 import pytest
 
-from core.http_utils import http_request_with_retry
+from ultimate_discord_intelligence_bot.core.http_utils import http_request_with_retry
 
 
 class _Resp:

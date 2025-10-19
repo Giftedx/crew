@@ -43,6 +43,7 @@ class RouteState:
     adaptive_suggested_model: str | None = None
     adaptive_candidates: list[str] | None = None
     adaptive_recorded: bool = False
+    rl_router_selection: dict[str, Any] | None = None
 
     def labels(self) -> dict[str, str]:
         """Return lazily-computed metric labels."""

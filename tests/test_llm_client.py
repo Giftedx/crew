@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from src.core.llm_client import LLMClient
+from ultimate_discord_intelligence_bot.core.llm_client import LLMClient
 
 
 # Simple counting provider

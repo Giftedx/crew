@@ -29,6 +29,12 @@ class TranscriptIndexTool(BaseTool[StepResult]):
         # indices maps video_id -> list of (start_ts, end_ts, text)
         self.indices: dict[str, list[tuple[float, float, str]]] = {}
         self._metrics = get_metrics()
+        # Shared context populated by orchestrator
+        self._shared_context: dict[str, any] = {}
+
+    def update_context(self, context_data: dict[str, any]) -> None:
+        """Update shared context from orchestrator (enables video_id propagation)."""
+        self._shared_context.update(context_data)
 
     def index_transcript(self, transcript: str, video_id: str) -> StepResult:
         """Split a transcript into timestamped chunks and store them.
@@ -76,8 +82,13 @@ class TranscriptIndexTool(BaseTool[StepResult]):
         return " ".join(context)
 
     # expose indexing via BaseTool run
-    def _run(self, transcript: str, video_id: str) -> StepResult:
+    def _run(self, transcript: str, video_id: str | None = None) -> StepResult:
+        """Run indexing with optional video_id (falls back to shared context)."""
+        # Get video_id from shared context if not provided
+        if not video_id:
+            video_id = self._shared_context.get("video_id") or self._shared_context.get("url", "unknown")
+
         return self.index_transcript(transcript, video_id)
 
-    def run(self, transcript: str, video_id: str) -> StepResult:  # pragma: no cover - thin wrapper
+    def run(self, transcript: str, video_id: str | None = None) -> StepResult:  # pragma: no cover - thin wrapper
         return self._run(transcript, video_id)

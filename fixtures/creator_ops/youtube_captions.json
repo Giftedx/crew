@@ -1,0 +1,25 @@
+{
+    "kind": "youtube#captionListResponse",
+    "etag": "test_etag_captions",
+    "items": [
+        {
+            "kind": "youtube#caption",
+            "etag": "test_etag_caption",
+            "id": "test_caption_id",
+            "snippet": {
+                "videoId": "dQw4w9WgXcQ",
+                "lastUpdated": "2024-01-15T14:35:00Z",
+                "trackKind": "standard",
+                "language": "en",
+                "name": "English",
+                "audioTrackType": "unknown",
+                "isCC": false,
+                "isLarge": false,
+                "isEasyReader": false,
+                "isDraft": false,
+                "isAutoSynced": false,
+                "status": "serving"
+            }
+        }
+    ]
+}

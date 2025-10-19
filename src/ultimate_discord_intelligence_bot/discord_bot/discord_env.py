@@ -83,7 +83,7 @@ def _import_real_discord_if_needed() -> tuple[Any | None, Any | None, Any | None
         except Exception:
             pass
 
-        def _load_from(paths: list[str], modname: str):
+        def _load_from(paths: list[str], modname: str) -> Any:
             for root in paths:
                 try:
                     spec = PathFinder.find_spec(modname, [root])
@@ -131,32 +131,32 @@ if LIGHTWEIGHT_IMPORT or not _DISCORD_AVAILABLE:
             _sys.modules.pop(_m, None)
 
     class _ShimIntents:
-        def __init__(self):
+        def __init__(self) -> None:
             self.message_content = True
             self.guilds = True
 
         @staticmethod
-        def default():
+        def default() -> _ShimIntents:
             return _ShimIntents()
 
     class _ShimBot:
-        def __init__(self, *_, **__):
+        def __init__(self, *_: Any, **__: Any) -> None:
             self.intents = _ShimIntents.default()
             self.tree = type("Tree", (), {"sync": staticmethod(lambda: [])})()
 
-        def command(self, *_, **__):
-            def deco(fn):
+        def command(self, *_: Any, **__: Any) -> Any:
+            def deco(fn: Any) -> Any:
                 return fn
 
             return deco
 
-        def event(self, fn):
+        def event(self, fn: Any) -> Any:
             return fn
 
-        async def process_commands(self, *_args, **_kwargs):  # minimal no-op
+        async def process_commands(self, *_args: Any, **_kwargs: Any) -> None:  # minimal no-op
             return None
 
-        async def start(self, *_args, **_kwargs):  # pragma: no cover - shim gateway entrypoint
+        async def start(self, *_args: Any, **_kwargs: Any) -> None:  # pragma: no cover - shim gateway entrypoint
             raise AttributeError("_ShimBot does not support gateway start; use webhook/headless mode")
 
     class _ShimUI:
@@ -166,14 +166,14 @@ if LIGHTWEIGHT_IMPORT or not _DISCORD_AVAILABLE:
             link = BUTTON_STYLE_LINK
 
         class View:
-            def __init__(self, *_, **__):
+            def __init__(self, *_: Any, **__: Any) -> None:
                 pass
 
-            def add_item(self, *_a, **_k):
+            def add_item(self, *_a: Any, **_k: Any) -> None:
                 return None
 
         class Button:
-            def __init__(self, *_, **__):
+            def __init__(self, *_: Any, **__: Any) -> None:
                 pass
 
     discord = SimpleNamespace(Intents=_ShimIntents, Embed=object, Interaction=object, ui=_ShimUI)  # type: ignore[assignment]
@@ -186,7 +186,7 @@ if LIGHTWEIGHT_IMPORT or not _DISCORD_AVAILABLE:
     app_commands = cast(Any, app_commands)
 
 
-def build_intents():
+def build_intents() -> Any:
     intents = discord.Intents.default()
     intents.message_content = True
     intents.guilds = True

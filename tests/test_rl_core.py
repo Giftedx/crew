@@ -3,8 +3,8 @@ from __future__ import annotations
 import random
 
 from core import learn, reward_pipe, rl
-from core.learning_engine import LearningEngine
-from core.rl.policies.bandit_base import EpsilonGreedyBandit, UCB1Bandit
+from ultimate_discord_intelligence_bot.core.learning_engine import LearningEngine
+from ultimate_discord_intelligence_bot.core.rl.policies.bandit_base import EpsilonGreedyBandit, UCB1Bandit
 
 
 def test_feature_store_stats_and_featurize() -> None:

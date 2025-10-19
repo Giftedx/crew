@@ -45,8 +45,8 @@ ALLOWED_FILES = {
 # Replacement patterns for different usage types
 REPLACEMENTS = {
     "import_statement": {
-        "from ultimate_discord_intelligence_bot.services.learning_engine import LearningEngine": "from core.learning_engine import LearningEngine",
-        "from services.learning_engine import LearningEngine": "from core.learning_engine import LearningEngine",
+        "from ultimate_discord_intelligence_bot.services.learning_engine import LearningEngine": "from ultimate_discord_intelligence_bot.core.learning_engine import LearningEngine",
+        "from services.learning_engine import LearningEngine": "from ultimate_discord_intelligence_bot.core.learning_engine import LearningEngine",
     },
     "import_module": {
         "import ultimate_discord_intelligence_bot.services.learning_engine": "import core.learning_engine",

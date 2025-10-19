@@ -70,8 +70,10 @@ def main() -> int:
     if segments:
         print(f"\n🔤 Segments ({len(segments)}):")
         for i, segment in enumerate(segments[:5]):  # Show first 5 segments
-            print(f"   {i+1}. [{segment['start']:.1f}s - {segment['end']:.1f}s] "
-                  f"\"{segment['text']}\" (conf: {segment.get('confidence', 1):.2f})")
+            print(
+                f"   {i + 1}. [{segment['start']:.1f}s - {segment['end']:.1f}s] "
+                f'"{segment["text"]}" (conf: {segment.get("confidence", 1):.2f})'
+            )
 
         if len(segments) > 5:
             print(f"   ... and {len(segments) - 5} more segments")
@@ -81,4 +83,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
-

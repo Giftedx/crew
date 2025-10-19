@@ -1,0 +1,1342 @@
+[
+  {
+    "episode_id": "h3_podcast_123",
+    "platform": "youtube",
+    "creator": "h3podcast",
+    "title": "H3 Podcast #123 - Triller Lawsuit Discussion",
+    "duration_seconds": 5400,
+    "upload_date": "2024-02-15T10:00:00+00:00",
+    "url": "https://youtube.com/watch?v=test123",
+    "transcript_segments": [
+      {
+        "start_time": 0.0,
+        "end_time": 60.0,
+        "text": "Welcome back to the podcast everyone. Today we're going to talk about some important legal developments.",
+        "speaker": "Ethan",
+        "confidence": 0.95
+      },
+      {
+        "start_time": 60.0,
+        "end_time": 150.0,
+        "text": "So Ethan, can you tell us about what's been happening with the lawsuit? I heard there were some new developments.",
+        "speaker": "Hila",
+        "confidence": 0.92
+      },
+      {
+        "start_time": 150.0,
+        "end_time": 300.0,
+        "text": "Yeah, so we've got some new evidence that really supports our case. I'm feeling pretty confident about this whole situation.",
+        "speaker": "Ethan",
+        "confidence": 0.98
+      }
+    ],
+    "speaker_segments": [
+      {
+        "start_time": 0.0,
+        "end_time": 180.0,
+        "speaker": "Ethan",
+        "confidence": 0.95
+      },
+      {
+        "start_time": 180.0,
+        "end_time": 240.0,
+        "speaker": "Hila",
+        "confidence": 0.92
+      },
+      {
+        "start_time": 240.0,
+        "end_time": 360.0,
+        "speaker": "Ethan",
+        "confidence": 0.98
+      }
+    ],
+    "topics": [
+      {
+        "topic": "lawsuit",
+        "start_time": 60.0,
+        "end_time": 300.0,
+        "confidence": 0.95,
+        "keywords": [
+          "lawsuit",
+          "legal",
+          "court",
+          "evidence"
+        ]
+      },
+      {
+        "topic": "creator_economy",
+        "start_time": 300.0,
+        "end_time": 480.0,
+        "confidence": 0.88,
+        "keywords": [
+          "creators",
+          "platform",
+          "monetization",
+          "rights"
+        ]
+      }
+    ],
+    "claims": [
+      {
+        "claim_id": "claim_001",
+        "text": "We have strong evidence supporting our case",
+        "speaker": "Ethan",
+        "start_time": 180.0,
+        "end_time": 210.0,
+        "confidence": 0.95,
+        "factuality": "subjective",
+        "sources": [
+          "internal_evidence"
+        ]
+      },
+      {
+        "claim_id": "claim_002",
+        "text": "This lawsuit will set important precedents for creators",
+        "speaker": "Ethan",
+        "start_time": 240.0,
+        "end_time": 270.0,
+        "confidence": 0.88,
+        "factuality": "speculative",
+        "sources": [
+          "expert_opinion"
+        ]
+      }
+    ],
+    "highlights": [
+      {
+        "highlight_id": "highlight_001",
+        "start_time": 180.0,
+        "end_time": 210.0,
+        "type": "key_statement",
+        "description": "Ethan expresses confidence in evidence",
+        "confidence": 0.95,
+        "intensity": 0.8
+      },
+      {
+        "highlight_id": "highlight_002",
+        "start_time": 240.0,
+        "end_time": 270.0,
+        "type": "reaction",
+        "description": "Hila reacts to legal strategy discussion",
+        "confidence": 0.88,
+        "intensity": 0.7
+      }
+    ],
+    "annotator_id": "annotator_1",
+    "annotation_date": "2025-10-17T17:48:55.651355",
+    "annotation_version": "1.0",
+    "confidence_scores": {
+      "transcript": 0.9500000000000001,
+      "speakers": 0.9500000000000001,
+      "topics": 0.915,
+      "claims": 0.915,
+      "highlights": 0.915
+    }
+  },
+  {
+    "episode_id": "hasan_piker_056",
+    "platform": "twitch",
+    "creator": "hasanabi",
+    "title": "Hasan Reacts to H3 Triller Drama",
+    "duration_seconds": 7200,
+    "upload_date": "2024-02-16T14:00:00+00:00",
+    "url": "https://twitch.tv/videos/test456",
+    "transcript_segments": [
+      {
+        "start_time": 0.0,
+        "end_time": 60.0,
+        "text": "Welcome back to the podcast everyone. Today we're going to talk about some important legal developments.",
+        "speaker": "Ethan",
+        "confidence": 0.95
+      },
+      {
+        "start_time": 60.0,
+        "end_time": 150.0,
+        "text": "So Ethan, can you tell us about what's been happening with the lawsuit? I heard there were some new developments.",
+        "speaker": "Hila",
+        "confidence": 0.92
+      },
+      {
+        "start_time": 150.0,
+        "end_time": 300.0,
+        "text": "Yeah, so we've got some new evidence that really supports our case. I'm feeling pretty confident about this whole situation.",
+        "speaker": "Ethan",
+        "confidence": 0.98
+      }
+    ],
+    "speaker_segments": [
+      {
+        "start_time": 0.0,
+        "end_time": 180.0,
+        "speaker": "Ethan",
+        "confidence": 0.95
+      },
+      {
+        "start_time": 180.0,
+        "end_time": 240.0,
+        "speaker": "Hila",
+        "confidence": 0.92
+      },
+      {
+        "start_time": 240.0,
+        "end_time": 360.0,
+        "speaker": "Ethan",
+        "confidence": 0.98
+      }
+    ],
+    "topics": [
+      {
+        "topic": "lawsuit",
+        "start_time": 60.0,
+        "end_time": 300.0,
+        "confidence": 0.95,
+        "keywords": [
+          "lawsuit",
+          "legal",
+          "court",
+          "evidence"
+        ]
+      },
+      {
+        "topic": "creator_economy",
+        "start_time": 300.0,
+        "end_time": 480.0,
+        "confidence": 0.88,
+        "keywords": [
+          "creators",
+          "platform",
+          "monetization",
+          "rights"
+        ]
+      }
+    ],
+    "claims": [
+      {
+        "claim_id": "claim_001",
+        "text": "We have strong evidence supporting our case",
+        "speaker": "Ethan",
+        "start_time": 180.0,
+        "end_time": 210.0,
+        "confidence": 0.95,
+        "factuality": "subjective",
+        "sources": [
+          "internal_evidence"
+        ]
+      },
+      {
+        "claim_id": "claim_002",
+        "text": "This lawsuit will set important precedents for creators",
+        "speaker": "Ethan",
+        "start_time": 240.0,
+        "end_time": 270.0,
+        "confidence": 0.88,
+        "factuality": "speculative",
+        "sources": [
+          "expert_opinion"
+        ]
+      }
+    ],
+    "highlights": [
+      {
+        "highlight_id": "highlight_001",
+        "start_time": 180.0,
+        "end_time": 210.0,
+        "type": "key_statement",
+        "description": "Ethan expresses confidence in evidence",
+        "confidence": 0.95,
+        "intensity": 0.8
+      },
+      {
+        "highlight_id": "highlight_002",
+        "start_time": 240.0,
+        "end_time": 270.0,
+        "type": "reaction",
+        "description": "Hila reacts to legal strategy discussion",
+        "confidence": 0.88,
+        "intensity": 0.7
+      }
+    ],
+    "annotator_id": "annotator_1",
+    "annotation_date": "2025-10-17T17:48:55.652016",
+    "annotation_version": "1.0",
+    "confidence_scores": {
+      "transcript": 0.9500000000000001,
+      "speakers": 0.9500000000000001,
+      "topics": 0.915,
+      "claims": 0.915,
+      "highlights": 0.915
+    }
+  },
+  {
+    "episode_id": "h3_podcast_124",
+    "platform": "youtube",
+    "creator": "h3podcast",
+    "title": "H3 Podcast #124 - Lawsuit Update & Clarifications",
+    "duration_seconds": 4800,
+    "upload_date": "2024-02-20T10:00:00+00:00",
+    "url": "https://youtube.com/watch?v=test789",
+    "transcript_segments": [
+      {
+        "start_time": 0.0,
+        "end_time": 60.0,
+        "text": "Welcome back to the podcast everyone. Today we're going to talk about some important legal developments.",
+        "speaker": "Ethan",
+        "confidence": 0.95
+      },
+      {
+        "start_time": 60.0,
+        "end_time": 150.0,
+        "text": "So Ethan, can you tell us about what's been happening with the lawsuit? I heard there were some new developments.",
+        "speaker": "Hila",
+        "confidence": 0.92
+      },
+      {
+        "start_time": 150.0,
+        "end_time": 300.0,
+        "text": "Yeah, so we've got some new evidence that really supports our case. I'm feeling pretty confident about this whole situation.",
+        "speaker": "Ethan",
+        "confidence": 0.98
+      }
+    ],
+    "speaker_segments": [
+      {
+        "start_time": 0.0,
+        "end_time": 180.0,
+        "speaker": "Ethan",
+        "confidence": 0.95
+      },
+      {
+        "start_time": 180.0,
+        "end_time": 240.0,
+        "speaker": "Hila",
+        "confidence": 0.92
+      },
+      {
+        "start_time": 240.0,
+        "end_time": 360.0,
+        "speaker": "Ethan",
+        "confidence": 0.98
+      }
+    ],
+    "topics": [
+      {
+        "topic": "lawsuit",
+        "start_time": 60.0,
+        "end_time": 300.0,
+        "confidence": 0.95,
+        "keywords": [
+          "lawsuit",
+          "legal",
+          "court",
+          "evidence"
+        ]
+      },
+      {
+        "topic": "creator_economy",
+        "start_time": 300.0,
+        "end_time": 480.0,
+        "confidence": 0.88,
+        "keywords": [
+          "creators",
+          "platform",
+          "monetization",
+          "rights"
+        ]
+      }
+    ],
+    "claims": [
+      {
+        "claim_id": "claim_001",
+        "text": "We have strong evidence supporting our case",
+        "speaker": "Ethan",
+        "start_time": 180.0,
+        "end_time": 210.0,
+        "confidence": 0.95,
+        "factuality": "subjective",
+        "sources": [
+          "internal_evidence"
+        ]
+      },
+      {
+        "claim_id": "claim_002",
+        "text": "This lawsuit will set important precedents for creators",
+        "speaker": "Ethan",
+        "start_time": 240.0,
+        "end_time": 270.0,
+        "confidence": 0.88,
+        "factuality": "speculative",
+        "sources": [
+          "expert_opinion"
+        ]
+      }
+    ],
+    "highlights": [
+      {
+        "highlight_id": "highlight_001",
+        "start_time": 180.0,
+        "end_time": 210.0,
+        "type": "key_statement",
+        "description": "Ethan expresses confidence in evidence",
+        "confidence": 0.95,
+        "intensity": 0.8
+      },
+      {
+        "highlight_id": "highlight_002",
+        "start_time": 240.0,
+        "end_time": 270.0,
+        "type": "reaction",
+        "description": "Hila reacts to legal strategy discussion",
+        "confidence": 0.88,
+        "intensity": 0.7
+      }
+    ],
+    "annotator_id": "annotator_1",
+    "annotation_date": "2025-10-17T17:48:55.652065",
+    "annotation_version": "1.0",
+    "confidence_scores": {
+      "transcript": 0.9500000000000001,
+      "speakers": 0.9500000000000001,
+      "topics": 0.915,
+      "claims": 0.915,
+      "highlights": 0.915
+    }
+  },
+  {
+    "episode_id": "destiny_debate_032",
+    "platform": "youtube",
+    "creator": "destiny",
+    "title": "Destiny Debates: Creator Lawsuits & Platform Policies",
+    "duration_seconds": 3600,
+    "upload_date": "2024-02-22T16:00:00+00:00",
+    "url": "https://youtube.com/watch?v=test101",
+    "transcript_segments": [
+      {
+        "start_time": 0.0,
+        "end_time": 60.0,
+        "text": "Welcome back to the podcast everyone. Today we're going to talk about some important legal developments.",
+        "speaker": "Ethan",
+        "confidence": 0.95
+      },
+      {
+        "start_time": 60.0,
+        "end_time": 150.0,
+        "text": "So Ethan, can you tell us about what's been happening with the lawsuit? I heard there were some new developments.",
+        "speaker": "Hila",
+        "confidence": 0.92
+      },
+      {
+        "start_time": 150.0,
+        "end_time": 300.0,
+        "text": "Yeah, so we've got some new evidence that really supports our case. I'm feeling pretty confident about this whole situation.",
+        "speaker": "Ethan",
+        "confidence": 0.98
+      }
+    ],
+    "speaker_segments": [
+      {
+        "start_time": 0.0,
+        "end_time": 180.0,
+        "speaker": "Ethan",
+        "confidence": 0.95
+      },
+      {
+        "start_time": 180.0,
+        "end_time": 240.0,
+        "speaker": "Hila",
+        "confidence": 0.92
+      },
+      {
+        "start_time": 240.0,
+        "end_time": 360.0,
+        "speaker": "Ethan",
+        "confidence": 0.98
+      }
+    ],
+    "topics": [
+      {
+        "topic": "lawsuit",
+        "start_time": 60.0,
+        "end_time": 300.0,
+        "confidence": 0.95,
+        "keywords": [
+          "lawsuit",
+          "legal",
+          "court",
+          "evidence"
+        ]
+      },
+      {
+        "topic": "creator_economy",
+        "start_time": 300.0,
+        "end_time": 480.0,
+        "confidence": 0.88,
+        "keywords": [
+          "creators",
+          "platform",
+          "monetization",
+          "rights"
+        ]
+      }
+    ],
+    "claims": [
+      {
+        "claim_id": "claim_001",
+        "text": "We have strong evidence supporting our case",
+        "speaker": "Ethan",
+        "start_time": 180.0,
+        "end_time": 210.0,
+        "confidence": 0.95,
+        "factuality": "subjective",
+        "sources": [
+          "internal_evidence"
+        ]
+      },
+      {
+        "claim_id": "claim_002",
+        "text": "This lawsuit will set important precedents for creators",
+        "speaker": "Ethan",
+        "start_time": 240.0,
+        "end_time": 270.0,
+        "confidence": 0.88,
+        "factuality": "speculative",
+        "sources": [
+          "expert_opinion"
+        ]
+      }
+    ],
+    "highlights": [
+      {
+        "highlight_id": "highlight_001",
+        "start_time": 180.0,
+        "end_time": 210.0,
+        "type": "key_statement",
+        "description": "Ethan expresses confidence in evidence",
+        "confidence": 0.95,
+        "intensity": 0.8
+      },
+      {
+        "highlight_id": "highlight_002",
+        "start_time": 240.0,
+        "end_time": 270.0,
+        "type": "reaction",
+        "description": "Hila reacts to legal strategy discussion",
+        "confidence": 0.88,
+        "intensity": 0.7
+      }
+    ],
+    "annotator_id": "annotator_1",
+    "annotation_date": "2025-10-17T17:48:55.652106",
+    "annotation_version": "1.0",
+    "confidence_scores": {
+      "transcript": 0.9500000000000001,
+      "speakers": 0.9500000000000001,
+      "topics": 0.915,
+      "claims": 0.915,
+      "highlights": 0.915
+    }
+  },
+  {
+    "episode_id": "h3_podcast_125",
+    "platform": "youtube",
+    "creator": "h3podcast",
+    "title": "H3 Podcast #125 - Legal Strategy Discussion",
+    "duration_seconds": 6000,
+    "upload_date": "2024-03-01T10:00:00+00:00",
+    "url": "https://youtube.com/watch?v=test202",
+    "transcript_segments": [
+      {
+        "start_time": 0.0,
+        "end_time": 60.0,
+        "text": "Welcome back to the podcast everyone. Today we're going to talk about some important legal developments.",
+        "speaker": "Ethan",
+        "confidence": 0.95
+      },
+      {
+        "start_time": 60.0,
+        "end_time": 150.0,
+        "text": "So Ethan, can you tell us about what's been happening with the lawsuit? I heard there were some new developments.",
+        "speaker": "Hila",
+        "confidence": 0.92
+      },
+      {
+        "start_time": 150.0,
+        "end_time": 300.0,
+        "text": "Yeah, so we've got some new evidence that really supports our case. I'm feeling pretty confident about this whole situation.",
+        "speaker": "Ethan",
+        "confidence": 0.98
+      }
+    ],
+    "speaker_segments": [
+      {
+        "start_time": 0.0,
+        "end_time": 180.0,
+        "speaker": "Ethan",
+        "confidence": 0.95
+      },
+      {
+        "start_time": 180.0,
+        "end_time": 240.0,
+        "speaker": "Hila",
+        "confidence": 0.92
+      },
+      {
+        "start_time": 240.0,
+        "end_time": 360.0,
+        "speaker": "Ethan",
+        "confidence": 0.98
+      }
+    ],
+    "topics": [
+      {
+        "topic": "lawsuit",
+        "start_time": 60.0,
+        "end_time": 300.0,
+        "confidence": 0.95,
+        "keywords": [
+          "lawsuit",
+          "legal",
+          "court",
+          "evidence"
+        ]
+      },
+      {
+        "topic": "creator_economy",
+        "start_time": 300.0,
+        "end_time": 480.0,
+        "confidence": 0.88,
+        "keywords": [
+          "creators",
+          "platform",
+          "monetization",
+          "rights"
+        ]
+      }
+    ],
+    "claims": [
+      {
+        "claim_id": "claim_001",
+        "text": "We have strong evidence supporting our case",
+        "speaker": "Ethan",
+        "start_time": 180.0,
+        "end_time": 210.0,
+        "confidence": 0.95,
+        "factuality": "subjective",
+        "sources": [
+          "internal_evidence"
+        ]
+      },
+      {
+        "claim_id": "claim_002",
+        "text": "This lawsuit will set important precedents for creators",
+        "speaker": "Ethan",
+        "start_time": 240.0,
+        "end_time": 270.0,
+        "confidence": 0.88,
+        "factuality": "speculative",
+        "sources": [
+          "expert_opinion"
+        ]
+      }
+    ],
+    "highlights": [
+      {
+        "highlight_id": "highlight_001",
+        "start_time": 180.0,
+        "end_time": 210.0,
+        "type": "key_statement",
+        "description": "Ethan expresses confidence in evidence",
+        "confidence": 0.95,
+        "intensity": 0.8
+      },
+      {
+        "highlight_id": "highlight_002",
+        "start_time": 240.0,
+        "end_time": 270.0,
+        "type": "reaction",
+        "description": "Hila reacts to legal strategy discussion",
+        "confidence": 0.88,
+        "intensity": 0.7
+      }
+    ],
+    "annotator_id": "annotator_1",
+    "annotation_date": "2025-10-17T17:48:55.652154",
+    "annotation_version": "1.0",
+    "confidence_scores": {
+      "transcript": 0.9500000000000001,
+      "speakers": 0.9500000000000001,
+      "topics": 0.915,
+      "claims": 0.915,
+      "highlights": 0.915
+    }
+  },
+  {
+    "episode_id": "hasan_piker_057",
+    "platform": "twitch",
+    "creator": "hasanabi",
+    "title": "Hasan on Creator Economy & Legal Battles",
+    "duration_seconds": 5400,
+    "upload_date": "2024-03-05T14:00:00+00:00",
+    "url": "https://twitch.tv/videos/test303",
+    "transcript_segments": [
+      {
+        "start_time": 0.0,
+        "end_time": 60.0,
+        "text": "Welcome back to the podcast everyone. Today we're going to talk about some important legal developments.",
+        "speaker": "Ethan",
+        "confidence": 0.95
+      },
+      {
+        "start_time": 60.0,
+        "end_time": 150.0,
+        "text": "So Ethan, can you tell us about what's been happening with the lawsuit? I heard there were some new developments.",
+        "speaker": "Hila",
+        "confidence": 0.92
+      },
+      {
+        "start_time": 150.0,
+        "end_time": 300.0,
+        "text": "Yeah, so we've got some new evidence that really supports our case. I'm feeling pretty confident about this whole situation.",
+        "speaker": "Ethan",
+        "confidence": 0.98
+      }
+    ],
+    "speaker_segments": [
+      {
+        "start_time": 0.0,
+        "end_time": 180.0,
+        "speaker": "Ethan",
+        "confidence": 0.95
+      },
+      {
+        "start_time": 180.0,
+        "end_time": 240.0,
+        "speaker": "Hila",
+        "confidence": 0.92
+      },
+      {
+        "start_time": 240.0,
+        "end_time": 360.0,
+        "speaker": "Ethan",
+        "confidence": 0.98
+      }
+    ],
+    "topics": [
+      {
+        "topic": "lawsuit",
+        "start_time": 60.0,
+        "end_time": 300.0,
+        "confidence": 0.95,
+        "keywords": [
+          "lawsuit",
+          "legal",
+          "court",
+          "evidence"
+        ]
+      },
+      {
+        "topic": "creator_economy",
+        "start_time": 300.0,
+        "end_time": 480.0,
+        "confidence": 0.88,
+        "keywords": [
+          "creators",
+          "platform",
+          "monetization",
+          "rights"
+        ]
+      }
+    ],
+    "claims": [
+      {
+        "claim_id": "claim_001",
+        "text": "We have strong evidence supporting our case",
+        "speaker": "Ethan",
+        "start_time": 180.0,
+        "end_time": 210.0,
+        "confidence": 0.95,
+        "factuality": "subjective",
+        "sources": [
+          "internal_evidence"
+        ]
+      },
+      {
+        "claim_id": "claim_002",
+        "text": "This lawsuit will set important precedents for creators",
+        "speaker": "Ethan",
+        "start_time": 240.0,
+        "end_time": 270.0,
+        "confidence": 0.88,
+        "factuality": "speculative",
+        "sources": [
+          "expert_opinion"
+        ]
+      }
+    ],
+    "highlights": [
+      {
+        "highlight_id": "highlight_001",
+        "start_time": 180.0,
+        "end_time": 210.0,
+        "type": "key_statement",
+        "description": "Ethan expresses confidence in evidence",
+        "confidence": 0.95,
+        "intensity": 0.8
+      },
+      {
+        "highlight_id": "highlight_002",
+        "start_time": 240.0,
+        "end_time": 270.0,
+        "type": "reaction",
+        "description": "Hila reacts to legal strategy discussion",
+        "confidence": 0.88,
+        "intensity": 0.7
+      }
+    ],
+    "annotator_id": "annotator_1",
+    "annotation_date": "2025-10-17T17:48:55.652191",
+    "annotation_version": "1.0",
+    "confidence_scores": {
+      "transcript": 0.9500000000000001,
+      "speakers": 0.9500000000000001,
+      "topics": 0.915,
+      "claims": 0.915,
+      "highlights": 0.915
+    }
+  },
+  {
+    "episode_id": "h3_podcast_126",
+    "platform": "youtube",
+    "creator": "h3podcast",
+    "title": "H3 Podcast #126 - Settlement Negotiations",
+    "duration_seconds": 4200,
+    "upload_date": "2024-03-10T10:00:00+00:00",
+    "url": "https://youtube.com/watch?v=test404",
+    "transcript_segments": [
+      {
+        "start_time": 0.0,
+        "end_time": 60.0,
+        "text": "Welcome back to the podcast everyone. Today we're going to talk about some important legal developments.",
+        "speaker": "Ethan",
+        "confidence": 0.95
+      },
+      {
+        "start_time": 60.0,
+        "end_time": 150.0,
+        "text": "So Ethan, can you tell us about what's been happening with the lawsuit? I heard there were some new developments.",
+        "speaker": "Hila",
+        "confidence": 0.92
+      },
+      {
+        "start_time": 150.0,
+        "end_time": 300.0,
+        "text": "Yeah, so we've got some new evidence that really supports our case. I'm feeling pretty confident about this whole situation.",
+        "speaker": "Ethan",
+        "confidence": 0.98
+      }
+    ],
+    "speaker_segments": [
+      {
+        "start_time": 0.0,
+        "end_time": 180.0,
+        "speaker": "Ethan",
+        "confidence": 0.95
+      },
+      {
+        "start_time": 180.0,
+        "end_time": 240.0,
+        "speaker": "Hila",
+        "confidence": 0.92
+      },
+      {
+        "start_time": 240.0,
+        "end_time": 360.0,
+        "speaker": "Ethan",
+        "confidence": 0.98
+      }
+    ],
+    "topics": [
+      {
+        "topic": "lawsuit",
+        "start_time": 60.0,
+        "end_time": 300.0,
+        "confidence": 0.95,
+        "keywords": [
+          "lawsuit",
+          "legal",
+          "court",
+          "evidence"
+        ]
+      },
+      {
+        "topic": "creator_economy",
+        "start_time": 300.0,
+        "end_time": 480.0,
+        "confidence": 0.88,
+        "keywords": [
+          "creators",
+          "platform",
+          "monetization",
+          "rights"
+        ]
+      }
+    ],
+    "claims": [
+      {
+        "claim_id": "claim_001",
+        "text": "We have strong evidence supporting our case",
+        "speaker": "Ethan",
+        "start_time": 180.0,
+        "end_time": 210.0,
+        "confidence": 0.95,
+        "factuality": "subjective",
+        "sources": [
+          "internal_evidence"
+        ]
+      },
+      {
+        "claim_id": "claim_002",
+        "text": "This lawsuit will set important precedents for creators",
+        "speaker": "Ethan",
+        "start_time": 240.0,
+        "end_time": 270.0,
+        "confidence": 0.88,
+        "factuality": "speculative",
+        "sources": [
+          "expert_opinion"
+        ]
+      }
+    ],
+    "highlights": [
+      {
+        "highlight_id": "highlight_001",
+        "start_time": 180.0,
+        "end_time": 210.0,
+        "type": "key_statement",
+        "description": "Ethan expresses confidence in evidence",
+        "confidence": 0.95,
+        "intensity": 0.8
+      },
+      {
+        "highlight_id": "highlight_002",
+        "start_time": 240.0,
+        "end_time": 270.0,
+        "type": "reaction",
+        "description": "Hila reacts to legal strategy discussion",
+        "confidence": 0.88,
+        "intensity": 0.7
+      }
+    ],
+    "annotator_id": "annotator_1",
+    "annotation_date": "2025-10-17T17:48:55.652229",
+    "annotation_version": "1.0",
+    "confidence_scores": {
+      "transcript": 0.9500000000000001,
+      "speakers": 0.9500000000000001,
+      "topics": 0.915,
+      "claims": 0.915,
+      "highlights": 0.915
+    }
+  },
+  {
+    "episode_id": "vaush_political_089",
+    "platform": "youtube",
+    "creator": "vaush",
+    "title": "Vaush on Platform Liability & Creator Rights",
+    "duration_seconds": 4800,
+    "upload_date": "2024-03-12T18:00:00+00:00",
+    "url": "https://youtube.com/watch?v=test505",
+    "transcript_segments": [
+      {
+        "start_time": 0.0,
+        "end_time": 60.0,
+        "text": "Welcome back to the podcast everyone. Today we're going to talk about some important legal developments.",
+        "speaker": "Ethan",
+        "confidence": 0.95
+      },
+      {
+        "start_time": 60.0,
+        "end_time": 150.0,
+        "text": "So Ethan, can you tell us about what's been happening with the lawsuit? I heard there were some new developments.",
+        "speaker": "Hila",
+        "confidence": 0.92
+      },
+      {
+        "start_time": 150.0,
+        "end_time": 300.0,
+        "text": "Yeah, so we've got some new evidence that really supports our case. I'm feeling pretty confident about this whole situation.",
+        "speaker": "Ethan",
+        "confidence": 0.98
+      }
+    ],
+    "speaker_segments": [
+      {
+        "start_time": 0.0,
+        "end_time": 180.0,
+        "speaker": "Ethan",
+        "confidence": 0.95
+      },
+      {
+        "start_time": 180.0,
+        "end_time": 240.0,
+        "speaker": "Hila",
+        "confidence": 0.92
+      },
+      {
+        "start_time": 240.0,
+        "end_time": 360.0,
+        "speaker": "Ethan",
+        "confidence": 0.98
+      }
+    ],
+    "topics": [
+      {
+        "topic": "lawsuit",
+        "start_time": 60.0,
+        "end_time": 300.0,
+        "confidence": 0.95,
+        "keywords": [
+          "lawsuit",
+          "legal",
+          "court",
+          "evidence"
+        ]
+      },
+      {
+        "topic": "creator_economy",
+        "start_time": 300.0,
+        "end_time": 480.0,
+        "confidence": 0.88,
+        "keywords": [
+          "creators",
+          "platform",
+          "monetization",
+          "rights"
+        ]
+      }
+    ],
+    "claims": [
+      {
+        "claim_id": "claim_001",
+        "text": "We have strong evidence supporting our case",
+        "speaker": "Ethan",
+        "start_time": 180.0,
+        "end_time": 210.0,
+        "confidence": 0.95,
+        "factuality": "subjective",
+        "sources": [
+          "internal_evidence"
+        ]
+      },
+      {
+        "claim_id": "claim_002",
+        "text": "This lawsuit will set important precedents for creators",
+        "speaker": "Ethan",
+        "start_time": 240.0,
+        "end_time": 270.0,
+        "confidence": 0.88,
+        "factuality": "speculative",
+        "sources": [
+          "expert_opinion"
+        ]
+      }
+    ],
+    "highlights": [
+      {
+        "highlight_id": "highlight_001",
+        "start_time": 180.0,
+        "end_time": 210.0,
+        "type": "key_statement",
+        "description": "Ethan expresses confidence in evidence",
+        "confidence": 0.95,
+        "intensity": 0.8
+      },
+      {
+        "highlight_id": "highlight_002",
+        "start_time": 240.0,
+        "end_time": 270.0,
+        "type": "reaction",
+        "description": "Hila reacts to legal strategy discussion",
+        "confidence": 0.88,
+        "intensity": 0.7
+      }
+    ],
+    "annotator_id": "annotator_1",
+    "annotation_date": "2025-10-17T17:48:55.652299",
+    "annotation_version": "1.0",
+    "confidence_scores": {
+      "transcript": 0.9500000000000001,
+      "speakers": 0.9500000000000001,
+      "topics": 0.915,
+      "claims": 0.915,
+      "highlights": 0.915
+    }
+  },
+  {
+    "episode_id": "h3_podcast_127",
+    "platform": "youtube",
+    "creator": "h3podcast",
+    "title": "H3 Podcast #127 - Case Resolution & Lessons Learned",
+    "duration_seconds": 3600,
+    "upload_date": "2024-03-15T10:00:00+00:00",
+    "url": "https://youtube.com/watch?v=test606",
+    "transcript_segments": [
+      {
+        "start_time": 0.0,
+        "end_time": 60.0,
+        "text": "Welcome back to the podcast everyone. Today we're going to talk about some important legal developments.",
+        "speaker": "Ethan",
+        "confidence": 0.95
+      },
+      {
+        "start_time": 60.0,
+        "end_time": 150.0,
+        "text": "So Ethan, can you tell us about what's been happening with the lawsuit? I heard there were some new developments.",
+        "speaker": "Hila",
+        "confidence": 0.92
+      },
+      {
+        "start_time": 150.0,
+        "end_time": 300.0,
+        "text": "Yeah, so we've got some new evidence that really supports our case. I'm feeling pretty confident about this whole situation.",
+        "speaker": "Ethan",
+        "confidence": 0.98
+      }
+    ],
+    "speaker_segments": [
+      {
+        "start_time": 0.0,
+        "end_time": 180.0,
+        "speaker": "Ethan",
+        "confidence": 0.95
+      },
+      {
+        "start_time": 180.0,
+        "end_time": 240.0,
+        "speaker": "Hila",
+        "confidence": 0.92
+      },
+      {
+        "start_time": 240.0,
+        "end_time": 360.0,
+        "speaker": "Ethan",
+        "confidence": 0.98
+      }
+    ],
+    "topics": [
+      {
+        "topic": "lawsuit",
+        "start_time": 60.0,
+        "end_time": 300.0,
+        "confidence": 0.95,
+        "keywords": [
+          "lawsuit",
+          "legal",
+          "court",
+          "evidence"
+        ]
+      },
+      {
+        "topic": "creator_economy",
+        "start_time": 300.0,
+        "end_time": 480.0,
+        "confidence": 0.88,
+        "keywords": [
+          "creators",
+          "platform",
+          "monetization",
+          "rights"
+        ]
+      }
+    ],
+    "claims": [
+      {
+        "claim_id": "claim_001",
+        "text": "We have strong evidence supporting our case",
+        "speaker": "Ethan",
+        "start_time": 180.0,
+        "end_time": 210.0,
+        "confidence": 0.95,
+        "factuality": "subjective",
+        "sources": [
+          "internal_evidence"
+        ]
+      },
+      {
+        "claim_id": "claim_002",
+        "text": "This lawsuit will set important precedents for creators",
+        "speaker": "Ethan",
+        "start_time": 240.0,
+        "end_time": 270.0,
+        "confidence": 0.88,
+        "factuality": "speculative",
+        "sources": [
+          "expert_opinion"
+        ]
+      }
+    ],
+    "highlights": [
+      {
+        "highlight_id": "highlight_001",
+        "start_time": 180.0,
+        "end_time": 210.0,
+        "type": "key_statement",
+        "description": "Ethan expresses confidence in evidence",
+        "confidence": 0.95,
+        "intensity": 0.8
+      },
+      {
+        "highlight_id": "highlight_002",
+        "start_time": 240.0,
+        "end_time": 270.0,
+        "type": "reaction",
+        "description": "Hila reacts to legal strategy discussion",
+        "confidence": 0.88,
+        "intensity": 0.7
+      }
+    ],
+    "annotator_id": "annotator_1",
+    "annotation_date": "2025-10-17T17:48:55.652341",
+    "annotation_version": "1.0",
+    "confidence_scores": {
+      "transcript": 0.9500000000000001,
+      "speakers": 0.9500000000000001,
+      "topics": 0.915,
+      "claims": 0.915,
+      "highlights": 0.915
+    }
+  },
+  {
+    "episode_id": "hasan_piker_058",
+    "platform": "twitch",
+    "creator": "hasanabi",
+    "title": "Hasan Reacts: H3 Lawsuit Resolution",
+    "duration_seconds": 3000,
+    "upload_date": "2024-03-16T14:00:00+00:00",
+    "url": "https://twitch.tv/videos/test707",
+    "transcript_segments": [
+      {
+        "start_time": 0.0,
+        "end_time": 60.0,
+        "text": "Welcome back to the podcast everyone. Today we're going to talk about some important legal developments.",
+        "speaker": "Ethan",
+        "confidence": 0.95
+      },
+      {
+        "start_time": 60.0,
+        "end_time": 150.0,
+        "text": "So Ethan, can you tell us about what's been happening with the lawsuit? I heard there were some new developments.",
+        "speaker": "Hila",
+        "confidence": 0.92
+      },
+      {
+        "start_time": 150.0,
+        "end_time": 300.0,
+        "text": "Yeah, so we've got some new evidence that really supports our case. I'm feeling pretty confident about this whole situation.",
+        "speaker": "Ethan",
+        "confidence": 0.98
+      }
+    ],
+    "speaker_segments": [
+      {
+        "start_time": 0.0,
+        "end_time": 180.0,
+        "speaker": "Ethan",
+        "confidence": 0.95
+      },
+      {
+        "start_time": 180.0,
+        "end_time": 240.0,
+        "speaker": "Hila",
+        "confidence": 0.92
+      },
+      {
+        "start_time": 240.0,
+        "end_time": 360.0,
+        "speaker": "Ethan",
+        "confidence": 0.98
+      }
+    ],
+    "topics": [
+      {
+        "topic": "lawsuit",
+        "start_time": 60.0,
+        "end_time": 300.0,
+        "confidence": 0.95,
+        "keywords": [
+          "lawsuit",
+          "legal",
+          "court",
+          "evidence"
+        ]
+      },
+      {
+        "topic": "creator_economy",
+        "start_time": 300.0,
+        "end_time": 480.0,
+        "confidence": 0.88,
+        "keywords": [
+          "creators",
+          "platform",
+          "monetization",
+          "rights"
+        ]
+      }
+    ],
+    "claims": [
+      {
+        "claim_id": "claim_001",
+        "text": "We have strong evidence supporting our case",
+        "speaker": "Ethan",
+        "start_time": 180.0,
+        "end_time": 210.0,
+        "confidence": 0.95,
+        "factuality": "subjective",
+        "sources": [
+          "internal_evidence"
+        ]
+      },
+      {
+        "claim_id": "claim_002",
+        "text": "This lawsuit will set important precedents for creators",
+        "speaker": "Ethan",
+        "start_time": 240.0,
+        "end_time": 270.0,
+        "confidence": 0.88,
+        "factuality": "speculative",
+        "sources": [
+          "expert_opinion"
+        ]
+      }
+    ],
+    "highlights": [
+      {
+        "highlight_id": "highlight_001",
+        "start_time": 180.0,
+        "end_time": 210.0,
+        "type": "key_statement",
+        "description": "Ethan expresses confidence in evidence",
+        "confidence": 0.95,
+        "intensity": 0.8
+      },
+      {
+        "highlight_id": "highlight_002",
+        "start_time": 240.0,
+        "end_time": 270.0,
+        "type": "reaction",
+        "description": "Hila reacts to legal strategy discussion",
+        "confidence": 0.88,
+        "intensity": 0.7
+      }
+    ],
+    "annotator_id": "annotator_1",
+    "annotation_date": "2025-10-17T17:48:55.652379",
+    "annotation_version": "1.0",
+    "confidence_scores": {
+      "transcript": 0.9500000000000001,
+      "speakers": 0.9500000000000001,
+      "topics": 0.915,
+      "claims": 0.915,
+      "highlights": 0.915
+    }
+  }
+]

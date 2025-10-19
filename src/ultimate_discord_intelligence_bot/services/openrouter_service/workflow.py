@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any
 
 from obs import metrics
 
+from ..prompt_compression_tool import PromptCompressionTool
 from .budget import enforce_budget_limits
 from .cache_layer import check_caches
 from .context import prepare_route_state
@@ -23,9 +24,23 @@ def route_prompt(
     task_type: str,
     model: str | None,
     provider_opts: dict[str, Any] | None,
+    compress: bool = True,
 ) -> dict[str, Any]:
     state = prepare_route_state(service, prompt, task_type, model, provider_opts)
     metrics.ROUTER_DECISIONS.labels(**state.labels()).inc()
+
+    if compress and get_settings().enable_prompt_compression:
+        compressor = PromptCompressionTool()
+        result = compressor.run(
+            contexts=[prompt],
+            target_token=provider_opts.get("max_tokens", 2000) * 2 if provider_opts else 4000,
+        )
+        if result.success:
+            state.prompt = result.data["compressed_prompt"]
+            log.info(
+                f"Compressed prompt: {result.data['tokens_saved']} tokens saved "
+                f"({result.data['compression_ratio']:.2%} reduction)"
+            )
 
     budget_error = enforce_budget_limits(service, state)
     if budget_error is not None:

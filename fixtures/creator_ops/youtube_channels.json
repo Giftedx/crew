@@ -1,0 +1,84 @@
+{
+    "kind": "youtube#channelListResponse",
+    "etag": "test_etag_channels",
+    "pageInfo": {
+        "totalResults": 1,
+        "resultsPerPage": 1
+    },
+    "items": [
+        {
+            "kind": "youtube#channel",
+            "etag": "test_etag_channel",
+            "id": "UC-lHJZR3Gqxm24_Vd_D_EZw",
+            "snippet": {
+                "title": "H3 Podcast",
+                "description": "The official H3 Podcast channel featuring Ethan and Hila Klein.",
+                "customUrl": "@h3podcast",
+                "publishedAt": "2016-12-19T18:00:00Z",
+                "thumbnails": {
+                    "default": {
+                        "url": "https://yt3.ggpht.com/test_default.jpg",
+                        "width": 88,
+                        "height": 88
+                    },
+                    "medium": {
+                        "url": "https://yt3.ggpht.com/test_medium.jpg",
+                        "width": 240,
+                        "height": 240
+                    },
+                    "high": {
+                        "url": "https://yt3.ggpht.com/test_high.jpg",
+                        "width": 800,
+                        "height": 800
+                    }
+                },
+                "localized": {
+                    "title": "H3 Podcast",
+                    "description": "The official H3 Podcast channel featuring Ethan and Hila Klein."
+                },
+                "country": "US"
+            },
+            "statistics": {
+                "viewCount": "1000000000",
+                "subscriberCount": "3000000",
+                "hiddenSubscriberCount": false,
+                "videoCount": "500"
+            },
+            "status": {
+                "privacyStatus": "public",
+                "isLinked": true,
+                "longUploadsStatus": "allowed",
+                "madeForKids": false,
+                "selfDeclaredMadeForKids": false
+            },
+            "brandingSettings": {
+                "channel": {
+                    "title": "H3 Podcast",
+                    "description": "The official H3 Podcast channel featuring Ethan and Hila Klein.",
+                    "keywords": "h3,podcast,ethan,hila,comedy,entertainment",
+                    "unsubscribedTrailer": "test_trailer_id",
+                    "defaultLanguage": "en"
+                },
+                "image": {
+                    "bannerExternalUrl": "https://yt3.ggpht.com/test_banner.jpg"
+                }
+            },
+            "contentDetails": {
+                "relatedPlaylists": {
+                    "likes": "LL-lHJZR3Gqxm24_Vd_D_EZw",
+                    "uploads": "UU-lHJZR3Gqxm24_Vd_D_EZw"
+                }
+            },
+            "topicDetails": {
+                "topicIds": [
+                    "/m/04rlf",
+                    "/m/02jjt"
+                ],
+                "topicCategories": [
+                    "https://en.wikipedia.org/wiki/Entertainment",
+                    "https://en.wikipedia.org/wiki/Comedy"
+                ]
+            }
+        }
+    ]
+}

@@ -2,7 +2,7 @@ import importlib
 
 import pytest
 
-from core.settings import get_settings
+from ultimate_discord_intelligence_bot.core.settings import get_settings
 from ultimate_discord_intelligence_bot.services.prompt_engine import PromptEngine
 
 

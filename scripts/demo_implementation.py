@@ -24,7 +24,7 @@ async def demonstrate_semantic_cache():
     print("-" * 50)
 
     try:
-        from core.cache.semantic_cache import create_semantic_cache
+        from ultimate_discord_intelligence_bot.core.cache.semantic_cache import create_semantic_cache
 
         # Create cache with fallback (no GPTCache required)
         cache = create_semantic_cache(fallback_enabled=True)
@@ -83,7 +83,7 @@ async def demonstrate_enhanced_observability():
     print("-" * 50)
 
     try:
-        from obs.langsmith_integration import EnhancedLLMObservability
+        from ultimate_discord_intelligence_bot.obs.langsmith_integration import EnhancedLLMObservability
 
         # Create observability instance
         observability = EnhancedLLMObservability(enable_langsmith=False, enable_local_tracing=True)
@@ -144,7 +144,7 @@ async def demonstrate_monitoring_system():
     print("-" * 50)
 
     try:
-        from obs.enhanced_monitoring import EnhancedMonitoringSystem
+        from ultimate_discord_intelligence_bot.obs.enhanced_monitoring import EnhancedMonitoringSystem
 
         # Create monitoring system
         monitoring = EnhancedMonitoringSystem()
@@ -184,7 +184,7 @@ async def demonstrate_circuit_breaker():
     print("-" * 50)
 
     try:
-        from core.circuit_breaker import CircuitBreaker, CircuitConfig
+        from ultimate_discord_intelligence_bot.core.circuit_breaker import CircuitBreaker, CircuitConfig
 
         # Create circuit breaker with low thresholds for demo
         config = CircuitConfig(

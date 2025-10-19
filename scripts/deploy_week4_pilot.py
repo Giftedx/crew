@@ -14,21 +14,16 @@ Usage:
 """
 
 import argparse
-import asyncio
 import json
 import os
 import sys
 import time
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Dict, List, Any
+from typing import Any
 
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
-
-from ultimate_discord_intelligence_bot.pipeline_components.orchestrator import (
-    ContentPipeline,
-)
 
 
 class Week4PilotMonitor:
@@ -37,10 +32,10 @@ class Week4PilotMonitor:
     def __init__(self, output_dir: Path):
         self.output_dir = output_dir
         self.output_dir.mkdir(parents=True, exist_ok=True)
-        self.metrics: List[Dict[str, Any]] = []
+        self.metrics: list[dict[str, Any]] = []
         self.start_time = time.time()
 
-    def record_pipeline_run(self, result: Dict[str, Any]) -> None:
+    def record_pipeline_run(self, result: dict[str, Any]) -> None:
         """Record a pipeline run result."""
         self.metrics.append(
             {
@@ -50,7 +45,7 @@ class Week4PilotMonitor:
             }
         )
 
-    def get_summary(self) -> Dict[str, Any]:
+    def get_summary(self) -> dict[str, Any]:
         """Get summary statistics."""
         if not self.metrics:
             return {
@@ -170,24 +165,24 @@ class Week4PilotMonitor:
         print(f"\n📊 Pilot Duration: {summary['pilot_duration_hours']:.1f} hours")
         print(f"📈 Total Runs: {summary['total_runs']}")
         print(f"✅ Success Rate: {summary['success_rate']:.1f}%")
-        print(f"\n🔍 Quality Bypass:")
+        print("\n🔍 Quality Bypass:")
         print(f"   Activations: {summary['bypass_activations']} ({summary['bypass_rate_percent']}%)")
-        print(f"   Target: 15-30%")
-        print(f"\n⚡ Early Exit:")
+        print("   Target: 15-30%")
+        print("\n⚡ Early Exit:")
         print(f"   Activations: {summary['exit_activations']} ({summary['exit_rate_percent']}%)")
-        print(f"   Target: 10-25%")
-        print(f"\n⏱️  Time Savings:")
+        print("   Target: 10-25%")
+        print("\n⏱️  Time Savings:")
         print(f"   Average: {summary['avg_time_savings_percent']}%")
-        print(f"   Target: ≥15%")
-        print(f"\n⭐ Quality Score:")
+        print("   Target: ≥15%")
+        print("\n⭐ Quality Score:")
         print(f"   Average: {summary['avg_quality_score']}")
-        print(f"   Target: ≥0.70")
-        print(f"\n🎯 Recommendation:")
+        print("   Target: ≥0.70")
+        print("\n🎯 Recommendation:")
         print(f"   {summary['recommendation']}")
         print("\n" + "=" * 70 + "\n")
 
 
-def setup_pilot_environment(guild_id: str) -> Dict[str, str]:
+def setup_pilot_environment(guild_id: str) -> dict[str, str]:
     """Configure environment for pilot deployment."""
     env_vars = {
         "DISCORD_GUILD_ID": guild_id,
@@ -205,22 +200,22 @@ def setup_pilot_environment(guild_id: str) -> Dict[str, str]:
     return env_vars
 
 
-def print_pilot_config(guild_id: str, duration_hours: int, env_vars: Dict[str, str]):
+def print_pilot_config(guild_id: str, duration_hours: int, env_vars: dict[str, str]):
     """Print pilot configuration."""
     print("\n" + "=" * 70)
     print("Week 4 HYBRID PILOT DEPLOYMENT")
     print("=" * 70)
     print(f"\n📍 Target Server: {guild_id}")
     print(f"⏰ Duration: {duration_hours} hours")
-    print(f"\n🔧 Configuration:")
+    print("\n🔧 Configuration:")
     for key, value in env_vars.items():
         print(f"   {key}={value}")
 
     end_time = datetime.now() + timedelta(hours=duration_hours)
-    print(f"\n📅 Pilot Schedule:")
+    print("\n📅 Pilot Schedule:")
     print(f"   Start: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print(f"   End: {end_time.strftime('%Y-%m-%d %H:%M:%S')}")
-    print(f"\n📊 Monitoring: Metrics will be saved to benchmarks/week4_pilot_metrics_*.json")
+    print("\n📊 Monitoring: Metrics will be saved to benchmarks/week4_pilot_metrics_*.json")
     print("\n" + "=" * 70 + "\n")
 
 

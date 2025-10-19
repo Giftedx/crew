@@ -3,9 +3,9 @@
 import os
 from unittest.mock import MagicMock, patch
 
-from core.learning_engine import LearningEngine
-from core.rl.policies.lints import LinTSDiagBandit
-from core.rl.shadow_regret import ShadowRegretTracker, get_shadow_tracker
+from ultimate_discord_intelligence_bot.core.learning_engine import LearningEngine
+from ultimate_discord_intelligence_bot.core.rl.policies.lints import LinTSDiagBandit
+from ultimate_discord_intelligence_bot.core.rl.shadow_regret import ShadowRegretTracker, get_shadow_tracker
 
 
 def enable_flags():

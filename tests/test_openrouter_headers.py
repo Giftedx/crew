@@ -8,12 +8,12 @@ def test_openrouter_includes_recommended_headers(monkeypatch):
     monkeypatch.setenv("OPENROUTER_TITLE", "My Bot")
 
     # Reload configuration to pick up environment changes
-    from core.secure_config import reload_config
+    from ultimate_discord_intelligence_bot.core.secure_config import reload_config
 
     reload_config()
 
     # Clear settings cache to pick up new environment variables
-    from core.settings import get_settings
+    from ultimate_discord_intelligence_bot.core.settings import get_settings
 
     get_settings.cache_clear()
 

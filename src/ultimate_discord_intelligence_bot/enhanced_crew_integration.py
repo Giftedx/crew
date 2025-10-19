@@ -17,6 +17,15 @@ from typing import Any
 from .crew import UltimateDiscordIntelligenceBotCrew
 from .enhanced_performance_monitor import EnhancedPerformanceMonitor
 from .performance_integration import PerformanceIntegrationManager
+from .services.enterprise_auth_service import get_auth_service
+from .services.enterprise_tenant_manager import ResourceType, get_tenant_manager
+from .services.hierarchical_orchestrator import HierarchicalOrchestrator
+from .services.websocket_integration import get_websocket_integration
+from .settings import (
+    ENABLE_ENTERPRISE_TENANT_MANAGEMENT,
+    ENABLE_HIERARCHICAL_ORCHESTRATION,
+    ENABLE_WEBSOCKET_UPDATES,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -33,6 +42,29 @@ class EnhancedCrewExecutor:
         self.crew_instance = crew_instance or UltimateDiscordIntelligenceBotCrew()
         self.enhanced_monitor = EnhancedPerformanceMonitor()
         self.integration_manager = PerformanceIntegrationManager()
+
+        # Initialize hierarchical orchestrator if enabled
+        self.orchestrator = None
+        if ENABLE_HIERARCHICAL_ORCHESTRATION:
+            self.orchestrator = HierarchicalOrchestrator()
+            logger.info(
+                "Hierarchical Orchestrator enabled - Phase 2 agent coordination active"
+            )
+
+        # Initialize WebSocket integration if enabled
+        self.websocket_integration = None
+        if ENABLE_WEBSOCKET_UPDATES:
+            self.websocket_integration = get_websocket_integration()
+            logger.info("WebSocket integration enabled - real-time updates active")
+
+        # Initialize Enterprise services if enabled
+        self.tenant_manager = None
+        self.auth_service = None
+        if ENABLE_ENTERPRISE_TENANT_MANAGEMENT:
+            self.tenant_manager = get_tenant_manager()
+            self.auth_service = get_auth_service()
+            logger.info("Enterprise services enabled - multi-tenant operations active")
+
         self._execution_context: dict[str, Any] = {}
 
     async def execute_with_comprehensive_monitoring(
@@ -68,10 +100,54 @@ class EnhancedCrewExecutor:
                 "performance_alerts": [],
             }
 
+            # Extract tenant information from inputs
+            tenant_id = inputs.get("tenant_id", "default") if inputs else "default"
+            workspace_id = inputs.get("workspace_id", "main") if inputs else "main"
+            user_id = inputs.get("user_id") if inputs else None
+
+            # Track tenant resource usage
+            if self.tenant_manager and tenant_id != "default":
+                # Check quota before execution
+                quota_check = self.tenant_manager.check_tenant_quota(
+                    tenant_id, ResourceType.AGENT_EXECUTIONS, 1.0
+                )
+                if not quota_check.success or not quota_check.data.get(
+                    "sufficient", True
+                ):
+                    return {
+                        "result": None,
+                        "execution_summary": "Quota exceeded",
+                        "quality_score": 0.0,
+                        "execution_time": 0.0,
+                        "performance_alerts": ["Tenant quota exceeded"],
+                        "error": "Insufficient quota for agent execution",
+                    }
+
+                # Update usage
+                self.tenant_manager.update_tenant_usage(
+                    tenant_id, ResourceType.AGENT_EXECUTIONS, 1.0
+                )
+
+            # Notify WebSocket clients about execution start
+            if self.websocket_integration:
+                await self.websocket_integration.notify_agent_status_change(
+                    agent_id="crew_executor",
+                    status="starting",
+                    details={
+                        "execution_id": execution_id,
+                        "inputs": inputs or {},
+                        "timestamp": start_time,
+                    },
+                    tenant_id="default",
+                    workspace_id="main",
+                )
+
             # Start real-time monitoring
             if enable_real_time_alerts:
                 monitor_task = asyncio.create_task(
-                    self._real_time_monitoring_loop(execution_id, quality_threshold, max_execution_time)
+                    self._real_time_monitoring_loop(
+                        execution_id, quality_threshold, max_execution_time
+                    )
                 )
 
             # Execute crew with enhanced tracking
@@ -82,19 +158,52 @@ class EnhancedCrewExecutor:
             # Store the original method for restoration later
             setattr(self.crew_instance, "_original_log_step", original_log_step)
             # Replace with enhanced callback
-            setattr(self.crew_instance, "_log_step", lambda step: self._enhanced_step_callback(step, original_log_step))
+            setattr(
+                self.crew_instance,
+                "_log_step",
+                lambda step: self._enhanced_step_callback(step, original_log_step),
+            )
 
-            # Execute the crew
-            result = self.crew_instance.kickoff_with_performance_tracking(inputs)
+            # Execute the crew with optional hierarchical orchestration
+            if self.orchestrator:
+                # Create orchestration session for hierarchical coordination
+                session = await self.orchestrator.create_orchestration_session(
+                    mission_context=f"Enhanced crew execution {execution_id}",
+                    tenant="default",
+                    workspace="main",
+                )
+
+                # Register agents in the orchestrator
+                await self._register_crew_agents_in_orchestrator(session)
+
+                # Execute with hierarchical coordination
+                result = await self._execute_with_hierarchical_orchestration(
+                    session, inputs
+                )
+
+                # Complete the orchestration session
+                await self.orchestrator.complete_orchestration_session(
+                    session.session_id
+                )
+                logger.info(
+                    f"Hierarchical orchestration session {session.session_id} completed"
+                )
+            else:
+                # Standard crew execution without orchestration
+                result = self.crew_instance.kickoff_with_performance_tracking(inputs)
 
             end_time = time.time()
             total_execution_time = end_time - start_time
 
             # Assess overall execution quality
-            execution_quality = await self._assess_comprehensive_execution_quality(result, total_execution_time)
+            execution_quality = await self._assess_comprehensive_execution_quality(
+                result, total_execution_time
+            )
 
             # Record comprehensive performance data
-            await self._record_comprehensive_performance(execution_id, result, execution_quality, total_execution_time)
+            await self._record_comprehensive_performance(
+                execution_id, result, execution_quality, total_execution_time
+            )
 
             # Generate execution summary
             execution_summary = self._generate_execution_summary(
@@ -109,15 +218,36 @@ class EnhancedCrewExecutor:
                 except asyncio.CancelledError:
                     pass
 
-            logger.info(f"Enhanced crew execution {execution_id} completed successfully")
+            logger.info(
+                f"Enhanced crew execution {execution_id} completed successfully"
+            )
+
+            # Notify WebSocket clients about execution completion
+            if self.websocket_integration:
+                await self.websocket_integration.notify_agent_status_change(
+                    agent_id="crew_executor",
+                    status="completed",
+                    details={
+                        "execution_id": execution_id,
+                        "execution_time": total_execution_time,
+                        "quality_score": execution_quality,
+                        "summary": execution_summary,
+                    },
+                    tenant_id="default",
+                    workspace_id="main",
+                )
 
             return {
                 "result": result,
                 "execution_summary": execution_summary,
                 "quality_score": execution_quality,
                 "execution_time": total_execution_time,
-                "performance_alerts": self._execution_context.get("performance_alerts", []),
-                "quality_checkpoints": self._execution_context.get("quality_checkpoints", []),
+                "performance_alerts": self._execution_context.get(
+                    "performance_alerts", []
+                ),
+                "quality_checkpoints": self._execution_context.get(
+                    "quality_checkpoints", []
+                ),
             }
 
         except Exception as e:
@@ -132,13 +262,19 @@ class EnhancedCrewExecutor:
             return {
                 "result": None,
                 "error": str(e),
-                "execution_summary": self._generate_failure_summary(execution_id, str(e), execution_time),
+                "execution_summary": self._generate_failure_summary(
+                    execution_id, str(e), execution_time
+                ),
                 "quality_score": 0.0,
                 "execution_time": execution_time,
-                "performance_alerts": self._execution_context.get("performance_alerts", []),
+                "performance_alerts": self._execution_context.get(
+                    "performance_alerts", []
+                ),
             }
 
-    def _enhanced_step_callback(self, step: Any, original_callback: Callable[[Any], None]) -> None:
+    def _enhanced_step_callback(
+        self, step: Any, original_callback: Callable[[Any], None]
+    ) -> None:
         """Enhanced step callback with real-time quality assessment."""
         # Call original callback first
         original_callback(step)
@@ -185,7 +321,9 @@ class EnhancedCrewExecutor:
         try:
             agent_role = getattr(getattr(step, "agent", None), "role", "unknown")
             tool_used = getattr(step, "tool", None)
-            raw_output = getattr(step, "raw", None) or getattr(getattr(step, "output", None), "raw", None)
+            raw_output = getattr(step, "raw", None) or getattr(
+                getattr(step, "output", None), "raw", None
+            )
 
             return {
                 "agent_role": agent_role,
@@ -233,7 +371,11 @@ class EnhancedCrewExecutor:
                 "suggests",
             ]
 
-            indicator_count = sum(1 for indicator in quality_indicators if indicator.lower() in output.lower())
+            indicator_count = sum(
+                1
+                for indicator in quality_indicators
+                if indicator.lower() in output.lower()
+            )
             quality_score += min(0.2, indicator_count * 0.05)
 
             # Coherence check (basic)
@@ -303,7 +445,9 @@ class EnhancedCrewExecutor:
             except Exception as e:
                 logger.debug(f"Real-time monitoring error: {e}")
 
-    async def _assess_comprehensive_execution_quality(self, result: Any, execution_time: float) -> float:
+    async def _assess_comprehensive_execution_quality(
+        self, result: Any, execution_time: float
+    ) -> float:
         """Assess comprehensive execution quality using enhanced monitoring."""
         try:
             # Base quality from result content
@@ -321,7 +465,10 @@ class EnhancedCrewExecutor:
 
             # Weighted combination
             comprehensive_quality = (
-                content_quality * 0.4 + process_quality * 0.3 + time_efficiency * 0.2 + tool_effectiveness * 0.1
+                content_quality * 0.4
+                + process_quality * 0.3
+                + time_efficiency * 0.2
+                + tool_effectiveness * 0.1
             )
 
             return min(1.0, comprehensive_quality)
@@ -360,12 +507,20 @@ class EnhancedCrewExecutor:
             "thorough",
         ]
 
-        indicator_count = sum(1 for indicator in high_quality_indicators if indicator.lower() in result_str.lower())
+        indicator_count = sum(
+            1
+            for indicator in high_quality_indicators
+            if indicator.lower() in result_str.lower()
+        )
         quality_score += min(0.3, indicator_count * 0.05)
 
         # Structure indicators
         structure_indicators = ["introduction", "summary", "conclusion", "findings"]
-        structure_count = sum(1 for indicator in structure_indicators if indicator.lower() in result_str.lower())
+        structure_count = sum(
+            1
+            for indicator in structure_indicators
+            if indicator.lower() in result_str.lower()
+        )
         quality_score += min(0.1, structure_count * 0.03)
 
         return min(1.0, quality_score)
@@ -425,7 +580,9 @@ class EnhancedCrewExecutor:
             "PipelineTool",
         ]
 
-        high_value_count = sum(1 for tool in tools_used if any(hv in tool for hv in high_value_tools))
+        high_value_count = sum(
+            1 for tool in tools_used if any(hv in tool for hv in high_value_tools)
+        )
         value_score = min(0.4, high_value_count * 0.1)
 
         return min(1.0, 0.3 + diversity_score + value_score)
@@ -447,10 +604,18 @@ class EnhancedCrewExecutor:
                     "quality_score": quality_score,
                     "response_time": execution_time,
                     "execution_id": execution_id,
-                    "agents_count": len(set(self._execution_context.get("agents_executed", []))),
-                    "tools_count": len(set(self._execution_context.get("tools_used", []))),
-                    "quality_checkpoints": len(self._execution_context.get("quality_checkpoints", [])),
-                    "performance_alerts": len(self._execution_context.get("performance_alerts", [])),
+                    "agents_count": len(
+                        set(self._execution_context.get("agents_executed", []))
+                    ),
+                    "tools_count": len(
+                        set(self._execution_context.get("tools_used", []))
+                    ),
+                    "quality_checkpoints": len(
+                        self._execution_context.get("quality_checkpoints", [])
+                    ),
+                    "performance_alerts": len(
+                        self._execution_context.get("performance_alerts", [])
+                    ),
                     "result_length": len(str(result)) if result else 0,
                     "execution_context": self._execution_context,
                 },
@@ -469,7 +634,9 @@ class EnhancedCrewExecutor:
         except Exception as e:
             logger.debug(f"Performance recording error: {e}")
 
-    async def _record_execution_failure(self, execution_id: str, error_message: str, execution_time: float) -> None:
+    async def _record_execution_failure(
+        self, execution_id: str, error_message: str, execution_time: float
+    ) -> None:
         """Record execution failure data."""
         try:
             await self.enhanced_monitor.record_interaction_async(
@@ -498,10 +665,16 @@ class EnhancedCrewExecutor:
             "execution_id": execution_id,
             "execution_time": execution_time,
             "quality_score": quality_score,
-            "agents_executed": list(set(self._execution_context.get("agents_executed", []))),
+            "agents_executed": list(
+                set(self._execution_context.get("agents_executed", []))
+            ),
             "tools_used": list(set(self._execution_context.get("tools_used", []))),
-            "quality_checkpoints_count": len(self._execution_context.get("quality_checkpoints", [])),
-            "performance_alerts_count": len(self._execution_context.get("performance_alerts", [])),
+            "quality_checkpoints_count": len(
+                self._execution_context.get("quality_checkpoints", [])
+            ),
+            "performance_alerts_count": len(
+                self._execution_context.get("performance_alerts", [])
+            ),
             "result_summary": {
                 "has_result": result is not None,
                 "result_length": len(str(result)) if result else 0,
@@ -510,13 +683,17 @@ class EnhancedCrewExecutor:
             "performance_insights": self._generate_performance_insights(),
         }
 
-    def _generate_failure_summary(self, execution_id: str, error_message: str, execution_time: float) -> dict[str, Any]:
+    def _generate_failure_summary(
+        self, execution_id: str, error_message: str, execution_time: float
+    ) -> dict[str, Any]:
         """Generate summary for failed execution."""
         return {
             "execution_id": execution_id,
             "execution_time": execution_time,
             "error": error_message,
-            "agents_attempted": list(set(self._execution_context.get("agents_executed", []))),
+            "agents_attempted": list(
+                set(self._execution_context.get("agents_executed", []))
+            ),
             "tools_attempted": list(set(self._execution_context.get("tools_used", []))),
             "failure_analysis": self._analyze_failure_context(),
         }
@@ -544,18 +721,26 @@ class EnhancedCrewExecutor:
         if alerts:
             if any(alert["type"] == "execution_timeout" for alert in alerts):
                 insights["efficiency_rating"] = "poor"
-                insights["recommendations"].append("Consider optimizing agent workflows to reduce execution time")
+                insights["recommendations"].append(
+                    "Consider optimizing agent workflows to reduce execution time"
+                )
             elif any(alert["type"] == "quality_decline" for alert in alerts):
                 insights["efficiency_rating"] = "fair"
-                insights["recommendations"].append("Monitor agent performance for quality consistency")
+                insights["recommendations"].append(
+                    "Monitor agent performance for quality consistency"
+                )
 
         return insights
 
     def _analyze_failure_context(self) -> dict[str, Any]:
         """Analyze context around execution failure."""
         return {
-            "checkpoints_before_failure": len(self._execution_context.get("quality_checkpoints", [])),
-            "alerts_before_failure": len(self._execution_context.get("performance_alerts", [])),
+            "checkpoints_before_failure": len(
+                self._execution_context.get("quality_checkpoints", [])
+            ),
+            "alerts_before_failure": len(
+                self._execution_context.get("performance_alerts", [])
+            ),
             "last_successful_agent": (
                 self._execution_context.get("agents_executed", [])[-1]
                 if self._execution_context.get("agents_executed")
@@ -578,9 +763,78 @@ class EnhancedCrewExecutor:
         else:
             return "mid_execution"
 
+    async def _register_crew_agents_in_orchestrator(self, session) -> None:
+        """Register crew agents in the hierarchical orchestrator."""
+        if not self.orchestrator:
+            return
+
+        logger.info(
+            f"Registering crew agents in orchestrator session {session.session_id}"
+        )
+
+        # Get crew agents and register them
+        crew_agents = self.crew_instance.crew().agents
+
+        for agent in crew_agents:
+            await self.orchestrator.register_agent(
+                session.session_id,
+                agent_id=agent.role.lower().replace(" ", "_"),
+                role=agent.role,
+                capabilities=[tool.name for tool in agent.tools],
+                max_concurrent_tasks=3,
+            )
+
+        logger.info(f"Registered {len(crew_agents)} agents in orchestrator")
+
+    async def _execute_with_hierarchical_orchestration(
+        self, session, inputs: dict[str, Any]
+    ) -> Any:
+        """Execute crew with hierarchical orchestration coordination."""
+        if not self.orchestrator:
+            return self.crew_instance.kickoff_with_performance_tracking(inputs)
+
+        logger.info(
+            f"Executing crew with hierarchical orchestration - session {session.session_id}"
+        )
+
+        try:
+            # Create orchestration tasks based on inputs
+            orchestration_tasks = []
+
+            # Create main execution task
+            main_task = await self.orchestrator.create_orchestration_task(
+                session.session_id,
+                task_id="main_execution",
+                description=f"Execute crew with inputs: {inputs}",
+                priority=1,
+                estimated_duration=300,  # 5 minutes
+                dependencies=[],
+            )
+            orchestration_tasks.append(main_task)
+
+            # Execute tasks through orchestrator
+            results = []
+            for task in orchestration_tasks:
+                result = await self.orchestrator.execute_orchestration_task(
+                    session.session_id, task.task_id
+                )
+                results.append(result)
+
+            # For now, fall back to standard crew execution
+            # TODO: Implement full hierarchical task execution
+            return self.crew_instance.kickoff_with_performance_tracking(inputs)
+
+        except Exception as e:
+            logger.error(f"Hierarchical orchestration execution failed: {e}")
+            # Fall back to standard execution
+            return self.crew_instance.kickoff_with_performance_tracking(inputs)
+
 
 @contextmanager
-def enhanced_crew_execution(crew_instance: UltimateDiscordIntelligenceBotCrew | None = None, **monitoring_options):
+def enhanced_crew_execution(
+    crew_instance: UltimateDiscordIntelligenceBotCrew | None = None,
+    **monitoring_options,
+):
     """Context manager for enhanced crew execution with comprehensive monitoring.
 
     Args:

@@ -15,10 +15,26 @@ from dataclasses import dataclass
 from ultimate_discord_intelligence_bot.tenancy import TenantContext, current_tenant
 from ultimate_discord_intelligence_bot.tenancy.registry import TenantRegistry
 
-# Rough per-token costs in USD for demonstration purposes.
+# Comprehensive per-token costs in USD (input/output averaged for simplicity).
+# Updated pricing as of 2024 - reflects current market rates for major providers.
 MODEL_PRICES: dict[str, float] = {
-    "gpt-3.5": 0.002 / 1000,
-    "gpt-4": 0.03 / 1000,
+    # OpenAI Models
+    "gpt-4": 0.045 / 1000,  # Average of input (0.03) and output (0.06)
+    "gpt-4-turbo": 0.02 / 1000,  # Average of input (0.01) and output (0.03)
+    "gpt-3.5-turbo": 0.0015 / 1000,  # Average of input (0.001) and output (0.002)
+    "gpt-3.5": 0.0015 / 1000,  # Alias for gpt-3.5-turbo for backward compatibility
+    # Anthropic Claude Models
+    "claude-3-opus": 0.045 / 1000,  # Average of input (0.015) and output (0.075)
+    "claude-3-sonnet": 0.009 / 1000,  # Average of input (0.003) and output (0.015)
+    "claude-3-haiku": 0.000625 / 1000,  # Average of input (0.00025) and output (0.00125)
+    # Google Gemini Models (estimated - add when available)
+    "gemini-pro": 0.0015 / 1000,  # Estimated based on competitive pricing
+    "gemini-pro-vision": 0.002 / 1000,  # Estimated for vision capabilities
+    # Meta Llama Models (estimated)
+    "llama-2-70b": 0.0008 / 1000,  # Estimated
+    "llama-3-70b": 0.001 / 1000,  # Estimated
+    # Fallback for unknown models
+    "default": 0.002 / 1000,  # Conservative fallback rate
 }
 
 
@@ -147,7 +163,21 @@ def measure(text: str, model: str) -> TokenCost:
 
 def estimate(tokens_in: int, tokens_out: int, model: str) -> float:
     """Estimate USD cost for a call with ``tokens_in`` and ``tokens_out``."""
-    price = MODEL_PRICES.get(model, 0.0)
+    # Use detailed pricing if available, otherwise fall back to averaged pricing
+    try:
+        from .cost_optimizer import get_cost_optimizer
+
+        optimizer = get_cost_optimizer()
+        if model in optimizer.model_pricing:
+            pricing = optimizer.model_pricing[model]
+            input_cost = tokens_in * pricing["input"]
+            output_cost = tokens_out * pricing["output"]
+            return input_cost + output_cost
+    except Exception:
+        pass
+
+    # Fallback to averaged pricing
+    price = MODEL_PRICES.get(model, MODEL_PRICES.get("default", 0.002 / 1000))
     return (tokens_in + tokens_out) * price
 
 

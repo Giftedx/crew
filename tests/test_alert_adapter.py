@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from core.secure_config import reload_config
+from ultimate_discord_intelligence_bot.core.secure_config import reload_config
 from fastapi.testclient import TestClient
-from server.app import create_app
+from ultimate_discord_intelligence_bot.server.app import create_app
 
 
 def test_alert_adapter_posts_to_discord(monkeypatch):

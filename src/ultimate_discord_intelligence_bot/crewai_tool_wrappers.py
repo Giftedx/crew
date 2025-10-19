@@ -64,7 +64,9 @@ except Exception:  # pragma: no cover - minimal fallback
         name: str
         description: str
 
-        def __init__(self, name: str | None = None, description: str | None = None, **_kwargs):
+        def __init__(
+            self, name: str | None = None, description: str | None = None, **_kwargs
+        ):
             if name:
                 self.name = name
             if description:
@@ -101,10 +103,13 @@ class CrewAIToolWrapper(BaseTool):
 
     def __init__(self, wrapped_tool: Any, **kwargs):
         # Get name and description with proper fallbacks
-        tool_name = getattr(wrapped_tool, "name", None) or wrapped_tool.__class__.__name__.replace("Tool", "").replace(
-            "_", " "
+        tool_name = getattr(
+            wrapped_tool, "name", None
+        ) or wrapped_tool.__class__.__name__.replace("Tool", "").replace("_", " ")
+        tool_description = (
+            getattr(wrapped_tool, "description", None)
+            or f"Wrapped {wrapped_tool.__class__.__name__}"
         )
-        tool_description = getattr(wrapped_tool, "description", None) or f"Wrapped {wrapped_tool.__class__.__name__}"
 
         # Dynamically create args_schema from wrapped tool's signature
         # This allows CrewAI v2.x to inspect and pass the correct parameters
@@ -168,7 +173,10 @@ class CrewAIToolWrapper(BaseTool):
                     continue
 
                 # Skip keyword-only tenant/workspace params
-                if param_name in ("tenant_id", "workspace_id") and param.kind == inspect.Parameter.KEYWORD_ONLY:
+                if (
+                    param_name in ("tenant_id", "workspace_id")
+                    and param.kind == inspect.Parameter.KEYWORD_ONLY
+                ):
                     continue
 
                 # Determine the field type and default
@@ -183,7 +191,9 @@ class CrewAIToolWrapper(BaseTool):
                     # CRITICAL: This prevents LLM from passing None for params like 'quality'
                     schema_fields[param_name] = (
                         field_type,
-                        Field(default=param.default, description=f"{param_name} parameter"),
+                        Field(
+                            default=param.default, description=f"{param_name} parameter"
+                        ),
                     )
                 elif param_name in SHARED_CONTEXT_PARAMS:
                     # Parameter can come from shared_context - make optional WITHOUT Field() description
@@ -194,15 +204,23 @@ class CrewAIToolWrapper(BaseTool):
                         optional_type = field_type | None
                     except Exception:
                         optional_type = field_type
-                    schema_fields[param_name] = (optional_type, None)  # Plain None, no Field()
+                    schema_fields[param_name] = (
+                        optional_type,
+                        None,
+                    )  # Plain None, no Field()
                 else:
                     # Required parameter - use Field(...) with description
-                    schema_fields[param_name] = (field_type, Field(..., description=f"{param_name} parameter"))
+                    schema_fields[param_name] = (
+                        field_type,
+                        Field(..., description=f"{param_name} parameter"),
+                    )
 
             # Create dynamic Pydantic model if we have fields
             if schema_fields:
                 # Build the class dictionary with proper annotations and defaults
-                class_dict = {"__annotations__": {k: v[0] for k, v in schema_fields.items()}}
+                class_dict = {
+                    "__annotations__": {k: v[0] for k, v in schema_fields.items()}
+                }
                 # Add field values (defaults or Field(...) objects)
                 for k, v in schema_fields.items():
                     class_dict[k] = v[1]
@@ -217,11 +235,15 @@ class CrewAIToolWrapper(BaseTool):
                 # This is critical for type annotations like dict[str, Any] | None
                 # Use the module-level type namespace so Pydantic can resolve all ForwardRefs
                 try:
-                    DynamicArgsSchema.model_rebuild(_types_namespace=_PYDANTIC_TYPES_NAMESPACE)
+                    DynamicArgsSchema.model_rebuild(
+                        _types_namespace=_PYDANTIC_TYPES_NAMESPACE
+                    )
                 except Exception as e:
                     # Log rebuild failures for diagnostics but don't fail completely
                     # The model might still work for simple cases
-                    logging.debug(f"Failed to rebuild {wrapped_tool.__class__.__name__}Args schema: {e}")
+                    logging.debug(
+                        f"Failed to rebuild {wrapped_tool.__class__.__name__}Args schema: {e}"
+                    )
 
                 return DynamicArgsSchema
 
@@ -303,7 +325,11 @@ class CrewAIToolWrapper(BaseTool):
 
             get_metrics().counter(
                 "autointel_tool_calls_total",
-                labels={"tool": tool_cls, "call_number": str(call_count), "limit_reached": "false"},
+                labels={
+                    "tool": tool_cls,
+                    "call_number": str(call_count),
+                    "limit_reached": "false",
+                },
             )
         except Exception:
             pass  # Metrics are optional
@@ -317,9 +343,15 @@ class CrewAIToolWrapper(BaseTool):
 
                 get_metrics().counter(
                     "autointel_tool_calls_total",
-                    labels={"tool": tool_cls, "call_number": str(call_count), "limit_reached": "true"},
+                    labels={
+                        "tool": tool_cls,
+                        "call_number": str(call_count),
+                        "limit_reached": "true",
+                    },
                 )
-                get_metrics().counter("autointel_rate_limit_triggered", labels={"tool": tool_cls})
+                get_metrics().counter(
+                    "autointel_rate_limit_triggered", labels={"tool": tool_cls}
+                )
             except Exception:
                 pass  # Metrics are optional
 
@@ -348,7 +380,14 @@ class CrewAIToolWrapper(BaseTool):
                         # Introspect the tool signature to pick the best parameter name
                         import inspect
 
-                        param_order = ["url", "question", "query", "text", "message", "content"]
+                        param_order = [
+                            "url",
+                            "question",
+                            "query",
+                            "text",
+                            "message",
+                            "content",
+                        ]
                         picked = None
                         try:
                             if hasattr(self._wrapped_tool, "run"):
@@ -394,7 +433,9 @@ class CrewAIToolWrapper(BaseTool):
                 if isinstance(v, dict) and "description" in v and "type" in v:
                     # This is a schema dict, not actual data - unwrap to None
                     print(f"⚠️  Detected schema dict for '{k}': {v}")
-                    print("   Unwrapping to None so aliasing can populate from shared_context")
+                    print(
+                        "   Unwrapping to None so aliasing can populate from shared_context"
+                    )
                     final_kwargs[k] = None
 
             # Enhanced placeholder detection - catch more empty/meaningless LLM responses
@@ -472,7 +513,10 @@ class CrewAIToolWrapper(BaseTool):
                     return True
 
                 # Very generic/vague phrases
-                if normalized.startswith(("the ", "a ", "an ")) and len(normalized.split()) < 5:
+                if (
+                    normalized.startswith(("the ", "a ", "an "))
+                    and len(normalized.split()) < 5
+                ):
                     return True
 
                 return False
@@ -485,7 +529,9 @@ class CrewAIToolWrapper(BaseTool):
                     )
                     final_kwargs[k] = None
 
-            print(f"🔧 Executing {tool_cls} with preserved args: {list(final_kwargs.keys())}")
+            print(
+                f"🔧 Executing {tool_cls} with preserved args: {list(final_kwargs.keys())}"
+            )
 
             # Track which parameters came from shared_context before merge
             # CRITICAL FIX: Merge BOTH instance context AND global context
@@ -513,15 +559,24 @@ class CrewAIToolWrapper(BaseTool):
                     "media_info",
                 }
 
-                merged_kwargs = {**merged_context}  # Start with merged context (global + instance) as base
+                merged_kwargs = {
+                    **merged_context
+                }  # Start with merged context (global + instance) as base
                 for k, v in final_kwargs.items():
                     # Only override if value is meaningful AND not a placeholder
                     # Enhanced check: also verify against placeholder detection
-                    is_meaningful = v not in (None, "", [], {}) and not _is_placeholder_or_empty(v, k)
+                    is_meaningful = v not in (
+                        None,
+                        "",
+                        [],
+                        {},
+                    ) and not _is_placeholder_or_empty(v, k)
 
                     if is_meaningful:
                         merged_kwargs[k] = v
-                        print(f"✅ Using LLM-provided value for '{k}' ({len(str(v))} chars)")
+                        print(
+                            f"✅ Using LLM-provided value for '{k}' ({len(str(v))} chars)"
+                        )
                     elif k not in merged_kwargs and k not in CRITICAL_DATA_PARAMS:
                         # Keep the empty value ONLY if:
                         # 1. No shared_context alternative exists AND
@@ -552,9 +607,15 @@ class CrewAIToolWrapper(BaseTool):
                 allowed = {
                     p.name
                     for p in params
-                    if p.kind in (inspect.Parameter.POSITIONAL_OR_KEYWORD, inspect.Parameter.KEYWORD_ONLY)
+                    if p.kind
+                    in (
+                        inspect.Parameter.POSITIONAL_OR_KEYWORD,
+                        inspect.Parameter.KEYWORD_ONLY,
+                    )
                 }
-                has_var_kw = any(p.kind == inspect.Parameter.VAR_KEYWORD for p in params)
+                has_var_kw = any(
+                    p.kind == inspect.Parameter.VAR_KEYWORD for p in params
+                )
 
                 # CRITICAL FIX: Comprehensive aliasing BEFORE filtering
                 # This ensures shared context data reaches tools with correct parameter names
@@ -573,37 +634,59 @@ class CrewAIToolWrapper(BaseTool):
                     text_is_placeholder = _is_placeholder_or_empty(text_value, "text")
                     if "text" in allowed and text_is_placeholder and transcript_data:
                         final_kwargs["text"] = transcript_data
-                        print(f"✅ Aliased transcript→text ({len(transcript_data)} chars)")
+                        print(
+                            f"✅ Aliased transcript→text ({len(transcript_data)} chars)"
+                        )
                     elif "text" in allowed and not text_value and not transcript_data:
                         # FAIL FAST: Critical parameter 'text' is required but unavailable
                         print(
                             f"❌ CRITICAL ERROR: Tool {tool_cls} requires 'text' parameter but no data available in context"
                         )
-                        print(f"   Context keys: {list(merged_context.keys()) if merged_context else 'EMPTY'}")
+                        print(
+                            f"   Context keys: {list(merged_context.keys()) if merged_context else 'EMPTY'}"
+                        )
 
                     # Map transcript to 'claim' parameter (FactCheckTool)
                     # CRITICAL: Also check if existing value is empty/meaningless
                     claim_value = final_kwargs.get("claim", "")
-                    claim_is_empty_or_missing = _is_placeholder_or_empty(claim_value, "claim")
-                    if "claim" in allowed and claim_is_empty_or_missing and transcript_data:
+                    claim_is_empty_or_missing = _is_placeholder_or_empty(
+                        claim_value, "claim"
+                    )
+                    if (
+                        "claim" in allowed
+                        and claim_is_empty_or_missing
+                        and transcript_data
+                    ):
                         # For fact checking, use first meaningful chunk if transcript is very long
                         if len(transcript_data) > 500:
                             final_kwargs["claim"] = transcript_data[:500] + "..."
                         else:
                             final_kwargs["claim"] = transcript_data
-                        print(f"✅ Aliased transcript→claim ({len(final_kwargs['claim'])} chars)")
+                        print(
+                            f"✅ Aliased transcript→claim ({len(final_kwargs['claim'])} chars)"
+                        )
 
                     # Map transcript to 'content' parameter (generic content processors)
                     # CRITICAL: Also check if existing value is empty/meaningless
                     content_value = final_kwargs.get("content", "")
-                    content_is_empty_or_missing = _is_placeholder_or_empty(content_value, "content")
-                    if "content" in allowed and content_is_empty_or_missing and transcript_data:
+                    content_is_empty_or_missing = _is_placeholder_or_empty(
+                        content_value, "content"
+                    )
+                    if (
+                        "content" in allowed
+                        and content_is_empty_or_missing
+                        and transcript_data
+                    ):
                         final_kwargs["content"] = transcript_data
-                        print(f"✅ Aliased transcript→content ({len(transcript_data)} chars)")
+                        print(
+                            f"✅ Aliased transcript→content ({len(transcript_data)} chars)"
+                        )
 
                     # Map claims/fact_checks to 'claims' parameter
                     if "claims" in allowed and "claims" not in final_kwargs:
-                        claims_data = merged_context.get("claims") or merged_context.get("fact_checks")
+                        claims_data = merged_context.get(
+                            "claims"
+                        ) or merged_context.get("fact_checks")
                         if claims_data:
                             final_kwargs["claims"] = claims_data
                             print("✅ Aliased claims data")
@@ -618,11 +701,15 @@ class CrewAIToolWrapper(BaseTool):
                         )
                         if file_path_data:
                             final_kwargs["video_path"] = file_path_data
-                            print(f"✅ Aliased video_path from context: {file_path_data}")
+                            print(
+                                f"✅ Aliased video_path from context: {file_path_data}"
+                            )
 
                     # For tools that use 'file_path' parameter
                     if "file_path" in allowed and "file_path" not in final_kwargs:
-                        file_path_data = merged_context.get("file_path") or merged_context.get("media_path")
+                        file_path_data = merged_context.get(
+                            "file_path"
+                        ) or merged_context.get("media_path")
                         if file_path_data:
                             final_kwargs["file_path"] = file_path_data
                             print("✅ Aliased file_path from context")
@@ -636,7 +723,9 @@ class CrewAIToolWrapper(BaseTool):
 
                     # Map query/question parameters
                     if "query" in allowed and "query" not in final_kwargs:
-                        query_data = merged_context.get("query") or merged_context.get("question")
+                        query_data = merged_context.get("query") or merged_context.get(
+                            "question"
+                        )
                         if query_data:
                             final_kwargs["query"] = query_data
                             print("✅ Aliased query data")
@@ -647,7 +736,9 @@ class CrewAIToolWrapper(BaseTool):
                         url_data = (
                             merged_context.get("url")
                             or merged_context.get("source_url")
-                            or final_kwargs.get("video_url")  # ✅ NEW: alias from video_url if present
+                            or final_kwargs.get(
+                                "video_url"
+                            )  # ✅ NEW: alias from video_url if present
                         )
                         if url_data:
                             final_kwargs["url"] = url_data
@@ -657,7 +748,9 @@ class CrewAIToolWrapper(BaseTool):
                     # CRITICAL FIX: Check both merged_context AND final_kwargs for bidirectional aliasing
                     if "video_url" in allowed and "video_url" not in final_kwargs:
                         url_data = (
-                            final_kwargs.get("url")  # ✅ NEW: check final_kwargs first (LLM-provided)
+                            final_kwargs.get(
+                                "url"
+                            )  # ✅ NEW: check final_kwargs first (LLM-provided)
                             or merged_context.get("url")
                             or merged_context.get("video_url")
                             or merged_context.get("source_url")
@@ -668,7 +761,9 @@ class CrewAIToolWrapper(BaseTool):
 
                     # Map media_info/metadata parameters
                     if "metadata" in allowed and "metadata" not in final_kwargs:
-                        metadata = merged_context.get("media_info") or merged_context.get("metadata")
+                        metadata = merged_context.get(
+                            "media_info"
+                        ) or merged_context.get("metadata")
                         if metadata:
                             final_kwargs["metadata"] = metadata
                             print("✅ Aliased metadata")
@@ -678,16 +773,25 @@ class CrewAIToolWrapper(BaseTool):
                         media_info = merged_context.get("media_info")
                         if isinstance(media_info, dict) and "video_id" in media_info:
                             final_kwargs["video_id"] = media_info["video_id"]
-                            print(f"✅ Aliased video_id from media_info: {media_info['video_id']}")
+                            print(
+                                f"✅ Aliased video_id from media_info: {media_info['video_id']}"
+                            )
 
                 # Debug logging BEFORE filtering to see what will be lost
                 if final_kwargs:
                     available_params = list(final_kwargs.keys())
-                    print(f"📋 Available parameters before filtering: {available_params}")
+                    print(
+                        f"📋 Available parameters before filtering: {available_params}"
+                    )
 
                 # Define context-only parameters that should NEVER be passed to tools
                 # These are only used for routing/config and will cause "unexpected keyword" errors
-                CONTEXT_ONLY_PARAMS = {"depth", "tenant_id", "workspace_id", "routing_profile_id"}
+                CONTEXT_ONLY_PARAMS = {
+                    "depth",
+                    "tenant_id",
+                    "workspace_id",
+                    "routing_profile_id",
+                }
 
                 # CRITICAL FIX: Identify context data that should be preserved
                 # These are NOT in tool signatures but contain critical workflow data
@@ -717,24 +821,32 @@ class CrewAIToolWrapper(BaseTool):
 
                 if not has_var_kw:
                     # Standard filtering: only keep parameters in tool signature
-                    filtered_kwargs = {k: v for k, v in final_kwargs.items() if k in allowed}
+                    filtered_kwargs = {
+                        k: v for k, v in final_kwargs.items() if k in allowed
+                    }
 
                     # CRITICAL: Preserve context data by bundling it as _context
                     # This makes it available to tools that need upstream task outputs
                     context_data = {
-                        k: v for k, v in final_kwargs.items() if k in CONTEXT_DATA_KEYS and k not in allowed
+                        k: v
+                        for k, v in final_kwargs.items()
+                        if k in CONTEXT_DATA_KEYS and k not in allowed
                     }
                     if context_data:
                         # If tool accepts _context parameter, add it directly
                         if "_context" in allowed:
                             filtered_kwargs["_context"] = context_data
-                            print(f"✅ Bundled {len(context_data)} context keys into _context parameter")
+                            print(
+                                f"✅ Bundled {len(context_data)} context keys into _context parameter"
+                            )
                         else:
                             # Otherwise store in shared context for tool access
                             if not hasattr(self, "_shared_context"):
                                 self._shared_context = {}
                             self._shared_context.update(context_data)
-                            print(f"✅ Preserved {len(context_data)} context keys in _shared_context")
+                            print(
+                                f"✅ Preserved {len(context_data)} context keys in _shared_context"
+                            )
 
                     # Critical debug: show what was filtered out
                     removed = set(final_kwargs.keys()) - set(filtered_kwargs.keys())
@@ -744,7 +856,9 @@ class CrewAIToolWrapper(BaseTool):
                     if truly_removed:
                         print(f"⚠️  Filtered out parameters: {truly_removed}")
                     if preserved_in_context:
-                        print(f"ℹ️  Context data preserved ({len(preserved_in_context)} keys): {preserved_in_context}")
+                        print(
+                            f"ℹ️  Context data preserved ({len(preserved_in_context)} keys): {preserved_in_context}"
+                        )
                     print(f"✅ Kept parameters: {list(filtered_kwargs.keys())}")
 
                     # CRITICAL VALIDATION: Fail fast if data-dependent tools get empty parameters
@@ -764,23 +878,42 @@ class CrewAIToolWrapper(BaseTool):
                         for param in required_params:
                             value = filtered_kwargs.get(param)
                             # ENHANCED: Try to auto-populate from context if missing
-                            if not value or (isinstance(value, str) and not value.strip()):
+                            if not value or (
+                                isinstance(value, str) and not value.strip()
+                            ):
                                 # Try to find suitable data in shared context
                                 if param == "text" and self._shared_context:
                                     # Try transcript first, then insights, then themes
-                                    for fallback_key in ["transcript", "insights", "themes", "perspectives"]:
-                                        fallback_val = self._shared_context.get(fallback_key)
-                                        if fallback_val and isinstance(fallback_val, str) and fallback_val.strip():
+                                    for fallback_key in [
+                                        "transcript",
+                                        "insights",
+                                        "themes",
+                                        "perspectives",
+                                    ]:
+                                        fallback_val = self._shared_context.get(
+                                            fallback_key
+                                        )
+                                        if (
+                                            fallback_val
+                                            and isinstance(fallback_val, str)
+                                            and fallback_val.strip()
+                                        ):
                                             filtered_kwargs[param] = fallback_val
-                                            print(f"✅ Auto-populated '{param}' from context key '{fallback_key}'")
+                                            print(
+                                                f"✅ Auto-populated '{param}' from context key '{fallback_key}'"
+                                            )
                                             break
 
                                 # Re-check after auto-population attempt
                                 value = filtered_kwargs.get(param)
-                                if not value or (isinstance(value, str) and not value.strip()):
+                                if not value or (
+                                    isinstance(value, str) and not value.strip()
+                                ):
                                     # Provide helpful diagnostic
                                     available_context = (
-                                        list(self._shared_context.keys()) if self._shared_context else []
+                                        list(self._shared_context.keys())
+                                        if self._shared_context
+                                        else []
                                     )
                                     error_msg = (
                                         f"❌ {tool_cls} called with empty '{param}' parameter. "
@@ -792,10 +925,13 @@ class CrewAIToolWrapper(BaseTool):
                                     logger.error(error_msg)
 
                                     # Return StepResult.fail instead of allowing tool to run with empty data
-                                    from ultimate_discord_intelligence_bot.step_result import StepResult
+                                    from ultimate_discord_intelligence_bot.step_result import (
+                                        StepResult,
+                                    )
 
                                     return StepResult.fail(
-                                        error=f"Missing required data: {param}", step=f"{tool_cls}_validation"
+                                        error=f"Missing required data: {param}",
+                                        step=f"{tool_cls}_validation",
                                     )
 
                     print(
@@ -803,23 +939,33 @@ class CrewAIToolWrapper(BaseTool):
                     )
                 else:
                     # Tool accepts **kwargs, but still filter out context-only params to prevent errors
-                    filtered_kwargs = {k: v for k, v in final_kwargs.items() if k not in CONTEXT_ONLY_PARAMS}
+                    filtered_kwargs = {
+                        k: v
+                        for k, v in final_kwargs.items()
+                        if k not in CONTEXT_ONLY_PARAMS
+                    }
 
                     # Provide sensible defaults for common optional parameters
                     if "quality" in allowed and filtered_kwargs.get("quality") is None:
-                        filtered_kwargs["quality"] = "best"  # Default quality for download tools
+                        filtered_kwargs["quality"] = (
+                            "best"  # Default quality for download tools
+                        )
                         print("✅ Applied default quality='best' for download tool")
 
                     removed = set(final_kwargs.keys()) - set(filtered_kwargs.keys())
                     if removed:
                         print(f"⚠️  Filtered out context-only params: {removed}")
-                    print(f"🔍 Parameter passthrough: tool accepts **kwargs, passing {len(filtered_kwargs)} params")
+                    print(
+                        f"🔍 Parameter passthrough: tool accepts **kwargs, passing {len(filtered_kwargs)} params"
+                    )
 
                 # Only replace if filtering removed anything or aliasing added parameters
                 final_kwargs = filtered_kwargs
             except Exception as introspection_error:
                 # If introspection fails, proceed with unfiltered kwargs (legacy behavior)
-                print(f"⚠️  Introspection failed: {introspection_error}, using unfiltered kwargs")
+                print(
+                    f"⚠️  Introspection failed: {introspection_error}, using unfiltered kwargs"
+                )
                 pass
 
             # Execute the tool with proper error handling
@@ -838,9 +984,13 @@ class CrewAIToolWrapper(BaseTool):
                         )
 
                 # Validate transcription tools
-                elif "TranscriptionTool" in tool_cls or "AudioTranscription" in tool_cls:
+                elif (
+                    "TranscriptionTool" in tool_cls or "AudioTranscription" in tool_cls
+                ):
                     # AudioTranscriptionTool uses 'video_path', not 'file_path'
-                    video_path = final_kwargs.get("video_path") or final_kwargs.get("file_path")
+                    video_path = final_kwargs.get("video_path") or final_kwargs.get(
+                        "file_path"
+                    )
                     if not video_path:
                         # Try to get from context
                         if merged_context:
@@ -854,7 +1004,9 @@ class CrewAIToolWrapper(BaseTool):
                                 final_kwargs["video_path"] = video_path
                                 # Remove 'file_path' if it was added by mistake
                                 final_kwargs.pop("file_path", None)
-                                print(f"✅ Auto-populated video_path from context: {video_path}")
+                                print(
+                                    f"✅ Auto-populated video_path from context: {video_path}"
+                                )
 
                         # Re-check after auto-population
                         if not final_kwargs.get("video_path"):
@@ -876,7 +1028,9 @@ class CrewAIToolWrapper(BaseTool):
                     ]
                 ):
                     text_param = final_kwargs.get("text") or final_kwargs.get("content")
-                    if not text_param or (isinstance(text_param, str) and len(text_param.strip()) < 10):
+                    if not text_param or (
+                        isinstance(text_param, str) and len(text_param.strip()) < 10
+                    ):
                         validation_errors.append(
                             f"{tool_cls} requires non-empty 'text' parameter (min 10 chars). "
                             f"Received: {len(str(text_param)) if text_param else 0} chars. "
@@ -886,7 +1040,9 @@ class CrewAIToolWrapper(BaseTool):
                 # Validate claim extraction/verification tools
                 elif "ClaimExtractor" in tool_cls:
                     text_param = final_kwargs.get("text")
-                    if not text_param or (isinstance(text_param, str) and len(text_param.strip()) < 50):
+                    if not text_param or (
+                        isinstance(text_param, str) and len(text_param.strip()) < 50
+                    ):
                         validation_errors.append(
                             f"{tool_cls} requires substantial 'text' parameter (min 50 chars) to extract claims. "
                             f"Received: {len(str(text_param)) if text_param else 0} chars."
@@ -894,7 +1050,9 @@ class CrewAIToolWrapper(BaseTool):
 
                 elif "FactCheck" in tool_cls:
                     claim_param = final_kwargs.get("claim")
-                    if not claim_param or (isinstance(claim_param, str) and len(claim_param.strip()) < 5):
+                    if not claim_param or (
+                        isinstance(claim_param, str) and len(claim_param.strip()) < 5
+                    ):
                         validation_errors.append(
                             f"{tool_cls} requires non-empty 'claim' parameter. "
                             f"Received: {len(str(claim_param)) if claim_param else 0} chars."
@@ -903,7 +1061,9 @@ class CrewAIToolWrapper(BaseTool):
                 # Validate memory storage tools
                 elif "MemoryStorage" in tool_cls or "GraphMemory" in tool_cls:
                     text_param = final_kwargs.get("text") or final_kwargs.get("content")
-                    if not text_param or (isinstance(text_param, str) and len(text_param.strip()) < 10):
+                    if not text_param or (
+                        isinstance(text_param, str) and len(text_param.strip()) < 10
+                    ):
                         validation_errors.append(
                             f"{tool_cls} requires non-empty text to store. "
                             f"Received: {len(str(text_param)) if text_param else 0} chars."
@@ -926,7 +1086,9 @@ class CrewAIToolWrapper(BaseTool):
                         tool=tool_cls,
                         step="pre_execution_validation",
                         args_provided=list(final_kwargs.keys()),
-                        context_available=list(merged_context.keys()) if merged_context else [],
+                        context_available=list(merged_context.keys())
+                        if merged_context
+                        else [],
                     )
 
                 # Validate dependencies only for non-TypeError scenarios; do a light check but do not block TypeError path
@@ -941,13 +1103,17 @@ class CrewAIToolWrapper(BaseTool):
                 param_summary = {}
                 for k, v in final_kwargs.items():
                     if isinstance(v, str):
-                        param_summary[k] = f"{len(v)} chars" if len(v) > 50 else f"'{v}'"
+                        param_summary[k] = (
+                            f"{len(v)} chars" if len(v) > 50 else f"'{v}'"
+                        )
                     elif isinstance(v, (list, dict)):
                         param_summary[k] = f"{len(v)} items"
                     else:
                         param_summary[k] = str(v)[:50]
 
-                logger.warning(f"🔧 TOOL CALLED: {tool_cls} with params: {param_summary}")
+                logger.warning(
+                    f"🔧 TOOL CALLED: {tool_cls} with params: {param_summary}"
+                )
                 print(f"🔧 TOOL CALLED: {tool_cls} with params: {param_summary}")
 
                 if hasattr(self._wrapped_tool, "run"):
@@ -989,7 +1155,9 @@ class CrewAIToolWrapper(BaseTool):
                     if "transcript" in res.data:
                         context_updates["transcript"] = res.data["transcript"]
                     if "enhanced_transcript" in res.data:
-                        context_updates["enhanced_transcript"] = res.data["enhanced_transcript"]
+                        context_updates["enhanced_transcript"] = res.data[
+                            "enhanced_transcript"
+                        ]
                     if "text" in res.data:
                         context_updates["text"] = res.data["text"]
                     if "analysis" in res.data:
@@ -999,9 +1167,13 @@ class CrewAIToolWrapper(BaseTool):
                     if "file_path" in res.data:
                         context_updates["file_path"] = res.data["file_path"]
                     if "media_path" in res.data:
-                        context_updates["file_path"] = res.data["media_path"]  # Normalize to file_path
+                        context_updates["file_path"] = res.data[
+                            "media_path"
+                        ]  # Normalize to file_path
                     if "output_path" in res.data:
-                        context_updates["file_path"] = res.data["output_path"]  # Normalize to file_path
+                        context_updates["file_path"] = res.data[
+                            "output_path"
+                        ]  # Normalize to file_path
                     if "media_info" in res.data:
                         context_updates["media_info"] = res.data["media_info"]
                     if "metadata" in res.data:
@@ -1014,7 +1186,9 @@ class CrewAIToolWrapper(BaseTool):
                         context_updates["fact_checks"] = res.data["fact_checks"]
 
                     if context_updates:
-                        print(f"📤 Updating global context with keys: {list(context_updates.keys())}")
+                        print(
+                            f"📤 Updating global context with keys: {list(context_updates.keys())}"
+                        )
                         self.update_context(context_updates)
 
                 # Preserve StepResult structure - don't convert to strings
@@ -1028,7 +1202,9 @@ class CrewAIToolWrapper(BaseTool):
                     return StepResult.ok(data=res)
                 else:
                     # Only convert to string as last resort, preserve type info
-                    return StepResult.ok(data={"result": res, "result_type": type(res).__name__})
+                    return StepResult.ok(
+                        data={"result": res, "result_type": type(res).__name__}
+                    )
 
             except Exception as tool_error:
                 print(f"❌ {tool_cls} execution failed: {tool_error}")
@@ -1101,13 +1277,20 @@ class CrewAIToolWrapper(BaseTool):
                 "error_type": type(e).__name__,
                 "args_provided": list(final_kwargs.keys()),
                 "args_values": {
-                    k: str(v)[:100] + "..." if len(str(v)) > 100 else str(v) for k, v in final_kwargs.items()
+                    k: str(v)[:100] + "..." if len(str(v)) > 100 else str(v)
+                    for k, v in final_kwargs.items()
                 },
-                "shared_context_keys": list(self._shared_context.keys()) if self._shared_context else [],
+                "shared_context_keys": list(self._shared_context.keys())
+                if self._shared_context
+                else [],
                 "traceback": full_traceback,
                 "has_wrapped_tool": hasattr(self, "_wrapped_tool"),
-                "wrapped_tool_type": type(self._wrapped_tool).__name__ if hasattr(self, "_wrapped_tool") else None,
-                "available_methods": [m for m in dir(self._wrapped_tool) if not m.startswith("_")]
+                "wrapped_tool_type": type(self._wrapped_tool).__name__
+                if hasattr(self, "_wrapped_tool")
+                else None,
+                "available_methods": [
+                    m for m in dir(self._wrapped_tool) if not m.startswith("_")
+                ]
                 if hasattr(self, "_wrapped_tool")
                 else [],
             }
@@ -1148,13 +1331,17 @@ class CrewAIToolWrapper(BaseTool):
         if "OpenAI" in tool_cls or "Transcription" in tool_cls:
             import os
 
-            if not os.getenv("OPENAI_API_KEY") or os.getenv("OPENAI_API_KEY", "").startswith("dummy"):
+            if not os.getenv("OPENAI_API_KEY") or os.getenv(
+                "OPENAI_API_KEY", ""
+            ).startswith("dummy"):
                 config_issues.append("OpenAI API key not configured")
 
         if "Pipeline" in tool_cls:
             # Check if pipeline dependencies are available
             try:
-                from ..pipeline_components.orchestrator import ContentPipeline  # noqa: F401
+                from ..pipeline_components.orchestrator import (
+                    ContentPipeline,  # noqa: F401
+                )
             except ImportError:
                 missing_deps.append("ContentPipeline not available")
 
@@ -1192,20 +1379,33 @@ class CrewAIToolWrapper(BaseTool):
             required_attrs = ["name", "description"]
             for attr in required_attrs:
                 if not hasattr(self._wrapped_tool, attr):
-                    validation_result["configuration_issues"].append(f"Missing required attribute: {attr}")
+                    validation_result["configuration_issues"].append(
+                        f"Missing required attribute: {attr}"
+                    )
 
             # Check if tool has run methods
-            if not (hasattr(self._wrapped_tool, "run") or hasattr(self._wrapped_tool, "_run")):
-                validation_result["configuration_issues"].append("Tool missing both 'run' and '_run' methods")
+            if not (
+                hasattr(self._wrapped_tool, "run")
+                or hasattr(self._wrapped_tool, "_run")
+            ):
+                validation_result["configuration_issues"].append(
+                    "Tool missing both 'run' and '_run' methods"
+                )
 
             # Tool-specific validation
             tool_class = self._wrapped_tool.__class__.__name__
 
             # Validate OpenAI/API-dependent tools
-            if tool_class in ["AudioTranscriptionTool", "TextAnalysisTool", "FactCheckTool"]:
+            if tool_class in [
+                "AudioTranscriptionTool",
+                "TextAnalysisTool",
+                "FactCheckTool",
+            ]:
                 import os
 
-                if not os.getenv("OPENAI_API_KEY") and not os.getenv("OPENROUTER_API_KEY"):
+                if not os.getenv("OPENAI_API_KEY") and not os.getenv(
+                    "OPENROUTER_API_KEY"
+                ):
                     validation_result["missing_dependencies"].append(
                         "API key required (OPENAI_API_KEY or OPENROUTER_API_KEY)"
                     )
@@ -1215,7 +1415,9 @@ class CrewAIToolWrapper(BaseTool):
                 import os
 
                 if not os.getenv("DISCORD_WEBHOOK"):
-                    validation_result["missing_dependencies"].append("DISCORD_WEBHOOK environment variable required")
+                    validation_result["missing_dependencies"].append(
+                        "DISCORD_WEBHOOK environment variable required"
+                    )
 
             # Update overall validation status
             validation_result["dependencies_valid"] = (
@@ -1225,7 +1427,9 @@ class CrewAIToolWrapper(BaseTool):
 
         except Exception as e:
             validation_result["dependencies_valid"] = False
-            validation_result["configuration_issues"].append(f"Validation error: {str(e)}")
+            validation_result["configuration_issues"].append(
+                f"Validation error: {str(e)}"
+            )
 
         return validation_result
 
@@ -1282,7 +1486,11 @@ class CrewAIToolWrapper(BaseTool):
             )
 
         # Pipeline and download tools
-        if tool_cls in ["PipelineTool", "MultiPlatformDownloadTool", "YouTubeDownloadTool"]:
+        if tool_cls in [
+            "PipelineTool",
+            "MultiPlatformDownloadTool",
+            "YouTubeDownloadTool",
+        ]:
             suggestions.extend(
                 [
                     "Install yt-dlp: pip install yt-dlp",
@@ -1326,7 +1534,9 @@ def wrap_tool_for_crewai(tool: Any) -> BaseTool:
 # Specific wrappers for tools that need special handling
 class PipelineToolWrapper(BaseTool):
     name: str = "Pipeline Tool"
-    description: str = "Execute the content pipeline for downloading and processing media"
+    description: str = (
+        "Execute the content pipeline for downloading and processing media"
+    )
 
     _wrapped_tool: Any = PrivateAttr()
 
@@ -1345,7 +1555,11 @@ class PipelineToolWrapper(BaseTool):
 
             # Validate inputs
             if not url or not isinstance(url, str):
-                return StepResult.fail(error="URL is required and must be a string", url=url, quality=quality)
+                return StepResult.fail(
+                    error="URL is required and must be a string",
+                    url=url,
+                    quality=quality,
+                )
 
             if not quality or not isinstance(quality, str) or not quality.strip():
                 quality = "1080p"  # Default quality
@@ -1354,7 +1568,10 @@ class PipelineToolWrapper(BaseTool):
             if hasattr(self._wrapped_tool, "run"):
                 try:
                     result = self._wrapped_tool.run(
-                        url=url, quality=quality, tenant_id=tenant_id, workspace_id=workspace_id
+                        url=url,
+                        quality=quality,
+                        tenant_id=tenant_id,
+                        workspace_id=workspace_id,
                     )
 
                     # Check if we got a coroutine (indicating async handling issue)
@@ -1379,7 +1596,9 @@ class PipelineToolWrapper(BaseTool):
                     if "coroutine" in str(e) or "async context" in str(e):
                         # The tool returned a coroutine but we're in sync context
                         return StepResult.fail(
-                            error=f"Pipeline async handling issue: {str(e)}", url=url, quality=quality
+                            error=f"Pipeline async handling issue: {str(e)}",
+                            url=url,
+                            quality=quality,
                         )
                     else:
                         raise
@@ -1401,12 +1620,16 @@ class PipelineToolWrapper(BaseTool):
                 else:
                     return StepResult.ok(data={"result": result})
             else:
-                return StepResult.fail(error="Pipeline tool has no run method", url=url, quality=quality)
+                return StepResult.fail(
+                    error="Pipeline tool has no run method", url=url, quality=quality
+                )
 
         except Exception as e:
             from ultimate_discord_intelligence_bot.step_result import StepResult
 
-            return StepResult.fail(error=f"Pipeline execution failed: {str(e)}", url=url, quality=quality)
+            return StepResult.fail(
+                error=f"Pipeline execution failed: {str(e)}", url=url, quality=quality
+            )
 
 
 class DiscordPostToolWrapper(BaseTool):
@@ -1418,7 +1641,9 @@ class DiscordPostToolWrapper(BaseTool):
     _last_post_hash: str | None = PrivateAttr(default=None)
     _last_post_time: float | None = PrivateAttr(default=None)
 
-    def __init__(self, tool_class, webhook_url: str = "https://placeholder.webhook.url", **kwargs):
+    def __init__(
+        self, tool_class, webhook_url: str = "https://placeholder.webhook.url", **kwargs
+    ):
         super().__init__(**kwargs)
         # Create instance with proper webhook_url
         try:
@@ -1469,7 +1694,9 @@ class DiscordPostToolWrapper(BaseTool):
             except Exception:
                 min_len = 20
             try:
-                cooldown = float(os.getenv("DISCORD_POST_COOLDOWN_SECONDS", "20").strip())
+                cooldown = float(
+                    os.getenv("DISCORD_POST_COOLDOWN_SECONDS", "20").strip()
+                )
             except Exception:
                 cooldown = 20.0
 
@@ -1477,7 +1704,11 @@ class DiscordPostToolWrapper(BaseTool):
             if not isinstance(message, str):
                 if isinstance(message, dict):
                     # Prefer explicit fields if present
-                    msg = message.get("content") or message.get("message") or message.get("description")
+                    msg = (
+                        message.get("content")
+                        or message.get("message")
+                        or message.get("description")
+                    )
                     if isinstance(msg, str):
                         message = msg
                     else:
@@ -1525,7 +1756,11 @@ class DiscordPostToolWrapper(BaseTool):
                 return StepResult.ok(message=str(res))
             # Fallback: call _run with a minimal payload assuming (content_data, drive_links)
             if hasattr(self._wrapped_tool, "_run"):
-                content_data = {"title": message[:80], "uploader": "CrewAI", "platform": "internal"}
+                content_data = {
+                    "title": message[:80],
+                    "uploader": "CrewAI",
+                    "platform": "internal",
+                }
                 res = self._wrapped_tool._run(content_data, {})
                 from ultimate_discord_intelligence_bot.step_result import StepResult
 
@@ -1553,7 +1788,9 @@ class DiscordPrivateAlertToolWrapper(BaseTool):
 
     _wrapped_tool: Any = PrivateAttr()
 
-    def __init__(self, tool_class, webhook_url: str = "https://placeholder.webhook.url", **kwargs):
+    def __init__(
+        self, tool_class, webhook_url: str = "https://placeholder.webhook.url", **kwargs
+    ):
         super().__init__(**kwargs)
         # Create instance with proper webhook_url
         try:
@@ -1575,11 +1812,17 @@ class DiscordPrivateAlertToolWrapper(BaseTool):
                 res = self._wrapped_tool._run(message)
                 from .step_result import StepResult
 
-                return res if isinstance(res, StepResult) else StepResult.ok(message=str(res))
+                return (
+                    res
+                    if isinstance(res, StepResult)
+                    else StepResult.ok(message=str(res))
+                )
             else:
                 from .step_result import StepResult
 
-                return StepResult.ok(message=f"Private alert simulated: {message[:100]}...")
+                return StepResult.ok(
+                    message=f"Private alert simulated: {message[:100]}..."
+                )
         except Exception as e:
             from .step_result import StepResult
 
@@ -1588,7 +1831,9 @@ class DiscordPrivateAlertToolWrapper(BaseTool):
 
 class MCPCallToolWrapper(BaseTool):
     name: str = "MCP Call Tool"
-    description: str = "Call MCP server tools safely by namespace and name with optional parameters"
+    description: str = (
+        "Call MCP server tools safely by namespace and name with optional parameters"
+    )
 
     _wrapped_tool: Any = PrivateAttr()
 
@@ -1596,7 +1841,12 @@ class MCPCallToolWrapper(BaseTool):
         super().__init__(**kwargs)
         self._wrapped_tool = wrapped_tool
 
-    def _run(self, namespace: str = "obs", name: str = "summarize_health", params: dict = None) -> Any:
+    def _run(
+        self,
+        namespace: str = "obs",
+        name: str = "summarize_health",
+        params: dict = None,
+    ) -> Any:
         """Execute MCP call with required parameters."""
         try:
             res = self._wrapped_tool.run(namespace=namespace, name=name, params=params)
@@ -1606,7 +1856,9 @@ class MCPCallToolWrapper(BaseTool):
         except Exception as e:
             from .step_result import StepResult
 
-            return StepResult.fail(error=f"MCP call failed: {str(e)[:200]}", namespace=namespace, name=name)
+            return StepResult.fail(
+                error=f"MCP call failed: {str(e)[:200]}", namespace=namespace, name=name
+            )
 
 
 class TimelineToolWrapper(BaseTool):
@@ -1661,7 +1913,9 @@ class TimelineToolWrapper(BaseTool):
 
                     parsed = urlparse(url or "")
                     segs = [s for s in (parsed.path or "").split("/") if s]
-                    vid = (segs[-1] if segs else (parsed.netloc or "unknown")) or "unknown"
+                    vid = (
+                        segs[-1] if segs else (parsed.netloc or "unknown")
+                    ) or "unknown"
                 except Exception:
                     vid = "unknown"
             # Map friendly aliases
@@ -1673,9 +1927,15 @@ class TimelineToolWrapper(BaseTool):
                     details = details or "Auto-created timeline anchors"
 
             if act in {"record", "add"}:
-                ev = event or {"type": event_type, "data": {"details": details, "url": url}}
+                ev = event or {
+                    "type": event_type,
+                    "data": {"details": details, "url": url},
+                }
                 if not isinstance(ev, dict):
-                    ev = {"type": str(event_type), "data": {"details": str(details), "url": str(url)}}
+                    ev = {
+                        "type": str(event_type),
+                        "data": {"details": str(details), "url": str(url)},
+                    }
                 return self._wrapped_tool._run("add", video_id=vid, event=ev)
             if act in {"get", "fetch"}:
                 return self._wrapped_tool._run("get", video_id=vid)
@@ -1689,7 +1949,9 @@ class TimelineToolWrapper(BaseTool):
 
 class AdvancedPerformanceAnalyticsToolWrapper(BaseTool):
     name: str = "Advanced Performance Analytics Tool"
-    description: str = "Execute comprehensive performance analytics with proper action parameters"
+    description: str = (
+        "Execute comprehensive performance analytics with proper action parameters"
+    )
 
     _wrapped_tool: Any = PrivateAttr()
 
@@ -1736,12 +1998,16 @@ class AdvancedPerformanceAnalyticsToolWrapper(BaseTool):
         except Exception as e:
             from .step_result import StepResult
 
-            return StepResult.fail(error=f"Performance analytics failed: {str(e)[:200]}", action=action)
+            return StepResult.fail(
+                error=f"Performance analytics failed: {str(e)[:200]}", action=action
+            )
 
 
 class SentimentToolWrapper(BaseTool):
     name: str = "Sentiment Tool"
-    description: str = "Analyze sentiment of text with automatic text parameter handling"
+    description: str = (
+        "Analyze sentiment of text with automatic text parameter handling"
+    )
 
     _wrapped_tool: Any = PrivateAttr()
 
@@ -1785,7 +2051,12 @@ class GraphMemoryToolWrapper(BaseTool):
         pass
 
     def _run(
-        self, text: str = "sample knowledge", index: str = "graph", metadata: dict = None, tags: list = None, **kwargs
+        self,
+        text: str = "sample knowledge",
+        index: str = "graph",
+        metadata: dict = None,
+        tags: list = None,
+        **kwargs,
     ) -> Any:
         """Execute graph memory storage with required text parameter."""
         try:
@@ -1800,7 +2071,9 @@ class GraphMemoryToolWrapper(BaseTool):
             md = metadata or {}
             if "crew_analysis" in kwargs and not md.get("crew_analysis"):
                 md["crew_analysis"] = kwargs.pop("crew_analysis")
-            return self._wrapped_tool.run(text=text, index=index, metadata=md, tags=tags or [], **kwargs)
+            return self._wrapped_tool.run(
+                text=text, index=index, metadata=md, tags=tags or [], **kwargs
+            )
         except Exception as e:
             from .step_result import StepResult
 
@@ -1838,13 +2111,24 @@ class RAGIngestToolWrapper(BaseTool):
         self._wrapped_tool = wrapped_tool
 
     def _run(
-        self, texts: list = None, index: str = "memory", chunk_size: int = 400, overlap: int = 50, **kwargs
+        self,
+        texts: list = None,
+        index: str = "memory",
+        chunk_size: int = 400,
+        overlap: int = 50,
+        **kwargs,
     ) -> Any:
         """Execute RAG ingestion with required texts parameter."""
         try:
             if texts is None:
                 texts = ["sample text content"]
-            return self._wrapped_tool.run(texts=texts, index=index, chunk_size=chunk_size, overlap=overlap, **kwargs)
+            return self._wrapped_tool.run(
+                texts=texts,
+                index=index,
+                chunk_size=chunk_size,
+                overlap=overlap,
+                **kwargs,
+            )
         except Exception as e:
             from .step_result import StepResult
 
@@ -1861,10 +2145,18 @@ class MemoryStorageToolWrapper(BaseTool):
         super().__init__(**kwargs)
         self._wrapped_tool = wrapped_tool
 
-    def _run(self, text: str = "sample memory", namespace: str = "default", metadata: dict = None, **kwargs) -> Any:
+    def _run(
+        self,
+        text: str = "sample memory",
+        namespace: str = "default",
+        metadata: dict = None,
+        **kwargs,
+    ) -> Any:
         """Execute memory storage with required parameters."""
         try:
-            return self._wrapped_tool.run(text=text, namespace=namespace, metadata=metadata or {}, **kwargs)
+            return self._wrapped_tool.run(
+                text=text, namespace=namespace, metadata=metadata or {}, **kwargs
+            )
         except Exception as e:
             from .step_result import StepResult
 
@@ -1952,7 +2244,9 @@ class TranscriptIndexArgs(BaseModel):
 
 class TranscriptIndexToolWrapper(BaseTool):
     name: str = "Transcript Index Tool"
-    description: str = "Index transcripts into timestamped windows and fetch surrounding context."
+    description: str = (
+        "Index transcripts into timestamped windows and fetch surrounding context."
+    )
     args_schema: type[BaseModel] = TranscriptIndexArgs
 
     _wrapped_tool: Any = PrivateAttr()
@@ -1960,7 +2254,11 @@ class TranscriptIndexToolWrapper(BaseTool):
     _default_video_id: str | None = PrivateAttr(default=None)
 
     def __init__(
-        self, wrapped_tool, default_transcript: str | None = None, default_video_id: str | None = None, **kwargs
+        self,
+        wrapped_tool,
+        default_transcript: str | None = None,
+        default_video_id: str | None = None,
+        **kwargs,
     ):
         super().__init__(**kwargs)
         self._wrapped_tool = wrapped_tool
@@ -1997,7 +2295,11 @@ class DriveUploadToolWrapper(BaseTool):
     _default_platform: str | None = PrivateAttr(default=None)
 
     def __init__(
-        self, wrapped_tool, default_file_path: str | None = None, default_platform: str | None = None, **kwargs
+        self,
+        wrapped_tool,
+        default_file_path: str | None = None,
+        default_platform: str | None = None,
+        **kwargs,
     ):
         super().__init__(**kwargs)
         self._wrapped_tool = wrapped_tool
@@ -2025,7 +2327,9 @@ class EnhancedAnalysisArgs(BaseModel):
 
 class EnhancedContentAnalysisToolWrapper(BaseTool):
     name: str = "Enhanced Content Analysis Tool"
-    description: str = "Analyze content with multiple analysis modes and intelligent fallbacks"
+    description: str = (
+        "Analyze content with multiple analysis modes and intelligent fallbacks"
+    )
     args_schema: type[BaseModel] = EnhancedAnalysisArgs
 
     _wrapped_tool: Any = PrivateAttr()
@@ -2057,7 +2361,9 @@ class ClaimExtractorArgs(BaseModel):
 
 class ClaimExtractorToolWrapper(BaseTool):
     name: str = "Claim Extractor Tool"
-    description: str = "Extract potential factual claims from text using linguistic patterns."
+    description: str = (
+        "Extract potential factual claims from text using linguistic patterns."
+    )
     args_schema: type[BaseModel] = ClaimExtractorArgs
 
     _wrapped_tool: Any = PrivateAttr()

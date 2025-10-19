@@ -1,0 +1,150 @@
+"""
+DEPRECATED: advanced_performance_analytics*.py (6 files)
+
+All advanced performance analytics modules were deprecated in Phase 7
+(Performance Consolidation - October 2025). Functionality migrated to
+AnalyticsService and canonical AgentPerformanceMonitor.
+
+DEPRECATION DATE: October 19, 2025
+REMOVAL TARGET: After Phase 7 validation (Week 12)
+DO NOT ADD NEW CODE TO THESE FILES.
+
+=============================================================================
+DEPRECATED FILES
+=============================================================================
+
+1. advanced_performance_analytics.py
+2. advanced_performance_analytics_alert_engine.py
+3. advanced_performance_analytics_alert_management.py
+4. advanced_performance_analytics_discord_integration.py
+5. advanced_performance_analytics_integration.py
+6. tools/advanced_performance_analytics_tool.py
+
+=============================================================================
+MIGRATION GUIDE
+=============================================================================
+
+All advanced analytics features are now available via AnalyticsService
+and the canonical AgentPerformanceMonitor:
+
+BEFORE (advanced_performance_analytics*.py):
+
+```python
+from ultimate_discord_intelligence_bot.advanced_performance_analytics import (
+    AdvancedPerformanceAnalytics
+)
+from ultimate_discord_intelligence_bot.advanced_performance_analytics_alert_engine import (
+    AlertEngine
+)
+
+analytics = AdvancedPerformanceAnalytics()
+analytics.record_event(agent_name="agent", metrics={...})
+report = analytics.generate_report("agent")
+
+alert_engine = AlertEngine()
+alert_engine.configure_alerts(thresholds={...})
+```
+
+AFTER (Use AnalyticsService):
+
+```python
+from ultimate_discord_intelligence_bot.observability import get_analytics_service
+
+analytics = get_analytics_service()
+
+# Record agent performance
+analytics.record_agent_performance(
+    agent_name="agent",
+    task_type="analysis",
+    quality_score=0.87,
+    response_time=2.5,
+    tools_used=["tool1", "tool2"]
+)
+
+# Get performance report
+report_result = analytics.get_agent_performance_report("agent", days=30)
+if report_result.ok:
+    print(f"Overall score: {report_result.data['overall_score']}")
+    print(f"Recommendations: {report_result.data['recommendations']}")
+
+# System health and performance metrics
+health_result = analytics.get_system_health()
+performance_result = analytics.get_performance_metrics()
+```
+
+For alerting:
+
+```python
+from ultimate_discord_intelligence_bot.observability.intelligent_alerts import (
+    get_alert_manager
+)
+
+alert_manager = get_alert_manager()
+alert_manager.configure_thresholds({
+    "quality_threshold": 0.7,
+    "response_time_threshold": 5.0
+})
+```
+
+=============================================================================
+FEATURE MAPPING
+=============================================================================
+
+| Advanced Analytics Module                 | Replacement                             |
+|-------------------------------------------|-----------------------------------------|
+| AdvancedPerformanceAnalytics              | AnalyticsService                        |
+| record_event() / track_metrics()          | record_agent_performance()              |
+| generate_report()                         | get_agent_performance_report()          |
+| comparative_analysis()                    | get_comparative_agent_analysis()        |
+| AlertEngine                               | observability.intelligent_alerts        |
+| DiscordIntegration                        | Built into intelligent_alerts           |
+| alert configuration                       | intelligent_alerts.configure_thresholds |
+| AdvancedPerformanceAnalyticsTool          | Use AnalyticsService directly           |
+
+=============================================================================
+RATIONALE
+=============================================================================
+
+- 6 advanced_performance_analytics* files created feature fragmentation
+- Each file duplicated core analytics functionality
+- Alert engine, Discord integration, and management spread across 4 files
+- AnalyticsService provides unified interface for all analytics
+- intelligent_alerts module consolidates alerting logic
+- Phase 7 reduces 6 fragmented modules to 1 unified service
+
+=============================================================================
+AFFECTED COMPONENTS
+=============================================================================
+
+Known usages (to be migrated):
+
+- tests/test_datetime_utc_guard.py (checks advanced_performance_analytics.py)
+- tests/test_enhanced_system.py (uses PerformanceDashboard integration)
+- Any tools using AdvancedPerformanceAnalyticsTool
+- Custom Discord alert integrations
+
+Migration steps for each:
+
+1. Replace imports with AnalyticsService
+2. Update method calls per feature mapping table
+3. Migrate alert configurations to intelligent_alerts
+4. Test functionality with new interface
+
+=============================================================================
+REFERENCES
+=============================================================================
+
+- ADR-0005: Analytics Consolidation Strategy
+- PHASE7_PERFORMANCE_CONSOLIDATION_COMPLETE.md
+- Unified analytics: observability/analytics_service.py
+- Unified alerts: observability/intelligent_alerts.py
+- Canonical monitor: agent_training/performance_monitor.py
+
+For questions, see Phase 7 documentation.
+"""
+
+raise ImportError(
+    "advanced_performance_analytics*.py modules are deprecated. "
+    "Use observability.AnalyticsService and observability.intelligent_alerts. "
+    "See .DEPRECATED_PHASE7 marker for migration guide."
+)

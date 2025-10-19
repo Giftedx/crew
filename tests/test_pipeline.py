@@ -6,7 +6,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from core.secure_config import reload_config
+from ultimate_discord_intelligence_bot.core.secure_config import reload_config
 from ultimate_discord_intelligence_bot.cache import TranscriptCache
 from ultimate_discord_intelligence_bot.pipeline import ContentPipeline
 from ultimate_discord_intelligence_bot.tools.discord_download_tool import (

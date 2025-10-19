@@ -1,17 +1,24 @@
-"""Text analysis helper built on top of NLTK.
+"""Enhanced text analysis tool with advanced sentiment analysis and topic modeling.
 
-Design notes (typing):
-        * NLTK is an optional dependency; we avoid importing it at type-check time
-            to prevent mypy crashes / missing-import noise in strict mode.
-        * Runtime imports are performed lazily inside ``__init__``; for mypy we
-            supply minimal Protocol-like attribute expectations via ``TYPE_CHECKING``
-            guarded imports.
+This tool extends the basic NLTK-based text analysis with:
+- Advanced emotion detection (joy, anger, fear, sadness, etc.)
+- Topic modeling and categorization
+- Context-aware sentiment analysis
+- Multi-dimensional sentiment scoring
+- Trend detection capabilities
+
+Future extensions planned:
+- Multi-modal analysis (images, videos, audio)
+- Visual sentiment detection
+- Video frame-by-frame emotion tracking
+- Audio speaker identification and tone analysis
+- Cross-media correlation and synthesis
 """
 
 import logging
 import os
 from collections import Counter
-from typing import TYPE_CHECKING, TypedDict
+from typing import TYPE_CHECKING, Any, TypedDict
 
 from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 from ultimate_discord_intelligence_bot.step_result import StepResult
@@ -43,9 +50,29 @@ class _SentimentResult(TypedDict, total=False):
     compound: float
 
 
+class _EmotionResult(TypedDict, total=False):
+    joy: float
+    anger: float
+    fear: float
+    sadness: float
+    surprise: float
+    disgust: float
+    anticipation: float
+    trust: float
+    dominant_emotion: str
+    emotion_intensity: float
+
+
+class _TopicResult(TypedDict, total=False):
+    primary_topics: list[str]
+    topic_categories: list[str]
+    topic_confidence: dict[str, float]
+    content_themes: list[str]
+
+
 class TextAnalysisTool(BaseTool[StepResult]):
-    name: str = "Text Analysis Tool"
-    description: str = "Analyze text to extract sentiment, keywords, and topics."
+    name: str = "Enhanced Text Analysis Tool"
+    description: str = "Advanced text analysis with emotion detection, topic modeling, and enhanced sentiment analysis."
 
     def __init__(self) -> None:
         super().__init__()
@@ -135,6 +162,9 @@ class TextAnalysisTool(BaseTool[StepResult]):
             keywords = self.get_keywords(text)
             word_count = len(word_tokenize(text)) if word_tokenize and text else 0
 
+            # Enhanced analysis
+            enhanced_analysis = self.get_enhanced_sentiment_analysis(text)
+
             # Map compound polarity to coarse label for downstream tags/memory
             compound = sentiment_raw.get("compound", 0.0)
             pos_threshold = 0.05
@@ -167,6 +197,7 @@ class TextAnalysisTool(BaseTool[StepResult]):
             # - 'sentiment_score': numeric score for metrics
             # - 'keywords': alias of key_phrases for compatibility
             # Also include original rich payloads under *_details to avoid data loss
+            # Enhanced analysis data
             out = {
                 "sentiment": sentiment_label,
                 "sentiment_score": sentiment_score,
@@ -177,6 +208,14 @@ class TextAnalysisTool(BaseTool[StepResult]):
                 "readability_score": readability,
                 "sentiment_details": sentiment_raw,
                 "structured": structured,
+                # Enhanced analysis features
+                "emotions": enhanced_analysis["emotions"],
+                "topics": enhanced_analysis["topics"],
+                "enhanced_insights": enhanced_analysis["enhanced_insights"],
+                "dominant_emotion": enhanced_analysis["emotions"]["dominant_emotion"],
+                "emotion_intensity": enhanced_analysis["emotions"]["emotion_intensity"],
+                "primary_topics": enhanced_analysis["topics"]["primary_topics"],
+                "content_themes": enhanced_analysis["topics"]["content_themes"],
             }
 
             try:
@@ -289,6 +328,466 @@ class TextAnalysisTool(BaseTool[StepResult]):
         words = [word for word in words if word.isalpha() and word not in stop_words]
         word_counts = Counter(words)
         return [word for word, _ in word_counts.most_common(num_keywords)]
+
+    def get_emotions(self, text: str) -> _EmotionResult:
+        """Advanced emotion detection using enhanced lexical analysis."""
+        # Enhanced emotion lexicons
+        emotion_lexicons = {
+            "joy": {
+                "happy",
+                "excited",
+                "pleased",
+                "delighted",
+                "thrilled",
+                "ecstatic",
+                "cheerful",
+                "jubilant",
+                "elated",
+                "overjoyed",
+                "blissful",
+                "radiant",
+                "laughing",
+                "smiling",
+                "grinning",
+                "beaming",
+                "glowing",
+                "exuberant",
+            },
+            "anger": {
+                "angry",
+                "furious",
+                "irate",
+                "enraged",
+                "livid",
+                "incensed",
+                "outraged",
+                "infuriated",
+                "irritated",
+                "annoyed",
+                "frustrated",
+                "aggravated",
+                "exasperated",
+                "provoked",
+                "hostile",
+                "aggressive",
+            },
+            "fear": {
+                "scared",
+                "afraid",
+                "frightened",
+                "terrified",
+                "panicked",
+                "alarmed",
+                "anxious",
+                "worried",
+                "nervous",
+                "uneasy",
+                "apprehensive",
+                "dread",
+                "terror",
+                "horror",
+                "panic",
+                "alarm",
+                "fearful",
+                "timid",
+            },
+            "sadness": {
+                "sad",
+                "depressed",
+                "unhappy",
+                "miserable",
+                "despairing",
+                "sorrowful",
+                "grieving",
+                "melancholy",
+                "heartbroken",
+                "devastated",
+                "disappointed",
+                "downhearted",
+                "dejected",
+                "despondent",
+                "hopeless",
+                "forlorn",
+            },
+            "surprise": {
+                "surprised",
+                "shocked",
+                "astonished",
+                "amazed",
+                "stunned",
+                "astounded",
+                "dumbfounded",
+                "flabbergasted",
+                "speechless",
+                "incredulous",
+                "amazed",
+                "unexpected",
+                "sudden",
+                "startling",
+                "shocking",
+                "amazing",
+            },
+            "disgust": {
+                "disgusted",
+                "repulsed",
+                "revolted",
+                "nauseated",
+                "sickened",
+                "appalled",
+                "horrified",
+                "outraged",
+                "repugnant",
+                "vile",
+                "loathsome",
+                "abhorrent",
+                "detestable",
+                "repulsive",
+                "nauseating",
+                "sickening",
+            },
+            "anticipation": {
+                "anticipating",
+                "expecting",
+                "awaiting",
+                "looking forward",
+                "hopeful",
+                "eager",
+                "excited",
+                "impatient",
+                "anxious",
+                "expectant",
+                "pending",
+                "upcoming",
+                "forthcoming",
+                "imminent",
+                "prospective",
+                "awaited",
+            },
+            "trust": {
+                "trust",
+                "believe",
+                "confident",
+                "reliable",
+                "dependable",
+                "faithful",
+                "loyal",
+                "honest",
+                "sincere",
+                "genuine",
+                "authentic",
+                "credible",
+                "trustworthy",
+                "reputable",
+                "honorable",
+                "integrity",
+            },
+        }
+
+        try:
+            words = word_tokenize(text.lower()) if word_tokenize else text.lower().split()
+        except Exception:
+            words = text.lower().split()
+
+        # Count emotion words
+        emotion_scores = {}
+        total_emotion_words = 0
+
+        for emotion, lexicon in emotion_lexicons.items():
+            score = sum(1 for word in words if word in lexicon)
+            emotion_scores[emotion] = score
+            total_emotion_words += score
+
+        # Normalize scores
+        if total_emotion_words > 0:
+            for emotion in emotion_scores:
+                emotion_scores[emotion] = emotion_scores[emotion] / total_emotion_words
+
+        # Determine dominant emotion
+        dominant_emotion = max(emotion_scores.items(), key=lambda x: x[1])[0] if emotion_scores else "neutral"
+        max_score = max(emotion_scores.values()) if emotion_scores else 0
+
+        # Calculate emotion intensity (0-1 scale)
+        emotion_intensity = min(1.0, max_score * 2)  # Scale factor to make intensity more sensitive
+
+        return {
+            "joy": emotion_scores.get("joy", 0.0),
+            "anger": emotion_scores.get("anger", 0.0),
+            "fear": emotion_scores.get("fear", 0.0),
+            "sadness": emotion_scores.get("sadness", 0.0),
+            "surprise": emotion_scores.get("surprise", 0.0),
+            "disgust": emotion_scores.get("disgust", 0.0),
+            "anticipation": emotion_scores.get("anticipation", 0.0),
+            "trust": emotion_scores.get("trust", 0.0),
+            "dominant_emotion": dominant_emotion,
+            "emotion_intensity": emotion_intensity,
+        }
+
+    def get_topics(self, text: str) -> _TopicResult:
+        """Extract topics and themes from text using enhanced analysis."""
+        # Topic categories and their associated keywords
+        topic_categories = {
+            "politics": {
+                "government",
+                "policy",
+                "election",
+                "president",
+                "congress",
+                "senate",
+                "democrat",
+                "republican",
+                "legislation",
+                "law",
+                "regulation",
+                "vote",
+                "campaign",
+                "candidate",
+                "political",
+                "partisan",
+                "ideology",
+            },
+            "technology": {
+                "technology",
+                "tech",
+                "software",
+                "hardware",
+                "computer",
+                "internet",
+                "digital",
+                "innovation",
+                "artificial intelligence",
+                "AI",
+                "machine learning",
+                "automation",
+                "cybersecurity",
+                "programming",
+                "development",
+                "app",
+            },
+            "business": {
+                "business",
+                "company",
+                "corporate",
+                "industry",
+                "market",
+                "economy",
+                "finance",
+                "investment",
+                "stock",
+                "revenue",
+                "profit",
+                "growth",
+                "strategy",
+                "management",
+                "entrepreneurship",
+                "startup",
+            },
+            "science": {
+                "science",
+                "research",
+                "study",
+                "experiment",
+                "discovery",
+                "theory",
+                "scientific",
+                "biology",
+                "chemistry",
+                "physics",
+                "mathematics",
+                "data",
+                "analysis",
+                "evidence",
+                "hypothesis",
+                "conclusion",
+            },
+            "health": {
+                "health",
+                "medical",
+                "medicine",
+                "doctor",
+                "patient",
+                "treatment",
+                "disease",
+                "illness",
+                "wellness",
+                "fitness",
+                "nutrition",
+                "mental health",
+                "therapy",
+                "diagnosis",
+                "prevention",
+                "care",
+                "hospital",
+            },
+            "environment": {
+                "environment",
+                "climate",
+                "sustainability",
+                "green",
+                "eco",
+                "nature",
+                "pollution",
+                "conservation",
+                "renewable",
+                "energy",
+                "carbon",
+                "emissions",
+                "ecosystem",
+                "biodiversity",
+                "wildlife",
+                "planet",
+            },
+            "education": {
+                "education",
+                "school",
+                "university",
+                "college",
+                "student",
+                "teacher",
+                "learning",
+                "curriculum",
+                "academic",
+                "degree",
+                "knowledge",
+                "skill",
+                "training",
+                "development",
+                "instruction",
+                "pedagogy",
+            },
+            "entertainment": {
+                "entertainment",
+                "movie",
+                "film",
+                "music",
+                "song",
+                "artist",
+                "celebrity",
+                "game",
+                "gaming",
+                "sport",
+                "athlete",
+                "performance",
+                "show",
+                "concert",
+                "festival",
+                "media",
+                "streaming",
+            },
+        }
+
+        try:
+            words = word_tokenize(text.lower()) if word_tokenize else text.lower().split()
+        except Exception:
+            words = text.lower().split()
+
+        # Count topic keywords
+        topic_scores = {}
+        topic_word_counts = {}
+
+        for topic, keywords in topic_categories.items():
+            count = sum(1 for word in words if word in keywords)
+            if count > 0:
+                topic_scores[topic] = count / len(words)  # Normalize by text length
+                topic_word_counts[topic] = count
+
+        # Sort topics by relevance score
+        sorted_topics = sorted(topic_scores.items(), key=lambda x: x[1], reverse=True)
+
+        # Extract primary topics (top 3)
+        primary_topics = [topic for topic, _ in sorted_topics[:3]]
+
+        # Extract topic categories with confidence scores
+        topic_confidence = {topic: score for topic, score in sorted_topics}
+
+        # Generate content themes (broader categories)
+        content_themes = []
+        if any(score > 0.01 for score in topic_scores.values()):  # At least some topical content
+            # Determine dominant theme based on highest scoring topic category
+            if sorted_topics:
+                dominant_topic = sorted_topics[0][0]
+                content_themes.append(dominant_topic)
+
+                # Add secondary themes if they have significant scores
+                for topic, score in sorted_topics[1:3]:
+                    if score > 0.005:  # Lower threshold for secondary themes
+                        content_themes.append(topic)
+
+        return {
+            "primary_topics": primary_topics,
+            "topic_categories": list(topic_categories.keys()),
+            "topic_confidence": topic_confidence,
+            "content_themes": content_themes,
+        }
+
+    def get_enhanced_sentiment_analysis(self, text: str) -> dict[str, Any]:
+        """Enhanced sentiment analysis with emotion detection and topic modeling."""
+        # Get basic sentiment
+        basic_sentiment = self.get_sentiment(text)
+
+        # Get emotion analysis
+        emotions = self.get_emotions(text)
+
+        # Get topic analysis
+        topics = self.get_topics(text)
+
+        # Combine analyses for enhanced insights
+        enhanced_analysis = {
+            "basic_sentiment": basic_sentiment,
+            "emotions": emotions,
+            "topics": topics,
+            "enhanced_insights": self._generate_enhanced_insights(basic_sentiment, emotions, topics),
+        }
+
+        return enhanced_analysis
+
+    def _generate_enhanced_insights(
+        self, sentiment: _SentimentResult, emotions: _EmotionResult, topics: _TopicResult
+    ) -> dict[str, Any]:
+        """Generate enhanced insights by combining sentiment, emotion, and topic data."""
+        insights = {}
+
+        # Sentiment intensity interpretation
+        compound_score = sentiment.get("compound", 0)
+        if compound_score > 0.6:
+            insights["sentiment_interpretation"] = "Strongly positive sentiment with high emotional engagement"
+        elif compound_score > 0.2:
+            insights["sentiment_interpretation"] = "Moderately positive sentiment"
+        elif compound_score > -0.2:
+            insights["sentiment_interpretation"] = "Neutral sentiment with balanced emotional tone"
+        elif compound_score > -0.6:
+            insights["sentiment_interpretation"] = "Moderately negative sentiment"
+        else:
+            insights["sentiment_interpretation"] = "Strongly negative sentiment with intense emotional response"
+
+        # Emotional context
+        dominant_emotion = emotions.get("dominant_emotion", "neutral")
+        emotion_intensity = emotions.get("emotion_intensity", 0)
+
+        if emotion_intensity > 0.3:
+            insights["emotional_context"] = f"High emotional intensity with dominant {dominant_emotion} tone"
+        elif emotion_intensity > 0.1:
+            insights["emotional_context"] = f"Moderate emotional engagement, primarily {dominant_emotion}"
+        else:
+            insights["emotional_context"] = "Low emotional intensity, relatively neutral tone"
+
+        # Topic relevance
+        primary_topics = topics.get("primary_topics", [])
+        if primary_topics:
+            insights["topic_relevance"] = f"Content primarily discusses: {', '.join(primary_topics[:2])}"
+        else:
+            insights["topic_relevance"] = "Content appears to be general or conversational"
+
+        # Overall content classification
+        if topics.get("content_themes"):
+            theme = topics["content_themes"][0]
+            if emotions.get("joy", 0) > 0.1 and sentiment.get("pos", 0) > 0.3:
+                insights["content_classification"] = f"Positive {theme} content with engaging emotional tone"
+            elif emotions.get("anger", 0) > 0.1 and sentiment.get("neg", 0) > 0.3:
+                insights["content_classification"] = f"Critical {theme} content with strong negative emotions"
+            else:
+                insights["content_classification"] = f"Neutral {theme} discussion"
+
+        return insights
 
     def run(self, text: str) -> StepResult:  # pragma: no cover - thin wrapper
         return self._run(text)

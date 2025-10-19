@@ -1,6 +1,6 @@
 from unittest.mock import MagicMock
 
-from core.http_utils import resilient_get, resilient_post
+from ultimate_discord_intelligence_bot.core.http_utils import resilient_get, resilient_post
 
 
 def test_resilient_post_normal():

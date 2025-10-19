@@ -1,7 +1,7 @@
-from core.cache.llm_cache import memo_llm
-from core.learning_engine import LearningEngine
-from core.privacy import privacy_filter
-from core.rl.policies.bandit_base import EpsilonGreedyBandit
+from ultimate_discord_intelligence_bot.core.cache.llm_cache import memo_llm
+from ultimate_discord_intelligence_bot.core.learning_engine import LearningEngine
+from ultimate_discord_intelligence_bot.core.privacy import privacy_filter
+from ultimate_discord_intelligence_bot.core.rl.policies.bandit_base import EpsilonGreedyBandit
 
 
 def test_rl_cache_domain():

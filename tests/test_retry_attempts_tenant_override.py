@@ -4,7 +4,7 @@ from pathlib import Path
 
 import yaml
 
-from core.http_utils import resolve_retry_attempts
+from ultimate_discord_intelligence_bot.core.http_utils import resolve_retry_attempts
 from ultimate_discord_intelligence_bot.tenancy.context import TenantContext, with_tenant
 
 

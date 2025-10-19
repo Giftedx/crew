@@ -6,7 +6,7 @@ import pytest
 
 from client.a2a_client import A2AClient, A2AClientConfig, HttpError
 from fastapi.testclient import TestClient
-from server.app import create_app
+from ultimate_discord_intelligence_bot.server.app import create_app
 
 
 @pytest.fixture()

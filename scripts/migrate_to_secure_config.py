@@ -185,7 +185,7 @@ def migrate_file(file_path: Path, dry_run: bool = True) -> bool:
         original_content = content
 
         # Add import if not present
-        if "from core.secure_config import get_config" not in content:
+        if "from ultimate_discord_intelligence_bot.core.secure_config import get_config" not in content:
             # Find appropriate place to add import
             import_lines = []
             other_lines = []
@@ -197,12 +197,12 @@ def migrate_file(file_path: Path, dry_run: bool = True) -> bool:
                 else:
                     if in_imports and line.strip() and not line.startswith("#"):
                         # Add our import before first non-import line
-                        import_lines.append("from core.secure_config import get_config")
+                        import_lines.append("from ultimate_discord_intelligence_bot.core.secure_config import get_config")
                         in_imports = False
                     other_lines.append(line)
 
             if in_imports:  # All imports at end of file
-                import_lines.append("from core.secure_config import get_config")
+                import_lines.append("from ultimate_discord_intelligence_bot.core.secure_config import get_config")
 
             content = "\n".join(import_lines + other_lines)
 

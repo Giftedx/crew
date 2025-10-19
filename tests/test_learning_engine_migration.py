@@ -2,7 +2,7 @@
 
 import pytest
 
-from core.learning_engine import LearningEngine
+from ultimate_discord_intelligence_bot.core.learning_engine import LearningEngine
 
 
 def test_learning_engine_initialization():

@@ -1,4 +1,59 @@
 ---
+alwaysApply: true
+description: Error handling patterns and StepResult usage standards
+---
+### Error Handling Standards
+
+- **StepResult Everywhere**
+  - Convert all outcomes to `StepResult.ok(data=...)` or `StepResult.fail(error)`
+  - Provide actionable, concise error messages with context
+
+```python
+from ultimate_discord_intelligence_bot.step_result import StepResult
+
+def robust_tool_function(input_data: str, tenant: str, workspace: str) -> StepResult:
+    try:
+        if not input_data:
+            return StepResult.fail("Input data cannot be empty")
+        if not tenant or not workspace:
+            return StepResult.fail("Tenant and workspace are required")
+
+        try:
+            result = _process(input_data, tenant, workspace)
+        except ValueError as e:
+            return StepResult.fail(f"Invalid input data: {str(e)}")
+        except ConnectionError as e:
+            return StepResult.fail(f"Service unavailable: {str(e)}")
+        except Exception as e:
+            return StepResult.fail(f"Unexpected error: {str(e)}")
+
+        if not result:
+            return StepResult.fail("Processing returned empty result")
+        return StepResult.ok(data=result)
+    except Exception as e:
+        return StepResult.fail(f"Critical error in tool execution: {str(e)}")
+```
+
+- **Input Validation**
+  - Validate early (lengths, formats, required fields)
+  - Sanitize inputs before processing/output
+
+- **Tenancy Context (required)**
+  - All operations accept `(tenant, workspace)` and enforce isolation
+
+- **Catching Exceptions**
+  - Catch specific exceptions you can handle; avoid blanket except
+  - Never silence errors; return `StepResult.fail` with context
+
+- **Logging & Observability**
+  - Use structured logs and trace context where available
+  - Ensure failures are discoverable in monitoring; avoid noisy logs
+
+Related: [python-standards.mdc](mdc:.cursor/rules/python-standards.mdc),
+[core-architecture.mdc](mdc:.cursor/rules/core-architecture.mdc).
+
+---
+
 description: "Error handling patterns and StepResult usage standards"
 ---
 
@@ -31,11 +86,13 @@ def my_tool_function(input_data: str) -> StepResult:
 Use these standard status codes consistently:
 
 ### Success Status
+
 ```python
 return StepResult(data=result)  # status defaults to "success"
 ```
 
 ### Error Statuses
+
 ```python
 # bad_request - Invalid input, don't retry
 return StepResult(error="Invalid URL format", status="bad_request")
@@ -56,6 +113,7 @@ return StepResult(error="Access denied", status="forbidden")
 ## Exception Handling Patterns
 
 ### Network Operations
+
 ```python
 from core.http_utils import resilient_get, resilient_post
 
@@ -76,6 +134,7 @@ except requests.exceptions.HTTPError as e:
 ```
 
 ### File Operations
+
 ```python
 try:
     with open(filepath, 'r') as f:
@@ -90,6 +149,7 @@ except IOError as e:
 ```
 
 ### Database Operations
+
 ```python
 try:
     result = database_operation()
@@ -105,6 +165,7 @@ except IntegrityError:
 ## Error Logging
 
 ### Structured Logging
+
 ```python
 import logging
 
@@ -128,7 +189,9 @@ def my_function():
 ```
 
 ### Privacy-Safe Logging
+
 Never log sensitive information:
+
 ```python
 # BAD - logs sensitive data
 logger.error(f"API call failed with token {api_token}")
@@ -140,6 +203,7 @@ logger.error("API call failed", extra={"status_code": response.status_code})
 ## Discord Bot Error Handling
 
 ### Command Error Handling
+
 ```python
 @bot.command(name="analyze")
 async def analyze_content(ctx, *, url: str):
@@ -159,6 +223,7 @@ async def analyze_content(ctx, *, url: str):
 ```
 
 ### Bot Event Error Handling
+
 ```python
 @bot.event
 async def on_command_error(ctx, error):
@@ -180,6 +245,7 @@ async def on_command_error(ctx, error):
 ## Retry Patterns
 
 ### Exponential Backoff
+
 ```python
 import time
 import random
@@ -200,6 +266,7 @@ def retry_with_backoff(func, max_retries=3):
 ```
 
 ### Using HTTP Utils Retry
+
 ```python
 from core.http_utils import http_request_with_retry
 
@@ -214,6 +281,7 @@ result = http_request_with_retry(
 ## Testing Error Conditions
 
 ### Unit Tests for Error Handling
+
 ```python
 def test_tool_handles_missing_input():
     tool = MyTool()
@@ -233,6 +301,7 @@ def test_tool_handles_network_error():
 ## Error Recovery Strategies
 
 ### Graceful Degradation
+
 ```python
 def get_enhanced_data(input_data):
     # Try primary source

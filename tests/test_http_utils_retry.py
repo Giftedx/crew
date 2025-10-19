@@ -1,6 +1,6 @@
 import pytest
 
-from core.http_utils import HTTP_RATE_LIMITED, http_request_with_retry
+from ultimate_discord_intelligence_bot.core.http_utils import HTTP_RATE_LIMITED, http_request_with_retry
 
 
 def test_http_request_with_retry_status(monkeypatch):

@@ -20,6 +20,18 @@ from typing import TYPE_CHECKING, Any
 try:  # pragma: no cover - friendly import
     from crewai import Agent, Crew, Process, Task
     from crewai.project import agent, crew, task
+
+    # CRITICAL: Disable PostHog telemetry immediately after import
+    # This prevents connection errors to us.i.posthog.com
+    try:
+        from crewai.telemetry import Telemetry  # type: ignore
+
+        Telemetry._instance = None  # Reset singleton
+        os.environ["CREWAI_DISABLE_TELEMETRY"] = "1"
+        os.environ["OTEL_SDK_DISABLED"] = "true"
+    except Exception:
+        pass  # If telemetry module doesn't exist, continue
+
 except Exception:  # pragma: no cover - lightweight placeholders for parsing/imports
     if not TYPE_CHECKING:
 
@@ -65,12 +77,28 @@ from .crewai_tool_wrappers import (
     TranscriptIndexToolWrapper,
     wrap_tool_for_crewai,
 )
-from .settings import DISCORD_PRIVATE_WEBHOOK, DISCORD_WEBHOOK
+from .settings import (
+    DISCORD_PRIVATE_WEBHOOK,
+    DISCORD_WEBHOOK,
+    ENABLE_AGENT_BRIDGE,
+    ENABLE_DASHBOARD_INTEGRATION,
+    ENABLE_INTELLIGENT_ALERTING,
+    ENABLE_LANGGRAPH_PIPELINE,
+    ENABLE_UNIFIED_CACHE,
+    ENABLE_UNIFIED_KNOWLEDGE,
+    ENABLE_UNIFIED_METRICS,
+    ENABLE_UNIFIED_ORCHESTRATION,
+    ENABLE_UNIFIED_ROUTER,
+)
 from .tools import (
+    AdvancedAudioAnalysisTool,
     AdvancedPerformanceAnalyticsTool,
     AudioTranscriptionTool,
     CharacterProfileTool,
+    CheckpointManagementTool,
     ClaimExtractorTool,
+    ContentGenerationTool,
+    ContentRecommendationTool,
     ContextVerificationTool,
     DebateCommandTool,
     DeceptionScoringTool,
@@ -81,15 +109,18 @@ from .tools import (
     DiscordQATool,
     DriveUploadTool,
     DriveUploadToolBypass,
+    EngagementPredictionTool,
     EnhancedAnalysisTool,
     EnhancedYouTubeDownloadTool,
     FactCheckTool,
     GraphMemoryTool,
     HippoRagContinualMemoryTool,
+    ImageAnalysisTool,
     InstagramDownloadTool,
     KickDownloadTool,
     LCSummarizeTool,
     LeaderboardTool,
+    LiveStreamAnalysisTool,
     LogicalFallacyTool,
     MCPCallTool,
     MemoryCompactionTool,
@@ -108,6 +139,7 @@ from .tools import (
     ResearchAndBriefMultiTool,
     ResearchAndBriefTool,
     SentimentTool,
+    SocialGraphAnalysisTool,
     SocialMediaMonitorTool,
     SocialResolverTool,
     SteelmanArgumentTool,
@@ -116,17 +148,61 @@ from .tools import (
     TikTokDownloadTool,
     TimelineTool,
     TranscriptIndexTool,
+    TrendAnalysisTool,
+    TrendForecastingTool,
     TrustworthinessTrackerTool,
     TruthScoringTool,
     TwitchDownloadTool,
     TwitchResolverTool,
     TwitterDownloadTool,
     VectorSearchTool,
+    VideoFrameAnalysisTool,
+    ViralityPredictionTool,
+    VisualSummaryTool,
     XMonitorTool,
     YouTubeDownloadTool,
     YouTubeResolverTool,
     YtDlpDownloadTool,
 )
+from .tools.agent_bridge_tool import (
+    AgentBridgeTool,
+    CollectiveIntelligenceTool,
+    InsightSharingTool,
+    LearningTool,
+)
+from .tools.dependency_resolver_tool import DependencyResolverTool
+from .tools.escalation_management_tool import EscalationManagementTool
+from .tools.mem0_memory_tool import Mem0MemoryTool
+from .tools.multimodal_analysis_tool import MultimodalAnalysisTool
+from .tools.observability_tool import (
+    DashboardIntegrationTool,
+    IntelligentAlertingTool,
+    UnifiedMetricsTool,
+)
+from .tools.resource_allocation_tool import ResourceAllocationTool
+from .tools.strategic_planning_tool import StrategicPlanningTool
+from .tools.task_routing_tool import TaskRoutingTool
+from .tools.unified_cache_tool import (
+    CacheOptimizationTool,
+    CacheStatusTool,
+    UnifiedCacheTool,
+)
+from .tools.unified_memory_tool import (
+    UnifiedContextTool,
+    UnifiedMemoryStoreTool,
+    UnifiedMemoryTool,
+)
+from .tools.unified_orchestration_tool import (
+    OrchestrationStatusTool,
+    TaskManagementTool,
+    UnifiedOrchestrationTool,
+)
+from .tools.unified_router_tool import (
+    CostTrackingTool,
+    RouterStatusTool,
+    UnifiedRouterTool,
+)
+from .tools.workflow_optimization_tool import WorkflowOptimizationTool
 
 RAW_SNIPPET_MAX_LEN = 160
 
@@ -137,6 +213,33 @@ class UltimateDiscordIntelligenceBotCrew:
     # ========================================
     # STRATEGIC CONTROL & COORDINATION
     # ========================================
+    def run_langgraph_if_enabled(self, url: str, quality: str = "1080p") -> dict:
+        """Optional LangGraph execution path controlled by feature flag.
+
+        Returns an empty dict when disabled or on import errors to preserve callers.
+        """
+        if not ENABLE_LANGGRAPH_PIPELINE:
+            return {}
+        try:
+            from . import langgraph_pipeline as _lg
+
+            app = _lg.compile_mission_graph()
+            # Minimal run: convert stream to list for side-effects; return last event or empty
+            config = {"configurable": {"thread_id": f"mission_{int(time.time())}"}}
+            inputs = {"request_url": url, "quality": quality}
+            last_event = None
+            try:
+                for ev in app.stream(inputs, config=config):
+                    last_event = ev
+            except Exception:
+                # Silently degrade; callers rely on primary pipeline
+                return {}
+            return {
+                "langgraph": True,
+                "last_event": str(last_event) if last_event else None,
+            }
+        except Exception:
+            return {}
 
     # Legacy-named agent methods expected by tests/agents.yaml -----------------
 
@@ -145,7 +248,7 @@ class UltimateDiscordIntelligenceBotCrew:
         return Agent(
             role="Autonomy Mission Orchestrator",
             goal="Coordinate end-to-end missions, sequencing depth, specialists, and budgets.",
-            backstory="Mission orchestration and strategic control.",
+            backstory="Mission orchestration and strategic control with multimodal planning capabilities.",
             tools=[
                 # Wrapped for CrewAI compatibility with shared context support
                 wrap_tool_for_crewai(PipelineTool()),
@@ -153,9 +256,200 @@ class UltimateDiscordIntelligenceBotCrew:
                 wrap_tool_for_crewai(TimelineTool()),
                 wrap_tool_for_crewai(PerspectiveSynthesizerTool()),
                 wrap_tool_for_crewai(MCPCallTool()),
+                # Enhanced with multimodal and predictive capabilities
+                wrap_tool_for_crewai(MultimodalAnalysisTool()),
+                wrap_tool_for_crewai(ContentGenerationTool()),
+                wrap_tool_for_crewai(Mem0MemoryTool()),
+                # Operational: manage graph checkpoints
+                wrap_tool_for_crewai(CheckpointManagementTool()),
+                # Unified Knowledge Layer (Phase 1) - Conditional
+                *(
+                    [
+                        wrap_tool_for_crewai(UnifiedMemoryTool()),
+                        wrap_tool_for_crewai(UnifiedMemoryStoreTool()),
+                        wrap_tool_for_crewai(UnifiedContextTool()),
+                    ]
+                    if ENABLE_UNIFIED_KNOWLEDGE
+                    else []
+                ),
+                # Unified Router System (Phase 2) - Conditional
+                *(
+                    [
+                        wrap_tool_for_crewai(UnifiedRouterTool()),
+                        wrap_tool_for_crewai(CostTrackingTool()),
+                        wrap_tool_for_crewai(RouterStatusTool()),
+                    ]
+                    if ENABLE_UNIFIED_ROUTER
+                    else []
+                ),
+                # Unified Cache System (Phase 3) - Conditional
+                *(
+                    [
+                        wrap_tool_for_crewai(UnifiedCacheTool()),
+                        wrap_tool_for_crewai(CacheOptimizationTool()),
+                        wrap_tool_for_crewai(CacheStatusTool()),
+                    ]
+                    if ENABLE_UNIFIED_CACHE
+                    else []
+                ),
+                # Unified Orchestration System (Phase 4) - Conditional
+                *(
+                    [
+                        wrap_tool_for_crewai(UnifiedOrchestrationTool()),
+                        wrap_tool_for_crewai(TaskManagementTool()),
+                        wrap_tool_for_crewai(OrchestrationStatusTool()),
+                    ]
+                    if ENABLE_UNIFIED_ORCHESTRATION
+                    else []
+                ),
+                # Agent Bridge System (Phase 5) - Conditional
+                *(
+                    [
+                        wrap_tool_for_crewai(AgentBridgeTool()),
+                        wrap_tool_for_crewai(InsightSharingTool()),
+                        wrap_tool_for_crewai(LearningTool()),
+                        wrap_tool_for_crewai(CollectiveIntelligenceTool()),
+                    ]
+                    if ENABLE_AGENT_BRIDGE
+                    else []
+                ),
+                # Observability System (Phase 6) - Conditional
+                *(
+                    [
+                        wrap_tool_for_crewai(UnifiedMetricsTool()),
+                        wrap_tool_for_crewai(IntelligentAlertingTool()),
+                        wrap_tool_for_crewai(DashboardIntegrationTool()),
+                    ]
+                    if ENABLE_UNIFIED_METRICS
+                    or ENABLE_INTELLIGENT_ALERTING
+                    or ENABLE_DASHBOARD_INTEGRATION
+                    else []
+                ),
             ],
             verbose=True,
             allow_delegation=True,
+        )
+
+    @agent
+    def executive_supervisor(self) -> Agent:
+        """Executive Supervisor Agent - Strategic Intelligence Command Center.
+
+        Top-level strategic commander responsible for mission planning,
+        resource allocation, and system-wide optimization.
+        """
+        return Agent(
+            role="Executive Intelligence Supervisor",
+            goal="Orchestrate enterprise-wide intelligence operations with strategic oversight and optimal resource allocation.",
+            backstory="""You are the executive commander of the intelligence platform, responsible for 
+            strategic decision-making, resource allocation, and mission success across all operational domains. 
+            You balance competing priorities, manage escalations, and ensure optimal system performance through 
+            data-driven decision-making and proactive risk management.""",
+            tools=[
+                # Strategic Planning & Resource Management
+                wrap_tool_for_crewai(StrategicPlanningTool()),
+                wrap_tool_for_crewai(ResourceAllocationTool()),
+                wrap_tool_for_crewai(EscalationManagementTool()),
+                # Performance & Analytics
+                wrap_tool_for_crewai(AdvancedPerformanceAnalyticsTool()),
+                wrap_tool_for_crewai(TimelineTool()),
+                # Memory & Context Management
+                wrap_tool_for_crewai(Mem0MemoryTool()),
+                wrap_tool_for_crewai(PerspectiveSynthesizerTool()),
+                # Unified Knowledge Layer (Phase 1) - Conditional
+                *(
+                    [
+                        wrap_tool_for_crewai(UnifiedMemoryTool()),
+                        wrap_tool_for_crewai(UnifiedMemoryStoreTool()),
+                        wrap_tool_for_crewai(UnifiedContextTool()),
+                    ]
+                    if ENABLE_UNIFIED_KNOWLEDGE
+                    else []
+                ),
+                # Unified Router System (Phase 2) - Conditional
+                *(
+                    [
+                        wrap_tool_for_crewai(UnifiedRouterTool()),
+                        wrap_tool_for_crewai(CostTrackingTool()),
+                        wrap_tool_for_crewai(RouterStatusTool()),
+                    ]
+                    if ENABLE_UNIFIED_ROUTER
+                    else []
+                ),
+                # Unified Cache System (Phase 3) - Conditional
+                *(
+                    [
+                        wrap_tool_for_crewai(UnifiedCacheTool()),
+                        wrap_tool_for_crewai(CacheOptimizationTool()),
+                        wrap_tool_for_crewai(CacheStatusTool()),
+                    ]
+                    if ENABLE_UNIFIED_CACHE
+                    else []
+                ),
+                # Unified Orchestration System (Phase 4) - Conditional
+                *(
+                    [
+                        wrap_tool_for_crewai(UnifiedOrchestrationTool()),
+                        wrap_tool_for_crewai(TaskManagementTool()),
+                        wrap_tool_for_crewai(OrchestrationStatusTool()),
+                    ]
+                    if ENABLE_UNIFIED_ORCHESTRATION
+                    else []
+                ),
+                # Agent Bridge System (Phase 5) - Conditional
+                *(
+                    [
+                        wrap_tool_for_crewai(AgentBridgeTool()),
+                        wrap_tool_for_crewai(InsightSharingTool()),
+                        wrap_tool_for_crewai(LearningTool()),
+                        wrap_tool_for_crewai(CollectiveIntelligenceTool()),
+                    ]
+                    if ENABLE_AGENT_BRIDGE
+                    else []
+                ),
+                # Observability System (Phase 6) - Conditional
+                *(
+                    [
+                        wrap_tool_for_crewai(UnifiedMetricsTool()),
+                        wrap_tool_for_crewai(IntelligentAlertingTool()),
+                        wrap_tool_for_crewai(DashboardIntegrationTool()),
+                    ]
+                    if ENABLE_UNIFIED_METRICS
+                    or ENABLE_INTELLIGENT_ALERTING
+                    or ENABLE_DASHBOARD_INTEGRATION
+                    else []
+                ),
+            ],
+            verbose=True,
+            allow_delegation=True,  # Can delegate to Mission Orchestrator and other specialists
+        )
+
+    @agent
+    def workflow_manager(self) -> Agent:
+        """Workflow Manager Agent - Dynamic Task Routing & Dependency Management.
+
+        Operational brain responsible for optimizing task distribution,
+        resolving dependencies, and ensuring efficient workflow execution.
+        """
+        return Agent(
+            role="Workflow Orchestration Manager",
+            goal="Optimize task routing and dependency management across agent hierarchies for maximum throughput and efficiency.",
+            backstory="""You are the operational brain of the system, managing complex workflows, resolving dependencies, 
+            and ensuring optimal task distribution. You understand each agent's capabilities and current load, making intelligent 
+            routing decisions that maximize system throughput while maintaining quality. You proactively identify bottlenecks 
+            and optimize execution paths for complex multi-agent operations.""",
+            tools=[
+                # Workflow Orchestration
+                wrap_tool_for_crewai(TaskRoutingTool()),
+                wrap_tool_for_crewai(DependencyResolverTool()),
+                wrap_tool_for_crewai(WorkflowOptimizationTool()),
+                # Performance Monitoring
+                wrap_tool_for_crewai(AdvancedPerformanceAnalyticsTool()),
+                wrap_tool_for_crewai(TimelineTool()),
+                # Context Management
+                wrap_tool_for_crewai(PerspectiveSynthesizerTool()),
+            ],
+            verbose=True,
+            allow_delegation=True,  # Can delegate to specialist agents
         )
 
     @agent
@@ -203,7 +497,7 @@ class UltimateDiscordIntelligenceBotCrew:
         return Agent(
             role="Analysis Cartographer",
             goal="Map linguistic, sentiment, and thematic signals.",
-            backstory="Comprehensive linguistic analysis.",
+            backstory="Comprehensive linguistic analysis with predictive capabilities.",
             tools=[
                 wrap_tool_for_crewai(EnhancedAnalysisTool()),
                 wrap_tool_for_crewai(TextAnalysisTool()),
@@ -211,6 +505,9 @@ class UltimateDiscordIntelligenceBotCrew:
                 wrap_tool_for_crewai(PerspectiveSynthesizerTool()),
                 wrap_tool_for_crewai(TranscriptIndexTool()),
                 wrap_tool_for_crewai(LCSummarizeTool()),
+                # Enhanced with predictive analytics
+                wrap_tool_for_crewai(TrendForecastingTool()),
+                wrap_tool_for_crewai(EngagementPredictionTool()),
             ],
             verbose=True,
             allow_delegation=False,
@@ -221,13 +518,15 @@ class UltimateDiscordIntelligenceBotCrew:
         return Agent(
             role="Verification Director",
             goal="Deliver defensible verdicts and reasoning for significant claims.",
-            backstory="Fact-checking leadership.",
+            backstory="Fact-checking leadership with visual verification capabilities.",
             tools=[
                 wrap_tool_for_crewai(FactCheckTool()),
                 wrap_tool_for_crewai(LogicalFallacyTool()),
                 wrap_tool_for_crewai(ClaimExtractorTool()),
                 wrap_tool_for_crewai(ContextVerificationTool()),
                 wrap_tool_for_crewai(PerspectiveSynthesizerTool()),
+                # Enhanced with visual fact-checking
+                wrap_tool_for_crewai(ImageAnalysisTool()),
             ],
             verbose=True,
             allow_delegation=False,
@@ -260,6 +559,7 @@ class UltimateDiscordIntelligenceBotCrew:
                 wrap_tool_for_crewai(TimelineTool()),
                 wrap_tool_for_crewai(SentimentTool()),
                 wrap_tool_for_crewai(TrustworthinessTrackerTool()),
+                wrap_tool_for_crewai(Mem0MemoryTool()),
             ],
             verbose=True,
             allow_delegation=False,
@@ -286,9 +586,11 @@ class UltimateDiscordIntelligenceBotCrew:
         return Agent(
             role="Knowledge Integration Steward",
             goal="Preserve mission intelligence across memory systems.",
-            backstory="Knowledge architecture.",
+            backstory="Knowledge architecture with multimodal memory integration.",
             tools=[
-                wrap_tool_for_crewai(MemoryStorageTool(embedding_fn=embedding_function)),
+                wrap_tool_for_crewai(
+                    MemoryStorageTool(embedding_fn=embedding_function)
+                ),
                 wrap_tool_for_crewai(GraphMemoryTool()),
                 wrap_tool_for_crewai(HippoRagContinualMemoryTool()),
                 wrap_tool_for_crewai(MemoryCompactionTool()),
@@ -296,6 +598,8 @@ class UltimateDiscordIntelligenceBotCrew:
                 wrap_tool_for_crewai(RagIngestUrlTool()),
                 wrap_tool_for_crewai(RagHybridTool()),
                 wrap_tool_for_crewai(VectorSearchTool()),
+                # Enhanced with multimodal memory integration
+                wrap_tool_for_crewai(MultimodalAnalysisTool()),
             ],
             verbose=True,
             allow_delegation=False,
@@ -417,9 +721,14 @@ class UltimateDiscordIntelligenceBotCrew:
             tools=[
                 wrap_tool_for_crewai(DiscordQATool()),
                 wrap_tool_for_crewai(
-                    DiscordPostTool(webhook_url=(DISCORD_WEBHOOK or "https://placeholder.webhook.url"))
+                    DiscordPostTool(
+                        webhook_url=(
+                            DISCORD_WEBHOOK or "https://placeholder.webhook.url"
+                        )
+                    )
                 ),
                 wrap_tool_for_crewai(VectorSearchTool()),
+                wrap_tool_for_crewai(Mem0MemoryTool()),
             ],
             verbose=True,
             allow_delegation=False,
@@ -438,7 +747,9 @@ class UltimateDiscordIntelligenceBotCrew:
             ),
             tools=[
                 PipelineToolWrapper(PipelineTool()),
-                AdvancedPerformanceAnalyticsToolWrapper(AdvancedPerformanceAnalyticsTool()),
+                AdvancedPerformanceAnalyticsToolWrapper(
+                    AdvancedPerformanceAnalyticsTool()
+                ),
                 TimelineToolWrapper(TimelineTool()),
                 wrap_tool_for_crewai(PerspectiveSynthesizerTool()),
                 MCPCallToolWrapper(MCPCallTool()),
@@ -788,7 +1099,9 @@ class UltimateDiscordIntelligenceBotCrew:
             ),
             tools=[
                 wrap_tool_for_crewai(SystemStatusTool()),
-                AdvancedPerformanceAnalyticsToolWrapper(AdvancedPerformanceAnalyticsTool()),
+                AdvancedPerformanceAnalyticsToolWrapper(
+                    AdvancedPerformanceAnalyticsTool()
+                ),
                 # Use configured private webhook, falling back to public webhook, then placeholder
                 DiscordPrivateAlertToolWrapper(
                     DiscordPrivateAlertTool,
@@ -854,6 +1167,173 @@ class UltimateDiscordIntelligenceBotCrew:
         )
 
     # ========================================
+    # SPECIALIZED AI AGENTS (Phase 3.1)
+    # ========================================
+
+    @agent
+    def visual_intelligence_specialist(self) -> Agent:
+        return Agent(
+            role="Visual Intelligence Specialist",
+            goal="Analyze visual content across all platforms with computer vision expertise, providing comprehensive image and video analysis",
+            backstory="Expert in computer vision, image analysis, and visual pattern recognition with deep knowledge of visual sentiment, scene understanding, OCR, object detection, and visual fact-checking.",
+            tools=[
+                wrap_tool_for_crewai(VideoFrameAnalysisTool()),
+                wrap_tool_for_crewai(ImageAnalysisTool()),
+                wrap_tool_for_crewai(VisualSummaryTool()),
+                wrap_tool_for_crewai(MultimodalAnalysisTool()),
+            ],
+            verbose=True,
+            allow_delegation=False,
+        )
+
+    @agent
+    def audio_intelligence_specialist(self) -> Agent:
+        return Agent(
+            role="Audio Intelligence Specialist",
+            goal="Provide advanced audio analysis including music recognition, speaker identification, emotional tone analysis, and acoustic scene classification",
+            backstory="Expert in audio processing, speech analysis, and acoustic pattern recognition with deep knowledge of music recognition, speaker diarization, emotional tone analysis, and audio quality assessment.",
+            tools=[
+                wrap_tool_for_crewai(AdvancedAudioAnalysisTool()),
+                wrap_tool_for_crewai(AudioTranscriptionTool()),
+                wrap_tool_for_crewai(MultimodalAnalysisTool()),
+            ],
+            verbose=True,
+            allow_delegation=False,
+        )
+
+    @agent
+    def trend_intelligence_specialist(self) -> Agent:
+        return Agent(
+            role="Trend Intelligence Specialist",
+            goal="Monitor, analyze, and predict content trends across all platforms with real-time analysis and long-term forecasting capabilities",
+            backstory="Expert in trend analysis, viral prediction, and content forecasting with deep knowledge of cross-platform trend detection, engagement prediction, and market cycle identification.",
+            tools=[
+                wrap_tool_for_crewai(LiveStreamAnalysisTool()),
+                wrap_tool_for_crewai(TrendAnalysisTool()),
+                wrap_tool_for_crewai(TrendForecastingTool()),
+                wrap_tool_for_crewai(ViralityPredictionTool()),
+            ],
+            verbose=True,
+            allow_delegation=False,
+        )
+
+    @agent
+    def content_generation_specialist(self) -> Agent:
+        return Agent(
+            role="Content Generation Specialist",
+            goal="Create, adapt, and optimize content across platforms using AI-powered generation and multimodal understanding",
+            backstory="Expert in AI-powered content creation, adaptation, and optimization with deep knowledge of multimodal content generation, platform-specific optimization, and audience targeting.",
+            tools=[
+                wrap_tool_for_crewai(ContentGenerationTool()),
+                wrap_tool_for_crewai(MultimodalAnalysisTool()),
+                wrap_tool_for_crewai(ContentRecommendationTool()),
+                wrap_tool_for_crewai(EngagementPredictionTool()),
+            ],
+            verbose=True,
+            allow_delegation=False,
+        )
+
+    @agent
+    def cross_platform_intelligence_specialist(self) -> Agent:
+        return Agent(
+            role="Cross-Platform Intelligence Specialist",
+            goal="Correlate and analyze content patterns across multiple platforms, identifying cross-platform trends and content propagation",
+            backstory="Expert in cross-platform analysis, content correlation, and multi-platform intelligence with deep knowledge of platform-specific behaviors, content propagation patterns, and cross-platform trend identification.",
+            tools=[
+                wrap_tool_for_crewai(TrendAnalysisTool()),
+                wrap_tool_for_crewai(MultiPlatformMonitorTool()),
+                wrap_tool_for_crewai(MultiPlatformDownloadTool()),
+                wrap_tool_for_crewai(MultimodalAnalysisTool()),
+            ],
+            verbose=True,
+            allow_delegation=False,
+        )
+
+    # ========================================
+    # CREATOR NETWORK INTELLIGENCE AGENTS
+    # ========================================
+
+    @agent
+    def network_discovery_specialist(self) -> Agent:
+        return Agent(
+            role="Social Network Discovery Specialist",
+            goal="Automatically discover and map social networks of content creators, identifying relationships, collaboration patterns, and influence dynamics",
+            backstory="Expert in social network analysis with deep knowledge of creator ecosystems, collaboration patterns, and cross-platform presence tracking.",
+            tools=[
+                wrap_tool_for_crewai(SocialGraphAnalysisTool()),
+                wrap_tool_for_crewai(CharacterProfileTool()),
+                wrap_tool_for_crewai(MultiPlatformMonitorTool()),
+                wrap_tool_for_crewai(MultiPlatformDownloadTool()),
+            ],
+            verbose=True,
+            allow_delegation=False,
+        )
+
+    @agent
+    def deep_content_analyst(self) -> Agent:
+        return Agent(
+            role="Deep Content Analysis Specialist",
+            goal="Perform comprehensive multimodal analysis of creator content, extracting topics, debates, controversies, guest information, and narrative arcs",
+            backstory="Expert in long-form content analysis with deep knowledge of podcast formats, debate structures, and creator dynamics. Specializes in H3/Hasan content styles.",
+            tools=[
+                wrap_tool_for_crewai(MultimodalAnalysisTool()),
+                wrap_tool_for_crewai(EnhancedAnalysisTool()),
+                wrap_tool_for_crewai(CharacterProfileTool()),
+                wrap_tool_for_crewai(DebateCommandTool()),
+            ],
+            verbose=True,
+            allow_delegation=False,
+        )
+
+    @agent
+    def guest_intelligence_specialist(self) -> Agent:
+        return Agent(
+            role="Guest & Collaborator Intelligence Specialist",
+            goal="Track and profile guests, collaborators, and frequent participants in creator content, building comprehensive profiles and identifying monitoring opportunities",
+            backstory="Expert in guest analysis and collaboration tracking with deep knowledge of creator ecosystems, guest dynamics, and collaboration patterns.",
+            tools=[
+                wrap_tool_for_crewai(CharacterProfileTool()),
+                wrap_tool_for_crewai(SocialGraphAnalysisTool()),
+                wrap_tool_for_crewai(MultiPlatformMonitorTool()),
+                wrap_tool_for_crewai(EnhancedAnalysisTool()),
+            ],
+            verbose=True,
+            allow_delegation=False,
+        )
+
+    @agent
+    def controversy_tracker_specialist(self) -> Agent:
+        return Agent(
+            role="Controversy & Drama Tracking Specialist",
+            goal="Track controversies, drama, and conflicts involving tracked creators, providing early warning and comprehensive analysis of developing situations",
+            backstory="Expert in controversy detection and drama tracking with deep knowledge of creator ecosystems, conflict patterns, and community dynamics.",
+            tools=[
+                wrap_tool_for_crewai(EnhancedAnalysisTool()),
+                wrap_tool_for_crewai(SocialGraphAnalysisTool()),
+                wrap_tool_for_crewai(MultiPlatformMonitorTool()),
+                wrap_tool_for_crewai(SentimentTool()),
+            ],
+            verbose=True,
+            allow_delegation=False,
+        )
+
+    @agent
+    def insight_generation_specialist(self) -> Agent:
+        return Agent(
+            role="Insight Generation Specialist",
+            goal="Generate high-level insights and summaries about creator networks, trends, and content patterns, synthesizing complex data into actionable intelligence",
+            backstory="Expert data analyst specializing in creator ecosystems, capable of synthesizing complex patterns into actionable insights.",
+            tools=[
+                wrap_tool_for_crewai(TrendAnalysisTool()),
+                wrap_tool_for_crewai(SocialGraphAnalysisTool()),
+                wrap_tool_for_crewai(EnhancedAnalysisTool()),
+                wrap_tool_for_crewai(LCSummarizeTool()),
+            ],
+            verbose=True,
+            allow_delegation=False,
+        )
+
+    # ========================================
     # CREW CONSTRUCTION
     # ========================================
 
@@ -869,10 +1349,16 @@ class UltimateDiscordIntelligenceBotCrew:
                 additional_config = json.loads(embedder_json)
                 embedder_config.update(additional_config)
             except json.JSONDecodeError:
-                print(f"Warning: Invalid JSON in CREW_EMBEDDER_CONFIG_JSON: {embedder_json}")
+                print(
+                    f"Warning: Invalid JSON in CREW_EMBEDDER_CONFIG_JSON: {embedder_json}"
+                )
 
         # Optional configuration validation expected by tests
-        if os.getenv("ENABLE_CREW_CONFIG_VALIDATION", "0").lower() in {"1", "true", "yes"}:
+        if os.getenv("ENABLE_CREW_CONFIG_VALIDATION", "0").lower() in {
+            "1",
+            "true",
+            "yes",
+        }:
             required_fields = {"date_format"}
             missing = {
                 name: sorted(list(required_fields - set((cfg or {}).keys())))
@@ -969,15 +1455,19 @@ class UltimateDiscordIntelligenceBotCrew:
         self._execution_start_time: float | None = None
         self._current_step_count = 0
         # Compatibility attributes expected by some tests/wrappers
-        self._original_tasks: dict[str, Any] = getattr(self, "_original_tasks", {}) or {}
-        self._original_agents: dict[str, Any] = getattr(self, "_original_agents", {}) or {}
+        self._original_tasks: dict[str, Any] = (
+            getattr(self, "_original_tasks", {}) or {}
+        )
+        self._original_agents: dict[str, Any] = (
+            getattr(self, "_original_agents", {}) or {}
+        )
         # Hooks expected by crewai.project.annotations wrapper
         self._before_kickoff: dict[str, Any] = {}
         self._after_kickoff: dict[str, Any] = {}
         # Minimal agent config footprint for validation tests
-        self.agents_config: dict[str, dict[str, Any]] = getattr(self, "agents_config", None) or {
-            "default": {"date_format": "%Y-%m-%d", "timezone": "UTC"}
-        }
+        self.agents_config: dict[str, dict[str, Any]] = getattr(
+            self, "agents_config", None
+        ) or {"default": {"date_format": "%Y-%m-%d", "timezone": "UTC"}}
 
     def _enhanced_step_logger(self, step: Any) -> None:
         """Enhanced step logging with structured tracing and optional verbose output."""
@@ -1002,7 +1492,9 @@ class UltimateDiscordIntelligenceBotCrew:
             "tool": tool,
             "step_type": step_type,
             "status": status,
-            "duration_from_start": time.time() - self._execution_start_time if self._execution_start_time else 0,
+            "duration_from_start": time.time() - self._execution_start_time
+            if self._execution_start_time
+            else 0,
             "raw_output_length": len(str(raw)) if raw else 0,
         }
 
@@ -1019,10 +1511,17 @@ class UltimateDiscordIntelligenceBotCrew:
         print(f"🤖 Agent {agent_role} using {tool}")
 
         # Enhanced verbose logging if enabled
-        if os.getenv("ENABLE_CREW_STEP_VERBOSE", "false").lower() in {"1", "true", "yes", "on"}:
+        if os.getenv("ENABLE_CREW_STEP_VERBOSE", "false").lower() in {
+            "1",
+            "true",
+            "yes",
+            "on",
+        }:
             print(f"   ↳ Type: {step_type}, Status: {status}")
             if isinstance(raw, str) and raw:
-                snippet = raw[: RAW_SNIPPET_MAX_LEN - 3] + ("..." if len(raw) > RAW_SNIPPET_MAX_LEN else "")
+                snippet = raw[: RAW_SNIPPET_MAX_LEN - 3] + (
+                    "..." if len(raw) > RAW_SNIPPET_MAX_LEN else ""
+                )
                 # Modern helper line for humans
                 print(f"   ↳ Output: {snippet}")
                 # Legacy line expected by tests (print last so test slice after 'raw:' is only the snippet)
@@ -1038,7 +1537,9 @@ class UltimateDiscordIntelligenceBotCrew:
             traces_dir = os.getenv("CREWAI_TRACES_DIR", "crew_data/Logs/traces")
             os.makedirs(traces_dir, exist_ok=True)
 
-            trace_filename = f"crew_trace_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+            trace_filename = (
+                f"crew_trace_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+            )
             trace_path = os.path.join(traces_dir, trace_filename)
 
             trace_data = {
@@ -1058,13 +1559,22 @@ class UltimateDiscordIntelligenceBotCrew:
                 "latest_trace_file": trace_filename,
                 "execution_summary": {
                     "total_steps": self._current_step_count,
-                    "agents_used": list(set(step["agent_role"] for step in self._execution_trace)),
-                    "tools_used": list(
-                        set(step["tool"] for step in self._execution_trace if step["tool"] != "unknown")
+                    "agents_used": list(
+                        set(step["agent_role"] for step in self._execution_trace)
                     ),
-                    "total_duration": time.time() - self._execution_start_time if self._execution_start_time else 0,
+                    "tools_used": list(
+                        set(
+                            step["tool"]
+                            for step in self._execution_trace
+                            if step["tool"] != "unknown"
+                        )
+                    ),
+                    "total_duration": time.time() - self._execution_start_time
+                    if self._execution_start_time
+                    else 0,
                 },
-                "trace_url_template": "Use this for local analysis: file://" + os.path.abspath(trace_path),
+                "trace_url_template": "Use this for local analysis: file://"
+                + os.path.abspath(trace_path),
             }
 
             with open(summary_path, "w") as f:
@@ -1077,10 +1587,22 @@ class UltimateDiscordIntelligenceBotCrew:
         """Get current execution summary for monitoring and analysis."""
         return {
             "total_steps": self._current_step_count,
-            "execution_duration": time.time() - self._execution_start_time if self._execution_start_time else 0,
-            "agents_involved": list(set(step["agent_role"] for step in self._execution_trace)),
-            "tools_used": list(set(step["tool"] for step in self._execution_trace if step["tool"] != "unknown")),
-            "recent_steps": self._execution_trace[-5:] if len(self._execution_trace) > 5 else self._execution_trace,
+            "execution_duration": time.time() - self._execution_start_time
+            if self._execution_start_time
+            else 0,
+            "agents_involved": list(
+                set(step["agent_role"] for step in self._execution_trace)
+            ),
+            "tools_used": list(
+                set(
+                    step["tool"]
+                    for step in self._execution_trace
+                    if step["tool"] != "unknown"
+                )
+            ),
+            "recent_steps": self._execution_trace[-5:]
+            if len(self._execution_trace) > 5
+            else self._execution_trace,
         }
 
     # Backwards-compatible alias required by tests

@@ -1,0 +1,127 @@
+{
+  "test_timestamp": "2025-10-18T19:09:16.059582",
+  "overall_results": {
+    "total_tests": 19,
+    "passed": 3,
+    "failed": 16,
+    "success_rate": 15.789473684210526
+  },
+  "component_results": {
+    "executive_supervisor": {
+      "passed": 0,
+      "failed": 3,
+      "tests": [
+        {
+          "name": "Strategic Planning",
+          "status": "FAILED",
+          "error": "Strategic planning failed: Strategic planning failed: unsupported operand type(s) for +: 'int' and 'str'"
+        },
+        {
+          "name": "Resource Allocation",
+          "status": "FAILED",
+          "error": "Resource allocation failed: None"
+        },
+        {
+          "name": "Escalation Management",
+          "status": "FAILED",
+          "error": "Escalation management failed: None"
+        }
+      ]
+    },
+    "workflow_manager": {
+      "passed": 0,
+      "failed": 3,
+      "tests": [
+        {
+          "name": "Task Routing",
+          "status": "FAILED",
+          "error": "Task routing failed: Task routing failed: 9 is not a valid TaskPriority"
+        },
+        {
+          "name": "Dependency Resolution",
+          "status": "FAILED",
+          "error": "Dependency resolution failed: None"
+        },
+        {
+          "name": "Workflow Optimization",
+          "status": "FAILED",
+          "error": "Workflow optimization failed: Workflow optimization failed: 'str' object has no attribute 'get'"
+        }
+      ]
+    },
+    "hierarchical_orchestrator": {
+      "passed": 0,
+      "failed": 1,
+      "tests": [
+        {
+          "name": "Create Orchestration Session",
+          "status": "FAILED",
+          "error": "Session creation failed: Strategic planning failed: Strategic planning failed: unsupported operand type(s) for +: 'int' and 'str'"
+        }
+      ]
+    },
+    "rl_model_router": {
+      "passed": 1,
+      "failed": 3,
+      "tests": [
+        {
+          "name": "Model Routing",
+          "status": "FAILED",
+          "error": "Model routing failed: None"
+        },
+        {
+          "name": "Reward Update",
+          "status": "FAILED",
+          "error": "'composite_reward'"
+        },
+        {
+          "name": "Routing Statistics",
+          "status": "FAILED",
+          "error": "Statistics retrieval failed: None"
+        }
+      ]
+    },
+    "rl_cache_optimizer": {
+      "passed": 1,
+      "failed": 3,
+      "tests": [
+        {
+          "name": "Cache Optimization",
+          "status": "FAILED",
+          "error": "Cache optimization failed: None"
+        },
+        {
+          "name": "Performance Update",
+          "status": "FAILED",
+          "error": "'composite_reward'"
+        },
+        {
+          "name": "Cache Statistics",
+          "status": "FAILED",
+          "error": "Statistics retrieval failed: None"
+        }
+      ]
+    },
+    "performance_learning_engine": {
+      "passed": 1,
+      "failed": 3,
+      "tests": [
+        {
+          "name": "Request Optimization",
+          "status": "FAILED",
+          "error": "Request optimization failed: None"
+        },
+        {
+          "name": "Performance Feedback",
+          "status": "FAILED",
+          "error": "'learning_triggered'"
+        },
+        {
+          "name": "Optimization Statistics",
+          "status": "FAILED",
+          "error": "Statistics retrieval failed: None"
+        }
+      ]
+    }
+  }
+}

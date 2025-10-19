@@ -1,6 +1,6 @@
 from datetime import UTC, datetime
 
-from core.time import default_utc_now, ensure_utc
+from ultimate_discord_intelligence_bot.core.time import default_utc_now, ensure_utc
 
 
 def test_default_utc_now_is_timezone_aware_utc():

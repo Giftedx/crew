@@ -9,6 +9,8 @@ Enhanced Features:
 - Performance metrics integration for continuous optimization
 - Enhanced bandit algorithms with cost sensitivity
 
+import logging
+
 Feature flags:
 - ENABLE_BANDIT_ROUTING=1 (existing bandit routing)
 - ENABLE_COST_AWARE_ROUTING=1 (cost-aware optimization)
@@ -27,6 +29,7 @@ Reward Feedback:
 
 from __future__ import annotations
 
+import logging
 import math
 import os
 import statistics
@@ -41,6 +44,8 @@ from ai.routing.linucb_router import LinUCBRouter
 from ai.routing.router_registry import RewardNormalizer, get_tenant_router, record_selection
 from ai.routing.vw_bandit_router import VWBanditRouter
 from core.llm_client import LLMCallResult, LLMClient
+
+logger = logging.getLogger(__name__)
 
 try:  # metrics optional
     from ultimate_discord_intelligence_bot.obs.metrics import get_metrics as _gm
@@ -242,10 +247,35 @@ class LLMRouter:
         )  # Minimum cost savings to consider
         self._quality_threshold_base = float(os.getenv("QUALITY_THRESHOLD_BASE", "0.7"))  # Base quality threshold
 
+        # Enhanced model selection configuration
+        self._content_type_weights = {
+            "text": {"accuracy": 0.8, "latency": 0.6, "cost": 0.4},
+            "image": {"accuracy": 0.9, "latency": 0.5, "cost": 0.3},  # Vision models need high accuracy
+            "video": {"accuracy": 0.9, "latency": 0.4, "cost": 0.2},  # Video analysis needs high accuracy
+            "audio": {"accuracy": 0.8, "latency": 0.7, "cost": 0.5},  # Audio needs good latency
+            "multimodal": {"accuracy": 0.95, "latency": 0.3, "cost": 0.1},  # Multi-modal needs highest accuracy
+        }
+
+        # Model capability mapping for different content types
+        self._model_capabilities = {
+            "gpt-4": {"text": True, "image": True, "video": False, "audio": False, "multimodal": False},
+            "gpt-4-turbo": {"text": True, "image": True, "video": False, "audio": False, "multimodal": False},
+            "gpt-4-vision": {"text": True, "image": True, "video": False, "audio": False, "multimodal": False},
+            "claude-3-opus": {"text": True, "image": True, "video": False, "audio": False, "multimodal": False},
+            "claude-3-sonnet": {"text": True, "image": True, "video": False, "audio": False, "multimodal": False},
+            "gemini-pro": {"text": True, "image": True, "video": False, "audio": False, "multimodal": False},
+            "gemini-pro-vision": {"text": True, "image": True, "video": False, "audio": False, "multimodal": False},
+        }
+
         # Performance tracking
         self._model_profiles: dict[str, ModelPerformanceProfile] = {}
         self._cost_optimization_stats = CostOptimizationStats()
-        self._recent_decisions: deque = deque(maxlen=1000)  # Track recent decisions for analysis
+        self._recent_decisions: deque[dict[str, Any]] = deque(maxlen=1000)  # Track recent decisions for analysis
+
+        # Routing decision caching
+        self._routing_cache: dict[str, tuple[str, float]] = {}
+        self._routing_cache_ttl = int(os.getenv("ROUTING_CACHE_TTL", "600"))  # 10 minutes default
+        self._routing_cache_max_size = int(os.getenv("ROUTING_CACHE_MAX_SIZE", "1000"))  # Max cache entries
 
         # Initialize model profiles
         for model_name in clients.keys():
@@ -340,6 +370,108 @@ class LLMRouter:
 
         return utility_score
 
+    def _generate_routing_cache_key(
+        self,
+        messages: Sequence[dict[str, Any]],
+        context: dict[str, Any] | None = None,
+        content_type: str | None = None,
+    ) -> str:
+        """Generate cache key for routing decision."""
+        context = context or {}
+
+        # Extract complexity indicators from messages
+        message_text = " ".join(msg.get("content", "") for msg in messages if isinstance(msg.get("content"), str))
+        text_length = len(message_text)
+
+        # Bucket text length for cache efficiency (500 char buckets)
+        length_bucket = (text_length // 500) * 500
+
+        # Extract key context parameters
+        complexity = context.get("complexity", "medium")
+        budget = context.get("budget", 1.0)
+        task_type = context.get("task_type", "general")
+        quality_threshold = context.get("quality_threshold", 0.7)
+
+        # Create deterministic cache key
+        cache_params = [
+            content_type or "text",
+            complexity,
+            str(length_bucket),
+            f"{budget:.2f}",
+            task_type,
+            f"{quality_threshold:.2f}",
+        ]
+
+        # Hash the parameters for a compact key
+        import hashlib
+
+        cache_str = ":".join(cache_params)
+        cache_hash = hashlib.md5(cache_str.encode()).hexdigest()[:12]
+
+        return f"routing:{cache_hash}"
+
+    def _cleanup_routing_cache(self) -> None:
+        """Clean up expired cache entries."""
+        current_time = time.time()
+        expired_keys = []
+
+        for key, (_, timestamp) in self._routing_cache.items():
+            if current_time - timestamp > self._routing_cache_ttl:
+                expired_keys.append(key)
+
+        for key in expired_keys:
+            del self._routing_cache[key]
+
+        # If cache is still too large, remove oldest entries
+        if len(self._routing_cache) > self._routing_cache_max_size:
+            sorted_items = sorted(self._routing_cache.items(), key=lambda x: x[1][1])  # Sort by timestamp
+            excess_count = len(self._routing_cache) - self._routing_cache_max_size
+            for key, _ in sorted_items[:excess_count]:
+                del self._routing_cache[key]
+
+        if expired_keys:
+            logger.debug(f"Cleaned up {len(expired_keys)} expired routing cache entries")
+
+    def _get_cached_routing_decision(
+        self,
+        messages: Sequence[dict[str, Any]],
+        context: dict[str, Any] | None = None,
+        content_type: str | None = None,
+    ) -> str | None:
+        """Get cached routing decision if available and not expired."""
+        cache_key = self._generate_routing_cache_key(messages, context, content_type)
+
+        if cache_key in self._routing_cache:
+            model, timestamp = self._routing_cache[cache_key]
+            age = time.time() - timestamp
+
+            if age < self._routing_cache_ttl:
+                logger.debug(f"Routing cache HIT: {model} (age={age:.1f}s)")
+                return model
+            else:
+                # Remove expired entry
+                del self._routing_cache[cache_key]
+
+        logger.debug(f"Routing cache MISS: {cache_key}")
+        return None
+
+    def _cache_routing_decision(
+        self,
+        model: str,
+        messages: Sequence[dict[str, Any]],
+        context: dict[str, Any] | None = None,
+        content_type: str | None = None,
+    ) -> None:
+        """Cache routing decision for future use."""
+        cache_key = self._generate_routing_cache_key(messages, context, content_type)
+
+        # Cleanup cache periodically
+        if len(self._routing_cache) % 100 == 0:  # Cleanup every 100 entries
+            self._cleanup_routing_cache()
+
+        self._routing_cache[cache_key] = (model, time.time())
+        logger.debug(f"Cached routing decision: {model} for key {cache_key}")
+
     def _select_cost_aware_model(
         self, messages: Sequence[dict[str, Any]], available_models: list[str]
     ) -> CostAwareDecision:
@@ -399,28 +531,28 @@ class LLMRouter:
             )
 
         # Select model with highest utility score
-        best_option = max(model_options, key=lambda x: x["utility_score"])
+        best_option = max(model_options, key=lambda x: x["utility_score"])  # type: ignore[return-value,arg-type]
 
         # Calculate confidence based on utility gap and historical performance
-        utility_gap = best_option["utility_score"] - min(o["utility_score"] for o in model_options)
+        utility_gap = best_option["utility_score"] - min(o["utility_score"] for o in model_options)  # type: ignore[operator,type-var]
         confidence = min(1.0, utility_gap + 0.3)  # Base confidence + utility gap bonus
 
         # Determine fallback models (next best options)
-        sorted_options = sorted(model_options, key=lambda x: x["utility_score"], reverse=True)
+        sorted_options = sorted(model_options, key=lambda x: x["utility_score"], reverse=True)  # type: ignore[return-value,arg-type]
         fallback_models = [opt["model"] for opt in sorted_options[1:3]]  # Top 2 alternatives
 
         # Generate reasoning
         reasoning = self._generate_selection_reasoning(best_option, complexity_metrics, quality_threshold)
 
         return CostAwareDecision(
-            model=best_option["model"],
-            estimated_cost=best_option["estimated_cost"],
-            estimated_quality=best_option["estimated_quality"],
-            estimated_latency=best_option["estimated_latency"],
-            utility_score=best_option["utility_score"],
+            model=best_option["model"],  # type: ignore[arg-type]
+            estimated_cost=best_option["estimated_cost"],  # type: ignore[arg-type]
+            estimated_quality=best_option["estimated_quality"],  # type: ignore[arg-type]
+            estimated_latency=best_option["estimated_latency"],  # type: ignore[arg-type]
+            utility_score=best_option["utility_score"],  # type: ignore[arg-type]
             confidence=confidence,
             reasoning=reasoning,
-            fallback_models=fallback_models,
+            fallback_models=fallback_models,  # type: ignore[arg-type]
         )
 
     def _generate_selection_reasoning(
@@ -496,8 +628,6 @@ class LLMRouter:
 
     def chat(self, messages: Sequence[dict[str, Any]]) -> tuple[str, LLMCallResult]:
         """Enhanced chat method with cost-aware model selection."""
-        start_time = time.time()
-
         # Get available models
         model_names = self._get_available_models()
 
@@ -507,7 +637,19 @@ class LLMRouter:
             selected = cost_aware_decision.model
 
             # Track the decision for analysis
-            self._recent_decisions.append(cost_aware_decision)
+            self._recent_decisions.append(
+                {
+                    "model": cost_aware_decision.model,
+                    "estimated_cost": cost_aware_decision.estimated_cost,
+                    "estimated_quality": cost_aware_decision.estimated_quality,
+                    "estimated_latency": cost_aware_decision.estimated_latency,
+                    "utility_score": cost_aware_decision.utility_score,
+                    "confidence": cost_aware_decision.confidence,
+                    "reasoning": cost_aware_decision.reasoning,
+                    "fallback_models": cost_aware_decision.fallback_models,
+                    "timestamp": cost_aware_decision.timestamp,
+                }
+            )
 
             # Use fallback if cost-aware selection fails
             if selected not in model_names:
@@ -567,9 +709,9 @@ class LLMRouter:
             recent_decisions = list(self._recent_decisions)
             if recent_decisions:
                 latest_decision = recent_decisions[-1]
-                if latest_decision.model == model_name:
+                if latest_decision["model"] == model_name:
                     # This was a cost-aware selection - record cost savings if any
-                    baseline_cost = sum(d.estimated_cost for d in recent_decisions[-10:]) / min(
+                    baseline_cost = sum(d["estimated_cost"] for d in recent_decisions[-10:]) / min(
                         10, len(recent_decisions)
                     )
                     if baseline_cost > 0:
@@ -645,15 +787,15 @@ class LLMRouter:
         recent = list(self._recent_decisions)[-limit:]
         return [
             {
-                "model": decision.model,
-                "estimated_cost": decision.estimated_cost,
-                "estimated_quality": decision.estimated_quality,
-                "estimated_latency": decision.estimated_latency,
-                "utility_score": decision.utility_score,
-                "confidence": decision.confidence,
-                "reasoning": decision.reasoning,
-                "fallback_models": decision.fallback_models,
-                "timestamp": decision.timestamp,
+                "model": decision["model"],
+                "estimated_cost": decision["estimated_cost"],
+                "estimated_quality": decision["estimated_quality"],
+                "estimated_latency": decision["estimated_latency"],
+                "utility_score": decision["utility_score"],
+                "confidence": decision["confidence"],
+                "reasoning": decision["reasoning"],
+                "fallback_models": decision["fallback_models"],
+                "timestamp": decision["timestamp"],
             }
             for decision in recent
         ]
@@ -666,14 +808,14 @@ class LLMRouter:
         decisions = list(self._recent_decisions)
 
         # Calculate average utility scores and costs
-        avg_utility = statistics.mean(d.utility_score for d in decisions if d.utility_score > 0)
-        avg_cost = statistics.mean(d.estimated_cost for d in decisions)
-        avg_confidence = statistics.mean(d.confidence for d in decisions)
+        avg_utility = statistics.mean(d["utility_score"] for d in decisions if d["utility_score"] > 0)
+        avg_cost = statistics.mean(d["estimated_cost"] for d in decisions)
+        avg_confidence = statistics.mean(d["confidence"] for d in decisions)
 
         # Analyze model selection distribution
-        model_selections = {}
+        model_selections: dict[str, int] = {}
         for decision in decisions:
-            model_selections[decision.model] = model_selections.get(decision.model, 0) + 1
+            model_selections[decision["model"]] = model_selections.get(decision["model"], 0) + 1
 
         # Identify most and least cost-effective models
         cost_effectiveness = {}
@@ -750,27 +892,6 @@ class LLMRouter:
             if len(suggestions) <= 2
             else "requires_attention",
         }
-
-    def chat_and_update(
-        self,
-        messages: Sequence[dict[str, Any]],
-        quality_metric: float = 0.8,
-        cost_usd: float = 0.0,
-        latency_ms: float = 0.0,
-    ) -> tuple[str, LLMCallResult, float]:
-        """Convenience wrapper: route, invoke, normalize reward, update bandit.
-
-        Returns (model_name, result, reward).
-        """
-        # In earlier versions this raised when contextual routing was enabled.
-        # For backward compatibility we now gracefully fall back to classical
-        # Thompson sampling when callers (legacy code/tests) invoke this path
-        # with contextual mode toggled on but without feature vectors.
-        # This mirrors the fallback already implemented in chat()/update().
-        model, result = self.chat(messages)
-        reward = self._reward_normalizer.compute(quality=quality, latency_ms=latency_ms, cost=cost)
-        self.update(model, reward)
-        return model, result, reward
 
     # ---------------------- Contextual Mode APIs ----------------------
     def chat_with_features(
@@ -869,6 +990,119 @@ class LLMRouter:
         reward = self._reward_normalizer.compute(quality=quality, latency_ms=latency_ms, cost=cost)
         self.update_with_features(model, reward, features)
         return model, result, reward
+
+    def select_model_for_content_type(
+        self, content_type: str, task_complexity: str = "standard", quality_requirement: float | None = None
+    ) -> str:
+        """Select the best model for a specific content type and task requirements.
+
+        Args:
+            content_type: Type of content (text, image, video, audio, multimodal)
+            task_complexity: Complexity level (quick, standard, comprehensive, expert)
+            quality_requirement: Minimum quality threshold (0.0-1.0)
+
+        Returns:
+            Recommended model name for the given requirements
+        """
+        # Check cache first
+        context = {
+            "complexity": task_complexity,
+            "quality_threshold": quality_requirement or self._quality_threshold_base,
+        }
+
+        # Create dummy messages for cache key generation
+        dummy_messages = [{"role": "user", "content": f"{content_type}:{task_complexity}"}]
+
+        cached_model = self._get_cached_routing_decision(dummy_messages, context, content_type)
+        if cached_model:
+            return cached_model
+        # Get content type weights
+        content_weights = self._content_type_weights.get(content_type, self._content_type_weights["text"])
+
+        # Adjust quality threshold based on task complexity
+        complexity_multiplier = {"quick": 0.8, "standard": 1.0, "comprehensive": 1.2, "expert": 1.4}.get(
+            task_complexity, 1.0
+        )
+
+        effective_quality_threshold = (quality_requirement or self._quality_threshold_base) * complexity_multiplier
+        effective_quality_threshold = min(1.0, effective_quality_threshold)  # Cap at 1.0
+
+        # Filter models that support the content type
+        compatible_models = []
+        for model_name, capabilities in self._model_capabilities.items():
+            if capabilities.get(content_type, False):
+                # Check if model meets quality threshold
+                profile = self._model_profiles.get(model_name)
+                if profile and profile.avg_quality_score >= effective_quality_threshold:
+                    compatible_models.append(model_name)
+
+        if not compatible_models:
+            # Fallback to best available model for content type
+            compatible_models = [
+                model_name
+                for model_name, capabilities in self._model_capabilities.items()
+                if capabilities.get(content_type, False)
+            ]
+
+        if not compatible_models:
+            # Ultimate fallback to any model
+            compatible_models = list(self._model_capabilities.keys())
+
+        # Score models based on content type requirements
+        model_scores = {}
+        for model_name in compatible_models:
+            profile = self._model_profiles.get(model_name, ModelPerformanceProfile(model=model_name))
+
+            # Calculate weighted score
+            accuracy_score = profile.avg_quality_score * content_weights["accuracy"]
+            latency_score = (1.0 / max(profile.avg_latency_ms, 1)) * content_weights[
+                "latency"
+            ]  # Lower latency = higher score
+            cost_score = (1.0 / max(profile.avg_cost_per_token, 0.001)) * content_weights[
+                "cost"
+            ]  # Lower cost = higher score
+
+            total_score = accuracy_score + latency_score + cost_score
+            model_scores[model_name] = total_score
+
+        # Select best model
+        best_model = max(model_scores.items(), key=lambda x: x[1])[0]
+
+        logger.info(
+            f"Selected model '{best_model}' for {content_type} content "
+            f"(complexity: {task_complexity}, quality: {effective_quality_threshold:.2f})"
+        )
+
+        # Cache the routing decision
+        self._cache_routing_decision(best_model, dummy_messages, context, content_type)
+
+        return best_model
+
+    def get_routing_cache_stats(self) -> dict[str, Any]:
+        """Get routing cache statistics for monitoring."""
+        current_time = time.time()
+        total_entries = len(self._routing_cache)
+        expired_entries = 0
+
+        for _, (_, timestamp) in self._routing_cache.items():
+            if current_time - timestamp > self._routing_cache_ttl:
+                expired_entries += 1
+
+        active_entries = total_entries - expired_entries
+
+        return {
+            "total_entries": total_entries,
+            "active_entries": active_entries,
+            "expired_entries": expired_entries,
+            "cache_size_limit": self._routing_cache_max_size,
+            "ttl_seconds": self._routing_cache_ttl,
+            "utilization_percent": (total_entries / self._routing_cache_max_size) * 100,
+        }
+
+    def clear_routing_cache(self) -> None:
+        """Clear all routing cache entries."""
+        self._routing_cache.clear()
+        logger.info("Routing cache cleared")
 
 
 __all__ = ["LLMRouter"]

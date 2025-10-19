@@ -13,8 +13,8 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 
-from core.cache.api_cache_middleware import APICacheMiddleware
-from core.cache.cache_service import CacheService
+from ultimate_discord_intelligence_bot.core.cache.api_cache_middleware import APICacheMiddleware
+from ultimate_discord_intelligence_bot.core.cache.cache_service import CacheService
 from fastapi import FastAPI, Request, Response
 from fastapi.testclient import TestClient
 
@@ -301,7 +301,7 @@ class TestAPICacheIntegration:
     @pytest.fixture
     def app_with_cache(self):
         """Create FastAPI app with cache middleware for integration testing."""
-        from core.cache.cache_service import get_cache_service
+        from ultimate_discord_intelligence_bot.core.cache.cache_service import get_cache_service
 
         app = FastAPI()
 

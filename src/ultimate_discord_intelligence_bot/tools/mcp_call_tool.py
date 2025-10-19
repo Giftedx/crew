@@ -42,6 +42,17 @@ _SAFE_REGISTRY: dict[str, tuple[str, list[str]]] = {
         "mcp_server.routing_server",
         ["estimate_cost", "route_completion", "choose_embedding_model"],
     ),
+    "multimodal": (
+        "mcp_server.multimodal_server",
+        [
+            "analyze_image",
+            "analyze_video",
+            "analyze_audio",
+            "analyze_content_auto",
+            "get_visual_sentiment",
+            "extract_content_themes",
+        ],
+    ),
     "memory": (
         "mcp_server.memory_server",
         ["vs_search", "vs_list_namespaces", "vs_samples"],

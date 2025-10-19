@@ -1,0 +1,22 @@
+{
+  "data": [
+    {
+      "id": "stream_123456789",
+      "user_id": "123456789",
+      "user_login": "hasanabi",
+      "user_name": "HasanAbi",
+      "game_id": "509658",
+      "game_name": "Just Chatting",
+      "type": "live",
+      "title": "Political Commentary - Breaking News Discussion",
+      "viewer_count": 25000,
+      "started_at": "2024-01-15T14:00:00Z",
+      "language": "en",
+      "thumbnail_url": "https://static-cdn.jtvnw.net/previews-ttv/live_user_hasanabi-{width}x{height}.jpg",
+      "tag_ids": ["6ea6bca4-4712-4ab9-a906-e3336a9d8039"],
+      "tags": ["Politics", "News", "Commentary"],
+      "is_mature": false
+    }
+  ],
+  "pagination": {}
+}

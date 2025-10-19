@@ -5,7 +5,9 @@ from pathlib import Path
 # absence on subsequent reloads (importlib.reload). Without this, load_dotenv()
 # would re-populate deleted variables, preventing override-clearing tests.
 _DOTENV_LOADED = globals().get("_DOTENV_LOADED", False)
-_DISABLE_DOTENV = os.getenv("CREW_DISABLE_DOTENV") == "1" or (os.getenv("PYTEST_CURRENT_TEST") is not None)
+_DISABLE_DOTENV = os.getenv("CREW_DISABLE_DOTENV") == "1" or (
+    os.getenv("PYTEST_CURRENT_TEST") is not None
+)
 if not _DOTENV_LOADED and not _DISABLE_DOTENV:
     try:
         from dotenv import load_dotenv
@@ -24,7 +26,9 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 # Lazy-loaded configuration to avoid circular imports
 def _get_config():
     try:
-        from core.secure_config import get_config  # noqa: E402, PLC0415 - intentional lazy import to avoid cycles
+        from core.secure_config import (
+            get_config,  # noqa: E402, PLC0415 - intentional lazy import to avoid cycles
+        )
 
         return get_config()
     except ImportError:
@@ -84,11 +88,17 @@ PROCESSING_DIR = _get_path_setting("crewai_processing_dir", BASE_DIR / "Processi
 
 # yt-dlp paths
 YTDLP_DIR = _get_path_setting("crewai_ytdlp_dir", REPO_ROOT / "yt-dlp")
-YTDLP_CONFIG = _get_path_setting("crewai_ytdlp_config", YTDLP_DIR / "config" / "crewai-system.conf")
-YTDLP_ARCHIVE = _get_path_setting("crewai_ytdlp_archive", YTDLP_DIR / "archives" / "crewai_downloads.txt")
+YTDLP_CONFIG = _get_path_setting(
+    "crewai_ytdlp_config", YTDLP_DIR / "config" / "crewai-system.conf"
+)
+YTDLP_ARCHIVE = _get_path_setting(
+    "crewai_ytdlp_archive", YTDLP_DIR / "archives" / "crewai_downloads.txt"
+)
 TEMP_DIR = _get_path_setting("crewai_temp_dir", DOWNLOADS_DIR / "temp")
 
-GOOGLE_CREDENTIALS = _get_path_setting("google_credentials", CONFIG_DIR / "google-credentials.json")
+GOOGLE_CREDENTIALS = _get_path_setting(
+    "google_credentials", CONFIG_DIR / "google-credentials.json"
+)
 DISCORD_WEBHOOK = _get_setting("discord_webhook")
 DISCORD_PRIVATE_WEBHOOK = _get_setting("discord_private_webhook")
 
@@ -124,5 +134,190 @@ else:
     QDRANT_API_KEY = ""
 
 # Ensure directories exist
-for path in [DOWNLOADS_DIR, CONFIG_DIR, LOGS_DIR, PROCESSING_DIR, TEMP_DIR, YTDLP_ARCHIVE.parent]:
+for path in [
+    DOWNLOADS_DIR,
+    CONFIG_DIR,
+    LOGS_DIR,
+    PROCESSING_DIR,
+    TEMP_DIR,
+    YTDLP_ARCHIVE.parent,
+]:
     path.mkdir(parents=True, exist_ok=True)
+
+
+# ========================================
+# PHASE 1 ENHANCEMENT FLAGS
+# ========================================
+
+ENABLE_MEM0_MEMORY = str(_get_setting("ENABLE_MEM0_MEMORY", "false")).lower() in (
+    "true",
+    "1",
+    "yes",
+)
+ENABLE_DSPY_OPTIMIZATION = str(
+    _get_setting("ENABLE_DSPY_OPTIMIZATION", "false")
+).lower() in ("true", "1", "yes")
+
+# Configuration for DSPy (placeholders)
+DSPY_OPTIMIZATION_LEVEL = _get_setting("DSPY_OPTIMIZATION_LEVEL", "medium")
+
+# LangGraph pipeline flag (sqlite checkpointer with memory fallback in code)
+ENABLE_LANGGRAPH_PIPELINE = str(
+    _get_setting("ENABLE_LANGGRAPH_PIPELINE", "false")
+).lower() in ("true", "1", "yes")
+
+# ========================================
+# PHASE 2 ENHANCEMENT FLAGS
+# ========================================
+
+ENABLE_HIERARCHICAL_ORCHESTRATION = str(
+    _get_setting("ENABLE_HIERARCHICAL_ORCHESTRATION", "false")
+).lower() in ("true", "1", "yes")
+
+ENABLE_RL_MODEL_ROUTING = str(
+    _get_setting("ENABLE_RL_MODEL_ROUTING", "false")
+).lower() in ("true", "1", "yes")
+
+ENABLE_WEBSOCKET_UPDATES = str(
+    _get_setting("ENABLE_WEBSOCKET_UPDATES", "false")
+).lower() in ("true", "1", "yes")
+
+ENABLE_ENTERPRISE_TENANT_MANAGEMENT = str(
+    _get_setting("ENABLE_ENTERPRISE_TENANT_MANAGEMENT", "false")
+).lower() in ("true", "1", "yes")
+
+# ========================================
+# UNIFIED KNOWLEDGE LAYER FLAGS
+# ========================================
+
+ENABLE_UNIFIED_KNOWLEDGE = str(
+    _get_setting("ENABLE_UNIFIED_KNOWLEDGE", "false")
+).lower() in ("true", "1", "yes")
+
+ENABLE_UNIFIED_CACHE = str(_get_setting("ENABLE_UNIFIED_CACHE", "false")).lower() in (
+    "true",
+    "1",
+    "yes",
+)
+
+ENABLE_UNIFIED_ROUTER = str(_get_setting("ENABLE_UNIFIED_ROUTER", "false")).lower() in (
+    "true",
+    "1",
+    "yes",
+)
+
+ENABLE_UNIFIED_ORCHESTRATION = str(
+    _get_setting("ENABLE_UNIFIED_ORCHESTRATION", "false")
+).lower() in ("true", "1", "yes")
+
+# ========================================
+# UNIFIED ROUTER SYSTEM FLAGS
+# ========================================
+
+ENABLE_UNIFIED_COST_TRACKING = str(
+    _get_setting("ENABLE_UNIFIED_COST_TRACKING", "false")
+).lower() in (
+    "true",
+    "1",
+    "yes",
+)
+
+# ========================================
+# UNIFIED CACHE SYSTEM FLAGS
+# ========================================
+
+ENABLE_UNIFIED_CACHE = str(_get_setting("ENABLE_UNIFIED_CACHE", "false")).lower() in (
+    "true",
+    "1",
+    "yes",
+)
+
+ENABLE_CACHE_OPTIMIZATION = str(
+    _get_setting("ENABLE_CACHE_OPTIMIZATION", "false")
+).lower() in (
+    "true",
+    "1",
+    "yes",
+)
+
+# ========================================
+# UNIFIED ORCHESTRATION SYSTEM FLAGS
+# ========================================
+
+ENABLE_UNIFIED_ORCHESTRATION = str(
+    _get_setting("ENABLE_UNIFIED_ORCHESTRATION", "false")
+).lower() in (
+    "true",
+    "1",
+    "yes",
+)
+
+ENABLE_TASK_MANAGEMENT = str(
+    _get_setting("ENABLE_TASK_MANAGEMENT", "false")
+).lower() in (
+    "true",
+    "1",
+    "yes",
+)
+
+# ========================================
+# AGENT BRIDGE SYSTEM FLAGS
+# ========================================
+
+ENABLE_AGENT_BRIDGE = str(_get_setting("ENABLE_AGENT_BRIDGE", "false")).lower() in (
+    "true",
+    "1",
+    "yes",
+)
+
+ENABLE_KNOWLEDGE_SHARING = str(
+    _get_setting("ENABLE_KNOWLEDGE_SHARING", "false")
+).lower() in (
+    "true",
+    "1",
+    "yes",
+)
+
+ENABLE_CROSS_AGENT_LEARNING = str(
+    _get_setting("ENABLE_CROSS_AGENT_LEARNING", "false")
+).lower() in (
+    "true",
+    "1",
+    "yes",
+)
+
+ENABLE_COLLECTIVE_INTELLIGENCE = str(
+    _get_setting("ENABLE_COLLECTIVE_INTELLIGENCE", "false")
+).lower() in (
+    "true",
+    "1",
+    "yes",
+)
+
+# ========================================
+# OBSERVABILITY SYSTEM FLAGS
+# ========================================
+
+ENABLE_UNIFIED_METRICS = str(
+    _get_setting("ENABLE_UNIFIED_METRICS", "false")
+).lower() in (
+    "true",
+    "1",
+    "yes",
+)
+
+ENABLE_INTELLIGENT_ALERTING = str(
+    _get_setting("ENABLE_INTELLIGENT_ALERTING", "false")
+).lower() in (
+    "true",
+    "1",
+    "yes",
+)
+
+ENABLE_DASHBOARD_INTEGRATION = str(
+    _get_setting("ENABLE_DASHBOARD_INTEGRATION", "false")
+).lower() in (
+    "true",
+    "1",
+    "yes",
+)

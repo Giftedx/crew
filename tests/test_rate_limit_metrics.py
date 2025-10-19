@@ -1,8 +1,9 @@
 import os
 
+from ultimate_discord_intelligence_bot.server.app import create_app
+
 from fastapi.testclient import TestClient
-from obs import metrics
-from server.app import create_app
+from ultimate_discord_intelligence_bot.obs import metrics
 
 
 def test_rate_limit_rejections_metric_increments():
@@ -76,9 +77,13 @@ def test_rate_limit_rejections_metric():
             rf"[^}}]*\}} (\d+(?:\.\d+)?)"
         )
         match = re.search(pattern, prom_text)
-        assert match, f"Did not find rate_limit_rejections_total series for {path}. Exposition was:\n{prom_text}"
+        assert match, (
+            f"Did not find rate_limit_rejections_total series for {path}. Exposition was:\n{prom_text}"
+        )
         value = float(match.group(1))
-        assert int(value) == rejected, f"Metric value {value} != observed 429 count {rejected}"
+        assert int(value) == rejected, (
+            f"Metric value {value} != observed 429 count {rejected}"
+        )
     else:
         # Document expectation: without prometheus_client metrics are inert but code path ran
         assert rejected >= 1

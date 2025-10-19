@@ -12,9 +12,9 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from core.cache.dependency_tracker import DependencyNode, DependencyTracker
-from core.cache.invalidation_engine import InvalidationEngine, InvalidationResult
-from core.cache.multi_level_cache import CacheEntry, MultiLevelCache
+from ultimate_discord_intelligence_bot.core.cache.dependency_tracker import DependencyNode, DependencyTracker
+from ultimate_discord_intelligence_bot.core.cache.invalidation_engine import InvalidationEngine, InvalidationResult
+from ultimate_discord_intelligence_bot.core.cache.multi_level_cache import CacheEntry, MultiLevelCache
 
 
 class TestDependencyTracker:

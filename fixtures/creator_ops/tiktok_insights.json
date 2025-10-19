@@ -1,0 +1,31 @@
+{
+    "data": {
+        "view_count": 1000000,
+        "like_count": 50000,
+        "comment_count": 2500,
+        "share_count": 1000,
+        "profile_views": 5000,
+        "video_views_by_region": {
+            "US": 400000,
+            "GB": 200000,
+            "CA": 150000,
+            "AU": 100000,
+            "DE": 75000,
+            "FR": 50000,
+            "IT": 25000
+        },
+        "video_views_by_age_group": {
+            "13-17": 100000,
+            "18-24": 400000,
+            "25-34": 300000,
+            "35-44": 150000,
+            "45-54": 40000,
+            "55+": 10000
+        },
+        "video_views_by_gender": {
+            "male": 450000,
+            "female": 550000
+        }
+    },
+    "error": null
+}

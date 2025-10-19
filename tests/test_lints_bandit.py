@@ -1,4 +1,4 @@
-from core.rl.policies.lints import LinTSDiagBandit
+from ultimate_discord_intelligence_bot.core.rl.policies.lints import LinTSDiagBandit
 
 
 def test_lints_recommend_and_update_basic():

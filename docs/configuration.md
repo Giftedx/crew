@@ -177,6 +177,7 @@ The content pipeline can optionally compress long transcripts before LLM analysi
 | `TRANSCRIPT_COMPRESSION_MIN_TOKENS` | `1200` | Minimum token count required before compression is attempted. |
 | `TRANSCRIPT_COMPRESSION_TARGET_RATIO` | `0.35` | Target reduction ratio for LLMLingua (e.g., `0.35` keeps ~65% of tokens). |
 | `TRANSCRIPT_COMPRESSION_MAX_TOKENS` | unset | Optional hard cap on the compressed transcript token count. |
+| `ENABLE_CACHE_V2` | unset/false | Enable the unified cache facade backed by `core.cache.multi_level_cache.MultiLevelCache`. |
 
 Compression metadata is attached to downstream `StepResult` payloads (analysis, fallacy, perspective) and persisted in the pipeline's memory payload for observability.
 

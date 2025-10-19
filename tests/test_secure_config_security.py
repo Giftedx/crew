@@ -7,7 +7,7 @@ from unittest.mock import patch
 
 import pytest
 
-from core.secure_config import reload_config
+from ultimate_discord_intelligence_bot.core.secure_config import reload_config
 from security.net_guard import SecurityError
 from security.webhook_guard import verify_incoming
 
@@ -22,7 +22,7 @@ class TestSecureConfigSecurity:
 
         for default_value in default_values:
             with patch.dict(os.environ, {"WEBHOOK_SECRET_DEFAULT": default_value}):
-                from core.secure_config import reload_config
+                from ultimate_discord_intelligence_bot.core.secure_config import reload_config
 
                 config = reload_config()
                 with pytest.raises(ValueError, match="must be changed from default value"):
@@ -31,7 +31,7 @@ class TestSecureConfigSecurity:
     def test_webhook_secret_requires_configuration(self):
         """Test that webhook secrets must be configured."""
         with patch.dict(os.environ, {}, clear=True):
-            from core.secure_config import reload_config
+            from ultimate_discord_intelligence_bot.core.secure_config import reload_config
 
             config = reload_config()
             with pytest.raises(ValueError, match="is not configured"):
@@ -41,7 +41,7 @@ class TestSecureConfigSecurity:
         """Test that API keys are properly validated."""
         # Test missing API key
         with patch.dict(os.environ, {}, clear=True):
-            from core.secure_config import reload_config
+            from ultimate_discord_intelligence_bot.core.secure_config import reload_config
 
             config = reload_config()
             with pytest.raises(ValueError, match="API key for service 'missing' is not configured"):
@@ -49,7 +49,7 @@ class TestSecureConfigSecurity:
 
         # Test valid API key
         with patch.dict(os.environ, {"OPENAI_API_KEY": "sk-valid-key"}):
-            from core.secure_config import reload_config
+            from ultimate_discord_intelligence_bot.core.secure_config import reload_config
 
             config = reload_config()
             key = config.get_api_key("openai")
@@ -69,14 +69,14 @@ class TestSecureConfigSecurity:
         """Test HTTP retry flag configuration."""
         # Test flag enabled
         with patch.dict(os.environ, {"ENABLE_HTTP_RETRY": "true"}):
-            from core.secure_config import reload_config
+            from ultimate_discord_intelligence_bot.core.secure_config import reload_config
 
             config = reload_config()
             assert config.enable_http_retry is True
 
         # Test flag disabled
         with patch.dict(os.environ, {"ENABLE_HTTP_RETRY": "false"}):
-            from core.secure_config import reload_config
+            from ultimate_discord_intelligence_bot.core.secure_config import reload_config
 
             config = reload_config()
             assert config.enable_http_retry is False
@@ -84,7 +84,7 @@ class TestSecureConfigSecurity:
     def test_audit_logging_for_sensitive_access(self):
         """Test that sensitive operations are audit logged."""
         with patch.dict(os.environ, {"OPENAI_API_KEY": "sk-test-key", "ENABLE_AUDIT_LOGGING": "true"}):
-            from core.secure_config import reload_config
+            from ultimate_discord_intelligence_bot.core.secure_config import reload_config
 
             config = reload_config()
 
@@ -114,7 +114,7 @@ class TestSecureConfigIntegration:
 
     def test_backward_compatibility_helpers(self):
         """Test that backward compatibility functions work."""
-        from core.secure_config import get_api_key, get_webhook_url, is_feature_enabled, reload_config
+        from ultimate_discord_intelligence_bot.core.secure_config import get_api_key, get_webhook_url, is_feature_enabled, reload_config
 
         with patch.dict(
             os.environ,
@@ -132,7 +132,7 @@ class TestSecureConfigIntegration:
     def test_security_secrets_integration(self):
         """Test integration with security.secrets module."""
         with patch.dict(os.environ, {"WEBHOOK_SECRET_TEST": "secure-secret-123"}):
-            from core.secure_config import reload_config
+            from ultimate_discord_intelligence_bot.core.secure_config import reload_config
 
             config = reload_config()
             secret = config.get_webhook_secret("test")
@@ -141,7 +141,7 @@ class TestSecureConfigIntegration:
     def test_pydantic_validation_errors(self):
         """Test that invalid configuration values are caught."""
         with patch.dict(os.environ, {"QDRANT_GRPC_PORT": "not-a-number"}):
-            from core.secure_config import reload_config
+            from ultimate_discord_intelligence_bot.core.secure_config import reload_config
 
             with pytest.raises(ValueError):
                 reload_config()

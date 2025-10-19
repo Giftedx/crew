@@ -2,7 +2,7 @@ import importlib
 import os
 from unittest.mock import patch
 
-from core.http_utils import (
+from ultimate_discord_intelligence_bot.core.http_utils import (
     HTTP_RATE_LIMITED,
     retrying_get,
     retrying_post,

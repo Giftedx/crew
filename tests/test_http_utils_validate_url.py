@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from core.http_utils import validate_public_https_url
+from ultimate_discord_intelligence_bot.core.http_utils import validate_public_https_url
 
 
 def test_validate_public_https_url_accepts_dns_hostname():

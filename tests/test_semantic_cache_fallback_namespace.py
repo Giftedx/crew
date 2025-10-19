@@ -60,7 +60,7 @@ def test_fallback_semantic_cache_namespace_isolation(monkeypatch: pytest.MonkeyP
     We simulate absence of GPTCache by monkeypatching the availability flag. This should instantiate a
     FallbackSemanticCache instance. The isolation behaviour must hold (no cross-tenant hits).
     """
-    from core.cache import semantic_cache as sc
+    from ultimate_discord_intelligence_bot.core.cache import semantic_cache as sc
 
     # Force code path where GPTCACHE_AVAILABLE is False
     monkeypatch.setattr(sc, "GPTCACHE_AVAILABLE", False, raising=True)
@@ -69,7 +69,7 @@ def test_fallback_semantic_cache_namespace_isolation(monkeypatch: pytest.MonkeyP
 
     svc = OpenRouterService(api_key="")
     # Sanity: ensure we really got fallback cache (string matching implementation)
-    from core.cache.semantic_cache import FallbackSemanticCache
+    from ultimate_discord_intelligence_bot.core.cache.semantic_cache import FallbackSemanticCache
 
     assert isinstance(svc.semantic_cache, FallbackSemanticCache)
     _namespace_isolation_behavior(svc)
@@ -85,7 +85,7 @@ def test_degraded_gptcache_simple_store_namespace_isolation(monkeypatch: pytest.
     The downgraded GPTCacheSemanticCache sets ``self.cache`` to None and uses an internal ``simple_cache``.
     We monkeypatch ``get_data_manager`` to raise so initialization falls back. Isolation must persist.
     """
-    from core.cache import semantic_cache as sc
+    from ultimate_discord_intelligence_bot.core.cache import semantic_cache as sc
 
     # Ensure GPTCache path taken first
     monkeypatch.setattr(sc, "GPTCACHE_AVAILABLE", True, raising=True)
@@ -100,7 +100,7 @@ def test_degraded_gptcache_simple_store_namespace_isolation(monkeypatch: pytest.
     sc._semantic_cache = None  # type: ignore[attr-defined]
 
     svc = OpenRouterService(api_key="")
-    from core.cache.semantic_cache import GPTCacheSemanticCache
+    from ultimate_discord_intelligence_bot.core.cache.semantic_cache import GPTCacheSemanticCache
 
     assert isinstance(svc.semantic_cache, GPTCacheSemanticCache)
     # Degraded mode characteristics

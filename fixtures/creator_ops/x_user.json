@@ -1,0 +1,39 @@
+{
+    "data": {
+        "id": "1234567890123456789",
+        "username": "creatorx_official",
+        "name": "CreatorX Official",
+        "description": "Official X account of CreatorX. Gaming, vlogs, and more! 🎮📹",
+        "profile_image_url": "https://pbs.twimg.com/profile_images/1234567890123456789/avatar.jpg",
+        "public_metrics": {
+            "followers_count": 500000,
+            "following_count": 200,
+            "tweet_count": 1500,
+            "listed_count": 50
+        },
+        "verified": true,
+        "protected": false,
+        "created_at": "2020-01-15T10:30:00.000Z",
+        "location": "Los Angeles, CA",
+        "url": "https://creatorx.com",
+        "pinned_tweet_id": "1234567890123456789",
+        "entities": {
+            "url": {
+                "urls": [
+                    {
+                        "start": 0,
+                        "end": 23,
+                        "url": "https://creatorx.com",
+                        "expanded_url": "https://creatorx.com",
+                        "display_url": "creatorx.com"
+                    }
+                ]
+            },
+            "description": {
+                "hashtags": [],
+                "mentions": [],
+                "urls": []
+            }
+        }
+    }
+}

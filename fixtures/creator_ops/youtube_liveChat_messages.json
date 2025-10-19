@@ -1,0 +1,37 @@
+{
+    "kind": "youtube#liveChatMessageListResponse",
+    "etag": "test_etag_live_chat",
+    "nextPageToken": "test_live_chat_next_page",
+    "pollingIntervalMillis": 5000,
+    "pageInfo": {
+        "totalResults": 200,
+        "resultsPerPage": 200
+    },
+    "items": [
+        {
+            "kind": "youtube#liveChatMessage",
+            "etag": "test_etag_live_message",
+            "id": "test_live_message_1",
+            "snippet": {
+                "type": "textMessageEvent",
+                "liveChatId": "test_live_chat_id",
+                "authorChannelId": "UCtestuser123",
+                "publishedAt": "2024-01-15T15:30:00Z",
+                "hasDisplayContent": true,
+                "displayMessage": "This is amazing!",
+                "textMessageDetails": {
+                    "messageText": "This is amazing!"
+                }
+            },
+            "authorDetails": {
+                "channelId": "UCtestuser123",
+                "displayName": "TestUser",
+                "profileImageUrl": "https://yt3.ggpht.com/test_profile.jpg",
+                "isVerified": false,
+                "isChatOwner": false,
+                "isChatSponsor": false,
+                "isChatModerator": false
+            }
+        }
+    ]
+}

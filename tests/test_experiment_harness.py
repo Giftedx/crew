@@ -1,6 +1,6 @@
 import os
 
-from core.rl.experiment import Experiment, ExperimentManager
+from ultimate_discord_intelligence_bot.core.rl.experiment import Experiment, ExperimentManager
 
 
 def enable_flag():
