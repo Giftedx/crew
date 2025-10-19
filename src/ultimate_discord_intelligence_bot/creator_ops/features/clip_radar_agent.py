@@ -3,8 +3,8 @@ CrewAI agent for Live Clip Radar viral moment detection and clip generation.
 Provides intelligent analysis and optimization for viral moment detection.
 """
 
-from datetime import datetime
 import logging
+from datetime import datetime
 
 from crewai import Agent, Crew, Task
 from pydantic import BaseModel
@@ -58,7 +58,10 @@ class LiveClipRadarAgent:
     def _get_llm(self):
         """Get configured LLM for agent."""
         # Use OpenRouter or OpenAI based on configuration
-        if hasattr(self.config, "openrouter_api_key") and self.config.openrouter_api_key:
+        if (
+            hasattr(self.config, "openrouter_api_key")
+            and self.config.openrouter_api_key
+        ):
             from langchain_openai import ChatOpenAI
 
             return ChatOpenAI(
@@ -236,8 +239,12 @@ class LiveClipRadarAgent:
                 "moment_type": viral_moment.moment_type.value,
                 "confidence": viral_moment.confidence,
                 "description": viral_moment.description,
-                "trigger_message": viral_moment.trigger_message.message if viral_moment.trigger_message else "",
-                "context_messages": [msg.message for msg in viral_moment.context_messages],
+                "trigger_message": viral_moment.trigger_message.message
+                if viral_moment.trigger_message
+                else "",
+                "context_messages": [
+                    msg.message for msg in viral_moment.context_messages
+                ],
                 "metrics": viral_moment.metrics,
             }
 
@@ -266,7 +273,9 @@ class LiveClipRadarAgent:
             return StepResult.fail(f"Viral moment analysis failed: {str(e)}")
 
     async def optimize_clip_candidate(
-        self, clip_candidate: ClipCandidate, viral_analysis: ViralMomentAnalysis | None = None
+        self,
+        clip_candidate: ClipCandidate,
+        viral_analysis: ViralMomentAnalysis | None = None,
     ) -> StepResult:
         """
         Optimize a clip candidate using CrewAI agents.
@@ -302,8 +311,12 @@ class LiveClipRadarAgent:
 
             # Create optimization result
             clip_optimization = ClipOptimization(
-                title_optimization=optimization.get("title_optimization", clip_candidate.title),
-                description_optimization=optimization.get("description_optimization", clip_candidate.description),
+                title_optimization=optimization.get(
+                    "title_optimization", clip_candidate.title
+                ),
+                description_optimization=optimization.get(
+                    "description_optimization", clip_candidate.description
+                ),
                 timing_optimization=optimization.get("timing_optimization", {}),
                 platform_specific_hooks=optimization.get("platform_hooks", {}),
                 hashtag_recommendations=optimization.get("hashtags", []),
@@ -344,15 +357,21 @@ class LiveClipRadarAgent:
 
             # Parse clip optimization
             if "clip_optimization" in result:
-                analysis.update(self._extract_optimization_insights(result["clip_optimization"]))
+                analysis.update(
+                    self._extract_optimization_insights(result["clip_optimization"])
+                )
 
             # Parse engagement prediction
             if "engagement_prediction" in result:
-                analysis.update(self._extract_engagement_insights(result["engagement_prediction"]))
+                analysis.update(
+                    self._extract_engagement_insights(result["engagement_prediction"])
+                )
 
             # Parse platform strategy
             if "platform_strategy" in result:
-                analysis.update(self._extract_platform_insights(result["platform_strategy"]))
+                analysis.update(
+                    self._extract_platform_insights(result["platform_strategy"])
+                )
 
             return analysis
 
@@ -402,11 +421,15 @@ class LiveClipRadarAgent:
 
         # Extract title optimization
         if "title" in text_lower:
-            insights["title_optimization"] = self._extract_optimization(text_lower, "title")
+            insights["title_optimization"] = self._extract_optimization(
+                text_lower, "title"
+            )
 
         # Extract description optimization
         if "description" in text_lower:
-            insights["description_optimization"] = self._extract_optimization(text_lower, "description")
+            insights["description_optimization"] = self._extract_optimization(
+                text_lower, "description"
+            )
 
         # Extract hashtags
         hashtags = []
@@ -450,7 +473,9 @@ class LiveClipRadarAgent:
         if "instagram" in text_lower:
             platform_hooks["instagram"] = "Focus on visual appeal and engagement"
         if "twitter" in text_lower or "x" in text_lower:
-            platform_hooks["twitter"] = "Create engaging threads and use trending topics"
+            platform_hooks["twitter"] = (
+                "Create engaging threads and use trending topics"
+            )
 
         insights["platform_hooks"] = platform_hooks
 
@@ -462,7 +487,11 @@ class LiveClipRadarAgent:
             # Look for patterns like "quality: 0.8" or "quality score: 85%"
             import re
 
-            patterns = [rf"{keyword}.*?(\d+\.?\d*)", rf"{keyword}.*?(\d+)%", rf"(\d+\.?\d*).*?{keyword}"]
+            patterns = [
+                rf"{keyword}.*?(\d+\.?\d*)",
+                rf"{keyword}.*?(\d+)%",
+                rf"(\d+\.?\d*).*?{keyword}",
+            ]
 
             for pattern in patterns:
                 match = re.search(pattern, text)
@@ -510,7 +539,10 @@ class LiveClipRadarAgent:
             return 1000
 
     async def generate_optimized_clip(
-        self, clip_candidate: ClipCandidate, viral_analysis: ViralMomentAnalysis, clip_optimization: ClipOptimization
+        self,
+        clip_candidate: ClipCandidate,
+        viral_analysis: ViralMomentAnalysis,
+        clip_optimization: ClipOptimization,
     ) -> StepResult:
         """Generate an optimized clip based on analysis and optimization."""
         try:
@@ -564,7 +596,9 @@ class LiveClipRadarAgent:
                     "platforms": list(clip_optimization.platform_specific_hooks.keys()),
                 },
                 "recommendations": {
-                    "optimization": viral_analysis.optimization_suggestions[:3],  # Top 3
+                    "optimization": viral_analysis.optimization_suggestions[
+                        :3
+                    ],  # Top 3
                     "engagement": clip_optimization.engagement_strategies[:3],  # Top 3
                     "clips": viral_analysis.clip_recommendations[:3],  # Top 3
                 },

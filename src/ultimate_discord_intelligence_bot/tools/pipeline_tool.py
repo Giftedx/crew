@@ -44,9 +44,15 @@ class PipelineTool(BaseTool[StepResult]):
         # Initialize shared circuit breaker on first instantiation
         if PipelineTool._circuit_breaker is None:
             settings = get_settings()
-            failure_threshold = getattr(settings, "pipeline_circuit_failure_threshold", 5)
-            recovery_timeout = getattr(settings, "pipeline_circuit_recovery_timeout", 60.0)
-            success_threshold = getattr(settings, "pipeline_circuit_success_threshold", 2)
+            failure_threshold = getattr(
+                settings, "pipeline_circuit_failure_threshold", 5
+            )
+            recovery_timeout = getattr(
+                settings, "pipeline_circuit_recovery_timeout", 60.0
+            )
+            success_threshold = getattr(
+                settings, "pipeline_circuit_success_threshold", 2
+            )
 
             PipelineTool._circuit_breaker = CircuitBreaker(
                 failure_threshold=failure_threshold,
@@ -76,7 +82,9 @@ class PipelineTool(BaseTool[StepResult]):
             can_execute, reason = self._circuit_breaker.can_execute()
             if not can_execute:
                 duration = time.time() - start_time
-                self._metrics.histogram("tool_run_seconds", duration, labels={"tool": "pipeline"})
+                self._metrics.histogram(
+                    "tool_run_seconds", duration, labels={"tool": "pipeline"}
+                )
                 self._metrics.counter(
                     "tool_runs_total",
                     labels={"tool": "pipeline", "outcome": "circuit_breaker_open"},
@@ -94,25 +102,39 @@ class PipelineTool(BaseTool[StepResult]):
                     quality=quality,
                     processing_time=duration,
                     timestamp=time.time(),
-                    circuit_breaker_status=self._circuit_breaker.get_health_status() if self._circuit_breaker else None,
+                    circuit_breaker_status=self._circuit_breaker.get_health_status()
+                    if self._circuit_breaker
+                    else None,
                 )
 
         try:
             # Validate inputs
             if not url or not isinstance(url, str):
                 duration = time.time() - start_time
-                self._metrics.histogram("tool_run_seconds", duration, labels={"tool": "pipeline"})
-                self._metrics.counter("tool_runs_total", labels={"tool": "pipeline", "outcome": "error"}).inc()
+                self._metrics.histogram(
+                    "tool_run_seconds", duration, labels={"tool": "pipeline"}
+                )
+                self._metrics.counter(
+                    "tool_runs_total", labels={"tool": "pipeline", "outcome": "error"}
+                ).inc()
                 if self._circuit_breaker:
                     self._circuit_breaker.record_failure()
-                return StepResult.fail(error="URL is required and must be a string", url=url, quality=quality)
+                return StepResult.fail(
+                    error="URL is required and must be a string",
+                    url=url,
+                    quality=quality,
+                )
 
             if not quality or not isinstance(quality, str) or not quality.strip():
                 settings = get_settings()
                 default_quality = getattr(settings, "download_quality_default", "720p")
-                quality = quality or quality.strip() or default_quality  # central default
+                quality = (
+                    quality or quality.strip() or default_quality
+                )  # central default
 
-            logger.info(f"Starting pipeline processing for URL: {url} with quality: {quality}")
+            logger.info(
+                f"Starting pipeline processing for URL: {url} with quality: {quality}"
+            )
 
             # Provide shared ingest queue so auto-follow can enqueue backfills
             pipeline = ContentPipeline()
@@ -122,11 +144,15 @@ class PipelineTool(BaseTool[StepResult]):
                 try:
                     from ..tenancy import TenantContext, with_tenant
 
-                    tenant_ctx = TenantContext(tenant_id=tenant_id, workspace_id=workspace_id)
+                    tenant_ctx = TenantContext(
+                        tenant_id=tenant_id, workspace_id=workspace_id
+                    )
                     with with_tenant(tenant_ctx):
                         result = await pipeline.process_video(url, quality=quality)
                 except ImportError:
-                    logger.warning("Tenancy modules not found, running without tenant context.")
+                    logger.warning(
+                        "Tenancy modules not found, running without tenant context."
+                    )
                     result = await pipeline.process_video(url, quality=quality)
             else:
                 result = await pipeline.process_video(url, quality=quality)
@@ -138,10 +164,17 @@ class PipelineTool(BaseTool[StepResult]):
             processing_time = time.time() - start_time
             if status_raw != "success":
                 # Surface pipeline error explicitly
-                error_msg = result.get("error") or f"Pipeline failed at step: {result.get('step', 'unknown')}"
+                error_msg = (
+                    result.get("error")
+                    or f"Pipeline failed at step: {result.get('step', 'unknown')}"
+                )
                 logger.error(f"Pipeline processing failed for URL {url}: {error_msg}")
-                self._metrics.counter("tool_runs_total", labels={"tool": "pipeline", "outcome": "error"}).inc()
-                self._metrics.histogram("tool_run_seconds", processing_time, labels={"tool": "pipeline"})
+                self._metrics.counter(
+                    "tool_runs_total", labels={"tool": "pipeline", "outcome": "error"}
+                ).inc()
+                self._metrics.histogram(
+                    "tool_run_seconds", processing_time, labels={"tool": "pipeline"}
+                )
 
                 # Record failure in circuit breaker
                 if self._circuit_breaker:
@@ -154,13 +187,21 @@ class PipelineTool(BaseTool[StepResult]):
                     processing_time=processing_time,
                     timestamp=time.time(),
                     data=payload,
-                    circuit_breaker_status=self._circuit_breaker.get_health_status() if self._circuit_breaker else None,
+                    circuit_breaker_status=self._circuit_breaker.get_health_status()
+                    if self._circuit_breaker
+                    else None,
                 )
 
             # Success path
-            logger.info(f"Pipeline processing completed successfully in {processing_time:.2f}s")
-            self._metrics.counter("tool_runs_total", labels={"tool": "pipeline", "outcome": "success"}).inc()
-            self._metrics.histogram("tool_run_seconds", processing_time, labels={"tool": "pipeline"})
+            logger.info(
+                f"Pipeline processing completed successfully in {processing_time:.2f}s"
+            )
+            self._metrics.counter(
+                "tool_runs_total", labels={"tool": "pipeline", "outcome": "success"}
+            ).inc()
+            self._metrics.histogram(
+                "tool_run_seconds", processing_time, labels={"tool": "pipeline"}
+            )
 
             # Record success in circuit breaker
             if self._circuit_breaker:
@@ -172,15 +213,21 @@ class PipelineTool(BaseTool[StepResult]):
                 processing_time=processing_time,
                 timestamp=time.time(),
                 data=payload,
-                circuit_breaker_status=self._circuit_breaker.get_health_status() if self._circuit_breaker else None,
+                circuit_breaker_status=self._circuit_breaker.get_health_status()
+                if self._circuit_breaker
+                else None,
             )
 
         except Exception as e:  # pragma: no cover - error path
             error_msg = str(e)
             processing_time = time.time() - start_time
             logger.error(f"Pipeline processing failed for URL {url}: {error_msg}")
-            self._metrics.counter("tool_runs_total", labels={"tool": "pipeline", "outcome": "error"}).inc()
-            self._metrics.histogram("tool_run_seconds", processing_time, labels={"tool": "pipeline"})
+            self._metrics.counter(
+                "tool_runs_total", labels={"tool": "pipeline", "outcome": "error"}
+            ).inc()
+            self._metrics.histogram(
+                "tool_run_seconds", processing_time, labels={"tool": "pipeline"}
+            )
 
             # Record failure in circuit breaker
             if self._circuit_breaker:
@@ -192,7 +239,9 @@ class PipelineTool(BaseTool[StepResult]):
                 quality=quality,
                 processing_time=processing_time,
                 timestamp=time.time(),
-                circuit_breaker_status=self._circuit_breaker.get_health_status() if self._circuit_breaker else None,
+                circuit_breaker_status=self._circuit_breaker.get_health_status()
+                if self._circuit_breaker
+                else None,
             )
 
     def run(
@@ -213,7 +262,11 @@ class PipelineTool(BaseTool[StepResult]):
 
                 # Run the async function in a separate thread with its own event loop
                 def run_in_thread():
-                    return asyncio.run(self._run_async(url, quality, tenant_id=tenant_id, workspace_id=workspace_id))
+                    return asyncio.run(
+                        self._run_async(
+                            url, quality, tenant_id=tenant_id, workspace_id=workspace_id
+                        )
+                    )
 
                 with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
                     future = executor.submit(run_in_thread)
@@ -224,7 +277,11 @@ class PipelineTool(BaseTool[StepResult]):
             pass
 
         # Use asyncio.run() when no event loop is running
-        return asyncio.run(self._run_async(url, quality, tenant_id=tenant_id, workspace_id=workspace_id))
+        return asyncio.run(
+            self._run_async(
+                url, quality, tenant_id=tenant_id, workspace_id=workspace_id
+            )
+        )
 
     async def _run_async(
         self,
@@ -235,9 +292,13 @@ class PipelineTool(BaseTool[StepResult]):
         workspace_id: str | None = None,
     ) -> StepResult:
         """Async version for use within async contexts."""
-        return await self._run(url, quality, tenant_id=tenant_id, workspace_id=workspace_id)
+        return await self._run(
+            url, quality, tenant_id=tenant_id, workspace_id=workspace_id
+        )
 
-    def execute_pipeline_steps(self, steps: list[str], input_data: dict[str, Any]) -> StepResult:
+    def execute_pipeline_steps(
+        self, steps: list[str], input_data: dict[str, Any]
+    ) -> StepResult:
         """Execute pipeline steps following StepResult pattern per instruction #3."""
         if not steps:
             return StepResult.skip(reason="No pipeline steps provided")
@@ -263,9 +324,13 @@ class PipelineTool(BaseTool[StepResult]):
 
                 # Use output as input for next step
                 current_data = step_result.data
-                results.append({"step": step_name, "success": True, "data": current_data})
+                results.append(
+                    {"step": step_name, "success": True, "data": current_data}
+                )
 
-            return StepResult.ok(data={"pipeline_results": results, "final_output": current_data})
+            return StepResult.ok(
+                data={"pipeline_results": results, "final_output": current_data}
+            )
 
         except Exception as e:
             # Recoverable error - don't raise per instruction #3

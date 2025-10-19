@@ -4,7 +4,9 @@ import asyncio
 import time
 from typing import Any, Dict, List, TypedDict
 
-from ultimate_discord_intelligence_bot.profiles.creator_network_schema import ALL_CREATOR_NETWORKS
+from ultimate_discord_intelligence_bot.profiles.creator_network_schema import (
+    ALL_CREATOR_NETWORKS,
+)
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
@@ -51,13 +53,34 @@ class RealTimeMonitoringOrchestrator:
 
         # Platform-specific intervals based on content velocity and importance
         platform_configs = {
-            "youtube": {"interval_minutes": 5, "priority": 1},  # High priority, frequent checks
-            "twitch": {"interval_minutes": 2, "priority": 1},  # Live content, very frequent
-            "tiktok": {"interval_minutes": 10, "priority": 2},  # High velocity, frequent
-            "instagram": {"interval_minutes": 15, "priority": 2},  # Stories expire, regular checks
-            "twitter": {"interval_minutes": 5, "priority": 1},  # High velocity, frequent
-            "reddit": {"interval_minutes": 30, "priority": 3},  # Lower velocity, less frequent
-            "discord": {"interval_minutes": 2, "priority": 1},  # Real-time chat, very frequent
+            "youtube": {
+                "interval_minutes": 5,
+                "priority": 1,
+            },  # High priority, frequent checks
+            "twitch": {
+                "interval_minutes": 2,
+                "priority": 1,
+            },  # Live content, very frequent
+            "tiktok": {
+                "interval_minutes": 10,
+                "priority": 2,
+            },  # High velocity, frequent
+            "instagram": {
+                "interval_minutes": 15,
+                "priority": 2,
+            },  # Stories expire, regular checks
+            "twitter": {
+                "interval_minutes": 5,
+                "priority": 1,
+            },  # High velocity, frequent
+            "reddit": {
+                "interval_minutes": 30,
+                "priority": 3,
+            },  # Lower velocity, less frequent
+            "discord": {
+                "interval_minutes": 2,
+                "priority": 1,
+            },  # Real-time chat, very frequent
         }
 
         for platform, config in platform_configs.items():
@@ -82,7 +105,9 @@ class RealTimeMonitoringOrchestrator:
 
         return creators
 
-    async def start_monitoring(self, tenant: str = "default", workspace: str = "default") -> StepResult:
+    async def start_monitoring(
+        self, tenant: str = "default", workspace: str = "default"
+    ) -> StepResult:
         """Start the real-time monitoring orchestrator."""
         try:
             if self._running:
@@ -100,14 +125,18 @@ class RealTimeMonitoringOrchestrator:
             # Start monitoring tasks for each platform
             for platform, schedule in self._schedules.items():
                 if schedule["enabled"]:
-                    task = asyncio.create_task(self._monitor_platform(platform, schedule, tenant, workspace))
+                    task = asyncio.create_task(
+                        self._monitor_platform(platform, schedule, tenant, workspace)
+                    )
                     self._monitoring_tasks[platform] = task
 
             return StepResult.ok(
                 data={
                     "status": "monitoring_started",
                     "platforms": list(self._schedules.keys()),
-                    "total_creators": sum(len(s["creators"]) for s in self._schedules.values()),
+                    "total_creators": sum(
+                        len(s["creators"]) for s in self._schedules.values()
+                    ),
                 }
             )
 
@@ -127,7 +156,9 @@ class RealTimeMonitoringOrchestrator:
                 task.cancel()
 
             # Wait for tasks to complete
-            await asyncio.gather(*self._monitoring_tasks.values(), return_exceptions=True)
+            await asyncio.gather(
+                *self._monitoring_tasks.values(), return_exceptions=True
+            )
 
             self._monitoring_tasks.clear()
 
@@ -136,7 +167,9 @@ class RealTimeMonitoringOrchestrator:
         except Exception as e:
             return StepResult.fail(f"Failed to stop monitoring: {str(e)}")
 
-    async def _monitor_platform(self, platform: str, schedule: MonitoringSchedule, tenant: str, workspace: str) -> None:
+    async def _monitor_platform(
+        self, platform: str, schedule: MonitoringSchedule, tenant: str, workspace: str
+    ) -> None:
         """Monitor a specific platform according to its schedule."""
         try:
             while self._running:
@@ -146,10 +179,14 @@ class RealTimeMonitoringOrchestrator:
                 if current_time >= schedule["next_run"]:
                     # Update schedule
                     schedule["last_run"] = current_time
-                    schedule["next_run"] = current_time + (schedule["interval_minutes"] * 60)
+                    schedule["next_run"] = current_time + (
+                        schedule["interval_minutes"] * 60
+                    )
 
                     # Perform monitoring
-                    result = await self._check_platform_content(platform, schedule, tenant, workspace)
+                    result = await self._check_platform_content(
+                        platform, schedule, tenant, workspace
+                    )
 
                     # Update statistics
                     self._update_monitoring_stats(platform, result)
@@ -180,7 +217,9 @@ class RealTimeMonitoringOrchestrator:
             for creator_id in schedule["creators"]:
                 try:
                     # Simulate content check
-                    content_count = await self._check_creator_content(creator_id, platform, tenant, workspace)
+                    content_count = await self._check_creator_content(
+                        creator_id, platform, tenant, workspace
+                    )
                     new_content_found += content_count
 
                     if content_count > 0:
@@ -191,7 +230,9 @@ class RealTimeMonitoringOrchestrator:
                         content_processed += processed
 
                 except Exception as e:
-                    errors.append(f"Error checking {creator_id} on {platform}: {str(e)}")
+                    errors.append(
+                        f"Error checking {creator_id} on {platform}: {str(e)}"
+                    )
 
         except Exception as e:
             errors.append(f"Platform monitoring error: {str(e)}")
@@ -207,7 +248,9 @@ class RealTimeMonitoringOrchestrator:
             next_check=schedule["next_run"],
         )
 
-    async def _check_creator_content(self, creator_id: str, platform: str, tenant: str, workspace: str) -> int:
+    async def _check_creator_content(
+        self, creator_id: str, platform: str, tenant: str, workspace: str
+    ) -> int:
         """Check for new content from a specific creator on a platform."""
         try:
             # Mock implementation - in real system, would use platform-specific APIs
@@ -221,7 +264,12 @@ class RealTimeMonitoringOrchestrator:
             return 0
 
     async def _process_new_content(
-        self, creator_id: str, platform: str, content_count: int, tenant: str, workspace: str
+        self,
+        creator_id: str,
+        platform: str,
+        content_count: int,
+        tenant: str,
+        workspace: str,
     ) -> int:
         """Process newly found content."""
         try:
@@ -268,7 +316,8 @@ class RealTimeMonitoringOrchestrator:
         return {
             "running": self._running,
             "start_time": self._monitoring_stats.get("start_time", 0),
-            "uptime_seconds": time.time() - self._monitoring_stats.get("start_time", time.time()),
+            "uptime_seconds": time.time()
+            - self._monitoring_stats.get("start_time", time.time()),
             "total_checks": self._monitoring_stats.get("total_checks", 0),
             "total_content_found": self._monitoring_stats.get("total_content_found", 0),
             "total_errors": self._monitoring_stats.get("total_errors", 0),
@@ -286,7 +335,10 @@ class RealTimeMonitoringOrchestrator:
         }
 
     def update_schedule(
-        self, platform: str, interval_minutes: int | None = None, enabled: bool | None = None
+        self,
+        platform: str,
+        interval_minutes: int | None = None,
+        enabled: bool | None = None,
     ) -> StepResult:
         """Update monitoring schedule for a platform."""
         try:
@@ -305,7 +357,9 @@ class RealTimeMonitoringOrchestrator:
 
             self._schedules[platform] = schedule
 
-            return StepResult.ok(data={"platform": platform, "updated_schedule": schedule})
+            return StepResult.ok(
+                data={"platform": platform, "updated_schedule": schedule}
+            )
 
         except Exception as e:
             return StepResult.fail(f"Failed to update schedule: {str(e)}")
@@ -321,12 +375,16 @@ class RealTimeMonitoringOrchestrator:
                 schedule["creators"].append(creator_id)
                 self._schedules[platform] = schedule
 
-            return StepResult.ok(data={"platform": platform, "creator_added": creator_id})
+            return StepResult.ok(
+                data={"platform": platform, "creator_added": creator_id}
+            )
 
         except Exception as e:
             return StepResult.fail(f"Failed to add creator: {str(e)}")
 
-    def remove_creator_from_platform(self, platform: str, creator_id: str) -> StepResult:
+    def remove_creator_from_platform(
+        self, platform: str, creator_id: str
+    ) -> StepResult:
         """Remove a creator from a platform's monitoring list."""
         try:
             if platform not in self._schedules:
@@ -337,7 +395,9 @@ class RealTimeMonitoringOrchestrator:
                 schedule["creators"].remove(creator_id)
                 self._schedules[platform] = schedule
 
-            return StepResult.ok(data={"platform": platform, "creator_removed": creator_id})
+            return StepResult.ok(
+                data={"platform": platform, "creator_removed": creator_id}
+            )
 
         except Exception as e:
             return StepResult.fail(f"Failed to remove creator: {str(e)}")

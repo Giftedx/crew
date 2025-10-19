@@ -31,7 +31,9 @@ class Account(BaseModel):
     id = Column(Integer, primary_key=True)
     tenant = Column(String(255), nullable=False)
     workspace = Column(String(255), nullable=False)
-    platform = Column(String(50), nullable=False)  # youtube, twitch, tiktok, instagram, x
+    platform = Column(
+        String(50), nullable=False
+    )  # youtube, twitch, tiktok, instagram, x
     handle = Column(String(255), nullable=False)
     display_name = Column(String(255))
     platform_id = Column(String(255), nullable=False)  # Platform-specific ID
@@ -44,8 +46,20 @@ class Account(BaseModel):
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
 
     __table_args__ = (
-        UniqueConstraint("tenant", "workspace", "platform", "handle", name="uq_tenant_workspace_platform_handle"),
-        UniqueConstraint("tenant", "workspace", "platform", "platform_id", name="uq_tenant_workspace_platform_id"),
+        UniqueConstraint(
+            "tenant",
+            "workspace",
+            "platform",
+            "handle",
+            name="uq_tenant_workspace_platform_handle",
+        ),
+        UniqueConstraint(
+            "tenant",
+            "workspace",
+            "platform",
+            "platform_id",
+            name="uq_tenant_workspace_platform_id",
+        ),
     )
 
     def get_oauth_scopes(self) -> list[str]:
@@ -83,11 +97,21 @@ class Media(BaseModel):
     published_at = Column(DateTime)
     media_metadata = Column(JSON)
     is_processed = Column(Boolean, default=False)
-    processing_status = Column(String(50), default="pending")  # pending, processing, completed, failed
+    processing_status = Column(
+        String(50), default="pending"
+    )  # pending, processing, completed, failed
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
 
-    __table_args__ = (UniqueConstraint("tenant", "workspace", "platform", "platform_id", name="uq_media_platform_id"),)
+    __table_args__ = (
+        UniqueConstraint(
+            "tenant",
+            "workspace",
+            "platform",
+            "platform_id",
+            name="uq_media_platform_id",
+        ),
+    )
 
 
 class Unit(BaseModel):
@@ -99,7 +123,9 @@ class Unit(BaseModel):
     tenant = Column(String(255), nullable=False)
     workspace = Column(String(255), nullable=False)
     media_id = Column(Integer, ForeignKey("creator_ops_media.id"), nullable=False)
-    unit_type = Column(String(50), nullable=False)  # episode, clip, segment, story, post
+    unit_type = Column(
+        String(50), nullable=False
+    )  # episode, clip, segment, story, post
     title = Column(String(500))
     content = Column(Text)  # Transcript, post text, etc.
     start_time_seconds = Column(Integer)  # For clips/segments
