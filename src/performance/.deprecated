@@ -1,0 +1,15 @@
+# DEPRECATED - DO NOT ADD NEW MODULES
+
+This directory is deprecated per ADR-0001 (Cache Platform) and ADR-0005 (Analytics Consolidation).
+
+**Canonical Replacements**:
+
+- Cache optimization: `core/cache/multi_level_cache.py`
+- Analytics: `src/ultimate_discord_intelligence_bot/observability/`
+
+**Migration Status**: Pending  
+**Target Removal**: TBD
+
+**Reason**: Duplicate cache optimization and warming logic; consolidating to unified cache layer.
+
+See `docs/architecture/adr-0001-cache-platform.md` and `adr-0005-analytics-consolidation.md` for details.
