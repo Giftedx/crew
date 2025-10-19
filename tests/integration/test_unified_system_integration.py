@@ -246,7 +246,7 @@ class TestUnifiedSystemIntegration:
 
         # Initialize services
         agent_bridge = AgentBridge()
-        knowledge_bridge = AgentKnowledgeBridge()
+        AgentKnowledgeBridge()
         learning_service = CrossAgentLearningService()
         collective_intelligence = CollectiveIntelligenceService()
 
@@ -636,8 +636,8 @@ class TestUnifiedSystemIntegration:
 
         # Initialize services
         memory_service = UnifiedMemoryService()
-        router_service = UnifiedRouterService()
-        cache_service = UnifiedCacheService()
+        UnifiedRouterService()
+        UnifiedCacheService()
 
         # Store content for tenant 1
         result1 = await memory_service.store_content(

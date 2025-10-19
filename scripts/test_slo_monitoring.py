@@ -248,7 +248,7 @@ def main():
     # Initialize SLO monitoring
     print("🚀 Initializing SLO Monitoring...")
     slos = create_test_slos()
-    slo_monitor = initialize_slo_monitoring(slos)
+    initialize_slo_monitoring(slos)
     print(f"✅ Initialized with {len(slos)} SLOs")
 
     # Run simulations if requested

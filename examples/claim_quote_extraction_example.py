@@ -53,7 +53,8 @@ def main() -> int:
 
     data = result.data
 
-    print("✅ Extraction completed!"    print(f"   Model: {data['model']}")
+    print("✅ Extraction completed!")
+    print(f"   Model: {data['model']}")
     print(f"   Extraction confidence: {data.get('extraction_confidence', 0):.2f}")
     print(f"   Cache hit: {data['cache_hit']}")
     print(f"   Processing time: {data['processing_time_ms']:.0f}ms")

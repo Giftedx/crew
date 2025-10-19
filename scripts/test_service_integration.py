@@ -159,7 +159,7 @@ class ServiceIntegrationTester:
             # Test memory retrieval operation
             start_time = time.time()
 
-            retrieve_result = memory_service.retrieve(
+            memory_service.retrieve(
                 query="test content",
                 namespace="test_namespace",
             )
@@ -195,7 +195,7 @@ class ServiceIntegrationTester:
             prompt_engine = PromptEngine()
 
             # Test prompt generation
-            test_prompt = prompt_engine.generate(
+            prompt_engine.generate(
                 template="Test template with {test_var}",
                 variables={"test_var": "test_value"},
             )
@@ -230,7 +230,7 @@ class ServiceIntegrationTester:
             test_message = "This is a test message for model routing"
             start_time = time.time()
 
-            route_result = openrouter_service.route(
+            openrouter_service.route(
                 task_type="test",
                 prompt=test_message,
             )
@@ -279,21 +279,21 @@ class ServiceIntegrationTester:
             try:
                 # Test OAuth manager initialization with platform-specific parameters
                 if platform == "TikTok":
-                    manager = manager_class(
+                    manager_class(
                         client_key="test_client_id",
                         client_secret="test_client_secret",
                         redirect_uri="http://localhost:8080/callback",
                         scopes=["test_scope"],
                     )
                 elif platform == "Instagram":
-                    manager = manager_class(
+                    manager_class(
                         app_id="test_client_id",
                         app_secret="test_client_secret",
                         redirect_uri="http://localhost:8080/callback",
                         scopes=["test_scope"],
                     )
                 else:
-                    manager = manager_class(
+                    manager_class(
                         client_id="test_client_id",
                         client_secret="test_client_secret",
                         redirect_uri="http://localhost:8080/callback",
@@ -324,7 +324,6 @@ class ServiceIntegrationTester:
         # Test content processing workflow
         try:
             # Simulate content ingestion
-            content_url = "https://example.com/test-content"
             start_time = time.time()
 
             # This would be a real workflow in production

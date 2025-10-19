@@ -400,8 +400,6 @@ class TestUnifiedSystemLoad:
 
         # Test parameters
         concurrent_requests = 100
-        tenant_id = "load_test_tenant"
-        workspace_id = "load_test_workspace"
 
         async def share_insight_task(task_id: int) -> Dict[str, Any]:
             """Individual task for sharing insights"""
@@ -481,8 +479,6 @@ class TestUnifiedSystemLoad:
 
         # Test parameters
         concurrent_requests = 150
-        tenant_id = "load_test_tenant"
-        workspace_id = "load_test_workspace"
 
         async def collect_metrics_task(task_id: int) -> Dict[str, Any]:
             """Individual task for collecting metrics"""

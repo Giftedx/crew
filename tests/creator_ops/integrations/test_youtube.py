@@ -233,7 +233,7 @@ class TestYouTubeClient:
 
         # Try to make a call that would exceed quota
         with patch.object(self.client.session, "get") as mock_get:
-            result = self.client.get_video(self.test_video_id)
+            self.client.get_video(self.test_video_id)
 
             # Should still make the call (quota check is advisory)
             mock_get.assert_called_once()

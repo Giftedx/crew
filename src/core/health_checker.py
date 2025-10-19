@@ -367,7 +367,7 @@ class ComponentHealthChecker:
             )
 
             # Create a minimal OpenRouterService for testing
-            service = OpenRouterService()
+            OpenRouterService()
 
             # Test basic initialization (smoke test)
             try:
@@ -429,7 +429,7 @@ class ComponentHealthChecker:
             )
 
             # Test crew initialization
-            crew = UltimateDiscordIntelligenceBotCrew()
+            UltimateDiscordIntelligenceBotCrew()
 
             return HealthCheckResult(
                 component="agent_coordination",
@@ -453,7 +453,7 @@ class ComponentHealthChecker:
             )
 
             # Test MCP tool initialization
-            mcp_tool = MCPCallTool()
+            MCPCallTool()
 
             return HealthCheckResult(
                 component="mcp_tools",

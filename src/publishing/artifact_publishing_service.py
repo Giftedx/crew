@@ -483,7 +483,7 @@ class ArtifactPublishingService:
         """
         try:
             # Prepare webhook payload
-            payload = {
+            {
                 "artifact_type": artifact.artifact_type,
                 "title": artifact.title,
                 "content": artifact.content,

@@ -166,7 +166,7 @@ class TaskDependencyResolver:
                             return True
                     elif dep in rec_stack:
                         # Cycle detected
-                        cycle_start = path.index(dep)
+                        path.index(dep)
                         return True
 
                 rec_stack.remove(task_id)

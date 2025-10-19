@@ -104,7 +104,7 @@ def measure_evaluation_performance() -> Dict[str, Any]:
             return results
 
         # Load test cases
-        cases = load_cases(dataset_path)
+        load_cases(dataset_path)
 
         # Define a mock model for baseline measurement
         def mock_model(task: str, case: dict[str, Any]) -> tuple[str, dict[str, float]]:
@@ -223,7 +223,7 @@ def measure_tool_performance() -> Dict[str, Any]:
             tool_class_obj = getattr(module, tool_class)
 
             # Try to instantiate the tool
-            tool_instance = tool_class_obj()
+            tool_class_obj()
 
             init_time = (time.time() - start_time) * 1000  # Convert to ms
 
@@ -298,7 +298,7 @@ def measure_memory_performance() -> Dict[str, Any]:
         from memory.embedding_service import EmbeddingService
 
         start_time = time.time()
-        service = EmbeddingService()
+        EmbeddingService()
         init_time = (time.time() - start_time) * 1000
 
         results["memory_systems"]["embedding"] = {

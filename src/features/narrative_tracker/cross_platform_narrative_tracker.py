@@ -391,7 +391,7 @@ class CrossPlatformNarrativeTracker:
 
         for item in content_items:
             item_text = item.get("text", item.get("title", ""))
-            item_id = item.get("id", str(hash(str(item))))
+            item.get("id", str(hash(str(item))))
 
             if not item_text:
                 continue

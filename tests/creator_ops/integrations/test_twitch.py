@@ -323,7 +323,7 @@ class TestTwitchClient:
         mock_response.status_code = 200
 
         with patch("requests.get", return_value=mock_response):
-            result = self.client.get_user_info("testuser")
+            self.client.get_user_info("testuser")
 
         # Should have called OAuth manager
         self.client.oauth_manager.get_valid_token.assert_called_once()

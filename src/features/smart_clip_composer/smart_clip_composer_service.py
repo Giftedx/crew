@@ -126,7 +126,7 @@ class SmartClipComposerService:
                 return StepResult.fail("Content analysis data cannot be empty", status="bad_request")
 
             # Extract content duration
-            content_duration = content_analysis.get("duration", 3600.0)
+            content_analysis.get("duration", 3600.0)
 
             # Check cache first
             if use_cache:

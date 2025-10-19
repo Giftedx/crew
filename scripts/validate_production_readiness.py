@@ -134,7 +134,7 @@ def validate_agent_configuration():
     try:
         from ultimate_discord_intelligence_bot.crew import UltimateDiscordIntelligenceBotCrew
 
-        crew = UltimateDiscordIntelligenceBotCrew()
+        UltimateDiscordIntelligenceBotCrew()
         results["crew_config"] = True
         print("  ✅ Crew Configuration: PASS")
     except Exception as e:

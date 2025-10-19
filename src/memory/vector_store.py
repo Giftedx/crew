@@ -51,11 +51,13 @@ if is_feature_enabled("qdrant_vector") and check_dependency("qdrant_client"):
         from .qdrant_provider import _DummyClient as _DC
     except Exception:
         # Use fallback if Qdrant import fails
-        get_qdrant_client = lambda: get_fallback_vector_store()
+        def get_qdrant_client():
+            return get_fallback_vector_store()
         _DC = FallbackVectorStore
 else:
     # Use fallback vector store
-    get_qdrant_client = lambda: get_fallback_vector_store()
+    def get_qdrant_client():
+        return get_fallback_vector_store()
     _DC = FallbackVectorStore
 
 

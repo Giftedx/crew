@@ -126,7 +126,7 @@ class TestRoutingQualityIntegration:
         ):
             # Make multiple calls to test convergence
             for i in range(10):
-                result = mock_openrouter_service.route(f"Test prompt {i}")
+                mock_openrouter_service.route(f"Test prompt {i}")
 
             # Check that later calls converge to the same model
             assert convergence_data[5]["rl_converged"] is True

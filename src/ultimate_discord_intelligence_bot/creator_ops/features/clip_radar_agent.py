@@ -3,6 +3,7 @@ CrewAI agent for Live Clip Radar viral moment detection and clip generation.
 Provides intelligent analysis and optimization for viral moment detection.
 """
 
+from datetime import datetime
 import logging
 
 from crewai import Agent, Crew, Task

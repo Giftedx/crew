@@ -201,21 +201,21 @@ def test_oauth_managers() -> Dict[str, Any]:
             # Initialize manager with test credentials
             # Use platform-specific parameter names
             if platform == "tiktok":
-                manager = manager_class(
+                manager_class(
                     client_key=client_id,
                     client_secret=client_secret,
                     redirect_uri="http://localhost:8080/callback",
                     scopes=["test_scope"],
                 )
             elif platform == "instagram":
-                manager = manager_class(
+                manager_class(
                     app_id=client_id,
                     app_secret=client_secret,
                     redirect_uri="http://localhost:8080/callback",
                     scopes=["test_scope"],
                 )
             else:
-                manager = manager_class(
+                manager_class(
                     client_id=client_id,
                     client_secret=client_secret,
                     redirect_uri="http://localhost:8080/callback",

@@ -1,13 +1,11 @@
-from core.circuit_breaker_canonical import CircuitBreaker, CircuitState
-
 """Pipeline tool for orchestrating multi-step operations per Copilot instructions."""
 
 import asyncio
 import logging
 import time
-from enum import Enum
 from typing import Any, TypedDict
 
+from core.circuit_breaker_canonical import CircuitBreaker
 from core.settings import get_settings
 
 from ..obs.metrics import get_metrics
@@ -16,116 +14,6 @@ from ..step_result import StepResult
 from ._base import BaseTool
 
 logger = logging.getLogger(__name__)
-
-
-class CircuitState(Enum):
-    """Circuit breaker states."""
-
-    CLOSED = "closed"  # Normal operation
-    OPEN = "open"  # Failing - reject requests
-    HALF_OPEN = "half_open"  # Testing - allow one request
-
-
-class CircuitBreaker:
-    """Circuit breaker pattern for pipeline fault tolerance.
-
-    Prevents cascading failures by tracking error rates and temporarily
-    stopping requests when failure threshold is exceeded.
-
-    States:
-        CLOSED: Normal operation (failures < threshold)
-        OPEN: Failing (reject all requests)
-        HALF_OPEN: Testing recovery (allow 1 request)
-
-    Configuration:
-        failure_threshold: Number of failures before opening circuit (default: 5)
-        recovery_timeout: Seconds to wait before testing recovery (default: 60)
-        success_threshold: Successes needed to close circuit from half-open (default: 2)
-    """
-
-    def __init__(
-        self,
-        failure_threshold: int = 5,
-        recovery_timeout: float = 60.0,
-        success_threshold: int = 2,
-    ):
-        self.failure_threshold = failure_threshold
-        self.recovery_timeout = recovery_timeout
-        self.success_threshold = success_threshold
-
-        self.state = CircuitState.CLOSED
-        self.failure_count = 0
-        self.success_count = 0
-        self.last_failure_time: float | None = None
-        self._metrics = get_metrics()
-
-    def record_success(self) -> None:
-        """Record successful operation."""
-        if self.state == CircuitState.HALF_OPEN:
-            self.success_count += 1
-            if self.success_count >= self.success_threshold:
-                # Recovery successful - close circuit
-                self._transition_to(CircuitState.CLOSED)
-                self.failure_count = 0
-                self.success_count = 0
-        elif self.state == CircuitState.CLOSED:
-            # Reset failure count on success
-            self.failure_count = 0
-
-    def record_failure(self) -> None:
-        """Record failed operation."""
-        self.last_failure_time = time.time()
-
-        if self.state == CircuitState.HALF_OPEN:
-            # Test failed - reopen circuit
-            self._transition_to(CircuitState.OPEN)
-            self.success_count = 0
-        elif self.state == CircuitState.CLOSED:
-            self.failure_count += 1
-            if self.failure_count >= self.failure_threshold:
-                # Too many failures - open circuit
-                self._transition_to(CircuitState.OPEN)
-
-    def can_execute(self) -> tuple[bool, str]:
-        """Check if request can be executed.
-
-        Returns:
-            (allowed, reason) tuple
-        """
-        if self.state == CircuitState.CLOSED:
-            return True, "circuit_closed"
-
-        if self.state == CircuitState.OPEN:
-            # Check if recovery timeout elapsed
-            if self.last_failure_time and (time.time() - self.last_failure_time) >= self.recovery_timeout:
-                # Try half-open state
-                self._transition_to(CircuitState.HALF_OPEN)
-                self.success_count = 0
-                return True, "circuit_half_open"
-            return False, "circuit_open"
-
-        # HALF_OPEN state - allow request
-        return True, "circuit_half_open"
-
-    def _transition_to(self, new_state: CircuitState) -> None:
-        """Transition to new state with logging and metrics."""
-        old_state = self.state
-        self.state = new_state
-        logger.info(f"Circuit breaker state transition: {old_state.value} → {new_state.value}")
-        self._metrics.counter(
-            "circuit_breaker_state_transitions",
-            labels={"from_state": old_state.value, "to_state": new_state.value},
-        ).inc()
-        self._metrics.gauge("circuit_breaker_state", 1.0, labels={"state": new_state.value})
-
-    def get_status(self) -> dict[str, Any]:
-        """Get current circuit breaker status."""
-        return {
-            "state": self.state.value,
-            "failure_count": self.failure_count,
-            "success_count": self.success_count,
-            "last_failure_time": self.last_failure_time,
-        }
 
 
 class _PipelineResult(TypedDict, total=False):

@@ -357,7 +357,7 @@ class PerformanceOptimizationTester:
         try:
             start_time = time.time()
             for i in range(100):
-                cache_key = self.optimizer.cache_optimizer.generate_cache_key(
+                self.optimizer.cache_optimizer.generate_cache_key(
                     operation="test_operation",
                     params={"test": f"value_{i}"},
                     tenant="benchmark_tenant",
@@ -386,7 +386,7 @@ class PerformanceOptimizationTester:
         try:
             start_time = time.time()
             for i in range(50):
-                routing_result = self.optimizer.model_router.route_model(
+                self.optimizer.model_router.route_model(
                     task_type="content_analysis",
                     task_complexity="moderate",
                     token_count=1000 + i * 100,
@@ -414,7 +414,7 @@ class PerformanceOptimizationTester:
         try:
             start_time = time.time()
             for i in range(25):
-                optimization_result = self.optimizer.optimize_request(
+                self.optimizer.optimize_request(
                     operation="test_optimization",
                     task_type="content_analysis",
                     task_complexity="simple",

@@ -211,7 +211,7 @@ class TestUnifiedSystemSecurity:
 
         router_service = UnifiedRouterService()
         cache_service = UnifiedCacheService()
-        orchestrator = UnifiedOrchestrationService()
+        UnifiedOrchestrationService()
 
         # Test invalid input types
         invalid_inputs = [

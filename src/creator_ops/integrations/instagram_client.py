@@ -134,9 +134,6 @@ class InstagramClient:
     def get_hashtag_info(self, hashtag_name: str) -> StepResult:
         """Get hashtag information."""
         # First, get hashtag ID
-        params = {
-            "user_id": "me",  # Requires user context
-        }
 
         return self._make_request("ig_hashtag_search", params={"q": hashtag_name})
 

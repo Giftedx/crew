@@ -102,8 +102,8 @@ class EnhancedCrewExecutor:
 
             # Extract tenant information from inputs
             tenant_id = inputs.get("tenant_id", "default") if inputs else "default"
-            workspace_id = inputs.get("workspace_id", "main") if inputs else "main"
-            user_id = inputs.get("user_id") if inputs else None
+            inputs.get("workspace_id", "main") if inputs else "main"
+            inputs.get("user_id") if inputs else None
 
             # Track tenant resource usage
             if self.tenant_manager and tenant_id != "default":

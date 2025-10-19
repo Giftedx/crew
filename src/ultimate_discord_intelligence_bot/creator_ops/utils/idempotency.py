@@ -1,20 +1,22 @@
-"""
-Idempotency management for ensuring operations can be safely retried.
-Prevents duplicate processing and ensures consistent results.
+"""Idempotency management for Creator Operations.
+
+Provides decorators and managers for ensuring operations are executed only once,
+with proper caching and result storage.
 """
 
+import asyncio
 import hashlib
 import json
 import logging
 import time
-from collections.abc import Callable
-from typing import Any, TypeVar
+from typing import Any, Awaitable, Callable, ParamSpec, TypeVar
 
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
 logger = logging.getLogger(__name__)
 
 T = TypeVar("T")
+P = ParamSpec("P")
 
 
 class IdempotencyKey:

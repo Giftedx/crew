@@ -300,7 +300,7 @@ class CrossAgentLearningService:
             pattern = self._patterns[pattern_id]
 
             # Record validation
-            validation_record = {
+            {
                 "validating_agent": validating_agent_id,
                 "validation_context": validation_context,
                 "success": success,

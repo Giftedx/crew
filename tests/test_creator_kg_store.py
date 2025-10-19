@@ -151,7 +151,7 @@ class TestCreatorKGStore:
     def test_get_creator_nodes(self, store: CreatorKGStore) -> None:
         """Test getting creator nodes with filtering."""
         # Add test nodes
-        creator_id = store.add_creator_node(
+        store.add_creator_node(
             tenant="test",
             node_type="creator",
             name="Test Creator",
@@ -162,7 +162,7 @@ class TestCreatorKGStore:
             },
         )
 
-        episode_id = store.add_creator_node(
+        store.add_creator_node(
             tenant="test",
             node_type="episode",
             name="Test Episode",

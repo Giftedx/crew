@@ -413,7 +413,7 @@ class CreatorIntelligenceIngestionTools:
             # Compute content hash for provenance tracking
             content_hash = self._compute_content_hash(content)
 
-            provenance = Provenance(
+            Provenance(
                 id=None,
                 content_id=content.content_id,
                 source_url=content.url,

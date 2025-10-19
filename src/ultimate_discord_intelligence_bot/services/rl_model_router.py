@@ -587,7 +587,6 @@ class RLModelRouter:
         self, primary_model_id: str, context: RoutingContext
     ) -> List[str]:
         """Get fallback models for the primary selection."""
-        fallbacks = []
 
         # Sort models by suitability
         model_scores = []

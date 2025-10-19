@@ -331,7 +331,7 @@ class MCPToolsValidator:
         """Test knowledge graph server tools."""
         try:
             if tool_name == "kg_query_tool":
-                tenant = params.get("tenant", "test_tenant")
+                params.get("tenant", "test_tenant")
                 entity = params.get("entity", "test_entity")
                 depth = params.get("depth", 1)
 
@@ -350,7 +350,7 @@ class MCPToolsValidator:
                 )
 
             elif tool_name == "kg_timeline_tool":
-                tenant = params.get("tenant", "test_tenant")
+                params.get("tenant", "test_tenant")
                 entity = params.get("entity", "test_entity")
 
                 # Simulate timeline
@@ -412,7 +412,7 @@ class MCPToolsValidator:
                 )
 
             elif tool_name == "route_completion_tool":
-                task = params.get("task", "test completion task")
+                params.get("task", "test completion task")
 
                 # Simulate routing decision
                 return StepResult.ok(

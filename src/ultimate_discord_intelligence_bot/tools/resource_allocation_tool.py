@@ -163,7 +163,7 @@ class ResourceAllocationTool(BaseTool):
         """Analyze plan to determine resource requirements for each objective."""
         requirements = []
         objectives = plan.get("objectives", [])
-        execution_plan = plan.get("execution_plan", {})
+        plan.get("execution_plan", {})
 
         for objective in objectives:
             # Determine resource requirements based on objective type

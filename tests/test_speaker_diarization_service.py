@@ -238,7 +238,7 @@ class TestSpeakerDiarizationWithMocking:
             asr_service = ASRService()
 
             # Mock successful ASR transcription
-            mock_asr_result = StepResult.ok(
+            StepResult.ok(
                 data={
                     "text": "This is a test transcript",
                     "segments": [

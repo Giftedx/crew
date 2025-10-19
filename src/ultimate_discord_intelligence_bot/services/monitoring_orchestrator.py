@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import time
-from typing import Any, TypedDict
+from typing import Any, Dict, List, TypedDict
 
 from ultimate_discord_intelligence_bot.profiles.creator_network_schema import ALL_CREATOR_NETWORKS
 from ultimate_discord_intelligence_bot.step_result import StepResult

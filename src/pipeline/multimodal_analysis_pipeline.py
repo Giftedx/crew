@@ -394,7 +394,7 @@ class MultimodalAnalysisPipeline:
             visual_service = get_visual_parsing_service()
 
             # Use thumbnail or video for visual analysis
-            thumbnail_path = ingestion_data.get("thumbnail_url", "placeholder_image.jpg")
+            ingestion_data.get("thumbnail_url", "placeholder_image.jpg")
 
             result = visual_service.analyze_video(
                 video_path="placeholder_video.mp4",  # Would use actual video

@@ -57,17 +57,9 @@ class EndToEndWorkflowTester:
         try:
             # Step 1: Simulate content discovery
             start_time = time.time()
-            content_url = "https://youtube.com/watch?v=test123"
             platform = "youtube"
 
             # Simulate content metadata extraction
-            content_metadata = {
-                "url": content_url,
-                "platform": platform,
-                "title": "Test Content",
-                "duration": 300,
-                "upload_date": "2024-01-01",
-            }
 
             duration = time.time() - start_time
             CONTENT_INGESTION_LATENCY.labels(
@@ -85,11 +77,6 @@ class EndToEndWorkflowTester:
             start_time = time.time()
 
             # Simulate download process
-            content_data = {
-                "video_file": "test_video.mp4",
-                "audio_file": "test_audio.wav",
-                "transcript": "This is a test transcript of the content.",
-            }
 
             duration = time.time() - start_time
             CONTENT_INGESTION_LATENCY.labels(
@@ -104,9 +91,6 @@ class EndToEndWorkflowTester:
             start_time = time.time()
 
             # Simulate transcription process
-            transcript = (
-                "This is a test transcript of the content that will be analyzed."
-            )
 
             duration = time.time() - start_time
             CONTENT_INGESTION_LATENCY.labels(
@@ -144,12 +128,6 @@ class EndToEndWorkflowTester:
             start_time = time.time()
 
             # Simulate debate analysis
-            debate_analysis = {
-                "debate_score": 0.85,
-                "participants": ["Speaker A", "Speaker B"],
-                "key_points": ["Point 1", "Point 2", "Point 3"],
-                "bias_detection": "minimal",
-            }
 
             duration = time.time() - start_time
             CONTENT_ANALYSIS_LATENCY.labels(analysis_type="debate").observe(duration)
@@ -163,12 +141,6 @@ class EndToEndWorkflowTester:
             start_time = time.time()
 
             # Simulate fact checking
-            fact_check_results = {
-                "claims_checked": 5,
-                "verified_claims": 4,
-                "disputed_claims": 1,
-                "confidence_score": 0.92,
-            }
 
             duration = time.time() - start_time
             CONTENT_ANALYSIS_LATENCY.labels(analysis_type="fact_check").observe(
@@ -184,18 +156,6 @@ class EndToEndWorkflowTester:
             start_time = time.time()
 
             # Simulate sentiment analysis
-            sentiment_analysis = {
-                "overall_sentiment": "neutral",
-                "sentiment_score": 0.1,
-                "emotion_breakdown": {
-                    "joy": 0.2,
-                    "anger": 0.1,
-                    "fear": 0.1,
-                    "sadness": 0.1,
-                    "surprise": 0.1,
-                    "neutral": 0.4,
-                },
-            }
 
             duration = time.time() - start_time
             CONTENT_ANALYSIS_LATENCY.labels(analysis_type="sentiment").observe(duration)
@@ -244,7 +204,7 @@ class EndToEndWorkflowTester:
                 namespace="analysis_results",
             )
 
-            duration = time.time() - start_time
+            time.time() - start_time
             MEMORY_STORE_COUNT.labels(store_type="vector").inc()
 
             workflow_results["steps_tested"] += 1
@@ -254,12 +214,12 @@ class EndToEndWorkflowTester:
             # Step 2: Retrieve related content
             start_time = time.time()
 
-            related_content = memory_service.retrieve(
+            memory_service.retrieve(
                 query="debate analysis",
                 namespace="analysis_results",
             )
 
-            duration = time.time() - start_time
+            time.time() - start_time
             MEMORY_RETRIEVAL_COUNT.labels(store_type="vector").inc()
 
             workflow_results["steps_tested"] += 1
@@ -316,7 +276,7 @@ class EndToEndWorkflowTester:
             start_time = time.time()
 
             # Simulate Discord message formatting
-            discord_message = f"""
+            f"""
 🎯 **Content Analysis Report**
 
 **Title:** {summary_report["content_title"]}
@@ -340,11 +300,6 @@ class EndToEndWorkflowTester:
             start_time = time.time()
 
             # Simulate Discord API call
-            discord_response = {
-                "message_id": "123456789",
-                "channel_id": "test_channel",
-                "status": "sent",
-            }
 
             duration = time.time() - start_time
             DISCORD_MESSAGE_LATENCY.labels(message_type="post").observe(duration)
@@ -402,7 +357,7 @@ class EndToEndWorkflowTester:
             )
 
             # Step 4: Discord Output
-            discord_message = f"""
+            f"""
 🎯 **Complete Analysis Report**
 
 **Content:** {content_data["title"]}

@@ -108,7 +108,7 @@ class ProductionDeployer:
         # Step 1: Install dependencies
         build_results["steps_performed"] += 1
         try:
-            result = subprocess.run(
+            subprocess.run(
                 ["pip", "install", "-r", "requirements.txt"],
                 capture_output=True,
                 text=True,
@@ -125,7 +125,7 @@ class ProductionDeployer:
         # Step 2: Run type checking
         build_results["steps_performed"] += 1
         try:
-            result = subprocess.run(
+            subprocess.run(
                 ["python", "-m", "mypy", "src/"],
                 capture_output=True,
                 text=True,
@@ -140,7 +140,7 @@ class ProductionDeployer:
         # Step 3: Run tests
         build_results["steps_performed"] += 1
         try:
-            result = subprocess.run(
+            subprocess.run(
                 ["python", "-m", "pytest", "tests/", "-v"],
                 capture_output=True,
                 text=True,
@@ -172,7 +172,7 @@ class ProductionDeployer:
             infrastructure_results["services_deployed"] += 1
             try:
                 # Start service using Docker Compose
-                result = subprocess.run(
+                subprocess.run(
                     [
                         "docker-compose",
                         "-f",
@@ -213,7 +213,7 @@ class ProductionDeployer:
             monitoring_results["components_deployed"] += 1
             try:
                 # Start monitoring component
-                result = subprocess.run(
+                subprocess.run(
                     [
                         "docker-compose",
                         "-f",
@@ -254,7 +254,7 @@ class ProductionDeployer:
             application_results["components_deployed"] += 1
             try:
                 # Start application component
-                result = subprocess.run(
+                subprocess.run(
                     [
                         "docker-compose",
                         "-f",
@@ -362,7 +362,7 @@ class ProductionDeployer:
                 # Run the corresponding test script
                 test_script = f"scripts/test_{test_name}.py"
                 if Path(test_script).exists():
-                    result = subprocess.run(
+                    subprocess.run(
                         ["python", test_script],
                         capture_output=True,
                         text=True,

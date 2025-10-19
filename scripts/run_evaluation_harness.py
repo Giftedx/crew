@@ -40,7 +40,6 @@ def run_evaluation(gold_dataset_path: str = "gold_dataset.json") -> StepResult:
 
         # Display thresholds
         print("\n🎯 Evaluation Thresholds:")
-        thresholds = harness.metrics_thresholds
         print(".1%")
         print(".1%")
         print(".2f")
@@ -61,7 +60,7 @@ def run_evaluation(gold_dataset_path: str = "gold_dataset.json") -> StepResult:
             print(f"🏆 Overall Status: {'✅ PASSED' if data['overall_passed'] else '❌ NEEDS IMPROVEMENT'}")
 
             # Display key metrics
-            metrics = data["metrics"]
+            data["metrics"]
             print("\n📊 Key Metrics:")
             print(".1%")
             print(".1%")

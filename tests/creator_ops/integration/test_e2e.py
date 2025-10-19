@@ -441,7 +441,7 @@ class TestCreatorOpsE2E:
         # Step 2: Retry succeeds
         result2 = youtube_client.get_video_metadata(self.test_video_id)
         assert result2.success
-        video_data = result2.data["video"]
+        result2.data["video"]
 
         # Step 3: Continue processing
         asr_result = asr_processor.transcribe_audio("audio_file.wav")
