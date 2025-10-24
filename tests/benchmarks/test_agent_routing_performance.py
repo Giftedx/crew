@@ -56,7 +56,11 @@ class TestAgentRoutingPerformance:
         routing_times = []
 
         for i in range(iterations):
-            request_context = {"prompt": f"Test prompt {i}", "complexity": "high", "budget": 100.0}
+            request_context = {
+                "prompt": f"Test prompt {i}",
+                "complexity": "high",
+                "budget": 100.0,
+            }
 
             start_time = time.time()
             routing_decision = await mock_llm_router.route_request(
@@ -91,7 +95,11 @@ class TestAgentRoutingPerformance:
     async def test_routing_decision_under_load(self, mock_llm_router, sample_tenant_context):
         """Benchmark routing decision performance under concurrent load."""
         # Mock successful routing decision
-        mock_llm_router.route_request.return_value = {"model": "gpt-4", "provider": "openai", "confidence": 0.95}
+        mock_llm_router.route_request.return_value = {
+            "model": "gpt-4",
+            "provider": "openai",
+            "confidence": 0.95,
+        }
 
         concurrent_requests = 50
         request_contexts = [
@@ -135,7 +143,11 @@ class TestAgentRoutingPerformance:
         # Mock successful LLM responses
         model_responses = {
             "gpt-4": {"response": "GPT-4 response", "tokens": 100, "cost": 0.03},
-            "gpt-3.5-turbo": {"response": "GPT-3.5 response", "tokens": 80, "cost": 0.002},
+            "gpt-3.5-turbo": {
+                "response": "GPT-3.5 response",
+                "tokens": 80,
+                "cost": 0.002,
+            },
             "claude-3": {"response": "Claude-3 response", "tokens": 90, "cost": 0.015},
         }
 
@@ -179,7 +191,11 @@ class TestAgentRoutingPerformance:
 
             avg_response_time = statistics.mean(response_times)
             model_results.append(
-                {"model": model, "avg_response_time": avg_response_time, "response_times": response_times}
+                {
+                    "model": model,
+                    "avg_response_time": avg_response_time,
+                    "response_times": response_times,
+                }
             )
 
         # Analyze model performance
@@ -270,7 +286,11 @@ class TestAgentRoutingPerformance:
 
             selected_arm = random.choice(arms)
             reward = arm_rewards[selected_arm] + random.uniform(-0.1, 0.1)
-            return {"selected_arm": selected_arm, "expected_reward": reward, "confidence": 0.9}
+            return {
+                "selected_arm": selected_arm,
+                "expected_reward": reward,
+                "confidence": 0.9,
+            }
 
         def mock_bandit_update(*args, **kwargs):
             # Simulate bandit update
@@ -281,14 +301,16 @@ class TestAgentRoutingPerformance:
 
         iterations = 100
         selection_times = []
-        arm_selections = {arm: 0 for arm in arms}
+        arm_selections = dict.fromkeys(arms, 0)
 
         for i in range(iterations):
             context = {"iteration": i, "task_type": "test"}
 
             start_time = time.time()
             selection = await mock_bandit_algorithm.select_arm(
-                context=context, tenant=sample_tenant_context["tenant"], workspace=sample_tenant_context["workspace"]
+                context=context,
+                tenant=sample_tenant_context["tenant"],
+                workspace=sample_tenant_context["workspace"],
             )
             end_time = time.time()
 
@@ -397,7 +419,7 @@ class TestAgentRoutingPerformance:
         """Benchmark load balancing across multiple LLM providers."""
         # Mock load balancing across providers
         providers = ["openai", "anthropic", "google", "cohere"]
-        provider_loads = {provider: 0 for provider in providers}
+        provider_loads = dict.fromkeys(providers, 0)
 
         def mock_load_balance(*args, **kwargs):
             # Select provider with least load
@@ -433,7 +455,7 @@ class TestAgentRoutingPerformance:
         total_time = end_time - start_time
 
         # Analyze load distribution
-        load_distribution = {provider: 0 for provider in providers}
+        load_distribution = dict.fromkeys(providers, 0)
         for result in results:
             load_distribution[result["provider"]] += 1
 
@@ -472,9 +494,15 @@ class TestAgentRoutingPerformance:
 
             # Adaptive routing logic based on task requirements
             if priority == "accuracy":
-                selected_model = max(model_performance.keys(), key=lambda m: model_performance[m]["accuracy"])
+                selected_model = max(
+                    model_performance.keys(),
+                    key=lambda m: model_performance[m]["accuracy"],
+                )
             elif priority == "speed":
-                selected_model = max(model_performance.keys(), key=lambda m: model_performance[m]["speed"])
+                selected_model = max(
+                    model_performance.keys(),
+                    key=lambda m: model_performance[m]["speed"],
+                )
             elif priority == "cost":
                 selected_model = min(model_performance.keys(), key=lambda m: model_performance[m]["cost"])
             else:  # balanced

@@ -7,8 +7,9 @@ Extracted from autonomous_orchestrator.py to improve maintainability.
 """
 
 import logging
-import subprocess
+import shutil
 from typing import Any
+
 
 logger = logging.getLogger(__name__)
 
@@ -52,12 +53,14 @@ def check_ytdlp_available() -> bool:
 
     Returns:
         True if yt-dlp is available, False otherwise
+
+    Note: Uses dispatcher module to avoid direct yt-dlp subprocess calls.
     """
     try:
-        result = subprocess.run(["yt-dlp", "--version"], capture_output=True, text=True, timeout=5)
-        return result.returncode == 0
-    except (subprocess.SubprocessError, FileNotFoundError):
-        logger.warning("yt-dlp not found in system PATH")
+        # Check if yt-dlp is available via shutil.which (same approach as yt_dlp_download_tool)
+        return shutil.which("yt-dlp") is not None
+    except Exception as e:
+        logger.warning(f"Could not check yt-dlp availability: {e}")
         return False
 
 
@@ -70,7 +73,12 @@ def check_llm_api_available() -> bool:
     import os
 
     # Check for various LLM API keys
-    api_keys = ["OPENAI_API_KEY", "ANTHROPIC_API_KEY", "OPENROUTER_API_KEY", "TOGETHER_API_KEY"]
+    api_keys = [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "OPENROUTER_API_KEY",
+        "TOGETHER_API_KEY",
+    ]
 
     return any(os.environ.get(key) for key in api_keys)
 
@@ -93,7 +101,14 @@ def detect_placeholder_responses(task_name: str, output_data: dict[str, Any]) ->
         task_name: Name of the task that generated the output
         output_data: Output data to check for placeholder content
     """
-    placeholder_phrases = ["placeholder", "to be determined", "tbd", "coming soon", "not available", "n/a"]
+    placeholder_phrases = [
+        "placeholder",
+        "to be determined",
+        "tbd",
+        "coming soon",
+        "not available",
+        "n/a",
+    ]
 
     output_str = str(output_data).lower()
 

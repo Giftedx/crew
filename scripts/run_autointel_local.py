@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import contextlib
 import json
 import sys
 from pathlib import Path
@@ -43,7 +44,7 @@ class _Followup:
         # Print simple summaries for embeds
         if "embed" in kwargs and kwargs["embed"] is not None:
             print("[interaction.followup.send.embed]", _summarize_obj(kwargs["embed"]))
-        if "embeds" in kwargs and kwargs["embeds"]:
+        if kwargs.get("embeds"):
             print("[interaction.followup.send.embeds]")
             for i, e in enumerate(kwargs["embeds"], 1):
                 print(f"  - embed[{i}]:", _summarize_obj(e))
@@ -102,10 +103,8 @@ async def _main(url: str, depth: str) -> int:
 
     adapter = LocalInteractionAdapter()
 
-    try:
+    with contextlib.suppress(Exception):
         await adapter.response.defer()
-    except Exception:
-        pass
 
     print(f"[runner] Starting autointel for: {url} (depth: {depth_norm})")
     try:

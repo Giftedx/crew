@@ -10,6 +10,7 @@ Run: python scripts/diagnostics/api_diagnostic.py
 import os
 import sys
 
+
 # Add src to path
 sys.path.append("src")
 
@@ -79,7 +80,11 @@ def check_env_vars():
         if value:
             # Check for common issues
             if len(value.strip()) != len(value):
-                print_status(var, False, f"Has whitespace (length: {len(value)}, trimmed: {len(value.strip())})")
+                print_status(
+                    var,
+                    False,
+                    f"Has whitespace (length: {len(value)}, trimmed: {len(value.strip())})",
+                )
             elif "\n" in value or "\r" in value:
                 print_status(var, False, f"Contains line breaks (length: {len(value)})")
             else:
@@ -135,7 +140,11 @@ def test_discord_token():
     try:
         # Optional: check discord presence without importing heavy module at runtime
         has_discord = (_il.find_spec("discord") is not None) if _il else False
-        print_status("Discord.py", has_discord, "Library available" if has_discord else "Not installed")
+        print_status(
+            "Discord.py",
+            has_discord,
+            "Library available" if has_discord else "Not installed",
+        )
         print_status("Discord Token", True, f"Format looks correct ({len(token)} chars)")
         return True
     except Exception as e:
@@ -163,7 +172,11 @@ def test_openai_api():
         try:
             client = _openai.OpenAI(api_key=api_key)
             models = client.models.list()
-            print_status("OpenAI API", True, f"Connection successful ({len(models.data)} models available)")
+            print_status(
+                "OpenAI API",
+                True,
+                f"Connection successful ({len(models.data)} models available)",
+            )
             return True
         except Exception as e:
             error_msg = str(e)[:100] + "..." if len(str(e)) > 100 else str(e)
@@ -190,7 +203,11 @@ def test_qdrant():
         api_key = os.getenv("QDRANT_API_KEY", "").strip() or None
         client = _QdrantClient(url=url, api_key=api_key)
         collections = client.get_collections()
-        print_status("Qdrant Connection", True, f"Connected ({len(collections.collections)} collections)")
+        print_status(
+            "Qdrant Connection",
+            True,
+            f"Connected ({len(collections.collections)} collections)",
+        )
         return True
     except Exception as e:
         error_msg = str(e)[:100] + "..." if len(str(e)) > 100 else str(e)
@@ -234,13 +251,19 @@ def test_optional_apis():
     print_status("Exa API", bool(exa_key), "Configured" if exa_key else "Not configured")
 
     perplexity_key = os.getenv("PERPLEXITY_API_KEY", "").strip()
-    print_status("Perplexity API", bool(perplexity_key), "Configured" if perplexity_key else "Not configured")
+    print_status(
+        "Perplexity API",
+        bool(perplexity_key),
+        "Configured" if perplexity_key else "Not configured",
+    )
 
     return results
 
 
 try:
-    from ultimate_discord_intelligence_bot.tools.fact_check_tool import FactCheckTool as _FactCheckTool
+    from ultimate_discord_intelligence_bot.tools.fact_check_tool import (
+        FactCheckTool as _FactCheckTool,
+    )
 except Exception:  # pragma: no cover - optional
     _FactCheckTool = None  # type: ignore
 
@@ -261,7 +284,11 @@ def test_bot_tools():
         fact_tool = _FactCheckTool()
         result = fact_tool.run("The sky is blue")
         status = result.get("status") == "success"
-        print_status("Fact Check Tool", status, "Working" if status else f"Error: {result.get('error', 'Unknown')}")
+        print_status(
+            "Fact Check Tool",
+            status,
+            "Working" if status else f"Error: {result.get('error', 'Unknown')}",
+        )
     except Exception as e:
         print_status("Fact Check Tool", False, f"Import/run error: {str(e)[:50]}...")
 
@@ -272,7 +299,9 @@ def test_bot_tools():
         result = fallacy_tool.run("Everyone believes this so it must be true")
         has_fallacies = len(result.get("fallacies", [])) > 0
         print_status(
-            "Fallacy Detection", has_fallacies, f"Working ({len(result.get('fallacies', []))} fallacies detected)"
+            "Fallacy Detection",
+            has_fallacies,
+            f"Working ({len(result.get('fallacies', []))} fallacies detected)",
         )
     except Exception as e:
         print_status("Fallacy Detection", False, f"Error: {str(e)[:50]}...")

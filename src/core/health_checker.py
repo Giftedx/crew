@@ -14,6 +14,7 @@ from typing import Any
 
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -46,9 +47,7 @@ class ComponentHealthChecker:
         self.register_check("monitoring", self._check_monitoring)
         self.register_check("performance_validator", self._check_performance_validator)
         self.register_check("cost_optimizer", self._check_cost_optimizer)
-        self.register_check(
-            "distributed_rate_limiter", self._check_distributed_rate_limiter
-        )
+        self.register_check("distributed_rate_limiter", self._check_distributed_rate_limiter)
         self.register_check("advanced_cache", self._check_advanced_cache)
         self.register_check("llm_router", self._check_llm_router)
         self.register_check("vector_database", self._check_vector_database)
@@ -85,7 +84,7 @@ class ComponentHealthChecker:
                     results[check_name] = HealthCheckResult(
                         component=check_name,
                         healthy=False,
-                        message=f"Check failed: {str(result)}",
+                        message=f"Check failed: {result!s}",
                     )
                     overall_healthy = False
                 elif isinstance(result, HealthCheckResult):
@@ -93,9 +92,7 @@ class ComponentHealthChecker:
                     if not result.healthy:
                         overall_healthy = False
                 else:
-                    logger.error(
-                        f"Unexpected result type for {check_name}: {type(result)}"
-                    )
+                    logger.error(f"Unexpected result type for {check_name}: {type(result)}")
                     results[check_name] = HealthCheckResult(
                         component=check_name,
                         healthy=False,
@@ -115,9 +112,7 @@ class ComponentHealthChecker:
             return StepResult.ok(
                 data={
                     "overall_healthy": overall_healthy,
-                    "checks": {
-                        name: result.__dict__ for name, result in results.items()
-                    },
+                    "checks": {name: result.__dict__ for name, result in results.items()},
                     "total_checks": len(self.checks),
                     "healthy_checks": sum(1 for r in results.values() if r.healthy),
                     "duration_ms": duration_ms,
@@ -127,11 +122,9 @@ class ComponentHealthChecker:
 
         except Exception as e:
             logger.error(f"Health check execution failed: {e}")
-            return StepResult.fail(f"Health check execution failed: {str(e)}")
+            return StepResult.fail(f"Health check execution failed: {e!s}")
 
-    async def _run_single_check(
-        self, name: str, check_func: callable
-    ) -> HealthCheckResult:
+    async def _run_single_check(self, name: str, check_func: callable) -> HealthCheckResult:
         """Run a single health check with timing."""
         start_time = time.time()
 
@@ -171,7 +164,7 @@ class ComponentHealthChecker:
             return HealthCheckResult(
                 component=name,
                 healthy=False,
-                message=f"Check failed: {str(e)}",
+                message=f"Check failed: {e!s}",
                 latency_ms=latency_ms,
                 details={"error": str(e)},
             )
@@ -485,36 +478,26 @@ class ComponentHealthChecker:
             unhealthy_checks = total_checks - healthy_checks
 
             # Calculate average latency
-            avg_latency = (
-                sum(r.latency_ms for r in self.check_results.values()) / total_checks
-            )
+            avg_latency = sum(r.latency_ms for r in self.check_results.values()) / total_checks
 
             # Identify unhealthy components
-            unhealthy_components = [
-                name
-                for name, result in self.check_results.items()
-                if not result.healthy
-            ]
+            unhealthy_components = [name for name, result in self.check_results.items() if not result.healthy]
 
             return StepResult.ok(
                 data={
-                    "overall_health": "healthy"
-                    if unhealthy_checks == 0
-                    else "degraded",
+                    "overall_health": "healthy" if unhealthy_checks == 0 else "degraded",
                     "total_components": total_checks,
                     "healthy_components": healthy_checks,
                     "unhealthy_components": unhealthy_checks,
                     "unhealthy_component_list": unhealthy_components,
                     "average_check_latency_ms": avg_latency,
-                    "last_check_timestamp": max(
-                        r.timestamp for r in self.check_results.values()
-                    ),
+                    "last_check_timestamp": max(r.timestamp for r in self.check_results.values()),
                 }
             )
 
         except Exception as e:
             logger.error(f"Health summary failed: {e}")
-            return StepResult.fail(f"Health summary failed: {str(e)}")
+            return StepResult.fail(f"Health summary failed: {e!s}")
 
     def health_check(self) -> StepResult:
         """Health check for the health checker itself."""
@@ -530,7 +513,7 @@ class ComponentHealthChecker:
 
         except Exception as e:
             logger.error(f"Health checker health check failed: {e}")
-            return StepResult.fail(f"Health checker health check failed: {str(e)}")
+            return StepResult.fail(f"Health checker health check failed: {e!s}")
 
 
 # Global health checker instance

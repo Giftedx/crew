@@ -72,12 +72,15 @@ class TestCreatorOpsConfig:
         assert config.whisper_model == "large-v3"
         assert config.use_gpu is True
 
-    @patch.dict(os.environ, {
-        "ENABLE_CREATOR_OPS": "true",
-        "ENABLE_REAL_APIS": "true",
-        "MAX_WORKERS": "8",
-        "WHISPER_MODEL": "small",
-    })
+    @patch.dict(
+        os.environ,
+        {
+            "ENABLE_CREATOR_OPS": "true",
+            "ENABLE_REAL_APIS": "true",
+            "MAX_WORKERS": "8",
+            "WHISPER_MODEL": "small",
+        },
+    )
     def test_config_from_environment(self):
         """Test configuration loading from environment variables."""
         config = CreatorOpsConfig()
@@ -145,13 +148,16 @@ class TestCreatorOpsConfig:
         enabled = config.get_enabled_platforms()
         assert "youtube" not in enabled
 
-    @patch.dict(os.environ, {
-        "ENABLE_CREATOR_OPS": "true",
-        "DATABASE_URL": "postgresql://test:test@localhost/test",
-        "MINIO_ENDPOINT": "http://localhost:9000",
-        "QDRANT_URL": "http://localhost:6333",
-        "CREATOR_OPS_ENCRYPTION_KEY": "test_key",
-    })
+    @patch.dict(
+        os.environ,
+        {
+            "ENABLE_CREATOR_OPS": "true",
+            "DATABASE_URL": "postgresql://test:test@localhost/test",
+            "MINIO_ENDPOINT": "http://localhost:9000",
+            "QDRANT_URL": "http://localhost:6333",
+            "CREATOR_OPS_ENCRYPTION_KEY": "test_key",
+        },
+    )
     def test_validate_configuration_success(self):
         """Test successful configuration validation."""
         config = CreatorOpsConfig()
@@ -170,10 +176,13 @@ class TestCreatorOpsConfig:
         assert result.success
         assert result.data["status"] == "disabled"
 
-    @patch.dict(os.environ, {
-        "ENABLE_CREATOR_OPS": "true",
-        # Missing required settings
-    })
+    @patch.dict(
+        os.environ,
+        {
+            "ENABLE_CREATOR_OPS": "true",
+            # Missing required settings
+        },
+    )
     def test_validate_configuration_failure(self):
         """Test configuration validation failure."""
         config = CreatorOpsConfig()
@@ -361,13 +370,16 @@ class TestPlatformSecrets:
 class TestConfigurationIntegration:
     """Test configuration integration functions."""
 
-    @patch.dict(os.environ, {
-        "ENABLE_CREATOR_OPS": "true",
-        "DATABASE_URL": "postgresql://test:test@localhost/test",
-        "MINIO_ENDPOINT": "http://localhost:9000",
-        "QDRANT_URL": "http://localhost:6333",
-        "CREATOR_OPS_ENCRYPTION_KEY": "test_key",
-    })
+    @patch.dict(
+        os.environ,
+        {
+            "ENABLE_CREATOR_OPS": "true",
+            "DATABASE_URL": "postgresql://test:test@localhost/test",
+            "MINIO_ENDPOINT": "http://localhost:9000",
+            "QDRANT_URL": "http://localhost:6333",
+            "CREATOR_OPS_ENCRYPTION_KEY": "test_key",
+        },
+    )
     def test_get_config(self):
         """Test getting global configuration."""
         config = get_config()
@@ -380,13 +392,16 @@ class TestConfigurationIntegration:
             config = reload_config()
             assert config.enabled is False
 
-    @patch.dict(os.environ, {
-        "ENABLE_CREATOR_OPS": "true",
-        "DATABASE_URL": "postgresql://test:test@localhost/test",
-        "MINIO_ENDPOINT": "http://localhost:9000",
-        "QDRANT_URL": "http://localhost:6333",
-        "CREATOR_OPS_ENCRYPTION_KEY": "test_key",
-    })
+    @patch.dict(
+        os.environ,
+        {
+            "ENABLE_CREATOR_OPS": "true",
+            "DATABASE_URL": "postgresql://test:test@localhost/test",
+            "MINIO_ENDPOINT": "http://localhost:9000",
+            "QDRANT_URL": "http://localhost:6333",
+            "CREATOR_OPS_ENCRYPTION_KEY": "test_key",
+        },
+    )
     def test_validate_environment(self):
         """Test environment validation."""
         result = validate_environment()

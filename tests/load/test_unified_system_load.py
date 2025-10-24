@@ -8,7 +8,7 @@ import asyncio
 import statistics
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import Any, Dict
+from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -21,21 +21,13 @@ class TestUnifiedSystemLoad:
     def mock_services(self):
         """Mock external services for load testing"""
         with (
-            patch(
-                "ultimate_discord_intelligence_bot.knowledge.unified_memory.QdrantClient"
-            ) as mock_qdrant,
-            patch(
-                "ultimate_discord_intelligence_bot.knowledge.unified_memory.sqlite3.connect"
-            ) as mock_sqlite,
+            patch("ultimate_discord_intelligence_bot.knowledge.unified_memory.QdrantClient") as mock_qdrant,
+            patch("ultimate_discord_intelligence_bot.knowledge.unified_memory.sqlite3.connect") as mock_sqlite,
             patch(
                 "ultimate_discord_intelligence_bot.observability.unified_metrics.prometheus_client"
             ) as mock_prometheus,
-            patch(
-                "ultimate_discord_intelligence_bot.routing.unified_router.OpenRouterService"
-            ) as mock_openrouter,
-            patch(
-                "ultimate_discord_intelligence_bot.caching.unified_cache.redis.Redis"
-            ) as mock_redis,
+            patch("ultimate_discord_intelligence_bot.routing.unified_router.OpenRouterService") as mock_openrouter,
+            patch("ultimate_discord_intelligence_bot.caching.unified_cache.redis.Redis") as mock_redis,
         ):
             # Mock Qdrant
             mock_qdrant.return_value = AsyncMock()
@@ -88,7 +80,7 @@ class TestUnifiedSystemLoad:
         tenant_id = "load_test_tenant"
         workspace_id = "load_test_workspace"
 
-        async def store_content_task(task_id: int) -> Dict[str, Any]:
+        async def store_content_task(task_id: int) -> dict[str, Any]:
             """Individual task for storing content"""
             start_time = time.time()
 
@@ -118,12 +110,8 @@ class TestUnifiedSystemLoad:
         total_duration = end_time - start_time
 
         # Analyze results
-        successful_results = [
-            r for r in results if isinstance(r, dict) and r.get("success")
-        ]
-        failed_results = [
-            r for r in results if isinstance(r, dict) and not r.get("success")
-        ]
+        successful_results = [r for r in results if isinstance(r, dict) and r.get("success")]
+        failed_results = [r for r in results if isinstance(r, dict) and not r.get("success")]
         exceptions = [r for r in results if isinstance(r, Exception)]
 
         durations = [r["duration"] for r in successful_results if isinstance(r, dict)]
@@ -163,7 +151,7 @@ class TestUnifiedSystemLoad:
         tenant_id = "load_test_tenant"
         workspace_id = "load_test_workspace"
 
-        async def route_request_task(task_id: int) -> Dict[str, Any]:
+        async def route_request_task(task_id: int) -> dict[str, Any]:
             """Individual task for routing requests"""
             start_time = time.time()
 
@@ -193,12 +181,8 @@ class TestUnifiedSystemLoad:
         total_duration = end_time - start_time
 
         # Analyze results
-        successful_results = [
-            r for r in results if isinstance(r, dict) and r.get("success")
-        ]
-        failed_results = [
-            r for r in results if isinstance(r, dict) and not r.get("success")
-        ]
+        successful_results = [r for r in results if isinstance(r, dict) and r.get("success")]
+        failed_results = [r for r in results if isinstance(r, dict) and not r.get("success")]
         exceptions = [r for r in results if isinstance(r, Exception)]
 
         durations = [r["duration"] for r in successful_results if isinstance(r, dict)]
@@ -238,7 +222,7 @@ class TestUnifiedSystemLoad:
         tenant_id = "load_test_tenant"
         workspace_id = "load_test_workspace"
 
-        async def cache_operation_task(task_id: int) -> Dict[str, Any]:
+        async def cache_operation_task(task_id: int) -> dict[str, Any]:
             """Individual task for cache operations"""
             start_time = time.time()
 
@@ -267,9 +251,7 @@ class TestUnifiedSystemLoad:
                 "duration": end_time - start_time,
                 "store_success": store_result.success,
                 "get_success": get_result.success,
-                "error": store_result.error
-                if not store_result.success
-                else get_result.error,
+                "error": store_result.error if not store_result.success else get_result.error,
             }
 
         # Execute concurrent requests
@@ -281,12 +263,8 @@ class TestUnifiedSystemLoad:
         total_duration = end_time - start_time
 
         # Analyze results
-        successful_results = [
-            r for r in results if isinstance(r, dict) and r.get("success")
-        ]
-        failed_results = [
-            r for r in results if isinstance(r, dict) and not r.get("success")
-        ]
+        successful_results = [r for r in results if isinstance(r, dict) and r.get("success")]
+        failed_results = [r for r in results if isinstance(r, dict) and not r.get("success")]
         exceptions = [r for r in results if isinstance(r, Exception)]
 
         durations = [r["duration"] for r in successful_results if isinstance(r, dict)]
@@ -328,7 +306,7 @@ class TestUnifiedSystemLoad:
         tenant_id = "load_test_tenant"
         workspace_id = "load_test_workspace"
 
-        async def submit_task_task(task_id: int) -> Dict[str, Any]:
+        async def submit_task_task(task_id: int) -> dict[str, Any]:
             """Individual task for submitting orchestration tasks"""
             start_time = time.time()
 
@@ -358,12 +336,8 @@ class TestUnifiedSystemLoad:
         total_duration = end_time - start_time
 
         # Analyze results
-        successful_results = [
-            r for r in results if isinstance(r, dict) and r.get("success")
-        ]
-        failed_results = [
-            r for r in results if isinstance(r, dict) and not r.get("success")
-        ]
+        successful_results = [r for r in results if isinstance(r, dict) and r.get("success")]
+        failed_results = [r for r in results if isinstance(r, dict) and not r.get("success")]
         exceptions = [r for r in results if isinstance(r, Exception)]
 
         durations = [r["duration"] for r in successful_results if isinstance(r, dict)]
@@ -401,7 +375,7 @@ class TestUnifiedSystemLoad:
         # Test parameters
         concurrent_requests = 100
 
-        async def share_insight_task(task_id: int) -> Dict[str, Any]:
+        async def share_insight_task(task_id: int) -> dict[str, Any]:
             """Individual task for sharing insights"""
             start_time = time.time()
 
@@ -435,12 +409,8 @@ class TestUnifiedSystemLoad:
         total_duration = end_time - start_time
 
         # Analyze results
-        successful_results = [
-            r for r in results if isinstance(r, dict) and r.get("success")
-        ]
-        failed_results = [
-            r for r in results if isinstance(r, dict) and not r.get("success")
-        ]
+        successful_results = [r for r in results if isinstance(r, dict) and r.get("success")]
+        failed_results = [r for r in results if isinstance(r, dict) and not r.get("success")]
         exceptions = [r for r in results if isinstance(r, Exception)]
 
         durations = [r["duration"] for r in successful_results if isinstance(r, dict)]
@@ -480,7 +450,7 @@ class TestUnifiedSystemLoad:
         # Test parameters
         concurrent_requests = 150
 
-        async def collect_metrics_task(task_id: int) -> Dict[str, Any]:
+        async def collect_metrics_task(task_id: int) -> dict[str, Any]:
             """Individual task for collecting metrics"""
             start_time = time.time()
 
@@ -514,9 +484,7 @@ class TestUnifiedSystemLoad:
                 "duration": end_time - start_time,
                 "system_success": system_result.success,
                 "agent_success": agent_result.success,
-                "error": system_result.error
-                if not system_result.success
-                else agent_result.error,
+                "error": system_result.error if not system_result.success else agent_result.error,
             }
 
         # Execute concurrent requests
@@ -528,12 +496,8 @@ class TestUnifiedSystemLoad:
         total_duration = end_time - start_time
 
         # Analyze results
-        successful_results = [
-            r for r in results if isinstance(r, dict) and r.get("success")
-        ]
-        failed_results = [
-            r for r in results if isinstance(r, dict) and not r.get("success")
-        ]
+        successful_results = [r for r in results if isinstance(r, dict) and r.get("success")]
+        failed_results = [r for r in results if isinstance(r, dict) and not r.get("success")]
         exceptions = [r for r in results if isinstance(r, Exception)]
 
         durations = [r["duration"] for r in successful_results if isinstance(r, dict)]
@@ -588,7 +552,7 @@ class TestUnifiedSystemLoad:
         tenant_id = "load_test_tenant"
         workspace_id = "load_test_workspace"
 
-        async def mixed_workload_task(task_id: int) -> Dict[str, Any]:
+        async def mixed_workload_task(task_id: int) -> dict[str, Any]:
             """Individual task for mixed workload"""
             start_time = time.time()
             results = {}
@@ -679,12 +643,8 @@ class TestUnifiedSystemLoad:
         total_duration = end_time - start_time
 
         # Analyze results
-        successful_results = [
-            r for r in results if isinstance(r, dict) and r.get("success")
-        ]
-        failed_results = [
-            r for r in results if isinstance(r, dict) and not r.get("success")
-        ]
+        successful_results = [r for r in results if isinstance(r, dict) and r.get("success")]
+        failed_results = [r for r in results if isinstance(r, dict) and not r.get("success")]
         exceptions = [r for r in results if isinstance(r, Exception)]
 
         durations = [r["duration"] for r in successful_results if isinstance(r, dict)]
@@ -706,12 +666,8 @@ class TestUnifiedSystemLoad:
             "agent_bridge",
             "metrics",
         ]:
-            service_successes = sum(
-                1 for r in successful_results if r.get("results", {}).get(service)
-            )
-            service_success_rates[service] = (
-                service_successes / concurrent_requests * 100
-            )
+            service_successes = sum(1 for r in successful_results if r.get("results", {}).get(service))
+            service_success_rates[service] = service_successes / concurrent_requests * 100
 
         print("\nMixed Workload Load Test Results:")
         print(f"  Concurrent Requests: {concurrent_requests}")
@@ -729,9 +685,7 @@ class TestUnifiedSystemLoad:
             print(f"  {service}: {rate:.2f}%")
 
         # Assertions
-        assert success_rate >= 90.0, (
-            f"Overall success rate {success_rate:.2f}% is below 90%"
-        )
+        assert success_rate >= 90.0, f"Overall success rate {success_rate:.2f}% is below 90%"
         assert avg_duration <= 3.0, f"Average duration {avg_duration:.3f}s is too high"
         assert throughput >= 15.0, f"Throughput {throughput:.2f} req/s is too low"
 
@@ -745,7 +699,7 @@ class TestUnifiedSystemLoad:
             UltimateDiscordIntelligenceBotCrew,
         )
 
-        def crew_initialization_task(task_id: int) -> Dict[str, Any]:
+        def crew_initialization_task(task_id: int) -> dict[str, Any]:
             """Individual task for crew initialization"""
             start_time = time.time()
 
@@ -760,8 +714,7 @@ class TestUnifiedSystemLoad:
                     "task_id": task_id,
                     "success": True,
                     "duration": end_time - start_time,
-                    "tools_count": len(mission_orchestrator.tools)
-                    + len(executive_supervisor.tools),
+                    "tools_count": len(mission_orchestrator.tools) + len(executive_supervisor.tools),
                     "error": None,
                 }
             except Exception as e:
@@ -780,10 +733,7 @@ class TestUnifiedSystemLoad:
         # Execute concurrent requests using ThreadPoolExecutor
         start_time = time.time()
         with ThreadPoolExecutor(max_workers=10) as executor:
-            futures = [
-                executor.submit(crew_initialization_task, i)
-                for i in range(concurrent_requests)
-            ]
+            futures = [executor.submit(crew_initialization_task, i) for i in range(concurrent_requests)]
             results = [future.result() for future in as_completed(futures)]
         end_time = time.time()
 
@@ -824,6 +774,4 @@ class TestUnifiedSystemLoad:
         # Assertions
         assert success_rate >= 95.0, f"Success rate {success_rate:.2f}% is below 95%"
         assert avg_duration <= 5.0, f"Average duration {avg_duration:.3f}s is too high"
-        assert avg_tools_count >= 10, (
-            f"Average tools count {avg_tools_count:.1f} is too low"
-        )
+        assert avg_tools_count >= 10, f"Average tools count {avg_tools_count:.1f} is too low"

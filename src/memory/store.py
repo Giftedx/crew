@@ -195,4 +195,4 @@ class MemoryStore:
         return deleted_total
 
 
-__all__ = ["MemoryItem", "RetentionPolicy", "MemoryStore"]
+__all__ = ["MemoryItem", "MemoryStore", "RetentionPolicy"]

@@ -54,7 +54,7 @@ def main() -> int:
         pip = [str(vpy), "-m", "pip"]
 
     # Upgrade pip toolchain and install deps
-    run(pip + ["install", "--upgrade", "pip", "setuptools", "wheel"])
+    run([*pip, "install", "--upgrade", "pip", "setuptools", "wheel"])
     run([str(vpy), "-m", "pip", "install", "-e", ".[dev]"])
 
     # Install pre-commit hooks if available

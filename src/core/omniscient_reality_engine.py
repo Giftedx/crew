@@ -22,17 +22,18 @@ from core.omniscient_reality import (
     run_phase7_omniscient_cycle,
 )
 
+
 __all__ = [
+    "MultiDimensionalConsciousness",
+    "OmniscientInsight",
     "OmniscientLevel",
     "RealityLayer",
-    "TemporalDimension",
-    "UniversalKnowledgeNode",
-    "OmniscientInsight",
     "RealityPattern",
-    "UniversalKnowledgeSynthesis",
-    "TemporalTranscendenceEngine",
-    "MultiDimensionalConsciousness",
     "RealityPatternRecognition",
-    "run_phase7_omniscient_cycle",
+    "TemporalDimension",
+    "TemporalTranscendenceEngine",
+    "UniversalKnowledgeNode",
+    "UniversalKnowledgeSynthesis",
     "demonstrate_omniscient_capabilities",
+    "run_phase7_omniscient_cycle",
 ]

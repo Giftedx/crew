@@ -6,6 +6,7 @@ across commands and easy to tweak.
 
 from __future__ import annotations
 
+
 # URL and title truncation
 MAX_URL_DISPLAY_LENGTH = 50
 MAX_TITLE_DISPLAY_LENGTH = 100

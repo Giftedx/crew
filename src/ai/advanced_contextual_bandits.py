@@ -27,6 +27,7 @@ from typing import Any
 
 import numpy as np
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -81,7 +82,13 @@ class DoublyRobustBandit:
     Features importance sampling, reward model learning, and UCB exploration.
     """
 
-    def __init__(self, num_actions: int, context_dim: int, alpha: float = 1.5, learning_rate: float = 0.1):
+    def __init__(
+        self,
+        num_actions: int,
+        context_dim: int,
+        alpha: float = 1.5,
+        learning_rate: float = 0.1,
+    ):
         self.num_actions = num_actions
         self.context_dim = context_dim
         self.alpha = alpha
@@ -211,7 +218,8 @@ class DoublyRobustBandit:
             "total_rounds": self.t,
             "avg_reward": np.mean(recent_rewards) if recent_rewards else 0,
             "avg_prediction": np.mean(recent_predictions) if recent_predictions else 0,
-            "prediction_accuracy": 1 - np.mean([abs(r - p) for r, p in zip(recent_rewards, recent_predictions)])
+            "prediction_accuracy": 1
+            - np.mean([abs(r - p) for r, p in zip(recent_rewards, recent_predictions, strict=False)])
             if recent_rewards
             else 0,
             "last_update": self.last_update.isoformat(),
@@ -229,7 +237,13 @@ class OffsetTreeBandit:
     Thompson sampling at leaf nodes for effective exploration.
     """
 
-    def __init__(self, num_actions: int, context_dim: int, max_depth: int = 4, min_samples: int = 20):
+    def __init__(
+        self,
+        num_actions: int,
+        context_dim: int,
+        max_depth: int = 4,
+        min_samples: int = 20,
+    ):
         self.num_actions = num_actions
         self.context_dim = context_dim
         self.max_depth = max_depth
@@ -444,8 +458,16 @@ class OffsetTreeBandit:
             node["type"] = "split"
             node["feature"] = best_feature
             node["threshold"] = best_threshold
-            node["left"] = {"type": "leaf", "bandit": self._create_leaf_bandit(), "samples": 0}
-            node["right"] = {"type": "leaf", "bandit": self._create_leaf_bandit(), "samples": 0}
+            node["left"] = {
+                "type": "leaf",
+                "bandit": self._create_leaf_bandit(),
+                "samples": 0,
+            }
+            node["right"] = {
+                "type": "leaf",
+                "bandit": self._create_leaf_bandit(),
+                "samples": 0,
+            }
 
             # Remove old bandit reference
             del node["bandit"]
@@ -464,7 +486,8 @@ class OffsetTreeBandit:
             "total_rounds": self.t,
             "avg_reward": np.mean(recent_rewards) if recent_rewards else 0,
             "avg_prediction": np.mean(recent_predictions) if recent_predictions else 0,
-            "prediction_accuracy": 1 - np.mean([abs(r - p) for r, p in zip(recent_rewards, recent_predictions)])
+            "prediction_accuracy": 1
+            - np.mean([abs(r - p) for r, p in zip(recent_rewards, recent_predictions, strict=False)])
             if recent_rewards
             else 0,
             "avg_tree_depth": np.mean(tree_depths) if tree_depths else 0,

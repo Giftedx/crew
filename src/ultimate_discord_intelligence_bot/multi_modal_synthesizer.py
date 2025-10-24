@@ -104,7 +104,11 @@ class MultiModalSynthesizer:
 
             # Generate comprehensive intelligence report
             intelligence_report = self._generate_intelligence_report(
-                agent_contributions, fused_intelligence, overall_quality, synthesis_metrics, workflow_metadata
+                agent_contributions,
+                fused_intelligence,
+                overall_quality,
+                synthesis_metrics,
+                workflow_metadata,
             )
 
             # Create final synthesized result
@@ -147,7 +151,8 @@ class MultiModalSynthesizer:
         except Exception as e:
             self.logger.error(f"Multi-modal synthesis failed: {e}", exc_info=True)
             failure_result = StepResult.fail(
-                f"Intelligence synthesis failed: {e}", step="multi_modal_synthesis_failure"
+                f"Intelligence synthesis failed: {e}",
+                step="multi_modal_synthesis_failure",
             )
             return failure_result, {"error": str(e), "quality": QualityGrade.POOR.value}
 
@@ -461,7 +466,10 @@ class MultiModalSynthesizer:
             return QualityGrade.POOR
 
     def _create_executive_summary(
-        self, fused_intelligence: dict[str, Any], quality: QualityGrade, metrics: SynthesisMetrics
+        self,
+        fused_intelligence: dict[str, Any],
+        quality: QualityGrade,
+        metrics: SynthesisMetrics,
     ) -> dict[str, Any]:
         """Create executive summary of the intelligence analysis."""
         return {

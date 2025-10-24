@@ -4,9 +4,10 @@ import logging
 import statistics
 from datetime import timedelta
 
-from core.time import default_utc_now
+from core.time import default_utc_now  # type: ignore[import-not-found]
 
 from .models import PerformanceAnomaly
+
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +16,10 @@ def detect_performance_anomalies(engine, lookback_hours: int) -> list[Performanc
     anomalies: list[PerformanceAnomaly] = []
     try:
         if hasattr(engine.enhanced_monitor, "real_time_metrics"):
-            for agent_name, agent_data in engine.enhanced_monitor.real_time_metrics.items():
+            for (
+                agent_name,
+                agent_data,
+            ) in engine.enhanced_monitor.real_time_metrics.items():
                 recent_interactions = agent_data.get("recent_interactions", [])
                 if len(recent_interactions) >= 10:
                     quality_values = [i.get("response_quality", 0) for i in recent_interactions]
@@ -61,7 +65,12 @@ def _detect_anomalies_in_series(engine, values: list[float], metric_name: str) -
                             actual_value=current_value,
                             severity=severity,
                             anomaly_type=anomaly_type,
-                            context={"z_score": z_score, "window_mean": mean_val, "window_std": std_val, "i": i},
+                            context={
+                                "z_score": z_score,
+                                "window_mean": mean_val,
+                                "window_std": std_val,
+                                "i": i,
+                            },
                         )
                     )
     except Exception as e:

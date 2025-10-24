@@ -8,11 +8,17 @@ hashed with SHA-256 and the resulting bytes are converted into a fixed
 
 from __future__ import annotations
 
+import contextlib
 import hashlib
 import json
-from collections.abc import Iterable
+from typing import TYPE_CHECKING
 
 from core.secure_config import get_config
+
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
 
 try:
     from core.cache.redis_cache import RedisCache  # optional
@@ -28,8 +34,17 @@ def embed(texts: Iterable[str], model_hint: str | None = None) -> list[list[floa
     rc = None
     if use_cache and callable(RedisCache):
         try:
+            # Prefer unified cache configuration for default TTL; fallback to secure_config
+            try:
+                from core.cache.unified_config import get_unified_cache_config  # local import to avoid cycles
+
+                _ttl = int(get_unified_cache_config().get_ttl_for_domain("tool"))
+            except Exception:
+                _ttl = int(getattr(cfg, "cache_ttl_retrieval", 300))
             rc = RedisCache(  # runtime optional dependency
-                url=str(cfg.rate_limit_redis_url), namespace="emb", ttl=int(getattr(cfg, "cache_ttl_retrieval", 300))
+                url=str(cfg.rate_limit_redis_url),
+                namespace="emb",
+                ttl=_ttl,
             )
         except Exception:
             rc = None
@@ -49,9 +64,7 @@ def embed(texts: Iterable[str], model_hint: str | None = None) -> list[list[floa
             h = hashlib.sha256(text.encode("utf-8")).digest()
             vec = [int.from_bytes(h[i : i + 4], "big") / 2**32 for i in range(0, 32, 4)]
             if rc is not None and key is not None:
-                try:
+                with contextlib.suppress(Exception):
                     rc.set_str(key, json.dumps(vec))
-                except Exception:
-                    ...
         vectors.append(vec)
     return vectors

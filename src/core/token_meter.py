@@ -9,11 +9,16 @@ can reason about expenses.
 from __future__ import annotations
 
 import math
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from ultimate_discord_intelligence_bot.tenancy import TenantContext, current_tenant
-from ultimate_discord_intelligence_bot.tenancy.registry import TenantRegistry
+
+
+if TYPE_CHECKING:
+    from ultimate_discord_intelligence_bot.tenancy.registry import TenantRegistry
+
 
 # Comprehensive per-token costs in USD (input/output averaged for simplicity).
 # Updated pricing as of 2024 - reflects current market rates for major providers.
@@ -91,28 +96,20 @@ class BudgetStore:
                 if cfg:
                     # Backward-compatible flat keys
                     if "max_per_request" in cfg:
-                        try:
+                        with suppress(Exception):
                             max_req = float(cfg.get("max_per_request", max_req))
-                        except Exception:
-                            pass
                     if "daily_cap_usd" in cfg:
-                        try:
+                        with suppress(Exception):
                             daily = float(cfg.get("daily_cap_usd", daily))
-                        except Exception:
-                            pass
                     # Optional nested schema: limits.{max_per_request,daily_limit}
                     limits = cfg.get("limits") if isinstance(cfg, dict) else None
                     if isinstance(limits, dict):
                         if "max_per_request" in limits:
-                            try:
+                            with suppress(Exception):
                                 max_req = float(limits.get("max_per_request", max_req))
-                            except Exception:
-                                pass
                         if "daily_limit" in limits:
-                            try:
+                            with suppress(Exception):
                                 daily = float(limits.get("daily_limit", daily))
-                            except Exception:
-                                pass
             self._budgets[key] = BudgetManager(max_per_request=max_req, daily_budget=daily)
         return self._budgets[key]
 
@@ -194,11 +191,11 @@ def cost_guard(tokens_in: int, tokens_out: int, model: str):
 
 
 __all__ = [
-    "TokenCost",
-    "measure",
-    "estimate_tokens",
-    "estimate",
-    "cost_guard",
     "BudgetError",
+    "TokenCost",
     "budget",
+    "cost_guard",
+    "estimate",
+    "estimate_tokens",
+    "measure",
 ]

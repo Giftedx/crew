@@ -3,8 +3,12 @@
 from __future__ import annotations
 
 import re
+from typing import TYPE_CHECKING
 
-from .schema import AnswerContract, Evidence
+
+if TYPE_CHECKING:
+    from .schema import AnswerContract, Evidence
+
 
 MIN_STATEMENT_LEN = 3  # Minimum length (characters) for a cleaned statement to be considered
 
@@ -61,7 +65,7 @@ def _check_text_contradictions(statements: list[str]) -> list[str]:
     contradictions = []
 
     for i, stmt1 in enumerate(statements):
-        for j, stmt2 in enumerate(statements[i + 1 :], i + 1):
+        for _j, stmt2 in enumerate(statements[i + 1 :], i + 1):
             if _are_contradictory(stmt1, stmt2):
                 contradictions.append(f"Answer contains contradictory statements: '{stmt1}' contradicts '{stmt2}'")
 

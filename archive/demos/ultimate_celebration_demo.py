@@ -187,23 +187,48 @@ class UltimateAdvancedBanditsDemo:
         certification_areas = {
             "Security & Compliance": {
                 "score": "100%",
-                "features": ["Authentication", "Rate Limiting", "Input Validation", "Audit Logging"],
+                "features": [
+                    "Authentication",
+                    "Rate Limiting",
+                    "Input Validation",
+                    "Audit Logging",
+                ],
             },
             "Performance & Scalability": {
                 "score": "95%",
-                "features": ["Auto-scaling", "Load Testing", "Resource Management", "Capacity Planning"],
+                "features": [
+                    "Auto-scaling",
+                    "Load Testing",
+                    "Resource Management",
+                    "Capacity Planning",
+                ],
             },
             "Monitoring & Observability": {
                 "score": "95.4%",
-                "features": ["Real-time Metrics", "Business KPIs", "System Health", "Incident Response"],
+                "features": [
+                    "Real-time Metrics",
+                    "Business KPIs",
+                    "System Health",
+                    "Incident Response",
+                ],
             },
             "Operational Excellence": {
                 "score": "100%",
-                "features": ["Deployment Automation", "Rollback Capabilities", "Documentation", "Runbooks"],
+                "features": [
+                    "Deployment Automation",
+                    "Rollback Capabilities",
+                    "Documentation",
+                    "Runbooks",
+                ],
             },
             "Business Alignment": {
                 "score": "94.8%",
-                "features": ["KPI Tracking", "ROI Validation", "User Experience", "Cost Optimization"],
+                "features": [
+                    "KPI Tracking",
+                    "ROI Validation",
+                    "User Experience",
+                    "Cost Optimization",
+                ],
             },
         }
 

@@ -13,6 +13,7 @@ from dataclasses import dataclass, field
 from decimal import Decimal
 from typing import Any
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -192,7 +193,10 @@ class CostTracker:
             logger.debug(f"Error updating cost metrics: {e}")
 
     def get_cost_summary(
-        self, start_time: float | None = None, end_time: float | None = None, tenant_id: str | None = None
+        self,
+        start_time: float | None = None,
+        end_time: float | None = None,
+        tenant_id: str | None = None,
     ) -> CostSummary:
         """Get cost summary for a time period."""
         if start_time is None:
@@ -578,7 +582,9 @@ def record_vector_operation_cost(
 
 
 def get_cost_summary(
-    start_time: float | None = None, end_time: float | None = None, tenant_id: str | None = None
+    start_time: float | None = None,
+    end_time: float | None = None,
+    tenant_id: str | None = None,
 ) -> CostSummary:
     """Get cost summary for a time period."""
     tracker = get_cost_tracker()
@@ -586,7 +592,11 @@ def get_cost_summary(
 
 
 def set_tenant_budget(
-    tenant_id: str, max_daily_cost: Decimal, max_monthly_cost: Decimal, max_hourly_cost: Decimal, **kwargs
+    tenant_id: str,
+    max_daily_cost: Decimal,
+    max_monthly_cost: Decimal,
+    max_hourly_cost: Decimal,
+    **kwargs,
 ) -> None:
     """Set budget configuration for a tenant."""
     config = BudgetConfig(
@@ -616,7 +626,9 @@ def export_cost_report(days: int = 7) -> str:
 # Discord alert callback for budget issues
 def discord_budget_alert(alert_data: dict[str, Any]) -> None:
     """Discord alert callback for budget issues."""
-    from ultimate_discord_intelligence_bot.tools.discord_private_alert_tool import DiscordPrivateAlertTool
+    from ultimate_discord_intelligence_bot.tools.discord_private_alert_tool import (
+        DiscordPrivateAlertTool,
+    )
 
     alert_type = alert_data["alert_type"]
     tenant_id = alert_data["tenant_id"]
@@ -644,18 +656,18 @@ def initialize_cost_tracking() -> None:
 
 
 __all__ = [
-    "CostTracker",
-    "CostOptimizer",
-    "CostMetrics",
     "BudgetConfig",
+    "CostMetrics",
+    "CostOptimizer",
     "CostSummary",
+    "CostTracker",
+    "discord_budget_alert",
+    "export_cost_report",
+    "get_cost_summary",
     "get_cost_tracker",
+    "get_optimization_recommendations",
+    "initialize_cost_tracking",
     "record_llm_cost",
     "record_vector_operation_cost",
-    "get_cost_summary",
     "set_tenant_budget",
-    "get_optimization_recommendations",
-    "export_cost_report",
-    "discord_budget_alert",
-    "initialize_cost_tracking",
 ]

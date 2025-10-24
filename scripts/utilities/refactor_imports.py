@@ -6,7 +6,7 @@ def refactor_imports_in_file(file_path):
     """
     Refactors import statements in a single Python file.
     """
-    with open(file_path, "r") as f:
+    with open(file_path) as f:
         content = f.read()
 
     new_content = content.replace(

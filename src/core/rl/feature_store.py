@@ -6,6 +6,7 @@ from collections import deque
 from statistics import mean
 from typing import Any
 
+
 FeatureVector = dict[str, float]
 
 # Keep short sliding windows of recent outcomes to expose running averages.

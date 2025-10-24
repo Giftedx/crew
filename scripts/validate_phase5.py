@@ -7,10 +7,12 @@ Tests registry operations, strategy loading, and facade integration.
 import sys
 from pathlib import Path
 
+
 # Add src to path
 repo_root = Path(__file__).parent
 sys.path.insert(0, str(repo_root / "src"))
 
+# ruff: noqa: E402
 from ultimate_discord_intelligence_bot.orchestration.strategies import (
     FallbackStrategy,
     HierarchicalStrategy,
@@ -25,15 +27,9 @@ def test_strategy_attributes():
 
     strategies = [FallbackStrategy, HierarchicalStrategy, MonitoringStrategy]
     for strategy_class in strategies:
-        assert hasattr(strategy_class, "name"), (
-            f"{strategy_class.__name__} missing 'name'"
-        )
-        assert hasattr(strategy_class, "description"), (
-            f"{strategy_class.__name__} missing 'description'"
-        )
-        assert hasattr(strategy_class, "execute_workflow"), (
-            f"{strategy_class.__name__} missing 'execute_workflow'"
-        )
+        assert hasattr(strategy_class, "name"), f"{strategy_class.__name__} missing 'name'"
+        assert hasattr(strategy_class, "description"), f"{strategy_class.__name__} missing 'description'"
+        assert hasattr(strategy_class, "execute_workflow"), f"{strategy_class.__name__} missing 'execute_workflow'"
         print(f"  ✅ {strategy_class.__name__} has required attributes")
 
 
@@ -80,9 +76,7 @@ def test_facade_integration():
     # Test hierarchical strategy
     facade = OrchestrationFacade(strategy=OrchestrationStrategy.HIERARCHICAL)
     orchestrator = facade._get_orchestrator()
-    assert isinstance(orchestrator, HierarchicalStrategy), (
-        "Facade loaded wrong strategy"
-    )
+    assert isinstance(orchestrator, HierarchicalStrategy), "Facade loaded wrong strategy"
     print("  ✅ Facade loaded HierarchicalStrategy from registry")
 
     # Test monitoring strategy
@@ -104,9 +98,7 @@ def test_strategy_instantiation():
 
     for name, strategy_class in strategies:
         instance = strategy_class()
-        assert hasattr(instance, "execute_workflow"), (
-            f"{name} instance missing execute_workflow"
-        )
+        assert hasattr(instance, "execute_workflow"), f"{name} instance missing execute_workflow"
         print(f"  ✅ {name} instantiates successfully")
 
 

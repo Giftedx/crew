@@ -40,7 +40,14 @@ from .intelligent_retry import (
     retry,
 )
 
+
 __all__ = [
+    # Adaptive batching exports
+    "AdaptiveBatcher",
+    "BatchConfig",
+    "BatchManager",
+    "BatchMetrics",
+    "BatchStrategy",
     # Circuit breaker exports
     "CircuitBreaker",
     "CircuitBreakerConfig",
@@ -48,27 +55,21 @@ __all__ = [
     "CircuitBreakerManager",
     "CircuitBreakerMetrics",
     "CircuitState",
-    "get_circuit_breaker",
-    "get_circuit_breaker_manager",
-    "circuit_breaker",
-    # Adaptive batching exports
-    "AdaptiveBatcher",
-    "BatchConfig",
-    "BatchManager",
-    "BatchMetrics",
-    "BatchStrategy",
-    "get_batch_manager",
-    "get_batcher",
-    "create_batcher",
     # Intelligent retry exports
     "IntelligentRetry",
-    "RetryConfig",
     "RetryCondition",
+    "RetryConfig",
     "RetryError",
     "RetryManager",
     "RetryMetrics",
     "RetryStrategy",
-    "get_retry_manager",
+    "circuit_breaker",
+    "create_batcher",
     "create_retry_system",
+    "get_batch_manager",
+    "get_batcher",
+    "get_circuit_breaker",
+    "get_circuit_breaker_manager",
+    "get_retry_manager",
     "retry",
 ]

@@ -13,7 +13,10 @@ from typing import Any
 from core.db_optimizer import get_database_optimizer
 from core.llm_cache import get_llm_cache
 from memory.vector_store import VectorStore
-from ultimate_discord_intelligence_bot.step_result import get_error_analyzer, get_recovery_manager
+from ultimate_discord_intelligence_bot.step_result import (
+    get_error_analyzer,
+    get_recovery_manager,
+)
 
 
 class PerformanceDashboard:
@@ -144,7 +147,12 @@ class PerformanceDashboard:
         """Get circuit breaker status for all components."""
         try:
             # This would query actual circuit breaker states
-            return {"components_monitored": 0, "open_circuits": 0, "recent_failures": 0, "recovery_success_rate": 0.0}
+            return {
+                "components_monitored": 0,
+                "open_circuits": 0,
+                "recent_failures": 0,
+                "recovery_success_rate": 0.0,
+            }
         except Exception as e:
             return {"error": str(e)}
 
@@ -308,7 +316,12 @@ class PerformanceDashboard:
                 },
             }
         except Exception as e:
-            return {"timestamp": time.time(), "overall_health": "error", "overall_score": 0.0, "error": str(e)}
+            return {
+                "timestamp": time.time(),
+                "overall_health": "error",
+                "overall_score": 0.0,
+                "error": str(e),
+            }
 
 
 # Global dashboard instance

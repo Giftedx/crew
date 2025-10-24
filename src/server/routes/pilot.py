@@ -1,17 +1,25 @@
 from __future__ import annotations
 
+import contextlib
 import logging
 import time
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from fastapi import FastAPI, Request
+
+if TYPE_CHECKING:
+    from fastapi import FastAPI, Request
 
 
 def register_pilot_route(app: FastAPI, settings: Any) -> None:
     try:
         import os as _os
 
-        if _os.getenv("ENABLE_LANGGRAPH_PILOT_API", "0").lower() not in ("1", "true", "yes", "on"):
+        if _os.getenv("ENABLE_LANGGRAPH_PILOT_API", "0").lower() not in (
+            "1",
+            "true",
+            "yes",
+            "on",
+        ):
             return
 
         try:
@@ -73,10 +81,8 @@ def register_pilot_route(app: FastAPI, settings: Any) -> None:
                 emb_fn = _embed if enable_embed else None
                 t0 = time.perf_counter()
                 out = run_ingest_analysis_pilot(job, _ingest, _analyze, segment_fn=seg_fn, embed_fn=emb_fn)
-                try:
+                with contextlib.suppress(Exception):
                     out["duration_seconds"] = max(0.0, time.perf_counter() - t0)
-                except Exception:
-                    pass
                 return out
         except Exception as exc:  # pragma: no cover - optional path
             logging.debug("pilot api wiring skipped: %s", exc)

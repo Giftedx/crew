@@ -16,6 +16,7 @@ from datetime import datetime, timedelta
 from enum import Enum
 from typing import Any
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -228,7 +229,10 @@ class JobQueue:
                         get_metrics().histogram(
                             "pipeline_job_duration_seconds",
                             duration,
-                            labels={"tenant": job.tenant_id, "workspace": job.workspace_id},
+                            labels={
+                                "tenant": job.tenant_id,
+                                "workspace": job.workspace_id,
+                            },
                         )
                 except Exception as exc:
                     logger.debug("Metrics emission failed: %s", exc)
@@ -294,9 +298,17 @@ class JobQueue:
 
             expired_ids = []
             for job_id, job in self._jobs.items():
-                if job.status in (JobStatus.COMPLETED, JobStatus.FAILED, JobStatus.CANCELLED):
-                    if job.completed_at and job.completed_at < cutoff:
-                        expired_ids.append(job_id)
+                if (
+                    job.status
+                    in (
+                        JobStatus.COMPLETED,
+                        JobStatus.FAILED,
+                        JobStatus.CANCELLED,
+                    )
+                    and job.completed_at
+                    and job.completed_at < cutoff
+                ):
+                    expired_ids.append(job_id)
 
             for job_id in expired_ids:
                 del self._jobs[job_id]

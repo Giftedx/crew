@@ -20,6 +20,7 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
+
 BASELINE_PATH = Path("mypy_baseline.json")
 MYPY_CMD = [sys.executable, "-m", "mypy", "src"]
 ERROR_RE = re.compile(r"Found (\d+) errors? in ")
@@ -36,9 +37,7 @@ def run_mypy() -> Result:
     # Security note (S603): command arguments are a static list (no user input)
     # and we do not invoke a shell. We intentionally keep check=False so we can
     # parse mypy's stdout/stderr even on non‑zero exit (regression reporting).
-    proc = subprocess.run(  # noqa: S603
-        MYPY_CMD, check=False, capture_output=True, text=True
-    )
+    proc = subprocess.run(MYPY_CMD, check=False, capture_output=True, text=True)
     out = proc.stdout + "\n" + proc.stderr
     match = ERROR_RE.search(out)
     count = int(match.group(1)) if match else 0
@@ -60,7 +59,10 @@ def cmd_check() -> int:
     res = run_mypy()
     baseline = load_baseline()
     if baseline and res.count > baseline:
-        print(f"mypy error count regression: {res.count} > baseline {baseline}", file=sys.stderr)
+        print(
+            f"mypy error count regression: {res.count} > baseline {baseline}",
+            file=sys.stderr,
+        )
         return 1
     print(f"mypy errors: {res.count} (baseline {baseline or 'unset'})")
     if baseline == 0:
@@ -72,7 +74,10 @@ def cmd_update(force: bool = False) -> int:
     res = run_mypy()
     baseline = load_baseline()
     if baseline and res.count > baseline and not force:
-        print(f"Refusing to increase baseline ({res.count} > {baseline}). Use --force to override.", file=sys.stderr)
+        print(
+            f"Refusing to increase baseline ({res.count} > {baseline}). Use --force to override.",
+            file=sys.stderr,
+        )
         return 1
     save_baseline(res.count)
     print(f"Baseline updated to {res.count} errors.")

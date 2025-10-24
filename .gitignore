@@ -64,6 +64,12 @@ pyrightcache/
 # Runtime data artifacts (created automatically; see docs/runtime_data.md)
 data/*.db
 data/*.json
+data/bandit_state/
+
+# Benchmarks runtime artifacts
+benchmarks/profiling/
+benchmarks/results/
+benchmarks/logs/
 
 # OS files
 Thumbs.db

@@ -53,7 +53,8 @@ def main() -> int:
 
     data = result.data
 
-    print("✅ Visual analysis completed!"    print(f"   Model: {data['model']}")
+    print("✅ Visual analysis completed!")
+    print(f"   Model: {data['model']}")
     print(f"   Total frames: {data['total_frames']}")
     print(f"   Duration: {data['duration_seconds']:.2f}s")
     print(f"   Confidence: {data.get('confidence', 0):.2f}")
@@ -68,20 +69,22 @@ def main() -> int:
         print("-" * 80)
 
         for i, segment in enumerate(scene_segments[:5]):  # Show first 5 segments
-            start_time = segment['start_frame'] / 30  # Assume 30fps
-            end_time = segment['end_frame'] / 30
+            start_time = segment["start_frame"] / 30  # Assume 30fps
+            end_time = segment["end_frame"] / 30
             duration = end_time - start_time
 
-            print(f"   {i+1}. [{start_time:6.1f}s - {end_time:6.1f}s] "
-                  f"({duration:5.1f}s) {segment['scene_type']} "
-                  f"(conf: {segment.get('confidence', 1):.2f})")
+            print(
+                f"   {i + 1}. [{start_time:6.1f}s - {end_time:6.1f}s] "
+                f"({duration:5.1f}s) {segment['scene_type']} "
+                f"(conf: {segment.get('confidence', 1):.2f})"
+            )
 
             # Show keyframes if available
-            if segment.get('keyframes'):
+            if segment.get("keyframes"):
                 print(f"      Keyframes: {len(segment['keyframes'])} extracted")
 
             # Show text overlays if available
-            if segment.get('text_overlays'):
+            if segment.get("text_overlays"):
                 print(f"      Text overlays: {len(segment['text_overlays'])} detected")
 
         if len(scene_segments) > 5:
@@ -94,7 +97,7 @@ def main() -> int:
     if keyframes:
         print(f"\n📸 Keyframes ({len(keyframes)} extracted):")
         for i, keyframe in enumerate(keyframes[:3]):  # Show first 3
-            print(f"   {i+1}. {Path(keyframe).name}")
+            print(f"   {i + 1}. {Path(keyframe).name}")
         if len(keyframes) > 3:
             print(f"   ... and {len(keyframes) - 3} more keyframes")
 
@@ -103,8 +106,10 @@ def main() -> int:
     if ocr_results:
         print(f"\n🔤 OCR Results ({len(ocr_results)} text detections):")
         for i, ocr in enumerate(ocr_results[:3]):  # Show first 3
-            print(f"   {i+1}. \"{ocr['text']}\" (conf: {ocr['confidence']:.2f}) "
-                  f"at {ocr['bounding_box']}")
+            print(
+                f'   {i + 1}. "{ocr["text"]}" (conf: {ocr["confidence"]:.2f}) '
+                f"at {ocr['bounding_box']}"
+            )
         if len(ocr_results) > 3:
             print(f"   ... and {len(ocr_results) - 3} more text detections")
 
@@ -113,4 +118,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
-

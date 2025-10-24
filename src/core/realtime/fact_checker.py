@@ -12,6 +12,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -146,7 +147,10 @@ class VerificationResult:
     @property
     def has_high_confidence(self) -> bool:
         """Check if result has high confidence."""
-        return self.confidence_level in {ConfidenceLevel.VERY_HIGH, ConfidenceLevel.HIGH}
+        return self.confidence_level in {
+            ConfidenceLevel.VERY_HIGH,
+            ConfidenceLevel.HIGH,
+        }
 
     @property
     def consensus_ratio(self) -> float:
@@ -357,7 +361,7 @@ class RealTimeFactChecker:
                 sources_checked=0,
                 sources_agreeing=0,
                 sources_disputing=0,
-                summary=f"Verification failed: {str(e)}",
+                summary=f"Verification failed: {e!s}",
             )
         finally:
             if claim.claim_id in self.verification_tasks:
@@ -520,7 +524,7 @@ class RealTimeFactChecker:
 
         logger.info("Real-time fact checker shutdown complete")
 
-    async def __aenter__(self) -> RealTimeFactChecker:
+    async def __aenter__(self) -> "RealTimeFactChecker":
         """Async context manager entry."""
         return self
 

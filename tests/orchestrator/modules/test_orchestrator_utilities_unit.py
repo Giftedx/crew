@@ -11,6 +11,7 @@ import pytest
 
 from ultimate_discord_intelligence_bot.orchestrator import orchestrator_utilities
 
+
 # ===================================
 # get_budget_limits() Tests
 # ===================================
@@ -198,7 +199,7 @@ class TestToThreadWithTenant:
 
         try:
             await orchestrator_utilities.to_thread_with_tenant(failing_func)
-            assert False, "Should have raised ValueError"
+            raise AssertionError("Should have raised ValueError")
         except ValueError as e:
             assert str(e) == "test error"
 
@@ -244,7 +245,7 @@ class TestInitializeAgentWorkflowMap:
     def test_all_keys_are_strings(self):
         """All workflow names should be strings."""
         result = orchestrator_utilities.initialize_agent_workflow_map()
-        assert all(isinstance(k, str) for k in result.keys())
+        assert all(isinstance(k, str) for k in result)
 
     def test_all_values_are_strings(self):
         """All agent method names should be strings."""
@@ -327,7 +328,7 @@ class TestInitializeWorkflowDependencies:
     def test_all_keys_are_strings(self):
         """All workflow names should be strings."""
         result = orchestrator_utilities.initialize_workflow_dependencies()
-        assert all(isinstance(k, str) for k in result.keys())
+        assert all(isinstance(k, str) for k in result)
 
     def test_all_values_are_lists(self):
         """All dependencies should be lists."""

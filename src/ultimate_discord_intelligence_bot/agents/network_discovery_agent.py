@@ -5,12 +5,12 @@ from __future__ import annotations
 import time
 from typing import Any, TypedDict
 
-from ultimate_discord_intelligence_bot.profiles.creator_network_schema import (
+from ultimate_discord_intelligence_bot.profiles.creator_network_schema import (  # type: ignore[import-not-found]
     ALL_CREATOR_NETWORKS,
     EnhancedCreatorProfile,
     create_enhanced_profile_from_config,
 )
-from ultimate_discord_intelligence_bot.step_result import StepResult
+from ultimate_discord_intelligence_bot.step_result import StepResult  # type: ignore[import-not-found]
 
 
 class CollaborationPattern(TypedDict, total=False):
@@ -48,7 +48,11 @@ class NetworkDiscoveryAgent:
         self._network_relationships: dict[str, list[str]] = {}
 
     async def discover_network(
-        self, seed_creator: str, depth: int = 3, tenant: str = "default", workspace: str = "default"
+        self,
+        seed_creator: str,
+        depth: int = 3,
+        tenant: str = "default",
+        workspace: str = "default",
     ) -> StepResult:
         """
         Recursively discover social network.
@@ -138,7 +142,7 @@ class NetworkDiscoveryAgent:
             return StepResult.ok(data=result)
 
         except Exception as e:
-            return StepResult.fail(f"Network discovery failed: {str(e)}")
+            return StepResult.fail(f"Network discovery failed: {e!s}")
 
     async def _initialize_creator_profile(self, creator_id: str, tenant: str, workspace: str) -> None:
         """Initialize creator profile from configuration or create new one."""
@@ -180,7 +184,12 @@ class NetworkDiscoveryAgent:
             if creator_id == "h3_podcast" or creator_id == "ethan_klein":
                 mock_mentions = ["hasan_piker", "dan", "ab", "zach", "olivia"]
             elif creator_id == "hasan_piker":
-                mock_mentions = ["h3_podcast", "ethan_klein", "will_neff", "qt_cinderella"]
+                mock_mentions = [
+                    "h3_podcast",
+                    "ethan_klein",
+                    "will_neff",
+                    "qt_cinderella",
+                ]
             elif creator_id in ["dan", "ab", "zach", "olivia"]:
                 mock_mentions = ["h3_podcast", "ethan_klein", "hila_klein"]
             elif creator_id in ["will_neff", "qt_cinderella"]:
@@ -300,7 +309,10 @@ class NetworkDiscoveryAgent:
             return {}
 
     def _generate_discovery_recommendations(
-        self, creators: list[str], relationships: list[dict[str, Any]], patterns: list[CollaborationPattern]
+        self,
+        creators: list[str],
+        relationships: list[dict[str, Any]],
+        patterns: list[CollaborationPattern],
     ) -> list[str]:
         """Generate recommendations based on discovery results."""
         recommendations = []

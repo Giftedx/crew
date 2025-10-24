@@ -11,13 +11,16 @@ import sys
 import time
 from pathlib import Path
 
+
 # Add the src directory to Python path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 try:
     from crewai import Task
 
-    from ultimate_discord_intelligence_bot.crew import UltimateDiscordIntelligenceBotCrew
+    from ultimate_discord_intelligence_bot.crew import (
+        UltimateDiscordIntelligenceBotCrew,
+    )
 except ImportError as e:
     print(f"❌ Import error: {e}")
     print("💡 Make sure you have CrewAI installed: pip install 'crewai[tools]'")
@@ -90,7 +93,9 @@ def analyze_trace():
         import subprocess
 
         result = subprocess.run(
-            ["python", str(analysis_script), "--traces-dir", traces_dir], capture_output=True, text=True
+            ["python", str(analysis_script), "--traces-dir", traces_dir],
+            capture_output=True,
+            text=True,
         )
 
         if result.returncode == 0:

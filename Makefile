@@ -6,7 +6,7 @@ PYTHON := .venv/bin/python
 endif
 PKG := ultimate_discord_intelligence_bot
 
-.PHONY: install dev lint format format-check type test eval docs pre-commit deprecations deprecations-json deprecations-strict deprecations-badge guards ci-all clean clean-dry-run deep-clean organize-root maintain-archive
+.PHONY: install dev lint format format-check type test eval docs pre-commit deprecations deprecations-json deprecations-strict deprecations-badge guards ci-all clean clean-dry-run deep-clean organize-root maintain-archive config-validate health health-dashboard health-report metrics metrics-api metrics-dashboard metrics-test
 .PHONY: docs-strict
 .PHONY: ops-queue
 .PHONY: test-fast ci-fast agent-evals-ci
@@ -36,6 +36,10 @@ clean-bytecode:
 
 setup:
 	$(PYTHON) -m ultimate_discord_intelligence_bot.setup_cli wizard
+
+# Validate configuration and system requirements
+config-validate:
+	$(PYTHON) -m ultimate_discord_intelligence_bot.startup_validation
 
 # Initialize local environment file from template (idempotent)
 .PHONY: init-env
@@ -110,16 +114,21 @@ sync:
 	$(PYTHON) -m piptools sync requirements-dev.txt
 
 lint:
-	$(PYTHON) -m ruff check .
+	$(PYTHON) -m ruff check . --exclude examples
 
 format:
-	$(PYTHON) -m ruff check --fix . && $(PYTHON) -m ruff format .
+	$(PYTHON) -m ruff check --fix . --exclude examples && $(PYTHON) -m ruff format . --exclude examples
 
 format-check:
 	$(PYTHON) -m ruff format --check .
 
 type:
 	$(PYTHON) -m mypy src/core/llm_router.py src/ai/routing src/eval/config.py src/ai/performance_router.py src/ai/enhanced_ai_router.py src/ai/adaptive_ai_router.py src/ai/ai_enhanced_performance_monitor.py src/ultimate_discord_intelligence_bot/agent_training/performance_monitor.py || true  # incremental adoption, non-zero tolerated locally
+
+# Install missing type stubs for optional dependencies
+types-install:
+	$(PYTHON) -m pip install types-requests types-redis types-beautifulsoup4
+	@echo "Type stubs installed. Run 'make type' to verify."
 
 type-guard:
 	$(PYTHON) scripts/mypy_snapshot_guard.py --baseline reports/mypy_snapshot.json
@@ -161,7 +170,8 @@ test-a2a:
 
 # Golden evaluation harness (fast path)
 eval:
-	$(PYTHON) -m eval.runner datasets/golden/core/v1 baselines/golden/core/v1/summary.json || true
+	eval-baseline:  ## Run agentevals against local baseline
+	$(PYTHON) -m eval.runner datasets/golden/core/v1 benchmarks/baselines/golden/core/v1/summary.json || true
 
 docs:
 	@mkdir -p reports
@@ -317,3 +327,128 @@ run-a2a-client-demo:
 .PHONY: test-mcp-smoke
 test-mcp-smoke:
 	PYTHONPATH=src $(PYTHON) -m pytest -q -c .config/pytest.ini tests/test_mcp_imports.py
+
+# Health monitoring targets
+.PHONY: health
+health:
+	@echo "🔍 Running tool health monitoring..."
+	$(PYTHON) scripts/tool_health_monitor.py
+
+.PHONY: health-dashboard
+health-dashboard:
+	@echo "🚀 Starting health dashboard..."
+	$(PYTHON) scripts/health_dashboard.py --console
+
+.PHONY: health-report
+health-report:
+	@echo "📊 Generating health report..."
+	@if [ -f tool_health_report.json ]; then \
+		$(PYTHON) scripts/health_dashboard.py --console; \
+	else \
+		echo "No health report found. Run 'make health' first."; \
+	fi
+
+# Metrics monitoring targets
+.PHONY: metrics
+metrics:
+	@echo "📊 Running metrics collection test..."
+	$(PYTHON) scripts/test_metrics_collection.py
+
+.PHONY: metrics-api
+metrics-api:
+	@echo "🌐 Starting metrics API server..."
+	$(PYTHON) -c "from ultimate_discord_intelligence_bot.observability.metrics_api import run_metrics_api; run_metrics_api()"
+
+.PHONY: metrics-dashboard
+metrics-dashboard:
+	@echo "📊 Starting metrics dashboard..."
+	$(PYTHON) scripts/metrics_dashboard.py
+
+.PHONY: metrics-test
+metrics-test:
+	@echo "🧪 Testing metrics collection system..."
+	$(PYTHON) scripts/test_metrics_collection.py
+
+# Enhanced metrics dashboard targets
+.PHONY: enhanced-metrics
+enhanced-metrics:
+	@echo "🚀 Starting enhanced metrics dashboard..."
+	$(PYTHON) scripts/enhanced_metrics_dashboard.py
+
+.PHONY: enhanced-metrics-host
+enhanced-metrics-host:
+	@echo "🌐 Starting enhanced metrics dashboard on all interfaces..."
+	$(PYTHON) scripts/enhanced_metrics_dashboard.py --host 0.0.0.0 --port 5002
+
+.PHONY: enhanced-metrics-debug
+enhanced-metrics-debug:
+	@echo "🐛 Starting enhanced metrics dashboard in debug mode..."
+	$(PYTHON) scripts/enhanced_metrics_dashboard.py --debug
+
+# Lazy loading targets
+.PHONY: lazy-loading-test
+lazy-loading-test:
+	@echo "⚡ Testing lazy loading system..."
+	$(PYTHON) scripts/test_lazy_loading.py
+
+.PHONY: lazy-loading-benchmark
+lazy-loading-benchmark:
+	@echo "📊 Running lazy loading benchmarks..."
+	$(PYTHON) scripts/test_lazy_loading.py
+
+.PHONY: lazy-loading-stats
+lazy-loading-stats:
+	@echo "📈 Getting lazy loading statistics..."
+	$(PYTHON) -c "from ultimate_discord_intelligence_bot.tools.lazy_loader import get_lazy_loader_stats; import json; print(json.dumps(get_lazy_loader_stats(), indent=2))"
+
+# Result caching targets
+.PHONY: cache-test
+cache-test:
+	@echo "🧪 Testing result caching system..."
+	$(PYTHON) scripts/test_result_caching.py
+
+.PHONY: cache-benchmark
+cache-benchmark:
+	@echo "📊 Running cache performance benchmarks..."
+	$(PYTHON) scripts/test_result_caching.py
+
+.PHONY: cache-stats
+cache-stats:
+	@echo "📈 Getting cache statistics..."
+	$(PYTHON) -c "from ultimate_discord_intelligence_bot.caching import get_cache_stats, analyze_cache_performance; import json; print('Basic Cache Stats:'); print(json.dumps(get_cache_stats(), indent=2)); print('\nSmart Cache Analysis:'); print(json.dumps(analyze_cache_performance(), indent=2))"
+
+.PHONY: cache-optimize
+cache-optimize:
+	@echo "⚙️ Running cache optimization..."
+	$(PYTHON) -c "from ultimate_discord_intelligence_bot.caching import auto_optimize_cache; auto_optimize_cache(); print('Cache optimization completed')"
+
+.PHONY: cache-recommendations
+cache-recommendations:
+	@echo "💡 Getting cache recommendations..."
+	$(PYTHON) -c "from ultimate_discord_intelligence_bot.caching import get_cache_recommendations; import json; print(json.dumps(get_cache_recommendations(), indent=2))"
+
+# Memory optimization targets
+.PHONY: memory-test
+memory-test:
+	@echo "🧪 Testing memory optimization system..."
+	$(PYTHON) scripts/test_memory_optimization.py
+
+.PHONY: memory-benchmark
+memory-benchmark:
+	@echo "📊 Running memory optimization benchmarks..."
+	$(PYTHON) scripts/test_memory_optimization.py
+
+.PHONY: memory-stats
+memory-stats:
+	@echo "📈 Getting memory optimization statistics..."
+	$(PYTHON) -c "from ultimate_discord_intelligence_bot.optimization import get_memory_stats, analyze_memory_usage; import json; print('Memory Stats:'); print(json.dumps(get_memory_stats(), indent=2)); print('\nMemory Analysis:'); print(json.dumps(analyze_memory_usage(), indent=2))"
+
+.PHONY: memory-optimize
+memory-optimize:
+	@echo "⚙️ Running memory optimization..."
+	$(PYTHON) -c "from ultimate_discord_intelligence_bot.optimization import optimize_memory; import json; result = optimize_memory(); print(json.dumps(result, indent=2))"
+
+.PHONY: memory-analyze
+memory-analyze:
+	@echo "🔍 Analyzing memory usage patterns..."
+	$(PYTHON) -c "from ultimate_discord_intelligence_bot.optimization import analyze_memory_usage; import json; print(json.dumps(analyze_memory_usage(), indent=2))"

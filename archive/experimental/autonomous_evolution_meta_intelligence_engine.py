@@ -14,6 +14,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
@@ -159,7 +160,11 @@ class AutonomousSelfEvolutionEngine:
                 component_name="Meta-Cognitive Architecture Engine",
                 evolution_type="meta_cognitive",
                 complexity="transcendent",
-                target_capabilities=["meta_cognitive_capability", "self_awareness", "cognitive_reflection"],
+                target_capabilities=[
+                    "meta_cognitive_capability",
+                    "self_awareness",
+                    "cognitive_reflection",
+                ],
                 evolution_impact="Revolutionary meta-cognitive architecture enabling self-awareness and recursive thinking",
                 autonomy_level="autonomous",
                 self_improvement_potential="infinite",
@@ -175,7 +180,11 @@ class AutonomousSelfEvolutionEngine:
                 component_name="Self-Modifying Code Evolution System",
                 evolution_type="self_modifying",
                 complexity="autonomous",
-                target_capabilities=["self_modification_efficiency", "code_evolution", "adaptive_architecture"],
+                target_capabilities=[
+                    "self_modification_efficiency",
+                    "code_evolution",
+                    "adaptive_architecture",
+                ],
                 evolution_impact="Autonomous code modification and evolution with self-improving algorithms",
                 autonomy_level="fully_autonomous",
                 self_improvement_potential="exponential",
@@ -191,7 +200,11 @@ class AutonomousSelfEvolutionEngine:
                 component_name="Autonomous Research and Development Engine",
                 evolution_type="autonomous_research",
                 complexity="meta",
-                target_capabilities=["autonomous_research_ability", "hypothesis_generation", "experimental_design"],
+                target_capabilities=[
+                    "autonomous_research_ability",
+                    "hypothesis_generation",
+                    "experimental_design",
+                ],
                 evolution_impact="Autonomous scientific research and development with hypothesis generation",
                 autonomy_level="fully_autonomous",
                 self_improvement_potential="breakthrough",
@@ -207,7 +220,11 @@ class AutonomousSelfEvolutionEngine:
                 component_name="Recursive Self-Improvement Optimizer",
                 evolution_type="recursive_improvement",
                 complexity="singularity",
-                target_capabilities=["recursive_improvement_factor", "optimization_discovery", "performance_evolution"],
+                target_capabilities=[
+                    "recursive_improvement_factor",
+                    "optimization_discovery",
+                    "performance_evolution",
+                ],
                 evolution_impact="Recursive self-improvement leading to exponential capability enhancement",
                 autonomy_level="superintelligent",
                 self_improvement_potential="singularity",
@@ -223,7 +240,11 @@ class AutonomousSelfEvolutionEngine:
                 component_name="Autonomous Decision-Making Framework",
                 evolution_type="decision_making",
                 complexity="meta",
-                target_capabilities=["autonomous_decision_making", "goal_formulation", "strategic_planning"],
+                target_capabilities=[
+                    "autonomous_decision_making",
+                    "goal_formulation",
+                    "strategic_planning",
+                ],
                 evolution_impact="Autonomous goal-setting and strategic decision-making capabilities",
                 autonomy_level="fully_autonomous",
                 self_improvement_potential="strategic",
@@ -299,7 +320,15 @@ class AutonomousSelfEvolutionEngine:
                 # Calculate evolved value with autonomous enhancement
                 evolved_value = min(
                     0.999
-                    if capability.endswith(("_score", "_effectiveness", "_capability", "_index", "_efficiency"))
+                    if capability.endswith(
+                        (
+                            "_score",
+                            "_effectiveness",
+                            "_capability",
+                            "_index",
+                            "_efficiency",
+                        )
+                    )
                     else 10.0,
                     baseline_value + actual_evolution,
                 )
@@ -569,7 +598,7 @@ class AutonomousSelfEvolutionEngine:
             return results
 
         except Exception as e:
-            logger.error(f"❌ Autonomous Evolution Error: {str(e)}")
+            logger.error(f"❌ Autonomous Evolution Error: {e!s}")
             raise
 
     def _calculate_meta_cognitive_achievements(self, final_metrics: dict[str, float]) -> dict[str, float]:
@@ -645,7 +674,7 @@ async def main():
         return results
 
     except Exception as e:
-        logger.error(f"❌ Autonomous evolution failed: {str(e)}")
+        logger.error(f"❌ Autonomous evolution failed: {e!s}")
         raise
 
 

@@ -1,8 +1,11 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Callable, Coroutine
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Coroutine
 
 
 class HTTPException(Exception):
@@ -37,7 +40,11 @@ class Response:
 
 class Request:
     # Class-level placeholders so Mock(spec=Request) in tests exposes these attributes
-    url = type("URL", (), {"path": "/", "query": "", "__str__": lambda self: getattr(self, "path", "/")})()
+    url = type(
+        "URL",
+        (),
+        {"path": "/", "query": "", "__str__": lambda self: getattr(self, "path", "/")},
+    )()
     headers: dict[str, str] = {}
     query_params: dict[str, str] = {}
 

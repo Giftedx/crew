@@ -23,7 +23,10 @@ async def profile_vector_operations():
 
     # Profile store operations
     await store.store_vectors(
-        vectors=[test_embedding] * 100, payloads=[test_content] * 100, tenant="benchmark", workspace="profiling"
+        vectors=[test_embedding] * 100,
+        payloads=[test_content] * 100,
+        tenant="benchmark",
+        workspace="profiling",
     )
 
     # Profile search operations
@@ -31,7 +34,10 @@ async def profile_vector_operations():
 
     # Profile batch operations
     await store.batch_upsert(
-        vectors=[test_embedding] * 500, payloads=[test_content] * 500, tenant="benchmark", workspace="profiling"
+        vectors=[test_embedding] * 500,
+        payloads=[test_content] * 500,
+        tenant="benchmark",
+        workspace="profiling",
     )
 
     return store
@@ -45,14 +51,14 @@ def main():
 
     profiler.disable()
 
-    Path("profiling").mkdir(exist_ok=True)
-    profiler.dump_stats("profiling/memory.prof")
+    Path("benchmarks/profiling").mkdir(exist_ok=True, parents=True)
+    profiler.dump_stats("benchmarks/profiling/memory.prof")
 
     stats = pstats.Stats(profiler)
     stats.strip_dirs()
     stats.sort_stats("cumulative")
 
-    with open("profiling/memory_analysis.txt", "w") as f:
+    with open("benchmarks/profiling/memory_analysis.txt", "w") as f:
         stats.stream = f
         stats.print_stats(30)
 

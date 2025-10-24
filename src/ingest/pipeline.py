@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-import concurrent.futures  # noqa: I001
+import concurrent.futures
+import contextlib
 import hashlib
 import os
 import time
@@ -213,7 +214,7 @@ def run(job: IngestJob, store: vector_store.VectorStore) -> dict:
                     "published_at": _normalize_published_at(getattr(meta, "published_at", None)),
                 },
             )
-            for v, c in zip(vectors, chunks)
+            for v, c in zip(vectors, chunks, strict=False)
         ]
         store.upsert(namespace, records)
         # Record upsert completion metric
@@ -264,12 +265,13 @@ def run(job: IngestJob, store: vector_store.VectorStore) -> dict:
                         )
                         # Best-effort creator upsert when channel id is present
                         if isinstance(chan_id, str) and chan_id:
-                            try:
+                            with contextlib.suppress(Exception):
                                 models.upsert_creator_by_youtube_channel(
-                                    conn, tenant=job.tenant, workspace=job.workspace, channel_id=chan_id
+                                    conn,
+                                    tenant=job.tenant,
+                                    workspace=job.workspace,
+                                    channel_id=chan_id,
                                 )
-                            except Exception:
-                                pass
             except Exception:
                 # Backfill wiring is best-effort; do not impact ingest success
                 pass

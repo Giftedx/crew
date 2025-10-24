@@ -62,12 +62,10 @@ class BaseRouter(ABC):
         Returns:
             StepResult containing RoutingDecision or error information
         """
-        pass
 
     @abstractmethod
     def get_strategy_name(self) -> str:
         """Get the name of this routing strategy."""
-        pass
 
 
 class BanditRouter(BaseRouter):
@@ -78,9 +76,24 @@ class BanditRouter(BaseRouter):
         self.strategy_name = "bandit"
         # Available models with their characteristics
         self.models = {
-            "gpt-4o-mini": {"provider": "openai", "cost": 0.001, "latency": 1.5, "quality": 0.8},
-            "gpt-3.5-turbo": {"provider": "openai", "cost": 0.0005, "latency": 2.0, "quality": 0.7},
-            "claude-3-haiku": {"provider": "anthropic", "cost": 0.0008, "latency": 1.8, "quality": 0.75},
+            "gpt-4o-mini": {
+                "provider": "openai",
+                "cost": 0.001,
+                "latency": 1.5,
+                "quality": 0.8,
+            },
+            "gpt-3.5-turbo": {
+                "provider": "openai",
+                "cost": 0.0005,
+                "latency": 2.0,
+                "quality": 0.7,
+            },
+            "claude-3-haiku": {
+                "provider": "anthropic",
+                "cost": 0.0008,
+                "latency": 1.8,
+                "quality": 0.75,
+            },
         }
         # Thompson sampling parameters for each model
         self.arm_states = {model: {"alpha": 1.0, "beta": 1.0} for model in self.models}
@@ -106,7 +119,7 @@ class BanditRouter(BaseRouter):
             )
             return StepResult.ok(data=decision)
         except Exception as e:
-            return StepResult.fail(f"Bandit routing failed: {str(e)}")
+            return StepResult.fail(f"Bandit routing failed: {e!s}")
 
     def _select_model(self) -> str:
         """Select model using Thompson sampling."""
@@ -147,10 +160,30 @@ class CostAwareRouter(BaseRouter):
         self.strategy_name = "cost_aware"
         # Available models with cost and quality profiles
         self.models = {
-            "gpt-3.5-turbo": {"provider": "openai", "cost": 0.0005, "latency": 2.0, "quality": 0.7},
-            "gpt-4o-mini": {"provider": "openai", "cost": 0.001, "latency": 1.5, "quality": 0.8},
-            "claude-3-haiku": {"provider": "anthropic", "cost": 0.0008, "latency": 1.8, "quality": 0.75},
-            "claude-3-sonnet": {"provider": "anthropic", "cost": 0.003, "latency": 2.5, "quality": 0.9},
+            "gpt-3.5-turbo": {
+                "provider": "openai",
+                "cost": 0.0005,
+                "latency": 2.0,
+                "quality": 0.7,
+            },
+            "gpt-4o-mini": {
+                "provider": "openai",
+                "cost": 0.001,
+                "latency": 1.5,
+                "quality": 0.8,
+            },
+            "claude-3-haiku": {
+                "provider": "anthropic",
+                "cost": 0.0008,
+                "latency": 1.8,
+                "quality": 0.75,
+            },
+            "claude-3-sonnet": {
+                "provider": "anthropic",
+                "cost": 0.003,
+                "latency": 2.5,
+                "quality": 0.9,
+            },
         }
         self.min_quality_threshold = 0.6  # Minimum acceptable quality
 
@@ -189,7 +222,7 @@ class CostAwareRouter(BaseRouter):
             )
             return StepResult.ok(data=decision)
         except Exception as e:
-            return StepResult.fail(f"Cost-aware routing failed: {str(e)}")
+            return StepResult.fail(f"Cost-aware routing failed: {e!s}")
 
     def get_strategy_name(self) -> str:
         """Get strategy name."""
@@ -204,10 +237,30 @@ class LatencyOptimizedRouter(BaseRouter):
         self.strategy_name = "latency_optimized"
         # Available models with latency profiles
         self.models = {
-            "gpt-4o-mini": {"provider": "openai", "cost": 0.001, "latency": 0.8, "quality": 0.8},
-            "claude-3-haiku": {"provider": "anthropic", "cost": 0.0008, "latency": 1.0, "quality": 0.75},
-            "gpt-3.5-turbo": {"provider": "openai", "cost": 0.0005, "latency": 1.2, "quality": 0.7},
-            "claude-3-sonnet": {"provider": "anthropic", "cost": 0.003, "latency": 1.5, "quality": 0.9},
+            "gpt-4o-mini": {
+                "provider": "openai",
+                "cost": 0.001,
+                "latency": 0.8,
+                "quality": 0.8,
+            },
+            "claude-3-haiku": {
+                "provider": "anthropic",
+                "cost": 0.0008,
+                "latency": 1.0,
+                "quality": 0.75,
+            },
+            "gpt-3.5-turbo": {
+                "provider": "openai",
+                "cost": 0.0005,
+                "latency": 1.2,
+                "quality": 0.7,
+            },
+            "claude-3-sonnet": {
+                "provider": "anthropic",
+                "cost": 0.003,
+                "latency": 1.5,
+                "quality": 0.9,
+            },
         }
         self.min_quality_threshold = 0.6  # Minimum acceptable quality
 
@@ -246,7 +299,7 @@ class LatencyOptimizedRouter(BaseRouter):
             )
             return StepResult.ok(data=decision)
         except Exception as e:
-            return StepResult.fail(f"Latency-optimized routing failed: {str(e)}")
+            return StepResult.fail(f"Latency-optimized routing failed: {e!s}")
 
     def get_strategy_name(self) -> str:
         """Get strategy name."""
@@ -284,7 +337,7 @@ class FallbackRouter(BaseRouter):
             )
             return StepResult.ok(data=decision)
         except Exception as e:
-            return StepResult.fail(f"Fallback routing failed: {str(e)}")
+            return StepResult.fail(f"Fallback routing failed: {e!s}")
 
     def get_strategy_name(self) -> str:
         """Get strategy name."""
@@ -353,7 +406,7 @@ class UnifiedRouter:
             return decision_result
 
         except Exception as e:
-            return StepResult.fail(f"Unified routing failed: {str(e)}")
+            return StepResult.fail(f"Unified routing failed: {e!s}")
 
     def _select_strategy(self, constraints: dict[str, Any]) -> str:
         """Select routing strategy based on constraints."""

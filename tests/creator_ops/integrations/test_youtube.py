@@ -16,7 +16,9 @@ import pytest
 import requests
 from requests.exceptions import ConnectionError, Timeout
 
-from ultimate_discord_intelligence_bot.creator_ops.integrations.youtube_client import YouTubeClient
+from ultimate_discord_intelligence_bot.creator_ops.integrations.youtube_client import (
+    YouTubeClient,
+)
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
@@ -55,7 +57,11 @@ class TestYouTubeClient:
                         "publishedAt": "2023-01-01T00:00:00Z",
                         "duration": "PT3M33S",
                     },
-                    "statistics": {"viewCount": "1000000", "likeCount": "50000", "commentCount": "1000"},
+                    "statistics": {
+                        "viewCount": "1000000",
+                        "likeCount": "50000",
+                        "commentCount": "1000",
+                    },
                 }
             ]
         }
@@ -90,7 +96,10 @@ class TestYouTubeClient:
         mock_response = Mock()
         mock_response.status_code = 400
         mock_response.json.return_value = {
-            "error": {"errors": [{"reason": "invalidParameter"}], "message": "Invalid video ID"}
+            "error": {
+                "errors": [{"reason": "invalidParameter"}],
+                "message": "Invalid video ID",
+            }
         }
 
         # Create a proper HTTPError with response
@@ -132,7 +141,11 @@ class TestYouTubeClient:
                         "publishedAt": "2020-01-01T00:00:00Z",
                         "thumbnails": {"default": {"url": "https://example.com/thumb.jpg"}},
                     },
-                    "statistics": {"subscriberCount": "1000000", "videoCount": "500", "viewCount": "100000000"},
+                    "statistics": {
+                        "subscriberCount": "1000000",
+                        "videoCount": "500",
+                        "viewCount": "100000000",
+                    },
                 }
             ]
         }
@@ -263,9 +276,15 @@ class TestYouTubeClient:
         }
         mock_success_response.raise_for_status.return_value = None
 
-        with patch.object(self.client.session, "get", side_effect=[mock_429_response, mock_success_response]):
-            with patch("time.sleep") as mock_sleep:
-                result = self.client.get_video(self.test_video_id)
+        with (
+            patch.object(
+                self.client.session,
+                "get",
+                side_effect=[mock_429_response, mock_success_response],
+            ),
+            patch("time.sleep") as mock_sleep,
+        ):
+            result = self.client.get_video(self.test_video_id)
 
         # Should have slept due to rate limiting (once for retry-after, once for rate limiting)
         assert mock_sleep.call_count >= 1
@@ -316,7 +335,10 @@ class TestYouTubeClient:
         mock_response = Mock()
         mock_response.status_code = 403
         mock_response.json.return_value = {
-            "error": {"errors": [{"reason": "keyInvalid"}], "message": "API key not valid"}
+            "error": {
+                "errors": [{"reason": "keyInvalid"}],
+                "message": "API key not valid",
+            }
         }
 
         # Create a proper HTTPError with response

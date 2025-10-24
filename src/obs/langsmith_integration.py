@@ -11,7 +11,6 @@ import json
 import logging
 import time
 import uuid
-from collections.abc import Generator
 from contextlib import contextmanager
 from dataclasses import asdict, dataclass
 from typing import TYPE_CHECKING, Any
@@ -20,17 +19,20 @@ from core.secure_config import get_config
 from obs import metrics
 from ultimate_discord_intelligence_bot.tenancy.context import current_tenant
 
+
 # Optional LangSmith dependency handling.
 # We define LANGSMITH_AVAILABLE in all branches to avoid NameError at runtime
 # and provide minimal stubs when the package is absent.
 LANGSMITH_AVAILABLE = False
 if TYPE_CHECKING:  # pragma: no cover - type checking only
-    from langsmith import Client, RunTree  # noqa: F401
-    from langsmith.run_trees import RunTree as LangSmithRunTree  # noqa: F401
+    from collections.abc import Generator
+
+    from langsmith import Client, RunTree
+    from langsmith.run_trees import RunTree as LangSmithRunTree
 
     LANGSMITH_AVAILABLE = True
 else:  # runtime import attempt
-    try:  # noqa: SIM105
+    try:
         from langsmith import Client, RunTree  # type: ignore[import-not-found]
         from langsmith.run_trees import RunTree as LangSmithRunTree  # type: ignore[import-not-found]
 
@@ -150,7 +152,8 @@ class EnhancedLLMObservability:
 
             # Initialize client
             client = Client(
-                api_key=api_key, api_url=getattr(config, "langsmith_api_url", "https://api.smith.langchain.com")
+                api_key=api_key,
+                api_url=getattr(config, "langsmith_api_url", "https://api.smith.langchain.com"),
             )
 
             # Test connection
@@ -168,7 +171,11 @@ class EnhancedLLMObservability:
 
     @contextmanager
     def trace_llm_call(
-        self, model: str, provider: str, task_type: str = "general", metadata: dict[str, Any] | None = None
+        self,
+        model: str,
+        provider: str,
+        task_type: str = "general",
+        metadata: dict[str, Any] | None = None,
     ) -> Generator[dict[str, Any], None, None]:
         """Context manager for tracing LLM calls with comprehensive observability.
 
@@ -363,7 +370,10 @@ class EnhancedLLMObservability:
 
             if trace.status == "success":
                 metrics.LLM_MODEL_SELECTED.labels(
-                    **metrics.label_ctx(), task=trace.task_type, model=trace.model, provider=trace.provider
+                    **metrics.label_ctx(),
+                    task=trace.task_type,
+                    model=trace.model,
+                    provider=trace.provider,
                 ).inc()
 
         except Exception as e:
@@ -394,7 +404,11 @@ class EnhancedLLMObservability:
         return self.metrics
 
     def get_traces(
-        self, limit: int = 100, task_type: str | None = None, tenant_id: str | None = None, status: str | None = None
+        self,
+        limit: int = 100,
+        task_type: str | None = None,
+        tenant_id: str | None = None,
+        status: str | None = None,
     ) -> list[LLMTrace]:
         """Get recent traces with optional filtering."""
         traces = self.local_traces
@@ -427,7 +441,12 @@ class EnhancedLLMObservability:
         model_stats = {}
         for trace in recent_traces:
             if trace.model not in model_stats:
-                model_stats[trace.model] = {"requests": 0, "cost": 0.0, "avg_latency": 0.0, "success_rate": 0.0}
+                model_stats[trace.model] = {
+                    "requests": 0,
+                    "cost": 0.0,
+                    "avg_latency": 0.0,
+                    "success_rate": 0.0,
+                }
 
             stats = model_stats[trace.model]
             stats["requests"] += 1
@@ -486,4 +505,9 @@ def get_enhanced_observability() -> EnhancedLLMObservability:
     return _enhanced_observability
 
 
-__all__ = ["EnhancedLLMObservability", "LLMTrace", "LLMMetrics", "get_enhanced_observability"]
+__all__ = [
+    "EnhancedLLMObservability",
+    "LLMMetrics",
+    "LLMTrace",
+    "get_enhanced_observability",
+]

@@ -18,6 +18,7 @@ from sentence_transformers import SentenceTransformer
 
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -172,7 +173,13 @@ class AdvancedSemanticCache:
 
         return None, metadata
 
-    def put(self, prompt: str, response: Any, expected_tokens: int = 1000, cost_estimate: float = 0.0) -> StepResult:
+    def put(
+        self,
+        prompt: str,
+        response: Any,
+        expected_tokens: int = 1000,
+        cost_estimate: float = 0.0,
+    ) -> StepResult:
         """Store response in cache with multi-level optimization.
 
         Args:
@@ -212,7 +219,7 @@ class AdvancedSemanticCache:
             # Store in L3 (semantic match) - only if we have embeddings
             if embedding:
                 # Use hash of embedding as key for L3
-                embedding_key = hashlib.md5(json.dumps(embedding).encode()).hexdigest()[:16]
+                embedding_key = hashlib.md5(json.dumps(embedding).encode(), usedforsecurity=False).hexdigest()[:16]  # nosec B324 - non-cryptographic cache key
                 self.l3_cache[embedding_key] = entry
 
             # Cleanup if cache is full
@@ -228,7 +235,7 @@ class AdvancedSemanticCache:
 
         except Exception as e:
             logger.error(f"Failed to cache response: {e}")
-            return StepResult.fail(f"Cache storage failed: {str(e)}")
+            return StepResult.fail(f"Cache storage failed: {e!s}")
 
     def _compress_prompt(self, prompt: str) -> str:
         """Compress prompt using pattern matching and heuristics."""
@@ -333,7 +340,7 @@ class AdvancedSemanticCache:
                 return StepResult.fail("Prompts and responses lists must have same length")
 
             warmed_count = 0
-            for prompt, response in zip(common_prompts, responses):
+            for prompt, response in zip(common_prompts, responses, strict=False):
                 result = self.put(prompt, response)
                 if result.success:
                     warmed_count += 1
@@ -347,7 +354,7 @@ class AdvancedSemanticCache:
 
         except Exception as e:
             logger.error(f"Cache warming failed: {e}")
-            return StepResult.fail(f"Cache warming failed: {str(e)}")
+            return StepResult.fail(f"Cache warming failed: {e!s}")
 
     def get_metrics(self) -> dict[str, Any]:
         """Get cache performance metrics."""
@@ -404,7 +411,7 @@ class AdvancedSemanticCache:
 
         except Exception as e:
             logger.error(f"Cache health check failed: {e}")
-            return StepResult.fail(f"Health check failed: {str(e)}")
+            return StepResult.fail(f"Health check failed: {e!s}")
 
 
 # Global cache instance

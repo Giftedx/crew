@@ -35,7 +35,7 @@ case "$action" in
     pytest -q
     ;;
   eval)
-    python -m eval.runner datasets/golden/core/v1 baselines/golden/core/v1/summary.json || true
+    python -m eval.runner datasets/golden/core/v1 benchmarks/baselines/golden/core/v1/summary.json || true
     ;;
   hooks)
     pre-commit install --install-hooks

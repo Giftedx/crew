@@ -8,6 +8,7 @@ from typing import Any
 
 import yaml
 
+
 # Use relative path to avoid circular imports
 POLICY_PATH = Path(__file__).parent.parent.parent.parent / "config" / "policy.yaml"
 TENANT_DIR = Path(__file__).parent.parent.parent.parent / "tenants"
@@ -136,8 +137,8 @@ def check_use_case(use_case: str, policy: Policy) -> Decision:
 __all__ = [
     "Decision",
     "Policy",
-    "load_policy",
-    "check_source",
     "check_payload",
+    "check_source",
     "check_use_case",
+    "load_policy",
 ]

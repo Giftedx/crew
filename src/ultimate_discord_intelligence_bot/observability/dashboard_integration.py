@@ -10,10 +10,11 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from ultimate_discord_intelligence_bot.step_result import StepResult
 from ultimate_discord_intelligence_bot.tenancy.context import current_tenant
+
 
 logger = logging.getLogger(__name__)
 
@@ -51,7 +52,7 @@ class MetricsQuery:
     interval: str = "1m"
     range: str = "1h"
     step: str = "15s"
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -61,11 +62,11 @@ class DashboardWidget:
     widget_id: str
     title: str
     widget_type: WidgetType
-    position: Dict[str, int]  # x, y, width, height
-    queries: List[MetricsQuery]
-    options: Dict[str, Any] = field(default_factory=dict)
-    thresholds: List[Dict[str, Any]] = field(default_factory=list)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    position: dict[str, int]  # x, y, width, height
+    queries: list[MetricsQuery]
+    options: dict[str, Any] = field(default_factory=dict)
+    thresholds: list[dict[str, Any]] = field(default_factory=list)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -76,11 +77,11 @@ class GrafanaDashboard:
     title: str
     description: str
     dashboard_type: DashboardType
-    widgets: List[DashboardWidget]
-    tags: List[str] = field(default_factory=list)
+    widgets: list[DashboardWidget]
+    tags: list[str] = field(default_factory=list)
     time_range: str = "1h"
     refresh_interval: str = "30s"
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -90,10 +91,10 @@ class PrometheusMetrics:
     metric_name: str
     metric_type: str  # counter, gauge, histogram, summary
     help_text: str
-    labels: List[str] = field(default_factory=list)
-    buckets: Optional[List[float]] = None  # for histogram
-    quantiles: Optional[List[float]] = None  # for summary
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    labels: list[str] = field(default_factory=list)
+    buckets: list[float] | None = None  # for histogram
+    quantiles: list[float] | None = None  # for summary
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -111,7 +112,7 @@ class DashboardConfig:
 
     # Grafana settings
     grafana_endpoint: str = "http://localhost:3000"
-    grafana_api_key: Optional[str] = None
+    grafana_api_key: str | None = None
     default_org_id: int = 1
 
     # Dashboard settings
@@ -128,14 +129,14 @@ class DashboardConfig:
 class DashboardIntegrationService:
     """Dashboard integration service for Prometheus and Grafana"""
 
-    def __init__(self, config: Optional[DashboardConfig] = None):
+    def __init__(self, config: DashboardConfig | None = None):
         self.config = config or DashboardConfig()
         self._initialized = False
-        self._prometheus_metrics: Dict[str, PrometheusMetrics] = {}
-        self._grafana_dashboards: Dict[str, GrafanaDashboard] = {}
-        self._dashboard_cache: Dict[str, Any] = {}
-        self._query_cache: Dict[str, Any] = {}
-        self._last_cache_update: Dict[str, datetime] = {}
+        self._prometheus_metrics: dict[str, PrometheusMetrics] = {}
+        self._grafana_dashboards: dict[str, GrafanaDashboard] = {}
+        self._dashboard_cache: dict[str, Any] = {}
+        self._query_cache: dict[str, Any] = {}
+        self._last_cache_update: dict[str, datetime] = {}
 
         # Initialize dashboard integration
         self._initialize_dashboard_integration()
@@ -154,10 +155,10 @@ class DashboardIntegrationService:
         metric_name: str,
         metric_type: str,
         help_text: str,
-        labels: Optional[List[str]] = None,
-        buckets: Optional[List[float]] = None,
-        quantiles: Optional[List[float]] = None,
-        metadata: Optional[Dict[str, Any]] = None,
+        labels: list[str] | None = None,
+        buckets: list[float] | None = None,
+        quantiles: list[float] | None = None,
+        metadata: dict[str, Any] | None = None,
     ) -> StepResult:
         """Register a metric with Prometheus"""
         try:
@@ -192,7 +193,7 @@ class DashboardIntegrationService:
 
         except Exception as e:
             logger.error(f"Error registering Prometheus metric: {e}")
-            return StepResult.fail(f"Prometheus metric registration failed: {str(e)}")
+            return StepResult.fail(f"Prometheus metric registration failed: {e!s}")
 
     async def create_grafana_dashboard(
         self,
@@ -200,13 +201,13 @@ class DashboardIntegrationService:
         title: str,
         description: str,
         dashboard_type: DashboardType,
-        widgets: List[DashboardWidget],
-        tags: Optional[List[str]] = None,
-        time_range: Optional[str] = None,
-        refresh_interval: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None,
-        tenant_id: Optional[str] = None,
-        workspace_id: Optional[str] = None,
+        widgets: list[DashboardWidget],
+        tags: list[str] | None = None,
+        time_range: str | None = None,
+        refresh_interval: str | None = None,
+        metadata: dict[str, Any] | None = None,
+        tenant_id: str | None = None,
+        workspace_id: str | None = None,
     ) -> StepResult:
         """Create a Grafana dashboard"""
         try:
@@ -229,8 +230,7 @@ class DashboardIntegrationService:
                 widgets=widgets,
                 tags=tags or [],
                 time_range=time_range or self.config.default_time_range,
-                refresh_interval=refresh_interval
-                or f"{self.config.auto_refresh_interval}s",
+                refresh_interval=refresh_interval or f"{self.config.auto_refresh_interval}s",
                 metadata={
                     "tenant_id": tenant_id,
                     "workspace_id": workspace_id,
@@ -257,16 +257,16 @@ class DashboardIntegrationService:
 
         except Exception as e:
             logger.error(f"Error creating Grafana dashboard: {e}")
-            return StepResult.fail(f"Grafana dashboard creation failed: {str(e)}")
+            return StepResult.fail(f"Grafana dashboard creation failed: {e!s}")
 
     async def execute_metrics_query(
         self,
         query: str,
         range_time: str = "1h",
         step: str = "15s",
-        timeout: Optional[int] = None,
-        tenant_id: Optional[str] = None,
-        workspace_id: Optional[str] = None,
+        timeout: int | None = None,
+        tenant_id: str | None = None,
+        workspace_id: str | None = None,
     ) -> StepResult:
         """Execute a Prometheus metrics query"""
         try:
@@ -277,18 +277,12 @@ class DashboardIntegrationService:
             cache_key = f"{query}:{range_time}:{step}"
             if cache_key in self._query_cache:
                 cache_time = self._last_cache_update.get(cache_key)
-                if (
-                    cache_time
-                    and (datetime.now(timezone.utc) - cache_time).seconds
-                    < self.config.cache_ttl
-                ):
+                if cache_time and (datetime.now(timezone.utc) - cache_time).seconds < self.config.cache_ttl:
                     logger.debug(f"Returning cached query result: {query}")
                     return StepResult.ok(data=self._query_cache[cache_key])
 
             # Execute query (simulated for now)
-            query_result = await self._execute_prometheus_query(
-                query, range_time, step, timeout
-            )
+            query_result = await self._execute_prometheus_query(query, range_time, step, timeout)
 
             # Cache result
             self._query_cache[cache_key] = query_result
@@ -307,15 +301,15 @@ class DashboardIntegrationService:
 
         except Exception as e:
             logger.error(f"Error executing metrics query: {e}")
-            return StepResult.fail(f"Metrics query execution failed: {str(e)}")
+            return StepResult.fail(f"Metrics query execution failed: {e!s}")
 
     async def get_dashboard_data(
         self,
         dashboard_id: str,
-        time_range: Optional[str] = None,
+        time_range: str | None = None,
         refresh_cache: bool = False,
-        tenant_id: Optional[str] = None,
-        workspace_id: Optional[str] = None,
+        tenant_id: str | None = None,
+        workspace_id: str | None = None,
     ) -> StepResult:
         """Get data for a dashboard"""
         try:
@@ -332,11 +326,7 @@ class DashboardIntegrationService:
             cache_key = f"{dashboard_id}:{time_range}"
             if not refresh_cache and cache_key in self._dashboard_cache:
                 cache_time = self._last_cache_update.get(cache_key)
-                if (
-                    cache_time
-                    and (datetime.now(timezone.utc) - cache_time).seconds
-                    < self.config.cache_ttl
-                ):
+                if cache_time and (datetime.now(timezone.utc) - cache_time).seconds < self.config.cache_ttl:
                     logger.debug(f"Returning cached dashboard data: {dashboard_id}")
                     return StepResult.ok(data=self._dashboard_cache[cache_key])
 
@@ -363,14 +353,14 @@ class DashboardIntegrationService:
 
         except Exception as e:
             logger.error(f"Error getting dashboard data: {e}")
-            return StepResult.fail(f"Dashboard data retrieval failed: {str(e)}")
+            return StepResult.fail(f"Dashboard data retrieval failed: {e!s}")
 
     async def export_dashboard_config(
         self,
         dashboard_id: str,
         format_type: str = "json",
-        tenant_id: Optional[str] = None,
-        workspace_id: Optional[str] = None,
+        tenant_id: str | None = None,
+        workspace_id: str | None = None,
     ) -> StepResult:
         """Export dashboard configuration"""
         try:
@@ -384,13 +374,9 @@ class DashboardIntegrationService:
 
             # Filter by tenant/workspace if specified
             if tenant_id and dashboard.metadata.get("tenant_id") != tenant_id:
-                return StepResult.fail(
-                    f"Dashboard {dashboard_id} not accessible for tenant {tenant_id}"
-                )
+                return StepResult.fail(f"Dashboard {dashboard_id} not accessible for tenant {tenant_id}")
             if workspace_id and dashboard.metadata.get("workspace_id") != workspace_id:
-                return StepResult.fail(
-                    f"Dashboard {dashboard_id} not accessible for workspace {workspace_id}"
-                )
+                return StepResult.fail(f"Dashboard {dashboard_id} not accessible for workspace {workspace_id}")
 
             # Export based on format
             if format_type == "json":
@@ -411,11 +397,11 @@ class DashboardIntegrationService:
 
         except Exception as e:
             logger.error(f"Error exporting dashboard config: {e}")
-            return StepResult.fail(f"Dashboard config export failed: {str(e)}")
+            return StepResult.fail(f"Dashboard config export failed: {e!s}")
 
     async def _execute_prometheus_query(
-        self, query: str, range_time: str, step: str, timeout: Optional[int]
-    ) -> Dict[str, Any]:
+        self, query: str, range_time: str, step: str, timeout: int | None
+    ) -> dict[str, Any]:
         """Execute a Prometheus query (simulated)"""
         try:
             # This would integrate with actual Prometheus API
@@ -445,9 +431,7 @@ class DashboardIntegrationService:
             logger.error(f"Error executing Prometheus query: {e}")
             return {"status": "error", "error": str(e)}
 
-    async def _get_widget_data(
-        self, widget: DashboardWidget, time_range: str
-    ) -> Dict[str, Any]:
+    async def _get_widget_data(self, widget: DashboardWidget, time_range: str) -> dict[str, Any]:
         """Get data for a specific widget"""
         try:
             widget_data = {
@@ -497,7 +481,7 @@ class DashboardIntegrationService:
         except Exception:
             return 3600
 
-    def _export_dashboard_json(self, dashboard: GrafanaDashboard) -> Dict[str, Any]:
+    def _export_dashboard_json(self, dashboard: GrafanaDashboard) -> dict[str, Any]:
         """Export dashboard as JSON configuration"""
         try:
             return {
@@ -535,7 +519,7 @@ class DashboardIntegrationService:
             logger.error(f"Error exporting dashboard JSON: {e}")
             return {"error": str(e)}
 
-    def _export_dashboard_grafana(self, dashboard: GrafanaDashboard) -> Dict[str, Any]:
+    def _export_dashboard_grafana(self, dashboard: GrafanaDashboard) -> dict[str, Any]:
         """Export dashboard as Grafana API format"""
         try:
             return {
@@ -574,7 +558,7 @@ class DashboardIntegrationService:
             logger.error(f"Error exporting dashboard Grafana format: {e}")
             return {"error": str(e)}
 
-    def get_dashboard_integration_status(self) -> Dict[str, Any]:
+    def get_dashboard_integration_status(self) -> dict[str, Any]:
         """Get dashboard integration service status"""
         return {
             "initialized": self._initialized,

@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import os
 
+
 # Mirror LIGHTWEIGHT_IMPORT semantics used elsewhere for import safety
 LIGHTWEIGHT_IMPORT = os.getenv("LIGHTWEIGHT_IMPORT", "0") in {"1", "true", "yes", "on"}
 
@@ -20,4 +21,4 @@ DEFAULT_FEATURE_FLAGS = {
     "ENABLE_SEMANTIC_CACHE": "1",
 }
 
-__all__ = ["LIGHTWEIGHT_IMPORT", "DEFAULT_FEATURE_FLAGS"]
+__all__ = ["DEFAULT_FEATURE_FLAGS", "LIGHTWEIGHT_IMPORT"]

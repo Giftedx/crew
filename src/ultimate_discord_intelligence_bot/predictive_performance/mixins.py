@@ -2,9 +2,8 @@ from __future__ import annotations
 
 import logging
 import statistics
-from collections import deque
 from datetime import timedelta
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 from scipy import stats
@@ -17,6 +16,11 @@ from .models import (
     ModelDriftAlert,
     PredictionConfidence,
 )
+
+
+if TYPE_CHECKING:
+    from collections import deque
+
 
 logger = logging.getLogger(__name__)
 
@@ -115,7 +119,8 @@ class WarningDetectionMixin:
                 decline_rate = decline_ratio / 10
                 critical_threshold = 0.5
                 interactions_to_critical = max(
-                    1, (recent_avg - critical_threshold) / max(decline_rate * recent_avg, 0.001)
+                    1,
+                    (recent_avg - critical_threshold) / max(decline_rate * recent_avg, 0.001),
                 )
                 time_to_impact = timedelta(hours=interactions_to_critical * 0.5)
                 return EarlyWarningAlert(
@@ -161,7 +166,8 @@ class WarningDetectionMixin:
                 increase_rate = increase_ratio / 10
                 critical_threshold = 30.0
                 interactions_to_critical = max(
-                    1, (critical_threshold - recent_avg) / max(increase_rate * recent_avg, 0.001)
+                    1,
+                    (critical_threshold - recent_avg) / max(increase_rate * recent_avg, 0.001),
                 )
                 time_to_impact = timedelta(hours=interactions_to_critical * 0.5)
                 return EarlyWarningAlert(
@@ -196,7 +202,10 @@ class WarningDetectionMixin:
             if hasattr(self.enhanced_monitor, "real_time_metrics"):
                 total_interactions = 0
                 agent_loads: dict[str, int] = {}
-                for agent_name, agent_data in self.enhanced_monitor.real_time_metrics.items():
+                for (
+                    agent_name,
+                    agent_data,
+                ) in self.enhanced_monitor.real_time_metrics.items():
                     recent_interactions = len(agent_data.get("recent_interactions", []))
                     agent_loads[agent_name] = recent_interactions
                     total_interactions += recent_interactions
@@ -318,9 +327,8 @@ class DriftDetectionMixin:
                 baseline_tools.extend(ctx.get("tools_used", []))
             for ctx in recent_contexts:
                 recent_tools.extend(ctx.get("tools_used", []))
-            if baseline_tools and recent_tools:
-                if set(baseline_tools) != set(recent_tools):
-                    factors.append("Changes in tool usage patterns detected")
+            if baseline_tools and recent_tools and set(baseline_tools) != set(recent_tools):
+                factors.append("Changes in tool usage patterns detected")
         except Exception as e:  # pragma: no cover
             logger.debug(f"Drift factors analysis error: {e}")
         return factors if factors else ["Standard operational variance"]
@@ -338,9 +346,7 @@ class DriftDetectionMixin:
             ks_statistic, p_value = stats.ks_2samp(baseline_values, recent_values)
             drift_magnitude = abs(recent_mean - baseline_mean) / max(abs(baseline_mean), 0.001)
             if ks_statistic > self.drift_detection_threshold or p_value < 0.05:
-                if "quality" in metric_name:
-                    drift_type = "performance_drift"
-                elif "response_time" in metric_name:
+                if "quality" in metric_name or "response_time" in metric_name:
                     drift_type = "performance_drift"
                 else:
                     drift_type = "data_drift"
@@ -446,7 +452,11 @@ class ScenarioGenerationMixin:
     def _create_cost_scenario(self, current_state: dict[str, Any]) -> dict[str, Any]:
         return {
             "scenario_name": "Cost-Efficient Operations",
-            "target_improvements": {"cost_reduction": "25%", "resource_utilization": "+40%", "efficiency_gain": "20%"},
+            "target_improvements": {
+                "cost_reduction": "25%",
+                "resource_utilization": "+40%",
+                "efficiency_gain": "20%",
+            },
             "required_changes": [
                 "Implement intelligent model selection",
                 "Add request batching and optimization",
@@ -456,7 +466,11 @@ class ScenarioGenerationMixin:
             "estimated_timeline": "3-6 weeks",
             "resource_requirements": "High",
             "risk_level": "Medium",
-            "expected_outcomes": {"operational_cost": "-25%", "resource_efficiency": "+40%", "scalability": "+50%"},
+            "expected_outcomes": {
+                "operational_cost": "-25%",
+                "resource_efficiency": "+40%",
+                "scalability": "+50%",
+            },
         }
 
     def _create_reliability_scenario(self, current_state: dict[str, Any]) -> dict[str, Any]:

@@ -12,6 +12,7 @@ import threading
 import time
 from typing import Any
 
+
 # Import metrics registry for accessing metric instances
 try:
     from .metrics import GAUGE
@@ -36,13 +37,27 @@ logger = logging.getLogger(__name__)
 
 # Resource monitoring metrics
 RESOURCE_METRICS = {
-    "memory_usage_percent": GAUGE("system_memory_usage_percent", "System memory utilization percentage", ["hostname"]),
+    "memory_usage_percent": GAUGE(
+        "system_memory_usage_percent",
+        "System memory utilization percentage",
+        ["hostname"],
+    ),
     "cpu_usage_percent": GAUGE("system_cpu_usage_percent", "System CPU utilization percentage", ["hostname"]),
     "disk_usage_percent": GAUGE(
-        "system_disk_usage_percent", "System disk utilization percentage", ["hostname", "mount_point"]
+        "system_disk_usage_percent",
+        "System disk utilization percentage",
+        ["hostname", "mount_point"],
     ),
-    "disk_free_bytes": GAUGE("system_disk_free_bytes", "System disk free space in bytes", ["hostname", "mount_point"]),
-    "memory_available_bytes": GAUGE("system_memory_available_bytes", "System available memory in bytes", ["hostname"]),
+    "disk_free_bytes": GAUGE(
+        "system_disk_free_bytes",
+        "System disk free space in bytes",
+        ["hostname", "mount_point"],
+    ),
+    "memory_available_bytes": GAUGE(
+        "system_memory_available_bytes",
+        "System available memory in bytes",
+        ["hostname"],
+    ),
     "cpu_load_average": GAUGE("system_cpu_load_average", "System CPU load average (1min)", ["hostname"]),
 }
 
@@ -290,8 +305,8 @@ def get_current_resource_usage() -> dict[str, Any]:
 
 __all__ = [
     "ResourceMonitor",
+    "get_current_resource_usage",
     "get_resource_monitor",
     "start_resource_monitoring",
     "stop_resource_monitoring",
-    "get_current_resource_usage",
 ]

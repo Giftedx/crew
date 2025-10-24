@@ -21,18 +21,22 @@ import json
 import math
 import os
 import threading
-from collections.abc import Callable, Sequence
 from dataclasses import dataclass
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
-from ._metrics_types import MetricLike, MetricsFacade
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Sequence
+
+    from ._metrics_types import MetricLike, MetricsFacade
+
 
 try:  # optional metrics
     from ultimate_discord_intelligence_bot.obs.metrics import (
         get_metrics as _gm,
     )
 
-    _real_get_metrics: Callable[[], MetricsFacade] | None = cast(Callable[[], MetricsFacade], _gm)
+    _real_get_metrics: Callable[[], MetricsFacade] | None = cast("Callable[[], MetricsFacade]", _gm)
 except Exception:  # pragma: no cover
     _real_get_metrics = None
 
@@ -48,7 +52,12 @@ def _obtain_metrics() -> MetricsFacade | None:
 
 
 def _ctx_flag() -> bool:
-    return os.getenv("ENABLE_CONTEXTUAL_BANDIT", "0").lower() in {"1", "true", "yes", "on"}
+    return os.getenv("ENABLE_CONTEXTUAL_BANDIT", "0").lower() in {
+        "1",
+        "true",
+        "yes",
+        "on",
+    }
 
 
 def _alpha_value() -> float:
@@ -71,7 +80,12 @@ class LinUCBRouter:
         self._arms: dict[str, _ArmCtx] = {}
         self._lock = threading.Lock()
         self._metrics: MetricsFacade | None = _obtain_metrics()
-        self._persist_enabled = os.getenv("ENABLE_BANDIT_PERSIST", "0").lower() in {"1", "true", "yes", "on"}
+        self._persist_enabled = os.getenv("ENABLE_BANDIT_PERSIST", "0").lower() in {
+            "1",
+            "true",
+            "yes",
+            "on",
+        }
         self._state_dir = os.getenv("BANDIT_STATE_DIR", "./bandit_state")
         self._recompute_interval = int(os.getenv("LINUCB_RECOMPUTE_INTERVAL", "0") or 0)
         self._alpha = _alpha_value()

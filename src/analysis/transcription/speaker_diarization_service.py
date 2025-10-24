@@ -22,14 +22,18 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Literal
 
-from analysis.transcription.asr_service import ASRService, TranscriptionResult
+from analysis.transcription.asr_service import (
+    ASRService,
+    TranscriptionResult,
+    TranscriptionSegment,
+)
 from ultimate_discord_intelligence_bot.step_result import StepResult
+
 
 logger = logging.getLogger(__name__)
 
 # Try to import pyannote.audio (optional dependency)
 try:
-    import pyannote.audio
     from pyannote.audio import Pipeline
 
     PYANNOTE_AVAILABLE = True
@@ -161,7 +165,7 @@ class SpeakerDiarizationService:
 
         except Exception as e:
             logger.error(f"Audio diarization failed: {e}")
-            return StepResult.fail(f"Diarization failed: {str(e)}", status="retryable")
+            return StepResult.fail(f"Diarization failed: {e!s}", status="retryable")
 
     def diarize_with_transcript(
         self,
@@ -265,7 +269,7 @@ class SpeakerDiarizationService:
 
         except Exception as e:
             logger.error(f"Combined diarization+transcript failed: {e}")
-            return StepResult.fail(f"Combined processing failed: {str(e)}")
+            return StepResult.fail(f"Combined processing failed: {e!s}")
 
     def _select_model(self, model_alias: str) -> str:
         """Select actual model name from alias.
@@ -436,7 +440,9 @@ class SpeakerDiarizationService:
             return "participant"  # Default role
 
     def _align_transcript_with_diarization(
-        self, transcript_segments: list[TranscriptionSegment], speaker_segments: list[SpeakerSegment]
+        self,
+        transcript_segments: list[TranscriptionSegment],
+        speaker_segments: list[SpeakerSegment],
     ) -> list[SpeakerSegment]:
         """Align transcript segments with speaker segments.
 
@@ -567,7 +573,7 @@ class SpeakerDiarizationService:
 
         except Exception as e:
             logger.error(f"Failed to get cache stats: {e}")
-            return StepResult.fail(f"Failed to get cache stats: {str(e)}")
+            return StepResult.fail(f"Failed to get cache stats: {e!s}")
 
 
 # Singleton instance

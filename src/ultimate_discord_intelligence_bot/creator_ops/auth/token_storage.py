@@ -10,12 +10,16 @@ from __future__ import annotations
 import logging
 from datetime import datetime, timedelta
 
-from sqlalchemy import create_engine
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy import create_engine  # type: ignore[import-untyped]
+from sqlalchemy.orm import Session, sessionmaker  # type: ignore[import-untyped]
 
-from ultimate_discord_intelligence_bot.creator_ops.auth.vault import SecretsVault
-from ultimate_discord_intelligence_bot.creator_ops.models.schema_fixed import Account, BaseModel
-from ultimate_discord_intelligence_bot.step_result import StepResult
+from ultimate_discord_intelligence_bot.creator_ops.auth.vault import SecretsVault  # type: ignore[import-not-found]
+from ultimate_discord_intelligence_bot.creator_ops.models.schema import (  # type: ignore[import-not-found]
+    Account,
+    BaseModel,
+)
+from ultimate_discord_intelligence_bot.step_result import StepResult  # type: ignore[import-not-found]
+
 
 logger = logging.getLogger(__name__)
 
@@ -141,8 +145,8 @@ class TokenStorage:
 
         except Exception as e:
             session.rollback()
-            logger.error(f"Failed to store tokens: {str(e)}")
-            return StepResult.fail(f"Token storage failed: {str(e)}")
+            logger.error(f"Failed to store tokens: {e!s}")
+            return StepResult.fail(f"Token storage failed: {e!s}")
         finally:
             session.close()
 
@@ -214,8 +218,8 @@ class TokenStorage:
             )
 
         except Exception as e:
-            logger.error(f"Failed to get tokens: {str(e)}")
-            return StepResult.fail(f"Token retrieval failed: {str(e)}")
+            logger.error(f"Failed to get tokens: {e!s}")
+            return StepResult.fail(f"Token retrieval failed: {e!s}")
         finally:
             session.close()
 
@@ -261,8 +265,8 @@ class TokenStorage:
 
         except Exception as e:
             session.rollback()
-            logger.error(f"Failed to update tokens: {str(e)}")
-            return StepResult.fail(f"Token update failed: {str(e)}")
+            logger.error(f"Failed to update tokens: {e!s}")
+            return StepResult.fail(f"Token update failed: {e!s}")
         finally:
             session.close()
 
@@ -316,8 +320,8 @@ class TokenStorage:
 
         except Exception as e:
             session.rollback()
-            logger.error(f"Failed to delete tokens: {str(e)}")
-            return StepResult.fail(f"Token deletion failed: {str(e)}")
+            logger.error(f"Failed to delete tokens: {e!s}")
+            return StepResult.fail(f"Token deletion failed: {e!s}")
         finally:
             session.close()
 
@@ -374,8 +378,8 @@ class TokenStorage:
             return StepResult.ok(data={"accounts": account_list})
 
         except Exception as e:
-            logger.error(f"Failed to list accounts: {str(e)}")
-            return StepResult.fail(f"Account listing failed: {str(e)}")
+            logger.error(f"Failed to list accounts: {e!s}")
+            return StepResult.fail(f"Account listing failed: {e!s}")
         finally:
             session.close()
 
@@ -417,8 +421,8 @@ class TokenStorage:
 
         except Exception as e:
             session.rollback()
-            logger.error(f"Failed to cleanup expired tokens: {str(e)}")
-            return StepResult.fail(f"Token cleanup failed: {str(e)}")
+            logger.error(f"Failed to cleanup expired tokens: {e!s}")
+            return StepResult.fail(f"Token cleanup failed: {e!s}")
         finally:
             session.close()
 
@@ -471,7 +475,7 @@ class TokenStorage:
             return StepResult.ok(data={"expiring_tokens": expiring_list})
 
         except Exception as e:
-            logger.error(f"Failed to get expiring tokens: {str(e)}")
-            return StepResult.fail(f"Expiring tokens retrieval failed: {str(e)}")
+            logger.error(f"Failed to get expiring tokens: {e!s}")
+            return StepResult.fail(f"Expiring tokens retrieval failed: {e!s}")
         finally:
             session.close()

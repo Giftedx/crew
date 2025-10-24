@@ -34,8 +34,13 @@ from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+
 if TYPE_CHECKING:
-    from ultimate_discord_intelligence_bot.autonomous_orchestrator import AutonomousIntelligenceOrchestrator
+    from crewai import CrewOutput
+
+    from ultimate_discord_intelligence_bot.autonomous_orchestrator import (
+        AutonomousIntelligenceOrchestrator,
+    )
 
 logger = logging.getLogger(__name__)
 
@@ -127,7 +132,8 @@ class BackgroundIntelligenceWorker:
                 t.result()  # This will raise if the task failed
             except Exception as e:
                 logger.error(
-                    f"❌ CRITICAL: Background task {workflow_id} failed with unhandled exception: {e}", exc_info=True
+                    f"❌ CRITICAL: Background task {workflow_id} failed with unhandled exception: {e}",
+                    exc_info=True,
                 )
                 # Try to update workflow state to failed
                 try:
@@ -164,10 +170,14 @@ class BackgroundIntelligenceWorker:
             # The orchestrator's crew execution doesn't have Discord interaction constraints
             crew = self.orchestrator._build_intelligence_crew(url, depth)
 
-            await self._update_progress(workflow_id, "execution", 20, "Running multi-agent intelligence analysis...")
+            await self._update_progress(
+                workflow_id,
+                "execution",
+                20,
+                "Running multi-agent intelligence analysis...",
+            )
 
             # Execute crew - THIS CAN TAKE AS LONG AS NEEDED
-            from crewai import CrewOutput
 
             result: CrewOutput = await asyncio.to_thread(crew.kickoff, inputs={"url": url, "depth": depth})
 

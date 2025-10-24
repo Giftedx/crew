@@ -15,6 +15,7 @@ import logging
 import time
 from typing import Any
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -23,7 +24,11 @@ class EnhancedAutonomousOrchestrator:
 
     def __init__(self):
         self.logger = logger
-        self.system_health = {"healthy": False, "errors": [], "available_capabilities": []}
+        self.system_health = {
+            "healthy": False,
+            "errors": [],
+            "available_capabilities": [],
+        }
         self._validate_system_health()
 
         # Initialize metrics if available
@@ -98,7 +103,11 @@ class EnhancedAutonomousOrchestrator:
         logger.info(f"System health check: {len(capabilities)} capabilities available, {len(errors)} issues")
 
     async def execute_autonomous_intelligence_workflow(
-        self, interaction: Any, url: str, depth: str = "standard", tenant_ctx: Any = None
+        self,
+        interaction: Any,
+        url: str,
+        depth: str = "standard",
+        tenant_ctx: Any = None,
     ) -> None:
         """Execute enhanced autonomous workflow with intelligent fallback."""
         start_time = time.time()
@@ -165,14 +174,20 @@ class EnhancedAutonomousOrchestrator:
         except TimeoutError:
             logger.warning(f"CrewAI workflow {workflow_id} timed out, falling back to pipeline")
             await self._send_progress_update(
-                interaction, "⏰ Multi-agent workflow timed out, switching to fallback...", 5, 10
+                interaction,
+                "⏰ Multi-agent workflow timed out, switching to fallback...",
+                5,
+                10,
             )
             await self._execute_pipeline_workflow(interaction, url, depth, tenant_ctx, workflow_id)
 
         except Exception as e:
             logger.warning(f"CrewAI workflow {workflow_id} failed: {e}, falling back to pipeline")
             await self._send_progress_update(
-                interaction, "⚠️ Multi-agent workflow failed, switching to fallback...", 5, 10
+                interaction,
+                "⚠️ Multi-agent workflow failed, switching to fallback...",
+                5,
+                10,
             )
             await self._execute_pipeline_workflow(interaction, url, depth, tenant_ctx, workflow_id)
 

@@ -8,6 +8,7 @@ import yaml
 from .citation_utils import append_numeric_citations
 from .schema import AnswerContract, Evidence
 
+
 """Builders and validators for :class:`AnswerContract`."""
 
 CONFIG_PATH = Path("config/grounding.yaml")
@@ -66,4 +67,4 @@ def build_contract(
     return AnswerContract(answer_text=formatted_answer, citations=evidence)
 
 
-__all__ = ["load_config", "GroundingError", "build_contract", "GroundingConfig"]
+__all__ = ["GroundingConfig", "GroundingError", "build_contract", "load_config"]

@@ -91,23 +91,32 @@ def add_stepresult_import(content: str) -> str:
     for i, line in enumerate(lines):
         if "from ultimate_discord_intelligence_bot." in line:
             # Insert before this import
-            lines.insert(i, "from ultimate_discord_intelligence_bot.step_result import StepResult")
+            lines.insert(
+                i,
+                "from ultimate_discord_intelligence_bot.step_result import StepResult",
+            )
             return "\n".join(lines)
 
     # Look for other tool imports
     for i, line in enumerate(lines):
         if "from ._base import BaseTool" in line:
             # Insert after this import
-            lines.insert(i + 1, "from ultimate_discord_intelligence_bot.step_result import StepResult")
+            lines.insert(
+                i + 1,
+                "from ultimate_discord_intelligence_bot.step_result import StepResult",
+            )
             return "\n".join(lines)
 
     # Fallback: add after the last import
     for i, line in enumerate(lines):
-        if line.startswith("from ") or line.startswith("import "):
+        if line.startswith(("from ", "import ")):
             continue
         else:
             # Found first non-import line
-            lines.insert(i, "from ultimate_discord_intelligence_bot.step_result import StepResult")
+            lines.insert(
+                i,
+                "from ultimate_discord_intelligence_bot.step_result import StepResult",
+            )
             lines.insert(i + 1, "")
             return "\n".join(lines)
 

@@ -12,6 +12,7 @@ This module provides comprehensive cache optimization tools including:
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
 import time
 from dataclasses import dataclass, field
@@ -20,6 +21,7 @@ from typing import Any
 from core.cache.adaptive_semantic_cache import get_adaptive_semantic_cache
 from core.vector_search.optimized_vector_store import get_optimized_vector_store
 from obs.metrics import generate_latest
+
 
 logger = logging.getLogger(__name__)
 
@@ -95,17 +97,13 @@ class CacheOptimizer:
         """Stop monitoring and optimization tasks."""
         if self.monitoring_task and not self.monitoring_task.done():
             self.monitoring_task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await self.monitoring_task
-            except asyncio.CancelledError:
-                pass
 
         if self.optimization_task and not self.optimization_task.done():
             self.optimization_task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await self.optimization_task
-            except asyncio.CancelledError:
-                pass
 
         logger.info("Stopped cache monitoring and optimization")
 
@@ -406,7 +404,7 @@ __all__ = [
     "CacheOptimizer",
     "OptimizationReport",
     "get_cache_optimizer",
+    "get_optimization_report",
     "start_cache_optimization",
     "stop_cache_optimization",
-    "get_optimization_report",
 ]

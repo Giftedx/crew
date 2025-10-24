@@ -7,7 +7,9 @@ from ultimate_discord_intelligence_bot.pipeline_components.middleware import (
     StepContext,
     TracingStepMiddleware,
 )
-from ultimate_discord_intelligence_bot.pipeline_components.mixins import PipelineExecutionMixin
+from ultimate_discord_intelligence_bot.pipeline_components.mixins import (
+    PipelineExecutionMixin,
+)
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
 

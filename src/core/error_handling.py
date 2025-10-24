@@ -11,9 +11,13 @@ from __future__ import annotations
 
 import logging
 import time
-from collections.abc import Callable
 from contextlib import contextmanager
-from typing import Any, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
 
 logger = logging.getLogger(__name__)
 
@@ -36,31 +40,21 @@ class UltimateDiscordBotError(Exception):
 class ConfigurationError(UltimateDiscordBotError):
     """Raised when there's a configuration-related error."""
 
-    pass
-
 
 class DatabaseError(UltimateDiscordBotError):
     """Raised when there's a database-related error."""
-
-    pass
 
 
 class ExternalServiceError(UltimateDiscordBotError):
     """Raised when an external service (API, etc.) fails."""
 
-    pass
-
 
 class ValidationError(UltimateDiscordBotError):
     """Raised when input validation fails."""
 
-    pass
-
 
 class ProcessingError(UltimateDiscordBotError):
     """Raised when content processing fails."""
-
-    pass
 
 
 def log_error(
@@ -97,7 +91,10 @@ T = TypeVar("T")
 
 
 def handle_error_safely(
-    operation: Callable[[], T], fallback: T | None = None, error_message: str | None = None, reraise: bool = False
+    operation: Callable[[], T],
+    fallback: T | None = None,
+    error_message: str | None = None,
+    reraise: bool = False,
 ) -> T | None:
     """Execute an operation safely with error handling.
 
@@ -208,15 +205,15 @@ def validate_and_raise(
 
 
 __all__ = [
-    "UltimateDiscordBotError",
     "ConfigurationError",
     "DatabaseError",
     "ExternalServiceError",
-    "ValidationError",
     "ProcessingError",
-    "log_error",
-    "handle_error_safely",
+    "UltimateDiscordBotError",
+    "ValidationError",
     "error_context",
+    "handle_error_safely",
+    "log_error",
     "retry_with_backoff",
     "validate_and_raise",
 ]

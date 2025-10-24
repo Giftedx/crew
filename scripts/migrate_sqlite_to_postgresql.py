@@ -19,6 +19,7 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
+
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
@@ -30,6 +31,7 @@ from ultimate_discord_intelligence_bot.core.store_adapter import (
     UnifiedStoreManager,
 )
 from ultimate_discord_intelligence_bot.step_result import StepResult
+
 
 # Configure logging
 logging.basicConfig(
@@ -77,7 +79,14 @@ MIGRATION_CONFIG = {
     "P2": {
         "marketplace": {
             "sqlite_path": "./marketplace.db",
-            "tables": ["mp_repos", "mp_plugins", "mp_signers", "mp_releases", "mp_advisories", "mp_installs"],
+            "tables": [
+                "mp_repos",
+                "mp_plugins",
+                "mp_signers",
+                "mp_releases",
+                "mp_advisories",
+                "mp_installs",
+            ],
             "priority": 2,
         },
         "archive": {
@@ -111,7 +120,7 @@ class MigrationManager:
             return StepResult.ok(data={"message": "PostgreSQL initialized"})
         except Exception as e:
             logger.error(f"Failed to initialize PostgreSQL: {e}")
-            return StepResult.fail(f"Failed to initialize PostgreSQL: {str(e)}")
+            return StepResult.fail(f"Failed to initialize PostgreSQL: {e!s}")
 
     def migrate_memory_store(self, sqlite_path: str) -> StepResult:
         """Migrate memory store from SQLite to PostgreSQL."""
@@ -189,11 +198,16 @@ class MigrationManager:
             )
 
             logger.info(f"Memory store migration completed: {migrated_count} items, {len(retention_policies)} policies")
-            return StepResult.ok(data={"migrated_items": migrated_count, "migrated_policies": len(retention_policies)})
+            return StepResult.ok(
+                data={
+                    "migrated_items": migrated_count,
+                    "migrated_policies": len(retention_policies),
+                }
+            )
 
         except Exception as e:
             logger.error(f"Failed to migrate memory store: {e}")
-            return StepResult.fail(f"Failed to migrate memory store: {str(e)}")
+            return StepResult.fail(f"Failed to migrate memory store: {e!s}")
 
     def migrate_debate_store(self, sqlite_path: str) -> StepResult:
         """Migrate debate store from SQLite to PostgreSQL."""
@@ -252,7 +266,7 @@ class MigrationManager:
 
         except Exception as e:
             logger.error(f"Failed to migrate debate store: {e}")
-            return StepResult.fail(f"Failed to migrate debate store: {str(e)}")
+            return StepResult.fail(f"Failed to migrate debate store: {e!s}")
 
     def migrate_kg_store(self, sqlite_path: str) -> StepResult:
         """Migrate knowledge graph store from SQLite to PostgreSQL."""
@@ -310,7 +324,7 @@ class MigrationManager:
 
         except Exception as e:
             logger.error(f"Failed to migrate KG store: {e}")
-            return StepResult.fail(f"Failed to migrate KG store: {str(e)}")
+            return StepResult.fail(f"Failed to migrate KG store: {e!s}")
 
     def migrate_profiles_store(self, sqlite_path: str) -> StepResult:
         """Migrate profiles store from SQLite to PostgreSQL."""
@@ -364,7 +378,7 @@ class MigrationManager:
 
         except Exception as e:
             logger.error(f"Failed to migrate profiles store: {e}")
-            return StepResult.fail(f"Failed to migrate profiles store: {str(e)}")
+            return StepResult.fail(f"Failed to migrate profiles store: {e!s}")
 
     def run_migration(self, priority: str = "P0") -> StepResult:
         """Run migration for specified priority level."""
@@ -432,7 +446,7 @@ class MigrationManager:
 
         except Exception as e:
             logger.error(f"Migration failed: {e}")
-            return StepResult.fail(f"Migration failed: {str(e)}")
+            return StepResult.fail(f"Migration failed: {e!s}")
 
     def cleanup(self) -> StepResult:
         """Cleanup resources."""
@@ -442,15 +456,24 @@ class MigrationManager:
             return StepResult.ok(data={"message": "Cleanup completed"})
         except Exception as e:
             logger.error(f"Cleanup failed: {e}")
-            return StepResult.fail(f"Cleanup failed: {str(e)}")
+            return StepResult.fail(f"Cleanup failed: {e!s}")
 
 
 def main():
     """Main migration function."""
     parser = argparse.ArgumentParser(description="Migrate SQLite stores to PostgreSQL")
     parser.add_argument("--postgresql-url", required=True, help="PostgreSQL connection URL")
-    parser.add_argument("--priority", choices=["P0", "P1", "P2"], default="P0", help="Migration priority level")
-    parser.add_argument("--dry-run", action="store_true", help="Perform a dry run without actual migration")
+    parser.add_argument(
+        "--priority",
+        choices=["P0", "P1", "P2"],
+        default="P0",
+        help="Migration priority level",
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Perform a dry run without actual migration",
+    )
     parser.add_argument("--all", action="store_true", help="Migrate all priority levels")
 
     args = parser.parse_args()
@@ -470,10 +493,7 @@ def main():
             sys.exit(1)
 
         # Run migration
-        if args.all:
-            priorities = ["P0", "P1", "P2"]
-        else:
-            priorities = [args.priority]
+        priorities = ["P0", "P1", "P2"] if args.all else [args.priority]
 
         for priority in priorities:
             logger.info(f"Running migration for priority {priority}")

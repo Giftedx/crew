@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from ultimate_discord_intelligence_bot.step_result import StepResult
+
 from ..step_result import StepResult
 
 
@@ -12,7 +14,6 @@ class MultimodalUnderstandingService:
         """Initializes the MultimodalUnderstandingService."""
         # In a real implementation, you would initialize clients for your
         # chosen vision and audio models here.
-        pass
 
     def analyze_video(self, video_path: str, transcript: str) -> StepResult:
         """
@@ -34,9 +35,7 @@ class MultimodalUnderstandingService:
 
             # 2. Audio-Visual Correlation (Placeholder)
             # This would involve analyzing the alignment of audio and visual events.
-            correlation_result = self._correlate_audio_visual(
-                vision_analysis_result.data, transcript
-            )
+            correlation_result = self._correlate_audio_visual(vision_analysis_result.data, transcript)
             if not correlation_result.success:
                 return correlation_result
 
@@ -61,9 +60,7 @@ class MultimodalUnderstandingService:
         # 1. Use a library like OpenCV to extract keyframes from the video.
         # 2. Send the frames to a vision model API.
         # 3. Process the results.
-        self.logger.debug(
-            f"Analyzing vision for {video_path} (placeholder implementation)"
-        )
+        self.logger.debug(f"Analyzing vision for {video_path} (placeholder implementation)")
         mock_vision_data = {
             "summary": "The video contains a debate between two individuals in a studio setting.",
             "elements": ["person_a", "person_b", "desk", "microphone"],

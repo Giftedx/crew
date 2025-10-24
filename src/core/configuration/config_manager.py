@@ -2,15 +2,16 @@
 
 from __future__ import annotations
 
-"""Main configuration manager that orchestrates loading, validation, and caching."""
-
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from .config_cache import ConfigCache, FileWatcher
 from .config_loader import ConfigLoader
-from .config_schema import GlobalConfig, TenantConfig
 from .config_validator import ConfigValidator, ValidationResult
+
+
+if TYPE_CHECKING:
+    from .config_schema import GlobalConfig, TenantConfig
 
 
 class ConfigManager:

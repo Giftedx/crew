@@ -12,6 +12,7 @@ import time
 from pathlib import Path
 from typing import Any
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -89,7 +90,10 @@ async def persist_workflow_results(
         _logger.info(f"✅ Workflow results persisted to {result_file} (workflow_id={workflow_id})")
 
         # Track metric
-        _get_metrics().counter("workflow_results_persisted_total", labels={"reason": "session_closed", "depth": depth})
+        _get_metrics().counter(
+            "workflow_results_persisted_total",
+            labels={"reason": "session_closed", "depth": depth},
+        )
 
         return str(result_file)
     except Exception as e:

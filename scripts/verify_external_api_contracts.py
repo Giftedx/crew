@@ -9,8 +9,13 @@ for manual use. CI should not rely on it unless network is permitted.
 from __future__ import annotations
 
 import sys as _sys
-from collections.abc import Callable
 from pathlib import Path
+from typing import TYPE_CHECKING
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
 
 # Ensure src/ is on path so we can use core HTTP wrappers everywhere
 _sys.path.append(str(Path(__file__).resolve().parents[1] / "src"))
@@ -18,7 +23,10 @@ _sys.path.append(str(Path(__file__).resolve().parents[1] / "src"))
 # isort: off - local path mutation requires nearby import for stability
 try:
     # Prefer centralized HTTP wrappers per repository policy
-    from ultimate_discord_intelligence_bot.core.http_utils import REQUEST_TIMEOUT_SECONDS, cached_get
+    from ultimate_discord_intelligence_bot.core.http_utils import (
+        REQUEST_TIMEOUT_SECONDS,
+        cached_get,
+    )
 except Exception:  # pragma: no cover - fallback in environments without src path
     cached_get = None  # type: ignore
     REQUEST_TIMEOUT_SECONDS = 15  # sensible default

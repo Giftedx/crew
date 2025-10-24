@@ -19,7 +19,9 @@ from pathlib import Path
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from features.rights_management.rights_reuse_intelligence_service import get_rights_reuse_intelligence_service
+from features.rights_management.rights_reuse_intelligence_service import (
+    get_rights_reuse_intelligence_service,
+)
 
 
 def main() -> int:
@@ -52,7 +54,9 @@ def main() -> int:
         },
     ]
 
-    print(f"📝 Analyzing {len(content_segments)} content segments for rights compliance...")
+    print(
+        f"📝 Analyzing {len(content_segments)} content segments for rights compliance..."
+    )
 
     # Analyze content rights
     result = rights_service.analyze_content_rights(
@@ -70,7 +74,8 @@ def main() -> int:
 
     data = result.data
 
-    print("✅ Rights analysis completed!"    print(f"   Total segments: {data['total_content_duration']:.0f}s duration")
+    print("✅ Rights analysis completed!")
+    print(f"   Total segments: {data['total_content_duration']:.0f}s duration")
     print(f"   Cache hit: {data['cache_hit']}")
     print(f"   Processing time: {data['processing_time_ms']:.0f}ms")
     print()
@@ -82,29 +87,31 @@ def main() -> int:
         print("-" * 80)
 
         for i, fragment in enumerate(content_fragments[:3]):  # Show first 3 fragments
-            fragment_id = fragment['fragment_id']
-            start_time = fragment['start_time']
-            end_time = fragment['end_time']
-            duration = fragment['duration']
-            license_type = fragment['license_info']['license_type']
-            risk_score = fragment['risk_score']
-            rights_holder = fragment['license_info']['rights_holder']
+            fragment_id = fragment["fragment_id"]
+            start_time = fragment["start_time"]
+            end_time = fragment["end_time"]
+            duration = fragment["duration"]
+            license_type = fragment["license_info"]["license_type"]
+            risk_score = fragment["risk_score"]
+            rights_holder = fragment["license_info"]["rights_holder"]
 
-            print(f"   {i+1}. **{fragment_id}**")
-            print(f"      Duration: {duration:.1f}s ({start_time:.1f}s - {end_time:.1f}s)")
+            print(f"   {i + 1}. **{fragment_id}**")
+            print(
+                f"      Duration: {duration:.1f}s ({start_time:.1f}s - {end_time:.1f}s)"
+            )
             print(f"      License: {license_type}")
             print(f"      Rights Holder: {rights_holder}")
             print(f"      Risk Score: {risk_score:.2f}")
 
             # Show license details
-            license_info = fragment['license_info']
-            if license_info['usage_rights']:
+            license_info = fragment["license_info"]
+            if license_info["usage_rights"]:
                 print(f"      Usage Rights: {', '.join(license_info['usage_rights'])}")
-            if license_info['restrictions']:
+            if license_info["restrictions"]:
                 print(f"      Restrictions: {', '.join(license_info['restrictions'])}")
 
             # Show alternative suggestions
-            alternatives = fragment.get('alternative_suggestions', [])
+            alternatives = fragment.get("alternative_suggestions", [])
             if alternatives:
                 print(f"      Alternatives: {len(alternatives)} suggestions")
                 for alt in alternatives[:2]:
@@ -147,8 +154,12 @@ def main() -> int:
         print(f"   Overall Risk: {risk_assessment.get('overall_risk', 0):.2f}")
         print(f"   Max Risk: {risk_assessment.get('max_risk', 0):.2f}")
         print(f"   Min Risk: {risk_assessment.get('min_risk', 0):.2f}")
-        print(f"   High Risk Fragments: {risk_assessment.get('high_risk_fragments', 0)}")
-        print(f"   Medium Risk Fragments: {risk_assessment.get('medium_risk_fragments', 0)}")
+        print(
+            f"   High Risk Fragments: {risk_assessment.get('high_risk_fragments', 0)}"
+        )
+        print(
+            f"   Medium Risk Fragments: {risk_assessment.get('medium_risk_fragments', 0)}"
+        )
         print(f"   Low Risk Fragments: {risk_assessment.get('low_risk_fragments', 0)}")
 
     print("-" * 80)
@@ -158,7 +169,7 @@ def main() -> int:
     if recommendations:
         print("💡 Recommendations:")
         for i, rec in enumerate(recommendations[:5]):
-            print(f"   {i+1}. {rec}")
+            print(f"   {i + 1}. {rec}")
 
     print("-" * 80)
 
@@ -175,7 +186,8 @@ def main() -> int:
     if fair_use_result.success:
         fair_use_data = fair_use_result.data
 
-        print("✅ Fair use assessment completed!"        print(f"   Fair Use Score: {fair_use_data['fair_use_score']:.2f}")
+        print("✅ Fair use assessment completed!")
+        print(f"   Fair Use Score: {fair_use_data['fair_use_score']:.2f}")
         print(f"   Risk Level: {fair_use_data['risk_level']}")
 
         factors = fair_use_data.get("factors", {})
@@ -202,13 +214,16 @@ def main() -> int:
         "description": "Recent viral news footage with copyright restrictions",
     }
 
-    alternatives = rights_service.suggest_alternative_content(original_content, risk_threshold=0.5)
+    alternatives = rights_service.suggest_alternative_content(
+        original_content, risk_threshold=0.5
+    )
 
-    print("✅ Alternative content suggestions generated!"    print(f"   Suggestions: {len(alternatives)}")
+    print("✅ Alternative content suggestions generated!")
+    print(f"   Suggestions: {len(alternatives)}")
 
     for i, alt in enumerate(alternatives[:5]):
         risk_score = rights_service._assess_alternative_risk(alt)
-        print(f"   {i+1}. {alt} (Risk: {risk_score:.2f})")
+        print(f"   {i + 1}. {alt} (Risk: {risk_score:.2f})")
 
     print("-" * 80)
 
@@ -239,4 +254,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
-

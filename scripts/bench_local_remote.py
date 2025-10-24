@@ -20,6 +20,7 @@ from statistics import mean
 
 from dotenv import load_dotenv
 
+
 load_dotenv()
 
 
@@ -28,7 +29,12 @@ def bench_local(prompt: str, iters: int) -> float:
 
     model = os.environ.get("VLLM_MODEL_ID")
     max_len = int(os.environ.get("VLLM_MAX_MODEL_LEN", "1024"))
-    llm = LLM(model=model, tensor_parallel_size=1, max_model_len=max_len, gpu_memory_utilization=0.95)
+    llm = LLM(
+        model=model,
+        tensor_parallel_size=1,
+        max_model_len=max_len,
+        gpu_memory_utilization=0.95,
+    )
     _ = SamplingParams(temperature=0.2, max_tokens=64)
     # warmup
     llm.generate(["ping"])  # warm the graph

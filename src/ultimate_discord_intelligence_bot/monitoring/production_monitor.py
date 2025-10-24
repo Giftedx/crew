@@ -18,6 +18,7 @@ from typing import Any
 
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -115,7 +116,7 @@ class ProductionMonitor:
             return StepResult.ok(data=SystemMetrics().__dict__)
         except Exception as e:
             logger.error(f"Failed to get system metrics: {e}")
-            return StepResult.fail(f"System metrics collection failed: {str(e)}")
+            return StepResult.fail(f"System metrics collection failed: {e!s}")
 
     def get_application_metrics(self) -> StepResult:
         """Get current application metrics."""
@@ -137,7 +138,7 @@ class ProductionMonitor:
 
         except Exception as e:
             logger.error(f"Failed to get application metrics: {e}")
-            return StepResult.fail(f"Application metrics collection failed: {str(e)}")
+            return StepResult.fail(f"Application metrics collection failed: {e!s}")
 
     def get_business_metrics(self) -> StepResult:
         """Get current business metrics."""
@@ -157,7 +158,7 @@ class ProductionMonitor:
 
         except Exception as e:
             logger.error(f"Failed to get business metrics: {e}")
-            return StepResult.fail(f"Business metrics collection failed: {str(e)}")
+            return StepResult.fail(f"Business metrics collection failed: {e!s}")
 
     def get_comprehensive_metrics(self) -> StepResult:
         """Get all metrics in a unified format."""
@@ -186,7 +187,7 @@ class ProductionMonitor:
 
         except Exception as e:
             logger.error(f"Failed to get comprehensive metrics: {e}")
-            return StepResult.fail(f"Comprehensive metrics collection failed: {str(e)}")
+            return StepResult.fail(f"Comprehensive metrics collection failed: {e!s}")
 
     def _calculate_health_status(self, system_metrics: dict, app_metrics: dict) -> str:
         """Calculate overall system health status."""
@@ -240,7 +241,7 @@ class ProductionMonitor:
                     logger.error(f"Health check {name} failed: {e}")
                     results[name] = {
                         "healthy": False,
-                        "status": f"Health check failed: {str(e)}",
+                        "status": f"Health check failed: {e!s}",
                     }
                     overall_healthy = False
 
@@ -254,7 +255,7 @@ class ProductionMonitor:
 
         except Exception as e:
             logger.error(f"Failed to run health checks: {e}")
-            return StepResult.fail(f"Health checks failed: {str(e)}")
+            return StepResult.fail(f"Health checks failed: {e!s}")
 
     def get_metrics_history(self, limit: int = 50) -> StepResult:
         """Get metrics history."""
@@ -271,7 +272,7 @@ class ProductionMonitor:
 
         except Exception as e:
             logger.error(f"Failed to get metrics history: {e}")
-            return StepResult.fail(f"Metrics history retrieval failed: {str(e)}")
+            return StepResult.fail(f"Metrics history retrieval failed: {e!s}")
 
     def start_monitoring(self, interval: int = 30) -> StepResult:
         """Start continuous monitoring."""
@@ -287,7 +288,7 @@ class ProductionMonitor:
 
         except Exception as e:
             logger.error(f"Failed to start monitoring: {e}")
-            return StepResult.fail(f"Failed to start monitoring: {str(e)}")
+            return StepResult.fail(f"Failed to start monitoring: {e!s}")
 
     def stop_monitoring(self) -> StepResult:
         """Stop continuous monitoring."""
@@ -305,7 +306,7 @@ class ProductionMonitor:
 
         except Exception as e:
             logger.error(f"Failed to stop monitoring: {e}")
-            return StepResult.fail(f"Failed to stop monitoring: {str(e)}")
+            return StepResult.fail(f"Failed to stop monitoring: {e!s}")
 
     async def _monitor_loop(self, interval: int) -> None:
         """Continuous monitoring loop."""
@@ -425,7 +426,7 @@ class ProductionMonitor:
 
         except Exception as e:
             logger.error(f"Failed to export Prometheus metrics: {e}")
-            return StepResult.fail(f"Prometheus export failed: {str(e)}")
+            return StepResult.fail(f"Prometheus export failed: {e!s}")
 
     def health_check(self) -> StepResult:
         """Health check for the monitoring system itself."""
@@ -449,7 +450,7 @@ class ProductionMonitor:
 
         except Exception as e:
             logger.error(f"Monitoring system health check failed: {e}")
-            return StepResult.fail(f"Monitoring health check failed: {str(e)}")
+            return StepResult.fail(f"Monitoring health check failed: {e!s}")
 
 
 # Global monitoring instance

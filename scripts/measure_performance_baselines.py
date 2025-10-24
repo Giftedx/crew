@@ -14,13 +14,14 @@ import os
 import sys
 import time
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
+
 
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 
-def measure_system_health() -> Dict[str, Any]:
+def measure_system_health() -> dict[str, Any]:
     """Measure basic system health and connectivity."""
     print("🔍 Measuring System Health...")
 
@@ -35,9 +36,7 @@ def measure_system_health() -> Dict[str, Any]:
         collections = client.get_collections()
         results["services"]["qdrant"] = {
             "status": "healthy",
-            "collections_count": len(collections.collections)
-            if hasattr(collections, "collections")
-            else 0,
+            "collections_count": len(collections.collections) if hasattr(collections, "collections") else 0,
         }
     except Exception as e:
         results["services"]["qdrant"] = {"status": "unhealthy", "error": str(e)}
@@ -71,11 +70,7 @@ def measure_system_health() -> Dict[str, Any]:
         }
 
     # Determine overall status
-    unhealthy_services = [
-        s
-        for s in results["services"].values()
-        if s["status"] in ["unhealthy", "not_configured"]
-    ]
+    unhealthy_services = [s for s in results["services"].values() if s["status"] in ["unhealthy", "not_configured"]]
     if not unhealthy_services:
         results["overall_status"] = "healthy"
     elif len(unhealthy_services) == len(results["services"]):
@@ -86,7 +81,7 @@ def measure_system_health() -> Dict[str, Any]:
     return results
 
 
-def measure_evaluation_performance() -> Dict[str, Any]:
+def measure_evaluation_performance() -> dict[str, Any]:
     """Measure performance using the existing evaluation harness."""
     print("🔍 Measuring Evaluation Performance...")
 
@@ -113,43 +108,25 @@ def measure_evaluation_performance() -> Dict[str, Any]:
             # Simulate different processing times based on task complexity
             if task == "rag_qa":
                 time.sleep(0.1)  # 100ms
-                output = (
-                    case.get("must_include", [""])[0]
-                    if case.get("must_include")
-                    else "mock answer"
-                )
+                output = case.get("must_include", [""])[0] if case.get("must_include") else "mock answer"
                 cost = 0.001  # $0.001
             elif task == "summarize":
                 time.sleep(0.2)  # 200ms
                 output = (
-                    " ".join(case.get("expected_keywords", []))
-                    if case.get("expected_keywords")
-                    else "mock summary"
+                    " ".join(case.get("expected_keywords", [])) if case.get("expected_keywords") else "mock summary"
                 )
                 cost = 0.002  # $0.002
             elif task == "claimcheck":
                 time.sleep(0.15)  # 150ms
-                output = (
-                    case.get("expected_label", "true")
-                    if case.get("expected_label")
-                    else "mock label"
-                )
+                output = case.get("expected_label", "true") if case.get("expected_label") else "mock label"
                 cost = 0.0015  # $0.0015
             elif task == "classification":
                 time.sleep(0.1)  # 100ms
-                output = (
-                    case.get("expected", "mock_class")
-                    if case.get("expected")
-                    else "mock class"
-                )
+                output = case.get("expected", "mock_class") if case.get("expected") else "mock class"
                 cost = 0.001  # $0.001
             elif task == "tool_tasks":
                 time.sleep(0.3)  # 300ms
-                output = (
-                    json.dumps(case.get("expected", {}))
-                    if case.get("expected")
-                    else "{}"
-                )
+                output = json.dumps(case.get("expected", {})) if case.get("expected") else "{}"
                 cost = 0.003  # $0.003
             else:
                 time.sleep(0.1)  # 100ms
@@ -191,12 +168,12 @@ def measure_evaluation_performance() -> Dict[str, Any]:
             }
 
     except Exception as e:
-        results["error"] = f"Evaluation failed: {str(e)}"
+        results["error"] = f"Evaluation failed: {e!s}"
 
     return results
 
 
-def measure_tool_performance() -> Dict[str, Any]:
+def measure_tool_performance() -> dict[str, Any]:
     """Measure performance of individual tools."""
     print("🔍 Measuring Tool Performance...")
 
@@ -255,7 +232,7 @@ def measure_tool_performance() -> Dict[str, Any]:
     return results
 
 
-def measure_memory_performance() -> Dict[str, Any]:
+def measure_memory_performance() -> dict[str, Any]:
     """Measure memory system performance."""
     print("🔍 Measuring Memory Performance...")
 
@@ -279,9 +256,7 @@ def measure_memory_performance() -> Dict[str, Any]:
                 "status": "healthy",
                 "init_time_ms": init_time,
                 "collections_query_time_ms": collections_time,
-                "collections_count": len(collections.collections)
-                if hasattr(collections, "collections")
-                else 0,
+                "collections_count": len(collections.collections) if hasattr(collections, "collections") else 0,
             }
         except Exception as e:
             results["memory_systems"]["qdrant"] = {
@@ -310,9 +285,7 @@ def measure_memory_performance() -> Dict[str, Any]:
         results["memory_systems"]["embedding"] = {"status": "failed", "error": str(e)}
 
     # Calculate overall metrics
-    healthy_systems = [
-        s for s in results["memory_systems"].values() if s["status"] == "healthy"
-    ]
+    healthy_systems = [s for s in results["memory_systems"].values() if s["status"] == "healthy"]
     if healthy_systems:
         results["overall_metrics"] = {
             "healthy_systems": len(healthy_systems),
@@ -324,10 +297,10 @@ def measure_memory_performance() -> Dict[str, Any]:
 
 
 def generate_performance_report(
-    health_results: Dict[str, Any],
-    eval_results: Dict[str, Any],
-    tool_results: Dict[str, Any],
-    memory_results: Dict[str, Any],
+    health_results: dict[str, Any],
+    eval_results: dict[str, Any],
+    tool_results: dict[str, Any],
+    memory_results: dict[str, Any],
 ) -> str:
     """Generate a comprehensive performance baseline report."""
     report = []
@@ -347,9 +320,7 @@ def generate_performance_report(
         elif status["status"] == "configured":
             report.append(f"- {service.title()}: ⚠️ {status['status']}")
         else:
-            report.append(
-                f"- {service.title()}: ❌ {status['status']} - {status.get('error', 'Unknown error')}"
-            )
+            report.append(f"- {service.title()}: ❌ {status['status']} - {status.get('error', 'Unknown error')}")
     report.append("")
 
     # Evaluation Performance Section
@@ -383,9 +354,7 @@ def generate_performance_report(
     if tool_results["overall_metrics"]:
         metrics = tool_results["overall_metrics"]
         report.append("### Overall Metrics")
-        report.append(
-            f"- Successful Tools: {metrics['successful_tools']}/{metrics['total_tools_tested']}"
-        )
+        report.append(f"- Successful Tools: {metrics['successful_tools']}/{metrics['total_tools_tested']}")
         report.append(f"- Success Rate: {metrics['success_rate']:.1%}")
         report.append(f"- Average Init Time: {metrics['average_init_time_ms']:.1f}ms")
         report.append("")
@@ -405,26 +374,16 @@ def generate_performance_report(
     if memory_results["overall_metrics"]:
         metrics = memory_results["overall_metrics"]
         report.append("### Overall Metrics")
-        report.append(
-            f"- Healthy Systems: {metrics['healthy_systems']}/{metrics['total_systems']}"
-        )
+        report.append(f"- Healthy Systems: {metrics['healthy_systems']}/{metrics['total_systems']}")
         report.append(f"- Health Rate: {metrics['health_rate']:.1%}")
         report.append("")
 
     report.append("### Individual System Status")
     for system, status in memory_results["memory_systems"].items():
-        if status["status"] == "healthy":
-            report.append(
-                f"- **{system.title()}**: ✅ {status.get('init_time_ms', 0):.1f}ms"
-            )
-        elif status["status"] == "success":
-            report.append(
-                f"- **{system.title()}**: ✅ {status.get('init_time_ms', 0):.1f}ms"
-            )
+        if status["status"] == "healthy" or status["status"] == "success":
+            report.append(f"- **{system.title()}**: ✅ {status.get('init_time_ms', 0):.1f}ms")
         else:
-            report.append(
-                f"- **{system.title()}**: ❌ {status.get('error', 'Unknown error')}"
-            )
+            report.append(f"- **{system.title()}**: ❌ {status.get('error', 'Unknown error')}")
     report.append("")
 
     # Summary and Recommendations
@@ -440,24 +399,16 @@ def generate_performance_report(
     if "error" in eval_results:
         overall_issues.append("Evaluation system errors")
 
-    if (
-        tool_results["overall_metrics"]
-        and tool_results["overall_metrics"].get("success_rate", 1.0) < 1.0
-    ):
+    if tool_results["overall_metrics"] and tool_results["overall_metrics"].get("success_rate", 1.0) < 1.0:
         overall_issues.append("Some tools failed to initialize")
 
-    if (
-        memory_results["overall_metrics"]
-        and memory_results["overall_metrics"].get("health_rate", 1.0) < 1.0
-    ):
+    if memory_results["overall_metrics"] and memory_results["overall_metrics"].get("health_rate", 1.0) < 1.0:
         overall_issues.append("Memory system issues detected")
 
     if not overall_issues:
         report.append("✅ **Overall Status: HEALTHY**")
         report.append("")
-        report.append(
-            "All systems are functioning correctly. Performance baselines have been established."
-        )
+        report.append("All systems are functioning correctly. Performance baselines have been established.")
     else:
         report.append("⚠️ **Overall Status: ISSUES DETECTED**")
         report.append("")
@@ -487,9 +438,7 @@ def main():
     memory_results = measure_memory_performance()
 
     # Generate and display report
-    report = generate_performance_report(
-        health_results, eval_results, tool_results, memory_results
-    )
+    report = generate_performance_report(health_results, eval_results, tool_results, memory_results)
     print(report)
 
     # Save report to file

@@ -11,6 +11,11 @@ import time
 import uuid
 from typing import TYPE_CHECKING, Any
 
+from core.secure_config import get_config
+from core.time import default_utc_now
+from ultimate_discord_intelligence_bot.tenancy.context import current_tenant
+
+
 logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:  # pragma: no cover - typing only
@@ -31,9 +36,7 @@ except ImportError:  # pragma: no cover
     LANGSMITH_AVAILABLE = False
     logger.debug("LangSmith not available - specialized LLM tracing disabled")
 
-from core.secure_config import get_config
-from core.time import default_utc_now
-from ultimate_discord_intelligence_bot.tenancy.context import current_tenant
+# imports moved above to satisfy E402
 
 
 class LangSmithObservabilityManager:
@@ -382,7 +385,11 @@ def trace_llm_call(name: str, prompt: str, response: str, model: str, **kwargs) 
 
 
 def trace_tool_execution(
-    tool_name: str, inputs: dict[str, Any], outputs: dict[str, Any], latency_ms: float, **kwargs
+    tool_name: str,
+    inputs: dict[str, Any],
+    outputs: dict[str, Any],
+    latency_ms: float,
+    **kwargs,
 ) -> str | None:
     """Convenience function for tracing tool executions."""
     manager = get_langsmith_manager()

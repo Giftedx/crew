@@ -2,11 +2,15 @@ from __future__ import annotations
 
 import logging
 import time
-from collections.abc import Callable
+from typing import TYPE_CHECKING
 
 from core.cache.api_cache_middleware import APICacheMiddleware
 from fastapi import FastAPI, Request, Response
 from obs import metrics
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 def add_metrics_middleware(app: FastAPI, settings) -> None:
@@ -39,8 +43,22 @@ def add_api_cache_middleware(app: FastAPI, settings) -> None:
     if not getattr(settings, "enable_advanced_cache", False):
         return
 
+    # Prefer unified cache TTL for API cache if settings doesn't override
+    try:
+        ttl_api = getattr(settings, "cache_ttl_api", None)
+        if not isinstance(ttl_api, int) or ttl_api <= 0:
+            from core.cache.unified_config import get_unified_cache_config  # local import to avoid cycles
+
+            ttl_api = int(get_unified_cache_config().get_ttl_for_domain("tool"))
+    except Exception:
+        ttl_api = (
+            getattr(settings, "cache_ttl_api", 300)
+            if isinstance(getattr(settings, "cache_ttl_api", None), int)
+            else 300
+        )
+
     middleware_instance = APICacheMiddleware(
-        cache_ttl=getattr(settings, "cache_ttl_api", 300),
+        cache_ttl=ttl_api,
         exclude_paths={
             "/health",
             "/metrics",
@@ -65,7 +83,12 @@ def add_cors_middleware(app: FastAPI, settings) -> None:
 
         enable_cors = getattr(settings, "enable_cors", False)
         if not enable_cors:
-            enable_cors = _os.getenv("ENABLE_CORS", "0").lower() in {"1", "true", "yes", "on"}
+            enable_cors = _os.getenv("ENABLE_CORS", "0").lower() in {
+                "1",
+                "true",
+                "yes",
+                "on",
+            }
         if not enable_cors:
             return
 
@@ -108,7 +131,7 @@ def add_cors_middleware(app: FastAPI, settings) -> None:
             return response
 
         @app.options("/{full_path:path}")
-        def _cors_preflight(request: Request) -> Response:  # noqa: D401
+        def _cors_preflight(request: Request) -> Response:
             origin = request.headers.get("origin")
             if not origin or origin not in allowed:
                 return Response(status_code=404)
@@ -125,7 +148,7 @@ def add_cors_middleware(app: FastAPI, settings) -> None:
 
 
 __all__ = [
-    "add_metrics_middleware",
     "add_api_cache_middleware",
     "add_cors_middleware",
+    "add_metrics_middleware",
 ]

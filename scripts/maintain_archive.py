@@ -35,9 +35,8 @@ def compress_old_results(archive_path: Path, days_old: int = 30):
         if file_time < cutoff_date:
             # Compress the file
             compressed_path = json_file.with_suffix(".json.gz")
-            with open(json_file, "rb") as f_in:
-                with gzip.open(compressed_path, "wb") as f_out:
-                    shutil.copyfileobj(f_in, f_out)
+            with open(json_file, "rb") as f_in, gzip.open(compressed_path, "wb") as f_out:
+                shutil.copyfileobj(f_in, f_out)
 
             # Remove original if compression successful
             if compressed_path.exists():
@@ -49,7 +48,11 @@ def compress_old_results(archive_path: Path, days_old: int = 30):
 
 def generate_archive_inventory(archive_path: Path):
     """Generate an inventory report of the archive."""
-    inventory = {"generated_at": datetime.now().isoformat(), "directories": {}, "summary": {}}
+    inventory = {
+        "generated_at": datetime.now().isoformat(),
+        "directories": {},
+        "summary": {},
+    }
 
     for subdir in ["demos", "results", "experimental", "logs"]:
         dir_path = archive_path / subdir

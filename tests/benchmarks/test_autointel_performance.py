@@ -28,6 +28,7 @@ from ultimate_discord_intelligence_bot.autonomous_orchestrator import (
     AutonomousIntelligenceOrchestrator,
 )
 
+
 # ============================================================================
 # FIXTURES
 # ============================================================================
@@ -205,7 +206,9 @@ class TestAutointelWorkflowPerformance:
         start = time.time()
 
         await orchestrator.execute_autonomous_intelligence_workflow(
-            interaction=mock_interaction, url="https://youtube.com/watch?v=test", depth="experimental"
+            interaction=mock_interaction,
+            url="https://youtube.com/watch?v=test",
+            depth="experimental",
         )
 
         duration = time.time() - start
@@ -234,7 +237,9 @@ class TestAutointelWorkflowPerformance:
         start = time.time()
 
         await orchestrator.execute_autonomous_intelligence_workflow(
-            interaction=mock_interaction, url="https://youtube.com/watch?v=test", depth="standard"
+            interaction=mock_interaction,
+            url="https://youtube.com/watch?v=test",
+            depth="standard",
         )
 
         duration = time.time() - start
@@ -255,7 +260,9 @@ class TestAutointelWorkflowPerformance:
         start = time.time()
 
         await orchestrator.execute_autonomous_intelligence_workflow(
-            interaction=mock_interaction, url="https://youtube.com/watch?v=test", depth="deep"
+            interaction=mock_interaction,
+            url="https://youtube.com/watch?v=test",
+            depth="deep",
         )
 
         duration = time.time() - start
@@ -289,7 +296,9 @@ class TestPerformanceRegression:
         start = time.time()
 
         await orchestrator.execute_autonomous_intelligence_workflow(
-            interaction=mock_interaction, url="https://youtube.com/watch?v=test", depth="experimental"
+            interaction=mock_interaction,
+            url="https://youtube.com/watch?v=test",
+            depth="experimental",
         )
 
         duration = time.time() - start
@@ -351,7 +360,9 @@ class TestOptimizationTargets:
         start = time.time()
 
         await orchestrator.execute_autonomous_intelligence_workflow(
-            interaction=mock_interaction, url="https://youtube.com/watch?v=test", depth="experimental"
+            interaction=mock_interaction,
+            url="https://youtube.com/watch?v=test",
+            depth="experimental",
         )
 
         duration = time.time() - start
@@ -436,7 +447,9 @@ class TestFlagCombinationValidation:
         start = time.time()
 
         await orchestrator.execute_autonomous_intelligence_workflow(
-            interaction=mock_interaction, url="https://youtube.com/watch?v=test", depth="experimental"
+            interaction=mock_interaction,
+            url="https://youtube.com/watch?v=test",
+            depth="experimental",
         )
 
         duration = time.time() - start
@@ -467,7 +480,9 @@ class TestFlagCombinationValidation:
         start = time.time()
 
         await orchestrator.execute_autonomous_intelligence_workflow(
-            interaction=mock_interaction, url="https://youtube.com/watch?v=test", depth="experimental"
+            interaction=mock_interaction,
+            url="https://youtube.com/watch?v=test",
+            depth="experimental",
         )
 
         duration = time.time() - start
@@ -497,7 +512,9 @@ class TestFlagCombinationValidation:
         start = time.time()
 
         await orchestrator.execute_autonomous_intelligence_workflow(
-            interaction=mock_interaction, url="https://youtube.com/watch?v=test", depth="experimental"
+            interaction=mock_interaction,
+            url="https://youtube.com/watch?v=test",
+            depth="experimental",
         )
 
         duration = time.time() - start
@@ -529,7 +546,9 @@ class TestFlagCombinationValidation:
         start = time.time()
 
         await orchestrator.execute_autonomous_intelligence_workflow(
-            interaction=mock_interaction, url="https://youtube.com/watch?v=test", depth="experimental"
+            interaction=mock_interaction,
+            url="https://youtube.com/watch?v=test",
+            depth="experimental",
         )
 
         duration = time.time() - start
@@ -561,7 +580,9 @@ class TestFlagCombinationValidation:
         start = time.time()
 
         await orchestrator.execute_autonomous_intelligence_workflow(
-            interaction=mock_interaction, url="https://youtube.com/watch?v=test", depth="experimental"
+            interaction=mock_interaction,
+            url="https://youtube.com/watch?v=test",
+            depth="experimental",
         )
 
         duration = time.time() - start
@@ -593,7 +614,9 @@ class TestFlagCombinationValidation:
         start = time.time()
 
         await orchestrator.execute_autonomous_intelligence_workflow(
-            interaction=mock_interaction, url="https://youtube.com/watch?v=test", depth="experimental"
+            interaction=mock_interaction,
+            url="https://youtube.com/watch?v=test",
+            depth="experimental",
         )
 
         duration = time.time() - start
@@ -625,7 +648,9 @@ class TestFlagCombinationValidation:
         start = time.time()
 
         await orchestrator.execute_autonomous_intelligence_workflow(
-            interaction=mock_interaction, url="https://youtube.com/watch?v=test", depth="experimental"
+            interaction=mock_interaction,
+            url="https://youtube.com/watch?v=test",
+            depth="experimental",
         )
 
         duration = time.time() - start
@@ -656,7 +681,9 @@ class TestFlagCombinationValidation:
         start = time.time()
 
         await orchestrator.execute_autonomous_intelligence_workflow(
-            interaction=mock_interaction, url="https://youtube.com/watch?v=test", depth="experimental"
+            interaction=mock_interaction,
+            url="https://youtube.com/watch?v=test",
+            depth="experimental",
         )
 
         duration = time.time() - start

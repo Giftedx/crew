@@ -224,7 +224,10 @@ class TestSpeakerDiarization:
             created_at=None,
         )
 
-        with patch("pyannote.metrics.diarization.DiarizationErrorRate", side_effect=Exception("DER failed")):
+        with patch(
+            "pyannote.metrics.diarization.DiarizationErrorRate",
+            side_effect=Exception("DER failed"),
+        ):
             result = self.processor.evaluate_der(predicted_result, reference_result)
 
             assert not result.success
@@ -256,7 +259,11 @@ class TestSpeakerDiarization:
 
             assert result.success
             assert result.data["data"]["estimated_speaker_count"] == 3
-            assert result.data["data"]["speakers"] == ["SPEAKER_00", "SPEAKER_01", "SPEAKER_02"]
+            assert result.data["data"]["speakers"] == [
+                "SPEAKER_00",
+                "SPEAKER_01",
+                "SPEAKER_02",
+            ]
             assert result.data["data"]["confidence"] == "medium"
 
         finally:

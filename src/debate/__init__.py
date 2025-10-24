@@ -1,5 +1,6 @@
 """Debate package exposing panel helpers."""
 
-from .panel import AgentResult, DebateReport, PanelConfig, run_panel  # noqa: F401
+from .panel import AgentResult, DebateReport, PanelConfig, run_panel
 
-__all__ = ["PanelConfig", "DebateReport", "AgentResult", "run_panel"]
+
+__all__ = ["AgentResult", "DebateReport", "PanelConfig", "run_panel"]

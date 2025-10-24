@@ -8,6 +8,7 @@ and reduce connection overhead.
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
 import threading
 import time
@@ -15,6 +16,7 @@ from abc import ABC, abstractmethod
 from collections import deque
 from dataclasses import dataclass
 from typing import Any, Generic, TypeVar
+
 
 logger = logging.getLogger(__name__)
 
@@ -54,22 +56,18 @@ class ResourceFactory(ABC, Generic[T]):
     @abstractmethod
     async def create_resource(self) -> T:
         """Create a new resource instance."""
-        pass
 
     @abstractmethod
     async def destroy_resource(self, resource: T) -> None:
         """Destroy a resource instance."""
-        pass
 
     @abstractmethod
     def is_resource_valid(self, resource: T) -> bool:
         """Check if a resource is still valid for use."""
-        pass
 
     @abstractmethod
     async def validate_resource(self, resource: T) -> bool:
         """Perform validation on a resource before reuse."""
-        pass
 
 
 class ConnectionPool(Generic[T]):
@@ -123,10 +121,8 @@ class ConnectionPool(Generic[T]):
         # Cancel maintenance task
         if self._maintenance_task:
             self._maintenance_task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await self._maintenance_task
-            except asyncio.CancelledError:
-                pass
 
         # Destroy all connections
         await self._destroy_all_connections()
@@ -314,7 +310,9 @@ class HTTPConnectionFactory(ResourceFactory[Any]):
         )
 
         session = aiohttp.ClientSession(
-            connector=connector, headers=self.headers, timeout=aiohttp.ClientTimeout(total=30)
+            connector=connector,
+            headers=self.headers,
+            timeout=aiohttp.ClientTimeout(total=30),
         )
 
         # Mark creation time
@@ -471,7 +469,7 @@ async def initialize_connection_pools() -> None:
     logger.info("Initializing connection pools...")
 
     # Start all pools
-    for pool_name, pool in _connection_pools.items():
+    for _pool_name, pool in _connection_pools.items():
         await pool.start()
 
     logger.info(f"Initialized {len(_connection_pools)} connection pools")
@@ -482,7 +480,7 @@ async def shutdown_connection_pools() -> None:
     logger.info("Shutting down connection pools...")
 
     # Stop all pools
-    for pool_name, pool in _connection_pools.items():
+    for _pool_name, pool in _connection_pools.items():
         await pool.stop()
 
     _connection_pools.clear()
@@ -495,16 +493,16 @@ def get_pool_stats() -> dict[str, PoolStats]:
 
 
 __all__ = [
-    "ResourceFactory",
     "ConnectionPool",
-    "PoolStats",
     "HTTPConnectionFactory",
     "OpenRouterConnectionFactory",
+    "PoolStats",
     "QdrantConnectionFactory",
+    "ResourceFactory",
     "get_connection_pool",
     "get_openrouter_pool",
+    "get_pool_stats",
     "get_qdrant_pool",
     "initialize_connection_pools",
     "shutdown_connection_pools",
-    "get_pool_stats",
 ]

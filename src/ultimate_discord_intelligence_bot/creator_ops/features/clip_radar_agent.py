@@ -6,7 +6,7 @@ Provides intelligent analysis and optimization for viral moment detection.
 import logging
 from datetime import datetime
 
-from crewai import Agent, Crew, Task
+from crewai import Agent, Crew, Task  # type: ignore[import-not-found]
 from pydantic import BaseModel
 
 from ultimate_discord_intelligence_bot.creator_ops.config import CreatorOpsConfig
@@ -17,6 +17,7 @@ from ultimate_discord_intelligence_bot.creator_ops.features.clip_radar_models im
     ViralMoment,
 )
 from ultimate_discord_intelligence_bot.step_result import StepResult
+
 
 logger = logging.getLogger(__name__)
 
@@ -58,11 +59,8 @@ class LiveClipRadarAgent:
     def _get_llm(self):
         """Get configured LLM for agent."""
         # Use OpenRouter or OpenAI based on configuration
-        if (
-            hasattr(self.config, "openrouter_api_key")
-            and self.config.openrouter_api_key
-        ):
-            from langchain_openai import ChatOpenAI
+        if hasattr(self.config, "openrouter_api_key") and self.config.openrouter_api_key:
+            from langchain_openai import ChatOpenAI  # type: ignore[import-not-found]
 
             return ChatOpenAI(
                 model="anthropic/claude-3-sonnet",
@@ -70,7 +68,7 @@ class LiveClipRadarAgent:
                 base_url="https://openrouter.ai/api/v1",
             )
         else:
-            from langchain_openai import ChatOpenAI
+            from langchain_openai import ChatOpenAI  # type: ignore[import-not-found]
 
             return ChatOpenAI(model="gpt-4", api_key=self.config.openai_api_key)
 
@@ -239,12 +237,8 @@ class LiveClipRadarAgent:
                 "moment_type": viral_moment.moment_type.value,
                 "confidence": viral_moment.confidence,
                 "description": viral_moment.description,
-                "trigger_message": viral_moment.trigger_message.message
-                if viral_moment.trigger_message
-                else "",
-                "context_messages": [
-                    msg.message for msg in viral_moment.context_messages
-                ],
+                "trigger_message": viral_moment.trigger_message.message if viral_moment.trigger_message else "",
+                "context_messages": [msg.message for msg in viral_moment.context_messages],
                 "metrics": viral_moment.metrics,
             }
 
@@ -269,8 +263,8 @@ class LiveClipRadarAgent:
             return StepResult.ok(data={"analysis": viral_analysis})
 
         except Exception as e:
-            logger.error(f"Viral moment analysis failed: {str(e)}")
-            return StepResult.fail(f"Viral moment analysis failed: {str(e)}")
+            logger.error(f"Viral moment analysis failed: {e!s}")
+            return StepResult.fail(f"Viral moment analysis failed: {e!s}")
 
     async def optimize_clip_candidate(
         self,
@@ -311,12 +305,8 @@ class LiveClipRadarAgent:
 
             # Create optimization result
             clip_optimization = ClipOptimization(
-                title_optimization=optimization.get(
-                    "title_optimization", clip_candidate.title
-                ),
-                description_optimization=optimization.get(
-                    "description_optimization", clip_candidate.description
-                ),
+                title_optimization=optimization.get("title_optimization", clip_candidate.title),
+                description_optimization=optimization.get("description_optimization", clip_candidate.description),
                 timing_optimization=optimization.get("timing_optimization", {}),
                 platform_specific_hooks=optimization.get("platform_hooks", {}),
                 hashtag_recommendations=optimization.get("hashtags", []),
@@ -328,8 +318,8 @@ class LiveClipRadarAgent:
             return StepResult.ok(data={"optimization": clip_optimization})
 
         except Exception as e:
-            logger.error(f"Clip optimization failed: {str(e)}")
-            return StepResult.fail(f"Clip optimization failed: {str(e)}")
+            logger.error(f"Clip optimization failed: {e!s}")
+            return StepResult.fail(f"Clip optimization failed: {e!s}")
 
     def _parse_crew_results(self, result) -> dict:
         """Parse results from crew execution."""
@@ -357,26 +347,20 @@ class LiveClipRadarAgent:
 
             # Parse clip optimization
             if "clip_optimization" in result:
-                analysis.update(
-                    self._extract_optimization_insights(result["clip_optimization"])
-                )
+                analysis.update(self._extract_optimization_insights(result["clip_optimization"]))
 
             # Parse engagement prediction
             if "engagement_prediction" in result:
-                analysis.update(
-                    self._extract_engagement_insights(result["engagement_prediction"])
-                )
+                analysis.update(self._extract_engagement_insights(result["engagement_prediction"]))
 
             # Parse platform strategy
             if "platform_strategy" in result:
-                analysis.update(
-                    self._extract_platform_insights(result["platform_strategy"])
-                )
+                analysis.update(self._extract_platform_insights(result["platform_strategy"]))
 
             return analysis
 
         except Exception as e:
-            logger.error(f"Failed to parse crew results: {str(e)}")
+            logger.error(f"Failed to parse crew results: {e!s}")
             return {
                 "quality_score": 0.7,
                 "viral_potential": 0.6,
@@ -421,15 +405,11 @@ class LiveClipRadarAgent:
 
         # Extract title optimization
         if "title" in text_lower:
-            insights["title_optimization"] = self._extract_optimization(
-                text_lower, "title"
-            )
+            insights["title_optimization"] = self._extract_optimization(text_lower, "title")
 
         # Extract description optimization
         if "description" in text_lower:
-            insights["description_optimization"] = self._extract_optimization(
-                text_lower, "description"
-            )
+            insights["description_optimization"] = self._extract_optimization(text_lower, "description")
 
         # Extract hashtags
         hashtags = []
@@ -473,9 +453,7 @@ class LiveClipRadarAgent:
         if "instagram" in text_lower:
             platform_hooks["instagram"] = "Focus on visual appeal and engagement"
         if "twitter" in text_lower or "x" in text_lower:
-            platform_hooks["twitter"] = (
-                "Create engaging threads and use trending topics"
-            )
+            platform_hooks["twitter"] = "Create engaging threads and use trending topics"
 
         insights["platform_hooks"] = platform_hooks
 
@@ -497,9 +475,7 @@ class LiveClipRadarAgent:
                 match = re.search(pattern, text)
                 if match:
                     score = float(match.group(1))
-                    if "%" in text:
-                        return score / 100.0
-                    elif score > 1.0:
+                    if "%" in text or score > 1.0:
                         return score / 100.0
                     else:
                         return score
@@ -577,8 +553,8 @@ class LiveClipRadarAgent:
             return StepResult.ok(data={"optimized_clip": optimized_clip})
 
         except Exception as e:
-            logger.error(f"Failed to generate optimized clip: {str(e)}")
-            return StepResult.fail(f"Failed to generate optimized clip: {str(e)}")
+            logger.error(f"Failed to generate optimized clip: {e!s}")
+            return StepResult.fail(f"Failed to generate optimized clip: {e!s}")
 
     async def get_analysis_summary(
         self, viral_analysis: ViralMomentAnalysis, clip_optimization: ClipOptimization
@@ -596,9 +572,7 @@ class LiveClipRadarAgent:
                     "platforms": list(clip_optimization.platform_specific_hooks.keys()),
                 },
                 "recommendations": {
-                    "optimization": viral_analysis.optimization_suggestions[
-                        :3
-                    ],  # Top 3
+                    "optimization": viral_analysis.optimization_suggestions[:3],  # Top 3
                     "engagement": clip_optimization.engagement_strategies[:3],  # Top 3
                     "clips": viral_analysis.clip_recommendations[:3],  # Top 3
                 },
@@ -609,5 +583,5 @@ class LiveClipRadarAgent:
             return StepResult.ok(data={"summary": summary})
 
         except Exception as e:
-            logger.error(f"Failed to generate analysis summary: {str(e)}")
-            return StepResult.fail(f"Failed to generate analysis summary: {str(e)}")
+            logger.error(f"Failed to generate analysis summary: {e!s}")
+            return StepResult.fail(f"Failed to generate analysis summary: {e!s}")

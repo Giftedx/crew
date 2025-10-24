@@ -18,6 +18,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass, field
 from typing import Any
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -97,7 +98,13 @@ class PerformanceProfiler:
         except ImportError:
             return 0.0
 
-    def _record_profile(self, operation_name: str, duration: float, memory_delta: float, operation_id: str) -> None:
+    def _record_profile(
+        self,
+        operation_name: str,
+        duration: float,
+        memory_delta: float,
+        operation_id: str,
+    ) -> None:
         """Record profiling data."""
         if operation_name not in self.profiles:
             self.profiles[operation_name] = PerformanceProfile(
@@ -327,7 +334,10 @@ class SystemDebugger:
         return info
 
     def get_snapshots(
-        self, operation_id: str | None = None, operation_type: str | None = None, limit: int = 10
+        self,
+        operation_id: str | None = None,
+        operation_type: str | None = None,
+        limit: int = 10,
     ) -> list[DebugSnapshot]:
         """Get debug snapshots with optional filtering."""
         snapshots = self.snapshots
@@ -662,21 +672,21 @@ def initialize_development_tools() -> None:
 
 
 __all__ = [
-    "PerformanceProfiler",
-    "SystemDebugger",
+    "DebugSnapshot",
     "DevelopmentUtilities",
     "InteractiveDebugger",
     "PerformanceProfile",
-    "DebugSnapshot",
-    "get_profiler",
+    "PerformanceProfiler",
+    "SystemDebugger",
+    "capture_debug_snapshot",
+    "debug_snapshot",
+    "enable_profiling",
     "get_debugger",
     "get_dev_utils",
     "get_interactive_debugger",
-    "profile_operation",
-    "debug_snapshot",
-    "enable_profiling",
-    "capture_debug_snapshot",
-    "register_test_scenario",
+    "get_profiler",
     "get_system_status",
     "initialize_development_tools",
+    "profile_operation",
+    "register_test_scenario",
 ]

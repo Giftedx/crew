@@ -1,0 +1,40 @@
+# Poller Configuration
+# TODO: Implement polling and scheduling settings
+
+# Polling intervals
+intervals:
+  content_check: 300  # 5 minutes
+  health_check: 60    # 1 minute
+  metrics_collection: 30  # 30 seconds
+  # TODO: Add polling interval configuration
+
+# Polling targets
+targets:
+  youtube_channels:
+    enabled: true
+    # TODO: Add YouTube channel polling configuration
+  twitch_streams:
+    enabled: true
+    # TODO: Add Twitch stream polling configuration
+  reddit_subreddits:
+    enabled: true
+    # TODO: Add Reddit subreddit polling configuration
+
+# Scheduling settings
+scheduling:
+  enabled: true
+  timezone: "UTC"
+  # TODO: Add scheduling configuration
+
+# Performance settings
+performance:
+  max_concurrent_polls: 10
+  timeout_seconds: 30
+  retry_attempts: 3
+  # TODO: Add performance optimization settings
+
+# Monitoring settings
+monitoring:
+  enabled: true
+  alert_on_failure: true
+  # TODO: Add monitoring configuration

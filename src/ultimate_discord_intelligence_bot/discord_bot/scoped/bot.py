@@ -9,23 +9,26 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-try:  # optional dependency
-    from discord.ext import commands  # type: ignore
 
-    import discord  # type: ignore
+try:  # optional dependency
+    from discord.ext import commands
+
+    import discord
 
     _DISCORD_AVAILABLE = True
 except Exception:  # pragma: no cover - CI safe
     _DISCORD_AVAILABLE = False
-    discord = None  # type: ignore
-    commands = None  # type: ignore
+    discord = None
+    commands = None
 
 from .registrars.analytics import register_analytics_commands
 from .registrars.dev import register_dev_commands
 from .registrars.events import register_events
+from .registrars.openai import register_openai_commands
 from .registrars.ops import register_ops_commands
 from .registrars.system import register_system_commands
 from .timeline import TimelineManager
+
 
 log = logging.getLogger(__name__)
 
@@ -39,15 +42,17 @@ class ScopedCommandBot:
         self.system_metrics: dict[str, Any] = {}
 
         if _DISCORD_AVAILABLE:
-            intents = discord.Intents.default()  # type: ignore[attr-defined]
+            intents = discord.Intents.default()
             intents.message_content = True
             intents.guilds = True
-            self.bot = commands.Bot(  # type: ignore[call-arg]
-                command_prefix="!", intents=intents, description="Ultimate Discord Intelligence Bot - Scoped"
+            self.bot = commands.Bot(
+                command_prefix="!",
+                intents=intents,
+                description="Ultimate Discord Intelligence Bot - Scoped",
             )
             self._register_scoped_commands()
         else:
-            self.bot = None
+            self.bot = None  # type: ignore
 
     def _register_scoped_commands(self) -> None:
         if not self.bot:
@@ -56,6 +61,7 @@ class ScopedCommandBot:
         register_ops_commands(self)
         register_dev_commands(self)
         register_analytics_commands(self)
+        register_openai_commands(self)
         register_events(self)
 
     async def start(self, token: str) -> None:

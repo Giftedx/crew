@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 """Community Pulse Analyzer Service.
 
 Analyzes audience/community signals across platforms (YouTube, Twitch, X, Reddit, Discord)
@@ -8,6 +6,8 @@ to produce actionable insights: sentiment, momentum, topics, questions, and risk
 Follows StepResult pattern and includes caching.
 """
 
+from __future__ import annotations
+
 import hashlib
 import logging
 import time
@@ -15,6 +15,7 @@ from dataclasses import dataclass
 from typing import Any, Literal
 
 from ultimate_discord_intelligence_bot.step_result import StepResult
+
 
 logger = logging.getLogger(__name__)
 
@@ -184,7 +185,7 @@ class CommunityPulseAnalyzerService:
             return StepResult.ok(data=result)
         except Exception as e:
             logger.error(f"Community pulse analysis failed: {e}")
-            return StepResult.fail(f"Community pulse analysis failed: {str(e)}")
+            return StepResult.fail(f"Community pulse analysis failed: {e!s}")
 
     def clear_cache(self) -> StepResult:
         size = len(self._cache)
@@ -293,7 +294,9 @@ class CommunityPulseAnalyzerService:
 _community_pulse_service: CommunityPulseAnalyzerService | None = None
 
 
-def get_community_pulse_analyzer_service(cache_size: int = 1000) -> CommunityPulseAnalyzerService:
+def get_community_pulse_analyzer_service(
+    cache_size: int = 1000,
+) -> CommunityPulseAnalyzerService:
     global _community_pulse_service
     if _community_pulse_service is None:
         _community_pulse_service = CommunityPulseAnalyzerService(cache_size=cache_size)

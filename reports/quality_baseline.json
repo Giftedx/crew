@@ -1,0 +1,157 @@
+{
+    "analysis_date": "2025-01-22",
+    "analysis_scope": "Code Quality & Technical Debt Assessment",
+    "quality_metrics": {
+        "code_formatting": {
+            "status": "FAILED",
+            "exit_code": 2,
+            "issues": [
+                "Formatting issues detected",
+                "Need to run make format"
+            ],
+            "recommendation": "Fix formatting issues with ruff"
+        },
+        "linting": {
+            "status": "FAILED",
+            "exit_code": 2,
+            "issues": [
+                "Linting violations detected",
+                "Need to run make lint"
+            ],
+            "recommendation": "Fix linting issues with ruff"
+        },
+        "type_checking": {
+            "status": "PARTIAL",
+            "exit_code": 0,
+            "errors": 11,
+            "files_checked": 12,
+            "issues": [
+                "Unused type ignore comments in performance_monitor.py",
+                "Type compatibility issues in llm_router.py",
+                "Argument type issues in sorted function"
+            ],
+            "recommendation": "Fix type annotations and remove unused ignores"
+        },
+        "testing": {
+            "status": "FAILED",
+            "exit_code": 1,
+            "test_files": 948,
+            "errors": 79,
+            "import_errors": [
+                "Missing create_app function in main.py",
+                "ModuleNotFoundError: No module named 'core.settings'",
+                "Import path issues in multiple test files"
+            ],
+            "recommendation": "Fix import issues and missing dependencies"
+        },
+        "coverage": {
+            "status": "UNKNOWN",
+            "reason": "Tests not running due to import errors",
+            "recommendation": "Fix test imports before measuring coverage"
+        }
+    },
+    "technical_debt_inventory": {
+        "critical_issues": [
+            {
+                "category": "Import Errors",
+                "count": 79,
+                "severity": "HIGH",
+                "description": "Multiple import errors preventing test execution",
+                "files_affected": [
+                    "tests/agents/test_agents.py",
+                    "tests/benchmarks/test_autointel_performance.py",
+                    "tests/benchmarks/test_pipeline_performance.py",
+                    "tests/compliance/test_compliance.py"
+                ],
+                "root_causes": [
+                    "Missing create_app function in main.py",
+                    "core.settings module not found",
+                    "Incorrect import paths"
+                ]
+            },
+            {
+                "category": "Type Annotations",
+                "count": 11,
+                "severity": "MEDIUM",
+                "description": "Type checking errors and unused type ignores",
+                "files_affected": [
+                    "src/ultimate_discord_intelligence_bot/agent_training/performance_monitor.py",
+                    "src/core/llm_router.py"
+                ],
+                "root_causes": [
+                    "Unused type ignore comments",
+                    "Incompatible argument types",
+                    "Return value type mismatches"
+                ]
+            }
+        ],
+        "moderate_issues": [
+            {
+                "category": "Code Formatting",
+                "severity": "LOW",
+                "description": "Code formatting issues detected by ruff",
+                "recommendation": "Run make format to fix"
+            },
+            {
+                "category": "Linting Violations",
+                "severity": "LOW",
+                "description": "Code style violations detected by ruff",
+                "recommendation": "Run make lint to identify and fix"
+            }
+        ],
+        "low_priority_issues": [
+            {
+                "category": "Test Infrastructure",
+                "severity": "LOW",
+                "description": "Test suite structure exists but has import issues",
+                "recommendation": "Fix import paths and missing dependencies"
+            }
+        ]
+    },
+    "quality_gates_status": {
+        "format": "FAILED",
+        "lint": "FAILED",
+        "type": "PARTIAL",
+        "test": "FAILED",
+        "docs": "UNKNOWN"
+    },
+    "baseline_metrics": {
+        "total_issues": 90,
+        "critical_issues": 79,
+        "moderate_issues": 11,
+        "low_priority_issues": 0,
+        "test_files": 948,
+        "source_files": 150,
+        "coverage_percentage": "UNKNOWN"
+    },
+    "recommendations": {
+        "immediate_actions": [
+            "Fix import errors in test files",
+            "Add missing create_app function to main.py",
+            "Resolve core.settings module import issues",
+            "Fix type annotation errors",
+            "Remove unused type ignore comments"
+        ],
+        "short_term_actions": [
+            "Run make format to fix formatting issues",
+            "Run make lint to identify style violations",
+            "Fix all type checking errors",
+            "Ensure all tests can run successfully",
+            "Measure and improve test coverage"
+        ],
+        "long_term_actions": [
+            "Implement comprehensive test coverage",
+            "Establish quality gates in CI/CD",
+            "Regular code quality monitoring",
+            "Technical debt tracking and reduction"
+        ]
+    },
+    "quality_targets": {
+        "format": "PASS",
+        "lint": "PASS",
+        "type": "PASS",
+        "test": "PASS",
+        "coverage": "80%",
+        "technical_debt": "LOW"
+    }
+}

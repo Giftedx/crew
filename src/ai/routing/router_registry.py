@@ -23,12 +23,15 @@ import math
 import os
 import threading
 from collections import defaultdict
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 from ai.routing.bandit_router import ThompsonBanditRouter
 from ultimate_discord_intelligence_bot.tenancy.context import current_tenant
 
-from ._metrics_types import MetricLike, MetricsFacade
+
+if TYPE_CHECKING:
+    from ._metrics_types import MetricLike, MetricsFacade
+
 
 _registry_lock = threading.Lock()
 _routers: dict[tuple[str, str], ThompsonBanditRouter] = {}
@@ -39,7 +42,7 @@ try:  # optional metrics
 
     def _obtain_metrics() -> MetricsFacade | None:
         try:
-            return cast(MetricsFacade, _gm())
+            return cast("MetricsFacade", _gm())
         except Exception:  # pragma: no cover
             return None
 except Exception:  # pragma: no cover
@@ -170,7 +173,12 @@ def _counts_state_path() -> str:
 
 
 def load_selection_counts() -> None:
-    if os.getenv("ENABLE_BANDIT_PERSIST", "0").lower() not in {"1", "true", "yes", "on"}:
+    if os.getenv("ENABLE_BANDIT_PERSIST", "0").lower() not in {
+        "1",
+        "true",
+        "yes",
+        "on",
+    }:
         return
     path = _counts_state_path()
     if not os.path.isfile(path):
@@ -193,7 +201,12 @@ def load_selection_counts() -> None:
 
 
 def save_selection_counts() -> None:
-    if os.getenv("ENABLE_BANDIT_PERSIST", "0").lower() not in {"1", "true", "yes", "on"}:
+    if os.getenv("ENABLE_BANDIT_PERSIST", "0").lower() not in {
+        "1",
+        "true",
+        "yes",
+        "on",
+    }:
         return
     path = _counts_state_path()
     os.makedirs(os.path.dirname(path), exist_ok=True)
@@ -242,8 +255,8 @@ class RewardNormalizer:
 
 
 __all__ = [
+    "RewardNormalizer",
+    "compute_selection_entropy",
     "get_tenant_router",
     "record_selection",
-    "compute_selection_entropy",
-    "RewardNormalizer",
 ]

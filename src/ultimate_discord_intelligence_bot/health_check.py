@@ -81,14 +81,17 @@ class HealthCheckService:
     def _check_qdrant(self) -> dict[str, Any]:
         """Check Qdrant vector database health."""
         try:
-            # Try to connect and get basic info
-            from qdrant_client import QdrantClient
-
             qdrant_url = self._get_qdrant_url()
             if qdrant_url == ":memory:":
-                return {"status": "healthy", "type": "memory", "message": "Using in-memory Qdrant for testing"}
+                return {
+                    "status": "healthy",
+                    "type": "memory",
+                    "message": "Using in-memory Qdrant for testing",
+                }
+            # Use centralized provider, which returns pooled or dummy client
+            from memory.qdrant_provider import get_qdrant_client
 
-            client = QdrantClient(url=qdrant_url)
+            client = get_qdrant_client()
             collections = client.get_collections()
 
             return {
@@ -114,7 +117,9 @@ class HealthCheckService:
 
             # Use a minimal request to check API availability
             response = resilient_get(
-                "https://openrouter.ai/api/v1/auth/key", headers={"Authorization": "Bearer test"}, timeout_seconds=5
+                "https://openrouter.ai/api/v1/auth/key",
+                headers={"Authorization": "Bearer test"},
+                timeout_seconds=5,
             )
 
             if response.status_code == 401:  # Expected for invalid key
@@ -139,20 +144,26 @@ class HealthCheckService:
     def _check_memory_service(self) -> dict[str, Any]:
         """Check memory service health."""
         try:
-            from ultimate_discord_intelligence_bot.services.memory_service import MemoryService
+            from ultimate_discord_intelligence_bot.services.memory_service import (
+                MemoryService,
+            )
 
             # Try to initialize and perform basic operation
             memory_service = MemoryService()
 
-            # Simple connectivity test
-            test_result = memory_service.store_content(
-                content="health_check_test", tenant="health_check", workspace="system"
+            # Simple connectivity test using lightweight in-memory path
+            test_result = memory_service.add(
+                text="health_check_test", metadata={"source": "health_check"}, namespace=None
             )
 
             if test_result.success:
                 return {"status": "healthy", "message": "Memory service operational"}
             else:
-                return {"status": "degraded", "error": test_result.error, "message": "Memory service degraded"}
+                return {
+                    "status": "degraded",
+                    "error": test_result.error,
+                    "message": "Memory service degraded",
+                }
 
         except Exception as e:
             return {
@@ -309,7 +320,11 @@ def check_circuit_breakers() -> dict[str, Any]:
             }
 
     except Exception as e:
-        return {"status": "error", "error": str(e), "message": "Unable to check circuit breaker status"}
+        return {
+            "status": "error",
+            "error": str(e),
+            "message": "Unable to check circuit breaker status",
+        }
 
 
 # Performance health check
@@ -344,7 +359,11 @@ def check_performance_health() -> dict[str, Any]:
             }
 
     except Exception as e:
-        return {"status": "error", "error": str(e), "message": "Unable to check performance health"}
+        return {
+            "status": "error",
+            "error": str(e),
+            "message": "Unable to check performance health",
+        }
 
 
 # Resource health check
@@ -381,12 +400,23 @@ def check_resource_health() -> dict[str, Any]:
                     issues.append(f"High disk usage on {mount_point}: {usage_percent:.1f}%")
 
         if issues:
-            return {"status": "degraded", "issues": issues, "message": f"{len(issues)} resource issues detected"}
+            return {
+                "status": "degraded",
+                "issues": issues,
+                "message": f"{len(issues)} resource issues detected",
+            }
         else:
-            return {"status": "healthy", "message": "Resource usage within normal ranges"}
+            return {
+                "status": "healthy",
+                "message": "Resource usage within normal ranges",
+            }
 
     except Exception as e:
-        return {"status": "error", "error": str(e), "message": "Unable to check resource health"}
+        return {
+            "status": "error",
+            "error": str(e),
+            "message": "Unable to check resource health",
+        }
 
 
 # Comprehensive health check
@@ -423,11 +453,11 @@ def get_comprehensive_health() -> dict[str, Any]:
 
 __all__ = [
     "HealthCheckService",
-    "get_health_check_service",
-    "get_system_health",
-    "health_check_endpoint",
     "check_circuit_breakers",
     "check_performance_health",
     "check_resource_health",
     "get_comprehensive_health",
+    "get_health_check_service",
+    "get_system_health",
+    "health_check_endpoint",
 ]

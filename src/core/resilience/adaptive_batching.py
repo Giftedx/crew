@@ -12,10 +12,14 @@ import logging
 import statistics
 import time
 from collections import deque
-from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Generic, TypeVar
+from typing import TYPE_CHECKING, Any, Generic, TypeVar
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
 
 logger = logging.getLogger(__name__)
 
@@ -108,7 +112,12 @@ class AdaptiveBatcher(Generic[T, R]):
     based on performance metrics and system load.
     """
 
-    def __init__(self, name: str, processor: Callable[[list[T]], R], config: BatchConfig | None = None):
+    def __init__(
+        self,
+        name: str,
+        processor: Callable[[list[T]], R],
+        config: BatchConfig | None = None,
+    ):
         """Initialize adaptive batcher."""
         self.name = name
         self.processor = processor
@@ -281,7 +290,8 @@ class AdaptiveBatcher(Generic[T, R]):
         if avg_performance > self.config.performance_threshold_high:
             # High performance - can increase batch size
             new_size = min(
-                self.config.max_batch_size, int(self.current_batch_size * (1 + self.config.adaptation_factor))
+                self.config.max_batch_size,
+                int(self.current_batch_size * (1 + self.config.adaptation_factor)),
             )
             if new_size != self.current_batch_size:
                 await self._update_batch_size(new_size, "high_performance")
@@ -289,7 +299,8 @@ class AdaptiveBatcher(Generic[T, R]):
         elif avg_performance < self.config.performance_threshold_low:
             # Low performance - decrease batch size
             new_size = max(
-                self.config.min_batch_size, int(self.current_batch_size * (1 - self.config.adaptation_factor))
+                self.config.min_batch_size,
+                int(self.current_batch_size * (1 - self.config.adaptation_factor)),
             )
             if new_size != self.current_batch_size:
                 await self._update_batch_size(new_size, "low_performance")
@@ -329,7 +340,10 @@ class BatchManager:
         self._lock = asyncio.Lock()
 
     async def create_batcher(
-        self, name: str, processor: Callable[[list[T]], R], config: BatchConfig | None = None
+        self,
+        name: str,
+        processor: Callable[[list[T]], R],
+        config: BatchConfig | None = None,
     ) -> AdaptiveBatcher[T, R]:
         """Create a new adaptive batcher."""
         async with self._lock:

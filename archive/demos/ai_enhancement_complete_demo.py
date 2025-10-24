@@ -12,6 +12,7 @@ import json
 import logging
 import time
 
+
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
@@ -94,7 +95,13 @@ class AIEnhancementDemo:
             print(f"   ⚡ Latency: {latency}ms | 💰 Cost: ${cost:.4f}")
 
             performance_results.append(
-                {"scenario": task, "model": selected_model, "confidence": confidence, "cost": cost, "latency": latency}
+                {
+                    "scenario": task,
+                    "model": selected_model,
+                    "confidence": confidence,
+                    "cost": cost,
+                    "latency": latency,
+                }
             )
 
         self.enhancement_results["performance_routing"] = {
@@ -118,10 +125,22 @@ class AIEnhancementDemo:
 
         # Simulate learning progression
         learning_phases = [
-            ("Initial State", {"gpt-4o": 0.5, "claude-sonnet": 0.5, "gemini-flash": 0.5}),
-            ("After 50 routes", {"gpt-4o": 0.72, "claude-sonnet": 0.85, "gemini-flash": 0.68}),
-            ("After 200 routes", {"gpt-4o": 0.78, "claude-sonnet": 0.92, "gemini-flash": 0.75}),
-            ("After 500 routes", {"gpt-4o": 0.83, "claude-sonnet": 0.95, "gemini-flash": 0.81}),
+            (
+                "Initial State",
+                {"gpt-4o": 0.5, "claude-sonnet": 0.5, "gemini-flash": 0.5},
+            ),
+            (
+                "After 50 routes",
+                {"gpt-4o": 0.72, "claude-sonnet": 0.85, "gemini-flash": 0.68},
+            ),
+            (
+                "After 200 routes",
+                {"gpt-4o": 0.78, "claude-sonnet": 0.92, "gemini-flash": 0.75},
+            ),
+            (
+                "After 500 routes",
+                {"gpt-4o": 0.83, "claude-sonnet": 0.95, "gemini-flash": 0.81},
+            ),
         ]
 
         for phase, metrics in learning_phases:
@@ -138,7 +157,11 @@ class AIEnhancementDemo:
         specializations = {
             "analysis": {"claude-sonnet": 0.95, "gpt-4o": 0.88, "gemini-flash": 0.72},
             "creative": {"claude-sonnet": 0.90, "gpt-4o": 0.93, "gemini-flash": 0.75},
-            "general": {"gpt-4o-mini": 0.85, "gemini-flash": 0.82, "claude-haiku": 0.78},
+            "general": {
+                "gpt-4o-mini": 0.85,
+                "gemini-flash": 0.82,
+                "claude-haiku": 0.78,
+            },
         }
 
         for task, models in specializations.items():
@@ -159,10 +182,30 @@ class AIEnhancementDemo:
 
         # Simulate A/B test results
         test_results = {
-            "adaptive_learning": {"success_rate": 0.94, "avg_latency": 1250, "avg_cost": 0.0078, "quality": 0.89},
-            "performance_based": {"success_rate": 0.91, "avg_latency": 1180, "avg_cost": 0.0065, "quality": 0.85},
-            "cost_optimized": {"success_rate": 0.88, "avg_latency": 980, "avg_cost": 0.0032, "quality": 0.78},
-            "speed_optimized": {"success_rate": 0.89, "avg_latency": 850, "avg_cost": 0.0045, "quality": 0.82},
+            "adaptive_learning": {
+                "success_rate": 0.94,
+                "avg_latency": 1250,
+                "avg_cost": 0.0078,
+                "quality": 0.89,
+            },
+            "performance_based": {
+                "success_rate": 0.91,
+                "avg_latency": 1180,
+                "avg_cost": 0.0065,
+                "quality": 0.85,
+            },
+            "cost_optimized": {
+                "success_rate": 0.88,
+                "avg_latency": 980,
+                "avg_cost": 0.0032,
+                "quality": 0.78,
+            },
+            "speed_optimized": {
+                "success_rate": 0.89,
+                "avg_latency": 850,
+                "avg_cost": 0.0045,
+                "quality": 0.82,
+            },
         }
 
         print("\n📊 Strategy Performance Comparison:")
@@ -186,7 +229,8 @@ class AIEnhancementDemo:
 
         # Winner analysis
         best_strategy = max(
-            test_results.keys(), key=lambda s: test_results[s]["success_rate"] * test_results[s]["quality"]
+            test_results.keys(),
+            key=lambda s: test_results[s]["success_rate"] * test_results[s]["quality"],
         )
         print(f"\n🏆 Winner: {best_strategy} (Optimal balance of success rate and quality)")
 

@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -54,7 +55,11 @@ class ScenarioGenerationMixin:
     def _create_cost_scenario(self, current_state: dict[str, Any]) -> dict[str, Any]:
         return {
             "scenario_name": "Cost-Efficient Operations",
-            "target_improvements": {"cost_reduction": "25%", "resource_utilization": "+40%", "efficiency_gain": "20%"},
+            "target_improvements": {
+                "cost_reduction": "25%",
+                "resource_utilization": "+40%",
+                "efficiency_gain": "20%",
+            },
             "required_changes": [
                 "Implement intelligent model selection",
                 "Add request batching and optimization",
@@ -64,7 +69,11 @@ class ScenarioGenerationMixin:
             "estimated_timeline": "3-6 weeks",
             "resource_requirements": "High",
             "risk_level": "Medium",
-            "expected_outcomes": {"operational_cost": "-25%", "resource_efficiency": "+40%", "scalability": "+50%"},
+            "expected_outcomes": {
+                "operational_cost": "-25%",
+                "resource_efficiency": "+40%",
+                "scalability": "+50%",
+            },
         }
 
     def _create_reliability_scenario(self, current_state: dict[str, Any]) -> dict[str, Any]:

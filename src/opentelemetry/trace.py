@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import contextlib
 from typing import Any
+
 
 _GLOBAL_PROVIDER: TracerProvider | None = None
 
@@ -46,10 +48,8 @@ class _SpanContext:
         prov = get_tracer_provider()
         if isinstance(prov, TracerProvider):
             for proc in prov._processors:
-                try:
+                with contextlib.suppress(Exception):
                     proc.on_end(self._span)
-                except Exception:
-                    pass
 
 
 class Tracer:

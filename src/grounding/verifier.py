@@ -3,10 +3,14 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from . import consistency
 from .contracts import load_config
-from .schema import AnswerContract
+
+
+if TYPE_CHECKING:
+    from .schema import AnswerContract
 
 
 @dataclass
@@ -67,4 +71,4 @@ def verify(contract: AnswerContract, *, use_case: str, tenant: str | None = None
     )
 
 
-__all__ = ["verify", "VerifierReport"]
+__all__ = ["VerifierReport", "verify"]

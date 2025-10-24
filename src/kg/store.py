@@ -2,9 +2,13 @@ from __future__ import annotations
 
 import json
 import sqlite3
-from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
 
 """SQLite-backed knowledge graph store (final clean version).
 
@@ -124,7 +128,7 @@ class KGStore:
             params.append(name)
         # Dynamic assembly of WHERE clause uses only static column comparison
         # fragments with parameter placeholders; safe from injection.
-        query = "SELECT * FROM kg_nodes WHERE " + " AND ".join(conditions)  # noqa: S608 - static fragments only (conditions from fixed allow‑list)
+        query = "SELECT * FROM kg_nodes WHERE " + " AND ".join(conditions)
         cur.execute(query, params)
         rows = cur.fetchall()
         return [KGNode(**row) for row in rows]
@@ -136,7 +140,7 @@ class KGStore:
         return KGNode(**row) if row else None
 
     # Edge operations
-    def add_edge(  # noqa: PLR0913 - explicit edge attributes keep call sites self-documenting vs opaque tuple/dict
+    def add_edge(
         self,
         src_id: int,
         dst_id: int,
@@ -161,7 +165,11 @@ class KGStore:
         return int(row_id)
 
     def query_edges(
-        self, *, src_id: int | None = None, dst_id: int | None = None, type: str | None = None
+        self,
+        *,
+        src_id: int | None = None,
+        dst_id: int | None = None,
+        type: str | None = None,
     ) -> list[KGEdge]:
         cur = self.conn.cursor()
         conditions: list[str] = []
@@ -178,7 +186,7 @@ class KGStore:
         query = "SELECT * FROM kg_edges"
         if conditions:
             query += " WHERE " + " AND ".join(conditions)
-        cur.execute(query, params)  # noqa: S608 - static fragments only
+        cur.execute(query, params)
         rows = cur.fetchall()
         return [KGEdge(**row) for row in rows]
 
@@ -191,7 +199,7 @@ class KGStore:
                 break
             cur = self.conn.cursor()
             q_marks = ",".join(["?"] * len(frontier))
-            sql = "SELECT dst_id FROM kg_edges WHERE src_id IN (" + q_marks + ")"  # noqa: S608 - q_marks expands only to '?' placeholders
+            sql = "SELECT dst_id FROM kg_edges WHERE src_id IN (" + q_marks + ")"
             cur.execute(sql, list(frontier))
             rows = {r[0] for r in cur.fetchall()}
             rows -= seen

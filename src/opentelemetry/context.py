@@ -10,7 +10,6 @@ def attach(context: Any) -> Any:
 
 def detach(token: Any) -> None:
     """Stub detach function."""
-    pass
 
 
 def get_current() -> dict:

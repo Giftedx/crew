@@ -7,19 +7,20 @@ including cross-platform content, accounts, interactions, and analysis results.
 
 from __future__ import annotations
 
+
 __all__ = [
     "Account",
-    "Media",
-    "Unit",
-    "Interaction",
-    "Person",
-    "Topic",
+    "BaseModel",
     "Claim",
     "Embedding",
-    "BaseModel",
+    "Interaction",
+    "Media",
+    "Person",
+    "Topic",
+    "Unit",
 ]
 
-from .schema_fixed import (
+from .schema_fixed import (  # type: ignore[import-not-found]
     Account,
     BaseModel,
     Media,

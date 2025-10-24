@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import contextlib
 import os
 from typing import Any
 
@@ -91,18 +92,14 @@ def load_tools() -> ToolContainer:
                     print(f"⚠️  Could not resolve tool class {name}: {exc}")
                     return None
 
-            def safe_instantiate(
-                tool_class, tools_container, attr_name, *args, **kwargs
-            ):  # type: ignore[no-redef]
+            def safe_instantiate(tool_class, tools_container, attr_name, *args, **kwargs):  # type: ignore[no-redef]
                 if tool_class is None:
                     return False
                 try:
                     tool_instance = tool_class(*args, **kwargs)
                     setattr(tools_container, attr_name, tool_instance)
                     return True
-                except (
-                    Exception
-                ) as exc:  # pragma: no cover - tool instantiation failure
+                except Exception as exc:  # pragma: no cover - tool instantiation failure
                     print(f"⚠️  Failed to load {attr_name}: {exc}")
                     return False
 
@@ -115,7 +112,7 @@ def load_tools() -> ToolContainer:
                         {},
                     ),
                     (
-                        get_tool_class(tools_module, "EnhancedYouTubeDownloadTool"),
+                        get_tool_class(tools_module, "MultiPlatformDownloadTool"),
                         "youtube_tool",
                         (),
                         {},
@@ -347,7 +344,7 @@ def load_tools() -> ToolContainer:
                         {},
                     ),
                     (
-                        get_tool_class(tools_module, "YouTubeDownloadTool"),
+                        get_tool_class(tools_module, "MultiPlatformDownloadTool"),
                         "youtube_resolver_tool",
                         (),
                         {},
@@ -414,9 +411,7 @@ def load_tools() -> ToolContainer:
                         )
                     )
                 else:
-                    print(
-                        "⚠️  DiscordPrivateAlertTool skipped - no DISCORD_PRIVATE_WEBHOOK configured"
-                    )
+                    print("⚠️  DiscordPrivateAlertTool skipped - no DISCORD_PRIVATE_WEBHOOK configured")
 
                 return specs
 
@@ -461,10 +456,8 @@ def attach_tools(bot: Any, tools: ToolContainer) -> None:
     for tool_name, tool_instance in tools.__dict__.items():
         setattr(bot, tool_name, tool_instance)
 
-    try:
-        setattr(bot, "get_all_tools", tools.get_all_tools)
-    except Exception:
-        pass
+    with contextlib.suppress(Exception):
+        bot.get_all_tools = tools.get_all_tools
 
     bot.performance_monitor = AgentPerformanceMonitor()
 
@@ -484,14 +477,8 @@ def attach_tools(bot: Any, tools: ToolContainer) -> None:
                 core_tools.append(name.replace("_tool", ""))
 
         additional_count = len(all_tools) - len(core_tools)
-        display_tools = (
-            core_tools + [f"+{additional_count} more"]
-            if additional_count > 0
-            else core_tools
-        )
-        print(
-            f"🔧 Tools attached: {', '.join(display_tools) if display_tools else 'none'}"
-        )
+        display_tools = [*core_tools, f"+{additional_count} more"] if additional_count > 0 else core_tools
+        print(f"🔧 Tools attached: {', '.join(display_tools) if display_tools else 'none'}")
         print(f"📊 Total tools loaded: {len(all_tools)}")
 
         if os.getenv("DEBUG_TOOLS") == "true":
@@ -501,4 +488,4 @@ def attach_tools(bot: Any, tools: ToolContainer) -> None:
         print("🔧 Tools attached: none")
 
 
-__all__ = ["ToolContainer", "load_tools", "attach_tools"]
+__all__ = ["ToolContainer", "attach_tools", "load_tools"]

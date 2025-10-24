@@ -244,7 +244,10 @@ class TestAuditLogging:
         # Log all sensitive operations
         for operation in sensitive_operations:
             result = mock_audit_logger.log_operation(
-                operation=operation, tenant="test_tenant", workspace="test_workspace", user_id="test_user"
+                operation=operation,
+                tenant="test_tenant",
+                workspace="test_workspace",
+                user_id="test_user",
             )
             assert result.success
 
@@ -258,8 +261,18 @@ class TestAuditLogging:
         """Test audit log integrity verification."""
         # Mock log storage to return log entries
         log_entries = [
-            {"id": "log_1", "operation": "user_login", "timestamp": datetime.now().isoformat(), "hash": "abc123"},
-            {"id": "log_2", "operation": "data_access", "timestamp": datetime.now().isoformat(), "hash": "def456"},
+            {
+                "id": "log_1",
+                "operation": "user_login",
+                "timestamp": datetime.now().isoformat(),
+                "hash": "abc123",
+            },
+            {
+                "id": "log_2",
+                "operation": "data_access",
+                "timestamp": datetime.now().isoformat(),
+                "hash": "def456",
+            },
         ]
 
         mock_log_storage.get_log_entries.return_value = StepResult.ok(data=log_entries)
@@ -283,7 +296,12 @@ class TestAuditLogging:
         """Test detection of audit log tampering."""
         # Mock log storage to return tampered log entries
         tampered_entries = [
-            {"id": "log_1", "operation": "user_login", "timestamp": datetime.now().isoformat(), "hash": "abc123"},
+            {
+                "id": "log_1",
+                "operation": "user_login",
+                "timestamp": datetime.now().isoformat(),
+                "hash": "abc123",
+            },
             {
                 "id": "log_2",
                 "operation": "data_access",
@@ -356,7 +374,11 @@ class TestAuditLogging:
         """Test enforcement of log retention policies."""
         # Mock log storage to return old log entries
         old_log_entries = [
-            {"id": "log_1", "operation": "user_login", "timestamp": (datetime.now() - timedelta(days=400)).isoformat()},
+            {
+                "id": "log_1",
+                "operation": "user_login",
+                "timestamp": (datetime.now() - timedelta(days=400)).isoformat(),
+            },
             {
                 "id": "log_2",
                 "operation": "data_access",
@@ -387,7 +409,11 @@ class TestAuditLogging:
         """Test log archival policy."""
         # Mock log storage to return logs for archival
         logs_to_archive = [
-            {"id": "log_1", "operation": "user_login", "timestamp": (datetime.now() - timedelta(days=100)).isoformat()},
+            {
+                "id": "log_1",
+                "operation": "user_login",
+                "timestamp": (datetime.now() - timedelta(days=100)).isoformat(),
+            },
             {
                 "id": "log_2",
                 "operation": "data_access",
@@ -436,7 +462,13 @@ class TestAuditLogging:
 
             for ip, count in ip_counts.items():
                 if count > 5:  # More than 5 failed logins
-                    suspicious_patterns.append({"type": "multiple_failed_logins", "ip_address": ip, "count": count})
+                    suspicious_patterns.append(
+                        {
+                            "type": "multiple_failed_logins",
+                            "ip_address": ip,
+                            "count": count,
+                        }
+                    )
 
             if suspicious_patterns:
                 return StepResult.ok(data={"suspicious_activity": suspicious_patterns})
@@ -447,12 +479,36 @@ class TestAuditLogging:
 
         # Test suspicious activity detection
         suspicious_logs = [
-            {"operation": "user_login", "status": "failed", "ip_address": "192.168.1.1"},
-            {"operation": "user_login", "status": "failed", "ip_address": "192.168.1.1"},
-            {"operation": "user_login", "status": "failed", "ip_address": "192.168.1.1"},
-            {"operation": "user_login", "status": "failed", "ip_address": "192.168.1.1"},
-            {"operation": "user_login", "status": "failed", "ip_address": "192.168.1.1"},
-            {"operation": "user_login", "status": "failed", "ip_address": "192.168.1.1"},
+            {
+                "operation": "user_login",
+                "status": "failed",
+                "ip_address": "192.168.1.1",
+            },
+            {
+                "operation": "user_login",
+                "status": "failed",
+                "ip_address": "192.168.1.1",
+            },
+            {
+                "operation": "user_login",
+                "status": "failed",
+                "ip_address": "192.168.1.1",
+            },
+            {
+                "operation": "user_login",
+                "status": "failed",
+                "ip_address": "192.168.1.1",
+            },
+            {
+                "operation": "user_login",
+                "status": "failed",
+                "ip_address": "192.168.1.1",
+            },
+            {
+                "operation": "user_login",
+                "status": "failed",
+                "ip_address": "192.168.1.1",
+            },
         ]
 
         result = mock_audit_logger.detect_suspicious_activity(suspicious_logs)
@@ -480,7 +536,9 @@ class TestAuditLogging:
 
         # Test security alert generation
         result = mock_audit_logger.generate_security_alert(
-            alert_type="multiple_failed_logins", severity="high", details={"ip_address": "192.168.1.1", "attempts": 10}
+            alert_type="multiple_failed_logins",
+            severity="high",
+            details={"ip_address": "192.168.1.1", "attempts": 10},
         )
 
         assert result.success
@@ -496,8 +554,8 @@ class TestAuditLogging:
             if analysis_type == "summary":
                 summary = {
                     "total_operations": len(log_entries),
-                    "unique_users": len(set(entry.get("user_id") for entry in log_entries)),
-                    "operation_types": list(set(entry.get("operation") for entry in log_entries)),
+                    "unique_users": len({entry.get("user_id") for entry in log_entries}),
+                    "operation_types": list({entry.get("operation") for entry in log_entries}),
                     "time_range": {
                         "start": min(entry.get("timestamp") for entry in log_entries),
                         "end": max(entry.get("timestamp") for entry in log_entries),
@@ -511,9 +569,21 @@ class TestAuditLogging:
 
         # Test log analysis
         test_logs = [
-            {"operation": "user_login", "user_id": "user_1", "timestamp": "2024-01-01T00:00:00"},
-            {"operation": "data_access", "user_id": "user_2", "timestamp": "2024-01-01T01:00:00"},
-            {"operation": "user_login", "user_id": "user_1", "timestamp": "2024-01-01T02:00:00"},
+            {
+                "operation": "user_login",
+                "user_id": "user_1",
+                "timestamp": "2024-01-01T00:00:00",
+            },
+            {
+                "operation": "data_access",
+                "user_id": "user_2",
+                "timestamp": "2024-01-01T01:00:00",
+            },
+            {
+                "operation": "user_login",
+                "user_id": "user_1",
+                "timestamp": "2024-01-01T02:00:00",
+            },
         ]
 
         result = mock_audit_logger.analyze_logs(test_logs, analysis_type="summary")
@@ -536,7 +606,10 @@ class TestAuditLogging:
 
         # Test audit logging
         result = mock_audit_logger.log_operation(
-            operation="user_login", tenant="test_tenant", workspace="test_workspace", user_id="test_user"
+            operation="user_login",
+            tenant="test_tenant",
+            workspace="test_workspace",
+            user_id="test_user",
         )
 
         assert result.success
@@ -557,14 +630,20 @@ class TestAuditLogging:
 
         # Test normal operation
         result = mock_audit_logger.log_operation(
-            operation="user_login", tenant="test_tenant", workspace="test_workspace", user_id="test_user"
+            operation="user_login",
+            tenant="test_tenant",
+            workspace="test_workspace",
+            user_id="test_user",
         )
 
         assert result.success
 
         # Test error operation
         result = mock_audit_logger.log_operation(
-            operation="error_operation", tenant="test_tenant", workspace="test_workspace", user_id="test_user"
+            operation="error_operation",
+            tenant="test_tenant",
+            workspace="test_workspace",
+            user_id="test_user",
         )
 
         assert not result.success

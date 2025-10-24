@@ -18,6 +18,7 @@ from collections import defaultdict, deque
 from dataclasses import dataclass, field
 from typing import Any
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -130,7 +131,12 @@ class AutonomousLearningEngine:
             self._adapt_agent_strategy(metrics.agent_id)
 
     def record_model_performance(
-        self, model_name: str, provider: str, performance_score: float, cost: float, task_type: str
+        self,
+        model_name: str,
+        provider: str,
+        performance_score: float,
+        cost: float,
+        task_type: str,
     ) -> None:
         """Record model performance data."""
         model_key = f"{provider}:{model_name}"
@@ -150,7 +156,10 @@ class AutonomousLearningEngine:
         model_data.last_used = time.time()
 
     def select_optimal_model(
-        self, task_type: str, context: dict[str, Any] | None = None, tenant_id: str | None = None
+        self,
+        task_type: str,
+        context: dict[str, Any] | None = None,
+        tenant_id: str | None = None,
     ) -> dict[str, Any]:
         """Select optimal model for a task using multi-armed bandit approach."""
         available_models = self._get_available_models_for_task(task_type)
@@ -204,7 +213,10 @@ class AutonomousLearningEngine:
         return candidates
 
     def _select_best_model(
-        self, candidates: list[dict[str, Any]], task_type: str, context: dict[str, Any] | None = None
+        self,
+        candidates: list[dict[str, Any]],
+        task_type: str,
+        context: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Select the best model using multi-criteria optimization."""
         if not candidates:
@@ -415,7 +427,12 @@ class AdaptiveTaskRouter:
     def __init__(self, learning_engine: AutonomousLearningEngine):
         self.learning_engine = learning_engine
         self.routing_cache: dict[str, dict[str, Any]] = {}
-        self.cache_ttl = 300  # 5 minutes
+        try:
+            from core.cache.unified_config import get_unified_cache_config
+
+            self.cache_ttl = get_unified_cache_config().get_ttl_for_domain("routing")
+        except Exception:
+            self.cache_ttl = 300  # 5 minutes
 
     def route_task(
         self,
@@ -588,7 +605,10 @@ class AutonomousDecisionMaker:
         return decision
 
     async def _evaluate_option(
-        self, option: dict[str, Any], context: dict[str, Any], criteria: dict[str, float]
+        self,
+        option: dict[str, Any],
+        context: dict[str, Any],
+        criteria: dict[str, float],
     ) -> float:
         """Evaluate a single option against decision criteria."""
         scores = {}
@@ -631,7 +651,7 @@ class AutonomousDecisionMaker:
             "average_confidence": avg_confidence,
             "high_confidence_decisions": sum(1 for d in recent_decisions if d["confidence"] > 0.8),
             "low_confidence_decisions": sum(1 for d in recent_decisions if d["confidence"] < 0.5),
-            "decision_types": len(set(d.get("selected_option", {}).get("type", "unknown") for d in recent_decisions)),
+            "decision_types": len({d.get("selected_option", {}).get("type", "unknown") for d in recent_decisions}),
         }
 
 
@@ -696,7 +716,10 @@ def select_optimal_model(
 
 
 def route_task_adaptively(
-    task_type: str, context: dict[str, Any], tenant_id: str | None = None, urgency: str = "normal"
+    task_type: str,
+    context: dict[str, Any],
+    tenant_id: str | None = None,
+    urgency: str = "normal",
 ) -> dict[str, Any]:
     """Route task using adaptive routing."""
     router = get_adaptive_router()
@@ -739,18 +762,18 @@ def initialize_autonomous_intelligence() -> None:
 
 
 __all__ = [
-    "AutonomousLearningEngine",
     "AdaptiveTaskRouter",
-    "AutonomousDecisionMaker",
     "AgentPerformanceMetrics",
+    "AutonomousDecisionMaker",
+    "AutonomousLearningEngine",
     "ModelPerformanceData",
-    "get_autonomous_learning_engine",
     "get_adaptive_router",
-    "get_decision_maker",
-    "record_agent_performance",
-    "select_optimal_model",
-    "route_task_adaptively",
-    "process_user_feedback",
     "get_autonomous_intelligence_summary",
+    "get_autonomous_learning_engine",
+    "get_decision_maker",
     "initialize_autonomous_intelligence",
+    "process_user_feedback",
+    "record_agent_performance",
+    "route_task_adaptively",
+    "select_optimal_model",
 ]

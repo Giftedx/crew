@@ -18,6 +18,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -197,7 +198,10 @@ class ContinuousProductionOptimizer:
 
         # Sort by priority and expected impact
         priority_order = {"high": 3, "medium": 2, "low": 1}
-        targets.sort(key=lambda t: (priority_order.get(t.priority, 0), t.expected_improvement), reverse=True)
+        targets.sort(
+            key=lambda t: (priority_order.get(t.priority, 0), t.expected_improvement),
+            reverse=True,
+        )
 
         logger.info(f"   ✅ Identified {len(targets)} optimization targets")
         for target in targets[:3]:  # Log top 3

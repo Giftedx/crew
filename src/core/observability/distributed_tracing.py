@@ -17,12 +17,11 @@ from typing import Any
 
 import psutil
 
+
 logger = logging.getLogger(__name__)
 
 # Context variable for tracing
-_trace_context: contextvars.ContextVar[dict[str, Any] | None] = contextvars.ContextVar(
-    "trace_context", default=None
-)
+_trace_context: contextvars.ContextVar[dict[str, Any] | None] = contextvars.ContextVar("trace_context", default=None)
 
 
 class SpanStatus(Enum):
@@ -388,9 +387,7 @@ class DistributedTracer:
             return
 
         if span_context.span_id not in self.active_spans:
-            logger.warning(
-                f"Attempted to end non-existent span: {span_context.span_id}"
-            )
+            logger.warning(f"Attempted to end non-existent span: {span_context.span_id}")
             return
 
         span_data = self.active_spans[span_context.span_id]
@@ -438,9 +435,7 @@ class DistributedTracer:
             return
 
         if span_context.span_id not in self.active_spans:
-            logger.warning(
-                f"Attempted to add log to non-existent span: {span_context.span_id}"
-            )
+            logger.warning(f"Attempted to add log to non-existent span: {span_context.span_id}")
             return
 
         span_data = self.active_spans[span_context.span_id]
@@ -463,9 +458,7 @@ class DistributedTracer:
             return
 
         if span_context.span_id not in self.active_spans:
-            logger.warning(
-                f"Attempted to add event to non-existent span: {span_context.span_id}"
-            )
+            logger.warning(f"Attempted to add event to non-existent span: {span_context.span_id}")
             return
 
         span_data = self.active_spans[span_context.span_id]
@@ -505,24 +498,19 @@ class DistributedTracer:
         if self.config.enable_performance_profiling:
             logger.info(f"  CPU: {metrics.cpu_percent_avg:.1f}%")
             logger.info(f"  Memory: {metrics.memory_rss_delta:+.1f}MB")
-            logger.info(
-                f"  I/O: {metrics.io_read_bytes_delta:,}B read, {metrics.io_write_bytes_delta:,}B written"
-            )
+            logger.info(f"  I/O: {metrics.io_read_bytes_delta:,}B read, {metrics.io_write_bytes_delta:,}B written")
 
     def _export_to_file(self, span_data: SpanData) -> None:
         """Export span to file."""
         # This would implement file export in production
-        pass
 
     def _export_to_jaeger(self, span_data: SpanData) -> None:
         """Export span to Jaeger."""
         # This would implement Jaeger export in production
-        pass
 
     def _export_to_zipkin(self, span_data: SpanData) -> None:
         """Export span to Zipkin."""
         # This would implement Zipkin export in production
-        pass
 
     @contextmanager
     def trace_sync(
@@ -705,9 +693,7 @@ def trace_sync(
     **kwargs: Any,
 ) -> Generator[SpanContext, None, None]:
     """Context manager for synchronous tracing using the global tracer."""
-    with get_global_tracer().trace_sync(
-        operation_name, span_type, tags, **kwargs
-    ) as span_context:
+    with get_global_tracer().trace_sync(operation_name, span_type, tags, **kwargs) as span_context:
         yield span_context
 
 
@@ -719,7 +705,5 @@ async def trace_async(
     **kwargs: Any,
 ) -> AsyncGenerator[SpanContext, None]:
     """Async context manager for asynchronous tracing using the global tracer."""
-    async with get_global_tracer().trace_async(
-        operation_name, span_type, tags, **kwargs
-    ) as span_context:
+    async with get_global_tracer().trace_async(operation_name, span_type, tags, **kwargs) as span_context:
         yield span_context

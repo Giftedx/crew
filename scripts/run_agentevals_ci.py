@@ -8,7 +8,11 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from eval.trajectory_evaluator import AgentTrajectory, TrajectoryEvaluator, TrajectoryStep
+from eval.trajectory_evaluator import (
+    AgentTrajectory,
+    TrajectoryEvaluator,
+    TrajectoryStep,
+)
 
 
 def _load_dataset(path: Path) -> list[dict[str, Any]]:

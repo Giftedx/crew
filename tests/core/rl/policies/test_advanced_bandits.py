@@ -2,7 +2,10 @@
 
 import pytest
 
-from ultimate_discord_intelligence_bot.core.rl.policies.advanced_bandits import DoublyRobustBandit, OffsetTreeBandit
+from ultimate_discord_intelligence_bot.core.rl.policies.advanced_bandits import (
+    DoublyRobustBandit,
+    OffsetTreeBandit,
+)
 
 
 class TestDoublyRobustBandit:
@@ -189,7 +192,7 @@ class TestOffsetTreeBandit:
         ]
         rewards = [0.1, 0.2, 0.8, 0.9]
 
-        for ctx, reward in zip(contexts, rewards):
+        for ctx, reward in zip(contexts, rewards, strict=False):
             bandit.update("action1", reward, ctx)
 
         # Root should still be a leaf with only 4 samples (less than min_samples_split=20)
@@ -211,7 +214,7 @@ class TestOffsetTreeBandit:
         assert not bandit._should_split("root")
 
         # Add samples but not enough variance
-        for i in range(6):
+        for _i in range(6):
             bandit.update("action1", 0.5, {"feature1": 0.5})
 
         # Might not split due to low variance

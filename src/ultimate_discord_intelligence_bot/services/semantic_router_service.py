@@ -1,16 +1,41 @@
+"""Semantic Router Service - Optional intelligent routing based on query semantics.
+
+This service requires the 'semantic-router' optional dependency.
+Install with: pip install -e '.[semantic_router]'
+"""
+
+from __future__ import annotations
 
 import os
+from typing import TYPE_CHECKING, Any
 
-from semantic_router import Route
-from semantic_router.encoders import OpenAIEncoder
-from semantic_router.layer import RouteLayer
 
-from core.settings import get_settings
+try:
+    from semantic_router import Route
+    from semantic_router.encoders import OpenAIEncoder
+    from semantic_router.layer import RouteLayer
+
+    SEMANTIC_ROUTER_AVAILABLE = True
+except ImportError:
+    SEMANTIC_ROUTER_AVAILABLE = False
+    # Stub types for when the library is not available
+    Route = Any
+    OpenAIEncoder = Any
+    RouteLayer = Any
+
+from ultimate_discord_intelligence_bot.settings import Settings
+
+
+if TYPE_CHECKING:
+    from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 class SemanticRouterService:
     def __init__(self, routes: list[Route] | None = None):
-        self.settings = get_settings()
+        if not SEMANTIC_ROUTER_AVAILABLE:
+            raise ImportError("semantic-router is not installed. Install with: pip install -e '.[semantic_router]'")
+
+        self.settings = Settings()
         self.encoder = self._get_encoder()
         if routes:
             self.rl = RouteLayer(encoder=self.encoder, routes=routes)
@@ -29,7 +54,7 @@ class SemanticRouterService:
     def add_routes(self, routes: list[Route]):
         self.rl = RouteLayer(encoder=self.encoder, routes=routes)
 
-    def route(self, query: str) -> str | None:
+    def route(self, query: str) -> StepResult:
         if not self.rl:
             return None
 
@@ -42,6 +67,7 @@ class SemanticRouterService:
                 print(f"Semantic router failed: {e}")
                 return None
         return None
+
 
 # Example usage (can be removed or adapted)
 if __name__ == "__main__":

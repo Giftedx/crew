@@ -3,16 +3,24 @@ from __future__ import annotations
 import copy
 import logging
 from collections.abc import Mapping
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from core.flags import enabled
 from obs import metrics
-from ultimate_discord_intelligence_bot.tenancy.context import TenantContext, current_tenant
+from ultimate_discord_intelligence_bot.tenancy.context import (
+    TenantContext,
+    current_tenant,
+)
+
+
+if TYPE_CHECKING:
+    from ultimate_discord_intelligence_bot.step_result import StepResult
+
 
 log = logging.getLogger(__name__)
 
 
-def ctx_or_fallback(component: str) -> TenantContext | None:
+def ctx_or_fallback(component: str) -> StepResult:
     """Return current tenant or fallback/default according to flags.
 
     If strict tenancy is enabled and no context is set, raise. Otherwise,
@@ -37,7 +45,7 @@ def ctx_or_fallback(component: str) -> TenantContext | None:
     return TenantContext("default", "main")
 
 
-def deep_merge(base: dict[str, Any], overrides: Mapping[str, Any]) -> dict[str, Any]:
+def deep_merge(base: dict[str, Any], overrides: Mapping[str, Any]) -> StepResult:
     """Recursively merge ``overrides`` into ``base`` and return ``base``.
 
     This mirrors the previous OpenRouterService._deep_merge behavior.
@@ -50,7 +58,7 @@ def deep_merge(base: dict[str, Any], overrides: Mapping[str, Any]) -> dict[str, 
     return base
 
 
-def update_shadow_hit_ratio(labels: dict[str, str], is_hit: bool) -> None:
+def update_shadow_hit_ratio(labels: dict[str, str], is_hit: bool) -> StepResult:
     """Update the semantic cache shadow mode hit ratio metric (best-effort)."""
     try:
         metrics.SEMANTIC_CACHE_SHADOW_HIT_RATIO.labels(**labels).set(1.0 if is_hit else 0.0)
@@ -58,7 +66,7 @@ def update_shadow_hit_ratio(labels: dict[str, str], is_hit: bool) -> None:
         pass
 
 
-def choose_model_from_map(task_type: str, models_map: dict[str, list[str]], learning) -> str:
+def choose_model_from_map(task_type: str, models_map: dict[str, list[str]], learning) -> StepResult:
     """Pick a model for a given task type from the provided map using learning engine."""
     candidates = models_map.get(task_type) or models_map.get("general") or []
     if candidates:
@@ -72,8 +80,8 @@ def choose_model_from_map(task_type: str, models_map: dict[str, list[str]], lear
 
 
 __all__ = [
+    "choose_model_from_map",
     "ctx_or_fallback",
     "deep_merge",
     "update_shadow_hit_ratio",
-    "choose_model_from_map",
 ]

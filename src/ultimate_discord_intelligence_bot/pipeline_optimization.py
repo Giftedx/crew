@@ -15,6 +15,7 @@ from typing import Any
 
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -66,7 +67,10 @@ class PipelineOptimizer:
         self.content_hash_cache: dict[str, str] = {}  # URL -> content hash
 
     def create_fingerprint(
-        self, url: str, content_data: dict[str, Any], metadata: dict[str, Any] | None = None
+        self,
+        url: str,
+        content_data: dict[str, Any],
+        metadata: dict[str, Any] | None = None,
     ) -> ProcessingFingerprint:
         """Create a unique fingerprint for processing inputs."""
 
@@ -82,7 +86,10 @@ class PipelineOptimizer:
         metadata_hash = hashlib.sha256(metadata_str.encode()).hexdigest()[:16]
 
         return ProcessingFingerprint(
-            url_hash=url_hash, content_hash=content_hash, metadata_hash=metadata_hash, timestamp=time.time()
+            url_hash=url_hash,
+            content_hash=content_hash,
+            metadata_hash=metadata_hash,
+            timestamp=time.time(),
         )
 
     def should_skip_processing(
@@ -125,7 +132,10 @@ class PipelineOptimizer:
         return can_skip, reusable_results
 
     def cache_processing_result(
-        self, fingerprint: ProcessingFingerprint, operation_type: str, result: StepResult
+        self,
+        fingerprint: ProcessingFingerprint,
+        operation_type: str,
+        result: StepResult,
     ) -> None:
         """Cache a processing result for future reuse."""
         cache_key = fingerprint.to_key()
@@ -212,9 +222,9 @@ class BatchProcessor:
         operations.append({"data": operation_data, "id": operation_id, "added_at": time.time()})
 
         # Check if batch is ready
-        if len(operations) >= self.batch_size:
-            return self._execute_batch(operation_type)
-        elif time.time() - self.batch_timers[operation_type] >= self.batch_timeout_seconds:
+        if len(operations) >= self.batch_size or (
+            time.time() - self.batch_timers[operation_type] >= self.batch_timeout_seconds
+        ):
             return self._execute_batch(operation_type)
 
         return None  # Operation queued for batching
@@ -274,9 +284,9 @@ class MemoryOperationBatcher:
             self.batch_timer = time.time()
 
         # Check if batch is ready
-        if len(self.pending_memory_ops) >= self.batch_size:
-            return self._execute_memory_batch()
-        elif self.batch_timer and (time.time() - self.batch_timer) >= self.batch_timeout:
+        if len(self.pending_memory_ops) >= self.batch_size or (
+            self.batch_timer and (time.time() - self.batch_timer) >= self.batch_timeout
+        ):
             return self._execute_memory_batch()
 
         return None
@@ -334,7 +344,10 @@ class ProcessingShortcutDetector:
         }
 
     def should_use_shortcut(
-        self, url: str, content_data: dict[str, Any], metadata: dict[str, Any] | None = None
+        self,
+        url: str,
+        content_data: dict[str, Any],
+        metadata: dict[str, Any] | None = None,
     ) -> tuple[bool, str | None, dict[str, Any]]:
         """Check if processing can be shortcut.
 
@@ -350,7 +363,10 @@ class ProcessingShortcutDetector:
         return False, None, {}
 
     def _check_empty_content(
-        self, url: str, content_data: dict[str, Any], metadata: dict[str, Any] | None = None
+        self,
+        url: str,
+        content_data: dict[str, Any],
+        metadata: dict[str, Any] | None = None,
     ) -> tuple[bool, dict[str, Any]]:
         """Check if content is empty or too short."""
         transcript = content_data.get("transcript", "")
@@ -369,7 +385,10 @@ class ProcessingShortcutDetector:
         return False, {}
 
     def _check_duplicate_content(
-        self, url: str, content_data: dict[str, Any], metadata: dict[str, Any] | None = None
+        self,
+        url: str,
+        content_data: dict[str, Any],
+        metadata: dict[str, Any] | None = None,
     ) -> tuple[bool, dict[str, Any]]:
         """Check if content is a duplicate of recently processed content."""
         # This would check against a content hash database
@@ -377,14 +396,24 @@ class ProcessingShortcutDetector:
         return False, {}
 
     def _check_low_quality_content(
-        self, url: str, content_data: dict[str, Any], metadata: dict[str, Any] | None = None
+        self,
+        url: str,
+        content_data: dict[str, Any],
+        metadata: dict[str, Any] | None = None,
     ) -> tuple[bool, dict[str, Any]]:
         """Check if content quality is too low for processing."""
         # Check for indicators of low quality (very short, mostly non-speech, etc.)
         transcript = content_data.get("transcript", "")
 
         # Check for non-speech content indicators
-        non_speech_indicators = ["music", "instrumental", "no speech", "silence", "background noise", "unclear audio"]
+        non_speech_indicators = [
+            "music",
+            "instrumental",
+            "no speech",
+            "silence",
+            "background noise",
+            "unclear audio",
+        ]
 
         if any(indicator in transcript.lower() for indicator in non_speech_indicators):
             return True, {
@@ -402,7 +431,10 @@ class ProcessingShortcutDetector:
         return False, {}
 
     def _check_known_safe_content(
-        self, url: str, content_data: dict[str, Any], metadata: dict[str, Any] | None = None
+        self,
+        url: str,
+        content_data: dict[str, Any],
+        metadata: dict[str, Any] | None = None,
     ) -> tuple[bool, dict[str, Any]]:
         """Check if content is from a known safe source."""
         # Check for known safe platforms or creators
@@ -512,7 +544,10 @@ def optimize_pipeline_processing(
         }
 
     # No optimization possible
-    return False, {"optimization_type": "none", "reason": "No cached results or shortcuts available"}
+    return False, {
+        "optimization_type": "none",
+        "reason": "No cached results or shortcuts available",
+    }
 
 
 def batch_memory_operations(
@@ -540,17 +575,17 @@ def get_optimization_stats() -> dict[str, Any]:
 
 
 __all__ = [
-    "PipelineOptimizer",
     "BatchProcessor",
     "MemoryOperationBatcher",
-    "ProcessingShortcutDetector",
-    "ProcessingFingerprint",
+    "PipelineOptimizer",
     "ProcessingCache",
-    "get_pipeline_optimizer",
+    "ProcessingFingerprint",
+    "ProcessingShortcutDetector",
+    "batch_memory_operations",
     "get_batch_processor",
     "get_memory_batcher",
+    "get_optimization_stats",
+    "get_pipeline_optimizer",
     "get_shortcut_detector",
     "optimize_pipeline_processing",
-    "batch_memory_operations",
-    "get_optimization_stats",
 ]

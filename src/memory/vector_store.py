@@ -20,12 +20,12 @@ import os
 import statistics
 import time
 from collections import defaultdict, deque
-from collections.abc import Sequence
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, TypedDict
 
+
 try:
-    from core.settings import get_settings
+    from ultimate_discord_intelligence_bot.settings import Settings
 except Exception:  # pragma: no cover - fallback when pydantic/settings unavailable
 
     def get_settings() -> Any:
@@ -35,13 +35,14 @@ except Exception:  # pragma: no cover - fallback when pydantic/settings unavaila
         return _S()
 
 
-from src.core.dependencies import (
+from core.dependencies import (
     FallbackVectorStore,
     check_dependency,
     get_fallback_vector_store,
     is_feature_enabled,
 )
 from ultimate_discord_intelligence_bot.step_result import StepResult
+
 
 # Try to import Qdrant with fallback
 if is_feature_enabled("qdrant_vector") and check_dependency("qdrant_client"):
@@ -53,11 +54,13 @@ if is_feature_enabled("qdrant_vector") and check_dependency("qdrant_client"):
         # Use fallback if Qdrant import fails
         def get_qdrant_client():
             return get_fallback_vector_store()
+
         _DC = FallbackVectorStore
 else:
     # Use fallback vector store
     def get_qdrant_client():
         return get_fallback_vector_store()
+
     _DC = FallbackVectorStore
 
 
@@ -73,8 +76,10 @@ class _MultiModalEmbedding(TypedDict, total=False):
 
 
 if TYPE_CHECKING:  # pragma: no cover - for type checkers only
-    from qdrant_client import QdrantClient as _QdrantClient  # noqa: F401
-    from qdrant_client.http import models as _qmodels  # noqa: F401
+    from collections.abc import Sequence
+
+    from qdrant_client import QdrantClient as _QdrantClient
+    from qdrant_client.http import models as _qmodels
 else:
     _QdrantClient = Any  # runtime fallback type
     _qmodels = Any
@@ -175,10 +180,9 @@ class LRUCache:
                 self._access_order.remove(key)
 
         # Evict oldest if at capacity
-        elif len(self._cache) >= self.max_size:
-            if self._access_order:
-                oldest_key = self._access_order.popleft()
-                del self._cache[oldest_key]
+        elif len(self._cache) >= self.max_size and self._access_order:
+            oldest_key = self._access_order.popleft()
+            del self._cache[oldest_key]
 
         # Add to cache
         self._cache[key] = (value, current_time, actual_ttl)
@@ -371,7 +375,7 @@ class VectorStore:
         else:
             self.client = QdrantClient(url, api_key=api_key)
 
-        settings = get_settings()
+        settings = Settings()
         self._batch_size = max(1, getattr(settings, "vector_batch_size", 128))
 
         # Enhanced tracking for memory optimization
@@ -388,8 +392,14 @@ class VectorStore:
 
         # Enhanced LRU caching for search results
         cache_size = int(os.getenv("VECTOR_CACHE_SIZE", "1000"))
-        cache_ttl = int(os.getenv("VECTOR_CACHE_TTL", "300"))  # 5 minutes
-        self._search_result_cache = LRUCache(max_size=cache_size, default_ttl=cache_ttl)
+        # Prefer unified cache configuration for default TTL; fall back to env/constant
+        try:
+            from core.cache.unified_config import get_unified_cache_config  # local import to avoid import cycles
+
+            _ttl = int(get_unified_cache_config().get_ttl_for_domain("tool"))
+        except Exception:
+            _ttl = int(os.getenv("VECTOR_CACHE_TTL", "300"))  # 5 minutes fallback
+        self._search_result_cache = LRUCache(max_size=cache_size, default_ttl=_ttl)
 
         # Enable advanced optimizations by default in production
         self._enable_optimizations = os.getenv("ENABLE_MEMORY_OPTIMIZATIONS", "1").lower() in {"1", "true", "yes", "on"}
@@ -521,11 +531,17 @@ class VectorStore:
     ) -> StepResult:
         """Batch upsert with adaptive sizing and performance tracking."""
         if not vectors or not payloads:
-            return StepResult(success=False, error="Empty vectors or payloads provided", custom_status="bad_request")
+            return StepResult(
+                success=False,
+                error="Empty vectors or payloads provided",
+                custom_status="bad_request",
+            )
 
         if len(vectors) != len(payloads):
             return StepResult(
-                success=False, error="Mismatch between vectors and payloads count", custom_status="bad_request"
+                success=False,
+                error="Mismatch between vectors and payloads count",
+                custom_status="bad_request",
             )
 
         start_time = time.time()
@@ -559,8 +575,12 @@ class VectorStore:
 
                 # Create batch points
                 batch_points = []
-                for i, (vector, payload) in enumerate(zip(batch_vectors, batch_payloads)):
-                    point_data = {"id": base + offset + i, "vector": vector, "payload": payload}
+                for i, (vector, payload) in enumerate(zip(batch_vectors, batch_payloads, strict=False)):
+                    point_data = {
+                        "id": base + offset + i,
+                        "vector": vector,
+                        "payload": payload,
+                    }
                     batch_points.append(point_data)
 
                 # Store batch
@@ -594,7 +614,11 @@ class VectorStore:
 
         except Exception as e:
             logger.error(f"Batch upsert failed: {e}")
-            return StepResult(success=False, error=f"Batch upsert failed: {str(e)}", custom_status="retryable")
+            return StepResult(
+                success=False,
+                error=f"Batch upsert failed: {e!s}",
+                custom_status="retryable",
+            )
 
     async def batch_search(
         self,
@@ -607,7 +631,11 @@ class VectorStore:
     ) -> StepResult:
         """Batch search across multiple query vectors with parallel execution."""
         if not query_vectors:
-            return StepResult(success=False, error="No query vectors provided", custom_status="bad_request")
+            return StepResult(
+                success=False,
+                error="No query vectors provided",
+                custom_status="bad_request",
+            )
 
         start_time = time.time()
         namespace = f"{tenant}:{workspace}"
@@ -654,7 +682,11 @@ class VectorStore:
 
         except Exception as e:
             logger.error(f"Batch search failed: {e}")
-            return StepResult(success=False, error=f"Batch search failed: {str(e)}", custom_status="retryable")
+            return StepResult(
+                success=False,
+                error=f"Batch search failed: {e!s}",
+                custom_status="retryable",
+            )
 
     async def _single_vector_search(
         self,
@@ -698,7 +730,11 @@ class VectorStore:
     ) -> StepResult:
         """Batch delete vectors with adaptive sizing."""
         if not vector_ids:
-            return StepResult(success=False, error="No vector IDs provided", custom_status="bad_request")
+            return StepResult(
+                success=False,
+                error="No vector IDs provided",
+                custom_status="bad_request",
+            )
 
         start_time = time.time()
         namespace = f"{tenant}:{workspace}"
@@ -745,7 +781,8 @@ class VectorStore:
                         if scroll_result[0]:  # Has points
                             point_ids = [point.id for point in scroll_result[0]]
                             self.client.delete(
-                                collection_name=physical, points_selector=qmodels.PointIdsList(points=point_ids)
+                                collection_name=physical,
+                                points_selector=qmodels.PointIdsList(points=point_ids),
                             )
                             successful_deletes += len(point_ids)
                     else:
@@ -782,7 +819,11 @@ class VectorStore:
 
         except Exception as e:
             logger.error(f"Batch delete failed: {e}")
-            return StepResult(success=False, error=f"Batch delete failed: {str(e)}", custom_status="retryable")
+            return StepResult(
+                success=False,
+                error=f"Batch delete failed: {e!s}",
+                custom_status="retryable",
+            )
 
     async def get_batch_operation_stats(self, tenant: str, workspace: str) -> StepResult:
         """Get statistics about batch operations for monitoring."""
@@ -796,7 +837,11 @@ class VectorStore:
             if not batch_operations:
                 return StepResult(
                     success=True,
-                    data={"namespace": namespace, "message": "No batch operations recorded yet", "total_operations": 0},
+                    data={
+                        "namespace": namespace,
+                        "message": "No batch operations recorded yet",
+                        "total_operations": 0,
+                    },
                 )
 
             # Calculate averages
@@ -826,7 +871,9 @@ class VectorStore:
         except Exception as e:
             logger.error(f"Failed to get batch operation stats: {e}")
             return StepResult(
-                success=False, error=f"Failed to get batch operation stats: {str(e)}", custom_status="retryable"
+                success=False,
+                error=f"Failed to get batch operation stats: {e!s}",
+                custom_status="retryable",
             )
 
     async def compact_and_deduplicate(
@@ -920,7 +967,11 @@ class VectorStore:
 
         except Exception as e:
             logger.error(f"Memory compaction failed: {e}")
-            return StepResult(success=False, error=f"Memory compaction failed: {str(e)}", custom_status="retryable")
+            return StepResult(
+                success=False,
+                error=f"Memory compaction failed: {e!s}",
+                custom_status="retryable",
+            )
 
     async def _fetch_all_vectors_for_compaction(self, collection_name: str, batch_size: int) -> list[dict[str, Any]]:
         """Fetch all vectors from collection for compaction analysis."""
@@ -1012,7 +1063,7 @@ class VectorStore:
         duplicates = []
 
         for i, vec1 in enumerate(vectors):
-            for j, vec2 in enumerate(vectors[i + 1 :], start=i + 1):
+            for _j, vec2 in enumerate(vectors[i + 1 :], start=i + 1):
                 similarity = self._cosine_similarity(vec1["vector"], vec2["vector"])
 
                 if similarity > similarity_threshold:
@@ -1061,7 +1112,7 @@ class VectorStore:
 
         try:
             # Calculate dot product
-            dot_product = sum(a * b for a, b in zip(vec1, vec2))
+            dot_product = sum(a * b for a, b in zip(vec1, vec2, strict=False))
 
             # Calculate magnitudes
             magnitude1 = sum(a * a for a in vec1) ** 0.5
@@ -1140,7 +1191,9 @@ class VectorStore:
         except Exception as e:
             logger.error(f"Failed to get memory compaction stats: {e}")
             return StepResult(
-                success=False, error=f"Failed to get memory compaction stats: {str(e)}", custom_status="retryable"
+                success=False,
+                error=f"Failed to get memory compaction stats: {e!s}",
+                custom_status="retryable",
             )
 
     async def _get_collection_info(self, collection_name: str) -> dict[str, Any]:
@@ -1161,7 +1214,11 @@ class VectorStore:
             return {"error": str(e)}
 
     def _track_operation_performance(
-        self, operation: str, start_time: float, vectors_processed: int = 0, bytes_transferred: int = 0
+        self,
+        operation: str,
+        start_time: float,
+        vectors_processed: int = 0,
+        bytes_transferred: int = 0,
     ) -> None:
         """Track operation performance for adaptive optimization."""
         duration_ms = (time.time() - start_time) * 1000
@@ -1223,7 +1280,12 @@ class VectorStore:
             self._track_operation_performance("query", start_time, vectors_processed)
 
     def _optimized_similarity_search(
-        self, namespace: str, vector: Sequence[float], top_k: int, threshold: float, include_vectors: bool
+        self,
+        namespace: str,
+        vector: Sequence[float],
+        top_k: int,
+        threshold: float,
+        include_vectors: bool,
     ) -> list[OptimizedSearchResult]:
         """Optimized similarity search with multiple strategies."""
         physical = self._physical_names.get(namespace, namespace)
@@ -1315,7 +1377,11 @@ class VectorStore:
                 # Create a simple point-like object for caching
                 class CachedPoint:
                     def __init__(
-                        self, vector_id: str, score: float, payload: dict[str, Any], vector: list[float] | None = None
+                        self,
+                        vector_id: str,
+                        score: float,
+                        payload: dict[str, Any],
+                        vector: list[float] | None = None,
                     ):
                         self.id = vector_id
                         self.score = score
@@ -1324,7 +1390,10 @@ class VectorStore:
 
                 cache_results.append(
                     CachedPoint(
-                        vector_id=result.vector_id, score=result.score, payload=result.payload, vector=result.vector
+                        vector_id=result.vector_id,
+                        score=result.score,
+                        payload=result.payload,
+                        vector=result.vector,
                     )
                 )
 
@@ -1350,7 +1419,10 @@ class VectorStore:
             try:
                 # Get points with payloads
                 res = self.client.retrieve(
-                    collection_name=collection_name, ids=point_ids, with_payload=True, with_vectors=include_vectors
+                    collection_name=collection_name,
+                    ids=point_ids,
+                    with_payload=True,
+                    with_vectors=include_vectors,
                 )
 
                 # Create result objects
@@ -1400,7 +1472,10 @@ class VectorStore:
                         "status": "active",
                     }
                 except Exception as e:
-                    collections_info[collection_name] = {"error": str(e), "status": "error"}
+                    collections_info[collection_name] = {
+                        "error": str(e),
+                        "status": "error",
+                    }
 
         except Exception as e:
             logger.warning(f"Failed to get collection info: {e}")
@@ -1700,7 +1775,7 @@ class VectorStore:
 
         except Exception as e:
             logger.error(f"Failed to store multi-modal embedding: {e}")
-            return StepResult.fail(f"Storage failed: {str(e)}")
+            return StepResult.fail(f"Storage failed: {e!s}")
 
     def search_multimodal_content(
         self,
@@ -1771,7 +1846,7 @@ class VectorStore:
 
         except Exception as e:
             logger.error(f"Multi-modal search failed: {e}")
-            return StepResult.fail(f"Search failed: {str(e)}")
+            return StepResult.fail(f"Search failed: {e!s}")
 
     def get_content_themes(
         self,
@@ -1833,7 +1908,7 @@ class VectorStore:
 
         except Exception as e:
             logger.error(f"Theme extraction failed: {e}")
-            return StepResult.fail(f"Theme extraction failed: {str(e)}")
+            return StepResult.fail(f"Theme extraction failed: {e!s}")
 
     def _get_collection_name(self, namespace: str) -> str:
         """Get physical collection name from namespace."""
@@ -1872,7 +1947,11 @@ class VectorStore:
         try:
             # Check cache first
             cache_key = self._generate_search_cache_key(
-                collection_name, search_vector, limit, score_threshold, filter_conditions
+                collection_name,
+                search_vector,
+                limit,
+                score_threshold,
+                filter_conditions,
             )
             cached_result = self._search_result_cache.get(cache_key)
             if cached_result is not None:
@@ -1891,7 +1970,10 @@ class VectorStore:
                     for field, condition in filter_conditions.items():
                         if isinstance(condition, dict) and "$in" in condition:
                             must_conditions.append(
-                                qmodels.FieldCondition(key=field, match=qmodels.MatchAny(any=condition["$in"]))
+                                qmodels.FieldCondition(
+                                    key=field,
+                                    match=qmodels.MatchAny(any=condition["$in"]),
+                                )
                             )
 
                     if must_conditions:

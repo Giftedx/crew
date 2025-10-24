@@ -2,12 +2,17 @@ from __future__ import annotations
 
 import logging
 import statistics
-from collections import deque
 from datetime import timedelta
+from typing import TYPE_CHECKING
 
 from core.time import default_utc_now
 
 from ..models import AlertSeverity, EarlyWarningAlert, PredictionConfidence
+
+
+if TYPE_CHECKING:
+    from collections import deque
+
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +33,8 @@ class WarningDetectionMixin:
                 decline_rate = decline_ratio / 10
                 critical_threshold = 0.5
                 interactions_to_critical = max(
-                    1, (recent_avg - critical_threshold) / max(decline_rate * recent_avg, 0.001)
+                    1,
+                    (recent_avg - critical_threshold) / max(decline_rate * recent_avg, 0.001),
                 )
                 time_to_impact = timedelta(hours=interactions_to_critical * 0.5)
                 return EarlyWarningAlert(
@@ -74,7 +80,8 @@ class WarningDetectionMixin:
                 increase_rate = increase_ratio / 10
                 critical_threshold = 30.0
                 interactions_to_critical = max(
-                    1, (critical_threshold - recent_avg) / max(increase_rate * recent_avg, 0.001)
+                    1,
+                    (critical_threshold - recent_avg) / max(increase_rate * recent_avg, 0.001),
                 )
                 time_to_impact = timedelta(hours=interactions_to_critical * 0.5)
                 return EarlyWarningAlert(
@@ -109,7 +116,10 @@ class WarningDetectionMixin:
             if hasattr(self, "enhanced_monitor") and hasattr(self.enhanced_monitor, "real_time_metrics"):
                 total_interactions = 0
                 agent_loads: dict[str, int] = {}
-                for agent_name, agent_data in self.enhanced_monitor.real_time_metrics.items():
+                for (
+                    agent_name,
+                    agent_data,
+                ) in self.enhanced_monitor.real_time_metrics.items():
                     recent_interactions = len(agent_data.get("recent_interactions", []))
                     agent_loads[agent_name] = recent_interactions
                     total_interactions += recent_interactions

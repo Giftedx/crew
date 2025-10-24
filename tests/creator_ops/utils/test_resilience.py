@@ -15,6 +15,9 @@ from ultimate_discord_intelligence_bot.core.circuit_breaker_canonical import (
     CircuitState,
     with_circuit_breaker,
 )
+from ultimate_discord_intelligence_bot.core.circuit_breaker_registry import (
+    get_circuit_breaker_registry,
+)
 from ultimate_discord_intelligence_bot.creator_ops.utils.backpressure import (
     BackpressureHandler,
     BackpressureManager,
@@ -389,7 +392,7 @@ class TestSlidingWindowRateLimiter:
     @pytest.mark.asyncio
     async def test_acquire_success(self):
         """Test successful request acquisition."""
-        for i in range(5):
+        for _i in range(5):
             success = await self.limiter.acquire()
             assert success
 
@@ -397,7 +400,7 @@ class TestSlidingWindowRateLimiter:
     async def test_acquire_failure(self):
         """Test failed request acquisition."""
         # Use up all requests
-        for i in range(5):
+        for _i in range(5):
             await self.limiter.acquire()
 
         # Next request should fail
@@ -408,7 +411,7 @@ class TestSlidingWindowRateLimiter:
     async def test_window_sliding(self):
         """Test window sliding behavior."""
         # Use up all requests
-        for i in range(5):
+        for _i in range(5):
             await self.limiter.acquire()
 
         # Wait for window to slide
@@ -447,7 +450,7 @@ class TestRateLimiter:
         assert success
 
         # Use up token bucket
-        for i in range(4):
+        for _i in range(4):
             await self.limiter.acquire()
 
         # Next should fail (token bucket exhausted)

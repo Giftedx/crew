@@ -2,4 +2,5 @@
 
 from . import OTLPSpanExporter
 
+
 __all__ = ["OTLPSpanExporter"]

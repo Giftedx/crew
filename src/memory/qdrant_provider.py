@@ -15,9 +15,9 @@ return type is stable and we avoid ``Any`` leakage.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
 from functools import lru_cache
 from typing import TYPE_CHECKING, Any
+
 
 try:
     from core import settings as settings_mod  # module import (monkeypatch safe)
@@ -37,6 +37,8 @@ except Exception:  # pragma: no cover - fallback when pydantic/settings unavaila
     settings_mod = _SettingsMod()
 
 if TYPE_CHECKING:  # pragma: no cover - mypy / pyright only
+    from collections.abc import Sequence
+
     from qdrant_client import QdrantClient
 else:  # runtime fallback if dependency unavailable (tests may monkeypatch)
     try:  # pragma: no cover - defensive
@@ -123,9 +125,7 @@ class _DummyClient:
                                     "Vectors",
                                     (),
                                     {
-                                        "distance": type(
-                                            "Distance", (), {"value": "cosine"}
-                                        )(),
+                                        "distance": type("Distance", (), {"value": "cosine"})(),
                                         "size": 128,
                                     },
                                 )()
@@ -138,21 +138,15 @@ class _DummyClient:
             },
         )()
 
-    def create_payload_index(
-        self, **kwargs: Any
-    ) -> None:  # pragma: no cover - dummy implementation
+    def create_payload_index(self, **kwargs: Any) -> None:  # pragma: no cover - dummy implementation
         # Dummy implementation - do nothing
         pass
 
-    def search(
-        self, **kwargs: Any
-    ) -> list[Any]:  # pragma: no cover - dummy implementation
+    def search(self, **kwargs: Any) -> list[Any]:  # pragma: no cover - dummy implementation
         # Return empty results for dummy client
         return []
 
-    def upsert(
-        self, *, collection_name: str, points: Sequence[Any]
-    ):  # pragma: no cover
+    def upsert(self, *, collection_name: str, points: Sequence[Any]):  # pragma: no cover
         self._collections.add(collection_name)
         bucket = self._store.setdefault(collection_name, [])
         for p in points:
@@ -196,10 +190,7 @@ class _DummyClient:
                 if callable(filter):
                     return bool(filter(p.payload))
                 if isinstance(filter, dict):
-                    for k, v in filter.items():
-                        if p.payload.get(k) != v:
-                            return False
-                    return True
+                    return all(p.payload.get(k) == v for k, v in filter.items())
                 return True
 
             chunk = [p for p in chunk if _match(p)]
@@ -226,11 +217,7 @@ class _DummyClient:
                 to_delete = {p.id for p in bucket if filter(p.payload)}
                 id_set.update(to_delete)
             elif isinstance(filter, dict):
-                to_delete = {
-                    p.id
-                    for p in bucket
-                    if all(p.payload.get(k) == v for k, v in filter.items())
-                }
+                to_delete = {p.id for p in bucket if all(p.payload.get(k) == v for k, v in filter.items())}
                 id_set.update(to_delete)
         if not id_set:
             return
@@ -264,12 +251,7 @@ def get_qdrant_client() -> QdrantClient | _DummyClient:
     url_val = getattr(settings, "qdrant_url", None)
     # Provide an in-memory dummy fallback for tests requesting ':memory:' or empty URL, or when client missing.
     raw_url = str(url_val or "").strip()
-    if (
-        (not raw_url)
-        or raw_url == ":memory:"
-        or raw_url.startswith("memory://")
-        or QdrantClient is None
-    ):
+    if (not raw_url) or raw_url == ":memory:" or raw_url.startswith("memory://") or QdrantClient is None:
         return _DummyClient()
 
     # Connection pooling configuration
@@ -279,18 +261,10 @@ def get_qdrant_client() -> QdrantClient | _DummyClient:
     # The following environment variables are preserved for backwards compatibility
     # but are not passed to the client as they are not supported parameters.
     # Connection pooling is handled transparently by the underlying HTTP client.
-    _pool_size = int(
-        os.getenv("QDRANT_POOL_SIZE", "10")
-    )  # Unused, kept for compatibility
-    _max_overflow = int(
-        os.getenv("QDRANT_MAX_OVERFLOW", "5")
-    )  # Unused, kept for compatibility
-    _pool_timeout = int(
-        os.getenv("QDRANT_POOL_TIMEOUT", "30")
-    )  # Unused, kept for compatibility
-    _pool_recycle = int(
-        os.getenv("QDRANT_POOL_RECYCLE", "3600")
-    )  # Unused, kept for compatibility
+    _pool_size = int(os.getenv("QDRANT_POOL_SIZE", "10"))  # Unused, kept for compatibility
+    _max_overflow = int(os.getenv("QDRANT_MAX_OVERFLOW", "5"))  # Unused, kept for compatibility
+    _pool_timeout = int(os.getenv("QDRANT_POOL_TIMEOUT", "30"))  # Unused, kept for compatibility
+    _pool_recycle = int(os.getenv("QDRANT_POOL_RECYCLE", "3600"))  # Unused, kept for compatibility
 
     # Build client kwargs with only supported parameters
     kwargs: dict[str, object] = {
@@ -310,9 +284,7 @@ def get_qdrant_client() -> QdrantClient | _DummyClient:
     # Optional secure fallback: if connectivity is broken, fall back to dummy
     # to avoid hard failures in local/dev or air-gapped environments.
     try:
-        secure_fallback = str(
-            os.getenv("ENABLE_SECURE_QDRANT_FALLBACK", "0")
-        ).strip().lower() in {
+        secure_fallback = str(os.getenv("ENABLE_SECURE_QDRANT_FALLBACK", "0")).strip().lower() in {
             "1",
             "true",
             "yes",

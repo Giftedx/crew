@@ -31,6 +31,7 @@ from fastapi import FastAPI, Request, Response
 from obs import metrics
 from server import middleware_shim
 
+
 ## Optional Starlette integration ---------------------------------------------------
 # We attempted to hide imports behind TYPE_CHECKING previously which caused the
 # runtime to fall back to a dummy object even when Starlette WAS available.
@@ -48,7 +49,7 @@ except Exception:  # pragma: no cover - minimal environments without starlette
         Provides an ASGI callable that wraps a `dispatch` coroutine method.
         """
 
-        def __init__(self, app: Any) -> None:  # noqa: D401
+        def __init__(self, app: Any) -> None:
             self.app = app
 
         async def __call__(self, scope: dict, receive: Callable, send: Callable):
@@ -57,7 +58,7 @@ except Exception:  # pragma: no cover - minimal environments without starlette
                 return
             request = Request(scope, receive=receive)
 
-            async def call_next(req: Request) -> Response:  # noqa: D401
+            async def call_next(req: Request) -> Response:
                 responder = await self.app(scope, receive, send)
                 return responder
 
@@ -73,14 +74,14 @@ except Exception:  # pragma: no cover - minimal environments without starlette
     RequestResponseEndpoint = Callable[[Request], Awaitable[Response]]  # type: ignore
 
 
-class FixedWindowRateLimiter(BaseHTTPMiddleware):  # noqa: D401 - Starlette middleware signature
+class FixedWindowRateLimiter(BaseHTTPMiddleware):
     """Simple fixed-window rate limiter middleware.
 
     Works with real Starlette (subclassing its BaseHTTPMiddleware) or with the
     lightweight dummy base when Starlette is absent (tests / shim mode).
     """
 
-    def __init__(self, app: Any, burst: int) -> None:  # noqa: D401 - Starlette middleware signature
+    def __init__(self, app: Any, burst: int) -> None:
         # Always attempt super(); fallback already ensures compat
         try:  # pragma: no cover - defensive
             super().__init__(app)
@@ -127,7 +128,7 @@ class FixedWindowRateLimiter(BaseHTTPMiddleware):  # noqa: D401 - Starlette midd
             try:
                 # Label strictly with the incoming request method; tests expect GET here
                 meth = getattr(request, "method", "GET")
-                metrics.RATE_LIMIT_REJECTIONS.labels(rp_norm, str(meth).upper()).inc()  # noqa: E203
+                metrics.RATE_LIMIT_REJECTIONS.labels(rp_norm, str(meth).upper()).inc()
             except Exception as exc:  # pragma: no cover - defensive
                 logging.debug("rate limit metrics error: %s", exc)
             return Response(status_code=429, content="Rate limit exceeded")
@@ -136,7 +137,12 @@ class FixedWindowRateLimiter(BaseHTTPMiddleware):  # noqa: D401 - Starlette midd
 
 
 def add_rate_limit_middleware(app: FastAPI) -> None:
-    enable = os.getenv("ENABLE_RATE_LIMITING", "0").lower() in ("1", "true", "yes", "on")
+    enable = os.getenv("ENABLE_RATE_LIMITING", "0").lower() in (
+        "1",
+        "true",
+        "yes",
+        "on",
+    )
     if not enable:
         return
     try:
@@ -147,7 +153,7 @@ def add_rate_limit_middleware(app: FastAPI) -> None:
     middleware_shim.install_middleware_support()
     from typing import cast as _cast
 
-    app_any = _cast(Any, app)
+    app_any = _cast("Any", app)
     app_any.add_middleware(FixedWindowRateLimiter, burst=burst)
 
 

@@ -19,13 +19,9 @@ from __future__ import annotations
 
 import logging
 
-logger = logging.getLogger(__name__)
-
-
 # ============================================================================
 # Backward Compatibility Imports
 # ============================================================================
-
 # Import functions from the new focused modules for backward compatibility
 from .discord_embed_builders import (
     create_details_embed,
@@ -54,26 +50,29 @@ from .discord_session_validators import (
     is_session_valid,
 )
 
+
+logger = logging.getLogger(__name__)
+
 # Export all functions for backward compatibility
 __all__ = [
-    # Session validation
-    "is_session_valid",
-    # Progress updates
-    "send_progress_update",
-    # Result persistence
-    "persist_workflow_results",
-    # Error handling
-    "handle_acquisition_failure",
-    "send_error_response",
-    "send_enhanced_error_response",
-    # Result delivery
-    "deliver_autonomous_results",
+    "create_details_embed",
+    "create_error_embed",
+    "create_knowledge_base_embed",
     # Embed builders
     "create_main_results_embed",
-    "create_details_embed",
-    "create_knowledge_base_embed",
-    "create_error_embed",
-    "create_specialized_main_results_embed",
     "create_specialized_details_embed",
     "create_specialized_knowledge_embed",
+    "create_specialized_main_results_embed",
+    # Result delivery
+    "deliver_autonomous_results",
+    # Error handling
+    "handle_acquisition_failure",
+    # Session validation
+    "is_session_valid",
+    # Result persistence
+    "persist_workflow_results",
+    "send_enhanced_error_response",
+    "send_error_response",
+    # Progress updates
+    "send_progress_update",
 ]

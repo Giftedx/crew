@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping, MutableMapping
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping, MutableMapping
 
 
 @dataclass
@@ -91,4 +94,4 @@ def attribute_reward(decisions: Mapping[str, Any], breakdown: RewardBreakdown) -
     if not decisions:
         return {}
     share = breakdown.total / len(decisions)
-    return {action_id: share for action_id in decisions}
+    return dict.fromkeys(decisions, share)

@@ -13,7 +13,13 @@ from enum import Enum
 from typing import Any
 
 from .agent_planner import AgentPlanner, PlanningContext, PlanningStrategy
-from .dspy_optimizer import DSPyOptimizer, OptimizationConfig, PromptTemplate, PromptType
+from .dspy_optimizer import (
+    DSPyOptimizer,
+    OptimizationConfig,
+    PromptTemplate,
+    PromptType,
+)
+
 
 logger = logging.getLogger(__name__)
 

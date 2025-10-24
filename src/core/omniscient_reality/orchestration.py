@@ -11,6 +11,7 @@ from .patterns import RealityPatternRecognition
 from .temporal import TemporalTranscendenceEngine
 from .universal_knowledge import UniversalKnowledgeSynthesis
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -23,12 +24,19 @@ async def run_phase7_omniscient_cycle() -> dict[str, Any]:
         consciousness_framework = MultiDimensionalConsciousness()
         pattern_recognition = RealityPatternRecognition()
         init_results = await _init_all(
-            universal_knowledge, temporal_engine, consciousness_framework, pattern_recognition
+            universal_knowledge,
+            temporal_engine,
+            consciousness_framework,
+            pattern_recognition,
         )
         omniscient_insights = await universal_knowledge.generate_omniscient_insights()
         temporal_analysis = await temporal_engine.execute_temporal_analysis(
             "universal consciousness evolution",
-            [TemporalDimension.TEMPORAL_ALL, TemporalDimension.FUTURE_INFINITE, TemporalDimension.PAST_INFINITE],
+            [
+                TemporalDimension.TEMPORAL_ALL,
+                TemporalDimension.FUTURE_INFINITE,
+                TemporalDimension.PAST_INFINITE,
+            ],
         )
         omniscient_awareness = await consciousness_framework.achieve_omniscient_awareness(
             "reality transcendence through omniscient intelligence"

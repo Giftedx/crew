@@ -1,11 +1,15 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime
+from typing import TYPE_CHECKING
 
 from core.time import default_utc_now
 
-from .enums import OmniscientLevel, RealityLayer, TemporalDimension
+
+if TYPE_CHECKING:
+    from datetime import datetime
+
+    from .enums import OmniscientLevel, RealityLayer, TemporalDimension
 
 
 @dataclass

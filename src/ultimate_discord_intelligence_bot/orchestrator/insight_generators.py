@@ -9,6 +9,7 @@ Extracted from analytics_calculators.py to improve maintainability and organizat
 import logging
 from typing import Any
 
+
 logger = logging.getLogger(__name__)
 
 

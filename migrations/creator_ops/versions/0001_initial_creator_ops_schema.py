@@ -10,6 +10,7 @@ import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.dialects import postgresql
 
+
 # revision identifiers, used by Alembic.
 revision = "0001"
 down_revision = None
@@ -39,10 +40,14 @@ def upgrade() -> None:
     )
     op.create_index(op.f("ix_creator_ops_accounts_id"), "creator_ops_accounts", ["id"], unique=False)
     op.create_unique_constraint(
-        "uq_tenant_workspace_platform_handle", "creator_ops_accounts", ["tenant", "workspace", "platform", "handle"]
+        "uq_tenant_workspace_platform_handle",
+        "creator_ops_accounts",
+        ["tenant", "workspace", "platform", "handle"],
     )
     op.create_unique_constraint(
-        "uq_tenant_workspace_platform_id", "creator_ops_accounts", ["tenant", "workspace", "platform", "platform_id"]
+        "uq_tenant_workspace_platform_id",
+        "creator_ops_accounts",
+        ["tenant", "workspace", "platform", "platform_id"],
     )
 
     # Create media table
@@ -75,7 +80,9 @@ def upgrade() -> None:
     )
     op.create_index(op.f("ix_creator_ops_media_id"), "creator_ops_media", ["id"], unique=False)
     op.create_unique_constraint(
-        "uq_media_platform_id", "creator_ops_media", ["tenant", "workspace", "platform", "platform_id"]
+        "uq_media_platform_id",
+        "creator_ops_media",
+        ["tenant", "workspace", "platform", "platform_id"],
     )
 
     # Create units table
@@ -135,9 +142,16 @@ def upgrade() -> None:
         ),
         sa.PrimaryKeyConstraint("id"),
     )
-    op.create_index(op.f("ix_creator_ops_interactions_id"), "creator_ops_interactions", ["id"], unique=False)
+    op.create_index(
+        op.f("ix_creator_ops_interactions_id"),
+        "creator_ops_interactions",
+        ["id"],
+        unique=False,
+    )
     op.create_unique_constraint(
-        "uq_interaction_platform_id", "creator_ops_interactions", ["tenant", "workspace", "platform", "platform_id"]
+        "uq_interaction_platform_id",
+        "creator_ops_interactions",
+        ["tenant", "workspace", "platform", "platform_id"],
     )
 
     # Create people table
@@ -159,7 +173,9 @@ def upgrade() -> None:
     )
     op.create_index(op.f("ix_creator_ops_people_id"), "creator_ops_people", ["id"], unique=False)
     op.create_unique_constraint(
-        "uq_person_name_type", "creator_ops_people", ["tenant", "workspace", "name", "person_type"]
+        "uq_person_name_type",
+        "creator_ops_people",
+        ["tenant", "workspace", "name", "person_type"],
     )
 
     # Create topics table
@@ -184,7 +200,9 @@ def upgrade() -> None:
     )
     op.create_index(op.f("ix_creator_ops_topics_id"), "creator_ops_topics", ["id"], unique=False)
     op.create_unique_constraint(
-        "uq_topic_unit_type_text", "creator_ops_topics", ["tenant", "workspace", "unit_id", "topic_type", "text"]
+        "uq_topic_unit_type_text",
+        "creator_ops_topics",
+        ["tenant", "workspace", "unit_id", "topic_type", "text"],
     )
 
     # Create claims table
@@ -213,7 +231,9 @@ def upgrade() -> None:
     )
     op.create_index(op.f("ix_creator_ops_claims_id"), "creator_ops_claims", ["id"], unique=False)
     op.create_unique_constraint(
-        "uq_claim_unit_text", "creator_ops_claims", ["tenant", "workspace", "unit_id", "claim_text"]
+        "uq_claim_unit_text",
+        "creator_ops_claims",
+        ["tenant", "workspace", "unit_id", "claim_text"],
     )
 
     # Create embeddings table
@@ -235,12 +255,21 @@ def upgrade() -> None:
         ),
         sa.PrimaryKeyConstraint("id"),
     )
-    op.create_index(op.f("ix_creator_ops_embeddings_id"), "creator_ops_embeddings", ["id"], unique=False)
-    op.create_unique_constraint(
-        "uq_embedding_unit_type", "creator_ops_embeddings", ["tenant", "workspace", "unit_id", "embedding_type"]
+    op.create_index(
+        op.f("ix_creator_ops_embeddings_id"),
+        "creator_ops_embeddings",
+        ["id"],
+        unique=False,
     )
     op.create_unique_constraint(
-        "uq_embedding_vector_id", "creator_ops_embeddings", ["tenant", "workspace", "vector_id"]
+        "uq_embedding_unit_type",
+        "creator_ops_embeddings",
+        ["tenant", "workspace", "unit_id", "embedding_type"],
+    )
+    op.create_unique_constraint(
+        "uq_embedding_vector_id",
+        "creator_ops_embeddings",
+        ["tenant", "workspace", "vector_id"],
     )
 
 

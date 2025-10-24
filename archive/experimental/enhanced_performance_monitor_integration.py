@@ -15,6 +15,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
 
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -123,7 +124,10 @@ class EnhancedPerformanceMonitor:
         self.record_standard_interaction(
             agent_name=agent_name,
             task_type=task_type,
-            tools_used=[f"ai_router_{routing_strategy}", f"model_{selected_model.split('/')[-1]}"],
+            tools_used=[
+                f"ai_router_{routing_strategy}",
+                f"model_{selected_model.split('/')[-1]}",
+            ],
             response_quality=actual_performance.get("quality", 0.0),
             response_time=actual_performance.get("latency_ms", 0.0) / 1000.0,
             user_feedback=user_feedback,
@@ -477,7 +481,12 @@ async def demonstrate_enhanced_performance_monitoring():
 
     # Record standard agent interactions
     standard_scenarios = [
-        ("fact_verification", ["claim_extractor", "fact_checker", "vector_search"], 0.85, 12.5),
+        (
+            "fact_verification",
+            ["claim_extractor", "fact_checker", "vector_search"],
+            0.85,
+            12.5,
+        ),
         ("content_analysis", ["text_analyzer", "sentiment_tool"], 0.78, 8.2),
         ("research_task", ["web_search", "summarizer", "fact_checker"], 0.92, 15.7),
     ]

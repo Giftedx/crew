@@ -23,7 +23,12 @@ def schema_lc_summarize() -> dict[str, Any]:
         "type": "object",
         "properties": {
             "text": {"type": "string"},
-            "max_sentences": {"type": "integer", "minimum": 1, "maximum": 10, "default": 3},
+            "max_sentences": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 10,
+                "default": 3,
+            },
         },
         "required": ["text"],
     }
@@ -63,7 +68,12 @@ def schema_rag_ingest() -> dict[str, Any]:
         "properties": {
             "texts": {"type": "array", "items": {"type": "string"}},
             "index": {"type": "string", "default": "memory"},
-            "chunk_size": {"type": "integer", "minimum": 50, "maximum": 2000, "default": 400},
+            "chunk_size": {
+                "type": "integer",
+                "minimum": 50,
+                "maximum": 2000,
+                "default": 400,
+            },
             "overlap": {"type": "integer", "minimum": 0, "maximum": 500, "default": 50},
         },
         "required": ["texts"],
@@ -77,9 +87,19 @@ def schema_rag_ingest_url() -> dict[str, Any]:
         "properties": {
             "urls": {"type": "array", "items": {"type": "string"}},
             "index": {"type": "string", "default": "memory"},
-            "chunk_size": {"type": "integer", "minimum": 50, "maximum": 2000, "default": 400},
+            "chunk_size": {
+                "type": "integer",
+                "minimum": 50,
+                "maximum": 2000,
+                "default": 400,
+            },
             "overlap": {"type": "integer", "minimum": 0, "maximum": 500, "default": 50},
-            "max_bytes": {"type": "integer", "minimum": 1000, "maximum": 2000000, "default": 500000},
+            "max_bytes": {
+                "type": "integer",
+                "minimum": 1000,
+                "maximum": 2000000,
+                "default": 500000,
+            },
         },
         "required": ["urls"],
     }
@@ -122,7 +142,12 @@ def schema_research_and_brief_multi() -> dict[str, Any]:
             "query": {"type": "string"},
             "sources_text": {"type": ["array", "null"], "items": {"type": "string"}},
             "max_items": {"type": "integer", "minimum": 1, "maximum": 10, "default": 5},
-            "max_time": {"type": "number", "minimum": 5.0, "maximum": 300.0, "default": 60.0},
+            "max_time": {
+                "type": "number",
+                "minimum": 5.0,
+                "maximum": 300.0,
+                "default": 60.0,
+            },
             "enable_alerts": {"type": "boolean", "default": False},
         },
         "required": ["query"],
@@ -130,13 +155,13 @@ def schema_research_and_brief_multi() -> dict[str, Any]:
 
 
 __all__ = [
-    "schema_text_analyze",
     "schema_lc_summarize",
-    "schema_rag_query",
-    "schema_rag_query_vs",
+    "schema_rag_hybrid",
     "schema_rag_ingest",
     "schema_rag_ingest_url",
-    "schema_rag_hybrid",
+    "schema_rag_query",
+    "schema_rag_query_vs",
     "schema_research_and_brief",
     "schema_research_and_brief_multi",
+    "schema_text_analyze",
 ]

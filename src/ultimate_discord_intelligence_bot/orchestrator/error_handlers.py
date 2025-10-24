@@ -14,6 +14,7 @@ from typing import Any
 
 from ..step_result import StepResult
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -206,5 +207,6 @@ async def execute_stage_with_recovery(
 
     # Final fallback
     return StepResult.fail(
-        f"Stage {stage_name} failed after {max_retries} retries", step=f"{stage_name}_max_retries_exceeded"
+        f"Stage {stage_name} failed after {max_retries} retries",
+        step=f"{stage_name}_max_retries_exceeded",
     )

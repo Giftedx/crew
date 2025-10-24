@@ -8,7 +8,7 @@ A tenant-aware Discord platform that ingests public media, builds grounded conte
 
 All detailed guides, architecture docs, and operational procedures have been organized under `docs/`. Use the documentation index above to find what you need.
 
-**🚀 [Developer Onboarding Guide](DEVELOPER_ONBOARDING_GUIDE.md)** - Quick-start guide for new developers
+**🚀 [Developer Onboarding Guide](../archive/consolidated/DEVELOPER_ONBOARDING_GUIDE.md)** - Quick-start guide for new developers
 
 **🤖 Official AI Model Best Practices** - Integrated from OpenAI, Anthropic, and Google AI:
 

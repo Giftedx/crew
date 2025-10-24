@@ -20,12 +20,16 @@ from __future__ import annotations
 import asyncio
 import logging
 import time
-from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Generic, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Generic, TypeVar, cast
 
 from ultimate_discord_intelligence_bot.step_result import StepResult
+
+
+if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable
+
 
 logger = logging.getLogger(__name__)
 
@@ -101,7 +105,13 @@ class CircuitStats:
 class CircuitBreakerOpenError(Exception):
     """Exception raised when circuit breaker is open."""
 
-    def __init__(self, message: str, circuit_name: str, state: CircuitState, last_failure: Exception | None = None):
+    def __init__(
+        self,
+        message: str,
+        circuit_name: str,
+        state: CircuitState,
+        last_failure: Exception | None = None,
+    ):
         super().__init__(message)
         self.circuit_name = circuit_name
         self.state = state
@@ -307,7 +317,7 @@ class CircuitBreaker(Generic[T]):
                         result = self.fallback(*args, **kwargs)
                         if asyncio.iscoroutine(result):
                             return await result
-                        return cast(T, result)
+                        return cast("T", result)
                     else:
                         raise CircuitBreakerOpenError(
                             f"Circuit breaker '{self.name}' is open - service unavailable",
@@ -335,7 +345,7 @@ class CircuitBreaker(Generic[T]):
                     result = func(*args, **kwargs)
 
                 await self._record_success()
-                return cast(T, result)
+                return cast("T", result)
 
             except TimeoutError:
                 self.stats.timeouts += 1
@@ -366,9 +376,9 @@ class CircuitBreaker(Generic[T]):
             result = await self.call(func, *args, **kwargs)
             return result
         except CircuitBreakerOpenError as e:
-            return StepResult.fail(f"Circuit breaker {self.name} is open: {str(e)}")
+            return StepResult.fail(f"Circuit breaker {self.name} is open: {e!s}")
         except Exception as e:
-            return StepResult.fail(f"Function failed: {str(e)}")
+            return StepResult.fail(f"Function failed: {e!s}")
 
     def get_stats(self) -> CircuitStats:
         """Get current circuit breaker statistics."""
@@ -430,7 +440,10 @@ class CircuitBreakerRegistry:
         self._lock = asyncio.Lock()
 
     async def get_circuit_breaker(
-        self, name: str, config: CircuitConfig | None = None, fallback: Callable | None = None
+        self,
+        name: str,
+        config: CircuitConfig | None = None,
+        fallback: Callable | None = None,
     ) -> CircuitBreaker:
         """Get or create a circuit breaker."""
         async with self._lock:
@@ -439,7 +452,10 @@ class CircuitBreakerRegistry:
             return self.circuit_breakers[name]
 
     def get_circuit_breaker_sync(
-        self, name: str, config: CircuitConfig | None = None, fallback: Callable | None = None
+        self,
+        name: str,
+        config: CircuitConfig | None = None,
+        fallback: Callable | None = None,
     ) -> CircuitBreaker:
         """Get or create a circuit breaker (synchronous)."""
         if name not in self.circuit_breakers:
@@ -449,7 +465,11 @@ class CircuitBreakerRegistry:
     def get_all_stats(self) -> dict[str, dict[str, Any]]:
         """Get statistics for all circuit breakers."""
         return {
-            name: {"state": cb.get_state().value, "stats": cb.get_stats().__dict__, "config": cb.config.__dict__}
+            name: {
+                "state": cb.get_state().value,
+                "stats": cb.get_stats().__dict__,
+                "config": cb.config.__dict__,
+            }
             for name, cb in self.circuit_breakers.items()
         }
 
@@ -611,15 +631,15 @@ def get_platform_circuit_breaker(platform: str, fallback: Callable | None = None
 
 
 __all__ = [
+    "PLATFORM_CONFIGS",
     "CircuitBreaker",
-    "CircuitState",
-    "CircuitConfig",
-    "CircuitStats",
     "CircuitBreakerOpenError",
     "CircuitBreakerRegistry",
-    "get_circuit_breaker_registry",
+    "CircuitConfig",
+    "CircuitState",
+    "CircuitStats",
     "circuit_breaker",
-    "with_circuit_breaker",
+    "get_circuit_breaker_registry",
     "get_platform_circuit_breaker",
-    "PLATFORM_CONFIGS",
+    "with_circuit_breaker",
 ]

@@ -54,9 +54,9 @@ class _SettingsLike:
 
 
 try:
-    from core.settings import get_settings as _real_get_settings
+    from ultimate_discord_intelligence_bot.settings import Settings as _real_get_settings
 
-    def get_settings() -> _SettingsLike:  # type: ignore[override]
+    def get_settings() -> _SettingsLike:
         return _real_get_settings()  # type: ignore[return-value]
 except Exception:  # pragma: no cover
 
@@ -66,8 +66,8 @@ except Exception:  # pragma: no cover
         enable_http_negative_cache: bool = False
         rate_limit_redis_url: str | None = None
 
-    def get_settings() -> _SettingsLike:  # type: ignore[override]
-        return _FallbackSettings()
+    def get_settings() -> _SettingsLike:
+        return _FallbackSettings()  # type: ignore[return-value]
 
 
 try:  # optional Redis cache
@@ -95,7 +95,20 @@ def cached_get(
         )
     key = _cache_key(url, params)
     now = time.time()
-    ttl = int(ttl_seconds if ttl_seconds is not None else getattr(settings, "http_cache_ttl_seconds", 300) or 300)
+    # Resolve TTL precedence: explicit param > settings.http_cache_ttl_seconds > unified 'tool' TTL > 300
+    if ttl_seconds is not None:
+        ttl = int(ttl_seconds)
+    else:
+        ttl_from_settings = getattr(settings, "http_cache_ttl_seconds", None)
+        if isinstance(ttl_from_settings, (int, float)) and int(ttl_from_settings) > 0:
+            ttl = int(ttl_from_settings)
+        else:
+            try:
+                from core.cache.unified_config import get_unified_cache_config  # local import to avoid cycles
+
+                ttl = int(get_unified_cache_config().get_ttl_for_domain("tool"))
+            except Exception:
+                ttl = 300
     redis_url = getattr(settings, "rate_limit_redis_url", None)
     if _RedisCache is not None and redis_url:
         try:
@@ -104,14 +117,23 @@ def cached_get(
             if raw:
                 try:
                     obj = json.loads(raw)
-                    return _CachedResponse(text=str(obj.get("text", "")), status_code=int(obj.get("status", 200)))
+                    return _CachedResponse(
+                        text=str(obj.get("text", "")),
+                        status_code=int(obj.get("status", 200)),
+                    )
                 except Exception:
                     ...
             resp = resilient_get(
-                url, params=params, headers=headers, timeout_seconds=timeout_seconds or REQUEST_TIMEOUT_SECONDS
+                url,
+                params=params,
+                headers=headers,
+                timeout_seconds=timeout_seconds or REQUEST_TIMEOUT_SECONDS,
             )
             if 200 <= resp.status_code < 300:
-                rc.set_str(key, json.dumps({"status": resp.status_code, "text": getattr(resp, "text", "")}))
+                rc.set_str(
+                    key,
+                    json.dumps({"status": resp.status_code, "text": getattr(resp, "text", "")}),
+                )
             return resp
         except Exception:
             ...
@@ -131,10 +153,17 @@ def cached_get(
         if neg_exp > now:
             return _CachedResponse(text="", status_code=int(neg_status))
     resp = resilient_get(
-        url, params=params, headers=headers, timeout_seconds=timeout_seconds or REQUEST_TIMEOUT_SECONDS
+        url,
+        params=params,
+        headers=headers,
+        timeout_seconds=timeout_seconds or REQUEST_TIMEOUT_SECONDS,
     )
     if 200 <= resp.status_code < 300:
-        _MEM_HTTP_CACHE[key] = (time.time() + ttl, getattr(resp, "text", ""), int(resp.status_code))
+        _MEM_HTTP_CACHE[key] = (
+            time.time() + ttl,
+            getattr(resp, "text", ""),
+            int(resp.status_code),
+        )
     else:
         if getattr(settings, "enable_http_negative_cache", False) and resp.status_code in {404, 429}:
             retry_after_s: float | None = None

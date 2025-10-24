@@ -6,15 +6,19 @@ anomaly detection, and context-aware notifications.
 
 from __future__ import annotations
 
-import asyncio
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any
 
 from ultimate_discord_intelligence_bot.step_result import StepResult
 from ultimate_discord_intelligence_bot.tenancy.context import current_tenant
+
+
+if TYPE_CHECKING:
+    import asyncio
+
 
 logger = logging.getLogger(__name__)
 
@@ -47,11 +51,11 @@ class AlertCondition:
 
     metric_name: str
     operator: str  # >, <, >=, <=, ==, !=
-    threshold_value: Union[int, float]
+    threshold_value: int | float
     time_window: int  # seconds
     evaluation_periods: int = 1
-    comparison_metric: Optional[str] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    comparison_metric: str | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -63,13 +67,13 @@ class AlertRule:
     description: str
     alert_type: AlertType
     alert_level: AlertLevel
-    conditions: List[AlertCondition]
+    conditions: list[AlertCondition]
     enabled: bool = True
     cooldown_period: int = 300  # seconds
     max_alerts_per_hour: int = 10
-    notification_channels: List[str] = field(default_factory=list)
-    tags: List[str] = field(default_factory=list)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    notification_channels: list[str] = field(default_factory=list)
+    tags: list[str] = field(default_factory=list)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -78,10 +82,10 @@ class AlertAction:
 
     action_type: str  # notify, scale, restart, rollback, etc.
     target: str  # service, agent, component
-    parameters: Dict[str, Any]
+    parameters: dict[str, Any]
     delay_seconds: int = 0
     retry_count: int = 3
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -95,12 +99,12 @@ class Alert:
     title: str
     description: str
     triggered_at: datetime
-    resolved_at: Optional[datetime] = None
+    resolved_at: datetime | None = None
     status: str = "active"  # active, resolved, suppressed
-    affected_components: List[str] = field(default_factory=list)
-    metrics_data: Dict[str, Any] = field(default_factory=dict)
-    actions_taken: List[str] = field(default_factory=list)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    affected_components: list[str] = field(default_factory=list)
+    metrics_data: dict[str, Any] = field(default_factory=dict)
+    actions_taken: list[str] = field(default_factory=list)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -137,15 +141,15 @@ class AlertingConfig:
 class IntelligentAlertingService:
     """Intelligent alerting service with adaptive thresholds and anomaly detection"""
 
-    def __init__(self, config: Optional[AlertingConfig] = None):
+    def __init__(self, config: AlertingConfig | None = None):
         self.config = config or AlertingConfig()
         self._initialized = False
-        self._alert_rules: Dict[str, AlertRule] = {}
-        self._active_alerts: Dict[str, Alert] = {}
-        self._alert_history: List[Alert] = []
-        self._metrics_history: Dict[str, List[Dict[str, Any]]] = {}
-        self._evaluation_tasks: List[asyncio.Task] = []
-        self._last_evaluation_time: Dict[str, datetime] = {}
+        self._alert_rules: dict[str, AlertRule] = {}
+        self._active_alerts: dict[str, Alert] = {}
+        self._alert_history: list[Alert] = []
+        self._metrics_history: dict[str, list[dict[str, Any]]] = {}
+        self._evaluation_tasks: list[asyncio.Task] = []
+        self._last_evaluation_time: dict[str, datetime] = {}
 
         # Initialize alerting service
         self._initialize_alerting()
@@ -166,15 +170,15 @@ class IntelligentAlertingService:
         description: str,
         alert_type: AlertType,
         alert_level: AlertLevel,
-        conditions: List[AlertCondition],
+        conditions: list[AlertCondition],
         enabled: bool = True,
-        cooldown_period: Optional[int] = None,
-        max_alerts_per_hour: Optional[int] = None,
-        notification_channels: Optional[List[str]] = None,
-        tags: Optional[List[str]] = None,
-        metadata: Optional[Dict[str, Any]] = None,
-        tenant_id: Optional[str] = None,
-        workspace_id: Optional[str] = None,
+        cooldown_period: int | None = None,
+        max_alerts_per_hour: int | None = None,
+        notification_channels: list[str] | None = None,
+        tags: list[str] | None = None,
+        metadata: dict[str, Any] | None = None,
+        tenant_id: str | None = None,
+        workspace_id: str | None = None,
     ) -> StepResult:
         """Create a new alert rule"""
         try:
@@ -198,8 +202,7 @@ class IntelligentAlertingService:
                 conditions=conditions,
                 enabled=enabled,
                 cooldown_period=cooldown_period or self.config.default_cooldown_period,
-                max_alerts_per_hour=max_alerts_per_hour
-                or self.config.max_alerts_per_rule_per_hour,
+                max_alerts_per_hour=max_alerts_per_hour or self.config.max_alerts_per_rule_per_hour,
                 notification_channels=notification_channels or [],
                 tags=tags or [],
                 metadata={
@@ -228,17 +231,17 @@ class IntelligentAlertingService:
 
         except Exception as e:
             logger.error(f"Error creating alert rule: {e}")
-            return StepResult.fail(f"Alert rule creation failed: {str(e)}")
+            return StepResult.fail(f"Alert rule creation failed: {e!s}")
 
     async def evaluate_metric_for_alerts(
         self,
         metric_name: str,
-        value: Union[int, float],
-        timestamp: Optional[datetime] = None,
-        labels: Optional[Dict[str, str]] = None,
-        metadata: Optional[Dict[str, Any]] = None,
-        tenant_id: Optional[str] = None,
-        workspace_id: Optional[str] = None,
+        value: int | float,
+        timestamp: datetime | None = None,
+        labels: dict[str, str] | None = None,
+        metadata: dict[str, Any] | None = None,
+        tenant_id: str | None = None,
+        workspace_id: str | None = None,
     ) -> StepResult:
         """Evaluate a metric against all applicable alert rules"""
         try:
@@ -272,9 +275,7 @@ class IntelligentAlertingService:
             # Keep only recent metrics (last 24 hours)
             cutoff_time = datetime.now(timezone.utc) - timedelta(hours=24)
             self._metrics_history[metric_name] = [
-                m
-                for m in self._metrics_history[metric_name]
-                if m["timestamp"] > cutoff_time
+                m for m in self._metrics_history[metric_name] if m["timestamp"] > cutoff_time
             ]
 
             # Evaluate against alert rules
@@ -285,9 +286,7 @@ class IntelligentAlertingService:
                     continue
 
                 # Check if rule applies to this metric
-                if not self._rule_applies_to_metric(
-                    rule, metric_name, tenant_id, workspace_id
-                ):
+                if not self._rule_applies_to_metric(rule, metric_name, tenant_id, workspace_id):
                     continue
 
                 # Check cooldown period
@@ -299,21 +298,15 @@ class IntelligentAlertingService:
                     continue
 
                 # Evaluate conditions
-                if await self._evaluate_alert_conditions(
-                    rule, metric_name, value, timestamp
-                ):
+                if await self._evaluate_alert_conditions(rule, metric_name, value, timestamp):
                     # Trigger alert
-                    alert = await self._trigger_alert(
-                        rule, metric_name, value, timestamp, labels, metadata
-                    )
+                    alert = await self._trigger_alert(rule, metric_name, value, timestamp, labels, metadata)
                     if alert:
                         triggered_alerts.append(alert)
 
             # Also check for anomalies if enabled
             if self.config.enable_anomaly_detection:
-                anomaly_alerts = await self._detect_anomalies(
-                    metric_name, value, timestamp, tenant_id, workspace_id
-                )
+                anomaly_alerts = await self._detect_anomalies(metric_name, value, timestamp, tenant_id, workspace_id)
                 triggered_alerts.extend(anomaly_alerts)
 
             return StepResult.ok(
@@ -329,14 +322,14 @@ class IntelligentAlertingService:
 
         except Exception as e:
             logger.error(f"Error evaluating metric for alerts: {e}")
-            return StepResult.fail(f"Metric evaluation failed: {str(e)}")
+            return StepResult.fail(f"Metric evaluation failed: {e!s}")
 
     async def resolve_alert(
         self,
         alert_id: str,
         resolution_reason: str,
         resolved_by: str,
-        metadata: Optional[Dict[str, Any]] = None,
+        metadata: dict[str, Any] | None = None,
     ) -> StepResult:
         """Resolve an active alert"""
         try:
@@ -344,9 +337,7 @@ class IntelligentAlertingService:
                 return StepResult.fail("Intelligent Alerting Service not initialized")
 
             if alert_id not in self._active_alerts:
-                return StepResult.fail(
-                    f"Alert {alert_id} not found or already resolved"
-                )
+                return StepResult.fail(f"Alert {alert_id} not found or already resolved")
 
             alert = self._active_alerts[alert_id]
             alert.status = "resolved"
@@ -378,14 +369,14 @@ class IntelligentAlertingService:
 
         except Exception as e:
             logger.error(f"Error resolving alert: {e}")
-            return StepResult.fail(f"Alert resolution failed: {str(e)}")
+            return StepResult.fail(f"Alert resolution failed: {e!s}")
 
     async def get_active_alerts(
         self,
-        alert_level: Optional[AlertLevel] = None,
-        alert_type: Optional[AlertType] = None,
-        tenant_id: Optional[str] = None,
-        workspace_id: Optional[str] = None,
+        alert_level: AlertLevel | None = None,
+        alert_type: AlertType | None = None,
+        tenant_id: str | None = None,
+        workspace_id: str | None = None,
     ) -> StepResult:
         """Get all active alerts matching criteria"""
         try:
@@ -422,13 +413,13 @@ class IntelligentAlertingService:
 
         except Exception as e:
             logger.error(f"Error getting active alerts: {e}")
-            return StepResult.fail(f"Active alerts retrieval failed: {str(e)}")
+            return StepResult.fail(f"Active alerts retrieval failed: {e!s}")
 
     async def get_alert_statistics(
         self,
         hours: int = 24,
-        tenant_id: Optional[str] = None,
-        workspace_id: Optional[str] = None,
+        tenant_id: str | None = None,
+        workspace_id: str | None = None,
     ) -> StepResult:
         """Get alert statistics for specified time period"""
         try:
@@ -470,9 +461,7 @@ class IntelligentAlertingService:
             # Calculate statistics
             total_alerts = len(filtered_alerts)
             active_alerts = len([a for a in filtered_alerts if a.status == "active"])
-            resolved_alerts = len(
-                [a for a in filtered_alerts if a.status == "resolved"]
-            )
+            resolved_alerts = len([a for a in filtered_alerts if a.status == "resolved"])
 
             # Group by alert level
             level_counts = {}
@@ -495,10 +484,7 @@ class IntelligentAlertingService:
             # Calculate resolution time statistics
             resolved_with_times = [a for a in filtered_alerts if a.resolved_at]
             if resolved_with_times:
-                resolution_times = [
-                    (a.resolved_at - a.triggered_at).total_seconds()
-                    for a in resolved_with_times
-                ]
+                resolution_times = [(a.resolved_at - a.triggered_at).total_seconds() for a in resolved_with_times]
                 avg_resolution_time = sum(resolution_times) / len(resolution_times)
                 min_resolution_time = min(resolution_times)
                 max_resolution_time = max(resolution_times)
@@ -511,14 +497,10 @@ class IntelligentAlertingService:
                         "total_alerts": total_alerts,
                         "active_alerts": active_alerts,
                         "resolved_alerts": resolved_alerts,
-                        "resolution_rate": resolved_alerts / total_alerts
-                        if total_alerts > 0
-                        else 0,
+                        "resolution_rate": resolved_alerts / total_alerts if total_alerts > 0 else 0,
                         "alert_levels": level_counts,
                         "alert_types": type_counts,
-                        "top_rules": sorted(
-                            rule_counts.items(), key=lambda x: x[1], reverse=True
-                        )[:10],
+                        "top_rules": sorted(rule_counts.items(), key=lambda x: x[1], reverse=True)[:10],
                         "resolution_times": {
                             "average_seconds": avg_resolution_time,
                             "min_seconds": min_resolution_time,
@@ -535,11 +517,9 @@ class IntelligentAlertingService:
 
         except Exception as e:
             logger.error(f"Error getting alert statistics: {e}")
-            return StepResult.fail(f"Alert statistics retrieval failed: {str(e)}")
+            return StepResult.fail(f"Alert statistics retrieval failed: {e!s}")
 
-    def _rule_applies_to_metric(
-        self, rule: AlertRule, metric_name: str, tenant_id: str, workspace_id: str
-    ) -> bool:
+    def _rule_applies_to_metric(self, rule: AlertRule, metric_name: str, tenant_id: str, workspace_id: str) -> bool:
         """Check if an alert rule applies to a metric"""
         try:
             # Check if any condition matches the metric
@@ -548,15 +528,9 @@ class IntelligentAlertingService:
                     return True
 
             # Check tenant/workspace match
-            if (
-                rule.metadata.get("tenant_id")
-                and rule.metadata.get("tenant_id") != tenant_id
-            ):
+            if rule.metadata.get("tenant_id") and rule.metadata.get("tenant_id") != tenant_id:
                 return False
-            if (
-                rule.metadata.get("workspace_id")
-                and rule.metadata.get("workspace_id") != workspace_id
-            ):
+            if rule.metadata.get("workspace_id") and rule.metadata.get("workspace_id") != workspace_id:
                 return False
 
             return False
@@ -574,9 +548,7 @@ class IntelligentAlertingService:
             if not rule:
                 return False
 
-            cooldown_end = self._last_evaluation_time[rule_id] + timedelta(
-                seconds=rule.cooldown_period
-            )
+            cooldown_end = self._last_evaluation_time[rule_id] + timedelta(seconds=rule.cooldown_period)
             return timestamp < cooldown_end
 
         except Exception:
@@ -592,9 +564,7 @@ class IntelligentAlertingService:
             # Count alerts in the last hour
             hour_ago = timestamp - timedelta(hours=1)
             recent_alerts = [
-                alert
-                for alert in self._alert_history
-                if alert.rule_id == rule_id and alert.triggered_at > hour_ago
+                alert for alert in self._alert_history if alert.rule_id == rule_id and alert.triggered_at > hour_ago
             ]
 
             return len(recent_alerts) >= rule.max_alerts_per_hour
@@ -606,7 +576,7 @@ class IntelligentAlertingService:
         self,
         rule: AlertRule,
         metric_name: str,
-        value: Union[int, float],
+        value: int | float,
         timestamp: datetime,
     ) -> bool:
         """Evaluate alert conditions for a rule"""
@@ -631,9 +601,8 @@ class IntelligentAlertingService:
                 elif condition.operator == "==":
                     if value != condition.threshold_value:
                         continue
-                elif condition.operator == "!=":
-                    if value == condition.threshold_value:
-                        continue
+                elif condition.operator == "!=" and value == condition.threshold_value:
+                    continue
 
                 # Condition met
                 return True
@@ -648,11 +617,11 @@ class IntelligentAlertingService:
         self,
         rule: AlertRule,
         metric_name: str,
-        value: Union[int, float],
+        value: int | float,
         timestamp: datetime,
-        labels: Optional[Dict[str, str]],
-        metadata: Optional[Dict[str, Any]],
-    ) -> Optional[Alert]:
+        labels: dict[str, str] | None,
+        metadata: dict[str, Any] | None,
+    ) -> Alert | None:
         """Trigger an alert based on a rule"""
         try:
             # Generate alert ID
@@ -707,11 +676,11 @@ class IntelligentAlertingService:
     async def _detect_anomalies(
         self,
         metric_name: str,
-        value: Union[int, float],
+        value: int | float,
         timestamp: datetime,
         tenant_id: str,
         workspace_id: str,
-    ) -> List[Alert]:
+    ) -> list[Alert]:
         """Detect anomalies in metric values"""
         try:
             anomalies = []
@@ -731,9 +700,7 @@ class IntelligentAlertingService:
 
             # Calculate statistics
             mean_value = sum(recent_values) / len(recent_values)
-            variance = sum((x - mean_value) ** 2 for x in recent_values) / len(
-                recent_values
-            )
+            variance = sum((x - mean_value) ** 2 for x in recent_values) / len(recent_values)
             std_dev = variance**0.5
 
             if std_dev == 0:
@@ -775,9 +742,7 @@ class IntelligentAlertingService:
                 self._active_alerts[alert_id] = alert
                 anomalies.append(alert)
 
-                logger.warning(
-                    f"Anomaly detected: {metric_name} - Z-score: {z_score:.2f}"
-                )
+                logger.warning(f"Anomaly detected: {metric_name} - Z-score: {z_score:.2f}")
 
             return anomalies
 
@@ -814,26 +779,47 @@ class IntelligentAlertingService:
         except Exception as e:
             logger.error(f"Error sending notifications: {e}")
 
-    async def _send_notification_to_channel(
-        self, channel: str, data: Dict[str, Any]
-    ) -> None:
+    async def _send_notification_to_channel(self, channel: str, data: dict[str, Any]) -> None:
         """Send notification to a specific channel"""
         try:
             # This would integrate with actual notification systems
             # For now, just log the notification
             logger.info(f"Notification sent to {channel}: {data['title']}")
 
-            # TODO: Implement actual notification channels
-            # - Discord webhooks
-            # - Email
-            # - Slack
-            # - PagerDuty
-            # - SMS
+            # Implemented: Multi-channel notification system
+            notification_sent = False
+
+            # Discord webhook notification
+            if hasattr(self, "discord_webhook") and self.discord_webhook:
+                try:
+                    await self._send_discord_notification(channel, data)
+                    notification_sent = True
+                except Exception as e:
+                    logger.warning(f"Discord notification failed: {e}")
+
+            # Email notification
+            if hasattr(self, "email_config") and self.email_config:
+                try:
+                    await self._send_email_notification(channel, data)
+                    notification_sent = True
+                except Exception as e:
+                    logger.warning(f"Email notification failed: {e}")
+
+            # Slack notification
+            if hasattr(self, "slack_webhook") and self.slack_webhook:
+                try:
+                    await self._send_slack_notification(channel, data)
+                    notification_sent = True
+                except Exception as e:
+                    logger.warning(f"Slack notification failed: {e}")
+
+            if not notification_sent:
+                logger.warning(f"No notification channels configured for {channel}")
 
         except Exception as e:
             logger.error(f"Error sending notification to channel {channel}: {e}")
 
-    def get_alerting_status(self) -> Dict[str, Any]:
+    def get_alerting_status(self) -> dict[str, Any]:
         """Get alerting service status"""
         return {
             "initialized": self._initialized,

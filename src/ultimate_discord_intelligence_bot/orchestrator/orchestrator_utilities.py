@@ -24,10 +24,7 @@ Functions:
 from __future__ import annotations
 
 import asyncio
-from typing import TYPE_CHECKING, Any
-
-if TYPE_CHECKING:  # pragma: no cover - typing only
-    pass
+from typing import Any
 
 
 def get_budget_limits(depth: str) -> dict[str, Any]:
@@ -205,7 +202,11 @@ def initialize_workflow_dependencies() -> dict[str, list[str]]:
         "behavioral_profiling": ["content_analysis", "threat_analysis"],
         "social_intelligence": ["content_analysis"],  # Can run in parallel
         "trend_analysis": ["social_intelligence"],  # Depends on social intelligence
-        "knowledge_integration": ["information_verification", "threat_analysis", "behavioral_profiling"],
+        "knowledge_integration": [
+            "information_verification",
+            "threat_analysis",
+            "behavioral_profiling",
+        ],
         "research_synthesis": ["content_analysis", "information_verification"],
         "intelligence_briefing": ["knowledge_integration", "research_synthesis"],
         "strategic_argumentation": ["information_verification", "research_synthesis"],

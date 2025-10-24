@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
-import builtins
 from dataclasses import dataclass, field
-from datetime import datetime
+from typing import TYPE_CHECKING
 
 from core.time import default_utc_now
+
+
+if TYPE_CHECKING:
+    import builtins
+    from datetime import datetime
 
 
 @dataclass

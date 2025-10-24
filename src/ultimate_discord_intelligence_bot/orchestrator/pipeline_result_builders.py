@@ -283,7 +283,9 @@ def create_executive_summary(analysis_data: dict[str, Any], threat_data: dict[st
 
 
 def extract_key_findings(
-    analysis_data: dict[str, Any], verification_data: dict[str, Any], threat_data: dict[str, Any]
+    analysis_data: dict[str, Any],
+    verification_data: dict[str, Any],
+    threat_data: dict[str, Any],
 ) -> list[str]:
     """Extract key findings from all analysis sources.
 

@@ -3,8 +3,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
 
 from core.secure_config import get_config
+
+
+if TYPE_CHECKING:
+    from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 @dataclass
@@ -19,13 +24,13 @@ class TokenMeter:
     model_prices: dict[str, float] = field(default_factory=dict)
     max_cost_per_request: float | None = None
 
-    def __post_init__(self) -> None:
+    def __post_init__(self) -> StepResult:
         if self.max_cost_per_request is None:
             config = get_config()
             self.max_cost_per_request = config.cost_max_per_request
 
     # ------------------------------------------------------------------
-    def estimate_cost(self, tokens: int, model: str, prices: dict[str, float] | None = None) -> float:
+    def estimate_cost(self, tokens: int, model: str, prices: dict[str, float] | None = None) -> StepResult:
         """Return the projected cost for ``tokens`` on ``model``.
 
         Pricing is expressed as USD per 1K tokens.  Unknown models default to
@@ -42,7 +47,7 @@ class TokenMeter:
         tokens: int,
         candidates: list[str],
         prices: dict[str, float] | None = None,
-    ) -> str | None:
+    ) -> StepResult:
         """Return the cheapest candidate fitting within the request budget.
 
         Models are sorted by price; the first whose estimated cost is below the

@@ -39,33 +39,34 @@ from .ucb_bandit import (
     UCBStrategy,
 )
 
+
 __all__ = [
+    "BanditArm",
+    "BanditStrategy",
+    "ConfidenceLevel",
+    "CostModel",
+    # Cost-Quality Optimization
+    "CostQualityOptimizer",
+    "LearningAlgorithm",
+    "LearningConfig",
+    "ModelSpecification",
+    "OptimizationAlgorithm",
+    "OptimizationConfig",
+    "OptimizationObjective",
+    "OptimizationResult",
+    "PreferenceMetric",
+    "ProviderMetrics",
+    # Provider Preference Learning
+    "ProviderPreferenceLearning",
+    "RewardType",
     # Thompson Sampling
     "ThompsonSamplingBandit",
     "ThompsonSamplingConfig",
     "ThompsonSamplingMetrics",
-    "BanditArm",
-    "BanditStrategy",
-    "RewardType",
+    "UCBArm",
     # UCB Bandit
     "UCBBandit",
     "UCBConfig",
     "UCBMetrics",
-    "UCBArm",
     "UCBStrategy",
-    "ConfidenceLevel",
-    # Provider Preference Learning
-    "ProviderPreferenceLearning",
-    "LearningConfig",
-    "ProviderMetrics",
-    "LearningAlgorithm",
-    "PreferenceMetric",
-    # Cost-Quality Optimization
-    "CostQualityOptimizer",
-    "OptimizationConfig",
-    "ModelSpecification",
-    "OptimizationResult",
-    "OptimizationObjective",
-    "OptimizationAlgorithm",
-    "CostModel",
 ]

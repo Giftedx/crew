@@ -19,15 +19,21 @@ from pathlib import Path
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from analysis.nlp.claim_quote_extraction_service import get_claim_quote_extraction_service
+from analysis.nlp.claim_quote_extraction_service import (
+    get_claim_quote_extraction_service,
+)
 
 
 def main() -> int:
     """Main example function."""
     if len(sys.argv) < 2:
-        print("Usage: python examples/claim_quote_extraction_example.py \"transcript text\"")
+        print(
+            'Usage: python examples/claim_quote_extraction_example.py "transcript text"'
+        )
         print("Example:")
-        print('python examples/claim_quote_extraction_example.py "According to research, AI will change everything by 2025. The expert said, \'This is revolutionary.\' In fact, statistics show 80% improvement."')
+        print(
+            "python examples/claim_quote_extraction_example.py \"According to research, AI will change everything by 2025. The expert said, 'This is revolutionary.' In fact, statistics show 80% improvement.\""
+        )
         return 1
 
     text = sys.argv[1]
@@ -71,8 +77,10 @@ def main() -> int:
             claim_type = claim.get("claim_type", "statement")
             speaker = claim.get("speaker", "Unknown")
 
-            print(f"   {i+1}. \"{claim['text']}\"")
-            print(f"      Speaker: {speaker} | Type: {claim_type} | Confidence: {confidence:.2f}")
+            print(f'   {i + 1}. "{claim["text"]}"')
+            print(
+                f"      Speaker: {speaker} | Type: {claim_type} | Confidence: {confidence:.2f}"
+            )
             print(f"      Status: {claim.get('verification_status', 'unverified')}")
 
         if len(claims) > 5:
@@ -92,8 +100,10 @@ def main() -> int:
             speaker = quote.get("speaker", "Unknown")
             significance = quote.get("significance_score", 0)
 
-            print(f"   {i+1}. \"{quote['text']}\"")
-            print(f"      Speaker: {speaker} | Type: {quote_type} | Confidence: {confidence:.2f}")
+            print(f'   {i + 1}. "{quote["text"]}"')
+            print(
+                f"      Speaker: {speaker} | Type: {quote_type} | Confidence: {confidence:.2f}"
+            )
             print(f"      Significance: {significance:.2f}")
 
             if quote.get("context"):
@@ -107,12 +117,17 @@ def main() -> int:
     # Show summary statistics
     total_items = len(claims) + len(quotes)
     if total_items > 0:
-        print("📊 Extraction Summary:"        print(f"   Total items extracted: {total_items}")
+        print("📊 Extraction Summary:")
+        print(f"   Total items extracted: {total_items}")
         print(f"   Claims: {len(claims)} | Quotes: {len(quotes)}")
 
         # Calculate average confidence
-        all_confidences = [c.get("confidence", 0) for c in claims] + [q.get("confidence", 0) for q in quotes]
-        avg_confidence = sum(all_confidences) / len(all_confidences) if all_confidences else 0
+        all_confidences = [c.get("confidence", 0) for c in claims] + [
+            q.get("confidence", 0) for q in quotes
+        ]
+        avg_confidence = (
+            sum(all_confidences) / len(all_confidences) if all_confidences else 0
+        )
         print(f"   Average confidence: {avg_confidence:.2f}")
 
     return 0
@@ -120,4 +135,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
-

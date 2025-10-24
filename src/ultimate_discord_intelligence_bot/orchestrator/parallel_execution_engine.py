@@ -10,6 +10,7 @@ from typing import Any
 
 from crewai import Crew, Task
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -398,7 +399,9 @@ def optimize_crew_for_parallel_execution(crew: Crew, tasks: list[Task], max_conc
         from .crew_builders_focused import build_crew_with_tasks
 
         optimized_crew = build_crew_with_tasks(
-            tasks=optimized_tasks, process_type=optimized_config["process"], logger_instance=logger
+            tasks=optimized_tasks,
+            process_type=optimized_config["process"],
+            logger_instance=logger,
         )
 
         logger.info(

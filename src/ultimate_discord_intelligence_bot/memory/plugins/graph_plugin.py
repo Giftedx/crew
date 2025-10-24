@@ -7,10 +7,15 @@ storage, and relationship-based retrieval.
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, Sequence
+from typing import TYPE_CHECKING, Any
 
 from ultimate_discord_intelligence_bot.step_result import StepResult
 from ultimate_discord_intelligence_bot.tools.graph_memory_tool import GraphMemoryTool
+
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
 
 logger = logging.getLogger(__name__)
 
@@ -38,9 +43,7 @@ class GraphPlugin:
             logger.warning(f"GraphPlugin initialization failed: {exc}")
             self._tool = None
 
-    async def store(
-        self, namespace: str, records: Sequence[Dict[str, Any]]
-    ) -> StepResult:
+    async def store(self, namespace: str, records: Sequence[dict[str, Any]]) -> StepResult:
         """Store records as knowledge graphs.
 
         Args:
@@ -75,9 +78,7 @@ class GraphPlugin:
                 tags = metadata.pop("tags", None)
 
                 # Build and store graph
-                result = self._tool.run(
-                    text=content, index=index, metadata=metadata, tags=tags
-                )
+                result = self._tool.run(text=content, index=index, metadata=metadata, tags=tags)
 
                 if result.success:
                     stored_count += 1
@@ -88,9 +89,7 @@ class GraphPlugin:
                     logger.warning(f"Failed to store graph: {result.error}")
 
             if stored_count == 0:
-                return StepResult.fail(
-                    "No graphs stored successfully", namespace=namespace
-                )
+                return StepResult.fail("No graphs stored successfully", namespace=namespace)
 
             return StepResult.ok(
                 stored=stored_count,
@@ -101,9 +100,7 @@ class GraphPlugin:
             )
 
         except Exception as exc:
-            return StepResult.fail(
-                f"Graph storage failed: {exc}", namespace=namespace, step="graph_store"
-            )
+            return StepResult.fail(f"Graph storage failed: {exc}", namespace=namespace, step="graph_store")
 
     async def retrieve(self, namespace: str, query: str, limit: int) -> StepResult:
         """Retrieve graphs using keyword search.
@@ -125,9 +122,7 @@ class GraphPlugin:
             index = parts[-1] if len(parts) > 3 else "graph"
 
             # Search graphs by query
-            result = self._tool.search_graphs(
-                query=query, namespace=index, tags=None, limit=limit
-            )
+            result = self._tool.search_graphs(query=query, namespace=index, tags=None, limit=limit)
 
             if not result.success:
                 return StepResult.fail(

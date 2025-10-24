@@ -9,7 +9,8 @@ they are properly integrated and functional.
 import sys
 import time
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
+
 
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
@@ -30,10 +31,10 @@ class MCPToolsValidator:
 
     def __init__(self):
         """Initialize the validator."""
-        self.results: Dict[str, Any] = {}
+        self.results: dict[str, Any] = {}
         self.mcp_tool = MCPCallTool()
 
-    def validate_tool_registry(self) -> Dict[str, Any]:
+    def validate_tool_registry(self) -> dict[str, Any]:
         """Validate the MCP tool registry."""
         print("\n📋 Validating MCP Tool Registry...")
 
@@ -56,7 +57,7 @@ class MCPToolsValidator:
         )
         return registry_results
 
-    def test_obs_tools(self) -> Dict[str, Any]:
+    def test_obs_tools(self) -> dict[str, Any]:
         """Test observability tools."""
         print("\n📊 Testing Observability Tools...")
 
@@ -90,18 +91,16 @@ class MCPToolsValidator:
                 else:
                     obs_results["tools_failed"] += 1
                     MCP_TOOL_CALL_ERROR_COUNT.labels(tool_name=tool_name).inc()
-                    obs_results["tool_details"][tool_name] = (
-                        f"❌ Failed: {result.error}"
-                    )
+                    obs_results["tool_details"][tool_name] = f"❌ Failed: {result.error}"
 
             except Exception as e:
                 obs_results["tools_failed"] += 1
                 MCP_TOOL_CALL_ERROR_COUNT.labels(tool_name=tool_name).inc()
-                obs_results["tool_details"][tool_name] = f"❌ Exception: {str(e)}"
+                obs_results["tool_details"][tool_name] = f"❌ Exception: {e!s}"
 
         return obs_results
 
-    def test_http_tools(self) -> Dict[str, Any]:
+    def test_http_tools(self) -> dict[str, Any]:
         """Test HTTP tools."""
         print("\n🌐 Testing HTTP Tools...")
 
@@ -142,18 +141,16 @@ class MCPToolsValidator:
                 else:
                     http_results["tools_failed"] += 1
                     MCP_TOOL_CALL_ERROR_COUNT.labels(tool_name=tool_name).inc()
-                    http_results["tool_details"][tool_name] = (
-                        f"❌ Failed: {result.error}"
-                    )
+                    http_results["tool_details"][tool_name] = f"❌ Failed: {result.error}"
 
             except Exception as e:
                 http_results["tools_failed"] += 1
                 MCP_TOOL_CALL_ERROR_COUNT.labels(tool_name=tool_name).inc()
-                http_results["tool_details"][tool_name] = f"❌ Exception: {str(e)}"
+                http_results["tool_details"][tool_name] = f"❌ Exception: {e!s}"
 
         return http_results
 
-    def test_ingest_tools(self) -> Dict[str, Any]:
+    def test_ingest_tools(self) -> dict[str, Any]:
         """Test content ingestion tools."""
         print("\n📥 Testing Content Ingestion Tools...")
 
@@ -199,18 +196,16 @@ class MCPToolsValidator:
                 else:
                     ingest_results["tools_failed"] += 1
                     MCP_TOOL_CALL_ERROR_COUNT.labels(tool_name=tool_name).inc()
-                    ingest_results["tool_details"][tool_name] = (
-                        f"❌ Failed: {result.error}"
-                    )
+                    ingest_results["tool_details"][tool_name] = f"❌ Failed: {result.error}"
 
             except Exception as e:
                 ingest_results["tools_failed"] += 1
                 MCP_TOOL_CALL_ERROR_COUNT.labels(tool_name=tool_name).inc()
-                ingest_results["tool_details"][tool_name] = f"❌ Exception: {str(e)}"
+                ingest_results["tool_details"][tool_name] = f"❌ Exception: {e!s}"
 
         return ingest_results
 
-    def test_kg_tools(self) -> Dict[str, Any]:
+    def test_kg_tools(self) -> dict[str, Any]:
         """Test knowledge graph tools."""
         print("\n🧠 Testing Knowledge Graph Tools...")
 
@@ -256,11 +251,11 @@ class MCPToolsValidator:
             except Exception as e:
                 kg_results["tools_failed"] += 1
                 MCP_TOOL_CALL_ERROR_COUNT.labels(tool_name=tool_name).inc()
-                kg_results["tool_details"][tool_name] = f"❌ Exception: {str(e)}"
+                kg_results["tool_details"][tool_name] = f"❌ Exception: {e!s}"
 
         return kg_results
 
-    def test_router_tools(self) -> Dict[str, Any]:
+    def test_router_tools(self) -> dict[str, Any]:
         """Test model routing tools."""
         print("\n🔄 Testing Model Routing Tools...")
 
@@ -301,18 +296,16 @@ class MCPToolsValidator:
                 else:
                     router_results["tools_failed"] += 1
                     MCP_TOOL_CALL_ERROR_COUNT.labels(tool_name=tool_name).inc()
-                    router_results["tool_details"][tool_name] = (
-                        f"❌ Failed: {result.error}"
-                    )
+                    router_results["tool_details"][tool_name] = f"❌ Failed: {result.error}"
 
             except Exception as e:
                 router_results["tools_failed"] += 1
                 MCP_TOOL_CALL_ERROR_COUNT.labels(tool_name=tool_name).inc()
-                router_results["tool_details"][tool_name] = f"❌ Exception: {str(e)}"
+                router_results["tool_details"][tool_name] = f"❌ Exception: {e!s}"
 
         return router_results
 
-    def test_multimodal_tools(self) -> Dict[str, Any]:
+    def test_multimodal_tools(self) -> dict[str, Any]:
         """Test multimodal analysis tools."""
         print("\n🎭 Testing Multimodal Analysis Tools...")
 
@@ -360,20 +353,16 @@ class MCPToolsValidator:
                 else:
                     multimodal_results["tools_failed"] += 1
                     MCP_TOOL_CALL_ERROR_COUNT.labels(tool_name=tool_name).inc()
-                    multimodal_results["tool_details"][tool_name] = (
-                        f"❌ Failed: {result.error}"
-                    )
+                    multimodal_results["tool_details"][tool_name] = f"❌ Failed: {result.error}"
 
             except Exception as e:
                 multimodal_results["tools_failed"] += 1
                 MCP_TOOL_CALL_ERROR_COUNT.labels(tool_name=tool_name).inc()
-                multimodal_results["tool_details"][tool_name] = (
-                    f"❌ Exception: {str(e)}"
-                )
+                multimodal_results["tool_details"][tool_name] = f"❌ Exception: {e!s}"
 
         return multimodal_results
 
-    def test_memory_tools(self) -> Dict[str, Any]:
+    def test_memory_tools(self) -> dict[str, Any]:
         """Test memory tools."""
         print("\n💾 Testing Memory Tools...")
 
@@ -414,18 +403,16 @@ class MCPToolsValidator:
                 else:
                     memory_results["tools_failed"] += 1
                     MCP_TOOL_CALL_ERROR_COUNT.labels(tool_name=tool_name).inc()
-                    memory_results["tool_details"][tool_name] = (
-                        f"❌ Failed: {result.error}"
-                    )
+                    memory_results["tool_details"][tool_name] = f"❌ Failed: {result.error}"
 
             except Exception as e:
                 memory_results["tools_failed"] += 1
                 MCP_TOOL_CALL_ERROR_COUNT.labels(tool_name=tool_name).inc()
-                memory_results["tool_details"][tool_name] = f"❌ Exception: {str(e)}"
+                memory_results["tool_details"][tool_name] = f"❌ Exception: {e!s}"
 
         return memory_results
 
-    def test_a2a_tools(self) -> Dict[str, Any]:
+    def test_a2a_tools(self) -> dict[str, Any]:
         """Test agent-to-agent tools."""
         print("\n🤖 Testing Agent-to-Agent Tools...")
 
@@ -466,18 +453,16 @@ class MCPToolsValidator:
                 else:
                     a2a_results["tools_failed"] += 1
                     MCP_TOOL_CALL_ERROR_COUNT.labels(tool_name=tool_name).inc()
-                    a2a_results["tool_details"][tool_name] = (
-                        f"❌ Failed: {result.error}"
-                    )
+                    a2a_results["tool_details"][tool_name] = f"❌ Failed: {result.error}"
 
             except Exception as e:
                 a2a_results["tools_failed"] += 1
                 MCP_TOOL_CALL_ERROR_COUNT.labels(tool_name=tool_name).inc()
-                a2a_results["tool_details"][tool_name] = f"❌ Exception: {str(e)}"
+                a2a_results["tool_details"][tool_name] = f"❌ Exception: {e!s}"
 
         return a2a_results
 
-    def test_crewai_tools(self) -> Dict[str, Any]:
+    def test_crewai_tools(self) -> dict[str, Any]:
         """Test CrewAI tools."""
         print("\n👥 Testing CrewAI Tools...")
 
@@ -524,18 +509,16 @@ class MCPToolsValidator:
                 else:
                     crewai_results["tools_failed"] += 1
                     MCP_TOOL_CALL_ERROR_COUNT.labels(tool_name=tool_name).inc()
-                    crewai_results["tool_details"][tool_name] = (
-                        f"❌ Failed: {result.error}"
-                    )
+                    crewai_results["tool_details"][tool_name] = f"❌ Failed: {result.error}"
 
             except Exception as e:
                 crewai_results["tools_failed"] += 1
                 MCP_TOOL_CALL_ERROR_COUNT.labels(tool_name=tool_name).inc()
-                crewai_results["tool_details"][tool_name] = f"❌ Exception: {str(e)}"
+                crewai_results["tool_details"][tool_name] = f"❌ Exception: {e!s}"
 
         return crewai_results
 
-    def run_all_tests(self) -> Dict[str, Any]:
+    def run_all_tests(self) -> dict[str, Any]:
         """Run all MCP tool validation tests."""
         print("🚀 Starting MCP Tools Validation...")
 

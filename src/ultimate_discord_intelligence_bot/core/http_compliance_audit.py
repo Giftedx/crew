@@ -4,10 +4,12 @@ import re
 import sys
 from pathlib import Path
 
+
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from ultimate_discord_intelligence_bot.step_result import StepResult
+from ultimate_discord_intelligence_bot.step_result import StepResult  # type: ignore[import-not-found]
+
 
 FIXES_PREVIEW_LIMIT = 3  # how many auto-fix suggestions to print
 
@@ -45,7 +47,8 @@ class HTTPComplianceAuditor:
 
         if self.violations:
             return StepResult.fail(
-                error=f"Found {len(self.violations)} HTTP compliance violations", data={"violations": self.violations}
+                error=f"Found {len(self.violations)} HTTP compliance violations",
+                data={"violations": self.violations},
             )
 
         return StepResult.ok(data={"message": "All files comply with HTTP wrapper requirements"})

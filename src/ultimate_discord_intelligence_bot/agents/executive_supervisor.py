@@ -9,12 +9,15 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
-
-from crewai import Agent
+from typing import TYPE_CHECKING, Any
 
 from ..step_result import StepResult
 from ..tools._base import BaseTool
+
+
+if TYPE_CHECKING:
+    from crewai import Agent
+
 
 logger = logging.getLogger(__name__)
 
@@ -27,10 +30,10 @@ class StrategicObjective:
     title: str
     description: str
     priority: int  # 1-10, higher is more important
-    success_criteria: List[str]
-    resource_requirements: Dict[str, Any]
+    success_criteria: list[str]
+    resource_requirements: dict[str, Any]
     timeline: str
-    dependencies: List[str] = field(default_factory=list)
+    dependencies: list[str] = field(default_factory=list)
     status: str = "pending"  # pending, active, completed, failed
     progress: float = 0.0
 
@@ -47,7 +50,7 @@ class ResourceAllocation:
     storage_gb: int
     priority_level: int
     allocated_at: str
-    expires_at: Optional[str] = None
+    expires_at: str | None = None
 
 
 @dataclass
@@ -72,7 +75,7 @@ class StrategicPlanningTool(BaseTool):
     def _run(
         self,
         mission_context: str,
-        objectives: List[Dict[str, Any]],
+        objectives: list[dict[str, Any]],
         tenant: str,
         workspace: str,
     ) -> StepResult:
@@ -92,9 +95,7 @@ class StrategicPlanningTool(BaseTool):
             if not mission_context or not objectives:
                 return StepResult.fail("Mission context and objectives are required")
 
-            strategic_plan = self._create_strategic_plan(
-                mission_context, objectives, tenant, workspace
-            )
+            strategic_plan = self._create_strategic_plan(mission_context, objectives, tenant, workspace)
 
             return StepResult.ok(
                 data={
@@ -107,18 +108,18 @@ class StrategicPlanningTool(BaseTool):
             )
 
         except Exception as e:
-            logger.error(f"Strategic planning failed: {str(e)}")
-            return StepResult.fail(f"Strategic planning failed: {str(e)}")
+            logger.error(f"Strategic planning failed: {e!s}")
+            return StepResult.fail(f"Strategic planning failed: {e!s}")
 
     def _create_strategic_plan(
         self,
         mission_context: str,
-        objectives: List[Dict[str, Any]],
+        objectives: list[dict[str, Any]],
         tenant: str,
         workspace: str,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Create comprehensive strategic plan."""
-        strategic_objectives: List[StrategicObjective] = []
+        strategic_objectives: list[StrategicObjective] = []
 
         for obj_data in objectives:
             objective = StrategicObjective(
@@ -158,13 +159,12 @@ class StrategicPlanningTool(BaseTool):
             "success_metrics": self._define_success_metrics(strategic_objectives),
         }
 
-    def _create_execution_plan(
-        self, objectives: List[StrategicObjective]
-    ) -> Dict[str, Any]:
+    def _create_execution_plan(self, objectives: list[StrategicObjective]) -> dict[str, Any]:
         """Create detailed execution plan with dependencies."""
         execution_phases = []
         current_phase = []
-        completed_deps: Set[str] = set()
+
+        completed_deps: set[str] = set()
 
         for objective in objectives:
             if all(dep in completed_deps for dep in objective.dependencies):
@@ -188,28 +188,22 @@ class StrategicPlanningTool(BaseTool):
                 }
                 for i, phase in enumerate(execution_phases)
             ],
-            "total_estimated_duration": sum(
-                self._estimate_phase_duration(phase) for phase in execution_phases
-            ),
+            "total_estimated_duration": sum(self._estimate_phase_duration(phase) for phase in execution_phases),
         }
 
-    def _estimate_phase_duration(self, objectives: List[StrategicObjective]) -> str:
+    def _estimate_phase_duration(self, objectives: list[StrategicObjective]) -> str:
         """Estimate phase duration based on objectives."""
         # Simple estimation logic - can be enhanced with ML
         base_days = len(objectives) * 2
-        complexity_multiplier = (
-            sum(obj.priority for obj in objectives) / len(objectives) / 10
-        )
+        complexity_multiplier = sum(obj.priority for obj in objectives) / len(objectives) / 10
         estimated_days = int(base_days * (1 + complexity_multiplier))
         return f"{estimated_days} days"
 
-    def _identify_critical_path(
-        self, objectives: List[StrategicObjective]
-    ) -> List[str]:
+    def _identify_critical_path(self, objectives: list[StrategicObjective]) -> list[str]:
         """Identify critical path objectives."""
         return [obj.id for obj in objectives if obj.priority >= 8]
 
-    def _assess_risks(self, objectives: List[StrategicObjective]) -> Dict[str, Any]:
+    def _assess_risks(self, objectives: list[StrategicObjective]) -> dict[str, Any]:
         """Assess risks for strategic objectives."""
         high_priority_count = sum(1 for obj in objectives if obj.priority >= 8)
         dependency_count = sum(len(obj.dependencies) for obj in objectives)
@@ -232,9 +226,7 @@ class StrategicPlanningTool(BaseTool):
             ],
         }
 
-    def _define_success_metrics(
-        self, objectives: List[StrategicObjective]
-    ) -> Dict[str, Any]:
+    def _define_success_metrics(self, objectives: list[StrategicObjective]) -> dict[str, Any]:
         """Define success metrics for the strategic plan."""
         return {
             "completion_rate_target": 0.95,
@@ -248,9 +240,7 @@ class StrategicPlanningTool(BaseTool):
 class ResourceAllocationTool(BaseTool):
     """Tool for dynamic resource allocation and management."""
 
-    def _run(
-        self, allocation_requests: List[Dict[str, Any]], tenant: str, workspace: str
-    ) -> StepResult:
+    def _run(self, allocation_requests: list[dict[str, Any]], tenant: str, workspace: str) -> StepResult:
         """
         Allocate resources to agents and tasks based on priority and availability.
 
@@ -266,29 +256,25 @@ class ResourceAllocationTool(BaseTool):
             if not allocation_requests:
                 return StepResult.fail("Allocation requests are required")
 
-            allocations = self._process_allocation_requests(
-                allocation_requests, tenant, workspace
-            )
+            allocations = self._process_allocation_requests(allocation_requests, tenant, workspace)
 
             return StepResult.ok(
                 data={
                     "allocations": allocations,
                     "total_allocated": len(allocations),
-                    "resource_utilization": self._calculate_resource_utilization(
-                        allocations
-                    ),
+                    "resource_utilization": self._calculate_resource_utilization(allocations),
                     "tenant": tenant,
                     "workspace": workspace,
                 }
             )
 
         except Exception as e:
-            logger.error(f"Resource allocation failed: {str(e)}")
-            return StepResult.fail(f"Resource allocation failed: {str(e)}")
+            logger.error(f"Resource allocation failed: {e!s}")
+            return StepResult.fail(f"Resource allocation failed: {e!s}")
 
     def _process_allocation_requests(
-        self, requests: List[Dict[str, Any]], tenant: str, workspace: str
-    ) -> List[Dict[str, Any]]:
+        self, requests: list[dict[str, Any]], tenant: str, workspace: str
+    ) -> list[dict[str, Any]]:
         """Process resource allocation requests."""
         allocations = []
 
@@ -322,9 +308,7 @@ class ResourceAllocationTool(BaseTool):
 
         return allocations
 
-    def _calculate_resource_utilization(
-        self, allocations: List[Dict[str, Any]]
-    ) -> Dict[str, Any]:
+    def _calculate_resource_utilization(self, allocations: list[dict[str, Any]]) -> dict[str, Any]:
         """Calculate resource utilization metrics."""
         total_cpu = sum(alloc.get("cpu_cores", 0) for alloc in allocations)
         total_memory = sum(alloc.get("memory_gb", 0) for alloc in allocations)
@@ -335,10 +319,7 @@ class ResourceAllocationTool(BaseTool):
             "total_memory_gb": total_memory,
             "total_gpu_units": total_gpu,
             "allocation_count": len(allocations),
-            "average_priority": sum(
-                alloc.get("priority_level", 0) for alloc in allocations
-            )
-            / len(allocations)
+            "average_priority": sum(alloc.get("priority_level", 0) for alloc in allocations) / len(allocations)
             if allocations
             else 0,
         }
@@ -357,7 +338,7 @@ class EscalationManagementTool(BaseTool):
         self,
         escalation_context: str,
         severity: str,
-        affected_components: List[str],
+        affected_components: list[str],
         tenant: str,
         workspace: str,
     ) -> StepResult:
@@ -378,9 +359,7 @@ class EscalationManagementTool(BaseTool):
             if not escalation_context or not severity:
                 return StepResult.fail("Escalation context and severity are required")
 
-            response = self._process_escalation(
-                escalation_context, severity, affected_components, tenant, workspace
-            )
+            response = self._process_escalation(escalation_context, severity, affected_components, tenant, workspace)
 
             return StepResult.ok(
                 data={
@@ -393,17 +372,17 @@ class EscalationManagementTool(BaseTool):
             )
 
         except Exception as e:
-            logger.error(f"Escalation management failed: {str(e)}")
-            return StepResult.fail(f"Escalation management failed: {str(e)}")
+            logger.error(f"Escalation management failed: {e!s}")
+            return StepResult.fail(f"Escalation management failed: {e!s}")
 
     def _process_escalation(
         self,
         context: str,
         severity: str,
-        components: List[str],
+        components: list[str],
         tenant: str,
         workspace: str,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Process escalation and determine response."""
         response_actions = []
 
@@ -473,7 +452,7 @@ class EscalationManagementTool(BaseTool):
         }
         return team_assignments.get(severity, "General Team")
 
-    def _define_monitoring_requirements(self, severity: str) -> List[str]:
+    def _define_monitoring_requirements(self, severity: str) -> list[str]:
         """Define monitoring requirements based on severity."""
         if severity in ["critical", "high"]:
             return [
@@ -508,28 +487,24 @@ class ExecutiveSupervisorAgent:
     async def execute_strategic_planning(
         self,
         mission_context: str,
-        objectives: List[Dict[str, Any]],
+        objectives: list[dict[str, Any]],
         tenant: str,
         workspace: str,
     ) -> StepResult:
         """Execute strategic planning for intelligence operations."""
-        return self.strategic_planning_tool._run(
-            mission_context, objectives, tenant, workspace
-        )
+        return self.strategic_planning_tool._run(mission_context, objectives, tenant, workspace)
 
     async def allocate_resources(
-        self, allocation_requests: List[Dict[str, Any]], tenant: str, workspace: str
+        self, allocation_requests: list[dict[str, Any]], tenant: str, workspace: str
     ) -> StepResult:
         """Allocate resources to agents and tasks."""
-        return self.resource_allocation_tool._run(
-            allocation_requests, tenant, workspace
-        )
+        return self.resource_allocation_tool._run(allocation_requests, tenant, workspace)
 
     async def handle_escalation(
         self,
         escalation_context: str,
         severity: str,
-        affected_components: List[str],
+        affected_components: list[str],
         tenant: str,
         workspace: str,
     ) -> StepResult:

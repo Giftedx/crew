@@ -26,6 +26,7 @@ from typing import Any, Literal
 
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -141,13 +142,23 @@ class CrossPlatformNarrativeTracker:
             # Perform narrative tracking
             model_name = self._select_model(model)
             tracking_result = self._track_narrative_evolution(
-                content_items, time_window_hours, similarity_threshold, max_threads, model_name
+                content_items,
+                time_window_hours,
+                similarity_threshold,
+                max_threads,
+                model_name,
             )
 
             if tracking_result:
                 # Cache result
                 if use_cache:
-                    self._cache_result(content_items, time_window_hours, similarity_threshold, model, tracking_result)
+                    self._cache_result(
+                        content_items,
+                        time_window_hours,
+                        similarity_threshold,
+                        model,
+                        tracking_result,
+                    )
 
                 processing_time = (time.time() - start_time) * 1000
 
@@ -166,7 +177,7 @@ class CrossPlatformNarrativeTracker:
 
         except Exception as e:
             logger.error(f"Narrative tracking failed: {e}")
-            return StepResult.fail(f"Narrative tracking failed: {str(e)}", status="retryable")
+            return StepResult.fail(f"Narrative tracking failed: {e!s}", status="retryable")
 
     def find_contradictions_and_clarifications(
         self,
@@ -233,7 +244,7 @@ class CrossPlatformNarrativeTracker:
 
         except Exception as e:
             logger.error(f"Contradiction analysis failed: {e}")
-            return StepResult.fail(f"Contradiction analysis failed: {str(e)}")
+            return StepResult.fail(f"Contradiction analysis failed: {e!s}")
 
     def generate_narrative_timeline(
         self,
@@ -255,7 +266,8 @@ class CrossPlatformNarrativeTracker:
             for event in narrative_thread.events:
                 # Sort related content by timestamp
                 sorted_content = sorted(
-                    [event.primary_content] + event.related_content, key=lambda x: x.get("timestamp", 0)
+                    [event.primary_content, *event.related_content],
+                    key=lambda x: x.get("timestamp", 0),
                 )
 
                 timeline_event = {
@@ -294,7 +306,7 @@ class CrossPlatformNarrativeTracker:
 
         except Exception as e:
             logger.error(f"Timeline generation failed: {e}")
-            return StepResult.fail(f"Timeline generation failed: {str(e)}")
+            return StepResult.fail(f"Timeline generation failed: {e!s}")
 
     def _select_model(self, model_alias: str) -> str:
         """Select actual model configuration from alias.
@@ -402,7 +414,8 @@ class CrossPlatformNarrativeTracker:
                 # Check similarity with cluster representative
                 representative = cluster["representative"]
                 similarity = self._calculate_text_similarity(
-                    item_text, representative.get("text", representative.get("title", ""))
+                    item_text,
+                    representative.get("text", representative.get("title", "")),
                 )
 
                 if similarity >= threshold:
@@ -541,7 +554,7 @@ class CrossPlatformNarrativeTracker:
         first_title = first_item.get("title", "Initial content")
         last_title = last_item.get("title", "Latest update")
 
-        platforms = list(set(item.get("platform", "unknown") for item in items))
+        platforms = list({item.get("platform", "unknown") for item in items})
 
         return f"Narrative evolving from '{first_title}' to '{last_title}' across {len(platforms)} platforms"
 
@@ -561,7 +574,7 @@ class CrossPlatformNarrativeTracker:
                 return title
 
         # Fallback title
-        platforms = list(set(item.get("platform", "unknown") for item in items))
+        platforms = list({item.get("platform", "unknown") for item in items})
         return f"Cross-Platform Story on {', '.join(platforms[:2])}"
 
     def _calculate_evolution_score(self, items: list[dict[str, Any]]) -> float:
@@ -586,7 +599,7 @@ class CrossPlatformNarrativeTracker:
         evolution_factors.append(min(time_span / 3600, 1.0))  # Max 1 hour for full evolution
 
         # Platform diversity factor
-        platforms = set(item.get("platform", "unknown") for item in items)
+        platforms = {item.get("platform", "unknown") for item in items}
         evolution_factors.append(len(platforms) / 3.0)  # Max 3 platforms
 
         # Content length variation factor
@@ -806,7 +819,7 @@ class CrossPlatformNarrativeTracker:
 
         except Exception as e:
             logger.error(f"Failed to get cache stats: {e}")
-            return StepResult.fail(f"Failed to get cache stats: {str(e)}")
+            return StepResult.fail(f"Failed to get cache stats: {e!s}")
 
 
 # Singleton instance

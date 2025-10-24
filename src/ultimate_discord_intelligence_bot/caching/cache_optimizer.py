@@ -9,9 +9,10 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from ultimate_discord_intelligence_bot.step_result import StepResult
+from ultimate_discord_intelligence_bot.step_result import StepResult  # type: ignore[import-not-found]
+
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +42,7 @@ class TTLOptimizationResult:
     expected_hit_rate_improvement: float
     expected_cost_savings: float
     optimization_method: str
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -60,12 +61,12 @@ class CachePattern:
 class RLCacheOptimizer:
     """Reinforcement Learning-based cache optimizer"""
 
-    def __init__(self, config: Optional[CacheOptimizationConfig] = None):
+    def __init__(self, config: CacheOptimizationConfig | None = None):
         self.config = config or CacheOptimizationConfig()
-        self._q_table: Dict[str, Dict[int, float]] = {}
-        self._cache_patterns: Dict[str, CachePattern] = {}
-        self._performance_history: List[Dict[str, Any]] = []
-        self._last_optimization: Dict[str, datetime] = {}
+        self._q_table: dict[str, dict[int, float]] = {}
+        self._cache_patterns: dict[str, CachePattern] = {}
+        self._performance_history: list[dict[str, Any]] = []
+        self._last_optimization: dict[str, datetime] = {}
 
         # Initialize Q-table for TTL optimization
         self._initialize_q_table()
@@ -82,14 +83,12 @@ class RLCacheOptimizer:
                 for ttl_bucket in ttl_buckets:
                     self._q_table[pattern][ttl_bucket] = 0.0
 
-            logger.info(
-                f"Q-table initialized with {len(self._q_table)} patterns and {len(ttl_buckets)} TTL buckets"
-            )
+            logger.info(f"Q-table initialized with {len(self._q_table)} patterns and {len(ttl_buckets)} TTL buckets")
 
         except Exception as e:
             logger.error(f"Failed to initialize Q-table: {e}")
 
-    def _create_ttl_buckets(self) -> List[int]:
+    def _create_ttl_buckets(self) -> list[int]:
         """Create TTL buckets for discretization"""
         buckets = []
         min_ttl = self.config.min_ttl
@@ -103,7 +102,7 @@ class RLCacheOptimizer:
 
         return buckets
 
-    def _get_pattern_types(self) -> List[str]:
+    def _get_pattern_types(self) -> list[str]:
         """Get pattern types for Q-table initialization"""
         return [
             "frequent_small",  # High frequency, small values
@@ -120,7 +119,7 @@ class RLCacheOptimizer:
         self,
         key_pattern: str,
         current_ttl: int,
-        access_history: List[Dict[str, Any]],
+        access_history: list[dict[str, Any]],
         tenant_id: str = "default",
         workspace_id: str = "main",
     ) -> StepResult:
@@ -136,9 +135,7 @@ class RLCacheOptimizer:
             ttl_bucket = self._select_ttl_bucket(pattern_type, current_ttl)
 
             # Calculate expected reward
-            expected_reward = self._calculate_expected_reward(
-                pattern_type, ttl_bucket, pattern_analysis
-            )
+            expected_reward = self._calculate_expected_reward(pattern_type, ttl_bucket, pattern_analysis)
 
             # Create optimization result
             optimization_result = TTLOptimizationResult(
@@ -160,7 +157,7 @@ class RLCacheOptimizer:
 
         except Exception as e:
             logger.error(f"TTL optimization failed: {e}", exc_info=True)
-            return StepResult.fail(f"TTL optimization failed: {str(e)}")
+            return StepResult.fail(f"TTL optimization failed: {e!s}")
 
     async def update_reward(
         self,
@@ -168,7 +165,7 @@ class RLCacheOptimizer:
         pattern_type: str,
         ttl_bucket: int,
         actual_reward: float,
-        metadata: Optional[Dict[str, Any]] = None,
+        metadata: dict[str, Any] | None = None,
     ) -> StepResult:
         """Update Q-table with actual reward"""
         try:
@@ -178,8 +175,7 @@ class RLCacheOptimizer:
             # Update Q-value using Q-learning
             new_q = current_q + self.config.learning_rate * (
                 actual_reward
-                + self.config.reward_discount
-                * max(self._q_table.get(pattern_type, {}).values(), default=0.0)
+                + self.config.reward_discount * max(self._q_table.get(pattern_type, {}).values(), default=0.0)
                 - current_q
             )
 
@@ -200,19 +196,15 @@ class RLCacheOptimizer:
                 }
             )
 
-            logger.debug(
-                f"Updated Q-value for {pattern_type}[{ttl_bucket}]: {current_q:.4f} -> {new_q:.4f}"
-            )
+            logger.debug(f"Updated Q-value for {pattern_type}[{ttl_bucket}]: {current_q:.4f} -> {new_q:.4f}")
 
             return StepResult.ok(data={"updated": True, "new_q_value": new_q})
 
         except Exception as e:
             logger.error(f"Failed to update reward: {e}")
-            return StepResult.fail(f"Reward update failed: {str(e)}")
+            return StepResult.fail(f"Reward update failed: {e!s}")
 
-    def get_optimization_recommendations(
-        self, tenant_id: str = "default", workspace_id: str = "main"
-    ) -> StepResult:
+    def get_optimization_recommendations(self, tenant_id: str = "default", workspace_id: str = "main") -> StepResult:
         """Get optimization recommendations for cache patterns"""
         try:
             recommendations = []
@@ -223,15 +215,11 @@ class RLCacheOptimizer:
 
                 # Get best TTL for this pattern
                 if pattern_type in self._q_table:
-                    best_ttl_bucket = max(
-                        self._q_table[pattern_type].items(), key=lambda x: x[1]
-                    )[0]
+                    best_ttl_bucket = max(self._q_table[pattern_type].items(), key=lambda x: x[1])[0]
                     best_ttl = self._bucket_to_ttl(best_ttl_bucket)
 
                     # Calculate potential improvement
-                    current_q = self._q_table[pattern_type].get(
-                        self._ttl_to_bucket(pattern.ttl_preference), 0.0
-                    )
+                    current_q = self._q_table[pattern_type].get(self._ttl_to_bucket(pattern.ttl_preference), 0.0)
                     best_q = self._q_table[pattern_type].get(best_ttl_bucket, 0.0)
                     improvement = best_q - current_q
 
@@ -255,17 +243,15 @@ class RLCacheOptimizer:
                     "recommendations": recommendations,
                     "total_patterns": len(self._cache_patterns),
                     "optimizable_patterns": len(recommendations),
-                    "q_table_size": sum(
-                        len(buckets) for buckets in self._q_table.values()
-                    ),
+                    "q_table_size": sum(len(buckets) for buckets in self._q_table.values()),
                 }
             )
 
         except Exception as e:
             logger.error(f"Failed to get optimization recommendations: {e}")
-            return StepResult.fail(f"Recommendations retrieval failed: {str(e)}")
+            return StepResult.fail(f"Recommendations retrieval failed: {e!s}")
 
-    def get_optimization_metrics(self) -> Dict[str, Any]:
+    def get_optimization_metrics(self) -> dict[str, Any]:
         """Get optimization performance metrics"""
         try:
             if not self._performance_history:
@@ -274,18 +260,12 @@ class RLCacheOptimizer:
             # Calculate metrics from recent history
             recent_history = self._performance_history[-100:]  # Last 100 updates
 
-            avg_reward = sum(h["actual_reward"] for h in recent_history) / len(
-                recent_history
-            )
-            avg_q_value = sum(h["new_q_value"] for h in recent_history) / len(
-                recent_history
-            )
+            avg_reward = sum(h["actual_reward"] for h in recent_history) / len(recent_history)
+            avg_q_value = sum(h["new_q_value"] for h in recent_history) / len(recent_history)
 
             # Calculate learning progress
             if len(self._performance_history) >= 50:
-                early_rewards = [
-                    h["actual_reward"] for h in self._performance_history[:50]
-                ]
+                early_rewards = [h["actual_reward"] for h in self._performance_history[:50]]
                 recent_rewards = [h["actual_reward"] for h in recent_history]
                 learning_progress = (sum(recent_rewards) / len(recent_rewards)) - (
                     sum(early_rewards) / len(early_rewards)
@@ -309,9 +289,7 @@ class RLCacheOptimizer:
             logger.error(f"Failed to get optimization metrics: {e}")
             return {"error": str(e)}
 
-    def _analyze_access_pattern(
-        self, access_history: List[Dict[str, Any]]
-    ) -> Dict[str, Any]:
+    def _analyze_access_pattern(self, access_history: list[dict[str, Any]]) -> dict[str, Any]:
         """Analyze access pattern from history"""
         if not access_history:
             return {"frequency": 0.0, "burstiness": 0.0, "trend": "stable"}
@@ -324,16 +302,12 @@ class RLCacheOptimizer:
         if len(access_history) > 1:
             intervals = []
             for i in range(1, len(access_history)):
-                interval = (
-                    access_history[i]["timestamp"] - access_history[i - 1]["timestamp"]
-                ).total_seconds()
+                interval = (access_history[i]["timestamp"] - access_history[i - 1]["timestamp"]).total_seconds()
                 intervals.append(interval)
 
             if intervals:
                 mean_interval = sum(intervals) / len(intervals)
-                variance = sum((i - mean_interval) ** 2 for i in intervals) / len(
-                    intervals
-                )
+                variance = sum((i - mean_interval) ** 2 for i in intervals) / len(intervals)
                 burstiness = (variance**0.5) / max(mean_interval, 1.0)
             else:
                 burstiness = 0.0
@@ -342,8 +316,8 @@ class RLCacheOptimizer:
 
         # Calculate trend
         if len(access_history) >= 10:
-            early_count = len([h for h in access_history[: len(access_history) // 2]])
-            late_count = len([h for h in access_history[len(access_history) // 2 :]])
+            early_count = len(list(access_history[: len(access_history) // 2]))
+            late_count = len(list(access_history[len(access_history) // 2 :]))
             if late_count > early_count * 1.2:
                 trend = "growing"
             elif late_count < early_count * 0.8:
@@ -361,7 +335,7 @@ class RLCacheOptimizer:
             "time_span_hours": total_time.total_seconds() / 3600,
         }
 
-    def _classify_pattern(self, pattern_analysis: Dict[str, Any]) -> str:
+    def _classify_pattern(self, pattern_analysis: dict[str, Any]) -> str:
         """Classify pattern based on analysis"""
         frequency = pattern_analysis["frequency"]
         burstiness = pattern_analysis["burstiness"]
@@ -411,18 +385,14 @@ class RLCacheOptimizer:
             return random.choice(ttl_buckets)
         else:
             # Exploit: select best known TTL bucket
-            if pattern_type in self._q_table and self._q_table[pattern_type]:
-                best_bucket = max(
-                    self._q_table[pattern_type].items(), key=lambda x: x[1]
-                )[0]
+            if self._q_table.get(pattern_type):
+                best_bucket = max(self._q_table[pattern_type].items(), key=lambda x: x[1])[0]
                 return best_bucket
             else:
                 # Fallback to current TTL bucket
                 return self._ttl_to_bucket(current_ttl)
 
-    def _calculate_expected_reward(
-        self, pattern_type: str, ttl_bucket: int, pattern_analysis: Dict[str, Any]
-    ) -> float:
+    def _calculate_expected_reward(self, pattern_type: str, ttl_bucket: int, pattern_analysis: dict[str, Any]) -> float:
         """Calculate expected reward for TTL bucket"""
         # Base reward from Q-table
         base_reward = self._q_table.get(pattern_type, {}).get(ttl_bucket, 0.0)
@@ -454,7 +424,7 @@ class RLCacheOptimizer:
         """Convert bucket to TTL value"""
         return bucket
 
-    def _record_performance(self, performance_data: Dict[str, Any]) -> None:
+    def _record_performance(self, performance_data: dict[str, Any]) -> None:
         """Record performance data for analysis"""
         self._performance_history.append(performance_data)
 
@@ -468,6 +438,6 @@ class RLCacheOptimizer:
         self._cache_patterns[pattern_key] = pattern
         logger.debug(f"Registered cache pattern: {pattern_key}")
 
-    def get_cache_patterns(self) -> Dict[str, CachePattern]:
+    def get_cache_patterns(self) -> dict[str, CachePattern]:
         """Get all registered cache patterns"""
         return self._cache_patterns.copy()

@@ -14,6 +14,7 @@ from typing import Any
 
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -239,7 +240,7 @@ class CostAlertManager:
 
         except Exception as e:
             logger.error(f"Cost alert checking failed: {e}")
-            return StepResult.fail(f"Cost alert checking failed: {str(e)}")
+            return StepResult.fail(f"Cost alert checking failed: {e!s}")
 
     def _create_alert(
         self,
@@ -309,7 +310,10 @@ class CostAlertManager:
                     workspace_id,
                     model,
                     component,
-                    metadata={"average_cost": avg_cost, "spike_multiplier": cost_usd / avg_cost},
+                    metadata={
+                        "average_cost": avg_cost,
+                        "spike_multiplier": cost_usd / avg_cost,
+                    },
                 )
 
             return None
@@ -354,7 +358,10 @@ class CostAlertManager:
                     workspace_id,
                     model,
                     component,
-                    metadata={"average_model_cost": avg_model_cost, "anomaly_multiplier": cost_usd / avg_model_cost},
+                    metadata={
+                        "average_model_cost": avg_model_cost,
+                        "anomaly_multiplier": cost_usd / avg_model_cost,
+                    },
                 )
 
             return None
@@ -494,7 +501,7 @@ class CostAlertManager:
 
         except Exception as e:
             logger.error(f"Alert summary generation failed: {e}")
-            return StepResult.fail(f"Alert summary failed: {str(e)}")
+            return StepResult.fail(f"Alert summary failed: {e!s}")
 
     def clear_alert_history(self, tenant_id: str | None = None) -> StepResult:
         """Clear alert history for a tenant or all tenants."""
@@ -508,7 +515,7 @@ class CostAlertManager:
 
         except Exception as e:
             logger.error(f"Alert history clearing failed: {e}")
-            return StepResult.fail(f"Alert history clearing failed: {str(e)}")
+            return StepResult.fail(f"Alert history clearing failed: {e!s}")
 
     def health_check(self) -> StepResult:
         """Health check for the cost alert manager."""
@@ -532,7 +539,7 @@ class CostAlertManager:
 
         except Exception as e:
             logger.error(f"Cost alert manager health check failed: {e}")
-            return StepResult.fail(f"Health check failed: {str(e)}")
+            return StepResult.fail(f"Health check failed: {e!s}")
 
 
 # Global cost alert manager instance
@@ -549,9 +556,9 @@ def get_cost_alert_manager() -> CostAlertManager:
 
 __all__ = [
     "AlertSeverity",
+    "AlertThresholds",
     "AlertType",
     "CostAlert",
-    "AlertThresholds",
     "CostAlertManager",
     "get_cost_alert_manager",
 ]

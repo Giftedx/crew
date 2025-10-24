@@ -40,30 +40,31 @@ from .statistical_confidence_calculators import (
     calculate_statistical_significance,
 )
 
+
 # Re-export all functions for backward compatibility
 __all__ = [
-    # Persona/Agent confidence functions
-    "calculate_persona_confidence",
-    "calculate_persona_confidence_from_crew",
     "calculate_agent_confidence_from_crew",
-    "calculate_contextual_relevance",
+    "calculate_ai_enhancement_level",
     # AI Quality functions
     "calculate_ai_quality_score",
-    "calculate_ai_enhancement_level",
-    "calculate_synthesis_confidence",
-    "calculate_synthesis_confidence_from_crew",
-    "calculate_overall_confidence",
+    "calculate_analysis_confidence_from_crew",
     # Statistical confidence functions
     "calculate_confidence_interval",
     "calculate_confidence_score",
+    "calculate_content_coherence",
+    "calculate_content_completeness",
+    "calculate_contextual_relevance",
+    "calculate_overall_confidence",
+    # Persona/Agent confidence functions
+    "calculate_persona_confidence",
+    "calculate_persona_confidence_from_crew",
     "calculate_reliability_score",
+    "calculate_source_reliability",
     "calculate_standard_error",
     "calculate_statistical_significance",
+    "calculate_synthesis_confidence",
+    "calculate_synthesis_confidence_from_crew",
     # Content confidence functions
     "calculate_transcript_quality",
-    "calculate_analysis_confidence_from_crew",
     "calculate_verification_confidence_from_crew",
-    "calculate_content_completeness",
-    "calculate_content_coherence",
-    "calculate_source_reliability",
 ]

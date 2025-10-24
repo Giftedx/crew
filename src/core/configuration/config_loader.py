@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-"""Configuration loader with support for YAML files and environment variables."""
-
+import logging
 import os
 from pathlib import Path
 from typing import Any
@@ -64,9 +63,7 @@ class ConfigLoader:
         routing_overrides = self._load_yaml_file(tenant_dir / "routing.yaml")
         budget_overrides = self._load_yaml_file(tenant_dir / "budgets.yaml")
         policy_overrides = self._load_yaml_file(tenant_dir / "policy_overrides.yaml")
-        security_overrides = self._load_yaml_file(
-            tenant_dir / "security_overrides.yaml"
-        )
+        security_overrides = self._load_yaml_file(tenant_dir / "security_overrides.yaml")
 
         return TenantConfig(
             tenant_id=tenant_id,
@@ -182,43 +179,31 @@ class ConfigLoader:
             with open(file_path, encoding="utf-8") as f:
                 return yaml.safe_load(f) or {}
         except Exception as e:
-            logger.warning(f"Failed to load config file {file_path}: {e}")
+            logging.getLogger(__name__).warning(f"Failed to load config file {file_path}: {e}")
             return None
 
     def _dict_to_routing_config(self, data: dict[str, Any]) -> RoutingConfig:
         """Convert dictionary to RoutingConfig."""
         return RoutingConfig(
-            default_model=data.get("models", {}).get(
-                "default", "anthropic/claude-3-sonnet"
-            ),
+            default_model=data.get("models", {}).get("default", "anthropic/claude-3-sonnet"),
             debate_model=data.get("models", {}).get("debate", "openai/gpt-4"),
-            summarization_model=data.get("models", {}).get(
-                "summarization", "anthropic/claude-3-haiku"
-            ),
+            summarization_model=data.get("models", {}).get("summarization", "anthropic/claude-3-haiku"),
             code_model=data.get("models", {}).get("code", "anthropic/claude-3-sonnet"),
             creative_model=data.get("models", {}).get("creative", "openai/gpt-4"),
             strategy=data.get("routing", {}).get("strategy", "cost_optimized"),
             fallback_enabled=data.get("routing", {}).get("fallback_enabled", True),
             retry_attempts=data.get("routing", {}).get("retry_attempts", 3),
             default_context_window=data.get("context_limits", {}).get("default", 32000),
-            long_context_window=data.get("context_limits", {}).get(
-                "long_context", 128000
-            ),
-            max_cost_per_request=data.get("budgets", {})
-            .get("limits", {})
-            .get("max_per_request", 5.00),
-            cost_alert_threshold=data.get("budgets", {})
-            .get("tracking", {})
-            .get("alert_thresholds", [0.8])[0],
+            long_context_window=data.get("context_limits", {}).get("long_context", 128000),
+            max_cost_per_request=data.get("budgets", {}).get("limits", {}).get("max_per_request", 5.00),
+            cost_alert_threshold=data.get("budgets", {}).get("tracking", {}).get("alert_thresholds", [0.8])[0],
         )
 
     def _dict_to_security_config(self, data: dict[str, Any]) -> SecurityConfig:
         """Convert dictionary to SecurityConfig."""
         return SecurityConfig(
             role_permissions=data.get("role_permissions", {}),
-            default_rate_limit=data.get("rate_limits", {}).get(
-                "default_per_minute", 60
-            ),
+            default_rate_limit=data.get("rate_limits", {}).get("default_per_minute", 60),
             rate_limit_scopes=data.get("rate_limits", {}).get("scopes", {}),
             enable_content_moderation=data.get("enable_content_moderation", True),
             enable_pii_detection=data.get("enable_pii_detection", True),
@@ -230,42 +215,18 @@ class ConfigLoader:
         """Convert dictionary to MonitoringConfig."""
         overall_metrics = data.get("overall_metrics", {})
         return MonitoringConfig(
-            target_bypass_rate=overall_metrics.get("bypass_rate", {}).get(
-                "target", 0.60
-            ),
-            target_early_exit_rate=overall_metrics.get("early_exit_rate", {}).get(
-                "target", 0.40
-            ),
-            target_avg_time_savings=overall_metrics.get("avg_time_savings", {}).get(
-                "target", 0.70
-            ),
-            target_quality_score=overall_metrics.get("quality_score_avg", {}).get(
-                "target", 0.75
-            ),
-            warning_bypass_rate_low=overall_metrics.get("bypass_rate", {}).get(
-                "warning_low", 0.50
-            ),
-            critical_bypass_rate_low=overall_metrics.get("bypass_rate", {}).get(
-                "critical_low", 0.40
-            ),
-            warning_bypass_rate_high=overall_metrics.get("bypass_rate", {}).get(
-                "warning_high", 0.80
-            ),
-            dashboard_refresh_interval=data.get("monitoring_intervals", {}).get(
-                "dashboard_refresh", 30
-            ),
-            metrics_aggregation_interval=data.get("monitoring_intervals", {}).get(
-                "metrics_aggregation", 3600
-            ),
-            alert_check_interval=data.get("monitoring_intervals", {}).get(
-                "alert_check", 300
-            ),
-            quality_trends_retention=data.get("data_retention", {}).get(
-                "quality_trends", 168
-            ),
-            detailed_metrics_retention=data.get("data_retention", {}).get(
-                "detailed_metrics", 48
-            ),
+            target_bypass_rate=overall_metrics.get("bypass_rate", {}).get("target", 0.60),
+            target_early_exit_rate=overall_metrics.get("early_exit_rate", {}).get("target", 0.40),
+            target_avg_time_savings=overall_metrics.get("avg_time_savings", {}).get("target", 0.70),
+            target_quality_score=overall_metrics.get("quality_score_avg", {}).get("target", 0.75),
+            warning_bypass_rate_low=overall_metrics.get("bypass_rate", {}).get("warning_low", 0.50),
+            critical_bypass_rate_low=overall_metrics.get("bypass_rate", {}).get("critical_low", 0.40),
+            warning_bypass_rate_high=overall_metrics.get("bypass_rate", {}).get("warning_high", 0.80),
+            dashboard_refresh_interval=data.get("monitoring_intervals", {}).get("dashboard_refresh", 30),
+            metrics_aggregation_interval=data.get("monitoring_intervals", {}).get("metrics_aggregation", 3600),
+            alert_check_interval=data.get("monitoring_intervals", {}).get("alert_check", 300),
+            quality_trends_retention=data.get("data_retention", {}).get("quality_trends", 168),
+            detailed_metrics_retention=data.get("data_retention", {}).get("detailed_metrics", 48),
             warning_cooldown=data.get("alert_cooldown", {}).get("warning", 1800),
             critical_cooldown=data.get("alert_cooldown", {}).get("critical", 600),
         )
@@ -311,9 +272,7 @@ class ConfigLoader:
         """Convert dictionary to PollerConfig."""
         return PollerConfig(
             intervals=data.get("intervals", {}),
-            high_priority_sources=data.get("priority", {}).get(
-                "high_priority_sources", []
-            ),
+            high_priority_sources=data.get("priority", {}).get("high_priority_sources", []),
             batch_size=data.get("batch_size", 10),
             max_concurrent_polls=data.get("max_concurrent_polls", 3),
             max_consecutive_failures=data.get("max_consecutive_failures", 5),
@@ -324,9 +283,7 @@ class ConfigLoader:
         """Convert dictionary to GroundingConfig."""
         return GroundingConfig(
             min_citations=data.get("defaults", {}).get("min_citations", 1),
-            require_timestamped=data.get("defaults", {}).get(
-                "require_timestamped", False
-            ),
+            require_timestamped=data.get("defaults", {}).get("require_timestamped", False),
             command_requirements=data.get("commands", {}),
             confidence_threshold=data.get("confidence_threshold", 0.75),
             source_reliability_threshold=data.get("source_reliability_threshold", 0.80),

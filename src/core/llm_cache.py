@@ -20,6 +20,7 @@ from .dependencies import (
     is_feature_enabled,
 )
 
+
 logger = logging.getLogger(__name__)
 
 # Try to import Redis with fallback
@@ -263,7 +264,7 @@ class LLMCache:
                     return self.redis_client.delete(*keys)
             else:
                 # In-memory fallback
-                keys_to_delete = [k for k in self._memory_cache.keys() if k.startswith(f"{self.namespace}:")]
+                keys_to_delete = [k for k in self._memory_cache if k.startswith(f"{self.namespace}:")]
                 for key in keys_to_delete:
                     del self._memory_cache[key]
                 return len(keys_to_delete)
@@ -303,7 +304,7 @@ class LLMCache:
                 }
             else:
                 # In-memory fallback
-                namespace_keys = [k for k in self._memory_cache.keys() if k.startswith(f"{self.namespace}:")]
+                namespace_keys = [k for k in self._memory_cache if k.startswith(f"{self.namespace}:")]
                 return {
                     "enabled": True,
                     "backend": "memory",
@@ -368,7 +369,9 @@ async def cache_llm_request(
     await cache.set(request_data, response_data, ttl)
 
 
-async def get_cached_llm_response(request_data: dict[str, Any]) -> dict[str, Any] | None:
+async def get_cached_llm_response(
+    request_data: dict[str, Any],
+) -> dict[str, Any] | None:
     """Get cached LLM response.
 
     Args:
@@ -383,7 +386,7 @@ async def get_cached_llm_response(request_data: dict[str, Any]) -> dict[str, Any
 
 __all__ = [
     "LLMCache",
-    "get_llm_cache",
     "cache_llm_request",
     "get_cached_llm_response",
+    "get_llm_cache",
 ]

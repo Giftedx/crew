@@ -7,6 +7,7 @@ from core.time import default_utc_now
 
 from .enums import RealityLayer
 
+
 logger = logging.getLogger(__name__)
 
 

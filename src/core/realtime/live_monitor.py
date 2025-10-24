@@ -6,11 +6,14 @@ content detection, trend analysis, and automated response capabilities.
 """
 
 import asyncio
+import contextlib
 import logging
 import time
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
+
 
 logger = logging.getLogger(__name__)
 
@@ -228,10 +231,8 @@ class LiveMonitor:
 
         task = self.monitoring_tasks[stream_id]
         task.cancel()
-        try:
+        with contextlib.suppress(asyncio.CancelledError):
             await task
-        except asyncio.CancelledError:
-            pass
 
         del self.monitoring_tasks[stream_id]
         if stream_id in self.content_metrics:
@@ -318,9 +319,10 @@ class LiveMonitor:
 
             # Check cooldown
             cooldown_key = f"{stream_id}:{rule.rule_id}"
-            if cooldown_key in self._cooldown_timers:
-                if time.time() - self._cooldown_timers[cooldown_key] < rule.cooldown_seconds:
-                    continue
+            if cooldown_key in self._cooldown_timers and (
+                time.time() - self._cooldown_timers[cooldown_key] < rule.cooldown_seconds
+            ):
+                continue
 
             # Evaluate rule condition
             if await self._evaluate_rule(rule, metrics):
@@ -494,7 +496,7 @@ class LiveMonitor:
 
         logger.info("Live monitor shutdown complete")
 
-    async def __aenter__(self) -> LiveMonitor:
+    async def __aenter__(self) -> "LiveMonitor":
         """Async context manager entry."""
         return self
 

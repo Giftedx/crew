@@ -34,7 +34,9 @@ def attach_streaming_demo(router: APIRouter) -> None:
     else:
 
         @router.get("/stream-demo")
-        async def stream_demo_fallback(text: str = "processing") -> Response:  # pragma: no cover - fallback
+        async def stream_demo_fallback(
+            text: str = "processing",
+        ) -> Response:  # pragma: no cover - fallback
             payload = "".join([f"data: step {i}/3: {text}\n\n" for i in range(1, 4)]) + "data: done\n\n"
             return Response(payload, media_type="text/event-stream")
 

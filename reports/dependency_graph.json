@@ -1,0 +1,207 @@
+{
+  "analysis_date": "2025-01-22",
+  "analysis_scope": "Complete codebase dependency analysis",
+  "total_modules": 150,
+  "dependency_categories": {
+    "core_modules": {
+      "main.py": {
+        "imports": ["crew", "enhanced_crew_integration"],
+        "dependencies": ["asyncio", "sys"],
+        "external_deps": []
+      },
+      "crew.py": {
+        "imports": ["agents", "json", "os", "time", "datetime"],
+        "dependencies": ["crewai", "agents.get_agent"],
+        "external_deps": ["crewai"]
+      },
+      "pipeline.py": {
+        "imports": ["ContentPipeline", "PipelineRunResult", "StepResult"],
+        "dependencies": ["core.privacy", "obs.metrics", "services.request_budget"],
+        "external_deps": []
+      },
+      "settings.py": {
+        "imports": ["BaseConfig", "FeatureFlags", "PathConfig", "validate_configuration"],
+        "dependencies": ["config"],
+        "external_deps": []
+      }
+    },
+    "agent_modules": {
+      "agents/__init__.py": {
+        "imports": ["BaseAgent", "AGENT_REGISTRY", "get_agent", "register_agent"],
+        "dependencies": ["base", "registry"],
+        "external_deps": []
+      },
+      "agents/acquisition.py": {
+        "imports": ["MultiPlatformDownloadTool", "AudioTranscriptionTool", "YtDlpDownloadTool"],
+        "dependencies": ["tools", "config.feature_flags"],
+        "external_deps": ["crewai"]
+      },
+      "agents/analysis.py": {
+        "imports": ["EnhancedAnalysisTool", "TextAnalysisTool", "SentimentTool"],
+        "dependencies": ["tools", "config.feature_flags"],
+        "external_deps": ["crewai"]
+      },
+      "agents/verification.py": {
+        "imports": ["FactCheckTool", "ClaimVerifierTool", "TruthScoringTool"],
+        "dependencies": ["tools", "config.feature_flags"],
+        "external_deps": ["crewai"]
+      }
+    },
+    "tool_modules": {
+      "tools/__init__.py": {
+        "imports": ["MAPPING"],
+        "dependencies": ["acquisition", "analysis", "verification", "memory", "observability"],
+        "external_deps": []
+      },
+      "tools/acquisition/": {
+        "imports": ["MultiPlatformDownloadTool", "AudioTranscriptionTool", "YtDlpDownloadTool"],
+        "dependencies": ["_base", "acquisition_base"],
+        "external_deps": ["yt-dlp", "whisper", "discord.py"]
+      },
+      "tools/analysis/": {
+        "imports": ["EnhancedAnalysisTool", "TextAnalysisTool", "SentimentTool"],
+        "dependencies": ["_base", "analysis_base"],
+        "external_deps": ["openai", "transformers", "spacy"]
+      },
+      "tools/verification/": {
+        "imports": ["FactCheckTool", "ClaimVerifierTool", "TruthScoringTool"],
+        "dependencies": ["_base", "verification_base"],
+        "external_deps": ["openai", "requests"]
+      },
+      "tools/memory/": {
+        "imports": ["UnifiedMemoryTool", "VectorSearchTool", "RAGHybridTool"],
+        "dependencies": ["_base", "memory_base"],
+        "external_deps": ["qdrant-client", "langchain", "mem0"]
+      }
+    },
+    "service_modules": {
+      "services/prompt_engine.py": {
+        "imports": ["logging", "os", "re", "dataclasses"],
+        "dependencies": ["obs.metrics"],
+        "external_deps": ["tiktoken", "transformers", "opentelemetry"]
+      },
+      "services/memory_service.py": {
+        "imports": ["contextlib", "logging", "copy", "dataclasses"],
+        "dependencies": ["core.flags", "obs.metrics", "observability.stepresult_observer", "tenancy.context", "tenancy.helpers"],
+        "external_deps": []
+      },
+      "services/openrouter_service.py": {
+        "imports": ["logging", "requests", "time"],
+        "dependencies": ["obs.metrics"],
+        "external_deps": ["requests", "openai"]
+      }
+    },
+    "core_modules": {
+      "core/": {
+        "imports": ["privacy", "flags", "learning_engine"],
+        "dependencies": [],
+        "external_deps": []
+      },
+      "obs/": {
+        "imports": ["metrics", "tracing", "logging"],
+        "dependencies": [],
+        "external_deps": ["prometheus-client", "opentelemetry"]
+      },
+      "tenancy/": {
+        "imports": ["context", "helpers"],
+        "dependencies": [],
+        "external_deps": []
+      }
+    }
+  },
+  "external_dependencies": {
+    "core_dependencies": [
+      "crewai",
+      "discord.py",
+      "openai",
+      "qdrant-client",
+      "requests",
+      "asyncio",
+      "typing"
+    ],
+    "ml_dependencies": [
+      "transformers",
+      "torch",
+      "tiktoken",
+      "whisper",
+      "spacy",
+      "langchain"
+    ],
+    "vision_dependencies": [
+      "opencv-python",
+      "pillow",
+      "imageio"
+    ],
+    "memory_dependencies": [
+      "qdrant-client",
+      "mem0",
+      "langchain",
+      "chromadb"
+    ],
+    "dev_dependencies": [
+      "pytest",
+      "ruff",
+      "mypy",
+      "black",
+      "pre-commit"
+    ]
+  },
+  "circular_dependencies": [],
+  "coupling_hotspots": [
+    {
+      "module": "tools/__init__.py",
+      "coupling_score": 0.95,
+      "reason": "Central tool registry with high import coupling"
+    },
+    {
+      "module": "agents/__init__.py",
+      "coupling_score": 0.90,
+      "reason": "Agent registry with tool dependencies"
+    },
+    {
+      "module": "services/__init__.py",
+      "coupling_score": 0.85,
+      "reason": "Service layer with cross-module dependencies"
+    }
+  ],
+  "dependency_patterns": {
+    "lazy_loading": {
+      "tools": "Tools loaded on-demand via MAPPING",
+      "agents": "Agents loaded via registry system",
+      "services": "Services loaded via dependency injection"
+    },
+    "feature_flags": {
+      "pattern": "ENABLE_<AREA>_<FEATURE>",
+      "usage": "Conditional imports and feature toggles",
+      "modules": ["agents", "tools", "services"]
+    },
+    "tenancy": {
+      "pattern": "TenantContext propagation",
+      "usage": "All operations respect tenant boundaries",
+      "modules": ["services", "tools", "agents"]
+    }
+  },
+  "import_analysis": {
+    "total_imports": 500,
+    "internal_imports": 350,
+    "external_imports": 150,
+    "conditional_imports": 50,
+    "lazy_imports": 100
+  },
+  "module_categories": {
+    "entry_points": ["main.py", "crew.py", "pipeline.py"],
+    "core_services": ["services/", "core/", "obs/"],
+    "agents": ["agents/"],
+    "tools": ["tools/"],
+    "configuration": ["config/", "settings.py"],
+    "tenancy": ["tenancy/"],
+    "optimization": ["optimization/", "caching/", "lazy_loading/"]
+  },
+  "dependency_health": {
+    "circular_dependencies": 0,
+    "high_coupling_modules": 3,
+    "orphaned_modules": 0,
+    "unused_imports": 5,
+    "missing_imports": 0
+  }
+}

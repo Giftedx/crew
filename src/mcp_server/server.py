@@ -15,7 +15,12 @@ Safe defaults only; integrates lightly with existing core/settings.
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from typing import TYPE_CHECKING
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
 
 try:  # Import fastmcp only when installed via optional extra
     from fastmcp import FastMCP  # type: ignore
@@ -199,7 +204,10 @@ def main(argv: list[str] | None = None) -> int:
             # Optional extra not installed
             import sys as _sys
 
-            print("FastMCP not available. Install optional extra: pip install '.[mcp]'", file=_sys.stderr)
+            print(
+                "FastMCP not available. Install optional extra: pip install '.[mcp]'",
+                file=_sys.stderr,
+            )
             return 2
         _m.run()
         return 0

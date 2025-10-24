@@ -1,13 +1,17 @@
 from __future__ import annotations
 
-from collections.abc import Iterable
-from typing import Any
+import contextlib
+from typing import TYPE_CHECKING, Any
 
 from core.time import default_utc_now
 from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 
-from .middleware import Middleware
-from .step import Step
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from .middleware import Middleware
+    from .step import Step
 
 
 class Executor:
@@ -37,26 +41,20 @@ class Executor:
             result = step.run(context)
         except Exception as e:  # Error path hooks
             for m in self._middleware:
-                try:
+                with contextlib.suppress(Exception):
                     m.on_error(context, e)
-                except Exception:
-                    pass
             raise
 
         # After hooks
         for m in self._middleware:
-            try:
+            with contextlib.suppress(Exception):
                 m.after(context, result)
-            except Exception:
-                pass
 
         # Emit basic metric (low-cardinality)
-        try:
+        with contextlib.suppress(Exception):
             self._metrics.counter(
                 "pipeline_step_executed_total",
                 description="Count of executed pipeline steps",
             ).add(1, {"idempotent": str(getattr(step, "idempotent", False))})
-        except Exception:
-            pass
 
         return result

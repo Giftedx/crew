@@ -14,6 +14,7 @@ import json
 import sys
 from pathlib import Path
 
+
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
@@ -178,7 +179,10 @@ def validate_extraction_patterns():
         # Strategy 2: JSON code block without language specifier (non-greedy)
         (r"```\s*(\{(?:[^{}]|\{[^{}]*\})*\})\s*```", "generic code block"),
         # Strategy 3: Inline JSON object with balanced braces
-        (r'(\{(?:[^{}"]*"[^"]*"[^{}]*|[^{}]|\{(?:[^{}]|\{[^{}]*\})*\})*\})', "inline JSON"),
+        (
+            r'(\{(?:[^{}"]*"[^"]*"[^{}]*|[^{}]|\{(?:[^{}]|\{[^{}]*\})*\})*\})',
+            "inline JSON",
+        ),
     ]
 
     test_cases = [

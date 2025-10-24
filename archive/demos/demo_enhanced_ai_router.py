@@ -11,6 +11,7 @@ import logging
 import sys
 from typing import Any
 
+
 # Add the src directory to Python path for imports
 sys.path.insert(0, "/home/crew/src")
 
@@ -112,7 +113,9 @@ class EnhancedAIRouterDemo:
             # Use performance-based routing if no specific model requested
             if model is None:
                 routing_decision = self.performance_router.select_optimal_model(
-                    task_type=task_type, available_models=available_models, optimization_target=optimization_target
+                    task_type=task_type,
+                    available_models=available_models,
+                    optimization_target=optimization_target,
                 )
                 selected_model = routing_decision.selected_model
                 decision_reasoning = routing_decision.reasoning
@@ -229,9 +232,9 @@ class EnhancedAIRouterDemo:
 
         # Task-specific adjustments
         task_bonus = 0.0
-        if task_type == "analysis" and any(word in response.lower() for word in ["analyze", "evidence"]):
-            task_bonus = 0.1
-        elif task_type == "creative" and len(response) > 100:
+        if (task_type == "analysis" and any(word in response.lower() for word in ["analyze", "evidence"])) or (
+            task_type == "creative" and len(response) > 100
+        ):
             task_bonus = 0.1
 
         return min(1.0, length_score * 0.3 + coherence_score * 0.6 + task_bonus)

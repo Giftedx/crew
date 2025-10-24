@@ -8,16 +8,19 @@ for TTL optimization, predictive cache warming, and usage pattern recognition.
 from __future__ import annotations
 
 import hashlib
+import json
 import logging
-import pickle
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 import numpy as np
 
+from ultimate_discord_intelligence_bot.step_result import StepResult
+
 from ..step_result import StepResult
+
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +57,7 @@ class CacheEntry:
     ttl_seconds: int = 3600
     size_bytes: int = 0
     priority: float = 1.0
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -69,7 +72,7 @@ class CacheContext:
     day_of_week: int  # 0-6
     tenant: str = ""
     workspace: str = ""
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -81,7 +84,7 @@ class CacheAction:
     ttl_seconds: int = 3600
     priority: float = 1.0
     strategy: CacheStrategy = CacheStrategy.ADAPTIVE
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -102,7 +105,7 @@ class CacheOptimizationBandit:
 
     def __init__(
         self,
-        action_space: List[CacheAction],
+        action_space: list[CacheAction],
         context_dim: int = 12,
         exploration_rate: float = 0.15,
     ):
@@ -114,22 +117,20 @@ class CacheOptimizationBandit:
             context_dim: Dimension of context features
             exploration_rate: Exploration rate for epsilon-greedy
         """
-        self.action_space = {i: action for i, action in enumerate(action_space)}
+        self.action_space = dict(enumerate(action_space))
         self.context_dim = context_dim
         self.exploration_rate = exploration_rate
-        self.action_counts = {i: 0 for i in range(len(action_space))}
+        self.action_counts = dict.fromkeys(range(len(action_space)), 0)
         self.action_rewards = {i: [] for i in range(len(action_space))}
 
         # Linear model parameters for each action
-        self.action_parameters = {
-            i: np.random.normal(0, 0.1, context_dim) for i in range(len(action_space))
-        }
+        self.action_parameters = {i: np.random.normal(0, 0.1, context_dim) for i in range(len(action_space))}
 
         # Context and reward history
         self.context_history = []
         self.reward_history = []
 
-    def select_action(self, context: np.ndarray) -> Tuple[int, float]:
+    def select_action(self, context: np.ndarray) -> StepResult:
         """
         Select cache action using contextual bandit.
 
@@ -197,7 +198,7 @@ class CacheOptimizationBandit:
             self.context_history = self.context_history[-5000:]
             self.reward_history = self.reward_history[-5000:]
 
-    def _normalize_context(self, context: np.ndarray) -> np.ndarray:
+    def _normalize_context(self, context: np.ndarray) -> StepResult:
         """Normalize context to required dimension."""
         if len(context) > self.context_dim:
             return context[: self.context_dim]
@@ -207,18 +208,14 @@ class CacheOptimizationBandit:
             return padded
         return context
 
-    def _calculate_confidence(
-        self, selected_action: int, expected_rewards: Dict[int, float]
-    ) -> float:
+    def _calculate_confidence(self, selected_action: int, expected_rewards: dict[int, float]) -> StepResult:
         """Calculate confidence in the selected action."""
         if selected_action not in expected_rewards:
             return 0.5
 
         selected_reward = expected_rewards[selected_action]
         max_other_reward = max(
-            reward
-            for action_idx, reward in expected_rewards.items()
-            if action_idx != selected_action
+            reward for action_idx, reward in expected_rewards.items() if action_idx != selected_action
         )
 
         # Confidence based on margin between selected and second-best
@@ -227,7 +224,7 @@ class CacheOptimizationBandit:
 
         return confidence
 
-    def get_action_statistics(self) -> Dict[int, Dict[str, Any]]:
+    def get_action_statistics(self) -> StepResult:
         """Get statistics for all actions."""
         stats = {}
         for action_idx in self.action_space:
@@ -253,10 +250,10 @@ class RLCacheOptimizer:
             max_cache_size: Maximum number of cache entries
         """
         self.max_cache_size = max_cache_size
-        self.cache: Dict[str, CacheEntry] = {}
-        self.access_patterns: Dict[str, List[datetime]] = {}
+        self.cache: dict[str, CacheEntry] = {}
+        self.access_patterns: dict[str, list[datetime]] = {}
         self.bandit = None
-        self.optimization_history: List[CacheReward] = []
+        self.optimization_history: list[CacheReward] = []
 
         # Performance metrics
         self.metrics = {
@@ -299,20 +296,14 @@ class RLCacheOptimizer:
             )
 
         # Predictive warming actions
-        action_space.append(
-            CacheAction(action_type="warm", key="", strategy=CacheStrategy.PREDICTIVE)
-        )
+        action_space.append(CacheAction(action_type="warm", key="", strategy=CacheStrategy.PREDICTIVE))
 
         # Eviction actions
-        action_space.append(
-            CacheAction(action_type="evict", key="", strategy=CacheStrategy.LRU)
-        )
+        action_space.append(CacheAction(action_type="evict", key="", strategy=CacheStrategy.LRU))
 
         self.bandit = CacheOptimizationBandit(action_space)
 
-    async def optimize_cache_operation(
-        self, context: CacheContext, operation: str
-    ) -> StepResult:
+    async def optimize_cache_operation(self, context: CacheContext, operation: str) -> StepResult:
         """
         Optimize cache operation using RL.
 
@@ -332,9 +323,7 @@ class RLCacheOptimizer:
             selected_action = self.bandit.action_space[action_idx]
 
             # Customize action for the specific operation
-            optimized_action = self._customize_action(
-                selected_action, context, operation
-            )
+            optimized_action = self._customize_action(selected_action, context, operation)
 
             return StepResult.ok(
                 data={
@@ -351,12 +340,10 @@ class RLCacheOptimizer:
             )
 
         except Exception as e:
-            logger.error(f"Cache optimization failed: {str(e)}")
-            return StepResult.fail(f"Cache optimization failed: {str(e)}")
+            logger.error(f"Cache optimization failed: {e!s}")
+            return StepResult.fail(f"Cache optimization failed: {e!s}")
 
-    async def update_cache_performance(
-        self, action: CacheAction, reward_data: Dict[str, Any]
-    ) -> StepResult:
+    async def update_cache_performance(self, action: CacheAction, reward_data: dict[str, Any]) -> StepResult:
         """
         Update cache performance with observed reward.
 
@@ -405,12 +392,10 @@ class RLCacheOptimizer:
             )
 
         except Exception as e:
-            logger.error(f"Cache performance update failed: {str(e)}")
-            return StepResult.fail(f"Cache performance update failed: {str(e)}")
+            logger.error(f"Cache performance update failed: {e!s}")
+            return StepResult.fail(f"Cache performance update failed: {e!s}")
 
-    async def predict_cache_warming(
-        self, access_patterns: Dict[str, List[datetime]]
-    ) -> StepResult:
+    async def predict_cache_warming(self, access_patterns: dict[str, list[datetime]]) -> StepResult:
         """
         Predict cache warming opportunities based on access patterns.
 
@@ -439,12 +424,8 @@ class RLCacheOptimizer:
                             "key": key,
                             "predicted_access_time": predicted_access.isoformat(),
                             "confidence": pattern_analysis.get("confidence", 0.5),
-                            "pattern_type": pattern_analysis.get(
-                                "pattern_type", "unknown"
-                            ),
-                            "recommended_action": self._get_warming_recommendation(
-                                pattern_analysis
-                            ),
+                            "pattern_type": pattern_analysis.get("pattern_type", "unknown"),
+                            "recommended_action": self._get_warming_recommendation(pattern_analysis),
                         }
                     )
 
@@ -466,8 +447,8 @@ class RLCacheOptimizer:
             )
 
         except Exception as e:
-            logger.error(f"Cache warming prediction failed: {str(e)}")
-            return StepResult.fail(f"Cache warming prediction failed: {str(e)}")
+            logger.error(f"Cache warming prediction failed: {e!s}")
+            return StepResult.fail(f"Cache warming prediction failed: {e!s}")
 
     def get_cache_statistics(self) -> StepResult:
         """
@@ -477,12 +458,8 @@ class RLCacheOptimizer:
             StepResult with cache statistics
         """
         try:
-            hit_rate = self.metrics["cache_hits"] / max(
-                1, self.metrics["total_requests"]
-            )
-            average_latency = self.metrics["total_latency_ms"] / max(
-                1, self.metrics["total_requests"]
-            )
+            hit_rate = self.metrics["cache_hits"] / max(1, self.metrics["total_requests"])
+            average_latency = self.metrics["total_latency_ms"] / max(1, self.metrics["total_requests"])
 
             stats = {
                 "cache_metrics": {
@@ -495,9 +472,7 @@ class RLCacheOptimizer:
                     "utilization": len(self.cache) / self.max_cache_size,
                 },
                 "performance_metrics": self.metrics,
-                "bandit_statistics": self.bandit.get_action_statistics()
-                if self.bandit
-                else {},
+                "bandit_statistics": self.bandit.get_action_statistics() if self.bandit else {},
                 "optimization_history_size": len(self.optimization_history),
                 "recent_performance": self._get_recent_performance(),
             }
@@ -505,15 +480,15 @@ class RLCacheOptimizer:
             return StepResult.ok(data=stats)
 
         except Exception as e:
-            logger.error(f"Failed to get cache statistics: {str(e)}")
-            return StepResult.fail(f"Failed to get cache statistics: {str(e)}")
+            logger.error(f"Failed to get cache statistics: {e!s}")
+            return StepResult.fail(f"Failed to get cache statistics: {e!s}")
 
-    def _context_to_features(self, context: CacheContext) -> np.ndarray:
+    def _context_to_features(self, context: CacheContext) -> StepResult:
         """Convert cache context to feature vector."""
         features = np.zeros(12)  # Fixed feature dimension
 
         # Key pattern encoding (hash-based)
-        key_hash = int(hashlib.md5(context.key_pattern.encode()).hexdigest()[:8], 16)
+        key_hash = int(hashlib.md5(context.key_pattern.encode(), usedforsecurity=False).hexdigest()[:8], 16)  # nosec B324 - feature encoding only
         features[0] = (key_hash % 1000) / 1000.0
 
         # Access frequency (normalized)
@@ -534,13 +509,11 @@ class RLCacheOptimizer:
         features[7] = np.cos(2 * np.pi * context.day_of_week / 7)
 
         # Tenant encoding (hash-based)
-        tenant_hash = int(hashlib.md5(context.tenant.encode()).hexdigest()[:8], 16)
+        tenant_hash = int(hashlib.md5(context.tenant.encode(), usedforsecurity=False).hexdigest()[:8], 16)  # nosec B324 - feature encoding only
         features[8] = (tenant_hash % 100) / 100.0
 
         # Workspace encoding (hash-based)
-        workspace_hash = int(
-            hashlib.md5(context.workspace.encode()).hexdigest()[:8], 16
-        )
+        workspace_hash = int(hashlib.md5(context.workspace.encode(), usedforsecurity=False).hexdigest()[:8], 16)  # nosec B324 - feature encoding only
         features[9] = (workspace_hash % 100) / 100.0
 
         # Metadata features
@@ -549,9 +522,7 @@ class RLCacheOptimizer:
 
         return features
 
-    def _customize_action(
-        self, base_action: CacheAction, context: CacheContext, operation: str
-    ) -> CacheAction:
+    def _customize_action(self, base_action: CacheAction, context: CacheContext, operation: str) -> StepResult:
         """Customize base action for specific context and operation."""
         customized = CacheAction(
             action_type=operation,
@@ -564,13 +535,9 @@ class RLCacheOptimizer:
 
         # Adjust TTL based on access frequency
         if context.access_frequency > 10:  # High frequency
-            customized.ttl_seconds = min(
-                customized.ttl_seconds * 2, 14400
-            )  # Max 4 hours
+            customized.ttl_seconds = min(customized.ttl_seconds * 2, 14400)  # Max 4 hours
         elif context.access_frequency < 1:  # Low frequency
-            customized.ttl_seconds = max(
-                customized.ttl_seconds // 2, 300
-            )  # Min 5 minutes
+            customized.ttl_seconds = max(customized.ttl_seconds // 2, 300)  # Min 5 minutes
 
         # Adjust priority based on data size and access pattern
         if context.data_size > 100000:  # Large data
@@ -580,7 +547,7 @@ class RLCacheOptimizer:
 
         return customized
 
-    def _calculate_composite_reward(self, reward: CacheReward) -> float:
+    def _calculate_composite_reward(self, reward: CacheReward) -> StepResult:
         """Calculate composite reward from multiple factors."""
         composite = 0.0
 
@@ -591,9 +558,7 @@ class RLCacheOptimizer:
             composite -= 0.5
 
         # Latency reward (lower is better)
-        latency_reward = max(
-            0, 1.0 - (reward.latency_ms / 1000.0)
-        )  # Normalize to 1 second
+        latency_reward = max(0, 1.0 - (reward.latency_ms / 1000.0))  # Normalize to 1 second
         composite += latency_reward * 0.3
 
         # Cost savings reward
@@ -605,7 +570,7 @@ class RLCacheOptimizer:
 
         return max(-1.0, min(1.0, composite))
 
-    def _find_action_index(self, action: CacheAction) -> Optional[int]:
+    def _find_action_index(self, action: CacheAction) -> StepResult:
         """Find action index in the bandit's action space."""
         for idx, bandit_action in self.bandit.action_space.items():
             if (
@@ -634,7 +599,7 @@ class RLCacheOptimizer:
         elif reward.action.action_type == "warm":
             self.metrics["predictive_warmings"] += 1
 
-    def _analyze_access_pattern(self, accesses: List[datetime]) -> Dict[str, Any]:
+    def _analyze_access_pattern(self, accesses: list[datetime]) -> StepResult:
         """Analyze access pattern to determine type and confidence."""
         if len(accesses) < 3:
             return {"pattern_type": "insufficient_data", "confidence": 0.0}
@@ -672,9 +637,7 @@ class RLCacheOptimizer:
             "coefficient_of_variation": cv,
         }
 
-    def _predict_next_access(
-        self, accesses: List[datetime], pattern_analysis: Dict[str, Any]
-    ) -> Optional[datetime]:
+    def _predict_next_access(self, accesses: list[datetime], pattern_analysis: dict[str, Any]) -> StepResult:
         """Predict next access time based on pattern analysis."""
         if pattern_analysis["confidence"] < 0.5:
             return None
@@ -692,9 +655,7 @@ class RLCacheOptimizer:
 
         return predicted_time
 
-    def _get_warming_recommendation(
-        self, pattern_analysis: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def _get_warming_recommendation(self, pattern_analysis: dict[str, Any]) -> StepResult:
         """Get cache warming recommendation based on pattern analysis."""
         pattern_type = pattern_analysis["pattern_type"]
         confidence = pattern_analysis["confidence"]
@@ -721,7 +682,7 @@ class RLCacheOptimizer:
                 "reasoning": "Uncertain pattern",
             }
 
-    def _get_recent_performance(self) -> Dict[str, Any]:
+    def _get_recent_performance(self) -> StepResult:
         """Get recent performance metrics."""
         if not self.optimization_history:
             return {}
@@ -733,45 +694,53 @@ class RLCacheOptimizer:
         recent_requests = len(recent_rewards)
 
         return {
-            "recent_hit_rate": recent_hits / recent_requests
-            if recent_requests > 0
-            else 0.0,
+            "recent_hit_rate": recent_hits / recent_requests if recent_requests > 0 else 0.0,
             "recent_average_latency": np.mean([r.latency_ms for r in recent_rewards]),
-            "recent_average_cost_savings": np.mean(
-                [r.cost_savings for r in recent_rewards]
-            ),
+            "recent_average_cost_savings": np.mean([r.cost_savings for r in recent_rewards]),
             "recent_reward_count": recent_requests,
         }
 
     def save_state(self, filepath: str) -> StepResult:
         """Save optimizer state to file."""
         try:
+            # Convert numpy arrays to lists for JSON serialization
             state = {
                 "cache": self.cache,
                 "access_patterns": self.access_patterns,
                 "optimization_history": self.optimization_history,
                 "metrics": self.metrics,
-                "bandit_parameters": self.bandit.action_parameters
-                if self.bandit
-                else {},
-                "bandit_counts": self.bandit.action_counts if self.bandit else {},
-                "bandit_rewards": self.bandit.action_rewards if self.bandit else {},
+                "bandit_parameters": {
+                    k: v.tolist() if hasattr(v, "tolist") else v
+                    for k, v in (self.bandit.action_parameters if self.bandit else {}).items()
+                },
+                "bandit_counts": {
+                    k: v.tolist() if hasattr(v, "tolist") else v
+                    for k, v in (self.bandit.action_counts if self.bandit else {}).items()
+                },
+                "bandit_rewards": {
+                    k: v.tolist() if hasattr(v, "tolist") else v
+                    for k, v in (self.bandit.action_rewards if self.bandit else {}).items()
+                },
             }
 
-            with open(filepath, "wb") as f:
-                pickle.dump(state, f)
+            with open(filepath, "w") as f:
+                json.dump(state, f, indent=2)  # nosec B301 - using secure JSON serialization
 
             return StepResult.ok(data={"saved_to": filepath})
 
         except Exception as e:
-            logger.error(f"Failed to save optimizer state: {str(e)}")
-            return StepResult.fail(f"Failed to save optimizer state: {str(e)}")
+            logger.error(f"Failed to save optimizer state: {e!s}")
+            return StepResult.fail(f"Failed to save optimizer state: {e!s}")
 
     def load_state(self, filepath: str) -> StepResult:
-        """Load optimizer state from file."""
+        """Load optimizer state from file.
+
+        Security: Uses JSON instead of pickle to prevent arbitrary code execution.
+        Note: Legacy pickle files will fail to load - manual migration required.
+        """
         try:
-            with open(filepath, "rb") as f:
-                state = pickle.load(f)
+            with open(filepath) as f:
+                state = json.load(f)  # nosec B301 - replaced pickle with secure JSON
 
             self.cache = state.get("cache", {})
             self.access_patterns = state.get("access_patterns", {})
@@ -788,5 +757,5 @@ class RLCacheOptimizer:
             return StepResult.ok(data={"loaded_from": filepath})
 
         except Exception as e:
-            logger.error(f"Failed to load optimizer state: {str(e)}")
-            return StepResult.fail(f"Failed to load optimizer state: {str(e)}")
+            logger.error(f"Failed to load optimizer state: {e!s}")
+            return StepResult.fail(f"Failed to load optimizer state: {e!s}")

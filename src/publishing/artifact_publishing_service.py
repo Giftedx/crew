@@ -27,13 +27,12 @@ from typing import Any
 
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
+
 logger = logging.getLogger(__name__)
 
 # Try to import discord.py (optional dependency)
 try:
     from discord.ext import commands
-
-    import discord
 
     DISCORD_AVAILABLE = True
 except ImportError:
@@ -188,7 +187,7 @@ class ArtifactPublishingService:
 
         except Exception as e:
             logger.error(f"Artifact publishing failed: {e}")
-            return StepResult.fail(f"Publishing failed: {str(e)}", status="retryable")
+            return StepResult.fail(f"Publishing failed: {e!s}", status="retryable")
 
     def publish_report(
         self,
@@ -232,7 +231,7 @@ class ArtifactPublishingService:
 
         except Exception as e:
             logger.error(f"Report publishing failed: {e}")
-            return StepResult.fail(f"Report publishing failed: {str(e)}")
+            return StepResult.fail(f"Report publishing failed: {e!s}")
 
     def publish_highlight_summary(
         self,
@@ -278,7 +277,7 @@ class ArtifactPublishingService:
 
         except Exception as e:
             logger.error(f"Highlight summary publishing failed: {e}")
-            return StepResult.fail(f"Highlight summary publishing failed: {str(e)}")
+            return StepResult.fail(f"Highlight summary publishing failed: {e!s}")
 
     def publish_claim_summary(
         self,
@@ -328,7 +327,7 @@ class ArtifactPublishingService:
 
         except Exception as e:
             logger.error(f"Claim/quote summary publishing failed: {e}")
-            return StepResult.fail(f"Claim/quote summary publishing failed: {str(e)}")
+            return StepResult.fail(f"Claim/quote summary publishing failed: {e!s}")
 
     def _publish_artifact(self, artifact: PublishingArtifact, platform: str) -> PublishingResult | None:
         """Publish artifact to specified platform.
@@ -412,8 +411,6 @@ class ArtifactPublishingService:
             PublishingResult with webhook response
         """
         try:
-            import requests
-
             # Format Discord embed
             embed = self._format_discord_embed(artifact)
 
@@ -425,7 +422,9 @@ class ArtifactPublishingService:
             }
 
             # Send to webhook
-            response = requests.post(
+            from core.http_utils import resilient_post
+
+            response = resilient_post(
                 self._discord_webhook_url,
                 json=payload,
                 timeout=10,
@@ -685,7 +684,7 @@ class ArtifactPublishingService:
         # Claims section
         if claims:
             lines.append(f"**📋 Claims ({len(claims)})**")
-            for i, claim in enumerate(claims[:3]):  # Top 3 claims
+            for _i, claim in enumerate(claims[:3]):  # Top 3 claims
                 confidence = claim.get("confidence", 0)
                 speaker = claim.get("speaker", "Unknown")
                 lines.append(f'• **{speaker}:** "{claim.get("text", "")}" ({confidence:.1%})')
@@ -696,7 +695,7 @@ class ArtifactPublishingService:
         # Quotes section
         if quotes:
             lines.append(f"**💬 Notable Quotes ({len(quotes)})**")
-            for i, quote in enumerate(quotes[:3]):  # Top 3 quotes
+            for _i, quote in enumerate(quotes[:3]):  # Top 3 quotes
                 confidence = quote.get("confidence", 0)
                 speaker = quote.get("speaker", "Unknown")
                 lines.append(f'• **{speaker}:** "{quote.get("text", "")}" ({confidence:.1%})')
@@ -802,7 +801,7 @@ class ArtifactPublishingService:
 
         except Exception as e:
             logger.error(f"Failed to get cache stats: {e}")
-            return StepResult.fail(f"Failed to get cache stats: {str(e)}")
+            return StepResult.fail(f"Failed to get cache stats: {e!s}")
 
 
 # Singleton instance

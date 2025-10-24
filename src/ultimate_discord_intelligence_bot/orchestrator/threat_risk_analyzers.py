@@ -9,6 +9,7 @@ Extracted from analytics_calculators.py to improve maintainability and organizat
 import logging
 from typing import Any
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -79,7 +80,13 @@ def calculate_threat_level_from_crew(crew_result: Any, log: logging.Logger | Non
         crew_output = str(crew_result).lower()
 
         # Threat indicators
-        high_threat_words = ["dangerous", "threatening", "harmful", "malicious", "deceptive"]
+        high_threat_words = [
+            "dangerous",
+            "threatening",
+            "harmful",
+            "malicious",
+            "deceptive",
+        ]
         medium_threat_words = ["concerning", "suspicious", "questionable", "misleading"]
         low_threat_words = ["safe", "benign", "harmless", "neutral", "acceptable"]
 
@@ -182,10 +189,7 @@ def calculate_behavioral_risk_from_crew(crew_result: Any, log: logging.Logger | 
         risk_count = sum(1 for indicator in risk_indicators if indicator in crew_output)
         total_words = len(crew_output.split())
 
-        if total_words > 0:
-            risk_score = min(risk_count / (total_words / 100), 1.0)
-        else:
-            risk_score = 0.0
+        risk_score = min(risk_count / (total_words / 100), 1.0) if total_words > 0 else 0.0
 
         return risk_score
 
@@ -312,7 +316,14 @@ def calculate_basic_threat_from_data(analysis_data: dict[str, Any], log: logging
         threat_score = 0.0
 
         # Check for threat indicators in the data
-        threat_keywords = ["threat", "danger", "risk", "harm", "deception", "manipulation"]
+        threat_keywords = [
+            "threat",
+            "danger",
+            "risk",
+            "harm",
+            "deception",
+            "manipulation",
+        ]
 
         for key, value in analysis_data.items():
             if isinstance(value, str):

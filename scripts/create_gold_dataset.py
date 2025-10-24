@@ -9,6 +9,7 @@ and calculates inter-annotator agreement metrics to ensure quality.
 import sys
 from pathlib import Path
 
+
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
@@ -16,14 +17,19 @@ import json
 import logging
 from typing import Any
 
-from ultimate_discord_intelligence_bot.services.gold_dataset_annotator import GoldDatasetAnnotator
+from ultimate_discord_intelligence_bot.services.gold_dataset_annotator import (
+    GoldDatasetAnnotator,
+)
 from ultimate_discord_intelligence_bot.step_result import StepResult
+
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
 
-def create_and_validate_gold_dataset(output_path: str = "gold_dataset.json") -> StepResult:
+def create_and_validate_gold_dataset(
+    output_path: str = "gold_dataset.json",
+) -> StepResult:
     """Create and validate the gold dataset."""
     print("🏆 Creating Gold Dataset for Creator Intelligence Evaluation")
     print("=" * 70)
@@ -35,8 +41,8 @@ def create_and_validate_gold_dataset(output_path: str = "gold_dataset.json") -> 
         print("📊 Dataset Overview:")
         print(f"  Episodes to annotate: {len(annotator.episodes_data)}")
         print(f"  Annotators: {', '.join(annotator.annotators)}")
-        print(f"  Platforms: {set(ep['platform'] for ep in annotator.episodes_data.values())}")
-        print(f"  Creators: {set(ep['creator'] for ep in annotator.episodes_data.values())}")
+        print(f"  Platforms: { {ep['platform'] for ep in annotator.episodes_data.values()} }")
+        print(f"  Creators: { {ep['creator'] for ep in annotator.episodes_data.values()} }")
 
         # Create gold annotations
         print("\n🔨 Generating gold annotations...")
@@ -126,8 +132,8 @@ def create_and_validate_gold_dataset(output_path: str = "gold_dataset.json") -> 
         )
 
     except Exception as e:
-        logger.error(f"Failed to create gold dataset: {str(e)}")
-        return StepResult.fail(f"Failed to create gold dataset: {str(e)}")
+        logger.error(f"Failed to create gold dataset: {e!s}")
+        return StepResult.fail(f"Failed to create gold dataset: {e!s}")
 
 
 def display_episode_details(annotations: list[Any]) -> None:

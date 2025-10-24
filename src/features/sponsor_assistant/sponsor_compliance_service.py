@@ -24,6 +24,7 @@ from typing import Any
 
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -118,12 +119,22 @@ class SponsorComplianceAssistant:
         """Load default policy packs for compliance checking."""
         return {
             "family_friendly": {
-                "prohibited_topics": ["violence", "adult_content", "profanity", "drugs", "alcohol"],
+                "prohibited_topics": [
+                    "violence",
+                    "adult_content",
+                    "profanity",
+                    "drugs",
+                    "alcohol",
+                ],
                 "required_warnings": ["mild_language", "intense_discussion"],
                 "min_compliance_score": 0.9,
             },
             "professional": {
-                "prohibited_topics": ["controversial_politics", "profanity", "adult_content"],
+                "prohibited_topics": [
+                    "controversial_politics",
+                    "profanity",
+                    "adult_content",
+                ],
                 "required_warnings": ["business_content", "technical_discussion"],
                 "min_compliance_score": 0.85,
             },
@@ -180,7 +191,12 @@ class SponsorComplianceAssistant:
             if compliance_result:
                 # Cache result
                 if use_cache:
-                    self._cache_result(content_segments, brand_guidelines, policy_pack, compliance_result)
+                    self._cache_result(
+                        content_segments,
+                        brand_guidelines,
+                        policy_pack,
+                        compliance_result,
+                    )
 
                 processing_time = (time.time() - start_time) * 1000
 
@@ -196,7 +212,7 @@ class SponsorComplianceAssistant:
 
         except Exception as e:
             logger.error(f"Compliance analysis failed: {e}")
-            return StepResult.fail(f"Compliance analysis failed: {str(e)}", status="retryable")
+            return StepResult.fail(f"Compliance analysis failed: {e!s}", status="retryable")
 
     def generate_compliant_cut_list(
         self,
@@ -227,7 +243,10 @@ class SponsorComplianceAssistant:
 
             # Generate cut list based on compliance analysis
             cut_list = self._generate_cut_list(
-                content_segments, compliance_report, brand_guidelines, max_video_duration
+                content_segments,
+                compliance_report,
+                brand_guidelines,
+                max_video_duration,
             )
 
             return StepResult.ok(
@@ -239,7 +258,7 @@ class SponsorComplianceAssistant:
 
         except Exception as e:
             logger.error(f"Cut list generation failed: {e}")
-            return StepResult.fail(f"Cut list generation failed: {str(e)}")
+            return StepResult.fail(f"Cut list generation failed: {e!s}")
 
     def generate_sponsor_script(
         self,
@@ -281,7 +300,7 @@ class SponsorComplianceAssistant:
 
         except Exception as e:
             logger.error(f"Sponsor script generation failed: {e}")
-            return StepResult.fail(f"Sponsor script generation failed: {str(e)}")
+            return StepResult.fail(f"Sponsor script generation failed: {e!s}")
 
     def _analyze_compliance(
         self,
@@ -300,7 +319,9 @@ class SponsorComplianceAssistant:
             ComplianceReport with analysis results
         """
         try:
-            from analysis.safety.safety_brand_suitability_service import get_safety_brand_suitability_service
+            from analysis.safety.safety_brand_suitability_service import (
+                get_safety_brand_suitability_service,
+            )
 
             safety_service = get_safety_brand_suitability_service()
 
@@ -694,7 +715,10 @@ class SponsorComplianceAssistant:
         return integration_points
 
     def _generate_sponsor_content(
-        self, sponsor_product: str, sponsor_message: str, brand_guidelines: BrandGuidelines
+        self,
+        sponsor_product: str,
+        sponsor_message: str,
+        brand_guidelines: BrandGuidelines,
     ) -> str:
         """Generate sponsor content based on brand guidelines.
 
@@ -809,7 +833,7 @@ class SponsorComplianceAssistant:
 
         except Exception as e:
             logger.error(f"Failed to get cache stats: {e}")
-            return StepResult.fail(f"Failed to get cache stats: {str(e)}")
+            return StepResult.fail(f"Failed to get cache stats: {e!s}")
 
 
 # Singleton instance

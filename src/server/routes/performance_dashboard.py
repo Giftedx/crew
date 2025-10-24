@@ -2,9 +2,15 @@
 
 from __future__ import annotations
 
-from fastapi import FastAPI
+from typing import TYPE_CHECKING
+
 from fastapi.responses import FileResponse
+
 from server.routers.performance_dashboard import router as performance_router
+
+
+if TYPE_CHECKING:
+    from fastapi import FastAPI
 
 
 def register_performance_dashboard(app: FastAPI) -> None:

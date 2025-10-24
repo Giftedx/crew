@@ -6,6 +6,7 @@ from collections import defaultdict
 from collections.abc import Iterable, Mapping, Sequence
 from typing import Any
 
+
 try:  # pragma: no cover - optional dependency
     from vowpalwabbit import pyvw
 except Exception:  # pragma: no cover - handled gracefully at runtime
@@ -83,16 +84,12 @@ class VowpalWabbitBandit:
             if isinstance(candidate, Mapping):
                 for key, value in candidate.items():
                     features[str(key)] = value
-                candidate_id = (
-                    candidate.get("id") if hasattr(candidate, "get") else None
-                )  # type: ignore[assignment]
+                candidate_id = candidate.get("id") if hasattr(candidate, "get") else None  # type: ignore[assignment]
                 if isinstance(candidate_id, str):
                     descriptor = candidate_id
             else:
                 descriptor = None
-            features.setdefault(
-                "arm", descriptor or f"arm_{idx}_" + _sanitize_token(candidate)
-            )
+            features.setdefault("arm", descriptor or f"arm_{idx}_" + _sanitize_token(candidate))
             action_lines.append(_format_namespace(f"a{idx}", features))
         return shared_line, action_lines
 

@@ -12,10 +12,14 @@ import pickle
 import time
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from ultimate_discord_intelligence_bot.step_result import StepResult
-from ultimate_discord_intelligence_bot.tenancy.context import current_tenant
+from core.cache.unified_config import (
+    get_unified_cache_config,
+)
+from ultimate_discord_intelligence_bot.step_result import StepResult  # type: ignore[import-not-found]
+from ultimate_discord_intelligence_bot.tenancy.context import current_tenant  # type: ignore[import-not-found]
+
 
 # Import existing cache implementations
 try:
@@ -25,12 +29,12 @@ except ImportError:
     Redis = None
 
 try:
-    from core.cache import Cache as CoreCache
+    from core.cache import Cache as CoreCache  # type: ignore[import-not-found]
 except ImportError:
     CoreCache = None
 
 try:
-    from ultimate_discord_intelligence_bot.services.semantic_cache_service import (
+    from ultimate_discord_intelligence_bot.services.semantic_cache_service import (  # type: ignore[import-not-found]
         SemanticCacheService,
     )
 except ImportError:
@@ -45,11 +49,11 @@ class CacheRequest:
 
     key: str
     value: Any = None
-    ttl: Optional[int] = None
+    ttl: int | None = None
     cache_level: str = "auto"  # auto, l1, l2, l3, all
-    tenant_id: Optional[str] = None
-    workspace_id: Optional[str] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    tenant_id: str | None = None
+    workspace_id: str | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -59,10 +63,10 @@ class CacheResult:
     hit: bool
     value: Any = None
     cache_level: str = "none"
-    ttl: Optional[int] = None
+    ttl: int | None = None
     cost: float = 0.0
     latency_ms: float = 0.0
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
     timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
 
@@ -114,15 +118,43 @@ class UnifiedCacheConfig:
 class UnifiedCacheService:
     """Unified three-tier cache service with intelligent optimization"""
 
-    def __init__(self, config: Optional[UnifiedCacheConfig] = None):
-        self.config = config or UnifiedCacheConfig()
+    def __init__(self, config: UnifiedCacheConfig | None = None, use_new_config: bool = True):
+        """Initialize unified cache service.
+
+        Args:
+            config: Legacy UnifiedCacheConfig for backward compatibility
+            use_new_config: If True, use new unified cache configuration (default)
+        """
+        if use_new_config:
+            # Use new unified configuration
+            new_config = get_unified_cache_config()
+            self.config = UnifiedCacheConfig(
+                enable_l1_cache=new_config.memory.enabled,
+                enable_l2_cache=new_config.redis.enabled,
+                enable_l3_cache=new_config.semantic.enabled,
+                enable_rl_optimization=new_config.auto_tier_selection,
+                enable_metrics=new_config.metrics.enabled,
+                l1_max_size=new_config.memory.max_size,
+                l1_default_ttl=new_config.domain.tool.ttl if new_config.domain.tool.enabled else 300,
+                l2_host=new_config.redis.host,
+                l2_port=new_config.redis.port,
+                l2_db=new_config.redis.db,
+                l2_default_ttl=new_config.redis.default_ttl,
+                l3_default_ttl=new_config.semantic.ttl,
+                l3_similarity_threshold=new_config.semantic.similarity_threshold,
+                optimization_interval=300,
+                metrics_reset_interval=3600,
+            )
+        else:
+            # Use legacy config for backward compatibility
+            self.config = config or UnifiedCacheConfig()
         self._initialized = False
-        self._l1_cache: Dict[str, Any] = {}
-        self._l2_client: Optional[Redis] = None
-        self._l3_service: Optional[Any] = None
-        self._core_cache: Optional[Any] = None
-        self._metrics: Dict[str, CacheMetrics] = {}
-        self._last_optimization: Dict[str, datetime] = {}
+        self._l1_cache: dict[str, Any] = {}
+        self._l2_client: Redis | None = None
+        self._l3_service: Any | None = None
+        self._core_cache: Any | None = None
+        self._metrics: dict[str, CacheMetrics] = {}
+        self._last_optimization: dict[str, datetime] = {}
 
         # Initialize cache layers
         self._initialize_cache_layers()
@@ -170,9 +202,7 @@ class UnifiedCacheService:
                     self._core_cache = None
 
             self._initialized = True
-            logger.info(
-                f"Unified cache service initialized with {self._get_active_layers()} layers"
-            )
+            logger.info(f"Unified cache service initialized with {self._get_active_layers()} layers")
 
         except Exception as e:
             logger.error(f"Failed to initialize unified cache service: {e}")
@@ -194,8 +224,8 @@ class UnifiedCacheService:
     async def get(
         self,
         key: str,
-        tenant_id: Optional[str] = None,
-        workspace_id: Optional[str] = None,
+        tenant_id: str | None = None,
+        workspace_id: str | None = None,
     ) -> StepResult:
         """Get value from cache with intelligent tier selection"""
         try:
@@ -238,15 +268,11 @@ class UnifiedCacheService:
                 l2_result = await self._get_l2(namespaced_key)
                 if l2_result.success and l2_result.data is not None:
                     latency = (time.time() - start_time) * 1000
-                    self._record_metrics(
-                        metrics_key, True, "l2", latency, 0.001
-                    )  # Small cost for Redis
+                    self._record_metrics(metrics_key, True, "l2", latency, 0.001)  # Small cost for Redis
 
                     # Promote to L1 cache
                     if self.config.enable_l1_cache:
-                        await self._set_l1(
-                            namespaced_key, l2_result.data, self.config.l1_default_ttl
-                        )
+                        await self._set_l1(namespaced_key, l2_result.data, self.config.l1_default_ttl)
 
                     return StepResult.ok(
                         data=CacheResult(
@@ -264,19 +290,13 @@ class UnifiedCacheService:
                 l3_result = await self._get_l3(key, tenant_id, workspace_id)
                 if l3_result.success and l3_result.data is not None:
                     latency = (time.time() - start_time) * 1000
-                    self._record_metrics(
-                        metrics_key, True, "l3", latency, 0.01
-                    )  # Higher cost for semantic
+                    self._record_metrics(metrics_key, True, "l3", latency, 0.01)  # Higher cost for semantic
 
                     # Promote to L1 and L2 caches
                     if self.config.enable_l1_cache:
-                        await self._set_l1(
-                            namespaced_key, l3_result.data, self.config.l1_default_ttl
-                        )
+                        await self._set_l1(namespaced_key, l3_result.data, self.config.l1_default_ttl)
                     if self.config.enable_l2_cache:
-                        await self._set_l2(
-                            namespaced_key, l3_result.data, self.config.l2_default_ttl
-                        )
+                        await self._set_l2(namespaced_key, l3_result.data, self.config.l2_default_ttl)
 
                     return StepResult.ok(
                         data=CacheResult(
@@ -298,13 +318,9 @@ class UnifiedCacheService:
 
                     # Promote to all available caches
                     if self.config.enable_l1_cache:
-                        await self._set_l1(
-                            namespaced_key, core_result.data, self.config.l1_default_ttl
-                        )
+                        await self._set_l1(namespaced_key, core_result.data, self.config.l1_default_ttl)
                     if self.config.enable_l2_cache:
-                        await self._set_l2(
-                            namespaced_key, core_result.data, self.config.l2_default_ttl
-                        )
+                        await self._set_l2(namespaced_key, core_result.data, self.config.l2_default_ttl)
 
                     return StepResult.ok(
                         data=CacheResult(
@@ -332,17 +348,17 @@ class UnifiedCacheService:
 
         except Exception as e:
             logger.error(f"Error in cache get operation: {e}", exc_info=True)
-            return StepResult.fail(f"Cache get failed: {str(e)}")
+            return StepResult.fail(f"Cache get failed: {e!s}")
 
     async def set(
         self,
         key: str,
         value: Any,
-        ttl: Optional[int] = None,
+        ttl: int | None = None,
         cache_level: str = "auto",
-        tenant_id: Optional[str] = None,
-        workspace_id: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None,
+        tenant_id: str | None = None,
+        workspace_id: str | None = None,
+        metadata: dict[str, Any] | None = None,
     ) -> StepResult:
         """Set value in cache with intelligent tier selection"""
         try:
@@ -370,35 +386,21 @@ class UnifiedCacheService:
             results = []
 
             # Set in L1 Cache
-            if (
-                "l1" in levels
-                and self.config.enable_l1_cache
-                and self._l1_cache is not None
-            ):
+            if "l1" in levels and self.config.enable_l1_cache and self._l1_cache is not None:
                 l1_ttl = ttl or self.config.l1_default_ttl
                 l1_result = await self._set_l1(namespaced_key, value, l1_ttl)
                 results.append(("l1", l1_result.success))
 
             # Set in L2 Cache
-            if (
-                "l2" in levels
-                and self.config.enable_l2_cache
-                and self._l2_client is not None
-            ):
+            if "l2" in levels and self.config.enable_l2_cache and self._l2_client is not None:
                 l2_ttl = ttl or self.config.l2_default_ttl
                 l2_result = await self._set_l2(namespaced_key, value, l2_ttl)
                 results.append(("l2", l2_result.success))
 
             # Set in L3 Cache
-            if (
-                "l3" in levels
-                and self.config.enable_l3_cache
-                and self._l3_service is not None
-            ):
+            if "l3" in levels and self.config.enable_l3_cache and self._l3_service is not None:
                 l3_ttl = ttl or self.config.l3_default_ttl
-                l3_result = await self._set_l3(
-                    key, value, l3_ttl, tenant_id, workspace_id, metadata
-                )
+                l3_result = await self._set_l3(key, value, l3_ttl, tenant_id, workspace_id, metadata)
                 results.append(("l3", l3_result.success))
 
             # Set in Core Cache
@@ -420,13 +422,13 @@ class UnifiedCacheService:
 
         except Exception as e:
             logger.error(f"Error in cache set operation: {e}", exc_info=True)
-            return StepResult.fail(f"Cache set failed: {str(e)}")
+            return StepResult.fail(f"Cache set failed: {e!s}")
 
     async def delete(
         self,
         key: str,
-        tenant_id: Optional[str] = None,
-        workspace_id: Optional[str] = None,
+        tenant_id: str | None = None,
+        workspace_id: str | None = None,
     ) -> StepResult:
         """Delete value from all cache layers"""
         try:
@@ -469,9 +471,7 @@ class UnifiedCacheService:
 
             return StepResult.ok(
                 data={
-                    "deleted_from_layers": [
-                        level for level, success in results if success
-                    ],
+                    "deleted_from_layers": [level for level, success in results if success],
                     "total_layers": len(results),
                     "success_count": success_count,
                 }
@@ -479,11 +479,9 @@ class UnifiedCacheService:
 
         except Exception as e:
             logger.error(f"Error in cache delete operation: {e}", exc_info=True)
-            return StepResult.fail(f"Cache delete failed: {str(e)}")
+            return StepResult.fail(f"Cache delete failed: {e!s}")
 
-    def get_metrics(
-        self, tenant_id: Optional[str] = None, workspace_id: Optional[str] = None
-    ) -> Dict[str, Any]:
+    def get_metrics(self, tenant_id: str | None = None, workspace_id: str | None = None) -> dict[str, Any]:
         """Get cache performance metrics"""
         try:
             if tenant_id and workspace_id:
@@ -509,8 +507,7 @@ class UnifiedCacheService:
             if metrics.total_requests > 0:
                 metrics.avg_latency_ms = (
                     sum(
-                        getattr(metrics, f"{level}_hits", 0)
-                        * (1.0 if level == "l1" else 2.0 if level == "l2" else 5.0)
+                        getattr(metrics, f"{level}_hits", 0) * (1.0 if level == "l1" else 2.0 if level == "l2" else 5.0)
                         for level in ["l1", "l2", "l3"]
                     )
                     / metrics.total_requests
@@ -534,13 +531,11 @@ class UnifiedCacheService:
             logger.error(f"Failed to get cache metrics: {e}")
             return {"error": str(e)}
 
-    def _create_namespaced_key(
-        self, key: str, tenant_id: str, workspace_id: str
-    ) -> str:
+    def _create_namespaced_key(self, key: str, tenant_id: str, workspace_id: str) -> str:
         """Create tenant/workspace namespaced cache key"""
         return f"{tenant_id}:{workspace_id}:{key}"
 
-    def _determine_cache_levels(self, value: Any, ttl: Optional[int]) -> List[str]:
+    def _determine_cache_levels(self, value: Any, ttl: int | None) -> list[str]:
         """Determine which cache levels to use based on value and TTL"""
         levels = []
 
@@ -563,7 +558,7 @@ class UnifiedCacheService:
         try:
             serialized = pickle.dumps(value)
             return len(serialized) < 1024 * 1024  # 1MB limit
-        except:
+        except Exception:
             return False
 
     def _record_metrics(
@@ -597,9 +592,7 @@ class UnifiedCacheService:
 
             # Reset metrics periodically
             now = datetime.now(timezone.utc)
-            if (
-                now - metrics.last_reset
-            ).total_seconds() > self.config.metrics_reset_interval:
+            if (now - metrics.last_reset).total_seconds() > self.config.metrics_reset_interval:
                 metrics.total_requests = 0
                 metrics.total_hits = 0
                 metrics.total_misses = 0
@@ -719,7 +712,7 @@ class UnifiedCacheService:
         ttl: int,
         tenant_id: str,
         workspace_id: str,
-        metadata: Optional[Dict[str, Any]],
+        metadata: dict[str, Any] | None,
     ) -> StepResult:
         """Set in L3 cache (Semantic)"""
         try:
@@ -728,17 +721,13 @@ class UnifiedCacheService:
 
             # Use semantic cache service
             if hasattr(self._l3_service, "set"):
-                result = await self._l3_service.set(
-                    key, value, ttl, tenant_id, workspace_id, metadata
-                )
+                result = await self._l3_service.set(key, value, ttl, tenant_id, workspace_id, metadata)
                 return result
             return StepResult.ok(data=True)
         except Exception as e:
             return StepResult.fail(str(e))
 
-    async def _delete_l3(
-        self, key: str, tenant_id: str, workspace_id: str
-    ) -> StepResult:
+    async def _delete_l3(self, key: str, tenant_id: str, workspace_id: str) -> StepResult:
         """Delete from L3 cache (Semantic)"""
         try:
             if not self._l3_service:

@@ -19,7 +19,11 @@ from core.http_utils import (
 from obs import metrics
 
 from .service import get_settings
-from .state import RouteState
+
+
+if TYPE_CHECKING:
+    from .state import RouteState
+
 
 try:
     from obs.enhanced_langsmith_integration import trace_llm_call as _trace_llm_call
@@ -138,7 +142,10 @@ def execute_online(service: OpenRouterService, state: RouteState) -> dict[str, A
     chosen = state.chosen_model
     provider = state.provider
     provider_family = state.provider_family
-    payload: dict[str, Any] = {"model": chosen, "messages": [{"role": "user", "content": prompt}]}
+    payload: dict[str, Any] = {
+        "model": chosen,
+        "messages": [{"role": "user", "content": prompt}],
+    }
     if provider:
         payload["provider"] = provider
     settings = get_settings()
@@ -160,7 +167,11 @@ def execute_online(service: OpenRouterService, state: RouteState) -> dict[str, A
                     prompt=prompt,
                     response=vllm_result["response"],
                     model=chosen,
-                    metadata={"provider": "vllm", "task_type": state.task_type, "local_inference": True},
+                    metadata={
+                        "provider": "vllm",
+                        "task_type": state.task_type,
+                        "local_inference": True,
+                    },
                     latency_ms=latency_ms,
                     token_usage={
                         "input_tokens": state.tokens_in,
@@ -179,8 +190,12 @@ def execute_online(service: OpenRouterService, state: RouteState) -> dict[str, A
         local_model = chosen.split("/", 1)[1] if "/" in chosen else chosen
         local_payload = {"model": local_model, "messages": payload["messages"]}
         local_url = str(getattr(settings, "local_llm_url", "")).rstrip("/") + "/v1/chat/completions"
-        resp = _call_resilient_post(local_url, json_payload=local_payload, timeout_seconds=REQUEST_TIMEOUT_SECONDS)
-        if resp is not None and getattr(resp, "status_code", 200) < 400:  # noqa: PLR2004
+        resp = _call_resilient_post(
+            local_url,
+            json_payload=local_payload,
+            timeout_seconds=REQUEST_TIMEOUT_SECONDS,
+        )
+        if resp is not None and getattr(resp, "status_code", 200) < 400:
             data = resp.json()
             message = data.get("choices", [{}])[0].get("message", {}).get("content", "")
             latency_ms = (time.perf_counter() - state.start_time) * 1000
@@ -192,7 +207,15 @@ def execute_online(service: OpenRouterService, state: RouteState) -> dict[str, A
                 "tokens": state.tokens_in,
                 "provider": {"order": ["local"]},
             }
-            _post_success(service, state, result_local, tokens_out, latency_ms, provider_family, offline=False)
+            _post_success(
+                service,
+                state,
+                result_local,
+                tokens_out,
+                latency_ms,
+                provider_family,
+                offline=False,
+            )
             return result_local
 
     url = "https://openrouter.ai/api/v1/chat/completions"
@@ -218,7 +241,10 @@ def execute_online(service: OpenRouterService, state: RouteState) -> dict[str, A
                 "POST",
                 url,
                 request_callable=lambda u, **_: _call_resilient_post(
-                    u, headers=headers, json_payload=payload, timeout_seconds=REQUEST_TIMEOUT_SECONDS
+                    u,
+                    headers=headers,
+                    json_payload=payload,
+                    timeout_seconds=REQUEST_TIMEOUT_SECONDS,
                 ),
                 max_attempts=3,
             )
@@ -260,9 +286,14 @@ def execute_online(service: OpenRouterService, state: RouteState) -> dict[str, A
             )
             return error
     else:
-        resp = _call_resilient_post(url, headers=headers, json_payload=payload, timeout_seconds=REQUEST_TIMEOUT_SECONDS)
+        resp = _call_resilient_post(
+            url,
+            headers=headers,
+            json_payload=payload,
+            timeout_seconds=REQUEST_TIMEOUT_SECONDS,
+        )
 
-    if resp is None or getattr(resp, "status_code", 200) >= 400:  # noqa: PLR2004
+    if resp is None or getattr(resp, "status_code", 200) >= 400:
         code = getattr(resp, "status_code", "unknown")
         raise RuntimeError(f"openrouter_error status={code}")
     data = resp.json() if resp is not None else {}
@@ -350,7 +381,10 @@ def _post_success(
     )
     labels = state.labels()
     metrics.LLM_MODEL_SELECTED.labels(
-        **labels, task=state.task_type, model=state.chosen_model, provider=provider_family
+        **labels,
+        task=state.task_type,
+        model=state.chosen_model,
+        provider=provider_family,
     ).inc()
     metrics.LLM_ESTIMATED_COST.labels(**labels, model=state.chosen_model, provider=provider_family).observe(
         state.projected_cost
@@ -407,7 +441,11 @@ def _persist_caches(service: OpenRouterService, state: RouteState, result: dict[
             # Call cache.set() directly - no longer async
             if sc is not None:
                 sc.set(state.prompt, state.chosen_model, result, namespace=state.namespace)
-            log.debug("semantic_cache_set completed for model=%s ns=%s", state.chosen_model, state.namespace)
+            log.debug(
+                "semantic_cache_set completed for model=%s ns=%s",
+                state.chosen_model,
+                state.namespace,
+            )
         except Exception:
             pass
     if service.cache and state.cache_key:
@@ -435,7 +473,12 @@ def _compute_reward(service: OpenRouterService, state: RouteState, latency_ms: f
         ctx_t = state.ctx_effective
         rl = service.tenant_registry.get_rl_overrides(ctx_t) if ctx_t else {}
     w_cost = float(rl.get("reward_cost_weight", getattr(settings, "reward_cost_weight", 0.5) or 0.5))
-    w_lat = float(rl.get("reward_latency_weight", getattr(settings, "reward_latency_weight", 0.5) or 0.5))
+    w_lat = float(
+        rl.get(
+            "reward_latency_weight",
+            getattr(settings, "reward_latency_weight", 0.5) or 0.5,
+        )
+    )
     if w_cost == 0.0 and w_lat == 0.0:
         w_cost = w_lat = 0.5
     norm = w_cost + w_lat
@@ -452,7 +495,12 @@ def _compute_reward(service: OpenRouterService, state: RouteState, latency_ms: f
                 else state.projected_cost
             )
         cost_norm = min(1.0, state.projected_cost / max(denom, 1e-9))
-    lat_window = float(rl.get("reward_latency_ms_window", getattr(settings, "reward_latency_ms_window", 2000) or 2000))
+    lat_window = float(
+        rl.get(
+            "reward_latency_ms_window",
+            getattr(settings, "reward_latency_ms_window", 2000) or 2000,
+        )
+    )
     lat_window = max(1.0, lat_window)
     lat_norm = min(1.0, latency_ms / lat_window)
     return max(0.0, 1.0 - w_cost * cost_norm - w_lat * lat_norm)

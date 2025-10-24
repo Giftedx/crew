@@ -10,6 +10,7 @@ from typing import Any
 
 from core import flags
 
+
 try:
     from core.learning_engine import LearningEngine
 except Exception:  # pragma: no cover - fallback when heavy deps unavailable
@@ -82,4 +83,4 @@ def filter_text(
     return redacted, PrivacyReport(spans, counts, decisions)
 
 
-__all__ = ["filter_text", "PrivacyReport"]
+__all__ = ["PrivacyReport", "filter_text"]

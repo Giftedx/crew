@@ -39,7 +39,11 @@ def sample_crew_result() -> dict[str, Any]:
         - 05:30 - Discussion of alignment problems
         - 10:45 - Testing framework requirements
         """,
-        "token_usage": {"total_tokens": 1250, "prompt_tokens": 850, "completion_tokens": 400},
+        "token_usage": {
+            "total_tokens": 1250,
+            "prompt_tokens": 850,
+            "completion_tokens": 400,
+        },
         "tasks_output": [
             {
                 "description": "Acquire content",
@@ -103,7 +107,11 @@ def sample_analysis_output() -> dict[str, Any]:
             {
                 "theme": "Transformer Architecture",
                 "confidence": 0.92,
-                "evidence": ["attention mechanisms", "layer normalization", "positional encodings"],
+                "evidence": [
+                    "attention mechanisms",
+                    "layer normalization",
+                    "positional encodings",
+                ],
             },
             {
                 "theme": "Training Methodology",
@@ -123,9 +131,21 @@ def sample_analysis_output() -> dict[str, Any]:
             {"text": "large language models", "type": "CONCEPT", "count": 12},
         ],
         "timeline": [
-            {"timestamp": "00:00:15", "event": "Introduction to LLMs", "importance": 0.75},
-            {"timestamp": "00:05:45", "event": "Attention mechanisms explained", "importance": 0.95},
-            {"timestamp": "00:30:00", "event": "Pre-training discussion", "importance": 0.88},
+            {
+                "timestamp": "00:00:15",
+                "event": "Introduction to LLMs",
+                "importance": 0.75,
+            },
+            {
+                "timestamp": "00:05:45",
+                "event": "Attention mechanisms explained",
+                "importance": 0.95,
+            },
+            {
+                "timestamp": "00:30:00",
+                "event": "Pre-training discussion",
+                "importance": 0.88,
+            },
         ],
         "confidence_score": 0.82,
         "coherence_score": 0.91,
@@ -152,7 +172,11 @@ def sample_crew_result_with_placeholders() -> dict[str, Any]:
         **Sentiment:** The overall tone is [SENTIMENT]
         **Confidence:** [CONFIDENCE_SCORE]
         """,
-        "token_usage": {"total_tokens": 250, "prompt_tokens": 150, "completion_tokens": 100},
+        "token_usage": {
+            "total_tokens": 250,
+            "prompt_tokens": 150,
+            "completion_tokens": 100,
+        },
         "tasks_output": [],
     }
 
@@ -168,8 +192,16 @@ def sample_incomplete_crew_result() -> dict[str, Any]:
         # Transcription
         [Transcription failed - audio quality too low]
         """,
-        "token_usage": {"total_tokens": 80, "prompt_tokens": 50, "completion_tokens": 30},
+        "token_usage": {
+            "total_tokens": 80,
+            "prompt_tokens": 50,
+            "completion_tokens": 30,
+        },
         "tasks_output": [
-            {"description": "Acquire content", "summary": "Success", "raw": "Downloaded"},
+            {
+                "description": "Acquire content",
+                "summary": "Success",
+                "raw": "Downloaded",
+            },
         ],
     }

@@ -25,6 +25,7 @@ from typing import Any, Literal
 
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
+
 logger = logging.getLogger(__name__)
 
 # Try to import librosa (optional dependency)
@@ -134,9 +135,7 @@ class HighlightDetectionService:
 
             # Check cache first
             if use_cache:
-                cache_result = self._check_cache(
-                    audio_path, transcript_segments, chat_data, model
-                )
+                cache_result = self._check_cache(audio_path, transcript_segments, chat_data, model)
                 if cache_result:
                     logger.info("Highlight detection cache hit")
                     return StepResult.ok(
@@ -189,7 +188,7 @@ class HighlightDetectionService:
 
         except Exception as e:
             logger.error(f"Highlight detection failed: {e}")
-            return StepResult.fail(f"Detection failed: {str(e)}", status="retryable")
+            return StepResult.fail(f"Detection failed: {e!s}", status="retryable")
 
     def _select_model(self, model_alias: str) -> str:
         """Select actual model configuration from alias.
@@ -233,14 +232,10 @@ class HighlightDetectionService:
             # Analyze different signals
             audio_scores = self._analyze_audio_energy(audio_path, total_duration)
             chat_scores = self._analyze_chat_spikes(chat_data, total_duration)
-            semantic_scores = self._analyze_semantic_novelty(
-                transcript_segments, total_duration
-            )
+            semantic_scores = self._analyze_semantic_novelty(transcript_segments, total_duration)
 
             # Combine signals
-            combined_scores = self._combine_signals(
-                audio_scores, chat_scores, semantic_scores, total_duration
-            )
+            combined_scores = self._combine_signals(audio_scores, chat_scores, semantic_scores, total_duration)
 
             # Detect highlight segments
             highlights = self._detect_highlight_segments(combined_scores, min_duration)
@@ -256,9 +251,7 @@ class HighlightDetectionService:
             logger.error(f"Highlight detection failed: {e}")
             return None
 
-    def _get_total_duration(
-        self, audio_path: str | None, transcript_segments: list[dict[str, Any]] | None
-    ) -> float:
+    def _get_total_duration(self, audio_path: str | None, transcript_segments: list[dict[str, Any]] | None) -> float:
         """Get total duration from audio or transcript segments.
 
         Args:
@@ -271,9 +264,7 @@ class HighlightDetectionService:
         if transcript_segments:
             # Use transcript segments to estimate duration
             if transcript_segments:
-                last_segment = max(
-                    transcript_segments, key=lambda s: s.get("end_time", 0)
-                )
+                last_segment = max(transcript_segments, key=lambda s: s.get("end_time", 0))
                 return last_segment.get("end_time", 0) + 30  # Add buffer
 
         # Fallback to audio file duration
@@ -289,9 +280,7 @@ class HighlightDetectionService:
         # Default fallback
         return 3600.0  # Assume 1 hour
 
-    def _analyze_audio_energy(
-        self, audio_path: str | None, duration: float
-    ) -> list[float]:
+    def _analyze_audio_energy(self, audio_path: str | None, duration: float) -> list[float]:
         """Analyze audio energy over time.
 
         Args:
@@ -313,9 +302,7 @@ class HighlightDetectionService:
             frame_length = int(sr * 10)  # 10-second frames
             hop_length = frame_length // 2
 
-            rms = librosa.feature.rms(
-                y=y, frame_length=frame_length, hop_length=hop_length
-            )[0]
+            rms = librosa.feature.rms(y=y, frame_length=frame_length, hop_length=hop_length)[0]
 
             # Normalize to 0-1 range
             if len(rms) > 0:
@@ -338,9 +325,7 @@ class HighlightDetectionService:
             logger.warning(f"Audio energy analysis failed: {e}")
             return [0.5] * int(duration / 10)
 
-    def _analyze_chat_spikes(
-        self, chat_data: list[dict[str, Any]] | None, duration: float
-    ) -> list[float]:
+    def _analyze_chat_spikes(self, chat_data: list[dict[str, Any]] | None, duration: float) -> list[float]:
         """Analyze chat message frequency for spikes.
 
         Args:
@@ -390,7 +375,7 @@ class HighlightDetectionService:
         # Simple novelty based on text length and topic changes
         novelty_scores = []
 
-        for i, segment in enumerate(transcript_segments):
+        for _i, segment in enumerate(transcript_segments):
             # Simple novelty metrics
             text_length = len(segment.get("text", ""))
 
@@ -408,9 +393,7 @@ class HighlightDetectionService:
         num_segments = int(duration / 10)
         if len(novelty_scores) < num_segments:
             # Extend with average score
-            avg_score = (
-                sum(novelty_scores) / len(novelty_scores) if novelty_scores else 0.5
-            )
+            avg_score = sum(novelty_scores) / len(novelty_scores) if novelty_scores else 0.5
             novelty_scores.extend([avg_score] * (num_segments - len(novelty_scores)))
         elif len(novelty_scores) > num_segments:
             # Truncate
@@ -439,15 +422,9 @@ class HighlightDetectionService:
         num_segments = int(duration / 10)
 
         # Ensure all score lists have the same length
-        audio_scores = audio_scores[:num_segments] + [0.5] * max(
-            0, num_segments - len(audio_scores)
-        )
-        chat_scores = chat_scores[:num_segments] + [0.0] * max(
-            0, num_segments - len(chat_scores)
-        )
-        semantic_scores = semantic_scores[:num_segments] + [0.5] * max(
-            0, num_segments - len(semantic_scores)
-        )
+        audio_scores = audio_scores[:num_segments] + [0.5] * max(0, num_segments - len(audio_scores))
+        chat_scores = chat_scores[:num_segments] + [0.0] * max(0, num_segments - len(chat_scores))
+        semantic_scores = semantic_scores[:num_segments] + [0.5] * max(0, num_segments - len(semantic_scores))
 
         # Combine scores using weights
         combined_scores = []
@@ -461,9 +438,7 @@ class HighlightDetectionService:
 
         return combined_scores
 
-    def _detect_highlight_segments(
-        self, scores: list[float], min_duration: float
-    ) -> list[HighlightSegment]:
+    def _detect_highlight_segments(self, scores: list[float], min_duration: float) -> list[HighlightSegment]:
         """Detect highlight segments from combined scores.
 
         Args:
@@ -497,12 +472,9 @@ class HighlightDetectionService:
                             duration=highlight_duration,
                             highlight_score=current_score,
                             confidence=min(current_score, 1.0),
-                            audio_energy_score=current_score
-                            * self._signal_weights["audio_energy"],
-                            chat_spike_score=current_score
-                            * self._signal_weights["chat_spikes"],
-                            semantic_novelty_score=current_score
-                            * self._signal_weights["semantic_novelty"],
+                            audio_energy_score=current_score * self._signal_weights["audio_energy"],
+                            chat_spike_score=current_score * self._signal_weights["chat_spikes"],
+                            semantic_novelty_score=current_score * self._signal_weights["semantic_novelty"],
                         )
                         highlights.append(highlight)
 
@@ -520,12 +492,9 @@ class HighlightDetectionService:
                     duration=highlight_duration,
                     highlight_score=current_score,
                     confidence=min(current_score, 1.0),
-                    audio_energy_score=current_score
-                    * self._signal_weights["audio_energy"],
-                    chat_spike_score=current_score
-                    * self._signal_weights["chat_spikes"],
-                    semantic_novelty_score=current_score
-                    * self._signal_weights["semantic_novelty"],
+                    audio_energy_score=current_score * self._signal_weights["audio_energy"],
+                    chat_spike_score=current_score * self._signal_weights["chat_spikes"],
+                    semantic_novelty_score=current_score * self._signal_weights["semantic_novelty"],
                 )
                 highlights.append(highlight)
 
@@ -577,7 +546,7 @@ class HighlightDetectionService:
         import hashlib
 
         # Create cache key from inputs
-        combined = f"{audio_path}:{str(transcript_segments)}:{str(chat_data)}:{model}"
+        combined = f"{audio_path}:{transcript_segments!s}:{chat_data!s}:{model}"
         cache_key = hashlib.sha256(combined.encode()).hexdigest()
 
         if cache_key in self._detection_cache:
@@ -606,7 +575,7 @@ class HighlightDetectionService:
         import time
 
         # Create cache key
-        combined = f"{audio_path}:{str(transcript_segments)}:{str(chat_data)}:{model}"
+        combined = f"{audio_path}:{transcript_segments!s}:{chat_data!s}:{model}"
         cache_key = hashlib.sha256(combined.encode()).hexdigest()
 
         # Add processing timestamp
@@ -643,9 +612,7 @@ class HighlightDetectionService:
             stats = {
                 "total_cached": len(self._detection_cache),
                 "cache_size_limit": self.cache_size,
-                "utilization": len(self._detection_cache) / self.cache_size
-                if self.cache_size > 0
-                else 0.0,
+                "utilization": len(self._detection_cache) / self.cache_size if self.cache_size > 0 else 0.0,
                 "models_cached": {},
             }
 
@@ -658,7 +625,7 @@ class HighlightDetectionService:
 
         except Exception as e:
             logger.error(f"Failed to get cache stats: {e}")
-            return StepResult.fail(f"Failed to get cache stats: {str(e)}")
+            return StepResult.fail(f"Failed to get cache stats: {e!s}")
 
 
 # Singleton instance

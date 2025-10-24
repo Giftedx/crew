@@ -10,6 +10,7 @@ import os
 from collections.abc import Callable
 from typing import Any
 
+
 try:
     from ultimate_discord_intelligence_bot.step_result import StepResult  # type: ignore
 except Exception:  # pragma: no cover - lightweight stub for local/dev
@@ -37,7 +38,12 @@ def is_enabled(name: str, default: bool = False) -> bool:
 
     Recognizes 1/true/yes/on (case-insensitive) as truthy.
     """
-    return os.getenv(name, "1" if default else "0").lower() in ("1", "true", "yes", "on")
+    return os.getenv(name, "1" if default else "0").lower() in (
+        "1",
+        "true",
+        "yes",
+        "on",
+    )
 
 
 def api_key_ok(header_val: str | None) -> bool:
@@ -97,14 +103,19 @@ def load_tools() -> dict[str, ToolFunc]:  # pragma: no cover - resolved dynamica
 
     if is_enabled("ENABLE_A2A_SKILL_RAG_OFFLINE", True):
         try:
-            from ultimate_discord_intelligence_bot.tools.rag_offline_tool import rag_query  # type: ignore
+            from ultimate_discord_intelligence_bot.tools.rag_offline_tool import (
+                rag_query,
+            )  # type: ignore
 
             tools["tools.rag_query"] = rag_query  # type: ignore[assignment]
         except Exception:
             # Offline TF-IDF-lite fallback using Jaccard similarity
             def _rag_query(query: str, documents: list[str], top_k: int = 3) -> StepResult:
                 if not isinstance(documents, list):
-                    return StepResult.fail("Invalid params for tools.rag_query: documents must be a list", data={})
+                    return StepResult.fail(
+                        "Invalid params for tools.rag_query: documents must be a list",
+                        data={},
+                    )
                 q_tokens = {t.lower() for t in str(query or "").split() if t}
                 hits: list[dict[str, Any]] = []
                 for idx, doc in enumerate(documents):
@@ -121,7 +132,9 @@ def load_tools() -> dict[str, ToolFunc]:  # pragma: no cover - resolved dynamica
 
     if is_enabled("ENABLE_A2A_SKILL_RAG_VECTOR", True):
         try:
-            from ultimate_discord_intelligence_bot.tools.rag_vector_tool import rag_query_vs  # type: ignore
+            from ultimate_discord_intelligence_bot.tools.rag_vector_tool import (
+                rag_query_vs,
+            )  # type: ignore
 
             tools["tools.rag_query_vs"] = rag_query_vs  # type: ignore[assignment]
         except Exception:
@@ -129,7 +142,9 @@ def load_tools() -> dict[str, ToolFunc]:  # pragma: no cover - resolved dynamica
 
     if is_enabled("ENABLE_A2A_SKILL_RAG_INGEST", False):
         try:
-            from ultimate_discord_intelligence_bot.tools.rag_ingest_tool import rag_ingest  # type: ignore
+            from ultimate_discord_intelligence_bot.tools.rag_ingest_tool import (
+                rag_ingest,
+            )  # type: ignore
 
             tools["tools.rag_ingest"] = rag_ingest  # type: ignore[assignment]
         except Exception:
@@ -137,7 +152,9 @@ def load_tools() -> dict[str, ToolFunc]:  # pragma: no cover - resolved dynamica
 
     if is_enabled("ENABLE_A2A_SKILL_RAG_INGEST_URL", False):
         try:
-            from ultimate_discord_intelligence_bot.tools.rag_ingest_url_tool import rag_ingest_url  # type: ignore
+            from ultimate_discord_intelligence_bot.tools.rag_ingest_url_tool import (
+                rag_ingest_url,
+            )  # type: ignore
 
             tools["tools.rag_ingest_url"] = rag_ingest_url  # type: ignore[assignment]
         except Exception:
@@ -145,7 +162,9 @@ def load_tools() -> dict[str, ToolFunc]:  # pragma: no cover - resolved dynamica
 
     if is_enabled("ENABLE_A2A_SKILL_RAG_HYBRID", True):
         try:
-            from ultimate_discord_intelligence_bot.tools.rag_hybrid_tool import rag_hybrid  # type: ignore
+            from ultimate_discord_intelligence_bot.tools.rag_hybrid_tool import (
+                rag_hybrid,
+            )  # type: ignore
 
             tools["tools.rag_hybrid"] = rag_hybrid  # type: ignore[assignment]
         except Exception:
@@ -189,8 +208,15 @@ def load_tools() -> dict[str, ToolFunc]:  # pragma: no cover - resolved dynamica
                 key_findings = [s[:80] for s in sources[: max(0, int(max_items or 5))]]
                 citations = [{"type": "source", "index": i} for i in range(len(key_findings))]
                 risks = ["Limited sources", "Heuristic synthesis"]
-                counts = {"sources": len(sources), "tokens_estimate": sum(len(s.split()) for s in sources)}
-                meta = {"multi_agent": True, "quality_score": None, "execution_time": None}
+                counts = {
+                    "sources": len(sources),
+                    "tokens_estimate": sum(len(s.split()) for s in sources),
+                }
+                meta = {
+                    "multi_agent": True,
+                    "quality_score": None,
+                    "execution_time": None,
+                }
                 data = {
                     "outline": outline or ["Overview"],
                     "key_findings": key_findings or ["No sources provided"],
@@ -211,4 +237,4 @@ def get_tools() -> dict[str, ToolFunc]:
     return load_tools()
 
 
-__all__ = ["ToolFunc", "is_enabled", "api_key_ok", "get_tools", "load_tools"]
+__all__ = ["ToolFunc", "api_key_ok", "get_tools", "is_enabled", "load_tools"]

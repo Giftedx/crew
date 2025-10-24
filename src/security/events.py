@@ -11,7 +11,7 @@ from typing import Any
 from obs.logging import logger
 
 
-def log_security_event(  # noqa: PLR0913 - explicit structured fields aid audit log clarity & downstream searchability
+def log_security_event(
     *,
     actor: str,
     action: str,
@@ -21,7 +21,7 @@ def log_security_event(  # noqa: PLR0913 - explicit structured fields aid audit 
     tenant: str | None = None,
     workspace: str | None = None,
     **extra: Any,
-) -> None:  # noqa: PLR0913 - explicit structured fields aid audit log clarity
+) -> None:
     """Emit a structured security event.
 
     Parameters

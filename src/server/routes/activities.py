@@ -1,16 +1,23 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from fastapi import FastAPI, Request
+
+if TYPE_CHECKING:
+    from fastapi import FastAPI, Request
 
 
 def register_activities_echo(app: FastAPI, settings: Any) -> None:
     try:
         import os as _os
 
-        if _os.getenv("ENABLE_ACTIVITIES_ECHO", "0").lower() not in ("1", "true", "yes", "on"):
+        if _os.getenv("ENABLE_ACTIVITIES_ECHO", "0").lower() not in (
+            "1",
+            "true",
+            "yes",
+            "on",
+        ):
             return
 
         @app.get("/activities/echo")

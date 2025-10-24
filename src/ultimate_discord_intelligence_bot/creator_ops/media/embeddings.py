@@ -10,17 +10,22 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-import torch
-from qdrant_client import QdrantClient
-from qdrant_client.http import models
-from sentence_transformers import SentenceTransformer
+import torch  # type: ignore[import-not-found]
+from sentence_transformers import SentenceTransformer  # type: ignore[import-not-found]
 
+from memory.qdrant_provider import get_qdrant_client
 from ultimate_discord_intelligence_bot.creator_ops.config import CreatorOpsConfig
-from ultimate_discord_intelligence_bot.creator_ops.media.alignment import AlignedTranscript
-from ultimate_discord_intelligence_bot.creator_ops.media.nlp import NLPResult
 from ultimate_discord_intelligence_bot.step_result import StepResult
+
+
+if TYPE_CHECKING:
+    from ultimate_discord_intelligence_bot.creator_ops.media.alignment import (
+        AlignedTranscript,
+    )
+    from ultimate_discord_intelligence_bot.creator_ops.media.nlp import NLPResult
+
 
 logger = logging.getLogger(__name__)
 
@@ -107,23 +112,21 @@ class EmbeddingsGenerator:
             logger.info(f"Loaded embedding model {model_name} on {self.device}")
 
         except Exception as e:
-            logger.error(f"Failed to initialize embedding model: {str(e)}")
+            logger.error(f"Failed to initialize embedding model: {e!s}")
             raise
 
     def _initialize_qdrant(self) -> None:
         """Initialize Qdrant client."""
         try:
-            self.qdrant_client = QdrantClient(
-                url=self.config.qdrant_url,
-                api_key=self.config.qdrant_api_key,
-            )
+            # Use centralized provider which handles config/env and provides dummy fallback in tests
+            self.qdrant_client = get_qdrant_client()
 
             # Test connection
             collections = self.qdrant_client.get_collections()
             logger.info(f"Connected to Qdrant. Found {len(collections.collections)} collections")
 
         except Exception as e:
-            logger.error(f"Failed to initialize Qdrant client: {str(e)}")
+            logger.error(f"Failed to initialize Qdrant client: {e!s}")
             raise
 
     def generate_embeddings(
@@ -171,7 +174,9 @@ class EmbeddingsGenerator:
                 )
 
                 # Create embedding objects
-                for j, (text, metadata, embedding) in enumerate(zip(batch_texts, batch_metadata, batch_embeddings)):
+                for _j, (text, metadata, embedding) in enumerate(
+                    zip(batch_texts, batch_metadata, batch_embeddings, strict=False)
+                ):
                     embedding_obj = Embedding(
                         vector=embedding.tolist(),
                         text=text,
@@ -195,8 +200,8 @@ class EmbeddingsGenerator:
             return StepResult.ok(data=result)
 
         except Exception as e:
-            logger.error(f"Embedding generation failed: {str(e)}")
-            return StepResult.fail(f"Embedding generation failed: {str(e)}")
+            logger.error(f"Embedding generation failed: {e!s}")
+            return StepResult.fail(f"Embedding generation failed: {e!s}")
 
     def generate_transcript_embeddings(
         self,
@@ -240,14 +245,18 @@ class EmbeddingsGenerator:
                 if nlp_result:
                     # Find corresponding sentiment
                     sentiment = next(
-                        (s for s in nlp_result.sentiment_analysis if s.start_time == segment.start_time), None
+                        (s for s in nlp_result.sentiment_analysis if s.start_time == segment.start_time),
+                        None,
                     )
                     if sentiment:
                         metadata["sentiment"] = sentiment.label
                         metadata["sentiment_score"] = sentiment.score
 
                     # Find corresponding safety analysis
-                    safety = next((s for s in nlp_result.content_safety if s.start_time == segment.start_time), None)
+                    safety = next(
+                        (s for s in nlp_result.content_safety if s.start_time == segment.start_time),
+                        None,
+                    )
                     if safety:
                         metadata["toxicity_score"] = safety.toxicity_score
                         metadata["brand_suitability"] = safety.brand_suitability_score
@@ -275,8 +284,8 @@ class EmbeddingsGenerator:
             )
 
         except Exception as e:
-            logger.error(f"Transcript embedding generation failed: {str(e)}")
-            return StepResult.fail(f"Transcript embedding generation failed: {str(e)}")
+            logger.error(f"Transcript embedding generation failed: {e!s}")
+            return StepResult.fail(f"Transcript embedding generation failed: {e!s}")
 
     def _store_embeddings_in_qdrant(
         self,
@@ -289,14 +298,30 @@ class EmbeddingsGenerator:
             try:
                 self.qdrant_client.get_collection(collection_name)
             except Exception:
-                # Collection doesn't exist, create it
-                self.qdrant_client.create_collection(
-                    collection_name=collection_name,
-                    vectors_config=models.VectorParams(
-                        size=len(embeddings[0].vector),
-                        distance=models.Distance.COSINE,
-                    ),
-                )
+                # Collection doesn't exist, create it (lazy-import model types with fallbacks)
+                vec_size = len(embeddings[0].vector) if embeddings else 384
+                try:
+                    from qdrant_client.http import models as _qmodels  # type: ignore
+
+                    vec_cfg = _qmodels.VectorParams(size=vec_size, distance=_qmodels.Distance.COSINE)
+                except Exception:
+                    try:
+                        from qdrant_client import models as _legacy_models  # type: ignore
+
+                        vec_cfg = _legacy_models.VectorParams(
+                            size=vec_size, distance=getattr(_legacy_models.Distance, "COSINE", "Cosine")
+                        )
+                    except Exception:
+                        vec_cfg = {"size": vec_size, "distance": "Cosine"}
+
+                try:
+                    self.qdrant_client.create_collection(
+                        collection_name=collection_name,
+                        vectors_config=vec_cfg,
+                    )
+                except TypeError:
+                    # For dummy/test clients that only accept dicts
+                    self.qdrant_client.create_collection(collection_name, vectors_config=vec_cfg)  # type: ignore
                 logger.info(f"Created Qdrant collection: {collection_name}")
 
             # Prepare points for insertion
@@ -304,15 +329,42 @@ class EmbeddingsGenerator:
             for i, embedding in enumerate(embeddings):
                 point_id = f"{collection_name}_{i}_{datetime.utcnow().timestamp()}"
 
-                point = models.PointStruct(
-                    id=point_id,
-                    vector=embedding.vector,
-                    payload={
-                        "text": embedding.text,
-                        "metadata": embedding.metadata,
-                        "created_at": embedding.created_at.isoformat(),
-                    },
-                )
+                # Build point struct with lazy imports/fallbacks
+                try:
+                    from qdrant_client.http import models as _qmodels  # type: ignore
+
+                    point = _qmodels.PointStruct(
+                        id=point_id,
+                        vector=embedding.vector,
+                        payload={
+                            "text": embedding.text,
+                            "metadata": embedding.metadata,
+                            "created_at": embedding.created_at.isoformat(),
+                        },
+                    )
+                except Exception:
+                    try:
+                        from qdrant_client import models as _legacy_models  # type: ignore
+
+                        point = _legacy_models.PointStruct(
+                            id=point_id,
+                            vector=embedding.vector,
+                            payload={
+                                "text": embedding.text,
+                                "metadata": embedding.metadata,
+                                "created_at": embedding.created_at.isoformat(),
+                            },
+                        )
+                    except Exception:
+                        point = {
+                            "id": point_id,
+                            "vector": embedding.vector,
+                            "payload": {
+                                "text": embedding.text,
+                                "metadata": embedding.metadata,
+                                "created_at": embedding.created_at.isoformat(),
+                            },
+                        }
                 points.append(point)
 
             # Insert points
@@ -325,7 +377,7 @@ class EmbeddingsGenerator:
             return [point.id for point in points]
 
         except Exception as e:
-            logger.error(f"Failed to store embeddings in Qdrant: {str(e)}")
+            logger.error(f"Failed to store embeddings in Qdrant: {e!s}")
             raise
 
     def search_similar_content(
@@ -383,8 +435,8 @@ class EmbeddingsGenerator:
             )
 
         except Exception as e:
-            logger.error(f"Semantic search failed: {str(e)}")
-            return StepResult.fail(f"Semantic search failed: {str(e)}")
+            logger.error(f"Semantic search failed: {e!s}")
+            return StepResult.fail(f"Semantic search failed: {e!s}")
 
     def get_collection_info(self, collection_name: str) -> StepResult:
         """Get information about a Qdrant collection."""
@@ -403,8 +455,8 @@ class EmbeddingsGenerator:
             )
 
         except Exception as e:
-            logger.error(f"Failed to get collection info: {str(e)}")
-            return StepResult.fail(f"Failed to get collection info: {str(e)}")
+            logger.error(f"Failed to get collection info: {e!s}")
+            return StepResult.fail(f"Failed to get collection info: {e!s}")
 
     def delete_collection(self, collection_name: str) -> StepResult:
         """Delete a Qdrant collection."""
@@ -415,8 +467,8 @@ class EmbeddingsGenerator:
             return StepResult.ok(data={"deleted": True, "collection_name": collection_name})
 
         except Exception as e:
-            logger.error(f"Failed to delete collection: {str(e)}")
-            return StepResult.fail(f"Failed to delete collection: {str(e)}")
+            logger.error(f"Failed to delete collection: {e!s}")
+            return StepResult.fail(f"Failed to delete collection: {e!s}")
 
     def get_model_info(self) -> dict[str, Any]:
         """Get model information."""

@@ -11,6 +11,9 @@ import math
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
+from memory.vector_store import VectorStore
+
+
 logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -26,8 +29,6 @@ try:
     QDRANT_AVAILABLE = _ils.find_spec("qdrant_client") is not None
 except Exception:  # pragma: no cover
     QDRANT_AVAILABLE = False
-
-from memory.vector_store import VectorStore
 
 
 @dataclass
@@ -100,7 +101,11 @@ class EnhancedVectorStore(VectorStore):
             self._sparse_vectors_supported = False
 
     def create_collection_with_hybrid_config(
-        self, namespace: str, dimension: int, enable_sparse: bool = True, quantization: bool = True
+        self,
+        namespace: str,
+        dimension: int,
+        enable_sparse: bool = True,
+        quantization: bool = True,
     ) -> bool:
         """Create collection optimized for hybrid search."""
         if not QDRANT_AVAILABLE:

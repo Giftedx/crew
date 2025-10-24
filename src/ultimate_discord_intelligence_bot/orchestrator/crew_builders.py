@@ -12,13 +12,9 @@ This file is maintained for backward compatibility.
 
 import logging
 
-logger = logging.getLogger(__name__)
-
-
 # ============================================================================
 # Backward Compatibility Imports
 # ============================================================================
-
 # Re-export CrewAI types for backward compatibility
 from crewai import Crew, Process, Task
 
@@ -34,23 +30,26 @@ from .crew_builders_focused import (
 )
 from .task_callbacks import task_completion_callback
 
+
+logger = logging.getLogger(__name__)
+
 # Export all functions for backward compatibility
 __all__ = [
     # CrewAI types
     "Crew",
     "Process",
     "Task",
+    "build_crew_with_tasks",
     # Main crew building function
     "build_intelligence_crew",
     # Task creation functions
     "create_acquisition_task",
-    "create_transcription_task",
     "create_analysis_tasks",
     "create_knowledge_integration_task",
-    "build_crew_with_tasks",
+    "create_transcription_task",
+    "get_or_create_agent",
     # Agent management functions
     "populate_agent_tool_context",
-    "get_or_create_agent",
     # Task callbacks
     "task_completion_callback",
 ]

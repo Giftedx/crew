@@ -31,7 +31,9 @@ class TestDetectPlaceholderResponses:
         """Test detection of placeholder via short transcript."""
         with caplog.at_level(logging.ERROR):
             quality_assessors.detect_placeholder_responses(
-                "transcription", {"transcript": "Short"}, logger_instance=logging.getLogger()
+                "transcription",
+                {"transcript": "Short"},
+                logger_instance=logging.getLogger(),
             )
 
         assert "too short" in caplog.text.lower()
@@ -62,7 +64,9 @@ class TestDetectPlaceholderResponses:
         """Test detection in analysis insights."""
         with caplog.at_level(logging.ERROR):
             quality_assessors.detect_placeholder_responses(
-                "analysis", {"insights": "TODO: Add real insights here"}, logger_instance=logging.getLogger()
+                "analysis",
+                {"insights": "TODO: Add real insights here"},
+                logger_instance=logging.getLogger(),
             )
 
         assert "placeholder pattern" in caplog.text.lower()
@@ -117,7 +121,12 @@ class TestAssessContentCoherence:
             "transcript": "This is a comprehensive transcript. " * 30,
             "linguistic_patterns": {"complexity": "high"},
             "sentiment_analysis": {"overall": "positive"},
-            "content_metadata": {"title": "Test", "platform": "YouTube", "word_count": 150, "quality_score": 0.9},
+            "content_metadata": {
+                "title": "Test",
+                "platform": "YouTube",
+                "word_count": 150,
+                "quality_score": 0.9,
+            },
         }
 
         score = quality_assessors.assess_content_coherence(analysis_data)
@@ -185,7 +194,13 @@ class TestAssessFactualAccuracy:
 
     def test_assesses_high_accuracy_with_verified_claims(self):
         """Test high accuracy when claims verified."""
-        verification_data = {"fact_checks": {"verified_claims": 8, "disputed_claims": 2, "evidence": [1, 2, 3]}}
+        verification_data = {
+            "fact_checks": {
+                "verified_claims": 8,
+                "disputed_claims": 2,
+                "evidence": [1, 2, 3],
+            }
+        }
 
         score = quality_assessors.assess_factual_accuracy(verification_data)
 
@@ -201,7 +216,12 @@ class TestAssessFactualAccuracy:
 
     def test_handles_list_format_claims(self):
         """Test handling of list-format claims."""
-        verification_data = {"fact_checks": {"verified_claims": ["claim1", "claim2"], "disputed_claims": ["claim3"]}}
+        verification_data = {
+            "fact_checks": {
+                "verified_claims": ["claim1", "claim2"],
+                "disputed_claims": ["claim3"],
+            }
+        }
 
         score = quality_assessors.assess_factual_accuracy(verification_data)
 

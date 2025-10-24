@@ -18,6 +18,7 @@ from ultimate_discord_intelligence_bot.tenancy import current_tenant
 from .experiment import Experiment, ExperimentManager, VariantStats
 from .policies.advanced_bandits import DoublyRobustBandit, OffsetTreeBandit
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -56,9 +57,9 @@ class AdvancedBanditExperimentManager(ExperimentManager):
         self,
         domain: str,
         baseline_policy: str = "epsilon_greedy",
-        advanced_policies: dict[str, float] = None,
+        advanced_policies: dict[str, float] | None = None,
         shadow_samples: int = 1000,
-        description: str = None,
+        description: str | None = None,
     ) -> None:
         """Register an experiment comparing advanced bandits against baseline.
 
@@ -91,7 +92,7 @@ class AdvancedBanditExperimentManager(ExperimentManager):
         # Override stats with advanced stats
         exp.stats = {
             baseline_policy: AdvancedBanditStats(),
-            **{policy: AdvancedBanditStats() for policy in advanced_policies.keys()},
+            **{policy: AdvancedBanditStats() for policy in advanced_policies},
         }
 
         self.register(exp)
@@ -114,7 +115,10 @@ class AdvancedBanditExperimentManager(ExperimentManager):
 
             exp = self._experiments.get(experiment_id)
             if not exp:
-                logger.debug("Cannot record reward - experiment not found: experiment_id=%s", experiment_id)
+                logger.debug(
+                    "Cannot record reward - experiment not found: experiment_id=%s",
+                    experiment_id,
+                )
                 return
 
             # Use AdvancedBanditStats instead of regular VariantStats
@@ -158,7 +162,7 @@ class AdvancedBanditExperimentManager(ExperimentManager):
         experiment_id: str,
         arm: str,
         reward: float,
-        context: dict[str, Any] = None,
+        context: dict[str, Any] | None = None,
         bandit_instance: Any = None,
     ) -> None:
         """Record reward and advanced bandit-specific metrics."""
@@ -198,7 +202,7 @@ class AdvancedBanditExperimentManager(ExperimentManager):
                 stats.reward_model_mse = (stats.reward_model_mse * (stats.pulls - 1) + mse) / stats.pulls
 
                 # Record importance weights
-                if arm in bandit.importance_weights and bandit.importance_weights[arm]:
+                if bandit.importance_weights.get(arm):
                     recent_weight = bandit.importance_weights[arm][-1]
                     stats.importance_weight_sum += recent_weight
 
@@ -332,7 +336,9 @@ class AdvancedBanditExperimentManager(ExperimentManager):
         return analysis
 
 
-def create_default_advanced_bandit_experiments(manager: AdvancedBanditExperimentManager) -> None:
+def create_default_advanced_bandit_experiments(
+    manager: AdvancedBanditExperimentManager,
+) -> None:
     """Create default advanced bandit experiments for common domains."""
 
     # Only create experiments if advanced bandits are enabled
@@ -365,7 +371,7 @@ def create_default_advanced_bandit_experiments(manager: AdvancedBanditExperiment
 
 
 __all__ = [
-    "AdvancedBanditStats",
     "AdvancedBanditExperimentManager",
+    "AdvancedBanditStats",
     "create_default_advanced_bandit_experiments",
 ]

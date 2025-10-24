@@ -10,12 +10,18 @@ from __future__ import annotations
 import logging
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta
+from typing import TYPE_CHECKING
 from urllib.parse import urlencode
 
-import requests
+from core.http_utils import requests, resilient_get, resilient_post  # type: ignore[import-not-found]
+from ultimate_discord_intelligence_bot.step_result import StepResult  # type: ignore[import-not-found]
 
-from ultimate_discord_intelligence_bot.creator_ops.auth.token_storage import TokenStorage
-from ultimate_discord_intelligence_bot.step_result import StepResult
+
+if TYPE_CHECKING:
+    from ultimate_discord_intelligence_bot.creator_ops.auth.token_storage import (  # type: ignore[import-not-found]
+        TokenStorage,
+    )
+
 
 logger = logging.getLogger(__name__)
 
@@ -59,7 +65,6 @@ class OAuthManager(ABC):
         Returns:
             Authorization URL
         """
-        pass
 
     @abstractmethod
     def exchange_code_for_tokens(self, code: str) -> StepResult:
@@ -71,7 +76,6 @@ class OAuthManager(ABC):
         Returns:
             StepResult with token data
         """
-        pass
 
     @abstractmethod
     def refresh_access_token(self, refresh_token: str) -> StepResult:
@@ -83,7 +87,6 @@ class OAuthManager(ABC):
         Returns:
             StepResult with new token data
         """
-        pass
 
     @abstractmethod
     def validate_token(self, access_token: str) -> StepResult:
@@ -95,7 +98,6 @@ class OAuthManager(ABC):
         Returns:
             StepResult with validation results
         """
-        pass
 
     def store_tokens(
         self,
@@ -141,8 +143,8 @@ class OAuthManager(ABC):
             )
 
         except Exception as e:
-            logger.error(f"Failed to store tokens for {self.platform}: {str(e)}")
-            return StepResult.fail(f"Token storage failed: {str(e)}")
+            logger.error(f"Failed to store tokens for {self.platform}: {e!s}")
+            return StepResult.fail(f"Token storage failed: {e!s}")
 
     def get_stored_tokens(self, tenant: str, workspace: str, user_id: str | None = None) -> StepResult:
         """Get stored tokens.
@@ -167,8 +169,8 @@ class OAuthManager(ABC):
             )
 
         except Exception as e:
-            logger.error(f"Failed to get tokens for {self.platform}: {str(e)}")
-            return StepResult.fail(f"Token retrieval failed: {str(e)}")
+            logger.error(f"Failed to get tokens for {self.platform}: {e!s}")
+            return StepResult.fail(f"Token retrieval failed: {e!s}")
 
 
 class YouTubeOAuthManager(OAuthManager):
@@ -226,7 +228,7 @@ class YouTubeOAuthManager(OAuthManager):
                 "redirect_uri": self.redirect_uri,
             }
 
-            response = requests.post(self.token_url, data=data, timeout=30)
+            response = resilient_post(self.token_url, data=data, timeout=30)
             response.raise_for_status()
 
             token_data = response.json()
@@ -242,8 +244,8 @@ class YouTubeOAuthManager(OAuthManager):
             )
 
         except requests.exceptions.RequestException as e:
-            logger.error(f"YouTube token exchange failed: {str(e)}")
-            return StepResult.fail(f"Token exchange failed: {str(e)}")
+            logger.error(f"YouTube token exchange failed: {e!s}")
+            return StepResult.fail(f"Token exchange failed: {e!s}")
 
     def refresh_access_token(self, refresh_token: str) -> StepResult:
         """Refresh YouTube access token."""
@@ -255,7 +257,7 @@ class YouTubeOAuthManager(OAuthManager):
                 "grant_type": "refresh_token",
             }
 
-            response = requests.post(self.token_url, data=data, timeout=30)
+            response = resilient_post(self.token_url, data=data, timeout=30)
             response.raise_for_status()
 
             token_data = response.json()
@@ -270,8 +272,8 @@ class YouTubeOAuthManager(OAuthManager):
             )
 
         except requests.exceptions.RequestException as e:
-            logger.error(f"YouTube token refresh failed: {str(e)}")
-            return StepResult.fail(f"Token refresh failed: {str(e)}")
+            logger.error(f"YouTube token refresh failed: {e!s}")
+            return StepResult.fail(f"Token refresh failed: {e!s}")
 
     def validate_token(self, access_token: str) -> StepResult:
         """Validate YouTube access token."""
@@ -279,7 +281,7 @@ class YouTubeOAuthManager(OAuthManager):
             headers = {"Authorization": f"Bearer {access_token}"}
             url = "https://www.googleapis.com/oauth2/v1/tokeninfo"
 
-            response = requests.get(url, headers=headers, timeout=30)
+            response = resilient_get(url, headers=headers, timeout=30)
             response.raise_for_status()
 
             token_info = response.json()
@@ -294,8 +296,8 @@ class YouTubeOAuthManager(OAuthManager):
             )
 
         except requests.exceptions.RequestException as e:
-            logger.error(f"YouTube token validation failed: {str(e)}")
-            return StepResult.fail(f"Token validation failed: {str(e)}")
+            logger.error(f"YouTube token validation failed: {e!s}")
+            return StepResult.fail(f"Token validation failed: {e!s}")
 
 
 class TwitchOAuthManager(OAuthManager):
@@ -351,7 +353,7 @@ class TwitchOAuthManager(OAuthManager):
                 "redirect_uri": self.redirect_uri,
             }
 
-            response = requests.post(self.token_url, data=data, timeout=30)
+            response = resilient_post(self.token_url, data=data, timeout=30)
             response.raise_for_status()
 
             token_data = response.json()
@@ -367,8 +369,8 @@ class TwitchOAuthManager(OAuthManager):
             )
 
         except requests.exceptions.RequestException as e:
-            logger.error(f"Twitch token exchange failed: {str(e)}")
-            return StepResult.fail(f"Token exchange failed: {str(e)}")
+            logger.error(f"Twitch token exchange failed: {e!s}")
+            return StepResult.fail(f"Token exchange failed: {e!s}")
 
     def refresh_access_token(self, refresh_token: str) -> StepResult:
         """Refresh Twitch access token."""
@@ -380,7 +382,7 @@ class TwitchOAuthManager(OAuthManager):
                 "grant_type": "refresh_token",
             }
 
-            response = requests.post(self.token_url, data=data, timeout=30)
+            response = resilient_post(self.token_url, data=data, timeout=30)
             response.raise_for_status()
 
             token_data = response.json()
@@ -395,15 +397,15 @@ class TwitchOAuthManager(OAuthManager):
             )
 
         except requests.exceptions.RequestException as e:
-            logger.error(f"Twitch token refresh failed: {str(e)}")
-            return StepResult.fail(f"Token refresh failed: {str(e)}")
+            logger.error(f"Twitch token refresh failed: {e!s}")
+            return StepResult.fail(f"Token refresh failed: {e!s}")
 
     def validate_token(self, access_token: str) -> StepResult:
         """Validate Twitch access token."""
         try:
             headers = {"Authorization": f"OAuth {access_token}"}
 
-            response = requests.get(self.validate_url, headers=headers, timeout=30)
+            response = resilient_get(self.validate_url, headers=headers, timeout=30)
             response.raise_for_status()
 
             token_info = response.json()
@@ -419,8 +421,8 @@ class TwitchOAuthManager(OAuthManager):
             )
 
         except requests.exceptions.RequestException as e:
-            logger.error(f"Twitch token validation failed: {str(e)}")
-            return StepResult.fail(f"Token validation failed: {str(e)}")
+            logger.error(f"Twitch token validation failed: {e!s}")
+            return StepResult.fail(f"Token validation failed: {e!s}")
 
 
 class TikTokOAuthManager(OAuthManager):
@@ -475,7 +477,7 @@ class TikTokOAuthManager(OAuthManager):
                 "redirect_uri": self.redirect_uri,
             }
 
-            response = requests.post(self.token_url, data=data, timeout=30)
+            response = resilient_post(self.token_url, data=data, timeout=30)
             response.raise_for_status()
 
             token_data = response.json()
@@ -494,8 +496,8 @@ class TikTokOAuthManager(OAuthManager):
             )
 
         except requests.exceptions.RequestException as e:
-            logger.error(f"TikTok token exchange failed: {str(e)}")
-            return StepResult.fail(f"Token exchange failed: {str(e)}")
+            logger.error(f"TikTok token exchange failed: {e!s}")
+            return StepResult.fail(f"Token exchange failed: {e!s}")
 
     def refresh_access_token(self, refresh_token: str) -> StepResult:
         """Refresh TikTok access token."""
@@ -507,7 +509,7 @@ class TikTokOAuthManager(OAuthManager):
                 "grant_type": "refresh_token",
             }
 
-            response = requests.post(self.token_url, data=data, timeout=30)
+            response = resilient_post(self.token_url, data=data, timeout=30)
             response.raise_for_status()
 
             token_data = response.json()
@@ -525,8 +527,8 @@ class TikTokOAuthManager(OAuthManager):
             )
 
         except requests.exceptions.RequestException as e:
-            logger.error(f"TikTok token refresh failed: {str(e)}")
-            return StepResult.fail(f"Token refresh failed: {str(e)}")
+            logger.error(f"TikTok token refresh failed: {e!s}")
+            return StepResult.fail(f"Token refresh failed: {e!s}")
 
     def validate_token(self, access_token: str) -> StepResult:
         """Validate TikTok access token."""
@@ -534,7 +536,7 @@ class TikTokOAuthManager(OAuthManager):
             headers = {"Authorization": f"Bearer {access_token}"}
             url = "https://open-api.tiktok.com/user/info/"
 
-            response = requests.get(url, headers=headers, timeout=30)
+            response = resilient_get(url, headers=headers, timeout=30)
 
             if response.status_code == 200:
                 return StepResult.ok(data={"valid": True})
@@ -542,8 +544,8 @@ class TikTokOAuthManager(OAuthManager):
                 return StepResult.ok(data={"valid": False, "error": response.text})
 
         except requests.exceptions.RequestException as e:
-            logger.error(f"TikTok token validation failed: {str(e)}")
-            return StepResult.fail(f"Token validation failed: {str(e)}")
+            logger.error(f"TikTok token validation failed: {e!s}")
+            return StepResult.fail(f"Token validation failed: {e!s}")
 
 
 class InstagramOAuthManager(OAuthManager):
@@ -600,7 +602,7 @@ class InstagramOAuthManager(OAuthManager):
                 "redirect_uri": self.redirect_uri,
             }
 
-            response = requests.post(self.token_url, data=data, timeout=30)
+            response = resilient_post(self.token_url, data=data, timeout=30)
             response.raise_for_status()
 
             token_data = response.json()
@@ -616,7 +618,7 @@ class InstagramOAuthManager(OAuthManager):
                 "fb_exchange_token": token_data["access_token"],
             }
 
-            long_lived_response = requests.post(self.long_lived_token_url, data=long_lived_data, timeout=30)
+            long_lived_response = resilient_post(self.long_lived_token_url, data=long_lived_data, timeout=30)
             long_lived_response.raise_for_status()
 
             long_lived_token_data = long_lived_response.json()
@@ -631,8 +633,8 @@ class InstagramOAuthManager(OAuthManager):
             )
 
         except requests.exceptions.RequestException as e:
-            logger.error(f"Instagram token exchange failed: {str(e)}")
-            return StepResult.fail(f"Token exchange failed: {str(e)}")
+            logger.error(f"Instagram token exchange failed: {e!s}")
+            return StepResult.fail(f"Token exchange failed: {e!s}")
 
     def refresh_access_token(self, refresh_token: str) -> StepResult:
         """Refresh Instagram access token (not supported by Instagram)."""
@@ -643,7 +645,7 @@ class InstagramOAuthManager(OAuthManager):
         try:
             url = f"https://graph.facebook.com/v18.0/me?access_token={access_token}"
 
-            response = requests.get(url, timeout=30)
+            response = resilient_get(url, timeout=30)
             response.raise_for_status()
 
             token_info = response.json()
@@ -657,8 +659,8 @@ class InstagramOAuthManager(OAuthManager):
             )
 
         except requests.exceptions.RequestException as e:
-            logger.error(f"Instagram token validation failed: {str(e)}")
-            return StepResult.fail(f"Token validation failed: {str(e)}")
+            logger.error(f"Instagram token validation failed: {e!s}")
+            return StepResult.fail(f"Token validation failed: {e!s}")
 
 
 class XOAuthManager(OAuthManager):
@@ -718,7 +720,7 @@ class XOAuthManager(OAuthManager):
             # X API requires Basic Auth
             auth = (self.client_id, self.client_secret)
 
-            response = requests.post(self.token_url, data=data, auth=auth, timeout=30)
+            response = resilient_post(self.token_url, data=data, auth=auth, timeout=30)
             response.raise_for_status()
 
             token_data = response.json()
@@ -734,8 +736,8 @@ class XOAuthManager(OAuthManager):
             )
 
         except requests.exceptions.RequestException as e:
-            logger.error(f"X token exchange failed: {str(e)}")
-            return StepResult.fail(f"Token exchange failed: {str(e)}")
+            logger.error(f"X token exchange failed: {e!s}")
+            return StepResult.fail(f"Token exchange failed: {e!s}")
 
     def refresh_access_token(self, refresh_token: str) -> StepResult:
         """Refresh X access token."""
@@ -748,7 +750,7 @@ class XOAuthManager(OAuthManager):
 
             auth = (self.client_id, self.client_secret)
 
-            response = requests.post(self.token_url, data=data, auth=auth, timeout=30)
+            response = resilient_post(self.token_url, data=data, auth=auth, timeout=30)
             response.raise_for_status()
 
             token_data = response.json()
@@ -764,8 +766,8 @@ class XOAuthManager(OAuthManager):
             )
 
         except requests.exceptions.RequestException as e:
-            logger.error(f"X token refresh failed: {str(e)}")
-            return StepResult.fail(f"Token refresh failed: {str(e)}")
+            logger.error(f"X token refresh failed: {e!s}")
+            return StepResult.fail(f"Token refresh failed: {e!s}")
 
     def validate_token(self, access_token: str) -> StepResult:
         """Validate X access token."""
@@ -773,7 +775,7 @@ class XOAuthManager(OAuthManager):
             headers = {"Authorization": f"Bearer {access_token}"}
             url = "https://api.twitter.com/2/users/me"
 
-            response = requests.get(url, headers=headers, timeout=30)
+            response = resilient_get(url, headers=headers, timeout=30)
             response.raise_for_status()
 
             token_info = response.json()
@@ -787,5 +789,5 @@ class XOAuthManager(OAuthManager):
             )
 
         except requests.exceptions.RequestException as e:
-            logger.error(f"X token validation failed: {str(e)}")
-            return StepResult.fail(f"Token validation failed: {str(e)}")
+            logger.error(f"X token validation failed: {e!s}")
+            return StepResult.fail(f"Token validation failed: {e!s}")

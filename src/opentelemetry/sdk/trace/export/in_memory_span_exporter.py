@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import contextlib
 from typing import Any
 
 from . import SpanExporter
@@ -10,10 +11,8 @@ class InMemorySpanExporter(SpanExporter):
         self._spans: list[Any] = []
 
     def export(self, spans):
-        try:
+        with contextlib.suppress(Exception):
             self._spans.extend(list(spans))
-        except Exception:
-            pass
 
     def get_finished_spans(self) -> list[Any]:
         return list(self._spans)

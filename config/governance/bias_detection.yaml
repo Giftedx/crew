@@ -1,0 +1,201 @@
+# Political Bias Detection Configuration
+# Based on OpenAI's bias detection methodology
+
+# Bias Detection Framework
+bias_detection:
+  # Core bias indicators
+  indicators:
+    partisan_language:
+      description: "Language that clearly favors one political side"
+      keywords:
+        - "liberal agenda"
+        - "conservative bias"
+        - "socialist policies"
+        - "capitalist exploitation"
+      weight: 0.15
+      
+    ideological_framing:
+      description: "Framing that promotes specific ideologies"
+      keywords:
+        - "progressive values"
+        - "traditional values"
+        - "leftist propaganda"
+        - "right-wing rhetoric"
+      weight: 0.15
+      
+    one_sided_evidence:
+      description: "Presenting only evidence supporting one viewpoint"
+      patterns:
+        - "only supports X"
+        - "ignores Y perspective"
+        - "selective evidence"
+      weight: 0.20
+      
+    strawman_arguments:
+      description: "Misrepresenting opposing arguments"
+      patterns:
+        - "distorts opponent's argument"
+        - "misrepresents position"
+        - "oversimplifies opposition"
+      weight: 0.10
+      
+    false_balance:
+      description: "Giving equal weight to unequal arguments"
+      patterns:
+        - "both sides equally valid"
+        - "equal time for all views"
+      weight: 0.15
+      
+    omission_bias:
+      description: "Systematically omitting important information"
+      patterns:
+        - "ignores counter-arguments"
+        - "omits key facts"
+        - "selective reporting"
+      weight: 0.05
+      
+    selection_bias:
+      description: "Biased source selection"
+      patterns:
+        - "only cites X sources"
+        - "ignores Y sources"
+        - "selective citations"
+      weight: 0.10
+      
+    emotional_manipulation:
+      description: "Using emotional language to influence"
+      keywords:
+        - "outrage"
+        - "shocking"
+        - "crisis"
+        - "triumph"
+      weight: 0.05
+
+# Viewpoint Diversity Assessment
+viewpoint_diversity:
+  high_diversity_indicators:
+    - "multiple perspectives discussed"
+    - "various viewpoints presented"
+    - "different opinions considered"
+    - "balanced analysis"
+    
+  low_diversity_indicators:
+    - "only one perspective"
+    - "single viewpoint"
+    - "unilateral analysis"
+    - "one-sided argument"
+    
+  diversity_thresholds:
+    high: 0.8
+    medium: 0.5
+    low: 0.2
+
+# Framing Analysis
+framing_analysis:
+  positive_framing_indicators:
+    - "framed positively for X"
+    - "beneficial for Y"
+    - "advantages of Z"
+    
+  negative_framing_indicators:
+    - "framed negatively for X"
+    - "harmful to Y"
+    - "disadvantages of Z"
+    
+  neutral_framing_indicators:
+    - "neutral presentation"
+    - "balanced framing"
+    - "objective analysis"
+
+# Evidence Balance Assessment
+evidence_balance:
+  supporting_evidence_indicators:
+    - "proves"
+    - "demonstrates"
+    - "shows"
+    - "confirms"
+    - "validates"
+    - "supports"
+    
+  opposing_evidence_indicators:
+    - "refutes"
+    - "contradicts"
+    - "disproves"
+    - "challenges"
+    - "questions"
+    - "undermines"
+    
+  balance_calculation:
+    method: "ratio_analysis"
+    threshold: 0.3  # Minimum ratio for balanced evidence
+
+# Source Diversity Analysis
+source_diversity:
+  source_types:
+    - "academic"
+    - "government"
+    - "media"
+    - "ngo"
+    - "corporate"
+    - "individual"
+    
+  diversity_indicators:
+    - "diverse sources cited"
+    - "multiple source types"
+    - "varied perspectives"
+    
+  bias_indicators:
+    - "single source cited"
+    - "only X sources"
+    - "limited perspective"
+
+# Scoring and Thresholds
+scoring:
+  overall_bias_thresholds:
+    low: 0.3
+    medium: 0.6
+    high: 0.8
+    
+  individual_metric_thresholds:
+    partisan_language: 0.5
+    ideological_framing: 0.5
+    one_sided_evidence: 0.7
+    strawman_arguments: 0.3
+    false_balance: 0.6
+    omission_bias: 0.4
+    selection_bias: 0.5
+    emotional_manipulation: 0.3
+
+# Mitigation Strategies
+mitigation:
+  high_bias_content:
+    - "flag_for_review"
+    - "add_balancing_perspective"
+    - "include_disclaimer"
+    
+  medium_bias_content:
+    - "suggest_alternative_sources"
+    - "add_context_warning"
+    - "encourage_critical_thinking"
+    
+  low_bias_content:
+    - "monitor_trends"
+    - "track_improvements"
+    - "provide_feedback"
+
+# Reporting and Analytics
+reporting:
+  bias_dashboard:
+    enabled: true
+    update_frequency: "daily"
+    
+  metrics:
+    - "bias_score_distribution"
+    - "trend_analysis"
+    - "source_comparison"
+    - "mitigation_effectiveness"
+    
+  alerts:
+    high_bias_threshold: 0.8
+    trend_analysis: true
+    source_comparison: true

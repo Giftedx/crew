@@ -12,12 +12,21 @@ from unittest.mock import Mock, patch
 import pytest
 
 from ultimate_discord_intelligence_bot.creator_ops.config import CreatorOpsConfig
-from ultimate_discord_intelligence_bot.creator_ops.integrations.instagram_client import InstagramClient
-from ultimate_discord_intelligence_bot.creator_ops.integrations.tiktok_client import TikTokClient
-from ultimate_discord_intelligence_bot.creator_ops.integrations.twitch_client import TwitchClient
+from ultimate_discord_intelligence_bot.creator_ops.integrations.instagram_client import (
+    InstagramClient,
+)
+from ultimate_discord_intelligence_bot.creator_ops.integrations.tiktok_client import (
+    TikTokClient,
+)
+from ultimate_discord_intelligence_bot.creator_ops.integrations.twitch_client import (
+    TwitchClient,
+)
 from ultimate_discord_intelligence_bot.creator_ops.integrations.x_client import XClient
-from ultimate_discord_intelligence_bot.creator_ops.integrations.youtube_client import YouTubeClient
+from ultimate_discord_intelligence_bot.creator_ops.integrations.youtube_client import (
+    YouTubeClient,
+)
 from ultimate_discord_intelligence_bot.step_result import StepResult
+
 
 logger = logging.getLogger(__name__)
 
@@ -67,7 +76,11 @@ class TestPlatformContractValidation:
                                 "publishedAt": "2020-01-01T00:00:00Z",
                                 "thumbnails": {"default": {"url": "https://example.com/thumb.jpg"}},
                             },
-                            "statistics": {"subscriberCount": "1000000", "videoCount": "100", "viewCount": "10000000"},
+                            "statistics": {
+                                "subscriberCount": "1000000",
+                                "videoCount": "100",
+                                "viewCount": "10000000",
+                            },
                         }
                     ]
                 }
@@ -169,7 +182,11 @@ class TestPlatformContractValidation:
                         "id": "1234567890123456789",
                         "username": "test_user",
                         "name": "Test User",
-                        "public_metrics": {"followers_count": 1000, "following_count": 500, "tweet_count": 100},
+                        "public_metrics": {
+                            "followers_count": 1000,
+                            "following_count": 500,
+                            "tweet_count": 100,
+                        },
                         "verified": True,
                     }
                 },
@@ -252,7 +269,14 @@ class TestRateLimitSimulation:
         # Simulate burst of 100 requests
         with patch.object(client, "_make_api_request") as mock_request:
             mock_request.return_value = StepResult.success(
-                {"data": {"user": {"open_id": "test_user_123", "display_name": "Test User"}}}
+                {
+                    "data": {
+                        "user": {
+                            "open_id": "test_user_123",
+                            "display_name": "Test User",
+                        }
+                    }
+                }
             )
 
             tasks = []
@@ -272,7 +296,11 @@ class TestRateLimitSimulation:
         # Simulate burst of 100 requests
         with patch.object(client, "_make_api_request") as mock_request:
             mock_request.return_value = StepResult.success(
-                {"id": "17841400000000000", "username": "test_user", "account_type": "BUSINESS"}
+                {
+                    "id": "17841400000000000",
+                    "username": "test_user",
+                    "account_type": "BUSINESS",
+                }
             )
 
             tasks = []
@@ -292,7 +320,14 @@ class TestRateLimitSimulation:
         # Simulate burst of 100 requests
         with patch.object(client, "_make_api_request") as mock_request:
             mock_request.return_value = StepResult.success(
-                {"data": {"id": "1234567890123456789", "username": "test_user", "name": "Test User"}}, Mock()
+                {
+                    "data": {
+                        "id": "1234567890123456789",
+                        "username": "test_user",
+                        "name": "Test User",
+                    }
+                },
+                Mock(),
             )
 
             tasks = []
@@ -448,7 +483,10 @@ class TestEndToEndWorkflows:
         instagram_client = InstagramClient(config=mock_config, oauth_manager=mock_oauth_manager)
         with patch.object(instagram_client, "get_user_media") as mock_media:
             mock_media.return_value = StepResult.success(
-                ([Mock(id="media1", media_type="IMAGE", caption="Test Instagram 1")], None)
+                (
+                    [Mock(id="media1", media_type="IMAGE", caption="Test Instagram 1")],
+                    None,
+                )
             )
             instagram_results = await instagram_client.get_user_media("test_user", limit=5)
             assert instagram_results.success
@@ -522,7 +560,10 @@ class TestEndToEndWorkflows:
         instagram_client = InstagramClient(config=mock_config, oauth_manager=mock_oauth_manager)
         with patch.object(instagram_client, "get_media_insights") as mock_insights:
             mock_insights.return_value = StepResult.success(
-                Mock(media_id="media1", insights=[Mock(name="impressions", values=[{"value": 5000}])])
+                Mock(
+                    media_id="media1",
+                    insights=[Mock(name="impressions", values=[{"value": 5000}])],
+                )
             )
             instagram_engagement = await instagram_client.get_media_insights("user1", "media1", ["impressions"])
             if instagram_engagement.success:
@@ -532,7 +573,14 @@ class TestEndToEndWorkflows:
         x_client = XClient(config=mock_config, oauth_manager=mock_oauth_manager)
         with patch.object(x_client, "get_tweet") as mock_tweet:
             mock_tweet.return_value = StepResult.success(
-                Mock(id="tweet1", public_metrics={"retweet_count": 100, "like_count": 500, "reply_count": 50})
+                Mock(
+                    id="tweet1",
+                    public_metrics={
+                        "retweet_count": 100,
+                        "like_count": 500,
+                        "reply_count": 50,
+                    },
+                )
             )
             x_engagement = await x_client.get_tweet("user1", "tweet1")
             if x_engagement.success:
@@ -694,7 +742,14 @@ class TestPerformanceBenchmarks:
 
         with patch.object(client, "_make_api_request") as mock_request:
             mock_request.return_value = StepResult.success(
-                {"data": {"user": {"open_id": "test_user_123", "display_name": "Test User"}}}
+                {
+                    "data": {
+                        "user": {
+                            "open_id": "test_user_123",
+                            "display_name": "Test User",
+                        }
+                    }
+                }
             )
 
             start_time = datetime.now()
@@ -710,7 +765,11 @@ class TestPerformanceBenchmarks:
 
         with patch.object(client, "_make_api_request") as mock_request:
             mock_request.return_value = StepResult.success(
-                {"id": "17841400000000000", "username": "test_user", "account_type": "BUSINESS"}
+                {
+                    "id": "17841400000000000",
+                    "username": "test_user",
+                    "account_type": "BUSINESS",
+                }
             )
 
             start_time = datetime.now()
@@ -726,7 +785,14 @@ class TestPerformanceBenchmarks:
 
         with patch.object(client, "_make_api_request") as mock_request:
             mock_request.return_value = StepResult.success(
-                {"data": {"id": "1234567890123456789", "username": "test_user", "name": "Test User"}}, Mock()
+                {
+                    "data": {
+                        "id": "1234567890123456789",
+                        "username": "test_user",
+                        "name": "Test User",
+                    }
+                },
+                Mock(),
             )
 
             start_time = datetime.now()

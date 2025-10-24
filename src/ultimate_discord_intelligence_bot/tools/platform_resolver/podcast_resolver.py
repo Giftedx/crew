@@ -27,10 +27,16 @@ class PodcastResolverTool(BaseTool[StepResult]):
     def _run(self, query: str) -> StepResult:  # pragma: no cover - pure mapping
         try:
             feed = resolve_podcast_query(query)
-            self._metrics.counter("tool_runs_total", labels={"tool": "resolver_podcast", "outcome": "success"}).inc()
+            self._metrics.counter(
+                "tool_runs_total",
+                labels={"tool": "resolver_podcast", "outcome": "success"},
+            ).inc()
             return StepResult.ok(data=feed.to_dict())
         except Exception as exc:
-            self._metrics.counter("tool_runs_total", labels={"tool": "resolver_podcast", "outcome": "error"}).inc()
+            self._metrics.counter(
+                "tool_runs_total",
+                labels={"tool": "resolver_podcast", "outcome": "error"},
+            ).inc()
             return StepResult.fail(error=str(exc))
 
     def run(self, query: str) -> StepResult:  # thin wrapper

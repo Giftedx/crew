@@ -11,17 +11,18 @@ import yaml
 
 from .events import log_security_event
 
+
 # Standardized moderation action names (hierarchical dotted form)
 ACTION_MODERATION = "moderation"
 ACTION_MODERATION_REVIEW = "moderation.review"
 ACTION_MODERATION_REVIEW_RESOLVE = "moderation.review.resolve"
 __all__ = [
-    "Moderation",
-    "ModerationResult",
-    "ReviewItem",
     "ACTION_MODERATION",
     "ACTION_MODERATION_REVIEW",
     "ACTION_MODERATION_REVIEW_RESOLVE",
+    "Moderation",
+    "ModerationResult",
+    "ReviewItem",
 ]
 
 DEFAULT_CONFIG_PATH = Path(__file__).resolve().parents[2] / "config" / "security.yaml"

@@ -11,10 +11,13 @@ import asyncio
 import sys
 from pathlib import Path
 
+
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent))
 
-from ultimate_discord_intelligence_bot.autonomous_orchestrator import AutonomousIntelligenceOrchestrator
+from ultimate_discord_intelligence_bot.autonomous_orchestrator import (
+    AutonomousIntelligenceOrchestrator,
+)
 
 
 async def test_agent_caching():
@@ -94,11 +97,10 @@ async def test_context_persistence():
     # Verify context is still there
     has_context = False
     for tool in agent2.tools:
-        if hasattr(tool, "_shared_context"):
-            if "transcript" in tool._shared_context:
-                has_context = True
-                print(f"✅ Context persisted: {tool._shared_context['transcript']}")
-                break
+        if hasattr(tool, "_shared_context") and "transcript" in tool._shared_context:
+            has_context = True
+            print(f"✅ Context persisted: {tool._shared_context['transcript']}")
+            break
 
     assert has_context, "❌ FAIL: Context not persisted!"
     print("✅ PASS: Context persisted across agent retrievals")

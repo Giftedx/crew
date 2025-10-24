@@ -10,10 +10,12 @@ import argparse
 import json
 import logging
 import statistics
+import sys
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from pathlib import Path
+
 
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
@@ -26,6 +28,7 @@ from ultimate_discord_intelligence_bot.core.store_adapter import (
     UnifiedStoreManager,
 )
 from ultimate_discord_intelligence_bot.step_result import StepResult
+
 
 # Configure logging
 logging.basicConfig(
@@ -54,7 +57,7 @@ class PostgreSQLBenchmark:
             return StepResult.ok(data={"message": "Benchmark initialized"})
         except Exception as e:
             logger.error(f"Failed to initialize benchmark: {e}")
-            return StepResult.fail(f"Failed to initialize benchmark: {str(e)}")
+            return StepResult.fail(f"Failed to initialize benchmark: {e!s}")
 
     def generate_test_data(
         self, count: int
@@ -208,7 +211,10 @@ class PostgreSQLBenchmark:
                 futures.extend(
                     [
                         executor.submit(
-                            search_memory_items, f"benchmark_tenant_{i % 10}", f"benchmark_workspace_{i % 5}", query
+                            search_memory_items,
+                            f"benchmark_tenant_{i % 10}",
+                            f"benchmark_workspace_{i % 5}",
+                            query,
                         )
                         for i in range(20)  # 20 searches per query
                     ]
@@ -269,8 +275,8 @@ class PostgreSQLBenchmark:
 
         # Benchmark list operations
         logger.info("Benchmarking debate list operations...")
-        tenants = list(set(debate.tenant for debate in debates))
-        workspaces = list(set(debate.workspace for debate in debates))
+        tenants = list({debate.tenant for debate in debates})
+        workspaces = list({debate.workspace for debate in debates})
 
         with ThreadPoolExecutor(max_workers=concurrent_workers) as executor:
             futures = []
@@ -326,8 +332,8 @@ class PostgreSQLBenchmark:
 
         # Benchmark query operations
         logger.info("Benchmarking KG query operations...")
-        tenants = list(set(node.tenant for node in kg_nodes))
-        node_types = list(set(node.type for node in kg_nodes))
+        tenants = list({node.tenant for node in kg_nodes})
+        node_types = list({node.type for node in kg_nodes})
 
         with ThreadPoolExecutor(max_workers=concurrent_workers) as executor:
             futures = []
@@ -428,10 +434,10 @@ class PostgreSQLBenchmark:
             index = len(sorted_data) - 1
         return sorted_data[index]
 
-    def run_comprehensive_benchmark(
-        self, record_counts: list[int] = [100, 500, 1000], concurrent_workers: int = 5
-    ) -> dict:
+    def run_comprehensive_benchmark(self, record_counts: list[int] | None = None, concurrent_workers: int = 5) -> dict:
         """Run comprehensive benchmark across different record counts."""
+        if record_counts is None:
+            record_counts = [100, 500, 1000]
         logger.info("Starting comprehensive PostgreSQL benchmark")
 
         comprehensive_results = {}
@@ -563,7 +569,11 @@ def main():
     parser = argparse.ArgumentParser(description="Benchmark PostgreSQL migration performance")
     parser.add_argument("--postgresql-url", required=True, help="PostgreSQL connection URL")
     parser.add_argument(
-        "--record-counts", nargs="+", type=int, default=[100, 500, 1000], help="Record counts to benchmark"
+        "--record-counts",
+        nargs="+",
+        type=int,
+        default=[100, 500, 1000],
+        help="Record counts to benchmark",
     )
     parser.add_argument("--concurrent-workers", type=int, default=5, help="Number of concurrent workers")
     parser.add_argument("--output-file", help="Output file for benchmark report")

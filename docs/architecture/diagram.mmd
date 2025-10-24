@@ -1,0 +1,132 @@
+graph TB
+    %% External Sources
+    YT[YouTube Content]
+    TT[TikTok Content]
+    TW[Twitch Content]
+    RD[Reddit Content]
+    
+    %% Entry Point
+    CLI[CLI Entry Point<br/>main.py]
+    
+    %% Crew Orchestration
+    CREW[Crew Orchestrator<br/>crew.py]
+    ENHANCED[Enhanced Integration<br/>enhanced_crew_integration.py]
+    
+    %% Agent System
+    subgraph "Agent System"
+        MISSION[Mission Orchestrator]
+        ACQUISITION[Acquisition Specialist]
+        TRANSCRIPTION[Transcription Engineer]
+        ANALYSIS[Analysis Specialist]
+        MEMORY[Memory Manager]
+        DISCORD_AGENT[Discord Agent]
+    end
+    
+    %% Pipeline Components
+    subgraph "Content Pipeline"
+        DOWNLOAD[Multi-Platform Download]
+        TRANSCRIBE[Audio Transcription]
+        ANALYZE[Content Analysis]
+        STORE[Memory Storage]
+        PUBLISH[Discord Publishing]
+    end
+    
+    %% Tools Architecture
+    subgraph "Tools System"
+        ACQ_TOOLS[Acquisition Tools]
+        ANALYSIS_TOOLS[Analysis Tools]
+        MEMORY_TOOLS[Memory Tools]
+        VERIFICATION_TOOLS[Verification Tools]
+    end
+    
+    %% StepResult System
+    STEPRESULT[StepResult System<br/>Error Handling & Results]
+    
+    %% Observability
+    subgraph "Observability"
+        METRICS[Metrics Collection]
+        LOGGING[Structured Logging]
+        HEALTH[Health Monitoring]
+        ALERTS[Alert System]
+    end
+    
+    %% Storage Systems
+    subgraph "Storage Layer"
+        QDRANT[Qdrant Vector DB]
+        REDIS[Redis Cache]
+        POSTGRES[PostgreSQL]
+    end
+    
+    %% Discord Integration
+    DISCORD[Discord Bot<br/>Commands & Events]
+    WEBHOOK[Discord Webhooks]
+    
+    %% Tenant Isolation
+    subgraph "Tenant Isolation"
+        TENANT_A[Tenant A]
+        TENANT_B[Tenant B]
+        WORKSPACE_A[Workspace A]
+        WORKSPACE_B[Workspace B]
+    end
+    
+    %% Data Flow
+    YT --> DOWNLOAD
+    TT --> DOWNLOAD
+    TW --> DOWNLOAD
+    RD --> DOWNLOAD
+    
+    CLI --> CREW
+    CREW --> ENHANCED
+    ENHANCED --> MISSION
+    
+    MISSION --> ACQUISITION
+    ACQUISITION --> TRANSCRIPTION
+    TRANSCRIPTION --> ANALYSIS
+    ANALYSIS --> MEMORY
+    MEMORY --> DISCORD_AGENT
+    
+    DOWNLOAD --> ACQ_TOOLS
+    TRANSCRIBE --> ANALYSIS_TOOLS
+    ANALYZE --> ANALYSIS_TOOLS
+    STORE --> MEMORY_TOOLS
+    PUBLISH --> VERIFICATION_TOOLS
+    
+    ACQ_TOOLS --> STEPRESULT
+    ANALYSIS_TOOLS --> STEPRESULT
+    MEMORY_TOOLS --> STEPRESULT
+    VERIFICATION_TOOLS --> STEPRESULT
+    
+    STEPRESULT --> METRICS
+    METRICS --> LOGGING
+    LOGGING --> HEALTH
+    HEALTH --> ALERTS
+    
+    STORE --> QDRANT
+    STORE --> REDIS
+    STORE --> POSTGRES
+    
+    DISCORD_AGENT --> DISCORD
+    DISCORD --> WEBHOOK
+    
+    %% Tenant Isolation
+    QDRANT --> TENANT_A
+    QDRANT --> TENANT_B
+    REDIS --> WORKSPACE_A
+    REDIS --> WORKSPACE_B
+    
+    %% Styling
+    classDef external fill:#e1f5fe
+    classDef core fill:#f3e5f5
+    classDef pipeline fill:#e8f5e8
+    classDef tools fill:#fff3e0
+    classDef storage fill:#fce4ec
+    classDef discord fill:#e3f2fd
+    classDef tenant fill:#f1f8e9
+    
+    class YT,TT,TW,RD external
+    class CLI,CREW,ENHANCED,MISSION,ACQUISITION,TRANSCRIPTION,ANALYSIS,MEMORY,DISCORD_AGENT core
+    class DOWNLOAD,TRANSCRIBE,ANALYZE,STORE,PUBLISH pipeline
+    class ACQ_TOOLS,ANALYSIS_TOOLS,MEMORY_TOOLS,VERIFICATION_TOOLS,STEPRESULT tools
+    class QDRANT,REDIS,POSTGRES storage
+    class DISCORD,WEBHOOK discord
+    class TENANT_A,TENANT_B,WORKSPACE_A,WORKSPACE_B tenant

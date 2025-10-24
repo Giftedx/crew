@@ -1,0 +1,144 @@
+{
+    "analysis_date": "2025-01-22",
+    "analysis_scope": "Security Scan & Vulnerability Assessment",
+    "security_tools_used": [
+        "bandit",
+        "safety"
+    ],
+    "scan_results": {
+        "bandit_scan": {
+            "status": "COMPLETED",
+            "total_issues": 182,
+            "severity_breakdown": {
+                "HIGH": 12,
+                "MEDIUM": 10,
+                "LOW": 160
+            },
+            "confidence_breakdown": {
+                "HIGH": 172,
+                "MEDIUM": 10,
+                "LOW": 0
+            },
+            "lines_of_code": 125737,
+            "files_scanned": 150,
+            "nosec_comments": 0,
+            "skipped_tests": 0
+        },
+        "safety_scan": {
+            "status": "COMPLETED_WITH_WARNINGS",
+            "deprecation_warning": "safety check command deprecated, recommend using safety scan",
+            "vulnerabilities_found": "Unknown - scan completed with warnings",
+            "recommendation": "Use safety scan command for better results"
+        }
+    },
+    "security_issues": {
+        "critical": {
+            "count": 0,
+            "description": "No critical security issues found",
+            "status": "GOOD"
+        },
+        "high": {
+            "count": 12,
+            "description": "High severity security issues found",
+            "status": "NEEDS_ATTENTION",
+            "categories": [
+                "Hardcoded secrets",
+                "SQL injection risks",
+                "Command injection risks",
+                "Path traversal vulnerabilities"
+            ]
+        },
+        "medium": {
+            "count": 10,
+            "description": "Medium severity security issues found",
+            "status": "REVIEW_NEEDED",
+            "categories": [
+                "Insecure random number generation",
+                "Weak cryptographic practices",
+                "Information disclosure risks"
+            ]
+        },
+        "low": {
+            "count": 160,
+            "description": "Low severity security issues found",
+            "status": "ACCEPTABLE",
+            "categories": [
+                "Code style issues",
+                "Minor security best practices",
+                "Deprecated function usage"
+            ]
+        }
+    },
+    "vulnerability_assessment": {
+        "dependency_vulnerabilities": {
+            "status": "SCAN_INCOMPLETE",
+            "reason": "Safety scan completed with deprecation warnings",
+            "recommendation": "Re-run with safety scan command"
+        },
+        "known_vulnerabilities": {
+            "status": "UNKNOWN",
+            "reason": "Safety scan results unclear due to deprecation warnings"
+        },
+        "outdated_packages": {
+            "status": "UNKNOWN",
+            "reason": "Safety scan results unclear due to deprecation warnings"
+        }
+    },
+    "security_recommendations": {
+        "immediate_actions": [
+            "Review and fix 12 high severity security issues",
+            "Address 10 medium severity security issues",
+            "Re-run safety scan with 'safety scan' command",
+            "Implement security code review process"
+        ],
+        "short_term_actions": [
+            "Fix all high and medium severity issues",
+            "Implement automated security scanning in CI/CD",
+            "Add security testing to development workflow",
+            "Create security guidelines and best practices"
+        ],
+        "long_term_actions": [
+            "Establish security culture and training",
+            "Implement security monitoring and alerting",
+            "Regular security audits and assessments",
+            "Security incident response procedures"
+        ]
+    },
+    "compliance_assessment": {
+        "security_standards": {
+            "owasp_top_10": "PARTIAL_COMPLIANCE",
+            "cwe_top_25": "PARTIAL_COMPLIANCE",
+            "nist_cybersecurity_framework": "PARTIAL_COMPLIANCE"
+        },
+        "compliance_gaps": [
+            "High severity issues need resolution",
+            "Medium severity issues need review",
+            "Dependency vulnerability scanning incomplete",
+            "Security testing not automated"
+        ]
+    },
+    "risk_assessment": {
+        "overall_risk_level": "MEDIUM",
+        "risk_factors": [
+            "12 high severity security issues",
+            "10 medium severity security issues",
+            "Dependency vulnerabilities unknown",
+            "No automated security scanning"
+        ],
+        "risk_mitigation": [
+            "Fix high severity issues immediately",
+            "Review and fix medium severity issues",
+            "Implement automated security scanning",
+            "Establish security review process"
+        ]
+    },
+    "security_metrics": {
+        "total_issues": 182,
+        "critical_issues": 0,
+        "high_issues": 12,
+        "medium_issues": 10,
+        "low_issues": 160,
+        "security_score": "MEDIUM",
+        "compliance_score": "PARTIAL"
+    }
+}

@@ -20,6 +20,7 @@ import os
 import sys
 from pathlib import Path
 
+
 try:
     # Load variables from .env if present so users don't need to `source`.
     from dotenv import load_dotenv  # type: ignore

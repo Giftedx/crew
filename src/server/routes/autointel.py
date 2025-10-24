@@ -3,8 +3,10 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from fastapi import Body, FastAPI, HTTPException, status
 from fastapi.responses import JSONResponse
+
+from fastapi import Body, FastAPI, HTTPException, status
+
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +41,9 @@ def register_autointel_routes(app: FastAPI, settings: Any) -> None:
         return
 
     @app.post("/autointel", summary="Run autonomous intelligence analysis")
-    async def _autointel_run(payload: dict[str, Any] = Body(..., embed=False)) -> JSONResponse:
+    async def _autointel_run(
+        payload: dict[str, Any] = Body(..., embed=False),
+    ) -> JSONResponse:
         """Execute autonomous intelligence workflow via HTTP.
 
         Request body:
@@ -58,10 +62,16 @@ def register_autointel_routes(app: FastAPI, settings: Any) -> None:
 
         # Validate required parameters
         if not isinstance(url, str) or not url.strip():
-            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="`url` is required")
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="`url` is required",
+            )
 
         if depth is not None and not isinstance(depth, str):
-            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="`depth` must be a string")
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="`depth` must be a string",
+            )
 
         # Validate depth value
         valid_depths = {"standard", "deep", "comprehensive", "experimental"}
@@ -94,7 +104,11 @@ def register_autointel_routes(app: FastAPI, settings: Any) -> None:
         try:
             logger.info(
                 "autointel API request",
-                extra={"tenant_id": tenant_id, "workspace_id": workspace_id, "depth": resolved_depth},
+                extra={
+                    "tenant_id": tenant_id,
+                    "workspace_id": workspace_id,
+                    "depth": resolved_depth,
+                },
             )
 
             # Execute workflow within tenant context

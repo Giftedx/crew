@@ -9,13 +9,17 @@ detailed reports with trends, alerts, and recommendations.
 import sys
 from pathlib import Path
 
+
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 import logging
 
-from ultimate_discord_intelligence_bot.services.creator_evaluation_harness import CreatorEvaluationHarness
+from ultimate_discord_intelligence_bot.services.creator_evaluation_harness import (
+    CreatorEvaluationHarness,
+)
 from ultimate_discord_intelligence_bot.step_result import StepResult
+
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
@@ -93,8 +97,8 @@ def run_evaluation(gold_dataset_path: str = "gold_dataset.json") -> StepResult:
             return result
 
     except Exception as e:
-        logger.error(f"Evaluation harness failed: {str(e)}")
-        return StepResult.fail(f"Evaluation harness failed: {str(e)}")
+        logger.error(f"Evaluation harness failed: {e!s}")
+        return StepResult.fail(f"Evaluation harness failed: {e!s}")
 
 
 def run_continuous_monitoring():

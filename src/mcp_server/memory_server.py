@@ -16,8 +16,12 @@ Implementation notes:
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
 
 try:
     from fastmcp import FastMCP  # type: ignore
@@ -78,7 +82,14 @@ def _sanitize_hit(payload: dict[str, Any]) -> dict[str, Any]:
 
 
 @memory_mcp.tool
-def vs_search(tenant: str, workspace: str, name: str, query: str, k: int = 5, min_score: float | None = None) -> dict:
+def vs_search(
+    tenant: str,
+    workspace: str,
+    name: str,
+    query: str,
+    k: int = 5,
+    min_score: float | None = None,
+) -> dict:
     """Vector similarity search over a logical namespace.
 
     Returns: { "namespace": str, "hits": [{"score": float, "payload": dict}] }
@@ -187,4 +198,10 @@ def memory_stats(tenant: str, workspace: str, name: str) -> dict:
     return info
 
 
-__all__ = ["memory_mcp", "vs_search", "vs_list_namespaces", "vs_samples", "memory_stats"]
+__all__ = [
+    "memory_mcp",
+    "memory_stats",
+    "vs_list_namespaces",
+    "vs_samples",
+    "vs_search",
+]

@@ -5,6 +5,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
+
 ENTITY_RE = re.compile(r"\b([A-Z][a-z]+(?:\s[A-Z][a-z]+)*)\b")
 CLAIM_RE = re.compile(r"([^.!?]+?(?:is|are|was|were)[^.!?]+)")
 

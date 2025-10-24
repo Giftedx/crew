@@ -34,13 +34,13 @@ except Exception:  # pragma: no cover
         _HAS_PYDANTIC_V2 = False
     except Exception:  # Final minimal stubs
 
-        class BaseSettings:  # type: ignore[no-redef]  # noqa: D401
+        class BaseSettings:  # type: ignore[no-redef]
             pass
 
-        class SettingsConfigDict(dict):  # type: ignore[no-redef]  # noqa: D401
+        class SettingsConfigDict(dict):  # type: ignore[no-redef]
             pass
 
-        class AliasChoices:  # type: ignore[no-redef]  # noqa: D401
+        class AliasChoices:  # type: ignore[no-redef]
             def __init__(self, *args: Any, **kwargs: Any) -> None:  # pragma: no cover
                 pass
 
@@ -70,13 +70,13 @@ def Field(*args: Any, **kwargs: Any) -> Any:  # unified wrapper adding env->alia
 
 
 __all__ = [
-    "BaseSettings",
-    "SettingsConfigDict",
-    "Field",
-    "AliasChoices",
-    "validator",
     "_HAS_PYDANTIC",
     "_HAS_PYDANTIC_V2",
+    "AliasChoices",
+    "BaseSettings",
+    "Field",
+    "SettingsConfigDict",
+    "validator",
 ]
 
 
@@ -479,11 +479,21 @@ if not _HAS_PYDANTIC:
         self.discord_webhook = _os.getenv("DISCORD_WEBHOOK")
 
         # Feature flags (commonly used ones)
-        self.enable_http_retry = _os.getenv("ENABLE_HTTP_RETRY", "false").lower() in ("1", "true", "yes", "on")
+        self.enable_http_retry = _os.getenv("ENABLE_HTTP_RETRY", "false").lower() in (
+            "1",
+            "true",
+            "yes",
+            "on",
+        )
         self.enable_audit_logging = _os.getenv("ENABLE_AUDIT_LOGGING", "true").lower() in ("1", "true", "yes", "on")
         self.enable_pii_detection = _os.getenv("ENABLE_PII_DETECTION", "true").lower() in ("1", "true", "yes", "on")
         self.enable_rate_limiting = _os.getenv("ENABLE_RATE_LIMITING", "true").lower() in ("1", "true", "yes", "on")
-        self.enable_tracing = _os.getenv("ENABLE_TRACING", "false").lower() in ("1", "true", "yes", "on")
+        self.enable_tracing = _os.getenv("ENABLE_TRACING", "false").lower() in (
+            "1",
+            "true",
+            "yes",
+            "on",
+        )
 
         # API keys and webhooks (commonly accessed)
         self.openrouter_api_key = _os.getenv("OPENROUTER_API_KEY")

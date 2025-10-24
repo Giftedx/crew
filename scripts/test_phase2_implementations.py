@@ -19,6 +19,7 @@ import time
 from datetime import datetime
 from pathlib import Path
 
+
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
@@ -47,10 +48,9 @@ from ultimate_discord_intelligence_bot.services.rl_model_router import (
     TaskComplexity,
 )
 
+
 # Configure logging
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
 
@@ -331,9 +331,7 @@ class Phase2TestSuite:
                 },
             ]
 
-            result = await self.workflow_manager.resolve_dependencies(
-                workflow_tasks, "test_tenant", "test_workspace"
-            )
+            result = await self.workflow_manager.resolve_dependencies(workflow_tasks, "test_tenant", "test_workspace")
 
             if result.success and "dependency_resolution" in result.data:
                 self.test_results["workflow_manager"]["passed"] += 1
@@ -429,11 +427,7 @@ class Phase2TestSuite:
 
                 # Test 2: Execute Session
                 try:
-                    execution_result = (
-                        await self.orchestrator.execute_orchestration_session(
-                            session_id
-                        )
-                    )
+                    execution_result = await self.orchestrator.execute_orchestration_session(session_id)
 
                     if execution_result.success:
                         self.test_results["hierarchical_orchestrator"]["passed"] += 1
@@ -445,9 +439,7 @@ class Phase2TestSuite:
                             }
                         )
                     else:
-                        raise Exception(
-                            f"Session execution failed: {execution_result.error}"
-                        )
+                        raise Exception(f"Session execution failed: {execution_result.error}")
 
                 except Exception as e:
                     self.test_results["hierarchical_orchestrator"]["failed"] += 1
@@ -461,11 +453,7 @@ class Phase2TestSuite:
 
                 # Test 3: Monitor Session
                 try:
-                    monitoring_result = (
-                        await self.orchestrator.monitor_orchestration_session(
-                            session_id
-                        )
-                    )
+                    monitoring_result = await self.orchestrator.monitor_orchestration_session(session_id)
 
                     if monitoring_result.success:
                         self.test_results["hierarchical_orchestrator"]["passed"] += 1
@@ -477,9 +465,7 @@ class Phase2TestSuite:
                             }
                         )
                     else:
-                        raise Exception(
-                            f"Session monitoring failed: {monitoring_result.error}"
-                        )
+                        raise Exception(f"Session monitoring failed: {monitoring_result.error}")
 
                 except Exception as e:
                     self.test_results["hierarchical_orchestrator"]["failed"] += 1
@@ -552,9 +538,7 @@ class Phase2TestSuite:
                 "context_features": [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
             }
 
-            result = await self.model_router.update_reward(
-                "gpt-4", "task_1", reward_data
-            )
+            result = await self.model_router.update_reward("gpt-4", "task_1", reward_data)
 
             if result.success:
                 self.test_results["rl_model_router"]["passed"] += 1
@@ -613,9 +597,7 @@ class Phase2TestSuite:
                 workspace="test_workspace",
             )
 
-            result = await self.cache_optimizer.optimize_cache_operation(
-                context, "store"
-            )
+            result = await self.cache_optimizer.optimize_cache_operation(context, "store")
 
             if result.success and "optimized_action" in result.data:
                 self.test_results["rl_cache_optimizer"]["passed"] += 1
@@ -670,9 +652,7 @@ class Phase2TestSuite:
                 ],
             }
 
-            result = await self.cache_optimizer.update_cache_performance(
-                action, reward_data
-            )
+            result = await self.cache_optimizer.update_cache_performance(action, reward_data)
 
             if result.success:
                 self.test_results["rl_cache_optimizer"]["passed"] += 1
@@ -810,9 +790,7 @@ class Phase2TestSuite:
                 },
             }
 
-            result = await self.performance_engine.update_performance_feedback(
-                feedback_data
-            )
+            result = await self.performance_engine.update_performance_feedback(feedback_data)
 
             if result.success:
                 self.test_results["performance_learning_engine"]["passed"] += 1
@@ -872,9 +850,7 @@ class Phase2TestSuite:
             logger.info(f"\n{component.upper().replace('_', ' ')}:")
             logger.info(f"  Passed: {component_passed}")
             logger.info(f"  Failed: {component_failed}")
-            logger.info(
-                f"  Success Rate: {(component_passed / (component_passed + component_failed) * 100):.1f}%"
-            )
+            logger.info(f"  Success Rate: {(component_passed / (component_passed + component_failed) * 100):.1f}%")
 
             for test in results["tests"]:
                 status_icon = "✅" if test["status"] == "PASSED" else "❌"
@@ -888,9 +864,7 @@ class Phase2TestSuite:
         logger.info(f"  Total Tests: {total_passed + total_failed}")
         logger.info(f"  Passed: {total_passed}")
         logger.info(f"  Failed: {total_failed}")
-        logger.info(
-            f"  Overall Success Rate: {(total_passed / (total_passed + total_failed) * 100):.1f}%"
-        )
+        logger.info(f"  Overall Success Rate: {(total_passed / (total_passed + total_failed) * 100):.1f}%")
 
         # Save detailed report
         report_data = {
@@ -911,13 +885,9 @@ class Phase2TestSuite:
         logger.info(f"\nDetailed report saved to: {report_file}")
 
         if total_failed == 0:
-            logger.info(
-                "\n🎉 ALL TESTS PASSED! Phase 2 implementations are working correctly."
-            )
+            logger.info("\n🎉 ALL TESTS PASSED! Phase 2 implementations are working correctly.")
         else:
-            logger.info(
-                f"\n⚠️  {total_failed} tests failed. Please review the errors above."
-            )
+            logger.info(f"\n⚠️  {total_failed} tests failed. Please review the errors above.")
 
 
 async def main():

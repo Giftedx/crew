@@ -10,10 +10,11 @@ from __future__ import annotations
 import logging
 import re
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from ultimate_discord_intelligence_bot.step_result import StepResult
 from ultimate_discord_intelligence_bot.tenancy.context import current_tenant
+
 
 logger = logging.getLogger(__name__)
 
@@ -24,8 +25,8 @@ class RetrievalQuery:
 
     text: str
     intent: str = "general"  # general, fact_check, debate_analysis, creator_intel
-    context: Optional[Dict[str, Any]] = None
-    filters: Optional[Dict[str, Any]] = None
+    context: dict[str, Any] | None = None
+    filters: dict[str, Any] | None = None
     limit: int = 10
     min_confidence: float = 0.5
     include_metadata: bool = True
@@ -36,7 +37,7 @@ class RankedResult:
     """Result with ranking information"""
 
     content: str
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
     source: str = "unknown"
     confidence: float = 1.0
     relevance_score: float = 1.0
@@ -65,7 +66,7 @@ class RetrievalConfig:
 class UnifiedRetrievalEngine:
     """Advanced retrieval engine with multi-source ranking and fusion"""
 
-    def __init__(self, config: Optional[RetrievalConfig] = None):
+    def __init__(self, config: RetrievalConfig | None = None):
         self.config = config or RetrievalConfig()
         self.query_cache = {}  # Simple query result cache
         self.ranking_weights = {
@@ -79,8 +80,8 @@ class UnifiedRetrievalEngine:
         self,
         query: RetrievalQuery,
         unified_memory_service,
-        tenant_id: Optional[str] = None,
-        workspace_id: Optional[str] = None,
+        tenant_id: str | None = None,
+        workspace_id: str | None = None,
     ) -> StepResult:
         """Perform sophisticated multi-source retrieval with ranking"""
         try:
@@ -108,15 +109,13 @@ class UnifiedRetrievalEngine:
             )
 
             if not memory_result.success:
-                return StepResult.fail(
-                    f"Memory retrieval failed: {memory_result.error}"
-                )
+                return StepResult.fail(f"Memory retrieval failed: {memory_result.error}")
 
             # Convert to RankedResult objects
             raw_results = memory_result.data.get("results", [])
             ranked_results = []
 
-            for i, result in enumerate(raw_results):
+            for _i, result in enumerate(raw_results):
                 ranked_result = RankedResult(
                     content=result.content,
                     metadata=result.metadata,
@@ -128,9 +127,7 @@ class UnifiedRetrievalEngine:
                 ranked_results.append(ranked_result)
 
             # Apply ranking and fusion
-            final_results = await self._rank_and_fuse_results(
-                ranked_results, query, tenant_id, workspace_id
-            )
+            final_results = await self._rank_and_fuse_results(ranked_results, query, tenant_id, workspace_id)
 
             # Apply deduplication if enabled
             if self.config.enable_content_deduplication:
@@ -148,13 +145,11 @@ class UnifiedRetrievalEngine:
                     "filters": query.filters,
                 },
                 "metadata": {
-                    "total_sources": len(set(r.source for r in final_results)),
-                    "avg_confidence": sum(r.confidence for r in final_results)
-                    / len(final_results)
+                    "total_sources": len({r.source for r in final_results}),
+                    "avg_confidence": sum(r.confidence for r in final_results) / len(final_results)
                     if final_results
                     else 0,
-                    "avg_relevance": sum(r.relevance_score for r in final_results)
-                    / len(final_results)
+                    "avg_relevance": sum(r.relevance_score for r in final_results) / len(final_results)
                     if final_results
                     else 0,
                     "tenant_id": tenant_id,
@@ -171,15 +166,15 @@ class UnifiedRetrievalEngine:
 
         except Exception as e:
             logger.error(f"Error in unified retrieval: {e}", exc_info=True)
-            return StepResult.fail(f"Retrieval engine failed: {str(e)}")
+            return StepResult.fail(f"Retrieval engine failed: {e!s}")
 
     async def _rank_and_fuse_results(
         self,
-        results: List[RankedResult],
+        results: list[RankedResult],
         query: RetrievalQuery,
         tenant_id: str,
         workspace_id: str,
-    ) -> List[RankedResult]:
+    ) -> list[RankedResult]:
         """Rank and fuse results from multiple sources"""
         try:
             # Calculate relevance scores
@@ -222,9 +217,7 @@ class UnifiedRetrievalEngine:
                 result.rank = i + 1
             return results
 
-    async def _calculate_relevance(
-        self, result: RankedResult, query: RetrievalQuery
-    ) -> float:
+    async def _calculate_relevance(self, result: RankedResult, query: RetrievalQuery) -> float:
         """Calculate relevance score for a result"""
         try:
             relevance_score = 0.0
@@ -244,9 +237,7 @@ class UnifiedRetrievalEngine:
 
             # Context matching
             if query.context and result.metadata:
-                context_overlap = self._calculate_context_overlap(
-                    query.context, result.metadata
-                )
+                context_overlap = self._calculate_context_overlap(query.context, result.metadata)
                 relevance_score += context_overlap * 0.2
 
             return min(1.0, relevance_score)
@@ -270,9 +261,7 @@ class UnifiedRetrievalEngine:
         except Exception:
             return 0.0
 
-    def _calculate_context_overlap(
-        self, query_context: Dict[str, Any], result_metadata: Dict[str, Any]
-    ) -> float:
+    def _calculate_context_overlap(self, query_context: dict[str, Any], result_metadata: dict[str, Any]) -> float:
         """Calculate context overlap between query and result metadata"""
         try:
             overlap_score = 0.0
@@ -283,9 +272,7 @@ class UnifiedRetrievalEngine:
                     total_fields += 1
                     if result_metadata[key] == value:
                         overlap_score += 1.0
-                    elif isinstance(value, str) and isinstance(
-                        result_metadata[key], str
-                    ):
+                    elif isinstance(value, str) and isinstance(result_metadata[key], str):
                         # Partial string match
                         if value.lower() in result_metadata[key].lower():
                             overlap_score += 0.5
@@ -295,9 +282,7 @@ class UnifiedRetrievalEngine:
         except Exception:
             return 0.0
 
-    def _weighted_average_fusion(
-        self, source_groups: Dict[str, List[RankedResult]]
-    ) -> List[RankedResult]:
+    def _weighted_average_fusion(self, source_groups: dict[str, list[RankedResult]]) -> list[RankedResult]:
         """Fuse results using weighted average by source"""
         fused_results = []
 
@@ -320,13 +305,11 @@ class UnifiedRetrievalEngine:
 
         return fused_results
 
-    def _best_of_each_fusion(
-        self, source_groups: Dict[str, List[RankedResult]]
-    ) -> List[RankedResult]:
+    def _best_of_each_fusion(self, source_groups: dict[str, list[RankedResult]]) -> list[RankedResult]:
         """Take the best result from each source"""
         fused_results = []
 
-        for source, results in source_groups.items():
+        for _source, results in source_groups.items():
             if not results:
                 continue
 
@@ -336,9 +319,7 @@ class UnifiedRetrievalEngine:
 
         return fused_results
 
-    def _hybrid_fusion(
-        self, source_groups: Dict[str, List[RankedResult]]
-    ) -> List[RankedResult]:
+    def _hybrid_fusion(self, source_groups: dict[str, list[RankedResult]]) -> list[RankedResult]:
         """Hybrid fusion strategy combining weighted average and best of each"""
         # Get best of each source
         best_results = self._best_of_each_fusion(source_groups)
@@ -359,9 +340,7 @@ class UnifiedRetrievalEngine:
 
         return unique_results
 
-    def _deduplicate_results(
-        self, results: List[RankedResult], query: RetrievalQuery
-    ) -> List[RankedResult]:
+    def _deduplicate_results(self, results: list[RankedResult], query: RetrievalQuery) -> list[RankedResult]:
         """Remove duplicate results based on content similarity"""
         if not results:
             return results
@@ -395,9 +374,7 @@ class UnifiedRetrievalEngine:
         }
         return authority_weights.get(source, 0.5)
 
-    def _get_cache_key(
-        self, query: RetrievalQuery, tenant_id: str, workspace_id: str
-    ) -> str:
+    def _get_cache_key(self, query: RetrievalQuery, tenant_id: str, workspace_id: str) -> str:
         """Generate cache key for query"""
         return f"{tenant_id}:{workspace_id}:{hash(query.text)}:{query.intent}:{query.limit}"
 
@@ -406,7 +383,7 @@ class UnifiedRetrievalEngine:
         self.query_cache.clear()
         logger.info("Retrieval engine cache cleared")
 
-    def get_cache_stats(self) -> Dict[str, Any]:
+    def get_cache_stats(self) -> dict[str, Any]:
         """Get cache statistics"""
         return {
             "cache_size": len(self.query_cache),

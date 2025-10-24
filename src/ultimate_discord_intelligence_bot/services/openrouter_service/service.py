@@ -6,8 +6,8 @@ import copy
 import logging
 import os as _os
 import sys
-from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any
+
 
 # Optional dependencies (graceful degradation if unavailable)
 try:  # pragma: no cover - optional distributed cache
@@ -16,6 +16,7 @@ except Exception:  # pragma: no cover
     DistributedLLMCache = None
 
 from core.cache.bounded_cache import BoundedLRUCache
+from core.cache.unified_config import get_unified_cache_config
 from core.learning_engine import LearningEngine
 from core.secure_config import get_config
 from obs import metrics
@@ -23,11 +24,15 @@ from obs import metrics
 from .adaptive_routing import AdaptiveRoutingManager
 from .tenant_semantic_cache import TenantSemanticCache
 
+
 try:
     from src.core.settings import get_settings  # type: ignore
 except Exception:
     try:
-        from core.settings import get_settings  # type: ignore
+        from ultimate_discord_intelligence_bot.settings import Settings  # type: ignore
+
+        def get_settings():
+            return Settings()
     except Exception:  # pragma: no cover - fallback when pydantic/settings unavailable
 
         def _get_settings_fallback() -> Any:
@@ -50,10 +55,7 @@ from ultimate_discord_intelligence_bot.cache import (
     get_unified_cache,
 )
 from ultimate_discord_intelligence_bot.settings import ENABLE_RL_MODEL_ROUTING
-from ultimate_discord_intelligence_bot.tenancy.context import TenantContext
-from ultimate_discord_intelligence_bot.tenancy.registry import TenantRegistry
 
-from ..logging_utils import AnalyticsStore
 from ..openrouter_helpers import (
     choose_model_from_map as _choose_model_from_map_helper,
 )
@@ -69,6 +71,7 @@ from ..openrouter_helpers import (
 from ..prompt_engine import PromptEngine
 from ..rl_model_router import RLModelRouter
 from ..token_meter import TokenMeter
+
 
 _MODULE_NAMES = (
     "ultimate_discord_intelligence_bot.services.openrouter_service",
@@ -103,13 +106,19 @@ log = logging.getLogger(__name__)
 
 
 if TYPE_CHECKING:  # pragma: no cover - type hints only
+    from collections.abc import Mapping
+
+    from ultimate_discord_intelligence_bot.tenancy.context import TenantContext
+    from ultimate_discord_intelligence_bot.tenancy.registry import TenantRegistry
+
+    from ..logging_utils import AnalyticsStore
     from .state import RouteState
 
 
 class OpenRouterService:
     """Route prompts to the best available provider via OpenRouter."""
 
-    def __init__(  # noqa: PLR0913, PLR0912
+    def __init__(
         self,
         models_map: dict[str, list[str]] | None = None,
         learning_engine: LearningEngine | None = None,
@@ -159,28 +168,16 @@ class OpenRouterService:
                 cfg = get_config()
                 if ENABLE_CACHE_V2:
                     self.unified_cache = get_unified_cache()
-                elif getattr(cfg, "enable_cache_global", True) and getattr(
-                    cfg, "rate_limit_redis_url", None
-                ):
+                elif getattr(cfg, "enable_cache_global", True) and getattr(cfg, "rate_limit_redis_url", None):
                     if DistributedLLMCache is not None:
                         try:
-                            ctx_cache = OpenRouterService._ctx_or_fallback(
-                                "openrouter_service"
-                            )
-                            tenant_id = (
-                                (getattr(ctx_cache, "tenant_id", None) or "default")
-                                if ctx_cache
-                                else "default"
-                            )
-                            workspace_id = (
-                                (getattr(ctx_cache, "workspace_id", None) or "main")
-                                if ctx_cache
-                                else "main"
-                            )
+                            ctx_cache = OpenRouterService._ctx_or_fallback("openrouter_service")
+                            tenant_id = (getattr(ctx_cache, "tenant_id", None) or "default") if ctx_cache else "default"
+                            workspace_id = (getattr(ctx_cache, "workspace_id", None) or "main") if ctx_cache else "main"
                             cache_ctor: Any = DistributedLLMCache
                             self.cache = cache_ctor(
                                 url=str(cfg.rate_limit_redis_url),
-                                ttl=int(getattr(cfg, "cache_ttl_llm", 3600)),
+                                ttl=get_unified_cache_config().get_ttl_for_domain("llm"),
                                 tenant=tenant_id,
                                 workspace=workspace_id,
                             )
@@ -193,7 +190,7 @@ class OpenRouterService:
                     if self.cache is None:
                         self.cache = BoundedLRUCache(
                             max_size=int(getattr(cfg, "cache_max_entries", 1000)),
-                            ttl=int(getattr(cfg, "cache_ttl_llm", 3600)),
+                            ttl=get_unified_cache_config().get_ttl_for_domain("llm"),
                             name="openrouter",
                         )
             except Exception as cache_root_exc:  # pragma: no cover
@@ -226,12 +223,9 @@ class OpenRouterService:
             if gptcache_flag:
                 try:
                     cache_root = getattr(get_config(), "cache_dir", "./cache")
-                    threshold = float(
-                        getattr(settings, "semantic_cache_threshold", 0.8) or 0.8
-                    )
-                    ttl = int(
-                        getattr(settings, "semantic_cache_ttl_seconds", 3600) or 3600
-                    )
+                    threshold = float(getattr(settings, "semantic_cache_threshold", 0.8) or 0.8)
+                    cache_config = get_unified_cache_config()
+                    ttl = cache_config.semantic.ttl if cache_config.semantic.enabled else 3600
                     self.semantic_cache = TenantSemanticCache(
                         cache_root=str(cache_root),
                         similarity_threshold=threshold,
@@ -239,9 +233,7 @@ class OpenRouterService:
                     )
                     self.semantic_cache_mode = "tenant"
                     enabled_sem = True
-                except (
-                    Exception
-                ) as tenant_cache_exc:  # pragma: no cover - best effort init
+                except Exception as tenant_cache_exc:  # pragma: no cover - best effort init
                     log.warning(
                         "Tenant semantic cache init failed (%s); falling back to global cache",
                         tenant_cache_exc,
@@ -259,19 +251,12 @@ class OpenRouterService:
                     )
                     self.semantic_cache = None
 
-            enabled_shadow = bool(
-                getattr(settings, "enable_semantic_cache_shadow", False)
-            )
+            enabled_shadow = bool(getattr(settings, "enable_semantic_cache_shadow", False))
             if not enabled_shadow:
                 raw_shadow = (_os.getenv("ENABLE_SEMANTIC_CACHE_SHADOW") or "").lower()
                 enabled_shadow = raw_shadow in ("1", "true", "yes", "on")
             self.semantic_cache_shadow_mode = enabled_shadow
-            if (
-                enabled_shadow
-                and not enabled_sem
-                and self.semantic_cache is None
-                and factory
-            ):
+            if enabled_shadow and not enabled_sem and self.semantic_cache is None and factory:
                 try:
                     self.semantic_cache = factory()
                     self.semantic_cache_mode = "global"
@@ -302,26 +287,18 @@ class OpenRouterService:
                     if name:
                         shadow_tasks.add(name.lower())
 
-            analysis_shadow_flag = bool(
-                getattr(settings, "enable_gptcache_analysis_shadow", False)
-            )
+            analysis_shadow_flag = bool(getattr(settings, "enable_gptcache_analysis_shadow", False))
             if not analysis_shadow_flag:
-                raw_analysis = (
-                    _os.getenv("ENABLE_GPTCACHE_ANALYSIS_SHADOW") or ""
-                ).lower()
+                raw_analysis = (_os.getenv("ENABLE_GPTCACHE_ANALYSIS_SHADOW") or "").lower()
                 analysis_shadow_flag = raw_analysis in ("1", "true", "yes", "on")
             if analysis_shadow_flag:
                 shadow_tasks.add("analysis")
 
             self.semantic_cache_shadow_task_types = shadow_tasks
 
-            promote_flag = bool(
-                getattr(settings, "enable_semantic_cache_promotion", False)
-            )
+            promote_flag = bool(getattr(settings, "enable_semantic_cache_promotion", False))
             if not promote_flag:
-                raw_promote = (
-                    _os.getenv("ENABLE_SEMANTIC_CACHE_PROMOTION") or ""
-                ).lower()
+                raw_promote = (_os.getenv("ENABLE_SEMANTIC_CACHE_PROMOTION") or "").lower()
                 promote_flag = raw_promote in ("1", "true", "yes", "on")
             self.semantic_cache_promotion_enabled = promote_flag
 
@@ -329,11 +306,7 @@ class OpenRouterService:
             if thr is None:
                 env_thr = _os.getenv("SEMANTIC_CACHE_PROMOTION_THRESHOLD")
                 try:
-                    thr = (
-                        float(env_thr)
-                        if env_thr is not None and env_thr.strip() != ""
-                        else 0.9
-                    )
+                    thr = float(env_thr) if env_thr is not None and env_thr.strip() != "" else 0.9
                 except Exception:
                     thr = 0.9
             try:
@@ -368,17 +341,13 @@ class OpenRouterService:
         return _ctx_or_fallback_helper(component)
 
     @staticmethod
-    def _deep_merge(
-        base: dict[str, Any], overrides: Mapping[str, Any]
-    ) -> dict[str, Any]:
+    def _deep_merge(base: dict[str, Any], overrides: Mapping[str, Any]) -> dict[str, Any]:
         return _deep_merge_helper(base, overrides)
 
     def _update_shadow_hit_ratio(self, labels: dict[str, str], is_hit: bool) -> None:
         _update_shadow_hit_ratio_helper(labels, is_hit)
 
-    def _choose_model_from_map(
-        self, task_type: str, models_map: dict[str, list[str]]
-    ) -> str:
+    def _choose_model_from_map(self, task_type: str, models_map: dict[str, list[str]]) -> str:
         return _choose_model_from_map_helper(task_type, models_map, self.learning)
 
     def route(
@@ -415,9 +384,7 @@ class OpenRouterService:
         if rl_router is not None and state.rl_router_selection is not None:
             try:
                 rl_router.update_reward(state.rl_router_selection, reward)
-                log.debug(
-                    f"RL Router reward updated: {reward} for model {state.chosen_model}"
-                )
+                log.debug(f"RL Router reward updated: {reward} for model {state.chosen_model}")
             except Exception as rl_exc:  # pragma: no cover
                 log.warning(f"RL Router reward update failed: {rl_exc}")
 
@@ -444,9 +411,7 @@ class OpenRouterService:
         if metadata:
             record_metadata.update(metadata)
         try:
-            manager.observe(
-                state.task_type, trial_index, float(reward), record_metadata
-            )
+            manager.observe(state.task_type, trial_index, float(reward), record_metadata)
         except Exception:  # pragma: no cover - observation best effort
             log.debug("adaptive routing observe failed", exc_info=True)
         finally:

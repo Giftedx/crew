@@ -1,0 +1,36 @@
+# Grounding Configuration
+# TODO: Implement fact verification and grounding settings
+
+# Fact verification settings
+fact_verification:
+  enabled: true
+  providers:
+    - "web_search"
+    - "knowledge_base"
+  # TODO: Add fact verification provider configuration
+
+# Knowledge base settings
+knowledge_base:
+  enabled: true
+  vector_store: "qdrant"
+  # TODO: Add knowledge base configuration
+
+# Web search settings
+web_search:
+  enabled: true
+  providers:
+    - "google"
+    - "bing"
+  # TODO: Add web search API configuration
+
+# Citation settings
+citations:
+  enabled: true
+  format: "markdown"
+  # TODO: Add citation format configuration
+
+# Confidence thresholds
+confidence:
+  minimum_threshold: 0.7
+  high_confidence: 0.9
+  # TODO: Add confidence scoring configuration

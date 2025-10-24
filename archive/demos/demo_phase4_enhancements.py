@@ -17,6 +17,7 @@ import asyncio
 import sys
 from pathlib import Path
 
+
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
@@ -24,7 +25,11 @@ from datetime import datetime
 
 from core.code_intelligence import CodeIntelligenceEngine
 from core.nextgen_intelligence_hub import run_comprehensive_intelligence_analysis
-from core.predictive_operations import PerformanceMetric, PredictiveOperationsEngine, ResourceType
+from core.predictive_operations import (
+    PerformanceMetric,
+    PredictiveOperationsEngine,
+    ResourceType,
+)
 from core.resilience_orchestrator import ResilienceStrategy, get_resilience_orchestrator
 from core.security_fortification import SecurityOrchestrator
 

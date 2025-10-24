@@ -28,6 +28,7 @@ import yaml
 
 import scripts.validate_feature_flags as vf
 
+
 DOC_PATH = Path(__file__).parent.parent / "docs" / "feature_flags.md"
 SRC_PATH = Path(__file__).parent.parent / "src"
 HEADER_PREFIX = "<!-- AUTO-GENERATED:"
@@ -95,7 +96,7 @@ def render(flags: set[str]) -> str:
         lines.append("| Flag | Referenced In (sample) |")
         lines.append("|------|------------------------|")
         for f in categorized[cat]:
-            sample = ", ".join(sorted(list(code_index[f]))[:2]) or "-"
+            sample = ", ".join(sorted(code_index[f])[:2]) or "-"
             lines.append(f"| `{f}` | {sample} |")
         lines.append("")
     # Append deprecations section to satisfy drift tests that reference non-ENABLE symbols
@@ -148,8 +149,16 @@ def main() -> int:
         print("Feature flags doc up to date")
         return 0
     parser = argparse.ArgumentParser()
-    parser.add_argument("--write", action="store_true", help="Overwrite the existing doc with regenerated content")
-    parser.add_argument("--check", action="store_true", help="Exit 1 if regeneration would change the doc")
+    parser.add_argument(
+        "--write",
+        action="store_true",
+        help="Overwrite the existing doc with regenerated content",
+    )
+    parser.add_argument(
+        "--check",
+        action="store_true",
+        help="Exit 1 if regeneration would change the doc",
+    )
     args = parser.parse_args()
     if args.write:
         DOC_PATH.write_text(content, encoding="utf-8")

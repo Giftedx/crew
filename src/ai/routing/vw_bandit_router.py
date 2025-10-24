@@ -13,8 +13,8 @@ Design goals:
 from __future__ import annotations
 
 import os
-from collections.abc import Sequence
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
 
 try:  # Optional dependency
     # Note: depending on version, import path can be `vowpalwabbit` or `vowpalwabbit_next`.
@@ -27,6 +27,10 @@ except Exception:  # pragma: no cover - optional
     _vw = None
 
 from .bandit_router import ThompsonBanditRouter
+
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 
 def _flag_enabled() -> bool:
@@ -56,13 +60,13 @@ class VWBanditRouter:
             # Keeping behavior identical to fallback for now
             self._vw_model = None
 
-    def select(self, arms: Sequence[str], context: dict[str, Any] | None = None) -> str:  # noqa: ARG002
+    def select(self, arms: Sequence[str], context: dict[str, Any] | None = None) -> str:
         # Until VW integration is implemented, delegate to fallback
         return self._fallback.select(arms)
 
-    def update(self, arm: str, reward: float, context: dict[str, Any] | None = None) -> None:  # noqa: ARG002
+    def update(self, arm: str, reward: float, context: dict[str, Any] | None = None) -> None:
         # Delegate to fallback policy
         self._fallback.update(arm, reward)
 
 
-__all__ = ["VWBanditRouter", "VW_AVAILABLE"]
+__all__ = ["VW_AVAILABLE", "VWBanditRouter"]

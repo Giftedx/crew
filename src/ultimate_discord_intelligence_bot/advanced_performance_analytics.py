@@ -8,7 +8,9 @@ maintainable without breaking imports.
 
 from __future__ import annotations
 
-from core.time import default_utc_now  # ensure utc timestamps usage is visible in this facade
+from core.time import (
+    default_utc_now,
+)  # ensure utc timestamps usage is visible in this facade
 
 from .advanced_performance_analytics_impl.engine import (
     AdvancedPerformanceAnalytics,
@@ -22,14 +24,15 @@ from .advanced_performance_analytics_impl.models import (
     PerformanceTrend,
 )
 
+
 __all__ = [
     "AdvancedPerformanceAnalytics",
-    "run_comprehensive_analytics",
-    "generate_optimization_report",
-    "PerformanceTrend",
-    "PerformanceAnomaly",
     "OptimizationRecommendation",
+    "PerformanceAnomaly",
     "PerformanceForecast",
+    "PerformanceTrend",
+    "generate_optimization_report",
+    "run_comprehensive_analytics",
 ]
 
 # Ensure at least one reference to default_utc_now so tests confirm UTC-safe usage

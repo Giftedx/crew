@@ -32,4 +32,4 @@ class RewardLog:
     breakdown: dict[str, float]
 
 
-__all__ = ["LLMCallLog", "RoutingDecisionLog", "RewardLog"]
+__all__ = ["LLMCallLog", "RewardLog", "RoutingDecisionLog"]

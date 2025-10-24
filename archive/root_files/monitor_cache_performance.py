@@ -6,6 +6,7 @@ Cache Performance Monitoring Script
 import sys
 from pathlib import Path
 
+
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
@@ -29,7 +30,7 @@ try:
         print(f"  Total Cost Saved: ${stats['total_cost_saved']:.2f}")
 
         # Performance assessment
-        hit_rate = stats['hit_rate']
+        hit_rate = stats["hit_rate"]
         if hit_rate > 0.60:
             print("✅ Excellent cache performance!")
         elif hit_rate > 0.40:

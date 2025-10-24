@@ -15,12 +15,14 @@ introduced. It focuses on safe, testable composition of caching and budgeting.
 
 from __future__ import annotations
 
+import contextlib
 from collections.abc import Callable, Sequence
 from typing import Any
 
 from core.llm_cache import get_llm_cache
 from core.token_meter import cost_guard, estimate_tokens
 from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
+
 
 # Type alias for provider function: messages -> response dict/str
 ProviderFn = Callable[[Sequence[dict[str, Any]]], Any]
@@ -40,10 +42,8 @@ class LLMCallResult:  # not a dataclass to allow flexible legacy kwargs
         if response is None and "output" in kwargs:
             response = kwargs.pop("output")
         if (estimated_tokens == 0) and ("usage_tokens" in kwargs):
-            try:
+            with contextlib.suppress(Exception):
                 estimated_tokens = int(kwargs.pop("usage_tokens"))
-            except Exception:
-                pass
         # Ignore extra keys like cost, latency_ms, etc.
         self.response = response
         self.cached = bool(cached)
@@ -116,9 +116,15 @@ class LLMClient:
             try:  # non-fatal best effort
                 if isinstance(cached_resp, dict):
                     if "output" in cached_resp and isinstance(cached_resp["output"], str):
-                        transformed = {**cached_resp, "output": cached_resp["output"] + " (cached)"}
+                        transformed = {
+                            **cached_resp,
+                            "output": cached_resp["output"] + " (cached)",
+                        }
                     elif "response" in cached_resp and isinstance(cached_resp["response"], str):
-                        transformed = {**cached_resp, "response": cached_resp["response"] + " (cached)"}
+                        transformed = {
+                            **cached_resp,
+                            "response": cached_resp["response"] + " (cached)",
+                        }
                 elif isinstance(cached_resp, str):
                     transformed = cached_resp + " (cached)"
             except Exception:  # pragma: no cover
@@ -129,7 +135,12 @@ class LLMClient:
                     self._metrics.counter("llm_tokens_estimated_total", labels={"model": self.model}).add(tokens)
             except Exception:
                 pass
-            return LLMCallResult(response=transformed, cached=True, estimated_tokens=tokens, model=self.model)
+            return LLMCallResult(
+                response=transformed,
+                cached=True,
+                estimated_tokens=tokens,
+                model=self.model,
+            )
 
         # Miss path
         tokens = estimate_tokens(normalized)
@@ -155,7 +166,12 @@ class LLMClient:
             self._cache.put(normalized, self.model, resp)
         except Exception:  # pragma: no cover - defensive
             pass
-        return LLMCallResult(response=resp, cached=False, estimated_tokens=tokens + est_out, model=self.model)
+        return LLMCallResult(
+            response=resp,
+            cached=False,
+            estimated_tokens=tokens + est_out,
+            model=self.model,
+        )
 
     # ------------------ Helpers ------------------
     def _normalize_messages(self, messages: Sequence[dict[str, Any]]) -> str:
@@ -171,4 +187,4 @@ class LLMClient:
         return "\n".join(parts)
 
 
-__all__ = ["LLMClient", "LLMCallResult", "ProviderFn", "build_llm_call_result"]
+__all__ = ["LLMCallResult", "LLMClient", "ProviderFn", "build_llm_call_result"]

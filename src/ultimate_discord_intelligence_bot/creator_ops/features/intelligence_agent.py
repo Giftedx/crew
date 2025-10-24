@@ -5,16 +5,19 @@ Provides intelligent content analysis and recommendations for creators.
 
 import logging
 
-from crewai import Agent, Crew, Task
+from crewai import Agent, Crew, Task  # type: ignore[import-not-found]
 from pydantic import BaseModel
 
 from ultimate_discord_intelligence_bot.creator_ops.config import CreatorOpsConfig
 from ultimate_discord_intelligence_bot.creator_ops.features.intelligence_models import (
     EpisodeIntelligence,
 )
-from ultimate_discord_intelligence_bot.creator_ops.media.alignment import AlignedTranscript
+from ultimate_discord_intelligence_bot.creator_ops.media.alignment import (
+    AlignedTranscript,
+)
 from ultimate_discord_intelligence_bot.creator_ops.media.nlp import NLPResult
 from ultimate_discord_intelligence_bot.step_result import StepResult
+
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +48,7 @@ class EpisodeIntelligenceAgent:
         """Get configured LLM for agent."""
         # Use OpenRouter or OpenAI based on configuration
         if hasattr(self.config, "openrouter_api_key") and self.config.openrouter_api_key:
-            from langchain_openai import ChatOpenAI
+            from langchain_openai import ChatOpenAI  # type: ignore[import-not-found]
 
             return ChatOpenAI(
                 model="anthropic/claude-3-sonnet",
@@ -53,7 +56,7 @@ class EpisodeIntelligenceAgent:
                 base_url="https://openrouter.ai/api/v1",
             )
         else:
-            from langchain_openai import ChatOpenAI
+            from langchain_openai import ChatOpenAI  # type: ignore[import-not-found]
 
             return ChatOpenAI(model="gpt-4", api_key=self.config.openai_api_key)
 
@@ -194,7 +197,10 @@ class EpisodeIntelligenceAgent:
         )
 
     async def analyze_episode_intelligence(
-        self, intelligence_pack: EpisodeIntelligence, transcript: AlignedTranscript, nlp_result: NLPResult | None = None
+        self,
+        intelligence_pack: EpisodeIntelligence,
+        transcript: AlignedTranscript,
+        nlp_result: NLPResult | None = None,
     ) -> StepResult:
         """
         Analyze episode intelligence using CrewAI agents.
@@ -250,8 +256,8 @@ class EpisodeIntelligenceAgent:
             return StepResult.ok(data={"analysis": intelligence_analysis})
 
         except Exception as e:
-            logger.error(f"Intelligence analysis failed: {str(e)}")
-            return StepResult.fail(f"Intelligence analysis failed: {str(e)}")
+            logger.error(f"Intelligence analysis failed: {e!s}")
+            return StepResult.fail(f"Intelligence analysis failed: {e!s}")
 
     def _parse_crew_results(self, result) -> dict:
         """Parse results from crew execution."""
@@ -293,7 +299,7 @@ class EpisodeIntelligenceAgent:
             return analysis
 
         except Exception as e:
-            logger.error(f"Failed to parse crew results: {str(e)}")
+            logger.error(f"Failed to parse crew results: {e!s}")
             return {"episode_summary": "Analysis parsing failed", "key_insights": []}
 
     def _extract_insights(self, text: str) -> list[str]:
@@ -304,7 +310,13 @@ class EpisodeIntelligenceAgent:
         sentences = text.split(". ")
         for sentence in sentences:
             if len(sentence) > 20 and any(
-                keyword in sentence.lower() for keyword in ["insight", "recommendation", "suggestion", "opportunity"]
+                keyword in sentence.lower()
+                for keyword in [
+                    "insight",
+                    "recommendation",
+                    "suggestion",
+                    "opportunity",
+                ]
             ):
                 insights.append(sentence.strip())
 
@@ -329,7 +341,12 @@ class EpisodeIntelligenceAgent:
         self, intelligence_pack: EpisodeIntelligence, analysis: dict
     ) -> dict[str, list[str]]:
         """Generate specific recommendations based on analysis."""
-        recommendations = {"content": [], "monetization": [], "risks": [], "improvements": []}
+        recommendations = {
+            "content": [],
+            "monetization": [],
+            "risks": [],
+            "improvements": [],
+        }
 
         # Content recommendations
         if intelligence_pack.claims:
@@ -393,8 +410,8 @@ class EpisodeIntelligenceAgent:
             return StepResult.ok(data={"report": report})
 
         except Exception as e:
-            logger.error(f"Failed to generate intelligence report: {str(e)}")
-            return StepResult.fail(f"Failed to generate intelligence report: {str(e)}")
+            logger.error(f"Failed to generate intelligence report: {e!s}")
+            return StepResult.fail(f"Failed to generate intelligence report: {e!s}")
 
     async def get_intelligence_dashboard_data(
         self, intelligence_pack: EpisodeIntelligence, analysis: IntelligenceAnalysis
@@ -441,5 +458,5 @@ class EpisodeIntelligenceAgent:
             return StepResult.ok(data={"dashboard": dashboard_data})
 
         except Exception as e:
-            logger.error(f"Failed to generate dashboard data: {str(e)}")
-            return StepResult.fail(f"Failed to generate dashboard data: {str(e)}")
+            logger.error(f"Failed to generate dashboard data: {e!s}")
+            return StepResult.fail(f"Failed to generate dashboard data: {e!s}")

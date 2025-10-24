@@ -19,7 +19,9 @@ from pathlib import Path
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from features.narrative_tracker.cross_platform_narrative_tracker import get_cross_platform_narrative_tracker
+from features.narrative_tracker.cross_platform_narrative_tracker import (
+    get_cross_platform_narrative_tracker,
+)
 
 
 def main() -> int:
@@ -95,7 +97,8 @@ def main() -> int:
 
     data = result.data
 
-    print("✅ Narrative tracking completed!"    print(f"   Total content analyzed: {data['total_content_analyzed']}")
+    print("✅ Narrative tracking completed!")
+    print(f"   Total content analyzed: {data['total_content_analyzed']}")
     print(f"   Cross-platform connections: {data['cross_platform_connections']}")
     print(f"   Tracking confidence: {data.get('tracking_confidence', 0):.2f}")
     print(f"   Cache hit: {data['cache_hit']}")
@@ -109,16 +112,16 @@ def main() -> int:
         print("-" * 80)
 
         for i, thread in enumerate(narrative_threads[:3]):  # Show first 3 threads
-            thread_id = thread['thread_id']
-            title = thread.get('title', 'Untitled Thread')
-            summary = thread.get('summary', 'No summary')
-            platforms = thread.get('platforms_involved', [])
-            reach = thread.get('total_reach', 0)
-            evolution = thread.get('evolution_score', 0)
+            thread_id = thread["thread_id"]
+            title = thread.get("title", "Untitled Thread")
+            summary = thread.get("summary", "No summary")
+            platforms = thread.get("platforms_involved", [])
+            reach = thread.get("total_reach", 0)
+            evolution = thread.get("evolution_score", 0)
 
-            print(f"   {i+1}. **{title}**")
+            print(f"   {i + 1}. **{title}**")
             print(f"      Platforms: {', '.join(platforms)}")
-            print(f"      Total Reach: {reach:,}",")
+            print(f"      Total Reach: {reach:,}")
             print(f"      Evolution Score: {evolution:.2f}")
             print(f"      Summary: {summary}")
             print()
@@ -138,8 +141,13 @@ def main() -> int:
     if contradiction_result.success:
         contradiction_data = contradiction_result.data
 
-        print("✅ Contradiction analysis completed!"        print(f"   Contradictions found: {contradiction_data.get('contradictions_found', 0)}")
-        print(f"   Clarifications found: {contradiction_data.get('clarifications_found', 0)}")
+        print("✅ Contradiction analysis completed!")
+        print(
+            f"   Contradictions found: {contradiction_data.get('contradictions_found', 0)}"
+        )
+        print(
+            f"   Clarifications found: {contradiction_data.get('clarifications_found', 0)}"
+        )
 
         # Show contradictions
         contradictions = contradiction_data.get("contradictions", [])
@@ -147,9 +155,13 @@ def main() -> int:
             print("   Contradictions detected:")
             for i, contradiction in enumerate(contradictions[:2]):
                 score = contradiction.get("contradiction_score", 0)
-                print(f"     {i+1}. Score: {score:.2f}")
-                print(f"        Original: {contradiction['item1'].get('title', 'Unknown')}")
-                print(f"        Contradiction: {contradiction['item2'].get('title', 'Unknown')}")
+                print(f"     {i + 1}. Score: {score:.2f}")
+                print(
+                    f"        Original: {contradiction['item1'].get('title', 'Unknown')}"
+                )
+                print(
+                    f"        Contradiction: {contradiction['item2'].get('title', 'Unknown')}"
+                )
 
         # Show clarifications
         clarifications = contradiction_data.get("clarifications", [])
@@ -157,9 +169,13 @@ def main() -> int:
             print("   Clarifications detected:")
             for i, clarification in enumerate(clarifications[:2]):
                 score = clarification.get("clarification_score", 0)
-                print(f"     {i+1}. Score: {score:.2f}")
-                print(f"        Original: {clarification['original_item'].get('title', 'Unknown')}")
-                print(f"        Clarification: {clarification['clarifying_item'].get('title', 'Unknown')}")
+                print(f"     {i + 1}. Score: {score:.2f}")
+                print(
+                    f"        Original: {clarification['original_item'].get('title', 'Unknown')}"
+                )
+                print(
+                    f"        Clarification: {clarification['clarifying_item'].get('title', 'Unknown')}"
+                )
     else:
         print(f"❌ Contradiction analysis failed: {contradiction_result.error}")
 
@@ -173,7 +189,10 @@ def main() -> int:
         thread = narrative_threads[0]
 
         # Convert back to NarrativeThread object for timeline generation
-        from features.narrative_tracker.cross_platform_narrative_tracker import NarrativeThread, NarrativeEvent
+        from features.narrative_tracker.cross_platform_narrative_tracker import (
+            NarrativeEvent,
+            NarrativeThread,
+        )
 
         # Create a simplified thread for demo
         events = []
@@ -208,9 +227,12 @@ def main() -> int:
         if timeline_result.success:
             timeline_data = timeline_result.data
 
-            print("✅ Timeline generated!"            print(f"   Thread ID: {timeline_data['thread_id']}")
+            print("✅ Timeline generated!")
+            print(f"   Thread ID: {timeline_data['thread_id']}")
             print(f"   Total events: {timeline_data['total_events']}")
-            print(f"   Platforms involved: {', '.join(timeline_data['platforms_involved'])}")
+            print(
+                f"   Platforms involved: {', '.join(timeline_data['platforms_involved'])}"
+            )
 
             # Show timeline events
             events = timeline_data.get("timeline_events", [])
@@ -220,7 +242,9 @@ def main() -> int:
                     timestamp = event.get("timestamp", 0)
                     event_type = event.get("narrative_type", "unknown")
                     platform_count = len(event.get("platform_sequence", []))
-                    print(f"     {i+1}. {event_type.title()} at {timestamp} ({platform_count} platforms)")
+                    print(
+                        f"     {i + 1}. {event_type.title()} at {timestamp} ({platform_count} platforms)"
+                    )
         else:
             print(f"❌ Timeline generation failed: {timeline_result.error}")
 
@@ -254,4 +278,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
-

@@ -15,6 +15,7 @@ from typing import Any, Protocol
 from ..step_result import StepResult
 from .strategies import get_strategy_registry
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -46,9 +47,7 @@ class OrchestratorProtocol(Protocol):
 class OrchestrationFacade:
     """Unified orchestrator facade with strategy selection."""
 
-    def __init__(
-        self, strategy: OrchestrationStrategy = OrchestrationStrategy.AUTONOMOUS
-    ):
+    def __init__(self, strategy: OrchestrationStrategy = OrchestrationStrategy.AUTONOMOUS):
         """Initialize orchestrator with specified strategy.
 
         Args:
@@ -92,9 +91,7 @@ class OrchestrationFacade:
             self._orchestrator = TrainingOrchestrator()
 
         else:
-            raise ValueError(
-                f"Strategy '{strategy_name}' not found in registry and no legacy fallback available"
-            )
+            raise ValueError(f"Strategy '{strategy_name}' not found in registry and no legacy fallback available")
 
         logger.info(f"Initialized {self.strategy.value} orchestrator (legacy)")
         return self._orchestrator
@@ -144,9 +141,7 @@ class OrchestrationFacade:
                     return StepResult.ok(data=result)
                 return result
             else:
-                return StepResult.fail(
-                    f"Orchestrator {type(orchestrator).__name__} missing execute method"
-                )
+                return StepResult.fail(f"Orchestrator {type(orchestrator).__name__} missing execute method")
 
         except Exception as exc:
             logger.error(f"Workflow execution failed: {exc}", exc_info=True)
@@ -199,7 +194,7 @@ _register_strategies()
 
 
 __all__ = [
-    "OrchestrationStrategy",
     "OrchestrationFacade",
+    "OrchestrationStrategy",
     "get_orchestrator",
 ]

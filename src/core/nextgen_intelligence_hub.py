@@ -17,9 +17,14 @@ from core.time import default_utc_now
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
 from .code_intelligence import CodeIntelligenceEngine
-from .predictive_operations import PerformanceMetric, PredictiveOperationsEngine, ResourceType
+from .predictive_operations import (
+    PerformanceMetric,
+    PredictiveOperationsEngine,
+    ResourceType,
+)
 from .resilience_orchestrator import get_resilience_orchestrator
 from .security_fortification import SecurityOrchestrator
+
 
 logger = logging.getLogger(__name__)
 
@@ -62,7 +67,12 @@ class NextGenIntelligenceHub:
                 return_exceptions=True,
             )
 
-            code_analysis, security_analysis, performance_analysis, resilience_analysis = results
+            (
+                code_analysis,
+                security_analysis,
+                performance_analysis,
+                resilience_analysis,
+            ) = results
 
             # Compile comprehensive report
             comprehensive_report = {
@@ -223,13 +233,13 @@ class NextGenIntelligenceHub:
 
         # Reduce score for open circuit breakers
         circuit_breakers = health_summary.get("circuit_breakers", {})
-        for cb_name, cb_info in circuit_breakers.items():
+        for _cb_name, cb_info in circuit_breakers.items():
             if cb_info.get("state") == "open":
                 base_score -= 10
 
         # Reduce score for unhealthy services
         service_health = health_summary.get("service_health", {})
-        for service_name, service_info in service_health.items():
+        for _service_name, service_info in service_health.items():
             if not service_info.get("is_healthy", True):
                 base_score -= 5
 
@@ -372,7 +382,9 @@ class NextGenIntelligenceHub:
 
 
 # Convenient function for easy access
-async def run_comprehensive_intelligence_analysis(project_root: Path | None = None) -> StepResult:
+async def run_comprehensive_intelligence_analysis(
+    project_root: Path | None = None,
+) -> StepResult:
     """
     Run comprehensive intelligence analysis across all domains.
 

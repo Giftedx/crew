@@ -7,12 +7,17 @@ factual memory, sense-making, and associative retrieval.
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, Sequence
+from typing import TYPE_CHECKING, Any
 
 from ultimate_discord_intelligence_bot.step_result import StepResult
 from ultimate_discord_intelligence_bot.tools.hipporag_continual_memory_tool import (
     HippoRagContinualMemoryTool,
 )
+
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
 
 logger = logging.getLogger(__name__)
 
@@ -40,9 +45,7 @@ class HippoRAGPlugin:
             logger.warning(f"HippoRAGPlugin initialization failed: {exc}")
             self._tool = None
 
-    async def store(
-        self, namespace: str, records: Sequence[Dict[str, Any]]
-    ) -> StepResult:
+    async def store(self, namespace: str, records: Sequence[dict[str, Any]]) -> StepResult:
         """Store records in HippoRAG continual memory.
 
         Args:
@@ -97,14 +100,10 @@ class HippoRAGPlugin:
                     if memory_id:
                         memory_ids.append(memory_id)
                 else:
-                    logger.warning(
-                        f"Failed to store record in HippoRAG: {result.error}"
-                    )
+                    logger.warning(f"Failed to store record in HippoRAG: {result.error}")
 
             if stored_count == 0:
-                return StepResult.fail(
-                    "No records stored successfully", namespace=namespace
-                )
+                return StepResult.fail("No records stored successfully", namespace=namespace)
 
             return StepResult.ok(
                 stored=stored_count,

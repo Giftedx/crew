@@ -29,9 +29,13 @@ def fix_ensure_utc_calls():
             content = f.read()
 
         # Add import if not present
-        if "from ultimate_discord_intelligence_bot.core.time import ensure_utc" in content and "default_utc_now" not in content:
+        if (
+            "from ultimate_discord_intelligence_bot.core.time import ensure_utc" in content
+            and "default_utc_now" not in content
+        ):
             content = content.replace(
-                "from ultimate_discord_intelligence_bot.core.time import ensure_utc", "from ultimate_discord_intelligence_bot.core.time import ensure_utc, default_utc_now"
+                "from ultimate_discord_intelligence_bot.core.time import ensure_utc",
+                "from ultimate_discord_intelligence_bot.core.time import ensure_utc, default_utc_now",
             )
 
         # Replace ensure_utc() calls

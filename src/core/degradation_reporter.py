@@ -26,10 +26,16 @@ from dataclasses import dataclass
 from threading import RLock
 from time import time
 
-from core.settings import get_settings
 from obs import metrics
+from ultimate_discord_intelligence_bot.settings import Settings
 
-__all__ = ["DegradationEvent", "DegradationReporter", "get_degradation_reporter", "record_degradation"]
+
+__all__ = [
+    "DegradationEvent",
+    "DegradationReporter",
+    "get_degradation_reporter",
+    "record_degradation",
+]
 
 
 @dataclass(slots=True)
@@ -67,7 +73,7 @@ class DegradationReporter:
         detail: optional human readable explanation (NOT placed in metric labels)
         added_latency_ms: optional numeric latency impact; feeds a histogram
         """
-        settings = get_settings()
+        settings = Settings()
         if not getattr(settings, "enable_degradation_reporter", False):  # fast path exit
             return
         evt = DegradationEvent(time(), component, event_type, severity, detail, added_latency_ms)

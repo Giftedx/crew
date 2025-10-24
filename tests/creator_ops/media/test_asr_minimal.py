@@ -165,7 +165,7 @@ class TestASRMinimal:
 
         # Count substitutions, insertions, deletions
         # This is a simplified version - real WER uses edit distance
-        substitutions = sum(1 for r, h in zip(ref_words, hyp_words) if r != h)
+        substitutions = sum(1 for r, h in zip(ref_words, hyp_words, strict=False) if r != h)
         insertions = max(0, len(hyp_words) - len(ref_words))
         deletions = max(0, len(ref_words) - len(hyp_words))
 

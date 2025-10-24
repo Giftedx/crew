@@ -1,14 +1,19 @@
 from __future__ import annotations
 
+import contextlib
 import logging
 import statistics
 from typing import Any
+
 
 logger = logging.getLogger(__name__)
 
 
 def calculate_system_health_score(
-    engine, trends: list[dict[str, Any]], anomalies: list[Any], dashboard_data: dict[str, Any]
+    engine,
+    trends: list[dict[str, Any]],
+    anomalies: list[Any],
+    dashboard_data: dict[str, Any],
 ) -> float:
     try:
         health_factors: list[tuple[str, float, float]] = []
@@ -26,10 +31,8 @@ def calculate_system_health_score(
                 recent = agent_data.get("recent_interactions", [])
                 if recent:
                     scores = [i.get("response_quality", 0) for i in recent[-5:]]
-                    try:
+                    with contextlib.suppress(statistics.StatisticsError):
                         quality_scores.append(statistics.mean(scores))
-                    except statistics.StatisticsError:
-                        pass
             if quality_scores:
                 try:
                     avg_quality = statistics.mean(quality_scores)

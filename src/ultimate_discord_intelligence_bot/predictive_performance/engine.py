@@ -9,6 +9,7 @@ import numpy as np
 
 from obs import metrics as obs_metrics
 
+
 # Optional scikit-learn dependency: provide lightweight fallback
 try:  # pragma: no cover - import guarded for optional dep
     from sklearn.ensemble import IsolationForest  # type: ignore
@@ -64,6 +65,7 @@ from .models import (
     PredictionConfidence,
 )
 
+
 try:  # pragma: no cover - optional tracing dependency
     from obs import tracing as _obs_tracing
 except Exception:  # pragma: no cover - fallback no-op
@@ -95,7 +97,12 @@ def _record_outcome(component: str, outcome: str) -> None:
     try:  # pragma: no cover - metrics optional
         _metrics.counter("predictive_engine_runs_total", labels=labels).inc()
     except Exception as exc:  # pragma: no cover - defensive
-        logger.debug("metrics emit failed (component=%s, outcome=%s): %s", component, outcome, exc)
+        logger.debug(
+            "metrics emit failed (component=%s, outcome=%s): %s",
+            component,
+            outcome,
+            exc,
+        )
 
 
 def _record_duration(component: str, outcome: str, duration: float) -> None:
@@ -222,11 +229,27 @@ class PredictivePerformanceInsights(
             _record_duration(component, outcome, duration)
 
             if outcome == "success":
-                _set_gauge("predictive_engine_predictions_total", float(total_predictions), component)
+                _set_gauge(
+                    "predictive_engine_predictions_total",
+                    float(total_predictions),
+                    component,
+                )
                 _set_gauge("predictive_engine_warnings_total", float(total_warnings), component)
-                _set_gauge("predictive_engine_capacity_forecasts_total", float(total_forecasts), component)
-                _set_gauge("predictive_engine_drift_alerts_total", float(total_drift_alerts), component)
-                _set_gauge("predictive_engine_reliability_score", float(reliability_score), component)
+                _set_gauge(
+                    "predictive_engine_capacity_forecasts_total",
+                    float(total_forecasts),
+                    component,
+                )
+                _set_gauge(
+                    "predictive_engine_drift_alerts_total",
+                    float(total_drift_alerts),
+                    component,
+                )
+                _set_gauge(
+                    "predictive_engine_reliability_score",
+                    float(reliability_score),
+                    component,
+                )
 
             return result
 
@@ -238,7 +261,10 @@ class PredictivePerformanceInsights(
             outcome = "success"
             try:
                 if hasattr(self.enhanced_monitor, "real_time_metrics"):
-                    for agent_name, agent_data in self.enhanced_monitor.real_time_metrics.items():
+                    for (
+                        agent_name,
+                        agent_data,
+                    ) in self.enhanced_monitor.real_time_metrics.items():
                         recent_interactions = agent_data.get("recent_interactions", [])
                         for interaction in recent_interactions[-10:]:
                             timestamp = interaction.get("timestamp", default_utc_now())
@@ -322,8 +348,16 @@ class PredictivePerformanceInsights(
             _record_outcome(component, outcome)
             _record_duration(component, outcome, duration)
             if outcome == "success":
-                _set_gauge("predictive_engine_prediction_groups", float(len(predictions)), component)
-                _set_gauge("predictive_engine_predictions_total", float(total_predictions), component)
+                _set_gauge(
+                    "predictive_engine_prediction_groups",
+                    float(len(predictions)),
+                    component,
+                )
+                _set_gauge(
+                    "predictive_engine_predictions_total",
+                    float(total_predictions),
+                    component,
+                )
             return predictions
 
     def _create_metric_prediction(
@@ -344,7 +378,10 @@ class PredictivePerformanceInsights(
             mse = (residuals**2).mean()
             std_error = float(np.sqrt(mse * (1 + 1 / len(values))))
             margin = 1.96 * std_error
-            confidence_interval = (float(predicted_value - margin), float(predicted_value + margin))
+            confidence_interval = (
+                float(predicted_value - margin),
+                float(predicted_value + margin),
+            )
             confidence_level = self._determine_confidence_level(accuracy, len(values))
             contributing_factors = self._identify_contributing_factors(metric_name, historical_data)
             uncertainty_factors = self._identify_uncertainty_factors(values, accuracy)
@@ -430,7 +467,11 @@ class PredictivePerformanceInsights(
             _record_outcome(component, outcome)
             _record_duration(component, outcome, duration)
             if outcome == "success":
-                _set_gauge("predictive_engine_capacity_forecasts_total", float(len(forecasts)), component)
+                _set_gauge(
+                    "predictive_engine_capacity_forecasts_total",
+                    float(len(forecasts)),
+                    component,
+                )
             return forecasts
 
     async def _detect_model_drift(self) -> list[ModelDriftAlert]:
@@ -458,7 +499,11 @@ class PredictivePerformanceInsights(
             _record_outcome(component, outcome)
             _record_duration(component, outcome, duration)
             if outcome == "success":
-                _set_gauge("predictive_engine_drift_alerts_total", float(len(drift_alerts)), component)
+                _set_gauge(
+                    "predictive_engine_drift_alerts_total",
+                    float(len(drift_alerts)),
+                    component,
+                )
             return drift_alerts
 
     # Defensive shim: some environments reported AttributeError for
@@ -564,6 +609,6 @@ async def get_early_warning_alerts() -> list[EarlyWarningAlert]:
 
 __all__ = [
     "PredictivePerformanceInsights",
-    "run_predictive_analysis",
     "get_early_warning_alerts",
+    "run_predictive_analysis",
 ]

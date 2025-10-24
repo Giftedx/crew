@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from fastapi import FastAPI
+
+if TYPE_CHECKING:
+    from fastapi import FastAPI
 
 
 def register_a2a_router(app: FastAPI, settings: Any) -> None:

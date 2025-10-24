@@ -19,7 +19,9 @@ from pathlib import Path
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from features.smart_clip_composer.smart_clip_composer_service import get_smart_clip_composer_service
+from features.smart_clip_composer.smart_clip_composer_service import (
+    get_smart_clip_composer_service,
+)
 
 
 def main() -> int:
@@ -97,7 +99,8 @@ def main() -> int:
 
     data = result.data
 
-    print("✅ Clip suggestions generated!"    print(f"   Total suggestions: {len(data['suggestions'])}")
+    print("✅ Clip suggestions generated!")
+    print(f"   Total suggestions: {len(data['suggestions'])}")
     print(f"   Content duration: {data['total_content_duration']:.0f}s")
     print(f"   Cache hit: {data['cache_hit']}")
     print(f"   Processing time: {data['processing_time_ms']:.0f}ms")
@@ -110,30 +113,34 @@ def main() -> int:
         print("-" * 100)
 
         for i, suggestion in enumerate(suggestions[:5]):  # Show top 5
-            start_time = suggestion['start_time']
-            end_time = suggestion['end_time']
-            duration = suggestion['duration']
-            title = suggestion['title']
-            confidence = suggestion['confidence_score']
-            platforms = suggestion.get('suggested_platforms', [])
+            start_time = suggestion["start_time"]
+            end_time = suggestion["end_time"]
+            duration = suggestion["duration"]
+            title = suggestion["title"]
+            confidence = suggestion["confidence_score"]
+            platforms = suggestion.get("suggested_platforms", [])
 
-            print(f"   {i+1}. **{title}**")
-            print(f"      Duration: {duration:.1f}s ({start_time:.1f}s - {end_time:.1f}s)")
+            print(f"   {i + 1}. **{title}**")
+            print(
+                f"      Duration: {duration:.1f}s ({start_time:.1f}s - {end_time:.1f}s)"
+            )
             print(f"      Confidence: {confidence:.2f}")
             print(f"      Platforms: {', '.join(platforms)}")
 
             # Show signal scores
-            signal_scores = suggestion.get('signal_scores', {})
+            signal_scores = suggestion.get("signal_scores", {})
             if signal_scores:
                 print("      Signal Scores:")
                 for signal, score in signal_scores.items():
                     print(f"        {signal}: {score:.2f}")
 
             # Show description preview
-            description = suggestion.get('description', '')
+            description = suggestion.get("description", "")
             if description:
-                desc_preview = description[:80] + "..." if len(description) > 80 else description
-                print(f"      Description: \"{desc_preview}\"")
+                desc_preview = (
+                    description[:80] + "..." if len(description) > 80 else description
+                )
+                print(f'      Description: "{desc_preview}"')
 
             print()
 
@@ -152,11 +159,13 @@ def main() -> int:
         print(f"   Base: {base_suggestion['title']}")
 
         # Generate variants
-        variant_objects = composer.generate_clip_variants(base_suggestion, num_variants=2)
+        variant_objects = composer.generate_clip_variants(
+            base_suggestion, num_variants=2
+        )
 
         for i, variant in enumerate(variant_objects[:3]):
             expected_perf = variant.expected_performance
-            print(f"   Variant {i+1}: {variant.title}")
+            print(f"   Variant {i + 1}: {variant.title}")
             print(f"     Description: {variant.description[:50]}...")
             print(f"     Expected Performance: {expected_perf:.1%}")
             print()
@@ -191,7 +200,8 @@ def main() -> int:
 
         if extraction_result.success:
             extraction_data = extraction_result.data
-            print("✅ Clip extraction simulated successfully!"            print(f"   Source: {extraction_data['source_video']}")
+            print("✅ Clip extraction simulated successfully!")
+            print(f"   Source: {extraction_data['source_video']}")
             print(f"   Output: {extraction_data['output_clip']}")
             print(f"   Duration: {extraction_data['duration']:.1f}s")
         else:
@@ -206,14 +216,15 @@ def main() -> int:
 
         thumbnail_result = composer.generate_thumbnail(
             video_path="/path/to/source/video.mp4",
-            timestamp=first_suggestion['start_time'] + 5,  # 5 seconds into clip
-            thumbnail_text=first_suggestion['thumbnail_text'],
+            timestamp=first_suggestion["start_time"] + 5,  # 5 seconds into clip
+            thumbnail_text=first_suggestion["thumbnail_text"],
             output_path="/path/to/output/thumbnail.jpg",
         )
 
         if thumbnail_result.success:
             thumbnail_data = thumbnail_result.data
-            print("✅ Thumbnail generation simulated successfully!"            print(f"   Source: {thumbnail_data['source_video']}")
+            print("✅ Thumbnail generation simulated successfully!")
+            print(f"   Source: {thumbnail_data['source_video']}")
             print(f"   Output: {thumbnail_data['output_thumbnail']}")
             print(f"   Timestamp: {thumbnail_data['timestamp']:.1f}s")
             print(f"   Text: {thumbnail_data['thumbnail_text']}")
@@ -237,4 +248,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
-

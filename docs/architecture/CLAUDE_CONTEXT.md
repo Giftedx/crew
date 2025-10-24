@@ -214,7 +214,7 @@ response = retrying_post(url, json=payload, timeout=30)
 
 The project uses incremental mypy adoption:
 
-- Current baseline: ~120 errors (tracked in `mypy_baseline.json`)
+- Current baseline: 58 errors (tracked in `mypy_baseline.json`)
 - New code should be fully typed
 - Never increase the baseline error count
 - Use `./scripts/dev.sh type-baseline-update` if error count decreases
@@ -280,7 +280,12 @@ For changes affecting routing, prompting, or grounding:
 ```bash
 make eval
 # or
-python -m eval.runner datasets/golden/core/v1 baselines/golden/core/v1/summary.json
+### Evaluation
+
+```bash
+python -m eval.runner datasets/golden/core/v1 benchmarks/baselines/golden/core/v1/summary.json
+```
+
 ```
 
 This file should be updated when new architectural patterns or development workflows are established.

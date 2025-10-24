@@ -33,6 +33,7 @@ from typing import Any
 
 import numpy as np
 
+
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
@@ -113,7 +114,13 @@ class DashboardConfig:
 
     def __post_init__(self):
         if self.algorithms is None:
-            self.algorithms = ["doubly_robust", "offset_tree", "linucb", "thompson_sampling", "epsilon_greedy"]
+            self.algorithms = [
+                "doubly_robust",
+                "offset_tree",
+                "linucb",
+                "thompson_sampling",
+                "epsilon_greedy",
+            ]
         if self.domains is None:
             self.domains = ["model_routing", "content_analysis", "user_engagement"]
 
@@ -196,8 +203,20 @@ class MetricsCollector:
                 # Add individual metric points
                 self._add_metric_point("reward_rate", metrics.reward_rate, algorithm, domain, timestamp)
                 self._add_metric_point("latency_p95", metrics.latency_p95, algorithm, domain, timestamp)
-                self._add_metric_point("memory_usage", metrics.memory_usage_mb, algorithm, domain, timestamp)
-                self._add_metric_point("user_satisfaction", metrics.user_satisfaction, algorithm, domain, timestamp)
+                self._add_metric_point(
+                    "memory_usage",
+                    metrics.memory_usage_mb,
+                    algorithm,
+                    domain,
+                    timestamp,
+                )
+                self._add_metric_point(
+                    "user_satisfaction",
+                    metrics.user_satisfaction,
+                    algorithm,
+                    domain,
+                    timestamp,
+                )
 
     def _get_base_performance(self, algorithm: str) -> float:
         """Get base performance for algorithm based on benchmark results."""
@@ -210,7 +229,14 @@ class MetricsCollector:
         }
         return base_performances.get(algorithm, 0.6)
 
-    def _add_metric_point(self, metric_name: str, value: float, algorithm: str, domain: str, timestamp: datetime):
+    def _add_metric_point(
+        self,
+        metric_name: str,
+        value: float,
+        algorithm: str,
+        domain: str,
+        timestamp: datetime,
+    ):
         """Add a metric point to the time series data."""
         key = f"{metric_name}_{algorithm}_{domain}"
         point = MetricPoint(timestamp, value, algorithm, domain)
@@ -339,7 +365,7 @@ class AlertManager:
         violations = []
         recent_metrics = self.collector.get_recent_metrics(alert_config.metric_name, 5)
 
-        for key, points in recent_metrics.items():
+        for _key, points in recent_metrics.items():
             if not points:
                 continue
 
@@ -348,11 +374,11 @@ class AlertManager:
             domain = points[-1].domain
 
             is_violation = False
-            if alert_config.comparison == "gt" and latest_value > alert_config.threshold:
-                is_violation = True
-            elif alert_config.comparison == "lt" and latest_value < alert_config.threshold:
-                is_violation = True
-            elif alert_config.comparison == "eq" and abs(latest_value - alert_config.threshold) < 0.001:
+            if (
+                (alert_config.comparison == "gt" and latest_value > alert_config.threshold)
+                or (alert_config.comparison == "lt" and latest_value < alert_config.threshold)
+                or (alert_config.comparison == "eq" and abs(latest_value - alert_config.threshold) < 0.001)
+            ):
                 is_violation = True
 
             if is_violation:
@@ -592,9 +618,12 @@ class DashboardRenderer:
         else:
             for alert in active_alerts:
                 duration_min = alert["duration_seconds"] / 60
-                severity_emoji = {"low": "🟡", "medium": "🟠", "high": "🔴", "critical": "🚨"}.get(
-                    alert.get("severity", "medium"), "🟡"
-                )
+                severity_emoji = {
+                    "low": "🟡",
+                    "medium": "🟠",
+                    "high": "🔴",
+                    "critical": "🚨",
+                }.get(alert.get("severity", "medium"), "🟡")
 
                 lines.append(
                     f"{severity_emoji} {alert['metric']} | "
@@ -747,7 +776,11 @@ class AdvancedMetricsDashboard:
             if domain_rewards:
                 avg_score = statistics.mean(domain_rewards)
                 comparisons.append(
-                    {"algorithm": algorithm, "average_score": avg_score, "domain_count": len(domain_rewards)}
+                    {
+                        "algorithm": algorithm,
+                        "average_score": avg_score,
+                        "domain_count": len(domain_rewards),
+                    }
                 )
 
         return sorted(comparisons, key=lambda x: x["average_score"], reverse=True)
@@ -821,7 +854,11 @@ async def main():
     print("=" * 80)
 
     # Configuration
-    config = DashboardConfig(collection_interval_seconds=2, refresh_interval_seconds=3, chart_window_minutes=30)
+    config = DashboardConfig(
+        collection_interval_seconds=2,
+        refresh_interval_seconds=3,
+        chart_window_minutes=30,
+    )
 
     print("Configuration:")
     print(f"  Algorithms: {', '.join(config.algorithms)}")

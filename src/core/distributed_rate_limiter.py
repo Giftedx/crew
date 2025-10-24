@@ -15,6 +15,7 @@ from redis.exceptions import ConnectionError, RedisError
 
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -64,15 +65,15 @@ class DistributedRateLimiter:
         local tokens_requested = tonumber(ARGV[3])
         local now = tonumber(ARGV[4])
         local ttl = tonumber(ARGV[5])
-        
+
         local current = redis.call('HMGET', key, 'tokens', 'last_refill')
         local tokens = tonumber(current[1]) or capacity
         local last_refill = tonumber(current[2]) or now
-        
+
         -- Refill tokens based on time elapsed
         local time_elapsed = now - last_refill
         local new_tokens = math.min(capacity, tokens + (time_elapsed * refill_rate))
-        
+
         if new_tokens >= tokens_requested then
             new_tokens = new_tokens - tokens_requested
             redis.call('HMSET', key, 'tokens', new_tokens, 'last_refill', now)
@@ -115,7 +116,14 @@ class DistributedRateLimiter:
                 return self._fallback_allow(key, tokens)
             else:
                 # No Redis, no fallback - deny request
-                return False, 0, {"method": "denied_no_backend", "error": "No rate limiting backend available"}
+                return (
+                    False,
+                    0,
+                    {
+                        "method": "denied_no_backend",
+                        "error": "No rate limiting backend available",
+                    },
+                )
 
         except Exception as e:
             logger.error(f"Rate limiting error for key {key}: {e}")
@@ -247,7 +255,7 @@ class DistributedRateLimiter:
 
         except Exception as e:
             logger.error(f"Failed to reset bucket {key}: {e}")
-            return StepResult.fail(f"Failed to reset bucket: {str(e)}")
+            return StepResult.fail(f"Failed to reset bucket: {e!s}")
 
     def health_check(self) -> StepResult:
         """Perform health check on rate limiter."""
@@ -272,7 +280,7 @@ class DistributedRateLimiter:
 
         except Exception as e:
             logger.error(f"Rate limiter health check failed: {e}")
-            return StepResult.fail(f"Health check failed: {str(e)}")
+            return StepResult.fail(f"Health check failed: {e!s}")
 
     def reconnect_redis(self, redis_url: str) -> StepResult:
         """Attempt to reconnect to Redis."""
@@ -288,7 +296,7 @@ class DistributedRateLimiter:
 
         except Exception as e:
             logger.error(f"Failed to reconnect to Redis: {e}")
-            return StepResult.fail(f"Redis reconnection failed: {str(e)}")
+            return StepResult.fail(f"Redis reconnection failed: {e!s}")
 
 
 # Global rate limiter instance
@@ -321,13 +329,10 @@ def rate_limit_middleware(key_func: callable | None = None):
             rate_limiter = get_distributed_rate_limiter()
 
             # Generate key for rate limiting
-            if key_func:
-                key = key_func(*args, **kwargs)
-            else:
-                key = f"{func.__name__}:{hash(str(args) + str(kwargs))}"
+            key = key_func(*args, **kwargs) if key_func else f"{func.__name__}:{hash(str(args) + str(kwargs))}"
 
             # Check rate limit
-            allowed, remaining, metadata = rate_limiter.allow(key)
+            allowed, remaining, _metadata = rate_limiter.allow(key)
 
             if not allowed:
                 raise Exception(f"Rate limit exceeded for key: {key}")

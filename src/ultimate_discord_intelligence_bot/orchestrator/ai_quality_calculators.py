@@ -9,6 +9,7 @@ Extracted from confidence_calculators.py to improve maintainability and organiza
 import logging
 from typing import Any
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -74,7 +75,12 @@ def calculate_ai_enhancement_level(depth: str, log: logging.Logger | None = None
         if not log:
             log = logger
 
-        depth_levels = {"shallow": 0.25, "standard": 0.5, "deep": 0.75, "experimental": 1.0}
+        depth_levels = {
+            "shallow": 0.25,
+            "standard": 0.5,
+            "deep": 0.75,
+            "experimental": 1.0,
+        }
 
         return depth_levels.get(depth.lower(), 0.5)
 
@@ -129,7 +135,12 @@ def calculate_synthesis_confidence(research_results: dict[str, Any], log: loggin
                 "comprehensive",
                 "cohesive",
             ]
-            uncertainty_words = ["fragmented", "disjointed", "inconsistent", "contradictory"]
+            uncertainty_words = [
+                "fragmented",
+                "disjointed",
+                "inconsistent",
+                "contradictory",
+            ]
 
             synthesis_count = sum(1 for word in synthesis_words if word in text_data)
             uncertainty_count = sum(1 for word in uncertainty_words if word in text_data)
@@ -219,8 +230,20 @@ def calculate_overall_confidence(*data_sources, log: logging.Logger | None = Non
                 else:
                     # Analyze text content for confidence indicators
                     text = str(source).lower()
-                    confidence_words = ["high", "excellent", "strong", "reliable", "accurate"]
-                    uncertainty_words = ["low", "poor", "weak", "unreliable", "inaccurate"]
+                    confidence_words = [
+                        "high",
+                        "excellent",
+                        "strong",
+                        "reliable",
+                        "accurate",
+                    ]
+                    uncertainty_words = [
+                        "low",
+                        "poor",
+                        "weak",
+                        "unreliable",
+                        "inaccurate",
+                    ]
 
                     conf_count = sum(1 for word in confidence_words if word in text)
                     unc_count = sum(1 for word in uncertainty_words if word in text)
@@ -239,8 +262,19 @@ def calculate_overall_confidence(*data_sources, log: logging.Logger | None = Non
             elif isinstance(source, str):
                 # Analyze string content for confidence indicators
                 source_lower = source.lower()
-                confidence_words = ["confident", "certain", "sure", "definitive", "conclusive"]
-                uncertainty_words = ["uncertain", "doubtful", "speculative", "tentative"]
+                confidence_words = [
+                    "confident",
+                    "certain",
+                    "sure",
+                    "definitive",
+                    "conclusive",
+                ]
+                uncertainty_words = [
+                    "uncertain",
+                    "doubtful",
+                    "speculative",
+                    "tentative",
+                ]
 
                 conf_count = sum(1 for word in confidence_words if word in source_lower)
                 unc_count = sum(1 for word in uncertainty_words if word in source_lower)

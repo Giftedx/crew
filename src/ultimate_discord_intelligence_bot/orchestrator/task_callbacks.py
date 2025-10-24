@@ -6,8 +6,10 @@ and propagating structured data between crew tasks.
 Extracted from crew_builders.py to improve maintainability and organization.
 """
 
+import contextlib
 import logging
 from typing import Any
+
 
 # Module-level logger
 logger = logging.getLogger(__name__)
@@ -89,10 +91,9 @@ def task_completion_callback(
         _logger.info(f"📋 Processing task completion for: {task_name}")
 
         # Check for placeholder responses
-        if detect_placeholder_callback:
-            if detect_placeholder_callback(raw_output):
-                _logger.error(f"❌ PLACEHOLDER RESPONSE DETECTED in {task_name} task")
-                return
+        if detect_placeholder_callback and detect_placeholder_callback(raw_output):
+            _logger.error(f"❌ PLACEHOLDER RESPONSE DETECTED in {task_name} task")
+            return
 
         # Try to extract JSON data
         json_data = None
@@ -126,7 +127,7 @@ def task_completion_callback(
 
         # Track metrics
         if metrics_instance:
-            try:
+            with contextlib.suppress(Exception):
                 metrics_instance.counter(
                     "autointel_task_completed",
                     labels={
@@ -135,8 +136,6 @@ def task_completion_callback(
                         "output_size": len(raw_output),
                     },
                 ).inc()
-            except Exception:
-                pass
 
         _logger.info(f"✅ Task completion processed for {task_name}")
 

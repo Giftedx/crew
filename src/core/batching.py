@@ -10,11 +10,15 @@ import asyncio
 import logging
 import sqlite3
 import time
-from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from .error_handling import log_error
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
 
 logger = logging.getLogger(__name__)
 
@@ -74,13 +78,21 @@ class BatchMetrics:
             log_error(
                 e,
                 message="Failed to record batch metrics - invalid data types",
-                context={"batch_size": size, "execution_time": execution_time, "operation": "metrics_calculation"},
+                context={
+                    "batch_size": size,
+                    "execution_time": execution_time,
+                    "operation": "metrics_calculation",
+                },
             )
         except (OverflowError, ArithmeticError) as e:
             log_error(
                 e,
                 message="Failed to record batch metrics - arithmetic overflow",
-                context={"batch_size": size, "execution_time": execution_time, "operation": "metrics_calculation"},
+                context={
+                    "batch_size": size,
+                    "execution_time": execution_time,
+                    "operation": "metrics_calculation",
+                },
             )
 
     @property
@@ -151,7 +163,7 @@ class RequestBatcher:
 
         # Use parameterized query to prevent SQL injection
         placeholders = ",".join("?" * len(columns))
-        sql = f"INSERT INTO {table} ({','.join(columns)}) VALUES ({placeholders})"
+        sql = f"INSERT INTO {table} ({','.join(columns)}) VALUES ({placeholders})"  # nosec B608 - table/column names can't be parameterized, values use ? placeholders
 
         for value_tuple in values:
             config = BatchConfig(
@@ -173,7 +185,7 @@ class RequestBatcher:
     ) -> None:
         """Add update operation."""
         # Use parameterized query to prevent SQL injection
-        sql = f"UPDATE {table} SET {set_clause} WHERE {where_clause}"
+        sql = f"UPDATE {table} SET {set_clause} WHERE {where_clause}"  # nosec B608 - table/column names can't be parameterized, values use params tuple
         config = BatchConfig(
             operation_type="update",
             table=table,
@@ -192,7 +204,7 @@ class RequestBatcher:
     ) -> None:
         """Add delete operation."""
         # Use parameterized query to prevent SQL injection
-        sql = f"DELETE FROM {table} WHERE {where_clause}"
+        sql = f"DELETE FROM {table} WHERE {where_clause}"  # nosec B608 - table/column names can't be parameterized, values use params tuple
         config = BatchConfig(
             operation_type="delete",
             table=table,
@@ -270,7 +282,7 @@ class RequestBatcher:
                 self._operations.extend(operations)
             except (TimeoutError, asyncio.CancelledError) as e:
                 log_error(
-                    cast(Exception, e),
+                    cast("Exception", e),
                     message="Async operation error during batch flush",
                     context={
                         "operation_count": len(operations),
@@ -284,7 +296,10 @@ class RequestBatcher:
                 log_error(
                     e,
                     message="Batch flush error",
-                    context={"operation_count": len(operations), "batch_size": len(self._operations)},
+                    context={
+                        "operation_count": len(operations),
+                        "batch_size": len(self._operations),
+                    },
                 )
                 # Re-queue failed operations
                 self._operations.extend(operations)
@@ -333,7 +348,11 @@ class RequestBatcher:
                 log_error(
                     e,
                     message="Batch operation failed",
-                    context={"sql": op.sql, "operation_type": op.operation_type, "table": op.table},
+                    context={
+                        "sql": op.sql,
+                        "operation_type": op.operation_type,
+                        "table": op.table,
+                    },
                 )
                 raise
 
@@ -395,7 +414,7 @@ class BulkInserter:
 
             # Build bulk insert SQL
             placeholders = ",".join("?" * len(columns))
-            sql = f"INSERT INTO {table} ({columns_str}) VALUES ({placeholders})"
+            sql = f"INSERT INTO {table} ({columns_str}) VALUES ({placeholders})"  # nosec B608 - column names from internal structure, values use ? placeholders
 
             # Execute all inserts in a transaction
             with self.conn:
@@ -411,18 +430,30 @@ class BulkInserter:
             log_error(
                 e,
                 message="Database error during bulk insert",
-                context={"table": table, "row_count": len(rows), "operation": "bulk_insert"},
+                context={
+                    "table": table,
+                    "row_count": len(rows),
+                    "operation": "bulk_insert",
+                },
             )
             raise
         except (TypeError, ValueError) as e:
             log_error(
                 e,
                 message="Invalid data for bulk insert",
-                context={"table": table, "row_count": len(rows), "operation": "data_validation"},
+                context={
+                    "table": table,
+                    "row_count": len(rows),
+                    "operation": "data_validation",
+                },
             )
             raise
         except Exception as e:
-            log_error(e, message="Bulk insert error", context={"table": table, "row_count": len(rows)})
+            log_error(
+                e,
+                message="Bulk insert error",
+                context={"table": table, "row_count": len(rows)},
+            )
             raise
         finally:
             # Clear buffer regardless of success/failure
@@ -510,7 +541,11 @@ def get_batching_metrics(conn: sqlite3.Connection) -> dict[str, Any]:
             context={"connection_id": id(conn), "operation": "instance_retrieval"},
         )
     except Exception as e:
-        log_error(e, message="Failed to get batcher metrics", context={"connection_id": id(conn)})
+        log_error(
+            e,
+            message="Failed to get batcher metrics",
+            context={"connection_id": id(conn)},
+        )
 
     try:
         bulk_inserter = BatchingManager.get_bulk_inserter(conn)
@@ -534,6 +569,10 @@ def get_batching_metrics(conn: sqlite3.Connection) -> dict[str, Any]:
             context={"connection_id": id(conn), "operation": "instance_retrieval"},
         )
     except Exception as e:
-        log_error(e, message="Failed to get bulk inserter metrics", context={"connection_id": id(conn)})
+        log_error(
+            e,
+            message="Failed to get bulk inserter metrics",
+            context={"connection_id": id(conn)},
+        )
 
     return metrics

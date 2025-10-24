@@ -7,6 +7,7 @@ from typing import Any
 
 from ..base_router import RoutingContext, RoutingStrategy
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -86,10 +87,18 @@ class PerformanceStrategy(RoutingStrategy):
             # Adjust score based on context if available
             if context.metadata:
                 # Boost score for specific tasks that benefit from speed
-                if context.metadata.get("task") in ["summarization", "translation", "simple_qa"]:
+                if context.metadata.get("task") in [
+                    "summarization",
+                    "translation",
+                    "simple_qa",
+                ]:
                     score *= 1.1
                 # Reduce score for complex tasks that need quality
-                elif context.metadata.get("task") in ["analysis", "reasoning", "creative"]:
+                elif context.metadata.get("task") in [
+                    "analysis",
+                    "reasoning",
+                    "creative",
+                ]:
                     score *= 0.95
 
             scored_models.append((model, score))

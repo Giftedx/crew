@@ -14,14 +14,14 @@ import os
 import subprocess
 import sys
 from pathlib import Path
-from typing import Dict
+
 
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 try:
-    from ultimate_discord_intelligence_bot.settings import get_settings
-    from ultimate_discord_intelligence_bot.step_result import StepResult
+    from ultimate_discord_intelligence_bot.settings import get_settings  # noqa: F401
+    from ultimate_discord_intelligence_bot.step_result import StepResult  # noqa: F401
 except ImportError as e:
     print(f"Warning: Could not import project modules: {e}")
     print("Running in standalone mode...")
@@ -40,7 +40,7 @@ class Phase1EnvironmentSetup:
             "oauth_config": {"status": "pending", "details": {}},
         }
 
-    def check_environment_variables(self) -> Dict[str, any]:
+    def check_environment_variables(self) -> dict[str, any]:
         """Check current environment variable configuration."""
         print("🔍 Checking environment variables...")
 
@@ -95,7 +95,7 @@ class Phase1EnvironmentSetup:
             return False
 
         # Read the example file
-        with open(self.env_example, "r") as f:
+        with open(self.env_example) as f:
             template_content = f.read()
 
         # Create a production template with placeholders
@@ -134,7 +134,7 @@ RATE_LIMIT_REQUESTS_PER_MINUTE=60
         print(f"✅ Created production environment template: {env_production}")
         return True
 
-    def check_service_health(self) -> Dict[str, any]:
+    def check_service_health(self) -> dict[str, any]:
         """Check the health of all required services."""
         print("🏥 Checking service health...")
 
@@ -169,7 +169,7 @@ RATE_LIMIT_REQUESTS_PER_MINUTE=60
 
         return services
 
-    def check_oauth_configuration(self) -> Dict[str, any]:
+    def check_oauth_configuration(self) -> dict[str, any]:
         """Check OAuth configuration for all platforms."""
         print("🔐 Checking OAuth configuration...")
 
@@ -195,7 +195,7 @@ RATE_LIMIT_REQUESTS_PER_MINUTE=60
 
         return oauth_status
 
-    def run_doctor_check(self) -> Dict[str, any]:
+    def run_doctor_check(self) -> dict[str, any]:
         """Run the existing doctor check."""
         print("🩺 Running system doctor check...")
 
@@ -276,9 +276,7 @@ Status: {self.results.get("doctor_check", {}).get("status", "unknown")}
 
         return report
 
-    def run_full_setup(
-        self, check_only: bool = False, interactive: bool = False
-    ) -> bool:
+    def run_full_setup(self, check_only: bool = False, interactive: bool = False) -> bool:
         """Run the complete Phase 1 environment setup."""
         print("🚀 Starting Phase 1 Environment Setup")
         print("=" * 50)
@@ -298,9 +296,7 @@ Status: {self.results.get("doctor_check", {}).get("status", "unknown")}
         print("\n🏥 Step 2: Service Health Check")
         service_check = self.check_service_health()
         self.results["service_health"] = {
-            "status": "healthy"
-            if all(s["status"] == "healthy" for s in service_check.values())
-            else "unhealthy",
+            "status": "healthy" if all(s["status"] == "healthy" for s in service_check.values()) else "unhealthy",
             "details": service_check,
         }
 
@@ -308,9 +304,7 @@ Status: {self.results.get("doctor_check", {}).get("status", "unknown")}
         print("\n🔐 Step 3: OAuth Configuration")
         oauth_check = self.check_oauth_configuration()
         self.results["oauth_config"] = {
-            "status": "healthy"
-            if all(c["status"] == "configured" for c in oauth_check.values())
-            else "unhealthy",
+            "status": "healthy" if all(c["status"] == "configured" for c in oauth_check.values()) else "unhealthy",
             "details": oauth_check,
         }
 
@@ -357,16 +351,12 @@ def main():
         action="store_true",
         help="Only check status, don't create files",
     )
-    parser.add_argument(
-        "--interactive", action="store_true", help="Interactive mode for configuration"
-    )
+    parser.add_argument("--interactive", action="store_true", help="Interactive mode for configuration")
 
     args = parser.parse_args()
 
     setup = Phase1EnvironmentSetup()
-    success = setup.run_full_setup(
-        check_only=args.check_only, interactive=args.interactive
-    )
+    success = setup.run_full_setup(check_only=args.check_only, interactive=args.interactive)
 
     sys.exit(0 if success else 1)
 

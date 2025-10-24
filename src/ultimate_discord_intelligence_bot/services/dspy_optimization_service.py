@@ -4,6 +4,8 @@ from pathlib import Path
 
 import dspy
 
+from ultimate_discord_intelligence_bot.step_result import StepResult
+
 from ..step_result import StepResult
 from .dspy_components.signature import DebateAnalysisSignature
 
@@ -11,9 +13,7 @@ from .dspy_components.signature import DebateAnalysisSignature
 class AgentOptimizer:
     """A service to optimize agent prompts using DSPy."""
 
-    def __init__(
-        self, model: str = "gpt-4o-mini", storage_dir: str = "crew_data/dspy_optimized"
-    ):
+    def __init__(self, model: str = "gpt-4o-mini", storage_dir: str = "crew_data/dspy_optimized"):
         """
         Initializes the AgentOptimizer.
 
@@ -59,18 +59,14 @@ class AgentOptimizer:
             optimizer = dspy.MIPROv2(metric=metric, auto=optimization_level)
 
             # Compile and optimize the module
-            optimized_module = optimizer.compile(
-                AgentModule(agent_signature), trainset=training_examples
-            )
+            optimized_module = optimizer.compile(AgentModule(agent_signature), trainset=training_examples)
 
             return StepResult.ok(data=optimized_module)
 
         except Exception as e:
             return StepResult.fail(f"DSPy optimization failed: {e}")
 
-    def save_optimized_module(
-        self, optimized_module: dspy.Module, agent_name: str, version: str = "v1"
-    ) -> StepResult:
+    def save_optimized_module(self, optimized_module: dspy.Module, agent_name: str, version: str = "v1") -> StepResult:
         """
         Saves an optimized DSPy module to disk.
 
@@ -186,17 +182,9 @@ class AgentOptimizer:
                     baseline_scores.append(0.0)
 
             # Calculate statistics
-            avg_optimized = (
-                sum(optimized_scores) / len(optimized_scores) if optimized_scores else 0
-            )
-            avg_baseline = (
-                sum(baseline_scores) / len(baseline_scores) if baseline_scores else 0
-            )
-            improvement = (
-                ((avg_optimized - avg_baseline) / avg_baseline * 100)
-                if avg_baseline > 0
-                else 0
-            )
+            avg_optimized = sum(optimized_scores) / len(optimized_scores) if optimized_scores else 0
+            avg_baseline = sum(baseline_scores) / len(baseline_scores) if baseline_scores else 0
+            improvement = ((avg_optimized - avg_baseline) / avg_baseline * 100) if avg_baseline > 0 else 0
 
             comparison = {
                 "optimized_avg_score": avg_optimized,
@@ -217,9 +205,7 @@ class AgentOptimizer:
         except Exception as e:
             return StepResult.fail(f"A/B comparison failed: {e}")
 
-    def calculate_metric(
-        self, module: dspy.Module, examples: list[dspy.Example], metric: callable
-    ) -> StepResult:
+    def calculate_metric(self, module: dspy.Module, examples: list[dspy.Example], metric: callable) -> StepResult:
         """
         Calculate performance metric for a module on a set of examples.
 

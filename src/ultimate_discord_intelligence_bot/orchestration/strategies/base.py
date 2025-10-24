@@ -7,9 +7,12 @@ enabling dynamic strategy selection and runtime swapping.
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, Protocol
+from typing import TYPE_CHECKING, Any, Protocol
 
-from ultimate_discord_intelligence_bot.step_result import StepResult
+
+if TYPE_CHECKING:
+    from ultimate_discord_intelligence_bot.step_result import StepResult
+
 
 logger = logging.getLogger(__name__)
 
@@ -60,12 +63,10 @@ class StrategyRegistry:
 
     def __init__(self):
         """Initialize strategy registry."""
-        self._strategies: Dict[str, OrchestrationStrategyProtocol] = {}
+        self._strategies: dict[str, OrchestrationStrategyProtocol] = {}
         logger.info("Strategy registry initialized")
 
-    def register(
-        self, strategy: type | OrchestrationStrategyProtocol, name: str | None = None
-    ) -> None:
+    def register(self, strategy: type | OrchestrationStrategyProtocol, name: str | None = None) -> None:
         """Register a strategy.
 
         Args:
@@ -80,9 +81,7 @@ class StrategyRegistry:
             if hasattr(strategy, "name"):
                 name = strategy.name
             else:
-                raise ValueError(
-                    f"Strategy {strategy} has no 'name' attribute and no name provided"
-                )
+                raise ValueError(f"Strategy {strategy} has no 'name' attribute and no name provided")
 
         self._strategies[name] = strategy
         logger.info(f"Registered orchestration strategy: {name}")
@@ -106,7 +105,7 @@ class StrategyRegistry:
 
         return strategy
 
-    def list_strategies(self) -> Dict[str, str]:
+    def list_strategies(self) -> dict[str, str]:
         """List all registered strategies.
 
         Returns:

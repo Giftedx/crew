@@ -77,8 +77,8 @@ def display_trace_summary(trace_data: dict[str, Any]) -> None:
     # Extract summary statistics
     steps = trace_data.get("steps", [])
     if steps:
-        agents_used = set(step.get("agent_role", "unknown") for step in steps)
-        tools_used = set(step.get("tool", "unknown") for step in steps if step.get("tool") != "unknown")
+        agents_used = {step.get("agent_role", "unknown") for step in steps}
+        tools_used = {step.get("tool", "unknown") for step in steps if step.get("tool") != "unknown"}
 
         print(f"🤖 Agents Involved: {len(agents_used)}")
         print(f"🔧 Tools Used: {len(tools_used)}")
@@ -113,9 +113,13 @@ def display_step_details(steps: list[dict[str, Any]], show_output: bool = False)
             formatted_time = "unknown"
 
         # Status emoji
-        status_emoji = {"completed": "✅", "running": "🏃", "pending": "⏳", "error": "❌", "unknown": "❓"}.get(
-            status.lower(), "❓"
-        )
+        status_emoji = {
+            "completed": "✅",
+            "running": "🏃",
+            "pending": "⏳",
+            "error": "❌",
+            "unknown": "❓",
+        }.get(status.lower(), "❓")
 
         print(f"Step {step_num:2d} | {formatted_time} | {format_duration(duration):>8s} | {status_emoji} {agent_role}")
         print(f"        | Tool: {tool}")
@@ -155,7 +159,13 @@ def analyze_performance(steps: list[dict[str, Any]]) -> None:
             prev_duration = steps[i - 1].get("duration_from_start", 0)
             curr_duration = step.get("duration_from_start", 0)
             step_duration = curr_duration - prev_duration
-            step_durations.append((step.get("agent_role", "unknown"), step.get("tool", "unknown"), step_duration))
+            step_durations.append(
+                (
+                    step.get("agent_role", "unknown"),
+                    step.get("tool", "unknown"),
+                    step_duration,
+                )
+            )
 
     if step_durations:
         # Find slowest steps
@@ -181,7 +191,11 @@ def analyze_performance(steps: list[dict[str, Any]]) -> None:
 
 
 @click.command()
-@click.option("--traces-dir", default="crew_data/Logs/traces", help="Directory containing trace files")
+@click.option(
+    "--traces-dir",
+    default="crew_data/Logs/traces",
+    help="Directory containing trace files",
+)
 @click.option("--show-output", is_flag=True, help="Show step output details")
 @click.option("--latest", is_flag=True, default=True, help="Analyze latest trace (default)")
 @click.option("--trace-file", help="Specific trace file to analyze")
@@ -201,7 +215,10 @@ def main(traces_dir: str, show_output: bool, latest: bool, trace_file: str | Non
         trace_data = load_latest_trace(traces_dir)
         if not trace_data:
             click.echo(f"❌ No trace files found in {traces_dir}", err=True)
-            click.echo("💡 Make sure CREWAI_SAVE_TRACES=true is set in your environment", err=True)
+            click.echo(
+                "💡 Make sure CREWAI_SAVE_TRACES=true is set in your environment",
+                err=True,
+            )
             sys.exit(1)
 
     # Display analysis

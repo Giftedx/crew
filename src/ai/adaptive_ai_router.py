@@ -12,6 +12,7 @@ from collections import defaultdict, deque
 from dataclasses import dataclass, field
 from typing import Any
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -35,7 +36,12 @@ class AdaptiveModelMetrics:
     adaptive_weights: dict[str, float] = field(default_factory=lambda: {"speed": 0.33, "cost": 0.33, "quality": 0.34})
 
     def add_performance_data(
-        self, latency_ms: float, cost: float, quality_score: float, success: bool, task_type: str
+        self,
+        latency_ms: float,
+        cost: float,
+        quality_score: float,
+        success: bool,
+        task_type: str,
     ) -> None:
         """Add new performance data point."""
         self.latency_window.append(latency_ms)
@@ -368,7 +374,12 @@ class AdaptiveAIRouter:
         return defaults.get(model, (0.005, 1200, 0.75))
 
     def _generate_adaptive_reasoning(
-        self, model: str, task_type: str, optimization_target: str, details: dict[str, float], score: float
+        self,
+        model: str,
+        task_type: str,
+        optimization_target: str,
+        details: dict[str, float],
+        score: float,
     ) -> str:
         """Generate reasoning for adaptive model selection."""
         model_name = model.split("/")[-1]
@@ -388,7 +399,7 @@ class AdaptiveAIRouter:
             reasons.append("specialized for this task type")
 
         # Optimization target reasoning
-        if optimization_target == "speed" and "flash" in model or "mini" in model:
+        if (optimization_target == "speed" and "flash" in model) or "mini" in model:
             reasons.append("optimized for fast response")
         elif optimization_target == "cost" and ("gemini" in model or "mini" in model):
             reasons.append("cost-effective choice")

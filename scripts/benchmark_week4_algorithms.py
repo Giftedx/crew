@@ -32,12 +32,14 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 from ultimate_discord_intelligence_bot.autonomous_orchestrator import (
     AutonomousIntelligenceOrchestrator,
 )
+
 
 # ============================================================================
 # WEEK 4 TEST CONFIGURATIONS
@@ -196,7 +198,7 @@ class Week4BenchmarkRunner:
             end_time = time.time()
             duration = end_time - start_time
 
-            print(f"   ❌ Failed after {duration:.2f}s: {str(e)}")
+            print(f"   ❌ Failed after {duration:.2f}s: {e!s}")
 
             return {
                 "test_name": test_name,
@@ -444,7 +446,7 @@ Week 4 tested algorithmic optimization strategies to improve performance through
 |------|--------|-----------|-------------|----------|------------|
 """
 
-    for test_name in test_stats.keys():
+    for test_name in test_stats:
         stats = test_stats[test_name]
         comparison = baseline_comparison[test_name]
 
@@ -452,9 +454,13 @@ Week 4 tested algorithmic optimization strategies to improve performance through
             md_content += f"| {test_name} | ❌ FAILED | N/A | N/A | N/A | ❌ |\n"
             continue
 
-        status_emoji = {"EXCELLENT": "🟢", "GOOD": "✅", "NEUTRAL": "⚠️", "POOR": "🔶", "FAILED": "❌"}.get(
-            comparison["status"], "❓"
-        )
+        status_emoji = {
+            "EXCELLENT": "🟢",
+            "GOOD": "✅",
+            "NEUTRAL": "⚠️",
+            "POOR": "🔶",
+            "FAILED": "❌",
+        }.get(comparison["status"], "❓")
 
         mean_time = stats["mean_minutes"]
         vs_baseline = comparison["vs_baseline_percent"]
@@ -567,23 +573,31 @@ async def main():
 
     parser.add_argument("--depth", default="experimental", help="Analysis depth (default: experimental)")
 
-    parser.add_argument("--iterations", type=int, default=3, help="Number of iterations per test (default: 3)")
-
     parser.add_argument(
-        "--test", choices=list(WEEK4_TESTS.keys()) + ["all"], default="all", help="Specific test to run (default: all)"
+        "--iterations",
+        type=int,
+        default=3,
+        help="Number of iterations per test (default: 3)",
     )
 
     parser.add_argument(
-        "--output-dir", type=Path, default=Path("benchmarks"), help="Output directory for results (default: benchmarks)"
+        "--test",
+        choices=[*list(WEEK4_TESTS.keys()), "all"],
+        default="all",
+        help="Specific test to run (default: all)",
+    )
+
+    parser.add_argument(
+        "--output-dir",
+        type=Path,
+        default=Path("benchmarks"),
+        help="Output directory for results (default: benchmarks)",
     )
 
     args = parser.parse_args()
 
     # Determine which tests to run
-    if args.test == "all":
-        test_names = list(WEEK4_TESTS.keys())
-    else:
-        test_names = [args.test]
+    test_names = list(WEEK4_TESTS.keys()) if args.test == "all" else [args.test]
 
     # Create output directory
     args.output_dir.mkdir(parents=True, exist_ok=True)

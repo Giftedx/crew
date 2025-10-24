@@ -22,6 +22,7 @@ from typing import Any, Literal
 
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
+
 logger = logging.getLogger(__name__)
 
 # Try to import transformers (optional dependency)
@@ -191,7 +192,7 @@ class SafetyBrandSuitabilityService:
 
         except Exception as e:
             logger.error(f"Safety analysis failed: {e}")
-            return StepResult.fail(f"Analysis failed: {str(e)}", status="retryable")
+            return StepResult.fail(f"Analysis failed: {e!s}", status="retryable")
 
     def analyze_segments(
         self,
@@ -268,7 +269,7 @@ class SafetyBrandSuitabilityService:
 
         except Exception as e:
             logger.error(f"Segment analysis failed: {e}")
-            return StepResult.fail(f"Segment analysis failed: {str(e)}")
+            return StepResult.fail(f"Segment analysis failed: {e!s}")
 
     def _select_model(self, model_alias: str) -> str:
         """Select actual model configuration from alias.
@@ -397,8 +398,14 @@ class SafetyBrandSuitabilityService:
                     scores = results[0]
 
                     # Find highest scoring category
-                    toxic_score = next((item["score"] for item in scores if item["label"].lower() == "toxic"), 0)
-                    safe_score = next((item["score"] for item in scores if item["label"].lower() == "safe"), 0)
+                    toxic_score = next(
+                        (item["score"] for item in scores if item["label"].lower() == "toxic"),
+                        0,
+                    )
+                    safe_score = next(
+                        (item["score"] for item in scores if item["label"].lower() == "safe"),
+                        0,
+                    )
 
                     # Determine safety level
                     if toxic_score > 0.7:
@@ -450,13 +457,25 @@ class SafetyBrandSuitabilityService:
         content_lower = content.lower()
 
         # Check for brand-friendly indicators
-        brand_friendly_words = ["professional", "educational", "informative", "helpful", "positive"]
+        brand_friendly_words = [
+            "professional",
+            "educational",
+            "informative",
+            "helpful",
+            "positive",
+        ]
         brand_friendly_score = sum(1 for word in brand_friendly_words if word in content_lower) / len(
             brand_friendly_words
         )
 
         # Check for brand-risky indicators
-        brand_risky_words = ["controversial", "political", "religious", "adult", "violent"]
+        brand_risky_words = [
+            "controversial",
+            "political",
+            "religious",
+            "adult",
+            "violent",
+        ]
         brand_risky_score = sum(1 for word in brand_risky_words if word in content_lower) / len(brand_risky_words)
 
         # Calculate suitability score
@@ -700,7 +719,7 @@ class SafetyBrandSuitabilityService:
 
         except Exception as e:
             logger.error(f"Failed to get cache stats: {e}")
-            return StepResult.fail(f"Failed to get cache stats: {str(e)}")
+            return StepResult.fail(f"Failed to get cache stats: {e!s}")
 
 
 # Singleton instance

@@ -13,6 +13,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -71,7 +72,7 @@ class ProviderMetrics:
 
     # Preference scores (learned)
     preference_scores: dict[PreferenceMetric, float] = field(
-        default_factory=lambda: {metric: 0.5 for metric in PreferenceMetric}
+        default_factory=lambda: dict.fromkeys(PreferenceMetric, 0.5)
     )
 
     # Learning history
@@ -129,7 +130,11 @@ class ProviderMetrics:
         return min(1.0, max(0.0, score))
 
     def update_request(
-        self, success: bool, response_time: float, cost: float, quality_score: float | None = None
+        self,
+        success: bool,
+        response_time: float,
+        cost: float,
+        quality_score: float | None = None,
     ) -> None:
         """Update provider metrics with new request data."""
         self.total_requests += 1
@@ -236,13 +241,20 @@ class ProviderPreferenceLearning:
         if self.last_global_update == 0.0:
             self.last_global_update = time.time()
 
-    def add_provider(self, provider_id: str, provider_name: str, metadata: dict[str, Any] | None = None) -> None:
+    def add_provider(
+        self,
+        provider_id: str,
+        provider_name: str,
+        metadata: dict[str, Any] | None = None,
+    ) -> None:
         """Add a new provider to the learning system."""
         if provider_id in self.providers:
             logger.warning(f"Provider {provider_id} already exists, updating metadata")
 
         self.providers[provider_id] = ProviderMetrics(
-            provider_id=provider_id, provider_name=provider_name, metadata=metadata or {}
+            provider_id=provider_id,
+            provider_name=provider_name,
+            metadata=metadata or {},
         )
 
         logger.info(f"Added provider {provider_id} ({provider_name}) to preference learning")
@@ -257,7 +269,12 @@ class ProviderPreferenceLearning:
         return True
 
     def update_provider_request(
-        self, provider_id: str, success: bool, response_time: float, cost: float, quality_score: float | None = None
+        self,
+        provider_id: str,
+        success: bool,
+        response_time: float,
+        cost: float,
+        quality_score: float | None = None,
     ) -> bool:
         """Update provider with new request data."""
         if provider_id not in self.providers:
@@ -280,10 +297,7 @@ class ProviderPreferenceLearning:
             return True
 
         # Count-based update
-        if self.update_count >= self.config.batch_update_size:
-            return True
-
-        return False
+        return self.update_count >= self.config.batch_update_size
 
     def _update_preferences(self) -> None:
         """Update provider preferences using configured learning algorithm."""
@@ -364,7 +378,7 @@ class ProviderPreferenceLearning:
                     # Simple weighted average with decay
                     weights = [self.config.decay_factor ** (len(history) - 1 - i) for i in range(len(history))]
 
-                    weighted_sum = sum(score * weight for score, weight in zip(history, weights))
+                    weighted_sum = sum(score * weight for score, weight in zip(history, weights, strict=False))
                     weight_sum = sum(weights)
 
                     new_score = weighted_sum / weight_sum

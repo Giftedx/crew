@@ -12,7 +12,8 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from typing import Protocol
 
-__all__ = ["ensure_utc", "UtcNowProvider", "default_utc_now"]
+
+__all__ = ["UtcNowProvider", "default_utc_now", "ensure_utc"]
 
 
 class UtcNowProvider(Protocol):  # pragma: no cover - structural protocol

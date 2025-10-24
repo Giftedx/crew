@@ -2,15 +2,20 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from obs import metrics, tracing
 from ultimate_discord_intelligence_bot.tenancy import current_tenant
-from ultimate_discord_intelligence_bot.tenancy.registry import TenantRegistry
 
 from . import token_meter
-from .learning_engine import LearningEngine
+
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+    from ultimate_discord_intelligence_bot.tenancy.registry import TenantRegistry
+
+    from .learning_engine import LearningEngine
 
 
 class Router:

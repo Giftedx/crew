@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import os
 import sys
 import traceback
@@ -49,9 +50,7 @@ def create_full_bot():
         )
         bot.background_worker = background_worker  # type: ignore[attr-defined]
         bot.orchestrator = orchestrator  # type: ignore[attr-defined]
-        print(
-            "✅ Background worker initialized with unified orchestrator (unlimited analysis time enabled)"
-        )
+        print("✅ Background worker initialized with unified orchestrator (unlimited analysis time enabled)")
     except Exception as e:
         print(f"⚠️ Background worker not available: {e}")
         bot.background_worker = None  # type: ignore[attr-defined]
@@ -114,9 +113,7 @@ async def main():
             await start_ingest_workers(asyncio.get_running_loop())
         else:
             print("ℹ️  Ingest workers disabled (ENABLE_INGEST_WORKER=0)")
-        print(
-            "📨 Discord posts will use webhooks if configured; no gateway commands are exposed."
-        )
+        print("📨 Discord posts will use webhooks if configured; no gateway commands are exposed.")
 
         async def _heartbeat_loop():
             try:
@@ -133,9 +130,7 @@ async def main():
                         ts = default_utc_now().isoformat()
                         retrying_post(
                             webhook,
-                            json_payload={
-                                "content": f"🫀 Heartbeat: headless agent alive @ {ts}"
-                            },
+                            json_payload={"content": f"🫀 Heartbeat: headless agent alive @ {ts}"},
                             headers={"Content-Type": "application/json"},
                             timeout_seconds=REQUEST_TIMEOUT_SECONDS,
                         )
@@ -145,10 +140,8 @@ async def main():
             except Exception:
                 return
 
-        try:
+        with contextlib.suppress(Exception):
             asyncio.get_running_loop().create_task(_heartbeat_loop())
-        except Exception:
-            pass
         try:
             while True:
                 await asyncio.sleep(3600)
@@ -184,13 +177,9 @@ async def main():
                 try:
                     webhook = cfg.get_webhook("discord_private")
                 except Exception:
-                    webhook = os.getenv("DISCORD_PRIVATE_WEBHOOK") or os.getenv(
-                        "DISCORD_WEBHOOK"
-                    )
+                    webhook = os.getenv("DISCORD_PRIVATE_WEBHOOK") or os.getenv("DISCORD_WEBHOOK")
                 if webhook:
-                    content = (
-                        "⚠️ Gateway connection failed; falling back to headless mode"
-                    )
+                    content = "⚠️ Gateway connection failed; falling back to headless mode"
                     retrying_post(
                         webhook,
                         json_payload={"content": content[:1900]},
@@ -206,9 +195,7 @@ async def main():
             except Exception:
                 pass
             if auto_fb:
-                print(
-                    "↩️  Falling back to headless agent mode (AUTO_FALLBACK_HEADLESS=1)"
-                )
+                print("↩️  Falling back to headless agent mode (AUTO_FALLBACK_HEADLESS=1)")
                 await _run_headless_agent(user_cmds_enabled, admin_cmds_enabled)
             else:
                 sys.exit(1)

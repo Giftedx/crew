@@ -14,6 +14,7 @@ from dataclasses import dataclass, field
 
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -83,7 +84,7 @@ class PerformanceValidator:
 
         except Exception as e:
             logger.error(f"Routing performance validation failed: {e}")
-            return StepResult.fail(f"Routing validation failed: {str(e)}")
+            return StepResult.fail(f"Routing validation failed: {e!s}")
 
     def validate_cache_performance(self) -> StepResult:
         """Validate semantic cache hit rates and performance."""
@@ -120,7 +121,7 @@ class PerformanceValidator:
 
         except Exception as e:
             logger.error(f"Cache performance validation failed: {e}")
-            return StepResult.fail(f"Cache validation failed: {str(e)}")
+            return StepResult.fail(f"Cache validation failed: {e!s}")
 
     def validate_vector_database_performance(self) -> StepResult:
         """Validate vector database search latency and throughput."""
@@ -157,7 +158,7 @@ class PerformanceValidator:
 
         except Exception as e:
             logger.error(f"Vector database validation failed: {e}")
-            return StepResult.fail(f"Vector DB validation failed: {str(e)}")
+            return StepResult.fail(f"Vector DB validation failed: {e!s}")
 
     def validate_agent_coordination(self) -> StepResult:
         """Validate 26-agent coordination and task delegation."""
@@ -195,7 +196,7 @@ class PerformanceValidator:
 
         except Exception as e:
             logger.error(f"Agent coordination validation failed: {e}")
-            return StepResult.fail(f"Agent coordination validation failed: {str(e)}")
+            return StepResult.fail(f"Agent coordination validation failed: {e!s}")
 
     def validate_mcp_tools(self) -> StepResult:
         """Validate MCP tool integration and execution."""
@@ -225,7 +226,7 @@ class PerformanceValidator:
 
         except Exception as e:
             logger.error(f"MCP tools validation failed: {e}")
-            return StepResult.fail(f"MCP tools validation failed: {str(e)}")
+            return StepResult.fail(f"MCP tools validation failed: {e!s}")
 
     def validate_pipeline_workflow(self) -> StepResult:
         """Validate end-to-end pipeline workflow performance."""
@@ -251,13 +252,20 @@ class PerformanceValidator:
                 data={
                     "pipeline_workflow": "PASS",
                     "metrics": pipeline_metrics.__dict__,
-                    "stages_validated": ["download", "transcription", "analysis", "verification", "memory", "discord"],
+                    "stages_validated": [
+                        "download",
+                        "transcription",
+                        "analysis",
+                        "verification",
+                        "memory",
+                        "discord",
+                    ],
                 }
             )
 
         except Exception as e:
             logger.error(f"Pipeline workflow validation failed: {e}")
-            return StepResult.fail(f"Pipeline workflow validation failed: {str(e)}")
+            return StepResult.fail(f"Pipeline workflow validation failed: {e!s}")
 
     def run_comprehensive_validation(self) -> StepResult:
         """Run comprehensive performance validation across all components."""
@@ -310,7 +318,7 @@ class PerformanceValidator:
 
         except Exception as e:
             logger.error(f"Comprehensive validation failed: {e}")
-            return StepResult.fail(f"Comprehensive validation failed: {str(e)}")
+            return StepResult.fail(f"Comprehensive validation failed: {e!s}")
 
     def get_performance_summary(self) -> StepResult:
         """Get performance summary and recommendations."""
@@ -364,7 +372,7 @@ class PerformanceValidator:
 
         except Exception as e:
             logger.error(f"Performance summary failed: {e}")
-            return StepResult.fail(f"Performance summary failed: {str(e)}")
+            return StepResult.fail(f"Performance summary failed: {e!s}")
 
     def health_check(self) -> StepResult:
         """Health check for the performance validator."""
@@ -380,7 +388,7 @@ class PerformanceValidator:
 
         except Exception as e:
             logger.error(f"Performance validator health check failed: {e}")
-            return StepResult.fail(f"Health check failed: {str(e)}")
+            return StepResult.fail(f"Health check failed: {e!s}")
 
 
 # Global performance validator instance

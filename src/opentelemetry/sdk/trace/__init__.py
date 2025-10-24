@@ -31,4 +31,4 @@ class Tracer:
         return Span()
 
 
-__all__ = ["TracerProvider", "Tracer", "Resource"]
+__all__ = ["Resource", "Tracer", "TracerProvider"]

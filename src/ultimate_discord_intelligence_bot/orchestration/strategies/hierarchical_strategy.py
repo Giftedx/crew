@@ -14,6 +14,7 @@ from ultimate_discord_intelligence_bot.services.hierarchical_orchestrator import
 )
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -66,8 +67,7 @@ class HierarchicalStrategy:
 
         try:
             logger.info(
-                f"Executing hierarchical workflow: url={url}, depth={depth}, "
-                f"tenant={tenant}, workspace={workspace}"
+                f"Executing hierarchical workflow: url={url}, depth={depth}, tenant={tenant}, workspace={workspace}"
             )
 
             # Create orchestration session

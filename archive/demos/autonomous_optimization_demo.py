@@ -20,11 +20,15 @@ import json
 import logging
 from datetime import datetime
 
+
 # Setup logging
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    handlers=[logging.StreamHandler(), logging.FileHandler("autonomous_optimization_demo.log")],
+    handlers=[
+        logging.StreamHandler(),
+        logging.FileHandler("autonomous_optimization_demo.log"),
+    ],
 )
 logger = logging.getLogger(__name__)
 
@@ -42,7 +46,11 @@ async def main():
 
         # Initialize the advanced bandits system
         orchestrator = await initialize_advanced_bandits(
-            {"context_dimension": 8, "num_actions": 4, "default_algorithm": "doubly_robust"}
+            {
+                "context_dimension": 8,
+                "num_actions": 4,
+                "default_algorithm": "doubly_robust",
+            }
         )
 
         if orchestrator is None:
@@ -60,11 +68,25 @@ async def main():
             "optimization_interval": 30,  # 30 seconds for demo (vs 1 hour in production)
             "min_data_points": 10,  # Lower threshold for demo
             "performance_threshold": 0.6,
-            "safety_constraints": {"max_latency_ms": 200, "max_error_rate": 0.1, "min_reward": 0.3},
+            "safety_constraints": {
+                "max_latency_ms": 200,
+                "max_error_rate": 0.1,
+                "min_reward": 0.3,
+            },
             "optimization_targets": [
                 {"metric_name": "avg_reward", "target_value": 0.8, "weight": 0.6},
-                {"metric_name": "decision_latency_ms", "target_value": 50, "weight": 0.2, "minimize": True},
-                {"metric_name": "error_rate", "target_value": 0.02, "weight": 0.2, "minimize": True},
+                {
+                    "metric_name": "decision_latency_ms",
+                    "target_value": 50,
+                    "weight": 0.2,
+                    "minimize": True,
+                },
+                {
+                    "metric_name": "error_rate",
+                    "target_value": 0.02,
+                    "weight": 0.2,
+                    "minimize": True,
+                },
             ],
         }
 
@@ -262,7 +284,11 @@ async def demonstrate_hyperparameter_optimization(optimizer):
                 "error_rate": max(0.001, np.random.normal(0.02, 0.005)),
             },
             objective_score=optimizer._calculate_objective_score(
-                {"avg_reward": base_performance, "decision_latency_ms": 45, "error_rate": 0.02}
+                {
+                    "avg_reward": base_performance,
+                    "decision_latency_ms": 45,
+                    "error_rate": 0.02,
+                }
             ),
             timestamp=datetime.now(),
             duration_seconds=0.5,

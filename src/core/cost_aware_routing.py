@@ -17,6 +17,7 @@ from typing import Any
 
 from core.time import default_utc_now
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -219,7 +220,11 @@ class CostAwareRoutingShadow:
         recent_results = [r for r in self.shadow_results if r.timestamp >= cutoff_time]
 
         if not recent_results:
-            return {"enabled": True, "total_evaluations": 0, "message": "No shadow evaluations in time window"}
+            return {
+                "enabled": True,
+                "total_evaluations": 0,
+                "message": "No shadow evaluations in time window",
+            }
 
         # Calculate metrics
         total_potential_savings = sum(r.potential_cost_savings for r in recent_results)

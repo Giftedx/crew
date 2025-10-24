@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from mem0 import Memory
 
+from ultimate_discord_intelligence_bot.step_result import StepResult
+
 from ..settings import _get_setting
 from ..step_result import StepResult
 
@@ -21,9 +23,7 @@ class Mem0MemoryService:
             }
         )
 
-    def remember(
-        self, content: str, user_id: str, metadata: dict | None = None
-    ) -> StepResult:
+    def remember(self, content: str, user_id: str, metadata: dict | None = None) -> StepResult:
         """
         Stores a memory or preference for a user.
 
@@ -59,9 +59,7 @@ class Mem0MemoryService:
         except Exception as e:
             return StepResult.fail(f"Mem0 recall failed: {e}")
 
-    def update_memory(
-        self, memory_id: str, content: str, user_id: str, metadata: dict | None = None
-    ) -> StepResult:
+    def update_memory(self, memory_id: str, content: str, user_id: str, metadata: dict | None = None) -> StepResult:
         """
         Updates an existing memory.
 

@@ -8,11 +8,19 @@ from unittest.mock import Mock, patch
 import pytest
 
 from ultimate_discord_intelligence_bot.creator_ops.config import CreatorOpsConfig
-from ultimate_discord_intelligence_bot.creator_ops.integrations.instagram_client import InstagramClient
-from ultimate_discord_intelligence_bot.creator_ops.integrations.tiktok_client import TikTokClient
-from ultimate_discord_intelligence_bot.creator_ops.integrations.twitch_client import TwitchClient
+from ultimate_discord_intelligence_bot.creator_ops.integrations.instagram_client import (
+    InstagramClient,
+)
+from ultimate_discord_intelligence_bot.creator_ops.integrations.tiktok_client import (
+    TikTokClient,
+)
+from ultimate_discord_intelligence_bot.creator_ops.integrations.twitch_client import (
+    TwitchClient,
+)
 from ultimate_discord_intelligence_bot.creator_ops.integrations.x_client import XClient
-from ultimate_discord_intelligence_bot.creator_ops.integrations.youtube_client import YouTubeClient
+from ultimate_discord_intelligence_bot.creator_ops.integrations.youtube_client import (
+    YouTubeClient,
+)
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
@@ -49,7 +57,11 @@ class TestYouTubeContract:
                                 "publishedAt": "2023-01-01T00:00:00Z",
                                 "thumbnails": {"default": {"url": "https://example.com/thumb.jpg"}},
                             },
-                            "statistics": {"viewCount": "1000", "likeCount": "100", "commentCount": "50"},
+                            "statistics": {
+                                "viewCount": "1000",
+                                "likeCount": "100",
+                                "commentCount": "50",
+                            },
                         }
                     ]
                 }
@@ -83,7 +95,11 @@ class TestYouTubeContract:
                                 "publishedAt": "2023-01-01T00:00:00Z",
                                 "thumbnails": {"default": {"url": "https://example.com/channel_thumb.jpg"}},
                             },
-                            "statistics": {"subscriberCount": "10000", "videoCount": "100", "viewCount": "1000000"},
+                            "statistics": {
+                                "subscriberCount": "10000",
+                                "videoCount": "100",
+                                "viewCount": "1000000",
+                            },
                         }
                     ]
                 }
@@ -816,7 +832,11 @@ class TestInstagramContract:
                             "timestamp": "2023-01-01T00:00:00+0000",
                             "like_count": 5,
                             "media": {"id": "media_id"},
-                            "user": {"id": "user_id", "username": "testuser", "account_type": "PERSONAL"},
+                            "user": {
+                                "id": "user_id",
+                                "username": "testuser",
+                                "account_type": "PERSONAL",
+                            },
                             "replies": {
                                 "data": [
                                     {
@@ -884,7 +904,15 @@ class TestInstagramContract:
                             "like_count": 100,
                             "comments_count": 10,
                             "reactions": {
-                                "data": [{"reaction_type": "like", "user": {"id": "user_id", "username": "testuser"}}]
+                                "data": [
+                                    {
+                                        "reaction_type": "like",
+                                        "user": {
+                                            "id": "user_id",
+                                            "username": "testuser",
+                                        },
+                                    }
+                                ]
                             },
                         }
                     ]
@@ -1071,7 +1099,11 @@ class TestXContract:
                                         "expanded_url": "https://example.com",
                                         "display_url": "example.com",
                                         "images": [
-                                            {"url": "https://example.com/image.jpg", "width": 1200, "height": 630}
+                                            {
+                                                "url": "https://example.com/image.jpg",
+                                                "width": 1200,
+                                                "height": 630,
+                                            }
                                         ],
                                         "status": 200,
                                         "title": "Test Title",
@@ -1158,7 +1190,11 @@ class TestXContract:
                             "conversation_id": "1234567890123456789",
                             "in_reply_to_user_id": "1234567890123456789",
                             "referenced_tweets": [{"type": "replied_to", "id": "1234567890123456789"}],
-                            "attachments": {"media_keys": [], "poll_ids": [], "urls": []},
+                            "attachments": {
+                                "media_keys": [],
+                                "poll_ids": [],
+                                "urls": [],
+                            },
                             "entities": {
                                 "hashtags": [],
                                 "mentions": [{"start": 0, "end": 9, "username": "testuser"}],
@@ -1216,7 +1252,11 @@ class TestXContract:
                             "conversation_id": "1234567890123456789",
                             "in_reply_to_user_id": None,
                             "referenced_tweets": [],
-                            "attachments": {"media_keys": [], "poll_ids": [], "urls": []},
+                            "attachments": {
+                                "media_keys": [],
+                                "poll_ids": [],
+                                "urls": [],
+                            },
                             "entities": {
                                 "hashtags": [{"start": 0, "end": 9, "tag": "test"}],
                                 "mentions": [],
@@ -1269,7 +1309,11 @@ class TestXContract:
                     "media_id_string": "1234567890123456789",
                     "size": 1024,
                     "expires_after_secs": 3600,
-                    "processing_info": {"state": "in_progress", "check_after_secs": 30, "progress_percent": 50},
+                    "processing_info": {
+                        "state": "in_progress",
+                        "check_after_secs": 30,
+                        "progress_percent": 50,
+                    },
                 },
                 Mock(),
             )

@@ -16,6 +16,7 @@ from ultimate_discord_intelligence_bot.orchestrator.crew_builders import (
     task_completion_callback,
 )
 
+
 # ============================================================================
 # Test Class: populate_agent_tool_context
 # ============================================================================
@@ -219,7 +220,12 @@ class TestGetOrCreateAgent:
         custom_logger = Mock(spec=logging.Logger)
 
         # Act
-        get_or_create_agent("test_agent", agent_coordinators, crew_instance, logger_instance=custom_logger)
+        get_or_create_agent(
+            "test_agent",
+            agent_coordinators,
+            crew_instance,
+            logger_instance=custom_logger,
+        )
 
         # Assert
         assert custom_logger.info.called or custom_logger.debug.called
@@ -484,7 +490,10 @@ class TestTaskCompletionCallback:
         task_output.task.description = "Download and acquire content"
 
         # Act
-        with patch("ultimate_discord_intelligence_bot.crewai_tool_wrappers._GLOBAL_CREW_CONTEXT", {}):
+        with patch(
+            "ultimate_discord_intelligence_bot.crewai_tool_wrappers._GLOBAL_CREW_CONTEXT",
+            {},
+        ):
             task_completion_callback(task_output)
 
             # Assert - context should be updated
@@ -508,7 +517,10 @@ class TestTaskCompletionCallback:
         task_output.task.description = "Transcribe the content"
 
         # Act
-        with patch("ultimate_discord_intelligence_bot.crewai_tool_wrappers._GLOBAL_CREW_CONTEXT", {}):
+        with patch(
+            "ultimate_discord_intelligence_bot.crewai_tool_wrappers._GLOBAL_CREW_CONTEXT",
+            {},
+        ):
             task_completion_callback(task_output)
 
             # Assert
@@ -532,7 +544,10 @@ class TestTaskCompletionCallback:
         extract_callback = Mock(return_value={"file_path": "/tmp/test.mp4", "title": "Test Video"})
 
         # Act
-        with patch("ultimate_discord_intelligence_bot.crewai_tool_wrappers._GLOBAL_CREW_CONTEXT", {}):
+        with patch(
+            "ultimate_discord_intelligence_bot.crewai_tool_wrappers._GLOBAL_CREW_CONTEXT",
+            {},
+        ):
             task_completion_callback(task_output, extract_key_values_callback=extract_callback)
 
             # Assert
@@ -549,7 +564,10 @@ class TestTaskCompletionCallback:
         detect_callback = Mock()
 
         # Act
-        with patch("ultimate_discord_intelligence_bot.crewai_tool_wrappers._GLOBAL_CREW_CONTEXT", {}):
+        with patch(
+            "ultimate_discord_intelligence_bot.crewai_tool_wrappers._GLOBAL_CREW_CONTEXT",
+            {},
+        ):
             task_completion_callback(task_output, detect_placeholder_callback=detect_callback)
 
             # Assert
@@ -564,7 +582,10 @@ class TestTaskCompletionCallback:
         task_output.task.description = "Download and acquire content"
 
         # Mock schema validation
-        with patch("ultimate_discord_intelligence_bot.crewai_tool_wrappers._GLOBAL_CREW_CONTEXT", {}):
+        with patch(
+            "ultimate_discord_intelligence_bot.crewai_tool_wrappers._GLOBAL_CREW_CONTEXT",
+            {},
+        ):
             # Act - should not raise error even without schema
             task_completion_callback(task_output)
 
@@ -581,7 +602,10 @@ class TestTaskCompletionCallback:
         metrics.counter.return_value = counter_mock
 
         # Act
-        with patch("ultimate_discord_intelligence_bot.crewai_tool_wrappers._GLOBAL_CREW_CONTEXT", {}):
+        with patch(
+            "ultimate_discord_intelligence_bot.crewai_tool_wrappers._GLOBAL_CREW_CONTEXT",
+            {},
+        ):
             task_completion_callback(task_output, metrics_instance=metrics)
 
             # Note: Metrics may or may not be called depending on schema availability
@@ -606,7 +630,10 @@ class TestTaskCompletionCallback:
         metrics.counter.return_value = counter_mock
 
         # Act
-        with patch("ultimate_discord_intelligence_bot.crewai_tool_wrappers._GLOBAL_CREW_CONTEXT", {}):
+        with patch(
+            "ultimate_discord_intelligence_bot.crewai_tool_wrappers._GLOBAL_CREW_CONTEXT",
+            {},
+        ):
             task_completion_callback(task_output, metrics_instance=metrics)
 
             # Assert - should track tool compliance
@@ -627,7 +654,10 @@ class TestTaskCompletionCallback:
         populate_callback = Mock()
 
         # Act
-        with patch("ultimate_discord_intelligence_bot.crewai_tool_wrappers._GLOBAL_CREW_CONTEXT", {}):
+        with patch(
+            "ultimate_discord_intelligence_bot.crewai_tool_wrappers._GLOBAL_CREW_CONTEXT",
+            {},
+        ):
             task_completion_callback(
                 task_output,
                 populate_agent_context_callback=populate_callback,
@@ -646,7 +676,10 @@ class TestTaskCompletionCallback:
         task_output.task.description = "Test"
 
         # Act - should not raise exception
-        with patch("ultimate_discord_intelligence_bot.crewai_tool_wrappers._GLOBAL_CREW_CONTEXT", {}):
+        with patch(
+            "ultimate_discord_intelligence_bot.crewai_tool_wrappers._GLOBAL_CREW_CONTEXT",
+            {},
+        ):
             task_completion_callback(task_output)
 
             # Assert - function should complete
@@ -664,7 +697,10 @@ class TestTaskCompletionCallback:
         repair_callback = Mock(return_value='{"file_path": "/tmp/test.mp4", "title": "Test"}')
 
         # Act
-        with patch("ultimate_discord_intelligence_bot.crewai_tool_wrappers._GLOBAL_CREW_CONTEXT", {}):
+        with patch(
+            "ultimate_discord_intelligence_bot.crewai_tool_wrappers._GLOBAL_CREW_CONTEXT",
+            {},
+        ):
             task_completion_callback(task_output, repair_json_callback=repair_callback)
 
             # Assert

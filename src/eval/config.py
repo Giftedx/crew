@@ -78,7 +78,7 @@ def reset_trajectory_evaluation_config() -> None:
 
 __all__ = [
     "TrajectoryEvaluationConfig",
-    "load_trajectory_evaluation_config",
     "get_trajectory_evaluation_config",
+    "load_trajectory_evaluation_config",
     "reset_trajectory_evaluation_config",
 ]

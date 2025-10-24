@@ -1,10 +1,14 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from . import learn
-from .rl import registry as rl_registry
+
+
+if TYPE_CHECKING:
+    from .rl import registry as rl_registry
+
 
 """RL-driven helper for selecting and executing tool plans.
 

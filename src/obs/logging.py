@@ -33,4 +33,4 @@ class JsonLogger(logging.Logger):
 
 logger = JsonLogger("obs")
 
-__all__ = ["logger", "JsonLogger"]
+__all__ = ["JsonLogger", "logger"]

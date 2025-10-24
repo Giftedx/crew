@@ -10,7 +10,8 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from ultimate_discord_intelligence_bot.step_result import StepResult
+from ultimate_discord_intelligence_bot.step_result import StepResult  # type: ignore[import-not-found]
+
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +58,13 @@ class ScopeValidator:
             "x": {
                 "read": ["tweet.read", "users.read"],
                 "write": ["tweet.read", "users.read", "tweet.write", "users.write"],
-                "full": ["tweet.read", "users.read", "tweet.write", "users.write", "offline.access"],
+                "full": [
+                    "tweet.read",
+                    "users.read",
+                    "tweet.write",
+                    "users.write",
+                    "offline.access",
+                ],
             },
         }
 
@@ -67,23 +74,19 @@ class ScopeValidator:
             "https://www.googleapis.com/auth/youtube.readonly": "Read YouTube channel and video data",
             "https://www.googleapis.com/auth/youtube": "Full access to YouTube channel",
             "https://www.googleapis.com/auth/youtube.force-ssl": "Force HTTPS for YouTube API calls",
-
             # Twitch scopes
             "user:read:email": "Read user email address",
             "channel:read:stream_key": "Read channel stream key",
             "moderator:read:chatters": "Read chat messages",
             "channel:manage:broadcast": "Manage channel broadcasts",
-
             # TikTok scopes
             "user.info.basic": "Read basic user information",
             "video.list": "List user videos",
             "video.publish": "Publish videos",
-
             # Instagram scopes
             "instagram_basic": "Read Instagram profile and media",
             "instagram_manage_insights": "Read Instagram insights and analytics",
             "instagram_manage_comments": "Manage Instagram comments",
-
             # X scopes
             "tweet.read": "Read tweets and timelines",
             "users.read": "Read user profiles",
@@ -126,9 +129,7 @@ class ScopeValidator:
             # Check if all required scopes are requested
             missing_scopes = required_scopes - requested_scopes_set
             if missing_scopes:
-                return StepResult.fail(
-                    f"Missing required scopes for {purpose}: {', '.join(missing_scopes)}"
-                )
+                return StepResult.fail(f"Missing required scopes for {purpose}: {', '.join(missing_scopes)}")
 
             # Check for unknown scopes
             all_valid_scopes = set()
@@ -140,24 +141,24 @@ class ScopeValidator:
                 logger.warning(f"Unknown scopes requested for {platform}: {', '.join(unknown_scopes)}")
 
             # Check for sensitive scopes
-            sensitive_requested = requested_scopes_set.intersection(
-                set(self.sensitive_scopes.get(platform, []))
+            sensitive_requested = requested_scopes_set.intersection(set(self.sensitive_scopes.get(platform, [])))
+
+            return StepResult.ok(
+                data={
+                    "valid": True,
+                    "platform": platform,
+                    "purpose": purpose,
+                    "requested_scopes": requested_scopes,
+                    "missing_scopes": list(missing_scopes),
+                    "unknown_scopes": list(unknown_scopes),
+                    "sensitive_scopes": list(sensitive_requested),
+                    "requires_special_approval": len(sensitive_requested) > 0,
+                }
             )
 
-            return StepResult.ok(data={
-                "valid": True,
-                "platform": platform,
-                "purpose": purpose,
-                "requested_scopes": requested_scopes,
-                "missing_scopes": list(missing_scopes),
-                "unknown_scopes": list(unknown_scopes),
-                "sensitive_scopes": list(sensitive_requested),
-                "requires_special_approval": len(sensitive_requested) > 0,
-            })
-
         except Exception as e:
-            logger.error(f"Scope validation failed: {str(e)}")
-            return StepResult.fail(f"Scope validation error: {str(e)}")
+            logger.error(f"Scope validation failed: {e!s}")
+            return StepResult.fail(f"Scope validation error: {e!s}")
 
     def get_scope_descriptions(self, scopes: list[str]) -> dict[str, str]:
         """Get descriptions for scopes.
@@ -205,7 +206,9 @@ class ScopeValidator:
 
             # Create audit record
             audit_record = {
-                "timestamp": str(logger.handlers[0].formatter.formatTime(logger.makeRecord("", 0, "", 0, "", (), None))),
+                "timestamp": str(
+                    logger.handlers[0].formatter.formatTime(logger.makeRecord("", 0, "", 0, "", (), None))
+                ),
                 "platform": platform,
                 "tenant": tenant,
                 "workspace": workspace,
@@ -233,15 +236,17 @@ class ScopeValidator:
             if validation_data.get("requires_special_approval"):
                 compliance_issues.append("Sensitive scopes require special approval")
 
-            return StepResult.ok(data={
-                "audit_record": audit_record,
-                "compliance_issues": compliance_issues,
-                "requires_manual_review": len(compliance_issues) > 0,
-            })
+            return StepResult.ok(
+                data={
+                    "audit_record": audit_record,
+                    "compliance_issues": compliance_issues,
+                    "requires_manual_review": len(compliance_issues) > 0,
+                }
+            )
 
         except Exception as e:
-            logger.error(f"Scope audit failed: {str(e)}")
-            return StepResult.fail(f"Scope audit error: {str(e)}")
+            logger.error(f"Scope audit failed: {e!s}")
+            return StepResult.fail(f"Scope audit error: {e!s}")
 
     def get_minimal_scopes(self, platform: str, purpose: str) -> list[str]:
         """Get minimal required scopes for a purpose.
@@ -326,16 +331,18 @@ class ScopeValidator:
             # Check for sensitive scope additions
             sensitive_new = new_scopes.intersection(set(self.sensitive_scopes.get(platform, [])))
 
-            return StepResult.ok(data={
-                "consistent": True,
-                "new_scopes": list(new_scopes),
-                "removed_scopes": list(removed_scopes),
-                "sensitive_new_scopes": list(sensitive_new),
-                "requires_approval": len(sensitive_new) > 0,
-                "scope_expansion": len(new_scopes) > 0,
-                "scope_reduction": len(removed_scopes) > 0,
-            })
+            return StepResult.ok(
+                data={
+                    "consistent": True,
+                    "new_scopes": list(new_scopes),
+                    "removed_scopes": list(removed_scopes),
+                    "sensitive_new_scopes": list(sensitive_new),
+                    "requires_approval": len(sensitive_new) > 0,
+                    "scope_expansion": len(new_scopes) > 0,
+                    "scope_reduction": len(removed_scopes) > 0,
+                }
+            )
 
         except Exception as e:
-            logger.error(f"Scope consistency validation failed: {str(e)}")
-            return StepResult.fail(f"Scope consistency validation error: {str(e)}")
+            logger.error(f"Scope consistency validation failed: {e!s}")
+            return StepResult.fail(f"Scope consistency validation error: {e!s}")

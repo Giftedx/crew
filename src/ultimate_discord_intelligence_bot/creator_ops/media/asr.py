@@ -11,15 +11,19 @@ import logging
 import os
 from dataclasses import dataclass
 from datetime import datetime
-from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-import torch
-import whisper
-from faster_whisper import WhisperModel
+import torch  # type: ignore[import-not-found]
+import whisper  # type: ignore[import-not-found]
+from faster_whisper import WhisperModel  # type: ignore[import-not-found]
 
 from ultimate_discord_intelligence_bot.creator_ops.config import CreatorOpsConfig
 from ultimate_discord_intelligence_bot.step_result import StepResult
+
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
 
 logger = logging.getLogger(__name__)
 
@@ -103,7 +107,7 @@ class WhisperASR:
                 )
                 logger.info(f"Loaded faster-whisper model {self.model_name} on CPU")
         except Exception as e:
-            logger.error(f"Failed to initialize Whisper model: {str(e)}")
+            logger.error(f"Failed to initialize Whisper model: {e!s}")
             raise
 
     def transcribe_audio(
@@ -155,8 +159,8 @@ class WhisperASR:
             return StepResult.ok(data=asr_result)
 
         except Exception as e:
-            logger.error(f"ASR transcription failed: {str(e)}")
-            return StepResult.fail(f"ASR transcription failed: {str(e)}")
+            logger.error(f"ASR transcription failed: {e!s}")
+            return StepResult.fail(f"ASR transcription failed: {e!s}")
 
     def _transcribe_with_whisper(
         self,
@@ -212,7 +216,7 @@ class WhisperASR:
             return StepResult.ok(data=asr_result)
 
         except Exception as e:
-            return StepResult.fail(f"Whisper transcription failed: {str(e)}")
+            return StepResult.fail(f"Whisper transcription failed: {e!s}")
 
     def _transcribe_with_faster_whisper(
         self,
@@ -273,7 +277,7 @@ class WhisperASR:
             return StepResult.ok(data=asr_result)
 
         except Exception as e:
-            return StepResult.fail(f"Faster-whisper transcription failed: {str(e)}")
+            return StepResult.fail(f"Faster-whisper transcription failed: {e!s}")
 
     def batch_transcribe(
         self,
@@ -307,7 +311,7 @@ class WhisperASR:
             return StepResult.ok(data=results)
 
         except Exception as e:
-            return StepResult.fail(f"Batch transcription failed: {str(e)}")
+            return StepResult.fail(f"Batch transcription failed: {e!s}")
 
     def get_supported_languages(self) -> list[str]:
         """Get list of supported languages."""

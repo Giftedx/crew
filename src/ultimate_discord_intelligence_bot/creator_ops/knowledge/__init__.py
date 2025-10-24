@@ -9,8 +9,9 @@ from .api import KnowledgeAPI
 from .retrieval import ContentRetriever
 from .social_graph import SocialGraphMapper
 
+
 __all__ = [
-    "KnowledgeAPI",
     "ContentRetriever",
+    "KnowledgeAPI",
     "SocialGraphMapper",
 ]

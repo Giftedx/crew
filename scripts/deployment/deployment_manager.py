@@ -17,6 +17,7 @@ from typing import Any
 
 import structlog
 
+
 logger = structlog.get_logger()
 
 
@@ -136,7 +137,10 @@ class DeploymentManager:
 
     def _switch_environments(self):
         """Switch active and standby environments."""
-        self.current_environment, self.standby_environment = (self.standby_environment, self.current_environment)
+        self.current_environment, self.standby_environment = (
+            self.standby_environment,
+            self.current_environment,
+        )
 
     async def _deploy_to_environment(self, config: DeploymentConfig, environment: DeploymentEnvironment) -> bool:
         """Deploy application to specified environment."""
@@ -319,7 +323,10 @@ class DeploymentManager:
 
         # Create deployment record
         deployment_record = DeploymentRecord(
-            deployment_id=deployment_id, config=config, status=DeploymentStatus.PENDING, started_at=time.time()
+            deployment_id=deployment_id,
+            config=config,
+            status=DeploymentStatus.PENDING,
+            started_at=time.time(),
         )
 
         self.active_deployment = deployment_record
@@ -395,7 +402,7 @@ class DeploymentManager:
             logger.error(f"Deployment {deployment_id} failed with exception: {e}")
             deployment_record.status = DeploymentStatus.FAILED
             deployment_record.completed_at = time.time()
-            await self._rollback_deployment(f"Deployment exception: {str(e)}")
+            await self._rollback_deployment(f"Deployment exception: {e!s}")
             return False
 
     def get_deployment_status(self) -> dict[str, Any]:
@@ -431,7 +438,11 @@ async def main():
     config = DeploymentConfig(
         version="v2.1.0-ai-enhanced",
         environment=DeploymentEnvironment.PRODUCTION,
-        feature_flags={"ENABLE_LITELLM_ROUTING": True, "ENABLE_SEMANTIC_CACHE": True, "ENABLE_LANGSMITH_TRACING": True},
+        feature_flags={
+            "ENABLE_LITELLM_ROUTING": True,
+            "ENABLE_SEMANTIC_CACHE": True,
+            "ENABLE_LANGSMITH_TRACING": True,
+        },
         rollback_threshold={
             "response_latency_p95": 1500.0,  # 1.5 seconds max
             "error_rate_percentage": 3.0,  # 3% max error rate

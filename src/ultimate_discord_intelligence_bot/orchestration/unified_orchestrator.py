@@ -12,10 +12,11 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set
+from typing import Any
 
 from ultimate_discord_intelligence_bot.step_result import StepResult
 from ultimate_discord_intelligence_bot.tenancy.context import current_tenant
+
 
 # Import existing orchestration implementations
 try:
@@ -61,15 +62,15 @@ class TaskRequest:
 
     task_id: str
     task_type: str
-    payload: Dict[str, Any]
+    payload: dict[str, Any]
     priority: TaskPriority = TaskPriority.NORMAL
-    dependencies: List[str] = field(default_factory=list)
-    tenant_id: Optional[str] = None
-    workspace_id: Optional[str] = None
-    timeout: Optional[int] = None
+    dependencies: list[str] = field(default_factory=list)
+    tenant_id: str | None = None
+    workspace_id: str | None = None
+    timeout: int | None = None
     retry_count: int = 0
     max_retries: int = 3
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -78,13 +79,13 @@ class TaskResult:
 
     task_id: str
     status: TaskStatus
-    result_data: Optional[Any] = None
-    error_message: Optional[str] = None
+    result_data: Any | None = None
+    error_message: str | None = None
     execution_time_ms: float = 0.0
-    started_at: Optional[datetime] = None
-    completed_at: Optional[datetime] = None
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
     retry_count: int = 0
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -126,18 +127,18 @@ class UnifiedOrchestrationConfig:
 class UnifiedOrchestrationService:
     """Unified orchestration service consolidating all orchestrators"""
 
-    def __init__(self, config: Optional[UnifiedOrchestrationConfig] = None):
+    def __init__(self, config: UnifiedOrchestrationConfig | None = None):
         self.config = config or UnifiedOrchestrationConfig()
         self._initialized = False
-        self._hierarchical_orchestrator: Optional[Any] = None
-        self._enhanced_crew_executor: Optional[Any] = None
-        self._task_queue: Dict[str, TaskRequest] = {}
-        self._running_tasks: Dict[str, TaskRequest] = {}
-        self._completed_tasks: Dict[str, TaskResult] = {}
-        self._failed_tasks: Dict[str, TaskResult] = {}
-        self._metrics: Dict[str, OrchestrationMetrics] = {}
-        self._task_dependencies: Dict[str, Set[str]] = {}
-        self._task_dependents: Dict[str, Set[str]] = {}
+        self._hierarchical_orchestrator: Any | None = None
+        self._enhanced_crew_executor: Any | None = None
+        self._task_queue: dict[str, TaskRequest] = {}
+        self._running_tasks: dict[str, TaskRequest] = {}
+        self._completed_tasks: dict[str, TaskResult] = {}
+        self._failed_tasks: dict[str, TaskResult] = {}
+        self._metrics: dict[str, OrchestrationMetrics] = {}
+        self._task_dependencies: dict[str, set[str]] = {}
+        self._task_dependents: dict[str, set[str]] = {}
 
         # Initialize orchestration components
         self._initialize_orchestration_components()
@@ -146,17 +147,12 @@ class UnifiedOrchestrationService:
         """Initialize all orchestration components"""
         try:
             # Hierarchical Orchestrator
-            if (
-                self.config.enable_hierarchical_orchestrator
-                and HierarchicalOrchestrator
-            ):
+            if self.config.enable_hierarchical_orchestrator and HierarchicalOrchestrator:
                 try:
                     self._hierarchical_orchestrator = HierarchicalOrchestrator()
                     logger.info("Hierarchical Orchestrator initialized")
                 except Exception as e:
-                    logger.warning(
-                        f"Failed to initialize Hierarchical Orchestrator: {e}"
-                    )
+                    logger.warning(f"Failed to initialize Hierarchical Orchestrator: {e}")
                     self._hierarchical_orchestrator = None
 
             # Enhanced Crew Executor
@@ -169,9 +165,7 @@ class UnifiedOrchestrationService:
                     self._enhanced_crew_executor = None
 
             self._initialized = True
-            logger.info(
-                f"Unified orchestration service initialized with {self._get_active_components()} components"
-            )
+            logger.info(f"Unified orchestration service initialized with {self._get_active_components()} components")
 
         except Exception as e:
             logger.error(f"Failed to initialize unified orchestration service: {e}")
@@ -189,8 +183,8 @@ class UnifiedOrchestrationService:
     async def execute_task(
         self,
         task_request: TaskRequest,
-        tenant_id: Optional[str] = None,
-        workspace_id: Optional[str] = None,
+        tenant_id: str | None = None,
+        workspace_id: str | None = None,
     ) -> StepResult:
         """Execute a task through the unified orchestration system"""
         try:
@@ -243,7 +237,7 @@ class UnifiedOrchestrationService:
 
         except Exception as e:
             logger.error(f"Error in task execution: {e}", exc_info=True)
-            return StepResult.fail(f"Task execution failed: {str(e)}")
+            return StepResult.fail(f"Task execution failed: {e!s}")
 
     async def _execute_task_internal(self, task_request: TaskRequest) -> TaskResult:
         """Internal task execution logic"""
@@ -330,9 +324,7 @@ class UnifiedOrchestrationService:
                 del self._running_tasks[task_id]
 
             # Update metrics
-            self._update_metrics(
-                task_request.tenant_id, task_request.workspace_id, task_result
-            )
+            self._update_metrics(task_request.tenant_id, task_request.workspace_id, task_result)
 
     async def _execute_via_crew_executor(self, task_request: TaskRequest) -> StepResult:
         """Execute task via Enhanced Crew Executor"""
@@ -350,11 +342,9 @@ class UnifiedOrchestrationService:
             return result
 
         except Exception as e:
-            return StepResult.fail(f"Crew executor execution failed: {str(e)}")
+            return StepResult.fail(f"Crew executor execution failed: {e!s}")
 
-    async def _execute_via_hierarchical_orchestrator(
-        self, task_request: TaskRequest
-    ) -> StepResult:
+    async def _execute_via_hierarchical_orchestrator(self, task_request: TaskRequest) -> StepResult:
         """Execute task via Hierarchical Orchestrator"""
         try:
             if not self._hierarchical_orchestrator:
@@ -371,9 +361,7 @@ class UnifiedOrchestrationService:
             return result
 
         except Exception as e:
-            return StepResult.fail(
-                f"Hierarchical orchestrator execution failed: {str(e)}"
-            )
+            return StepResult.fail(f"Hierarchical orchestrator execution failed: {e!s}")
 
     async def _execute_generic_task(self, task_request: TaskRequest) -> StepResult:
         """Execute generic task"""
@@ -391,7 +379,7 @@ class UnifiedOrchestrationService:
             )
 
         except Exception as e:
-            return StepResult.fail(f"Generic task execution failed: {str(e)}")
+            return StepResult.fail(f"Generic task execution failed: {e!s}")
 
     async def _check_dependencies(self, task_request: TaskRequest) -> bool:
         """Check if task dependencies are satisfied"""
@@ -414,9 +402,7 @@ class UnifiedOrchestrationService:
             logger.error(f"Error checking dependencies: {e}")
             return False
 
-    async def _update_task_dependencies(
-        self, task_request: TaskRequest, task_result: TaskResult
-    ) -> None:
+    async def _update_task_dependencies(self, task_request: TaskRequest, task_result: TaskResult) -> None:
         """Update task dependencies after execution"""
         try:
             task_id = task_request.task_id
@@ -483,9 +469,7 @@ class UnifiedOrchestrationService:
         else:
             return "generic_executor"
 
-    def _update_metrics(
-        self, tenant_id: str, workspace_id: str, task_result: TaskResult
-    ) -> None:
+    def _update_metrics(self, tenant_id: str, workspace_id: str, task_result: TaskResult) -> None:
         """Update orchestration metrics"""
         try:
             key = f"{tenant_id}:{workspace_id}"
@@ -505,10 +489,7 @@ class UnifiedOrchestrationService:
                 metrics.success_rate = metrics.completed_tasks / metrics.total_tasks
 
             # Update average execution time
-            total_time = (
-                metrics.avg_execution_time_ms * (metrics.total_tasks - 1)
-                + task_result.execution_time_ms
-            )
+            total_time = metrics.avg_execution_time_ms * (metrics.total_tasks - 1) + task_result.execution_time_ms
             metrics.avg_execution_time_ms = total_time / metrics.total_tasks
 
             # Update active and queued counts
@@ -527,9 +508,7 @@ class UnifiedOrchestrationService:
                     data={
                         "task_id": task_id,
                         "status": TaskStatus.RUNNING.value,
-                        "started_at": self._running_tasks[task_id].metadata.get(
-                            "started_at"
-                        ),
+                        "started_at": self._running_tasks[task_id].metadata.get("started_at"),
                     }
                 )
 
@@ -542,12 +521,8 @@ class UnifiedOrchestrationService:
                         "status": result.status.value,
                         "result_data": result.result_data,
                         "execution_time_ms": result.execution_time_ms,
-                        "started_at": result.started_at.isoformat()
-                        if result.started_at
-                        else None,
-                        "completed_at": result.completed_at.isoformat()
-                        if result.completed_at
-                        else None,
+                        "started_at": result.started_at.isoformat() if result.started_at else None,
+                        "completed_at": result.completed_at.isoformat() if result.completed_at else None,
                         "metadata": result.metadata,
                     }
                 )
@@ -561,12 +536,8 @@ class UnifiedOrchestrationService:
                         "status": result.status.value,
                         "error_message": result.error_message,
                         "execution_time_ms": result.execution_time_ms,
-                        "started_at": result.started_at.isoformat()
-                        if result.started_at
-                        else None,
-                        "completed_at": result.completed_at.isoformat()
-                        if result.completed_at
-                        else None,
+                        "started_at": result.started_at.isoformat() if result.started_at else None,
+                        "completed_at": result.completed_at.isoformat() if result.completed_at else None,
                         "retry_count": result.retry_count,
                         "metadata": result.metadata,
                     }
@@ -587,11 +558,11 @@ class UnifiedOrchestrationService:
 
         except Exception as e:
             logger.error(f"Error getting task status: {e}")
-            return StepResult.fail(f"Task status retrieval failed: {str(e)}")
+            return StepResult.fail(f"Task status retrieval failed: {e!s}")
 
     def get_orchestration_metrics(
-        self, tenant_id: Optional[str] = None, workspace_id: Optional[str] = None
-    ) -> Dict[str, Any]:
+        self, tenant_id: str | None = None, workspace_id: str | None = None
+    ) -> dict[str, Any]:
         """Get orchestration performance metrics"""
         try:
             if tenant_id and workspace_id:
@@ -609,20 +580,12 @@ class UnifiedOrchestrationService:
 
                 # Calculate aggregated averages
                 if self._metrics:
-                    total_execution_time = sum(
-                        m.avg_execution_time_ms * m.total_tasks
-                        for m in self._metrics.values()
-                    )
+                    total_execution_time = sum(m.avg_execution_time_ms * m.total_tasks for m in self._metrics.values())
                     total_tasks = sum(m.total_tasks for m in self._metrics.values())
-                    metrics.avg_execution_time_ms = total_execution_time / max(
-                        total_tasks, 1
-                    )
+                    metrics.avg_execution_time_ms = total_execution_time / max(total_tasks, 1)
 
                     if total_tasks > 0:
-                        metrics.success_rate = (
-                            sum(m.completed_tasks for m in self._metrics.values())
-                            / total_tasks
-                        )
+                        metrics.success_rate = sum(m.completed_tasks for m in self._metrics.values()) / total_tasks
 
             return {
                 "total_tasks": metrics.total_tasks,
@@ -665,9 +628,9 @@ class UnifiedOrchestrationService:
 
         except Exception as e:
             logger.error(f"Error cancelling task: {e}")
-            return StepResult.fail(f"Task cancellation failed: {str(e)}")
+            return StepResult.fail(f"Task cancellation failed: {e!s}")
 
-    def get_orchestration_status(self) -> Dict[str, Any]:
+    def get_orchestration_status(self) -> dict[str, Any]:
         """Get overall orchestration system status"""
         return {
             "initialized": self._initialized,

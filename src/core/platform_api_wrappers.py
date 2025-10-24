@@ -16,6 +16,7 @@ from .circuit_breaker_canonical import (
     get_platform_circuit_breaker,
 )
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -50,7 +51,7 @@ class PlatformAPIWrapper:
             return StepResult.ok(data=result)
         except Exception as e:
             logger.error(f"Platform API call failed: {self.platform}.{method_name}: {e}")
-            return StepResult.fail(f"API call failed: {str(e)}")
+            return StepResult.fail(f"API call failed: {e!s}")
 
     def get_health_status(self) -> dict[str, Any]:
         """Get circuit breaker health status."""
@@ -166,7 +167,7 @@ class OpenRouterAPIWrapper:
             return StepResult.ok(data=result)
         except Exception as e:
             logger.error(f"OpenRouter API call failed: {e}")
-            return StepResult.fail(f"API call failed: {str(e)}")
+            return StepResult.fail(f"API call failed: {e!s}")
 
     async def chat_complete(self, messages: list[dict], **kwargs) -> StepResult:
         """Chat completion with circuit breaker protection."""
@@ -175,7 +176,7 @@ class OpenRouterAPIWrapper:
             return StepResult.ok(data=result)
         except Exception as e:
             logger.error(f"OpenRouter chat completion failed: {e}")
-            return StepResult.fail(f"Chat completion failed: {str(e)}")
+            return StepResult.fail(f"Chat completion failed: {e!s}")
 
     def get_health_status(self) -> dict[str, Any]:
         """Get circuit breaker health status."""
@@ -196,18 +197,22 @@ class QdrantAPIWrapper:
             return StepResult.ok(data=result)
         except Exception as e:
             logger.error(f"Qdrant upsert failed: {e}")
-            return StepResult.fail(f"Upsert failed: {str(e)}")
+            return StepResult.fail(f"Upsert failed: {e!s}")
 
     async def search(self, collection_name: str, query_vector: list, limit: int = 10, **kwargs) -> StepResult:
         """Search vectors with circuit breaker protection."""
         try:
             result = await self.circuit_breaker.call(
-                self.qdrant_client.search, collection_name, query_vector, limit, **kwargs
+                self.qdrant_client.search,
+                collection_name,
+                query_vector,
+                limit,
+                **kwargs,
             )
             return StepResult.ok(data=result)
         except Exception as e:
             logger.error(f"Qdrant search failed: {e}")
-            return StepResult.fail(f"Search failed: {str(e)}")
+            return StepResult.fail(f"Search failed: {e!s}")
 
     async def delete(self, collection_name: str, points: list, **kwargs) -> StepResult:
         """Delete points with circuit breaker protection."""
@@ -216,7 +221,7 @@ class QdrantAPIWrapper:
             return StepResult.ok(data=result)
         except Exception as e:
             logger.error(f"Qdrant delete failed: {e}")
-            return StepResult.fail(f"Delete failed: {str(e)}")
+            return StepResult.fail(f"Delete failed: {e!s}")
 
     def get_health_status(self) -> dict[str, Any]:
         """Get circuit breaker health status."""
@@ -278,21 +283,21 @@ def get_all_api_health_status() -> dict[str, Any]:
 
 
 __all__ = [
-    "PlatformAPIWrapper",
-    "YouTubeAPIWrapper",
-    "TwitchAPIWrapper",
-    "TikTokAPIWrapper",
     "InstagramAPIWrapper",
-    "XAPIWrapper",
     "OpenRouterAPIWrapper",
+    "PlatformAPIWrapper",
     "QdrantAPIWrapper",
-    "create_youtube_wrapper",
-    "create_twitch_wrapper",
-    "create_tiktok_wrapper",
+    "TikTokAPIWrapper",
+    "TwitchAPIWrapper",
+    "XAPIWrapper",
+    "YouTubeAPIWrapper",
     "create_instagram_wrapper",
-    "create_x_wrapper",
     "create_openrouter_wrapper",
     "create_qdrant_wrapper",
-    "register_wrapped_api",
+    "create_tiktok_wrapper",
+    "create_twitch_wrapper",
+    "create_x_wrapper",
+    "create_youtube_wrapper",
     "get_all_api_health_status",
+    "register_wrapped_api",
 ]

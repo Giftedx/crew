@@ -5,6 +5,8 @@ import os
 from langfuse import Langfuse
 from langfuse.model import CreateSpan, CreateTrace, UpdateSpan
 
+from ultimate_discord_intelligence_bot.step_result import StepResult
+
 from ..step_result import StepResult
 
 
@@ -21,9 +23,7 @@ class LangfuseService:
 
         self.langfuse = Langfuse(public_key, secret_key)
 
-    def create_trace(
-        self, name: str, user_id: str, metadata: dict | None = None
-    ) -> StepResult:
+    def create_trace(self, name: str, user_id: str, metadata: dict | None = None) -> StepResult:
         """
         Creates a new trace in Langfuse.
 
@@ -36,16 +36,12 @@ class LangfuseService:
             A StepResult containing the created trace object.
         """
         try:
-            trace = self.langfuse.trace(
-                CreateTrace(name=name, user_id=user_id, metadata=metadata or {})
-            )
+            trace = self.langfuse.trace(CreateTrace(name=name, user_id=user_id, metadata=metadata or {}))
             return StepResult.ok(data=trace)
         except Exception as e:
             return StepResult.fail(f"Langfuse create trace failed: {e}")
 
-    def create_span(
-        self, trace, name: str, input_data: dict, metadata: dict | None = None
-    ) -> StepResult:
+    def create_span(self, trace, name: str, input_data: dict, metadata: dict | None = None) -> StepResult:
         """
         Creates a new span within a trace.
 
@@ -59,16 +55,12 @@ class LangfuseService:
             A StepResult containing the created span object.
         """
         try:
-            span = trace.span(
-                CreateSpan(name=name, input=input_data, metadata=metadata or {})
-            )
+            span = trace.span(CreateSpan(name=name, input=input_data, metadata=metadata or {}))
             return StepResult.ok(data=span)
         except Exception as e:
             return StepResult.fail(f"Langfuse create span failed: {e}")
 
-    def update_span(
-        self, span, output_data: dict, error: str | None = None
-    ) -> StepResult:
+    def update_span(self, span, output_data: dict, error: str | None = None) -> StepResult:
         """
         Updates an existing span with output data or an error.
 

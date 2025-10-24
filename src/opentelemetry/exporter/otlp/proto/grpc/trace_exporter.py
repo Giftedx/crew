@@ -15,7 +15,6 @@ class OTLPSpanExporter:
 
     def shutdown(self) -> None:
         """No-op shutdown method."""
-        pass
 
 
 __all__ = ["OTLPSpanExporter"]

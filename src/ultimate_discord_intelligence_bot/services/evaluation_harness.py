@@ -13,9 +13,13 @@ from __future__ import annotations
 import json
 import time
 from dataclasses import dataclass, field
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from .openrouter_service import OpenRouterService
+
+
+if TYPE_CHECKING:
+    from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 @dataclass
@@ -30,7 +34,7 @@ class EvaluationHarness:
         prompt: str,
         task_type: str = "general",
         models: list[str] | None = None,
-    ) -> list[dict[str, Any]]:  # noqa: PLR0913 - explicit parameters aid clarity for CLI usage
+    ) -> StepResult:
         """Execute ``prompt`` against ``models`` and log the outcomes.
 
         Keeping parameters explicit (vs a config dict) improves discoverability for
@@ -55,7 +59,7 @@ class EvaluationHarness:
                 with open(self.log_path, "a", encoding="utf-8") as fh:
                     json.dump(record, fh)
                     fh.write("\n")
-            except OSError as exc:  # noqa: S110 - explicit exception capture & logging
+            except OSError as exc:
                 # Logging failure should not abort benchmark loop; emit structured
                 # diagnostic for observability instead of swallowing silently.
                 # Using print keeps harness dependency‑light; upstream caller can

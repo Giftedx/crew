@@ -21,6 +21,7 @@ from typing import Any
 
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
+
 logger = logging.getLogger(__name__)
 
 # MCP Server Configuration
@@ -41,12 +42,20 @@ MCP_SERVERS = {
         "enabled": False,  # Controlled by ENABLE_MCP_KG
     },
     "routing": {
-        "tools": ["estimate_cost_tool", "route_completion_tool", "choose_embedding_model_tool"],
+        "tools": [
+            "estimate_cost_tool",
+            "route_completion_tool",
+            "choose_embedding_model_tool",
+        ],
         "resources": [],
         "enabled": False,  # Controlled by ENABLE_MCP_ROUTER
     },
     "obs": {
-        "tools": ["summarize_health_tool", "get_counters_tool", "recent_degradations_tool"],
+        "tools": [
+            "summarize_health_tool",
+            "get_counters_tool",
+            "recent_degradations_tool",
+        ],
         "resources": ["metrics://prom", "degradations://recent"],
         "enabled": False,  # Controlled by ENABLE_MCP_OBS
     },
@@ -78,7 +87,11 @@ MCP_SERVERS = {
             "get_agent_performance",
             "abort_crew_execution",
         ],
-        "resources": ["crewai://agents", "crewai://tasks", "crewai://metrics/{execution_id}"],
+        "resources": [
+            "crewai://agents",
+            "crewai://tasks",
+            "crewai://metrics/{execution_id}",
+        ],
         "enabled": False,  # Controlled by ENABLE_MCP_CREWAI
     },
     "multimodal": {
@@ -179,7 +192,10 @@ class MCPToolsValidator:
         return enabled
 
     async def validate_tool(
-        self, server_name: str, tool_name: str, test_params: dict[str, Any] | None = None
+        self,
+        server_name: str,
+        tool_name: str,
+        test_params: dict[str, Any] | None = None,
     ) -> ValidationResult:
         """Validate a specific MCP tool.
 
@@ -286,7 +302,11 @@ class MCPToolsValidator:
                 return StepResult.ok(
                     data={
                         "results": [
-                            {"id": f"doc_{i}", "score": 0.9 - i * 0.1, "content": f"Result {i}"}
+                            {
+                                "id": f"doc_{i}",
+                                "score": 0.9 - i * 0.1,
+                                "content": f"Result {i}",
+                            }
                             for i in range(min(k, 3))
                         ],
                         "namespace": name,
@@ -313,7 +333,11 @@ class MCPToolsValidator:
                 return StepResult.ok(
                     data={
                         "samples": [
-                            {"id": f"sample_{i}", "content": f"Sample content {i}", "metadata": {}}
+                            {
+                                "id": f"sample_{i}",
+                                "content": f"Sample content {i}",
+                                "metadata": {},
+                            }
                             for i in range(min(n, 3))
                         ],
                         "namespace": name,
@@ -339,11 +363,24 @@ class MCPToolsValidator:
                 return StepResult.ok(
                     data={
                         "nodes": [
-                            {"id": entity, "type": "entity", "properties": {"name": entity}},
-                            {"id": f"{entity}_related", "type": "related", "properties": {"name": f"{entity}_related"}},
+                            {
+                                "id": entity,
+                                "type": "entity",
+                                "properties": {"name": entity},
+                            },
+                            {
+                                "id": f"{entity}_related",
+                                "type": "related",
+                                "properties": {"name": f"{entity}_related"},
+                            },
                         ],
                         "edges": [
-                            {"source": entity, "target": f"{entity}_related", "type": "relates_to", "weight": 0.8},
+                            {
+                                "source": entity,
+                                "target": f"{entity}_related",
+                                "type": "relates_to",
+                                "weight": 0.8,
+                            },
                         ],
                         "depth": depth,
                     }
@@ -847,8 +884,16 @@ class MCPToolsValidator:
                         "content_url": content_url,
                         "content_type": content_type,
                         "themes": [
-                            {"name": "technology", "confidence": 0.95, "relevance": 0.9},
-                            {"name": "innovation", "confidence": 0.88, "relevance": 0.8},
+                            {
+                                "name": "technology",
+                                "confidence": 0.95,
+                                "relevance": 0.9,
+                            },
+                            {
+                                "name": "innovation",
+                                "confidence": 0.88,
+                                "relevance": 0.8,
+                            },
                             {"name": "future", "confidence": 0.82, "relevance": 0.7},
                         ],
                         "primary_theme": "technology",
@@ -969,7 +1014,10 @@ class MCPToolsValidator:
             "analyze_audio": {"audio_url": "https://example.com/audio.mp3"},
             "analyze_content_auto": {"content_url": "https://example.com/content"},
             "get_visual_sentiment": {"image_url": "https://example.com/image.jpg"},
-            "extract_content_themes": {"content_url": "https://example.com/content", "content_type": "auto"},
+            "extract_content_themes": {
+                "content_url": "https://example.com/content",
+                "content_type": "auto",
+            },
         }
 
         # Merge base and tool-specific parameters
@@ -1072,13 +1120,17 @@ class MCPToolsValidator:
 
             # Step 1: Extract metadata
             metadata_result = await self.validate_tool(
-                "ingest", "extract_metadata_tool", {"url": "https://youtube.com/watch?v=test"}
+                "ingest",
+                "extract_metadata_tool",
+                {"url": "https://youtube.com/watch?v=test"},
             )
 
             # Step 2: Analyze content (if metadata successful)
             if metadata_result.success:
                 analysis_result = await self.validate_tool(
-                    "multimodal", "analyze_content_auto", {"content_url": "https://youtube.com/watch?v=test"}
+                    "multimodal",
+                    "analyze_content_auto",
+                    {"content_url": "https://youtube.com/watch?v=test"},
                 )
             else:
                 analysis_result = ValidationResult(
@@ -1116,7 +1168,9 @@ class MCPToolsValidator:
 
             # Step 1: Query knowledge graph
             kg_result = await self.validate_tool(
-                "kg", "kg_query_tool", {"tenant": "test_tenant", "entity": "test_entity", "depth": 2}
+                "kg",
+                "kg_query_tool",
+                {"tenant": "test_tenant", "entity": "test_entity", "depth": 2},
             )
 
             # Step 2: Search memory (if KG query successful)
@@ -1167,13 +1221,17 @@ class MCPToolsValidator:
 
             # Step 1: Estimate cost
             cost_result = await self.validate_tool(
-                "routing", "estimate_cost_tool", {"model": "gpt-4", "input_tokens": 2000, "output_tokens": 1000}
+                "routing",
+                "estimate_cost_tool",
+                {"model": "gpt-4", "input_tokens": 2000, "output_tokens": 1000},
             )
 
             # Step 2: Route completion (if cost estimation successful)
             if cost_result.success:
                 route_result = await self.validate_tool(
-                    "routing", "route_completion_tool", {"task": "Complex research task requiring high-quality output"}
+                    "routing",
+                    "route_completion_tool",
+                    {"task": "Complex research task requiring high-quality output"},
                 )
             else:
                 route_result = ValidationResult(
@@ -1242,7 +1300,9 @@ def get_mcp_validator(enable_all_servers: bool = False) -> MCPToolsValidator:
     return _mcp_validator
 
 
-async def validate_all_mcp_tools(enable_all_servers: bool = False) -> MCPValidationReport:
+async def validate_all_mcp_tools(
+    enable_all_servers: bool = False,
+) -> MCPValidationReport:
     """Validate all MCP tools and return comprehensive report."""
     validator = get_mcp_validator(enable_all_servers)
     return await validator.validate_all_servers()
@@ -1256,9 +1316,9 @@ async def validate_research_workflows() -> StepResult:
 
 __all__ = [
     "MCPToolsValidator",
-    "ValidationResult",
-    "ServerValidationResult",
     "MCPValidationReport",
+    "ServerValidationResult",
+    "ValidationResult",
     "get_mcp_validator",
     "validate_all_mcp_tools",
     "validate_research_workflows",

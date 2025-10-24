@@ -31,6 +31,7 @@ from pathlib import Path
 
 from ultimate_discord_intelligence_bot.settings import CONFIG_DIR
 
+
 # Lazy imports to keep runtime light if user never uses OAuth
 try:
     # isort: off - keep grouped Google auth imports
@@ -99,7 +100,9 @@ def main() -> int:
                 else:
                     # Manual console flow for environments without run_console
                     auth_url, _ = flow.authorization_url(
-                        prompt="consent", access_type="offline", include_granted_scopes="true"
+                        prompt="consent",
+                        access_type="offline",
+                        include_granted_scopes="true",
                     )
                     print("Open this URL in a browser, approve access, then paste the authorization code below:\n")
                     print(auth_url)

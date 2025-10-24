@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping, MutableMapping
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from .rl import reward_engine
+
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping, MutableMapping
 
 
 @dataclass

@@ -17,6 +17,7 @@ from pydantic import BaseModel, Field
 
 from fastapi import APIRouter, Query
 
+
 # Import metrics module
 try:
     from obs import metrics

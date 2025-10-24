@@ -10,10 +10,11 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from ultimate_discord_intelligence_bot.step_result import StepResult
 from ultimate_discord_intelligence_bot.tenancy.context import current_tenant
+
 
 # Import existing routing implementations
 try:
@@ -41,13 +42,13 @@ class RoutingRequest:
 
     prompt: str
     task_type: str = "general"
-    context: Optional[Dict[str, Any]] = None
-    budget_limit: Optional[float] = None
+    context: dict[str, Any] | None = None
+    budget_limit: float | None = None
     quality_requirement: str = "balanced"  # fast, balanced, high_quality
-    tenant_id: Optional[str] = None
-    workspace_id: Optional[str] = None
-    max_tokens: Optional[int] = None
-    temperature: Optional[float] = None
+    tenant_id: str | None = None
+    workspace_id: str | None = None
+    max_tokens: int | None = None
+    temperature: float | None = None
 
 
 @dataclass
@@ -60,7 +61,7 @@ class RoutingResult:
     confidence_score: float = 1.0
     routing_method: str = "unified"
     fallback_used: bool = False
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
     timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
 
@@ -81,7 +82,7 @@ class UnifiedRouterConfig:
 class UnifiedRouterService:
     """Unified interface to all routing backends with intelligent selection"""
 
-    def __init__(self, config: Optional[UnifiedRouterConfig] = None):
+    def __init__(self, config: UnifiedRouterConfig | None = None):
         self.config = config or UnifiedRouterConfig()
         self._initialized = False
         self._routers = {}
@@ -115,9 +116,7 @@ class UnifiedRouterService:
             # See ADR-0003 for routing consolidation rationale
 
             self._initialized = True
-            logger.info(
-                f"Unified router service initialized with {len(self._routers)} backends"
-            )
+            logger.info(f"Unified router service initialized with {len(self._routers)} backends")
 
         except Exception as e:
             logger.error(f"Failed to initialize unified router service: {e}")
@@ -126,8 +125,8 @@ class UnifiedRouterService:
     async def route_request(
         self,
         request: RoutingRequest,
-        tenant_id: Optional[str] = None,
-        workspace_id: Optional[str] = None,
+        tenant_id: str | None = None,
+        workspace_id: str | None = None,
     ) -> StepResult:
         """Route request through unified routing system"""
         try:
@@ -180,20 +179,16 @@ class UnifiedRouterService:
                 return StepResult.fail("No routing candidates available")
 
             # Apply unified selection logic
-            selected_route = await self._select_optimal_route(
-                routing_candidates, request
-            )
+            selected_route = await self._select_optimal_route(routing_candidates, request)
 
             # Record routing decision for learning
-            await self._record_routing_decision(
-                request, selected_route, routing_candidates
-            )
+            await self._record_routing_decision(request, selected_route, routing_candidates)
 
             return StepResult.ok(data=selected_route)
 
         except Exception as e:
             logger.error(f"Error in unified routing: {e}", exc_info=True)
-            return StepResult.fail(f"Unified routing failed: {str(e)}")
+            return StepResult.fail(f"Unified routing failed: {e!s}")
 
     async def _route_openrouter(self, request: RoutingRequest) -> StepResult:
         """Route through OpenRouter service"""
@@ -339,46 +334,31 @@ class UnifiedRouterService:
             logger.debug(f"Core LLM Router routing failed: {e}")
             return StepResult.fail(str(e))
 
-    async def _select_optimal_route(
-        self, candidates: List[Dict[str, Any]], request: RoutingRequest
-    ) -> RoutingResult:
+    async def _select_optimal_route(self, candidates: list[dict[str, Any]], request: RoutingRequest) -> RoutingResult:
         """Select optimal route from candidates using unified logic"""
         try:
             if not candidates:
                 raise ValueError("No routing candidates available")
 
             # Filter candidates by budget
-            budget_filtered = [
-                c
-                for c in candidates
-                if c.get("estimated_cost", 0) <= request.budget_limit
-            ]
+            budget_filtered = [c for c in candidates if c.get("estimated_cost", 0) <= request.budget_limit]
 
             if not budget_filtered:
                 # If no candidates fit budget, use cheapest
-                budget_filtered = sorted(
-                    candidates, key=lambda x: x.get("estimated_cost", 0)
-                )
+                budget_filtered = sorted(candidates, key=lambda x: x.get("estimated_cost", 0))
 
             # Apply quality requirements
             if request.quality_requirement == "high_quality":
                 # Prefer higher confidence scores
-                sorted_candidates = sorted(
-                    budget_filtered, key=lambda x: x.get("confidence", 0), reverse=True
-                )
+                sorted_candidates = sorted(budget_filtered, key=lambda x: x.get("confidence", 0), reverse=True)
             elif request.quality_requirement == "fast":
                 # Prefer lower cost
-                sorted_candidates = sorted(
-                    budget_filtered, key=lambda x: x.get("estimated_cost", 0)
-                )
+                sorted_candidates = sorted(budget_filtered, key=lambda x: x.get("estimated_cost", 0))
             else:  # balanced
                 # Balance cost and quality
                 sorted_candidates = sorted(
                     budget_filtered,
-                    key=lambda x: (
-                        x.get("estimated_cost", 0) * 0.6
-                        + (1 - x.get("confidence", 0)) * 0.4
-                    ),
+                    key=lambda x: (x.get("estimated_cost", 0) * 0.6 + (1 - x.get("confidence", 0)) * 0.4),
                 )
 
             # Select best candidate
@@ -397,9 +377,7 @@ class UnifiedRouterService:
                 metadata={
                     "candidates_evaluated": len(candidates),
                     "budget_filtered": len(budget_filtered),
-                    "selection_reason": self._get_selection_reason(
-                        best_candidate, request
-                    ),
+                    "selection_reason": self._get_selection_reason(best_candidate, request),
                     "all_candidates": candidates,
                 },
             )
@@ -418,14 +396,10 @@ class UnifiedRouterService:
                 metadata={"error": str(e), "fallback_reason": "selection_failed"},
             )
 
-    def _get_selection_reason(
-        self, candidate: Dict[str, Any], request: RoutingRequest
-    ) -> str:
+    def _get_selection_reason(self, candidate: dict[str, Any], request: RoutingRequest) -> str:
         """Get human-readable reason for route selection"""
         if request.quality_requirement == "high_quality":
-            return (
-                f"Selected for high quality (confidence: {candidate['confidence']:.2f})"
-            )
+            return f"Selected for high quality (confidence: {candidate['confidence']:.2f})"
         elif request.quality_requirement == "fast":
             return f"Selected for speed (cost: ${candidate['estimated_cost']:.4f})"
         else:
@@ -435,7 +409,7 @@ class UnifiedRouterService:
         self,
         request: RoutingRequest,
         selected_route: RoutingResult,
-        all_candidates: List[Dict[str, Any]],
+        all_candidates: list[dict[str, Any]],
     ) -> None:
         """Record routing decision for learning and analytics"""
         try:
@@ -453,9 +427,7 @@ class UnifiedRouterService:
                 "routing_method": selected_route.routing_method,
                 "fallback_used": selected_route.fallback_used,
                 "candidates_count": len(all_candidates),
-                "selection_reason": selected_route.metadata.get(
-                    "selection_reason", "unknown"
-                ),
+                "selection_reason": selected_route.metadata.get("selection_reason", "unknown"),
             }
 
             # Store in performance metrics
@@ -470,9 +442,7 @@ class UnifiedRouterService:
                 self._performance_metrics[key] = self._performance_metrics[key][-100:]
 
             # Update learning systems if available
-            if "rl_router" in self._routers and hasattr(
-                self._routers["rl_router"], "update_reward"
-            ):
+            if "rl_router" in self._routers and hasattr(self._routers["rl_router"], "update_reward"):
                 await self._routers["rl_router"].update_reward(
                     context_payload={
                         "tenant": request.tenant_id,
@@ -488,9 +458,7 @@ class UnifiedRouterService:
         except Exception as e:
             logger.warning(f"Failed to record routing decision: {e}")
 
-    def get_performance_metrics(
-        self, tenant_id: Optional[str] = None, workspace_id: Optional[str] = None
-    ) -> Dict[str, Any]:
+    def get_performance_metrics(self, tenant_id: str | None = None, workspace_id: str | None = None) -> dict[str, Any]:
         """Get performance metrics for routing decisions"""
         try:
             if tenant_id and workspace_id:
@@ -507,9 +475,7 @@ class UnifiedRouterService:
 
             # Calculate summary statistics
             total_decisions = len(metrics)
-            avg_confidence = (
-                sum(m["confidence_score"] for m in metrics) / total_decisions
-            )
+            avg_confidence = sum(m["confidence_score"] for m in metrics) / total_decisions
             avg_cost = sum(m["estimated_cost"] for m in metrics) / total_decisions
             fallback_rate = sum(m["fallback_used"] for m in metrics) / total_decisions
 
@@ -532,11 +498,11 @@ class UnifiedRouterService:
             logger.error(f"Failed to get performance metrics: {e}")
             return {"error": str(e)}
 
-    def get_router_status(self) -> Dict[str, bool]:
+    def get_router_status(self) -> dict[str, bool]:
         """Get status of all routing backends"""
         return {
             "initialized": self._initialized,
-            "routers": {name: True for name in self._routers.keys()},
+            "routers": dict.fromkeys(self._routers.keys(), True),
             "config": {
                 "openrouter": self.config.enable_openrouter,
                 "rl_router": self.config.enable_rl_router,

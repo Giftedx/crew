@@ -51,7 +51,7 @@ class KGMigration:
             results["validation"] = validation_result
 
         except Exception as e:
-            results["errors"].append(f"Migration failed: {str(e)}")
+            results["errors"].append(f"Migration failed: {e!s}")
 
         return results
 
@@ -81,10 +81,10 @@ class KGMigration:
                     result["count"] += 1
 
                 except Exception as e:
-                    result["errors"].append(f"Failed to migrate node {row['id']}: {str(e)}")
+                    result["errors"].append(f"Failed to migrate node {row['id']}: {e!s}")
 
         except Exception as e:
-            result["errors"].append(f"Failed to read nodes: {str(e)}")
+            result["errors"].append(f"Failed to read nodes: {e!s}")
 
         return result
 
@@ -112,10 +112,10 @@ class KGMigration:
                     result["count"] += 1
 
                 except Exception as e:
-                    result["warnings"].append(f"Failed to migrate edge {row['id']}: {str(e)}")
+                    result["warnings"].append(f"Failed to migrate edge {row['id']}: {e!s}")
 
         except Exception as e:
-            result["errors"].append(f"Failed to read edges: {str(e)}")
+            result["errors"].append(f"Failed to read edges: {e!s}")
 
         return result
 

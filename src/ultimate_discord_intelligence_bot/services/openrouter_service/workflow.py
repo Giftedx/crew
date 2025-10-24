@@ -2,16 +2,19 @@
 
 from __future__ import annotations
 
+import logging
 import time
 from typing import TYPE_CHECKING, Any
 
 from obs import metrics
 
 from ..prompt_compression_tool import PromptCompressionTool
+from ..settings import get_settings
 from .budget import enforce_budget_limits
 from .cache_layer import check_caches
 from .context import prepare_route_state
 from .execution import execute_offline, execute_online, handle_failure
+
 
 if TYPE_CHECKING:  # pragma: no cover
     from .service import OpenRouterService
@@ -37,7 +40,7 @@ def route_prompt(
         )
         if result.success:
             state.prompt = result.data["compressed_prompt"]
-            log.info(
+            logging.getLogger("router").info(
                 f"Compressed prompt: {result.data['tokens_saved']} tokens saved "
                 f"({result.data['compression_ratio']:.2%} reduction)"
             )

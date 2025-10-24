@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import os
 
+
 # Default per-attachment limit in bytes when guild tier is unknown.
 # https://support.discord.com/hc/en-us/articles/213247207--My-files-are-too-powerful-
 _DEFAULT_LIMIT = 10 * 1024 * 1024

@@ -9,6 +9,7 @@ Extracted from confidence_calculators.py to improve maintainability and organiza
 import logging
 from typing import Any
 
+
 logger = logging.getLogger(__name__)
 
 

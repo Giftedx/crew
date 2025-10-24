@@ -7,10 +7,15 @@ user preference tracking, and adaptive behavior.
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, Sequence
+from typing import TYPE_CHECKING, Any
 
 from ultimate_discord_intelligence_bot.services.mem0_service import Mem0MemoryService
 from ultimate_discord_intelligence_bot.step_result import StepResult
+
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
 
 logger = logging.getLogger(__name__)
 
@@ -34,9 +39,7 @@ class Mem0Plugin:
             logger.warning(f"Mem0Plugin initialization failed: {exc}")
             self._service = None
 
-    async def store(
-        self, namespace: str, records: Sequence[Dict[str, Any]]
-    ) -> StepResult:
+    async def store(self, namespace: str, records: Sequence[dict[str, Any]]) -> StepResult:
         """Store records in Mem0 episodic memory.
 
         Args:
@@ -82,9 +85,7 @@ class Mem0Plugin:
                     logger.warning(f"Failed to store record: {result.error}")
 
             if stored_count == 0:
-                return StepResult.fail(
-                    "No records stored successfully", namespace=namespace
-                )
+                return StepResult.fail("No records stored successfully", namespace=namespace)
 
             return StepResult.ok(
                 stored=stored_count,
@@ -94,9 +95,7 @@ class Mem0Plugin:
             )
 
         except Exception as exc:
-            return StepResult.fail(
-                f"Mem0 storage failed: {exc}", namespace=namespace, step="mem0_store"
-            )
+            return StepResult.fail(f"Mem0 storage failed: {exc}", namespace=namespace, step="mem0_store")
 
     async def retrieve(self, namespace: str, query: str, limit: int) -> StepResult:
         """Retrieve records from Mem0 episodic memory.

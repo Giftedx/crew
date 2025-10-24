@@ -104,7 +104,7 @@ Key project optimization and onboarding documents:
 
 | Document | Location | Purpose |
 |----------|----------|---------|
-| Developer Onboarding Guide | `DEVELOPER_ONBOARDING_GUIDE.md` | Quick-start guide for new developers with organized structure and AI guidance |
+| Developer Onboarding Guide | `archive/consolidated/DEVELOPER_ONBOARDING_GUIDE.md` | Quick-start guide for new developers with organized structure and AI guidance |
 | Final Reorganization Report | history/FINAL_REORGANIZATION_REPORT.md | Complete transformation documentation and validation of requirements |
 | Enhanced AI Guidance | `.github/copilot-instructions.md` | Comprehensive architectural coverage for AI-assisted development |
 

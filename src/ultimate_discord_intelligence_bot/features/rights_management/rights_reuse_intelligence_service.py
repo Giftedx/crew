@@ -26,6 +26,7 @@ from typing import Any, Literal
 
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -100,9 +101,27 @@ class RightsReuseIntelligenceService:
 
         # Known license patterns
         self._license_patterns = {
-            "creative_commons": ["creativecommons.org", "CC BY", "CC BY-SA", "CC BY-NC", "CC BY-ND"],
-            "fair_use": ["fair use", "educational purpose", "commentary", "criticism", "news reporting"],
-            "copyrighted": ["all rights reserved", "copyright", "©", "trademark", "DMCA"],
+            "creative_commons": [
+                "creativecommons.org",
+                "CC BY",
+                "CC BY-SA",
+                "CC BY-NC",
+                "CC BY-ND",
+            ],
+            "fair_use": [
+                "fair use",
+                "educational purpose",
+                "commentary",
+                "criticism",
+                "news reporting",
+            ],
+            "copyrighted": [
+                "all rights reserved",
+                "copyright",
+                "©",
+                "trademark",
+                "DMCA",
+            ],
         }
 
         # Risk factors
@@ -165,13 +184,23 @@ class RightsReuseIntelligenceService:
             # Perform rights analysis
             model_name = self._select_model(model)
             analysis_result = self._analyze_content_rights(
-                content_segments, content_type, intended_use, target_audience_size, model_name
+                content_segments,
+                content_type,
+                intended_use,
+                target_audience_size,
+                model_name,
             )
 
             if analysis_result:
                 # Cache result
                 if use_cache:
-                    self._cache_result(content_segments, content_type, intended_use, model, analysis_result)
+                    self._cache_result(
+                        content_segments,
+                        content_type,
+                        intended_use,
+                        model,
+                        analysis_result,
+                    )
 
                 processing_time = (time.time() - start_time) * 1000
 
@@ -191,7 +220,7 @@ class RightsReuseIntelligenceService:
 
         except Exception as e:
             logger.error(f"Rights analysis failed: {e}")
-            return StepResult.fail(f"Rights analysis failed: {str(e)}", status="retryable")
+            return StepResult.fail(f"Rights analysis failed: {e!s}", status="retryable")
 
     def assess_fair_use_risk(
         self,
@@ -242,7 +271,7 @@ class RightsReuseIntelligenceService:
 
         except Exception as e:
             logger.error(f"Fair use assessment failed: {e}")
-            return StepResult.fail(f"Fair use assessment failed: {str(e)}")
+            return StepResult.fail(f"Fair use assessment failed: {e!s}")
 
     def suggest_alternative_content(
         self,
@@ -611,9 +640,7 @@ class RightsReuseIntelligenceService:
         # Educational and transformative uses score higher
         if intended_use == "educational":
             return 0.9
-        elif intended_use == "commentary":
-            return 0.8
-        elif intended_use == "criticism":
+        elif intended_use == "commentary" or intended_use == "criticism":
             return 0.8
         elif intended_use == "commercial":
             return 0.3
@@ -766,7 +793,13 @@ class RightsReuseIntelligenceService:
             Risk score (0.0 to 1.0)
         """
         # Most alternatives have low risk
-        low_risk_alternatives = ["Public domain", "Creative Commons", "Royalty-free", "Self-created", "Synthetic"]
+        low_risk_alternatives = [
+            "Public domain",
+            "Creative Commons",
+            "Royalty-free",
+            "Self-created",
+            "Synthetic",
+        ]
 
         if any(term in alternative for term in low_risk_alternatives):
             return 0.1  # Very low risk
@@ -863,7 +896,7 @@ class RightsReuseIntelligenceService:
 
         except Exception as e:
             logger.error(f"Failed to get cache stats: {e}")
-            return StepResult.fail(f"Failed to get cache stats: {str(e)}")
+            return StepResult.fail(f"Failed to get cache stats: {e!s}")
 
 
 # Singleton instance

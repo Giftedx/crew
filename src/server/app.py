@@ -14,11 +14,13 @@ in settings. The factory wires:
 
 from __future__ import annotations
 
+# ruff: noqa: E402
 import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from server.middleware_shim import install_middleware_support
+
 
 # Ensure middleware support available for local FastAPI shim
 install_middleware_support()
@@ -36,6 +38,7 @@ from server.routes import (
     register_pilot_route,
     register_pipeline_routes,
 )
+
 
 try:
     from core.settings import Settings  # type: ignore
@@ -57,11 +60,19 @@ except Exception:  # pragma: no cover - fallback when pydantic unavailable
 
 
 from memory.qdrant_provider import get_qdrant_client
-from obs.enhanced_monitoring import start_monitoring_system, stop_monitoring_system
+from obs.enhanced_monitoring import (
+    start_monitoring_system,
+    stop_monitoring_system,
+)
 from obs.tracing import init_tracing
 from server.rate_limit import add_rate_limit_middleware
 
-from .middleware import add_api_cache_middleware, add_cors_middleware, add_metrics_middleware
+from .middleware import (
+    add_api_cache_middleware,
+    add_cors_middleware,
+    add_metrics_middleware,
+)
+
 
 # moved to server/middleware.py: add_metrics_middleware
 

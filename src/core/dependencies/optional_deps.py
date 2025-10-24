@@ -8,10 +8,14 @@ from __future__ import annotations
 
 import importlib
 import logging
-from collections.abc import Callable
-from typing import Any, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from .dependency_manager import DependencyError, get_dependency_manager
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +25,12 @@ T = TypeVar("T")
 class OptionalImport:
     """Lazy import wrapper for optional dependencies."""
 
-    def __init__(self, module_name: str, fallback: Any | None = None, install_hint: str | None = None) -> None:
+    def __init__(
+        self,
+        module_name: str,
+        fallback: Any | None = None,
+        install_hint: str | None = None,
+    ) -> None:
         self.module_name = module_name
         self.fallback = fallback
         self.install_hint = install_hint
@@ -217,7 +226,9 @@ def create_feature_gate(feature_name: str, required_deps: list[str] | None = Non
 
 
 # Utility functions for common patterns
-def with_fallback(fallback_func: Callable[[], Any]) -> Callable[[Callable[[], Any]], Callable[[], Any]]:
+def with_fallback(
+    fallback_func: Callable[[], Any],
+) -> Callable[[Callable[[], Any]], Callable[[], Any]]:
     """Decorator to provide fallback functionality when dependencies are unavailable."""
 
     def decorator(import_func: Callable[[], Any]) -> Callable[[], Any]:

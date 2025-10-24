@@ -14,7 +14,7 @@ from typing import Any
 
 import yaml
 
-from core.time import default_utc_now
+from core.time import default_utc_now  # type: ignore[import-not-found]
 
 from .synthetic_data_generator import SyntheticDataGenerator, ToolUsageExample
 
@@ -161,7 +161,10 @@ class AgentTrainingCoordinator:
         return analysis
 
     def generate_enhanced_prompts(
-        self, agent_name: str, current_config: dict, training_examples: list[ToolUsageExample]
+        self,
+        agent_name: str,
+        current_config: dict,
+        training_examples: list[ToolUsageExample],
     ) -> dict[str, str]:
         """Generate enhanced prompts based on training examples."""
 
@@ -335,7 +338,12 @@ QUALITY ASSURANCE:
         training_examples = self.training_generator.generate_training_batch(
             agent_role=training_focus,
             batch_size=50,
-            complexity_distribution={"basic": 0.2, "intermediate": 0.3, "advanced": 0.3, "expert": 0.2},
+            complexity_distribution={
+                "basic": 0.2,
+                "intermediate": 0.3,
+                "advanced": 0.3,
+                "expert": 0.2,
+            },
         )
 
         # Generate enhanced prompts
@@ -437,7 +445,7 @@ QUALITY ASSURANCE:
         """Enhance all agents in the configuration."""
         results = {}
 
-        for agent_name in self.agents_config.keys():
+        for agent_name in self.agents_config:
             self.logger.info(f"Enhancing agent: {agent_name}")
 
             try:
@@ -508,7 +516,10 @@ Each successfully enhanced agent now includes:
 def main():
     """Main function to enhance all CrewAI agents."""
     # Configure logging
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    )
 
     # Initialize coordinator
     agents_config_path = Path("/home/crew/src/ultimate_discord_intelligence_bot/config/agents.yaml")

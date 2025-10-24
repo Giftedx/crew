@@ -3,13 +3,17 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from ultimate_discord_intelligence_bot.tenancy import current_tenant
-from ultimate_discord_intelligence_bot.tenancy.registry import TenantRegistry
 
 from ...learning_engine import LearningEngine
 from ..base_router import RoutingContext, RoutingStrategy
+
+
+if TYPE_CHECKING:
+    from ultimate_discord_intelligence_bot.tenancy.registry import TenantRegistry
+
 
 logger = logging.getLogger(__name__)
 

@@ -26,6 +26,7 @@ import statistics
 import time
 from datetime import datetime
 
+
 # Setup logging
 logging.basicConfig(
     level=logging.INFO,
@@ -108,7 +109,12 @@ class ProductionBotDemo:
                 "complexity": "medium",
                 "expected_model": "claude-3.5-sonnet",
             },
-            {"message": "Hi, how are you?", "user_id": 1002, "complexity": "low", "expected_model": "gemini-pro"},
+            {
+                "message": "Hi, how are you?",
+                "user_id": 1002,
+                "complexity": "low",
+                "expected_model": "gemini-pro",
+            },
             {
                 "message": "Can you explain quantum computing in detail with mathematical formulations?",
                 "user_id": 1003,
@@ -133,7 +139,12 @@ class ProductionBotDemo:
                 "complexity": "high",
                 "expected_model": "gpt-4-turbo",
             },
-            {"message": "Tell me a joke", "user_id": 1007, "complexity": "low", "expected_model": "gemini-pro"},
+            {
+                "message": "Tell me a joke",
+                "user_id": 1007,
+                "complexity": "low",
+                "expected_model": "gemini-pro",
+            },
             {
                 "message": "Explain the difference between supervised and unsupervised learning",
                 "user_id": 1008,
@@ -223,7 +234,11 @@ class ProductionBotDemo:
             from src.ai import initialize_advanced_bandits
 
             bot.orchestrator = await initialize_advanced_bandits(
-                {"context_dimension": 8, "num_actions": 4, "default_algorithm": "doubly_robust"}
+                {
+                    "context_dimension": 8,
+                    "num_actions": 4,
+                    "default_algorithm": "doubly_robust",
+                }
             )
 
             # Initialize autonomous optimizer
@@ -370,7 +385,12 @@ class ProductionBotDemo:
             except Exception as e:
                 logger.error(f"Routing failed for scenario {i + 1}: {e}")
                 routing_results.append(
-                    {"scenario": scenario, "success": False, "error": str(e), "timestamp": datetime.now()}
+                    {
+                        "scenario": scenario,
+                        "success": False,
+                        "error": str(e),
+                        "timestamp": datetime.now(),
+                    }
                 )
 
         return routing_results
@@ -397,11 +417,15 @@ class ProductionBotDemo:
 
                 try:
                     if strategy == "advanced_bandits":
-                        response, routing_info = await bot_system.route_with_advanced_bandits(message, context_features)
+                        (
+                            response,
+                            routing_info,
+                        ) = await bot_system.route_with_advanced_bandits(message, context_features)
                     else:
-                        response, routing_info = await bot_system.route_with_baseline_strategy(
-                            message, context_features
-                        )
+                        (
+                            response,
+                            routing_info,
+                        ) = await bot_system.route_with_baseline_strategy(message, context_features)
 
                     response_time = (time.time() - start_time) * 1000
                     satisfaction = bot_system.estimate_user_satisfaction(message.content, response, response_time)
@@ -440,7 +464,11 @@ class ProductionBotDemo:
         """Benchmark performance across different scenarios"""
         print("   Benchmarking performance metrics...")
 
-        benchmark_results = {"model_performance": {}, "complexity_analysis": {}, "latency_analysis": {}}
+        benchmark_results = {
+            "model_performance": {},
+            "complexity_analysis": {},
+            "latency_analysis": {},
+        }
 
         # Test each model individually
         models = list(bot_system.api_endpoints.keys())
@@ -514,8 +542,16 @@ class ProductionBotDemo:
         print("   Testing error handling scenarios...")
 
         error_scenarios = [
-            {"name": "Rate limit simulation", "test": "rate_limit", "message": "Test message for rate limiting"},
-            {"name": "API failure simulation", "test": "api_failure", "message": "Test message for API failure"},
+            {
+                "name": "Rate limit simulation",
+                "test": "rate_limit",
+                "message": "Test message for rate limiting",
+            },
+            {
+                "name": "API failure simulation",
+                "test": "api_failure",
+                "message": "Test message for API failure",
+            },
             {
                 "name": "Invalid message handling",
                 "test": "invalid_input",
@@ -551,16 +587,25 @@ class ProductionBotDemo:
                 elif scenario["test"] == "invalid_input":
                     # Test empty message handling
                     if not scenario["message"]:
-                        result = {"status": "invalid_input_handled", "fallback_used": True}
+                        result = {
+                            "status": "invalid_input_handled",
+                            "fallback_used": True,
+                        }
                     else:
-                        result = {"status": "processed_normally", "fallback_used": False}
+                        result = {
+                            "status": "processed_normally",
+                            "fallback_used": False,
+                        }
 
                 elif scenario["test"] == "long_message":
                     # Test very long message
                     if len(scenario["message"]) > 2000:
                         result = {"status": "message_truncated", "fallback_used": True}
                     else:
-                        result = {"status": "processed_normally", "fallback_used": False}
+                        result = {
+                            "status": "processed_normally",
+                            "fallback_used": False,
+                        }
 
                 else:
                     result = {"status": "unknown_test", "fallback_used": False}

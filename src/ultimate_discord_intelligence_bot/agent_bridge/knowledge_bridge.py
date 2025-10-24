@@ -10,10 +10,11 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set
+from typing import Any
 
-from ultimate_discord_intelligence_bot.step_result import StepResult
-from ultimate_discord_intelligence_bot.tenancy.context import current_tenant
+from ultimate_discord_intelligence_bot.step_result import StepResult  # type: ignore[import-not-found]
+from ultimate_discord_intelligence_bot.tenancy.context import current_tenant  # type: ignore[import-not-found]
+
 
 logger = logging.getLogger(__name__)
 
@@ -49,14 +50,14 @@ class AgentInsight:
     priority: InsightPriority
     title: str
     description: str
-    context: Dict[str, Any]
-    tags: List[str]
+    context: dict[str, Any]
+    tags: list[str]
     confidence_score: float
     validation_count: int = 0
     success_count: int = 0
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
-    expires_at: Optional[datetime] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    expires_at: datetime | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -66,24 +67,24 @@ class InsightRequest:
     requesting_agent_id: str
     agent_type: str
     query: str
-    context: Dict[str, Any]
-    insight_types: List[InsightType]
+    context: dict[str, Any]
+    insight_types: list[InsightType]
     max_results: int = 10
     min_confidence: float = 0.5
-    tags: Optional[List[str]] = None
-    tenant_id: Optional[str] = None
-    workspace_id: Optional[str] = None
+    tags: list[str] | None = None
+    tenant_id: str | None = None
+    workspace_id: str | None = None
 
 
 @dataclass
 class InsightResponse:
     """Response containing relevant insights"""
 
-    insights: List[AgentInsight]
+    insights: list[AgentInsight]
     total_found: int
     query_time_ms: float
     confidence_threshold: float
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -113,14 +114,14 @@ class KnowledgeBridgeConfig:
 class AgentKnowledgeBridge:
     """Intelligent agent knowledge sharing and learning system"""
 
-    def __init__(self, config: Optional[KnowledgeBridgeConfig] = None):
+    def __init__(self, config: KnowledgeBridgeConfig | None = None):
         self.config = config or KnowledgeBridgeConfig()
         self._initialized = False
-        self._insights: Dict[str, AgentInsight] = {}
-        self._agent_insights: Dict[str, Set[str]] = {}  # agent_id -> insight_ids
-        self._insight_index: Dict[str, Set[str]] = {}  # tag -> insight_ids
-        self._validation_history: Dict[str, List[Dict[str, Any]]] = {}
-        self._learning_cache: Dict[str, Any] = {}
+        self._insights: dict[str, AgentInsight] = {}
+        self._agent_insights: dict[str, set[str]] = {}  # agent_id -> insight_ids
+        self._insight_index: dict[str, set[str]] = {}  # tag -> insight_ids
+        self._validation_history: dict[str, list[dict[str, Any]]] = {}
+        self._learning_cache: dict[str, Any] = {}
 
         # Initialize bridge
         self._initialize_bridge()
@@ -141,13 +142,13 @@ class AgentKnowledgeBridge:
         insight_type: InsightType,
         title: str,
         description: str,
-        context: Dict[str, Any],
-        tags: List[str],
+        context: dict[str, Any],
+        tags: list[str],
         confidence_score: float,
         priority: InsightPriority = InsightPriority.NORMAL,
-        expires_at: Optional[datetime] = None,
-        tenant_id: Optional[str] = None,
-        workspace_id: Optional[str] = None,
+        expires_at: datetime | None = None,
+        tenant_id: str | None = None,
+        workspace_id: str | None = None,
     ) -> StepResult:
         """Share an insight with other agents"""
         try:
@@ -214,20 +215,20 @@ class AgentKnowledgeBridge:
 
         except Exception as e:
             logger.error(f"Error sharing insight: {e}", exc_info=True)
-            return StepResult.fail(f"Insight sharing failed: {str(e)}")
+            return StepResult.fail(f"Insight sharing failed: {e!s}")
 
     async def request_insights(
         self,
         requesting_agent_id: str,
         agent_type: str,
         query: str,
-        context: Dict[str, Any],
-        insight_types: List[InsightType],
+        context: dict[str, Any],
+        insight_types: list[InsightType],
         max_results: int = 10,
         min_confidence: float = 0.5,
-        tags: Optional[List[str]] = None,
-        tenant_id: Optional[str] = None,
-        workspace_id: Optional[str] = None,
+        tags: list[str] | None = None,
+        tenant_id: str | None = None,
+        workspace_id: str | None = None,
     ) -> StepResult:
         """Request relevant insights from other agents"""
         try:
@@ -255,9 +256,7 @@ class AgentKnowledgeBridge:
             )
 
             # Calculate query time
-            query_time = (
-                datetime.now(timezone.utc) - start_time
-            ).total_seconds() * 1000
+            query_time = (datetime.now(timezone.utc) - start_time).total_seconds() * 1000
 
             # Create response
             response = InsightResponse(
@@ -274,24 +273,22 @@ class AgentKnowledgeBridge:
                 },
             )
 
-            logger.info(
-                f"Insights requested by {requesting_agent_id}: {len(relevant_insights)} found"
-            )
+            logger.info(f"Insights requested by {requesting_agent_id}: {len(relevant_insights)} found")
 
             return StepResult.ok(data=response)
 
         except Exception as e:
             logger.error(f"Error requesting insights: {e}", exc_info=True)
-            return StepResult.fail(f"Insight request failed: {str(e)}")
+            return StepResult.fail(f"Insight request failed: {e!s}")
 
     async def validate_insight(
         self,
         insight_id: str,
         validating_agent_id: str,
         is_successful: bool,
-        feedback: Optional[str] = None,
-        tenant_id: Optional[str] = None,
-        workspace_id: Optional[str] = None,
+        feedback: str | None = None,
+        tenant_id: str | None = None,
+        workspace_id: str | None = None,
     ) -> StepResult:
         """Validate an insight based on experience"""
         try:
@@ -329,9 +326,7 @@ class AgentKnowledgeBridge:
             # Store updated insight
             self._insights[insight_id] = insight
 
-            logger.info(
-                f"Insight {insight_id} validated by {validating_agent_id}: {is_successful}"
-            )
+            logger.info(f"Insight {insight_id} validated by {validating_agent_id}: {is_successful}")
 
             return StepResult.ok(
                 data={
@@ -345,13 +340,13 @@ class AgentKnowledgeBridge:
 
         except Exception as e:
             logger.error(f"Error validating insight: {e}", exc_info=True)
-            return StepResult.fail(f"Insight validation failed: {str(e)}")
+            return StepResult.fail(f"Insight validation failed: {e!s}")
 
     async def get_agent_insights(
         self,
         agent_id: str,
         limit: int = 50,
-        insight_types: Optional[List[InsightType]] = None,
+        insight_types: list[InsightType] | None = None,
         min_confidence: float = 0.0,
     ) -> StepResult:
         """Get insights shared by a specific agent"""
@@ -394,11 +389,11 @@ class AgentKnowledgeBridge:
 
         except Exception as e:
             logger.error(f"Error getting agent insights: {e}", exc_info=True)
-            return StepResult.fail(f"Agent insights retrieval failed: {str(e)}")
+            return StepResult.fail(f"Agent insights retrieval failed: {e!s}")
 
     async def get_insight_statistics(
-        self, tenant_id: Optional[str] = None, workspace_id: Optional[str] = None
-    ) -> Dict[str, Any]:
+        self, tenant_id: str | None = None, workspace_id: str | None = None
+    ) -> dict[str, Any]:
         """Get statistics about shared insights"""
         try:
             # Filter insights by tenant/workspace if provided
@@ -406,10 +401,7 @@ class AgentKnowledgeBridge:
             for insight in self._insights.values():
                 if tenant_id and insight.metadata.get("tenant_id") != tenant_id:
                     continue
-                if (
-                    workspace_id
-                    and insight.metadata.get("workspace_id") != workspace_id
-                ):
+                if workspace_id and insight.metadata.get("workspace_id") != workspace_id:
                     continue
                 filtered_insights.append(insight)
 
@@ -432,18 +424,11 @@ class AgentKnowledgeBridge:
                 agent_type_counts[agent_type] = agent_type_counts.get(agent_type, 0) + 1
 
             # Calculate average confidence
-            avg_confidence = (
-                sum(insight.confidence_score for insight in filtered_insights)
-                / total_insights
-            )
+            avg_confidence = sum(insight.confidence_score for insight in filtered_insights) / total_insights
 
             # Calculate validation statistics
-            total_validations = sum(
-                insight.validation_count for insight in filtered_insights
-            )
-            total_successes = sum(
-                insight.success_count for insight in filtered_insights
-            )
+            total_validations = sum(insight.validation_count for insight in filtered_insights)
+            total_successes = sum(insight.success_count for insight in filtered_insights)
 
             return {
                 "total_insights": total_insights,
@@ -455,11 +440,7 @@ class AgentKnowledgeBridge:
                 "agent_types": agent_type_counts,
                 "top_tags": self._get_top_tags(filtered_insights),
                 "recent_insights": len(
-                    [
-                        i
-                        for i in filtered_insights
-                        if (datetime.now(timezone.utc) - i.created_at).days < 7
-                    ]
+                    [i for i in filtered_insights if (datetime.now(timezone.utc) - i.created_at).days < 7]
                 ),
             }
 
@@ -470,13 +451,13 @@ class AgentKnowledgeBridge:
     async def _search_insights(
         self,
         query: str,
-        context: Dict[str, Any],
-        insight_types: List[InsightType],
+        context: dict[str, Any],
+        insight_types: list[InsightType],
         min_confidence: float,
-        tags: Optional[List[str]],
+        tags: list[str] | None,
         requesting_agent_id: str,
         max_results: int,
-    ) -> List[AgentInsight]:
+    ) -> list[AgentInsight]:
         """Search for relevant insights"""
         try:
             candidate_insights = []
@@ -516,9 +497,7 @@ class AgentKnowledgeBridge:
             logger.error(f"Error searching insights: {e}")
             return []
 
-    def _calculate_relevance_score(
-        self, insight: AgentInsight, query: str, context: Dict[str, Any]
-    ) -> float:
+    def _calculate_relevance_score(self, insight: AgentInsight, query: str, context: dict[str, Any]) -> float:
         """Calculate relevance score for an insight"""
         try:
             score = 0.0
@@ -574,9 +553,7 @@ class AgentKnowledgeBridge:
         except Exception:
             return 0.0
 
-    def _context_similarity(
-        self, context1: Dict[str, Any], context2: Dict[str, Any]
-    ) -> float:
+    def _context_similarity(self, context1: dict[str, Any], context2: dict[str, Any]) -> float:
         """Calculate context similarity"""
         try:
             if not context1 or not context2:
@@ -595,9 +572,7 @@ class AgentKnowledgeBridge:
         except Exception:
             return 0.0
 
-    def _get_top_tags(
-        self, insights: List[AgentInsight], limit: int = 10
-    ) -> List[tuple]:
+    def _get_top_tags(self, insights: list[AgentInsight], limit: int = 10) -> list[tuple]:
         """Get most common tags from insights"""
         try:
             tag_counts = {}
@@ -638,16 +613,14 @@ class AgentKnowledgeBridge:
         except Exception as e:
             logger.error(f"Error cleaning up expired insights: {e}")
 
-    def get_bridge_status(self) -> Dict[str, Any]:
+    def get_bridge_status(self) -> dict[str, Any]:
         """Get knowledge bridge status"""
         return {
             "initialized": self._initialized,
             "total_insights": len(self._insights),
             "total_agents": len(self._agent_insights),
             "total_tags": len(self._insight_index),
-            "total_validations": sum(
-                len(validations) for validations in self._validation_history.values()
-            ),
+            "total_validations": sum(len(validations) for validations in self._validation_history.values()),
             "config": {
                 "enable_insight_sharing": self.config.enable_insight_sharing,
                 "enable_cross_agent_learning": self.config.enable_cross_agent_learning,

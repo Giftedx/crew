@@ -83,7 +83,10 @@ class PerformanceBaselineConfig:
         """Validate a metric value against its baseline."""
         baseline = self.get_baseline(metric_name)
         if not baseline:
-            return {"valid": False, "error": f"No baseline configured for metric: {metric_name}"}
+            return {
+                "valid": False,
+                "error": f"No baseline configured for metric: {metric_name}",
+            }
 
         is_acceptable = baseline.is_acceptable(value)
         alert_level = baseline.get_alert_level(value)
@@ -328,7 +331,9 @@ STAGING_BASELINES = PerformanceBaselineConfig(
 )
 
 
-def get_performance_baselines(tier: PerformanceTier | None = None) -> PerformanceBaselineConfig:
+def get_performance_baselines(
+    tier: PerformanceTier | None = None,
+) -> PerformanceBaselineConfig:
     """Get performance baselines for the specified tier.
 
     If no tier is specified, defaults to PRODUCTION for safety.
@@ -359,13 +364,13 @@ def get_current_performance_tier() -> PerformanceTier:
 
 
 __all__ = [
-    "PerformanceTier",
-    "MetricCategory",
-    "MetricBaseline",
-    "PerformanceBaselineConfig",
-    "PRODUCTION_BASELINES",
     "DEVELOPMENT_BASELINES",
+    "PRODUCTION_BASELINES",
     "STAGING_BASELINES",
-    "get_performance_baselines",
+    "MetricBaseline",
+    "MetricCategory",
+    "PerformanceBaselineConfig",
+    "PerformanceTier",
     "get_current_performance_tier",
+    "get_performance_baselines",
 ]

@@ -16,16 +16,20 @@ import logging
 import time
 from collections import defaultdict, deque
 from dataclasses import dataclass, field
-from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from core.time import default_utc_now
 
 from .error_handling import log_error
 from .nextgen_intelligence_hub import NextGenIntelligenceHub
 from .predictive_operations import PredictiveOperationsEngine
+
+
+if TYPE_CHECKING:
+    from datetime import datetime
+
 
 logger = logging.getLogger(__name__)
 
@@ -157,17 +161,29 @@ class SelfHealingEngine:
             },
             "memory_leak": {
                 "triggers": ["memory_usage_increasing", "gc_frequency_high"],
-                "actions": ["trigger_garbage_collection", "restart_affected_services", "enable_memory_profiling"],
+                "actions": [
+                    "trigger_garbage_collection",
+                    "restart_affected_services",
+                    "enable_memory_profiling",
+                ],
                 "confidence": 0.9,
             },
             "circuit_breaker_open": {
                 "triggers": ["circuit_breaker_state=open", "high_error_rate"],
-                "actions": ["check_downstream_health", "enable_fallback_service", "reduce_request_rate"],
+                "actions": [
+                    "check_downstream_health",
+                    "enable_fallback_service",
+                    "reduce_request_rate",
+                ],
                 "confidence": 0.95,
             },
             "security_threat": {
                 "triggers": ["threat_detected", "suspicious_activity"],
-                "actions": ["rate_limit_source", "block_malicious_ips", "alert_security_team"],
+                "actions": [
+                    "rate_limit_source",
+                    "block_malicious_ips",
+                    "alert_security_team",
+                ],
                 "confidence": 0.85,
             },
         }
@@ -186,10 +202,7 @@ class SelfHealingEngine:
     def _pattern_matches(self, issue_signature: str, pattern: dict[str, Any], context: dict[str, Any]) -> bool:
         """Check if issue matches pattern triggers."""
         triggers = pattern.get("triggers", [])
-        for trigger in triggers:
-            if trigger.lower() in issue_signature.lower():
-                return True
-        return False
+        return any(trigger.lower() in issue_signature.lower() for trigger in triggers)
 
     async def _execute_healing_action(
         self, healing_action: dict[str, Any], context: dict[str, Any]
@@ -271,7 +284,10 @@ class SelfHealingEngine:
         await asyncio.sleep(0.1)
 
     def _record_healing_outcome(
-        self, issue_signature: str, healing_action: dict[str, Any], result: AutomationAction
+        self,
+        issue_signature: str,
+        healing_action: dict[str, Any],
+        result: AutomationAction,
     ) -> None:
         """Record healing outcome for learning."""
         self.recovery_history[issue_signature].append(result)
@@ -371,10 +387,7 @@ class BusinessIntelligenceEngine:
         value_delivered = data.get("business_value", 100)
         costs_incurred = data.get("operational_costs", 80)
 
-        if costs_incurred > 0:
-            efficiency = min(1.0, value_delivered / (costs_incurred * 1.2))
-        else:
-            efficiency = 1.0
+        efficiency = min(1.0, value_delivered / (costs_incurred * 1.2)) if costs_incurred > 0 else 1.0
 
         return efficiency
 
@@ -383,10 +396,7 @@ class BusinessIntelligenceEngine:
         features_deployed = data.get("features_deployed", 5)
         target_features = data.get("target_features", 7)
 
-        if target_features > 0:
-            velocity = min(1.0, features_deployed / target_features)
-        else:
-            velocity = 0.5
+        velocity = min(1.0, features_deployed / target_features) if target_features > 0 else 0.5
 
         return velocity
 
@@ -632,7 +642,10 @@ class ProductionOperationsOrchestrator:
             )
 
         # Decision 4: Self-healing actions
-        if health_assessment.system_state in [OperationalState.DEGRADED, OperationalState.CRITICAL]:
+        if health_assessment.system_state in [
+            OperationalState.DEGRADED,
+            OperationalState.CRITICAL,
+        ]:
             decisions.append(
                 {
                     "type": "self_healing",
@@ -755,7 +768,9 @@ class ProductionOperationsOrchestrator:
 
 
 # Convenient function for easy access
-async def run_autonomous_operations_cycle(project_root: Path | None = None) -> dict[str, Any]:
+async def run_autonomous_operations_cycle(
+    project_root: Path | None = None,
+) -> dict[str, Any]:
     """
     Run autonomous operations cycle.
 
@@ -773,14 +788,14 @@ async def run_autonomous_operations_cycle(project_root: Path | None = None) -> d
 
 
 __all__ = [
+    "AutomationAction",
+    "AutomationLevel",
+    "BusinessIntelligenceEngine",
+    "DeploymentPlan",
+    "DeploymentStrategy",
+    "OperationalMetrics",
+    "OperationalState",
     "ProductionOperationsOrchestrator",
     "SelfHealingEngine",
-    "BusinessIntelligenceEngine",
-    "OperationalMetrics",
-    "DeploymentPlan",
-    "AutomationAction",
-    "OperationalState",
-    "DeploymentStrategy",
-    "AutomationLevel",
     "run_autonomous_operations_cycle",
 ]

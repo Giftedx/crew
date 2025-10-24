@@ -10,6 +10,7 @@ from core.time import default_utc_now
 from .enums import OmniscientLevel, RealityLayer, TemporalDimension
 from .types import OmniscientInsight, UniversalKnowledgeNode
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -38,7 +39,10 @@ class UniversalKnowledgeSynthesis:
                     "layer": RealityLayer.PHYSICAL,
                     "depth": 0.92,
                     "certainty": 0.85,
-                    "temporal_scope": {TemporalDimension.PAST_INFINITE, TemporalDimension.FUTURE_INFINITE},
+                    "temporal_scope": {
+                        TemporalDimension.PAST_INFINITE,
+                        TemporalDimension.FUTURE_INFINITE,
+                    },
                 },
                 "fundamental_forces": {
                     "layer": RealityLayer.PHYSICAL,
@@ -57,7 +61,10 @@ class UniversalKnowledgeSynthesis:
                     "layer": RealityLayer.INFORMATION,
                     "depth": 0.89,
                     "certainty": 0.87,
-                    "temporal_scope": {TemporalDimension.PRESENT_MOMENT, TemporalDimension.FUTURE_PREDICTABLE},
+                    "temporal_scope": {
+                        TemporalDimension.PRESENT_MOMENT,
+                        TemporalDimension.FUTURE_PREDICTABLE,
+                    },
                 },
                 # Consciousness Reality
                 "consciousness_principles": {
@@ -165,12 +172,36 @@ class UniversalKnowledgeSynthesis:
 
     async def _establish_universal_connections(self):
         universal_connections = {
-            "quantum_mechanics": ["information_theory", "mathematical_truths", "consciousness_principles"],
-            "cosmology": ["fundamental_forces", "mathematical_truths", "existence_principles"],
-            "information_theory": ["computational_limits", "consciousness_principles", "abstract_structures"],
-            "consciousness_principles": ["subjective_experience", "meaning_frameworks", "existence_principles"],
-            "mathematical_truths": ["logical_principles", "abstract_structures", "universal_constants"],
-            "causality_nature": ["fundamental_forces", "existence_principles", "temporal_all"],
+            "quantum_mechanics": [
+                "information_theory",
+                "mathematical_truths",
+                "consciousness_principles",
+            ],
+            "cosmology": [
+                "fundamental_forces",
+                "mathematical_truths",
+                "existence_principles",
+            ],
+            "information_theory": [
+                "computational_limits",
+                "consciousness_principles",
+                "abstract_structures",
+            ],
+            "consciousness_principles": [
+                "subjective_experience",
+                "meaning_frameworks",
+                "existence_principles",
+            ],
+            "mathematical_truths": [
+                "logical_principles",
+                "abstract_structures",
+                "universal_constants",
+            ],
+            "causality_nature": [
+                "fundamental_forces",
+                "existence_principles",
+                "temporal_all",
+            ],
         }
         for domain, connections in universal_connections.items():
             if domain in self.universal_graph:
@@ -194,7 +225,11 @@ class UniversalKnowledgeSynthesis:
                 {
                     "insight": "The universe exhibits fractal consciousness patterns across all scales from quantum to cosmic",
                     "level": OmniscientLevel.COSMIC,
-                    "layers": [RealityLayer.QUANTUM, RealityLayer.CONSCIOUSNESS, RealityLayer.PHYSICAL],
+                    "layers": [
+                        RealityLayer.QUANTUM,
+                        RealityLayer.CONSCIOUSNESS,
+                        RealityLayer.PHYSICAL,
+                    ],
                     "temporal": [TemporalDimension.TEMPORAL_ALL],
                     "significance": 0.95,
                     "recursive_depth": 7,
@@ -203,7 +238,11 @@ class UniversalKnowledgeSynthesis:
                 {
                     "insight": "Information is the fundamental substrate from which all reality emerges",
                     "level": OmniscientLevel.UNIVERSAL,
-                    "layers": [RealityLayer.INFORMATION, RealityLayer.PHYSICAL, RealityLayer.MATHEMATICAL],
+                    "layers": [
+                        RealityLayer.INFORMATION,
+                        RealityLayer.PHYSICAL,
+                        RealityLayer.MATHEMATICAL,
+                    ],
                     "temporal": [TemporalDimension.TEMPORAL_ALL],
                     "significance": 0.98,
                     "recursive_depth": 9,

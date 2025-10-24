@@ -4,7 +4,7 @@ from collections import Counter, defaultdict
 from datetime import datetime, timedelta
 from typing import Any
 
-from core.time import default_utc_now, ensure_utc
+from core.time import default_utc_now  # type: ignore[import-not-found]
 
 from .models import PerformanceMetric, ToolUsagePattern
 
@@ -56,17 +56,20 @@ def calculate_tool_efficiency(interactions: list[dict[str, Any]]) -> float:
         base_efficiency = quality / len(tools_used) if tools_used else 0.0
         sequence_bonus = 0.0
         if tool_sequence and len(tool_sequence) > 1:
-            if len(tool_sequence) > len(tools_used) * 1.5:
-                sequence_bonus = -0.1
-            else:
-                sequence_bonus = 0.1
+            sequence_bonus = -0.1 if len(tool_sequence) > len(tools_used) * 1.5 else 0.1
         efficiency_scores.append(min(1.0, base_efficiency + sequence_bonus))
     return sum(efficiency_scores) / len(efficiency_scores)
 
 
 def analyze_tool_usage(interactions: list[dict[str, Any]]) -> list[ToolUsagePattern]:
     tool_stats: dict[str, dict[str, Any]] = defaultdict(
-        lambda: {"usage_count": 0, "success_count": 0, "quality_scores": [], "sequences": [], "errors": []}
+        lambda: {
+            "usage_count": 0,
+            "success_count": 0,
+            "quality_scores": [],
+            "sequences": [],
+            "errors": [],
+        }
     )
     for interaction in interactions:
         tools_used = interaction.get("tools_used", [])
@@ -140,9 +143,9 @@ def calculate_performance_metrics_for_interactions(
 
 
 __all__ = [
-    "recent_interactions",
-    "calculate_trend",
-    "calculate_tool_efficiency",
     "analyze_tool_usage",
     "calculate_performance_metrics_for_interactions",
+    "calculate_tool_efficiency",
+    "calculate_trend",
+    "recent_interactions",
 ]

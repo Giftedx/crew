@@ -3,19 +3,24 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import json
 import logging
 import time
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set
+from typing import TYPE_CHECKING, Any
 
 import websockets
 from websockets.exceptions import ConnectionClosed, WebSocketException
-from websockets.server import WebSocketServerProtocol
 
 from ultimate_discord_intelligence_bot.settings import ENABLE_WEBSOCKET_UPDATES
 from ultimate_discord_intelligence_bot.step_result import StepResult
+
+
+if TYPE_CHECKING:
+    from websockets.server import WebSocketServerProtocol
+
 
 log = logging.getLogger(__name__)
 
@@ -37,13 +42,13 @@ class WebSocketMessage:
     """WebSocket message structure."""
 
     message_type: MessageType
-    data: Dict[str, Any]
+    data: dict[str, Any]
     timestamp: float
-    tenant_id: Optional[str] = None
-    workspace_id: Optional[str] = None
-    message_id: Optional[str] = None
+    tenant_id: str | None = None
+    workspace_id: str | None = None
+    message_id: str | None = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> StepResult:
         """Convert message to dictionary for JSON serialization."""
         return {
             "message_type": self.message_type.value,
@@ -63,7 +68,7 @@ class ClientConnection:
     client_id: str
     tenant_id: str
     workspace_id: str
-    subscribed_channels: Set[str]
+    subscribed_channels: set[str]
     connected_at: float
     last_heartbeat: float
 
@@ -80,8 +85,8 @@ class WebSocketService:
         """
         self.host = host
         self.port = port
-        self.clients: Dict[str, ClientConnection] = {}
-        self.server: Optional[websockets.WebSocketServer] = None
+        self.clients: dict[str, ClientConnection] = {}
+        self.server: websockets.WebSocketServer | None = None
         self.running = False
         self.heartbeat_interval = 30.0  # seconds
         self.max_connections = 1000
@@ -109,9 +114,7 @@ class WebSocketService:
             asyncio.create_task(self._cleanup_task())
 
             log.info(f"WebSocket server started on {self.host}:{self.port}")
-            return StepResult.ok(
-                data={"host": self.host, "port": self.port, "status": "running"}
-            )
+            return StepResult.ok(data={"host": self.host, "port": self.port, "status": "running"})
 
         except Exception as e:
             log.error(f"Failed to start WebSocket server: {e}")
@@ -123,11 +126,9 @@ class WebSocketService:
             self.running = False
 
             # Close all client connections
-            for client_id, connection in list(self.clients.items()):
-                try:
+            for _client_id, connection in list(self.clients.items()):
+                with contextlib.suppress(Exception):
                     await connection.websocket.close()
-                except Exception:
-                    pass
 
             self.clients.clear()
 
@@ -142,9 +143,7 @@ class WebSocketService:
             log.error(f"Error stopping WebSocket server: {e}")
             return StepResult.fail(f"Error stopping WebSocket server: {e}")
 
-    async def _handle_client(
-        self, websocket: WebSocketServerProtocol, path: str
-    ) -> None:
+    async def _handle_client(self, websocket: WebSocketServerProtocol, path: str) -> StepResult:
         """Handle new client connection."""
         client_id = f"client_{int(time.time() * 1000)}_{id(websocket)}"
 
@@ -171,9 +170,7 @@ class WebSocketService:
 
             self.clients[client_id] = connection
 
-            log.info(
-                f"Client {client_id} connected (tenant: {tenant_id}, workspace: {workspace_id})"
-            )
+            log.info(f"Client {client_id} connected (tenant: {tenant_id}, workspace: {workspace_id})")
 
             # Send welcome message
             welcome_msg = WebSocketMessage(
@@ -206,7 +203,7 @@ class WebSocketService:
             if client_id in self.clients:
                 del self.clients[client_id]
 
-    async def _handle_client_message(self, client_id: str, message: str) -> None:
+    async def _handle_client_message(self, client_id: str, message: str) -> StepResult:
         """Handle message from client."""
         try:
             data = json.loads(message)
@@ -231,7 +228,7 @@ class WebSocketService:
         except Exception as e:
             log.error(f"Error handling message from {client_id}: {e}")
 
-    async def _handle_subscribe(self, client_id: str, channels: List[str]) -> None:
+    async def _handle_subscribe(self, client_id: str, channels: list[str]) -> StepResult:
         """Handle client subscription to channels."""
         if client_id not in self.clients:
             return
@@ -254,7 +251,7 @@ class WebSocketService:
         )
         await self._send_to_client(client_id, response)
 
-    async def _handle_unsubscribe(self, client_id: str, channels: List[str]) -> None:
+    async def _handle_unsubscribe(self, client_id: str, channels: list[str]) -> StepResult:
         """Handle client unsubscription from channels."""
         if client_id not in self.clients:
             return
@@ -277,7 +274,7 @@ class WebSocketService:
         )
         await self._send_to_client(client_id, response)
 
-    async def _handle_ping(self, client_id: str) -> None:
+    async def _handle_ping(self, client_id: str) -> StepResult:
         """Handle client ping."""
         if client_id not in self.clients:
             return
@@ -294,7 +291,7 @@ class WebSocketService:
         )
         await self._send_to_client(client_id, response)
 
-    async def _send_to_client(self, client_id: str, message: WebSocketMessage) -> None:
+    async def _send_to_client(self, client_id: str, message: WebSocketMessage) -> StepResult:
         """Send message to specific client."""
         if client_id not in self.clients:
             return
@@ -312,9 +309,9 @@ class WebSocketService:
     async def broadcast_message(
         self,
         message: WebSocketMessage,
-        channel: Optional[str] = None,
-        tenant_id: Optional[str] = None,
-        workspace_id: Optional[str] = None,
+        channel: str | None = None,
+        tenant_id: str | None = None,
+        workspace_id: str | None = None,
     ) -> StepResult:
         """Broadcast message to all connected clients or filtered subset."""
         if not self.running:
@@ -349,7 +346,7 @@ class WebSocketService:
         self,
         agent_id: str,
         status: str,
-        details: Dict[str, Any],
+        details: dict[str, Any],
         tenant_id: str = "default",
         workspace_id: str = "main",
     ) -> StepResult:
@@ -377,7 +374,7 @@ class WebSocketService:
         self,
         analysis_id: str,
         progress: float,
-        results: Dict[str, Any],
+        results: dict[str, Any],
         tenant_id: str = "default",
         workspace_id: str = "main",
     ) -> StepResult:
@@ -394,15 +391,13 @@ class WebSocketService:
             workspace_id=workspace_id,
         )
 
-        return await self.broadcast_message(
-            message, channel="analysis", tenant_id=tenant_id, workspace_id=workspace_id
-        )
+        return await self.broadcast_message(message, channel="analysis", tenant_id=tenant_id, workspace_id=workspace_id)
 
     async def send_stream_update(
         self,
         stream_id: str,
         content: str,
-        metadata: Dict[str, Any],
+        metadata: dict[str, Any],
         tenant_id: str = "default",
         workspace_id: str = "main",
     ) -> StepResult:
@@ -419,16 +414,14 @@ class WebSocketService:
             workspace_id=workspace_id,
         )
 
-        return await self.broadcast_message(
-            message, channel="stream", tenant_id=tenant_id, workspace_id=workspace_id
-        )
+        return await self.broadcast_message(message, channel="stream", tenant_id=tenant_id, workspace_id=workspace_id)
 
     async def send_system_alert(
         self,
         alert_type: str,
         severity: str,
         message_text: str,
-        details: Dict[str, Any],
+        details: dict[str, Any],
         tenant_id: str = "default",
         workspace_id: str = "main",
     ) -> StepResult:
@@ -446,13 +439,11 @@ class WebSocketService:
             workspace_id=workspace_id,
         )
 
-        return await self.broadcast_message(
-            message, channel="alerts", tenant_id=tenant_id, workspace_id=workspace_id
-        )
+        return await self.broadcast_message(message, channel="alerts", tenant_id=tenant_id, workspace_id=workspace_id)
 
     async def send_performance_metrics(
         self,
-        metrics: Dict[str, Any],
+        metrics: dict[str, Any],
         tenant_id: str = "default",
         workspace_id: str = "main",
     ) -> StepResult:
@@ -465,11 +456,9 @@ class WebSocketService:
             workspace_id=workspace_id,
         )
 
-        return await self.broadcast_message(
-            message, channel="metrics", tenant_id=tenant_id, workspace_id=workspace_id
-        )
+        return await self.broadcast_message(message, channel="metrics", tenant_id=tenant_id, workspace_id=workspace_id)
 
-    async def _heartbeat_task(self) -> None:
+    async def _heartbeat_task(self) -> StepResult:
         """Background task to send heartbeats to clients."""
         while self.running:
             try:
@@ -496,7 +485,7 @@ class WebSocketService:
                 log.error(f"Error in heartbeat task: {e}")
                 await asyncio.sleep(self.heartbeat_interval)
 
-    async def _cleanup_task(self) -> None:
+    async def _cleanup_task(self) -> StepResult:
         """Background task to clean up stale connections."""
         while self.running:
             try:
@@ -511,10 +500,8 @@ class WebSocketService:
                 for client_id in stale_clients:
                     if client_id in self.clients:
                         connection = self.clients[client_id]
-                        try:
+                        with contextlib.suppress(Exception):
                             await connection.websocket.close()
-                        except Exception:
-                            pass
                         del self.clients[client_id]
                         log.info(f"Removed stale client {client_id}")
 
@@ -524,7 +511,7 @@ class WebSocketService:
                 log.error(f"Error in cleanup task: {e}")
                 await asyncio.sleep(60)
 
-    def get_connection_stats(self) -> Dict[str, Any]:
+    def get_connection_stats(self) -> StepResult:
         """Get current connection statistics."""
         current_time = time.time()
 

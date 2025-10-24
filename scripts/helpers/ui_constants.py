@@ -41,7 +41,15 @@ FACT_CHECKING_INDICATORS = [
     "research shows",
 ]
 
-REASONING_INDICATORS = ["because", "analysis", "therefore", "however", "indicates", "suggests", "demonstrates"]
+REASONING_INDICATORS = [
+    "because",
+    "analysis",
+    "therefore",
+    "however",
+    "indicates",
+    "suggests",
+    "demonstrates",
+]
 
 BALANCE_INDICATORS = [
     "on the other hand",

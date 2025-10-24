@@ -24,15 +24,9 @@ class TestStrategyProtocolCompliance:
     )
     def test_strategy_has_required_attributes(self, strategy_class):
         """Verify strategy has required protocol attributes."""
-        assert hasattr(strategy_class, "name"), (
-            f"{strategy_class.__name__} missing 'name'"
-        )
-        assert hasattr(strategy_class, "description"), (
-            f"{strategy_class.__name__} missing 'description'"
-        )
-        assert hasattr(strategy_class, "execute_workflow"), (
-            f"{strategy_class.__name__} missing 'execute_workflow'"
-        )
+        assert hasattr(strategy_class, "name"), f"{strategy_class.__name__} missing 'name'"
+        assert hasattr(strategy_class, "description"), f"{strategy_class.__name__} missing 'description'"
+        assert hasattr(strategy_class, "execute_workflow"), f"{strategy_class.__name__} missing 'execute_workflow'"
 
     @pytest.mark.parametrize(
         "strategy_class,expected_name",

@@ -11,7 +11,8 @@ import subprocess
 import sys
 import time
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
+
 
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
@@ -30,9 +31,9 @@ class ProductionDeployer:
         """Initialize the deployer."""
         self.environment = environment
         self.deployment_id = f"deploy_{int(time.time())}"
-        self.results: Dict[str, Any] = {}
+        self.results: dict[str, Any] = {}
 
-    def validate_environment(self) -> Dict[str, Any]:
+    def validate_environment(self) -> dict[str, Any]:
         """Validate deployment environment."""
         print(f"\n🔍 Validating {self.environment} environment...")
 
@@ -64,13 +65,9 @@ class ProductionDeployer:
         # Check Docker availability
         validation_results["checks_performed"] += 1
         try:
-            result = subprocess.run(
-                ["docker", "--version"], capture_output=True, text=True, check=True
-            )
+            result = subprocess.run(["docker", "--version"], capture_output=True, text=True, check=True)
             validation_results["checks_passed"] += 1
-            validation_results["check_details"]["docker"] = (
-                f"✅ Available: {result.stdout.strip()}"
-            )
+            validation_results["check_details"]["docker"] = f"✅ Available: {result.stdout.strip()}"
         except (subprocess.CalledProcessError, FileNotFoundError):
             validation_results["checks_failed"] += 1
             validation_results["check_details"]["docker"] = "❌ Not available"
@@ -85,16 +82,14 @@ class ProductionDeployer:
                 check=True,
             )
             validation_results["checks_passed"] += 1
-            validation_results["check_details"]["docker_compose"] = (
-                f"✅ Available: {result.stdout.strip()}"
-            )
+            validation_results["check_details"]["docker_compose"] = f"✅ Available: {result.stdout.strip()}"
         except (subprocess.CalledProcessError, FileNotFoundError):
             validation_results["checks_failed"] += 1
             validation_results["check_details"]["docker_compose"] = "❌ Not available"
 
         return validation_results
 
-    def build_application(self) -> Dict[str, Any]:
+    def build_application(self) -> dict[str, Any]:
         """Build the application for deployment."""
         print(f"\n🔨 Building application for {self.environment}...")
 
@@ -118,9 +113,7 @@ class ProductionDeployer:
             build_results["step_details"]["install_dependencies"] = "✅ Success"
         except subprocess.CalledProcessError as e:
             build_results["steps_failed"] += 1
-            build_results["step_details"]["install_dependencies"] = (
-                f"❌ Failed: {e.stderr}"
-            )
+            build_results["step_details"]["install_dependencies"] = f"❌ Failed: {e.stderr}"
 
         # Step 2: Run type checking
         build_results["steps_performed"] += 1
@@ -154,7 +147,7 @@ class ProductionDeployer:
 
         return build_results
 
-    def deploy_infrastructure(self) -> Dict[str, Any]:
+    def deploy_infrastructure(self) -> dict[str, Any]:
         """Deploy infrastructure services."""
         print(f"\n🏗️ Deploying infrastructure to {self.environment}...")
 
@@ -189,13 +182,11 @@ class ProductionDeployer:
                 infrastructure_results["service_details"][service] = "✅ Deployed"
             except subprocess.CalledProcessError as e:
                 infrastructure_results["services_failed"] += 1
-                infrastructure_results["service_details"][service] = (
-                    f"❌ Failed: {e.stderr}"
-                )
+                infrastructure_results["service_details"][service] = f"❌ Failed: {e.stderr}"
 
         return infrastructure_results
 
-    def deploy_monitoring(self) -> Dict[str, Any]:
+    def deploy_monitoring(self) -> dict[str, Any]:
         """Deploy monitoring infrastructure."""
         print(f"\n📊 Deploying monitoring to {self.environment}...")
 
@@ -230,13 +221,11 @@ class ProductionDeployer:
                 monitoring_results["component_details"][component] = "✅ Deployed"
             except subprocess.CalledProcessError as e:
                 monitoring_results["components_failed"] += 1
-                monitoring_results["component_details"][component] = (
-                    f"❌ Failed: {e.stderr}"
-                )
+                monitoring_results["component_details"][component] = f"❌ Failed: {e.stderr}"
 
         return monitoring_results
 
-    def deploy_application(self) -> Dict[str, Any]:
+    def deploy_application(self) -> dict[str, Any]:
         """Deploy the main application."""
         print(f"\n🚀 Deploying application to {self.environment}...")
 
@@ -271,13 +260,11 @@ class ProductionDeployer:
                 application_results["component_details"][component] = "✅ Deployed"
             except subprocess.CalledProcessError as e:
                 application_results["components_failed"] += 1
-                application_results["component_details"][component] = (
-                    f"❌ Failed: {e.stderr}"
-                )
+                application_results["component_details"][component] = f"❌ Failed: {e.stderr}"
 
         return application_results
 
-    def run_health_checks(self) -> Dict[str, Any]:
+    def run_health_checks(self) -> dict[str, Any]:
         """Run health checks on deployed services."""
         print(f"\n🏥 Running health checks on {self.environment}...")
 
@@ -299,7 +286,7 @@ class ProductionDeployer:
             ("http://localhost:9000/minio/health/live", "minio"),
         ]
 
-        for endpoint, service in health_endpoints:
+        for _endpoint, service in health_endpoints:
             health_results["checks_performed"] += 1
             try:
                 # Simulate health check (in real deployment, use actual HTTP requests)
@@ -310,33 +297,25 @@ class ProductionDeployer:
                 success = True
 
                 duration = time.time() - start_time
-                REQUEST_LATENCY.labels(method="GET", endpoint="/health").observe(
-                    duration
-                )
+                REQUEST_LATENCY.labels(method="GET", endpoint="/health").observe(duration)
 
                 if success:
                     health_results["checks_passed"] += 1
                     REQUEST_COUNT.labels(method="GET", endpoint="/health").inc()
-                    health_results["check_details"][service] = (
-                        f"✅ Healthy ({duration:.2f}s)"
-                    )
+                    health_results["check_details"][service] = f"✅ Healthy ({duration:.2f}s)"
                 else:
                     health_results["checks_failed"] += 1
-                    ERROR_COUNT.labels(
-                        method="GET", endpoint="/health", error_type="health_check"
-                    ).inc()
+                    ERROR_COUNT.labels(method="GET", endpoint="/health", error_type="health_check").inc()
                     health_results["check_details"][service] = "❌ Unhealthy"
 
             except Exception as e:
                 health_results["checks_failed"] += 1
-                ERROR_COUNT.labels(
-                    method="GET", endpoint="/health", error_type="exception"
-                ).inc()
-                health_results["check_details"][service] = f"❌ Error: {str(e)}"
+                ERROR_COUNT.labels(method="GET", endpoint="/health", error_type="exception").inc()
+                health_results["check_details"][service] = f"❌ Error: {e!s}"
 
         return health_results
 
-    def run_smoke_tests(self) -> Dict[str, Any]:
+    def run_smoke_tests(self) -> dict[str, Any]:
         """Run smoke tests on deployed application."""
         print(f"\n💨 Running smoke tests on {self.environment}...")
 
@@ -372,9 +351,7 @@ class ProductionDeployer:
                     smoke_results["test_details"][test_name] = "✅ Passed"
                 else:
                     smoke_results["tests_failed"] += 1
-                    smoke_results["test_details"][test_name] = (
-                        "❌ Test script not found"
-                    )
+                    smoke_results["test_details"][test_name] = "❌ Test script not found"
 
             except subprocess.CalledProcessError as e:
                 smoke_results["tests_failed"] += 1
@@ -382,7 +359,7 @@ class ProductionDeployer:
 
         return smoke_results
 
-    def deploy_to_environment(self) -> Dict[str, Any]:
+    def deploy_to_environment(self) -> dict[str, Any]:
         """Deploy to the specified environment."""
         print(f"🚀 Starting deployment to {self.environment}...")
 
@@ -433,11 +410,7 @@ class ProductionDeployer:
             "total_failed": total_failed,
             "success_rate": total_successful / total_steps if total_steps > 0 else 0.0,
             "deployment_duration": time.time() - start_time,
-            "deployment_status": "success"
-            if total_failed == 0
-            else "partial"
-            if total_successful > 0
-            else "failed",
+            "deployment_status": "success" if total_failed == 0 else "partial" if total_successful > 0 else "failed",
         }
 
         return self.results
@@ -460,12 +433,8 @@ class ProductionDeployer:
         report.append(f"- **Successful:** {summary.get('total_successful', 0)}")
         report.append(f"- **Failed:** {summary.get('total_failed', 0)}")
         report.append(f"- **Success Rate:** {summary.get('success_rate', 0.0):.2%}")
-        report.append(
-            f"- **Deployment Duration:** {summary.get('deployment_duration', 0.0):.2f}s"
-        )
-        report.append(
-            f"- **Status:** {summary.get('deployment_status', 'unknown').upper()}"
-        )
+        report.append(f"- **Deployment Duration:** {summary.get('deployment_duration', 0.0):.2f}s")
+        report.append(f"- **Status:** {summary.get('deployment_status', 'unknown').upper()}")
         report.append("")
 
         # Detailed results
@@ -546,9 +515,7 @@ def main() -> None:
     # Generate and save report
     report = deployer.generate_deployment_report()
 
-    report_path = Path(
-        f"docs/deployment_report_{args.environment}_{deployer.deployment_id}.md"
-    )
+    report_path = Path(f"docs/deployment_report_{args.environment}_{deployer.deployment_id}.md")
     report_path.parent.mkdir(parents=True, exist_ok=True)
 
     with open(report_path, "w") as f:

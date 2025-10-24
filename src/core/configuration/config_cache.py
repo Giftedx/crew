@@ -2,14 +2,14 @@
 
 from __future__ import annotations
 
-"""Configuration caching for performance optimization."""
-
 import time
 from functools import lru_cache
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from .config_schema import GlobalConfig, TenantConfig
+
+if TYPE_CHECKING:
+    from .config_schema import GlobalConfig, TenantConfig
 
 
 class ConfigCache:
@@ -72,7 +72,7 @@ class ConfigCache:
             self._cache_timestamps.clear()
         else:
             # Invalidate specific cache key and related entries
-            keys_to_remove = [key for key in self._cache.keys() if key.startswith(cache_key)]
+            keys_to_remove = [key for key in self._cache if key.startswith(cache_key)]
             for key in keys_to_remove:
                 self._cache.pop(key, None)
                 self._cache_timestamps.pop(key, None)
@@ -95,7 +95,7 @@ class ConfigCache:
         valid_entries = 0
         expired_entries = 0
 
-        for cache_key, timestamp in self._cache_timestamps.items():
+        for _cache_key, timestamp in self._cache_timestamps.items():
             if current_time - timestamp < self.cache_ttl:
                 valid_entries += 1
             else:
@@ -170,14 +170,13 @@ def get_cached_config_section(section: str, config_hash: str) -> Any:
     # This is a simple LRU cache that can be used for frequently accessed
     # configuration sections. The config_hash should be computed from the
     # file content to ensure cache invalidation when files change.
-    pass
 
 
 def compute_config_hash(config_dir: Path) -> str:
     """Compute hash of configuration directory for cache invalidation."""
     import hashlib
 
-    hash_obj = hashlib.md5()
+    hash_obj = hashlib.md5(usedforsecurity=False)  # nosec B324 - config cache key only
 
     # Sort files for consistent hashing
     config_files = sorted(config_dir.glob("*.yaml"))

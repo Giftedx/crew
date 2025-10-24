@@ -18,6 +18,7 @@ import re
 import sys
 import tokenize
 
+
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 SRC = ROOT / "src"
 

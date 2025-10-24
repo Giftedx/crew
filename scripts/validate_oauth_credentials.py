@@ -16,7 +16,8 @@ Usage:
 import os
 import sys
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
+
 
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
@@ -31,7 +32,7 @@ from ultimate_discord_intelligence_bot.creator_ops.auth.oauth_manager import (
 from ultimate_discord_intelligence_bot.creator_ops.auth.scopes import ScopeValidator
 
 
-def check_environment_variables() -> Dict[str, Any]:
+def check_environment_variables() -> dict[str, Any]:
     """Check for required environment variables."""
     print("🔍 Checking Environment Variables...")
 
@@ -71,9 +72,7 @@ def check_environment_variables() -> Dict[str, Any]:
         if var == "OPENAI_API_KEY":
             # Allow either OpenAI or OpenRouter
             if not (os.getenv("OPENAI_API_KEY") or os.getenv("OPENROUTER_API_KEY")):
-                results["missing_required"].append(
-                    f"{var} (or OPENROUTER_API_KEY): {description}"
-                )
+                results["missing_required"].append(f"{var} (or OPENROUTER_API_KEY): {description}")
             else:
                 results["required_vars"][var] = "✅ Set (or alternative provided)"
         elif value:
@@ -95,7 +94,7 @@ def check_environment_variables() -> Dict[str, Any]:
     return results
 
 
-def validate_oauth_scopes() -> Dict[str, Any]:
+def validate_oauth_scopes() -> dict[str, Any]:
     """Validate OAuth scopes for all platforms."""
     print("🔍 Validating OAuth Scopes...")
 
@@ -135,9 +134,7 @@ def validate_oauth_scopes() -> Dict[str, Any]:
                     minimal_scopes = validator.get_minimal_scopes(platform, purpose)
 
                     # Validate the minimal scopes
-                    validation_result = validator.validate_scopes(
-                        platform, minimal_scopes, purpose
-                    )
+                    validation_result = validator.validate_scopes(platform, minimal_scopes, purpose)
 
                     platform_results["scope_validation"][purpose] = {
                         "minimal_scopes": minimal_scopes,
@@ -164,7 +161,7 @@ def validate_oauth_scopes() -> Dict[str, Any]:
     return results
 
 
-def test_oauth_managers() -> Dict[str, Any]:
+def test_oauth_managers() -> dict[str, Any]:
     """Test OAuth manager initialization (without actual API calls)."""
     print("🔍 Testing OAuth Manager Initialization...")
 
@@ -224,18 +221,14 @@ def test_oauth_managers() -> Dict[str, Any]:
 
             results["managers"][platform] = {
                 "initialization": "✅ Success",
-                "client_id_set": "✅ Set"
-                if client_id != "test_client_id"
-                else "⚠️ Using test value",
-                "client_secret_set": "✅ Set"
-                if client_secret != "test_client_secret"
-                else "⚠️ Using test value",
+                "client_id_set": "✅ Set" if client_id != "test_client_id" else "⚠️ Using test value",
+                "client_secret_set": "✅ Set" if client_secret != "test_client_secret" else "⚠️ Using test value",
                 "status": "success",
             }
 
         except Exception as e:
             results["managers"][platform] = {
-                "initialization": f"❌ Failed: {str(e)}",
+                "initialization": f"❌ Failed: {e!s}",
                 "client_id_set": "❌ Not set",
                 "client_secret_set": "❌ Not set",
                 "status": "error",
@@ -246,9 +239,9 @@ def test_oauth_managers() -> Dict[str, Any]:
 
 
 def generate_oauth_report(
-    env_results: Dict[str, Any],
-    scope_results: Dict[str, Any],
-    manager_results: Dict[str, Any],
+    env_results: dict[str, Any],
+    scope_results: dict[str, Any],
+    manager_results: dict[str, Any],
 ) -> str:
     """Generate a comprehensive OAuth validation report."""
     report = []
@@ -294,13 +287,9 @@ def generate_oauth_report(
         if "compliance_summary" in platform_data:
             summary = platform_data["compliance_summary"]
             if "error" not in summary:
-                report.append(
-                    f"- Available purposes: {', '.join(summary.get('available_purposes', []))}"
-                )
+                report.append(f"- Available purposes: {', '.join(summary.get('available_purposes', []))}")
                 report.append(f"- Total scopes: {summary.get('total_scopes', 0)}")
-                report.append(
-                    f"- Sensitive scopes: {len(summary.get('sensitive_scopes', []))}"
-                )
+                report.append(f"- Sensitive scopes: {len(summary.get('sensitive_scopes', []))}")
             else:
                 report.append(f"- ❌ Error: {summary['error']}")
 
@@ -310,9 +299,7 @@ def generate_oauth_report(
                 if validation["status"] == "success":
                     report.append(f"  - {purpose}: ✅ Valid")
                 else:
-                    report.append(
-                        f"  - {purpose}: ❌ {validation.get('error', 'Validation failed')}"
-                    )
+                    report.append(f"  - {purpose}: ❌ {validation.get('error', 'Validation failed')}")
 
         report.append("")
 
@@ -332,11 +319,7 @@ def generate_oauth_report(
     report.append("")
 
     overall_status = "✅ SUCCESS"
-    if (
-        env_results["status"] == "error"
-        or scope_results["status"] == "error"
-        or manager_results["status"] == "error"
-    ):
+    if env_results["status"] == "error" or scope_results["status"] == "error" or manager_results["status"] == "error":
         overall_status = "❌ ISSUES FOUND"
 
     report.append(f"**Overall Status: {overall_status}**")
@@ -350,9 +333,7 @@ def generate_oauth_report(
 
     if env_results["missing_platform"]:
         report.append("### Optional Actions:")
-        report.append(
-            "1. Set platform-specific OAuth credentials for full functionality"
-        )
+        report.append("1. Set platform-specific OAuth credentials for full functionality")
         report.append("2. Configure OAuth redirect URIs in platform developer consoles")
         report.append("")
 

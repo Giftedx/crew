@@ -20,10 +20,15 @@ import logging
 import sys
 from pathlib import Path
 
+
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from memory.creator_intelligence_collections import COLLECTION_CONFIGS, get_collection_manager
+from memory.creator_intelligence_collections import (
+    COLLECTION_CONFIGS,
+    get_collection_manager,
+)
+
 
 # Configure logging
 logging.basicConfig(
@@ -84,7 +89,7 @@ def verify_collections(tenant: str, workspace: str) -> bool:
     manager = get_collection_manager()
     all_healthy = True
 
-    for collection_type in COLLECTION_CONFIGS.keys():
+    for collection_type in COLLECTION_CONFIGS:
         result = manager.get_collection_stats(
             collection_type=collection_type,  # type: ignore
             tenant=tenant,

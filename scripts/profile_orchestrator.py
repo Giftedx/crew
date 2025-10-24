@@ -7,7 +7,9 @@ import cProfile
 import pstats
 from pathlib import Path
 
-from ultimate_discord_intelligence_bot.pipeline_components.orchestrator import ContentPipeline
+from ultimate_discord_intelligence_bot.pipeline_components.orchestrator import (
+    ContentPipeline,
+)
 
 
 async def profile_pipeline():
@@ -28,8 +30,8 @@ def main():
     profiler.disable()
 
     # Save profile data
-    Path("profiling").mkdir(exist_ok=True)
-    profiler.dump_stats("profiling/orchestrator.prof")
+    Path("benchmarks/profiling").mkdir(exist_ok=True, parents=True)
+    profiler.dump_stats("benchmarks/profiling/orchestrator.prof")
 
     # Generate analysis
     stats = pstats.Stats(profiler)
@@ -37,7 +39,7 @@ def main():
     stats.sort_stats("cumulative")
 
     # Top 30 functions by cumulative time
-    with open("profiling/orchestrator_analysis.txt", "w") as f:
+    with open("benchmarks/profiling/orchestrator_analysis.txt", "w") as f:
         stats.stream = f
         stats.print_stats(30)
         f.write("\n\n=== Top 20 by Total Time ===\n")

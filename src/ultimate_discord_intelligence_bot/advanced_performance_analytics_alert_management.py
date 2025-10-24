@@ -20,12 +20,18 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from core.time import default_utc_now
 
-from .advanced_performance_analytics_discord_integration import AdvancedPerformanceAnalyticsDiscordIntegration
-from .crew import UltimateDiscordIntelligenceBotCrew
+from .advanced_performance_analytics_discord_integration import (
+    AdvancedPerformanceAnalyticsDiscordIntegration,
+)
+
+
+if TYPE_CHECKING:
+    from .crew import UltimateDiscordIntelligenceBotCrew
+
 
 logger = logging.getLogger(__name__)
 
@@ -166,12 +172,22 @@ class AdvancedPerformanceAnalyticsAlertManager:
                 name="Critical Performance Degradation Response",
                 description="Immediate response for critical performance issues",
                 conditions={
-                    "overall_performance_score": {"operator": "less_than", "value": 0.5},
+                    "overall_performance_score": {
+                        "operator": "less_than",
+                        "value": 0.5,
+                    },
                     "critical_alerts": {"operator": "greater_than", "value": 0},
                 },
-                actions=["send_critical_alert", "escalate_to_management", "trigger_optimization"],
+                actions=[
+                    "send_critical_alert",
+                    "escalate_to_management",
+                    "trigger_optimization",
+                ],
                 escalation_rules={
-                    EscalationLevel.CRITICAL: {"immediate_notification": True, "escalate_after_minutes": 0},
+                    EscalationLevel.CRITICAL: {
+                        "immediate_notification": True,
+                        "escalate_after_minutes": 0,
+                    },
                     EscalationLevel.ESCALATE: {"escalate_after_minutes": 15},
                 },
                 cooldown_minutes=30,
@@ -185,7 +201,11 @@ class AdvancedPerformanceAnalyticsAlertManager:
                     "resource_alerts": {"operator": "greater_than", "value": 2},
                     "capacity_warnings": {"operator": "greater_than", "value": 0},
                 },
-                actions=["send_warning_alert", "recommend_scaling", "schedule_optimization"],
+                actions=[
+                    "send_warning_alert",
+                    "recommend_scaling",
+                    "schedule_optimization",
+                ],
                 escalation_rules={
                     EscalationLevel.ALERT: {"escalate_after_minutes": 30},
                     EscalationLevel.ESCALATE: {"escalate_after_minutes": 60},
@@ -275,7 +295,11 @@ class AdvancedPerformanceAnalyticsAlertManager:
                         "notifications_sent": notification_result.get("status") == "success",
                     }
                 else:
-                    result = {"status": "executed", "alerts_generated": len(alerts), "notifications_sent": False}
+                    result = {
+                        "status": "executed",
+                        "alerts_generated": len(alerts),
+                        "notifications_sent": False,
+                    }
 
             # Update schedule timing
             schedule.last_execution = default_utc_now()
@@ -322,7 +346,7 @@ class AdvancedPerformanceAnalyticsAlertManager:
         """
         try:
             # Check each policy against the monitoring results
-            for policy_id, policy in self.alert_policies.items():
+            for _policy_id, policy in self.alert_policies.items():
                 if not policy.enabled:
                     continue
 
@@ -334,7 +358,10 @@ class AdvancedPerformanceAnalyticsAlertManager:
             logger.error(f"Error applying alert policies: {e}")
 
     async def _evaluate_policy_conditions(
-        self, policy: AlertPolicy, monitoring_result: dict[str, Any], schedule: MonitoringSchedule
+        self,
+        policy: AlertPolicy,
+        monitoring_result: dict[str, Any],
+        schedule: MonitoringSchedule,
     ) -> bool:
         """Evaluate if policy conditions are met.
 
@@ -355,11 +382,11 @@ class AdvancedPerformanceAnalyticsAlertManager:
                 actual_value = monitoring_result.get(condition_key, 0)
 
                 # Evaluate condition
-                if operator == "greater_than" and actual_value <= expected_value:
-                    return False
-                elif operator == "less_than" and actual_value >= expected_value:
-                    return False
-                elif operator == "equals" and actual_value != expected_value:
+                if (
+                    (operator == "greater_than" and actual_value <= expected_value)
+                    or (operator == "less_than" and actual_value >= expected_value)
+                    or (operator == "equals" and actual_value != expected_value)
+                ):
                     return False
 
             return True
@@ -369,7 +396,10 @@ class AdvancedPerformanceAnalyticsAlertManager:
             return False
 
     async def _execute_policy_actions(
-        self, policy: AlertPolicy, monitoring_result: dict[str, Any], schedule: MonitoringSchedule
+        self,
+        policy: AlertPolicy,
+        monitoring_result: dict[str, Any],
+        schedule: MonitoringSchedule,
     ) -> None:
         """Execute policy actions.
 
@@ -567,7 +597,9 @@ async def start_automated_monitoring(
     return alert_manager
 
 
-async def execute_immediate_performance_check(lookback_hours: int = 2) -> dict[str, Any]:
+async def execute_immediate_performance_check(
+    lookback_hours: int = 2,
+) -> dict[str, Any]:
     """Execute immediate performance check with alerting.
 
     Args:

@@ -18,6 +18,7 @@ import asyncio
 import sys
 from pathlib import Path
 
+
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
@@ -103,7 +104,11 @@ async def demo_cross_domain_synthesis():
     await asyncio.sleep(2)
 
     breakthroughs = [
-        ("Quantum-Inspired Neural Architecture for Consciousness Simulation", 95.0, 85.0),
+        (
+            "Quantum-Inspired Neural Architecture for Consciousness Simulation",
+            95.0,
+            85.0,
+        ),
         ("Self-Modifying Systems with Ethical Constraints", 88.0, 78.0),
         ("Cross-Domain Pattern Transfer for Breakthrough Innovation", 91.0, 82.0),
         ("Temporal Intelligence with Causal Reasoning", 89.0, 87.0),

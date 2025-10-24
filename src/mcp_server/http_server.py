@@ -14,8 +14,12 @@ Security:
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
 
 try:
     from fastmcp import FastMCP  # type: ignore
@@ -165,7 +169,13 @@ def http_get(
     ttl_seconds: int | None = None,
     max_bytes: int = 10000,
 ) -> dict:
-    return _http_get_impl(url, params=params, use_cache=use_cache, ttl_seconds=ttl_seconds, max_bytes=max_bytes)
+    return _http_get_impl(
+        url,
+        params=params,
+        use_cache=use_cache,
+        ttl_seconds=ttl_seconds,
+        max_bytes=max_bytes,
+    )
 
 
 def http_json_get(
@@ -175,7 +185,13 @@ def http_json_get(
     ttl_seconds: int | None = None,
     max_bytes: int = 20000,
 ) -> dict:
-    return _http_json_get_impl(url, params=params, use_cache=use_cache, ttl_seconds=ttl_seconds, max_bytes=max_bytes)
+    return _http_json_get_impl(
+        url,
+        params=params,
+        use_cache=use_cache,
+        ttl_seconds=ttl_seconds,
+        max_bytes=max_bytes,
+    )
 
 
 # Decorated MCP tools under distinct names to avoid shadowing callables
@@ -187,7 +203,13 @@ def http_get_tool(
     ttl_seconds: int | None = None,
     max_bytes: int = 10000,
 ) -> dict:  # pragma: no cover - thin wrapper for MCP
-    return _http_get_impl(url, params=params, use_cache=use_cache, ttl_seconds=ttl_seconds, max_bytes=max_bytes)
+    return _http_get_impl(
+        url,
+        params=params,
+        use_cache=use_cache,
+        ttl_seconds=ttl_seconds,
+        max_bytes=max_bytes,
+    )
 
 
 @http_mcp.tool
@@ -198,7 +220,13 @@ def http_json_get_tool(
     ttl_seconds: int | None = None,
     max_bytes: int = 20000,
 ) -> dict:  # pragma: no cover - thin wrapper for MCP
-    return _http_json_get_impl(url, params=params, use_cache=use_cache, ttl_seconds=ttl_seconds, max_bytes=max_bytes)
+    return _http_json_get_impl(
+        url,
+        params=params,
+        use_cache=use_cache,
+        ttl_seconds=ttl_seconds,
+        max_bytes=max_bytes,
+    )
 
 
 @http_mcp.resource("httpcfg://allowlist")
@@ -217,11 +245,11 @@ def example_header() -> dict:
 
 
 __all__ = [
-    "http_mcp",
-    "http_get",
-    "http_json_get",
-    "http_get_tool",
-    "http_json_get_tool",
     "allowlist_resource",
     "example_header",
+    "http_get",
+    "http_get_tool",
+    "http_json_get",
+    "http_json_get_tool",
+    "http_mcp",
 ]

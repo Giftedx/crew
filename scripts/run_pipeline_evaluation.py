@@ -12,6 +12,7 @@ import logging
 import sys
 from pathlib import Path
 
+
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
@@ -19,6 +20,7 @@ from kg.creator_kg_store import CreatorKGStore
 from pipeline.evaluation_harness import PipelineEvaluationHarness
 from pipeline.multimodal_pipeline import MultimodalContentPipeline, PipelineConfig
 from ultimate_discord_intelligence_bot.step_result import StepResult
+
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
@@ -52,7 +54,10 @@ async def run_evaluation(output_file: str | None = None, episodes_count: int = 5
 
         # Create evaluation harness
         harness = PipelineEvaluationHarness(
-            pipeline=pipeline, kg_store=kg_store, tenant="evaluation", workspace="testing"
+            pipeline=pipeline,
+            kg_store=kg_store,
+            tenant="evaluation",
+            workspace="testing",
         )
 
         # Get test episodes
@@ -104,7 +109,7 @@ async def run_evaluation(output_file: str | None = None, episodes_count: int = 5
 
         if verbose:
             print("\nDetailed Results:")
-            for i, (episode, metrics) in enumerate(zip(results["episodes"], results["metrics"]), 1):
+            for i, (episode, metrics) in enumerate(zip(results["episodes"], results["metrics"], strict=False), 1):
                 print(f"\nEpisode {i}: {episode['title']}")
                 print(f"  Creator: {episode['creator']}")
                 print(f"  Platform: {episode['platform']}")
@@ -131,16 +136,27 @@ async def run_evaluation(output_file: str | None = None, episodes_count: int = 5
             return StepResult.fail(f"Evaluation failed: {len(summary['criteria_failed'])} criteria not met")
 
     except Exception as e:
-        logger.error(f"Evaluation failed: {str(e)}")
-        return StepResult.fail(f"Evaluation failed: {str(e)}")
+        logger.error(f"Evaluation failed: {e!s}")
+        return StepResult.fail(f"Evaluation failed: {e!s}")
 
 
 def main():
     """Main entry point."""
     parser = argparse.ArgumentParser(description="Run pipeline evaluation")
     parser.add_argument("--output", "-o", type=str, help="Output file for results (JSON format)")
-    parser.add_argument("--episodes", "-e", type=int, default=5, help="Number of episodes to evaluate (default: 5)")
-    parser.add_argument("--verbose", "-v", action="store_true", help="Verbose output with detailed results")
+    parser.add_argument(
+        "--episodes",
+        "-e",
+        type=int,
+        default=5,
+        help="Number of episodes to evaluate (default: 5)",
+    )
+    parser.add_argument(
+        "--verbose",
+        "-v",
+        action="store_true",
+        help="Verbose output with detailed results",
+    )
 
     args = parser.parse_args()
 

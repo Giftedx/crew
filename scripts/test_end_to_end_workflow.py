@@ -10,7 +10,8 @@ import json
 import sys
 import time
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
+
 
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
@@ -39,11 +40,11 @@ class EndToEndWorkflowTester:
 
     def __init__(self):
         """Initialize the tester."""
-        self.results: Dict[str, Any] = {}
+        self.results: dict[str, Any] = {}
         self.test_tenant = "e2e_test"
         self.test_workspace = "test_workspace"
 
-    def test_content_ingestion_workflow(self) -> Dict[str, Any]:
+    def test_content_ingestion_workflow(self) -> dict[str, Any]:
         """Test content ingestion workflow."""
         print("\n📥 Testing Content Ingestion Workflow...")
 
@@ -62,12 +63,8 @@ class EndToEndWorkflowTester:
             # Simulate content metadata extraction
 
             duration = time.time() - start_time
-            CONTENT_INGESTION_LATENCY.labels(
-                platform=platform, content_type="video"
-            ).observe(duration)
-            CONTENT_INGESTION_COUNT.labels(
-                platform=platform, content_type="video"
-            ).inc()
+            CONTENT_INGESTION_LATENCY.labels(platform=platform, content_type="video").observe(duration)
+            CONTENT_INGESTION_COUNT.labels(platform=platform, content_type="video").inc()
 
             workflow_results["steps_tested"] += 1
             workflow_results["steps_successful"] += 1
@@ -79,9 +76,7 @@ class EndToEndWorkflowTester:
             # Simulate download process
 
             duration = time.time() - start_time
-            CONTENT_INGESTION_LATENCY.labels(
-                platform=platform, content_type="video"
-            ).observe(duration)
+            CONTENT_INGESTION_LATENCY.labels(platform=platform, content_type="video").observe(duration)
 
             workflow_results["steps_tested"] += 1
             workflow_results["steps_successful"] += 1
@@ -93,9 +88,7 @@ class EndToEndWorkflowTester:
             # Simulate transcription process
 
             duration = time.time() - start_time
-            CONTENT_INGESTION_LATENCY.labels(
-                platform=platform, content_type="transcript"
-            ).observe(duration)
+            CONTENT_INGESTION_LATENCY.labels(platform=platform, content_type="transcript").observe(duration)
 
             workflow_results["steps_tested"] += 1
             workflow_results["steps_successful"] += 1
@@ -103,16 +96,12 @@ class EndToEndWorkflowTester:
 
         except Exception as e:
             workflow_results["steps_failed"] += 1
-            CONTENT_INGESTION_ERROR_COUNT.labels(
-                platform=platform, content_type="video"
-            ).inc()
-            workflow_results["step_details"]["content_ingestion"] = (
-                f"❌ Exception: {str(e)}"
-            )
+            CONTENT_INGESTION_ERROR_COUNT.labels(platform=platform, content_type="video").inc()
+            workflow_results["step_details"]["content_ingestion"] = f"❌ Exception: {e!s}"
 
         return workflow_results
 
-    def test_content_analysis_workflow(self) -> Dict[str, Any]:
+    def test_content_analysis_workflow(self) -> dict[str, Any]:
         """Test content analysis workflow."""
         print("\n🔍 Testing Content Analysis Workflow...")
 
@@ -143,9 +132,7 @@ class EndToEndWorkflowTester:
             # Simulate fact checking
 
             duration = time.time() - start_time
-            CONTENT_ANALYSIS_LATENCY.labels(analysis_type="fact_check").observe(
-                duration
-            )
+            CONTENT_ANALYSIS_LATENCY.labels(analysis_type="fact_check").observe(duration)
             CONTENT_ANALYSIS_COUNT.labels(analysis_type="fact_check").inc()
 
             workflow_results["steps_tested"] += 1
@@ -168,13 +155,11 @@ class EndToEndWorkflowTester:
         except Exception as e:
             workflow_results["steps_failed"] += 1
             CONTENT_ANALYSIS_ERROR_COUNT.labels(analysis_type="general").inc()
-            workflow_results["step_details"]["content_analysis"] = (
-                f"❌ Exception: {str(e)}"
-            )
+            workflow_results["step_details"]["content_analysis"] = f"❌ Exception: {e!s}"
 
         return workflow_results
 
-    def test_memory_integration_workflow(self) -> Dict[str, Any]:
+    def test_memory_integration_workflow(self) -> dict[str, Any]:
         """Test memory integration workflow."""
         print("\n🧠 Testing Memory Integration Workflow...")
 
@@ -228,13 +213,11 @@ class EndToEndWorkflowTester:
 
         except Exception as e:
             workflow_results["steps_failed"] += 1
-            workflow_results["step_details"]["memory_integration"] = (
-                f"❌ Exception: {str(e)}"
-            )
+            workflow_results["step_details"]["memory_integration"] = f"❌ Exception: {e!s}"
 
         return workflow_results
 
-    def test_discord_output_workflow(self) -> Dict[str, Any]:
+    def test_discord_output_workflow(self) -> dict[str, Any]:
         """Test Discord output workflow."""
         print("\n💬 Testing Discord Output Workflow...")
 
@@ -312,13 +295,11 @@ class EndToEndWorkflowTester:
         except Exception as e:
             workflow_results["steps_failed"] += 1
             DISCORD_MESSAGE_ERROR_COUNT.labels(message_type="general").inc()
-            workflow_results["step_details"]["discord_output"] = (
-                f"❌ Exception: {str(e)}"
-            )
+            workflow_results["step_details"]["discord_output"] = f"❌ Exception: {e!s}"
 
         return workflow_results
 
-    def test_complete_workflow(self) -> Dict[str, Any]:
+    def test_complete_workflow(self) -> dict[str, Any]:
         """Test complete end-to-end workflow."""
         print("\n🔄 Testing Complete End-to-End Workflow...")
 
@@ -368,9 +349,7 @@ class EndToEndWorkflowTester:
             """.strip()
 
             duration = time.time() - start_time
-            REQUEST_LATENCY.labels(
-                method="POST", endpoint="/api/complete_workflow"
-            ).observe(duration)
+            REQUEST_LATENCY.labels(method="POST", endpoint="/api/complete_workflow").observe(duration)
             REQUEST_COUNT.labels(method="POST", endpoint="/api/complete_workflow").inc()
 
             workflow_results["workflows_tested"] += 1
@@ -379,16 +358,12 @@ class EndToEndWorkflowTester:
 
         except Exception as e:
             workflow_results["workflows_failed"] += 1
-            ERROR_COUNT.labels(
-                method="POST", endpoint="/api/complete_workflow", error_type="workflow"
-            ).inc()
-            workflow_results["workflow_details"]["complete_workflow"] = (
-                f"❌ Exception: {str(e)}"
-            )
+            ERROR_COUNT.labels(method="POST", endpoint="/api/complete_workflow", error_type="workflow").inc()
+            workflow_results["workflow_details"]["complete_workflow"] = f"❌ Exception: {e!s}"
 
         return workflow_results
 
-    def run_all_tests(self) -> Dict[str, Any]:
+    def run_all_tests(self) -> dict[str, Any]:
         """Run all end-to-end workflow tests."""
         print("🚀 Starting End-to-End Workflow Tests...")
 
@@ -403,18 +378,15 @@ class EndToEndWorkflowTester:
 
         # Calculate overall results
         total_tests = sum(
-            suite.get("steps_tested", 0) + suite.get("workflows_tested", 0)
-            for suite in self.results.values()
+            suite.get("steps_tested", 0) + suite.get("workflows_tested", 0) for suite in self.results.values()
         )
 
         total_successful = sum(
-            suite.get("steps_successful", 0) + suite.get("workflows_successful", 0)
-            for suite in self.results.values()
+            suite.get("steps_successful", 0) + suite.get("workflows_successful", 0) for suite in self.results.values()
         )
 
         total_failed = sum(
-            suite.get("steps_failed", 0) + suite.get("workflows_failed", 0)
-            for suite in self.results.values()
+            suite.get("steps_failed", 0) + suite.get("workflows_failed", 0) for suite in self.results.values()
         )
 
         self.results["summary"] = {
@@ -457,15 +429,9 @@ class EndToEndWorkflowTester:
             report.append("")
 
             # Suite summary
-            suite_tests = suite_results.get("steps_tested", 0) + suite_results.get(
-                "workflows_tested", 0
-            )
-            suite_successful = suite_results.get(
-                "steps_successful", 0
-            ) + suite_results.get("workflows_successful", 0)
-            suite_failed = suite_results.get("steps_failed", 0) + suite_results.get(
-                "workflows_failed", 0
-            )
+            suite_tests = suite_results.get("steps_tested", 0) + suite_results.get("workflows_tested", 0)
+            suite_successful = suite_results.get("steps_successful", 0) + suite_results.get("workflows_successful", 0)
+            suite_failed = suite_results.get("steps_failed", 0) + suite_results.get("workflows_failed", 0)
 
             report.append(f"- **Tests:** {suite_tests}")
             report.append(f"- **Successful:** {suite_successful}")
@@ -473,9 +439,7 @@ class EndToEndWorkflowTester:
             report.append("")
 
             # Detailed results
-            details = suite_results.get(
-                "step_details", suite_results.get("workflow_details", {})
-            )
+            details = suite_results.get("step_details", suite_results.get("workflow_details", {}))
             for item_name, status in details.items():
                 report.append(f"- **{item_name}:** {status}")
             report.append("")

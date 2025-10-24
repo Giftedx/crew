@@ -1,9 +1,14 @@
 from __future__ import annotations
 
 import threading
-from collections.abc import Generator
 from contextlib import contextmanager
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
+
+
+if TYPE_CHECKING:
+    from collections.abc import Generator
+
 
 _thread_local = threading.local()
 

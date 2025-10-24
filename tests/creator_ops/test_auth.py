@@ -16,7 +16,9 @@ from ultimate_discord_intelligence_bot.creator_ops.auth.oauth_manager import (
     YouTubeOAuthManager,
 )
 from ultimate_discord_intelligence_bot.creator_ops.auth.scopes import ScopeValidator
-from ultimate_discord_intelligence_bot.creator_ops.auth.token_storage import TokenStorage
+from ultimate_discord_intelligence_bot.creator_ops.auth.token_storage import (
+    TokenStorage,
+)
 
 
 class TestOAuthManager:
@@ -50,7 +52,7 @@ class TestOAuthManager:
         assert "state=test_state" in url
         assert "response_type=code" in url
 
-    @patch('requests.post')
+    @patch("requests.post")
     def test_youtube_token_exchange_success(self, mock_post):
         """Test successful YouTube token exchange."""
         mock_response = Mock()
@@ -76,7 +78,7 @@ class TestOAuthManager:
         assert result.data["access_token"] == "test_access_token"
         assert result.data["refresh_token"] == "test_refresh_token"
 
-    @patch('requests.post')
+    @patch("requests.post")
     def test_youtube_token_exchange_failure(self, mock_post):
         """Test failed YouTube token exchange."""
         mock_post.side_effect = Exception("Network error")
@@ -142,7 +144,7 @@ class TestTokenStorage:
 
     def test_token_storage_initialization(self):
         """Test token storage initialization."""
-        with patch('sqlalchemy.create_engine'):
+        with patch("sqlalchemy.create_engine"):
             storage = TokenStorage(
                 database_url="sqlite:///:memory:",
                 encryption_key="test_key",
@@ -151,8 +153,8 @@ class TestTokenStorage:
             assert storage is not None
             assert storage.vault is not None
 
-    @patch('sqlalchemy.create_engine')
-    @patch('sqlalchemy.orm.sessionmaker')
+    @patch("sqlalchemy.create_engine")
+    @patch("sqlalchemy.orm.sessionmaker")
     def test_store_tokens_success(self, mock_sessionmaker, mock_engine):
         """Test successful token storage."""
         # Mock session
@@ -179,8 +181,8 @@ class TestTokenStorage:
         assert result.success
         assert result.data["platform"] == "youtube"
 
-    @patch('sqlalchemy.create_engine')
-    @patch('sqlalchemy.orm.sessionmaker')
+    @patch("sqlalchemy.create_engine")
+    @patch("sqlalchemy.orm.sessionmaker")
     def test_get_tokens_success(self, mock_sessionmaker, mock_engine):
         """Test successful token retrieval."""
         # Mock account
@@ -206,7 +208,7 @@ class TestTokenStorage:
         )
 
         # Mock vault decryption
-        with patch.object(storage.vault, 'decrypt_secret', return_value="decrypted_token"):
+        with patch.object(storage.vault, "decrypt_secret", return_value="decrypted_token"):
             result = storage.get_tokens(
                 platform="youtube",
                 tenant="test_tenant",
@@ -217,8 +219,8 @@ class TestTokenStorage:
         assert result.success
         assert result.data["access_token"] == "decrypted_token"
 
-    @patch('sqlalchemy.create_engine')
-    @patch('sqlalchemy.orm.sessionmaker')
+    @patch("sqlalchemy.create_engine")
+    @patch("sqlalchemy.orm.sessionmaker")
     def test_get_tokens_not_found(self, mock_sessionmaker, mock_engine):
         """Test token retrieval when not found."""
         # Mock session
@@ -298,10 +300,12 @@ class TestScopeValidator:
         """Test getting scope descriptions."""
         validator = ScopeValidator()
 
-        descriptions = validator.get_scope_descriptions([
-            "https://www.googleapis.com/auth/youtube.readonly",
-            "user:read:email",
-        ])
+        descriptions = validator.get_scope_descriptions(
+            [
+                "https://www.googleapis.com/auth/youtube.readonly",
+                "user:read:email",
+            ]
+        )
 
         assert len(descriptions) == 2
         assert "Read YouTube channel and video data" in descriptions["https://www.googleapis.com/auth/youtube.readonly"]

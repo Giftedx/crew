@@ -11,11 +11,21 @@ import logging
 import re
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from ultimate_discord_intelligence_bot.creator_ops.media.asr import ASRResult, ASRSegment
-from ultimate_discord_intelligence_bot.creator_ops.media.diarization import DiarizationResult, DiarizationSegment
 from ultimate_discord_intelligence_bot.step_result import StepResult
+
+
+if TYPE_CHECKING:
+    from ultimate_discord_intelligence_bot.creator_ops.media.asr import (
+        ASRResult,
+        ASRSegment,
+    )
+    from ultimate_discord_intelligence_bot.creator_ops.media.diarization import (
+        DiarizationResult,
+        DiarizationSegment,
+    )
+
 
 logger = logging.getLogger(__name__)
 
@@ -69,7 +79,8 @@ class TranscriptAlignment:
         """Initialize text cleanup patterns."""
         return {
             "filler_words": re.compile(
-                r"\b(um|uh|er|ah|like|you know|basically|literally|actually|so|well)\b", re.IGNORECASE
+                r"\b(um|uh|er|ah|like|you know|basically|literally|actually|so|well)\b",
+                re.IGNORECASE,
             ),
             "stutters": re.compile(r"\b(\w+)\s+\1\b", re.IGNORECASE),
             "repeated_words": re.compile(r"\b(\w+)\s+\1\s+\1\b", re.IGNORECASE),
@@ -119,7 +130,7 @@ class TranscriptAlignment:
                     cleanup_applied.append(f"cleaned_segment_{len(cleanup_applied)}")
 
             # Calculate statistics
-            speakers = list(set(segment.speaker for segment in aligned_segments if segment.speaker))
+            speakers = list({segment.speaker for segment in aligned_segments if segment.speaker})
             total_duration = max(segment.end_time for segment in aligned_segments) if aligned_segments else 0.0
             word_count = sum(len(segment.text.split()) for segment in aligned_segments)
             speaker_turns = self._count_speaker_turns(aligned_segments)
@@ -154,8 +165,8 @@ class TranscriptAlignment:
             return StepResult.ok(data=aligned_transcript)
 
         except Exception as e:
-            logger.error(f"Transcript alignment failed: {str(e)}")
-            return StepResult.fail(f"Transcript alignment failed: {str(e)}")
+            logger.error(f"Transcript alignment failed: {e!s}")
+            return StepResult.fail(f"Transcript alignment failed: {e!s}")
 
     def _align_segments(
         self,
@@ -364,10 +375,7 @@ class TranscriptAlignment:
             end_time = self._format_srt_timestamp(segment.end_time)
 
             # Format text with speaker label
-            if segment.speaker:
-                text = f"[{segment.speaker}]: {segment.text}"
-            else:
-                text = segment.text
+            text = f"[{segment.speaker}]: {segment.text}" if segment.speaker else segment.text
 
             srt_content.append(f"{i}")
             srt_content.append(f"{start_time} --> {end_time}")

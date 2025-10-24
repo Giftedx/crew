@@ -96,7 +96,10 @@ def rerank(query: str, docs: list[str], *, provider: str, top_n: int) -> RerankR
             "documents": docs,
             "top_n": min(max(1, top_n), len(docs)),
         }
-        headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+        }
         resp = resilient_post(
             "https://api.jina.ai/v1/rerank",
             json_payload=payload,

@@ -11,6 +11,7 @@ from .knowledge import CrossDomainKnowledgeSynthesis
 from .multimodel import MultiModelIntelligence
 from .quantum import QuantumInspiredComputing
 
+
 logger = logging.getLogger(__name__)
 
 

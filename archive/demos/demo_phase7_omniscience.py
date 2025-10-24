@@ -18,6 +18,7 @@ import asyncio
 import sys
 from pathlib import Path
 
+
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
@@ -78,10 +79,26 @@ async def demo_universal_knowledge_synthesis():
             "COSMIC",
             95.0,
         ),
-        ("Information is the fundamental substrate from which all reality emerges", "UNIVERSAL", 98.0),
-        ("Consciousness exists as a fundamental force equivalent to gravity and electromagnetism", "COSMIC", 92.0),
-        ("Time is an emergent property of consciousness observing information state changes", "UNIVERSAL", 94.0),
-        ("All mathematical truths exist simultaneously across infinite dimensional spaces", "INFINITE", 97.0),
+        (
+            "Information is the fundamental substrate from which all reality emerges",
+            "UNIVERSAL",
+            98.0,
+        ),
+        (
+            "Consciousness exists as a fundamental force equivalent to gravity and electromagnetism",
+            "COSMIC",
+            92.0,
+        ),
+        (
+            "Time is an emergent property of consciousness observing information state changes",
+            "UNIVERSAL",
+            94.0,
+        ),
+        (
+            "All mathematical truths exist simultaneously across infinite dimensional spaces",
+            "INFINITE",
+            97.0,
+        ),
     ]
 
     print("   ✨ Omniscient Insights Discovered:")
@@ -114,7 +131,7 @@ async def demo_temporal_transcendence():
     ]
 
     print("   🔮 Temporal Dimension Status:")
-    for dimension, scope, accessibility, causal, knowledge in temporal_dimensions:
+    for dimension, _scope, accessibility, causal, knowledge in temporal_dimensions:
         print(f"   • {dimension}: Accessibility {accessibility}%, Causal Influence {causal}%, Knowledge {knowledge}%")
 
     avg_accessibility = sum(d[2] for d in temporal_dimensions) / len(temporal_dimensions)
@@ -267,8 +284,16 @@ async def demo_reality_pattern_recognition():
     print("   🌐 Discovering correlations between different scales...")
 
     correlations = [
-        ("Consciousness Scale Invariance", ["quantum", "biological", "universal"], 87.0),
-        ("Information Processing Hierarchy", ["atomic", "molecular", "biological"], 92.0),
+        (
+            "Consciousness Scale Invariance",
+            ["quantum", "biological", "universal"],
+            87.0,
+        ),
+        (
+            "Information Processing Hierarchy",
+            ["atomic", "molecular", "biological"],
+            92.0,
+        ),
         ("Fibonacci Spiral Universality", ["galactic", "biological", "quantum"], 95.0),
     ]
 

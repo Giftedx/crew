@@ -13,11 +13,17 @@ import time
 import uuid
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from loguru import logger
 
-from src.core.realtime.live_monitor import (
+try:
+    from loguru import logger  # type: ignore
+except ImportError:
+    import logging
+
+    logger = logging.getLogger(__name__)
+
+from core.realtime.live_monitor import (  # type: ignore[import-not-found]
     AlertLevel,
     LiveContentMetrics,
     LiveMonitor,
@@ -26,15 +32,15 @@ from src.core.realtime.live_monitor import (
     MonitorType,
     TrendData,
 )
-from src.core.realtime.stream_processor import (
+from core.realtime.stream_processor import (  # type: ignore[import-not-found]
     ProcessingPriority,
     ProcessingResult,
     StreamChunk,
     StreamProcessor,
     StreamType,
 )
-from src.ultimate_discord_intelligence_bot.step_result import StepResult
-from src.ultimate_discord_intelligence_bot.tools.live_stream_analysis_tool import (
+from ultimate_discord_intelligence_bot.step_result import StepResult  # type: ignore[import-not-found]
+from ultimate_discord_intelligence_bot.tools.analysis.live_stream_analysis_tool import (  # type: ignore[import-not-found]
     LiveStreamAnalysisTool,
 )
 
@@ -67,12 +73,12 @@ class LiveMonitoringSession:
     stream_type: StreamType
     monitoring_mode: MonitoringMode
     start_time: float
-    end_time: Optional[float] = None
+    end_time: float | None = None
     status: str = "active"
-    configuration: Dict[str, Any] = field(default_factory=dict)
-    metrics: List[LiveContentMetrics] = field(default_factory=list)
-    alerts: List[MonitoringAlert] = field(default_factory=list)
-    trends: List[TrendData] = field(default_factory=list)
+    configuration: dict[str, Any] = field(default_factory=dict)
+    metrics: list[LiveContentMetrics] = field(default_factory=list)
+    alerts: list[MonitoringAlert] = field(default_factory=list)
+    trends: list[TrendData] = field(default_factory=list)
     tenant: str = "default"
     workspace: str = "default"
 
@@ -99,8 +105,8 @@ class TrendAlert:
     timestamp: float
     stream_id: str
     impact_score: float
-    recommended_actions: List[str] = field(default_factory=list)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    recommended_actions: list[str] = field(default_factory=list)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -116,7 +122,7 @@ class FactCheckAlert:
     verification_status: str = "pending"
     suggested_response: str = ""
     priority: str = "medium"
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 class LiveMonitoringAgent:
@@ -138,11 +144,11 @@ class LiveMonitoringAgent:
         self.live_stream_analysis_tool = LiveStreamAnalysisTool()
 
         # Active monitoring sessions
-        self.active_sessions: Dict[str, LiveMonitoringSession] = {}
+        self.active_sessions: dict[str, LiveMonitoringSession] = {}
 
         # Alert handlers
-        self.trend_alerts: List[TrendAlert] = []
-        self.fact_check_alerts: List[FactCheckAlert] = []
+        self.trend_alerts: list[TrendAlert] = []
+        self.fact_check_alerts: list[FactCheckAlert] = []
 
         # Performance tracking
         self.performance_metrics = {
@@ -164,7 +170,7 @@ class LiveMonitoringAgent:
         stream_id: str,
         stream_type: StreamType,
         monitoring_mode: MonitoringMode = MonitoringMode.INTELLIGENT,
-        configuration: Optional[Dict[str, Any]] = None,
+        configuration: dict[str, Any] | None = None,
         tenant: str = "default",
         workspace: str = "default",
     ) -> StepResult:
@@ -220,9 +226,7 @@ class LiveMonitoringAgent:
             self.performance_metrics["total_sessions"] += 1
             self.performance_metrics["active_sessions"] += 1
 
-            logger.info(
-                f"Started monitoring session {session_id} for stream {stream_id}"
-            )
+            logger.info(f"Started monitoring session {session_id} for stream {stream_id}")
 
             return StepResult.success(
                 {
@@ -237,8 +241,8 @@ class LiveMonitoringAgent:
             )
 
         except Exception as e:
-            logger.error(f"Failed to start monitoring session: {str(e)}")
-            return StepResult.fail(f"Failed to start monitoring session: {str(e)}")
+            logger.error(f"Failed to start monitoring session: {e!s}")
+            return StepResult.fail(f"Failed to start monitoring session: {e!s}")
 
     async def stop_monitoring_session(self, session_id: str) -> StepResult:
         """
@@ -282,12 +286,10 @@ class LiveMonitoringAgent:
             )
 
         except Exception as e:
-            logger.error(f"Failed to stop monitoring session: {str(e)}")
-            return StepResult.fail(f"Failed to stop monitoring session: {str(e)}")
+            logger.error(f"Failed to stop monitoring session: {e!s}")
+            return StepResult.fail(f"Failed to stop monitoring session: {e!s}")
 
-    async def process_stream_chunk(
-        self, session_id: str, chunk: StreamChunk
-    ) -> StepResult:
+    async def process_stream_chunk(self, session_id: str, chunk: StreamChunk) -> StepResult:
         """
         Process a stream chunk for real-time analysis.
 
@@ -310,9 +312,7 @@ class LiveMonitoringAgent:
             await self.stream_processor.add_chunk(session.stream_id, chunk)
 
             # Get processing results
-            results = await self.stream_processor.get_processing_results(
-                session.stream_id
-            )
+            results = await self.stream_processor.get_processing_results(session.stream_id)
             latest_result = results[-1] if results else None
 
             if latest_result:
@@ -330,19 +330,15 @@ class LiveMonitoringAgent:
                 {
                     "session_id": session_id,
                     "chunk_processed": True,
-                    "processing_result": latest_result.__dict__
-                    if latest_result
-                    else None,
+                    "processing_result": latest_result.__dict__ if latest_result else None,
                 }
             )
 
         except Exception as e:
-            logger.error(f"Failed to process stream chunk: {str(e)}")
-            return StepResult.fail(f"Failed to process stream chunk: {str(e)}")
+            logger.error(f"Failed to process stream chunk: {e!s}")
+            return StepResult.fail(f"Failed to process stream chunk: {e!s}")
 
-    async def get_trend_analysis(
-        self, session_id: str, metric_name: Optional[str] = None
-    ) -> StepResult:
+    async def get_trend_analysis(self, session_id: str, metric_name: str | None = None) -> StepResult:
         """
         Get trend analysis for a monitoring session.
 
@@ -360,9 +356,7 @@ class LiveMonitoringAgent:
             session = self.active_sessions[session_id]
 
             if metric_name:
-                trend_data = await self.live_monitor.get_trend_analysis(
-                    session.stream_id, metric_name
-                )
+                trend_data = await self.live_monitor.get_trend_analysis(session.stream_id, metric_name)
                 trends = [trend_data] if trend_data else []
             else:
                 # Get all trend data for the stream
@@ -373,9 +367,7 @@ class LiveMonitoringAgent:
                     "sentiment_score",
                     "content_quality",
                 ]:
-                    trend = await self.live_monitor.get_trend_analysis(
-                        session.stream_id, metric
-                    )
+                    trend = await self.live_monitor.get_trend_analysis(session.stream_id, metric)
                     if trend:
                         trends.append(trend)
 
@@ -388,12 +380,10 @@ class LiveMonitoringAgent:
             )
 
         except Exception as e:
-            logger.error(f"Failed to get trend analysis: {str(e)}")
-            return StepResult.fail(f"Failed to get trend analysis: {str(e)}")
+            logger.error(f"Failed to get trend analysis: {e!s}")
+            return StepResult.fail(f"Failed to get trend analysis: {e!s}")
 
-    async def get_active_alerts(
-        self, session_id: Optional[str] = None, alert_type: Optional[str] = None
-    ) -> StepResult:
+    async def get_active_alerts(self, session_id: str | None = None, alert_type: str | None = None) -> StepResult:
         """
         Get active alerts for monitoring sessions.
 
@@ -413,27 +403,17 @@ class LiveMonitoringAgent:
 
                 session = self.active_sessions[session_id]
                 # Get monitoring alerts
-                monitoring_alerts = await self.live_monitor.get_active_alerts(
-                    session.stream_id
-                )
+                monitoring_alerts = await self.live_monitor.get_active_alerts(session.stream_id)
                 alerts.extend([alert.__dict__ for alert in monitoring_alerts])
 
                 # Get trend alerts
                 if not alert_type or alert_type == "trend":
-                    trend_alerts = [
-                        alert
-                        for alert in self.trend_alerts
-                        if alert.stream_id == session.stream_id
-                    ]
+                    trend_alerts = [alert for alert in self.trend_alerts if alert.stream_id == session.stream_id]
                     alerts.extend([alert.__dict__ for alert in trend_alerts])
 
                 # Get fact-check alerts
                 if not alert_type or alert_type == "fact_check":
-                    fact_alerts = [
-                        alert
-                        for alert in self.fact_check_alerts
-                        if alert.stream_id == session.stream_id
-                    ]
+                    fact_alerts = [alert for alert in self.fact_check_alerts if alert.stream_id == session.stream_id]
                     alerts.extend([alert.__dict__ for alert in fact_alerts])
             else:
                 # Get all active alerts
@@ -442,13 +422,11 @@ class LiveMonitoringAgent:
                 alerts.extend([alert.__dict__ for alert in self.trend_alerts])
                 alerts.extend([alert.__dict__ for alert in self.fact_check_alerts])
 
-            return StepResult.success(
-                {"alerts": alerts, "total_count": len(alerts), "timestamp": time.time()}
-            )
+            return StepResult.success({"alerts": alerts, "total_count": len(alerts), "timestamp": time.time()})
 
         except Exception as e:
-            logger.error(f"Failed to get active alerts: {str(e)}")
-            return StepResult.fail(f"Failed to get active alerts: {str(e)}")
+            logger.error(f"Failed to get active alerts: {e!s}")
+            return StepResult.fail(f"Failed to get active alerts: {e!s}")
 
     async def _setup_monitoring_rules(self, session: LiveMonitoringSession) -> None:
         """Set up monitoring rules for a session."""
@@ -516,9 +494,7 @@ class LiveMonitoringAgent:
             metadata=result_data.get("metadata", {}),
         )
 
-    async def _check_for_trends_and_alerts(
-        self, session: LiveMonitoringSession, result: ProcessingResult
-    ) -> None:
+    async def _check_for_trends_and_alerts(self, session: LiveMonitoringSession, result: ProcessingResult) -> None:
         """Check for trends and generate alerts."""
         # Check for viral content trends
         if result.result_data.get("engagement_rate", 0) > 0.8:
@@ -551,9 +527,7 @@ class LiveMonitoringAgent:
             self.fact_check_alerts.append(fact_alert)
             self.performance_metrics["fact_checks_triggered"] += 1
 
-    async def _generate_session_summary(
-        self, session: LiveMonitoringSession
-    ) -> Dict[str, Any]:
+    async def _generate_session_summary(self, session: LiveMonitoringSession) -> dict[str, Any]:
         """Generate a summary of the monitoring session."""
         return {
             "session_id": session.session_id,
@@ -561,20 +535,13 @@ class LiveMonitoringAgent:
             "duration_seconds": session.duration_seconds,
             "total_metrics": len(session.metrics),
             "total_alerts": len(session.alerts),
-            "trends_detected": len(
-                [a for a in self.trend_alerts if a.stream_id == session.stream_id]
-            ),
-            "fact_checks_triggered": len(
-                [a for a in self.fact_check_alerts if a.stream_id == session.stream_id]
-            ),
+            "trends_detected": len([a for a in self.trend_alerts if a.stream_id == session.stream_id]),
+            "fact_checks_triggered": len([a for a in self.fact_check_alerts if a.stream_id == session.stream_id]),
             "monitoring_mode": session.monitoring_mode.value,
             "performance_summary": {
-                "average_engagement": sum(m.engagement_rate for m in session.metrics)
-                / max(1, len(session.metrics)),
-                "average_sentiment": sum(m.sentiment_score for m in session.metrics)
-                / max(1, len(session.metrics)),
-                "average_quality": sum(m.content_quality for m in session.metrics)
-                / max(1, len(session.metrics)),
+                "average_engagement": sum(m.engagement_rate for m in session.metrics) / max(1, len(session.metrics)),
+                "average_sentiment": sum(m.sentiment_score for m in session.metrics) / max(1, len(session.metrics)),
+                "average_quality": sum(m.content_quality for m in session.metrics) / max(1, len(session.metrics)),
             },
         }
 
@@ -592,5 +559,5 @@ class LiveMonitoringAgent:
                 }
             )
         except Exception as e:
-            logger.error(f"Failed to get agent status: {str(e)}")
-            return StepResult.fail(f"Failed to get agent status: {str(e)}")
+            logger.error(f"Failed to get agent status: {e!s}")
+            return StepResult.fail(f"Failed to get agent status: {e!s}")

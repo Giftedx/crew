@@ -7,11 +7,14 @@ providing utilities to handle and report errors with user-friendly messages.
 from __future__ import annotations
 
 import logging
-from typing import Any
-
-from ultimate_discord_intelligence_bot.step_result import StepResult
+from typing import TYPE_CHECKING, Any
 
 from .discord_session_validators import is_session_valid
+
+
+if TYPE_CHECKING:
+    from ultimate_discord_intelligence_bot.step_result import StepResult
+
 
 logger = logging.getLogger(__name__)
 
@@ -98,7 +101,10 @@ async def handle_acquisition_failure(
     except Exception as e:
         # Fallback error handling
         await send_error_response(
-            interaction, "Content Acquisition", f"Failed to acquire content from {url}: {e}", _logger
+            interaction,
+            "Content Acquisition",
+            f"Failed to acquire content from {url}: {e}",
+            _logger,
         )
 
 

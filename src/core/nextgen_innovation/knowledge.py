@@ -8,6 +8,7 @@ from core.time import default_utc_now
 
 from .types import BreakthroughCandidate, KnowledgeDomain
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -26,7 +27,11 @@ class CrossDomainKnowledgeSynthesis:
             domains_config = {
                 "artificial_intelligence": {
                     "expertise_level": 0.95,
-                    "knowledge_areas": ["machine_learning", "neural_networks", "natural_language_processing"],
+                    "knowledge_areas": [
+                        "machine_learning",
+                        "neural_networks",
+                        "natural_language_processing",
+                    ],
                     "synthesis_potential": 0.92,
                 },
                 "cognitive_science": {
@@ -46,17 +51,29 @@ class CrossDomainKnowledgeSynthesis:
                 },
                 "quantum_computing": {
                     "expertise_level": 0.78,
-                    "knowledge_areas": ["quantum_mechanics", "information_theory", "computation"],
+                    "knowledge_areas": [
+                        "quantum_mechanics",
+                        "information_theory",
+                        "computation",
+                    ],
                     "synthesis_potential": 0.89,
                 },
                 "neuroscience": {
                     "expertise_level": 0.82,
-                    "knowledge_areas": ["brain_function", "neural_networks", "consciousness"],
+                    "knowledge_areas": [
+                        "brain_function",
+                        "neural_networks",
+                        "consciousness",
+                    ],
                     "synthesis_potential": 0.86,
                 },
                 "mathematics": {
                     "expertise_level": 0.93,
-                    "knowledge_areas": ["topology", "category_theory", "information_theory"],
+                    "knowledge_areas": [
+                        "topology",
+                        "category_theory",
+                        "information_theory",
+                    ],
                     "synthesis_potential": 0.91,
                 },
             }
@@ -83,13 +100,33 @@ class CrossDomainKnowledgeSynthesis:
 
     async def _establish_domain_connections(self):
         connections = {
-            "artificial_intelligence": ["cognitive_science", "neuroscience", "mathematics"],
-            "cognitive_science": ["philosophy", "neuroscience", "artificial_intelligence"],
+            "artificial_intelligence": [
+                "cognitive_science",
+                "neuroscience",
+                "mathematics",
+            ],
+            "cognitive_science": [
+                "philosophy",
+                "neuroscience",
+                "artificial_intelligence",
+            ],
             "systems_theory": ["artificial_intelligence", "philosophy", "mathematics"],
             "philosophy": ["cognitive_science", "systems_theory", "quantum_computing"],
-            "quantum_computing": ["mathematics", "artificial_intelligence", "philosophy"],
-            "neuroscience": ["cognitive_science", "artificial_intelligence", "systems_theory"],
-            "mathematics": ["quantum_computing", "artificial_intelligence", "systems_theory"],
+            "quantum_computing": [
+                "mathematics",
+                "artificial_intelligence",
+                "philosophy",
+            ],
+            "neuroscience": [
+                "cognitive_science",
+                "artificial_intelligence",
+                "systems_theory",
+            ],
+            "mathematics": [
+                "quantum_computing",
+                "artificial_intelligence",
+                "systems_theory",
+            ],
         }
         self.domain_connections.update(connections)
 
@@ -128,7 +165,11 @@ class CrossDomainKnowledgeSynthesis:
         breakthrough_concepts = [
             {
                 "concept": "Quantum-Inspired Neural Architecture for Consciousness Simulation",
-                "domains": ["quantum_computing", "artificial_intelligence", "cognitive_science"],
+                "domains": [
+                    "quantum_computing",
+                    "artificial_intelligence",
+                    "cognitive_science",
+                ],
                 "base_confidence": 0.85,
                 "impact_potential": 0.95,
             },
@@ -152,7 +193,11 @@ class CrossDomainKnowledgeSynthesis:
             },
             {
                 "concept": "Emergent Consciousness from Distributed Intelligence",
-                "domains": ["cognitive_science", "systems_theory", "artificial_intelligence"],
+                "domains": [
+                    "cognitive_science",
+                    "systems_theory",
+                    "artificial_intelligence",
+                ],
                 "base_confidence": 0.74,
                 "impact_potential": 0.96,
             },

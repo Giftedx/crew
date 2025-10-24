@@ -59,7 +59,9 @@ def main():
             try:
                 documents = json.loads(docs_env)
                 if not isinstance(documents, list):
-                    raise ValueError("A2A_DOCUMENTS_JSON must be a JSON array of strings")
+                    raise ValueError(
+                        "A2A_DOCUMENTS_JSON must be a JSON array of strings"
+                    )
             except Exception as exc:
                 print(f"Invalid A2A_DOCUMENTS_JSON: {exc}", file=sys.stderr)
                 sys.exit(2)

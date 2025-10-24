@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import os
 import time
 from collections.abc import Mapping, Sequence
@@ -22,13 +23,14 @@ from .rl.policies.lints import LinTSDiagBandit
 from .rl.policies.linucb import LinUCBDiagBandit
 from .rl.registry import PolicyRegistry
 
+
 try:  # optional dependency
     from .rl.policies.vowpal_wabbit import VowpalWabbitBandit
 except Exception:  # pragma: no cover - gracefully degrade when VW missing
     VowpalWabbitBandit = None  # type: ignore[assignment]
 
 try:
-    from .settings import get_settings
+    from ultimate_discord_intelligence_bot.settings import Settings
 except (ImportError, ModuleNotFoundError) as e:  # More specific exception types
     # Log the import failure for debugging
     log_error(
@@ -38,10 +40,7 @@ except (ImportError, ModuleNotFoundError) as e:  # More specific exception types
     )
 
     def get_settings():  # type: ignore
-        class _S:  # minimal attribute surface used in this module
-            rl_policy_model_selection = "epsilon_greedy"
-
-        return _S()  # returning instance keeps attribute access consistent
+        return Settings()
 
 
 @runtime_checkable
@@ -72,9 +71,7 @@ class LearningEngine:
         if policy is None:
             # Choose default policy from settings (fallback epsilon)
             try:
-                policy_name = getattr(
-                    get_settings(), "rl_policy_model_selection", "epsilon_greedy"
-                )
+                policy_name = getattr(Settings(), "rl_policy_model_selection", "epsilon_greedy")
             except (AttributeError, TypeError) as e:
                 log_error(
                     e,
@@ -112,19 +109,15 @@ class LearningEngine:
             }
 
             bandit: _BanditLike
-            if (
-                force_vowpal or p in {"vowpal", "vw", "vowpal_wabbit"}
-            ) and VowpalWabbitBandit is None:
+            if (force_vowpal or p in {"vowpal", "vw", "vowpal_wabbit"}) and VowpalWabbitBandit is None:
                 log_error(
                     RuntimeError("vowpalwabbit missing"),
                     message="Vowpal Wabbit bandit requested but dependency is not installed",
                     context={"policy": p},
                 )
-            if (
-                force_vowpal or p in {"vowpal", "vw", "vowpal_wabbit"}
-            ) and VowpalWabbitBandit is not None:
+            if (force_vowpal or p in {"vowpal", "vw", "vowpal_wabbit"}) and VowpalWabbitBandit is not None:
                 try:
-                    vw_args = getattr(get_settings(), "vw_bandit_args", None)
+                    vw_args = getattr(Settings(), "vw_bandit_args", None)
                 except Exception:  # pragma: no cover - defensive fallback
                     vw_args = None
                 try:
@@ -167,8 +160,7 @@ class LearningEngine:
             elif p == "linucb":
                 bandit = LinUCBDiagBandit()
             elif p in {"lints", "lin_ts", "linthompsonsampling"} or (
-                os.getenv("ENABLE_RL_LINTS", "").lower() in {"1", "true", "yes", "on"}
-                and p == "lints"
+                os.getenv("ENABLE_RL_LINTS", "").lower() in {"1", "true", "yes", "on"} and p == "lints"
             ):
                 bandit = LinTSDiagBandit()
             elif p in ("ucb1", "ucb"):
@@ -191,11 +183,9 @@ class LearningEngine:
                     min_samples_split=ot_config.min_samples_split,
                     split_threshold=ot_config.split_threshold,
                 )
-            elif (
-                force_vowpal or p in {"vowpal", "vw", "vowpal_wabbit"}
-            ) and VowpalWabbitBandit is not None:
+            elif (force_vowpal or p in {"vowpal", "vw", "vowpal_wabbit"}) and VowpalWabbitBandit is not None:
                 try:
-                    vw_args = getattr(get_settings(), "vw_bandit_args", None)
+                    vw_args = getattr(Settings(), "vw_bandit_args", None)
                 except Exception:  # pragma: no cover - defensive fallback
                     vw_args = None
                 try:
@@ -210,28 +200,22 @@ class LearningEngine:
             else:
                 bandit = EpsilonGreedyBandit()
         else:
-            bandit = cast(_BanditLike, policy)
+            bandit = cast("_BanditLike", policy)
         if priors and hasattr(bandit, "q_values"):
             # Access via Any to avoid blanket ignore; many bandit policies expose mutable q_values dict
-            qv = cast(Any, getattr(bandit, "q_values"))
+            qv = cast("Any", bandit.q_values)
             for arm, q in priors.items():
-                try:
+                with contextlib.suppress(Exception):
                     qv[arm] = q
-                except Exception:
-                    pass
         self.registry.register(name, bandit)
         # Emit ACTIVE_BANDIT_POLICY gauge (1 for active)
-        try:
+        with contextlib.suppress(Exception):
             metrics.ACTIVE_BANDIT_POLICY.labels(
                 **metrics.label_ctx(), domain=name, policy=bandit.__class__.__name__
             ).set(1)
-        except Exception:
-            pass
 
-    def recommend(
-        self, domain: str, context: dict[str, Any], candidates: Sequence[Any]
-    ) -> Any:
-        policy = cast(_BanditLike, self.registry.get(domain))
+    def recommend(self, domain: str, context: dict[str, Any], candidates: Sequence[Any]) -> Any:
+        policy = cast("_BanditLike", self.registry.get(domain))
         if not candidates:
             raise ValueError("candidates must not be empty")
         # Experiment path (flag gated)
@@ -244,25 +228,19 @@ class LearningEngine:
             exp_id = f"policy::{domain}"
             if self._exp_mgr.exists(exp_id):
                 # Map policy-level candidates to variants (string names expected)
-                variant_choice = self._exp_mgr.recommend(
-                    exp_id, context, [str(c) for c in candidates]
-                )
+                variant_choice = self._exp_mgr.recommend(exp_id, context, [str(c) for c in candidates])
                 # If the experiment returns a candidate that exists, use that; else fallback to policy.
                 if variant_choice in candidates:
                     return variant_choice
         return policy.recommend(context, candidates)
 
-    def record(
-        self, domain: str, context: dict[str, Any], action: Any, reward: float
-    ) -> None:
-        policy = cast(_BanditLike, self.registry.get(domain))
+    def record(self, domain: str, context: dict[str, Any], action: Any, reward: float) -> None:
+        policy = cast("_BanditLike", self.registry.get(domain))
         started = time.perf_counter()
         policy.update(action, reward, context)
         try:
             gap_ms = (time.perf_counter() - started) * 1000.0
-            metrics.RL_REWARD_LATENCY_GAP.labels(
-                **metrics.label_ctx(), domain=domain
-            ).observe(gap_ms)
+            metrics.RL_REWARD_LATENCY_GAP.labels(**metrics.label_ctx(), domain=domain).observe(gap_ms)
         except Exception:
             pass
         if os.getenv("ENABLE_EXPERIMENT_HARNESS", "").lower() in {
@@ -306,13 +284,11 @@ class LearningEngine:
 
         data: dict[str, dict[str, Any]] = {}
         for name, policy_obj in self.registry.items():
-            policy = cast(_BanditLike, policy_obj)
+            policy = cast("_BanditLike", policy_obj)
             # Prefer richer state when available
-            if hasattr(policy, "state_dict") and callable(
-                getattr(policy, "state_dict")
-            ):
+            if hasattr(policy, "state_dict") and callable(policy.state_dict):
                 try:
-                    state = getattr(policy, "state_dict")()
+                    state = policy.state_dict()
                     if isinstance(state, dict):
                         data[name] = state
                         continue
@@ -331,37 +307,35 @@ class LearningEngine:
         """Restore policy state from ``snapshot`` produced by :meth:`snapshot`."""
 
         for name, state in snapshot.items():
-            policy = cast(_BanditLike, self.registry.get(name))
+            policy = cast("_BanditLike", self.registry.get(name))
             # If the snapshot declares a future version we do not understand, skip early.
             ver = state.get("version") if isinstance(state, Mapping) else None
             if ver is not None and ver > 1:
                 continue
             # Prefer richer restore when available
-            if hasattr(policy, "load_state") and callable(
-                getattr(policy, "load_state")
-            ):
+            if hasattr(policy, "load_state") and callable(policy.load_state):
                 try:
-                    getattr(policy, "load_state")(state)
+                    policy.load_state(state)
                     continue
                 except Exception:
                     pass
             q_vals = state.get("q_values", {})
             counts = state.get("counts", {})
             # Access optional attributes via Any to satisfy type-checkers
-            _p_any = cast(Any, policy)
+            _p_any = cast("Any", policy)
             if hasattr(_p_any, "q_values") and isinstance(q_vals, Mapping):
                 _p_any.q_values.clear()
-                _p_any.q_values.update(cast(Mapping[Any, float], q_vals))
+                _p_any.q_values.update(cast("Mapping[Any, float]", q_vals))
             if hasattr(_p_any, "counts") and isinstance(counts, Mapping):
                 _p_any.counts.clear()
-                _p_any.counts.update(cast(Mapping[Any, int], counts))
+                _p_any.counts.update(cast("Mapping[Any, int]", counts))
 
     def status(self) -> dict[str, dict[str, Any]]:
         """Return a diagnostic view of all policies and their arms."""
 
         summary: dict[str, dict[str, Any]] = {}
         for name, policy_obj in self.registry.items():
-            policy = cast(_BanditLike, policy_obj)
+            policy = cast("_BanditLike", policy_obj)
             arms: dict[Any, dict[str, float | int]] = {}
             q_vals = getattr(policy, "q_values", {})
             counts = getattr(policy, "counts", {})
@@ -420,7 +394,7 @@ class LearningEngine:
                         continue
             except Exception:
                 pass
-        return cast(str, choice)
+        return cast("str", choice)
 
     def update(self, task_type: str, action: str, reward: float) -> None:
         """Legacy convenience update for model selection domains."""

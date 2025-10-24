@@ -160,8 +160,6 @@ ignore = [
     # Previously allowed
     "SIM105",  # allow broad exception catches in tool orchestration areas (documented)
     "E501",    # temporarily ignore long line violations while focusing on functional fixes
-    # Newly deferred for this finishing pass
-    "UP038",            # isinstance tuple → union style modernization deferred
     # Defer PEP 695 generics (require Python 3.12) to keep 3.10 compatibility
     # Note: Older ruff versions may not recognize UP046/UP047; omit to keep config portable.
 ]

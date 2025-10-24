@@ -6,10 +6,10 @@ from typing import TYPE_CHECKING, Any
 
 from obs import metrics
 
-from .state import RouteState
 
 if TYPE_CHECKING:  # pragma: no cover
     from .service import OpenRouterService
+    from .state import RouteState
 
 
 def enforce_budget_limits(service: OpenRouterService, state: RouteState) -> dict[str, Any] | None:

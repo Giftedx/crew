@@ -9,6 +9,7 @@ from security.net_guard import SecurityError
 from security.webhook_guard import verify_incoming
 from ultimate_discord_intelligence_bot.tenancy import current_tenant
 
+
 alert_router = APIRouter(prefix="/ops/alerts", tags=["alerts"])
 
 

@@ -9,6 +9,7 @@ from typing import Any
 
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -64,7 +65,7 @@ class GoldDatasetAnnotator:
         self.episodes_data = self._load_episode_data()
         self.annotators = ["annotator_1", "annotator_2", "annotator_3"]
 
-    def _load_episode_data(self) -> dict[str, Any]:
+    def _load_episode_data(self) -> StepResult:
         """Load episode data for annotation."""
         return {
             "h3_podcast_123": {
@@ -159,7 +160,7 @@ class GoldDatasetAnnotator:
             },
         }
 
-    def create_gold_annotations(self) -> list[GoldEpisodeAnnotation]:
+    def create_gold_annotations(self) -> StepResult:
         """Create gold standard annotations for all episodes."""
         gold_annotations = []
 
@@ -180,9 +181,7 @@ class GoldDatasetAnnotator:
 
         return gold_annotations
 
-    def _create_single_annotation(
-        self, episode_id: str, episode_info: dict[str, Any], annotator_id: str
-    ) -> GoldEpisodeAnnotation:
+    def _create_single_annotation(self, episode_id: str, episode_info: dict[str, Any], annotator_id: str) -> StepResult:
         """Create a single episode annotation."""
         # Generate realistic annotations based on episode content
         annotation = GoldEpisodeAnnotation(
@@ -216,7 +215,7 @@ class GoldDatasetAnnotator:
 
         return annotation
 
-    def _generate_transcript_segments(self, episode_id: str, annotator_id: str) -> list[dict[str, Any]]:
+    def _generate_transcript_segments(self, episode_id: str, annotator_id: str) -> StepResult:
         """Generate transcript segments for an episode."""
         # Mock transcript segments with realistic content
         base_segments = [
@@ -257,7 +256,7 @@ class GoldDatasetAnnotator:
 
         return base_segments
 
-    def _generate_speaker_segments(self, episode_id: str, annotator_id: str) -> list[dict[str, Any]]:
+    def _generate_speaker_segments(self, episode_id: str, annotator_id: str) -> StepResult:
         """Generate speaker segments for an episode."""
         base_segments = [
             {
@@ -287,7 +286,7 @@ class GoldDatasetAnnotator:
 
         return base_segments
 
-    def _generate_topics(self, episode_id: str, annotator_id: str) -> list[dict[str, Any]]:
+    def _generate_topics(self, episode_id: str, annotator_id: str) -> StepResult:
         """Generate topics for an episode."""
         base_topics = [
             {
@@ -321,7 +320,7 @@ class GoldDatasetAnnotator:
 
         return base_topics
 
-    def _generate_claims(self, episode_id: str, annotator_id: str) -> list[dict[str, Any]]:
+    def _generate_claims(self, episode_id: str, annotator_id: str) -> StepResult:
         """Generate claims for an episode."""
         base_claims = [
             {
@@ -353,7 +352,7 @@ class GoldDatasetAnnotator:
 
         return base_claims
 
-    def _generate_highlights(self, episode_id: str, annotator_id: str) -> list[dict[str, Any]]:
+    def _generate_highlights(self, episode_id: str, annotator_id: str) -> StepResult:
         """Generate highlights for an episode."""
         base_highlights = [
             {
@@ -393,7 +392,7 @@ class GoldDatasetAnnotator:
 
         return base_highlights
 
-    def _calculate_confidence_scores(self, annotation: GoldEpisodeAnnotation) -> dict[str, float]:
+    def _calculate_confidence_scores(self, annotation: GoldEpisodeAnnotation) -> StepResult:
         """Calculate confidence scores for annotation components."""
         scores = {}
 
@@ -423,7 +422,7 @@ class GoldDatasetAnnotator:
 
         return scores
 
-    def _calculate_inter_annotator_agreement(self, annotations: list[GoldEpisodeAnnotation]) -> InterAnnotatorAgreement:
+    def _calculate_inter_annotator_agreement(self, annotations: list[GoldEpisodeAnnotation]) -> StepResult:
         """Calculate Cohen's kappa for inter-annotator agreement."""
 
         # For simplicity, we'll calculate agreement on key categories
@@ -463,8 +462,10 @@ class GoldDatasetAnnotator:
         )
 
     def _select_gold_annotation(
-        self, annotations: list[GoldEpisodeAnnotation], agreement: InterAnnotatorAgreement
-    ) -> GoldEpisodeAnnotation:
+        self,
+        annotations: list[GoldEpisodeAnnotation],
+        agreement: InterAnnotatorAgreement,
+    ) -> StepResult:
         """Select the gold annotation from multiple annotator versions."""
 
         if agreement.cohens_kappa >= 0.70:
@@ -479,7 +480,9 @@ class GoldDatasetAnnotator:
             return annotations[0]  # Still return for now, but flag as needing review
 
     def save_gold_dataset(
-        self, annotations: list[GoldEpisodeAnnotation], output_path: str = "gold_dataset.json"
+        self,
+        annotations: list[GoldEpisodeAnnotation],
+        output_path: str = "gold_dataset.json",
     ) -> StepResult:
         """Save gold dataset to file."""
         try:
@@ -523,9 +526,9 @@ class GoldDatasetAnnotator:
             )
 
         except Exception as e:
-            return StepResult.fail(f"Failed to save gold dataset: {str(e)}")
+            return StepResult.fail(f"Failed to save gold dataset: {e!s}")
 
-    def load_gold_dataset(self, input_path: str = "gold_dataset.json") -> list[GoldEpisodeAnnotation]:
+    def load_gold_dataset(self, input_path: str = "gold_dataset.json") -> StepResult:
         """Load gold dataset from file."""
         try:
             with open(input_path, encoding="utf-8") as f:
@@ -556,7 +559,7 @@ class GoldDatasetAnnotator:
             return annotations
 
         except Exception as e:
-            logger.error(f"Failed to load gold dataset: {str(e)}")
+            logger.error(f"Failed to load gold dataset: {e!s}")
             return []
 
     def validate_gold_dataset(self, annotations: list[GoldEpisodeAnnotation]) -> StepResult:
@@ -609,13 +612,13 @@ class GoldDatasetAnnotator:
             )
 
         except Exception as e:
-            return StepResult.fail(f"Validation failed: {str(e)}")
+            return StepResult.fail(f"Validation failed: {e!s}")
 
-    def calculate_agreement_metrics(self) -> InterAnnotatorAgreement:
+    def calculate_agreement_metrics(self) -> StepResult:
         """Calculate inter-annotator agreement across all episodes."""
         # Create annotations for all episodes and all annotators
         all_annotations = []
-        for episode_id in self.episodes_data.keys():
+        for episode_id in self.episodes_data:
             for annotator_id in self.annotators:
                 episode_info = self.episodes_data[episode_id]
                 annotation = self._create_single_annotation(episode_id, episode_info, annotator_id)
@@ -626,7 +629,7 @@ class GoldDatasetAnnotator:
 
         return agreement
 
-    def generate_annotation_report(self) -> dict[str, Any]:
+    def generate_annotation_report(self) -> StepResult:
         """Generate comprehensive annotation report."""
         # Create gold annotations
         gold_annotations = self.create_gold_annotations()
@@ -643,8 +646,8 @@ class GoldDatasetAnnotator:
                 "total_episodes": len(gold_annotations),
                 "annotation_date": datetime.now().isoformat(),
                 "annotators": self.annotators,
-                "platforms": list(set(a.platform for a in gold_annotations)),
-                "creators": list(set(a.creator for a in gold_annotations)),
+                "platforms": list({a.platform for a in gold_annotations}),
+                "creators": list({a.creator for a in gold_annotations}),
             },
             "inter_annotator_agreement": {
                 "cohens_kappa": agreement.cohens_kappa,
@@ -675,4 +678,3 @@ class GoldDatasetAnnotator:
         }
 
         return report
-

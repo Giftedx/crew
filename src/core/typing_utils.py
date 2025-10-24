@@ -21,8 +21,12 @@ signature via ParamSpec/TypeVar inference.
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from typing import ParamSpec, TypeVar
+from typing import TYPE_CHECKING, ParamSpec, TypeVar
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
 
 P = ParamSpec("P")
 R = TypeVar("R")

@@ -28,6 +28,7 @@ from typing import Any, Literal
 
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
+
 logger = logging.getLogger(__name__)
 
 # Try to import OpenCV (optional dependency)
@@ -186,7 +187,7 @@ class VisualParsingService:
 
         except Exception as e:
             logger.error(f"Video analysis failed: {e}")
-            return StepResult.fail(f"Visual analysis failed: {str(e)}", status="retryable")
+            return StepResult.fail(f"Visual analysis failed: {e!s}", status="retryable")
 
     def extract_keyframes(
         self,
@@ -213,10 +214,7 @@ class VisualParsingService:
                 return StepResult.fail(f"Video file not found: {video_path}", status="bad_request")
 
             # Create output directory
-            if output_dir is None:
-                output_dir = Path(tempfile.mkdtemp()) / "keyframes"
-            else:
-                output_dir = Path(output_dir)
+            output_dir = Path(tempfile.mkdtemp()) / "keyframes" if output_dir is None else Path(output_dir)
 
             output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -268,7 +266,7 @@ class VisualParsingService:
 
         except Exception as e:
             logger.error(f"Keyframe extraction failed: {e}")
-            return StepResult.fail(f"Keyframe extraction failed: {str(e)}", status="retryable")
+            return StepResult.fail(f"Keyframe extraction failed: {e!s}", status="retryable")
 
     def perform_ocr_on_image(
         self,
@@ -328,7 +326,7 @@ class VisualParsingService:
 
         except Exception as e:
             logger.error(f"OCR failed: {e}")
-            return StepResult.fail(f"OCR failed: {str(e)}", status="retryable")
+            return StepResult.fail(f"OCR failed: {e!s}", status="retryable")
 
     def _select_model(self, model_alias: str) -> str:
         """Select actual model configuration from alias.
@@ -666,7 +664,7 @@ class VisualParsingService:
 
         except Exception as e:
             logger.error(f"Failed to get cache stats: {e}")
-            return StepResult.fail(f"Failed to get cache stats: {str(e)}")
+            return StepResult.fail(f"Failed to get cache stats: {e!s}")
 
 
 # Singleton instance

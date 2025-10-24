@@ -1,0 +1,1887 @@
+{
+  "test_matrices": [
+    {
+      "name": "fast-unit-tests",
+      "test_files": [
+        {
+          "path": "tests/config/test_agent_factory.py",
+          "name": "test_agent_factory",
+          "size_kb": 9.7587890625,
+          "estimated_duration": 9.87939453125,
+          "markers": [],
+          "dependencies": [
+            "file",
+            "discord"
+          ],
+          "complexity": "medium",
+          "category": "unit"
+        },
+        {
+          "path": "tests/config/test_config.py",
+          "name": "test_config",
+          "size_kb": 18.4619140625,
+          "estimated_duration": 2.84619140625,
+          "markers": [
+            "config"
+          ],
+          "dependencies": [
+            "discord"
+          ],
+          "complexity": "medium",
+          "category": "unit"
+        },
+        {
+          "path": "tests/pipelines/test_pipelines.py",
+          "name": "test_pipelines",
+          "size_kb": 18.67578125,
+          "estimated_duration": 2.867578125,
+          "markers": [
+            "pipelines"
+          ],
+          "dependencies": [
+            "discord"
+          ],
+          "complexity": "medium",
+          "category": "unit"
+        },
+        {
+          "path": "tests/media/test_media.py",
+          "name": "test_media",
+          "size_kb": 18.3740234375,
+          "estimated_duration": 2.83740234375,
+          "markers": [
+            "media"
+          ],
+          "dependencies": [
+            "file",
+            "discord"
+          ],
+          "complexity": "medium",
+          "category": "unit"
+        },
+        {
+          "path": "tests/fast/test_optimized.py",
+          "name": "test_optimized",
+          "size_kb": 9.787109375,
+          "estimated_duration": 59.361328125,
+          "markers": [
+            "fast"
+          ],
+          "dependencies": [
+            "file",
+            "discord",
+            "database"
+          ],
+          "complexity": "medium",
+          "category": "unit"
+        },
+        {
+          "path": "tests/fast/test_minimal.py",
+          "name": "test_minimal",
+          "size_kb": 9.1103515625,
+          "estimated_duration": 171.99316406250003,
+          "markers": [
+            "fast"
+          ],
+          "dependencies": [
+            "file",
+            "network",
+            "discord",
+            "database"
+          ],
+          "complexity": "medium",
+          "category": "unit"
+        },
+        {
+          "path": "tests/fast/test_fast.py",
+          "name": "test_fast",
+          "size_kb": 18.4921875,
+          "estimated_duration": 17.0953125,
+          "markers": [
+            "fast"
+          ],
+          "dependencies": [
+            "file",
+            "network",
+            "discord",
+            "database"
+          ],
+          "complexity": "medium",
+          "category": "unit"
+        },
+        {
+          "path": "tests/orchestrator/test_result_extractors.py",
+          "name": "test_result_extractors",
+          "size_kb": 21.1982421875,
+          "estimated_duration": 3.11982421875,
+          "markers": [],
+          "dependencies": [
+            "discord"
+          ],
+          "complexity": "medium",
+          "category": "unit"
+        },
+        {
+          "path": "tests/orchestrator/test_error_handlers.py",
+          "name": "test_error_handlers",
+          "size_kb": 6.427734375,
+          "estimated_duration": 1.6427734375,
+          "markers": [],
+          "dependencies": [
+            "file",
+            "discord"
+          ],
+          "complexity": "low",
+          "category": "unit"
+        },
+        {
+          "path": "tests/orchestrator/test_system_validators.py",
+          "name": "test_system_validators",
+          "size_kb": 11.0986328125,
+          "estimated_duration": 10.54931640625,
+          "markers": [],
+          "dependencies": [
+            "file",
+            "qdrant",
+            "discord",
+            "llm"
+          ],
+          "complexity": "medium",
+          "category": "unit"
+        },
+        {
+          "path": "tests/orchestrator/test_result_synthesizers_unit.py",
+          "name": "test_result_synthesizers_unit",
+          "size_kb": 17.939453125,
+          "estimated_duration": 27.939453125,
+          "markers": [
+            "asyncio"
+          ],
+          "dependencies": [
+            "discord"
+          ],
+          "complexity": "high",
+          "category": "unit"
+        },
+        {
+          "path": "tests/orchestrator/test_result_synthesizers.py",
+          "name": "test_result_synthesizers",
+          "size_kb": 1.828125,
+          "estimated_duration": 1.1828125,
+          "markers": [],
+          "dependencies": [
+            "file",
+            "discord"
+          ],
+          "complexity": "low",
+          "category": "unit"
+        },
+        {
+          "path": "tests/orchestrator/test_data_transformers.py",
+          "name": "test_data_transformers",
+          "size_kb": 9.677734375,
+          "estimated_duration": 1.9677734375,
+          "markers": [],
+          "dependencies": [
+            "discord"
+          ],
+          "complexity": "medium",
+          "category": "unit"
+        },
+        {
+          "path": "tests/orchestrator/test_pipeline_result_builders.py",
+          "name": "test_pipeline_result_builders",
+          "size_kb": 42.65625,
+          "estimated_duration": 26.328125,
+          "markers": [],
+          "dependencies": [
+            "file",
+            "discord"
+          ],
+          "complexity": "high",
+          "category": "unit"
+        },
+        {
+          "path": "tests/orchestrator/test_crew_builders_unit.py",
+          "name": "test_crew_builders_unit",
+          "size_kb": 25.0458984375,
+          "estimated_duration": 17.52294921875,
+          "markers": [],
+          "dependencies": [
+            "file",
+            "discord"
+          ],
+          "complexity": "medium",
+          "category": "unit"
+        },
+        {
+          "path": "tests/orchestrator/test_quality_assessors.py",
+          "name": "test_quality_assessors",
+          "size_kb": 6.7626953125,
+          "estimated_duration": 1.67626953125,
+          "markers": [],
+          "dependencies": [
+            "discord"
+          ],
+          "complexity": "medium",
+          "category": "unit"
+        },
+        {
+          "path": "tests/views/test_views.py",
+          "name": "test_views",
+          "size_kb": 18.376953125,
+          "estimated_duration": 2.8376953125,
+          "markers": [
+            "views"
+          ],
+          "dependencies": [
+            "discord"
+          ],
+          "complexity": "medium",
+          "category": "unit"
+        },
+        {
+          "path": "tests/tasks/test_tasks.py",
+          "name": "test_tasks",
+          "size_kb": 18.37109375,
+          "estimated_duration": 2.837109375,
+          "markers": [
+            "tasks"
+          ],
+          "dependencies": [
+            "discord"
+          ],
+          "complexity": "medium",
+          "category": "unit"
+        },
+        {
+          "path": "tests/unit/test_unit.py",
+          "name": "test_unit",
+          "size_kb": 18.3095703125,
+          "estimated_duration": 2.83095703125,
+          "markers": [
+            "unit"
+          ],
+          "dependencies": [
+            "discord"
+          ],
+          "complexity": "medium",
+          "category": "unit"
+        },
+        {
+          "path": "tests/deprecated/test_deprecated.py",
+          "name": "test_deprecated",
+          "size_kb": 18.673828125,
+          "estimated_duration": 2.8673828125,
+          "markers": [
+            "deprecated"
+          ],
+          "dependencies": [
+            "discord"
+          ],
+          "complexity": "medium",
+          "category": "unit"
+        },
+        {
+          "path": "tests/static/test_static.py",
+          "name": "test_static",
+          "size_kb": 18.4560546875,
+          "estimated_duration": 2.84560546875,
+          "markers": [
+            "static"
+          ],
+          "dependencies": [
+            "discord"
+          ],
+          "complexity": "medium",
+          "category": "unit"
+        },
+        {
+          "path": "tests/compliance/test_compliance.py",
+          "name": "test_compliance",
+          "size_kb": 18.640625,
+          "estimated_duration": 2.8640625,
+          "markers": [
+            "compliance"
+          ],
+          "dependencies": [
+            "discord"
+          ],
+          "complexity": "medium",
+          "category": "unit"
+        },
+        {
+          "path": "tests/configuration/test_feature_flag_audit.py",
+          "name": "test_feature_flag_audit",
+          "size_kb": 13.88671875,
+          "estimated_duration": 2.388671875,
+          "markers": [],
+          "dependencies": [
+            "file"
+          ],
+          "complexity": "medium",
+          "category": "unit"
+        },
+        {
+          "path": "tests/pipeline_components/test_step_middleware.py",
+          "name": "test_step_middleware",
+          "size_kb": 6.9326171875,
+          "estimated_duration": 3.3865234375,
+          "markers": [],
+          "dependencies": [
+            "discord"
+          ],
+          "complexity": "low",
+          "category": "unit"
+        },
+        {
+          "path": "tests/templates/test_templates.py",
+          "name": "test_templates",
+          "size_kb": 18.673828125,
+          "estimated_duration": 2.8673828125,
+          "markers": [
+            "templates"
+          ],
+          "dependencies": [
+            "discord"
+          ],
+          "complexity": "medium",
+          "category": "unit"
+        },
+        {
+          "path": "tests/core/test_distributed_rate_limiting.py",
+          "name": "test_distributed_rate_limiting",
+          "size_kb": 10.8310546875,
+          "estimated_duration": 2.08310546875,
+          "markers": [],
+          "dependencies": [
+            "network",
+            "redis",
+            "database"
+          ],
+          "complexity": "medium",
+          "category": "unit"
+        },
+        {
+          "path": "tests/plugins/test_goldens.py",
+          "name": "test_goldens",
+          "size_kb": 0.4150390625,
+          "estimated_duration": 1.04150390625,
+          "markers": [],
+          "dependencies": [
+            "file",
+            "discord"
+          ],
+          "complexity": "low",
+          "category": "unit"
+        },
+        {
+          "path": "tests/plugins/test_testkit_runner.py",
+          "name": "test_testkit_runner",
+          "size_kb": 0.8056640625,
+          "estimated_duration": 1.08056640625,
+          "markers": [],
+          "dependencies": [
+            "discord"
+          ],
+          "complexity": "low",
+          "category": "unit"
+        },
+        {
+          "path": "tests/workflows/test_workflows.py",
+          "name": "test_workflows",
+          "size_kb": 18.67578125,
+          "estimated_duration": 2.867578125,
+          "markers": [
+            "workflows"
+          ],
+          "dependencies": [
+            "discord"
+          ],
+          "complexity": "medium",
+          "category": "unit"
+        },
+        {
+          "path": "tests/creator_ops/test_basic.py",
+          "name": "test_basic",
+          "size_kb": 1.5,
+          "estimated_duration": 1.15,
+          "markers": [],
+          "dependencies": [
+            "file",
+            "discord"
+          ],
+          "complexity": "low",
+          "category": "unit"
+        },
+        {
+          "path": "tests/creator_ops/test_auth.py",
+          "name": "test_auth",
+          "size_kb": 15.1923828125,
+          "estimated_duration": 15.115429687499999,
+          "markers": [],
+          "dependencies": [
+            "network",
+            "discord",
+            "database"
+          ],
+          "complexity": "low",
+          "category": "unit"
+        },
+        {
+          "path": "tests/creator_ops/test_config.py",
+          "name": "test_config",
+          "size_kb": 13.841796875,
+          "estimated_duration": 23.841796875,
+          "markers": [],
+          "dependencies": [
+            "network",
+            "qdrant",
+            "discord",
+            "database"
+          ],
+          "complexity": "medium",
+          "category": "unit"
+        },
+        {
+          "path": "tests/creator_ops/test_models.py",
+          "name": "test_models",
+          "size_kb": 11.501953125,
+          "estimated_duration": 4.300390625,
+          "markers": [],
+          "dependencies": [
+            "file",
+            "discord",
+            "database"
+          ],
+          "complexity": "low",
+          "category": "unit"
+        },
+        {
+          "path": "tests/locale/test_locale.py",
+          "name": "test_locale",
+          "size_kb": 18.4541015625,
+          "estimated_duration": 2.84541015625,
+          "markers": [
+            "locale"
+          ],
+          "dependencies": [
+            "discord"
+          ],
+          "complexity": "medium",
+          "category": "unit"
+        },
+        {
+          "path": "tests/agents/test_agents.py",
+          "name": "test_agents",
+          "size_kb": 18.44921875,
+          "estimated_duration": 2.844921875,
+          "markers": [
+            "agents"
+          ],
+          "dependencies": [
+            "discord"
+          ],
+          "complexity": "medium",
+          "category": "unit"
+        },
+        {
+          "path": "tests/security/test_pii_detection.py",
+          "name": "test_pii_detection",
+          "size_kb": 5.775390625,
+          "estimated_duration": 1.5775390625,
+          "markers": [],
+          "dependencies": [
+            "discord"
+          ],
+          "complexity": "low",
+          "category": "unit"
+        },
+        {
+          "path": "tests/security/test_enhanced_pii_detection.py",
+          "name": "test_enhanced_pii_detection",
+          "size_kb": 14.4765625,
+          "estimated_duration": 2.44765625,
+          "markers": [],
+          "dependencies": [],
+          "complexity": "low",
+          "category": "unit"
+        },
+        {
+          "path": "tests/security/test_security.py",
+          "name": "test_security",
+          "size_kb": 18.7890625,
+          "estimated_duration": 2.87890625,
+          "markers": [
+            "security"
+          ],
+          "dependencies": [
+            "discord"
+          ],
+          "complexity": "medium",
+          "category": "unit"
+        },
+        {
+          "path": "tests/security/test_unified_system_security.py",
+          "name": "test_unified_system_security",
+          "size_kb": 25.2265625,
+          "estimated_duration": 300,
+          "markers": [],
+          "dependencies": [
+            "network",
+            "discord",
+            "redis",
+            "qdrant",
+            "database"
+          ],
+          "complexity": "high",
+          "category": "unit"
+        },
+        {
+          "path": "tests/security/test_tenant_isolation_audit.py",
+          "name": "test_tenant_isolation_audit",
+          "size_kb": 16.486328125,
+          "estimated_duration": 2.6486328125,
+          "markers": [],
+          "dependencies": [
+            "file",
+            "discord"
+          ],
+          "complexity": "medium",
+          "category": "unit"
+        },
+        {
+          "path": "tests/security/test_tenant_isolation.py",
+          "name": "test_tenant_isolation",
+          "size_kb": 7.697265625,
+          "estimated_duration": 8.8486328125,
+          "markers": [],
+          "dependencies": [
+            "time",
+            "discord"
+          ],
+          "complexity": "medium",
+          "category": "unit"
+        },
+        {
+          "path": "tests/security/test_rate_limiting.py",
+          "name": "test_rate_limiting",
+          "size_kb": 22.626953125,
+          "estimated_duration": 163.134765625,
+          "markers": [
+            "asyncio"
+          ],
+          "dependencies": [
+            "redis",
+            "discord",
+            "time",
+            "network"
+          ],
+          "complexity": "high",
+          "category": "unit"
+        },
+        {
+          "path": "tests/security/test_audit_logging.py",
+          "name": "test_audit_logging",
+          "size_kb": 24.31640625,
+          "estimated_duration": 17.158203125,
+          "markers": [],
+          "dependencies": [
+            "discord"
+          ],
+          "complexity": "high",
+          "category": "unit"
+        },
+        {
+          "path": "tests/models/test_models.py",
+          "name": "test_models",
+          "size_kb": 18.4423828125,
+          "estimated_duration": 2.84423828125,
+          "markers": [
+            "models"
+          ],
+          "dependencies": [
+            "discord"
+          ],
+          "complexity": "medium",
+          "category": "unit"
+        },
+        {
+          "path": "tests/load/test_unified_system_load.py",
+          "name": "test_unified_system_load",
+          "size_kb": 32.841796875,
+          "estimated_duration": 300,
+          "markers": [
+            "asyncio"
+          ],
+          "dependencies": [
+            "qdrant",
+            "redis",
+            "discord",
+            "network"
+          ],
+          "complexity": "high",
+          "category": "unit"
+        },
+        {
+          "path": "tests/lib/test_lib.py",
+          "name": "test_lib",
+          "size_kb": 18.2333984375,
+          "estimated_duration": 2.82333984375,
+          "markers": [
+            "lib"
+          ],
+          "dependencies": [
+            "discord"
+          ],
+          "complexity": "medium",
+          "category": "unit"
+        },
+        {
+          "path": "tests/tools/test_enhanced_analysis_tool.py",
+          "name": "test_enhanced_analysis_tool",
+          "size_kb": 11.7451171875,
+          "estimated_duration": 10.87255859375,
+          "markers": [],
+          "dependencies": [
+            "discord",
+            "network"
+          ],
+          "complexity": "medium",
+          "category": "unit"
+        },
+        {
+          "path": "tests/tools/test_tool_template.py",
+          "name": "test_tool_template",
+          "size_kb": 9.8720703125,
+          "estimated_duration": 5.961621093750001,
+          "markers": [
+            "parametrize"
+          ],
+          "dependencies": [
+            "file",
+            "discord",
+            "network"
+          ],
+          "complexity": "medium",
+          "category": "unit"
+        },
+        {
+          "path": "tests/tools/test_claim_verifier_tool.py",
+          "name": "test_claim_verifier_tool",
+          "size_kb": 17.224609375,
+          "estimated_duration": 2.7224609375,
+          "markers": [],
+          "dependencies": [
+            "discord",
+            "network"
+          ],
+          "complexity": "medium",
+          "category": "unit"
+        },
+        {
+          "path": "tests/tools/test_unified_memory_tool.py",
+          "name": "test_unified_memory_tool",
+          "size_kb": 16.9482421875,
+          "estimated_duration": 13.47412109375,
+          "markers": [],
+          "dependencies": [
+            "discord"
+          ],
+          "complexity": "medium",
+          "category": "unit"
+        },
+        {
+          "path": "tests/tools/test_content_quality_assessment_tool.py",
+          "name": "test_content_quality_assessment_tool",
+          "size_kb": 16.931640625,
+          "estimated_duration": 201.9873046875,
+          "markers": [
+            "integration",
+            "parametrize",
+            "unit",
+            "performance"
+          ],
+          "dependencies": [
+            "discord",
+            "network"
+          ],
+          "complexity": "high",
+          "category": "unit"
+        },
+        {
+          "path": "tests/tools/test_multi_platform_download_tool.py",
+          "name": "test_multi_platform_download_tool",
+          "size_kb": 15.7734375,
+          "estimated_duration": 38.66015625,
+          "markers": [],
+          "dependencies": [
+            "file",
+            "discord",
+            "network"
+          ],
+          "complexity": "medium",
+          "category": "unit"
+        },
+        {
+          "path": "tests/tools/test_tools.py",
+          "name": "test_tools",
+          "size_kb": 18.37890625,
+          "estimated_duration": 2.837890625,
+          "markers": [
+            "tools"
+          ],
+          "dependencies": [
+            "discord"
+          ],
+          "complexity": "medium",
+          "category": "unit"
+        },
+        {
+          "path": "tests/tools/test_error_handling.py",
+          "name": "test_error_handling",
+          "size_kb": 10.74609375,
+          "estimated_duration": 31.119140625,
+          "markers": [],
+          "dependencies": [
+            "time",
+            "discord",
+            "network"
+          ],
+          "complexity": "low",
+          "category": "unit"
+        },
+        {
+          "path": "tests/tools/test_base_tool.py",
+          "name": "test_base_tool",
+          "size_kb": 9.6123046875,
+          "estimated_duration": 88.25537109375,
+          "markers": [],
+          "dependencies": [
+            "discord",
+            "network"
+          ],
+          "complexity": "medium",
+          "category": "unit"
+        },
+        {
+          "path": "tests/services/test_prompt_engine.py",
+          "name": "test_prompt_engine",
+          "size_kb": 3.689453125,
+          "estimated_duration": 20.5341796875,
+          "markers": [],
+          "dependencies": [
+            "discord",
+            "llm"
+          ],
+          "complexity": "medium",
+          "category": "unit"
+        },
+        {
+          "path": "tests/services/test_memory_service.py",
+          "name": "test_memory_service",
+          "size_kb": 4.32421875,
+          "estimated_duration": 21.486328125,
+          "markers": [],
+          "dependencies": [
+            "qdrant",
+            "redis",
+            "discord"
+          ],
+          "complexity": "medium",
+          "category": "unit"
+        },
+        {
+          "path": "tests/services/test_openrouter_service.py",
+          "name": "test_openrouter_service",
+          "size_kb": 3.5,
+          "estimated_duration": 20.25,
+          "markers": [],
+          "dependencies": [
+            "discord",
+            "llm"
+          ],
+          "complexity": "medium",
+          "category": "unit"
+        },
+        {
+          "path": "tests/services/test_services.py",
+          "name": "test_services",
+          "size_kb": 18.6015625,
+          "estimated_duration": 2.86015625,
+          "markers": [
+            "services"
+          ],
+          "dependencies": [
+            "discord"
+          ],
+          "complexity": "medium",
+          "category": "unit"
+        },
+        {
+          "path": "tests/external/test_external.py",
+          "name": "test_external",
+          "size_kb": 18.6767578125,
+          "estimated_duration": 14.33837890625,
+          "markers": [
+            "external"
+          ],
+          "dependencies": [
+            "discord"
+          ],
+          "complexity": "medium",
+          "category": "unit"
+        },
+        {
+          "path": "tests/slow/test_slow.py",
+          "name": "test_slow",
+          "size_kb": 18.4833984375,
+          "estimated_duration": 17.090039062499997,
+          "markers": [
+            "slow"
+          ],
+          "dependencies": [
+            "network",
+            "discord",
+            "time",
+            "file",
+            "database"
+          ],
+          "complexity": "medium",
+          "category": "unit"
+        },
+        {
+          "path": "tests/orchestrator/modules/test_discord_helpers_unit.py",
+          "name": "test_discord_helpers_unit",
+          "size_kb": 12.0634765625,
+          "estimated_duration": 22.0634765625,
+          "markers": [],
+          "dependencies": [
+            "discord"
+          ],
+          "complexity": "medium",
+          "category": "unit"
+        },
+        {
+          "path": "tests/orchestrator/modules/test_quality_assessors_unit.py",
+          "name": "test_quality_assessors_unit",
+          "size_kb": 28.0458984375,
+          "estimated_duration": 3.80458984375,
+          "markers": [],
+          "dependencies": [
+            "discord"
+          ],
+          "complexity": "medium",
+          "category": "unit"
+        },
+        {
+          "path": "tests/orchestrator/modules/test_extractors_unit.py",
+          "name": "test_extractors_unit",
+          "size_kb": 19.1884765625,
+          "estimated_duration": 2.91884765625,
+          "markers": [],
+          "dependencies": [
+            "discord"
+          ],
+          "complexity": "low",
+          "category": "unit"
+        },
+        {
+          "path": "tests/orchestrator/modules/test_data_transformers_unit.py",
+          "name": "test_data_transformers_unit",
+          "size_kb": 25.078125,
+          "estimated_duration": 10.5234375,
+          "markers": [],
+          "dependencies": [
+            "file",
+            "discord",
+            "network"
+          ],
+          "complexity": "medium",
+          "category": "unit"
+        },
+        {
+          "path": "tests/orchestrator/modules/test_workflow_planners_unit.py",
+          "name": "test_workflow_planners_unit",
+          "size_kb": 22.8984375,
+          "estimated_duration": 300,
+          "markers": [],
+          "dependencies": [
+            "discord",
+            "network"
+          ],
+          "complexity": "high",
+          "category": "unit"
+        },
+        {
+          "path": "tests/orchestrator/modules/test_orchestrator_utilities_unit.py",
+          "name": "test_orchestrator_utilities_unit",
+          "size_kb": 18.619140625,
+          "estimated_duration": 28.619140625,
+          "markers": [
+            "asyncio"
+          ],
+          "dependencies": [
+            "discord"
+          ],
+          "complexity": "medium",
+          "category": "unit"
+        },
+        {
+          "path": "tests/orchestration/strategies/test_strategies_unit.py",
+          "name": "test_strategies_unit",
+          "size_kb": 7.529296875,
+          "estimated_duration": 3.505859375,
+          "markers": [
+            "asyncio",
+            "parametrize"
+          ],
+          "dependencies": [
+            "file",
+            "discord"
+          ],
+          "complexity": "medium",
+          "category": "unit"
+        },
+        {
+          "path": "tests/core/rl/test_advanced_config.py",
+          "name": "test_advanced_config",
+          "size_kb": 13.5673828125,
+          "estimated_duration": 35.35107421875,
+          "markers": [],
+          "dependencies": [
+            "discord",
+            "database"
+          ],
+          "complexity": "medium",
+          "category": "unit"
+        },
+        {
+          "path": "tests/core/rl/test_advanced_experiments.py",
+          "name": "test_advanced_experiments",
+          "size_kb": 12.9755859375,
+          "estimated_duration": 172.31689453125,
+          "markers": [],
+          "dependencies": [
+            "discord",
+            "database"
+          ],
+          "complexity": "high",
+          "category": "unit"
+        },
+        {
+          "path": "tests/core/rl/policies/test_advanced_bandits.py",
+          "name": "test_advanced_bandits",
+          "size_kb": 11.865234375,
+          "estimated_duration": 10.9326171875,
+          "markers": [],
+          "dependencies": [
+            "discord"
+          ],
+          "complexity": "medium",
+          "category": "unit"
+        },
+        {
+          "path": "tests/creator_ops/features/test_repurposing_studio.py",
+          "name": "test_repurposing_studio",
+          "size_kb": 20.986328125,
+          "estimated_duration": 300,
+          "markers": [],
+          "dependencies": [
+            "file",
+            "discord"
+          ],
+          "complexity": "high",
+          "category": "unit"
+        },
+        {
+          "path": "tests/creator_ops/features/test_live_clip_radar.py",
+          "name": "test_live_clip_radar",
+          "size_kb": 24.4697265625,
+          "estimated_duration": 6.8939453125,
+          "markers": [
+            "asyncio"
+          ],
+          "dependencies": [
+            "discord"
+          ],
+          "complexity": "medium",
+          "category": "unit"
+        },
+        {
+          "path": "tests/creator_ops/features/test_clip_radar.py",
+          "name": "test_clip_radar",
+          "size_kb": 18.41015625,
+          "estimated_duration": 142.05078125,
+          "markers": [],
+          "dependencies": [
+            "file",
+            "discord",
+            "network"
+          ],
+          "complexity": "high",
+          "category": "unit"
+        },
+        {
+          "path": "tests/creator_ops/features/test_episode_intelligence.py",
+          "name": "test_episode_intelligence",
+          "size_kb": 24.2333984375,
+          "estimated_duration": 6.8466796875,
+          "markers": [
+            "asyncio"
+          ],
+          "dependencies": [
+            "file",
+            "discord"
+          ],
+          "complexity": "medium",
+          "category": "unit"
+        },
+        {
+          "path": "tests/creator_ops/media/test_diarization.py",
+          "name": "test_diarization",
+          "size_kb": 13.5458984375,
+          "estimated_duration": 35.31884765625,
+          "markers": [],
+          "dependencies": [
+            "file",
+            "discord"
+          ],
+          "complexity": "medium",
+          "category": "unit"
+        },
+        {
+          "path": "tests/creator_ops/media/test_asr.py",
+          "name": "test_asr",
+          "size_kb": 17.9794921875,
+          "estimated_duration": 41.96923828125,
+          "markers": [],
+          "dependencies": [
+            "file",
+            "network",
+            "discord",
+            "database"
+          ],
+          "complexity": "medium",
+          "category": "unit"
+        },
+        {
+          "path": "tests/creator_ops/media/test_asr_minimal.py",
+          "name": "test_asr_minimal",
+          "size_kb": 8.21875,
+          "estimated_duration": 1.821875,
+          "markers": [],
+          "dependencies": [
+            "file",
+            "time",
+            "discord"
+          ],
+          "complexity": "low",
+          "category": "unit"
+        },
+        {
+          "path": "tests/creator_ops/media/test_diarization_minimal.py",
+          "name": "test_diarization_minimal",
+          "size_kb": 9.0869140625,
+          "estimated_duration": 1.90869140625,
+          "markers": [],
+          "dependencies": [
+            "file",
+            "discord"
+          ],
+          "complexity": "low",
+          "category": "unit"
+        },
+        {
+          "path": "tests/creator_ops/media/test_media_pipeline.py",
+          "name": "test_media_pipeline",
+          "size_kb": 18.064453125,
+          "estimated_duration": 14.0322265625,
+          "markers": [],
+          "dependencies": [
+            "discord"
+          ],
+          "complexity": "medium",
+          "category": "unit"
+        },
+        {
+          "path": "tests/creator_ops/chaos/test_outages.py",
+          "name": "test_outages",
+          "size_kb": 16.8125,
+          "estimated_duration": 300,
+          "markers": [],
+          "dependencies": [
+            "network",
+            "discord",
+            "time",
+            "file",
+            "database"
+          ],
+          "complexity": "high",
+          "category": "unit"
+        },
+        {
+          "path": "tests/creator_ops/utils/test_resilience.py",
+          "name": "test_resilience",
+          "size_kb": 23.318359375,
+          "estimated_duration": 33.318359375,
+          "markers": [
+            "asyncio"
+          ],
+          "dependencies": [
+            "file",
+            "time",
+            "discord",
+            "network"
+          ],
+          "complexity": "medium",
+          "category": "unit"
+        }
+      ],
+      "parallel_workers": 8,
+      "estimated_duration": 401.58924560546876,
+      "dependencies": [],
+      "priority": 1
+    },
+    {
+      "name": "integration-tests",
+      "test_files": [
+        {
+          "path": "tests/integration/test_content_pipeline_integration.py",
+          "name": "test_content_pipeline_integration",
+          "size_kb": 12.3291015625,
+          "estimated_duration": 300,
+          "markers": [
+            "asyncio"
+          ],
+          "dependencies": [
+            "file",
+            "discord"
+          ],
+          "complexity": "high",
+          "category": "integration"
+        },
+        {
+          "path": "tests/integration/test_routing_quality.py",
+          "name": "test_routing_quality",
+          "size_kb": 9.07421875,
+          "estimated_duration": 19.07421875,
+          "markers": [
+            "asyncio"
+          ],
+          "dependencies": [
+            "discord",
+            "llm"
+          ],
+          "complexity": "high",
+          "category": "integration"
+        },
+        {
+          "path": "tests/integration/test_discord_bot_integration.py",
+          "name": "test_discord_bot_integration",
+          "size_kb": 17.3564453125,
+          "estimated_duration": 300,
+          "markers": [
+            "asyncio"
+          ],
+          "dependencies": [
+            "file",
+            "discord",
+            "database"
+          ],
+          "complexity": "high",
+          "category": "integration"
+        },
+        {
+          "path": "tests/integration/test_end_to_end.py",
+          "name": "test_end_to_end",
+          "size_kb": 20.9375,
+          "estimated_duration": 232.03125,
+          "markers": [
+            "integration"
+          ],
+          "dependencies": [
+            "discord"
+          ],
+          "complexity": "high",
+          "category": "integration"
+        },
+        {
+          "path": "tests/integration/test_content_pipeline.py",
+          "name": "test_content_pipeline",
+          "size_kb": 5.2431640625,
+          "estimated_duration": 7.62158203125,
+          "markers": [],
+          "dependencies": [
+            "file",
+            "discord"
+          ],
+          "complexity": "medium",
+          "category": "integration"
+        },
+        {
+          "path": "tests/integration/test_memory_analysis_workflow.py",
+          "name": "test_memory_analysis_workflow",
+          "size_kb": 25.34765625,
+          "estimated_duration": 265.107421875,
+          "markers": [],
+          "dependencies": [
+            "file",
+            "discord"
+          ],
+          "complexity": "high",
+          "category": "integration"
+        },
+        {
+          "path": "tests/integration/test_orchestrator_workflows.py",
+          "name": "test_orchestrator_workflows",
+          "size_kb": 10.5556640625,
+          "estimated_duration": 300,
+          "markers": [
+            "asyncio"
+          ],
+          "dependencies": [
+            "discord"
+          ],
+          "complexity": "high",
+          "category": "integration"
+        },
+        {
+          "path": "tests/integration/test_memory_vector_storage_integration.py",
+          "name": "test_memory_vector_storage_integration",
+          "size_kb": 15.4423828125,
+          "estimated_duration": 300,
+          "markers": [
+            "asyncio"
+          ],
+          "dependencies": [
+            "qdrant",
+            "discord",
+            "network"
+          ],
+          "complexity": "high",
+          "category": "integration"
+        },
+        {
+          "path": "tests/integration/test_unified_system_integration.py",
+          "name": "test_unified_system_integration",
+          "size_kb": 23.00390625,
+          "estimated_duration": 300,
+          "markers": [
+            "asyncio"
+          ],
+          "dependencies": [
+            "qdrant",
+            "redis",
+            "discord"
+          ],
+          "complexity": "high",
+          "category": "integration"
+        },
+        {
+          "path": "tests/integration/test_integration.py",
+          "name": "test_integration",
+          "size_kb": 18.94140625,
+          "estimated_duration": 28.94140625,
+          "markers": [
+            "integration"
+          ],
+          "dependencies": [
+            "discord",
+            "database"
+          ],
+          "complexity": "medium",
+          "category": "integration"
+        },
+        {
+          "path": "tests/integration/test_content_processing_workflow.py",
+          "name": "test_content_processing_workflow",
+          "size_kb": 20.2890625,
+          "estimated_duration": 300,
+          "markers": [],
+          "dependencies": [
+            "file",
+            "discord",
+            "network"
+          ],
+          "complexity": "high",
+          "category": "integration"
+        },
+        {
+          "path": "tests/integration/test_end_to_end_workflows.py",
+          "name": "test_end_to_end_workflows",
+          "size_kb": 13.40234375,
+          "estimated_duration": 300,
+          "markers": [
+            "asyncio"
+          ],
+          "dependencies": [
+            "file",
+            "discord",
+            "llm"
+          ],
+          "complexity": "high",
+          "category": "integration"
+        },
+        {
+          "path": "tests/integration/test_discord_bot_workflow.py",
+          "name": "test_discord_bot_workflow",
+          "size_kb": 21.28125,
+          "estimated_duration": 300,
+          "markers": [],
+          "dependencies": [
+            "network",
+            "discord",
+            "database"
+          ],
+          "complexity": "high",
+          "category": "integration"
+        },
+        {
+          "path": "tests/integration/test_cache_hit_rate.py",
+          "name": "test_cache_hit_rate",
+          "size_kb": 7.236328125,
+          "estimated_duration": 17.236328125,
+          "markers": [
+            "asyncio"
+          ],
+          "dependencies": [
+            "discord"
+          ],
+          "complexity": "high",
+          "category": "integration"
+        },
+        {
+          "path": "tests/integration/test_e2e_pipeline_integration.py",
+          "name": "test_e2e_pipeline_integration",
+          "size_kb": 30.6103515625,
+          "estimated_duration": 300,
+          "markers": [
+            "asyncio"
+          ],
+          "dependencies": [
+            "discord"
+          ],
+          "complexity": "high",
+          "category": "integration"
+        },
+        {
+          "path": "tests/integration/test_crewai_agent_coordination.py",
+          "name": "test_crewai_agent_coordination",
+          "size_kb": 12.884765625,
+          "estimated_duration": 300,
+          "markers": [
+            "asyncio"
+          ],
+          "dependencies": [
+            "discord"
+          ],
+          "complexity": "high",
+          "category": "integration"
+        },
+        {
+          "path": "tests/integration/test_multi_platform_content_processing.py",
+          "name": "test_multi_platform_content_processing",
+          "size_kb": 25.39453125,
+          "estimated_duration": 35.39453125,
+          "markers": [
+            "asyncio"
+          ],
+          "dependencies": [
+            "discord"
+          ],
+          "complexity": "high",
+          "category": "integration"
+        },
+        {
+          "path": "tests/creator_ops/integrations/test_all_platforms.py",
+          "name": "test_all_platforms",
+          "size_kb": 34.0556640625,
+          "estimated_duration": 300,
+          "markers": [],
+          "dependencies": [
+            "file",
+            "discord",
+            "network"
+          ],
+          "complexity": "high",
+          "category": "integration"
+        },
+        {
+          "path": "tests/creator_ops/integrations/test_tiktok.py",
+          "name": "test_tiktok",
+          "size_kb": 12.60546875,
+          "estimated_duration": 11.302734375,
+          "markers": [],
+          "dependencies": [
+            "file",
+            "discord",
+            "network"
+          ],
+          "complexity": "medium",
+          "category": "integration"
+        },
+        {
+          "path": "tests/creator_ops/integrations/test_e2e.py",
+          "name": "test_e2e",
+          "size_kb": 46.494140625,
+          "estimated_duration": 300,
+          "markers": [
+            "asyncio"
+          ],
+          "dependencies": [
+            "file",
+            "discord"
+          ],
+          "complexity": "high",
+          "category": "integration"
+        },
+        {
+          "path": "tests/creator_ops/integrations/test_contracts.py",
+          "name": "test_contracts",
+          "size_kb": 55.373046875,
+          "estimated_duration": 32.6865234375,
+          "markers": [],
+          "dependencies": [
+            "file",
+            "discord"
+          ],
+          "complexity": "high",
+          "category": "integration"
+        },
+        {
+          "path": "tests/creator_ops/integrations/test_twitch.py",
+          "name": "test_twitch",
+          "size_kb": 22.6357421875,
+          "estimated_duration": 244.76806640625,
+          "markers": [],
+          "dependencies": [
+            "file",
+            "time",
+            "discord",
+            "network"
+          ],
+          "complexity": "high",
+          "category": "integration"
+        },
+        {
+          "path": "tests/creator_ops/integrations/test_instagram.py",
+          "name": "test_instagram",
+          "size_kb": 30.3212890625,
+          "estimated_duration": 20.16064453125,
+          "markers": [],
+          "dependencies": [
+            "file",
+            "discord",
+            "network"
+          ],
+          "complexity": "high",
+          "category": "integration"
+        },
+        {
+          "path": "tests/creator_ops/integrations/test_youtube.py",
+          "name": "test_youtube",
+          "size_kb": 17.7001953125,
+          "estimated_duration": 207.75146484375,
+          "markers": [],
+          "dependencies": [
+            "file",
+            "time",
+            "discord",
+            "network"
+          ],
+          "complexity": "medium",
+          "category": "integration"
+        },
+        {
+          "path": "tests/creator_ops/integrations/test_x.py",
+          "name": "test_x",
+          "size_kb": 51.2783203125,
+          "estimated_duration": 30.63916015625,
+          "markers": [],
+          "dependencies": [
+            "file",
+            "discord",
+            "network"
+          ],
+          "complexity": "high",
+          "category": "integration"
+        },
+        {
+          "path": "tests/creator_ops/integration/test_e2e.py",
+          "name": "test_e2e",
+          "size_kb": 23.6162109375,
+          "estimated_duration": 300,
+          "markers": [],
+          "dependencies": [
+            "file",
+            "discord",
+            "network"
+          ],
+          "complexity": "high",
+          "category": "integration"
+        }
+      ],
+      "parallel_workers": 1,
+      "estimated_duration": 5052.71533203125,
+      "dependencies": [
+        "database",
+        "redis",
+        "qdrant"
+      ],
+      "priority": 2
+    },
+    {
+      "name": "e2e-tests",
+      "test_files": [
+        {
+          "path": "tests/e2e/test_error_scenarios.py",
+          "name": "test_error_scenarios",
+          "size_kb": 29.5185546875,
+          "estimated_duration": 23.711132812499997,
+          "markers": [
+            "asyncio"
+          ],
+          "dependencies": [
+            "file",
+            "discord",
+            "network"
+          ],
+          "complexity": "medium",
+          "category": "e2e"
+        },
+        {
+          "path": "tests/e2e/test_complete_discord_workflow.py",
+          "name": "test_complete_discord_workflow",
+          "size_kb": 36.314453125,
+          "estimated_duration": 300,
+          "markers": [
+            "asyncio"
+          ],
+          "dependencies": [
+            "discord",
+            "network"
+          ],
+          "complexity": "high",
+          "category": "e2e"
+        },
+        {
+          "path": "tests/e2e/test_e2e.py",
+          "name": "test_e2e",
+          "size_kb": 18.79296875,
+          "estimated_duration": 143.96484375,
+          "markers": [
+            "e2e"
+          ],
+          "dependencies": [
+            "discord"
+          ],
+          "complexity": "high",
+          "category": "e2e"
+        },
+        {
+          "path": "tests/e2e/test_real_world_scenarios.py",
+          "name": "test_real_world_scenarios",
+          "size_kb": 44.689453125,
+          "estimated_duration": 32.813671875,
+          "markers": [
+            "asyncio"
+          ],
+          "dependencies": [
+            "discord",
+            "network"
+          ],
+          "complexity": "medium",
+          "category": "e2e"
+        }
+      ],
+      "parallel_workers": 1,
+      "estimated_duration": 500.4896484375,
+      "dependencies": [
+        "database",
+        "redis",
+        "qdrant",
+        "discord",
+        "llm"
+      ],
+      "priority": 3
+    },
+    {
+      "name": "performance-tests",
+      "test_files": [
+        {
+          "path": "tests/benchmarks/test_autointel_performance.py",
+          "name": "test_autointel_performance",
+          "size_kb": 27.400390625,
+          "estimated_duration": 300,
+          "markers": [
+            "xfail",
+            "slow",
+            "asyncio",
+            "skipif"
+          ],
+          "dependencies": [
+            "file",
+            "discord"
+          ],
+          "complexity": "high",
+          "category": "performance"
+        },
+        {
+          "path": "tests/benchmarks/test_pipeline_performance.py",
+          "name": "test_pipeline_performance",
+          "size_kb": 24.5009765625,
+          "estimated_duration": 103.5029296875,
+          "markers": [
+            "benchmark",
+            "asyncio"
+          ],
+          "dependencies": [
+            "discord",
+            "network"
+          ],
+          "complexity": "high",
+          "category": "performance"
+        },
+        {
+          "path": "tests/benchmarks/test_memory_performance.py",
+          "name": "test_memory_performance",
+          "size_kb": 19.0380859375,
+          "estimated_duration": 87.1142578125,
+          "markers": [
+            "benchmark",
+            "asyncio"
+          ],
+          "dependencies": [
+            "discord"
+          ],
+          "complexity": "high",
+          "category": "performance"
+        },
+        {
+          "path": "tests/benchmarks/test_agent_routing_performance.py",
+          "name": "test_agent_routing_performance",
+          "size_kb": 21.189453125,
+          "estimated_duration": 300,
+          "markers": [
+            "benchmark",
+            "asyncio"
+          ],
+          "dependencies": [
+            "time",
+            "discord",
+            "llm",
+            "network"
+          ],
+          "complexity": "high",
+          "category": "performance"
+        },
+        {
+          "path": "tests/performance/test_performance.py",
+          "name": "test_performance",
+          "size_kb": 19.06640625,
+          "estimated_duration": 261.59765625,
+          "markers": [
+            "performance"
+          ],
+          "dependencies": [
+            "file",
+            "network",
+            "discord",
+            "database"
+          ],
+          "complexity": "medium",
+          "category": "performance"
+        },
+        {
+          "path": "tests/performance/test_performance_integration.py",
+          "name": "test_performance_integration",
+          "size_kb": 27.748046875,
+          "estimated_duration": 300,
+          "markers": [],
+          "dependencies": [
+            "file",
+            "discord",
+            "network"
+          ],
+          "complexity": "high",
+          "category": "performance"
+        },
+        {
+          "path": "tests/performance/test_benchmarks.py",
+          "name": "test_benchmarks",
+          "size_kb": 7.611328125,
+          "estimated_duration": 264.169921875,
+          "markers": [],
+          "dependencies": [
+            "time",
+            "discord",
+            "database"
+          ],
+          "complexity": "medium",
+          "category": "performance"
+        },
+        {
+          "path": "tests/performance/test_performance_regression.py",
+          "name": "test_performance_regression",
+          "size_kb": 25.1875,
+          "estimated_duration": 52.78125,
+          "markers": [],
+          "dependencies": [
+            "file",
+            "discord"
+          ],
+          "complexity": "high",
+          "category": "performance"
+        },
+        {
+          "path": "tests/performance/test_performance_monitoring.py",
+          "name": "test_performance_monitoring",
+          "size_kb": 26.42578125,
+          "estimated_duration": 163.916015625,
+          "markers": [],
+          "dependencies": [
+            "file",
+            "discord",
+            "network"
+          ],
+          "complexity": "high",
+          "category": "performance"
+        },
+        {
+          "path": "tests/performance/test_caching.py",
+          "name": "test_caching",
+          "size_kb": 11.283203125,
+          "estimated_duration": 53.2080078125,
+          "markers": [],
+          "dependencies": [
+            "file",
+            "redis",
+            "discord",
+            "time"
+          ],
+          "complexity": "medium",
+          "category": "performance"
+        },
+        {
+          "path": "tests/performance/test_performance_baseline.py",
+          "name": "test_performance_baseline",
+          "size_kb": 20.763671875,
+          "estimated_duration": 46.1455078125,
+          "markers": [],
+          "dependencies": [
+            "file",
+            "discord"
+          ],
+          "complexity": "high",
+          "category": "performance"
+        },
+        {
+          "path": "tests/performance/test_performance_dashboard.py",
+          "name": "test_performance_dashboard",
+          "size_kb": 26.7919921875,
+          "estimated_duration": 165.56396484375,
+          "markers": [],
+          "dependencies": [
+            "file",
+            "discord",
+            "network"
+          ],
+          "complexity": "high",
+          "category": "performance"
+        },
+        {
+          "path": "tests/performance/test_performance_stress.py",
+          "name": "test_performance_stress",
+          "size_kb": 24.546875,
+          "estimated_duration": 300,
+          "markers": [],
+          "dependencies": [
+            "file",
+            "network",
+            "discord",
+            "database"
+          ],
+          "complexity": "high",
+          "category": "performance"
+        },
+        {
+          "path": "tests/performance/test_performance_optimization.py",
+          "name": "test_performance_optimization",
+          "size_kb": 24.2783203125,
+          "estimated_duration": 300,
+          "markers": [],
+          "dependencies": [
+            "file",
+            "network",
+            "discord",
+            "database"
+          ],
+          "complexity": "high",
+          "category": "performance"
+        },
+        {
+          "path": "tests/performance/test_performance_benchmarks.py",
+          "name": "test_performance_benchmarks",
+          "size_kb": 19.740234375,
+          "estimated_duration": 300,
+          "markers": [],
+          "dependencies": [
+            "file",
+            "time",
+            "discord",
+            "database"
+          ],
+          "complexity": "high",
+          "category": "performance"
+        },
+        {
+          "path": "tests/e2e/test_performance_stress.py",
+          "name": "test_performance_stress",
+          "size_kb": 29.1611328125,
+          "estimated_duration": 300,
+          "markers": [
+            "asyncio"
+          ],
+          "dependencies": [
+            "file",
+            "time",
+            "discord",
+            "network"
+          ],
+          "complexity": "high",
+          "category": "performance"
+        }
+      ],
+      "parallel_workers": 4,
+      "estimated_duration": 824.4998779296875,
+      "dependencies": [
+        "database",
+        "redis",
+        "qdrant"
+      ],
+      "priority": 4
+    }
+  ],
+  "execution_strategy": {
+    "parallel_matrices": [
+      "fast-unit-tests",
+      "performance-tests"
+    ],
+    "sequential_matrices": [
+      "integration-tests",
+      "e2e-tests"
+    ],
+    "max_parallel_workers": 8,
+    "timeout_per_matrix": 1800,
+    "retry_failed_tests": true,
+    "retry_count": 2
+  },
+  "optimization_settings": {
+    "use_pytest_xdist": true,
+    "use_pytest_timeout": true,
+    "use_pytest_mock": true,
+    "cache_test_results": true,
+    "skip_slow_tests_on_fast_ci": true
+  }
+}

@@ -3,16 +3,16 @@ from __future__ import annotations
 import json
 import logging
 import time
-from collections.abc import AsyncGenerator
 from dataclasses import dataclass
-from typing import Any, TypeVar, get_args, get_origin
+from typing import TYPE_CHECKING, Any, TypeVar, get_args, get_origin
 
 from pydantic import BaseModel, ValidationError
 from pydantic_core import PydanticUndefined
 
 from obs import metrics
-from ultimate_discord_intelligence_bot.services.openrouter_service import OpenRouterService
-from ultimate_discord_intelligence_bot.services.request_budget import current_request_tracker
+from ultimate_discord_intelligence_bot.services.request_budget import (
+    current_request_tracker,
+)
 
 from .cache import CacheKeyGenerator, ResponseCache
 from .recovery import EnhancedErrorRecovery
@@ -21,6 +21,15 @@ from .streaming import (
     StreamingResponse,
     StreamingStructuredRequest,
 )
+
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncGenerator
+
+    from ultimate_discord_intelligence_bot.services.openrouter_service import (
+        OpenRouterService,
+    )
+
 
 logger = logging.getLogger(__name__)
 
@@ -100,12 +109,20 @@ class StructuredLLMService:
         cache_key = CacheKeyGenerator.generate_key(request)
         cached_result = self.cache.get(cache_key)
         if cached_result is not None:
-            cache_labels = {**metrics.label_ctx(), "task": request.task_type, "method": "cache"}
+            cache_labels = {
+                **metrics.label_ctx(),
+                "task": request.task_type,
+                "method": "cache",
+            }
             metrics.STRUCTURED_LLM_REQUESTS.labels(**cache_labels).inc()
             metrics.STRUCTURED_LLM_CACHE_HITS.labels(**cache_labels).inc()
             return cached_result
 
-        cache_labels = {**metrics.label_ctx(), "task": request.task_type, "method": "cache"}
+        cache_labels = {
+            **metrics.label_ctx(),
+            "task": request.task_type,
+            "method": "cache",
+        }
         metrics.STRUCTURED_LLM_CACHE_MISSES.labels(**cache_labels).inc()
 
         if not self.error_recovery.should_attempt_request(request.model, None):
@@ -149,7 +166,7 @@ class StructuredLLMService:
             error_type = type(e).__name__.lower()
             metrics.STRUCTURED_LLM_ERRORS.labels(**labels, error_type=error_type).inc()
             metrics.STRUCTURED_LLM_LATENCY.labels(**labels).observe((time.time() - start_time) * 1000)
-            return {"status": "error", "error": f"Unexpected error: {str(e)}"}
+            return {"status": "error", "error": f"Unexpected error: {e!s}"}
 
     async def route_structured_streaming(
         self, request: StreamingStructuredRequest
@@ -161,15 +178,26 @@ class StructuredLLMService:
         cache_key = CacheKeyGenerator.generate_key(request)
         cached_result = self.cache.get(cache_key)
         if cached_result is not None:
-            cache_labels = {**metrics.label_ctx(), "task": request.task_type, "method": "cache"}
+            cache_labels = {
+                **metrics.label_ctx(),
+                "task": request.task_type,
+                "method": "cache",
+            }
             metrics.STRUCTURED_LLM_CACHE_HITS.labels(**cache_labels).inc()
             progress_tracker.complete_operation("Retrieved from cache")
             yield StreamingResponse(
-                partial_result=cached_result, is_complete=True, progress_percent=100.0, raw_chunks=[]
+                partial_result=cached_result,
+                is_complete=True,
+                progress_percent=100.0,
+                raw_chunks=[],
             )
             return
 
-        cache_labels = {**metrics.label_ctx(), "task": request.task_type, "method": "cache"}
+        cache_labels = {
+            **metrics.label_ctx(),
+            "task": request.task_type,
+            "method": "cache",
+        }
         metrics.STRUCTURED_LLM_CACHE_MISSES.labels(**cache_labels).inc()
 
         if not self.error_recovery.should_attempt_request(request.model, None):
@@ -198,8 +226,13 @@ class StructuredLLMService:
             self.error_recovery.record_failure(request.model, None)
             error_type = type(e).__name__.lower()
             metrics.STRUCTURED_LLM_ERRORS.labels(**labels, error_type=error_type).inc()
-            progress_tracker.error_operation(f"Unexpected error: {str(e)}")
-            yield StreamingResponse(partial_result=None, is_complete=True, progress_percent=100.0, error=str(e))
+            progress_tracker.error_operation(f"Unexpected error: {e!s}")
+            yield StreamingResponse(
+                partial_result=None,
+                is_complete=True,
+                progress_percent=100.0,
+                error=str(e),
+            )
 
     def _is_structured_model_compatible(self, model: str | None) -> bool:
         if not model:
@@ -223,7 +256,11 @@ class StructuredLLMService:
             selected_model = request.model or self.openrouter._choose_model_from_map(
                 request.task_type, self.openrouter.models_map
             )
-            usage_labels = {**metrics.label_ctx(), "task": request.task_type, "model": selected_model}
+            usage_labels = {
+                **metrics.label_ctx(),
+                "task": request.task_type,
+                "model": selected_model,
+            }
             metrics.STRUCTURED_LLM_INSTRUCTOR_USAGE.labels(**usage_labels).inc()
             response = self.instructor_client.chat.completions.create(
                 model=selected_model,
@@ -239,7 +276,9 @@ class StructuredLLMService:
                     try:
                         tracker.charge(cost, f"structured_{request.task_type}")
                         metrics.LLM_ESTIMATED_COST.labels(
-                            **metrics.label_ctx(), model=selected_model, provider="instructor"
+                            **metrics.label_ctx(),
+                            model=selected_model,
+                            provider="instructor",
                         ).observe(cost)
                     except Exception:
                         pass
@@ -291,7 +330,7 @@ class StructuredLLMService:
                     raw_chunks=[],
                 )
         except Exception as e:
-            progress_tracker.error_operation(f"Instructor streaming failed: {str(e)}")
+            progress_tracker.error_operation(f"Instructor streaming failed: {e!s}")
             async for resp in self._route_with_fallback_streaming(request, progress_tracker):
                 yield resp
 
@@ -332,12 +371,21 @@ class StructuredLLMService:
                     raw_chunks=[],
                 )
         except Exception as e:
-            progress_tracker.error_operation(f"Streaming failed: {str(e)}")
-            yield StreamingResponse(partial_result=None, is_complete=True, progress_percent=100.0, error=str(e))
+            progress_tracker.error_operation(f"Streaming failed: {e!s}")
+            yield StreamingResponse(
+                partial_result=None,
+                is_complete=True,
+                progress_percent=100.0,
+                error=str(e),
+            )
 
     def _route_with_fallback_parsing(self, request: StructuredRequest) -> BaseModel | dict[str, Any]:
         selected_model = request.model or "auto-selected"
-        fallback_labels = {**metrics.label_ctx(), "task": request.task_type, "model": selected_model}
+        fallback_labels = {
+            **metrics.label_ctx(),
+            "task": request.task_type,
+            "model": selected_model,
+        }
         metrics.STRUCTURED_LLM_FALLBACK_USAGE.labels(**fallback_labels).inc()
         structured_prompt = self._enhance_prompt_for_json(request.prompt, request.response_model)
         for attempt in range(request.max_retries):
@@ -369,10 +417,15 @@ class StructuredLLMService:
                         tracker = current_request_tracker()
                         if tracker:
                             try:
-                                tracker.charge(estimated_structured_cost, f"structured_{request.task_type}")
+                                tracker.charge(
+                                    estimated_structured_cost,
+                                    f"structured_{request.task_type}",
+                                )
                                 provider_family = self._extract_provider_family(response)
                                 metrics.LLM_ESTIMATED_COST.labels(
-                                    **metrics.label_ctx(), model=selected_model, provider=provider_family
+                                    **metrics.label_ctx(),
+                                    model=selected_model,
+                                    provider=provider_family,
                                 ).observe(estimated_structured_cost)
                             except Exception:
                                 pass
@@ -386,7 +439,11 @@ class StructuredLLMService:
                 if error_response is None:
                     continue
                 return error_response
-        return {"status": "error", "error": "Failed to generate structured output", "attempts": request.max_retries}
+        return {
+            "status": "error",
+            "error": "Failed to generate structured output",
+            "attempts": request.max_retries,
+        }
 
     def _handle_response_error(
         self, response: dict[str, Any], request: StructuredRequest, attempt: int
@@ -407,11 +464,19 @@ class StructuredLLMService:
         return self._enhance_prompt_with_example(structured_prompt, request.response_model)
 
     def _handle_exception_error(
-        self, e: Exception, request: StructuredRequest, attempt: int, response: dict[str, Any] | None
+        self,
+        e: Exception,
+        request: StructuredRequest,
+        attempt: int,
+        response: dict[str, Any] | None,
     ) -> dict[str, Any] | None:
         error_category = self.error_recovery.categorize_error(e)
         self.error_recovery.record_failure(request.model, None)
-        if attempt < request.max_retries - 1 and error_category in ["rate_limit", "timeout", "parsing"]:
+        if attempt < request.max_retries - 1 and error_category in [
+            "rate_limit",
+            "timeout",
+            "parsing",
+        ]:
             backoff_delay = self.error_recovery.get_backoff_delay(attempt)
             time.sleep(backoff_delay)
             return None

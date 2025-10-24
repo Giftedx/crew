@@ -11,11 +11,14 @@ from __future__ import annotations
 
 import os
 from datetime import timedelta
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from core.time import default_utc_now
 from ingest.backfill import BackfillPlan, enqueue_backfill
-from scheduler.priority_queue import PriorityQueue
+
+
+if TYPE_CHECKING:
+    from scheduler.priority_queue import PriorityQueue
 
 
 def _is_youtube(platform: str | None) -> bool:
@@ -53,7 +56,11 @@ def trigger_auto_follow(
     platform = str(download_result.get("platform", ""))
     uploader = str(download_result.get("uploader", "")).strip()
     if not uploader or not _is_youtube(platform):
-        return {"enabled": True, "enqueued": 0, "note": "unsupported platform or missing uploader"}
+        return {
+            "enabled": True,
+            "enqueued": 0,
+            "note": "unsupported platform or missing uploader",
+        }
 
     # Compute 12-month boundary
     since = default_utc_now() - timedelta(days=365)

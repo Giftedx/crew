@@ -8,7 +8,6 @@ import secrets
 import time
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set
 
 import bcrypt
 import jwt
@@ -17,6 +16,7 @@ from ultimate_discord_intelligence_bot.settings import (
     ENABLE_ENTERPRISE_TENANT_MANAGEMENT,
 )
 from ultimate_discord_intelligence_bot.step_result import StepResult
+
 
 log = logging.getLogger(__name__)
 
@@ -82,17 +82,17 @@ class User:
     username: str
     full_name: str
     tenant_id: str
-    roles: Set[UserRole] = field(default_factory=set)
-    permissions: Set[Permission] = field(default_factory=set)
+    roles: set[UserRole] = field(default_factory=set)
+    permissions: set[Permission] = field(default_factory=set)
     auth_provider: AuthProvider = AuthProvider.LOCAL
-    external_id: Optional[str] = None  # For SSO providers
+    external_id: str | None = None  # For SSO providers
     is_active: bool = True
     is_verified: bool = False
     created_at: float = field(default_factory=time.time)
-    last_login: Optional[float] = None
-    password_hash: Optional[str] = None  # Only for local auth
+    last_login: float | None = None
+    password_hash: str | None = None  # Only for local auth
     mfa_enabled: bool = False
-    mfa_secret: Optional[str] = None
+    mfa_secret: str | None = None
 
 
 @dataclass
@@ -105,9 +105,9 @@ class APIKey:
     tenant_id: str
     name: str
     description: str
-    permissions: Set[Permission] = field(default_factory=set)
-    expires_at: Optional[float] = None
-    last_used: Optional[float] = None
+    permissions: set[Permission] = field(default_factory=set)
+    expires_at: float | None = None
+    last_used: float | None = None
     usage_count: int = 0
     is_active: bool = True
     created_at: float = field(default_factory=time.time)
@@ -135,10 +135,10 @@ class EnterpriseAuthService:
         """Initialize enterprise auth service."""
         self.enabled = ENABLE_ENTERPRISE_TENANT_MANAGEMENT
         self.jwt_secret = jwt_secret
-        self.users: Dict[str, User] = {}
-        self.api_keys: Dict[str, APIKey] = {}
-        self.sessions: Dict[str, Session] = {}
-        self.role_permissions: Dict[UserRole, Set[Permission]] = {}
+        self.users: dict[str, User] = {}
+        self.api_keys: dict[str, APIKey] = {}
+        self.sessions: dict[str, Session] = {}
+        self.role_permissions: dict[UserRole, set[Permission]] = {}
 
         if self.enabled:
             log.info("Enterprise Auth Service initialized")
@@ -146,7 +146,7 @@ class EnterpriseAuthService:
         else:
             log.info("Enterprise Auth Service disabled via feature flag")
 
-    def _initialize_default_permissions(self) -> None:
+    def _initialize_default_permissions(self) -> StepResult:
         """Initialize default role-permission mappings."""
         self.role_permissions = {
             UserRole.SUPER_ADMIN: {
@@ -204,10 +204,10 @@ class EnterpriseAuthService:
         username: str,
         full_name: str,
         tenant_id: str,
-        password: Optional[str] = None,
-        roles: Optional[Set[UserRole]] = None,
+        password: str | None = None,
+        roles: set[UserRole] | None = None,
         auth_provider: AuthProvider = AuthProvider.LOCAL,
-        external_id: Optional[str] = None,
+        external_id: str | None = None,
     ) -> StepResult:
         """Create a new user."""
         if not self.enabled:
@@ -221,13 +221,8 @@ class EnterpriseAuthService:
                 return StepResult.fail("Email, username, and tenant_id are required")
 
             # Check if user already exists
-            if any(
-                user.email == email or user.username == username
-                for user in self.users.values()
-            ):
-                return StepResult.fail(
-                    "User with this email or username already exists"
-                )
+            if any(user.email == email or user.username == username for user in self.users.values()):
+                return StepResult.fail("User with this email or username already exists")
 
             # Set default roles if not provided
             if roles is None:
@@ -273,16 +268,16 @@ class EnterpriseAuthService:
             log.error(f"Failed to create user: {e}")
             return StepResult.fail(f"Failed to create user: {e}")
 
-    def _hash_password(self, password: str) -> str:
+    def _hash_password(self, password: str) -> StepResult:
         """Hash password using bcrypt."""
         salt = bcrypt.gensalt()
         return bcrypt.hashpw(password.encode("utf-8"), salt).decode("utf-8")
 
-    def _verify_password(self, password: str, password_hash: str) -> bool:
+    def _verify_password(self, password: str, password_hash: str) -> StepResult:
         """Verify password against hash."""
         return bcrypt.checkpw(password.encode("utf-8"), password_hash.encode("utf-8"))
 
-    def _get_permissions_for_roles(self, roles: Set[UserRole]) -> Set[Permission]:
+    def _get_permissions_for_roles(self, roles: set[UserRole]) -> StepResult:
         """Get all permissions for given roles."""
         permissions = set()
         for role in roles:
@@ -290,9 +285,7 @@ class EnterpriseAuthService:
                 permissions.update(self.role_permissions[role])
         return permissions
 
-    def authenticate_user(
-        self, email: str, password: str, tenant_id: str
-    ) -> StepResult:
+    def authenticate_user(self, email: str, password: str, tenant_id: str) -> StepResult:
         """Authenticate user with email and password."""
         if not self.enabled:
             return StepResult.fail("Enterprise auth service disabled")
@@ -301,11 +294,7 @@ class EnterpriseAuthService:
             # Find user by email and tenant
             user = None
             for u in self.users.values():
-                if (
-                    u.email == email
-                    and u.tenant_id == tenant_id
-                    and u.auth_provider == AuthProvider.LOCAL
-                ):
+                if u.email == email and u.tenant_id == tenant_id and u.auth_provider == AuthProvider.LOCAL:
                     user = u
                     break
 
@@ -350,7 +339,7 @@ class EnterpriseAuthService:
             log.error(f"Authentication failed: {e}")
             return StepResult.fail(f"Authentication failed: {e}")
 
-    def _create_session(self, user: User) -> Session:
+    def _create_session(self, user: User) -> StepResult:
         """Create a new session for user."""
         session_id = f"session_{int(time.time() * 1000)}_{secrets.token_hex(8)}"
         session = Session(
@@ -361,7 +350,7 @@ class EnterpriseAuthService:
         self.sessions[session_id] = session
         return session
 
-    def _generate_jwt_token(self, user: User, session: Session) -> str:
+    def _generate_jwt_token(self, user: User, session: Session) -> StepResult:
         """Generate JWT token for user session."""
         payload = {
             "user_id": user.user_id,
@@ -425,8 +414,8 @@ class EnterpriseAuthService:
         user_id: str,
         name: str,
         description: str,
-        permissions: Optional[Set[Permission]] = None,
-        expires_at: Optional[float] = None,
+        permissions: set[Permission] | None = None,
+        expires_at: float | None = None,
     ) -> StepResult:
         """Create a new API key for a user."""
         if not self.enabled:
@@ -547,7 +536,7 @@ class EnterpriseAuthService:
             }
         )
 
-    def update_user_roles(self, user_id: str, roles: Set[UserRole]) -> StepResult:
+    def update_user_roles(self, user_id: str, roles: set[UserRole]) -> StepResult:
         """Update user roles and permissions."""
         if not self.enabled:
             return StepResult.fail("Enterprise auth service disabled")
@@ -561,9 +550,7 @@ class EnterpriseAuthService:
             user.roles = roles
             user.permissions = self._get_permissions_for_roles(roles)
 
-            log.info(
-                f"Updated roles for user {user_id}: {[r.value for r in old_roles]} -> {[r.value for r in roles]}"
-            )
+            log.info(f"Updated roles for user {user_id}: {[r.value for r in old_roles]} -> {[r.value for r in roles]}")
 
             return StepResult.ok(
                 data={
@@ -578,17 +565,13 @@ class EnterpriseAuthService:
             log.error(f"Failed to update user roles: {e}")
             return StepResult.fail(f"Failed to update user roles: {e}")
 
-    def get_user_by_id(self, user_id: str) -> Optional[User]:
+    def get_user_by_id(self, user_id: str) -> StepResult:
         """Get user by ID."""
         return self.users.get(user_id)
 
-    def get_users_by_tenant(self, tenant_id: str) -> List[User]:
+    def get_users_by_tenant(self, tenant_id: str) -> StepResult:
         """Get all users for a tenant."""
-        return [
-            user
-            for user in self.users.values()
-            if user.tenant_id == tenant_id and user.is_active
-        ]
+        return [user for user in self.users.values() if user.tenant_id == tenant_id and user.is_active]
 
     def deactivate_api_key(self, key_id: str) -> StepResult:
         """Deactivate an API key."""
@@ -616,7 +599,7 @@ class EnterpriseAuthService:
 
         return StepResult.ok(data={"session_id": session_id, "logged_out": True})
 
-    def get_auth_stats(self) -> Dict[str, Any]:
+    def get_auth_stats(self) -> StepResult:
         """Get authentication service statistics."""
         if not self.enabled:
             return {"enabled": False}
@@ -636,10 +619,10 @@ class EnterpriseAuthService:
 
 
 # Global instance for easy access
-_auth_service: Optional[EnterpriseAuthService] = None
+_auth_service: EnterpriseAuthService | None = None
 
 
-def get_auth_service() -> EnterpriseAuthService:
+def get_auth_service() -> StepResult:
     """Get the global auth service instance."""
     global _auth_service
     if _auth_service is None:

@@ -8,13 +8,14 @@ database queries, semantic search, and cross-platform aggregation.
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from sqlalchemy import and_, desc
-from sqlalchemy.orm import Session
+from sqlalchemy import and_, desc  # type: ignore[import-untyped]
 
 from ultimate_discord_intelligence_bot.creator_ops.config import CreatorOpsConfig
-from ultimate_discord_intelligence_bot.creator_ops.media.embeddings import EmbeddingsGenerator
+from ultimate_discord_intelligence_bot.creator_ops.media.embeddings import (
+    EmbeddingsGenerator,
+)
 from ultimate_discord_intelligence_bot.creator_ops.models.schema import (
     Account,
     Claim,
@@ -25,6 +26,11 @@ from ultimate_discord_intelligence_bot.creator_ops.models.schema import (
     Unit,
 )
 from ultimate_discord_intelligence_bot.step_result import StepResult
+
+
+if TYPE_CHECKING:
+    from sqlalchemy.orm import Session
+
 
 logger = logging.getLogger(__name__)
 
@@ -127,8 +133,8 @@ class ContentRetriever:
             return StepResult.ok(data=episodes)
 
         except Exception as e:
-            logger.error(f"Failed to search episodes: {str(e)}")
-            return StepResult.fail(f"Failed to search episodes: {str(e)}")
+            logger.error(f"Failed to search episodes: {e!s}")
+            return StepResult.fail(f"Failed to search episodes: {e!s}")
 
     def semantic_search(
         self,
@@ -149,7 +155,10 @@ class ContentRetriever:
 
             # Use embeddings generator for semantic search
             search_result = self.embeddings_generator.search_similar_content(
-                query=query, collection_name="creator_ops_transcripts", limit=limit, score_threshold=0.7
+                query=query,
+                collection_name="creator_ops_transcripts",
+                limit=limit,
+                score_threshold=0.7,
             )
 
             if not search_result.success:
@@ -184,8 +193,8 @@ class ContentRetriever:
             return StepResult.ok(data=results)
 
         except Exception as e:
-            logger.error(f"Failed to perform semantic search: {str(e)}")
-            return StepResult.fail(f"Failed to perform semantic search: {str(e)}")
+            logger.error(f"Failed to perform semantic search: {e!s}")
+            return StepResult.fail(f"Failed to perform semantic search: {e!s}")
 
     def get_clip(self, clip_id: str) -> StepResult:
         """
@@ -238,8 +247,8 @@ class ContentRetriever:
             return StepResult.ok(data=clip_data)
 
         except Exception as e:
-            logger.error(f"Failed to get clip: {str(e)}")
-            return StepResult.fail(f"Failed to get clip: {str(e)}")
+            logger.error(f"Failed to get clip: {e!s}")
+            return StepResult.fail(f"Failed to get clip: {e!s}")
 
     def find_similar_clips(
         self,
@@ -301,8 +310,8 @@ class ContentRetriever:
             return StepResult.ok(data=similar_clips)
 
         except Exception as e:
-            logger.error(f"Failed to find similar clips: {str(e)}")
-            return StepResult.fail(f"Failed to find similar clips: {str(e)}")
+            logger.error(f"Failed to find similar clips: {e!s}")
+            return StepResult.fail(f"Failed to find similar clips: {e!s}")
 
     def get_episode_interactions(self, episode_id: str) -> StepResult:
         """
@@ -357,8 +366,8 @@ class ContentRetriever:
             return StepResult.ok(data=interaction_data)
 
         except Exception as e:
-            logger.error(f"Failed to get episode interactions: {str(e)}")
-            return StepResult.fail(f"Failed to get episode interactions: {str(e)}")
+            logger.error(f"Failed to get episode interactions: {e!s}")
+            return StepResult.fail(f"Failed to get episode interactions: {e!s}")
 
     def get_audience_demographics(self, episode_id: str) -> StepResult:
         """
@@ -380,7 +389,7 @@ class ContentRetriever:
             # Simple demographic analysis based on available data
             demographics = {
                 "total_interactions": len(interactions),
-                "unique_authors": len(set(i.author for i in interactions if i.author)),
+                "unique_authors": len({i.author for i in interactions if i.author}),
                 "platform_distribution": {},
                 "time_distribution": {},
             }
@@ -400,8 +409,8 @@ class ContentRetriever:
             return StepResult.ok(data=demographics)
 
         except Exception as e:
-            logger.error(f"Failed to get audience demographics: {str(e)}")
-            return StepResult.fail(f"Failed to get audience demographics: {str(e)}")
+            logger.error(f"Failed to get audience demographics: {e!s}")
+            return StepResult.fail(f"Failed to get audience demographics: {e!s}")
 
     def _get_media_topics(self, media_id: int) -> list[str]:
         """Get topics for a media item."""
@@ -413,7 +422,7 @@ class ContentRetriever:
             return [topic.name for topic in topics]
 
         except Exception as e:
-            logger.warning(f"Failed to get media topics: {str(e)}")
+            logger.warning(f"Failed to get media topics: {e!s}")
             return []
 
     def _get_media_claims(self, media_id: int) -> list[str]:
@@ -426,7 +435,7 @@ class ContentRetriever:
             return [claim.text for claim in claims]
 
         except Exception as e:
-            logger.warning(f"Failed to get media claims: {str(e)}")
+            logger.warning(f"Failed to get media claims: {e!s}")
             return []
 
     def _get_media_speakers(self, media_id: int) -> list[str]:
@@ -440,7 +449,7 @@ class ContentRetriever:
             return [person.name for person in people if person.role == "speaker"]
 
         except Exception as e:
-            logger.warning(f"Failed to get media speakers: {str(e)}")
+            logger.warning(f"Failed to get media speakers: {e!s}")
             return []
 
     def _get_unit_speakers(self, unit_id: int) -> list[str]:
@@ -454,7 +463,7 @@ class ContentRetriever:
             return [person.name for person in people if person.role == "speaker"]
 
         except Exception as e:
-            logger.warning(f"Failed to get unit speakers: {str(e)}")
+            logger.warning(f"Failed to get unit speakers: {e!s}")
             return []
 
     def _get_unit_topics(self, unit_id: int) -> list[str]:
@@ -467,7 +476,7 @@ class ContentRetriever:
             return [topic.name for topic in topics]
 
         except Exception as e:
-            logger.warning(f"Failed to get unit topics: {str(e)}")
+            logger.warning(f"Failed to get unit topics: {e!s}")
             return []
 
     def _get_unit_sentiment(self, unit_id: int) -> str | None:
@@ -484,5 +493,5 @@ class ContentRetriever:
             return None
 
         except Exception as e:
-            logger.warning(f"Failed to get unit sentiment: {str(e)}")
+            logger.warning(f"Failed to get unit sentiment: {e!s}")
             return None

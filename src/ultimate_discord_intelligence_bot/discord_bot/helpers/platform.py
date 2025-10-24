@@ -25,7 +25,9 @@ def _infer_platform(url: str) -> tuple[str, str]:
 
 
 # Backward-compatible alias with older type hints (Tuple)
-def _infer_platform_legacy(url: str) -> tuple[str, str]:  # pragma: no cover - legacy alias
+def _infer_platform_legacy(
+    url: str,
+) -> tuple[str, str]:  # pragma: no cover - legacy alias
     return _infer_platform(url)
 
 

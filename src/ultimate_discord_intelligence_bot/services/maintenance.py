@@ -2,10 +2,14 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from ..tenancy import current_tenant
-from ..tools.memory_compaction_tool import MemoryCompactionTool
+from ..tools.memory.memory_compaction_tool import MemoryCompactionTool
+
+
+if TYPE_CHECKING:
+    from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 class MemoryMaintenance:
@@ -15,10 +19,10 @@ class MemoryMaintenance:
     across multiple logical collections while respecting tenancy context.
     """
 
-    def __init__(self) -> None:
+    def __init__(self) -> StepResult:
         self._default_collections = ["content", "transcripts", "analysis"]
 
-    def compact(self, collections: list[str] | None = None, max_delete: int | None = None) -> dict[str, Any]:
+    def compact(self, collections: list[str] | None = None, max_delete: int | None = None) -> StepResult:
         cols = collections or list(self._default_collections)
         summaries: dict[str, Any] = {}
         for name in cols:

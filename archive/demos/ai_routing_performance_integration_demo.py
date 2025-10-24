@@ -15,6 +15,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any
 
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -231,7 +232,7 @@ class AIRoutingPerformanceAnalyzer:
         """Get detailed model performance analysis."""
 
         # Calculate optimization effectiveness for each model
-        for model, stats in self.model_stats.items():
+        for _model, stats in self.model_stats.items():
             # Composite effectiveness score
             quality_weight = 0.4
             cost_weight = 0.3
@@ -246,7 +247,13 @@ class AIRoutingPerformanceAnalyzer:
                 quality_norm * quality_weight + cost_norm * cost_weight + latency_norm * latency_weight
             )
 
-        return dict(sorted(self.model_stats.items(), key=lambda x: x[1].optimization_effectiveness, reverse=True))
+        return dict(
+            sorted(
+                self.model_stats.items(),
+                key=lambda x: x[1].optimization_effectiveness,
+                reverse=True,
+            )
+        )
 
     def generate_optimization_recommendations(self, metrics: AIPerformanceMetrics) -> list[str]:
         """Generate actionable optimization recommendations."""
@@ -450,7 +457,15 @@ async def demonstrate_next_logical_step():
     ]
 
     # Record routing decisions
-    for i, (task_type, strategy, model, confidence, expected, actual, target) in enumerate(scenarios):
+    for i, (
+        task_type,
+        strategy,
+        model,
+        confidence,
+        expected,
+        actual,
+        target,
+    ) in enumerate(scenarios):
         analyzer.record_routing_decision(
             task_type=task_type,
             routing_strategy=strategy,

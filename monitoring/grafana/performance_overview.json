@@ -1,0 +1,363 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "Ultimate Discord Intelligence Bot - Performance Overview",
+    "description": "Real-time performance monitoring dashboard for the Ultimate Discord Intelligence Bot",
+    "tags": [
+      "discord-bot",
+      "performance",
+      "monitoring"
+    ],
+    "timezone": "browser",
+    "refresh": "30s",
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "System Overview",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "up{job=\"discord-bot\"}",
+            "legendFormat": "Bot Status",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 0
+        },
+        "options": {
+          "colorMode": "value",
+          "graphMode": "area",
+          "justifyMode": "auto",
+          "orientation": "auto",
+          "reduceOptions": {
+            "values": false,
+            "calcs": [
+              "lastNotNull"
+            ],
+            "fields": ""
+          },
+          "textMode": "auto",
+          "unit": "short"
+        },
+        "fieldConfig": {
+          "defaults": {},
+          "overrides": []
+        }
+      },
+      {
+        "id": 2,
+        "title": "Workflow Performance",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "rate(discord_bot_workflow_duration_seconds[5m])",
+            "legendFormat": "{{workflow}}",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 0
+        },
+        "options": {
+          "legend": {
+            "displayMode": "table",
+            "placement": "bottom"
+          },
+          "tooltip": {
+            "mode": "single"
+          }
+        },
+        "fieldConfig": {
+          "defaults": {},
+          "overrides": []
+        }
+      },
+      {
+        "id": 3,
+        "title": "Memory Usage",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "process_resident_memory_bytes{job=\"discord-bot\"}",
+            "legendFormat": "RSS Memory",
+            "refId": "A"
+          },
+          {
+            "expr": "process_virtual_memory_bytes{job=\"discord-bot\"}",
+            "legendFormat": "Virtual Memory",
+            "refId": "B"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 8,
+          "x": 0,
+          "y": 8
+        },
+        "options": {
+          "legend": {
+            "displayMode": "table",
+            "placement": "bottom"
+          },
+          "tooltip": {
+            "mode": "single"
+          },
+          "unit": "bytes"
+        },
+        "fieldConfig": {
+          "defaults": {},
+          "overrides": []
+        }
+      },
+      {
+        "id": 4,
+        "title": "CPU Usage",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "rate(process_cpu_seconds_total{job=\"discord-bot\"}[5m]) * 100",
+            "legendFormat": "CPU Usage %",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 8,
+          "x": 8,
+          "y": 8
+        },
+        "options": {
+          "legend": {
+            "displayMode": "table",
+            "placement": "bottom"
+          },
+          "tooltip": {
+            "mode": "single"
+          },
+          "unit": "percent"
+        },
+        "fieldConfig": {
+          "defaults": {},
+          "overrides": []
+        }
+      },
+      {
+        "id": 5,
+        "title": "Error Rate",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "rate(discord_bot_errors_total[5m])",
+            "legendFormat": "{{error_type}}",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 8,
+          "x": 16,
+          "y": 8
+        },
+        "options": {
+          "legend": {
+            "displayMode": "table",
+            "placement": "bottom"
+          },
+          "tooltip": {
+            "mode": "single"
+          },
+          "unit": "reqps"
+        },
+        "fieldConfig": {
+          "defaults": {},
+          "overrides": []
+        }
+      },
+      {
+        "id": 6,
+        "title": "Throughput",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "rate(discord_bot_operations_total[5m])",
+            "legendFormat": "{{operation}}",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 16
+        },
+        "options": {
+          "legend": {
+            "displayMode": "table",
+            "placement": "bottom"
+          },
+          "tooltip": {
+            "mode": "single"
+          },
+          "unit": "ops"
+        },
+        "fieldConfig": {
+          "defaults": {},
+          "overrides": []
+        }
+      },
+      {
+        "id": 7,
+        "title": "Response Time",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(discord_bot_response_time_seconds_bucket[5m]))",
+            "legendFormat": "95th percentile",
+            "refId": "A"
+          },
+          {
+            "expr": "histogram_quantile(0.50, rate(discord_bot_response_time_seconds_bucket[5m]))",
+            "legendFormat": "50th percentile",
+            "refId": "B"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 16
+        },
+        "options": {
+          "legend": {
+            "displayMode": "table",
+            "placement": "bottom"
+          },
+          "tooltip": {
+            "mode": "single"
+          },
+          "unit": "s"
+        },
+        "fieldConfig": {
+          "defaults": {},
+          "overrides": []
+        }
+      },
+      {
+        "id": 8,
+        "title": "Cache Performance",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "rate(discord_bot_cache_hits_total[5m]) / rate(discord_bot_cache_requests_total[5m])",
+            "legendFormat": "Cache Hit Rate",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 8,
+          "x": 0,
+          "y": 24
+        },
+        "options": {
+          "legend": {
+            "displayMode": "table",
+            "placement": "bottom"
+          },
+          "tooltip": {
+            "mode": "single"
+          },
+          "unit": "percentunit"
+        },
+        "fieldConfig": {
+          "defaults": {},
+          "overrides": []
+        }
+      },
+      {
+        "id": 9,
+        "title": "Database Performance",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "rate(discord_bot_database_queries_total[5m])",
+            "legendFormat": "{{query_type}}",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 8,
+          "x": 8,
+          "y": 24
+        },
+        "options": {
+          "legend": {
+            "displayMode": "table",
+            "placement": "bottom"
+          },
+          "tooltip": {
+            "mode": "single"
+          },
+          "unit": "qps"
+        },
+        "fieldConfig": {
+          "defaults": {},
+          "overrides": []
+        }
+      },
+      {
+        "id": 10,
+        "title": "Network Performance",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "rate(discord_bot_network_bytes_total[5m])",
+            "legendFormat": "{{direction}}",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 8,
+          "x": 16,
+          "y": 24
+        },
+        "options": {
+          "legend": {
+            "displayMode": "table",
+            "placement": "bottom"
+          },
+          "tooltip": {
+            "mode": "single"
+          },
+          "unit": "Bps"
+        },
+        "fieldConfig": {
+          "defaults": {},
+          "overrides": []
+        }
+      }
+    ],
+    "templating": {
+      "list": []
+    },
+    "annotations": {
+      "list": []
+    },
+    "schemaVersion": 30,
+    "version": 1,
+    "links": []
+  }
+}

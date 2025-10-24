@@ -7,8 +7,13 @@ when check_same_thread=False is enabled.
 
 from __future__ import annotations
 
-import sqlite3
 from threading import RLock
+from typing import TYPE_CHECKING
+
+
+if TYPE_CHECKING:
+    import sqlite3
+
 
 _LOCKS: dict[int, RLock] = {}
 

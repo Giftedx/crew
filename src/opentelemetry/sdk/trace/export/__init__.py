@@ -1,7 +1,11 @@
 from __future__ import annotations
 
-from collections.abc import Iterable
-from typing import Any
+import contextlib
+from typing import TYPE_CHECKING, Any
+
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 
 class SpanExportResult:
@@ -31,16 +35,18 @@ class SimpleSpanProcessor:
 
     # Our stubbed TracerProvider calls on_end on processors
     def on_end(self, span: Any) -> None:
-        try:
+        with contextlib.suppress(Exception):
             self.exporter.export([span])
-        except Exception:
-            pass
 
 
 class BatchSpanProcessor(SimpleSpanProcessor):
     """Batch span processor stub - same as SimpleSpanProcessor for testing"""
 
-    pass
 
-
-__all__ = ["SpanExporter", "ConsoleSpanExporter", "SimpleSpanProcessor", "BatchSpanProcessor", "SpanExportResult"]
+__all__ = [
+    "BatchSpanProcessor",
+    "ConsoleSpanExporter",
+    "SimpleSpanProcessor",
+    "SpanExportResult",
+    "SpanExporter",
+]

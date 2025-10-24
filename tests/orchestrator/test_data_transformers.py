@@ -174,7 +174,7 @@ class TestDataValidation:
             orchestrator._validate_stage_data("test_stage", ["url", "title"], sample_acquisition_data)
             assert True  # No exception raised
         except ValueError:
-            assert False, "Should not raise exception for complete data"
+            raise AssertionError("Should not raise exception for complete data")
 
     def test_validate_detects_missing_required_fields(self, orchestrator):
         """Should raise ValueError when required fields missing."""
@@ -191,7 +191,7 @@ class TestDataValidation:
             orchestrator._validate_stage_data("test_stage", [], any_data)
             assert True  # No exception raised
         except ValueError:
-            assert False, "Should not raise exception with empty requirements"
+            raise AssertionError("Should not raise exception with empty requirements")
 
 
 class TestSchemaConversion:

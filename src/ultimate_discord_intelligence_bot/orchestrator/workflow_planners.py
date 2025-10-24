@@ -105,20 +105,76 @@ def get_planned_stages(depth: str) -> list[dict[str, Any]]:
         14
     """
     all_stages = [
-        {"name": "Mission Planning", "agent": "mission_orchestrator", "priority": "critical"},
-        {"name": "Content Acquisition", "agent": "acquisition_specialist", "priority": "critical"},
-        {"name": "Transcription Analysis", "agent": "transcription_engineer", "priority": "high"},
-        {"name": "Content Analysis", "agent": "analysis_cartographer", "priority": "critical"},
-        {"name": "Information Verification", "agent": "verification_director", "priority": "high"},
-        {"name": "Threat Analysis", "agent": "risk_intelligence_analyst", "priority": "high"},
-        {"name": "Social Intelligence", "agent": "signal_recon_specialist", "priority": "medium"},
-        {"name": "Behavioral Profiling", "agent": "persona_archivist", "priority": "medium"},
-        {"name": "Knowledge Integration", "agent": "knowledge_integrator", "priority": "high"},
-        {"name": "Research Synthesis", "agent": "research_synthesist", "priority": "medium"},
-        {"name": "Performance Analytics", "agent": "system_reliability_officer", "priority": "low"},
-        {"name": "Quality Assessment", "agent": "intelligence_briefing_curator", "priority": "low"},
-        {"name": "Intelligence Briefing", "agent": "intelligence_briefing_curator", "priority": "high"},
-        {"name": "Communication Reporting", "agent": "community_liaison", "priority": "medium"},
+        {
+            "name": "Mission Planning",
+            "agent": "mission_orchestrator",
+            "priority": "critical",
+        },
+        {
+            "name": "Content Acquisition",
+            "agent": "acquisition_specialist",
+            "priority": "critical",
+        },
+        {
+            "name": "Transcription Analysis",
+            "agent": "transcription_engineer",
+            "priority": "high",
+        },
+        {
+            "name": "Content Analysis",
+            "agent": "analysis_cartographer",
+            "priority": "critical",
+        },
+        {
+            "name": "Information Verification",
+            "agent": "verification_director",
+            "priority": "high",
+        },
+        {
+            "name": "Threat Analysis",
+            "agent": "risk_intelligence_analyst",
+            "priority": "high",
+        },
+        {
+            "name": "Social Intelligence",
+            "agent": "signal_recon_specialist",
+            "priority": "medium",
+        },
+        {
+            "name": "Behavioral Profiling",
+            "agent": "persona_archivist",
+            "priority": "medium",
+        },
+        {
+            "name": "Knowledge Integration",
+            "agent": "knowledge_integrator",
+            "priority": "high",
+        },
+        {
+            "name": "Research Synthesis",
+            "agent": "research_synthesist",
+            "priority": "medium",
+        },
+        {
+            "name": "Performance Analytics",
+            "agent": "system_reliability_officer",
+            "priority": "low",
+        },
+        {
+            "name": "Quality Assessment",
+            "agent": "intelligence_briefing_curator",
+            "priority": "low",
+        },
+        {
+            "name": "Intelligence Briefing",
+            "agent": "intelligence_briefing_curator",
+            "priority": "high",
+        },
+        {
+            "name": "Communication Reporting",
+            "agent": "community_liaison",
+            "priority": "medium",
+        },
     ]
 
     stage_filters = {

@@ -26,7 +26,10 @@ from typing import Any
 
 from core.time import default_utc_now
 
-from .advanced_performance_analytics_integration import AdvancedPerformanceAnalyticsSystem
+from .advanced_performance_analytics_integration import (
+    AdvancedPerformanceAnalyticsSystem,
+)
+
 
 logger = logging.getLogger(__name__)
 
@@ -73,7 +76,7 @@ class PerformanceAlert:
         severity_emojis = {
             AlertSeverity.CRITICAL: "🚨",
             AlertSeverity.WARNING: "⚠️",
-            AlertSeverity.INFO: "ℹ️",
+            AlertSeverity.INFO: "i",
         }
 
         # Category emojis for better visual identification
@@ -471,7 +474,7 @@ class AdvancedPerformanceAnalyticsAlertEngine:
                 "category_breakdown": category_counts,
                 "most_violated_metrics": dict(sorted(metric_violations.items(), key=lambda x: x[1], reverse=True)[:5]),
                 "active_rules": len([r for r in self.alert_rules.values() if r.enabled]),
-                "rules_in_cooldown": len([r for r in self.alert_rules.keys() if self._is_rule_in_cooldown(r)]),
+                "rules_in_cooldown": len([r for r in self.alert_rules if self._is_rule_in_cooldown(r)]),
             }
 
         except Exception as e:

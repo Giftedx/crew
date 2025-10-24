@@ -1,9 +1,13 @@
 """Shared services for prompt engineering, routing and learning."""
 
-from . import openrouter_service as openrouter_service  # re-export module for monkeypatch compatibility
+from . import (
+    openrouter_service as openrouter_service,
+)  # re-export module for monkeypatch compatibility
 from .cache import LLMCache
 from .evaluation_harness import EvaluationHarness
-from .learning_engine import LearningEngine  # Deprecated import path; prefer core.learning_engine.LearningEngine
+from .learning_engine import (
+    LearningEngine,
+)  # Deprecated import path; prefer core.learning_engine.LearningEngine
 from .logging_utils import AnalyticsStore
 from .maintenance import MemoryMaintenance
 from .memory_service import MemoryService
@@ -12,15 +16,16 @@ from .poller import ContentPoller
 from .prompt_engine import PromptEngine
 from .token_meter import TokenMeter
 
+
 __all__ = [
-    "PromptEngine",
-    "OpenRouterService",
-    "LearningEngine",
-    "MemoryService",
-    "EvaluationHarness",
-    "ContentPoller",
     "AnalyticsStore",
-    "TokenMeter",
+    "ContentPoller",
+    "EvaluationHarness",
     "LLMCache",
+    "LearningEngine",
     "MemoryMaintenance",
+    "MemoryService",
+    "OpenRouterService",
+    "PromptEngine",
+    "TokenMeter",
 ]

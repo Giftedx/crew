@@ -11,6 +11,7 @@ from typing import Any
 
 from .discord_session_validators import is_session_valid
 
+
 logger = logging.getLogger(__name__)
 
 

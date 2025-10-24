@@ -3,8 +3,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
-from .store import KGStore
+
+if TYPE_CHECKING:
+    from .store import KGStore
 
 
 @dataclass

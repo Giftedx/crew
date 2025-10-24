@@ -44,36 +44,37 @@ from .unified_metrics import (
     PerformanceMetric as UnifiedPerformanceMetric,
 )
 
+
 __all__ = [
+    "AgentMetric",
+    "AlertAction",
+    "AlertCondition",
+    "AlertLevel",
+    "AlertRule",
+    "AlertType",
+    "AlertingConfig",
     # Consolidated analytics (ADR-0005)
     "AnalyticsService",
-    "get_analytics_service",
-    "SystemHealth",
+    "DashboardConfig",
+    # Dashboard integration
+    "DashboardIntegrationService",
+    "DashboardType",
+    "DashboardWidget",
+    "GrafanaDashboard",
+    # Intelligent alerting
+    "IntelligentAlertingService",
+    "MetricCategory",
+    "MetricType",
+    "MetricsQuery",
     "PerformanceMetrics",
+    "PrometheusMetrics",
+    "QualityMetric",
+    "SystemHealth",
+    "SystemMetric",
     # Unified metrics
     "UnifiedMetricsCollector",
     "UnifiedMetricsConfig",
-    "MetricType",
-    "MetricCategory",
-    "SystemMetric",
-    "AgentMetric",
     "UnifiedPerformanceMetric",
-    "QualityMetric",
-    # Intelligent alerting
-    "IntelligentAlertingService",
-    "AlertingConfig",
-    "AlertLevel",
-    "AlertType",
-    "AlertRule",
-    "AlertCondition",
-    "AlertAction",
-    # Dashboard integration
-    "DashboardIntegrationService",
-    "DashboardConfig",
-    "GrafanaDashboard",
-    "PrometheusMetrics",
-    "DashboardWidget",
-    "MetricsQuery",
-    "DashboardType",
     "WidgetType",
+    "get_analytics_service",
 ]

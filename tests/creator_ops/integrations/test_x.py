@@ -16,6 +16,7 @@ from ultimate_discord_intelligence_bot.creator_ops.integrations.x_models import 
     XHashtag,
     XMedia,
     XMention,
+    XMentionResponse,
     XMeta,
     XPlace,
     XPoll,
@@ -1344,7 +1345,9 @@ class TestXClient:
     def test_create_webhook_subscription_success(self):
         """Test successful webhook subscription creation."""
         result = self.client.create_webhook_subscription(
-            "1234567890123456789", "https://example.com/webhook", ["tweet_create_events", "tweet_delete_events"]
+            "1234567890123456789",
+            "https://example.com/webhook",
+            ["tweet_create_events", "tweet_delete_events"],
         )
 
         assert result.success
@@ -1424,7 +1427,10 @@ class TestXClient:
 
     def test_get_fixture_response(self):
         """Test fixture response loading."""
-        with patch("pathlib.Path.exists") as mock_exists, patch("builtins.open") as mock_open:
+        with (
+            patch("pathlib.Path.exists") as mock_exists,
+            patch("builtins.open") as mock_open,
+        ):
             mock_exists.return_value = True
             mock_open.return_value.__enter__.return_value.read.return_value = '{"test": "data"}'
 

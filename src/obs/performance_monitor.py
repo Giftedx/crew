@@ -19,6 +19,7 @@ from .performance_baselines import (
 )
 from .resource_monitor import get_current_resource_usage
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -122,7 +123,7 @@ class PerformanceMonitor:
             category_metrics = self.baseline_config.get_metrics_by_category(category)
             summary["metrics_by_category"][category.value] = []
 
-            for metric_name, baseline in category_metrics.items():
+            for metric_name, _baseline in category_metrics.items():
                 if metric_name in self.metrics_history:
                     # Get latest value
                     latest_value = (
@@ -259,7 +260,9 @@ def export_performance_report() -> str:
 # Discord alert callback example
 def discord_performance_alert(alert_data: dict[str, Any]) -> None:
     """Example Discord alert callback for performance issues."""
-    from ultimate_discord_intelligence_bot.tools.discord_private_alert_tool import DiscordPrivateAlertTool
+    from ultimate_discord_intelligence_bot.tools.discord_private_alert_tool import (
+        DiscordPrivateAlertTool,
+    )
 
     level = alert_data["level"]
     metric_name = alert_data["metric_name"]
@@ -291,10 +294,10 @@ def initialize_performance_monitoring() -> None:
 
 __all__ = [
     "PerformanceMonitor",
-    "get_performance_monitor",
-    "record_metric",
-    "get_performance_summary",
-    "export_performance_report",
     "discord_performance_alert",
+    "export_performance_report",
+    "get_performance_monitor",
+    "get_performance_summary",
     "initialize_performance_monitoring",
+    "record_metric",
 ]

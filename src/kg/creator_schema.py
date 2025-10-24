@@ -39,14 +39,27 @@ CREATOR_NODE_TYPES = [
         name="creator",
         description="Content creator (YouTuber, streamer, podcaster)",
         required_attrs=["platform", "channel_id", "subscriber_count"],
-        optional_attrs=["bio", "location", "language", "category", "monetization_status"],
+        optional_attrs=[
+            "bio",
+            "location",
+            "language",
+            "category",
+            "monetization_status",
+        ],
         examples=["H3 Podcast", "Ethan Klein", "Hasan Piker"],
     ),
     CreatorNodeType(
         name="episode",
         description="Individual content episode (video, stream, podcast)",
         required_attrs=["title", "duration", "upload_date", "platform"],
-        optional_attrs=["description", "view_count", "like_count", "comment_count", "tags", "url"],
+        optional_attrs=[
+            "description",
+            "view_count",
+            "like_count",
+            "comment_count",
+            "tags",
+            "url",
+        ],
         examples=["H3 Podcast #123", "Hasan's Stream - 2024-01-15"],
     ),
     CreatorNodeType(
@@ -60,7 +73,13 @@ CREATOR_NODE_TYPES = [
         name="topic",
         description="Subject matter discussed in content",
         required_attrs=["name", "category"],
-        optional_attrs=["description", "trending_score", "sentiment", "complexity", "mentions"],
+        optional_attrs=[
+            "description",
+            "trending_score",
+            "sentiment",
+            "complexity",
+            "mentions",
+        ],
         examples=["Politics", "Gaming", "Conspiracy Theories", "Social Media Drama"],
     ),
     CreatorNodeType(
@@ -68,7 +87,11 @@ CREATOR_NODE_TYPES = [
         description="Factual claim or statement made in content",
         required_attrs=["text", "speaker", "timestamp", "confidence"],
         optional_attrs=["verification_status", "source_urls", "controversy_score"],
-        examples=["The election was stolen", "Climate change is real", "This product works"],
+        examples=[
+            "The election was stolen",
+            "Climate change is real",
+            "This product works",
+        ],
     ),
     CreatorNodeType(
         name="quote",
@@ -81,8 +104,18 @@ CREATOR_NODE_TYPES = [
         name="highlight",
         description="Notable moment or clip from content",
         required_attrs=["start_time", "end_time", "description", "episode_id"],
-        optional_attrs=["view_count", "share_count", "reaction_type", "viral_score", "confidence"],
-        examples=["Ethan's rant about Twitter", "Hasan's reaction to news", "Funny moment"],
+        optional_attrs=[
+            "view_count",
+            "share_count",
+            "reaction_type",
+            "viral_score",
+            "confidence",
+        ],
+        examples=[
+            "Ethan's rant about Twitter",
+            "Hasan's reaction to news",
+            "Funny moment",
+        ],
     ),
     CreatorNodeType(
         name="sponsor",
@@ -102,7 +135,12 @@ CREATOR_NODE_TYPES = [
         name="person",
         description="Person mentioned or discussed in content",
         required_attrs=["name", "role"],
-        optional_attrs=["bio", "political_affiliation", "controversy_level", "social_links"],
+        optional_attrs=[
+            "bio",
+            "political_affiliation",
+            "controversy_level",
+            "social_links",
+        ],
         examples=["Donald Trump", "Elon Musk", "Joe Biden", "Andrew Tate"],
     ),
     CreatorNodeType(

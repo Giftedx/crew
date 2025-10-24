@@ -3,11 +3,12 @@ from .privacy_filter import PrivacyReport, filter_text
 from .redactor import apply
 from .retention import sweep
 
+
 __all__ = [
-    "detect",
+    "PrivacyReport",
     "Span",
     "apply",
+    "detect",
     "filter_text",
-    "PrivacyReport",
     "sweep",
 ]

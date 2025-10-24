@@ -295,7 +295,10 @@ def synthesize_specialized_intelligence_results(
 
     except Exception as e:
         logger.error(f"Specialized result synthesis failed: {e}", exc_info=True)
-        return {"error": f"Specialized synthesis failed: {e}", "raw_results": all_results}
+        return {
+            "error": f"Specialized synthesis failed: {e}",
+            "raw_results": all_results,
+        }
 
 
 async def synthesize_enhanced_autonomous_results(
@@ -352,7 +355,10 @@ async def synthesize_enhanced_autonomous_results(
         analysis_depth = workflow_metadata.get("depth", "standard")
 
         # Use the advanced multi-modal synthesizer
-        synthesized_result, quality_assessment = await synthesizer.synthesize_intelligence_results(
+        (
+            synthesized_result,
+            quality_assessment,
+        ) = await synthesizer.synthesize_intelligence_results(
             workflow_results=all_results,
             analysis_depth=analysis_depth,
             workflow_metadata=workflow_metadata,

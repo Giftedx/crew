@@ -16,7 +16,11 @@ def _evaluate_claim(claim: str, fact_check_tool: Any | None) -> tuple[str, float
 
     # Simple heuristics / pattern matches
     if "earth is flat" in lower or ("earth" in lower and "flat" in lower):
-        return "False", 0.95, "Based on overwhelming scientific consensus, the Earth is not flat."
+        return (
+            "False",
+            0.95,
+            "Based on overwhelming scientific consensus, the Earth is not flat.",
+        )
 
     # External tool path (duck-typed)
     if fact_check_tool is not None:

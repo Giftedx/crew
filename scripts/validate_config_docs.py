@@ -22,7 +22,7 @@ def compare_structures(actual: dict[Any, Any], expected_keys: list[str], file_na
     """Compare actual YAML structure with expected keys from documentation."""
     issues = []
 
-    actual_keys = set(str(k) for k in actual)
+    actual_keys = {str(k) for k in actual}
     expected_key_set = set(expected_keys)
 
     # Check for missing documented keys
@@ -213,7 +213,12 @@ def validate_tenant_configs():
     if not tenant_dir.exists():
         return ["Tenant directory /home/crew/tenants/default does not exist"]
 
-    expected_tenant_files = ["tenant.yaml", "routing.yaml", "budgets.yaml", "policy_overrides.yaml"]
+    expected_tenant_files = [
+        "tenant.yaml",
+        "routing.yaml",
+        "budgets.yaml",
+        "policy_overrides.yaml",
+    ]
     actual_tenant_files = [f.name for f in tenant_dir.glob("*.yaml")]
 
     issues = []

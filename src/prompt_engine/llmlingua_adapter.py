@@ -27,13 +27,14 @@ import os
 from collections.abc import Callable
 from typing import Any
 
+
 _COMPRESSOR: Any | None = None
 _IMPORT_TRIED = False
 _SIGNATURE_CACHE: inspect.Signature | None = None
 
 
 def _get_compressor() -> Any | None:
-    global _COMPRESSOR, _IMPORT_TRIED  # noqa: PLW0603
+    global _COMPRESSOR, _IMPORT_TRIED
     if _COMPRESSOR is not None:
         return _COMPRESSOR
     if _IMPORT_TRIED:
@@ -50,7 +51,7 @@ def _get_compressor() -> Any | None:
 
 
 def _get_signature(compressor: Any) -> inspect.Signature | None:
-    global _SIGNATURE_CACHE  # noqa: PLW0603
+    global _SIGNATURE_CACHE
     if _SIGNATURE_CACHE is not None:
         return _SIGNATURE_CACHE
     try:
@@ -182,9 +183,18 @@ def compress_prompt_with_details(
         if not compressed:
             return prompt, {"applied": False, "reason": "no_output", "kwargs": accepted}
 
-        metadata: dict[str, Any] = {"applied": True, "reason": "applied", "kwargs": accepted}
+        metadata: dict[str, Any] = {
+            "applied": True,
+            "reason": "applied",
+            "kwargs": accepted,
+        }
         if isinstance(result, dict):
-            for key in ("compression_ratio", "original_tokens", "compressed_tokens", "removed_tokens"):
+            for key in (
+                "compression_ratio",
+                "original_tokens",
+                "compressed_tokens",
+                "removed_tokens",
+            ):
                 if key in result:
                     metadata[key] = result[key]
         return compressed, metadata
@@ -218,4 +228,4 @@ def maybe_compress_prompt(
     return compressed
 
 
-__all__ = ["maybe_compress_prompt", "compress_prompt_with_details"]
+__all__ = ["compress_prompt_with_details", "maybe_compress_prompt"]

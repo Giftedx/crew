@@ -28,22 +28,23 @@ from .unified_orchestrator import (
     UnifiedOrchestrationService,
 )
 
+
 __all__ = [
     # ADR-0004 Facade (recommended entry point)
     "OrchestrationFacade",
-    "OrchestrationStrategy",
-    "get_orchestrator",
-    # Legacy orchestration service
-    "UnifiedOrchestrationService",
-    "UnifiedOrchestrationConfig",
-    "TaskRequest",
-    "TaskResult",
-    "TaskStatus",
-    "TaskPriority",
     "OrchestrationMetrics",
+    "OrchestrationStrategy",
+    "TaskDependencyResolver",
     # Task management
     "TaskManager",
     "TaskManagerConfig",
-    "TaskDependencyResolver",
+    "TaskPriority",
+    "TaskRequest",
+    "TaskResult",
     "TaskScheduler",
+    "TaskStatus",
+    "UnifiedOrchestrationConfig",
+    # Legacy orchestration service
+    "UnifiedOrchestrationService",
+    "get_orchestrator",
 ]

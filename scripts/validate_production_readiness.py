@@ -10,11 +10,14 @@ import sys
 import time
 from pathlib import Path
 
+
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 from ultimate_discord_intelligence_bot.core.cost_optimizer import get_cost_optimizer
-from ultimate_discord_intelligence_bot.core.performance_validator import get_performance_validator
+from ultimate_discord_intelligence_bot.core.performance_validator import (
+    get_performance_validator,
+)
 from ultimate_discord_intelligence_bot.monitoring import get_production_monitor
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
@@ -132,7 +135,9 @@ def validate_agent_configuration():
 
     # Test crew configuration
     try:
-        from ultimate_discord_intelligence_bot.crew import UltimateDiscordIntelligenceBotCrew
+        from ultimate_discord_intelligence_bot.crew import (
+            UltimateDiscordIntelligenceBotCrew,
+        )
 
         UltimateDiscordIntelligenceBotCrew()
         results["crew_config"] = True
@@ -263,7 +268,9 @@ def validate_advanced_optimizations():
 
     # Validate distributed rate limiting
     try:
-        from ultimate_discord_intelligence_bot.core.distributed_rate_limiter import get_distributed_rate_limiter
+        from ultimate_discord_intelligence_bot.core.distributed_rate_limiter import (
+            get_distributed_rate_limiter,
+        )
 
         rate_limiter = get_distributed_rate_limiter()
         rate_limit_health = rate_limiter.health_check()
@@ -279,7 +286,9 @@ def validate_advanced_optimizations():
 
     # Validate advanced caching
     try:
-        from ultimate_discord_intelligence_bot.core.advanced_cache import get_advanced_cache
+        from ultimate_discord_intelligence_bot.core.advanced_cache import (
+            get_advanced_cache,
+        )
 
         cache = get_advanced_cache()
         cache_health = cache.health_check()
@@ -297,7 +306,9 @@ def validate_advanced_optimizations():
 
     # Validate comprehensive health checks
     try:
-        from ultimate_discord_intelligence_bot.core.health_checker import get_health_checker
+        from ultimate_discord_intelligence_bot.core.health_checker import (
+            get_health_checker,
+        )
 
         health_checker = get_health_checker()
         health_check_health = health_checker.health_check()

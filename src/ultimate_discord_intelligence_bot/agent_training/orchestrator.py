@@ -24,7 +24,8 @@ class CrewAITrainingOrchestrator:
 
         # Initialize components
         self.coordinator = AgentTrainingCoordinator(
-            agents_config_path=self.config_dir / "agents.yaml", tasks_config_path=self.config_dir / "tasks.yaml"
+            agents_config_path=self.config_dir / "agents.yaml",
+            tasks_config_path=self.config_dir / "tasks.yaml",
         )
 
         self.performance_monitor = AgentPerformanceMonitor(data_dir=self.data_dir)
@@ -145,7 +146,12 @@ def generate_weekly_reports():
 
     def run_complete_enhancement(self) -> dict[str, Any]:
         """Run the complete agent enhancement pipeline."""
-        results = {"enhancement_results": {}, "monitoring_setup": False, "reports_generated": [], "success": False}
+        results = {
+            "enhancement_results": {},
+            "monitoring_setup": False,
+            "reports_generated": [],
+            "success": False,
+        }
 
         try:
             # Step 1: Enhance agents
@@ -320,7 +326,10 @@ The system implements autonomous learning through:
 
 def main():
     """Main entry point for agent training orchestration."""
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    )
 
     orchestrator = CrewAITrainingOrchestrator()
     results = orchestrator.run_complete_enhancement()

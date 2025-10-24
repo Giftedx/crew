@@ -32,6 +32,7 @@ from sqlalchemy.pool import QueuePool
 
 from ultimate_discord_intelligence_bot.step_result import ErrorCategory, StepResult
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -145,7 +146,7 @@ class DatabaseOptimizer:
 
                 # Simulate metrics extraction (would be more sophisticated in production)
                 metrics = QueryPerformanceMetrics(
-                    query_hash=hashlib.md5(query.encode()).hexdigest()[:16],
+                    query_hash=hashlib.md5(query.encode(), usedforsecurity=False).hexdigest()[:16],  # nosec B324 - query fingerprint, not security
                     execution_time_ms=execution_time,
                     rows_returned=100,  # Would extract from actual result
                     bytes_transferred=1024,  # Would calculate from result size
@@ -171,7 +172,7 @@ class DatabaseOptimizer:
                 )
 
         except Exception as e:
-            return StepResult.fail(f"Query analysis failed: {str(e)}", ErrorCategory.DATABASE_ERROR)
+            return StepResult.fail(f"Query analysis failed: {e!s}", ErrorCategory.DATABASE_ERROR)
 
     def _extract_plan_cost(self, plan_text: str) -> float:
         """Extract query plan cost from EXPLAIN output."""
@@ -272,7 +273,11 @@ class DatabaseOptimizer:
 
                     if scan_count == 0:
                         unused_indexes.append(
-                            {"table": row.tablename, "index": row.indexname, "reason": "Never used for scans"}
+                            {
+                                "table": row.tablename,
+                                "index": row.indexname,
+                                "reason": "Never used for scans",
+                            }
                         )
                     elif read_count > 0 and scan_count / read_count < 0.1:  # Less than 10% efficiency
                         inefficient_indexes.append(
@@ -298,7 +303,7 @@ class DatabaseOptimizer:
                 )
 
         except Exception as e:
-            return StepResult.fail(f"Index analysis failed: {str(e)}", ErrorCategory.DATABASE_ERROR)
+            return StepResult.fail(f"Index analysis failed: {e!s}", ErrorCategory.DATABASE_ERROR)
 
     async def generate_index_recommendations(self) -> StepResult:
         """Generate index recommendations based on query patterns."""
@@ -340,7 +345,11 @@ class DatabaseOptimizer:
         # Look for common filter patterns
         if "WHERE" in query.upper():
             # Extract column names from WHERE clauses (simplified)
-            where_match = re.search(r"WHERE\s+(.+?)(?:\s+ORDER|\s+LIMIT|$)", query, re.IGNORECASE | re.DOTALL)
+            where_match = re.search(
+                r"WHERE\s+(.+?)(?:\s+ORDER|\s+LIMIT|$)",
+                query,
+                re.IGNORECASE | re.DOTALL,
+            )
             if where_match:
                 where_clause = where_match.group(1)
                 # Look for column = value patterns
@@ -365,7 +374,8 @@ class DatabaseOptimizer:
             # Calculate optimal pool size based on concurrent load
             # Rough heuristic: pool_size = (requests_per_second * avg_response_time_ms) / 1000
             estimated_rps = len(recent_metrics) / max(
-                1, (time.time() - (recent_metrics[0].timestamp if recent_metrics else time.time())) / 60
+                1,
+                (time.time() - (recent_metrics[0].timestamp if recent_metrics else time.time())) / 60,
             )
             optimal_pool_size = max(5, min(50, int((estimated_rps * avg_query_time) / 1000)))
 
@@ -405,7 +415,7 @@ class DatabaseOptimizer:
             )
 
         except Exception as e:
-            return StepResult.fail(f"Pool optimization failed: {str(e)}", ErrorCategory.DATABASE_ERROR)
+            return StepResult.fail(f"Pool optimization failed: {e!s}", ErrorCategory.DATABASE_ERROR)
 
     async def get_database_health(self) -> StepResult:
         """Get comprehensive database health metrics."""
@@ -461,7 +471,7 @@ class DatabaseOptimizer:
                 )
 
         except Exception as e:
-            return StepResult.fail(f"Health check failed: {str(e)}", ErrorCategory.DATABASE_ERROR)
+            return StepResult.fail(f"Health check failed: {e!s}", ErrorCategory.DATABASE_ERROR)
 
     def _calculate_query_performance_score(self) -> float:
         """Calculate overall query performance score."""
@@ -540,7 +550,10 @@ class DatabaseOptimizer:
             )
 
         except Exception as e:
-            return StepResult.fail(f"Query caching optimization failed: {str(e)}", ErrorCategory.DATABASE_ERROR)
+            return StepResult.fail(
+                f"Query caching optimization failed: {e!s}",
+                ErrorCategory.DATABASE_ERROR,
+            )
 
     async def analyze_table_structure(self) -> StepResult:
         """Analyze table structures and suggest optimizations."""
@@ -601,7 +614,10 @@ class DatabaseOptimizer:
                 )
 
         except Exception as e:
-            return StepResult.fail(f"Table structure analysis failed: {str(e)}", ErrorCategory.DATABASE_ERROR)
+            return StepResult.fail(
+                f"Table structure analysis failed: {e!s}",
+                ErrorCategory.DATABASE_ERROR,
+            )
 
     async def get_optimization_summary(self) -> StepResult:
         """Get comprehensive database optimization summary and recommendations."""
@@ -660,7 +676,7 @@ class DatabaseOptimizer:
             )
 
         except Exception as e:
-            return StepResult.fail(f"Optimization summary failed: {str(e)}", ErrorCategory.DATABASE_ERROR)
+            return StepResult.fail(f"Optimization summary failed: {e!s}", ErrorCategory.DATABASE_ERROR)
 
 
 # Global database optimizer instance

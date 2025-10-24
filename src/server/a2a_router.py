@@ -14,6 +14,7 @@ Notes
 
 from __future__ import annotations
 
+import contextlib
 import time
 from typing import Any
 
@@ -35,6 +36,7 @@ from .a2a_metrics import (
 from .a2a_streaming import attach_streaming_demo as _attach_streaming_demo
 from .a2a_tools import api_key_ok as _api_key_ok
 from .a2a_tools import get_tools as _get_tools
+
 
 # Local observability shims (defensive imports; fall back to no-ops in tests)
 try:
@@ -76,7 +78,11 @@ except Exception:  # pragma: no cover
             return cls(False, data=data, error=error)
 
         def to_dict(self) -> dict[str, Any]:
-            return {"status": "ok" if self.success else "error", "data": self.data, "error": self.error}
+            return {
+                "status": "ok" if self.success else "error",
+                "data": self.data,
+                "error": self.error,
+            }
 
 
 try:
@@ -167,7 +173,11 @@ def _sr_to_result(sr: StepResult) -> dict[str, Any]:
     if "status" in payload or "error" in payload:
         # StepResult.to_dict returns status/error combined with data; separate if needed
         payload = payload.get("data", payload)
-    return {"status": "success" if sr.success else "error", "data": payload, "error": sr.error}
+    return {
+        "status": "success" if sr.success else "error",
+        "data": payload,
+        "error": sr.error,
+    }
 
 
 def _ctx_from_request(tenant_id: str | None, workspace_id: str | None) -> TenantContext | None:
@@ -215,7 +225,10 @@ async def jsonrpc_endpoint(
 
             tenant_id = x_tenant_id or (params.get("tenant_id") if params else None)
             workspace_id = x_workspace_id or (params.get("workspace_id") if params else None)
-            ctx = _ctx_from_request(str(tenant_id) if tenant_id else None, str(workspace_id) if workspace_id else None)
+            ctx = _ctx_from_request(
+                str(tenant_id) if tenant_id else None,
+                str(workspace_id) if workspace_id else None,
+            )
 
             def _execute_one() -> dict[str, Any] | None:
                 tool_name = _tool_label(method, params)
@@ -227,10 +240,8 @@ async def jsonrpc_endpoint(
                     except Exception:
                         pass
                     sr = _dispatch(method, params)
-                    try:
+                    with contextlib.suppress(Exception):
                         span.set_attribute("outcome", "success" if sr.success else "error")
-                    except Exception:
-                        pass
                 dt = max(0.0, time.perf_counter() - t0)
                 _observe_tool_latency(tool_name, dt, "success" if sr.success else "error")
                 _inc_tool_runs(tool_name, "success" if sr.success else "error")
@@ -267,7 +278,10 @@ async def jsonrpc_endpoint(
 
     tenant_id = x_tenant_id or (params.get("tenant_id") if params else None)
     workspace_id = x_workspace_id or (params.get("workspace_id") if params else None)
-    ctx = _ctx_from_request(str(tenant_id) if tenant_id else None, str(workspace_id) if workspace_id else None)
+    ctx = _ctx_from_request(
+        str(tenant_id) if tenant_id else None,
+        str(workspace_id) if workspace_id else None,
+    )
 
     req_start = time.perf_counter()
 
@@ -281,10 +295,8 @@ async def jsonrpc_endpoint(
             except Exception:
                 pass
             sr = _dispatch(method, params)
-            try:
+            with contextlib.suppress(Exception):
                 span.set_attribute("outcome", "success" if sr.success else "error")
-            except Exception:
-                pass
         dt = max(0.0, time.perf_counter() - t0)
         _observe_tool_latency(tool_name, dt, "success" if sr.success else "error")
         _inc_tool_runs(tool_name, "success" if sr.success else "error")

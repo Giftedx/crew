@@ -7,6 +7,7 @@ and validating stage data integrity in the analysis pipeline.
 import logging
 from typing import Any
 
+
 # Module-level logger
 logger = logging.getLogger(__name__)
 
@@ -100,7 +101,10 @@ def detect_placeholder_responses(
                     if metrics_instance:
                         metrics_instance.counter(
                             "autointel_placeholder_detected",
-                            labels={"task": task_name, "reason": "placeholder_insights"},
+                            labels={
+                                "task": task_name,
+                                "reason": "placeholder_insights",
+                            },
                         ).inc()
                     break
 
@@ -117,7 +121,10 @@ def detect_placeholder_responses(
                         if metrics_instance:
                             metrics_instance.counter(
                                 "autointel_placeholder_detected",
-                                labels={"task": task_name, "reason": "placeholder_themes"},
+                                labels={
+                                    "task": task_name,
+                                    "reason": "placeholder_themes",
+                                },
                             ).inc()
                         break
 
@@ -135,7 +142,10 @@ def detect_placeholder_responses(
                         if metrics_instance:
                             metrics_instance.counter(
                                 "autointel_placeholder_detected",
-                                labels={"task": task_name, "reason": "placeholder_fallacies"},
+                                labels={
+                                    "task": task_name,
+                                    "reason": "placeholder_fallacies",
+                                },
                             ).inc()
                         break
 

@@ -95,7 +95,12 @@ class CreatorKGStore(KGStore):
                 )
 
         return self.add_edge(
-            src_id, dst_id, edge_type, weight=weight, provenance_id=provenance_id, created_at=created_at
+            src_id,
+            dst_id,
+            edge_type,
+            weight=weight,
+            provenance_id=provenance_id,
+            created_at=created_at,
         )
 
     def get_creator_nodes(self, tenant: str, node_type: str | None = None, limit: int = 100) -> list[KGNode]:
@@ -132,14 +137,14 @@ class CreatorKGStore(KGStore):
         cur = self.conn.cursor()
         placeholders = ",".join(["?"] * len(episode_ids))
         query = f"""
-            SELECT * FROM kg_nodes 
-            WHERE id IN ({placeholders}) 
-            AND tenant = ? 
+            SELECT * FROM kg_nodes
+            WHERE id IN ({placeholders})
+            AND tenant = ?
             AND type = 'episode'
             ORDER BY json_extract(attrs_json, '$.upload_date') DESC
             LIMIT ?
         """
-        cur.execute(query, episode_ids + [tenant, limit])
+        cur.execute(query, [*episode_ids, tenant, limit])
         rows = cur.fetchall()
         return [KGNode(**row) for row in rows]
 
@@ -161,14 +166,14 @@ class CreatorKGStore(KGStore):
         cur = self.conn.cursor()
         placeholders = ",".join(["?"] * len(highlight_ids))
         query = f"""
-            SELECT * FROM kg_nodes 
-            WHERE id IN ({placeholders}) 
-            AND tenant = ? 
+            SELECT * FROM kg_nodes
+            WHERE id IN ({placeholders})
+            AND tenant = ?
             AND type = 'highlight'
             ORDER BY json_extract(attrs_json, '$.start_time') ASC
             LIMIT ?
         """
-        cur.execute(query, highlight_ids + [tenant, limit])
+        cur.execute(query, [*highlight_ids, tenant, limit])
         rows = cur.fetchall()
         return [KGNode(**row) for row in rows]
 
@@ -190,13 +195,13 @@ class CreatorKGStore(KGStore):
         cur = self.conn.cursor()
         placeholders = ",".join(["?"] * len(collab_ids))
         query = f"""
-            SELECT * FROM kg_nodes 
-            WHERE id IN ({placeholders}) 
-            AND tenant = ? 
+            SELECT * FROM kg_nodes
+            WHERE id IN ({placeholders})
+            AND tenant = ?
             AND type = 'creator'
             LIMIT ?
         """
-        cur.execute(query, collab_ids + [tenant, limit])
+        cur.execute(query, [*collab_ids, tenant, limit])
         rows = cur.fetchall()
         collaborators = [KGNode(**row) for row in rows]
 
@@ -221,14 +226,14 @@ class CreatorKGStore(KGStore):
         cur = self.conn.cursor()
         placeholders = ",".join(["?"] * len(episode_ids))
         query = f"""
-            SELECT * FROM kg_nodes 
-            WHERE id IN ({placeholders}) 
-            AND tenant = ? 
+            SELECT * FROM kg_nodes
+            WHERE id IN ({placeholders})
+            AND tenant = ?
             AND type = 'episode'
             ORDER BY json_extract(attrs_json, '$.upload_date') DESC
             LIMIT ?
         """
-        cur.execute(query, episode_ids + [tenant, limit])
+        cur.execute(query, [*episode_ids, tenant, limit])
         rows = cur.fetchall()
         episodes = [KGNode(**row) for row in rows]
 
@@ -254,14 +259,14 @@ class CreatorKGStore(KGStore):
         placeholders = ",".join(["?"] * len(content_ids))
         query = f"""
             SELECT *, json_extract(attrs_json, '$.upload_date') as content_date
-            FROM kg_nodes 
-            WHERE id IN ({placeholders}) 
-            AND tenant = ? 
+            FROM kg_nodes
+            WHERE id IN ({placeholders})
+            AND tenant = ?
             AND type IN ('episode', 'claim', 'quote')
             ORDER BY content_date DESC
             LIMIT ?
         """
-        cur.execute(query, content_ids + [tenant, limit])
+        cur.execute(query, [*content_ids, tenant, limit])
         rows = cur.fetchall()
 
         # Return tuples of (content_node, content_type)
@@ -287,12 +292,12 @@ class CreatorKGStore(KGStore):
             cur = self.conn.cursor()
             placeholders = ",".join(["?"] * len(supporting_ids))
             query = f"""
-                SELECT * FROM kg_nodes 
-                WHERE id IN ({placeholders}) 
-                AND tenant = ? 
+                SELECT * FROM kg_nodes
+                WHERE id IN ({placeholders})
+                AND tenant = ?
                 AND type = 'claim'
             """
-            cur.execute(query, supporting_ids + [tenant])
+            cur.execute(query, [*supporting_ids, tenant])
             rows = cur.fetchall()
             supporting_claims = [KGNode(**row) for row in rows]
 
@@ -302,12 +307,12 @@ class CreatorKGStore(KGStore):
             cur = self.conn.cursor()
             placeholders = ",".join(["?"] * len(contradicting_ids))
             query = f"""
-                SELECT * FROM kg_nodes 
-                WHERE id IN ({placeholders}) 
-                AND tenant = ? 
+                SELECT * FROM kg_nodes
+                WHERE id IN ({placeholders})
+                AND tenant = ?
                 AND type = 'claim'
             """
-            cur.execute(query, contradicting_ids + [tenant])
+            cur.execute(query, [*contradicting_ids, tenant])
             rows = cur.fetchall()
             contradicting_claims = [KGNode(**row) for row in rows]
 

@@ -5,7 +5,9 @@ Tests for TikTok API client and models.
 from unittest.mock import Mock, patch
 
 from ultimate_discord_intelligence_bot.creator_ops.config import CreatorOpsConfig
-from ultimate_discord_intelligence_bot.creator_ops.integrations.tiktok_client import TikTokClient
+from ultimate_discord_intelligence_bot.creator_ops.integrations.tiktok_client import (
+    TikTokClient,
+)
 from ultimate_discord_intelligence_bot.creator_ops.integrations.tiktok_models import (
     TikTokComment,
     TikTokInsights,

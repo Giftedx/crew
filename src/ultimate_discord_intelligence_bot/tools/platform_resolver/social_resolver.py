@@ -28,10 +28,16 @@ class SocialResolverTool(BaseTool[StepResult]):
         try:
             profile = resolve_social_handle(platform, handle)
             data = profile.to_dict()
-            self._metrics.counter("tool_runs_total", labels={"tool": "resolver_social", "outcome": "success"}).inc()
+            self._metrics.counter(
+                "tool_runs_total",
+                labels={"tool": "resolver_social", "outcome": "success"},
+            ).inc()
             return StepResult.ok(data=data)
         except Exception as exc:
-            self._metrics.counter("tool_runs_total", labels={"tool": "resolver_social", "outcome": "error"}).inc()
+            self._metrics.counter(
+                "tool_runs_total",
+                labels={"tool": "resolver_social", "outcome": "error"},
+            ).inc()
             return StepResult.fail(error=str(exc))
 
     def run(self, platform: str, handle: str) -> StepResult:  # thin wrapper

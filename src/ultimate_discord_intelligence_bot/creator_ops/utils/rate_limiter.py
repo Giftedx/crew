@@ -11,6 +11,7 @@ from typing import Any, TypeVar
 
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
+
 logger = logging.getLogger(__name__)
 
 T = TypeVar("T")
@@ -244,10 +245,7 @@ class RateLimiter:
             return False
 
         # Check sliding window if available
-        if self.sliding_window and not await self.sliding_window.acquire():
-            return False
-
-        return True
+        return not (self.sliding_window and not await self.sliding_window.acquire())
 
     async def wait_for_permission(self, tokens: int = 1, timeout: float | None = None) -> bool:
         """

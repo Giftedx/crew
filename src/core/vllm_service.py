@@ -9,9 +9,15 @@ from __future__ import annotations
 import logging
 import threading
 import time
-from collections.abc import AsyncGenerator
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+from core.secure_config import get_config
+
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncGenerator
+
 
 logger = logging.getLogger(__name__)
 
@@ -29,8 +35,6 @@ except ImportError:  # pragma: no cover
     AsyncLLMEngine = None  # type: ignore[assignment,misc]
     VLLM_AVAILABLE = False
     logger.debug("vLLM not available - high-performance local inference disabled")
-
-from core.secure_config import get_config
 
 
 @dataclass
@@ -70,11 +74,19 @@ class vLLMLocalInferenceService:
             secure_config = get_config()
             self.config.model_name = getattr(secure_config, "vllm_model_name", self.config.model_name)
             self.config.tensor_parallel_size = int(
-                getattr(secure_config, "vllm_tensor_parallel_size", self.config.tensor_parallel_size)
+                getattr(
+                    secure_config,
+                    "vllm_tensor_parallel_size",
+                    self.config.tensor_parallel_size,
+                )
             )
             self.config.max_model_len = int(getattr(secure_config, "vllm_max_model_len", self.config.max_model_len))
             self.config.gpu_memory_utilization = float(
-                getattr(secure_config, "vllm_gpu_memory_utilization", self.config.gpu_memory_utilization)
+                getattr(
+                    secure_config,
+                    "vllm_gpu_memory_utilization",
+                    self.config.gpu_memory_utilization,
+                )
             )
             self.config.quantization = getattr(secure_config, "vllm_quantization", self.config.quantization)
         except Exception as e:
@@ -156,9 +168,8 @@ class vLLMLocalInferenceService:
         stop: list[str] | None = None,
     ) -> list[dict[str, Any]]:
         """Generate responses synchronously with batching."""
-        if not self.initialized or not self.sync_engine:
-            if not self.initialize_sync_engine():
-                return [{"error": "vLLM engine not available"} for _ in prompts]
+        if (not self.initialized or not self.sync_engine) and not self.initialize_sync_engine():
+            return [{"error": "vLLM engine not available"} for _ in prompts]
 
         # At this point, sync_engine should be initialized
         if self.sync_engine is None:
@@ -211,9 +222,8 @@ class vLLMLocalInferenceService:
         stop: list[str] | None = None,
     ) -> dict[str, Any]:
         """Generate response asynchronously."""
-        if not self.initialized or not self.engine:
-            if not await self.initialize_async_engine():
-                return {"error": "vLLM async engine not available"}
+        if (not self.initialized or not self.engine) and not await self.initialize_async_engine():
+            return {"error": "vLLM async engine not available"}
 
         # At this point, engine should be initialized
         if self.engine is None:
@@ -268,10 +278,9 @@ class vLLMLocalInferenceService:
         stop: list[str] | None = None,
     ) -> AsyncGenerator[dict[str, Any], None]:
         """Generate streaming response."""
-        if not self.initialized or not self.engine:
-            if not await self.initialize_async_engine():
-                yield {"error": "vLLM async engine not available"}
-                return
+        if (not self.initialized or not self.engine) and not await self.initialize_async_engine():
+            yield {"error": "vLLM async engine not available"}
+            return
 
         # At this point, engine should be initialized
         if self.engine is None:

@@ -25,8 +25,12 @@ from __future__ import annotations
 
 import json
 import time
-from collections.abc import Callable
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
 
 try:
     from fastmcp import FastMCP  # type: ignore
@@ -66,7 +70,9 @@ _active_executions: dict[str, dict[str, Any]] = {}
 def _get_crew_instance():
     """Get a CrewAI crew instance safely."""
     try:
-        from ultimate_discord_intelligence_bot.crew import UltimateDiscordIntelligenceBotCrew  # type: ignore
+        from ultimate_discord_intelligence_bot.crew import (
+            UltimateDiscordIntelligenceBotCrew,
+        )  # type: ignore
 
         return UltimateDiscordIntelligenceBotCrew()
     except Exception:
@@ -83,7 +89,12 @@ def _is_execution_enabled() -> bool:
     try:
         import os
 
-        return os.getenv("ENABLE_MCP_CREWAI_EXECUTION", "0").lower() in ("1", "true", "yes", "on")
+        return os.getenv("ENABLE_MCP_CREWAI_EXECUTION", "0").lower() in (
+            "1",
+            "true",
+            "yes",
+            "on",
+        )
     except Exception:
         return False
 
@@ -233,7 +244,11 @@ def execute_crew(inputs: dict[str, Any], crew_type: str = "default") -> dict[str
                     "success": True,
                 }
             else:
-                result_data = {"type": type(result).__name__, "value": str(result), "success": True}
+                result_data = {
+                    "type": type(result).__name__,
+                    "value": str(result),
+                    "success": True,
+                }
 
             return {
                 "execution_id": execution_id,
@@ -265,7 +280,11 @@ def execute_crew(inputs: dict[str, Any], crew_type: str = "default") -> dict[str
             }
 
     except Exception as e:
-        return {"execution_id": execution_id, "error": f"Execution setup failed: {e}", "status": "setup_failed"}
+        return {
+            "execution_id": execution_id,
+            "error": f"Execution setup failed: {e}",
+            "status": "setup_failed",
+        }
 
 
 @crewai_mcp.tool
@@ -295,7 +314,7 @@ def get_agent_performance(agent_name: str | None = None) -> dict[str, Any]:
         else:
             return {
                 "summary": {
-                    "total_agents": len([k for k in _active_executions.keys()]),
+                    "total_agents": len(list(_active_executions)),
                     "active_executions": len([e for e in _active_executions.values() if e.get("status") == "running"]),
                     "completed_executions": len(
                         [e for e in _active_executions.values() if e.get("status") == "completed"]
@@ -359,7 +378,12 @@ def list_agents_resource() -> str:
                 agents.append({"name": attr_name, "method": attr_name, "type": "agent"})
 
         return json.dumps(
-            {"agents": agents, "total": len(agents), "crew_type": "UltimateDiscordIntelligenceBotCrew"}, indent=2
+            {
+                "agents": agents,
+                "total": len(agents),
+                "crew_type": "UltimateDiscordIntelligenceBotCrew",
+            },
+            indent=2,
         )
     except Exception as e:
         return json.dumps({"error": f"Could not list agents: {e}"})
@@ -379,7 +403,12 @@ def list_tasks_resource() -> str:
                 tasks.append({"name": attr_name, "method": attr_name, "type": "task"})
 
         return json.dumps(
-            {"tasks": tasks, "total": len(tasks), "crew_type": "UltimateDiscordIntelligenceBotCrew"}, indent=2
+            {
+                "tasks": tasks,
+                "total": len(tasks),
+                "crew_type": "UltimateDiscordIntelligenceBotCrew",
+            },
+            indent=2,
         )
     except Exception as e:
         return json.dumps({"error": f"Could not list tasks: {e}"})
@@ -399,7 +428,11 @@ def execution_metrics_resource(execution_id: str) -> str:
     else:
         execution_time = None
 
-    metrics = {**execution, "calculated_execution_time": execution_time, "timestamp": time.time()}
+    metrics = {
+        **execution,
+        "calculated_execution_time": execution_time,
+        "timestamp": time.time(),
+    }
 
     return json.dumps(metrics, indent=2)
 

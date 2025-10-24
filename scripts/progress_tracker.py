@@ -15,6 +15,7 @@ from typing import Any
 
 import structlog
 
+
 logger = structlog.get_logger()
 
 
@@ -130,7 +131,8 @@ class ProgressTracker:
         completed_tasks_list = [t for t in tasks.values() if t.get("status") == "completed"]
         velocity = calculate_velocity(completed_tasks_list)
         estimated_date = estimate_completion_date(
-            remaining_tasks=len([t for t in tasks.values() if t.get("status") != "completed"]), velocity=velocity
+            remaining_tasks=len([t for t in tasks.values() if t.get("status") != "completed"]),
+            velocity=velocity,
         )
 
         return ProgressSummary(
@@ -177,7 +179,7 @@ class ProgressTracker:
                 print(f"   ⚠️  {blocker}")
 
         # Recent metrics
-        if "metrics_history" in self.progress_data and self.progress_data["metrics_history"]:
+        if self.progress_data.get("metrics_history"):
             latest_metrics = self.progress_data["metrics_history"][-1]
             print("\n📊 LATEST METRICS")
             print(f"   Cost/Interaction: ${latest_metrics['cost_per_interaction']:.3f}")
@@ -209,9 +211,13 @@ class ProgressTracker:
         print(f"\n🔍 {current_phase.upper()} PHASE DETAILS")
 
         for task_id, task_data in sorted(phase_tasks.items(), key=lambda x: x[1]["week"]):
-            status_icon = {"completed": "✅", "in_progress": "🔄", "failed": "❌", "pending": "⏳", "skipped": "⏭️"}.get(
-                task_data["status"], "❓"
-            )
+            status_icon = {
+                "completed": "✅",
+                "in_progress": "🔄",
+                "failed": "❌",
+                "pending": "⏳",
+                "skipped": "⏭️",
+            }.get(task_data["status"], "❓")
 
             priority_color = {"P0": "🔴", "P1": "🟡", "P2": "🟢", "P3": "🔵"}.get(task_data["priority"], "⚪")
 

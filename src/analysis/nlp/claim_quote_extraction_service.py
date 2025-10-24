@@ -25,6 +25,7 @@ from typing import Any, Literal
 
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
+
 logger = logging.getLogger(__name__)
 
 # Try to import spacy (optional dependency)
@@ -181,7 +182,7 @@ class ClaimQuoteExtractionService:
 
         except Exception as e:
             logger.error(f"Claim/quote extraction failed: {e}")
-            return StepResult.fail(f"Extraction failed: {str(e)}", status="retryable")
+            return StepResult.fail(f"Extraction failed: {e!s}", status="retryable")
 
     def extract_from_segments(
         self,
@@ -214,7 +215,13 @@ class ClaimQuoteExtractionService:
                 # Extract from this segment
                 segment_result = self.extract_claims_and_quotes(
                     text=segment_text,
-                    speakers=[{"speaker": speaker, "start": start_time, "end": start_time + 30}],
+                    speakers=[
+                        {
+                            "speaker": speaker,
+                            "start": start_time,
+                            "end": start_time + 30,
+                        }
+                    ],
                     model=model,
                     use_cache=False,  # Don't cache individual segments
                 )
@@ -253,7 +260,7 @@ class ClaimQuoteExtractionService:
 
         except Exception as e:
             logger.error(f"Segment extraction failed: {e}")
-            return StepResult.fail(f"Segment extraction failed: {str(e)}")
+            return StepResult.fail(f"Segment extraction failed: {e!s}")
 
     def _select_model(self, model_alias: str) -> str:
         """Select actual model configuration from alias.
@@ -529,7 +536,10 @@ class ClaimQuoteExtractionService:
         return None
 
     def _estimate_timestamp(
-        self, sentence_index: int, total_sentences: int, speakers: list[dict[str, Any]] | None
+        self,
+        sentence_index: int,
+        total_sentences: int,
+        speakers: list[dict[str, Any]] | None,
     ) -> float | None:
         """Estimate timestamp for a sentence based on position and speaker context.
 
@@ -675,7 +685,7 @@ class ClaimQuoteExtractionService:
 
         except Exception as e:
             logger.error(f"Failed to get cache stats: {e}")
-            return StepResult.fail(f"Failed to get cache stats: {str(e)}")
+            return StepResult.fail(f"Failed to get cache stats: {e!s}")
 
 
 # Singleton instance

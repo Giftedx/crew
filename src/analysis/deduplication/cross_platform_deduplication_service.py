@@ -27,6 +27,7 @@ from typing import Any, Literal
 
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
+
 logger = logging.getLogger(__name__)
 
 # Try to import imagehash (optional dependency)
@@ -121,16 +122,12 @@ class CrossPlatformDeduplicationService:
 
             # Check cache first
             if use_cache:
-                cache_result = self._check_cache(
-                    image_paths, text_items, platforms, similarity_threshold, model
-                )
+                cache_result = self._check_cache(image_paths, text_items, platforms, similarity_threshold, model)
                 if cache_result:
                     logger.info("Deduplication cache hit")
                     return StepResult.ok(
                         data={
-                            "duplicate_clusters": [
-                                c.__dict__ for c in cache_result.duplicate_clusters
-                            ],
+                            "duplicate_clusters": [c.__dict__ for c in cache_result.duplicate_clusters],
                             "total_items_processed": cache_result.total_items_processed,
                             "duplicates_found": cache_result.duplicates_found,
                             "unique_items": cache_result.unique_items,
@@ -162,9 +159,7 @@ class CrossPlatformDeduplicationService:
 
                 return StepResult.ok(
                     data={
-                        "duplicate_clusters": [
-                            c.__dict__ for c in deduplication_result.duplicate_clusters
-                        ],
+                        "duplicate_clusters": [c.__dict__ for c in deduplication_result.duplicate_clusters],
                         "total_items_processed": deduplication_result.total_items_processed,
                         "duplicates_found": deduplication_result.duplicates_found,
                         "unique_items": deduplication_result.unique_items,
@@ -178,9 +173,7 @@ class CrossPlatformDeduplicationService:
 
         except Exception as e:
             logger.error(f"Deduplication failed: {e}")
-            return StepResult.fail(
-                f"Deduplication failed: {str(e)}", status="retryable"
-            )
+            return StepResult.fail(f"Deduplication failed: {e!s}", status="retryable")
 
     def deduplicate_content_stream(
         self,
@@ -219,9 +212,7 @@ class CrossPlatformDeduplicationService:
                 # Check for duplicates
                 is_duplicate = False
                 for existing_hash in seen_hashes:
-                    similarity = self._calculate_similarity(
-                        existing_hash, item_hash, content_type
-                    )
+                    similarity = self._calculate_similarity(existing_hash, item_hash, content_type)
                     if similarity >= similarity_threshold:
                         is_duplicate = True
                         break
@@ -256,7 +247,7 @@ class CrossPlatformDeduplicationService:
 
         except Exception as e:
             logger.error(f"Stream deduplication failed: {e}")
-            return StepResult.fail(f"Stream deduplication failed: {str(e)}")
+            return StepResult.fail(f"Stream deduplication failed: {e!s}")
 
     def _select_model(self, model_alias: str) -> str:
         """Select actual model configuration from alias.
@@ -300,25 +291,17 @@ class CrossPlatformDeduplicationService:
 
             # Process images if provided
             if image_paths:
-                image_clusters = self._find_image_duplicates(
-                    image_paths, similarity_threshold
-                )
+                image_clusters = self._find_image_duplicates(image_paths, similarity_threshold)
                 all_clusters.extend(image_clusters)
 
             # Process text if provided
             if text_items:
-                text_clusters = self._find_text_duplicates(
-                    text_items, similarity_threshold
-                )
+                text_clusters = self._find_text_duplicates(text_items, similarity_threshold)
                 all_clusters.extend(text_clusters)
 
             # Calculate statistics
-            total_items = (len(image_paths) if image_paths else 0) + (
-                len(text_items) if text_items else 0
-            )
-            duplicates_found = sum(
-                len(cluster.platform_items) for cluster in all_clusters
-            ) - len(all_clusters)
+            total_items = (len(image_paths) if image_paths else 0) + (len(text_items) if text_items else 0)
+            duplicates_found = sum(len(cluster.platform_items) for cluster in all_clusters) - len(all_clusters)
 
             return DeduplicationResult(
                 duplicate_clusters=all_clusters,
@@ -332,9 +315,7 @@ class CrossPlatformDeduplicationService:
             logger.error(f"Deduplication failed: {e}")
             return None
 
-    def _find_image_duplicates(
-        self, image_paths: list[str], threshold: float
-    ) -> list[DuplicateCluster]:
+    def _find_image_duplicates(self, image_paths: list[str], threshold: float) -> list[DuplicateCluster]:
         """Find duplicate images using perceptual hashing.
 
         Args:
@@ -359,9 +340,7 @@ class CrossPlatformDeduplicationService:
                 # Check against existing hashes
                 found_cluster = False
                 for cluster_id, existing_hash in processed_hashes.items():
-                    similarity = self._calculate_image_similarity(
-                        existing_hash, image_hash
-                    )
+                    similarity = self._calculate_image_similarity(existing_hash, image_hash)
 
                     if similarity >= threshold:
                         # Add to existing cluster
@@ -381,9 +360,7 @@ class CrossPlatformDeduplicationService:
                     cluster_id = f"image_cluster_{len(clusters)}"
                     new_cluster = DuplicateCluster(
                         cluster_id=cluster_id,
-                        platform_items={
-                            "images": [{"path": image_path, "hash": image_hash}]
-                        },
+                        platform_items={"images": [{"path": image_path, "hash": image_hash}]},
                         similarity_scores={image_path: 1.0},
                         representative_item={"path": image_path, "hash": image_hash},
                         confidence=1.0,
@@ -396,9 +373,7 @@ class CrossPlatformDeduplicationService:
 
         return clusters
 
-    def _find_text_duplicates(
-        self, text_items: list[dict[str, Any]], threshold: float
-    ) -> list[DuplicateCluster]:
+    def _find_text_duplicates(self, text_items: list[dict[str, Any]], threshold: float) -> list[DuplicateCluster]:
         """Find duplicate text using semantic similarity.
 
         Args:
@@ -598,7 +573,7 @@ class CrossPlatformDeduplicationService:
         import hashlib
 
         # Create cache key from inputs
-        combined = f"{str(image_paths)}:{str(text_items)}:{str(platforms)}:{similarity_threshold}:{model}"
+        combined = f"{image_paths!s}:{text_items!s}:{platforms!s}:{similarity_threshold}:{model}"
         cache_key = hashlib.sha256(combined.encode()).hexdigest()
 
         if cache_key in self._deduplication_cache:
@@ -629,7 +604,7 @@ class CrossPlatformDeduplicationService:
         import time
 
         # Create cache key
-        combined = f"{str(image_paths)}:{str(text_items)}:{str(platforms)}:{similarity_threshold}:{model}"
+        combined = f"{image_paths!s}:{text_items!s}:{platforms!s}:{similarity_threshold}:{model}"
         cache_key = hashlib.sha256(combined.encode()).hexdigest()
 
         # Add processing timestamp
@@ -666,9 +641,7 @@ class CrossPlatformDeduplicationService:
             stats = {
                 "total_cached": len(self._deduplication_cache),
                 "cache_size_limit": self.cache_size,
-                "utilization": len(self._deduplication_cache) / self.cache_size
-                if self.cache_size > 0
-                else 0.0,
+                "utilization": len(self._deduplication_cache) / self.cache_size if self.cache_size > 0 else 0.0,
                 "models_cached": {},
             }
 
@@ -681,7 +654,7 @@ class CrossPlatformDeduplicationService:
 
         except Exception as e:
             logger.error(f"Failed to get cache stats: {e}")
-            return StepResult.fail(f"Failed to get cache stats: {str(e)}")
+            return StepResult.fail(f"Failed to get cache stats: {e!s}")
 
 
 # Singleton instance

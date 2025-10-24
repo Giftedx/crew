@@ -3,7 +3,7 @@ from __future__ import annotations
 import time
 from typing import Any, TypedDict
 
-from ultimate_discord_intelligence_bot.step_result import StepResult
+from ultimate_discord_intelligence_bot.step_result import StepResult  # type: ignore[import-not-found]
 
 
 class ContentAnalysisResult(TypedDict, total=False):
@@ -94,7 +94,12 @@ class DeepContentAnalysisAgent:
 
             # Assess controversy potential
             controversy_score = await self._assess_controversy_potential(
-                content_type, content_url, sentiment_analysis, topic_classification, tenant, workspace
+                content_type,
+                content_url,
+                sentiment_analysis,
+                topic_classification,
+                tenant,
+                workspace,
             )
 
             # Perform fact-checking
@@ -129,7 +134,7 @@ class DeepContentAnalysisAgent:
 
         except Exception as e:
             self._update_processing_stats(0, False)
-            return StepResult.fail(f"Deep content analysis failed: {str(e)}")
+            return StepResult.fail(f"Deep content analysis failed: {e!s}")
 
     async def _perform_multimodal_analysis(
         self, content_type: str, content_url: str, tenant: str, workspace: str
@@ -327,10 +332,16 @@ class DeepContentAnalysisAgent:
             ]
 
         except Exception as e:
-            return [f"classification_error: {str(e)}"]
+            return [f"classification_error: {e!s}"]
 
     async def _predict_engagement(
-        self, content_id: str, creator_id: str, platform: str, content_type: str, tenant: str, workspace: str
+        self,
+        content_id: str,
+        creator_id: str,
+        platform: str,
+        content_type: str,
+        tenant: str,
+        workspace: str,
     ) -> dict[str, Any]:
         """Predict engagement metrics for the content."""
         try:
@@ -350,7 +361,12 @@ class DeepContentAnalysisAgent:
             return {"error": str(e)}
 
     async def _calculate_viral_potential(
-        self, content_type: str, content_url: str, engagement_prediction: dict[str, Any], tenant: str, workspace: str
+        self,
+        content_type: str,
+        content_url: str,
+        engagement_prediction: dict[str, Any],
+        tenant: str,
+        workspace: str,
     ) -> float:
         """Calculate viral potential score (0-1)."""
         try:
@@ -387,7 +403,12 @@ class DeepContentAnalysisAgent:
             controversy_score = 0.0
 
             # Check topics
-            controversial_topics = ["Politics", "Controversy", "Religion", "Social Issues"]
+            controversial_topics = [
+                "Politics",
+                "Controversy",
+                "Religion",
+                "Social Issues",
+            ]
             for topic in topic_classification:
                 if topic in controversial_topics:
                     controversy_score += 0.2
@@ -420,7 +441,11 @@ class DeepContentAnalysisAgent:
                 "facts_unverified": 1,
                 "accuracy_score": 0.8,
                 "fact_check_summary": "Most claims are accurate, one disputed claim about statistics",
-                "sources_used": ["Wikipedia", "Official Government Data", "Academic Papers"],
+                "sources_used": [
+                    "Wikipedia",
+                    "Official Government Data",
+                    "Academic Papers",
+                ],
             }
 
         except Exception as e:
@@ -456,7 +481,10 @@ class DeepContentAnalysisAgent:
         self._analysis_cache.clear()
 
     async def batch_analyze_content(
-        self, content_list: list[dict[str, Any]], tenant: str = "default", workspace: str = "default"
+        self,
+        content_list: list[dict[str, Any]],
+        tenant: str = "default",
+        workspace: str = "default",
     ) -> StepResult:
         """Analyze multiple content pieces in batch."""
         try:
@@ -481,7 +509,7 @@ class DeepContentAnalysisAgent:
                         errors.append(f"Failed to analyze {content['content_id']}: {result.error}")
 
                 except Exception as e:
-                    errors.append(f"Error analyzing {content.get('content_id', 'unknown')}: {str(e)}")
+                    errors.append(f"Error analyzing {content.get('content_id', 'unknown')}: {e!s}")
 
             return StepResult.ok(
                 data={
@@ -493,4 +521,4 @@ class DeepContentAnalysisAgent:
             )
 
         except Exception as e:
-            return StepResult.fail(f"Batch analysis failed: {str(e)}")
+            return StepResult.fail(f"Batch analysis failed: {e!s}")

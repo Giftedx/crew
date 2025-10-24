@@ -19,15 +19,21 @@ from pathlib import Path
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from analysis.sentiment.sentiment_stance_analysis_service import get_sentiment_stance_analysis_service
+from analysis.sentiment.sentiment_stance_analysis_service import (
+    get_sentiment_stance_analysis_service,
+)
 
 
 def main() -> int:
     """Main example function."""
     if len(sys.argv) < 2:
-        print("Usage: python examples/sentiment_stance_analysis_example.py \"text to analyze\"")
+        print(
+            'Usage: python examples/sentiment_stance_analysis_example.py "text to analyze"'
+        )
         print("Example:")
-        print('python examples/sentiment_stance_analysis_example.py "This is absolutely amazing! I love this content so much. The discussion was incredible and I completely agree with everything said."')
+        print(
+            'python examples/sentiment_stance_analysis_example.py "This is absolutely amazing! I love this content so much. The discussion was incredible and I completely agree with everything said."'
+        )
         return 1
 
     text = sys.argv[1]
@@ -53,7 +59,8 @@ def main() -> int:
 
     data = result.data
 
-    print("✅ Analysis completed!"    print(f"   Analysis confidence: {data.get('analysis_confidence', 0):.2f}")
+    print("✅ Analysis completed!")
+    print(f"   Analysis confidence: {data.get('analysis_confidence', 0):.2f}")
     print(f"   Cache hit: {data['cache_hit']}")
     print(f"   Processing time: {data['processing_time_ms']:.0f}ms")
     print()
@@ -77,7 +84,9 @@ def main() -> int:
         emotion_scores = emotion.get("emotion_scores", {})
         if emotion_scores:
             print("   Emotion scores:")
-            for emotion_name, score in sorted(emotion_scores.items(), key=lambda x: x[1], reverse=True)[:3]:
+            for emotion_name, score in sorted(
+                emotion_scores.items(), key=lambda x: x[1], reverse=True
+            )[:3]:
                 print(f"     {emotion_name}: {score:.2f}")
         print()
 
@@ -101,7 +110,7 @@ def main() -> int:
         if rhetorical.get("rhetorical_questions"):
             print(f"   Rhetorical questions: {len(rhetorical['rhetorical_questions'])}")
             for question in rhetorical["rhetorical_questions"][:2]:
-                print(f"     \"{question}\"")
+                print(f'     "{question}"')
 
         if rhetorical.get("emphasis_words"):
             print(f"   Emphasis words: {', '.join(rhetorical['emphasis_words'][:3])}")
@@ -124,4 +133,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
-

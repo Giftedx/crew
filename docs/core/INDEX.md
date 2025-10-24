@@ -117,7 +117,7 @@
 
 ### Additional Resources
 
-- **[Developer Onboarding Guide](./docs/DEVELOPER_ONBOARDING_GUIDE.md)** - Getting started for new contributors
+- **[Developer Onboarding Guide](../archive/consolidated/DEVELOPER_ONBOARDING_GUIDE.md)** - Getting started for new contributors
 - **[Copilot Instructions Update](./docs/COPILOT_INSTRUCTIONS_UPDATE.md)** - AI agent operational guidelines
 
 ---
@@ -323,7 +323,7 @@ These documents are preserved for historical reference but removed from the root
 
 ## 🤝 Contributing
 
-1. Read the [Developer Onboarding Guide](./docs/DEVELOPER_ONBOARDING_GUIDE.md)
+1. Read the [Developer Onboarding Guide](../archive/consolidated/DEVELOPER_ONBOARDING_GUIDE.md)
 2. Review [Copilot Instructions](./docs/COPILOT_INSTRUCTIONS_UPDATE.md) if using AI tools
 3. Follow the test-driven development workflow
 4. Run `make guards` before committing

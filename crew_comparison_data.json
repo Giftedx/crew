@@ -1,0 +1,68 @@
+{
+  "timestamp": "2025-10-22 03:28:22",
+  "metrics": [
+    {
+      "crew_type": "canonical",
+      "success_rate": 0.88,
+      "avg_execution_time": 48.0,
+      "avg_memory_usage": 288.0,
+      "avg_cpu_usage": 68.0,
+      "total_executions": 1,
+      "successful_executions": 1,
+      "failed_executions": 0,
+      "performance_score": 0.8799999999999999,
+      "last_execution": 1761100102.1873727
+    },
+    {
+      "crew_type": "legacy",
+      "success_rate": 0.8400000000000001,
+      "avg_execution_time": 44.0,
+      "avg_memory_usage": 184.0,
+      "avg_cpu_usage": 64.0,
+      "total_executions": 1,
+      "successful_executions": 1,
+      "failed_executions": 0,
+      "performance_score": 0.84,
+      "last_execution": 1761100102.1873827
+    },
+    {
+      "crew_type": "new",
+      "success_rate": 0.8,
+      "avg_execution_time": 20.0,
+      "avg_memory_usage": 260.0,
+      "avg_cpu_usage": 70.0,
+      "total_executions": 1,
+      "successful_executions": 1,
+      "failed_executions": 0,
+      "performance_score": 0.8999999999999999,
+      "last_execution": 1761100102.1873853
+    },
+    {
+      "crew_type": "modular",
+      "success_rate": 0.8,
+      "avg_execution_time": 10.0,
+      "avg_memory_usage": 200.0,
+      "avg_cpu_usage": 60.0,
+      "total_executions": 1,
+      "successful_executions": 1,
+      "failed_executions": 0,
+      "performance_score": 0.7999999999999999,
+      "last_execution": 1761100102.1873875
+    },
+    {
+      "crew_type": "refactored",
+      "success_rate": 0.9,
+      "avg_execution_time": 20.0,
+      "avg_memory_usage": 110.0,
+      "avg_cpu_usage": 60.0,
+      "total_executions": 1,
+      "successful_executions": 1,
+      "failed_executions": 0,
+      "performance_score": 0.7999999999999999,
+      "last_execution": 1761100102.1873896
+    }
+  ],
+  "charts": [],
+  "summary": {},
+  "recommendations": []
+}

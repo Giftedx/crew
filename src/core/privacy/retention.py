@@ -6,11 +6,15 @@ Docstring precedes future import (Ruff E402 compliance).
 from __future__ import annotations
 
 import json
-import sqlite3
 from datetime import datetime, timedelta
+from typing import TYPE_CHECKING
 
 from core.time import default_utc_now
 from policy import policy_engine
+
+
+if TYPE_CHECKING:
+    import sqlite3
 
 
 def sweep(conn: sqlite3.Connection, *, tenant: str | None = None, now: datetime | None = None) -> int:
@@ -24,8 +28,8 @@ def sweep(conn: sqlite3.Connection, *, tenant: str | None = None, now: datetime 
 
 def export_redacted_dataset(conn: sqlite3.Connection, query: str) -> str:
     cur = conn.execute(query)
-    rows = [dict(zip([c[0] for c in cur.description], r)) for r in cur.fetchall()]
+    rows = [dict(zip([c[0] for c in cur.description], r, strict=False)) for r in cur.fetchall()]
     return "\n".join(json.dumps(r) for r in rows)
 
 
-__all__ = ["sweep", "export_redacted_dataset"]
+__all__ = ["export_redacted_dataset", "sweep"]

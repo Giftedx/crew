@@ -18,6 +18,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -186,7 +187,11 @@ class AIFeatureExpansionEngine:
                 feature_name="Intelligent Conversation Engine",
                 feature_type="conversational",
                 complexity="advanced",
-                foundation_requirements=["93.5% AI routing", "180ms response time", "99.92% reliability"],
+                foundation_requirements=[
+                    "93.5% AI routing",
+                    "180ms response time",
+                    "99.92% reliability",
+                ],
                 expected_impact="Revolutionary natural language understanding with context awareness",
                 development_effort="high",
                 user_value="Seamless, intelligent conversations with deep context understanding",
@@ -196,7 +201,11 @@ class AIFeatureExpansionEngine:
                 feature_name="Multimodal AI Comprehension",
                 feature_type="multimodal",
                 complexity="advanced",
-                foundation_requirements=["92.1% performance", "85% resource efficiency", "automated optimization"],
+                foundation_requirements=[
+                    "92.1% performance",
+                    "85% resource efficiency",
+                    "automated optimization",
+                ],
                 expected_impact="Cross-modal understanding of text, images, audio, and video",
                 development_effort="high",
                 user_value="Rich media analysis and intelligent content generation",
@@ -206,7 +215,11 @@ class AIFeatureExpansionEngine:
                 feature_name="Autonomous Task Agents",
                 feature_type="autonomous",
                 complexity="experimental",
-                foundation_requirements=["99.92% uptime", "self-healing systems", "predictive optimization"],
+                foundation_requirements=[
+                    "99.92% uptime",
+                    "self-healing systems",
+                    "predictive optimization",
+                ],
                 expected_impact="Self-directed AI agents capable of complex task completion",
                 development_effort="high",
                 user_value="Hands-free automation of complex workflows and decision-making",
@@ -216,7 +229,11 @@ class AIFeatureExpansionEngine:
                 feature_name="Dynamic Knowledge Graph",
                 feature_type="knowledge",
                 complexity="advanced",
-                foundation_requirements=["92.4% user satisfaction", "automated systems", "continuous learning"],
+                foundation_requirements=[
+                    "92.4% user satisfaction",
+                    "automated systems",
+                    "continuous learning",
+                ],
                 expected_impact="Real-time knowledge synthesis and intelligent reasoning",
                 development_effort="medium",
                 user_value="Instant access to synthesized knowledge and intelligent insights",
@@ -226,7 +243,10 @@ class AIFeatureExpansionEngine:
                 feature_name="Emotional Intelligence Engine",
                 feature_type="conversational",
                 complexity="intermediate",
-                foundation_requirements=["93.5% AI routing", "user feedback integration"],
+                foundation_requirements=[
+                    "93.5% AI routing",
+                    "user feedback integration",
+                ],
                 expected_impact="Emotionally aware AI interactions with empathy modeling",
                 development_effort="medium",
                 user_value="More human-like and emotionally intelligent conversations",
@@ -236,7 +256,10 @@ class AIFeatureExpansionEngine:
                 feature_name="Predictive User Intent",
                 feature_type="autonomous",
                 complexity="advanced",
-                foundation_requirements=["production patterns analysis", "predictive optimization"],
+                foundation_requirements=[
+                    "production patterns analysis",
+                    "predictive optimization",
+                ],
                 expected_impact="Anticipatory AI that predicts and fulfills user needs",
                 development_effort="high",
                 user_value="Proactive assistance and intelligent anticipation of needs",
@@ -646,7 +669,7 @@ class AIFeatureExpansionEngine:
 
     def _calculate_feature_diversity(self) -> float:
         """Calculate feature diversity score."""
-        feature_types = set(cap.capability_name for cap in self.deployed_capabilities)
+        feature_types = {cap.capability_name for cap in self.deployed_capabilities}
         return min(1.0, len(feature_types) / 6)  # Normalize by max expected features
 
     def _assess_technical_innovation(self) -> float:
@@ -669,7 +692,10 @@ class AIFeatureExpansionEngine:
         return (breadth_score + integration_score) / 2
 
     def _assess_innovation_success(
-        self, innovation_metrics: dict[str, Any], user_impact: dict[str, Any], technical_achievements: dict[str, Any]
+        self,
+        innovation_metrics: dict[str, Any],
+        user_impact: dict[str, Any],
+        technical_achievements: dict[str, Any],
     ) -> bool:
         """Assess overall innovation success."""
 

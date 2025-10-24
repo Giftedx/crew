@@ -12,13 +12,12 @@ import json
 import logging
 import time
 from datetime import datetime, timedelta
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
-from ultimate_discord_intelligence_bot.creator_ops.auth.oauth_manager import YouTubeOAuthManager
 from ultimate_discord_intelligence_bot.creator_ops.config import CreatorOpsConfig
 from ultimate_discord_intelligence_bot.creator_ops.integrations.youtube_models import (
     YouTubeCaption,
@@ -30,6 +29,13 @@ from ultimate_discord_intelligence_bot.creator_ops.integrations.youtube_models i
     YouTubeVideo,
 )
 from ultimate_discord_intelligence_bot.step_result import StepResult
+
+
+if TYPE_CHECKING:
+    from ultimate_discord_intelligence_bot.creator_ops.auth.oauth_manager import (
+        YouTubeOAuthManager,
+    )
+
 
 logger = logging.getLogger(__name__)
 
@@ -180,13 +186,13 @@ class YouTubeClient:
                 error_message = error_data.get("error", {}).get("message", "Forbidden")
                 return StepResult.fail(f"YouTube API error: {error_message}")
             else:
-                return StepResult.fail(f"HTTP error {e.response.status_code}: {str(e)}")
+                return StepResult.fail(f"HTTP error {e.response.status_code}: {e!s}")
 
         except requests.exceptions.RequestException as e:
-            return StepResult.fail(f"Request failed: {str(e)}")
+            return StepResult.fail(f"Request failed: {e!s}")
 
         except Exception as e:
-            return StepResult.fail(f"Unexpected error: {str(e)}")
+            return StepResult.fail(f"Unexpected error: {e!s}")
 
     def _get_fixture_response(self, endpoint: str, params: dict[str, Any]) -> StepResult:
         """Get fixture response for testing."""
@@ -199,7 +205,10 @@ class YouTubeClient:
             # Apply basic filtering based on params
             if "part" in params:
                 # Filter response to only include requested parts
-                filtered_data = {"kind": fixture_data.get("kind"), "etag": fixture_data.get("etag")}
+                filtered_data = {
+                    "kind": fixture_data.get("kind"),
+                    "etag": fixture_data.get("etag"),
+                }
 
                 if "items" in fixture_data:
                     filtered_items = []
@@ -219,7 +228,7 @@ class YouTubeClient:
         except FileNotFoundError:
             return StepResult.fail(f"Fixture file not found: {fixture_file}")
         except Exception as e:
-            return StepResult.fail(f"Fixture error: {str(e)}")
+            return StepResult.fail(f"Fixture error: {e!s}")
 
     def get_channel(self, channel_id: str, parts: str = "snippet,statistics,status") -> StepResult:
         """Get channel information."""
@@ -431,7 +440,7 @@ class YouTubeClient:
             return StepResult.ok(data={"content": content})
 
         except requests.exceptions.RequestException as e:
-            return StepResult.fail(f"Failed to download caption: {str(e)}")
+            return StepResult.fail(f"Failed to download caption: {e!s}")
 
     def get_live_chat_messages(
         self,
@@ -532,7 +541,7 @@ class YouTubeClient:
                     try:
                         await callback(new_messages)
                     except Exception as e:
-                        logger.error(f"Callback error: {str(e)}")
+                        logger.error(f"Callback error: {e!s}")
 
                 # Wait for next poll
                 await asyncio.sleep(polling_interval / 1000.0)
@@ -540,7 +549,7 @@ class YouTubeClient:
             return StepResult.ok(data={"status": "completed", "duration_minutes": max_duration_minutes})
 
         except Exception as e:
-            return StepResult.fail(f"Live chat polling failed: {str(e)}")
+            return StepResult.fail(f"Live chat polling failed: {e!s}")
 
     def get_quota_usage(self) -> dict[str, Any]:
         """Get current quota usage."""

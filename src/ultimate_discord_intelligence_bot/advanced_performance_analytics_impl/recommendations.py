@@ -5,11 +5,14 @@ from typing import Any
 
 from .models import OptimizationRecommendation, PerformanceAnomaly
 
+
 logger = logging.getLogger(__name__)
 
 
 def generate_recommendations(
-    trends: list[dict[str, Any]], anomalies: list[PerformanceAnomaly], dashboard_data: dict[str, Any]
+    trends: list[dict[str, Any]],
+    anomalies: list[PerformanceAnomaly],
+    dashboard_data: dict[str, Any],
 ) -> list[OptimizationRecommendation]:
     recommendations: list[OptimizationRecommendation] = []
     try:

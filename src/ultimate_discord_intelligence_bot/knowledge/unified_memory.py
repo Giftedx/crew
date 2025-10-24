@@ -10,10 +10,11 @@ from __future__ import annotations
 import asyncio
 import logging
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from ultimate_discord_intelligence_bot.step_result import StepResult
 from ultimate_discord_intelligence_bot.tenancy.context import current_tenant
+
 
 # Import existing memory implementations
 try:
@@ -53,10 +54,10 @@ class MemoryResult:
     """Result from unified memory operations"""
 
     content: str
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
     source: str = "unknown"  # Which backend provided this result
     confidence: float = 1.0
-    timestamp: Optional[float] = None
+    timestamp: float | None = None
     tenant_id: str = "default"
     workspace_id: str = "main"
 
@@ -77,7 +78,7 @@ class UnifiedMemoryConfig:
 class UnifiedMemoryService:
     """Unified interface to all memory backends with tenant isolation"""
 
-    def __init__(self, config: Optional[UnifiedMemoryConfig] = None):
+    def __init__(self, config: UnifiedMemoryConfig | None = None):
         self.config = config or UnifiedMemoryConfig()
         self._initialized = False
         self._backends = {}
@@ -121,9 +122,7 @@ class UnifiedMemoryService:
                     logger.warning(f"Failed to initialize Mem0: {e}")
 
             self._initialized = True
-            logger.info(
-                f"Unified memory service initialized with {len(self._backends)} backends"
-            )
+            logger.info(f"Unified memory service initialized with {len(self._backends)} backends")
 
         except Exception as e:
             logger.error(f"Failed to initialize unified memory service: {e}")
@@ -132,10 +131,10 @@ class UnifiedMemoryService:
     async def store(
         self,
         content: str,
-        metadata: Optional[Dict[str, Any]] = None,
-        tenant_id: Optional[str] = None,
-        workspace_id: Optional[str] = None,
-        namespace: Optional[str] = None,
+        metadata: dict[str, Any] | None = None,
+        tenant_id: str | None = None,
+        workspace_id: str | None = None,
+        namespace: str | None = None,
     ) -> StepResult:
         """Store content across all configured backends atomically"""
         try:
@@ -190,9 +189,7 @@ class UnifiedMemoryService:
 
             # Execute all stores concurrently
             if store_tasks:
-                results = await asyncio.gather(
-                    *[task for _, task in store_tasks], return_exceptions=True
-                )
+                results = await asyncio.gather(*[task for _, task in store_tasks], return_exceptions=True)
 
                 for i, (backend_name, _) in enumerate(store_tasks):
                     result = results[i]
@@ -204,9 +201,7 @@ class UnifiedMemoryService:
                         logger.debug(f"Successfully stored in {backend_name}")
 
             # Return success if at least one backend succeeded
-            successful_backends = [
-                name for name, success in backend_results.items() if success
-            ]
+            successful_backends = [name for name, success in backend_results.items() if success]
             if successful_backends:
                 return StepResult.ok(
                     data={
@@ -221,14 +216,14 @@ class UnifiedMemoryService:
 
         except Exception as e:
             logger.error(f"Error in unified store: {e}", exc_info=True)
-            return StepResult.fail(f"Unified store failed: {str(e)}")
+            return StepResult.fail(f"Unified store failed: {e!s}")
 
     async def retrieve(
         self,
         query: str,
-        tenant_id: Optional[str] = None,
-        workspace_id: Optional[str] = None,
-        filters: Optional[Dict[str, Any]] = None,
+        tenant_id: str | None = None,
+        workspace_id: str | None = None,
+        filters: dict[str, Any] | None = None,
         limit: int = 10,
     ) -> StepResult:
         """Retrieve from all backends and merge results"""
@@ -272,16 +267,12 @@ class UnifiedMemoryService:
             # Execute all retrievals concurrently
             all_results = []
             if retrieve_tasks:
-                results = await asyncio.gather(
-                    *[task for _, task in retrieve_tasks], return_exceptions=True
-                )
+                results = await asyncio.gather(*[task for _, task in retrieve_tasks], return_exceptions=True)
 
                 for i, (backend_name, _) in enumerate(retrieve_tasks):
                     result = results[i]
                     if isinstance(result, Exception):
-                        logger.warning(
-                            f"Failed to retrieve from {backend_name}: {result}"
-                        )
+                        logger.warning(f"Failed to retrieve from {backend_name}: {result}")
                         continue
 
                     if result and hasattr(result, "success") and result.success:
@@ -322,11 +313,9 @@ class UnifiedMemoryService:
 
         except Exception as e:
             logger.error(f"Error in unified retrieve: {e}", exc_info=True)
-            return StepResult.fail(f"Unified retrieve failed: {str(e)}")
+            return StepResult.fail(f"Unified retrieve failed: {e!s}")
 
-    async def _store_vector(
-        self, content: str, metadata: Dict[str, Any], namespace: str
-    ) -> bool:
+    async def _store_vector(self, content: str, metadata: dict[str, Any], namespace: str) -> bool:
         """Store content in vector store"""
         try:
             if not memory_store:
@@ -347,9 +336,7 @@ class UnifiedMemoryService:
             logger.debug(f"Vector store failed: {e}")
             return False
 
-    async def _store_sqlite(
-        self, content: str, metadata: Dict[str, Any], namespace: str
-    ) -> bool:
+    async def _store_sqlite(self, content: str, metadata: dict[str, Any], namespace: str) -> bool:
         """Store content in SQLite store"""
         try:
             store = self._backends["sqlite"]
@@ -359,26 +346,20 @@ class UnifiedMemoryService:
             logger.debug(f"SQLite store failed: {e}")
             return False
 
-    async def _store_semantic(
-        self, content: str, metadata: Dict[str, Any], namespace: str
-    ) -> bool:
+    async def _store_semantic(self, content: str, metadata: dict[str, Any], namespace: str) -> bool:
         """Store content in semantic cache"""
         try:
             cache = self._backends["semantic"]
             if hasattr(cache, "set"):
                 # Run in thread if sync
                 loop = asyncio.get_event_loop()
-                await loop.run_in_executor(
-                    None, cache.set, content, "unified", content, namespace
-                )
+                await loop.run_in_executor(None, cache.set, content, "unified", content, namespace)
             return True
         except Exception as e:
             logger.debug(f"Semantic cache store failed: {e}")
             return False
 
-    async def _store_mem0(
-        self, content: str, metadata: Dict[str, Any], namespace: str
-    ) -> bool:
+    async def _store_mem0(self, content: str, metadata: dict[str, Any], namespace: str) -> bool:
         """Store content in Mem0 knowledge graph"""
         try:
             mem0 = self._backends["mem0"]
@@ -390,9 +371,7 @@ class UnifiedMemoryService:
             logger.debug(f"Mem0 store failed: {e}")
             return False
 
-    async def _retrieve_vector(
-        self, query: str, namespace: str, filters: Dict[str, Any], limit: int
-    ) -> StepResult:
+    async def _retrieve_vector(self, query: str, namespace: str, filters: dict[str, Any], limit: int) -> StepResult:
         """Retrieve from vector store"""
         try:
             if not memory_retrieve:
@@ -411,9 +390,7 @@ class UnifiedMemoryService:
             logger.debug(f"Vector retrieve failed: {e}")
             return StepResult.fail(str(e))
 
-    async def _retrieve_sqlite(
-        self, query: str, namespace: str, filters: Dict[str, Any], limit: int
-    ) -> StepResult:
+    async def _retrieve_sqlite(self, query: str, namespace: str, filters: dict[str, Any], limit: int) -> StepResult:
         """Retrieve from SQLite store"""
         try:
             store = self._backends["sqlite"]
@@ -434,18 +411,14 @@ class UnifiedMemoryService:
             logger.debug(f"SQLite retrieve failed: {e}")
             return StepResult.fail(str(e))
 
-    async def _retrieve_semantic(
-        self, query: str, namespace: str, filters: Dict[str, Any], limit: int
-    ) -> StepResult:
+    async def _retrieve_semantic(self, query: str, namespace: str, filters: dict[str, Any], limit: int) -> StepResult:
         """Retrieve from semantic cache"""
         try:
             cache = self._backends["semantic"]
             if hasattr(cache, "get"):
                 # Run in thread if sync
                 loop = asyncio.get_event_loop()
-                result = await loop.run_in_executor(
-                    None, cache.get, query, "unified", namespace
-                )
+                result = await loop.run_in_executor(None, cache.get, query, "unified", namespace)
                 if result:
                     return StepResult.ok(
                         data=[
@@ -461,9 +434,7 @@ class UnifiedMemoryService:
             logger.debug(f"Semantic cache retrieve failed: {e}")
             return StepResult.fail(str(e))
 
-    async def _retrieve_mem0(
-        self, query: str, namespace: str, filters: Dict[str, Any], limit: int
-    ) -> StepResult:
+    async def _retrieve_mem0(self, query: str, namespace: str, filters: dict[str, Any], limit: int) -> StepResult:
         """Retrieve from Mem0 knowledge graph"""
         try:
             mem0 = self._backends["mem0"]
@@ -475,7 +446,7 @@ class UnifiedMemoryService:
             logger.debug(f"Mem0 retrieve failed: {e}")
             return StepResult.fail(str(e))
 
-    def _deduplicate_results(self, results: List[MemoryResult]) -> List[MemoryResult]:
+    def _deduplicate_results(self, results: list[MemoryResult]) -> list[MemoryResult]:
         """Remove duplicate results based on content similarity"""
         if not results:
             return results
@@ -492,11 +463,11 @@ class UnifiedMemoryService:
 
         return unique_results
 
-    def get_backend_status(self) -> Dict[str, bool]:
+    def get_backend_status(self) -> dict[str, bool]:
         """Get status of all backends"""
         return {
             "initialized": self._initialized,
-            "backends": {name: True for name in self._backends.keys()},
+            "backends": dict.fromkeys(self._backends.keys(), True),
             "config": {
                 "vector_store": self.config.enable_vector_store,
                 "sqlite_store": self.config.enable_sqlite_store,

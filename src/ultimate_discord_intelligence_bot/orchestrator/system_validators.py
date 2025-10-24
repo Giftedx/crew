@@ -100,7 +100,7 @@ def check_ytdlp_available() -> bool:
             return True
         # Check configured directory hint
         try:
-            from ..settings import YTDLP_DIR  # noqa: PLC0415
+            from ..settings import YTDLP_DIR
 
             return bool(YTDLP_DIR)
         except Exception:
@@ -160,7 +160,9 @@ def check_discord_available() -> bool:
 
 
 def get_system_health(
-    error_handler: Any = None, last_successful_stage: str | None = None, logger_instance: Any = None
+    error_handler: Any = None,
+    last_successful_stage: str | None = None,
+    logger_instance: Any = None,
 ) -> dict[str, Any]:
     """Get current system health metrics for error analysis.
 

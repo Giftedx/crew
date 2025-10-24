@@ -13,6 +13,7 @@ from typing import Any
 
 import numpy as np
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -68,7 +69,12 @@ class EmotionAnalysis:
     @property
     def is_positive_emotion(self) -> bool:
         """Check if the primary emotion is positive."""
-        positive_emotions = {EmotionType.HAPPY, EmotionType.EXCITED, EmotionType.SURPRISED, EmotionType.CALM}
+        positive_emotions = {
+            EmotionType.HAPPY,
+            EmotionType.EXCITED,
+            EmotionType.SURPRISED,
+            EmotionType.CALM,
+        }
         return self.primary_emotion in positive_emotions
 
     @property
@@ -433,7 +439,21 @@ class AudioAnalyzer:
             rms_energy=0.3,
             tempo=120.0,
             rhythm_complexity=0.6,
-            mfcc_features=[1.2, -0.8, 0.5, -0.3, 0.2, -0.1, 0.1, -0.05, 0.03, -0.02, 0.01, -0.01, 0.005],
+            mfcc_features=[
+                1.2,
+                -0.8,
+                0.5,
+                -0.3,
+                0.2,
+                -0.1,
+                0.1,
+                -0.05,
+                0.03,
+                -0.02,
+                0.01,
+                -0.01,
+                0.005,
+            ],
             pitch_mean=180.0,
             pitch_std=25.0,
             jitter=0.02,
@@ -457,7 +477,10 @@ class AudioAnalyzer:
         )
 
     def _analyze_speech_rate(
-        self, audio_array: np.ndarray[tuple[np.float32, ...]], sample_rate: int, transcript: str | None = None
+        self,
+        audio_array: np.ndarray[tuple[np.float32, ...]],
+        sample_rate: int,
+        transcript: str | None = None,
     ) -> SpeechRateAnalysis:
         """Analyze speech rate and timing."""
         # Simulate speech rate analysis
@@ -652,14 +675,18 @@ def set_global_audio_analyzer(analyzer: AudioAnalyzer) -> None:
 
 # Convenience functions for global analyzer
 def analyze_audio(
-    audio_data: bytes, analysis_types: list[AudioAnalysisType] | None = None, transcript: str | None = None
+    audio_data: bytes,
+    analysis_types: list[AudioAnalysisType] | None = None,
+    transcript: str | None = None,
 ) -> AudioAnalysisResult:
     """Analyze audio using the global analyzer."""
     return get_global_audio_analyzer().analyze_audio(audio_data, analysis_types, transcript)
 
 
 def analyze_audio_from_file(
-    file_path: str, analysis_types: list[AudioAnalysisType] | None = None, transcript: str | None = None
+    file_path: str,
+    analysis_types: list[AudioAnalysisType] | None = None,
+    transcript: str | None = None,
 ) -> AudioAnalysisResult:
     """Analyze audio from file using the global analyzer."""
     return get_global_audio_analyzer().analyze_audio_from_file(file_path, analysis_types, transcript)

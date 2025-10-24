@@ -4,12 +4,12 @@ import time
 from datetime import datetime
 from typing import Any, TypedDict
 
-from ultimate_discord_intelligence_bot.profiles.creator_network_schema import (
+from ultimate_discord_intelligence_bot.profiles.creator_network_schema import (  # type: ignore[import-not-found]
     ALL_CREATOR_NETWORKS,
     EnhancedCreatorProfile,
     create_enhanced_profile_from_config,
 )
-from ultimate_discord_intelligence_bot.step_result import StepResult
+from ultimate_discord_intelligence_bot.step_result import StepResult  # type: ignore[import-not-found]
 
 
 class CollaborationEvent(TypedDict, total=False):
@@ -54,7 +54,11 @@ class GuestIntelligenceAgent:
         self._relationship_insights: dict[str, Any] = {}
 
     async def analyze_guest_network(
-        self, primary_creator: str, depth: int = 2, tenant: str = "default", workspace: str = "default"
+        self,
+        primary_creator: str,
+        depth: int = 2,
+        tenant: str = "default",
+        workspace: str = "default",
     ) -> StepResult:
         """
         Analyze guest network and collaboration patterns for a primary creator.
@@ -84,17 +88,29 @@ class GuestIntelligenceAgent:
 
             # Generate network expansion recommendations
             network_recommendations = await self._generate_network_expansion_recommendations(
-                primary_creator, discovered_guests, collaboration_events, tenant, workspace
+                primary_creator,
+                discovered_guests,
+                collaboration_events,
+                tenant,
+                workspace,
             )
 
             # Generate monitoring recommendations
             monitoring_recommendations = await self._generate_monitoring_recommendations(
-                primary_creator, discovered_guests, collaboration_events, tenant, workspace
+                primary_creator,
+                discovered_guests,
+                collaboration_events,
+                tenant,
+                workspace,
             )
 
             # Analyze relationship insights
             relationship_insights = await self._analyze_relationship_insights(
-                primary_creator, discovered_guests, collaboration_events, tenant, workspace
+                primary_creator,
+                discovered_guests,
+                collaboration_events,
+                tenant,
+                workspace,
             )
 
             result = GuestIntelligenceResult(
@@ -112,7 +128,7 @@ class GuestIntelligenceAgent:
             return StepResult.ok(data=result)
 
         except Exception as e:
-            return StepResult.fail(f"Guest intelligence analysis failed: {str(e)}")
+            return StepResult.fail(f"Guest intelligence analysis failed: {e!s}")
 
     async def _discover_guests_and_collaborators(
         self, primary_creator: str, depth: int, tenant: str, workspace: str
@@ -138,7 +154,11 @@ class GuestIntelligenceAgent:
                         if related_creator not in processed_creators:
                             # Create or get profile for the guest
                             guest_profile = await self._create_guest_profile(
-                                related_creator, primary_creator, current_depth, tenant, workspace
+                                related_creator,
+                                primary_creator,
+                                current_depth,
+                                tenant,
+                                workspace,
                             )
                             discovered_guests.append(guest_profile)
                             next_level_creators.append(related_creator)
@@ -157,7 +177,14 @@ class GuestIntelligenceAgent:
         try:
             # Mock implementation - in real system, would use content analysis
             mock_mentions = {
-                "h3_podcast": ["hasan_piker", "dan", "ab", "zach", "olivia", "will_neff"],
+                "h3_podcast": [
+                    "hasan_piker",
+                    "dan",
+                    "ab",
+                    "zach",
+                    "olivia",
+                    "will_neff",
+                ],
                 "ethan_klein": ["hasan_piker", "dan", "ab", "hila_klein"],
                 "hasan_piker": ["ethan_klein", "will_neff", "qt_cinderella", "destiny"],
                 "will_neff": ["hasan_piker", "qt_cinderella", "pokimane"],
@@ -187,7 +214,12 @@ class GuestIntelligenceAgent:
             return []
 
     async def _create_guest_profile(
-        self, guest_id: str, primary_creator: str, depth: int, tenant: str, workspace: str
+        self,
+        guest_id: str,
+        primary_creator: str,
+        depth: int,
+        tenant: str,
+        workspace: str,
     ) -> EnhancedCreatorProfile:
         """Create or enhance guest profile."""
         try:
@@ -231,7 +263,11 @@ class GuestIntelligenceAgent:
             )
 
     async def _analyze_collaboration_events(
-        self, primary_creator: str, discovered_guests: list[EnhancedCreatorProfile], tenant: str, workspace: str
+        self,
+        primary_creator: str,
+        discovered_guests: list[EnhancedCreatorProfile],
+        tenant: str,
+        workspace: str,
     ) -> list[CollaborationEvent]:
         """Analyze historical collaboration events."""
         try:
@@ -255,7 +291,11 @@ class GuestIntelligenceAgent:
                         topics=["politics", "gaming", "controversy"],
                         sentiment=0.7,
                         chemistry_score=0.85,
-                        audience_reception={"positive": 0.8, "negative": 0.1, "neutral": 0.1},
+                        audience_reception={
+                            "positive": 0.8,
+                            "negative": 0.1,
+                            "neutral": 0.1,
+                        },
                         engagement_metrics={
                             "views": 500000,
                             "likes": 25000,
@@ -278,7 +318,11 @@ class GuestIntelligenceAgent:
                         topics=["gaming", "streaming", "entertainment"],
                         sentiment=0.8,
                         chemistry_score=0.9,
-                        audience_reception={"positive": 0.85, "negative": 0.05, "neutral": 0.1},
+                        audience_reception={
+                            "positive": 0.85,
+                            "negative": 0.05,
+                            "neutral": 0.1,
+                        },
                         engagement_metrics={
                             "views": 150000,
                             "likes": 8000,
@@ -512,7 +556,11 @@ class GuestIntelligenceAgent:
         return self._relationship_insights.get(creator_id, {})
 
     async def update_guest_profile(
-        self, guest_id: str, updates: dict[str, Any], tenant: str = "default", workspace: str = "default"
+        self,
+        guest_id: str,
+        updates: dict[str, Any],
+        tenant: str = "default",
+        workspace: str = "default",
     ) -> StepResult:
         """Update guest profile with new information."""
         try:
@@ -534,10 +582,13 @@ class GuestIntelligenceAgent:
             return StepResult.ok(data={"updated_profile": profile.to_dict()})
 
         except Exception as e:
-            return StepResult.fail(f"Failed to update guest profile: {str(e)}")
+            return StepResult.fail(f"Failed to update guest profile: {e!s}")
 
     async def add_collaboration_event(
-        self, event: CollaborationEvent, tenant: str = "default", workspace: str = "default"
+        self,
+        event: CollaborationEvent,
+        tenant: str = "default",
+        workspace: str = "default",
     ) -> StepResult:
         """Add a new collaboration event to the history."""
         try:
@@ -558,7 +609,7 @@ class GuestIntelligenceAgent:
             return StepResult.ok(data={"event_added": event["collaboration_id"]})
 
         except Exception as e:
-            return StepResult.fail(f"Failed to add collaboration event: {str(e)}")
+            return StepResult.fail(f"Failed to add collaboration event: {e!s}")
 
     def get_agent_stats(self) -> dict[str, Any]:
         """Get agent statistics."""

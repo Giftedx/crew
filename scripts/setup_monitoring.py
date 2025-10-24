@@ -10,6 +10,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
@@ -17,9 +18,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 def check_docker() -> bool:
     """Check if Docker is available."""
     try:
-        result = subprocess.run(
-            ["docker", "--version"], capture_output=True, text=True, check=True
-        )
+        result = subprocess.run(["docker", "--version"], capture_output=True, text=True, check=True)
         print(f"✅ Docker available: {result.stdout.strip()}")
         return True
     except (subprocess.CalledProcessError, FileNotFoundError):
@@ -347,9 +346,7 @@ def generate_monitoring_report() -> None:
             f.write(f"- {alert}\n")
 
         f.write("\n## Next Steps\n\n")
-        f.write(
-            "1. Start monitoring stack: `docker-compose -f ops/monitoring/docker-compose.yml up -d`\n"
-        )
+        f.write("1. Start monitoring stack: `docker-compose -f ops/monitoring/docker-compose.yml up -d`\n")
         f.write("2. Access Grafana: http://localhost:3000 (admin/admin)\n")
         f.write("3. Access Prometheus: http://localhost:9090\n")
         f.write("4. Start metrics server: `python3 -m obs.metrics_endpoint`\n")
@@ -374,9 +371,7 @@ def main() -> None:
         create_docker_compose()
         print("\n🐳 Docker Compose created for monitoring stack")
     else:
-        print(
-            "\n⚠️  Docker not available - monitoring stack config created but not started"
-        )
+        print("\n⚠️  Docker not available - monitoring stack config created but not started")
 
     # Test metrics endpoint
     test_metrics_endpoint()
@@ -386,9 +381,7 @@ def main() -> None:
 
     print("\n✅ Monitoring setup complete!")
     print("\n📋 Next steps:")
-    print(
-        "1. Start monitoring stack: docker-compose -f ops/monitoring/docker-compose.yml up -d"
-    )
+    print("1. Start monitoring stack: docker-compose -f ops/monitoring/docker-compose.yml up -d")
     print("2. Access Grafana: http://localhost:3000 (admin/admin)")
     print("3. Access Prometheus: http://localhost:9090")
     print("4. Start metrics server: python3 -m obs.metrics_endpoint")

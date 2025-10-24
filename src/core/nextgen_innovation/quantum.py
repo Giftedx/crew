@@ -3,10 +3,14 @@ from __future__ import annotations
 import logging
 import random
 from collections import defaultdict
-from collections.abc import Callable
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from core.time import default_utc_now
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
 
 logger = logging.getLogger(__name__)
 

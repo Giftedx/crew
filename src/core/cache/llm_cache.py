@@ -47,7 +47,7 @@ def memo_llm(
                 hit = llm_cache.get(key)
                 if hit is not None:
                     engine.record(domain, {}, arm, 1.0)
-                    return cast(R, hit)
+                    return cast("R", hit)
 
             result = func(*args, **kwargs)
             if arm == "use":
@@ -63,14 +63,37 @@ def memo_llm(
 
 # Use lazy import to avoid circular dependencies
 def _get_cache_ttl() -> int:
+    """Resolve LLM cache TTL with unified config precedence.
+
+    Precedence:
+      1) unified cache config domain 'llm'
+      2) secure_config.cache_ttl_llm
+      3) env CACHE_TTL_LLM
+      4) default 3600
+    """
+    # 1) Unified config (preferred)
+    try:
+        from core.cache.unified_config import get_unified_cache_config  # local import to avoid cycles
+
+        return int(get_unified_cache_config().get_ttl_for_domain("llm"))
+    except Exception:
+        ...
+    # 2) secure_config
     try:
         from ..secure_config import get_config
 
-        return get_config().cache_ttl_llm
-    except ImportError:
+        val = getattr(get_config(), "cache_ttl_llm", None)
+        if isinstance(val, (int, float)) and int(val) > 0:
+            return int(val)
+    except Exception:
+        ...
+    # 3) environment
+    try:
         return int(os.getenv("CACHE_TTL_LLM", "3600"))
+    except Exception:
+        return 3600
 
 
 llm_cache = create_llm_cache(ttl=_get_cache_ttl())
 
-__all__ = ["llm_cache", "memo_llm", "make_key"]
+__all__ = ["llm_cache", "make_key", "memo_llm"]

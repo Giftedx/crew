@@ -18,13 +18,9 @@ This file is maintained for backward compatibility.
 
 import logging
 
-logger = logging.getLogger(__name__)
-
-
 # ============================================================================
 # Backward Compatibility Imports
 # ============================================================================
-
 # Import functions from the new focused modules for backward compatibility
 from .bias_manipulation_extractors import (
     calculate_comprehensive_threat_score_from_crew,
@@ -57,32 +53,35 @@ from .fact_checking_extractors import (
     extract_source_validation_from_crew,
 )
 
+
+logger = logging.getLogger(__name__)
+
 # Export all functions for backward compatibility
 __all__ = [
-    # Content extraction functions
-    "extract_timeline_from_crew",
-    "extract_index_from_crew",
-    "extract_keywords_from_text",
-    "extract_linguistic_patterns_from_crew",
-    "extract_sentiment_from_crew",
-    "extract_themes_from_crew",
-    "extract_language_features",
-    "calculate_transcript_quality",
-    # Fact-checking functions
-    "extract_fact_checks_from_crew",
-    "extract_logical_analysis_from_crew",
-    "extract_credibility_from_crew",
-    "extract_source_validation_from_crew",
-    "calculate_verification_confidence_from_crew",
-    # Bias and manipulation functions
-    "extract_bias_indicators_from_crew",
-    "extract_deception_analysis_from_crew",
-    "extract_manipulation_indicators_from_crew",
-    "extract_narrative_integrity_from_crew",
-    "extract_psychological_threats_from_crew",
-    "calculate_comprehensive_threat_score_from_crew",
     # Confidence calculation functions
     "calculate_agent_confidence_from_crew",
     "calculate_analysis_confidence_from_crew",
+    "calculate_comprehensive_threat_score_from_crew",
     "calculate_synthesis_confidence_from_crew",
+    "calculate_transcript_quality",
+    "calculate_verification_confidence_from_crew",
+    # Bias and manipulation functions
+    "extract_bias_indicators_from_crew",
+    "extract_credibility_from_crew",
+    "extract_deception_analysis_from_crew",
+    # Fact-checking functions
+    "extract_fact_checks_from_crew",
+    "extract_index_from_crew",
+    "extract_keywords_from_text",
+    "extract_language_features",
+    "extract_linguistic_patterns_from_crew",
+    "extract_logical_analysis_from_crew",
+    "extract_manipulation_indicators_from_crew",
+    "extract_narrative_integrity_from_crew",
+    "extract_psychological_threats_from_crew",
+    "extract_sentiment_from_crew",
+    "extract_source_validation_from_crew",
+    "extract_themes_from_crew",
+    # Content extraction functions
+    "extract_timeline_from_crew",
 ]

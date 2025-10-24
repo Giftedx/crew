@@ -8,6 +8,7 @@ from core.time import default_utc_now
 from .enums import RealityLayer
 from .types import RealityPattern
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -26,7 +27,11 @@ class RealityPatternRecognition:
                     scale="universal",
                     occurrence_frequency=0.95,
                     pattern_stability=0.92,
-                    causal_relationships=["growth_optimization", "energy_efficiency", "aesthetic_harmony"],
+                    causal_relationships=[
+                        "growth_optimization",
+                        "energy_efficiency",
+                        "aesthetic_harmony",
+                    ],
                     cross_layer_manifestations={
                         RealityLayer.PHYSICAL: "galactic_spirals",
                         RealityLayer.QUANTUM: "wave_function_spirals",
@@ -39,7 +44,11 @@ class RealityPatternRecognition:
                     scale="multi_scale",
                     occurrence_frequency=0.88,
                     pattern_stability=0.85,
-                    causal_relationships=["complexity_increase", "consciousness_emergence", "system_evolution"],
+                    causal_relationships=[
+                        "complexity_increase",
+                        "consciousness_emergence",
+                        "system_evolution",
+                    ],
                     cross_layer_manifestations={
                         RealityLayer.PHYSICAL: "particle_to_atom_to_molecule",
                         RealityLayer.CONSCIOUSNESS: "sensation_to_perception_to_cognition",
@@ -141,7 +150,9 @@ class RealityPatternRecognition:
                 )
                 result["recognition_confidence"] = avg_rel
             result["pattern_synthesis"] = await self._synthesize_pattern_insights(
-                analysis_focus, result["pattern_recognition"], result["cross_scale_correlations"]
+                analysis_focus,
+                result["pattern_recognition"],
+                result["cross_scale_correlations"],
             )
             return result
         except Exception as e:
@@ -208,7 +219,10 @@ class RealityPatternRecognition:
         return insights
 
     async def _synthesize_pattern_insights(
-        self, focus: str, pattern_analyses: list[dict[str, Any]], correlations: list[dict[str, Any]]
+        self,
+        focus: str,
+        pattern_analyses: list[dict[str, Any]],
+        correlations: list[dict[str, Any]],
     ) -> str:
         if not pattern_analyses:
             return f"Limited pattern recognition available for '{focus}'"

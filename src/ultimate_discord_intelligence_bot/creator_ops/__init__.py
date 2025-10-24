@@ -13,6 +13,7 @@ optimize their content workflows, expand reach, and reduce operational risk.
 
 from __future__ import annotations
 
+
 __version__ = "1.0.0"
 __all__ = [
     "CreatorOpsConfig",
@@ -21,9 +22,9 @@ __all__ = [
 ]
 
 import os
-from typing import Any
 
-from ultimate_discord_intelligence_bot.step_result import StepResult
+# from typing import Any
+from ultimate_discord_intelligence_bot.step_result import StepResult  # type: ignore[import-not-found]
 
 
 class CreatorOpsError(Exception):
@@ -65,7 +66,7 @@ class CreatorOpsConfig:
             return StepResult.ok(data={"status": "valid"})
 
         except Exception as e:
-            return StepResult.fail(f"Configuration validation failed: {str(e)}")
+            return StepResult.fail(f"Configuration validation failed: {e!s}")
 
 
 def enable_creator_ops() -> bool:

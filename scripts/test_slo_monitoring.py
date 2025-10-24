@@ -15,6 +15,7 @@ import sys
 import time
 from pathlib import Path
 
+
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
@@ -158,9 +159,7 @@ def evaluate_slos() -> None:
 
     # Display current metrics
     print("\n📈 Current Metrics:")
-    print(
-        f"  Error Rate: {metrics.get('error_rate', 0.0):.3f} ({metrics.get('error_rate', 0.0) * 100:.1f}%)"
-    )
+    print(f"  Error Rate: {metrics.get('error_rate', 0.0):.3f} ({metrics.get('error_rate', 0.0) * 100:.1f}%)")
     print(f"  P95 Latency: {metrics.get('p95_latency', 0.0):.3f}s")
     print(
         f"  Cache Hit Rate: {metrics.get('cache_hit_rate', 0.0):.3f} ({metrics.get('cache_hit_rate', 0.0) * 100:.1f}%)"
@@ -232,15 +231,9 @@ Generated: {time.strftime("%Y-%m-%d %H:%M:%S UTC")}
 def main():
     """Main entry point."""
     parser = argparse.ArgumentParser(description="SLO Monitoring Test")
-    parser.add_argument(
-        "--simulate-load", action="store_true", help="Simulate system load"
-    )
-    parser.add_argument(
-        "--duration", type=int, default=60, help="Simulation duration in seconds"
-    )
-    parser.add_argument(
-        "--high-load", action="store_true", help="Simulate high load conditions"
-    )
+    parser.add_argument("--simulate-load", action="store_true", help="Simulate system load")
+    parser.add_argument("--duration", type=int, default=60, help="Simulation duration in seconds")
+    parser.add_argument("--high-load", action="store_true", help="Simulate high load conditions")
     parser.add_argument("--report", action="store_true", help="Generate metrics report")
 
     args = parser.parse_args()
@@ -264,9 +257,7 @@ def main():
     # Generate report if requested
     if args.report:
         report = generate_metrics_report()
-        report_file = (
-            Path(__file__).parent.parent / "docs" / "slo_monitoring_test_report.md"
-        )
+        report_file = Path(__file__).parent.parent / "docs" / "slo_monitoring_test_report.md"
         with open(report_file, "w") as f:
             f.write(report)
         print(f"\n📄 Report saved to: {report_file}")

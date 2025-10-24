@@ -29,14 +29,15 @@ from core.circuit_breaker_canonical import (
     get_circuit_breaker_manager as get_circuit_breaker_registry,
 )
 
+
 __all__ = [
     "CircuitBreaker",
-    "CircuitState",
-    "CircuitConfig",
-    "CircuitStats",
     "CircuitBreakerOpenError",
     "CircuitBreakerRegistry",
-    "get_circuit_breaker_sync",
-    "get_circuit_breaker_registry",
+    "CircuitConfig",
+    "CircuitState",
+    "CircuitStats",
     "circuit_breaker",
+    "get_circuit_breaker_registry",
+    "get_circuit_breaker_sync",
 ]

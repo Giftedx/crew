@@ -10,11 +10,12 @@ Features:
 """
 
 import logging
-from typing import Any, Dict, List
+from typing import Any
 
 import numpy as np
 
 from .base_plugin import BanditPlugin
+
 
 logger = logging.getLogger(__name__)
 
@@ -55,21 +56,16 @@ class DoublyRobustPlugin(BanditPlugin):
         self.action_probs = np.ones(num_actions) / num_actions
 
         # Model name mapping
-        self.model_to_idx: Dict[str, int] = {}
-        self.idx_to_model: Dict[int, str] = {}
+        self.model_to_idx: dict[str, int] = {}
+        self.idx_to_model: dict[int, str] = {}
 
         # Performance tracking
         self.t = 0
         self.total_reward = 0.0
 
-        logger.info(
-            f"DoublyRobustPlugin initialized: "
-            f"actions={num_actions}, dim={context_dim}, alpha={alpha}"
-        )
+        logger.info(f"DoublyRobustPlugin initialized: actions={num_actions}, dim={context_dim}, alpha={alpha}")
 
-    def select_action(
-        self, context: Dict[str, Any], available_models: List[str]
-    ) -> str:
+    def select_action(self, context: dict[str, Any], available_models: list[str]) -> str:
         """Select action using DoublyRobust algorithm.
 
         Args:
@@ -103,9 +99,7 @@ class DoublyRobustPlugin(BanditPlugin):
             predicted_reward = self.reward_model[idx] @ context_vec
 
             # Confidence bound with importance weighting
-            confidence = self.alpha * np.sqrt(
-                np.log(self.t + 1) / (1 + self.importance_weights[idx])
-            )
+            confidence = self.alpha * np.sqrt(np.log(self.t + 1) / (1 + self.importance_weights[idx]))
 
             scores[i] = predicted_reward + confidence
 
@@ -115,9 +109,7 @@ class DoublyRobustPlugin(BanditPlugin):
 
         # Update propensities (for importance sampling)
         model_idx = self.model_to_idx[selected_model]
-        self.action_probs[model_idx] = 0.9 * self.action_probs[model_idx] + 0.1 / len(
-            available_models
-        )
+        self.action_probs[model_idx] = 0.9 * self.action_probs[model_idx] + 0.1 / len(available_models)
 
         self.t += 1
 
@@ -125,7 +117,7 @@ class DoublyRobustPlugin(BanditPlugin):
 
         return selected_model
 
-    def update(self, context: Dict[str, Any], model: str, reward: float):
+    def update(self, context: dict[str, Any], model: str, reward: float):
         """Update with doubly robust estimator.
 
         Args:
@@ -155,19 +147,16 @@ class DoublyRobustPlugin(BanditPlugin):
         self.reward_model[idx] += self.learning_rate * gradient
 
         # Update importance weights (exponential moving average)
-        self.importance_weights[idx] = (
-            0.9 * self.importance_weights[idx] + 0.1 * importance_weight
-        )
+        self.importance_weights[idx] = 0.9 * self.importance_weights[idx] + 0.1 * importance_weight
 
         # Track performance
         self.total_reward += reward
 
         logger.debug(
-            f"Updated {model}: reward={reward:.4f}, error={error:.4f}, "
-            f"importance_weight={importance_weight:.4f}"
+            f"Updated {model}: reward={reward:.4f}, error={error:.4f}, importance_weight={importance_weight:.4f}"
         )
 
-    def _extract_features(self, context: Dict[str, Any]) -> np.ndarray:
+    def _extract_features(self, context: dict[str, Any]) -> np.ndarray:
         """Extract context features.
 
         Args:
@@ -225,7 +214,7 @@ class DoublyRobustPlugin(BanditPlugin):
 
         logger.debug(f"Extended arrays from {old_size} to {new_size}")
 
-    def get_state(self) -> Dict[str, Any]:
+    def get_state(self) -> dict[str, Any]:
         """Get current state for serialization.
 
         Returns:
@@ -245,7 +234,7 @@ class DoublyRobustPlugin(BanditPlugin):
             "total_reward": self.total_reward,
         }
 
-    def load_state(self, state: Dict[str, Any]):
+    def load_state(self, state: dict[str, Any]):
         """Load state from serialized form.
 
         Args:
@@ -256,9 +245,7 @@ class DoublyRobustPlugin(BanditPlugin):
         self.alpha = state.get("alpha", self.alpha)
         self.learning_rate = state.get("learning_rate", self.learning_rate)
         self.reward_model = np.array(state.get("reward_model", self.reward_model))
-        self.importance_weights = np.array(
-            state.get("importance_weights", self.importance_weights)
-        )
+        self.importance_weights = np.array(state.get("importance_weights", self.importance_weights))
         self.action_probs = np.array(state.get("action_probs", self.action_probs))
         self.model_to_idx = state.get("model_to_idx", {})
         self.idx_to_model = state.get("idx_to_model", {})

@@ -11,6 +11,7 @@ import re
 from collections import Counter
 from typing import Any
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -253,12 +254,57 @@ def extract_themes_from_crew(crew_result: Any) -> list[dict[str, Any]]:
 
         # Define theme categories and their keywords
         theme_keywords = {
-            "politics": ["political", "government", "policy", "election", "democracy", "republican", "democrat"],
-            "technology": ["technology", "digital", "software", "internet", "ai", "computer", "tech"],
-            "economics": ["economy", "economic", "financial", "market", "business", "trade", "money"],
-            "health": ["health", "medical", "healthcare", "disease", "treatment", "medicine"],
-            "education": ["education", "school", "university", "learning", "teaching", "student"],
-            "environment": ["environment", "climate", "nature", "pollution", "green", "sustainability"],
+            "politics": [
+                "political",
+                "government",
+                "policy",
+                "election",
+                "democracy",
+                "republican",
+                "democrat",
+            ],
+            "technology": [
+                "technology",
+                "digital",
+                "software",
+                "internet",
+                "ai",
+                "computer",
+                "tech",
+            ],
+            "economics": [
+                "economy",
+                "economic",
+                "financial",
+                "market",
+                "business",
+                "trade",
+                "money",
+            ],
+            "health": [
+                "health",
+                "medical",
+                "healthcare",
+                "disease",
+                "treatment",
+                "medicine",
+            ],
+            "education": [
+                "education",
+                "school",
+                "university",
+                "learning",
+                "teaching",
+                "student",
+            ],
+            "environment": [
+                "environment",
+                "climate",
+                "nature",
+                "pollution",
+                "green",
+                "sustainability",
+            ],
         }
 
         themes = []
@@ -266,7 +312,13 @@ def extract_themes_from_crew(crew_result: Any) -> list[dict[str, Any]]:
             keyword_count = sum(1 for keyword in keywords if keyword in crew_output)
             if keyword_count > 0:
                 relevance = min(keyword_count / len(keywords), 1.0)
-                themes.append({"theme": theme, "relevance": relevance, "keyword_matches": keyword_count})
+                themes.append(
+                    {
+                        "theme": theme,
+                        "relevance": relevance,
+                        "keyword_matches": keyword_count,
+                    }
+                )
 
         # Sort by relevance
         themes.sort(key=lambda x: x["relevance"], reverse=True)
@@ -304,7 +356,13 @@ def extract_language_features(text: str) -> dict[str, Any]:
             features["readability_score"] = max(0, 100 - (avg_sentence_length * 1.015) - (avg_syllables * 0.846))
 
         # Detect formality level
-        formal_indicators = ["therefore", "furthermore", "however", "consequently", "nevertheless"]
+        formal_indicators = [
+            "therefore",
+            "furthermore",
+            "however",
+            "consequently",
+            "nevertheless",
+        ]
         informal_indicators = ["yeah", "okay", "cool", "awesome", "totally"]
 
         formal_count = sum(1 for indicator in formal_indicators if indicator.lower() in text.lower())
@@ -321,14 +379,28 @@ def extract_language_features(text: str) -> dict[str, Any]:
             features["technical_terms"] += len(re.findall(pattern, text))
 
         # Count emotional language
-        emotional_words = ["feel", "believe", "think", "love", "hate", "excited", "worried", "angry"]
+        emotional_words = [
+            "feel",
+            "believe",
+            "think",
+            "love",
+            "hate",
+            "excited",
+            "worried",
+            "angry",
+        ]
         features["emotional_language"] = sum(1 for word in emotional_words if word in text.lower())
 
         return features
 
     except Exception as exc:
         logger.exception("Failed to extract language features from text: %s", exc)
-        return {"readability_score": 0.0, "formality_level": "neutral", "technical_terms": 0, "emotional_language": 0}
+        return {
+            "readability_score": 0.0,
+            "formality_level": "neutral",
+            "technical_terms": 0,
+            "emotional_language": 0,
+        }
 
 
 def calculate_transcript_quality(crew_result: Any) -> float:
@@ -345,7 +417,13 @@ def calculate_transcript_quality(crew_result: Any) -> float:
             return 0.0
 
         crew_output = str(crew_result).lower()
-        quality_indicators = ["high quality", "accurate", "clear", "comprehensive", "detailed"]
+        quality_indicators = [
+            "high quality",
+            "accurate",
+            "clear",
+            "comprehensive",
+            "detailed",
+        ]
         quality_count = sum(1 for indicator in quality_indicators if indicator in crew_output)
 
         return min(quality_count * 0.2, 1.0)

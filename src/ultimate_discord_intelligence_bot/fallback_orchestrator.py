@@ -27,7 +27,10 @@ class FallbackAutonomousOrchestrator:
 
         try:
             await self._send_progress_update(
-                interaction, "🔄 Starting basic intelligence analysis (CrewAI unavailable)...", 1, 5
+                interaction,
+                "🔄 Starting basic intelligence analysis (CrewAI unavailable)...",
+                1,
+                5,
             )
 
             # Stage 1: Basic Content Pipeline
@@ -61,7 +64,12 @@ class FallbackAutonomousOrchestrator:
 
             # Create fallback report
             report = await self._generate_fallback_report(
-                url, depth, pipeline_payload, analysis_result.data, fact_result.data, processing_time
+                url,
+                depth,
+                pipeline_payload,
+                analysis_result.data,
+                fact_result.data,
+                processing_time,
             )
 
             await interaction.followup.send(report, ephemeral=False)
@@ -89,7 +97,10 @@ class FallbackAutonomousOrchestrator:
                     await interaction.edit_original_response(content=f"{message}\n`{progress_bar}` {current}/{total}")
                 except Exception:
                     # If edit fails, send a new message
-                    await interaction.followup.send(f"{message}\n`{progress_bar}` {current}/{total}", ephemeral=False)
+                    await interaction.followup.send(
+                        f"{message}\n`{progress_bar}` {current}/{total}",
+                        ephemeral=False,
+                    )
         except Exception as e:
             self.logger.warning(f"Could not send progress update: {e}")
 

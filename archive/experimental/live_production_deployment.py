@@ -27,11 +27,15 @@ import aiofiles
 import psutil
 import yaml
 
+
 # Setup logging for production
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    handlers=[logging.FileHandler("production_deployment.log"), logging.StreamHandler()],
+    handlers=[
+        logging.FileHandler("production_deployment.log"),
+        logging.StreamHandler(),
+    ],
 )
 logger = logging.getLogger(__name__)
 
@@ -304,7 +308,11 @@ class LiveProductionDeployment:
                 "stage_duration_minutes": 30,
             },
             "monitoring": {
-                "alert_thresholds": {"error_rate": 0.05, "response_time_p95": 5000, "user_satisfaction": 0.7},
+                "alert_thresholds": {
+                    "error_rate": 0.05,
+                    "response_time_p95": 5000,
+                    "user_satisfaction": 0.7,
+                },
                 "business_kpi_check_interval": 300,  # 5 minutes
             },
         }
@@ -338,7 +346,10 @@ class LiveProductionDeployment:
             if current_percentage >= config["max_percentage"]:
                 break
 
-            current_percentage = min(current_percentage + config["increment_percentage"], config["max_percentage"])
+            current_percentage = min(
+                current_percentage + config["increment_percentage"],
+                config["max_percentage"],
+            )
 
         return stages
 
@@ -429,7 +440,8 @@ class LiveProductionDeployment:
 
         # Record validation results
         self.database.record_system_performance(
-            "pre_deployment_validation", {"timestamp": datetime.now(), "results": validation_results}
+            "pre_deployment_validation",
+            {"timestamp": datetime.now(), "results": validation_results},
         )
 
         # Check if deployment should proceed
@@ -684,10 +696,9 @@ class LiveProductionDeployment:
                 if current_value > threshold:
                     logger.error(f"Rollback trigger: {trigger_name} = {current_value} > {threshold}")
                     return True
-            elif trigger_name in ["user_satisfaction", "availability"]:
-                if current_value < threshold:
-                    logger.error(f"Rollback trigger: {trigger_name} = {current_value} < {threshold}")
-                    return True
+            elif trigger_name in ["user_satisfaction", "availability"] and current_value < threshold:
+                logger.error(f"Rollback trigger: {trigger_name} = {current_value} < {threshold}")
+                return True
 
         return False
 
@@ -701,10 +712,9 @@ class LiveProductionDeployment:
                 if current_value > target:
                     logger.warning(f"Success criteria not met: {criterion_name} = {current_value} > {target}")
                     return False
-            elif criterion_name in ["user_satisfaction", "availability"]:
-                if current_value < target:
-                    logger.warning(f"Success criteria not met: {criterion_name} = {current_value} < {target}")
-                    return False
+            elif criterion_name in ["user_satisfaction", "availability"] and current_value < target:
+                logger.warning(f"Success criteria not met: {criterion_name} = {current_value} < {target}")
+                return False
 
         return True
 
@@ -755,7 +765,8 @@ class LiveProductionDeployment:
 
         # Record validation results
         self.database.record_system_performance(
-            "post_deployment_validation", {"validation_results": validation_results, "final_metrics": final_metrics}
+            "post_deployment_validation",
+            {"validation_results": validation_results, "final_metrics": final_metrics},
         )
 
         success_rate = sum(validation_results.values()) / len(validation_results)

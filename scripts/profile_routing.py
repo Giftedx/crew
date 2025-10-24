@@ -37,14 +37,14 @@ def main():
 
     profiler.disable()
 
-    Path("profiling").mkdir(exist_ok=True)
-    profiler.dump_stats("profiling/routing.prof")
+    Path("benchmarks/profiling").mkdir(exist_ok=True, parents=True)
+    profiler.dump_stats("benchmarks/profiling/routing.prof")
 
     stats = pstats.Stats(profiler)
     stats.strip_dirs()
     stats.sort_stats("cumulative")
 
-    with open("profiling/routing_analysis.txt", "w") as f:
+    with open("benchmarks/profiling/routing_analysis.txt", "w") as f:
         stats.stream = f
         stats.print_stats(30)
 

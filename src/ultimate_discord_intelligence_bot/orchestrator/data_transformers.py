@@ -9,11 +9,14 @@ from typing import Any
 
 from ..step_result import StepResult
 
+
 # Module-level logger
 logger = logging.getLogger(__name__)
 
 
-def normalize_acquisition_data(acquisition: StepResult | dict[str, Any] | None) -> dict[str, Any]:
+def normalize_acquisition_data(
+    acquisition: StepResult | dict[str, Any] | None,
+) -> dict[str, Any]:
     """Return a flattened ContentPipeline payload for downstream stages.
 
     The ContentPipeline tool historically wrapped results inside nested ``data``
@@ -89,7 +92,10 @@ def merge_threat_and_deception_data(threat_result: StepResult, deception_result:
             "deception_score": None,
         }
 
-    return StepResult.ok(data=combined_data, message=original_message or "Combined threat + deception analysis")
+    return StepResult.ok(
+        data=combined_data,
+        message=original_message or "Combined threat + deception analysis",
+    )
 
 
 def transform_evidence_to_verdicts(

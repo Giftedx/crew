@@ -3,7 +3,7 @@ from __future__ import annotations
 import time
 from typing import Any, TypedDict
 
-from ultimate_discord_intelligence_bot.step_result import StepResult
+from ultimate_discord_intelligence_bot.step_result import StepResult  # type: ignore[import-not-found]
 
 
 class ControversyEvent(TypedDict, total=False):
@@ -74,7 +74,11 @@ class ControversyTrackingAgent:
         ]
 
     async def analyze_controversies(
-        self, creator_ids: list[str], time_range_hours: int = 24, tenant: str = "default", workspace: str = "default"
+        self,
+        creator_ids: list[str],
+        time_range_hours: int = 24,
+        tenant: str = "default",
+        workspace: str = "default",
     ) -> StepResult:
         """
         Analyze controversies and drama for specified creators.
@@ -143,7 +147,7 @@ class ControversyTrackingAgent:
             return StepResult.ok(data=result)
 
         except Exception as e:
-            return StepResult.fail(f"Controversy analysis failed: {str(e)}")
+            return StepResult.fail(f"Controversy analysis failed: {e!s}")
 
     async def _detect_controversies(
         self, creator_ids: list[str], cutoff_time: float, tenant: str, workspace: str
@@ -329,7 +333,12 @@ class ControversyTrackingAgent:
                     )
 
             # Identify trending topics
-            trends["trending_topics"] = ["politics", "social media", "gaming", "controversy"]
+            trends["trending_topics"] = [
+                "politics",
+                "social media",
+                "gaming",
+                "controversy",
+            ]
 
             return trends
 
@@ -338,7 +347,11 @@ class ControversyTrackingAgent:
             return {}
 
     async def _assess_creator_risk(
-        self, creator_ids: list[str], detected_controversies: list[ControversyEvent], tenant: str, workspace: str
+        self,
+        creator_ids: list[str],
+        detected_controversies: list[ControversyEvent],
+        tenant: str,
+        workspace: str,
     ) -> dict[str, Any]:
         """Assess risk levels for creators."""
         try:
@@ -444,7 +457,11 @@ class ControversyTrackingAgent:
         return recommendations
 
     async def _analyze_cross_creator_patterns(
-        self, creator_ids: list[str], detected_controversies: list[ControversyEvent], tenant: str, workspace: str
+        self,
+        creator_ids: list[str],
+        detected_controversies: list[ControversyEvent],
+        tenant: str,
+        workspace: str,
     ) -> dict[str, Any]:
         """Analyze patterns across multiple creators."""
         try:
@@ -516,7 +533,10 @@ class ControversyTrackingAgent:
             return {}
 
     async def _analyze_viral_potential(
-        self, detected_controversies: list[ControversyEvent], tenant: str, workspace: str
+        self,
+        detected_controversies: list[ControversyEvent],
+        tenant: str,
+        workspace: str,
     ) -> dict[str, Any]:
         """Analyze viral potential of controversies."""
         try:
@@ -581,7 +601,10 @@ class ControversyTrackingAgent:
             return {}
 
     async def _identify_fact_checking_priorities(
-        self, detected_controversies: list[ControversyEvent], tenant: str, workspace: str
+        self,
+        detected_controversies: list[ControversyEvent],
+        tenant: str,
+        workspace: str,
     ) -> list[str]:
         """Identify fact-checking priorities based on controversies."""
         try:
@@ -717,7 +740,7 @@ class ControversyTrackingAgent:
             return StepResult.ok(data={"updated_controversy": controversy})
 
         except Exception as e:
-            return StepResult.fail(f"Failed to update controversy status: {str(e)}")
+            return StepResult.fail(f"Failed to update controversy status: {e!s}")
 
     def get_agent_stats(self) -> dict[str, Any]:
         """Get agent statistics."""

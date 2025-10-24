@@ -10,6 +10,7 @@ import re
 import sys
 from pathlib import Path
 
+
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
@@ -30,12 +31,18 @@ def migrate_file(file_path: Path) -> bool:
     # Replace imports
     import_replacements = [
         # Core circuit breaker
-        (r"from src\.core\.circuit_breaker import", "from ultimate_discord_intelligence_bot.core.circuit_breaker_canonical import"),
+        (
+            r"from src\.core\.circuit_breaker import",
+            "from ultimate_discord_intelligence_bot.core.circuit_breaker_canonical import",
+        ),
         (
             r"from ultimate_discord_intelligence_bot\.creator_ops\.utils\.circuit_breaker import",
             "from ultimate_discord_intelligence_bot.core.circuit_breaker_canonical import",
         ),
-        (r"from core\.resilience\.circuit_breaker import", "from ultimate_discord_intelligence_bot.core.circuit_breaker_canonical import"),
+        (
+            r"from core\.resilience\.circuit_breaker import",
+            "from ultimate_discord_intelligence_bot.core.circuit_breaker_canonical import",
+        ),
         (
             r"from core\.http\.retry import.*_CircuitBreaker",
             "from ultimate_discord_intelligence_bot.core.circuit_breaker_canonical import CircuitBreaker as _CircuitBreaker",
@@ -81,9 +88,18 @@ def migrate_file(file_path: Path) -> bool:
 
     # Replace manager calls
     manager_replacements = [
-        (r"circuit_manager\.get_breaker\(", "get_circuit_breaker_registry().get_circuit_breaker_sync("),
-        (r"get_circuit_breaker_manager\(\)\.get_breaker\(", "get_circuit_breaker_registry().get_circuit_breaker_sync("),
-        (r"_global_manager\.get_breaker_sync\(", "get_circuit_breaker_registry().get_circuit_breaker_sync("),
+        (
+            r"circuit_manager\.get_breaker\(",
+            "get_circuit_breaker_registry().get_circuit_breaker_sync(",
+        ),
+        (
+            r"get_circuit_breaker_manager\(\)\.get_breaker\(",
+            "get_circuit_breaker_registry().get_circuit_breaker_sync(",
+        ),
+        (
+            r"_global_manager\.get_breaker_sync\(",
+            "get_circuit_breaker_registry().get_circuit_breaker_sync(",
+        ),
     ]
 
     for old_manager, new_manager in manager_replacements:
@@ -94,14 +110,12 @@ def migrate_file(file_path: Path) -> bool:
         if "from ultimate_discord_intelligence_bot.core.circuit_breaker_canonical import" not in content:
             # Add import at the top
             lines = content.split("\n")
-            import_line = (
-                "from ultimate_discord_intelligence_bot.core.circuit_breaker_canonical import CircuitBreaker, CircuitState, get_circuit_breaker_registry"
-            )
+            import_line = "from ultimate_discord_intelligence_bot.core.circuit_breaker_canonical import CircuitBreaker, CircuitState, get_circuit_breaker_registry"
 
             # Find the right place to insert the import
             insert_index = 0
             for i, line in enumerate(lines):
-                if line.startswith("import ") or line.startswith("from "):
+                if line.startswith(("import ", "from ")):
                     insert_index = i + 1
                 elif line.strip() == "":
                     continue
@@ -191,7 +205,7 @@ from ultimate_discord_intelligence_bot.core.circuit_breaker_canonical import (
 
 __all__ = [
     "CircuitBreaker",
-    "CircuitState", 
+    "CircuitState",
     "CircuitConfig",
     "CircuitStats",
     "CircuitBreakerOpenError",
@@ -228,14 +242,17 @@ circuit_manager = get_circuit_breaker_registry()
 __all__ = [
     "CircuitBreaker",
     "CircuitState",
-    "CircuitBreakerOpenError", 
+    "CircuitBreakerOpenError",
     "CircuitBreakerRegistry",
     "circuit_manager",
     "with_circuit_breaker",
 ]
 '''
 
-    with open("src/ultimate_discord_intelligence_bot/creator_ops/utils/circuit_breaker.py", "w") as f:
+    with open(
+        "src/ultimate_discord_intelligence_bot/creator_ops/utils/circuit_breaker.py",
+        "w",
+    ) as f:
         f.write(creator_ops_wrapper)
 
     print("✓ Created compatibility wrappers")

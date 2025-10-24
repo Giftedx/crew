@@ -1,388 +1,518 @@
-#!/usr/bin/env python3
-"""
-Cache Optimization Service.
+"""Cache optimization service.
 
-This service implements intelligent caching strategies to maximize cache hit rates,
-reduce latency, and optimize memory usage across the platform.
+This module provides comprehensive cache optimization strategies and management
+for improving system performance through intelligent caching mechanisms.
 """
 
 from __future__ import annotations
 
-import hashlib
-import json
+import logging
 import time
-from typing import Any, Dict, List, Tuple
+from typing import TYPE_CHECKING, Any
+
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 from ..step_result import StepResult
 
 
+if TYPE_CHECKING:
+    from ..tenancy.context import TenantContext
+
+
+logger = logging.getLogger(__name__)
+
+
 class CacheOptimizer:
-    """Intelligent cache optimization service."""
+    """Cache optimization service for performance improvement."""
 
-    def __init__(self):
-        """Initialize the cache optimizer."""
-        self.cache_stats = {
-            "hits": 0,
-            "misses": 0,
-            "evictions": 0,
-            "compressions": 0,
-            "total_requests": 0,
-        }
-        self.cache_policies = {
-            "ttl_strategies": {
-                "frequent": 3600,  # 1 hour for frequently accessed data
-                "moderate": 1800,  # 30 minutes for moderate access
-                "rare": 300,  # 5 minutes for rarely accessed data
+    def __init__(self, tenant_context: TenantContext):
+        """Initialize cache optimizer with tenant context.
+
+        Args:
+            tenant_context: Tenant context for data isolation
+        """
+        self.tenant_context = tenant_context
+        self.cache_stats = {}
+        self.optimization_rules = []
+        self._initialize_optimization_rules()
+
+    def _initialize_optimization_rules(self) -> StepResult:
+        """Initialize cache optimization rules."""
+        self.optimization_rules = [
+            {
+                "name": "frequent_access_boost",
+                "description": "Boost cache priority for frequently accessed items",
+                "enabled": True,
+                "threshold": 5,  # Access count threshold
+                "boost_factor": 1.5,
             },
-            "compression_threshold": 1024,  # Compress data larger than 1KB
-            "eviction_policy": "lru",  # Least Recently Used
-            "max_cache_size": 1000,  # Maximum number of cache entries
-        }
+            {
+                "name": "size_based_eviction",
+                "description": "Evict large items when cache is full",
+                "enabled": True,
+                "size_threshold": 1024 * 1024,  # 1MB
+                "priority": "low",
+            },
+            {
+                "name": "time_based_eviction",
+                "description": "Evict items based on access time",
+                "enabled": True,
+                "max_age_seconds": 3600,  # 1 hour
+                "priority": "medium",
+            },
+            {
+                "name": "pattern_based_prefetch",
+                "description": "Prefetch items based on access patterns",
+                "enabled": True,
+                "pattern_window": 100,  # Last 100 accesses
+                "prefetch_count": 5,
+            },
+        ]
 
-    def generate_cache_key(
-        self,
-        operation: str,
-        params: Dict[str, Any],
-        tenant: str,
-        workspace: str,
-    ) -> str:
-        """
-        Generate an optimized cache key.
-
-        Args:
-            operation: The operation being performed
-            params: Parameters for the operation
-            tenant: Tenant identifier
-            workspace: Workspace identifier
-
-        Returns:
-            A unique cache key
-        """
-        # Create a normalized representation of the parameters
-        normalized_params = self._normalize_params(params)
-
-        # Create a hash of the operation and parameters
-        key_data = {
-            "operation": operation,
-            "params": normalized_params,
-            "tenant": tenant,
-            "workspace": workspace,
-        }
-
-        key_string = json.dumps(key_data, sort_keys=True)
-        key_hash = hashlib.sha256(key_string.encode()).hexdigest()
-
-        return f"cache:{operation}:{key_hash[:16]}"
-
-    def _normalize_params(self, params: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Normalize parameters for consistent cache key generation.
+    def optimize_cache(self, cache_data: dict[str, Any], optimization_strategy: str = "balanced") -> StepResult:
+        """Optimize cache based on strategy.
 
         Args:
-            params: Raw parameters
-
-        Returns:
-            Normalized parameters
-        """
-        normalized = {}
-
-        for key, value in params.items():
-            if isinstance(value, (str, int, float, bool)):
-                normalized[key] = value
-            elif isinstance(value, (list, tuple)):
-                # Sort lists for consistent ordering
-                normalized[key] = sorted(value) if value else []
-            elif isinstance(value, dict):
-                # Recursively normalize nested dictionaries
-                normalized[key] = self._normalize_params(value)
-            else:
-                # Convert other types to string representation
-                normalized[key] = str(value)
-
-        return normalized
-
-    def determine_cache_strategy(
-        self,
-        operation: str,
-        data_size: int,
-        access_frequency: str = "moderate",
-    ) -> Dict[str, Any]:
-        """
-        Determine the optimal caching strategy for an operation.
-
-        Args:
-            operation: The operation being performed
-            data_size: Size of the data to be cached
-            access_frequency: Expected access frequency
-
-        Returns:
-            Cache strategy configuration
-        """
-        strategy = {
-            "ttl": self.cache_policies["ttl_strategies"].get(access_frequency, 1800),
-            "compress": data_size > self.cache_policies["compression_threshold"],
-            "priority": self._calculate_priority(
-                operation, data_size, access_frequency
-            ),
-            "eviction_policy": self.cache_policies["eviction_policy"],
-        }
-
-        return strategy
-
-    def _calculate_priority(
-        self,
-        operation: str,
-        data_size: int,
-        access_frequency: str,
-    ) -> int:
-        """
-        Calculate cache priority based on operation characteristics.
-
-        Args:
-            operation: The operation being performed
-            data_size: Size of the data
-            access_frequency: Expected access frequency
-
-        Returns:
-            Priority score (higher = more important)
-        """
-        # Base priority from access frequency
-        frequency_scores = {"frequent": 100, "moderate": 50, "rare": 10}
-        priority = frequency_scores.get(access_frequency, 50)
-
-        # Adjust for operation type
-        operation_weights = {
-            "content_analysis": 80,
-            "fact_checking": 90,
-            "debate_scoring": 85,
-            "memory_retrieval": 70,
-            "oauth_token": 95,
-            "user_preferences": 60,
-        }
-        priority += operation_weights.get(operation, 50)
-
-        # Adjust for data size (smaller data gets higher priority)
-        if data_size < 1024:  # Less than 1KB
-            priority += 20
-        elif data_size > 10240:  # More than 10KB
-            priority -= 10
-
-        return max(0, min(100, priority))
-
-    def optimize_cache_entry(
-        self,
-        key: str,
-        data: Any,
-        strategy: Dict[str, Any],
-    ) -> Tuple[Any, Dict[str, Any]]:
-        """
-        Optimize a cache entry based on the determined strategy.
-
-        Args:
-            key: Cache key
-            data: Data to be cached
-            strategy: Caching strategy
-
-        Returns:
-            Optimized data and metadata
-        """
-        optimized_data = data
-        metadata = {
-            "created_at": time.time(),
-            "ttl": strategy["ttl"],
-            "priority": strategy["priority"],
-            "compressed": False,
-            "size": len(str(data)),
-        }
-
-        # Apply compression if needed
-        if strategy["compress"]:
-            optimized_data, compression_ratio = self._compress_data(data)
-            metadata["compressed"] = True
-            metadata["compression_ratio"] = compression_ratio
-            metadata["original_size"] = len(str(data))
-            metadata["compressed_size"] = len(str(optimized_data))
-            self.cache_stats["compressions"] += 1
-
-        return optimized_data, metadata
-
-    def _compress_data(self, data: Any) -> Tuple[Any, float]:
-        """
-        Compress data for efficient storage.
-
-        Args:
-            data: Data to compress
-
-        Returns:
-            Compressed data and compression ratio
-        """
-        # Simple compression simulation
-        # In production, use actual compression libraries like gzip or lz4
-        original_size = len(str(data))
-
-        # Simulate compression (in real implementation, use actual compression)
-        compressed_data = data  # Placeholder for actual compression
-        compressed_size = original_size * 0.7  # Simulate 30% compression
-
-        compression_ratio = (
-            compressed_size / original_size if original_size > 0 else 1.0
-        )
-
-        return compressed_data, compression_ratio
-
-    def should_cache(
-        self,
-        operation: str,
-        data_size: int,
-        access_frequency: str,
-    ) -> bool:
-        """
-        Determine if data should be cached based on optimization criteria.
-
-        Args:
-            operation: The operation being performed
-            data_size: Size of the data
-            access_frequency: Expected access frequency
-
-        Returns:
-            True if data should be cached
-        """
-        # Don't cache very small data (overhead not worth it)
-        if data_size < 100:
-            return False
-
-        # Don't cache very large data (memory constraints)
-        if data_size > 1024 * 1024:  # 1MB
-            return False
-
-        # Always cache high-frequency operations
-        if access_frequency == "frequent":
-            return True
-
-        # Cache moderate operations if they're not too large
-        if access_frequency == "moderate" and data_size < 10000:
-            return True
-
-        # Only cache rare operations if they're small
-        if access_frequency == "rare" and data_size < 1000:
-            return True
-
-        return False
-
-    def get_cache_analytics(self) -> Dict[str, Any]:
-        """
-        Get cache performance analytics.
-
-        Returns:
-            Cache analytics data
-        """
-        total_requests = self.cache_stats["total_requests"]
-        hit_rate = (
-            self.cache_stats["hits"] / total_requests if total_requests > 0 else 0.0
-        )
-
-        return {
-            "hit_rate": hit_rate,
-            "miss_rate": 1.0 - hit_rate,
-            "total_requests": total_requests,
-            "hits": self.cache_stats["hits"],
-            "misses": self.cache_stats["misses"],
-            "evictions": self.cache_stats["evictions"],
-            "compressions": self.cache_stats["compressions"],
-            "compression_savings": self._calculate_compression_savings(),
-        }
-
-    def _calculate_compression_savings(self) -> float:
-        """
-        Calculate total compression savings.
-
-        Returns:
-            Compression savings ratio
-        """
-        # Simulate compression savings calculation
-        # In production, track actual compression ratios
-        return 0.3  # 30% average compression
-
-    def optimize_cache_policies(self) -> StepResult:
-        """
-        Optimize cache policies based on current performance.
+            cache_data: Current cache data
+            optimization_strategy: Optimization strategy (aggressive, balanced, conservative)
 
         Returns:
             StepResult with optimization results
         """
         try:
-            analytics = self.get_cache_analytics()
+            optimization_results = {
+                "strategy": optimization_strategy,
+                "original_size": len(cache_data),
+                "optimizations_applied": [],
+                "performance_metrics": {},
+            }
 
-            # Adjust TTL strategies based on hit rates
-            if analytics["hit_rate"] < 0.6:  # Low hit rate
-                # Increase TTL for better hit rates
-                self.cache_policies["ttl_strategies"]["frequent"] = 7200  # 2 hours
-                self.cache_policies["ttl_strategies"]["moderate"] = 3600  # 1 hour
-            elif analytics["hit_rate"] > 0.9:  # High hit rate
-                # Decrease TTL to reduce memory usage
-                self.cache_policies["ttl_strategies"]["frequent"] = 1800  # 30 minutes
-                self.cache_policies["ttl_strategies"]["moderate"] = 900  # 15 minutes
+            # Apply optimization rules based on strategy
+            if optimization_strategy == "aggressive":
+                optimized_data = self._apply_aggressive_optimization(cache_data)
+            elif optimization_strategy == "conservative":
+                optimized_data = self._apply_conservative_optimization(cache_data)
+            else:  # balanced
+                optimized_data = self._apply_balanced_optimization(cache_data)
 
-            # Adjust compression threshold based on compression savings
-            if analytics["compression_savings"] > 0.4:  # Good compression
-                self.cache_policies["compression_threshold"] = 512  # Lower threshold
-            elif analytics["compression_savings"] < 0.2:  # Poor compression
-                self.cache_policies["compression_threshold"] = 2048  # Higher threshold
+            optimization_results["optimized_size"] = len(optimized_data)
+            optimization_results["size_reduction"] = len(cache_data) - len(optimized_data)
+            optimization_results["reduction_percentage"] = (
+                optimization_results["size_reduction"] / len(cache_data) * 100 if len(cache_data) > 0 else 0
+            )
+
+            # Calculate performance metrics
+            optimization_results["performance_metrics"] = self._calculate_performance_metrics(
+                cache_data, optimized_data
+            )
 
             return StepResult.ok(
                 data={
-                    "optimization_applied": True,
-                    "new_policies": self.cache_policies,
-                    "analytics": analytics,
+                    "optimized_cache": optimized_data,
+                    "optimization_results": optimization_results,
+                    "tenant": self.tenant_context.tenant,
+                    "workspace": self.tenant_context.workspace,
                 }
             )
 
         except Exception as e:
-            return StepResult.fail(f"Cache optimization failed: {str(e)}")
+            logger.error(f"Cache optimization failed: {e}")
+            return StepResult.fail(f"Cache optimization failed: {e!s}")
 
-    def record_cache_operation(
-        self,
-        operation: str,
-        hit: bool,
-        data_size: int,
-    ) -> None:
-        """
-        Record a cache operation for analytics.
+    def _apply_aggressive_optimization(self, cache_data: dict[str, Any]) -> StepResult:
+        """Apply aggressive cache optimization.
 
         Args:
-            operation: The operation performed
-            hit: Whether it was a cache hit
-            data_size: Size of the data
-        """
-        self.cache_stats["total_requests"] += 1
-
-        if hit:
-            self.cache_stats["hits"] += 1
-        else:
-            self.cache_stats["misses"] += 1
-
-    def get_optimization_recommendations(self) -> List[str]:
-        """
-        Get cache optimization recommendations.
+            cache_data: Cache data to optimize
 
         Returns:
-            List of optimization recommendations
+            Aggressively optimized cache data
         """
-        recommendations = []
-        analytics = self.get_cache_analytics()
+        optimized = {}
+        optimizations_applied = []
 
-        if analytics["hit_rate"] < 0.6:
-            recommendations.append("Consider increasing cache TTL for better hit rates")
+        for key, value in cache_data.items():
+            # Apply all optimization rules aggressively
+            if self._should_keep_item_aggressive(key, value, cache_data):
+                optimized[key] = self._optimize_item_value(value)
+            else:
+                optimizations_applied.append(f"Removed {key} (aggressive eviction)")
 
-        if analytics["compression_savings"] < 0.2:
-            recommendations.append(
-                "Consider adjusting compression threshold for better efficiency"
+        return optimized
+
+    def _apply_balanced_optimization(self, cache_data: dict[str, Any]) -> StepResult:
+        """Apply balanced cache optimization.
+
+        Args:
+            cache_data: Cache data to optimize
+
+        Returns:
+            Balanced optimized cache data
+        """
+        optimized = {}
+        optimizations_applied = []
+
+        for key, value in cache_data.items():
+            # Apply balanced optimization rules
+            if self._should_keep_item_balanced(key, value, cache_data):
+                optimized[key] = self._optimize_item_value(value)
+            else:
+                optimizations_applied.append(f"Removed {key} (balanced eviction)")
+
+        return optimized
+
+    def _apply_conservative_optimization(self, cache_data: dict[str, Any]) -> StepResult:
+        """Apply conservative cache optimization.
+
+        Args:
+            cache_data: Cache data to optimize
+
+        Returns:
+            Conservatively optimized cache data
+        """
+        optimized = {}
+        optimizations_applied = []
+
+        for key, value in cache_data.items():
+            # Apply conservative optimization rules
+            if self._should_keep_item_conservative(key, value, cache_data):
+                optimized[key] = self._optimize_item_value(value)
+            else:
+                optimizations_applied.append(f"Removed {key} (conservative eviction)")
+
+        return optimized
+
+    def _should_keep_item_aggressive(self, key: str, value: Any, cache_data: dict[str, Any]) -> StepResult:
+        """Check if item should be kept with aggressive optimization.
+
+        Args:
+            key: Cache key
+            value: Cache value
+            cache_data: Full cache data
+
+        Returns:
+            True if item should be kept
+        """
+        # Aggressive: Remove items that don't meet strict criteria
+        if not self._is_frequently_accessed(key, value):
+            return False
+
+        if self._is_large_item(value):
+            return False
+
+        return not self._is_old_item(value)
+
+    def _should_keep_item_balanced(self, key: str, value: Any, cache_data: dict[str, Any]) -> StepResult:
+        """Check if item should be kept with balanced optimization.
+
+        Args:
+            key: Cache key
+            value: Cache value
+            cache_data: Full cache data
+
+        Returns:
+            True if item should be kept
+        """
+        # Balanced: Keep items that meet most criteria
+        score = 0
+
+        if self._is_frequently_accessed(key, value):
+            score += 2
+
+        if not self._is_large_item(value):
+            score += 1
+
+        if not self._is_old_item(value):
+            score += 1
+
+        return score >= 2
+
+    def _should_keep_item_conservative(self, key: str, value: Any, cache_data: dict[str, Any]) -> StepResult:
+        """Check if item should be kept with conservative optimization.
+
+        Args:
+            key: Cache key
+            value: Cache value
+            cache_data: Full cache data
+
+        Returns:
+            True if item should be kept
+        """
+        # Conservative: Keep items unless they clearly should be removed
+        if self._is_very_old_item(value):
+            return False
+
+        return not self._is_very_large_item(value)
+
+    def _is_frequently_accessed(self, key: str, value: Any) -> StepResult:
+        """Check if item is frequently accessed.
+
+        Args:
+            key: Cache key
+            value: Cache value
+
+        Returns:
+            True if frequently accessed
+        """
+        if isinstance(value, dict) and "access_count" in value:
+            return value["access_count"] >= 5
+        return True  # Default to keeping if no access count
+
+    def _is_large_item(self, value: Any) -> StepResult:
+        """Check if item is large.
+
+        Args:
+            value: Cache value
+
+        Returns:
+            True if item is large
+        """
+        try:
+            import sys
+
+            size = sys.getsizeof(value)
+            return size > 1024 * 1024  # 1MB
+        except Exception:
+            return False
+
+    def _is_very_large_item(self, value: Any) -> StepResult:
+        """Check if item is very large.
+
+        Args:
+            value: Cache value
+
+        Returns:
+            True if item is very large
+        """
+        try:
+            import sys
+
+            size = sys.getsizeof(value)
+            return size > 10 * 1024 * 1024  # 10MB
+        except Exception:
+            return False
+
+    def _is_old_item(self, value: Any) -> StepResult:
+        """Check if item is old.
+
+        Args:
+            value: Cache value
+
+        Returns:
+            True if item is old
+        """
+        if isinstance(value, dict) and "created_at" in value:
+            try:
+                created_time = float(value["created_at"])
+                current_time = time.time()
+                return (current_time - created_time) > 3600  # 1 hour
+            except Exception:
+                pass
+        return False
+
+    def _is_very_old_item(self, value: Any) -> StepResult:
+        """Check if item is very old.
+
+        Args:
+            value: Cache value
+
+        Returns:
+            True if item is very old
+        """
+        if isinstance(value, dict) and "created_at" in value:
+            try:
+                created_time = float(value["created_at"])
+                current_time = time.time()
+                return (current_time - created_time) > 86400  # 24 hours
+            except Exception:
+                pass
+        return False
+
+    def _optimize_item_value(self, value: Any) -> StepResult:
+        """Optimize individual cache item value.
+
+        Args:
+            value: Cache value to optimize
+
+        Returns:
+            Optimized value
+        """
+        if isinstance(value, dict):
+            optimized = value.copy()
+
+            # Remove unnecessary metadata
+            unnecessary_keys = ["debug_info", "temp_data", "internal_notes"]
+            for key in unnecessary_keys:
+                optimized.pop(key, None)
+
+            # Compress large text content
+            if "content" in optimized and isinstance(optimized["content"], str):
+                if len(optimized["content"]) > 10000:
+                    optimized["content"] = optimized["content"][:10000] + "... [truncated]"
+                    optimized["content_truncated"] = True
+
+            return optimized
+
+        return value
+
+    def _calculate_performance_metrics(
+        self, original_data: dict[str, Any], optimized_data: dict[str, Any]
+    ) -> StepResult:
+        """Calculate performance metrics for optimization.
+
+        Args:
+            original_data: Original cache data
+            optimized_data: Optimized cache data
+
+        Returns:
+            Performance metrics
+        """
+        try:
+            import sys
+
+            original_size = sys.getsizeof(original_data)
+            optimized_size = sys.getsizeof(optimized_data)
+
+            return {
+                "original_memory_bytes": original_size,
+                "optimized_memory_bytes": optimized_size,
+                "memory_saved_bytes": original_size - optimized_size,
+                "memory_saved_percentage": (
+                    (original_size - optimized_size) / original_size * 100 if original_size > 0 else 0
+                ),
+                "item_count_reduction": len(original_data) - len(optimized_data),
+                "compression_ratio": optimized_size / original_size if original_size > 0 else 1.0,
+            }
+        except Exception as e:
+            logger.warning(f"Could not calculate performance metrics: {e}")
+            return {
+                "original_memory_bytes": 0,
+                "optimized_memory_bytes": 0,
+                "memory_saved_bytes": 0,
+                "memory_saved_percentage": 0,
+                "item_count_reduction": len(original_data) - len(optimized_data),
+                "compression_ratio": 1.0,
+            }
+
+    def get_cache_statistics(self) -> StepResult:
+        """Get cache statistics and metrics.
+
+        Returns:
+            StepResult with cache statistics
+        """
+        try:
+            stats = {
+                "optimization_rules": self.optimization_rules,
+                "cache_stats": self.cache_stats,
+                "tenant": self.tenant_context.tenant,
+                "workspace": self.tenant_context.workspace,
+                "timestamp": time.time(),
+            }
+
+            return StepResult.ok(data=stats)
+
+        except Exception as e:
+            logger.error(f"Failed to get cache statistics: {e}")
+            return StepResult.fail(f"Cache statistics retrieval failed: {e!s}")
+
+    def update_optimization_rules(self, rules: list[dict[str, Any]]) -> StepResult:
+        """Update cache optimization rules.
+
+        Args:
+            rules: New optimization rules
+
+        Returns:
+            StepResult with update result
+        """
+        try:
+            self.optimization_rules = rules
+
+            return StepResult.ok(
+                data={
+                    "updated_rules": rules,
+                    "rule_count": len(rules),
+                    "tenant": self.tenant_context.tenant,
+                    "workspace": self.tenant_context.workspace,
+                }
             )
 
-        if analytics["evictions"] > analytics["hits"] * 0.1:
-            recommendations.append("Consider increasing cache size to reduce evictions")
+        except Exception as e:
+            logger.error(f"Failed to update optimization rules: {e}")
+            return StepResult.fail(f"Optimization rules update failed: {e!s}")
 
-        if not recommendations:
-            recommendations.append("Cache performance is optimal")
 
-        return recommendations
+class CacheOptimizationManager:
+    """Manager for cache optimization across tenants."""
+
+    def __init__(self):
+        """Initialize cache optimization manager."""
+        self.optimizers: dict[str, CacheOptimizer] = {}
+
+    def get_optimizer(self, tenant_context: TenantContext) -> StepResult:
+        """Get or create cache optimizer for tenant.
+
+        Args:
+            tenant_context: Tenant context
+
+        Returns:
+            Cache optimizer for the tenant
+        """
+        key = f"{tenant_context.tenant}:{tenant_context.workspace}"
+
+        if key not in self.optimizers:
+            self.optimizers[key] = CacheOptimizer(tenant_context)
+
+        return self.optimizers[key]
+
+    def optimize_tenant_cache(
+        self,
+        tenant_context: TenantContext,
+        cache_data: dict[str, Any],
+        optimization_strategy: str = "balanced",
+    ) -> StepResult:
+        """Optimize cache for tenant.
+
+        Args:
+            tenant_context: Tenant context
+            cache_data: Cache data to optimize
+            optimization_strategy: Optimization strategy
+
+        Returns:
+            StepResult with optimization results
+        """
+        optimizer = self.get_optimizer(tenant_context)
+        return optimizer.optimize_cache(cache_data, optimization_strategy)
+
+
+# Global cache optimization manager
+_cache_optimization_manager = CacheOptimizationManager()
+
+
+def get_cache_optimizer(tenant_context: TenantContext) -> StepResult:
+    """Get cache optimizer for tenant.
+
+    Args:
+        tenant_context: Tenant context
+
+    Returns:
+        Cache optimizer for the tenant
+    """
+    return _cache_optimization_manager.get_optimizer(tenant_context)
+
+
+def optimize_cache(
+    tenant_context: TenantContext,
+    cache_data: dict[str, Any],
+    optimization_strategy: str = "balanced",
+) -> StepResult:
+    """Optimize cache for tenant.
+
+    Args:
+        tenant_context: Tenant context
+        cache_data: Cache data to optimize
+        optimization_strategy: Optimization strategy
+
+    Returns:
+        StepResult with optimization results
+    """
+    return _cache_optimization_manager.optimize_tenant_cache(tenant_context, cache_data, optimization_strategy)

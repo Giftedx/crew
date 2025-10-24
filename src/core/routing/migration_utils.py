@@ -3,12 +3,17 @@
 from __future__ import annotations
 
 import logging
-from collections.abc import Callable
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from ..router import Router as LegacyRouter
 from .base_router import BaseRouter, RoutingResult
 from .router_factory import RouterFactory
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from ..router import Router as LegacyRouter
+
 
 logger = logging.getLogger(__name__)
 

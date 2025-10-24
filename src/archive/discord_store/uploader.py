@@ -17,13 +17,14 @@ from typing import Any as _Any
 
 import aiohttp
 
+
 try:  # optional dependency
     import discord as _discord_mod
 
     discord: _Any = _discord_mod
     _DISCORD_AVAILABLE = True
 except Exception:  # pragma: no cover
-    discord = cast(_Any, None)
+    discord = cast("_Any", None)
     _DISCORD_AVAILABLE = False
 
 
@@ -71,10 +72,10 @@ class _OneShotClient:
                 async def on_ready():  # pragma: no cover - network dependent
                     channel = await client.fetch_channel(self._channel_id)
                     msg = await channel.send(file=_make_file(self._path))
-                    self._future.set_result(cast(_MessageLike, msg))
+                    self._future.set_result(cast("_MessageLike", msg))
                     await client.close()
 
-                setattr(client, "on_ready", on_ready)
+                client.on_ready = on_ready
 
     async def start(self, token: str) -> None:  # pragma: no cover - network
         if not self._client:
@@ -109,7 +110,7 @@ async def upload_file(
             if webhook_cls is None:  # pragma: no cover - defensive
                 raise UploadError("discord.Webhook unavailable")
             webhook = webhook_cls.from_url(channel_id, session=session)
-            msg = cast(_MessageLike, await webhook.send(file=_make_file(p), wait=True))
+            msg = cast("_MessageLike", await webhook.send(file=_make_file(p), wait=True))
     else:
         client = _OneShotClient(p, int(channel_id))
         try:
@@ -139,4 +140,4 @@ def upload_file_sync(path: str | Path, channel_id: str, *, token: str) -> dict[s
     return asyncio.run(upload_file(path, channel_id, token=token))
 
 
-__all__ = ["upload_file", "upload_file_sync", "UploadError"]
+__all__ = ["UploadError", "upload_file", "upload_file_sync"]

@@ -10,6 +10,7 @@ import sqlite3
 from pathlib import Path
 from typing import Any
 
+
 # Backward-compatible path resolution:
 # 1. Explicit env var ARCHIVE_DB_PATH wins.
 # 2. If legacy root-level file exists (archive_manifest.db) and no data/ version yet, reuse it.
@@ -122,7 +123,7 @@ def lookup(content_hash: str) -> dict[str, Any] | None:
     if not row:
         return None
     columns = [c[0] for c in cur.description]
-    rec = dict(zip(columns, row))
+    rec = dict(zip(columns, row, strict=False))
     rec["attachment_ids"] = rec.get("attachment_ids", "").split(",") if rec.get("attachment_ids") else []
     if rec.get("tags"):
         rec["tags"] = rec["tags"].split(",")
@@ -144,7 +145,7 @@ def search_tag(tag: str, limit: int = 20, offset: int = 0) -> list[dict[str, Any
     )
     rows = cur.fetchall()
     conn.close()
-    return [dict(zip([c[0] for c in cur.description], r)) for r in rows]
+    return [dict(zip([c[0] for c in cur.description], r, strict=False)) for r in rows]
 
 
 def compute_hash(path: str | Path) -> str:
@@ -158,4 +159,4 @@ def compute_hash(path: str | Path) -> str:
     return sha.hexdigest()
 
 
-__all__ = ["record", "lookup", "compute_hash", "search_tag"]
+__all__ = ["compute_hash", "lookup", "record", "search_tag"]

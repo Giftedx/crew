@@ -10,16 +10,23 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-import torch
-from transformers import (
+import torch  # type: ignore[import-not-found]
+from transformers import (  # type: ignore[import-not-found]
     pipeline,
 )
 
 from ultimate_discord_intelligence_bot.creator_ops.config import CreatorOpsConfig
-from ultimate_discord_intelligence_bot.creator_ops.media.alignment import AlignedSegment, AlignedTranscript
 from ultimate_discord_intelligence_bot.step_result import StepResult
+
+
+if TYPE_CHECKING:
+    from ultimate_discord_intelligence_bot.creator_ops.media.alignment import (
+        AlignedSegment,
+        AlignedTranscript,
+    )
+
 
 logger = logging.getLogger(__name__)
 
@@ -174,7 +181,7 @@ class NLPPipeline:
             logger.info(f"NLP models loaded on {self.device}")
 
         except Exception as e:
-            logger.error(f"Failed to initialize NLP models: {str(e)}")
+            logger.error(f"Failed to initialize NLP models: {e!s}")
             raise
 
     def analyze_transcript(
@@ -253,8 +260,8 @@ class NLPPipeline:
             return StepResult.ok(data=result)
 
         except Exception as e:
-            logger.error(f"NLP analysis failed: {str(e)}")
-            return StepResult.fail(f"NLP analysis failed: {str(e)}")
+            logger.error(f"NLP analysis failed: {e!s}")
+            return StepResult.fail(f"NLP analysis failed: {e!s}")
 
     def _segment_topics(self, segments: list[AlignedSegment]) -> list[TopicSegment]:
         """Segment transcript into topics."""
@@ -379,7 +386,7 @@ class NLPPipeline:
                         entities.append(entity_obj)
 
             except Exception as e:
-                logger.warning(f"NER failed for segment: {str(e)}")
+                logger.warning(f"NER failed for segment: {e!s}")
                 continue
 
         return entities
@@ -456,7 +463,7 @@ class NLPPipeline:
                 sentiment_results.append(sentiment)
 
             except Exception as e:
-                logger.warning(f"Sentiment analysis failed for segment: {str(e)}")
+                logger.warning(f"Sentiment analysis failed for segment: {e!s}")
                 continue
 
         return sentiment_results
@@ -521,7 +528,7 @@ class NLPPipeline:
                 safety_results.append(safety)
 
             except Exception as e:
-                logger.warning(f"Content safety analysis failed for segment: {str(e)}")
+                logger.warning(f"Content safety analysis failed for segment: {e!s}")
                 continue
 
         return safety_results

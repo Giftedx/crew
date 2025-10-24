@@ -81,8 +81,6 @@ STOP_WORDS = {
     "which",
     "who",
     "whom",
-    "this",
-    "that",
     "am",
     "is",
     "are",
@@ -295,7 +293,7 @@ def extract(text: str) -> TopicResult:
         entities.extend(matches)
 
     # Remove duplicates and social handles from entities
-    entities = sorted(list(set([e for e in entities if not e.startswith("@")])))
+    entities = sorted({e for e in entities if not e.startswith("@")})
 
     # Extract keywords (filter stop words and short words)
     word_tokens = re.findall(r"\b[a-zA-Z]+\b", text_lower)
@@ -347,7 +345,7 @@ def extract(text: str) -> TopicResult:
             detected_topics.add(keyword)
 
     return TopicResult(
-        topics=sorted(list(detected_topics)),
+        topics=sorted(detected_topics),
         entities=entities,
         hashtags=hashtags,
         keywords=top_keywords,

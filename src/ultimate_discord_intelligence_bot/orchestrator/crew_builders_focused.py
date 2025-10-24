@@ -11,7 +11,8 @@ from typing import Any
 
 from crewai import Crew, Process, Task
 
-from core.settings import get_settings
+from ultimate_discord_intelligence_bot.settings import Settings
+
 
 # Module-level logger
 logger = logging.getLogger(__name__)
@@ -246,7 +247,7 @@ def build_crew_with_tasks(
     """
     _logger = logger_instance or logger
 
-    settings = get_settings()
+    settings = Settings()
 
     crew = Crew(
         tasks=tasks,
@@ -362,7 +363,9 @@ def build_intelligence_crew(
 
     # Stage 2: Transcription (depends on acquisition)
     transcription_task = create_transcription_task(
-        agent=agents["transcription_engineer"], acquisition_task=acquisition_task, callback=task_completion_callback
+        agent=agents["transcription_engineer"],
+        acquisition_task=acquisition_task,
+        callback=task_completion_callback,
     )
     tasks.append(transcription_task)
 

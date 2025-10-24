@@ -8,6 +8,7 @@ from typing import Any
 
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -236,10 +237,10 @@ class CreatorEvaluationHarness:
             )
 
         except Exception as e:
-            logger.error(f"Evaluation failed: {str(e)}")
-            return StepResult.fail(f"Evaluation failed: {str(e)}")
+            logger.error(f"Evaluation failed: {e!s}")
+            return StepResult.fail(f"Evaluation failed: {e!s}")
 
-    def _load_gold_dataset(self) -> list[Any]:
+    def _load_gold_dataset(self) -> StepResult:
         """Load gold dataset annotations."""
         try:
             with open(self.gold_dataset_path, encoding="utf-8") as f:
@@ -255,10 +256,10 @@ class CreatorEvaluationHarness:
             return annotations
 
         except Exception as e:
-            logger.error(f"Failed to load gold dataset: {str(e)}")
+            logger.error(f"Failed to load gold dataset: {e!s}")
             return []
 
-    def _evaluate_episode(self, annotation: Any) -> EvaluationEpisode:
+    def _evaluate_episode(self, annotation: Any) -> StepResult:
         """Evaluate a single episode against gold annotations."""
         try:
             # Handle both dict and object inputs
@@ -381,7 +382,7 @@ class CreatorEvaluationHarness:
                 error_message=str(e),
             )
 
-    def _calculate_aggregate_metrics(self, episode_results: list[EvaluationEpisode]) -> EvaluationMetrics:
+    def _calculate_aggregate_metrics(self, episode_results: list[EvaluationEpisode]) -> StepResult:
         """Calculate aggregate metrics across all episodes."""
         successful_results = [r for r in episode_results if r.success]
 
@@ -461,7 +462,7 @@ class CreatorEvaluationHarness:
             throughput_per_hour=throughput,
         )
 
-    def _analyze_trends(self, episode_results: list[EvaluationEpisode]) -> dict[str, Any]:
+    def _analyze_trends(self, episode_results: list[EvaluationEpisode]) -> StepResult:
         """Analyze trends in evaluation results."""
         trends = {
             "wer_trend": "stable",  # "improving", "degrading", "stable"
@@ -491,7 +492,7 @@ class CreatorEvaluationHarness:
 
         return trends
 
-    def _generate_regression_alerts(self, metrics: EvaluationMetrics, trends: dict[str, Any]) -> list[str]:
+    def _generate_regression_alerts(self, metrics: EvaluationMetrics, trends: dict[str, Any]) -> StepResult:
         """Generate alerts for metric regressions."""
         alerts = []
 
@@ -526,7 +527,7 @@ class CreatorEvaluationHarness:
 
     def _identify_improvement_opportunities(
         self, metrics: EvaluationMetrics, episode_results: list[EvaluationEpisode]
-    ) -> list[str]:
+    ) -> StepResult:
         """Identify opportunities for improvement."""
         opportunities = []
 
@@ -552,7 +553,9 @@ class CreatorEvaluationHarness:
 
         return opportunities
 
-    def _generate_evaluation_summary(self, metrics: EvaluationMetrics, episode_results: list[EvaluationEpisode]) -> str:
+    def _generate_evaluation_summary(
+        self, metrics: EvaluationMetrics, episode_results: list[EvaluationEpisode]
+    ) -> StepResult:
         """Generate evaluation summary."""
         successful_episodes = len([r for r in episode_results if r.success])
 
@@ -565,7 +568,7 @@ class CreatorEvaluationHarness:
 
         return summary
 
-    def _generate_recommendations(self, metrics: EvaluationMetrics, alerts: list[str]) -> list[str]:
+    def _generate_recommendations(self, metrics: EvaluationMetrics, alerts: list[str]) -> StepResult:
         """Generate actionable recommendations."""
         recommendations = []
 
@@ -589,7 +592,7 @@ class CreatorEvaluationHarness:
 
         return recommendations
 
-    def _check_overall_acceptance(self, metrics: EvaluationMetrics) -> bool:
+    def _check_overall_acceptance(self, metrics: EvaluationMetrics) -> StepResult:
         """Check if overall metrics meet acceptance criteria."""
         return (
             metrics.wer <= self.metrics_thresholds["wer_max"]
@@ -600,7 +603,7 @@ class CreatorEvaluationHarness:
             and metrics.source_retrieval_r3 >= self.metrics_thresholds["source_r3_min"]
         )
 
-    def _save_evaluation_report(self, report: EvaluationReport) -> str:
+    def _save_evaluation_report(self, report: EvaluationReport) -> StepResult:
         """Save evaluation report to file."""
         report_path = f"evaluation_report_{report.report_id}.json"
 
@@ -634,7 +637,7 @@ class CreatorEvaluationHarness:
 
         return report_path
 
-    def _serialize_metrics(self, metrics: EvaluationMetrics) -> dict[str, Any]:
+    def _serialize_metrics(self, metrics: EvaluationMetrics) -> StepResult:
         """Serialize metrics to dictionary."""
         return {
             "wer": metrics.wer,
@@ -658,7 +661,7 @@ class CreatorEvaluationHarness:
             "throughput_per_hour": metrics.throughput_per_hour,
         }
 
-    def _display_evaluation_results(self, report: EvaluationReport) -> None:
+    def _display_evaluation_results(self, report: EvaluationReport) -> StepResult:
         """Display evaluation results in a formatted way."""
         print("\n📊 Evaluation Results Summary")
         print("=" * 60)
@@ -691,8 +694,14 @@ class CreatorEvaluationHarness:
         # Acceptance criteria check
         print("\n🎯 Acceptance Criteria:")
         acceptance_checks = [
-            (f"WER ≤ {self.metrics_thresholds['wer_max']:.1%}", metrics.wer <= self.metrics_thresholds["wer_max"]),
-            (f"DER ≤ {self.metrics_thresholds['der_max']:.1%}", metrics.der <= self.metrics_thresholds["der_max"]),
+            (
+                f"WER ≤ {self.metrics_thresholds['wer_max']:.1%}",
+                metrics.wer <= self.metrics_thresholds["wer_max"],
+            ),
+            (
+                f"DER ≤ {self.metrics_thresholds['der_max']:.1%}",
+                metrics.der <= self.metrics_thresholds["der_max"],
+            ),
             (
                 f"Cost ≤ ${self.metrics_thresholds['cost_max_usd']:.2f}",
                 metrics.avg_cost_usd <= self.metrics_thresholds["cost_max_usd"],

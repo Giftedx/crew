@@ -130,7 +130,11 @@ async def demonstrate_phase5_capabilities():
         {
             "strategy": "Blue-Green",
             "use_case": "Zero-downtime production releases",
-            "benefits": ["Instant rollback", "No service interruption", "Complete isolation"],
+            "benefits": [
+                "Instant rollback",
+                "No service interruption",
+                "Complete isolation",
+            ],
             "simulation_time": 3.2,
         },
         {

@@ -4,14 +4,20 @@ from __future__ import annotations
 
 import contextlib
 import time
-from collections.abc import Callable, Iterable
-from typing import Any
+from copy import deepcopy
+from typing import TYPE_CHECKING, Any
 
 from obs import metrics
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
 from .middleware import PipelineStepMiddleware, StepContext
-from .types import PipelineRunResult
+from .observability import merge_log_pattern_summaries
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Iterable
+
+    from .types import PipelineRunResult
 
 
 class PipelineMetricsMixin:
@@ -107,6 +113,16 @@ class PipelineMetricsMixin:
             duration = max(time.monotonic() - start_time, 0.0)
         self._record_pipeline_duration(status, duration)
         payload.setdefault("status", status)
+
+        step_observability = getattr(self, "_step_observability", None)
+        if isinstance(step_observability, dict) and step_observability:
+            pipeline_observability = payload.setdefault("observability", {})
+            pipeline_observability["log_patterns"] = {
+                "summary": merge_log_pattern_summaries(step_observability),
+                "per_step": deepcopy(step_observability),
+            }
+        if isinstance(step_observability, dict):
+            step_observability.clear()
 
         # Record dashboard metrics asynchronously (fire-and-forget)
         self._record_dashboard_metrics_background(payload, duration)
@@ -220,6 +236,7 @@ class PipelineExecutionMixin(PipelineMetricsMixin):
             )
             context.result = result
             await self._dispatch_after_step(context, middlewares)
+            self._capture_step_observability(step, context)
             return result
         except Exception as exc:  # pragma: no cover - unexpected path
             error = exc
@@ -228,7 +245,13 @@ class PipelineExecutionMixin(PipelineMetricsMixin):
             logger = getattr(self, "logger", None)
             if logger is not None:
                 logger.exception("%s step raised unhandled exception", step)
-            return StepResult.fail(str(exc))
+            failure = StepResult.fail(str(exc))
+            summary = context.metadata.pop("log_patterns.summary", None)
+            if summary:
+                observability = failure.metadata.setdefault("observability", {})
+                observability["log_patterns"] = summary
+            self._capture_step_observability(step, context, summary)
+            return failure
         finally:
             outcome = self._step_outcome(result if error is None else error)
             duration = time.monotonic() - start
@@ -276,3 +299,18 @@ class PipelineExecutionMixin(PipelineMetricsMixin):
                         hook_name,
                         exc,
                     )
+
+    def _capture_step_observability(
+        self,
+        step: str,
+        context: StepContext,
+        summary: dict[str, Any] | None = None,
+    ) -> None:
+        if summary is None:
+            summary = context.metadata.get("log_patterns.summary")
+        if not isinstance(summary, dict):
+            return
+        observability = getattr(self, "_step_observability", None)
+        if not isinstance(observability, dict):
+            return
+        observability[step] = deepcopy(summary)

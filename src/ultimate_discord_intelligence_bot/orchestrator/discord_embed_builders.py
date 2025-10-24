@@ -37,25 +37,43 @@ async def create_main_results_embed(results: dict[str, Any], depth: str) -> Any:
         )
 
         # Deception score (primary metric)
-        embed.add_field(name="🎯 Deception Score", value=f"{score_emoji} {deception_score:.2f}/1.00", inline=True)
+        embed.add_field(
+            name="🎯 Deception Score",
+            value=f"{score_emoji} {deception_score:.2f}/1.00",
+            inline=True,
+        )
 
         # Processing stats
-        embed.add_field(name="⚡ Processing Time", value=f"{summary.get('processing_time', 0.0):.1f}s", inline=True)
+        embed.add_field(
+            name="⚡ Processing Time",
+            value=f"{summary.get('processing_time', 0.0):.1f}s",
+            inline=True,
+        )
 
         embed.add_field(name="📊 Analysis Depth", value=depth.title(), inline=True)
 
         # Fact-checking summary
         if stats.get("fact_checks_performed", 0) > 0:
-            embed.add_field(name="✅ Fact Checks", value=f"{stats['fact_checks_performed']} performed", inline=True)
+            embed.add_field(
+                name="✅ Fact Checks",
+                value=f"{stats['fact_checks_performed']} performed",
+                inline=True,
+            )
 
         # Fallacy detection
         if stats.get("fallacies_detected", 0) > 0:
-            embed.add_field(name="⚠️ Logical Fallacies", value=f"{stats['fallacies_detected']} detected", inline=True)
+            embed.add_field(
+                name="⚠️ Logical Fallacies",
+                value=f"{stats['fallacies_detected']} detected",
+                inline=True,
+            )
 
         # Cross-platform intelligence
         if stats.get("cross_platform_sources", 0) > 0:
             embed.add_field(
-                name="🌐 Cross-Platform Intel", value=f"{stats['cross_platform_sources']} sources", inline=True
+                name="🌐 Cross-Platform Intel",
+                value=f"{stats['cross_platform_sources']} sources",
+                inline=True,
             )
 
         # Autonomous insights
@@ -73,7 +91,10 @@ async def create_main_results_embed(results: dict[str, Any], depth: str) -> Any:
 
     except Exception as e:
         # Return a minimal embed on error
-        return {"title": "Results Available", "description": f"Results generated but embed creation failed: {e}"}
+        return {
+            "title": "Results Available",
+            "description": f"Results generated but embed creation failed: {e}",
+        }
 
 
 async def create_details_embed(results: dict[str, Any]) -> Any:
@@ -228,7 +249,10 @@ async def create_knowledge_base_embed(knowledge_data: dict[str, Any]) -> Any:
         return embed
 
     except Exception:
-        return {"title": "Knowledge Base", "description": "Integration completed successfully"}
+        return {
+            "title": "Knowledge Base",
+            "description": "Integration completed successfully",
+        }
 
 
 async def create_error_embed(stage: str, error: str) -> Any:
@@ -252,7 +276,11 @@ async def create_error_embed(stage: str, error: str) -> Any:
 
         embed.add_field(name="🔧 Failed Stage", value=stage, inline=True)
 
-        embed.add_field(name="⚠️ Error Details", value=error[:500] + ("..." if len(error) > 500 else ""), inline=False)
+        embed.add_field(
+            name="⚠️ Error Details",
+            value=error[:500] + ("..." if len(error) > 500 else ""),
+            inline=False,
+        )
 
         embed.set_footer(text="Please try again or contact support if the issue persists")
 
@@ -260,7 +288,10 @@ async def create_error_embed(stage: str, error: str) -> Any:
 
     except Exception:
         # Fallback to minimal embed on error
-        return {"title": "Error", "description": f"Error in stage: {stage}. Details: {error[:100]}"}
+        return {
+            "title": "Error",
+            "description": f"Error in stage: {stage}. Details: {error[:100]}",
+        }
 
 
 async def create_specialized_main_results_embed(results: dict[str, Any], depth: str) -> Any:
@@ -301,21 +332,37 @@ async def create_specialized_main_results_embed(results: dict[str, Any], depth: 
         )
 
         # Processing performance
-        embed.add_field(name="⚡ Processing Time", value=f"{summary.get('processing_time', 0.0):.1f}s", inline=True)
+        embed.add_field(
+            name="⚡ Processing Time",
+            value=f"{summary.get('processing_time', 0.0):.1f}s",
+            inline=True,
+        )
 
         embed.add_field(name="🧠 Analysis Method", value="Specialized Agents", inline=True)
 
         # Verification status
         if stats.get("verification_completed"):
-            embed.add_field(name="✅ Information Verification", value="Completed by Specialist", inline=True)
+            embed.add_field(
+                name="✅ Information Verification",
+                value="Completed by Specialist",
+                inline=True,
+            )
 
         # Behavioral analysis
         if stats.get("behavioral_analysis_done"):
-            embed.add_field(name="📊 Behavioral Analysis", value="Pattern Analysis Complete", inline=True)
+            embed.add_field(
+                name="📊 Behavioral Analysis",
+                value="Pattern Analysis Complete",
+                inline=True,
+            )
 
         # Knowledge integration
         if stats.get("knowledge_integrated"):
-            embed.add_field(name="💾 Knowledge Integration", value="Multi-System Storage", inline=True)
+            embed.add_field(
+                name="💾 Knowledge Integration",
+                value="Multi-System Storage",
+                inline=True,
+            )
 
         # Specialized insights
         if insights:
@@ -334,7 +381,10 @@ async def create_specialized_main_results_embed(results: dict[str, Any], depth: 
 
     except Exception as e:
         # Fallback embed
-        return {"title": "Specialized Analysis Complete", "description": f"Results available (embed error: {e})"}
+        return {
+            "title": "Specialized Analysis Complete",
+            "description": f"Results available (embed error: {e})",
+        }
 
 
 async def create_specialized_details_embed(results: dict[str, Any]) -> Any:
@@ -412,7 +462,10 @@ async def create_specialized_details_embed(results: dict[str, Any]) -> Any:
         return embed
 
     except Exception:
-        return {"title": "Analysis Details", "description": "Specialized analysis details available"}
+        return {
+            "title": "Analysis Details",
+            "description": "Specialized analysis details available",
+        }
 
 
 async def create_specialized_knowledge_embed(knowledge_data: dict[str, Any]) -> Any:
@@ -445,7 +498,11 @@ async def create_specialized_knowledge_embed(knowledge_data: dict[str, Any]) -> 
             integrated_systems.append("✅ Continual Learning System")
 
         if integrated_systems:
-            embed.add_field(name="🔧 Integrated Systems", value="\n".join(integrated_systems), inline=True)
+            embed.add_field(
+                name="🔧 Integrated Systems",
+                value="\n".join(integrated_systems),
+                inline=True,
+            )
 
         embed.add_field(
             name="📊 Integration Status",
@@ -458,4 +515,7 @@ async def create_specialized_knowledge_embed(knowledge_data: dict[str, Any]) -> 
         return embed
 
     except Exception:
-        return {"title": "Knowledge Integration", "description": "Specialized integration completed successfully"}
+        return {
+            "title": "Knowledge Integration",
+            "description": "Specialized integration completed successfully",
+        }

@@ -21,6 +21,7 @@ from typing import Any
 
 from .error_handling import log_error
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -265,7 +266,10 @@ class DistributedTracer:
         self.completed_traces: deque[TraceSpan] = deque(maxlen=1000)
 
     def start_span(
-        self, operation_name: str, parent_span_id: str | None = None, tags: dict[str, str] | None = None
+        self,
+        operation_name: str,
+        parent_span_id: str | None = None,
+        tags: dict[str, str] | None = None,
     ) -> TraceSpan:
         """Start a new trace span."""
         import secrets
@@ -349,7 +353,12 @@ class AlertingSystem:
         self.notification_channels: list[dict[str, Any]] = []
 
     def add_alert_rule(
-        self, rule_id: str, condition: str, severity: AlertSeverity, title: str, description: str
+        self,
+        rule_id: str,
+        condition: str,
+        severity: AlertSeverity,
+        title: str,
+        description: str,
     ) -> None:
         """Add alert rule."""
         self.alert_rules[rule_id] = {
@@ -449,7 +458,11 @@ class DashboardEngine:
         self.default_panels = self._create_default_panels()
 
     def create_dashboard(
-        self, dashboard_id: str, title: str, description: str, panels: list[dict[str, Any]] | None = None
+        self,
+        dashboard_id: str,
+        title: str,
+        description: str,
+        panels: list[dict[str, Any]] | None = None,
     ) -> Dashboard:
         """Create a new dashboard."""
         dashboard = Dashboard(
@@ -707,30 +720,34 @@ class TelemetryOrchestrator:
 
 
 # Convenience functions
-def create_telemetry_orchestrator(service_name: str = "discord-intelligence-bot") -> TelemetryOrchestrator:
+def create_telemetry_orchestrator(
+    service_name: str = "discord-intelligence-bot",
+) -> TelemetryOrchestrator:
     """Create telemetry orchestrator instance."""
     return TelemetryOrchestrator(service_name)
 
 
-async def run_telemetry_analysis(service_name: str = "discord-intelligence-bot") -> dict[str, Any]:
+async def run_telemetry_analysis(
+    service_name: str = "discord-intelligence-bot",
+) -> dict[str, Any]:
     """Run comprehensive telemetry analysis."""
     orchestrator = create_telemetry_orchestrator(service_name)
     return await orchestrator.run_telemetry_cycle()
 
 
 __all__ = [
-    "TelemetryOrchestrator",
-    "MetricsCollector",
-    "DistributedTracer",
-    "AlertingSystem",
-    "DashboardEngine",
-    "MetricPoint",
-    "TraceSpan",
     "Alert",
-    "Dashboard",
-    "MetricType",
     "AlertSeverity",
+    "AlertingSystem",
+    "Dashboard",
+    "DashboardEngine",
+    "DistributedTracer",
+    "MetricPoint",
+    "MetricType",
+    "MetricsCollector",
+    "TelemetryOrchestrator",
     "TelemetryScope",
+    "TraceSpan",
     "create_telemetry_orchestrator",
     "run_telemetry_analysis",
 ]

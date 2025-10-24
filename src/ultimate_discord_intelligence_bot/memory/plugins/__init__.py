@@ -10,4 +10,5 @@ from .graph_plugin import GraphPlugin
 from .hipporag_plugin import HippoRAGPlugin
 from .mem0_plugin import Mem0Plugin
 
-__all__ = ["Mem0Plugin", "HippoRAGPlugin", "GraphPlugin"]
+
+__all__ = ["GraphPlugin", "HippoRAGPlugin", "Mem0Plugin"]

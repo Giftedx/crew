@@ -24,6 +24,7 @@ import secrets
 import sys
 from pathlib import Path
 
+
 DEFAULT_FILE = Path(".env")
 
 
@@ -70,8 +71,18 @@ def rotate_lines(lines: list[str]) -> list[str]:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Rotate webhook shared secrets in env file.")
-    parser.add_argument("-f", "--file", type=Path, default=DEFAULT_FILE, help="Env file path (default ./.env)")
-    parser.add_argument("--write", action="store_true", help="Apply changes in-place (otherwise diff to stdout)")
+    parser.add_argument(
+        "-f",
+        "--file",
+        type=Path,
+        default=DEFAULT_FILE,
+        help="Env file path (default ./.env)",
+    )
+    parser.add_argument(
+        "--write",
+        action="store_true",
+        help="Apply changes in-place (otherwise diff to stdout)",
+    )
     args = parser.parse_args()
 
     if not args.file.exists():
@@ -86,7 +97,10 @@ def main() -> int:
         print(f"[rotate] Updated {args.file}. Remember to deploy & revoke old secrets once traffic drains.")
     else:
         print("".join(updated), end="")
-        print("\n[rotate] (Dry-run) Pass --write to modify the file in-place.", file=sys.stderr)
+        print(
+            "\n[rotate] (Dry-run) Pass --write to modify the file in-place.",
+            file=sys.stderr,
+        )
     return 0
 
 

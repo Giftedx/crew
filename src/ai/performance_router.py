@@ -17,6 +17,7 @@ from ultimate_discord_intelligence_bot.agent_training.performance_monitor import
     AgentPerformanceMonitor,
 )
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -113,25 +114,17 @@ class PerformanceBasedRouter:
 
         # Update metrics using exponential moving average
         alpha = 0.1  # Learning rate
-        metrics.avg_latency_ms = (
-            1 - alpha
-        ) * metrics.avg_latency_ms + alpha * latency_ms
+        metrics.avg_latency_ms = (1 - alpha) * metrics.avg_latency_ms + alpha * latency_ms
         metrics.avg_cost = (1 - alpha) * metrics.avg_cost + alpha * cost
-        metrics.success_rate = (1 - alpha) * metrics.success_rate + alpha * (
-            1.0 if success else 0.0
-        )
+        metrics.success_rate = (1 - alpha) * metrics.success_rate + alpha * (1.0 if success else 0.0)
 
         if quality_score is not None:
-            metrics.quality_score = (
-                1 - alpha
-            ) * metrics.quality_score + alpha * quality_score
+            metrics.quality_score = (1 - alpha) * metrics.quality_score + alpha * quality_score
 
         metrics.total_requests += 1
         metrics.last_updated = default_utc_now()
 
-        logger.debug(
-            f"Updated {model} metrics: latency={metrics.avg_latency_ms:.1f}ms, cost=${metrics.avg_cost:.4f}"
-        )
+        logger.debug(f"Updated {model} metrics: latency={metrics.avg_latency_ms:.1f}ms, cost=${metrics.avg_cost:.4f}")
 
     def select_optimal_model(
         self,
@@ -172,14 +165,10 @@ class PerformanceBasedRouter:
         # Calculate confidence based on score difference
         scores = list(model_scores.values())
         scores.sort(reverse=True)
-        confidence = (
-            0.9 if len(scores) == 1 else min(0.95, 0.5 + (scores[0] - scores[1]) / 2)
-        )
+        confidence = 0.9 if len(scores) == 1 else min(0.95, 0.5 + (scores[0] - scores[1]) / 2)
 
         # Build reasoning
-        reasoning = self._build_reasoning(
-            best_model, best_metrics, optimization_target, task_type
-        )
+        reasoning = self._build_reasoning(best_model, best_metrics, optimization_target, task_type)
 
         # Alternative models (sorted by score, excluding the best)
         alternatives = sorted(
@@ -200,9 +189,7 @@ class PerformanceBasedRouter:
 
         self.routing_history.append(decision)
 
-        logger.info(
-            f"Selected {best_model} for {task_type} (confidence: {confidence:.2f})"
-        )
+        logger.info(f"Selected {best_model} for {task_type} (confidence: {confidence:.2f})")
         return decision
 
     def _calculate_model_score(
@@ -234,9 +221,7 @@ class PerformanceBasedRouter:
             speed_score * weights["speed"] * task_multipliers.get("speed", 1.0)
             + cost_score * weights["cost"] * task_multipliers.get("cost", 1.0)
             + quality_score * weights["quality"] * task_multipliers.get("quality", 1.0)
-            + reliability_score
-            * weights["reliability"]
-            * task_multipliers.get("reliability", 1.0)
+            + reliability_score * weights["reliability"] * task_multipliers.get("reliability", 1.0)
         )
 
         # Bonus for recent good performance
@@ -269,15 +254,11 @@ class PerformanceBasedRouter:
         reasons = []
 
         if optimization_target == "speed":
-            reasons.append(
-                f"optimized for speed ({metrics.avg_latency_ms:.0f}ms avg latency)"
-            )
+            reasons.append(f"optimized for speed ({metrics.avg_latency_ms:.0f}ms avg latency)")
         elif optimization_target == "cost":
             reasons.append(f"optimized for cost (${metrics.avg_cost:.4f} avg cost)")
         elif optimization_target == "quality":
-            reasons.append(
-                f"optimized for quality ({metrics.quality_score:.2f} quality score)"
-            )
+            reasons.append(f"optimized for quality ({metrics.quality_score:.2f} quality score)")
         else:
             reasons.append("balanced optimization")
 
@@ -315,23 +296,15 @@ class PerformanceBasedRouter:
             model_data["avg_confidence"] /= model_data["count"]
 
         # Recent performance
-        recent_decisions = (
-            self.routing_history[-10:]
-            if total_decisions >= 10
-            else self.routing_history
-        )
-        avg_confidence = sum(d.confidence for d in recent_decisions) / len(
-            recent_decisions
-        )
+        recent_decisions = self.routing_history[-10:] if total_decisions >= 10 else self.routing_history
+        avg_confidence = sum(d.confidence for d in recent_decisions) / len(recent_decisions)
 
         return {
             "total_decisions": total_decisions,
             "recent_avg_confidence": avg_confidence,
             "model_usage": model_usage,
             "available_models": len(self.model_metrics),
-            "performance_data_points": sum(
-                m.total_requests for m in self.model_metrics.values()
-            ),
+            "performance_data_points": sum(m.total_requests for m in self.model_metrics.values()),
         }
 
 
@@ -368,9 +341,7 @@ if __name__ == "__main__":
             print(f"  🎯 Selected: {decision.selected_model}")
             print(f"  📊 Confidence: {decision.confidence:.2f}")
             print(f"  💡 Reasoning: {decision.reasoning}")
-            print(
-                f"  ⚡ Expected: {decision.expected_latency_ms:.0f}ms, ${decision.expected_cost:.4f}"
-            )
+            print(f"  ⚡ Expected: {decision.expected_latency_ms:.0f}ms, ${decision.expected_cost:.4f}")
 
         # Show statistics
         stats = router.get_routing_stats()

@@ -2,16 +2,15 @@
 
 from __future__ import annotations
 
+import contextlib
 from pathlib import Path
 
 
 def delete(path: str | Path) -> None:
     """Remove ``path`` if it exists."""
     p = Path(path)
-    try:
+    with contextlib.suppress(FileNotFoundError):
         p.unlink()
-    except FileNotFoundError:
-        pass
 
 
 __all__ = ["delete"]

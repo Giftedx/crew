@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+
 # JPEG compression tuning constants
 INITIAL_JPEG_QUALITY = 85  # Starting quality for adaptive downscale
 MIN_JPEG_QUALITY = 35  # Lower bound to avoid excessive degradation (balances size vs fidelity)

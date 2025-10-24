@@ -6,15 +6,17 @@ import logging
 from datetime import datetime, timedelta
 from typing import Any
 
-import httpx
-from tenacity import (
+import httpx  # type: ignore[import-not-found]
+from tenacity import (  # type: ignore[import-not-found]
     before_sleep_log,
     retry,
     stop_after_attempt,
     wait_exponential,
 )
 
-from ultimate_discord_intelligence_bot.creator_ops.auth.oauth_manager import OAuthManager
+from ultimate_discord_intelligence_bot.creator_ops.auth.oauth_manager import (
+    OAuthManager,
+)
 from ultimate_discord_intelligence_bot.creator_ops.config import CreatorOpsConfig
 from ultimate_discord_intelligence_bot.creator_ops.integrations.x_models import (
     XCostGuard,
@@ -29,6 +31,7 @@ from ultimate_discord_intelligence_bot.creator_ops.integrations.x_models import 
     XWebhookSubscription,
 )
 from ultimate_discord_intelligence_bot.step_result import StepResult
+
 
 logger = logging.getLogger(__name__)
 
@@ -172,7 +175,7 @@ class XClient:
             response.raise_for_status()
             data = response.json()
 
-            if "errors" in data and data["errors"]:
+            if data.get("errors"):
                 error = XError(**data["errors"][0])
                 logger.error(f"X API error: {error.message} (Code: {error.code})")
                 return StepResult.fail(f"X API error: {error.message}")
@@ -207,7 +210,7 @@ class XClient:
         if not result.success:
             return result.as_failure()
 
-        data, rate_limit = result.data
+        data, _rate_limit = result.data
         user_data = data.get("data")
         if not user_data:
             return StepResult.fail("User data not found in X API response.")
@@ -233,7 +236,7 @@ class XClient:
         if not result.success:
             return result.as_failure()
 
-        data, rate_limit = result.data
+        data, _rate_limit = result.data
         user_data = data.get("data")
         if not user_data:
             return StepResult.fail("User data not found in X API response.")
@@ -374,7 +377,7 @@ class XClient:
         if not result.success:
             return result.as_failure()
 
-        data, rate_limit = result.data
+        data, _rate_limit = result.data
         tweet_data = data.get("data")
         if not tweet_data:
             return StepResult.fail("Tweet data not found in X API response.")
@@ -413,7 +416,7 @@ class XClient:
         if not result.success:
             return result.as_failure()
 
-        data, rate_limit = result.data
+        data, _rate_limit = result.data
         tweet_data = data.get("data")
         if not tweet_data:
             return StepResult.fail("Tweet data not found in X API response.")
@@ -440,7 +443,7 @@ class XClient:
         if not result.success:
             return result.as_failure()
 
-        data, rate_limit = result.data
+        data, _rate_limit = result.data
         return StepResult.success(data.get("data", {}).get("deleted", False))
 
     async def get_tweet_media(
@@ -458,7 +461,7 @@ class XClient:
         if not result.success:
             return result.as_failure()
 
-        data, rate_limit = result.data
+        data, _rate_limit = result.data
         data.get("data", {})
         includes = data.get("includes", {})
         media_data = includes.get("media", [])
@@ -487,7 +490,7 @@ class XClient:
         if not result.success:
             return result.as_failure()
 
-        data, rate_limit = result.data
+        data, _rate_limit = result.data
         includes = data.get("includes", {})
         polls_data = includes.get("polls", [])
 
@@ -514,7 +517,7 @@ class XClient:
         if not result.success:
             return result.as_failure()
 
-        data, rate_limit = result.data
+        data, _rate_limit = result.data
         includes = data.get("includes", {})
         places_data = includes.get("places", [])
 

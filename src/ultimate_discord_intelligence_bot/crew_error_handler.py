@@ -100,7 +100,13 @@ class CrewErrorHandler:
         try:
             # Analyze error context
             error_context = self._analyze_error_context(
-                error, stage_name, agent_name, workflow_depth, retry_count, preceding_results or {}, system_health or {}
+                error,
+                stage_name,
+                agent_name,
+                workflow_depth,
+                retry_count,
+                preceding_results or {},
+                system_health or {},
             )
 
             # Generate recovery plan
@@ -130,7 +136,8 @@ class CrewErrorHandler:
                 reason=f"Recovery system failure: {recovery_error}",
             )
             critical_result = StepResult.fail(
-                f"Critical system failure in error recovery: {recovery_error}", step=f"{stage_name}_critical_failure"
+                f"Critical system failure in error recovery: {recovery_error}",
+                step=f"{stage_name}_critical_failure",
             )
             return critical_plan, critical_result
 

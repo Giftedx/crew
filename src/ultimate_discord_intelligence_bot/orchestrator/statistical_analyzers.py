@@ -9,6 +9,7 @@ Extracted from analytics_calculators.py to improve maintainability and organizat
 import logging
 from typing import Any
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -84,7 +85,13 @@ def calculate_consolidation_metrics_from_crew(crew_result: Any, log: logging.Log
         crew_output = str(crew_result)
 
         # Calculate metrics based on crew output quality and depth
-        consolidation_indicators = ["integrated", "consolidated", "archived", "stored", "processed"]
+        consolidation_indicators = [
+            "integrated",
+            "consolidated",
+            "archived",
+            "stored",
+            "processed",
+        ]
         consolidation_count = sum(1 for indicator in consolidation_indicators if indicator in crew_output.lower())
 
         metrics = {

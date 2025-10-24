@@ -30,6 +30,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
+
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
@@ -39,8 +40,12 @@ try:
         enhanced_crew_execution,
         execute_crew_with_quality_monitoring,
     )
-    from ultimate_discord_intelligence_bot.enhanced_performance_monitor import EnhancedPerformanceMonitor
-    from ultimate_discord_intelligence_bot.performance_integration import PerformanceIntegrationManager
+    from ultimate_discord_intelligence_bot.enhanced_performance_monitor import (
+        EnhancedPerformanceMonitor,
+    )
+    from ultimate_discord_intelligence_bot.performance_integration import (
+        PerformanceIntegrationManager,
+    )
 except ImportError as e:
     print(f"❌ Import error: {e}")
     print("Ensure you're running from the project root and have installed dependencies")
@@ -63,7 +68,11 @@ async def demo_simple_monitoring():
         # Define simple input for demonstration
         inputs = {
             "query": "Analyze the current state of artificial intelligence development",
-            "focus_areas": ["machine_learning", "natural_language_processing", "ethics"],
+            "focus_areas": [
+                "machine_learning",
+                "natural_language_processing",
+                "ethics",
+            ],
             "depth": "comprehensive",
         }
 
@@ -116,7 +125,12 @@ async def demo_complex_workflow():
             # Complex multi-step workflow
             inputs = {
                 "content_url": "https://example.com/analysis-target",
-                "analysis_types": ["fact_check", "sentiment", "bias_detection", "credibility"],
+                "analysis_types": [
+                    "fact_check",
+                    "sentiment",
+                    "bias_detection",
+                    "credibility",
+                ],
                 "cross_reference": True,
                 "generate_report": True,
                 "quality_threshold": 0.8,
@@ -287,7 +301,12 @@ async def generate_sample_performance_data(enhanced_monitor, integration_manager
     print("🔄 Generating sample performance data...")
 
     sample_agents = ["content_manager", "fact_checker", "truth_scorer", "qa_manager"]
-    sample_tools = ["FactCheckTool", "LogicalFallacyTool", "TruthScoringTool", "TextAnalysisTool"]
+    sample_tools = [
+        "FactCheckTool",
+        "LogicalFallacyTool",
+        "TruthScoringTool",
+        "TextAnalysisTool",
+    ]
 
     # Generate sample interactions
     for i in range(20):
@@ -358,7 +377,7 @@ def print_demo_summary(results: dict[str, Any]):
     print("📋 ENHANCED PERFORMANCE MONITORING DEMO SUMMARY")
     print("=" * 70)
 
-    total_demos = len([k for k in results.keys() if k.startswith("demo_")])
+    total_demos = len([k for k in results if k.startswith("demo_")])
     successful_demos = len([v for k, v in results.items() if k.startswith("demo_") and v is not None])
 
     print(f"🎯 Demos Executed: {total_demos}")

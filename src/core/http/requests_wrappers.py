@@ -4,12 +4,15 @@ from __future__ import annotations
 
 import inspect
 import os
-from collections.abc import Callable, Mapping
-from typing import Any, Protocol, cast, runtime_checkable
+from typing import TYPE_CHECKING, Any, Protocol, cast, runtime_checkable
 
 import requests
 
 from .config import REQUEST_TIMEOUT_SECONDS
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Mapping
 
 
 @runtime_checkable
@@ -80,7 +83,7 @@ def resilient_post(
         span.set_attribute("http.method", "POST")
         try:
             return cast(
-                ResponseLike,
+                "ResponseLike",
                 request_fn(
                     url,
                     json=json_payload,
@@ -92,7 +95,7 @@ def resilient_post(
         except TypeError as exc:
             if allow_legacy_timeout_fallback and "unexpected keyword argument" in str(exc):
                 return cast(
-                    ResponseLike,
+                    "ResponseLike",
                     request_fn(
                         url,
                         json=json_payload,
@@ -121,7 +124,7 @@ def resilient_get(
         span.set_attribute("http.method", "GET")
         try:
             return cast(
-                ResponseLike,
+                "ResponseLike",
                 request_fn(
                     url,
                     params=params,
@@ -146,8 +149,52 @@ def resilient_get(
                     retry_kwargs["timeout"] = timeout_seconds
                 if "stream" in allowed and stream is not None:
                     retry_kwargs["stream"] = stream
-                return cast(ResponseLike, request_fn(url, **retry_kwargs))
+                return cast("ResponseLike", request_fn(url, **retry_kwargs))
             raise
 
 
-__all__ = ["resilient_post", "resilient_get", "ResponseLike"]
+def resilient_delete(
+    url: str,
+    *,
+    params: Mapping[str, Any] | None = None,
+    headers: Mapping[str, str] | None = None,
+    timeout_seconds: int = REQUEST_TIMEOUT_SECONDS,
+    allow_legacy_timeout_fallback: bool = True,
+    request_fn: Callable[..., Any] | None = None,
+) -> ResponseLike:
+    if request_fn is None:
+        # Use pooled session when enabled
+        request_fn = _get_session().delete if _is_pooling_enabled() else requests.delete
+    tracer = trace.get_tracer(__name__)
+    with tracer.start_as_current_span("http.delete") as span:
+        span.set_attribute("http.url", url)
+        span.set_attribute("http.method", "DELETE")
+        try:
+            return cast(
+                "ResponseLike",
+                request_fn(
+                    url,
+                    params=params,
+                    headers=headers,
+                    timeout=timeout_seconds,
+                ),
+            )
+        except TypeError as exc:
+            if allow_legacy_timeout_fallback and "unexpected keyword argument" in str(exc):
+                try:
+                    sig = inspect.signature(request_fn)
+                    allowed = set(sig.parameters.keys())
+                except (TypeError, ValueError, AttributeError):
+                    allowed = {"url"}
+                retry_kwargs: dict[str, Any] = {}
+                if "params" in allowed and params is not None:
+                    retry_kwargs["params"] = params
+                if "headers" in allowed and headers is not None:
+                    retry_kwargs["headers"] = headers
+                if "timeout" in allowed:
+                    retry_kwargs["timeout"] = timeout_seconds
+                return cast("ResponseLike", request_fn(url, **retry_kwargs))
+            raise
+
+
+__all__ = ["ResponseLike", "resilient_delete", "resilient_get", "resilient_post"]

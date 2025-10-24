@@ -5,6 +5,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv  # type: ignore
 
+
 try:
     from scripts.helpers.ui_constants import DEFAULT_FEATURE_FLAGS
 except ImportError:
@@ -71,7 +72,11 @@ def check_environment() -> bool:
         print(f"ℹ️  Optional services disabled: {', '.join(optional_services)}")
         print("💡 Add API keys to .env for full functionality")
 
-    gateway_enabled = os.getenv("ENABLE_DISCORD_GATEWAY", "1").lower() in {"1", "true", "yes"}
+    gateway_enabled = os.getenv("ENABLE_DISCORD_GATEWAY", "1").lower() in {
+        "1",
+        "true",
+        "yes",
+    }
     required_vars: dict[str, str] = {}
     if gateway_enabled:
         required_vars["DISCORD_BOT_TOKEN"] = "Discord bot token"

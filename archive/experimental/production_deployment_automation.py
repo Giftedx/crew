@@ -25,6 +25,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
@@ -62,7 +63,11 @@ class DeploymentConfig:
 
     def __post_init__(self):
         if self.target_domains is None:
-            self.target_domains = ["model_routing", "content_analysis", "user_engagement"]
+            self.target_domains = [
+                "model_routing",
+                "content_analysis",
+                "user_engagement",
+            ]
         if self.deployment_id is None:
             self.deployment_id = f"deploy_{int(time.time())}"
 
@@ -285,7 +290,7 @@ class DeploymentManager:
 
             # Wait for metrics to stabilize
             logger.info(f"⏳ Waiting {self.config.rollout_interval_minutes} minutes for metrics to stabilize...")
-            for i in range(self.config.rollout_interval_minutes):
+            for _i in range(self.config.rollout_interval_minutes):
                 await asyncio.sleep(60)  # Wait 1 minute
 
                 # Perform health check every minute
@@ -317,7 +322,8 @@ class DeploymentManager:
                 break
 
             rollout_percentage = min(
-                self.config.max_rollout_percentage, rollout_percentage + self.config.rollout_increment
+                self.config.max_rollout_percentage,
+                rollout_percentage + self.config.rollout_increment,
             )
 
         logger.info("🎯 Rollout completed successfully!")
@@ -366,7 +372,10 @@ class DeploymentManager:
             await self._update_rollout_configuration(0.0)
 
             # Set environment variables to disable advanced features
-            rollback_config = {"ENABLE_RL_ADVANCED": "false", "RL_ROLLOUT_PERCENTAGE": "0.0"}
+            rollback_config = {
+                "ENABLE_RL_ADVANCED": "false",
+                "RL_ROLLOUT_PERCENTAGE": "0.0",
+            }
 
             for key, value in rollback_config.items():
                 os.environ[key] = value
@@ -442,7 +451,7 @@ class DeploymentManager:
 
         return report
 
-    def save_deployment_report(self, output_path: str = None) -> str:
+    def save_deployment_report(self, output_path: str | None = None) -> str:
         """Save deployment report to file."""
 
         if output_path is None:
@@ -470,14 +479,28 @@ class DeploymentCLI:
         parser = argparse.ArgumentParser(description="Advanced Bandits Production Deployment")
 
         parser.add_argument(
-            "--initial-rollout", type=float, default=0.05, help="Initial rollout percentage (default: 0.05)"
+            "--initial-rollout",
+            type=float,
+            default=0.05,
+            help="Initial rollout percentage (default: 0.05)",
         )
-        parser.add_argument("--max-rollout", type=float, default=1.0, help="Maximum rollout percentage (default: 1.0)")
         parser.add_argument(
-            "--rollout-increment", type=float, default=0.1, help="Rollout increment per step (default: 0.1)"
+            "--max-rollout",
+            type=float,
+            default=1.0,
+            help="Maximum rollout percentage (default: 1.0)",
         )
         parser.add_argument(
-            "--rollout-interval", type=int, default=30, help="Minutes between rollout steps (default: 30)"
+            "--rollout-increment",
+            type=float,
+            default=0.1,
+            help="Rollout increment per step (default: 0.1)",
+        )
+        parser.add_argument(
+            "--rollout-interval",
+            type=int,
+            default=30,
+            help="Minutes between rollout steps (default: 30)",
         )
         parser.add_argument(
             "--domains",
@@ -486,16 +509,30 @@ class DeploymentCLI:
             help="Domains to deploy (default: all)",
         )
         parser.add_argument(
-            "--min-success-rate", type=float, default=0.95, help="Minimum success rate threshold (default: 0.95)"
+            "--min-success-rate",
+            type=float,
+            default=0.95,
+            help="Minimum success rate threshold (default: 0.95)",
         )
         parser.add_argument(
-            "--max-latency-degradation", type=float, default=0.2, help="Maximum latency degradation (default: 0.2)"
+            "--max-latency-degradation",
+            type=float,
+            default=0.2,
+            help="Maximum latency degradation (default: 0.2)",
         )
-        parser.add_argument("--environment", default="production", help="Deployment environment (default: production)")
+        parser.add_argument(
+            "--environment",
+            default="production",
+            help="Deployment environment (default: production)",
+        )
         parser.add_argument("--deployment-id", help="Custom deployment ID (default: auto-generated)")
 
         # For demo purposes, use shorter intervals
-        parser.add_argument("--demo", action="store_true", help="Use demo settings with shorter intervals")
+        parser.add_argument(
+            "--demo",
+            action="store_true",
+            help="Use demo settings with shorter intervals",
+        )
 
         args = parser.parse_args()
 

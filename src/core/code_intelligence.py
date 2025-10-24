@@ -11,10 +11,14 @@ from __future__ import annotations
 import ast
 import logging
 from dataclasses import dataclass
-from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from ultimate_discord_intelligence_bot.step_result import StepResult
+
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
 
 logger = logging.getLogger(__name__)
 
@@ -384,7 +388,10 @@ class CodeIntelligenceEngine:
                             priority="medium",
                             description=f"Extract method from long function '{func_info['name']}'",
                             file_path=str(file_path),
-                            line_range=(func_info["line_number"], func_info["line_number"] + func_info["lines"]),
+                            line_range=(
+                                func_info["line_number"],
+                                func_info["line_number"] + func_info["lines"],
+                            ),
                             estimated_effort="15-30 minutes",
                             potential_impact="Improved readability and testability",
                             code_before=f"Function {func_info['name']} with {func_info['lines']} lines",
@@ -473,9 +480,7 @@ class CodeIntelligenceEngine:
         # In a real implementation, this would be more sophisticated
         complexity = 0
         for node in ast.walk(tree):
-            if isinstance(node, (ast.If, ast.For, ast.While)):
-                complexity += 1
-            elif isinstance(node, ast.Try):
+            if isinstance(node, (ast.If, ast.For, ast.While, ast.Try)):
                 complexity += 1
         return complexity
 
@@ -632,9 +637,9 @@ class CodeIntelligenceEngine:
 
 
 __all__ = [
-    "CodeIntelligenceEngine",
-    "CodeMetrics",
-    "CodeIssue",
-    "RefactoringOpportunity",
     "ASTAnalyzer",
+    "CodeIntelligenceEngine",
+    "CodeIssue",
+    "CodeMetrics",
+    "RefactoringOpportunity",
 ]

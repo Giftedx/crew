@@ -12,6 +12,7 @@ from dataclasses import dataclass, field
 
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -52,7 +53,10 @@ class CostOptimizer:
             "gpt-4": {"input": 0.03 / 1000, "output": 0.06 / 1000},
             "gpt-4-turbo": {"input": 0.01 / 1000, "output": 0.03 / 1000},
             "gpt-3.5-turbo": {"input": 0.001 / 1000, "output": 0.002 / 1000},
-            "gpt-3.5": {"input": 0.001 / 1000, "output": 0.002 / 1000},  # Alias for backward compatibility
+            "gpt-3.5": {
+                "input": 0.001 / 1000,
+                "output": 0.002 / 1000,
+            },  # Alias for backward compatibility
             # Anthropic Claude Models - Current pricing
             "claude-3-opus": {"input": 0.015 / 1000, "output": 0.075 / 1000},
             "claude-3-sonnet": {"input": 0.003 / 1000, "output": 0.015 / 1000},
@@ -133,7 +137,7 @@ class CostOptimizer:
 
         except Exception as e:
             logger.error(f"Cost recording failed: {e}")
-            return StepResult.fail(f"Cost recording failed: {str(e)}")
+            return StepResult.fail(f"Cost recording failed: {e!s}")
 
     def check_budget_constraints(self, cost_usd: float) -> StepResult:
         """Check if cost exceeds budget constraints."""
@@ -155,7 +159,7 @@ class CostOptimizer:
 
         except Exception as e:
             logger.error(f"Budget constraint check failed: {e}")
-            return StepResult.fail(f"Budget check failed: {str(e)}")
+            return StepResult.fail(f"Budget check failed: {e!s}")
 
     def get_daily_spend(self) -> float:
         """Calculate total spend for the current day."""
@@ -247,7 +251,7 @@ class CostOptimizer:
 
         except Exception as e:
             logger.error(f"Cost pattern analysis failed: {e}")
-            return StepResult.fail(f"Cost analysis failed: {str(e)}")
+            return StepResult.fail(f"Cost analysis failed: {e!s}")
 
     def get_optimization_recommendations(self) -> StepResult:
         """Get cost optimization recommendations based on analysis."""
@@ -339,7 +343,7 @@ class CostOptimizer:
 
         except Exception as e:
             logger.error(f"Optimization recommendations failed: {e}")
-            return StepResult.fail(f"Recommendations failed: {str(e)}")
+            return StepResult.fail(f"Recommendations failed: {e!s}")
 
     def simulate_optimization_impact(self, strategy: str) -> StepResult:
         """Simulate the impact of a specific optimization strategy."""
@@ -380,7 +384,7 @@ class CostOptimizer:
 
         except Exception as e:
             logger.error(f"Optimization simulation failed: {e}")
-            return StepResult.fail(f"Simulation failed: {str(e)}")
+            return StepResult.fail(f"Simulation failed: {e!s}")
 
     def health_check(self) -> StepResult:
         """Health check for the cost optimizer."""
@@ -400,7 +404,7 @@ class CostOptimizer:
 
         except Exception as e:
             logger.error(f"Cost optimizer health check failed: {e}")
-            return StepResult.fail(f"Health check failed: {str(e)}")
+            return StepResult.fail(f"Health check failed: {e!s}")
 
 
 # Global cost optimizer instance

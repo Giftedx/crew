@@ -1,4 +1,22 @@
-## MCP Feature Flags
+## Feature Flags
+
+### Core System Feature Flags
+
+- `ENABLE_DEBATE_ANALYSIS=true` — Enable debate analysis functionality
+- `ENABLE_FACT_CHECKING=true` — Enable fact-checking capabilities
+- `ENABLE_MEMORY_STORAGE=true` — Enable vector memory storage
+- `ENABLE_PERFORMANCE_ANALYTICS=true` — Enable performance monitoring
+- `ENABLE_DISCORD_INTEGRATION=true` — Enable Discord bot integration
+
+### Tool Feature Flags
+
+- `ENABLE_UNIFIED_KNOWLEDGE=true` — Enable unified knowledge management
+- `ENABLE_UNIFIED_ROUTER=true` — Enable unified model routing
+- `ENABLE_CACHING=true` — Enable tool result caching
+- `ENABLE_TRANSCRIPTION=true` — Enable audio transcription
+- `ENABLE_MULTIMODAL_ANALYSIS=true` — Enable multimodal content analysis
+
+### MCP Feature Flags
 
 MCP servers are optional and feature-flagged.
 
@@ -658,6 +676,17 @@ storage_overrides:
 
 Feature flags are controlled via environment variables and can be overridden in tenant configuration.
 
+### Crew Consolidation Flags
+
+These flags control which crew implementation is used:
+
+- `ENABLE_LEGACY_CREW=false` - Enable legacy crew variants
+- `ENABLE_CREW_MODULAR=false` - Enable modular crew system  
+- `ENABLE_CREW_REFACTORED=false` - Enable refactored crew system
+- `ENABLE_CREW_NEW=false` - Enable new crew system
+
+**Note**: Only one crew flag should be enabled at a time. If none are enabled, the canonical crew is used.
+
 ### Core Feature Flags
 
 ```bash
@@ -696,6 +725,8 @@ ENABLE_RATE_LIMITING=true     # API rate limiting
 ENABLE_TRACING=true           # OpenTelemetry tracing
 ENABLE_METRICS=true           # Prometheus metrics
 ENABLE_AUDIT_LOGGING=true     # Audit log collection
+ENABLE_OBSERVABILITY_WRAPPER=false  # StepResult observability wrapper (structured logs)
+ENABLE_OTEL_EXPORT=false           # Emit OTEL spans from wrapper when enabled
 ```
 
 ### Flag Hierarchies
@@ -824,10 +855,10 @@ export RETRY_MAX_ATTEMPTS=5  # 1-20 acceptable
 **Precedence Order (highest to lowest):**
 
 1. Explicit call argument to `retrying_get()`/`retrying_post()` (sanity-checked range)
-2. Secure config (`retry_max_attempts` attribute)
-3. Tenant-specific config cache (if available)
-4. Environment variable `RETRY_MAX_ATTEMPTS`
-5. Library constant `DEFAULT_HTTP_RETRY_ATTEMPTS` (3)
+1. Secure config (`retry_max_attempts` attribute)
+1. Tenant-specific config cache (if available)
+1. Environment variable `RETRY_MAX_ATTEMPTS`
+1. Library constant `DEFAULT_HTTP_RETRY_ATTEMPTS` (3)
 
 **Note:** Values must be integers in range [1, 20]. Invalid values fall back to the next precedence level.
 

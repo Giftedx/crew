@@ -23,18 +23,22 @@ import json
 import os
 import random
 import threading
-from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
-from ._metrics_types import MetricLike, MetricsFacade
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+    from ._metrics_types import MetricLike, MetricsFacade
+
 
 try:  # Local import guarded so this module remains lightweight if metrics disabled
     from ultimate_discord_intelligence_bot.obs.metrics import get_metrics as _gm
 
     def _obtain_metrics() -> MetricsFacade | None:
         try:
-            return cast(MetricsFacade, _gm())
+            return cast("MetricsFacade", _gm())
         except Exception:  # pragma: no cover
             return None
 except Exception:  # pragma: no cover - graceful fallback
@@ -111,8 +115,13 @@ class ThompsonBanditRouter:
         self._arms: dict[str, ArmState] = {}
         self._lock = threading.Lock()
         self._metrics: MetricsFacade | None = _obtain_metrics()
-        self._persist_enabled = os.getenv("ENABLE_BANDIT_PERSIST", "0").lower() in {"1", "true", "yes", "on"}
-        self._state_dir = os.getenv("BANDIT_STATE_DIR", "./bandit_state")
+        self._persist_enabled = os.getenv("ENABLE_BANDIT_PERSIST", "0").lower() in {
+            "1",
+            "true",
+            "yes",
+            "on",
+        }
+        self._state_dir = os.getenv("BANDIT_STATE_DIR", "./data/bandit_state")
         self._state_file_override = state_file
         # internal state for reset tracking
         self._low_entropy_run = 0
@@ -162,11 +171,11 @@ class ThompsonBanditRouter:
         chosen = samples[0][1]
         # epsilon-greedy overlay (dynamic env read)
         _eps = _min_epsilon()
-        if _eps > 0 and random.random() < _eps and len(arms) > 1:
+        if _eps > 0 and random.random() < _eps and len(arms) > 1:  # nosec B311 - bandit exploration, not cryptographic
             # choose a random different arm
             alt_choices = [a for a in arms if a != chosen]
             if alt_choices:
-                chosen = random.choice(alt_choices)
+                chosen = random.choice(alt_choices)  # nosec B311 - bandit exploration, not cryptographic
                 if self._explore_counter:
                     try:
                         self._explore_counter.inc(1)

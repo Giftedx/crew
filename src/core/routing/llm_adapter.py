@@ -6,10 +6,13 @@ as an LLM provider for CrewAI agents, enabling seamless integration.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from .base_router import RoutingRequest, UnifiedRouter
+
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 
 class RouterLLMAdapter:
@@ -46,7 +49,11 @@ class RouterLLMAdapter:
 
         if not result.success:
             # Return error response
-            return {"content": f"Routing failed: {result.error}", "model": "error", "usage": {"total_tokens": 0}}
+            return {
+                "content": f"Routing failed: {result.error}",
+                "model": "error",
+                "usage": {"total_tokens": 0},
+            }
 
         # Extract routing decision
         decision = result.data["data"]

@@ -18,6 +18,7 @@ import re
 import sys
 from pathlib import Path
 
+
 SRC_ROOT = Path(__file__).resolve().parents[1] / ".." / "src"
 
 SUSPICIOUS_LITERAL = re.compile(r"namespace\s*=\s*['\"](default|main)['\"]")

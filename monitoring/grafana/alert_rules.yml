@@ -1,0 +1,36 @@
+groups:
+- name: discord-bot-alerts
+  rules:
+  - alert: HighMemoryUsage
+    annotations:
+      description: Memory usage is above 80% for more than 5 minutes
+      summary: High memory usage detected
+    expr: discord_bot_memory_usage_percent > 80
+    for: 5m
+    labels:
+      severity: warning
+  - alert: HighCPUUsage
+    annotations:
+      description: CPU usage is above 90% for more than 5 minutes
+      summary: High CPU usage detected
+    expr: discord_bot_cpu_usage_percent > 90
+    for: 5m
+    labels:
+      severity: warning
+  - alert: HighErrorRate
+    annotations:
+      description: Error rate is above 0.1 errors per second for more than 2 minutes
+      summary: High error rate detected
+    expr: rate(discord_bot_errors_total[5m]) > 0.1
+    for: 2m
+    labels:
+      severity: critical
+  - alert: PerformanceRegression
+    annotations:
+      description: Workflow duration is 50% above baseline for more than 10 minutes
+      summary: Performance regression detected
+    expr: discord_bot_workflow_duration_seconds > discord_bot_performance_baseline_duration_seconds
+      * 1.5
+    for: 10m
+    labels:
+      severity: warning

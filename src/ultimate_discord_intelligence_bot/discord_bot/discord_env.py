@@ -11,6 +11,7 @@ from pathlib import Path
 from types import SimpleNamespace
 from typing import Any, cast
 
+
 try:
     from scripts.helpers.ui_constants import (
         BUTTON_STYLE_LINK,
@@ -111,12 +112,12 @@ if not LIGHTWEIGHT_IMPORT:
     _d, _c, _a = _import_real_discord_if_needed()
     if _d is not None and _c is not None and _a is not None:
         try:  # Login failure type (shape may vary per version)
-            _ = importlib.import_module("discord.errors").LoginFailure  # noqa: F841
+            _ = importlib.import_module("discord.errors").LoginFailure
         except Exception:  # pragma: no cover
             pass
-        discord = cast(Any, _d)
-        commands = cast(Any, _c)
-        app_commands = cast(Any, _a)
+        discord = cast("Any", _d)
+        commands = cast("Any", _c)
+        app_commands = cast("Any", _a)
         _DISCORD_AVAILABLE = True
     else:  # pragma: no cover - dependency missing or shim-only environment
         _DISCORD_AVAILABLE = False
@@ -142,7 +143,7 @@ if LIGHTWEIGHT_IMPORT or not _DISCORD_AVAILABLE:
     class _ShimBot:
         def __init__(self, *_: Any, **__: Any) -> None:
             self.intents = _ShimIntents.default()
-            self.tree = type("Tree", (), {"sync": staticmethod(lambda: [])})()
+            self.tree = type("Tree", (), {"sync": staticmethod(list)})()
 
         def command(self, *_: Any, **__: Any) -> Any:
             def deco(fn: Any) -> Any:
@@ -179,11 +180,13 @@ if LIGHTWEIGHT_IMPORT or not _DISCORD_AVAILABLE:
     discord = SimpleNamespace(Intents=_ShimIntents, Embed=object, Interaction=object, ui=_ShimUI)  # type: ignore[assignment]
     commands = SimpleNamespace(Bot=_ShimBot, CommandNotFound=Exception)  # type: ignore[assignment]
     app_commands = SimpleNamespace(
-        describe=lambda **kwargs: lambda f: f, choices=lambda choices: lambda f: f, Choice=object
+        describe=lambda **kwargs: lambda f: f,
+        choices=lambda choices: lambda f: f,
+        Choice=object,
     )  # type: ignore[assignment]
-    discord = cast(Any, discord)
-    commands = cast(Any, commands)
-    app_commands = cast(Any, app_commands)
+    discord = cast("Any", discord)
+    commands = cast("Any", commands)
+    app_commands = cast("Any", app_commands)
 
 
 def build_intents() -> Any:
@@ -194,10 +197,10 @@ def build_intents() -> Any:
 
 
 __all__ = [
-    "discord",
-    "commands",
-    "app_commands",
     "LIGHTWEIGHT_IMPORT",
     "_DISCORD_AVAILABLE",
+    "app_commands",
     "build_intents",
+    "commands",
+    "discord",
 ]

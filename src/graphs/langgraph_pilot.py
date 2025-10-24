@@ -8,12 +8,15 @@ from __future__ import annotations
 
 import os
 import time
-from collections.abc import Callable
-from contextlib import nullcontext
+from contextlib import nullcontext, suppress
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from src.obs import metrics, tracing
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 # Resolve tenancy helpers dynamically to ensure we use the same thread-local
@@ -57,7 +60,12 @@ class PilotConfig:
 
 
 def _is_enabled() -> bool:
-    return os.getenv("ENABLE_LANGGRAPH_PILOT", "0").lower() in ("1", "true", "yes", "on")
+    return os.getenv("ENABLE_LANGGRAPH_PILOT", "0").lower() in (
+        "1",
+        "true",
+        "yes",
+        "on",
+    )
 
 
 # --- Minimal internal graph runner (no external deps) ---------------------------------------
@@ -161,25 +169,19 @@ def run_ingest_analysis_pilot(
         except Exception:
             pass
         # Count pilot run as a pipeline request
-        try:
+        with suppress(Exception):
             metrics.PIPELINE_REQUESTS.labels(**metrics.label_ctx()).inc()
-        except Exception:
-            pass
         # Increment inflight gauge for this orchestrator
-        try:
+        with suppress(Exception):
             metrics.PIPELINE_INFLIGHT.labels(**metrics.label_ctx(), orchestrator=orchestrator).inc()
-        except Exception:
-            pass
         if orchestrator == "sequential":
-            try:
+            with suppress(Exception):
                 metrics.DEGRADATION_EVENTS.labels(
                     **metrics.label_ctx(),
                     component="langgraph_pilot",
                     event_type="fallback_sequential",
                     severity="info",
                 ).inc()
-            except Exception:
-                pass
 
         # If optional steps are not provided, record them as skipped regardless of orchestrator
         try:
@@ -203,32 +205,30 @@ def run_ingest_analysis_pilot(
             _step_start = time.monotonic()
             try:
                 res = ingest_fn(ctx)
-                try:
+                with suppress(Exception):
                     metrics.PIPELINE_STEPS_COMPLETED.labels(**metrics.label_ctx(), step="ingest").inc()
-                except Exception:
-                    pass
                 if hasattr(step_span, "set_attribute"):
                     step_span.set_attribute("outcome", "success")
-                try:
+                with suppress(Exception):
                     metrics.PIPELINE_STEP_DURATION.labels(
-                        **metrics.label_ctx(), step="ingest", orchestrator=orchestrator, status="success"
+                        **metrics.label_ctx(),
+                        step="ingest",
+                        orchestrator=orchestrator,
+                        status="success",
                     ).observe(time.monotonic() - _step_start)
-                except Exception:
-                    pass
                 return res
             except Exception:
                 if hasattr(step_span, "set_attribute"):
                     step_span.set_attribute("outcome", "error")
-                try:
+                with suppress(Exception):
                     metrics.PIPELINE_STEPS_FAILED.labels(**metrics.label_ctx(), step="ingest").inc()
-                except Exception:
-                    pass
-                try:
+                with suppress(Exception):
                     metrics.PIPELINE_STEP_DURATION.labels(
-                        **metrics.label_ctx(), step="ingest", orchestrator=orchestrator, status="error"
+                        **metrics.label_ctx(),
+                        step="ingest",
+                        orchestrator=orchestrator,
+                        status="error",
                     ).observe(time.monotonic() - _step_start)
-                except Exception:
-                    pass
                 raise
 
     def _segment_node(ctx: dict[str, Any]) -> dict[str, Any]:
@@ -240,41 +240,37 @@ def run_ingest_analysis_pilot(
             _step_start = time.monotonic()
             try:
                 res = segment_fn(ctx)
-                try:
+                with suppress(Exception):
                     metrics.PIPELINE_STEPS_COMPLETED.labels(**metrics.label_ctx(), step="segment").inc()
-                except Exception:
-                    pass
                 if hasattr(step_span, "set_attribute"):
                     step_span.set_attribute("outcome", "success")
-                try:
+                with suppress(Exception):
                     metrics.PIPELINE_STEP_DURATION.labels(
-                        **metrics.label_ctx(), step="segment", orchestrator=orchestrator, status="success"
+                        **metrics.label_ctx(),
+                        step="segment",
+                        orchestrator=orchestrator,
+                        status="success",
                     ).observe(time.monotonic() - _step_start)
-                except Exception:
-                    pass
                 return res
             except Exception:
-                try:
+                with suppress(Exception):
                     metrics.DEGRADATION_EVENTS.labels(
                         **metrics.label_ctx(),
                         component="langgraph_pilot",
                         event_type="segment_failure",
                         severity="error",
                     ).inc()
-                except Exception:
-                    pass
                 if hasattr(step_span, "set_attribute"):
                     step_span.set_attribute("outcome", "error")
-                try:
+                with suppress(Exception):
                     metrics.PIPELINE_STEPS_FAILED.labels(**metrics.label_ctx(), step="segment").inc()
-                except Exception:
-                    pass
-                try:
+                with suppress(Exception):
                     metrics.PIPELINE_STEP_DURATION.labels(
-                        **metrics.label_ctx(), step="segment", orchestrator=orchestrator, status="error"
+                        **metrics.label_ctx(),
+                        step="segment",
+                        orchestrator=orchestrator,
+                        status="error",
                     ).observe(time.monotonic() - _step_start)
-                except Exception:
-                    pass
                 return {}
 
     def _embed_node(ctx: dict[str, Any]) -> dict[str, Any]:
@@ -286,41 +282,37 @@ def run_ingest_analysis_pilot(
             _step_start = time.monotonic()
             try:
                 res = embed_fn(ctx)
-                try:
+                with suppress(Exception):
                     metrics.PIPELINE_STEPS_COMPLETED.labels(**metrics.label_ctx(), step="embed").inc()
-                except Exception:
-                    pass
                 if hasattr(step_span, "set_attribute"):
                     step_span.set_attribute("outcome", "success")
-                try:
+                with suppress(Exception):
                     metrics.PIPELINE_STEP_DURATION.labels(
-                        **metrics.label_ctx(), step="embed", orchestrator=orchestrator, status="success"
+                        **metrics.label_ctx(),
+                        step="embed",
+                        orchestrator=orchestrator,
+                        status="success",
                     ).observe(time.monotonic() - _step_start)
-                except Exception:
-                    pass
                 return res
             except Exception:
-                try:
+                with suppress(Exception):
                     metrics.DEGRADATION_EVENTS.labels(
                         **metrics.label_ctx(),
                         component="langgraph_pilot",
                         event_type="embed_failure",
                         severity="error",
                     ).inc()
-                except Exception:
-                    pass
                 if hasattr(step_span, "set_attribute"):
                     step_span.set_attribute("outcome", "error")
-                try:
+                with suppress(Exception):
                     metrics.PIPELINE_STEPS_FAILED.labels(**metrics.label_ctx(), step="embed").inc()
-                except Exception:
-                    pass
-                try:
+                with suppress(Exception):
                     metrics.PIPELINE_STEP_DURATION.labels(
-                        **metrics.label_ctx(), step="embed", orchestrator=orchestrator, status="error"
+                        **metrics.label_ctx(),
+                        step="embed",
+                        orchestrator=orchestrator,
+                        status="error",
                     ).observe(time.monotonic() - _step_start)
-                except Exception:
-                    pass
                 return {}
 
     def _analyze_node(ctx: dict[str, Any]) -> dict[str, Any]:
@@ -331,32 +323,30 @@ def run_ingest_analysis_pilot(
             _step_start = time.monotonic()
             try:
                 res = analyze_fn(ctx)
-                try:
+                with suppress(Exception):
                     metrics.PIPELINE_STEPS_COMPLETED.labels(**metrics.label_ctx(), step="analyze").inc()
-                except Exception:
-                    pass
                 if hasattr(step_span, "set_attribute"):
                     step_span.set_attribute("outcome", "success")
-                try:
+                with suppress(Exception):
                     metrics.PIPELINE_STEP_DURATION.labels(
-                        **metrics.label_ctx(), step="analyze", orchestrator=orchestrator, status="success"
+                        **metrics.label_ctx(),
+                        step="analyze",
+                        orchestrator=orchestrator,
+                        status="success",
                     ).observe(time.monotonic() - _step_start)
-                except Exception:
-                    pass
                 return res
             except Exception:
                 if hasattr(step_span, "set_attribute"):
                     step_span.set_attribute("outcome", "error")
-                try:
+                with suppress(Exception):
                     metrics.PIPELINE_STEPS_FAILED.labels(**metrics.label_ctx(), step="analyze").inc()
-                except Exception:
-                    pass
-                try:
+                with suppress(Exception):
                     metrics.PIPELINE_STEP_DURATION.labels(
-                        **metrics.label_ctx(), step="analyze", orchestrator=orchestrator, status="error"
+                        **metrics.label_ctx(),
+                        step="analyze",
+                        orchestrator=orchestrator,
+                        status="error",
                     ).observe(time.monotonic() - _step_start)
-                except Exception:
-                    pass
                 raise
 
     with (
@@ -394,19 +384,15 @@ def run_ingest_analysis_pilot(
                         outputs["segment"] = seg
                         base_ctx.update(seg)
                     else:
-                        try:
+                        with suppress(Exception):
                             metrics.PIPELINE_STEPS_SKIPPED.labels(**metrics.label_ctx(), step="segment").inc()
-                        except Exception:
-                            pass
                     if embed_fn is not None:
                         emb = _embed_node(base_ctx)
                         outputs["embed"] = emb
                         base_ctx.update(emb)
                     else:
-                        try:
+                        with suppress(Exception):
                             metrics.PIPELINE_STEPS_SKIPPED.labels(**metrics.label_ctx(), step="embed").inc()
-                        except Exception:
-                            pass
                     analysis_res = _analyze_node(base_ctx)
                     outputs["analysis"] = analysis_res
             except Exception:
@@ -419,33 +405,26 @@ def run_ingest_analysis_pilot(
                 try:
                     elapsed = time.monotonic() - start_time
                     metrics.PIPELINE_DURATION.labels(**metrics.label_ctx(), status=_status).observe(elapsed)
-                    try:
+                    with suppress(Exception):
                         metrics.PIPELINE_TOTAL_DURATION.labels(
-                            **metrics.label_ctx(), orchestrator=orchestrator, status=_status
+                            **metrics.label_ctx(),
+                            orchestrator=orchestrator,
+                            status=_status,
                         ).observe(elapsed)
-                    except Exception:
-                        pass
                     # Decrement inflight gauge
-                    try:
+                    with suppress(Exception):
                         metrics.PIPELINE_INFLIGHT.labels(**metrics.label_ctx(), orchestrator=orchestrator).dec()
-                    except Exception:
-                        pass
                     # Attach elapsed duration to outputs for caller ergonomics
-                    try:
+                    with suppress(Exception):
                         outputs["duration_seconds"] = elapsed
-                    except Exception:
-                        pass
                     if hasattr(span, "set_attribute"):
                         span.set_attribute("pipeline_duration_seconds", elapsed)
                         span.set_attribute("outcome", _status)
                 except Exception:
                     pass
 
-    with with_tenant(_tenant_ctx_obj) if (_has_tenant_ctx and with_tenant) else nullcontext():
-        try:
-            metrics.PIPELINE_STEPS_COMPLETED.labels(**metrics.label_ctx(), step="langgraph_pilot").inc()
-        except Exception:
-            pass
+    with with_tenant(_tenant_ctx_obj) if (_has_tenant_ctx and with_tenant) else nullcontext(), suppress(Exception):
+        metrics.PIPELINE_STEPS_COMPLETED.labels(**metrics.label_ctx(), step="langgraph_pilot").inc()
 
     outputs["orchestrator"] = orchestrator
     return outputs

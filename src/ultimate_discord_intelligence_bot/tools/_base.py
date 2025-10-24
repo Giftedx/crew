@@ -8,13 +8,18 @@ our internal tools without modifying the third-party dependency.
 
 from __future__ import annotations
 
-from typing import (  # noqa: I001 - single block intentionally grouped for clarity in shim
+from typing import (
+    TYPE_CHECKING,
     Any,
     Generic,
     Protocol,
     TypeVar,
     runtime_checkable,
 )
+
+
+if TYPE_CHECKING:
+    from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 @runtime_checkable
@@ -30,7 +35,7 @@ class _BaseToolProto(Protocol):
     name: str | None  # optional in our internal tools
     description: str | None
 
-    def run(self, *args: Any, **kwargs: Any) -> Any:  # minimal execution surface
+    def run(self, *args: Any, **kwargs: Any) -> StepResult:  # minimal execution surface
         ...  # pragma: no cover
 
 
@@ -50,7 +55,7 @@ class BaseTool(Generic[R_co]):
     description: str | None = None
 
     # We don't add new behaviour—purely for typing.
-    def run(self, *args: Any, **kwargs: Any) -> R_co:  # runtime provided by subclass
+    def run(self, *args: Any, **kwargs: Any) -> StepResult:  # runtime provided by subclass
         """Concrete subclasses must implement.
 
         Body raises to make misuse explicit at runtime.
@@ -63,16 +68,20 @@ class BaseTool(Generic[R_co]):
     # and absence of the bus is silently ignored.
     def publish_message(self, msg_type: str, content: str, **metadata: Any) -> None:
         try:
-            from ultimate_discord_intelligence_bot.tenancy.shared_context import (  # noqa: PLC0415
+            from typing import cast
+
+            from ultimate_discord_intelligence_bot.tenancy.shared_context import (
                 AgentMessage,
+                MessageType,
                 current_shared_context,
             )
 
             bus = current_shared_context()
             if bus is None:
                 return
-            # type is validated in AgentMessage literal; invalid types will raise
-            bus.publish(AgentMessage(type=msg_type, content=content, metadata=metadata))
+            # Validate msg_type is a valid MessageType
+            valid_msg_type = msg_type if msg_type in {"note", "ask", "answer", "evidence", "warning"} else "note"
+            bus.publish(AgentMessage(type=cast("MessageType", valid_msg_type), content=content, metadata=metadata))
         except Exception:
             # Publishing is best-effort; never fail tool execution for bus issues
             return

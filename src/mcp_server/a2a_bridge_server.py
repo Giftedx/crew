@@ -14,8 +14,12 @@ Guards:
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
 
 try:
     from fastmcp import FastMCP  # type: ignore
@@ -53,7 +57,7 @@ def _get_tools() -> dict[str, Any]:
     try:
         from server import a2a_router as _a2a  # type: ignore
 
-        return _a2a._get_tools()  # noqa: SLF001 - intentional private access within same repo
+        return _a2a._get_tools()
     except Exception:
         return {}
 
@@ -67,7 +71,11 @@ def _to_result(obj: Any) -> dict[str, Any]:
                 return d
         if isinstance(obj, dict):
             # Ensure minimal shape
-            return {"status": obj.get("status", "ok"), "data": obj.get("data", obj), "error": obj.get("error")}
+            return {
+                "status": obj.get("status", "ok"),
+                "data": obj.get("data", obj),
+                "error": obj.get("error"),
+            }
         # Fallback: wrap raw value
         return {"status": "ok", "data": obj, "error": None}
     except Exception as exc:
@@ -80,7 +88,11 @@ def _a2a_call_impl(method: str, params: dict[str, Any] | None = None) -> dict:
 
     name = str(method or "").strip()
     if not name.startswith("tools."):
-        return {"status": "error", "error": "forbidden_method", "data": {"method": name}}
+        return {
+            "status": "error",
+            "error": "forbidden_method",
+            "data": {"method": name},
+        }
     tools = _get_tools()
     fn = tools.get(name)
     if fn is None:
@@ -108,7 +120,7 @@ def a2a_call_tool(method: str, params: dict[str, Any] | None = None) -> dict:  #
 
 @a2a_mcp.resource("a2a://skills")
 def skills_simple() -> list[str]:
-    return sorted(list(_get_tools().keys()))
+    return sorted(_get_tools().keys())
 
 
 @a2a_mcp.resource("a2a://skills_full")
@@ -116,9 +128,9 @@ def skills_full() -> Any:
     try:
         from server import a2a_router as _a2a  # type: ignore
 
-        return _a2a._skill_entries()  # noqa: SLF001 - intentional private access
+        return _a2a._skill_entries()
     except Exception as exc:
         return {"error": str(exc)}
 
 
-__all__ = ["a2a_mcp", "a2a_call", "a2a_call_tool", "skills_simple", "skills_full"]
+__all__ = ["a2a_call", "a2a_call_tool", "a2a_mcp", "skills_full", "skills_simple"]

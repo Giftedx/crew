@@ -58,4 +58,4 @@ def _detect_fallacies(text: str) -> list[tuple[str, str]]:
     return results
 
 
-__all__ = ["_fallacy_database", "_detect_fallacies"]
+__all__ = ["_detect_fallacies", "_fallacy_database"]

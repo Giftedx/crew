@@ -8,6 +8,7 @@ import time
 from dataclasses import dataclass
 from typing import Any
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -27,7 +28,6 @@ class CacheEntry:
     def __post_init__(self):
         """Initialize timestamps if not set (kept minimal for tests)."""
         # Intentionally no-op to preserve test expectations
-        pass
 
     def is_expired(self) -> bool:
         """Check if cache entry has expired."""

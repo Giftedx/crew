@@ -12,6 +12,7 @@ import sys
 import time
 from pathlib import Path
 
+
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
@@ -19,6 +20,7 @@ from validation.mcp_tools_validator import (
     validate_all_mcp_tools,
     validate_research_workflows,
 )
+
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")

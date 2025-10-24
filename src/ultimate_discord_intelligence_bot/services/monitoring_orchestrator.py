@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import time
-from typing import Any, Dict, List, TypedDict
+from typing import Any, TypedDict
 
 from ultimate_discord_intelligence_bot.profiles.creator_network_schema import (
     ALL_CREATOR_NETWORKS,
@@ -38,7 +38,7 @@ class MonitoringResult(TypedDict, total=False):
 class RealTimeMonitoringOrchestrator:
     """Orchestrates real-time monitoring across all platforms with intelligent scheduling."""
 
-    def __init__(self) -> None:
+    def __init__(self) -> StepResult:
         self._schedules: dict[str, MonitoringSchedule] = {}
         self._monitoring_tasks: dict[str, asyncio.Task] = {}
         self._running = False
@@ -47,7 +47,7 @@ class RealTimeMonitoringOrchestrator:
         # Initialize platform schedules
         self._initialize_platform_schedules()
 
-    def _initialize_platform_schedules(self) -> None:
+    def _initialize_platform_schedules(self) -> StepResult:
         """Initialize monitoring schedules for all platforms."""
         current_time = time.time()
 
@@ -94,7 +94,7 @@ class RealTimeMonitoringOrchestrator:
                 creators=self._get_creators_for_platform(platform),
             )
 
-    def _get_creators_for_platform(self, platform: str) -> List[str]:
+    def _get_creators_for_platform(self, platform: str) -> StepResult:
         """Get list of creators to monitor for a specific platform."""
         creators = []
 
@@ -105,9 +105,7 @@ class RealTimeMonitoringOrchestrator:
 
         return creators
 
-    async def start_monitoring(
-        self, tenant: str = "default", workspace: str = "default"
-    ) -> StepResult:
+    async def start_monitoring(self, tenant: str = "default", workspace: str = "default") -> StepResult:
         """Start the real-time monitoring orchestrator."""
         try:
             if self._running:
@@ -125,23 +123,19 @@ class RealTimeMonitoringOrchestrator:
             # Start monitoring tasks for each platform
             for platform, schedule in self._schedules.items():
                 if schedule["enabled"]:
-                    task = asyncio.create_task(
-                        self._monitor_platform(platform, schedule, tenant, workspace)
-                    )
+                    task = asyncio.create_task(self._monitor_platform(platform, schedule, tenant, workspace))
                     self._monitoring_tasks[platform] = task
 
             return StepResult.ok(
                 data={
                     "status": "monitoring_started",
                     "platforms": list(self._schedules.keys()),
-                    "total_creators": sum(
-                        len(s["creators"]) for s in self._schedules.values()
-                    ),
+                    "total_creators": sum(len(s["creators"]) for s in self._schedules.values()),
                 }
             )
 
         except Exception as e:
-            return StepResult.fail(f"Failed to start monitoring: {str(e)}")
+            return StepResult.fail(f"Failed to start monitoring: {e!s}")
 
     async def stop_monitoring(self) -> StepResult:
         """Stop the real-time monitoring orchestrator."""
@@ -156,20 +150,18 @@ class RealTimeMonitoringOrchestrator:
                 task.cancel()
 
             # Wait for tasks to complete
-            await asyncio.gather(
-                *self._monitoring_tasks.values(), return_exceptions=True
-            )
+            await asyncio.gather(*self._monitoring_tasks.values(), return_exceptions=True)
 
             self._monitoring_tasks.clear()
 
             return StepResult.ok(data={"status": "monitoring_stopped"})
 
         except Exception as e:
-            return StepResult.fail(f"Failed to stop monitoring: {str(e)}")
+            return StepResult.fail(f"Failed to stop monitoring: {e!s}")
 
     async def _monitor_platform(
         self, platform: str, schedule: MonitoringSchedule, tenant: str, workspace: str
-    ) -> None:
+    ) -> StepResult:
         """Monitor a specific platform according to its schedule."""
         try:
             while self._running:
@@ -179,14 +171,10 @@ class RealTimeMonitoringOrchestrator:
                 if current_time >= schedule["next_run"]:
                     # Update schedule
                     schedule["last_run"] = current_time
-                    schedule["next_run"] = current_time + (
-                        schedule["interval_minutes"] * 60
-                    )
+                    schedule["next_run"] = current_time + (schedule["interval_minutes"] * 60)
 
                     # Perform monitoring
-                    result = await self._check_platform_content(
-                        platform, schedule, tenant, workspace
-                    )
+                    result = await self._check_platform_content(platform, schedule, tenant, workspace)
 
                     # Update statistics
                     self._update_monitoring_stats(platform, result)
@@ -205,7 +193,7 @@ class RealTimeMonitoringOrchestrator:
 
     async def _check_platform_content(
         self, platform: str, schedule: MonitoringSchedule, tenant: str, workspace: str
-    ) -> MonitoringResult:
+    ) -> StepResult:
         """Check for new content on a specific platform."""
         start_time = time.time()
         errors: list[str] = []
@@ -217,9 +205,7 @@ class RealTimeMonitoringOrchestrator:
             for creator_id in schedule["creators"]:
                 try:
                     # Simulate content check
-                    content_count = await self._check_creator_content(
-                        creator_id, platform, tenant, workspace
-                    )
+                    content_count = await self._check_creator_content(creator_id, platform, tenant, workspace)
                     new_content_found += content_count
 
                     if content_count > 0:
@@ -230,12 +216,10 @@ class RealTimeMonitoringOrchestrator:
                         content_processed += processed
 
                 except Exception as e:
-                    errors.append(
-                        f"Error checking {creator_id} on {platform}: {str(e)}"
-                    )
+                    errors.append(f"Error checking {creator_id} on {platform}: {e!s}")
 
         except Exception as e:
-            errors.append(f"Platform monitoring error: {str(e)}")
+            errors.append(f"Platform monitoring error: {e!s}")
 
         return MonitoringResult(
             platform=platform,
@@ -248,9 +232,7 @@ class RealTimeMonitoringOrchestrator:
             next_check=schedule["next_run"],
         )
 
-    async def _check_creator_content(
-        self, creator_id: str, platform: str, tenant: str, workspace: str
-    ) -> int:
+    async def _check_creator_content(self, creator_id: str, platform: str, tenant: str, workspace: str) -> StepResult:
         """Check for new content from a specific creator on a platform."""
         try:
             # Mock implementation - in real system, would use platform-specific APIs
@@ -270,7 +252,7 @@ class RealTimeMonitoringOrchestrator:
         content_count: int,
         tenant: str,
         workspace: str,
-    ) -> int:
+    ) -> StepResult:
         """Process newly found content."""
         try:
             # Mock implementation - in real system, would:
@@ -280,7 +262,7 @@ class RealTimeMonitoringOrchestrator:
             # 4. Trigger relevant agents for analysis
 
             processed_count = 0
-            for i in range(content_count):
+            for _i in range(content_count):
                 # Simulate processing
                 await asyncio.sleep(0.1)  # Simulate processing time
                 processed_count += 1
@@ -290,7 +272,7 @@ class RealTimeMonitoringOrchestrator:
         except Exception:
             return 0
 
-    def _update_monitoring_stats(self, platform: str, result: MonitoringResult) -> None:
+    def _update_monitoring_stats(self, platform: str, result: MonitoringResult) -> StepResult:
         """Update monitoring statistics."""
         if platform not in self._monitoring_stats["platform_stats"]:
             self._monitoring_stats["platform_stats"][platform] = {
@@ -311,13 +293,12 @@ class RealTimeMonitoringOrchestrator:
         self._monitoring_stats["total_content_found"] += result["new_content_found"]
         self._monitoring_stats["total_errors"] += len(result["errors"])
 
-    def get_monitoring_status(self) -> Dict[str, Any]:
+    def get_monitoring_status(self) -> StepResult:
         """Get current monitoring status and statistics."""
         return {
             "running": self._running,
             "start_time": self._monitoring_stats.get("start_time", 0),
-            "uptime_seconds": time.time()
-            - self._monitoring_stats.get("start_time", time.time()),
+            "uptime_seconds": time.time() - self._monitoring_stats.get("start_time", time.time()),
             "total_checks": self._monitoring_stats.get("total_checks", 0),
             "total_content_found": self._monitoring_stats.get("total_content_found", 0),
             "total_errors": self._monitoring_stats.get("total_errors", 0),
@@ -357,12 +338,10 @@ class RealTimeMonitoringOrchestrator:
 
             self._schedules[platform] = schedule
 
-            return StepResult.ok(
-                data={"platform": platform, "updated_schedule": schedule}
-            )
+            return StepResult.ok(data={"platform": platform, "updated_schedule": schedule})
 
         except Exception as e:
-            return StepResult.fail(f"Failed to update schedule: {str(e)}")
+            return StepResult.fail(f"Failed to update schedule: {e!s}")
 
     def add_creator_to_platform(self, platform: str, creator_id: str) -> StepResult:
         """Add a creator to a platform's monitoring list."""
@@ -375,16 +354,12 @@ class RealTimeMonitoringOrchestrator:
                 schedule["creators"].append(creator_id)
                 self._schedules[platform] = schedule
 
-            return StepResult.ok(
-                data={"platform": platform, "creator_added": creator_id}
-            )
+            return StepResult.ok(data={"platform": platform, "creator_added": creator_id})
 
         except Exception as e:
-            return StepResult.fail(f"Failed to add creator: {str(e)}")
+            return StepResult.fail(f"Failed to add creator: {e!s}")
 
-    def remove_creator_from_platform(
-        self, platform: str, creator_id: str
-    ) -> StepResult:
+    def remove_creator_from_platform(self, platform: str, creator_id: str) -> StepResult:
         """Remove a creator from a platform's monitoring list."""
         try:
             if platform not in self._schedules:
@@ -395,14 +370,12 @@ class RealTimeMonitoringOrchestrator:
                 schedule["creators"].remove(creator_id)
                 self._schedules[platform] = schedule
 
-            return StepResult.ok(
-                data={"platform": platform, "creator_removed": creator_id}
-            )
+            return StepResult.ok(data={"platform": platform, "creator_removed": creator_id})
 
         except Exception as e:
-            return StepResult.fail(f"Failed to remove creator: {str(e)}")
+            return StepResult.fail(f"Failed to remove creator: {e!s}")
 
-    def get_next_checks(self) -> List[Dict[str, Any]]:
+    def get_next_checks(self) -> StepResult:
         """Get list of upcoming monitoring checks."""
         upcoming = []
         current_time = time.time()

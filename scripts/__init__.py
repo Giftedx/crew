@@ -20,14 +20,18 @@ def _register_start_full_bot_shim() -> None:
 
     # LIGHTWEIGHT_IMPORT flag passthrough for tests (import-safe)
     try:  # pragma: no cover - optional dep path
-        from ultimate_discord_intelligence_bot.discord_bot.discord_env import LIGHTWEIGHT_IMPORT as _LW
+        from ultimate_discord_intelligence_bot.discord_bot.discord_env import (
+            LIGHTWEIGHT_IMPORT as _LW,
+        )
     except Exception:  # pragma: no cover
         _LW = False
     m.LIGHTWEIGHT_IMPORT = _LW
 
     # ToolContainer shim
     try:  # pragma: no cover - optional dep path
-        from ultimate_discord_intelligence_bot.discord_bot.tools_bootstrap import ToolContainer as _TC
+        from ultimate_discord_intelligence_bot.discord_bot.tools_bootstrap import (
+            ToolContainer as _TC,
+        )
     except Exception:  # pragma: no cover
 
         class _TC:  # type: ignore
@@ -38,7 +42,9 @@ def _register_start_full_bot_shim() -> None:
 
     # Runner delegation (defer heavy imports until called)
     try:  # pragma: no cover
-        from ultimate_discord_intelligence_bot.discord_bot.runner import create_full_bot as _cfb
+        from ultimate_discord_intelligence_bot.discord_bot.runner import (
+            create_full_bot as _cfb,
+        )
         from ultimate_discord_intelligence_bot.discord_bot.runner import main as _main
 
         def create_full_bot():  # type: ignore

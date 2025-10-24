@@ -9,6 +9,7 @@ import httpx
 
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -27,7 +28,7 @@ class TwitchClient:
         if access_token:
             self.headers["Authorization"] = f"Bearer {access_token}"
 
-    def _make_request(self, endpoint: str, params: dict[str, Any] = None) -> StepResult:
+    def _make_request(self, endpoint: str, params: dict[str, Any] | None = None) -> StepResult:
         """Make authenticated request to Twitch API."""
         try:
             params = params or {}
@@ -48,10 +49,10 @@ class TwitchClient:
 
         except httpx.HTTPError as e:
             logger.error(f"Twitch API request failed: {e}")
-            return StepResult.fail(f"Twitch API request failed: {str(e)}")
+            return StepResult.fail(f"Twitch API request failed: {e!s}")
         except Exception as e:
             logger.error(f"Unexpected error in Twitch API request: {e}")
-            return StepResult.fail(f"Unexpected error: {str(e)}")
+            return StepResult.fail(f"Unexpected error: {e!s}")
 
     def get_user_info(self, user_id: str | None = None, username: str | None = None) -> StepResult:
         """Get user information."""
@@ -86,7 +87,12 @@ class TwitchClient:
 
         return self._make_request("videos", params)
 
-    def get_clips(self, broadcaster_id: str, started_at: str | None = None, ended_at: str | None = None) -> StepResult:
+    def get_clips(
+        self,
+        broadcaster_id: str,
+        started_at: str | None = None,
+        ended_at: str | None = None,
+    ) -> StepResult:
         """Get clips from a broadcaster."""
         params = {
             "broadcaster_id": broadcaster_id,
@@ -270,4 +276,4 @@ class TwitchClient:
 
         except Exception as e:
             logger.error(f"Twitch client health check failed: {e}")
-            return StepResult.fail(f"Health check failed: {str(e)}")
+            return StepResult.fail(f"Health check failed: {e!s}")

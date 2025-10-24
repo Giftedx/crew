@@ -8,10 +8,12 @@ import os
 import tempfile
 from pathlib import Path
 
-from fastapi import APIRouter, File, Form, Header, HTTPException, UploadFile
 from fastapi.responses import JSONResponse
 
+from fastapi import APIRouter, File, Form, Header, HTTPException, UploadFile
+
 from . import cleanup, compress, limits, manifest, policy, rehydrate, router, uploader
+
 
 ENABLE_ARCHIVER = os.environ.get("ENABLE_DISCORD_ARCHIVER", "1") != "0"
 ALLOW_WEBHOOK = os.environ.get("ARCHIVER_ALLOW_WEBHOOK_FALLBACK", "0") == "1"
@@ -97,7 +99,7 @@ async def archive_endpoint(
     suffix = Path(file.filename or "").suffix
     with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
         # Some type checkers may not see .read on UploadFile; use getattr fallback.
-        reader = getattr(file, "read")
+        reader = file.read
         data = await reader()
         tmp.write(data)
         tmp_path = Path(tmp.name)
@@ -126,4 +128,4 @@ def search_endpoint(tag: str, x_api_token: str | None = Header(None, alias="X-AP
     return manifest.search_tag(tag)
 
 
-__all__ = ["archive_file", "api_router"]
+__all__ = ["api_router", "archive_file"]

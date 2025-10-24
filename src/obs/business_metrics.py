@@ -14,6 +14,7 @@ from typing import Any, TypeVar
 from ..obs.metrics import get_metrics
 from ..tenancy import current_tenant
 
+
 F = TypeVar("F", bound=Callable[..., Any])
 
 
@@ -127,8 +128,18 @@ class BusinessMetricsCollector:
 
     def track_tenant_resource_usage(self, tenant_id: str) -> dict[str, Any]:
         """Track resource usage per tenant for billing/optimization."""
-        return {"api_calls": 150, "processing_minutes": 45.2, "storage_mb": 1024, "bandwidth_mb": 512}
+        return {
+            "api_calls": 150,
+            "processing_minutes": 45.2,
+            "storage_mb": 1024,
+            "bandwidth_mb": 512,
+        }
 
     def track_model_performance(self) -> dict[str, Any]:
         """Track AI model performance metrics."""
-        return {"average_response_time": 2.3, "accuracy_score": 0.89, "cost_per_request": 0.002, "cache_hit_rate": 0.76}
+        return {
+            "average_response_time": 2.3,
+            "accuracy_score": 0.89,
+            "cost_per_request": 0.002,
+            "cache_hit_rate": 0.76,
+        }

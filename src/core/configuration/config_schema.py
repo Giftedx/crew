@@ -2,15 +2,16 @@
 
 from __future__ import annotations
 
-"""Configuration schema definitions with type safety and validation."""
-
 import os
 from dataclasses import dataclass, field
-from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel
+
+
+if TYPE_CHECKING:
+    from datetime import datetime
 
 
 class ConfigSchema(BaseModel):
@@ -78,7 +79,11 @@ class SecurityConfig:
     enable_content_moderation: bool = True
     enable_pii_detection: bool = True
     pii_types: dict[str, str] = field(
-        default_factory=lambda: {"email": "Email Address", "phone": "Phone Number", "address": "Physical Address"}
+        default_factory=lambda: {
+            "email": "Email Address",
+            "phone": "Phone Number",
+            "address": "Physical Address",
+        }
     )
     pii_masks: dict[str, str] = field(
         default_factory=lambda: {
@@ -173,11 +178,26 @@ class ArchiveConfig:
     # Content type routing
     routes: dict[str, dict[str, dict[str, str]]] = field(
         default_factory=lambda: {
-            "images": {"public": {"channel_id": "000000000000000000"}, "private": {"channel_id": "000000000000000000"}},
-            "videos": {"public": {"channel_id": "000000000000000000"}, "private": {"channel_id": "000000000000000000"}},
-            "audio": {"public": {"channel_id": "000000000000000000"}, "private": {"channel_id": "000000000000000000"}},
-            "docs": {"public": {"channel_id": "000000000000000000"}, "private": {"channel_id": "000000000000000000"}},
-            "blobs": {"public": {"channel_id": "000000000000000000"}, "private": {"channel_id": "000000000000000000"}},
+            "images": {
+                "public": {"channel_id": "000000000000000000"},
+                "private": {"channel_id": "000000000000000000"},
+            },
+            "videos": {
+                "public": {"channel_id": "000000000000000000"},
+                "private": {"channel_id": "000000000000000000"},
+            },
+            "audio": {
+                "public": {"channel_id": "000000000000000000"},
+                "private": {"channel_id": "000000000000000000"},
+            },
+            "docs": {
+                "public": {"channel_id": "000000000000000000"},
+                "private": {"channel_id": "000000000000000000"},
+            },
+            "blobs": {
+                "public": {"channel_id": "000000000000000000"},
+                "private": {"channel_id": "000000000000000000"},
+            },
         }
     )
 
@@ -307,7 +327,13 @@ class GlobalConfig:
     def __post_init__(self) -> None:
         """Post-initialization setup."""
         # Ensure directories exist
-        for path in [self.base_dir, self.config_dir, self.logs_dir, self.downloads_dir, self.processing_dir]:
+        for path in [
+            self.base_dir,
+            self.config_dir,
+            self.logs_dir,
+            self.downloads_dir,
+            self.processing_dir,
+        ]:
             path.mkdir(parents=True, exist_ok=True)
 
         # Load environment overrides

@@ -10,10 +10,11 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from ultimate_discord_intelligence_bot.step_result import StepResult
 from ultimate_discord_intelligence_bot.tenancy.context import current_tenant
+
 
 logger = logging.getLogger(__name__)
 
@@ -24,14 +25,14 @@ class ContextRequest:
 
     agent_id: str
     task_type: str = "general"
-    query: Optional[str] = None
-    current_context: Optional[Dict[str, Any]] = None
+    query: str | None = None
+    current_context: dict[str, Any] | None = None
     max_context_length: int = 4000
     include_history: bool = True
     include_related_content: bool = True
     include_creator_intelligence: bool = True
     include_fact_checking: bool = True
-    priority_sources: Optional[List[str]] = None
+    priority_sources: list[str] | None = None
 
 
 @dataclass
@@ -41,11 +42,9 @@ class ContextSegment:
     content: str
     source: str
     relevance_score: float = 1.0
-    timestamp: Optional[datetime] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
-    segment_type: str = (
-        "general"  # general, historical, related, creator_intel, fact_check
-    )
+    timestamp: datetime | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
+    segment_type: str = "general"  # general, historical, related, creator_intel, fact_check
 
 
 @dataclass
@@ -55,8 +54,8 @@ class UnifiedContext:
     agent_id: str
     task_type: str
     primary_context: str
-    supporting_contexts: List[ContextSegment] = field(default_factory=list)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    supporting_contexts: list[ContextSegment] = field(default_factory=list)
+    metadata: dict[str, Any] = field(default_factory=dict)
     total_tokens: int = 0
     relevance_score: float = 1.0
     timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
@@ -77,7 +76,7 @@ class ContextConfig:
 class UnifiedContextBuilder:
     """Intelligent context builder for comprehensive agent context"""
 
-    def __init__(self, config: Optional[ContextConfig] = None):
+    def __init__(self, config: ContextConfig | None = None):
         self.config = config or ContextConfig()
         self.context_cache = {}
         self.agent_context_history = {}  # Track context history per agent
@@ -87,8 +86,8 @@ class UnifiedContextBuilder:
         request: ContextRequest,
         unified_memory_service,
         retrieval_engine,
-        tenant_id: Optional[str] = None,
-        workspace_id: Optional[str] = None,
+        tenant_id: str | None = None,
+        workspace_id: str | None = None,
     ) -> StepResult:
         """Build comprehensive context for an agent"""
         try:
@@ -111,9 +110,7 @@ class UnifiedContextBuilder:
 
             # Primary context from current query
             if request.query:
-                primary_segment = await self._build_primary_context(
-                    request, unified_memory_service, retrieval_engine
-                )
+                primary_segment = await self._build_primary_context(request, unified_memory_service, retrieval_engine)
                 if primary_segment:
                     context_segments.append(primary_segment)
 
@@ -126,9 +123,7 @@ class UnifiedContextBuilder:
 
             # Related content context
             if request.include_related_content:
-                related_segments = await self._build_related_context(
-                    request, unified_memory_service, retrieval_engine
-                )
+                related_segments = await self._build_related_context(request, unified_memory_service, retrieval_engine)
                 context_segments.extend(related_segments)
 
             # Creator intelligence context
@@ -146,14 +141,10 @@ class UnifiedContextBuilder:
                 context_segments.extend(fact_check_segments)
 
             # Filter and rank segments
-            filtered_segments = self._filter_and_rank_segments(
-                context_segments, request
-            )
+            filtered_segments = self._filter_and_rank_segments(context_segments, request)
 
             # Build unified context
-            unified_context = await self._build_unified_context(
-                request, filtered_segments, tenant_id, workspace_id
-            )
+            unified_context = await self._build_unified_context(request, filtered_segments, tenant_id, workspace_id)
 
             # Cache the result
             self.context_cache[cache_key] = unified_context
@@ -165,11 +156,11 @@ class UnifiedContextBuilder:
 
         except Exception as e:
             logger.error(f"Error in context building: {e}", exc_info=True)
-            return StepResult.fail(f"Context building failed: {str(e)}")
+            return StepResult.fail(f"Context building failed: {e!s}")
 
     async def _build_primary_context(
         self, request: ContextRequest, unified_memory_service, retrieval_engine
-    ) -> Optional[ContextSegment]:
+    ) -> ContextSegment | None:
         """Build primary context from the main query"""
         try:
             if not request.query:
@@ -186,9 +177,7 @@ class UnifiedContextBuilder:
             )
 
             # Retrieve relevant information
-            result = await retrieval_engine.retrieve(
-                retrieval_query, unified_memory_service
-            )
+            result = await retrieval_engine.retrieve(retrieval_query, unified_memory_service)
 
             if not result.success:
                 logger.warning(f"Primary context retrieval failed: {result.error}")
@@ -224,7 +213,7 @@ class UnifiedContextBuilder:
 
     async def _build_historical_context(
         self, request: ContextRequest, unified_memory_service, retrieval_engine
-    ) -> List[ContextSegment]:
+    ) -> list[ContextSegment]:
         """Build historical context for the agent"""
         try:
             segments = []
@@ -258,9 +247,7 @@ class UnifiedContextBuilder:
                     limit=3,
                 )
 
-                result = await retrieval_engine.retrieve(
-                    historical_query, unified_memory_service
-                )
+                result = await retrieval_engine.retrieve(historical_query, unified_memory_service)
                 if result.success:
                     results = result.data.get("results", [])
                     for ranked_result in results:
@@ -268,8 +255,7 @@ class UnifiedContextBuilder:
                             segment = ContextSegment(
                                 content=ranked_result.content,
                                 source=ranked_result.source,
-                                relevance_score=ranked_result.confidence
-                                * 0.8,  # Lower weight for historical
+                                relevance_score=ranked_result.confidence * 0.8,  # Lower weight for historical
                                 segment_type="historical",
                                 metadata=ranked_result.metadata,
                             )
@@ -283,7 +269,7 @@ class UnifiedContextBuilder:
 
     async def _build_related_content_context(
         self, request: ContextRequest, unified_memory_service, retrieval_engine
-    ) -> List[ContextSegment]:
+    ) -> list[ContextSegment]:
         """Build context from related content"""
         try:
             segments = []
@@ -297,21 +283,16 @@ class UnifiedContextBuilder:
             for intent in related_intents:
                 from .retrieval_engine import RetrievalQuery
 
-                related_query = RetrievalQuery(
-                    text=request.query, intent=intent, limit=2
-                )
+                related_query = RetrievalQuery(text=request.query, intent=intent, limit=2)
 
-                result = await retrieval_engine.retrieve(
-                    related_query, unified_memory_service
-                )
+                result = await retrieval_engine.retrieve(related_query, unified_memory_service)
                 if result.success:
                     results = result.data.get("results", [])
                     for ranked_result in results:
                         segment = ContextSegment(
                             content=ranked_result.content,
                             source=ranked_result.source,
-                            relevance_score=ranked_result.confidence
-                            * 0.6,  # Lower weight for related
+                            relevance_score=ranked_result.confidence * 0.6,  # Lower weight for related
                             segment_type="related",
                             metadata=ranked_result.metadata,
                         )
@@ -325,7 +306,7 @@ class UnifiedContextBuilder:
 
     async def _build_creator_intelligence_context(
         self, request: ContextRequest, unified_memory_service, retrieval_engine
-    ) -> List[ContextSegment]:
+    ) -> list[ContextSegment]:
         """Build context from creator intelligence data"""
         try:
             segments = []
@@ -341,9 +322,7 @@ class UnifiedContextBuilder:
                     limit=3,
                 )
 
-                result = await retrieval_engine.retrieve(
-                    creator_query, unified_memory_service
-                )
+                result = await retrieval_engine.retrieve(creator_query, unified_memory_service)
                 if result.success:
                     results = result.data.get("results", [])
                     for ranked_result in results:
@@ -364,7 +343,7 @@ class UnifiedContextBuilder:
 
     async def _build_fact_checking_context(
         self, request: ContextRequest, unified_memory_service, retrieval_engine
-    ) -> List[ContextSegment]:
+    ) -> list[ContextSegment]:
         """Build context from fact-checking data"""
         try:
             segments = []
@@ -380,9 +359,7 @@ class UnifiedContextBuilder:
                     limit=2,
                 )
 
-                result = await retrieval_engine.retrieve(
-                    fact_query, unified_memory_service
-                )
+                result = await retrieval_engine.retrieve(fact_query, unified_memory_service)
                 if result.success:
                     results = result.data.get("results", [])
                     for ranked_result in results:
@@ -402,17 +379,13 @@ class UnifiedContextBuilder:
             return []
 
     def _filter_and_rank_segments(
-        self, segments: List[ContextSegment], request: ContextRequest
-    ) -> List[ContextSegment]:
+        self, segments: list[ContextSegment], request: ContextRequest
+    ) -> list[ContextSegment]:
         """Filter and rank context segments"""
         try:
             # Filter by relevance threshold
             if self.config.enable_relevance_filtering:
-                segments = [
-                    seg
-                    for seg in segments
-                    if seg.relevance_score >= self.config.min_relevance_threshold
-                ]
+                segments = [seg for seg in segments if seg.relevance_score >= self.config.min_relevance_threshold]
 
             # Sort by relevance score
             segments.sort(key=lambda x: x.relevance_score, reverse=True)
@@ -429,47 +402,33 @@ class UnifiedContextBuilder:
     async def _build_unified_context(
         self,
         request: ContextRequest,
-        segments: List[ContextSegment],
+        segments: list[ContextSegment],
         tenant_id: str,
         workspace_id: str,
     ) -> UnifiedContext:
         """Build the final unified context"""
         try:
             # Separate primary context from supporting contexts
-            primary_segments = [
-                seg for seg in segments if seg.segment_type == "primary"
-            ]
-            supporting_segments = [
-                seg for seg in segments if seg.segment_type != "primary"
-            ]
+            primary_segments = [seg for seg in segments if seg.segment_type == "primary"]
+            supporting_segments = [seg for seg in segments if seg.segment_type != "primary"]
 
             # Build primary context
             if primary_segments:
                 primary_context = primary_segments[0].content
-            elif (
-                request.current_context and "primary_context" in request.current_context
-            ):
+            elif request.current_context and "primary_context" in request.current_context:
                 primary_context = request.current_context["primary_context"]
             else:
                 primary_context = request.query or ""
 
             # Compress context if needed
             if self.config.context_compression_enabled:
-                primary_context = self._compress_context(
-                    primary_context, request.max_context_length
-                )
+                primary_context = self._compress_context(primary_context, request.max_context_length)
 
             # Calculate total tokens (rough estimate)
-            total_tokens = len(primary_context.split()) + sum(
-                len(seg.content.split()) for seg in supporting_segments
-            )
+            total_tokens = len(primary_context.split()) + sum(len(seg.content.split()) for seg in supporting_segments)
 
             # Calculate overall relevance score
-            relevance_score = (
-                sum(seg.relevance_score for seg in segments) / len(segments)
-                if segments
-                else 0.0
-            )
+            relevance_score = sum(seg.relevance_score for seg in segments) / len(segments) if segments else 0.0
 
             return UnifiedContext(
                 agent_id=request.agent_id,
@@ -506,11 +465,7 @@ class UnifiedContextBuilder:
 
             # Simple compression: take first part and last part
             half_length = max_length // 2
-            compressed = (
-                context[:half_length]
-                + "\n... [context compressed] ...\n"
-                + context[-half_length:]
-            )
+            compressed = context[:half_length] + "\n... [context compressed] ...\n" + context[-half_length:]
 
             return compressed
 
@@ -528,16 +483,12 @@ class UnifiedContextBuilder:
             self.agent_context_history[agent_id].append(context)
 
             # Keep only last 10 contexts per agent
-            self.agent_context_history[agent_id] = self.agent_context_history[agent_id][
-                -10:
-            ]
+            self.agent_context_history[agent_id] = self.agent_context_history[agent_id][-10:]
 
         except Exception as e:
             logger.warning(f"Agent history update failed: {e}")
 
-    def _get_cache_key(
-        self, request: ContextRequest, tenant_id: str, workspace_id: str
-    ) -> str:
+    def _get_cache_key(self, request: ContextRequest, tenant_id: str, workspace_id: str) -> str:
         """Generate cache key for context request"""
         return f"{tenant_id}:{workspace_id}:{request.agent_id}:{request.task_type}:{hash(request.query or '')}"
 
@@ -547,12 +498,10 @@ class UnifiedContextBuilder:
         self.agent_context_history.clear()
         logger.info("Context builder cache cleared")
 
-    def get_cache_stats(self) -> Dict[str, Any]:
+    def get_cache_stats(self) -> dict[str, Any]:
         """Get cache statistics"""
         return {
             "context_cache_size": len(self.context_cache),
-            "agent_history_size": sum(
-                len(history) for history in self.agent_context_history.values()
-            ),
+            "agent_history_size": sum(len(history) for history in self.agent_context_history.values()),
             "agents_with_history": len(self.agent_context_history),
         }

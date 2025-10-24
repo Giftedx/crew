@@ -5,7 +5,11 @@ Docstring placed before future import to satisfy Ruff E402.
 
 from __future__ import annotations
 
-from .pii_detector import Span
+from typing import TYPE_CHECKING
+
+
+if TYPE_CHECKING:
+    from .pii_detector import Span
 
 
 def apply(text: str, spans: list[Span], masks: dict[str, str]) -> str:

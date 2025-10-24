@@ -9,6 +9,7 @@ import httpx
 
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -52,10 +53,10 @@ class TikTokClient:
 
         except httpx.HTTPError as e:
             logger.error(f"TikTok API request failed: {e}")
-            return StepResult.fail(f"TikTok API request failed: {str(e)}")
+            return StepResult.fail(f"TikTok API request failed: {e!s}")
         except Exception as e:
             logger.error(f"Unexpected error in TikTok API request: {e}")
-            return StepResult.fail(f"Unexpected error: {str(e)}")
+            return StepResult.fail(f"Unexpected error: {e!s}")
 
     def get_user_info(self, fields: list[str] | None = None) -> StepResult:
         """Get user information (requires OAuth)."""
@@ -69,7 +70,11 @@ class TikTokClient:
         return self._make_request("user/info/", params=params)
 
     def get_video_list(
-        self, max_count: int = 20, cursor: str | None = None, start_date: str | None = None, end_date: str | None = None
+        self,
+        max_count: int = 20,
+        cursor: str | None = None,
+        start_date: str | None = None,
+        end_date: str | None = None,
     ) -> StepResult:
         """Get user's video list (requires OAuth)."""
         if not self.access_token:
@@ -288,4 +293,4 @@ class TikTokClient:
 
         except Exception as e:
             logger.error(f"TikTok client health check failed: {e}")
-            return StepResult.fail(f"Health check failed: {str(e)}")
+            return StepResult.fail(f"Health check failed: {e!s}")

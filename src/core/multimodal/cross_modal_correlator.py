@@ -13,6 +13,7 @@ from typing import Any
 
 import numpy as np
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -80,7 +81,10 @@ class CrossModalCorrelation:
     @property
     def is_consistent(self) -> bool:
         """Check if modalities are consistent."""
-        return self.consistency in {ConsistencyLevel.HIGHLY_CONSISTENT, ConsistencyLevel.CONSISTENT}
+        return self.consistency in {
+            ConsistencyLevel.HIGHLY_CONSISTENT,
+            ConsistencyLevel.CONSISTENT,
+        }
 
     @property
     def has_discrepancies(self) -> bool:
@@ -250,7 +254,11 @@ class CrossModalCorrelator:
             else ConsistencyLevel.PARTIALLY_CONSISTENT,
             correlation_score=correlation_score,
             confidence=0.85,
-            details={"text_objects": text_objects, "image_objects": image_objects, "overlap": overlap_ratio},
+            details={
+                "text_objects": text_objects,
+                "image_objects": image_objects,
+                "overlap": overlap_ratio,
+            },
             insights=["Text and image show overlapping content elements"],
         )
 
@@ -283,7 +291,11 @@ class CrossModalCorrelator:
         # Simulate text-video activity correlation
         # In a real implementation, this would analyze activity alignment
         text_activities = ["talking", "gesturing"]  # Activities mentioned in text
-        video_activities = ["talking", "gesturing", "sitting"]  # Activities detected in video
+        video_activities = [
+            "talking",
+            "gesturing",
+            "sitting",
+        ]  # Activities detected in video
 
         activity_match_ratio = len(set(text_activities) & set(video_activities)) / len(text_activities)
         correlation_score = activity_match_ratio * 0.85
@@ -294,7 +306,10 @@ class CrossModalCorrelator:
             consistency=ConsistencyLevel.CONSISTENT,
             correlation_score=correlation_score,
             confidence=0.82,
-            details={"text_activities": text_activities, "video_activities": video_activities},
+            details={
+                "text_activities": text_activities,
+                "video_activities": video_activities,
+            },
             insights=["Text accurately describes observed video activities"],
         )
 
@@ -556,7 +571,8 @@ def set_global_cross_modal_correlator(correlator: CrossModalCorrelator) -> None:
 
 # Convenience functions for global correlator
 def analyze_cross_modal(
-    modalities: dict[str, ModalityData], analysis_types: list[CorrelationType] | None = None
+    modalities: dict[str, ModalityData],
+    analysis_types: list[CorrelationType] | None = None,
 ) -> CrossModalAnalysisResult:
     """Analyze cross-modal correlations using the global correlator."""
     return get_global_cross_modal_correlator().analyze_cross_modal(modalities, analysis_types)

@@ -13,6 +13,7 @@ from typing import Any
 
 import numpy as np
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -66,7 +67,10 @@ class OptimizationConfig:
     enable_early_stopping: bool = True
     enable_hyperparameter_tuning: bool = True
     target_metrics: list[OptimizationMetric] = field(
-        default_factory=lambda: [OptimizationMetric.ACCURACY, OptimizationMetric.F1_SCORE]
+        default_factory=lambda: [
+            OptimizationMetric.ACCURACY,
+            OptimizationMetric.F1_SCORE,
+        ]
     )
     metadata: dict[str, Any] = field(default_factory=dict)
 
@@ -363,7 +367,13 @@ class DSPyOptimizer:
 
         # Generate systematic variations
         prefixes = ["Analyze", "Evaluate", "Consider", "Examine", "Assess"]
-        suffixes = ["carefully", "thoroughly", "systematically", "in detail", "comprehensively"]
+        suffixes = [
+            "carefully",
+            "thoroughly",
+            "systematically",
+            "in detail",
+            "comprehensively",
+        ]
 
         for prefix in prefixes:
             for suffix in suffixes:

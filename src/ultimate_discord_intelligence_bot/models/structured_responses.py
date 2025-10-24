@@ -48,7 +48,11 @@ class TextAnalysisResult(BaseModel):
             "example": {
                 "status": "success",
                 "sentiment": {"label": "positive", "score": 0.85},
-                "key_phrases": ["artificial intelligence", "machine learning", "data science"],
+                "key_phrases": [
+                    "artificial intelligence",
+                    "machine learning",
+                    "data science",
+                ],
                 "word_count": 1250,
                 "language_detected": "en",
                 "readability_score": 65.5,
@@ -186,7 +190,10 @@ class PerspectiveSynthesisResult(BaseModel):
                         "perspective_type": "counterargument",
                         "title": "Innovation Concern",
                         "description": "Heavy regulation might stifle AI innovation",
-                        "supporting_points": ["Slower development", "Competitive disadvantage"],
+                        "supporting_points": [
+                            "Slower development",
+                            "Competitive disadvantage",
+                        ],
                         "strength": 0.8,
                     }
                 ],
@@ -261,7 +268,11 @@ class FactCheckResult(BaseModel):
                 "confidence": 0.99,
                 "explanation": "Overwhelming scientific evidence confirms the Earth's spherical shape",
                 "sources": [
-                    {"url": "https://nasa.gov/earth-shape", "title": "NASA: Earth's Shape", "credibility_score": 0.95}
+                    {
+                        "url": "https://nasa.gov/earth-shape",
+                        "title": "NASA: Earth's Shape",
+                        "credibility_score": 0.95,
+                    }
                 ],
             }
         }
@@ -301,7 +312,12 @@ class TrustworthinessResult(BaseModel):
                 "status": "success",
                 "overall_trust_level": "medium",
                 "overall_score": 0.65,
-                "metrics": {"source_credibility": 0.7, "fact_accuracy": 0.8, "bias_level": 0.4, "transparency": 0.6},
+                "metrics": {
+                    "source_credibility": 0.7,
+                    "fact_accuracy": 0.8,
+                    "bias_level": 0.4,
+                    "transparency": 0.6,
+                },
                 "reasoning": "Generally reliable source with some bias detected",
                 "red_flags": ["Potential selection bias in examples"],
             }

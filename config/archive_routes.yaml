@@ -1,0 +1,48 @@
+# Archive Routing Configuration
+# TODO: Implement Discord CDN archiver routing rules
+
+# Archive routing rules
+routes:
+  # Default routing for all content
+  default:
+    enabled: true
+    destination: "local_storage"
+    # TODO: Add default routing configuration
+
+  # High priority content routing
+  high_priority:
+    enabled: true
+    destination: "fast_storage"
+    conditions:
+      - "file_size < 50MB"
+      - "priority = high"
+    # TODO: Add high priority routing configuration
+
+  # Large file routing
+  large_files:
+    enabled: true
+    destination: "bulk_storage"
+    conditions:
+      - "file_size > 100MB"
+    # TODO: Add large file routing configuration
+
+# Storage destinations
+destinations:
+  local_storage:
+    type: "local"
+    path: "/var/archive"
+    # TODO: Add local storage configuration
+  fast_storage:
+    type: "ssd"
+    path: "/var/archive/fast"
+    # TODO: Add fast storage configuration
+  bulk_storage:
+    type: "hdd"
+    path: "/var/archive/bulk"
+    # TODO: Add bulk storage configuration
+
+# Routing policies
+policies:
+  retention_days: 30
+  compression_enabled: true
+  # TODO: Add routing policy configuration

@@ -16,15 +16,19 @@ import logging
 import random
 import time
 from collections import defaultdict, deque
-from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from obs import metrics
 
 from .circuit_breaker import CircuitBreaker, CircuitConfig
 from .error_handling import log_error
+
+
+if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable
+
 
 logger = logging.getLogger(__name__)
 
@@ -169,7 +173,10 @@ class ResilienceOrchestrator:
                 try:
                     return await fallback_func()
                 except Exception as fallback_error:
-                    log_error(fallback_error, message=f"Fallback also failed for {service_name}")
+                    log_error(
+                        fallback_error,
+                        message=f"Fallback also failed for {service_name}",
+                    )
 
             raise
 
@@ -201,7 +208,10 @@ class ResilienceOrchestrator:
                 if attempt == self.config.max_retry_attempts - 1:
                     raise
 
-                delay = min(self.config.base_retry_delay * (2**attempt), self.config.max_retry_delay)
+                delay = min(
+                    self.config.base_retry_delay * (2**attempt),
+                    self.config.max_retry_delay,
+                )
                 jitter = delay * self.config.retry_jitter_factor * random.random()
                 total_delay = delay + jitter
 
@@ -288,7 +298,9 @@ class ResilienceOrchestrator:
         try:
             metrics.RESILIENCE_REQUESTS.labels(**metrics.label_ctx(), service=service_name, result="failure").inc()
             metrics.RESILIENCE_ERRORS.labels(
-                **metrics.label_ctx(), service=service_name, error_type=type(error).__name__
+                **metrics.label_ctx(),
+                service=service_name,
+                error_type=type(error).__name__,
             ).inc()
         except Exception as e:
             log_error(e, message="Failed to update resilience failure metrics")
@@ -408,9 +420,9 @@ def resilient_execute(
 
 
 __all__ = [
+    "ResilienceConfig",
     "ResilienceOrchestrator",
     "ResilienceStrategy",
-    "ResilienceConfig",
     "ServiceHealth",
     "get_resilience_orchestrator",
     "resilient_execute",

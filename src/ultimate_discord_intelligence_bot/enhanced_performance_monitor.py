@@ -18,7 +18,9 @@ from pathlib import Path
 from typing import Any
 
 from core.time import default_utc_now
-from ultimate_discord_intelligence_bot.agent_training.performance_monitor import AgentPerformanceMonitor
+from ultimate_discord_intelligence_bot.agent_training.performance_monitor import (
+    AgentPerformanceMonitor,
+)
 
 
 class EnhancedPerformanceMonitor:
@@ -99,7 +101,12 @@ class EnhancedPerformanceMonitor:
         score = 0.0
 
         # Check for uncertainty indicators (good for accuracy)
-        uncertainty_phrases = ["according to", "appears to", "suggests that", "evidence indicates"]
+        uncertainty_phrases = [
+            "according to",
+            "appears to",
+            "suggests that",
+            "evidence indicates",
+        ]
         if any(phrase in response.lower() for phrase in uncertainty_phrases):
             score += 0.3
 
@@ -140,12 +147,24 @@ class EnhancedPerformanceMonitor:
             score += 0.2
 
         # Evidence-based reasoning
-        evidence_phrases = ["analysis shows", "data indicates", "research suggests", "evidence supports", "based on"]
+        evidence_phrases = [
+            "analysis shows",
+            "data indicates",
+            "research suggests",
+            "evidence supports",
+            "based on",
+        ]
         if any(phrase in response.lower() for phrase in evidence_phrases):
             score += 0.3
 
         # Multiple perspectives or balanced view
-        balance_phrases = ["on the other hand", "alternatively", "however", "while", "although"]
+        balance_phrases = [
+            "on the other hand",
+            "alternatively",
+            "however",
+            "while",
+            "although",
+        ]
         if any(phrase in response.lower() for phrase in balance_phrases):
             score += 0.3
 
@@ -371,10 +390,17 @@ class EnhancedPerformanceMonitor:
 
         # Comparative metrics
         comparative_analysis: dict[str, Any] = {
-            "reporting_period": {"days_analyzed": days, "end_date": default_utc_now().isoformat()},
+            "reporting_period": {
+                "days_analyzed": days,
+                "end_date": default_utc_now().isoformat(),
+            },
             "agent_rankings": {},
             "performance_summary": {},
-            "recommendations": {"top_performers": [], "needs_attention": [], "improvement_opportunities": []},
+            "recommendations": {
+                "top_performers": [],
+                "needs_attention": [],
+                "improvement_opportunities": [],
+            },
         }
 
         # Calculate rankings
@@ -603,7 +629,11 @@ async def main():
     print(f"Trend: {real_time_data['recent_trend']}")
 
     # Generate comparative analysis
-    agent_names = ["enhanced_fact_checker", "content_manager", "cross_platform_intelligence_gatherer"]
+    agent_names = [
+        "enhanced_fact_checker",
+        "content_manager",
+        "cross_platform_intelligence_gatherer",
+    ]
     comparative_analysis = enhanced_monitor.generate_comparative_analysis(agent_names)
 
     print("\nComparative Analysis:")

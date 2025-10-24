@@ -17,6 +17,7 @@ from pathlib import Path
 
 import structlog
 
+
 logger = structlog.get_logger()
 
 
@@ -100,7 +101,10 @@ class RoadmapExecutor:
                 priority="P0",
                 estimated_hours=8,
                 dependencies=["ENV-001"],
-                files_modified=["src/obs/baseline_metrics.py", "monitoring/dashboard.json"],
+                files_modified=[
+                    "src/obs/baseline_metrics.py",
+                    "monitoring/dashboard.json",
+                ],
             ),
             Task(
                 id="LLM-001",
@@ -122,7 +126,10 @@ class RoadmapExecutor:
                 priority="P0",
                 estimated_hours=16,
                 dependencies=["LLM-001"],
-                files_modified=["src/core/cache/llm_cache.py", "src/core/cache/semantic_cache.py"],
+                files_modified=[
+                    "src/core/cache/llm_cache.py",
+                    "src/core/cache/semantic_cache.py",
+                ],
             ),
             Task(
                 id="OBS-001",
@@ -133,7 +140,10 @@ class RoadmapExecutor:
                 priority="P1",
                 estimated_hours=16,
                 dependencies=["LLM-001"],
-                files_modified=["src/obs/tracing.py", "src/obs/langsmith_integration.py"],
+                files_modified=[
+                    "src/obs/tracing.py",
+                    "src/obs/langsmith_integration.py",
+                ],
             ),
         ]
 

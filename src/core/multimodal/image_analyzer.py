@@ -15,6 +15,7 @@ from typing import Any
 
 from PIL import Image
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -425,9 +426,9 @@ class ImageAnalyzer:
     ) -> ImageAnalysisResult:
         """Analyze image from URL."""
         try:
-            import requests
+            from core.http_utils import resilient_get
 
-            response = requests.get(url, timeout=30)
+            response = resilient_get(url, timeout=30)
             response.raise_for_status()
             return self.analyze_image(response.content, analysis_types)
         except Exception as e:

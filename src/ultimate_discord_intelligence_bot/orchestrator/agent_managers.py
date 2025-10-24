@@ -6,10 +6,12 @@ in the autonomous intelligence workflow.
 Extracted from crew_builders.py to improve maintainability and organization.
 """
 
+import contextlib
 import logging
 from typing import Any
 
-from core.settings import get_settings
+from ultimate_discord_intelligence_bot.settings import Settings
+
 
 # Module-level logger
 logger = logging.getLogger(__name__)
@@ -66,7 +68,7 @@ def populate_agent_tool_context(
     try:
         from ..tools.mem0_memory_tool import Mem0MemoryTool
 
-        settings = get_settings()
+        settings = Settings()
         if settings.enable_enhanced_memory and settings.mem0_api_key:
             if not any(isinstance(t, Mem0MemoryTool) for t in agent.tools):
                 agent.tools.append(Mem0MemoryTool())
@@ -92,7 +94,7 @@ def populate_agent_tool_context(
         )
         # Track context population for monitoring
         if metrics_instance:
-            try:
+            with contextlib.suppress(Exception):
                 metrics_instance.counter(
                     "autointel_context_populated",
                     labels={
@@ -101,8 +103,6 @@ def populate_agent_tool_context(
                         "has_transcript": "transcript" in context_data or "text" in context_data,
                     },
                 ).inc()
-            except Exception:
-                pass
     else:
         _logger.error(f"❌ CONTEXT POPULATION FAILED: 0 tools updated for agent {getattr(agent, 'role', 'unknown')}")
 

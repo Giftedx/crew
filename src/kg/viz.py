@@ -2,9 +2,13 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from typing import TYPE_CHECKING
 
-from .store import KGEdge, KGNode
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from .store import KGEdge, KGNode
 
 
 def render(nodes: Iterable[KGNode], edges: Iterable[KGEdge]) -> bytes:

@@ -18,6 +18,7 @@ import re
 from pathlib import Path
 from typing import NamedTuple
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -127,7 +128,13 @@ def analyze_usage(root_path: Path) -> None:
     other = [
         u
         for u in usages
-        if u.env_var not in {**API_KEY_MAPPING, **WEBHOOK_MAPPING, **FEATURE_FLAG_MAPPING, **SETTING_MAPPING}
+        if u.env_var
+        not in {
+            **API_KEY_MAPPING,
+            **WEBHOOK_MAPPING,
+            **FEATURE_FLAG_MAPPING,
+            **SETTING_MAPPING,
+        }
     ]
 
     if api_keys:
@@ -175,7 +182,7 @@ def analyze_usage(root_path: Path) -> None:
     print(f"  Feature Flags: {len(feature_flags)} files")
     print(f"  Settings: {len(settings)} files")
     print(f"  Other: {len(other)} files")
-    print(f"  Total: {len(usages)} usages across {len(set(u.file_path for u in usages))} files")
+    print(f"  Total: {len(usages)} usages across {len({u.file_path for u in usages})} files")
 
 
 def migrate_file(file_path: Path, dry_run: bool = True) -> bool:
@@ -197,7 +204,9 @@ def migrate_file(file_path: Path, dry_run: bool = True) -> bool:
                 else:
                     if in_imports and line.strip() and not line.startswith("#"):
                         # Add our import before first non-import line
-                        import_lines.append("from ultimate_discord_intelligence_bot.core.secure_config import get_config")
+                        import_lines.append(
+                            "from ultimate_discord_intelligence_bot.core.secure_config import get_config"
+                        )
                         in_imports = False
                     other_lines.append(line)
 
@@ -222,7 +231,12 @@ def migrate_file(file_path: Path, dry_run: bool = True) -> bool:
             content = "\n".join(lines)
 
         # Replace os.getenv() calls
-        all_mappings = {**API_KEY_MAPPING, **WEBHOOK_MAPPING, **FEATURE_FLAG_MAPPING, **SETTING_MAPPING}
+        all_mappings = {
+            **API_KEY_MAPPING,
+            **WEBHOOK_MAPPING,
+            **FEATURE_FLAG_MAPPING,
+            **SETTING_MAPPING,
+        }
 
         for env_var, replacement in all_mappings.items():
             # Match various os.getenv() patterns
@@ -262,7 +276,7 @@ def main():
         analyze_usage(args.root)
     elif args.migrate:
         usages = find_os_getenv_usage(args.root)
-        files_to_migrate = list(set(u.file_path for u in usages))
+        files_to_migrate = list({u.file_path for u in usages})
 
         print(f"Migrating {len(files_to_migrate)} files...")
         print()

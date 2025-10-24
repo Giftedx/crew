@@ -11,8 +11,8 @@ import json
 import logging
 from typing import Any
 
-import httpx
-from tenacity import retry, stop_after_attempt, wait_exponential
+import httpx  # type: ignore[import-not-found]
+from tenacity import retry, stop_after_attempt, wait_exponential  # type: ignore[import-not-found]
 
 from ultimate_discord_intelligence_bot.creator_ops.config import CreatorOpsConfig
 from ultimate_discord_intelligence_bot.creator_ops.integrations.tiktok_models import (
@@ -26,6 +26,7 @@ from ultimate_discord_intelligence_bot.creator_ops.integrations.tiktok_models im
     TikTokVideoList,
 )
 from ultimate_discord_intelligence_bot.step_result import StepResult
+
 
 logger = logging.getLogger(__name__)
 
@@ -61,7 +62,18 @@ class TikTokClient:
         self.rate_limit_reset = None
 
         # Regional eligibility
-        self.supported_regions = ["US", "GB", "CA", "AU", "DE", "FR", "IT", "ES", "NL", "SE"]
+        self.supported_regions = [
+            "US",
+            "GB",
+            "CA",
+            "AU",
+            "DE",
+            "FR",
+            "IT",
+            "ES",
+            "NL",
+            "SE",
+        ]
 
         logger.info("TikTokClient initialized")
 
@@ -134,7 +146,7 @@ class TikTokClient:
                 logger.error(f"TikTok API error: {e.response.status_code} - {e.response.text}")
                 raise
         except Exception as e:
-            logger.error(f"TikTok API request failed: {str(e)}")
+            logger.error(f"TikTok API request failed: {e!s}")
             raise
 
     def get_user_info(self, open_id: str | None = None) -> StepResult:
@@ -175,8 +187,8 @@ class TikTokClient:
             return StepResult.ok(data=user)
 
         except Exception as e:
-            logger.error(f"Failed to get TikTok user info: {str(e)}")
-            return StepResult.fail(f"Failed to get TikTok user info: {str(e)}")
+            logger.error(f"Failed to get TikTok user info: {e!s}")
+            return StepResult.fail(f"Failed to get TikTok user info: {e!s}")
 
     def get_video_list(
         self,
@@ -234,8 +246,8 @@ class TikTokClient:
             return StepResult.ok(data=video_list)
 
         except Exception as e:
-            logger.error(f"Failed to get TikTok video list: {str(e)}")
-            return StepResult.fail(f"Failed to get TikTok video list: {str(e)}")
+            logger.error(f"Failed to get TikTok video list: {e!s}")
+            return StepResult.fail(f"Failed to get TikTok video list: {e!s}")
 
     def get_video_details(self, video_id: str) -> StepResult:
         """
@@ -277,8 +289,8 @@ class TikTokClient:
             return StepResult.ok(data=video)
 
         except Exception as e:
-            logger.error(f"Failed to get TikTok video details: {str(e)}")
-            return StepResult.fail(f"Failed to get TikTok video details: {str(e)}")
+            logger.error(f"Failed to get TikTok video details: {e!s}")
+            return StepResult.fail(f"Failed to get TikTok video details: {e!s}")
 
     def get_video_comments(
         self,
@@ -334,8 +346,8 @@ class TikTokClient:
             return StepResult.ok(data=comment_list)
 
         except Exception as e:
-            logger.error(f"Failed to get TikTok video comments: {str(e)}")
-            return StepResult.fail(f"Failed to get TikTok video comments: {str(e)}")
+            logger.error(f"Failed to get TikTok video comments: {e!s}")
+            return StepResult.fail(f"Failed to get TikTok video comments: {e!s}")
 
     def get_video_insights(
         self,
@@ -393,8 +405,8 @@ class TikTokClient:
             return StepResult.ok(data=insights)
 
         except Exception as e:
-            logger.error(f"Failed to get TikTok video insights: {str(e)}")
-            return StepResult.fail(f"Failed to get TikTok video insights: {str(e)}")
+            logger.error(f"Failed to get TikTok video insights: {e!s}")
+            return StepResult.fail(f"Failed to get TikTok video insights: {e!s}")
 
     def upload_video(
         self,
@@ -476,8 +488,8 @@ class TikTokClient:
             return StepResult.ok(data=upload_response_data)
 
         except Exception as e:
-            logger.error(f"Failed to upload TikTok video: {str(e)}")
-            return StepResult.fail(f"Failed to upload TikTok video: {str(e)}")
+            logger.error(f"Failed to upload TikTok video: {e!s}")
+            return StepResult.fail(f"Failed to upload TikTok video: {e!s}")
 
     def publish_video(self, publish_id: str) -> StepResult:
         """
@@ -522,8 +534,8 @@ class TikTokClient:
             return StepResult.ok(data=status)
 
         except Exception as e:
-            logger.error(f"Failed to publish TikTok video: {str(e)}")
-            return StepResult.fail(f"Failed to publish TikTok video: {str(e)}")
+            logger.error(f"Failed to publish TikTok video: {e!s}")
+            return StepResult.fail(f"Failed to publish TikTok video: {e!s}")
 
     def get_publish_status(self, publish_id: str) -> StepResult:
         """
@@ -568,8 +580,8 @@ class TikTokClient:
             return StepResult.ok(data=status)
 
         except Exception as e:
-            logger.error(f"Failed to get TikTok publish status: {str(e)}")
-            return StepResult.fail(f"Failed to get TikTok publish status: {str(e)}")
+            logger.error(f"Failed to get TikTok publish status: {e!s}")
+            return StepResult.fail(f"Failed to get TikTok publish status: {e!s}")
 
     def get_rate_limit_info(self) -> dict[str, Any]:
         """Get current rate limit information."""
@@ -596,5 +608,5 @@ class TikTokClient:
                 return {}
 
         except Exception as e:
-            logger.warning(f"Failed to load fixture response: {str(e)}")
+            logger.warning(f"Failed to load fixture response: {e!s}")
             return {}

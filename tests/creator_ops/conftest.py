@@ -82,8 +82,18 @@ def sample_episode_data():
         "duration": 3600,
         "transcript": "This is a test episode transcript with multiple segments.",
         "segments": [
-            {"start_time": 0, "end_time": 300, "text": "Introduction segment", "speaker": "SPEAKER_00"},
-            {"start_time": 300, "end_time": 900, "text": "Main content segment 1", "speaker": "SPEAKER_01"},
+            {
+                "start_time": 0,
+                "end_time": 300,
+                "text": "Introduction segment",
+                "speaker": "SPEAKER_00",
+            },
+            {
+                "start_time": 300,
+                "end_time": 900,
+                "text": "Main content segment 1",
+                "speaker": "SPEAKER_01",
+            },
         ],
         "metadata": {
             "channel_id": "test_channel",
@@ -127,7 +137,10 @@ def setup_test_logging():
     """Set up test logging."""
     import logging
 
-    logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    )
 
 
 # Pytest configuration

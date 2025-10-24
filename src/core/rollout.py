@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import random  # noqa: S311 - canary rollout sampling is non-cryptographic
+import random
 from dataclasses import dataclass
 
 
@@ -24,7 +24,14 @@ class RolloutController:
     def __init__(self) -> None:
         self._domains: dict[str, RolloutState] = {}
 
-    def start(self, domain: str, control: str, candidate: str, canary_pct: float, min_trials: int = 10) -> None:
+    def start(
+        self,
+        domain: str,
+        control: str,
+        candidate: str,
+        canary_pct: float,
+        min_trials: int = 10,
+    ) -> None:
         self._domains[domain] = RolloutState(control, candidate, canary_pct, min_trials)
 
     def choose(self, domain: str) -> str:
@@ -34,7 +41,7 @@ class RolloutController:
         if state.promoted:
             return state.control
         # Non-cryptographic sampling for progressive exposure; security irrelevance.
-        return state.candidate if random.random() < state.canary_pct else state.control  # noqa: S311
+        return state.candidate if random.random() < state.canary_pct else state.control
 
     def record(self, domain: str, arm: str, reward: float) -> None:
         state = self._domains.get(domain)

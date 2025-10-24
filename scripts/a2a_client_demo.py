@@ -9,7 +9,12 @@ from client.a2a_client import A2AClient, A2AClientConfig
 def main() -> None:
     base_url = os.getenv("A2A_BASE_URL", "http://localhost:8000")
     api_key = os.getenv("A2A_API_KEY")
-    enable_retry = os.getenv("A2A_ENABLE_RETRY", "0").lower() in ("1", "true", "yes", "on")
+    enable_retry = os.getenv("A2A_ENABLE_RETRY", "0").lower() in (
+        "1",
+        "true",
+        "yes",
+        "on",
+    )
     tenant_id = os.getenv("A2A_TENANT_ID")
     workspace_id = os.getenv("A2A_WORKSPACE_ID")
 
@@ -36,7 +41,14 @@ def main() -> None:
     print("\n# RPC Batch")
     batch = [
         ("tools.text_analyze", {"text": "alpha"}, 1),
-        ("agent.execute", {"skill": "tools.lc_summarize", "args": {"text": "one. two. three.", "max_sentences": 2}}, 2),
+        (
+            "agent.execute",
+            {
+                "skill": "tools.lc_summarize",
+                "args": {"text": "one. two. three.", "max_sentences": 2},
+            },
+            2,
+        ),
     ]
     res_b = client.call_batch(batch)
     print(json.dumps(res_b, indent=2))

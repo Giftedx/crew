@@ -16,6 +16,7 @@ Key Features:
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
 import time
 from dataclasses import dataclass
@@ -27,6 +28,7 @@ from obs.metrics import (
     CACHE_OPERATION_LATENCY,
     label_ctx,
 )
+
 
 logger = logging.getLogger(__name__)
 
@@ -225,7 +227,11 @@ class OptimizedVectorStore:
                 self.metrics.total_searches += 1
 
                 # Record cache hit metrics
-                labels = {**self._labels, "cache_name": self.name, "cache_level": "query"}
+                labels = {
+                    **self._labels,
+                    "cache_name": self.name,
+                    "cache_level": "query",
+                }
                 CACHE_HITS.labels(**labels).inc()
 
                 operation_time = (time.time() - start_time) * 1000
@@ -239,11 +245,21 @@ class OptimizedVectorStore:
         # Execute search
         if batch_mode and self.config.enable_batch_processing:
             result = await self._search_with_batching(
-                query_vector, collection, limit, similarity_threshold, metadata_filter, cache_key
+                query_vector,
+                collection,
+                limit,
+                similarity_threshold,
+                metadata_filter,
+                cache_key,
             )
         else:
             result = await self._search_single(
-                query_vector, collection, limit, similarity_threshold, metadata_filter, cache_key
+                query_vector,
+                collection,
+                limit,
+                similarity_threshold,
+                metadata_filter,
+                cache_key,
             )
 
         # Record metrics
@@ -382,7 +398,13 @@ class OptimizedVectorStore:
 
         # Process queries in parallel
         tasks = []
-        for query_vector, collection, limit, similarity_threshold, metadata_filter in queries:
+        for (
+            query_vector,
+            collection,
+            limit,
+            similarity_threshold,
+            metadata_filter,
+        ) in queries:
             task = asyncio.create_task(
                 self.search(
                     query_vector=query_vector,
@@ -486,10 +508,8 @@ class OptimizedVectorStore:
         """Shutdown the vector store and cleanup resources."""
         if self.batch_processor_task and not self.batch_processor_task.done():
             self.batch_processor_task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await self.batch_processor_task
-            except asyncio.CancelledError:
-                pass
 
         # Process any remaining pending queries
         if self.pending_queries:
@@ -528,8 +548,8 @@ async def optimize_all_vector_stores() -> dict[str, Any]:
 
 __all__ = [
     "OptimizedVectorStore",
-    "VectorSearchMetrics",
     "SearchOptimizationConfig",
+    "VectorSearchMetrics",
     "get_optimized_vector_store",
     "optimize_all_vector_stores",
 ]

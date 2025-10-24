@@ -13,6 +13,7 @@ from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
 from typing import Any
 
+
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
@@ -137,13 +138,22 @@ class GlobalAIPlatformExpansionEngine:
                 component_name="Multi-Regional Localization Platform",
                 component_type="localization",
                 complexity="enterprise",
-                target_regions=["Europe", "Asia-Pacific", "Latin America", "Middle East & Africa"],
+                target_regions=[
+                    "Europe",
+                    "Asia-Pacific",
+                    "Latin America",
+                    "Middle East & Africa",
+                ],
                 expansion_impact="Enables cultural adaptation and language support across 40+ countries",
                 development_effort="high",
                 business_value="Global market accessibility and user experience optimization",
                 technical_innovation="AI-powered real-time translation with cultural context awareness",
                 integration_complexity="advanced",
-                regulatory_requirements=["GDPR", "Data Protection Laws", "Cultural Compliance"],
+                regulatory_requirements=[
+                    "GDPR",
+                    "Data Protection Laws",
+                    "Cultural Compliance",
+                ],
             ),
             GlobalExpansionComponent(
                 component_name="Global Regulatory Compliance Framework",
@@ -161,13 +171,22 @@ class GlobalAIPlatformExpansionEngine:
                 component_name="International Developer Ecosystem Hub",
                 component_type="developer_platform",
                 complexity="enterprise",
-                target_regions=["North America", "Europe", "Asia-Pacific", "Latin America"],
+                target_regions=[
+                    "North America",
+                    "Europe",
+                    "Asia-Pacific",
+                    "Latin America",
+                ],
                 expansion_impact="Regional developer communities with localized support and resources",
                 development_effort="high",
                 business_value="Global developer adoption and ecosystem growth acceleration",
                 technical_innovation="Multi-timezone developer support with regional API optimization",
                 integration_complexity="advanced",
-                regulatory_requirements=["Developer Privacy", "API Security Standards", "Export Control"],
+                regulatory_requirements=[
+                    "Developer Privacy",
+                    "API Security Standards",
+                    "Export Control",
+                ],
             ),
             GlobalExpansionComponent(
                 component_name="Worldwide Market Intelligence Platform",
@@ -179,19 +198,32 @@ class GlobalAIPlatformExpansionEngine:
                 business_value="Strategic market positioning and opportunity identification",
                 technical_innovation="AI-driven market analysis with predictive expansion modeling",
                 integration_complexity="intermediate",
-                regulatory_requirements=["Data Privacy", "Market Research Ethics", "Competitive Intelligence Laws"],
+                regulatory_requirements=[
+                    "Data Privacy",
+                    "Market Research Ethics",
+                    "Competitive Intelligence Laws",
+                ],
             ),
             GlobalExpansionComponent(
                 component_name="Cross-Border Partnership Network",
                 component_type="partnerships",
                 complexity="enterprise",
-                target_regions=["Europe", "Asia-Pacific", "North America", "Emerging Markets"],
+                target_regions=[
+                    "Europe",
+                    "Asia-Pacific",
+                    "North America",
+                    "Emerging Markets",
+                ],
                 expansion_impact="Strategic alliances with regional leaders and technology partners",
                 development_effort="high",
                 business_value="Accelerated market entry and local expertise leverage",
                 technical_innovation="AI-matched partnership recommendations with success prediction",
                 integration_complexity="advanced",
-                regulatory_requirements=["International Trade Laws", "Partnership Compliance", "Technology Transfer"],
+                regulatory_requirements=[
+                    "International Trade Laws",
+                    "Partnership Compliance",
+                    "Technology Transfer",
+                ],
             ),
             GlobalExpansionComponent(
                 component_name="Global AI Standards Leadership Center",
@@ -203,7 +235,11 @@ class GlobalAIPlatformExpansionEngine:
                 business_value="Market influence and thought leadership establishment",
                 technical_innovation="Collaborative AI standards platform with real-time compliance verification",
                 integration_complexity="advanced",
-                regulatory_requirements=["AI Ethics Standards", "International Standards", "Industry Regulations"],
+                regulatory_requirements=[
+                    "AI Ethics Standards",
+                    "International Standards",
+                    "Industry Regulations",
+                ],
             ),
         ]
 
@@ -223,9 +259,12 @@ class GlobalAIPlatformExpansionEngine:
         base_effectiveness = 0.75 + (random.random() * 0.2)  # 75-95% base effectiveness
 
         # Adjust for complexity and regional scope
-        complexity_multiplier = {"basic": 1.0, "intermediate": 0.95, "advanced": 0.9, "enterprise": 0.85}.get(
-            component.complexity, 0.85
-        )
+        complexity_multiplier = {
+            "basic": 1.0,
+            "intermediate": 0.95,
+            "advanced": 0.9,
+            "enterprise": 0.85,
+        }.get(component.complexity, 0.85)
 
         regional_scope_factor = min(1.0, 0.8 + (len(component.target_regions) / len(self.target_regions)) * 0.2)
 
@@ -461,7 +500,9 @@ class GlobalAIPlatformExpansionEngine:
         return regional_analysis
 
     def calculate_business_achievements(
-        self, global_metrics: dict[str, float], regional_analysis: dict[str, dict[str, float]]
+        self,
+        global_metrics: dict[str, float],
+        regional_analysis: dict[str, dict[str, float]],
     ) -> dict[str, float]:
         """Calculate comprehensive business achievements from global expansion"""
         logger.info("💼 Calculating Business Achievements...")
@@ -556,19 +597,26 @@ class GlobalAIPlatformExpansionEngine:
         response_optimization = -2 + (-global_effectiveness * 3)  # 2-5ms improvement
 
         enhanced_metrics = {
-            "performance_score": min(0.999, self.ecosystem_foundation["performance_score"] + performance_enhancement),
+            "performance_score": min(
+                0.999,
+                self.ecosystem_foundation["performance_score"] + performance_enhancement,
+            ),
             "ai_routing_effectiveness": min(
-                0.999, self.ecosystem_foundation["ai_routing_effectiveness"] + (global_effectiveness * 0.005)
+                0.999,
+                self.ecosystem_foundation["ai_routing_effectiveness"] + (global_effectiveness * 0.005),
             ),
             "user_satisfaction": min(
-                0.999, self.ecosystem_foundation["user_satisfaction"] + (global_effectiveness * 0.003)
+                0.999,
+                self.ecosystem_foundation["user_satisfaction"] + (global_effectiveness * 0.003),
             ),
             "response_time": max(100, self.ecosystem_foundation["response_time"] + response_optimization),
             "system_reliability": min(
-                0.9999, self.ecosystem_foundation["system_reliability"] + reliability_enhancement
+                0.9999,
+                self.ecosystem_foundation["system_reliability"] + reliability_enhancement,
             ),
             "resource_efficiency": min(
-                0.999, self.ecosystem_foundation["resource_efficiency"] + efficiency_enhancement
+                0.999,
+                self.ecosystem_foundation["resource_efficiency"] + efficiency_enhancement,
             ),
             "ecosystem_effectiveness": self.ecosystem_foundation["ecosystem_effectiveness"],
             "developer_adoption": self.ecosystem_foundation["developer_adoption"],
@@ -667,7 +715,7 @@ class GlobalAIPlatformExpansionEngine:
             return results
 
         except Exception as e:
-            logger.error(f"❌ Global Expansion Error: {str(e)}")
+            logger.error(f"❌ Global Expansion Error: {e!s}")
             raise
 
     def save_results(self, results: GlobalExpansionResults, output_file: str | None = None) -> str:
@@ -706,7 +754,7 @@ async def main():
         return results
 
     except Exception as e:
-        logger.error(f"❌ Global expansion failed: {str(e)}")
+        logger.error(f"❌ Global expansion failed: {e!s}")
         raise
 
 

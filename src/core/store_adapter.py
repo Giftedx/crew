@@ -33,9 +33,16 @@ from sqlalchemy import (
     func,
     text,
 )
-from sqlalchemy.orm import Mapped, declarative_base, mapped_column, relationship, sessionmaker
+from sqlalchemy.orm import (
+    Mapped,
+    declarative_base,
+    mapped_column,
+    relationship,
+    sessionmaker,
+)
 
 from ultimate_discord_intelligence_bot.step_result import StepResult
+
 
 logger = logging.getLogger(__name__)
 
@@ -49,17 +56,14 @@ class StoreAdapter(ABC):
     @abstractmethod
     def initialize(self) -> StepResult:
         """Initialize the store and create tables if needed."""
-        pass
 
     @abstractmethod
     def health_check(self) -> StepResult:
         """Perform a health check on the store."""
-        pass
 
     @abstractmethod
     def close(self) -> StepResult:
         """Close the store connection."""
-        pass
 
 
 # ============================================================================
@@ -358,7 +362,7 @@ class UnifiedStoreManager:
             return StepResult.ok(data={"message": "Store initialized successfully"})
         except Exception as e:
             logger.error(f"Failed to initialize store: {e}")
-            return StepResult.fail(f"Failed to initialize store: {str(e)}")
+            return StepResult.fail(f"Failed to initialize store: {e!s}")
 
     def health_check(self) -> StepResult:
         """Perform health check."""
@@ -370,7 +374,7 @@ class UnifiedStoreManager:
             return StepResult.ok(data={"status": "healthy"})
         except Exception as e:
             logger.error(f"Health check failed: {e}")
-            return StepResult.fail(f"Health check failed: {str(e)}")
+            return StepResult.fail(f"Health check failed: {e!s}")
 
     def close(self) -> StepResult:
         """Close connections."""
@@ -381,7 +385,7 @@ class UnifiedStoreManager:
             return StepResult.ok(data={"message": "Store closed successfully"})
         except Exception as e:
             logger.error(f"Failed to close store: {e}")
-            return StepResult.fail(f"Failed to close store: {str(e)}")
+            return StepResult.fail(f"Failed to close store: {e!s}")
 
     # ============================================================================
     # Memory Store Operations
@@ -411,7 +415,7 @@ class UnifiedStoreManager:
         except Exception as e:
             session.rollback()
             logger.error(f"Failed to add memory item: {e}")
-            return StepResult.fail(f"Failed to add memory item: {str(e)}")
+            return StepResult.fail(f"Failed to add memory item: {e!s}")
 
     def get_memory_item(self, item_id: int) -> StepResult:
         """Get a memory item by ID."""
@@ -438,7 +442,7 @@ class UnifiedStoreManager:
             return StepResult.ok(data={"item": item})
         except Exception as e:
             logger.error(f"Failed to get memory item: {e}")
-            return StepResult.fail(f"Failed to get memory item: {str(e)}")
+            return StepResult.fail(f"Failed to get memory item: {e!s}")
 
     def update_memory_item_last_used(self, item_id: int, ts: str) -> StepResult:
         """Update memory item last used timestamp."""
@@ -454,7 +458,7 @@ class UnifiedStoreManager:
         except Exception as e:
             session.rollback()
             logger.error(f"Failed to update memory item: {e}")
-            return StepResult.fail(f"Failed to update memory item: {str(e)}")
+            return StepResult.fail(f"Failed to update memory item: {e!s}")
 
     def search_memory_keyword(self, tenant: str, workspace: str, text: str, limit: int = 5) -> StepResult:
         """Search memory items by keyword."""
@@ -494,7 +498,7 @@ class UnifiedStoreManager:
             return StepResult.ok(data={"items": items})
         except Exception as e:
             logger.error(f"Failed to search memory items: {e}")
-            return StepResult.fail(f"Failed to search memory items: {str(e)}")
+            return StepResult.fail(f"Failed to search memory items: {e!s}")
 
     def prune_memory_items(self, tenant: str, now: datetime | None = None) -> StepResult:
         """Prune expired memory items."""
@@ -526,7 +530,7 @@ class UnifiedStoreManager:
         except Exception as e:
             session.rollback()
             logger.error(f"Failed to prune memory items: {e}")
-            return StepResult.fail(f"Failed to prune memory items: {str(e)}")
+            return StepResult.fail(f"Failed to prune memory items: {e!s}")
 
     # ============================================================================
     # Debate Store Operations
@@ -552,7 +556,7 @@ class UnifiedStoreManager:
         except Exception as e:
             session.rollback()
             logger.error(f"Failed to add debate: {e}")
-            return StepResult.fail(f"Failed to add debate: {str(e)}")
+            return StepResult.fail(f"Failed to add debate: {e!s}")
 
     def list_debates(self, tenant: str, workspace: str) -> StepResult:
         """List debates for a tenant/workspace."""
@@ -582,7 +586,7 @@ class UnifiedStoreManager:
             return StepResult.ok(data={"debates": debates})
         except Exception as e:
             logger.error(f"Failed to list debates: {e}")
-            return StepResult.fail(f"Failed to list debates: {str(e)}")
+            return StepResult.fail(f"Failed to list debates: {e!s}")
 
     # ============================================================================
     # Knowledge Graph Operations
@@ -605,7 +609,7 @@ class UnifiedStoreManager:
         except Exception as e:
             session.rollback()
             logger.error(f"Failed to add KG node: {e}")
-            return StepResult.fail(f"Failed to add KG node: {str(e)}")
+            return StepResult.fail(f"Failed to add KG node: {e!s}")
 
     def query_kg_nodes(self, tenant: str, *, type: str | None = None, name: str | None = None) -> StepResult:
         """Query knowledge graph nodes."""
@@ -634,7 +638,7 @@ class UnifiedStoreManager:
             return StepResult.ok(data={"nodes": nodes})
         except Exception as e:
             logger.error(f"Failed to query KG nodes: {e}")
-            return StepResult.fail(f"Failed to query KG nodes: {str(e)}")
+            return StepResult.fail(f"Failed to query KG nodes: {e!s}")
 
     # ============================================================================
     # Profile Store Operations
@@ -657,7 +661,7 @@ class UnifiedStoreManager:
         except Exception as e:
             session.rollback()
             logger.error(f"Failed to upsert creator profile: {e}")
-            return StepResult.fail(f"Failed to upsert creator profile: {str(e)}")
+            return StepResult.fail(f"Failed to upsert creator profile: {e!s}")
 
     def get_creator_profile(self, name: str) -> StepResult:
         """Get a creator profile by name."""
@@ -672,7 +676,7 @@ class UnifiedStoreManager:
             return StepResult.ok(data={"profile": profile})
         except Exception as e:
             logger.error(f"Failed to get creator profile: {e}")
-            return StepResult.fail(f"Failed to get creator profile: {str(e)}")
+            return StepResult.fail(f"Failed to get creator profile: {e!s}")
 
 
 # ============================================================================
@@ -687,7 +691,7 @@ def create_store_manager(database_url: str) -> StepResult:
         return StepResult.ok(data={"manager": manager})
     except Exception as e:
         logger.error(f"Failed to create store manager: {e}")
-        return StepResult.fail(f"Failed to create store manager: {str(e)}")
+        return StepResult.fail(f"Failed to create store manager: {e!s}")
 
 
 def migrate_sqlite_to_postgresql(sqlite_path: str, postgresql_url: str, store_type: str) -> StepResult:
@@ -699,20 +703,20 @@ def migrate_sqlite_to_postgresql(sqlite_path: str, postgresql_url: str, store_ty
         return StepResult.ok(data={"message": f"Migration placeholder for {store_type}"})
     except Exception as e:
         logger.error(f"Failed to migrate {store_type}: {e}")
-        return StepResult.fail(f"Failed to migrate {store_type}: {str(e)}")
+        return StepResult.fail(f"Failed to migrate {store_type}: {e!s}")
 
 
 __all__ = [
-    "StoreAdapter",
-    "UnifiedStoreManager",
-    "MemoryItem",
-    "RetentionPolicy",
-    "Debate",
-    "DebateAgent",
-    "KGNode",
-    "KGEdge",
     "CreatorProfile",
     "CrossProfileLink",
+    "Debate",
+    "DebateAgent",
+    "KGEdge",
+    "KGNode",
+    "MemoryItem",
+    "RetentionPolicy",
+    "StoreAdapter",
+    "UnifiedStoreManager",
     "create_store_manager",
     "migrate_sqlite_to_postgresql",
 ]

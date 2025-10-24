@@ -34,6 +34,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+
 ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_CMD = [sys.executable, "-m", "mypy", "src"]
 SUMMARY_RE = re.compile(r"Found (\d+) errors? in ")
@@ -112,8 +113,15 @@ def _compute_breakdown(output: str) -> dict[str, int]:
     return counts
 
 
-def guard(baseline: Path, update: bool, cmd: list[str], *, json_mode: bool = False, breakdown: bool = False) -> int:
-    code, out, _err = run_mypy(cmd)
+def guard(
+    baseline: Path,
+    update: bool,
+    cmd: list[str],
+    *,
+    json_mode: bool = False,
+    breakdown: bool = False,
+) -> int:
+    _code, out, _err = run_mypy(cmd)
     # We intentionally allow mypy's own non-zero exit code (incremental adoption)
     try:
         current_total = parse_error_total(out)
@@ -238,10 +246,22 @@ def guard(baseline: Path, update: bool, cmd: list[str], *, json_mode: bool = Fal
 
 def _parse_args(argv: list[str]) -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Guard mypy error count against regressions")
-    p.add_argument("--baseline", default="reports/mypy_snapshot.json", help="Path to snapshot JSON file")
-    p.add_argument("--update", action="store_true", help="Update snapshot to current count (must not increase)")
+    p.add_argument(
+        "--baseline",
+        default="reports/mypy_snapshot.json",
+        help="Path to snapshot JSON file",
+    )
+    p.add_argument(
+        "--update",
+        action="store_true",
+        help="Update snapshot to current count (must not increase)",
+    )
     p.add_argument("--json", action="store_true", help="Emit machine-readable JSON status")
-    p.add_argument("--breakdown", action="store_true", help="Include per top-level package error counts in JSON output")
+    p.add_argument(
+        "--breakdown",
+        action="store_true",
+        help="Include per top-level package error counts in JSON output",
+    )
     p.add_argument(
         "--cmd",
         nargs=argparse.REMAINDER,

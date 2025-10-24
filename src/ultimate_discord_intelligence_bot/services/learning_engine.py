@@ -32,14 +32,20 @@ from __future__ import annotations
 
 import json
 import logging
-from collections.abc import Iterable, Sequence
 from datetime import date
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from warnings import warn
 
 from core.learning_engine import LearningEngine as _CoreLearningEngine
 from core.rl.policies.bandit_base import EpsilonGreedyBandit
+
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable, Sequence
+
+    from ultimate_discord_intelligence_bot.step_result import StepResult
+
 
 __all__ = ["LearningEngine"]
 
@@ -48,7 +54,7 @@ _REMOVAL_DEADLINE = date.fromisoformat("2025-12-31")
 _DEPRECATION_LOG_EMITTED = False
 
 
-def _check_deadline() -> None:
+def _check_deadline() -> StepResult:
     today = date.today()
     if today > _REMOVAL_DEADLINE:  # hard stop after grace period
         raise ImportError(
@@ -77,7 +83,7 @@ class LearningEngine(_CoreLearningEngine):  # pragma: no cover - thin wrapper
         epsilon: float = 0.1,
         store_path: str | None = None,  # kept for signature compatibility
         registry: Any | None = None,
-    ) -> None:  # noqa: D401 - delegated
+    ) -> StepResult:
         _check_deadline()
         warn(
             "services.learning_engine.LearningEngine is deprecated until 2025-12-31; "
@@ -85,7 +91,7 @@ class LearningEngine(_CoreLearningEngine):  # pragma: no cover - thin wrapper
             DeprecationWarning,
             stacklevel=2,
         )
-        global _DEPRECATION_LOG_EMITTED  # noqa: PLW0603 - single global gate for log emission
+        global _DEPRECATION_LOG_EMITTED
         if not _DEPRECATION_LOG_EMITTED:
             logging.getLogger("deprecations").info(
                 "{event}".replace(
@@ -127,7 +133,7 @@ class LearningEngine(_CoreLearningEngine):  # pragma: no cover - thin wrapper
                 logging.getLogger(__name__).debug("Ignoring legacy stats load error: %s", exc)
 
     # ----------------------------- legacy convenience API -----------------
-    def select_model(self, task_type: str, candidates: Sequence[str]) -> str:
+    def select_model(self, task_type: str, candidates: Sequence[str]) -> StepResult:
         domain = f"route.model.select::{task_type}"
         # Register the domain lazily with an epsilon‑greedy bandit if absent.
         if domain not in self.registry:
@@ -136,7 +142,7 @@ class LearningEngine(_CoreLearningEngine):  # pragma: no cover - thin wrapper
         choice = super().recommend(domain, {}, candidates)
         return str(choice)
 
-    def update(self, task_type: str, action: str, reward: float) -> None:
+    def update(self, task_type: str, action: str, reward: float) -> StepResult:
         domain = f"route.model.select::{task_type}"
         if domain not in self.registry:
             # Ensure domain exists even if update happens before select_model
@@ -155,21 +161,21 @@ class LearningEngine(_CoreLearningEngine):  # pragma: no cover - thin wrapper
                 logging.getLogger(__name__).debug("Ignoring legacy stats write error: %s", exc)
 
     # Legacy API compatibility (used in tests): expose register_policy with old semantics.
-    def register_policy(self, policy_id: str, actions: Iterable[str]) -> None:
+    def register_policy(self, policy_id: str, actions: Iterable[str]) -> StepResult:
         if policy_id not in self.registry:
             self.register_domain(policy_id, policy=EpsilonGreedyBandit(epsilon=self._default_epsilon))
         # Prime priors for provided actions so each arm appears with q=0, n=0
         policy = self.registry.get(policy_id)
         if hasattr(policy, "q_values"):
             try:  # narrow type for mypy via dynamic getattr
-                qv = getattr(policy, "q_values")
+                qv = policy.q_values
                 for a in actions:
                     _ = qv[a]
             except Exception as exc:  # pragma: no cover - defensive
                 logging.getLogger(__name__).debug("Unable to prime q_values for legacy policy: %s", exc)
 
     # Legacy methods below mirror the prior minimal surface -----------------
-    def recommend(self, policy_id: str, candidates: Sequence[str] | None = None) -> str:
+    def recommend(self, policy_id: str, candidates: Sequence[str] | None = None) -> StepResult:
         policy = self.registry.get(policy_id)
         if candidates is None:
             # Derive candidate set from known q_values/ counts (arms seen so far)
@@ -179,5 +185,5 @@ class LearningEngine(_CoreLearningEngine):  # pragma: no cover - thin wrapper
         choice = super().recommend(policy_id, {}, cand)
         return str(choice)
 
-    def record_outcome(self, policy_id: str, action: str, reward: float) -> None:
+    def record_outcome(self, policy_id: str, action: str, reward: float) -> StepResult:
         super().record(policy_id, {}, action, reward)

@@ -21,6 +21,7 @@ from typing import Any
 
 from core.time import default_utc_now
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -267,7 +268,11 @@ class ServiceMeshManager:
 
             # Generate routing rules
             for version, weight in traffic_split.items():
-                routing_rule = {"destination": f"{service_name}-{version}", "weight": weight, "subset": version}
+                routing_rule = {
+                    "destination": f"{service_name}-{version}",
+                    "weight": weight,
+                    "subset": version,
+                }
                 split_result["routing_rules"].append(routing_rule)
 
             # Store traffic policy
@@ -375,7 +380,10 @@ class DeploymentOrchestrator:
         logger.info(f"Starting deployment: {deployment_id}")
 
         deployment_result = DeploymentResult(
-            success=False, deployment_id=deployment_id, status=DeploymentStatus.PENDING, start_time=start_time
+            success=False,
+            deployment_id=deployment_id,
+            status=DeploymentStatus.PENDING,
+            start_time=start_time,
         )
 
         self.active_deployments[deployment_id] = deployment_result
@@ -454,9 +462,22 @@ class DeploymentOrchestrator:
         """Prepare infrastructure for deployment."""
         infrastructure_requirements = {
             "resources": {
-                "compute": {"instances": config.replicas, "cpu": "2", "memory": "4Gi", "region": "us-east-1"},
-                "load_balancer": {"type": "application", "scheme": "internet-facing", "region": "us-east-1"},
-                "database": {"tier": "standard", "backup_enabled": True, "multi_az": True},
+                "compute": {
+                    "instances": config.replicas,
+                    "cpu": "2",
+                    "memory": "4Gi",
+                    "region": "us-east-1",
+                },
+                "load_balancer": {
+                    "type": "application",
+                    "scheme": "internet-facing",
+                    "region": "us-east-1",
+                },
+                "database": {
+                    "tier": "standard",
+                    "backup_enabled": True,
+                    "multi_az": True,
+                },
             }
         }
 
@@ -485,8 +506,15 @@ class DeploymentOrchestrator:
                 {
                     "name": f"{config.service_name}-dr",
                     "load_balancer": "ROUND_ROBIN",
-                    "connection_pool": {"tcp": {"max_connections": 100}, "http": {"http1_max_pending_requests": 64}},
-                    "outlier_detection": {"consecutive_errors": 5, "interval": "30s", "base_ejection_time": "30s"},
+                    "connection_pool": {
+                        "tcp": {"max_connections": 100},
+                        "http": {"http1_max_pending_requests": 64},
+                    },
+                    "outlier_detection": {
+                        "consecutive_errors": 5,
+                        "interval": "30s",
+                        "base_ejection_time": "30s",
+                    },
                 }
             ],
         }
@@ -515,9 +543,21 @@ class DeploymentOrchestrator:
         deployment_result = {
             "strategy": "blue_green",
             "phases": [
-                {"name": "deploy_green", "status": "completed", "duration_seconds": 120},
-                {"name": "validate_green", "status": "completed", "duration_seconds": 60},
-                {"name": "switch_traffic", "status": "completed", "duration_seconds": 10},
+                {
+                    "name": "deploy_green",
+                    "status": "completed",
+                    "duration_seconds": 120,
+                },
+                {
+                    "name": "validate_green",
+                    "status": "completed",
+                    "duration_seconds": 60,
+                },
+                {
+                    "name": "switch_traffic",
+                    "status": "completed",
+                    "duration_seconds": 10,
+                },
                 {"name": "cleanup_blue", "status": "completed", "duration_seconds": 30},
             ],
             "total_duration_seconds": 220,
@@ -543,7 +583,11 @@ class DeploymentOrchestrator:
         # Rolling update phases
         for i in range(config.replicas):
             phase_duration = 45
-            phase = {"name": f"update_replica_{i + 1}", "status": "completed", "duration_seconds": phase_duration}
+            phase = {
+                "name": f"update_replica_{i + 1}",
+                "status": "completed",
+                "duration_seconds": phase_duration,
+            }
             deployment_result["phases"].append(phase)
             deployment_result["total_duration_seconds"] += phase_duration
 
@@ -557,11 +601,31 @@ class DeploymentOrchestrator:
         deployment_result = {
             "strategy": "canary",
             "phases": [
-                {"name": "deploy_canary_10%", "status": "completed", "duration_seconds": 60},
-                {"name": "validate_canary", "status": "completed", "duration_seconds": 120},
-                {"name": "scale_canary_50%", "status": "completed", "duration_seconds": 90},
-                {"name": "final_validation", "status": "completed", "duration_seconds": 120},
-                {"name": "complete_rollout", "status": "completed", "duration_seconds": 150},
+                {
+                    "name": "deploy_canary_10%",
+                    "status": "completed",
+                    "duration_seconds": 60,
+                },
+                {
+                    "name": "validate_canary",
+                    "status": "completed",
+                    "duration_seconds": 120,
+                },
+                {
+                    "name": "scale_canary_50%",
+                    "status": "completed",
+                    "duration_seconds": 90,
+                },
+                {
+                    "name": "final_validation",
+                    "status": "completed",
+                    "duration_seconds": 120,
+                },
+                {
+                    "name": "complete_rollout",
+                    "status": "completed",
+                    "duration_seconds": 150,
+                },
             ],
             "total_duration_seconds": 540,
             "status": "completed",
@@ -578,9 +642,21 @@ class DeploymentOrchestrator:
         deployment_result = {
             "strategy": "recreate",
             "phases": [
-                {"name": "stop_old_version", "status": "completed", "duration_seconds": 30},
-                {"name": "deploy_new_version", "status": "completed", "duration_seconds": 180},
-                {"name": "start_new_version", "status": "completed", "duration_seconds": 45},
+                {
+                    "name": "stop_old_version",
+                    "status": "completed",
+                    "duration_seconds": 30,
+                },
+                {
+                    "name": "deploy_new_version",
+                    "status": "completed",
+                    "duration_seconds": 180,
+                },
+                {
+                    "name": "start_new_version",
+                    "status": "completed",
+                    "duration_seconds": 45,
+                },
             ],
             "total_duration_seconds": 255,
             "status": "completed",
@@ -627,10 +703,26 @@ class DeploymentOrchestrator:
             "deployment_id": deployment_id,
             "rollback_strategy": config.strategy.value,
             "phases": [
-                {"name": "identify_previous_version", "status": "completed", "duration_seconds": 10},
-                {"name": "restore_traffic_routing", "status": "completed", "duration_seconds": 30},
-                {"name": "scale_down_failed_version", "status": "completed", "duration_seconds": 60},
-                {"name": "cleanup_resources", "status": "completed", "duration_seconds": 45},
+                {
+                    "name": "identify_previous_version",
+                    "status": "completed",
+                    "duration_seconds": 10,
+                },
+                {
+                    "name": "restore_traffic_routing",
+                    "status": "completed",
+                    "duration_seconds": 30,
+                },
+                {
+                    "name": "scale_down_failed_version",
+                    "status": "completed",
+                    "duration_seconds": 60,
+                },
+                {
+                    "name": "cleanup_resources",
+                    "status": "completed",
+                    "duration_seconds": 45,
+                },
             ],
             "total_duration_seconds": 145,
             "status": "completed",
@@ -708,7 +800,11 @@ async def run_deployment_automation_demo() -> dict[str, Any]:
 
         for strategy, version in strategies_to_test:
             deployment_result = await deploy_service(
-                service_name="demo-service", version=version, environment="staging", strategy=strategy, replicas=3
+                service_name="demo-service",
+                version=version,
+                environment="staging",
+                strategy=strategy,
+                replicas=3,
             )
 
             demo_results["deployments"].append(

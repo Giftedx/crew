@@ -24,6 +24,7 @@ from typing import Any, Literal
 
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
+
 logger = logging.getLogger(__name__)
 
 # Try to import transformers (optional dependency)
@@ -139,9 +140,7 @@ class SentimentStanceAnalysisService:
 
             # Validate input
             if not text or not text.strip():
-                return StepResult.fail(
-                    "Input text cannot be empty", status="bad_request"
-                )
+                return StepResult.fail("Input text cannot be empty", status="bad_request")
 
             # Check cache first
             if use_cache:
@@ -193,7 +192,7 @@ class SentimentStanceAnalysisService:
 
         except Exception as e:
             logger.error(f"Sentiment analysis failed: {e}")
-            return StepResult.fail(f"Analysis failed: {str(e)}", status="retryable")
+            return StepResult.fail(f"Analysis failed: {e!s}", status="retryable")
 
     def analyze_segments(
         self,
@@ -259,7 +258,7 @@ class SentimentStanceAnalysisService:
 
         except Exception as e:
             logger.error(f"Segment analysis failed: {e}")
-            return StepResult.fail(f"Segment analysis failed: {str(e)}")
+            return StepResult.fail(f"Segment analysis failed: {e!s}")
 
     def _select_model(self, model_alias: str) -> str:
         """Select actual model configuration from alias.
@@ -295,9 +294,7 @@ class SentimentStanceAnalysisService:
         try:
             # Try advanced transformer-based analysis
             if TRANSFORMERS_AVAILABLE:
-                return self._analyze_with_transformers(
-                    text, speaker, timestamp, model_name
-                )
+                return self._analyze_with_transformers(text, speaker, timestamp, model_name)
 
             # Fallback to rule-based analysis
             logger.warning("Transformers not available, using rule-based analysis")
@@ -407,11 +404,7 @@ class SentimentStanceAnalysisService:
 
                     # Calculate intensity (difference from neutral)
                     neutral_score = next(
-                        (
-                            item["score"]
-                            for item in scores
-                            if item["label"].lower() == "neutral"
-                        ),
+                        (item["score"] for item in scores if item["label"].lower() == "neutral"),
                         0,
                     )
                     intensity = abs(dominant["score"] - neutral_score)
@@ -449,9 +442,7 @@ class SentimentStanceAnalysisService:
                     primary_emotion = primary["label"].lower()
 
                     # Create emotion score mapping
-                    emotion_scores = {
-                        item["label"].lower(): item["score"] for item in scores
-                    }
+                    emotion_scores = {item["label"].lower(): item["score"] for item in scores}
 
                     return EmotionAnalysis(
                         primary_emotion=primary_emotion,
@@ -512,11 +503,7 @@ class SentimentStanceAnalysisService:
             )
 
         # Questioning indicators
-        if (
-            text.endswith("?")
-            or "what about" in text_lower
-            or "how about" in text_lower
-        ):
+        if text.endswith("?") or "what about" in text_lower or "how about" in text_lower:
             return StanceAnalysis(
                 stance="questioning",
                 confidence=0.8,
@@ -551,9 +538,7 @@ class SentimentStanceAnalysisService:
 
         # Find rhetorical questions
         rhetorical_questions = []
-        if has_question and not text.lower().startswith(
-            ("what", "who", "when", "where", "why", "how")
-        ):
+        if has_question and not text.lower().startswith(("what", "who", "when", "where", "why", "how")):
             rhetorical_questions.append(text)
 
         return RhetoricalAnalysis(
@@ -670,9 +655,7 @@ class SentimentStanceAnalysisService:
 
         # Find primary emotion
         if emotion_scores:
-            primary_emotion = max(
-                emotion_scores.keys(), key=lambda k: emotion_scores[k]
-            )
+            primary_emotion = max(emotion_scores.keys(), key=lambda k: emotion_scores[k])
             primary_confidence = emotion_scores[primary_emotion]
         else:
             primary_emotion = "neutral"
@@ -684,9 +667,7 @@ class SentimentStanceAnalysisService:
             emotion_scores=emotion_scores,
         )
 
-    def _check_cache(
-        self, text: str, speaker: str | None, model: str
-    ) -> SentimentStanceAnalysisResult | None:
+    def _check_cache(self, text: str, speaker: str | None, model: str) -> SentimentStanceAnalysisResult | None:
         """Check if analysis exists in cache.
 
         Args:
@@ -766,9 +747,7 @@ class SentimentStanceAnalysisService:
             stats = {
                 "total_cached": len(self._analysis_cache),
                 "cache_size_limit": self.cache_size,
-                "utilization": len(self._analysis_cache) / self.cache_size
-                if self.cache_size > 0
-                else 0.0,
+                "utilization": len(self._analysis_cache) / self.cache_size if self.cache_size > 0 else 0.0,
                 "models_cached": {},
             }
 
@@ -782,7 +761,7 @@ class SentimentStanceAnalysisService:
 
         except Exception as e:
             logger.error(f"Failed to get cache stats: {e}")
-            return StepResult.fail(f"Failed to get cache stats: {str(e)}")
+            return StepResult.fail(f"Failed to get cache stats: {e!s}")
 
 
 # Singleton instance

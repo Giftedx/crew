@@ -4,6 +4,7 @@
 import sys
 from pathlib import Path
 
+
 # Ensure src is on path before importing project modules.
 repo_root = Path(__file__).parent.parent
 src_path = repo_root / "src"

@@ -35,7 +35,13 @@ class TestDiarizationMinimal:
 
         # Mock the DiarizationSegment class
         class MockDiarizationSegment:
-            def __init__(self, start_time: float, end_time: float, speaker: str, confidence: float = None):
+            def __init__(
+                self,
+                start_time: float,
+                end_time: float,
+                speaker: str,
+                confidence: float | None = None,
+            ):
                 self.start_time = start_time
                 self.end_time = end_time
                 self.speaker = speaker
@@ -53,7 +59,15 @@ class TestDiarizationMinimal:
         # Mock the DiarizationResult class
         class MockDiarizationResult:
             def __init__(
-                self, segments, speakers, speaker_count, duration, model_name, processing_time, device, created_at
+                self,
+                segments,
+                speakers,
+                speaker_count,
+                duration,
+                model_name,
+                processing_time,
+                device,
+                created_at,
             ):
                 self.segments = segments
                 self.speakers = speakers
@@ -91,7 +105,7 @@ class TestDiarizationMinimal:
         def detect_overlaps(segments, threshold=0.1):
             overlaps = []
             for i, seg1 in enumerate(segments):
-                for j, seg2 in enumerate(segments[i + 1 :], i + 1):
+                for _j, seg2 in enumerate(segments[i + 1 :], i + 1):
                     overlap_start = max(seg1["start_time"], seg2["start_time"])
                     overlap_end = min(seg1["end_time"], seg2["end_time"])
 
@@ -138,7 +152,7 @@ class TestDiarizationMinimal:
             speakers = set()
             for segment in segments:
                 speakers.add(segment["speaker"])
-            return len(speakers), sorted(list(speakers))
+            return len(speakers), sorted(speakers)
 
         segments = [
             {"speaker": "SPEAKER_00"},
@@ -183,7 +197,11 @@ class TestDiarizationMinimal:
 
         predicted = [
             {"start_time": 0.0, "end_time": 2.0, "speaker": "SPEAKER_00"},  # Correct
-            {"start_time": 2.0, "end_time": 4.0, "speaker": "SPEAKER_00"},  # Wrong speaker
+            {
+                "start_time": 2.0,
+                "end_time": 4.0,
+                "speaker": "SPEAKER_00",
+            },  # Wrong speaker
         ]
 
         der = calculate_der(reference, predicted)
@@ -219,7 +237,7 @@ class TestDiarizationMinimal:
 
                 return StepResult.ok(data={"processed": True})
             except Exception as e:
-                return StepResult.fail(f"Processing failed: {str(e)}")
+                return StepResult.fail(f"Processing failed: {e!s}")
 
         # Test empty path
         result = process_audio_with_error_handling("")

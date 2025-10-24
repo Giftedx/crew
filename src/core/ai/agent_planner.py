@@ -13,6 +13,7 @@ from typing import Any
 
 import numpy as np
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -186,10 +187,7 @@ class ExecutionPlan:
 
         # Check if execution order is valid
         task_ids = {task.task_id for task in self.tasks}
-        if not set(self.execution_order).issubset(task_ids):
-            return False
-
-        return True
+        return set(self.execution_order).issubset(task_ids)
 
     @property
     def total_complexity(self) -> float:
@@ -535,7 +533,10 @@ class AgentPlanner:
             # Merge plans
             if critical_plan and other_plan:
                 merged_tasks = critical_plan.tasks + other_plan.tasks
-                merged_assignments = {**critical_plan.task_assignments, **other_plan.task_assignments}
+                merged_assignments = {
+                    **critical_plan.task_assignments,
+                    **other_plan.task_assignments,
+                }
                 merged_order = critical_plan.execution_order + other_plan.execution_order
                 merged_time = critical_plan.estimated_completion_time + other_plan.estimated_completion_time
 
@@ -644,7 +645,10 @@ class AgentPlanner:
                 return None
 
             # Return agent with highest capability match
-            return max(capable_agents, key=lambda a: a.capability_match_score(task.required_capabilities))
+            return max(
+                capable_agents,
+                key=lambda a: a.capability_match_score(task.required_capabilities),
+            )
 
         except Exception as e:
             logger.error(f"Capable agent finding failed: {e}")

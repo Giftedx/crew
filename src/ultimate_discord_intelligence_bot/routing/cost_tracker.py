@@ -11,9 +11,11 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any
 
+from core.cache.unified_config import get_unified_cache_config
 from ultimate_discord_intelligence_bot.step_result import StepResult
+
 
 logger = logging.getLogger(__name__)
 
@@ -42,10 +44,10 @@ class CostRecord:
     model: str
     provider: str
     cost: Decimal
-    tokens_used: Optional[int] = None
+    tokens_used: int | None = None
     request_type: str = "routing"
     timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -69,11 +71,11 @@ class UnifiedCostTracker:
     """Unified cost tracking and budget management service"""
 
     def __init__(self):
-        self._budgets: Dict[str, BudgetConfig] = {}
-        self._cost_records: List[CostRecord] = []
-        self._budget_cache: Dict[str, BudgetStatus] = {}
-        self._cache_ttl = 300  # 5 minutes
-        self._last_cache_update: Dict[str, datetime] = {}
+        self._budgets: dict[str, BudgetConfig] = {}
+        self._cost_records: list[CostRecord] = []
+        self._budget_cache: dict[str, BudgetStatus] = {}
+        self._cache_ttl = get_unified_cache_config().get_ttl_for_domain("routing")
+        self._last_cache_update: dict[str, datetime] = {}
 
     def set_budget(
         self,
@@ -107,14 +109,12 @@ class UnifiedCostTracker:
             if key in self._last_cache_update:
                 del self._last_cache_update[key]
 
-            logger.info(
-                f"Budget set for {key}: daily=${daily_limit}, monthly=${monthly_limit}"
-            )
+            logger.info(f"Budget set for {key}: daily=${daily_limit}, monthly=${monthly_limit}")
             return StepResult.ok(data={"budget_set": True, "key": key})
 
         except Exception as e:
             logger.error(f"Failed to set budget: {e}")
-            return StepResult.fail(f"Budget configuration failed: {str(e)}")
+            return StepResult.fail(f"Budget configuration failed: {e!s}")
 
     def get_budget_status(self, tenant_id: str, workspace_id: str) -> StepResult:
         """Get current budget status for tenant/workspace"""
@@ -131,9 +131,7 @@ class UnifiedCostTracker:
                 return StepResult.fail(f"No budget configured for {key}")
 
             # Get spending for current period
-            daily_spent, monthly_spent = self._calculate_spending(
-                tenant_id, workspace_id
-            )
+            daily_spent, monthly_spent = self._calculate_spending(tenant_id, workspace_id)
 
             # Calculate remaining budget
             daily_remaining = budget_config.daily_limit - daily_spent
@@ -159,9 +157,7 @@ class UnifiedCostTracker:
                 last_reset = now.replace(hour=0, minute=0, second=0, microsecond=0)
                 next_reset = last_reset + timedelta(days=1)
             else:  # monthly
-                last_reset = now.replace(
-                    day=1, hour=0, minute=0, second=0, microsecond=0
-                )
+                last_reset = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
                 if now.month == 12:
                     next_reset = now.replace(
                         year=now.year + 1,
@@ -204,7 +200,7 @@ class UnifiedCostTracker:
 
         except Exception as e:
             logger.error(f"Failed to get budget status: {e}")
-            return StepResult.fail(f"Budget status retrieval failed: {str(e)}")
+            return StepResult.fail(f"Budget status retrieval failed: {e!s}")
 
     def record_cost(
         self,
@@ -213,9 +209,9 @@ class UnifiedCostTracker:
         model: str,
         provider: str,
         cost: float,
-        tokens_used: Optional[int] = None,
+        tokens_used: int | None = None,
         request_type: str = "routing",
-        metadata: Optional[Dict[str, Any]] = None,
+        metadata: dict[str, Any] | None = None,
     ) -> StepResult:
         """Record a cost transaction"""
         try:
@@ -230,9 +226,7 @@ class UnifiedCostTracker:
                 return budget_check
 
             # Generate transaction ID
-            transaction_id = (
-                f"{tenant_id}:{workspace_id}:{int(datetime.now().timestamp() * 1000)}"
-            )
+            transaction_id = f"{tenant_id}:{workspace_id}:{int(datetime.now().timestamp() * 1000)}"
 
             # Create cost record
             cost_record = CostRecord(
@@ -258,17 +252,13 @@ class UnifiedCostTracker:
                 del self._last_cache_update[key]
 
             logger.debug(f"Recorded cost: {cost_record}")
-            return StepResult.ok(
-                data={"transaction_id": transaction_id, "cost_recorded": True}
-            )
+            return StepResult.ok(data={"transaction_id": transaction_id, "cost_recorded": True})
 
         except Exception as e:
             logger.error(f"Failed to record cost: {e}")
-            return StepResult.fail(f"Cost recording failed: {str(e)}")
+            return StepResult.fail(f"Cost recording failed: {e!s}")
 
-    def check_budget_compliance(
-        self, tenant_id: str, workspace_id: str, requested_cost: float
-    ) -> StepResult:
+    def check_budget_compliance(self, tenant_id: str, workspace_id: str, requested_cost: float) -> StepResult:
         """Check if a cost request complies with budget limits"""
         try:
             key = f"{tenant_id}:{workspace_id}"
@@ -276,9 +266,7 @@ class UnifiedCostTracker:
 
             if not budget_config:
                 # No budget set, allow request
-                return StepResult.ok(
-                    data={"compliant": True, "reason": "no_budget_set"}
-                )
+                return StepResult.ok(data={"compliant": True, "reason": "no_budget_set"})
 
             # Check per-request limit
             if Decimal(str(requested_cost)) > budget_config.per_request_limit:
@@ -287,9 +275,7 @@ class UnifiedCostTracker:
                 )
 
             # Get current spending
-            daily_spent, monthly_spent = self._calculate_spending(
-                tenant_id, workspace_id
-            )
+            daily_spent, monthly_spent = self._calculate_spending(tenant_id, workspace_id)
 
             # Check daily limit
             if daily_spent + Decimal(str(requested_cost)) > budget_config.daily_limit:
@@ -300,10 +286,7 @@ class UnifiedCostTracker:
                 )
 
             # Check monthly limit
-            if (
-                monthly_spent + Decimal(str(requested_cost))
-                > budget_config.monthly_limit
-            ):
+            if monthly_spent + Decimal(str(requested_cost)) > budget_config.monthly_limit:
                 return StepResult.fail(
                     f"Request would exceed monthly budget limit. "
                     f"Current: ${monthly_spent:.4f}, Request: ${requested_cost:.4f}, "
@@ -315,20 +298,18 @@ class UnifiedCostTracker:
                     "compliant": True,
                     "reason": "within_budget",
                     "daily_remaining": float(budget_config.daily_limit - daily_spent),
-                    "monthly_remaining": float(
-                        budget_config.monthly_limit - monthly_spent
-                    ),
+                    "monthly_remaining": float(budget_config.monthly_limit - monthly_spent),
                 }
             )
 
         except Exception as e:
             logger.error(f"Failed to check budget compliance: {e}")
-            return StepResult.fail(f"Budget compliance check failed: {str(e)}")
+            return StepResult.fail(f"Budget compliance check failed: {e!s}")
 
     def get_cost_analytics(
         self,
-        tenant_id: Optional[str] = None,
-        workspace_id: Optional[str] = None,
+        tenant_id: str | None = None,
+        workspace_id: str | None = None,
         days: int = 30,
     ) -> StepResult:
         """Get cost analytics and spending patterns"""
@@ -350,9 +331,7 @@ class UnifiedCostTracker:
                 filtered_records.append(record)
 
             if not filtered_records:
-                return StepResult.ok(
-                    data={"total_cost": 0.0, "total_requests": 0, "analytics": {}}
-                )
+                return StepResult.ok(data={"total_cost": 0.0, "total_requests": 0, "analytics": {}})
 
             # Calculate analytics
             total_cost = sum(record.cost for record in filtered_records)
@@ -388,16 +367,12 @@ class UnifiedCostTracker:
             analytics = {
                 "total_cost": float(total_cost),
                 "total_requests": total_requests,
-                "avg_cost_per_request": float(total_cost / total_requests)
-                if total_requests > 0
-                else 0.0,
+                "avg_cost_per_request": float(total_cost / total_requests) if total_requests > 0 else 0.0,
                 "provider_breakdown": {
                     provider: {
                         "cost": float(data["cost"]),
                         "requests": data["requests"],
-                        "percentage": float(data["cost"] / total_cost * 100)
-                        if total_cost > 0
-                        else 0.0,
+                        "percentage": float(data["cost"] / total_cost * 100) if total_cost > 0 else 0.0,
                     }
                     for provider, data in provider_costs.items()
                 },
@@ -405,15 +380,11 @@ class UnifiedCostTracker:
                     model: {
                         "cost": float(data["cost"]),
                         "requests": data["requests"],
-                        "percentage": float(data["cost"] / total_cost * 100)
-                        if total_cost > 0
-                        else 0.0,
+                        "percentage": float(data["cost"] / total_cost * 100) if total_cost > 0 else 0.0,
                     }
                     for model, data in model_costs.items()
                 },
-                "daily_spending": {
-                    str(day): float(cost) for day, cost in daily_spending.items()
-                },
+                "daily_spending": {str(day): float(cost) for day, cost in daily_spending.items()},
                 "period_days": days,
                 "records_analyzed": len(filtered_records),
             }
@@ -422,11 +393,9 @@ class UnifiedCostTracker:
 
         except Exception as e:
             logger.error(f"Failed to get cost analytics: {e}")
-            return StepResult.fail(f"Cost analytics retrieval failed: {str(e)}")
+            return StepResult.fail(f"Cost analytics retrieval failed: {e!s}")
 
-    def _calculate_spending(
-        self, tenant_id: str, workspace_id: str
-    ) -> tuple[Decimal, Decimal]:
+    def _calculate_spending(self, tenant_id: str, workspace_id: str) -> tuple[Decimal, Decimal]:
         """Calculate daily and monthly spending for tenant/workspace"""
         try:
             now = datetime.now(timezone.utc)
@@ -435,18 +404,13 @@ class UnifiedCostTracker:
             daily_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
 
             # Monthly period
-            monthly_start = now.replace(
-                day=1, hour=0, minute=0, second=0, microsecond=0
-            )
+            monthly_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
             daily_spent = Decimal("0")
             monthly_spent = Decimal("0")
 
             for record in self._cost_records:
-                if (
-                    record.tenant_id == tenant_id
-                    and record.workspace_id == workspace_id
-                ):
+                if record.tenant_id == tenant_id and record.workspace_id == workspace_id:
                     if record.timestamp >= daily_start:
                         daily_spent += record.cost
 
@@ -467,13 +431,11 @@ class UnifiedCostTracker:
         cache_age = datetime.now(timezone.utc) - self._last_cache_update[key]
         return cache_age.total_seconds() < self._cache_ttl
 
-    def get_all_budgets(self) -> Dict[str, BudgetConfig]:
+    def get_all_budgets(self) -> dict[str, BudgetConfig]:
         """Get all configured budgets"""
         return self._budgets.copy()
 
-    def reset_budget(
-        self, tenant_id: str, workspace_id: str, reset_type: str = "daily"
-    ) -> StepResult:
+    def reset_budget(self, tenant_id: str, workspace_id: str, reset_type: str = "daily") -> StepResult:
         """Reset budget counters (for testing or manual reset)"""
         try:
             key = f"{tenant_id}:{workspace_id}"
@@ -492,4 +454,4 @@ class UnifiedCostTracker:
 
         except Exception as e:
             logger.error(f"Failed to reset budget: {e}")
-            return StepResult.fail(f"Budget reset failed: {str(e)}")
+            return StepResult.fail(f"Budget reset failed: {e!s}")

@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
-"""Configuration factory for creating and managing configuration instances."""
-
-from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from .config_manager import ConfigManager
 from .config_schema import GlobalConfig, TenantConfig
+
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 class ConfigFactory:
@@ -47,7 +48,10 @@ class ConfigFactory:
     def create_minimal_config(cls) -> GlobalConfig:
         """Create minimal valid configuration for testing."""
         return GlobalConfig(
-            service_name="test-service", environment="test", discord_bot_token="test-token", openai_api_key="test-key"
+            service_name="test-service",
+            environment="test",
+            discord_bot_token="test-token",
+            openai_api_key="test-key",
         )
 
     @classmethod

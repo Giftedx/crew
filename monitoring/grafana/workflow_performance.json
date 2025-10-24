@@ -1,0 +1,189 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "Ultimate Discord Intelligence Bot - Workflow Performance",
+    "description": "Workflow-specific performance monitoring dashboard",
+    "tags": [
+      "discord-bot",
+      "workflows",
+      "performance"
+    ],
+    "timezone": "browser",
+    "refresh": "30s",
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "panels": [
+      {
+        "id": 11,
+        "title": "Content Ingestion",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "rate(discord_bot_content_ingestion_duration_seconds[5m])",
+            "legendFormat": "{{platform}}",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 0
+        },
+        "options": {
+          "legend": {
+            "displayMode": "table",
+            "placement": "bottom"
+          },
+          "tooltip": {
+            "mode": "single"
+          },
+          "unit": "s"
+        },
+        "fieldConfig": {
+          "defaults": {},
+          "overrides": []
+        }
+      },
+      {
+        "id": 12,
+        "title": "Content Analysis",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "rate(discord_bot_content_analysis_duration_seconds[5m])",
+            "legendFormat": "{{analysis_type}}",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 0
+        },
+        "options": {
+          "legend": {
+            "displayMode": "table",
+            "placement": "bottom"
+          },
+          "tooltip": {
+            "mode": "single"
+          },
+          "unit": "s"
+        },
+        "fieldConfig": {
+          "defaults": {},
+          "overrides": []
+        }
+      },
+      {
+        "id": 13,
+        "title": "Memory Operations",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "rate(discord_bot_memory_operations_total[5m])",
+            "legendFormat": "{{operation}}",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 8,
+          "x": 0,
+          "y": 8
+        },
+        "options": {
+          "legend": {
+            "displayMode": "table",
+            "placement": "bottom"
+          },
+          "tooltip": {
+            "mode": "single"
+          },
+          "unit": "ops"
+        },
+        "fieldConfig": {
+          "defaults": {},
+          "overrides": []
+        }
+      },
+      {
+        "id": 14,
+        "title": "Discord Integration",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "rate(discord_bot_discord_messages_total[5m])",
+            "legendFormat": "{{message_type}}",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 8,
+          "x": 8,
+          "y": 8
+        },
+        "options": {
+          "legend": {
+            "displayMode": "table",
+            "placement": "bottom"
+          },
+          "tooltip": {
+            "mode": "single"
+          },
+          "unit": "msgps"
+        },
+        "fieldConfig": {
+          "defaults": {},
+          "overrides": []
+        }
+      },
+      {
+        "id": 15,
+        "title": "CrewAI Execution",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "rate(discord_bot_crew_execution_duration_seconds[5m])",
+            "legendFormat": "{{agent}}",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 8,
+          "x": 16,
+          "y": 8
+        },
+        "options": {
+          "legend": {
+            "displayMode": "table",
+            "placement": "bottom"
+          },
+          "tooltip": {
+            "mode": "single"
+          },
+          "unit": "s"
+        },
+        "fieldConfig": {
+          "defaults": {},
+          "overrides": []
+        }
+      }
+    ],
+    "templating": {
+      "list": []
+    },
+    "annotations": {
+      "list": []
+    },
+    "schemaVersion": 30,
+    "version": 1,
+    "links": []
+  }
+}

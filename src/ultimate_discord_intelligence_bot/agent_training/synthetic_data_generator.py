@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from core.time import default_utc_now
+from core.time import default_utc_now  # type: ignore[import-not-found]
 
 
 @dataclass
@@ -49,7 +49,12 @@ class SyntheticDataGenerator:
                     "News article requires cross-platform sentiment analysis",
                 ],
                 "complexity_levels": ["basic", "intermediate", "advanced", "expert"],
-                "required_tools": ["pipeline_tool", "fact_check_tool", "fallacy_tool", "vector_tool"],
+                "required_tools": [
+                    "pipeline_tool",
+                    "fact_check_tool",
+                    "fallacy_tool",
+                    "vector_tool",
+                ],
             },
             "fact_checking": {
                 "scenarios": [
@@ -59,7 +64,12 @@ class SyntheticDataGenerator:
                     "Statistical claim needs data source verification",
                     "Quote attribution requires original source finding",
                 ],
-                "complexity_levels": ["straightforward", "nuanced", "contested", "deeply_complex"],
+                "complexity_levels": [
+                    "straightforward",
+                    "nuanced",
+                    "contested",
+                    "deeply_complex",
+                ],
                 "required_tools": [
                     "fact_check_tool",
                     "context_verification_tool",
@@ -75,7 +85,12 @@ class SyntheticDataGenerator:
                     "Track influencer narrative consistency",
                     "Monitor breaking news spread patterns",
                 ],
-                "complexity_levels": ["single_platform", "multi_platform", "cross_network", "ecosystem_wide"],
+                "complexity_levels": [
+                    "single_platform",
+                    "multi_platform",
+                    "cross_network",
+                    "ecosystem_wide",
+                ],
                 "required_tools": [
                     "multi_platform_monitor_tool",
                     "social_media_monitor_tool",
@@ -91,8 +106,18 @@ class SyntheticDataGenerator:
                     "Analyze rhetoric consistency across platforms",
                     "Evaluate credibility based on fact-check history",
                 ],
-                "complexity_levels": ["surface_level", "psychological", "longitudinal", "comprehensive"],
-                "required_tools": ["character_profile_tool", "truth_scoring_tool", "timeline_tool", "sentiment_tool"],
+                "complexity_levels": [
+                    "surface_level",
+                    "psychological",
+                    "longitudinal",
+                    "comprehensive",
+                ],
+                "required_tools": [
+                    "character_profile_tool",
+                    "truth_scoring_tool",
+                    "timeline_tool",
+                    "sentiment_tool",
+                ],
             },
         }
 
@@ -138,11 +163,19 @@ class SyntheticDataGenerator:
         }
 
     def generate_training_batch(
-        self, agent_role: str, batch_size: int = 50, complexity_distribution: dict[str, float] | None = None
+        self,
+        agent_role: str,
+        batch_size: int = 50,
+        complexity_distribution: dict[str, float] | None = None,
     ) -> list[ToolUsageExample]:
         """Generate a batch of synthetic training examples for an agent."""
         if complexity_distribution is None:
-            complexity_distribution = {"basic": 0.3, "intermediate": 0.4, "advanced": 0.2, "expert": 0.1}
+            complexity_distribution = {
+                "basic": 0.3,
+                "intermediate": 0.4,
+                "advanced": 0.2,
+                "expert": 0.1,
+            }
 
         examples = []
         scenario_config = self.scenario_templates.get(agent_role, self.scenario_templates["content_analysis"])
@@ -282,7 +315,7 @@ class SyntheticDataGenerator:
             optimal_tools.extend(["memory_storage_tool", "trustworthiness_tracker_tool"])
 
         # Remove duplicates and filter available tools
-        optimal_tools = list(set([tool for tool in optimal_tools if tool in self.tools_available]))
+        optimal_tools = list({tool for tool in optimal_tools if tool in self.tools_available})
 
         return optimal_tools
 
@@ -366,7 +399,10 @@ class SyntheticDataGenerator:
                     {
                         "tool": "steelman_argument_tool",
                         "action": "build_strongest_case",
-                        "parameters": {"claim": "{{primary_claim}}", "evidence": "{{fact_check_results}}"},
+                        "parameters": {
+                            "claim": "{{primary_claim}}",
+                            "evidence": "{{fact_check_results}}",
+                        },
                         "reasoning": "Present the strongest possible version of the argument",
                     }
                 )
@@ -377,7 +413,10 @@ class SyntheticDataGenerator:
                 {
                     "tool": "memory_storage_tool",
                     "action": "store_analysis",
-                    "parameters": {"data": "{{analysis_results}}", "tags": ["{{content_type}}", "{{platform}}"]},
+                    "parameters": {
+                        "data": "{{analysis_results}}",
+                        "tags": ["{{content_type}}", "{{platform}}"],
+                    },
                     "reasoning": "Preserve findings for future reference and learning",
                 }
             )
@@ -514,7 +553,12 @@ class SyntheticDataGenerator:
             base_score += 0.1
 
         # Complexity bonus
-        complexity_bonuses = {"basic": 0.0, "intermediate": 0.05, "advanced": 0.1, "expert": 0.15}
+        complexity_bonuses = {
+            "basic": 0.0,
+            "intermediate": 0.05,
+            "advanced": 0.1,
+            "expert": 0.15,
+        }
         base_score += complexity_bonuses.get(complexity, 0.0)
 
         return min(base_score, 1.0)
@@ -551,11 +595,18 @@ class SyntheticDataGenerator:
         print(f"✅ Saved {len(examples)} training examples to {output_path}")
 
 
-def generate_training_data_for_all_agents(tools_available: list[str]) -> dict[str, list[ToolUsageExample]]:
+def generate_training_data_for_all_agents(
+    tools_available: list[str],
+) -> dict[str, list[ToolUsageExample]]:
     """Generate comprehensive training data for all agent roles."""
     generator = SyntheticDataGenerator(tools_available)
 
-    agent_roles = ["content_analysis", "fact_checking", "cross_platform_monitoring", "character_profiling"]
+    agent_roles = [
+        "content_analysis",
+        "fact_checking",
+        "cross_platform_monitoring",
+        "character_profiling",
+    ]
 
     all_training_data = {}
 

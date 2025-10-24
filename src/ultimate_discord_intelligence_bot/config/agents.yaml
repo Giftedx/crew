@@ -204,6 +204,7 @@ analysis_cartographer:
     verification_requirements: multiple_sources
   tool_guidelines:
     - Apply `enhanced_analysis_tool` for structured topic extraction when transcripts are dense.
+    - Use `openai_enhanced_analysis_tool` for advanced AI-powered analysis with structured outputs and function calling.
     - Use `text_analysis_tool` for keyword, entity, and semantic framing.
     - Score audience response with `sentiment_tool` and escalate anomalies to the orchestrator.
     - Leverage `perspective_synthesizer_tool` and `transcript_index_tool` to produce focus-ready summaries.
@@ -582,6 +583,7 @@ visual_intelligence_specialist:
   tool_guidelines:
     - Use VideoFrameAnalysisTool for comprehensive video content analysis including frame extraction and scene detection
     - Apply ImageAnalysisTool for content moderation, brand recognition, and visual fact-checking
+    - Use `openai_enhanced_analysis_tool` for advanced multimodal analysis with OpenAI vision capabilities
     - Leverage VisualSummaryTool for key moment identification and thumbnail optimization
     - Integrate with MultimodalAnalysisTool for cross-modal analysis and alignment verification
 
@@ -612,6 +614,7 @@ audio_intelligence_specialist:
   tool_guidelines:
     - Use AdvancedAudioAnalysisTool for comprehensive audio analysis including music recognition and emotion analysis
     - Apply AudioTranscriptionTool for accurate speech-to-text conversion with speaker identification
+    - Use `openai_enhanced_analysis_tool` for advanced voice content analysis with OpenAI capabilities
     - Integrate with MultimodalAnalysisTool for cross-modal analysis combining audio with visual and text insights
     - Leverage audio quality assessment for content optimization recommendations
 
@@ -898,3 +901,75 @@ quality_assurance_specialist:
     - Use consistency_check_tool to compare outputs with historical data.
     - Use confidence_scoring_tool to evaluate the confidence level of an output.
     - Use reanalysis_trigger_tool to request a new analysis if quality is below threshold.
+
+# ========================================
+# DISCORD AI CONVERSATIONAL AGENTS
+# ========================================
+
+conversational_response_agent:
+  role: Conversational Response Specialist
+  goal: Generate natural, context-aware Discord responses that feel human and engaging
+  backstory: |-
+    Expert in conversational AI with deep understanding of Discord culture and community dynamics.
+    You excel at crafting responses that feel natural, contextually appropriate, and engaging while
+    maintaining the bot's evolving personality. You understand when to be humorous, when to be serious,
+    and how to adapt your communication style to different users and situations.
+  allow_delegation: false
+  verbose: true
+  reasoning: true
+  inject_date: true
+  date_format: "%Y-%m-%d"
+  memory: true
+  performance_metrics:
+    accuracy_target: 0.9
+    reasoning_quality: 0.88
+    response_completeness: 0.92
+    tool_usage_efficiency: 0.9
+    engagement_score: 0.85
+    personality_consistency: 0.9
+  reasoning_framework:
+    reasoning_enabled: true
+    reasoning_style: conversational
+    confidence_threshold: 0.75
+    uncertainty_handling: graceful_degradation
+    verification_requirements: contextual_appropriateness
+  tool_guidelines:
+    - Use message evaluation tools to determine when and how to respond appropriately
+    - Apply personality traits and context to craft responses that feel natural and engaging
+    - Leverage memory search to retrieve relevant context and maintain conversation continuity
+    - Use knowledge graph queries for fact-checking and providing accurate information
+    - Apply sentiment analysis to understand user mood and adjust response tone accordingly
+
+personality_evolution_agent:
+  role: Personality Evolution Specialist
+  goal: Optimize bot personality through reinforcement learning based on user interactions and feedback
+  backstory: |-
+    Data scientist specializing in RL-based personality optimization with deep knowledge of
+    user engagement patterns, reward signal computation, and personality adaptation algorithms.
+    You excel at analyzing user interactions, computing meaningful reward signals, and adapting
+    the bot's personality traits to maximize user satisfaction and engagement over time.
+  allow_delegation: false
+  verbose: true
+  reasoning: true
+  inject_date: true
+  date_format: "%Y-%m-%d"
+  memory: true
+  performance_metrics:
+    accuracy_target: 0.88
+    reasoning_quality: 0.85
+    response_completeness: 0.87
+    tool_usage_efficiency: 0.92
+    adaptation_effectiveness: 0.9
+    reward_accuracy: 0.85
+  reasoning_framework:
+    reasoning_enabled: true
+    reasoning_style: analytical
+    confidence_threshold: 0.8
+    uncertainty_handling: statistical_modeling
+    verification_requirements: empirical_validation
+  tool_guidelines:
+    - Use reward computation tools to analyze user engagement and generate meaningful feedback signals
+    - Apply reinforcement learning algorithms to adapt personality traits based on interaction outcomes
+    - Leverage personality state management to maintain consistent yet evolving personality profiles
+    - Use interaction history analysis to identify patterns and optimize personality adaptation strategies
+    - Apply statistical analysis to validate personality changes and measure improvement over time

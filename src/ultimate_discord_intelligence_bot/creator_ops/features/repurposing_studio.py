@@ -23,9 +23,13 @@ from ultimate_discord_intelligence_bot.creator_ops.features.repurposing_models i
     VideoClip,
 )
 from ultimate_discord_intelligence_bot.creator_ops.knowledge.api import KnowledgeAPI
-from ultimate_discord_intelligence_bot.creator_ops.media.alignment import AlignedTranscript, TranscriptAlignment
+from ultimate_discord_intelligence_bot.creator_ops.media.alignment import (
+    AlignedTranscript,
+    TranscriptAlignment,
+)
 from ultimate_discord_intelligence_bot.creator_ops.media.nlp import NLPPipeline
 from ultimate_discord_intelligence_bot.step_result import StepResult
+
 
 logger = logging.getLogger(__name__)
 
@@ -130,8 +134,8 @@ class RepurposingStudio:
             return StepResult.ok(data={"job": job, "result": result})
 
         except Exception as e:
-            logger.error(f"Repurposing job failed: {str(e)}")
-            return StepResult.fail(f"Repurposing job failed: {str(e)}")
+            logger.error(f"Repurposing job failed: {e!s}")
+            return StepResult.fail(f"Repurposing job failed: {e!s}")
 
     async def _identify_clip_candidates(self, transcript: AlignedTranscript, config: RepurposingConfig) -> StepResult:
         """Identify candidate segments for clip creation."""
@@ -173,8 +177,8 @@ class RepurposingStudio:
             return StepResult.ok(data={"candidates": candidates})
 
         except Exception as e:
-            logger.error(f"Failed to identify clip candidates: {str(e)}")
-            return StepResult.fail(f"Failed to identify clip candidates: {str(e)}")
+            logger.error(f"Failed to identify clip candidates: {e!s}")
+            return StepResult.fail(f"Failed to identify clip candidates: {e!s}")
 
     def _is_valid_clip_segment(self, segment, config: RepurposingConfig) -> bool:
         """Check if a segment is valid for clip creation."""
@@ -193,7 +197,14 @@ class RepurposingStudio:
             return True
 
         # Check for engaging content indicators
-        engaging_words = ["amazing", "incredible", "unbelievable", "shocking", "controversial", "breaking"]
+        engaging_words = [
+            "amazing",
+            "incredible",
+            "unbelievable",
+            "shocking",
+            "controversial",
+            "breaking",
+        ]
         if any(word in segment.text.lower() for word in engaging_words):
             return True
 
@@ -234,7 +245,13 @@ class RepurposingStudio:
         score = 0.0
 
         # Check for controversial topics
-        controversial_topics = ["politics", "religion", "controversy", "scandal", "breaking news"]
+        controversial_topics = [
+            "politics",
+            "religion",
+            "controversy",
+            "scandal",
+            "breaking news",
+        ]
         if segment.topics:
             for topic in segment.topics:
                 if any(controversial in topic.lower() for controversial in controversial_topics):
@@ -283,7 +300,11 @@ class RepurposingStudio:
         return f"Selected because: {', '.join(reasons)}"
 
     async def _generate_clip(
-        self, job: RepurposingJob, candidate: ClipCandidate, video_file_path: str, config: RepurposingConfig
+        self,
+        job: RepurposingJob,
+        candidate: ClipCandidate,
+        video_file_path: str,
+        config: RepurposingConfig,
     ) -> StepResult:
         """Generate a video clip from a candidate segment."""
         try:
@@ -359,8 +380,8 @@ class RepurposingStudio:
             return StepResult.ok(data={"clips": clips})
 
         except Exception as e:
-            logger.error(f"Failed to generate clip: {str(e)}")
-            return StepResult.fail(f"Failed to generate clip: {str(e)}")
+            logger.error(f"Failed to generate clip: {e!s}")
+            return StepResult.fail(f"Failed to generate clip: {e!s}")
 
     async def _process_video_with_ffmpeg(self, ffmpeg_config: FFmpegConfig, config: RepurposingConfig) -> StepResult:
         """Process video using FFmpeg."""
@@ -399,7 +420,7 @@ class RepurposingStudio:
                 *cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
             )
 
-            stdout, stderr = await process.communicate()
+            _stdout, stderr = await process.communicate()
 
             if process.returncode != 0:
                 error_msg = stderr.decode() if stderr else "Unknown FFmpeg error"
@@ -419,7 +440,9 @@ class RepurposingStudio:
             ]
 
             thumbnail_process = await asyncio.create_subprocess_exec(
-                *thumbnail_cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+                *thumbnail_cmd,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
             )
 
             await thumbnail_process.communicate()
@@ -427,11 +450,15 @@ class RepurposingStudio:
             return StepResult.ok(data={"output_file": ffmpeg_config.output_file})
 
         except Exception as e:
-            logger.error(f"FFmpeg processing failed: {str(e)}")
-            return StepResult.fail(f"FFmpeg processing failed: {str(e)}")
+            logger.error(f"FFmpeg processing failed: {e!s}")
+            return StepResult.fail(f"FFmpeg processing failed: {e!s}")
 
     async def _generate_captions(
-        self, candidate: ClipCandidate, clip_dir: Path, clip_id: str, caption_style: CaptionStyle
+        self,
+        candidate: ClipCandidate,
+        clip_dir: Path,
+        clip_id: str,
+        caption_style: CaptionStyle,
     ) -> StepResult:
         """Generate captions for a clip."""
         try:
@@ -456,8 +483,8 @@ class RepurposingStudio:
             return StepResult.ok(data={"captions_path": str(srt_path)})
 
         except Exception as e:
-            logger.error(f"Failed to generate captions: {str(e)}")
-            return StepResult.fail(f"Failed to generate captions: {str(e)}")
+            logger.error(f"Failed to generate captions: {e!s}")
+            return StepResult.fail(f"Failed to generate captions: {e!s}")
 
     async def _generate_platform_hooks(self, job: RepurposingJob, transcript: AlignedTranscript) -> StepResult:
         """Generate platform-specific hooks for clips."""
@@ -485,8 +512,8 @@ class RepurposingStudio:
             return StepResult.ok(data={"hooks": hooks})
 
         except Exception as e:
-            logger.error(f"Failed to generate platform hooks: {str(e)}")
-            return StepResult.fail(f"Failed to generate platform hooks: {str(e)}")
+            logger.error(f"Failed to generate platform hooks: {e!s}")
+            return StepResult.fail(f"Failed to generate platform hooks: {e!s}")
 
     def _generate_hook_text(self, platform: PlatformType, transcript: AlignedTranscript) -> str:
         """Generate hook text for a specific platform."""
@@ -569,7 +596,11 @@ class RepurposingStudio:
                 "Add images/videos for engagement",
             ]
         else:
-            return ["Post during peak hours", "Use trending content", "Engage with comments"]
+            return [
+                "Post during peak hours",
+                "Use trending content",
+                "Engage with comments",
+            ]
 
     async def cleanup(self):
         """Clean up temporary files and resources."""
@@ -580,4 +611,4 @@ class RepurposingStudio:
                 shutil.rmtree(self.temp_dir)
             logger.info("Repurposing Studio cleanup completed")
         except Exception as e:
-            logger.error(f"Failed to cleanup Repurposing Studio: {str(e)}")
+            logger.error(f"Failed to cleanup Repurposing Studio: {e!s}")

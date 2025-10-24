@@ -21,10 +21,15 @@ import datetime as dt
 import json as _json
 import logging
 import sys
-from collections.abc import Iterable
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import yaml
+
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
 
 ROOT = Path(__file__).resolve().parent.parent
 DEP_FILE = ROOT / "config" / "deprecations.yaml"
@@ -115,9 +120,9 @@ def _render_table(results: list[dict]) -> None:
         "past_deadline",
         "violation",
     ]
-    widths = {k: 0 for k in columns}
+    widths = dict.fromkeys(columns, 0)
     for row in results:
-        for k, w in widths.items():  # noqa: B007 (intentional read of w for clarity)
+        for k, w in widths.items():
             widths[k] = max(w, len(str(row[k])))
     header = " | ".join(k.ljust(widths[k]) for k in columns)
     print(header)
@@ -126,7 +131,7 @@ def _render_table(results: list[dict]) -> None:
         print(" | ".join(str(row[k]).ljust(widths[k]) for k in columns))
 
 
-def scan(upcoming_days: int = 120, *, print_table: bool = True):  # noqa: D401 - simple facade
+def scan(upcoming_days: int = 120, *, print_table: bool = True):
     """Run scan and return (exit_code, results, upcoming).
 
     Parameters

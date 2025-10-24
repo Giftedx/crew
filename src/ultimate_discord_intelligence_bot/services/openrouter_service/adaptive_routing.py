@@ -4,7 +4,8 @@ import logging
 import os
 import threading
 from collections import defaultdict
-from typing import Any, Optional
+from typing import Any
+
 
 try:  # pragma: no cover - optional dependency
     from ax.service.ax_client import AxClient
@@ -36,9 +37,7 @@ class AdaptiveRoutingManager:
     2. Bandit plugins (EnhancedLinUCB, DoublyRobust) via ROUTING_PLUGIN env var
     """
 
-    def __init__(
-        self, enabled: bool = False, experiment_prefix: str = "openrouter"
-    ) -> None:
+    def __init__(self, enabled: bool = False, experiment_prefix: str = "openrouter") -> None:
         self._enabled = bool(enabled) and _AX_AVAILABLE
         self._experiment_prefix = experiment_prefix
         self._clients: dict[str, AxClient] = {}
@@ -48,7 +47,7 @@ class AdaptiveRoutingManager:
         self._lock = threading.Lock()
 
         # Bandit plugin support (ADR-0003 enhanced routing)
-        self._plugin: Optional[BanditPlugin] = None
+        self._plugin: BanditPlugin | None = None
         self._plugin_trial_counter = 0
 
         # Initialize plugin if requested and available
@@ -117,9 +116,7 @@ class AdaptiveRoutingManager:
                     client = AxClient(enforce_sequential_optimization=False)
                     client.create_experiment(
                         name=f"{self._experiment_prefix}-{task_type}",
-                        parameters=[
-                            {"name": "model", "type": "choice", "values": normalized}
-                        ],
+                        parameters=[{"name": "model", "type": "choice", "values": normalized}],
                         objective_name="reward",
                         minimize=False,
                     )
@@ -129,13 +126,8 @@ class AdaptiveRoutingManager:
                     self._enabled = False
                     return None
             elif recorded_candidates:
-                intersection = [
-                    cand for cand in normalized if cand in recorded_candidates
-                ]
-                if not intersection:
-                    normalized = recorded_candidates
-                else:
-                    normalized = intersection
+                intersection = [cand for cand in normalized if cand in recorded_candidates]
+                normalized = intersection if intersection else recorded_candidates
             try:
                 trial_index, params = client.get_next_trial()
                 model = params.get("model") if isinstance(params, dict) else None
@@ -190,9 +182,7 @@ class AdaptiveRoutingManager:
                 if client is None:
                     return
                 try:
-                    client.complete_trial(
-                        trial_index, raw_data={"reward": (float(reward), 0.0)}
-                    )
+                    client.complete_trial(trial_index, raw_data={"reward": (float(reward), 0.0)})
                 except Exception:
                     try:
                         client.log_trial_data(trial_index, {"reward": float(reward)})

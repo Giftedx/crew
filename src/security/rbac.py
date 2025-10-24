@@ -11,6 +11,7 @@ import yaml
 
 from .events import log_security_event
 
+
 # Risk tier ordering for comparison; lower index = lower risk level privilege.
 _RISK_ORDER = ["low", "medium", "high"]
 
@@ -116,14 +117,20 @@ class RBAC:
                 roles_obj = kwargs.get("roles", [])
                 roles: Iterable[str] = roles_obj if isinstance(roles_obj, Iterable) else []
                 actor = str(kwargs.get("actor", "unknown"))
-                tenant = cast(str | None, kwargs.get("tenant") if isinstance(kwargs.get("tenant"), str) else None)
+                tenant = cast(
+                    "str | None",
+                    kwargs.get("tenant") if isinstance(kwargs.get("tenant"), str) else None,
+                )
                 workspace = cast(
-                    str | None,
+                    "str | None",
                     kwargs.get("workspace") if isinstance(kwargs.get("workspace"), str) else None,
                 )
-                channel = cast(str | None, kwargs.get("channel") if isinstance(kwargs.get("channel"), str) else None)
+                channel = cast(
+                    "str | None",
+                    kwargs.get("channel") if isinstance(kwargs.get("channel"), str) else None,
+                )
                 risk_tier = cast(
-                    str | None,
+                    "str | None",
                     kwargs.get("risk_tier") if isinstance(kwargs.get("risk_tier"), str) else None,
                 )
 
@@ -154,7 +161,14 @@ class RBAC:
                     )
                     raise PermissionError(f"ABAC denial for '{perm}'")
                 # drop security metadata before invoking the wrapped function
-                for key in ("roles", "actor", "tenant", "workspace", "channel", "risk_tier"):
+                for key in (
+                    "roles",
+                    "actor",
+                    "tenant",
+                    "workspace",
+                    "channel",
+                    "risk_tier",
+                ):
                     kwargs.pop(key, None)
                 return func(*args, **kwargs)
 

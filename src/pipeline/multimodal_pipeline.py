@@ -15,6 +15,7 @@ from typing import Any
 from kg.creator_kg_store import CreatorKGStore
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -76,7 +77,11 @@ class PipelineResult:
 class MultimodalContentPipeline:
     """Orchestrates multimodal content processing pipeline."""
 
-    def __init__(self, config: PipelineConfig | None = None, kg_store: CreatorKGStore | None = None):
+    def __init__(
+        self,
+        config: PipelineConfig | None = None,
+        kg_store: CreatorKGStore | None = None,
+    ):
         """Initialize pipeline with configuration and KG store."""
         self.config = config or PipelineConfig()
         self.kg_store = kg_store or CreatorKGStore(":memory:")
@@ -135,7 +140,12 @@ class MultimodalContentPipeline:
         ]
 
     async def process_content(
-        self, url: str, tenant: str, workspace: str, creator_name: str | None = None, episode_title: str | None = None
+        self,
+        url: str,
+        tenant: str,
+        workspace: str,
+        creator_name: str | None = None,
+        episode_title: str | None = None,
     ) -> StepResult:
         """Process content through the complete pipeline."""
         start_time = time.time()
@@ -182,7 +192,7 @@ class MultimodalContentPipeline:
 
         except Exception as e:
             result.total_duration = time.time() - start_time
-            result.errors.append(f"Pipeline exception: {str(e)}")
+            result.errors.append(f"Pipeline exception: {e!s}")
             logger.exception("Pipeline processing failed")
             return StepResult.fail(f"Pipeline failed: {', '.join(result.errors)}")
 
@@ -208,7 +218,7 @@ class MultimodalContentPipeline:
             return StepResult.ok(data={"validated": True})
 
         except Exception as e:
-            return StepResult.fail(f"Validation failed: {str(e)}")
+            return StepResult.fail(f"Validation failed: {e!s}")
 
     async def _execute_stages(
         self,
@@ -240,7 +250,13 @@ class MultimodalContentPipeline:
                 stage_start = time.time()
 
                 stage_result = await self._execute_stage(
-                    stage, url, tenant, workspace, creator_name, episode_title, stage_results
+                    stage,
+                    url,
+                    tenant,
+                    workspace,
+                    creator_name,
+                    episode_title,
+                    stage_results,
                 )
 
                 stage_duration = time.time() - stage_start
@@ -266,7 +282,7 @@ class MultimodalContentPipeline:
 
             except Exception as e:
                 result.stages_failed.append(stage.name)
-                result.errors.append(f"Stage {stage.name} exception: {str(e)}")
+                result.errors.append(f"Stage {stage.name} exception: {e!s}")
                 logger.exception(f"Stage {stage.name} failed with exception")
 
                 # If required stage failed, stop pipeline
@@ -309,7 +325,10 @@ class MultimodalContentPipeline:
 
         elif stage.name == "content_analysis":
             return await self._stage_content_analysis(
-                stage_results["transcription"], stage_results.get("visual_analysis"), tenant, workspace
+                stage_results["transcription"],
+                stage_results.get("visual_analysis"),
+                tenant,
+                workspace,
             )
 
         elif stage.name == "claim_extraction":
@@ -349,7 +368,7 @@ class MultimodalContentPipeline:
             return StepResult.ok(data=download_result)
 
         except Exception as e:
-            return StepResult.fail(f"Download failed: {str(e)}")
+            return StepResult.fail(f"Download failed: {e!s}")
 
     async def _stage_diarization(self, download_result: dict[str, Any], tenant: str, workspace: str) -> StepResult:
         """Perform speaker diarization."""
@@ -367,8 +386,18 @@ class MultimodalContentPipeline:
                 ],
                 "segments": [
                     {"start": 0, "end": 300, "speaker": "speaker_1", "confidence": 0.9},
-                    {"start": 300, "end": 600, "speaker": "speaker_2", "confidence": 0.8},
-                    {"start": 600, "end": 900, "speaker": "speaker_1", "confidence": 0.9},
+                    {
+                        "start": 300,
+                        "end": 600,
+                        "speaker": "speaker_2",
+                        "confidence": 0.8,
+                    },
+                    {
+                        "start": 600,
+                        "end": 900,
+                        "speaker": "speaker_1",
+                        "confidence": 0.9,
+                    },
                 ],
                 "total_speakers": 2,
                 "average_confidence": 0.85,
@@ -377,7 +406,7 @@ class MultimodalContentPipeline:
             return StepResult.ok(data=diarization_result)
 
         except Exception as e:
-            return StepResult.fail(f"Diarization failed: {str(e)}")
+            return StepResult.fail(f"Diarization failed: {e!s}")
 
     async def _stage_transcription(self, diarization_result: dict[str, Any], tenant: str, workspace: str) -> StepResult:
         """Perform audio transcription."""
@@ -421,7 +450,7 @@ class MultimodalContentPipeline:
             return StepResult.ok(data=transcription_result)
 
         except Exception as e:
-            return StepResult.fail(f"Transcription failed: {str(e)}")
+            return StepResult.fail(f"Transcription failed: {e!s}")
 
     async def _stage_visual_analysis(self, download_result: dict[str, Any], tenant: str, workspace: str) -> StepResult:
         """Perform visual content analysis."""
@@ -441,7 +470,12 @@ class MultimodalContentPipeline:
                 ],
                 "scenes": [
                     {"start": 0, "end": 1800, "type": "interview", "confidence": 0.9},
-                    {"start": 1800, "end": 3600, "type": "discussion", "confidence": 0.8},
+                    {
+                        "start": 1800,
+                        "end": 3600,
+                        "type": "discussion",
+                        "confidence": 0.8,
+                    },
                 ],
                 "average_confidence": 0.8,
             }
@@ -449,10 +483,14 @@ class MultimodalContentPipeline:
             return StepResult.ok(data=visual_result)
 
         except Exception as e:
-            return StepResult.fail(f"Visual analysis failed: {str(e)}")
+            return StepResult.fail(f"Visual analysis failed: {e!s}")
 
     async def _stage_content_analysis(
-        self, transcription_result: dict[str, Any], visual_result: dict[str, Any] | None, tenant: str, workspace: str
+        self,
+        transcription_result: dict[str, Any],
+        visual_result: dict[str, Any] | None,
+        tenant: str,
+        workspace: str,
     ) -> StepResult:
         """Perform content analysis and topic extraction."""
         try:
@@ -472,19 +510,39 @@ class MultimodalContentPipeline:
                     "overall": "neutral",
                     "confidence": 0.8,
                     "by_segment": [
-                        {"start": 0, "end": 300, "sentiment": "positive", "confidence": 0.7},
-                        {"start": 300, "end": 600, "sentiment": "neutral", "confidence": 0.8},
-                        {"start": 600, "end": 900, "sentiment": "neutral", "confidence": 0.9},
+                        {
+                            "start": 0,
+                            "end": 300,
+                            "sentiment": "positive",
+                            "confidence": 0.7,
+                        },
+                        {
+                            "start": 300,
+                            "end": 600,
+                            "sentiment": "neutral",
+                            "confidence": 0.8,
+                        },
+                        {
+                            "start": 600,
+                            "end": 900,
+                            "sentiment": "neutral",
+                            "confidence": 0.9,
+                        },
                     ],
                 },
-                "key_phrases": ["politics", "current events", "election results", "political climate"],
+                "key_phrases": [
+                    "politics",
+                    "current events",
+                    "election results",
+                    "political climate",
+                ],
                 "summary": "Discussion about politics and current events, focusing on recent election results and the political climate.",
             }
 
             return StepResult.ok(data=content_result)
 
         except Exception as e:
-            return StepResult.fail(f"Content analysis failed: {str(e)}")
+            return StepResult.fail(f"Content analysis failed: {e!s}")
 
     async def _stage_claim_extraction(self, content_result: dict[str, Any], tenant: str, workspace: str) -> StepResult:
         """Extract and validate claims."""
@@ -537,7 +595,7 @@ class MultimodalContentPipeline:
             return StepResult.ok(data=claims_result)
 
         except Exception as e:
-            return StepResult.fail(f"Claim extraction failed: {str(e)}")
+            return StepResult.fail(f"Claim extraction failed: {e!s}")
 
     async def _stage_kg_ingestion(
         self,
@@ -580,7 +638,11 @@ class MultimodalContentPipeline:
                     tenant=tenant,
                     node_type="creator",
                     name=creator_name,
-                    attrs={"platform": download_result["platform"], "channel_id": "unknown", "subscriber_count": 0},
+                    attrs={
+                        "platform": download_result["platform"],
+                        "channel_id": "unknown",
+                        "subscriber_count": 0,
+                    },
                 )
 
                 # Create hosts edge
@@ -666,7 +728,7 @@ class MultimodalContentPipeline:
             return StepResult.ok(data=ingestion_result)
 
         except Exception as e:
-            return StepResult.fail(f"KG ingestion failed: {str(e)}")
+            return StepResult.fail(f"KG ingestion failed: {e!s}")
 
     def get_pipeline_status(self) -> dict[str, Any]:
         """Get current pipeline status and configuration."""

@@ -54,7 +54,13 @@ def move_result_files():
 
 def move_experimental_files():
     """Move experimental files to archive/experimental/."""
-    patterns = ["*_engine.py", "*_optimizer.py", "*_orchestrator.py", "*_benchmark*.py", "*_integration*.py"]
+    patterns = [
+        "*_engine.py",
+        "*_optimizer.py",
+        "*_orchestrator.py",
+        "*_benchmark*.py",
+        "*_integration*.py",
+    ]
     moved = []
     for pattern in patterns:
         for file_path in glob.glob(pattern):

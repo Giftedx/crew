@@ -16,14 +16,15 @@ from core.circuit_breaker_canonical import (
     CircuitBreakerManager as CircuitBreakerRegistry,
 )
 
+
 # Legacy compatibility
 circuit_manager = get_circuit_breaker_registry()
 
 __all__ = [
     "CircuitBreaker",
-    "CircuitState",
     "CircuitBreakerOpenError",
     "CircuitBreakerRegistry",
+    "CircuitState",
     "circuit_manager",
     "with_circuit_breaker",
 ]

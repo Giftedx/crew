@@ -9,7 +9,8 @@ model routing, and overall system performance improvements.
 import sys
 import time
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
+
 
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
@@ -31,9 +32,9 @@ class PerformanceOptimizationTester:
     def __init__(self):
         """Initialize the tester."""
         self.optimizer = PerformanceOptimizer()
-        self.results: Dict[str, Any] = {}
+        self.results: dict[str, Any] = {}
 
-    def test_cache_optimization(self) -> Dict[str, Any]:
+    def test_cache_optimization(self) -> dict[str, Any]:
         """Test cache optimization functionality."""
         print("\n💾 Testing Cache Optimization...")
 
@@ -58,14 +59,10 @@ class PerformanceOptimizationTester:
                 cache_results["test_details"]["cache_key_generation"] = "✅ Working"
             else:
                 cache_results["tests_failed"] += 1
-                cache_results["test_details"]["cache_key_generation"] = (
-                    "❌ Invalid key format"
-                )
+                cache_results["test_details"]["cache_key_generation"] = "❌ Invalid key format"
         except Exception as e:
             cache_results["tests_failed"] += 1
-            cache_results["test_details"]["cache_key_generation"] = (
-                f"❌ Exception: {str(e)}"
-            )
+            cache_results["test_details"]["cache_key_generation"] = f"❌ Exception: {e!s}"
 
         # Test 2: Cache strategy determination
         cache_results["tests_performed"] += 1
@@ -83,27 +80,21 @@ class PerformanceOptimizationTester:
                 cache_results["test_details"]["cache_strategy"] = "❌ Invalid strategy"
         except Exception as e:
             cache_results["tests_failed"] += 1
-            cache_results["test_details"]["cache_strategy"] = f"❌ Exception: {str(e)}"
+            cache_results["test_details"]["cache_strategy"] = f"❌ Exception: {e!s}"
 
         # Test 3: Cache optimization
         cache_results["tests_performed"] += 1
         try:
-            optimization_result = (
-                self.optimizer.cache_optimizer.optimize_cache_policies()
-            )
+            optimization_result = self.optimizer.cache_optimizer.optimize_cache_policies()
             if optimization_result.success:
                 cache_results["tests_passed"] += 1
                 cache_results["test_details"]["cache_optimization"] = "✅ Working"
             else:
                 cache_results["tests_failed"] += 1
-                cache_results["test_details"]["cache_optimization"] = (
-                    f"❌ Failed: {optimization_result.error}"
-                )
+                cache_results["test_details"]["cache_optimization"] = f"❌ Failed: {optimization_result.error}"
         except Exception as e:
             cache_results["tests_failed"] += 1
-            cache_results["test_details"]["cache_optimization"] = (
-                f"❌ Exception: {str(e)}"
-            )
+            cache_results["test_details"]["cache_optimization"] = f"❌ Exception: {e!s}"
 
         # Test 4: Cache analytics
         cache_results["tests_performed"] += 1
@@ -114,16 +105,14 @@ class PerformanceOptimizationTester:
                 cache_results["test_details"]["cache_analytics"] = "✅ Working"
             else:
                 cache_results["tests_failed"] += 1
-                cache_results["test_details"]["cache_analytics"] = (
-                    "❌ Invalid analytics"
-                )
+                cache_results["test_details"]["cache_analytics"] = "❌ Invalid analytics"
         except Exception as e:
             cache_results["tests_failed"] += 1
-            cache_results["test_details"]["cache_analytics"] = f"❌ Exception: {str(e)}"
+            cache_results["test_details"]["cache_analytics"] = f"❌ Exception: {e!s}"
 
         return cache_results
 
-    def test_model_routing(self) -> Dict[str, Any]:
+    def test_model_routing(self) -> dict[str, Any]:
         """Test model routing functionality."""
         print("\n🔄 Testing Model Routing...")
 
@@ -148,20 +137,14 @@ class PerformanceOptimizationTester:
 
             if routing_result.success and routing_result.data:
                 routing_results["tests_passed"] += 1
-                MODEL_ROUTING_COUNT.labels(
-                    model=routing_result.data.selected_model
-                ).inc()
+                MODEL_ROUTING_COUNT.labels(model=routing_result.data.selected_model).inc()
                 routing_results["test_details"]["simple_routing"] = "✅ Working"
             else:
                 routing_results["tests_failed"] += 1
-                routing_results["test_details"]["simple_routing"] = (
-                    f"❌ Failed: {routing_result.error}"
-                )
+                routing_results["test_details"]["simple_routing"] = f"❌ Failed: {routing_result.error}"
         except Exception as e:
             routing_results["tests_failed"] += 1
-            routing_results["test_details"]["simple_routing"] = (
-                f"❌ Exception: {str(e)}"
-            )
+            routing_results["test_details"]["simple_routing"] = f"❌ Exception: {e!s}"
 
         # Test 2: Complex task routing
         routing_results["tests_performed"] += 1
@@ -180,14 +163,10 @@ class PerformanceOptimizationTester:
                 routing_results["test_details"]["complex_routing"] = "✅ Working"
             else:
                 routing_results["tests_failed"] += 1
-                routing_results["test_details"]["complex_routing"] = (
-                    f"❌ Failed: {routing_result.error}"
-                )
+                routing_results["test_details"]["complex_routing"] = f"❌ Failed: {routing_result.error}"
         except Exception as e:
             routing_results["tests_failed"] += 1
-            routing_results["test_details"]["complex_routing"] = (
-                f"❌ Exception: {str(e)}"
-            )
+            routing_results["test_details"]["complex_routing"] = f"❌ Exception: {e!s}"
 
         # Test 3: Routing analytics
         routing_results["tests_performed"] += 1
@@ -198,38 +177,28 @@ class PerformanceOptimizationTester:
                 routing_results["test_details"]["routing_analytics"] = "✅ Working"
             else:
                 routing_results["tests_failed"] += 1
-                routing_results["test_details"]["routing_analytics"] = (
-                    "❌ Invalid analytics"
-                )
+                routing_results["test_details"]["routing_analytics"] = "❌ Invalid analytics"
         except Exception as e:
             routing_results["tests_failed"] += 1
-            routing_results["test_details"]["routing_analytics"] = (
-                f"❌ Exception: {str(e)}"
-            )
+            routing_results["test_details"]["routing_analytics"] = f"❌ Exception: {e!s}"
 
         # Test 4: Routing optimization
         routing_results["tests_performed"] += 1
         try:
-            optimization_result = (
-                self.optimizer.model_router.optimize_routing_policies()
-            )
+            optimization_result = self.optimizer.model_router.optimize_routing_policies()
             if optimization_result.success:
                 routing_results["tests_passed"] += 1
                 routing_results["test_details"]["routing_optimization"] = "✅ Working"
             else:
                 routing_results["tests_failed"] += 1
-                routing_results["test_details"]["routing_optimization"] = (
-                    f"❌ Failed: {optimization_result.error}"
-                )
+                routing_results["test_details"]["routing_optimization"] = f"❌ Failed: {optimization_result.error}"
         except Exception as e:
             routing_results["tests_failed"] += 1
-            routing_results["test_details"]["routing_optimization"] = (
-                f"❌ Exception: {str(e)}"
-            )
+            routing_results["test_details"]["routing_optimization"] = f"❌ Exception: {e!s}"
 
         return routing_results
 
-    def test_combined_optimization(self) -> Dict[str, Any]:
+    def test_combined_optimization(self) -> dict[str, Any]:
         """Test combined cache and routing optimization."""
         print("\n🚀 Testing Combined Optimization...")
 
@@ -254,9 +223,7 @@ class PerformanceOptimizationTester:
                 token_count=1000,
             )
             duration = time.time() - start_time
-            REQUEST_LATENCY.labels(method="POST", endpoint="/optimize").observe(
-                duration
-            )
+            REQUEST_LATENCY.labels(method="POST", endpoint="/optimize").observe(duration)
 
             if optimization_result.success:
                 combined_results["tests_passed"] += 1
@@ -264,14 +231,10 @@ class PerformanceOptimizationTester:
                 combined_results["test_details"]["simple_optimization"] = "✅ Working"
             else:
                 combined_results["tests_failed"] += 1
-                combined_results["test_details"]["simple_optimization"] = (
-                    f"❌ Failed: {optimization_result.error}"
-                )
+                combined_results["test_details"]["simple_optimization"] = f"❌ Failed: {optimization_result.error}"
         except Exception as e:
             combined_results["tests_failed"] += 1
-            combined_results["test_details"]["simple_optimization"] = (
-                f"❌ Exception: {str(e)}"
-            )
+            combined_results["test_details"]["simple_optimization"] = f"❌ Exception: {e!s}"
 
         # Test 2: Complex request optimization
         combined_results["tests_performed"] += 1
@@ -294,14 +257,10 @@ class PerformanceOptimizationTester:
                 combined_results["test_details"]["complex_optimization"] = "✅ Working"
             else:
                 combined_results["tests_failed"] += 1
-                combined_results["test_details"]["complex_optimization"] = (
-                    f"❌ Failed: {optimization_result.error}"
-                )
+                combined_results["test_details"]["complex_optimization"] = f"❌ Failed: {optimization_result.error}"
         except Exception as e:
             combined_results["tests_failed"] += 1
-            combined_results["test_details"]["complex_optimization"] = (
-                f"❌ Exception: {str(e)}"
-            )
+            combined_results["test_details"]["complex_optimization"] = f"❌ Exception: {e!s}"
 
         # Test 3: System optimization
         combined_results["tests_performed"] += 1
@@ -312,14 +271,10 @@ class PerformanceOptimizationTester:
                 combined_results["test_details"]["system_optimization"] = "✅ Working"
             else:
                 combined_results["tests_failed"] += 1
-                combined_results["test_details"]["system_optimization"] = (
-                    f"❌ Failed: {system_optimization.error}"
-                )
+                combined_results["test_details"]["system_optimization"] = f"❌ Failed: {system_optimization.error}"
         except Exception as e:
             combined_results["tests_failed"] += 1
-            combined_results["test_details"]["system_optimization"] = (
-                f"❌ Exception: {str(e)}"
-            )
+            combined_results["test_details"]["system_optimization"] = f"❌ Exception: {e!s}"
 
         # Test 4: Performance analytics
         combined_results["tests_performed"] += 1
@@ -330,18 +285,14 @@ class PerformanceOptimizationTester:
                 combined_results["test_details"]["performance_analytics"] = "✅ Working"
             else:
                 combined_results["tests_failed"] += 1
-                combined_results["test_details"]["performance_analytics"] = (
-                    "❌ Invalid analytics"
-                )
+                combined_results["test_details"]["performance_analytics"] = "❌ Invalid analytics"
         except Exception as e:
             combined_results["tests_failed"] += 1
-            combined_results["test_details"]["performance_analytics"] = (
-                f"❌ Exception: {str(e)}"
-            )
+            combined_results["test_details"]["performance_analytics"] = f"❌ Exception: {e!s}"
 
         return combined_results
 
-    def test_performance_benchmarks(self) -> Dict[str, Any]:
+    def test_performance_benchmarks(self) -> dict[str, Any]:
         """Test performance benchmarks."""
         print("\n📊 Testing Performance Benchmarks...")
 
@@ -372,14 +323,10 @@ class PerformanceOptimizationTester:
                 )
             else:
                 benchmark_results["benchmarks_failed"] += 1
-                benchmark_results["benchmark_details"]["cache_performance"] = (
-                    f"❌ Too slow: {cache_duration:.3f}s"
-                )
+                benchmark_results["benchmark_details"]["cache_performance"] = f"❌ Too slow: {cache_duration:.3f}s"
         except Exception as e:
             benchmark_results["benchmarks_failed"] += 1
-            benchmark_results["benchmark_details"]["cache_performance"] = (
-                f"❌ Exception: {str(e)}"
-            )
+            benchmark_results["benchmark_details"]["cache_performance"] = f"❌ Exception: {e!s}"
 
         # Benchmark 2: Routing performance
         benchmark_results["benchmarks_performed"] += 1
@@ -400,14 +347,10 @@ class PerformanceOptimizationTester:
                 )
             else:
                 benchmark_results["benchmarks_failed"] += 1
-                benchmark_results["benchmark_details"]["routing_performance"] = (
-                    f"❌ Too slow: {routing_duration:.3f}s"
-                )
+                benchmark_results["benchmark_details"]["routing_performance"] = f"❌ Too slow: {routing_duration:.3f}s"
         except Exception as e:
             benchmark_results["benchmarks_failed"] += 1
-            benchmark_results["benchmark_details"]["routing_performance"] = (
-                f"❌ Exception: {str(e)}"
-            )
+            benchmark_results["benchmark_details"]["routing_performance"] = f"❌ Exception: {e!s}"
 
         # Benchmark 3: Combined optimization performance
         benchmark_results["benchmarks_performed"] += 1
@@ -437,13 +380,11 @@ class PerformanceOptimizationTester:
                 )
         except Exception as e:
             benchmark_results["benchmarks_failed"] += 1
-            benchmark_results["benchmark_details"]["optimization_performance"] = (
-                f"❌ Exception: {str(e)}"
-            )
+            benchmark_results["benchmark_details"]["optimization_performance"] = f"❌ Exception: {e!s}"
 
         return benchmark_results
 
-    def run_all_tests(self) -> Dict[str, Any]:
+    def run_all_tests(self) -> dict[str, Any]:
         """Run all performance optimization tests."""
         print("🚀 Starting Performance Optimization Tests...")
 
@@ -457,18 +398,15 @@ class PerformanceOptimizationTester:
 
         # Calculate overall results
         total_tests = sum(
-            suite.get("tests_performed", 0) + suite.get("benchmarks_performed", 0)
-            for suite in self.results.values()
+            suite.get("tests_performed", 0) + suite.get("benchmarks_performed", 0) for suite in self.results.values()
         )
 
         total_passed = sum(
-            suite.get("tests_passed", 0) + suite.get("benchmarks_passed", 0)
-            for suite in self.results.values()
+            suite.get("tests_passed", 0) + suite.get("benchmarks_passed", 0) for suite in self.results.values()
         )
 
         total_failed = sum(
-            suite.get("tests_failed", 0) + suite.get("benchmarks_failed", 0)
-            for suite in self.results.values()
+            suite.get("tests_failed", 0) + suite.get("benchmarks_failed", 0) for suite in self.results.values()
         )
 
         self.results["summary"] = {
@@ -509,15 +447,9 @@ class PerformanceOptimizationTester:
             report.append("")
 
             # Suite summary
-            suite_tests = suite_results.get("tests_performed", 0) + suite_results.get(
-                "benchmarks_performed", 0
-            )
-            suite_passed = suite_results.get("tests_passed", 0) + suite_results.get(
-                "benchmarks_passed", 0
-            )
-            suite_failed = suite_results.get("tests_failed", 0) + suite_results.get(
-                "benchmarks_failed", 0
-            )
+            suite_tests = suite_results.get("tests_performed", 0) + suite_results.get("benchmarks_performed", 0)
+            suite_passed = suite_results.get("tests_passed", 0) + suite_results.get("benchmarks_passed", 0)
+            suite_failed = suite_results.get("tests_failed", 0) + suite_results.get("benchmarks_failed", 0)
 
             report.append(f"- **Tests:** {suite_tests}")
             report.append(f"- **Passed:** {suite_passed}")
@@ -525,9 +457,7 @@ class PerformanceOptimizationTester:
             report.append("")
 
             # Detailed results
-            details = suite_results.get("test_details", {}) or suite_results.get(
-                "benchmark_details", {}
-            )
+            details = suite_results.get("test_details", {}) or suite_results.get("benchmark_details", {})
             for item_name, status in details.items():
                 report.append(f"- **{item_name}:** {status}")
             report.append("")

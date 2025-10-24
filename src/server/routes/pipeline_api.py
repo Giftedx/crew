@@ -2,10 +2,16 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+from fastapi.responses import JSONResponse
 
 from fastapi import Body, FastAPI, HTTPException, status
-from fastapi.responses import JSONResponse
+
+
+if TYPE_CHECKING:
+    from ultimate_discord_intelligence_bot.step_result import StepResult
+
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +25,7 @@ def register_pipeline_routes(app: FastAPI, settings: Any) -> None:
     """
 
     try:
-        enabled = bool(getattr(settings, "enable_pipeline_run_api"))
+        enabled = bool(settings.enable_pipeline_run_api)
     except Exception as exc:  # pragma: no cover - defensive settings access
         logger.debug("pipeline API flag lookup failed: %s", exc)
         return
@@ -28,7 +34,6 @@ def register_pipeline_routes(app: FastAPI, settings: Any) -> None:
         return
 
     try:
-        from ultimate_discord_intelligence_bot.step_result import StepResult
         from ultimate_discord_intelligence_bot.tenancy import TenantContext, with_tenant
         from ultimate_discord_intelligence_bot.tools.pipeline_tool import PipelineTool
     except Exception as exc:  # pragma: no cover - optional dependency path
@@ -36,17 +41,25 @@ def register_pipeline_routes(app: FastAPI, settings: Any) -> None:
         return
 
     @app.post("/pipeline/run", summary="Run the content pipeline")
-    async def _pipeline_run(payload: dict[str, Any] = Body(..., embed=False)) -> JSONResponse:
+    async def _pipeline_run(
+        payload: dict[str, Any] = Body(..., embed=False),
+    ) -> JSONResponse:
         url = payload.get("url")
         quality = payload.get("quality")
         tenant_id = payload.get("tenant_id") or payload.get("tenant") or "default"
         workspace_id = payload.get("workspace_id") or payload.get("workspace") or "main"
 
         if not isinstance(url, str) or not url.strip():
-            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="`url` is required")
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="`url` is required",
+            )
 
         if quality is not None and not isinstance(quality, str):
-            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="`quality` must be a string")
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="`quality` must be a string",
+            )
 
         resolved_quality = quality.strip() if isinstance(quality, str) else None
 
@@ -54,14 +67,20 @@ def register_pipeline_routes(app: FastAPI, settings: Any) -> None:
         ctx = TenantContext(tenant_id=tenant_id, workspace_id=workspace_id)
 
         try:
-            logger.info("pipeline API request", extra={"tenant_id": tenant_id, "workspace_id": workspace_id})
+            logger.info(
+                "pipeline API request",
+                extra={"tenant_id": tenant_id, "workspace_id": workspace_id},
+            )
             with with_tenant(ctx):
                 result: StepResult = await tool._run_async(url.strip(), resolved_quality or "1080p")
         except HTTPException:
             raise
         except Exception as exc:  # pragma: no cover - pipeline error path
             logger.exception("pipeline run failed: %s", exc)
-            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Pipeline execution failed")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Pipeline execution failed",
+            )
 
         response_payload = result.to_dict()
         data = response_payload.setdefault("data", {})
@@ -74,7 +93,7 @@ def register_pipeline_routes(app: FastAPI, settings: Any) -> None:
 
     # Check if async job queue is enabled
     try:
-        job_queue_enabled = bool(getattr(settings, "enable_pipeline_job_queue"))
+        job_queue_enabled = bool(settings.enable_pipeline_job_queue)
     except Exception as exc:
         logger.debug("pipeline job queue flag lookup failed: %s", exc)
         job_queue_enabled = False
@@ -133,8 +152,14 @@ def register_pipeline_routes(app: FastAPI, settings: Any) -> None:
                 completed_at=datetime.utcnow(),
             )
 
-    @app.post("/pipeline/jobs", summary="Create async pipeline job", status_code=status.HTTP_201_CREATED)
-    async def _create_pipeline_job(payload: dict[str, Any] = Body(..., embed=False)) -> JSONResponse:
+    @app.post(
+        "/pipeline/jobs",
+        summary="Create async pipeline job",
+        status_code=status.HTTP_201_CREATED,
+    )
+    async def _create_pipeline_job(
+        payload: dict[str, Any] = Body(..., embed=False),
+    ) -> JSONResponse:
         """Create a new pipeline job for async execution."""
         url = payload.get("url")
         quality = payload.get("quality")
@@ -142,10 +167,16 @@ def register_pipeline_routes(app: FastAPI, settings: Any) -> None:
         workspace_id = payload.get("workspace_id") or payload.get("workspace") or "main"
 
         if not isinstance(url, str) or not url.strip():
-            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="`url` is required")
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="`url` is required",
+            )
 
         if quality is not None and not isinstance(quality, str):
-            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="`quality` must be a string")
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="`quality` must be a string",
+            )
 
         resolved_quality = quality.strip() if isinstance(quality, str) else "1080p"
 
@@ -163,7 +194,10 @@ def register_pipeline_routes(app: FastAPI, settings: Any) -> None:
         # Return job info
         job = await queue.get_job(job_id)
         if not job:
-            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to create job")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to create job",
+            )
 
         return JSONResponse(status_code=status.HTTP_201_CREATED, content=job.to_dict())
 
@@ -192,11 +226,17 @@ def register_pipeline_routes(app: FastAPI, settings: Any) -> None:
         # Delete job
         deleted = await queue.delete_job(job_id)
         if not deleted:
-            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to delete job")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to delete job",
+            )
 
         return JSONResponse(
             status_code=status.HTTP_200_OK,
-            content={"job_id": job_id, "status": "cancelled" if job.status == JobStatus.RUNNING else "deleted"},
+            content={
+                "job_id": job_id,
+                "status": "cancelled" if job.status == JobStatus.RUNNING else "deleted",
+            },
         )
 
     @app.get("/pipeline/jobs", summary="List pipeline jobs")
@@ -221,7 +261,8 @@ def register_pipeline_routes(app: FastAPI, settings: Any) -> None:
         jobs = await queue.list_jobs(tenant_id=tenant_id, workspace_id=workspace_id, status=status_filter)
 
         return JSONResponse(
-            status_code=status.HTTP_200_OK, content={"jobs": [job.to_dict() for job in jobs], "count": len(jobs)}
+            status_code=status.HTTP_200_OK,
+            content={"jobs": [job.to_dict() for job in jobs], "count": len(jobs)},
         )
 
     # Start cleanup task

@@ -3,12 +3,16 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from memory import api as memory_api
 from memory import vector_store
-from memory.store import MemoryStore
 
 from .schema import Evidence
+
+
+if TYPE_CHECKING:
+    from memory.store import MemoryStore
 
 
 @dataclass
@@ -16,7 +20,7 @@ class EvidencePack:
     snippets: list[Evidence]
 
 
-def gather(  # noqa: PLR0913 - explicit parameter list clearer than packing into config object
+def gather(
     mstore: MemoryStore,
     vstore: vector_store.VectorStore,
     *,
@@ -40,4 +44,4 @@ def gather(  # noqa: PLR0913 - explicit parameter list clearer than packing into
     return EvidencePack(snippets)
 
 
-__all__ = ["gather", "EvidencePack"]
+__all__ = ["EvidencePack", "gather"]

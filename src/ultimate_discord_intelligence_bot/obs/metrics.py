@@ -29,16 +29,16 @@ class _Metric(Protocol):  # pragma: no cover - structural typing helper
 
 
 class _NoOpMetric:  # pragma: no cover - trivial
-    def inc(self, *args: Any, **kwargs: Any) -> None:  # noqa: D401
+    def inc(self, *args: Any, **kwargs: Any) -> None:
         return None
 
-    def observe(self, *args: Any, **kwargs: Any) -> None:  # noqa: D401
+    def observe(self, *args: Any, **kwargs: Any) -> None:
         return None
 
-    def set(self, *args: Any, **kwargs: Any) -> None:  # noqa: D401
+    def set(self, *args: Any, **kwargs: Any) -> None:
         return None
 
-    def add(self, *args: Any, **kwargs: Any) -> None:  # noqa: D401
+    def add(self, *args: Any, **kwargs: Any) -> None:
         return None
 
 
@@ -65,7 +65,7 @@ class _MetricsFacade:
         labels = labels or {}
         try:
             if self._backend and hasattr(self._backend, "CounterFactory"):
-                factory = getattr(self._backend, "CounterFactory")
+                factory = self._backend.CounterFactory
                 ctr = factory(name, f"auto-generated counter: {name}", list(labels.keys()))
                 labeled = ctr.labels(*labels.values())
                 return self._wrap_counter(labeled)
@@ -77,7 +77,7 @@ class _MetricsFacade:
         labels = labels or {}
         try:
             if self._backend and hasattr(self._backend, "GaugeFactory"):
-                factory = getattr(self._backend, "GaugeFactory")
+                factory = self._backend.GaugeFactory
                 g = factory(name, f"auto-generated gauge: {name}", list(labels.keys()))
                 labeled = g.labels(*labels.values())
                 # Provide add alias (increment) though seldom used for gauges
@@ -94,7 +94,7 @@ class _MetricsFacade:
         labels = labels or {}
         try:
             if self._backend and hasattr(self._backend, "HistogramFactory"):
-                factory = getattr(self._backend, "HistogramFactory")
+                factory = self._backend.HistogramFactory
                 hist = factory(name, f"auto-generated histogram: {name}", list(labels.keys()))
                 hist = hist.labels(*labels.values())
                 hist.observe(value)
@@ -107,7 +107,7 @@ class _MetricsFacade:
 def get_metrics() -> _MetricsFacade:
     # Delayed import to avoid hard dependency at module import time.
     try:  # pragma: no cover - normal path
-        import obs.metrics as backend  # noqa: WPS433,E402,PLC0415 (intentional lazy import for optional dependency)
+        import obs.metrics as backend
 
         return _MetricsFacade(backend)
     except Exception as exc:  # pragma: no cover - fallback path

@@ -9,8 +9,12 @@ from unittest.mock import Mock, patch
 import pytest
 
 from ultimate_discord_intelligence_bot.creator_ops.config import CreatorOpsConfig
-from ultimate_discord_intelligence_bot.creator_ops.features.episode_intelligence import EpisodeIntelligencePack
-from ultimate_discord_intelligence_bot.creator_ops.features.intelligence_agent import EpisodeIntelligenceAgent
+from ultimate_discord_intelligence_bot.creator_ops.features.episode_intelligence import (
+    EpisodeIntelligencePack,
+)
+from ultimate_discord_intelligence_bot.creator_ops.features.intelligence_agent import (
+    EpisodeIntelligenceAgent,
+)
 from ultimate_discord_intelligence_bot.creator_ops.features.intelligence_models import (
     AgendaItem,
     BrandSafetyAnalysis,
@@ -23,7 +27,10 @@ from ultimate_discord_intelligence_bot.creator_ops.features.intelligence_models 
     OutboundLink,
     RiskLevel,
 )
-from ultimate_discord_intelligence_bot.creator_ops.media.alignment import AlignedSegment, AlignedTranscript
+from ultimate_discord_intelligence_bot.creator_ops.media.alignment import (
+    AlignedSegment,
+    AlignedTranscript,
+)
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
@@ -233,7 +240,11 @@ class TestEpisodeIntelligencePack:
         assert "defamation_risk" in result.data
         defamation_risk = result.data["defamation_risk"]
         assert isinstance(defamation_risk, DefamationRisk)
-        assert defamation_risk.risk_level in [RiskLevel.LOW, RiskLevel.MEDIUM, RiskLevel.HIGH]
+        assert defamation_risk.risk_level in [
+            RiskLevel.LOW,
+            RiskLevel.MEDIUM,
+            RiskLevel.HIGH,
+        ]
 
     @pytest.mark.asyncio
     async def test_generate_key_insights(self):
@@ -359,7 +370,13 @@ class TestEpisodeIntelligencePack:
         """Test helper methods."""
         # Test claim type determination
         claim_type = self.intelligence_pack._determine_claim_type("According to studies, this is true")
-        assert claim_type in ["statistical", "historical", "scientific", "personal", "general"]
+        assert claim_type in [
+            "statistical",
+            "historical",
+            "scientific",
+            "personal",
+            "general",
+        ]
 
         # Test claim confidence calculation
         confidence = self.intelligence_pack._calculate_claim_confidence("According to studies", "statistical")
@@ -414,7 +431,12 @@ class TestEpisodeIntelligenceAgent:
         """Test agent creation."""
         agents = self.agent._create_agents()
 
-        expected_roles = ["content_analyst", "risk_assessor", "monetization_expert", "audience_specialist"]
+        expected_roles = [
+            "content_analyst",
+            "risk_assessor",
+            "monetization_expert",
+            "audience_specialist",
+        ]
         for role in expected_roles:
             assert role in agents
             assert agents[role].role == role.replace("_", " ").title()
@@ -423,7 +445,12 @@ class TestEpisodeIntelligenceAgent:
         """Test task creation."""
         tasks = self.agent._create_tasks()
 
-        expected_tasks = ["content_analysis", "risk_assessment", "monetization_analysis", "audience_engagement"]
+        expected_tasks = [
+            "content_analysis",
+            "risk_assessment",
+            "monetization_analysis",
+            "audience_engagement",
+        ]
         for task in expected_tasks:
             assert task in tasks
             assert tasks[task].description is not None

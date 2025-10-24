@@ -201,11 +201,11 @@ async def http_delete(url: str, **kwargs: Any) -> aiohttp.ClientResponse:
 
 __all__ = [
     "ConnectionPoolManager",
+    "close_all_connections",
     "get_connection_pool_manager",
     "get_http_session",
-    "close_all_connections",
+    "http_delete",
     "http_get",
     "http_post",
     "http_put",
-    "http_delete",
 ]

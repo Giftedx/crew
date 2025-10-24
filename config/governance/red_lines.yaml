@@ -1,0 +1,133 @@
+# Red Line Principles Configuration
+# These are hard boundaries that must never be violated
+
+# Critical Safety Red Lines
+critical_red_lines:
+  - principle: "child_safety"
+    description: "Absolutely no content involving minors in harmful contexts"
+    severity: "critical"
+    keywords:
+      - "child abuse"
+      - "csam"
+      - "minor exploitation"
+      - "underage"
+    detection_patterns:
+      - "child.*sexual"
+      - "minor.*abuse"
+      - "underage.*content"
+      
+  - principle: "violence_prevention"
+    description: "No content promoting terrorism, genocide, or mass violence"
+    severity: "critical"
+    keywords:
+      - "terrorism"
+      - "genocide"
+      - "mass violence"
+      - "ethnic cleansing"
+    detection_patterns:
+      - "terrorist.*attack"
+      - "genocide.*plan"
+      - "mass.*killing"
+      
+  - principle: "weapons_development"
+    description: "No assistance with CBRN weapons or mass destruction"
+    severity: "critical"
+    keywords:
+      - "nuclear weapons"
+      - "biological weapons"
+      - "chemical weapons"
+      - "radiological weapons"
+    detection_patterns:
+      - "weapon.*development"
+      - "mass.*destruction"
+      - "cbrn.*weapon"
+
+# High Priority Red Lines
+high_priority_red_lines:
+  - principle: "privacy_protection"
+    description: "No unauthorized access to private information"
+    severity: "high"
+    keywords:
+      - "hack"
+      - "breach"
+      - "unauthorized access"
+      - "private data"
+    detection_patterns:
+      - "hack.*account"
+      - "breach.*security"
+      - "access.*private"
+      
+  - principle: "election_integrity"
+    description: "No interference with democratic processes"
+    severity: "high"
+    keywords:
+      - "election fraud"
+      - "voter suppression"
+      - "ballot manipulation"
+    detection_patterns:
+      - "rig.*election"
+      - "suppress.*vote"
+      - "manipulate.*ballot"
+      
+  - principle: "human_autonomy"
+    description: "No content that undermines human agency or consent"
+    severity: "high"
+    keywords:
+      - "forced compliance"
+      - "coercion"
+      - "manipulation"
+    detection_patterns:
+      - "force.*compliance"
+      - "coerce.*action"
+      - "manipulate.*decision"
+
+# Detection Configuration
+detection:
+  pre_execution_check: true
+  post_execution_check: true
+  confidence_threshold: 0.8
+  
+  # Escalation levels
+  escalation:
+    critical:
+      action: "immediate_block"
+      notification: "admin_alert"
+      logging: "critical"
+      
+    high:
+      action: "block_with_review"
+      notification: "moderator_alert"
+      logging: "warning"
+      
+    medium:
+      action: "flag_for_review"
+      notification: "standard_log"
+      logging: "info"
+
+# Response Templates
+response_templates:
+  critical_violation: |
+    I cannot and will not assist with this request. This content violates fundamental safety principles and could cause serious harm.
+    
+  high_violation: |
+    I cannot help with this request as it may violate important safety or ethical guidelines. Please consider alternative approaches that don't involve these concerns.
+    
+  medium_violation: |
+    I need to be careful with this type of request. Let me suggest a safer alternative approach.
+
+# Monitoring and Reporting
+monitoring:
+  real_time_alerts: true
+  daily_reports: true
+  weekly_summaries: true
+  
+  metrics:
+    - "violation_count_by_type"
+    - "violation_count_by_severity"
+    - "response_effectiveness"
+    - "false_positive_rate"
+    
+  reporting:
+    format: "json"
+    retention_days: 365
+    anonymization: true

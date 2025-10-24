@@ -4,9 +4,12 @@ import logging
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from pydantic import BaseModel
+
+if TYPE_CHECKING:
+    from pydantic import BaseModel
+
 
 logger = logging.getLogger(__name__)
 
@@ -68,9 +71,18 @@ class ProgressTracker:
         self.events: list[ProgressEvent] = []
 
     def emit_event(
-        self, event_type: str, message: str, progress_percent: float = 0.0, data: dict[str, Any] | None = None
+        self,
+        event_type: str,
+        message: str,
+        progress_percent: float = 0.0,
+        data: dict[str, Any] | None = None,
     ):
-        event = ProgressEvent(event_type=event_type, message=message, progress_percent=progress_percent, data=data)
+        event = ProgressEvent(
+            event_type=event_type,
+            message=message,
+            progress_percent=progress_percent,
+            data=data,
+        )
         self.events.append(event)
         if self.callback:
             try:

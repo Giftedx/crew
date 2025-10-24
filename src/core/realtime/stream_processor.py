@@ -6,12 +6,14 @@ live content monitoring, and real-time fact-checking capabilities.
 """
 
 import asyncio
+import contextlib
 import logging
 import time
 from collections import defaultdict, deque
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
+
 
 logger = logging.getLogger(__name__)
 
@@ -265,10 +267,8 @@ class StreamProcessor:
             if stream_id in self._processing_tasks:
                 task = self._processing_tasks[stream_id]
                 task.cancel()
-                try:
+                with contextlib.suppress(asyncio.CancelledError):
                     await task
-                except asyncio.CancelledError:
-                    pass
                 del self._processing_tasks[stream_id]
 
             # Clean up
@@ -480,7 +480,7 @@ class StreamProcessor:
 
         logger.info("Stream processor shutdown complete")
 
-    async def __aenter__(self) -> StreamProcessor:
+    async def __aenter__(self) -> "StreamProcessor":
         """Async context manager entry."""
         return self
 

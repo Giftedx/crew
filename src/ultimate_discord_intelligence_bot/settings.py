@@ -1,323 +1,277 @@
+"""Layered configuration system for the Ultimate Discord Intelligence Bot.
+
+This module provides a clean, type-safe configuration system that replaces
+the monolithic settings.py with a layered approach:
+
+1. BaseConfig: Core application settings
+2. FeatureFlags: Feature toggles and flags
+3. PathConfig: File and directory paths
+4. Validation: Configuration validation
+
+Usage:
+    from ultimate_discord_intelligence_bot.settings import Settings
+
+    # Create settings instance
+    settings = Settings()
+
+    # Access configuration
+    print(settings.openai_api_key)
+    print(settings.feature_flags.enable_debate_analysis)
+"""
+
+from __future__ import annotations
+
 import os
-from pathlib import Path
+from typing import TYPE_CHECKING, Any
 
-# Ensure .env is only loaded once so tests that delete env vars can observe the
-# absence on subsequent reloads (importlib.reload). Without this, load_dotenv()
-# would re-populate deleted variables, preventing override-clearing tests.
-_DOTENV_LOADED = globals().get("_DOTENV_LOADED", False)
-_DISABLE_DOTENV = os.getenv("CREW_DISABLE_DOTENV") == "1" or (
-    os.getenv("PYTEST_CURRENT_TEST") is not None
-)
-if not _DOTENV_LOADED and not _DISABLE_DOTENV:
-    try:
-        from dotenv import load_dotenv
-
-        load_dotenv()
-    except ImportError:
-        pass  # dotenv is optional
-    _DOTENV_LOADED = True
-
-# In CI/tests where a committed .env may exist, honor the sentinel to prevent reloading on module reloads.
-globals()["_DOTENV_LOADED"] = _DOTENV_LOADED
-
-REPO_ROOT = Path(__file__).resolve().parents[2]
+# Import the new configuration system
+from .config import BaseConfig, FeatureFlags, PathConfig, validate_configuration
 
 
-# Lazy-loaded configuration to avoid circular imports
-def _get_config():
-    try:
-        from core.secure_config import (
-            get_config,  # noqa: E402, PLC0415 - intentional lazy import to avoid cycles
+if TYPE_CHECKING:
+    from pathlib import Path
+
+
+class Settings:
+    """Unified settings class that provides backward compatibility.
+
+    This class acts as a bridge between the old settings.py and the new
+    layered configuration system, providing the same interface while
+    using the new configuration classes internally.
+    """
+
+    def __init__(self):
+        """Initialize settings with layered configuration."""
+        # Create configuration instances
+        self.base_config = BaseConfig.from_env()
+        self.feature_flags = FeatureFlags.from_env()
+        self.path_config = PathConfig.from_env()
+
+        # Validate configuration
+        self.is_valid = validate_configuration()
+
+    # Base configuration properties
+    @property
+    def environment(self) -> str:
+        """Get environment setting."""
+        return self.base_config.environment
+
+    @property
+    def debug(self) -> bool:
+        """Get debug setting."""
+        return self.base_config.debug
+
+    @property
+    def log_level(self) -> str:
+        """Get log level setting."""
+        return self.base_config.log_level
+
+    @property
+    def openai_api_key(self) -> str | None:
+        """Get OpenAI API key."""
+        return self.base_config.openai_api_key
+
+    @property
+    def openrouter_api_key(self) -> str | None:
+        """Get OpenRouter API key."""
+        return self.base_config.openrouter_api_key
+
+    @property
+    def discord_bot_token(self) -> str | None:
+        """Get Discord bot token."""
+        return self.base_config.discord_bot_token
+
+    @property
+    def qdrant_url(self) -> str | None:
+        """Get Qdrant URL."""
+        return self.base_config.qdrant_url
+
+    @property
+    def qdrant_api_key(self) -> str | None:
+        """Get Qdrant API key."""
+        return self.base_config.qdrant_api_key
+
+    # Path configuration properties
+    @property
+    def base_dir(self) -> Path:
+        """Get base directory."""
+        return self.path_config.base_dir
+
+    @property
+    def downloads_dir(self) -> Path:
+        """Get downloads directory."""
+        return self.path_config.downloads_dir
+
+    @property
+    def config_dir(self) -> Path:
+        """Get config directory."""
+        return self.path_config.config_dir
+
+    @property
+    def logs_dir(self) -> Path:
+        """Get logs directory."""
+        return self.path_config.logs_dir
+
+    @property
+    def processing_dir(self) -> Path:
+        """Get processing directory."""
+        return self.path_config.processing_dir
+
+    @property
+    def temp_dir(self) -> Path:
+        """Get temp directory."""
+        return self.path_config.temp_dir
+
+    @property
+    def ytdlp_archive(self) -> Path:
+        """Get ytdlp archive path."""
+        return self.path_config.ytdlp_archive
+
+    @property
+    def ytdlp_config(self) -> Path:
+        """Get ytdlp config path."""
+        return self.path_config.ytdlp_config
+
+    # Feature flags properties
+    def is_feature_enabled(self, feature_name: str) -> bool:
+        """Check if a feature is enabled."""
+        return self.feature_flags.is_enabled(feature_name)
+
+    def get_enabled_features(self) -> dict[str, bool]:
+        """Get all enabled features."""
+        return self.feature_flags.get_enabled_flags()
+
+    def get_disabled_features(self) -> dict[str, bool]:
+        """Get all disabled features."""
+        return self.feature_flags.get_disabled_flags()
+
+    # Backward compatibility methods
+    def get_setting(self, key: str, default: Any = None) -> Any:
+        """Get a setting value with backward compatibility."""
+        # Check base config first
+        if hasattr(self.base_config, key):
+            return getattr(self.base_config, key)
+
+        # Check feature flags
+        if hasattr(self.feature_flags, key):
+            return getattr(self.feature_flags, key)
+
+        # Check path config
+        if hasattr(self.path_config, key):
+            return getattr(self.path_config, key)
+
+        # Fallback to environment variable
+        return os.getenv(key.upper(), default)
+
+    def set_setting(self, key: str, value: Any) -> None:
+        """Set a setting value."""
+        if hasattr(self.base_config, key):
+            setattr(self.base_config, key, value)
+        elif hasattr(self.feature_flags, key):
+            setattr(self.feature_flags, key, value)
+        elif hasattr(self.path_config, key):
+            setattr(self.path_config, key, value)
+        else:
+            # Set as environment variable
+            os.environ[key.upper()] = str(value)
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert settings to dictionary."""
+        result = {}
+
+        result.update(self.base_config.to_dict())
+        result.update(self.feature_flags.__dict__)
+        result.update(
+            {
+                "base_dir": str(self.path_config.base_dir),
+                "downloads_dir": str(self.path_config.downloads_dir),
+                "config_dir": str(self.path_config.config_dir),
+                "logs_dir": str(self.path_config.logs_dir),
+                "processing_dir": str(self.path_config.processing_dir),
+                "temp_dir": str(self.path_config.temp_dir),
+            }
         )
 
-        return get_config()
-    except ImportError:
-        return None
+        return result
 
 
-_ENABLE_SECURE_PATH_FALLBACK = os.getenv("CREW_ENABLE_SECURE_PATH_FALLBACK") == "1"
+# Global settings instance
+_settings: Settings | None = None
+
+
+def get_settings() -> Settings:
+    """Get the global settings instance."""
+    global _settings
+    if _settings is None:
+        _settings = Settings()
+    return _settings
+
+
+# Backward compatibility exports
+def _get_setting(key: str, default: str = "") -> str:
+    """Get a setting value with backward compatibility."""
+    settings = get_settings()
+    value = settings.get_setting(key, default)
+    return str(value) if value is not None else default
 
 
 def _get_path_setting(key: str, default_path: Path) -> Path:
-    """Get path setting preferring environment variable, then secure config.
-
-    Tests and CLI expect that explicit environment variables take precedence
-    over values that may be provided by the secure configuration layer. This
-    function therefore checks the environment first, then consults secure
-    config, finally falling back to the provided default.
-    """
-    # Highest priority: direct environment variable override
-    env_value = os.getenv(key.upper())
-    if env_value:
-        return Path(env_value).expanduser()
-
-    # Next: optional secure config (only if explicitly enabled to avoid sticky defaults in tests)
-    if _ENABLE_SECURE_PATH_FALLBACK:
-        config = _get_config()
-        if config:
-            value = config.get_setting(key, None)
-            if value:
-                return Path(value).expanduser()
-
-    # Default
-    return default_path.expanduser()
-
-
-def _get_setting(key: str, default: str = "") -> str:
-    """Get string setting preferring environment variable, then secure config.
-
-    Tests rely on environment taking precedence over any secure-config defaults.
-    """
-    # Highest priority: environment variable
-    env_val = os.getenv(key.upper())
-    if env_val is not None:
-        return env_val
-    # Fallback: optional secure config
-    config = _get_config()
-    if config:
-        return config.get_setting(key, default)
-    return default
-
-
-# Base directories (computed lazily)
-BASE_DIR = _get_path_setting("crewai_base_dir", Path.home() / "crew_data")
-DOWNLOADS_DIR = _get_path_setting("crewai_downloads_dir", BASE_DIR / "Downloads")
-CONFIG_DIR = _get_path_setting("crewai_config_dir", BASE_DIR / "Config")
-LOGS_DIR = _get_path_setting("crewai_logs_dir", BASE_DIR / "Logs")
-PROCESSING_DIR = _get_path_setting("crewai_processing_dir", BASE_DIR / "Processing")
-
-# yt-dlp paths
-YTDLP_DIR = _get_path_setting("crewai_ytdlp_dir", REPO_ROOT / "yt-dlp")
-YTDLP_CONFIG = _get_path_setting(
-    "crewai_ytdlp_config", YTDLP_DIR / "config" / "crewai-system.conf"
-)
-YTDLP_ARCHIVE = _get_path_setting(
-    "crewai_ytdlp_archive", YTDLP_DIR / "archives" / "crewai_downloads.txt"
-)
-TEMP_DIR = _get_path_setting("crewai_temp_dir", DOWNLOADS_DIR / "temp")
-
-GOOGLE_CREDENTIALS = _get_path_setting(
-    "google_credentials", CONFIG_DIR / "google-credentials.json"
-)
-DISCORD_WEBHOOK = _get_setting("discord_webhook")
-DISCORD_PRIVATE_WEBHOOK = _get_setting("discord_private_webhook")
-
-# Vector database settings
-# Precedence (highest first):
-#   1. Explicit environment variable (QDRANT_URL / QDRANT_API_KEY)
-#   2. Optional secure config (when CREW_ENABLE_SECURE_QDRANT_FALLBACK=1)
-#   3. Empty string default
-# Tests rely on being able to clear the env var and get an empty string, so the
-# fallback is gated by an opt-in flag and thus inert during tests unless set.
-_qdrant_env_url = os.getenv("QDRANT_URL", "")
-_qdrant_env_key = os.getenv("QDRANT_API_KEY", "")
-_enable_secure_qdrant_fallback = os.getenv("CREW_ENABLE_SECURE_QDRANT_FALLBACK") == "1"
-_test_secure_qdrant_url = os.getenv("CREW_QDRANT_SECURE_TEST_URL")  # test seam
-if _qdrant_env_url:
-    QDRANT_URL = _qdrant_env_url
-elif _enable_secure_qdrant_fallback:
-    # Allow tests to inject a deterministic secure-config URL without patching internals.
-    if _test_secure_qdrant_url:
-        QDRANT_URL = _test_secure_qdrant_url
+    """Get a path setting with backward compatibility."""
+    settings = get_settings()
+    if key == "crewai_base_dir":
+        return settings.base_dir
+    elif key == "crewai_downloads_dir":
+        return settings.downloads_dir
+    elif key == "crewai_config_dir":
+        return settings.config_dir
+    elif key == "crewai_logs_dir":
+        return settings.logs_dir
+    elif key == "crewai_processing_dir":
+        return settings.processing_dir
+    elif key == "crewai_temp_dir":
+        return settings.temp_dir
     else:
-        _cfg = _get_config()
-        QDRANT_URL = _cfg.qdrant_url if _cfg else ""
-else:
-    QDRANT_URL = ""
-
-if _qdrant_env_key:
-    QDRANT_API_KEY = _qdrant_env_key
-elif _enable_secure_qdrant_fallback:
-    _cfg = _get_config()
-    QDRANT_API_KEY = _cfg.qdrant_api_key if _cfg and _cfg.qdrant_api_key else ""
-else:
-    QDRANT_API_KEY = ""
-
-# Ensure directories exist
-for path in [
-    DOWNLOADS_DIR,
-    CONFIG_DIR,
-    LOGS_DIR,
-    PROCESSING_DIR,
-    TEMP_DIR,
-    YTDLP_ARCHIVE.parent,
-]:
-    path.mkdir(parents=True, exist_ok=True)
+        return default_path
 
 
-# ========================================
-# PHASE 1 ENHANCEMENT FLAGS
-# ========================================
+# Export commonly used settings for backward compatibility
+def _export_settings():
+    """Export commonly used settings for backward compatibility."""
+    settings = get_settings()
 
-ENABLE_MEM0_MEMORY = str(_get_setting("ENABLE_MEM0_MEMORY", "false")).lower() in (
-    "true",
-    "1",
-    "yes",
-)
-ENABLE_DSPY_OPTIMIZATION = str(
-    _get_setting("ENABLE_DSPY_OPTIMIZATION", "false")
-).lower() in ("true", "1", "yes")
+    # Export base configuration
+    globals().update(
+        {
+            "ENVIRONMENT": settings.environment,
+            "DEBUG": settings.debug,
+            "LOG_LEVEL": settings.log_level,
+            "OPENAI_API_KEY": settings.openai_api_key,
+            "OPENROUTER_API_KEY": settings.openrouter_api_key,
+            "DISCORD_BOT_TOKEN": settings.discord_bot_token,
+            "QDRANT_URL": settings.qdrant_url,
+            "QDRANT_API_KEY": settings.qdrant_api_key,
+        }
+    )
 
-# Configuration for DSPy (placeholders)
-DSPY_OPTIMIZATION_LEVEL = _get_setting("DSPY_OPTIMIZATION_LEVEL", "medium")
+    # Export paths
+    globals().update(
+        {
+            "BASE_DIR": settings.base_dir,
+            "DOWNLOADS_DIR": settings.downloads_dir,
+            "CONFIG_DIR": settings.config_dir,
+            "LOGS_DIR": settings.logs_dir,
+            "PROCESSING_DIR": settings.processing_dir,
+            "TEMP_DIR": settings.temp_dir,
+            "YTDLP_ARCHIVE": settings.ytdlp_archive,
+            "YTDLP_CONFIG": settings.ytdlp_config,
+        }
+    )
 
-# LangGraph pipeline flag (sqlite checkpointer with memory fallback in code)
-ENABLE_LANGGRAPH_PIPELINE = str(
-    _get_setting("ENABLE_LANGGRAPH_PIPELINE", "false")
-).lower() in ("true", "1", "yes")
+    # Export feature flags
+    for flag_name, flag_value in settings.feature_flags.__dict__.items():
+        if flag_name.startswith("ENABLE_"):
+            globals()[flag_name] = flag_value
 
-# ========================================
-# PHASE 2 ENHANCEMENT FLAGS
-# ========================================
 
-ENABLE_HIERARCHICAL_ORCHESTRATION = str(
-    _get_setting("ENABLE_HIERARCHICAL_ORCHESTRATION", "false")
-).lower() in ("true", "1", "yes")
-
-ENABLE_RL_MODEL_ROUTING = str(
-    _get_setting("ENABLE_RL_MODEL_ROUTING", "false")
-).lower() in ("true", "1", "yes")
-
-ENABLE_WEBSOCKET_UPDATES = str(
-    _get_setting("ENABLE_WEBSOCKET_UPDATES", "false")
-).lower() in ("true", "1", "yes")
-
-ENABLE_ENTERPRISE_TENANT_MANAGEMENT = str(
-    _get_setting("ENABLE_ENTERPRISE_TENANT_MANAGEMENT", "false")
-).lower() in ("true", "1", "yes")
-
-# ========================================
-# UNIFIED KNOWLEDGE LAYER FLAGS
-# ========================================
-
-ENABLE_UNIFIED_KNOWLEDGE = str(
-    _get_setting("ENABLE_UNIFIED_KNOWLEDGE", "false")
-).lower() in ("true", "1", "yes")
-
-ENABLE_UNIFIED_CACHE = str(_get_setting("ENABLE_UNIFIED_CACHE", "false")).lower() in (
-    "true",
-    "1",
-    "yes",
-)
-
-ENABLE_UNIFIED_ROUTER = str(_get_setting("ENABLE_UNIFIED_ROUTER", "false")).lower() in (
-    "true",
-    "1",
-    "yes",
-)
-
-ENABLE_UNIFIED_ORCHESTRATION = str(
-    _get_setting("ENABLE_UNIFIED_ORCHESTRATION", "false")
-).lower() in ("true", "1", "yes")
-
-# ========================================
-# UNIFIED ROUTER SYSTEM FLAGS
-# ========================================
-
-ENABLE_UNIFIED_COST_TRACKING = str(
-    _get_setting("ENABLE_UNIFIED_COST_TRACKING", "false")
-).lower() in (
-    "true",
-    "1",
-    "yes",
-)
-
-# ========================================
-# UNIFIED CACHE SYSTEM FLAGS
-# ========================================
-
-ENABLE_UNIFIED_CACHE = str(_get_setting("ENABLE_UNIFIED_CACHE", "false")).lower() in (
-    "true",
-    "1",
-    "yes",
-)
-
-ENABLE_CACHE_OPTIMIZATION = str(
-    _get_setting("ENABLE_CACHE_OPTIMIZATION", "false")
-).lower() in (
-    "true",
-    "1",
-    "yes",
-)
-
-# ========================================
-# UNIFIED ORCHESTRATION SYSTEM FLAGS
-# ========================================
-
-ENABLE_UNIFIED_ORCHESTRATION = str(
-    _get_setting("ENABLE_UNIFIED_ORCHESTRATION", "false")
-).lower() in (
-    "true",
-    "1",
-    "yes",
-)
-
-ENABLE_TASK_MANAGEMENT = str(
-    _get_setting("ENABLE_TASK_MANAGEMENT", "false")
-).lower() in (
-    "true",
-    "1",
-    "yes",
-)
-
-# ========================================
-# AGENT BRIDGE SYSTEM FLAGS
-# ========================================
-
-ENABLE_AGENT_BRIDGE = str(_get_setting("ENABLE_AGENT_BRIDGE", "false")).lower() in (
-    "true",
-    "1",
-    "yes",
-)
-
-ENABLE_KNOWLEDGE_SHARING = str(
-    _get_setting("ENABLE_KNOWLEDGE_SHARING", "false")
-).lower() in (
-    "true",
-    "1",
-    "yes",
-)
-
-ENABLE_CROSS_AGENT_LEARNING = str(
-    _get_setting("ENABLE_CROSS_AGENT_LEARNING", "false")
-).lower() in (
-    "true",
-    "1",
-    "yes",
-)
-
-ENABLE_COLLECTIVE_INTELLIGENCE = str(
-    _get_setting("ENABLE_COLLECTIVE_INTELLIGENCE", "false")
-).lower() in (
-    "true",
-    "1",
-    "yes",
-)
-
-# ========================================
-# OBSERVABILITY SYSTEM FLAGS
-# ========================================
-
-ENABLE_UNIFIED_METRICS = str(
-    _get_setting("ENABLE_UNIFIED_METRICS", "false")
-).lower() in (
-    "true",
-    "1",
-    "yes",
-)
-
-ENABLE_INTELLIGENT_ALERTING = str(
-    _get_setting("ENABLE_INTELLIGENT_ALERTING", "false")
-).lower() in (
-    "true",
-    "1",
-    "yes",
-)
-
-ENABLE_DASHBOARD_INTEGRATION = str(
-    _get_setting("ENABLE_DASHBOARD_INTEGRATION", "false")
-).lower() in (
-    "true",
-    "1",
-    "yes",
-)
+# Export settings for backward compatibility
+_export_settings()

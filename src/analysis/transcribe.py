@@ -13,6 +13,7 @@ from dataclasses import dataclass
 
 from core.degradation_reporter import record_degradation
 
+
 try:
     from core.secure_config import get_config
 except Exception:  # pragma: no cover - fallback when secure_config deps unavailable
@@ -79,7 +80,7 @@ def run_whisper(path: str, model: str = "tiny") -> Transcript:
             )
             # fall back to standard whisper or text path
     try:
-        import whisper  # noqa: PLC0415 - optional heavy dependency imported lazily
+        import whisper
 
         model_inst = whisper.load_model(getattr(cfg, "whisper_model", model) or model)
         result = model_inst.transcribe(path)

@@ -11,6 +11,7 @@ import time
 
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -60,7 +61,7 @@ class CostMonitoringIntegration:
             try:
                 self.budget_store.preflight(cost_usd)
             except self.BudgetError as e:
-                return StepResult.fail(f"Budget preflight failed: {str(e)}")
+                return StepResult.fail(f"Budget preflight failed: {e!s}")
 
             # Record cost metrics
             cost_result = self.cost_optimizer.record_cost(
@@ -114,7 +115,7 @@ class CostMonitoringIntegration:
 
         except Exception as e:
             logger.error(f"Cost monitoring integration failed: {e}")
-            return StepResult.fail(f"Cost monitoring failed: {str(e)}")
+            return StepResult.fail(f"Cost monitoring failed: {e!s}")
 
     def get_comprehensive_cost_report(
         self,
@@ -170,7 +171,7 @@ class CostMonitoringIntegration:
 
         except Exception as e:
             logger.error(f"Comprehensive cost report generation failed: {e}")
-            return StepResult.fail(f"Cost report generation failed: {str(e)}")
+            return StepResult.fail(f"Cost report generation failed: {e!s}")
 
     def _get_budget_status(self, utilization_percent: float) -> str:
         """Get budget status based on utilization."""
@@ -189,7 +190,7 @@ class CostMonitoringIntegration:
             return self.cost_optimizer.simulate_optimization_impact(strategy)
         except Exception as e:
             logger.error(f"Optimization simulation failed: {e}")
-            return StepResult.fail(f"Optimization simulation failed: {str(e)}")
+            return StepResult.fail(f"Optimization simulation failed: {e!s}")
 
     def health_check(self) -> StepResult:
         """Comprehensive health check for all cost monitoring systems."""
@@ -220,7 +221,7 @@ class CostMonitoringIntegration:
 
         except Exception as e:
             logger.error(f"Cost monitoring health check failed: {e}")
-            return StepResult.fail(f"Health check failed: {str(e)}")
+            return StepResult.fail(f"Health check failed: {e!s}")
 
 
 # Global cost monitoring integration instance

@@ -8,10 +8,11 @@ from .circuit_breaker import CircuitBreaker, CircuitState
 from .idempotency import IdempotencyManager
 from .rate_limiter import RateLimiter
 
+
 __all__ = [
+    "BackpressureHandler",
     "CircuitBreaker",
     "CircuitState",
     "IdempotencyManager",
     "RateLimiter",
-    "BackpressureHandler",
 ]

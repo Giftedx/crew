@@ -9,9 +9,11 @@ import hashlib
 import json
 import logging
 import time
-from typing import Any, Callable, ParamSpec, TypeVar
+from collections.abc import Callable
+from typing import Any, ParamSpec, TypeVar
 
 from ultimate_discord_intelligence_bot.step_result import StepResult
+
 
 logger = logging.getLogger(__name__)
 
@@ -110,9 +112,7 @@ class IdempotencyManager:
             if idempotency_key in self._store:
                 existing_key = self._store[idempotency_key]
                 if not existing_key.is_expired():
-                    logger.info(
-                        f"Returning cached result for idempotency key: {idempotency_key}"
-                    )
+                    logger.info(f"Returning cached result for idempotency key: {idempotency_key}")
                     return self._results[idempotency_key]
                 else:
                     # Remove expired key
@@ -135,8 +135,8 @@ class IdempotencyManager:
                     expires_at=expires_at,
                     metadata={
                         "operation": operation.__name__,
-                        "args_hash": hashlib.md5(str(args).encode()).hexdigest(),
-                        "kwargs_hash": hashlib.md5(str(kwargs).encode()).hexdigest(),
+                        "args_hash": hashlib.md5(str(args).encode(), usedforsecurity=False).hexdigest(),  # nosec B324 - idempotency metadata only
+                        "kwargs_hash": hashlib.md5(str(kwargs).encode(), usedforsecurity=False).hexdigest(),  # nosec B324 - idempotency metadata only
                     },
                 )
                 self._results[idempotency_key] = result
@@ -146,9 +146,7 @@ class IdempotencyManager:
 
             except Exception as e:
                 # Don't store failed results
-                logger.error(
-                    f"Operation failed for idempotency key {idempotency_key}: {str(e)}"
-                )
+                logger.error(f"Operation failed for idempotency key {idempotency_key}: {e!s}")
                 raise
 
     async def execute_with_result_idempotency(
@@ -173,12 +171,10 @@ class IdempotencyManager:
             StepResult (cached if key exists)
         """
         try:
-            result = await self.execute_with_idempotency(
-                operation, idempotency_key, ttl, *args, **kwargs
-            )
+            result = await self.execute_with_idempotency(operation, idempotency_key, ttl, *args, **kwargs)
             return result
         except Exception as e:
-            return StepResult.fail(f"Operation failed: {str(e)}")
+            return StepResult.fail(f"Operation failed: {e!s}")
 
     def _generate_key(self, operation: Callable, args: tuple, kwargs: dict) -> str:
         """Generate idempotency key from operation and arguments."""
@@ -263,14 +259,10 @@ def with_idempotency(
 
     def decorator(func: Callable[..., T]) -> Callable[..., T]:
         async def async_wrapper(*args, **kwargs) -> T:
-            return await manager.execute_with_idempotency(
-                func, key, ttl, *args, **kwargs
-            )
+            return await manager.execute_with_idempotency(func, key, ttl, *args, **kwargs)
 
         def sync_wrapper(*args, **kwargs) -> T:
-            return asyncio.run(
-                manager.execute_with_idempotency(func, key, ttl, *args, **kwargs)
-            )
+            return asyncio.run(manager.execute_with_idempotency(func, key, ttl, *args, **kwargs))
 
         if asyncio.iscoroutinefunction(func):
             return async_wrapper
@@ -298,14 +290,10 @@ def with_result_idempotency(
 
     def decorator(func: Callable[..., StepResult]) -> Callable[..., StepResult]:
         async def async_wrapper(*args, **kwargs) -> StepResult:
-            return await manager.execute_with_result_idempotency(
-                func, key, ttl, *args, **kwargs
-            )
+            return await manager.execute_with_result_idempotency(func, key, ttl, *args, **kwargs)
 
         def sync_wrapper(*args, **kwargs) -> StepResult:
-            return asyncio.run(
-                manager.execute_with_result_idempotency(func, key, ttl, *args, **kwargs)
-            )
+            return asyncio.run(manager.execute_with_result_idempotency(func, key, ttl, *args, **kwargs))
 
         if asyncio.iscoroutinefunction(func):
             return async_wrapper

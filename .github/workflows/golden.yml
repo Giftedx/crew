@@ -3,18 +3,18 @@ name: golden
 on:
   push:
     paths:
-      - 'src/**'
-      - 'datasets/**'
-      - 'baselines/**'
-      - 'config/**'
+      - "src/**"
+      - "datasets/**"
+      - "benchmarks/baselines/**"
+      - "config/**"
   pull_request:
     paths:
-      - 'src/**'
-      - 'datasets/**'
-      - 'baselines/**'
-      - 'config/**'
+      - "src/**"
+      - "datasets/**"
+      - "benchmarks/baselines/**"
+      - "config/**"
   schedule:
-    - cron: '0 3 * * *'
+    - cron: "0 3 * * *"
 
 jobs:
   eval:
@@ -23,6 +23,6 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.x'
-      - run: pip install -e .
-      - run: python -m eval.runner datasets/golden/core/v1 baselines/golden/core/v1/summary.json
+          python-version: "3.x"
+      - run: python -m pip install -e '.[dev]'
+      - run: python -m eval.runner datasets/golden/core/v1 benchmarks/baselines/golden/core/v1/summary.json

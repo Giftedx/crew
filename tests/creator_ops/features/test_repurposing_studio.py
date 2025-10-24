@@ -9,7 +9,9 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 
 from ultimate_discord_intelligence_bot.creator_ops.config import CreatorOpsConfig
-from ultimate_discord_intelligence_bot.creator_ops.features.repurposing_agent import RepurposingAgent
+from ultimate_discord_intelligence_bot.creator_ops.features.repurposing_agent import (
+    RepurposingAgent,
+)
 from ultimate_discord_intelligence_bot.creator_ops.features.repurposing_models import (
     AspectRatio,
     CaptionStyle,
@@ -20,9 +22,14 @@ from ultimate_discord_intelligence_bot.creator_ops.features.repurposing_models i
     RepurposingJob,
     RepurposingResult,
 )
-from ultimate_discord_intelligence_bot.creator_ops.features.repurposing_studio import RepurposingStudio
+from ultimate_discord_intelligence_bot.creator_ops.features.repurposing_studio import (
+    RepurposingStudio,
+)
 from ultimate_discord_intelligence_bot.creator_ops.knowledge.api import KnowledgeAPI
-from ultimate_discord_intelligence_bot.creator_ops.media.alignment import AlignedSegment, AlignedTranscript
+from ultimate_discord_intelligence_bot.creator_ops.media.alignment import (
+    AlignedSegment,
+    AlignedTranscript,
+)
 
 
 class TestRepurposingStudio:
@@ -71,7 +78,9 @@ class TestRepurposingStudio:
         ]
 
         return AlignedTranscript(
-            segments=segments, duration=90.0, metadata={"title": "Amazing Tech Talk", "episode_id": "test_episode_123"}
+            segments=segments,
+            duration=90.0,
+            metadata={"title": "Amazing Tech Talk", "episode_id": "test_episode_123"},
         )
 
     @pytest.fixture
@@ -123,7 +132,12 @@ class TestRepurposingStudio:
 
         # Invalid segment (too short)
         short_segment = AlignedSegment(
-            start_time=0.0, end_time=5.0, text="Too short", speakers=["Host"], topics=[], sentiment_score=0.5
+            start_time=0.0,
+            end_time=5.0,
+            text="Too short",
+            speakers=["Host"],
+            topics=[],
+            sentiment_score=0.5,
         )
 
         assert not repurposing_studio._is_valid_clip_segment(short_segment, sample_config)
@@ -243,7 +257,12 @@ class TestRepurposingStudio:
 
     def test_generate_hook_text(self, repurposing_studio, sample_transcript):
         """Test platform-specific hook text generation."""
-        platforms = [PlatformType.YOUTUBE_SHORTS, PlatformType.TIKTOK, PlatformType.INSTAGRAM_REELS, PlatformType.X]
+        platforms = [
+            PlatformType.YOUTUBE_SHORTS,
+            PlatformType.TIKTOK,
+            PlatformType.INSTAGRAM_REELS,
+            PlatformType.X,
+        ]
 
         for platform in platforms:
             hook_text = repurposing_studio._generate_hook_text(platform, sample_transcript)
@@ -252,7 +271,12 @@ class TestRepurposingStudio:
 
     def test_generate_hashtags(self, repurposing_studio, sample_transcript):
         """Test platform-specific hashtag generation."""
-        platforms = [PlatformType.YOUTUBE_SHORTS, PlatformType.TIKTOK, PlatformType.INSTAGRAM_REELS, PlatformType.X]
+        platforms = [
+            PlatformType.YOUTUBE_SHORTS,
+            PlatformType.TIKTOK,
+            PlatformType.INSTAGRAM_REELS,
+            PlatformType.X,
+        ]
 
         for platform in platforms:
             hashtags = repurposing_studio._generate_hashtags(platform, sample_transcript)
@@ -262,7 +286,12 @@ class TestRepurposingStudio:
 
     def test_generate_call_to_action(self, repurposing_studio):
         """Test call-to-action generation."""
-        platforms = [PlatformType.YOUTUBE_SHORTS, PlatformType.TIKTOK, PlatformType.INSTAGRAM_REELS, PlatformType.X]
+        platforms = [
+            PlatformType.YOUTUBE_SHORTS,
+            PlatformType.TIKTOK,
+            PlatformType.INSTAGRAM_REELS,
+            PlatformType.X,
+        ]
 
         for platform in platforms:
             cta = repurposing_studio._generate_call_to_action(platform)
@@ -271,7 +300,12 @@ class TestRepurposingStudio:
 
     def test_get_engagement_tips(self, repurposing_studio):
         """Test engagement tips generation."""
-        platforms = [PlatformType.YOUTUBE_SHORTS, PlatformType.TIKTOK, PlatformType.INSTAGRAM_REELS, PlatformType.X]
+        platforms = [
+            PlatformType.YOUTUBE_SHORTS,
+            PlatformType.TIKTOK,
+            PlatformType.INSTAGRAM_REELS,
+            PlatformType.X,
+        ]
 
         for platform in platforms:
             tips = repurposing_studio._get_engagement_tips(platform)
@@ -291,7 +325,11 @@ class TestRepurposingStudio:
         video_file_path = "test_episode.mp4"
 
         result = await repurposing_studio.repurpose_episode(
-            "test_episode_123", video_file_path, sample_transcript, target_platforms, sample_config
+            "test_episode_123",
+            video_file_path,
+            sample_transcript,
+            target_platforms,
+            sample_config,
         )
 
         assert result.success

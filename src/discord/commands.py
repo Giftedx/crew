@@ -10,7 +10,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from datetime import UTC, datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import discord
 from core.learning_engine import LearningEngine
@@ -19,19 +19,21 @@ from debate.panel import PanelConfig, run_panel
 from debate.store import Debate, DebateStore
 from discord.ext import commands
 from discord.ui import Button, Select, View
-from grounding import verifier
-from grounding.schema import AnswerContract
 from obs import incident, slo
-from scheduler.priority_queue import PriorityQueue
-from scheduler.scheduler import Scheduler
+
+
+if TYPE_CHECKING:
+    from grounding import verifier
+    from grounding.schema import AnswerContract
+    from scheduler.priority_queue import PriorityQueue
+    from scheduler.scheduler import Scheduler
+
 
 logger = logging.getLogger(__name__)
 
 
 # ------------------------------- Cost & cache ops -------------------------------
-def ops_status(
-    cost_usd: float, *, cache_hits: int, breaker_open: bool, alerts: list[str]
-) -> dict[str, Any]:
+def ops_status(cost_usd: float, *, cache_hits: int, breaker_open: bool, alerts: list[str]) -> dict[str, Any]:
     """Return a minimal ops status snapshot for tests.
 
     Parameters mirror tests and return a dict containing the inputs.
@@ -46,9 +48,7 @@ def ops_status(
 
 
 # ------------------------------- Grounding ops ---------------------------------
-def ops_grounding_audit(
-    contract: AnswerContract, report: verifier.VerifierReport
-) -> dict[str, Any]:
+def ops_grounding_audit(contract: AnswerContract, report: verifier.VerifierReport) -> dict[str, Any]:
     """Return a compact audit view of a grounding verification."""
     # Build citation entries from the contract's evidence list
     citations: list[dict[str, Any]] = []
@@ -76,12 +76,8 @@ def ops_grounding_audit(
 
 
 # -------------------------------- Ingest ops -----------------------------------
-def ops_ingest_watch_add(
-    sched: Scheduler, source: str, handle: str, *, tenant: str, workspace: str
-) -> dict[str, Any]:
-    w = sched.add_watch(
-        tenant=tenant, workspace=workspace, source_type=source, handle=handle
-    )
+def ops_ingest_watch_add(sched: Scheduler, source: str, handle: str, *, tenant: str, workspace: str) -> dict[str, Any]:
+    w = sched.add_watch(tenant=tenant, workspace=workspace, source_type=source, handle=handle)
     return {"id": w.id, "source_type": w.source_type, "handle": w.handle}
 
 
@@ -145,9 +141,7 @@ def verify_profiles(profiles: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
 
 # -------------------------------- Privacy ops ----------------------------------
-def ops_privacy_status(
-    events: list[dict[str, int]], *, policy_version: str
-) -> dict[str, Any]:
+def ops_privacy_status(events: list[dict[str, int]], *, policy_version: str) -> dict[str, Any]:
     counts: dict[str, int] = {}
     for e in events:
         counts[e["type"]] = counts.get(e["type"], 0) + int(e.get("count", 0))
@@ -298,9 +292,7 @@ class AnalysisDepthSelect(View):
     @discord.ui.select(
         placeholder="Choose analysis depth...",
         options=[
-            discord.SelectOption(
-                label="Quick", description="Fast analysis (2-3 min)", value="quick"
-            ),
+            discord.SelectOption(label="Quick", description="Fast analysis (2-3 min)", value="quick"),
             discord.SelectOption(
                 label="Standard",
                 description="Balanced analysis (5-7 min)",
@@ -320,9 +312,7 @@ class AnalysisDepthSelect(View):
     )
     async def select_depth(self, interaction: discord.Interaction, select: Select):
         if interaction.user.id != self.user_id:
-            await interaction.response.send_message(
-                "❌ This menu is not for you!", ephemeral=True
-            )
+            await interaction.response.send_message("❌ This menu is not for you!", ephemeral=True)
             return
 
         self.selected_depth = select.values[0]
@@ -365,16 +355,14 @@ class AnalysisDepthSelect(View):
 
         except Exception as e:
             logger.error(f"Analysis failed: {e}")
-            await channel.send(f"❌ Analysis failed: {str(e)}")
+            await channel.send(f"❌ Analysis failed: {e!s}")
 
     def _format_analysis_result(self, result) -> str:
         """Format analysis results for Discord."""
         quality_score = result.get("quality_score", 0.0)
         execution_time = result.get("execution_time", 0.0)
 
-        status_emoji = (
-            "🟢" if quality_score > 0.8 else "🟡" if quality_score > 0.6 else "🔴"
-        )
+        status_emoji = "🟢" if quality_score > 0.8 else "🟡" if quality_score > 0.6 else "🔴"
 
         return f"""🎯 **Analysis Complete!**
 
@@ -432,16 +420,12 @@ class PlatformSelectView(View):
                 emoji="💬",
                 value="reddit",
             ),
-            discord.SelectOption(
-                label="Twitch", description="Live streams", emoji="🎮", value="twitch"
-            ),
+            discord.SelectOption(label="Twitch", description="Live streams", emoji="🎮", value="twitch"),
         ],
     )
     async def select_platform(self, interaction: discord.Interaction, select: Select):
         if interaction.user.id != self.user_id:
-            await interaction.response.send_message(
-                "❌ This menu is not for you!", ephemeral=True
-            )
+            await interaction.response.send_message("❌ This menu is not for you!", ephemeral=True)
             return
 
         self.selected_platform = select.values[0]
@@ -457,18 +441,14 @@ class EnhancedAnalysisCommands(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.slash_command(
-        name="analyze", description="Analyze content with interactive depth selection"
-    )
+    @commands.slash_command(name="analyze", description="Analyze content with interactive depth selection")
     async def analyze_interactive(self, ctx, url: str):
         """Interactive content analysis with depth selection."""
         await ctx.defer()
 
         # Validate URL format
         if not self._is_valid_url(url):
-            await ctx.followup.send(
-                "❌ Please provide a valid URL (YouTube, Twitter, TikTok, etc.)"
-            )
+            await ctx.followup.send("❌ Please provide a valid URL (YouTube, Twitter, TikTok, etc.)")
             return
 
         # Send depth selection interface
@@ -479,9 +459,7 @@ class EnhancedAnalysisCommands(commands.Cog):
             ephemeral=True,  # Only visible to the user who ran the command
         )
 
-    @commands.slash_command(
-        name="monitor", description="Set up content monitoring with platform selection"
-    )
+    @commands.slash_command(name="monitor", description="Set up content monitoring with platform selection")
     async def monitor_setup(self, ctx):
         """Interactive platform monitoring setup."""
         await ctx.defer()
@@ -494,9 +472,7 @@ class EnhancedAnalysisCommands(commands.Cog):
             ephemeral=True,
         )
 
-    @commands.slash_command(
-        name="ask", description="Query analyzed content with enhanced formatting"
-    )
+    @commands.slash_command(name="ask", description="Query analyzed content with enhanced formatting")
     async def ask_enhanced(self, ctx, question: str):
         """Enhanced Q&A with better formatting and context."""
         await ctx.defer()
@@ -524,7 +500,7 @@ class EnhancedAnalysisCommands(commands.Cog):
 
         except Exception as e:
             logger.error(f"Q&A failed: {e}")
-            await ctx.followup.send(f"❌ Error processing question: {str(e)}")
+            await ctx.followup.send(f"❌ Error processing question: {e!s}")
 
     def _is_valid_url(self, url: str) -> bool:
         """Basic URL validation for supported platforms."""
@@ -560,15 +536,9 @@ class EnhancedAnalysisCommands(commands.Cog):
 
         domain = urlparse(url).netloc.lower()
 
-        for supported_domain in supported_domains:
-            if supported_domain in domain:
-                return True
+        return any(supported_domain in domain for supported_domain in supported_domains)
 
-        return False
-
-    def _create_qa_embed(
-        self, question: str, answer_data: dict[str, Any]
-    ) -> discord.Embed:
+    def _create_qa_embed(self, question: str, answer_data: dict[str, Any]) -> discord.Embed:
         """Create a rich embed for Q&A responses."""
         embed = discord.Embed(
             title="🔍 Content Query Results",
@@ -592,20 +562,14 @@ class EnhancedAnalysisCommands(commands.Cog):
         # Add sources if available
         sources = answer_data.get("sources", [])
         if sources:
-            sources_text = "\n".join(
-                [f"• {src.get('title', 'Unknown')}" for src in sources[:3]]
-            )
+            sources_text = "\n".join([f"• {src.get('title', 'Unknown')}" for src in sources[:3]])
             embed.add_field(name="📚 Sources", value=sources_text[:1024], inline=True)
 
         # Add citations if available
         citations = answer_data.get("citations", [])
         if citations:
-            citation_text = "\n".join(
-                [f"[{i + 1}] {cit}" for i, cit in enumerate(citations[:3])]
-            )
-            embed.add_field(
-                name="🔗 Citations", value=citation_text[:1024], inline=False
-            )
+            citation_text = "\n".join([f"[{i + 1}] {cit}" for i, cit in enumerate(citations[:3])])
+            embed.add_field(name="🔗 Citations", value=citation_text[:1024], inline=False)
 
         embed.set_footer(text="Powered by Ultimate Discord Intelligence Bot")
 
@@ -622,16 +586,12 @@ class SystemStatusView(View):
     @discord.ui.button(label="🔄 Refresh", style=discord.ButtonStyle.primary)
     async def refresh_status(self, interaction: discord.Interaction, button: Button):
         """Refresh system status."""
-        await interaction.response.edit_message(
-            content=self._get_system_status(), view=self
-        )
+        await interaction.response.edit_message(content=self._get_system_status(), view=self)
 
     @discord.ui.button(label="📊 Performance", style=discord.ButtonStyle.secondary)
     async def show_performance(self, interaction: discord.Interaction, button: Button):
         """Show performance metrics."""
-        await interaction.response.send_message(
-            self._get_performance_metrics(), ephemeral=True
-        )
+        await interaction.response.send_message(self._get_performance_metrics(), ephemeral=True)
 
     def _get_system_status(self) -> str:
         """Get current system status."""
@@ -699,9 +659,7 @@ async def setup_enhanced_discord_bot():
     async def on_ready():
         logger.info(f"{bot.user} has connected to Discord!")
         await bot.change_presence(
-            activity=discord.Activity(
-                type=discord.ActivityType.watching, name="for /analyze commands"
-            )
+            activity=discord.Activity(type=discord.ActivityType.watching, name="for /analyze commands")
         )
 
     @bot.event
@@ -717,14 +675,10 @@ async def setup_enhanced_discord_bot():
                 "*Use tab completion or check `/help` for more options!*"
             )
         elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send(
-                f"❌ **Missing argument:** `{error.param.name}` is required for this command."
-            )
+            await ctx.send(f"❌ **Missing argument:** `{error.param.name}` is required for this command.")
         else:
             logger.error(f"Command error: {error}")
-            await ctx.send(
-                "❌ **An error occurred.** Please try again or contact support."
-            )
+            await ctx.send("❌ **An error occurred.** Please try again or contact support.")
 
     return bot
 
@@ -740,9 +694,7 @@ async def run_enhanced_discord_bot():
     token = os.getenv("DISCORD_BOT_TOKEN")
     if not token:
         logger.error("DISCORD_BOT_TOKEN environment variable not set!")
-        logger.error(
-            "Please set your Discord bot token in the .env file or environment variables."
-        )
+        logger.error("Please set your Discord bot token in the .env file or environment variables.")
         return
 
     logger.info("Starting Enhanced Discord Intelligence Bot...")
@@ -771,30 +723,30 @@ if __name__ == "__main__":
 
 
 __all__ = [
-    # Legacy ops functions (for backward compatibility)
-    "ops_status",
+    "AnalysisDepthSelect",
+    "EnhancedAnalysisCommands",
+    "PlatformSelectView",
+    "SystemStatusView",
+    "ops_debate_inspect",
+    "ops_debate_run",
+    "ops_debate_stats",
     "ops_grounding_audit",
-    "ops_ingest_watch_add",
-    "ops_ingest_watch_list",
+    "ops_incident_ack",
+    "ops_incident_list",
+    "ops_incident_open",
+    "ops_incident_resolve",
     "ops_ingest_queue_status",
     "ops_ingest_run_once",
-    "ops_privacy_status",
+    "ops_ingest_watch_add",
+    "ops_ingest_watch_list",
     "ops_privacy_show",
+    "ops_privacy_status",
     "ops_privacy_sweep",
-    "ops_incident_open",
-    "ops_incident_ack",
-    "ops_incident_resolve",
-    "ops_incident_list",
     "ops_slo_status",
-    "ops_debate_run",
-    "ops_debate_inspect",
-    "ops_debate_stats",
+    # Legacy ops functions (for backward compatibility)
+    "ops_status",
+    "run_discord_bot",
+    "run_enhanced_discord_bot",
     # Enhanced Discord bot features
     "setup_enhanced_discord_bot",
-    "run_enhanced_discord_bot",
-    "run_discord_bot",
-    "AnalysisDepthSelect",
-    "PlatformSelectView",
-    "EnhancedAnalysisCommands",
-    "SystemStatusView",
 ]

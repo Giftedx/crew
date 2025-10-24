@@ -12,6 +12,7 @@ from typing import Any
 
 from .config import DEFAULT_HTTP_RETRY_ATTEMPTS
 
+
 try:
     # Optional: tenant-aware retry override
     from ultimate_discord_intelligence_bot.tenancy.context import current_tenant
@@ -77,7 +78,8 @@ def resolve_retry_attempts(call_arg: int | None = None) -> int:
         if 1 <= call_arg <= _MAX_REASONABLE_HTTP_RETRY_ATTEMPTS:
             return call_arg
         logging.getLogger(__name__).warning(
-            "Ignoring out-of-range explicit retry attempts (%s); falling back.", call_arg
+            "Ignoring out-of-range explicit retry attempts (%s); falling back.",
+            call_arg,
         )
 
     cfg = _load_retry_config()
@@ -119,4 +121,4 @@ def reset_retry_config_cache() -> None:
     _RETRY_CONFIG_CACHE = {}
 
 
-__all__ = ["resolve_retry_attempts", "reset_retry_config_cache"]
+__all__ = ["reset_retry_config_cache", "resolve_retry_attempts"]

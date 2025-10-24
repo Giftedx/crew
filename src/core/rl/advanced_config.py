@@ -12,6 +12,7 @@ import os
 from dataclasses import dataclass, field
 from typing import Any
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -241,7 +242,7 @@ class AdvancedBanditConfigManager:
             self._offset_tree_configs[domain] = offset_tree_config
 
         # Clear cache for this domain
-        cache_keys_to_remove = [k for k in self._config_cache.keys() if k.startswith(f"{domain}:")]
+        cache_keys_to_remove = [k for k in self._config_cache if k.startswith(f"{domain}:")]
         for key in cache_keys_to_remove:
             del self._config_cache[key]
 
@@ -266,7 +267,7 @@ class AdvancedBanditConfigManager:
         if global_config.rollout_percentage < 1.0:
             import hashlib
 
-            domain_hash = int(hashlib.md5(domain.encode()).hexdigest()[:8], 16)
+            domain_hash = int(hashlib.md5(domain.encode(), usedforsecurity=False).hexdigest()[:8], 16)  # nosec B324 - rollout routing only
             rollout_threshold = int(global_config.rollout_percentage * 2**32)
             if domain_hash > rollout_threshold:
                 return False
@@ -281,10 +282,7 @@ class AdvancedBanditConfigManager:
             return False
 
         # Check tenant-specific rollout
-        if global_config.rollout_tenants and tenant_id not in global_config.rollout_tenants:
-            return False
-
-        return True
+        return not (global_config.rollout_tenants and tenant_id not in global_config.rollout_tenants)
 
     def should_use_shadow_evaluation(self) -> bool:
         """Check if shadow evaluation should be used."""
@@ -355,9 +353,9 @@ def get_config_manager() -> AdvancedBanditConfigManager:
 
 
 __all__ = [
+    "AdvancedBanditConfigManager",
+    "AdvancedBanditGlobalConfig",
     "DoublyRobustConfig",
     "OffsetTreeConfig",
-    "AdvancedBanditGlobalConfig",
-    "AdvancedBanditConfigManager",
     "get_config_manager",
 ]

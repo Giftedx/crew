@@ -14,7 +14,12 @@ class CircuitBreakerState:
 class EnhancedErrorRecovery:
     """Enhanced error recovery with circuit breaker and exponential backoff."""
 
-    def __init__(self, max_failures: int = 5, reset_timeout: float = 60.0, base_delay: float = 1.0):
+    def __init__(
+        self,
+        max_failures: int = 5,
+        reset_timeout: float = 60.0,
+        base_delay: float = 1.0,
+    ):
         self.max_failures = max_failures
         self.reset_timeout = reset_timeout
         self.base_delay = base_delay

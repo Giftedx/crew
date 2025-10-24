@@ -5,7 +5,9 @@ Tests for Instagram Graph API client and models.
 from unittest.mock import Mock, patch
 
 from ultimate_discord_intelligence_bot.creator_ops.config import CreatorOpsConfig
-from ultimate_discord_intelligence_bot.creator_ops.integrations.instagram_client import InstagramClient
+from ultimate_discord_intelligence_bot.creator_ops.integrations.instagram_client import (
+    InstagramClient,
+)
 from ultimate_discord_intelligence_bot.creator_ops.integrations.instagram_models import (
     InstagramAccountInsight,
     InstagramComment,
@@ -307,7 +309,10 @@ class TestInstagramModels:
                 }
             ],
             "paging": {
-                "cursors": {"before": "before_cursor_12345", "after": "after_cursor_67890"},
+                "cursors": {
+                    "before": "before_cursor_12345",
+                    "after": "after_cursor_67890",
+                },
                 "next": "https://graph.facebook.com/v18.0/17841400000000000/media?access_token=...&after=after_cursor_67890",
             },
         }
@@ -471,7 +476,7 @@ class TestInstagramClient:
 
             assert result.success
             assert isinstance(result.data, tuple)
-            comments, next_cursor = result.data
+            comments, _next_cursor = result.data
             assert len(comments) == 1
             assert comments[0].id == "18000000000000000"
             assert comments[0].text == "Great post!"
@@ -660,7 +665,10 @@ class TestInstagramClient:
             mock_client.return_value.__enter__.return_value = mock_client_instance
 
             result = self.client.create_webhook_subscription(
-                "17841400000000000", "https://example.com/webhook", ["comments", "likes"], "verify_token_123"
+                "17841400000000000",
+                "https://example.com/webhook",
+                ["comments", "likes"],
+                "verify_token_123",
             )
 
             assert result.success
@@ -798,7 +806,10 @@ class TestInstagramClient:
 
     def test_get_fixture_response(self):
         """Test fixture response loading."""
-        with patch("pathlib.Path.exists") as mock_exists, patch("builtins.open") as mock_open:
+        with (
+            patch("pathlib.Path.exists") as mock_exists,
+            patch("builtins.open") as mock_open,
+        ):
             mock_exists.return_value = True
             mock_open.return_value.__enter__.return_value.read.return_value = '{"test": "data"}'
 

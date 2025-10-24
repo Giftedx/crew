@@ -9,6 +9,7 @@ import logging
 import sys
 from pathlib import Path
 
+
 # Add project root to path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root / "src"))
@@ -56,7 +57,9 @@ async def main():
     try:
         # Import orchestrator
         logger.info("\n[1/6] Importing AutonomousIntelligenceOrchestrator...")
-        from ultimate_discord_intelligence_bot.autonomous_orchestrator import AutonomousIntelligenceOrchestrator
+        from ultimate_discord_intelligence_bot.autonomous_orchestrator import (
+            AutonomousIntelligenceOrchestrator,
+        )
 
         # Create mock interaction
         logger.info("\n[2/6] Creating mock Discord interaction...")
@@ -142,7 +145,7 @@ async def main():
     except Exception as e:
         logger.exception("DIAGNOSTIC TEST FAILED WITH EXCEPTION")
         logger.error(f"Exception type: {type(e).__name__}")
-        logger.error(f"Exception message: {str(e)}")
+        logger.error(f"Exception message: {e!s}")
 
         # Try to get detailed traceback
         import traceback

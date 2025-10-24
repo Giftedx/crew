@@ -393,7 +393,9 @@ class PerformanceIntegrationManager:
 _integration_manager = None
 
 
-def get_performance_manager(enable_enhanced: bool = True) -> PerformanceIntegrationManager:
+def get_performance_manager(
+    enable_enhanced: bool = True,
+) -> PerformanceIntegrationManager:
     """Get the global performance integration manager instance."""
     global _integration_manager
     if _integration_manager is None:
@@ -453,7 +455,11 @@ class PerformanceAwareDiscordBot:
         interaction_id = await track_agent_interaction(
             agent_name=agent_name,
             task_type="discord_command",
-            context={"user_id": str(ctx.author.id), "channel_type": "discord", "command_input": user_input},
+            context={
+                "user_id": str(ctx.author.id),
+                "channel_type": "discord",
+                "command_input": user_input,
+            },
         )
 
         try:
@@ -466,7 +472,9 @@ class PerformanceAwareDiscordBot:
 
             # Complete tracking
             result = await complete_interaction(
-                interaction_id, response, user_feedback={"user_id": str(ctx.author.id), "channel": "discord"}
+                interaction_id,
+                response,
+                user_feedback={"user_id": str(ctx.author.id), "channel": "discord"},
             )
 
             return response, result
@@ -474,7 +482,10 @@ class PerformanceAwareDiscordBot:
         except Exception as e:
             # Record error and complete tracking
             await complete_interaction(
-                interaction_id, "Error occurred during processing", error_occurred=True, error_details={"error": str(e)}
+                interaction_id,
+                "Error occurred during processing",
+                error_occurred=True,
+                error_details={"error": str(e)},
             )
             raise
 

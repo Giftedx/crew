@@ -17,6 +17,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -195,7 +196,11 @@ class AIEcosystemLeadershipEngine:
                 component_name="AI Developer SDK Platform",
                 component_type="sdk",
                 complexity="enterprise",
-                foundation_requirements=["95% AI routing", "94.6% performance", "4 AI capabilities"],
+                foundation_requirements=[
+                    "95% AI routing",
+                    "94.6% performance",
+                    "4 AI capabilities",
+                ],
                 ecosystem_impact="Enables third-party developers to build on our AI foundation",
                 development_effort="high",
                 business_value="Platform ecosystem expansion and developer community growth",
@@ -206,7 +211,11 @@ class AIEcosystemLeadershipEngine:
                 component_name="AI Marketplace & Plugin Hub",
                 component_type="marketplace",
                 complexity="advanced",
-                foundation_requirements=["98% user satisfaction", "ecosystem governance", "quality standards"],
+                foundation_requirements=[
+                    "98% user satisfaction",
+                    "ecosystem governance",
+                    "quality standards",
+                ],
                 ecosystem_impact="Thriving marketplace for AI plugins and extensions",
                 development_effort="high",
                 business_value="Revenue sharing and ecosystem monetization",
@@ -217,7 +226,11 @@ class AIEcosystemLeadershipEngine:
                 component_name="AI Ethics & Governance Framework",
                 component_type="governance",
                 complexity="advanced",
-                foundation_requirements=["99.95% reliability", "safety standards", "compliance framework"],
+                foundation_requirements=[
+                    "99.95% reliability",
+                    "safety standards",
+                    "compliance framework",
+                ],
                 ecosystem_impact="Trusted ecosystem with ethical AI practices",
                 development_effort="medium",
                 business_value="Trust, compliance, and sustainable ecosystem growth",
@@ -228,7 +241,11 @@ class AIEcosystemLeadershipEngine:
                 component_name="Ecosystem Intelligence Analytics",
                 component_type="monitoring",
                 complexity="advanced",
-                foundation_requirements=["ecosystem metrics", "developer analytics", "business intelligence"],
+                foundation_requirements=[
+                    "ecosystem metrics",
+                    "developer analytics",
+                    "business intelligence",
+                ],
                 ecosystem_impact="Data-driven ecosystem optimization and growth insights",
                 development_effort="medium",
                 business_value="Strategic decision making and ecosystem optimization",
@@ -239,7 +256,11 @@ class AIEcosystemLeadershipEngine:
                 component_name="Strategic AI Partnership Network",
                 component_type="partnership",
                 complexity="enterprise",
-                foundation_requirements=["innovation leadership", "business development", "technical excellence"],
+                foundation_requirements=[
+                    "innovation leadership",
+                    "business development",
+                    "technical excellence",
+                ],
                 ecosystem_impact="Industry-leading AI research and collaboration network",
                 development_effort="high",
                 business_value="Market expansion and innovation acceleration",
@@ -250,7 +271,11 @@ class AIEcosystemLeadershipEngine:
                 component_name="AI Research & Innovation Labs",
                 component_type="sdk",
                 complexity="enterprise",
-                foundation_requirements=["AI expertise", "research partnerships", "innovation pipeline"],
+                foundation_requirements=[
+                    "AI expertise",
+                    "research partnerships",
+                    "innovation pipeline",
+                ],
                 ecosystem_impact="Cutting-edge AI research driving ecosystem advancement",
                 development_effort="high",
                 business_value="Technology leadership and competitive advantage",
@@ -741,7 +766,7 @@ class AIEcosystemLeadershipEngine:
 
     def _calculate_ecosystem_diversity(self) -> float:
         """Calculate ecosystem diversity score."""
-        component_types = set(cap.capability_name for cap in self.deployed_capabilities)
+        component_types = {cap.capability_name for cap in self.deployed_capabilities}
         return min(1.0, len(component_types) / 6)  # Normalize by max expected components
 
     def _assess_business_value(self) -> float:
@@ -775,7 +800,10 @@ class AIEcosystemLeadershipEngine:
         return (adoption_score + business_score + integration_score) / 3
 
     def _assess_ecosystem_success(
-        self, ecosystem_metrics: dict[str, Any], developer_impact: dict[str, Any], business_achievements: dict[str, Any]
+        self,
+        ecosystem_metrics: dict[str, Any],
+        developer_impact: dict[str, Any],
+        business_achievements: dict[str, Any],
     ) -> bool:
         """Assess overall ecosystem leadership success."""
 

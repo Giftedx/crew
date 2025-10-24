@@ -14,6 +14,7 @@ from typing import Any
 
 import numpy as np
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -202,9 +203,8 @@ class MonitoringRule:
             return False
 
         # Geographic check
-        if self.geographic_regions and content.location:
-            if content.location not in self.geographic_regions:
-                return False
+        if self.geographic_regions and content.location and content.location not in self.geographic_regions:
+            return False
 
         # Keyword check
         text_lower = content.text_content.lower()
@@ -212,9 +212,8 @@ class MonitoringRule:
             return False
 
         # Hashtag check
-        if self.hashtag_filters:
-            if not any(hashtag in content.hashtags for hashtag in self.hashtag_filters):
-                return False
+        if self.hashtag_filters and not any(hashtag in content.hashtags for hashtag in self.hashtag_filters):
+            return False
 
         # Engagement check
         total_engagement = sum(content.engagement_metrics.values())
@@ -225,10 +224,9 @@ class MonitoringRule:
         if self.sentiment_filter and content.sentiment != self.sentiment_filter:
             return False
 
-        if content.sentiment_score < self.min_sentiment_score or content.sentiment_score > self.max_sentiment_score:
-            return False
-
-        return True
+        return not (
+            content.sentiment_score < self.min_sentiment_score or content.sentiment_score > self.max_sentiment_score
+        )
 
 
 class SocialMonitor:
@@ -418,8 +416,26 @@ class SocialMonitor:
             # This would integrate with a sentiment analysis service
             # For now, use a simple heuristic based on keywords
 
-            positive_keywords = ["good", "great", "excellent", "amazing", "love", "best", "awesome", "fantastic"]
-            negative_keywords = ["bad", "terrible", "awful", "hate", "worst", "horrible", "disgusting", "angry"]
+            positive_keywords = [
+                "good",
+                "great",
+                "excellent",
+                "amazing",
+                "love",
+                "best",
+                "awesome",
+                "fantastic",
+            ]
+            negative_keywords = [
+                "bad",
+                "terrible",
+                "awful",
+                "hate",
+                "worst",
+                "horrible",
+                "disgusting",
+                "angry",
+            ]
 
             text_lower = content.text_content.lower()
 
@@ -475,7 +491,7 @@ class SocialMonitor:
                         platform_data[platform.value] = len(platform_content)
 
                         # Sentiment analysis
-                        sentiment_counts = {sentiment: 0 for sentiment in SentimentType}
+                        sentiment_counts = dict.fromkeys(SentimentType, 0)
                         total_sentiment_score = 0.0
 
                         for content in platform_content:
@@ -628,7 +644,7 @@ class SocialMonitor:
                 growth_rate = 1.0 if current_volume > 0 else 0.0
 
             # Analyze sentiment distribution
-            sentiment_distribution = {sentiment: 0 for sentiment in SentimentType}
+            sentiment_distribution = dict.fromkeys(SentimentType, 0)
             for content in current_content:
                 sentiment_distribution[content.sentiment] += 1
 

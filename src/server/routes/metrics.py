@@ -21,7 +21,12 @@ def register_metrics_endpoint(app: FastAPI, settings: Any) -> None:
         if not enable_prom:
             import os as _os
 
-            enable_prom = _os.getenv("ENABLE_PROMETHEUS_ENDPOINT", "0").lower() in ("1", "true", "yes", "on")
+            enable_prom = _os.getenv("ENABLE_PROMETHEUS_ENDPOINT", "0").lower() in (
+                "1",
+                "true",
+                "yes",
+                "on",
+            )
         if not enable_prom:
             return
 
@@ -36,7 +41,7 @@ def register_metrics_endpoint(app: FastAPI, settings: Any) -> None:
             pass
 
         @app.get(str(path))
-        def _metrics():  # noqa: D401
+        def _metrics():
             data = metrics.render()
             return Response(data, status_code=200, media_type="text/plain; version=0.0.4")
 
@@ -44,7 +49,7 @@ def register_metrics_endpoint(app: FastAPI, settings: Any) -> None:
         try:  # pragma: no cover - defensive
             app.state.metrics_path = str(path)  # type: ignore[attr-defined]
         except Exception:  # pragma: no cover
-            setattr(app, "_metrics_path", str(path))
+            app._metrics_path = str(path)
     except Exception as exc:  # pragma: no cover - defensive
         logging.debug("metrics endpoint registration skipped: %s", exc)
 

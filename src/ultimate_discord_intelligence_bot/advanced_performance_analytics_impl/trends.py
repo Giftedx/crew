@@ -4,9 +4,10 @@ import logging
 import statistics
 from typing import Any
 
-from scipy import stats  # type: ignore[import-not-found]
+from scipy import stats  # type: ignore[import-untyped]
 
 from .models import PerformanceTrend
+
 
 logger = logging.getLogger(__name__)
 
@@ -15,15 +16,20 @@ def analyze_performance_trends(engine, lookback_hours: int) -> list[dict[str, An
     trends: list[dict[str, Any]] = []
     try:
         if hasattr(engine.enhanced_monitor, "real_time_metrics"):
-            for agent_name, agent_data in engine.enhanced_monitor.real_time_metrics.items():
+            for (
+                agent_name,
+                agent_data,
+            ) in engine.enhanced_monitor.real_time_metrics.items():
                 recent_interactions = agent_data.get("recent_interactions", [])
                 if len(recent_interactions) >= 10:
                     quality_trend = analyze_metric_trend(
-                        [i.get("response_quality", 0) for i in recent_interactions], f"{agent_name}_quality"
+                        [i.get("response_quality", 0) for i in recent_interactions],
+                        f"{agent_name}_quality",
                     )
                     trends.append(trend_to_dict(quality_trend))
                     time_trend = analyze_metric_trend(
-                        [i.get("response_time", 0) for i in recent_interactions], f"{agent_name}_response_time"
+                        [i.get("response_time", 0) for i in recent_interactions],
+                        f"{agent_name}_response_time",
                     )
                     trends.append(trend_to_dict(time_trend))
                     error_rates: list[float] = []
@@ -65,7 +71,7 @@ def analyze_metric_trend(values: list[float], metric_name: str) -> PerformanceTr
         change_rate = (slope * len(values)) / values[0] * 100 if len(values) > 1 and values[0] != 0 else 0.0
         forecast_next_period = slope * len(values) + intercept
         predicted = [slope * i + intercept for i in x]
-        residuals = [actual - pred for actual, pred in zip(y, predicted)]
+        residuals = [actual - pred for actual, pred in zip(y, predicted, strict=False)]
         try:
             base_var = statistics.variance(y)
         except statistics.StatisticsError:

@@ -25,6 +25,7 @@ from typing import Any, Literal
 
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
+
 logger = logging.getLogger(__name__)
 
 # Try to import BERTopic (optional dependency)
@@ -137,9 +138,7 @@ class TopicSegmentationService:
 
             # Validate input
             if not text or not text.strip():
-                return StepResult.fail(
-                    "Input text cannot be empty", status="bad_request"
-                )
+                return StepResult.fail("Input text cannot be empty", status="bad_request")
 
             if len(text) < 100:
                 return StepResult.fail(
@@ -149,17 +148,13 @@ class TopicSegmentationService:
 
             # Check cache first
             if use_cache:
-                cache_result = self._check_cache(
-                    text, model, min_topic_size, max_topics
-                )
+                cache_result = self._check_cache(text, model, min_topic_size, max_topics)
                 if cache_result:
                     logger.info("Topic segmentation cache hit")
                     return StepResult.ok(
                         data={
                             "segments": [s.__dict__ for s in cache_result.segments],
-                            "topic_model": cache_result.topic_model.__dict__
-                            if cache_result.topic_model
-                            else None,
+                            "topic_model": cache_result.topic_model.__dict__ if cache_result.topic_model else None,
                             "overall_coherence": cache_result.overall_coherence,
                             "topic_distribution": cache_result.topic_distribution,
                             "model": cache_result.model,
@@ -170,16 +165,12 @@ class TopicSegmentationService:
 
             # Perform topic segmentation
             model_name = self._select_model(model)
-            segmentation_result = self._segment_text(
-                text, model_name, min_topic_size, max_topics
-            )
+            segmentation_result = self._segment_text(text, model_name, min_topic_size, max_topics)
 
             if segmentation_result:
                 # Cache result
                 if use_cache:
-                    self._cache_result(
-                        text, model, min_topic_size, max_topics, segmentation_result
-                    )
+                    self._cache_result(text, model, min_topic_size, max_topics, segmentation_result)
 
                 processing_time = (time.time() - start_time) * 1000
 
@@ -201,7 +192,7 @@ class TopicSegmentationService:
 
         except Exception as e:
             logger.error(f"Text segmentation failed: {e}")
-            return StepResult.fail(f"Segmentation failed: {str(e)}", status="retryable")
+            return StepResult.fail(f"Segmentation failed: {e!s}", status="retryable")
 
     def segment_transcript(
         self,
@@ -251,9 +242,7 @@ class TopicSegmentationService:
                 return StepResult.fail("Transcript segmentation failed")
 
             # Align topics back to original segments
-            aligned_segments = self._align_topics_to_segments(
-                segmentation_result.segments, segment_texts
-            )
+            aligned_segments = self._align_topics_to_segments(segmentation_result.segments, segment_texts)
 
             return StepResult.ok(
                 data={
@@ -270,7 +259,7 @@ class TopicSegmentationService:
 
         except Exception as e:
             logger.error(f"Transcript segmentation failed: {e}")
-            return StepResult.fail(f"Transcript segmentation failed: {str(e)}")
+            return StepResult.fail(f"Transcript segmentation failed: {e!s}")
 
     def _select_model(self, model_alias: str) -> str:
         """Select actual model configuration from alias.
@@ -323,7 +312,7 @@ class TopicSegmentationService:
             text_chunks = self._split_text_into_chunks(text, max_chunk_size=512)
 
             # Fit model and get topics
-            topics, probs = topic_model.fit_transform(text_chunks)
+            topics, _probs = topic_model.fit_transform(text_chunks)
 
             # Extract topic information
             topic_info = topic_model.get_topic_info()
@@ -333,16 +322,12 @@ class TopicSegmentationService:
             segments = []
             topic_distribution = {}
 
-            for i, (chunk, topic_id) in enumerate(zip(text_chunks, topics)):
+            for i, (chunk, topic_id) in enumerate(zip(text_chunks, topics, strict=False)):
                 if topic_id == -1:  # Outlier topic
                     continue
 
                 # Get topic name and coherence
-                topic_name = (
-                    topic_names[topic_id]
-                    if topic_id < len(topic_names)
-                    else f"Topic_{topic_id}"
-                )
+                topic_name = topic_names[topic_id] if topic_id < len(topic_names) else f"Topic_{topic_id}"
 
                 # Calculate segment timing (approximate)
                 chunk_start = i * 30.0  # Assume 30 seconds per chunk
@@ -360,9 +345,7 @@ class TopicSegmentationService:
                 segments.append(segment)
 
                 # Update topic distribution
-                topic_distribution[str(topic_id)] = (
-                    topic_distribution.get(str(topic_id), 0) + 1
-                )
+                topic_distribution[str(topic_id)] = topic_distribution.get(str(topic_id), 0) + 1
 
             # Create topic model metadata
             model_metadata = TopicModel(
@@ -379,9 +362,7 @@ class TopicSegmentationService:
             # Normalize topic distribution
             total_segments = sum(topic_distribution.values())
             if total_segments > 0:
-                topic_distribution = {
-                    k: v / total_segments for k, v in topic_distribution.items()
-                }
+                topic_distribution = {k: v / total_segments for k, v in topic_distribution.items()}
 
             return TopicSegmentationResult(
                 segments=segments,
@@ -438,9 +419,7 @@ class TopicSegmentationService:
 
         return topic_model
 
-    def _split_text_into_chunks(
-        self, text: str, max_chunk_size: int = 512
-    ) -> list[str]:
+    def _split_text_into_chunks(self, text: str, max_chunk_size: int = 512) -> list[str]:
         """Split text into manageable chunks for topic modeling.
 
         Args:
@@ -467,9 +446,7 @@ class TopicSegmentationService:
 
         return chunks
 
-    def _calculate_coherence(
-        self, topic_model: BERTopic, documents: list[str]
-    ) -> float:
+    def _calculate_coherence(self, topic_model: BERTopic, documents: list[str]) -> float:
         """Calculate topic coherence score.
 
         Args:
@@ -533,9 +510,7 @@ class TopicSegmentationService:
 
                 # Add transcript text if available
                 if segment_index < len(transcript_segments):
-                    topic_seg.text = transcript_segments[segment_index].get(
-                        "text", topic_seg.text
-                    )
+                    topic_seg.text = transcript_segments[segment_index].get("text", topic_seg.text)
 
             aligned_segments.append(topic_seg)
 
@@ -677,9 +652,7 @@ class TopicSegmentationService:
             stats = {
                 "total_cached": len(self._segmentation_cache),
                 "cache_size_limit": self.cache_size,
-                "utilization": len(self._segmentation_cache) / self.cache_size
-                if self.cache_size > 0
-                else 0.0,
+                "utilization": len(self._segmentation_cache) / self.cache_size if self.cache_size > 0 else 0.0,
                 "models_cached": {},
             }
 
@@ -692,7 +665,7 @@ class TopicSegmentationService:
 
         except Exception as e:
             logger.error(f"Failed to get cache stats: {e}")
-            return StepResult.fail(f"Failed to get cache stats: {str(e)}")
+            return StepResult.fail(f"Failed to get cache stats: {e!s}")
 
 
 # Singleton instance

@@ -9,6 +9,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -69,9 +70,14 @@ class FallbackVectorStore:
     def __init__(self) -> None:
         self._vectors: dict[str, list[float]] = {}
         self._metadata: dict[str, dict[str, Any]] = {}
+        self._collections: set[str] = set()
         logger.info("Using fallback in-memory vector store (Qdrant unavailable)")
 
-    def add_vectors(self, vectors: dict[str, list[float]], metadata: dict[str, dict[str, Any]] | None = None) -> bool:
+    def add_vectors(
+        self,
+        vectors: dict[str, list[float]],
+        metadata: dict[str, dict[str, Any]] | None = None,
+    ) -> bool:
         """Add vectors to the store."""
         self._vectors.update(vectors)
         if metadata:
@@ -104,7 +110,7 @@ class FallbackVectorStore:
         if len(a) != len(b):
             return 0.0
 
-        dot_product = sum(x * y for x, y in zip(a, b))
+        dot_product = sum(x * y for x, y in zip(a, b, strict=False))
         norm_a = sum(x * x for x in a) ** 0.5
         norm_b = sum(x * x for x in b) ** 0.5
 
@@ -123,6 +129,39 @@ class FallbackVectorStore:
     def get_vector_count(self) -> int:
         """Get total number of vectors in the store."""
         return len(self._vectors)
+
+    def get_collections(self) -> Any:
+        """Get collections (fallback implementation)."""
+
+        # Return a mock collections object that matches Qdrant's interface
+        class MockCollection:
+            def __init__(self, name: str):
+                self.name = name
+
+        class MockCollections:
+            def __init__(self, collections: set[str]):
+                self.collections = [MockCollection(name) for name in collections]
+
+        return MockCollections(self._collections)
+
+    def create_collection(self, name: str, vectors_config: Any = None) -> bool:
+        """Create a collection (fallback implementation)."""
+        # Track the collection in our set
+        self._collections.add(name)
+        logger.info(f"Fallback: created collection '{name}' with config {vectors_config}")
+        return True
+
+    def upsert(self, collection_name: str, points: list[Any]) -> bool:
+        """Upsert points to a collection (fallback implementation)."""
+        # In the fallback implementation, we store vectors in memory
+        for point in points:
+            if hasattr(point, "id") and hasattr(point, "vector"):
+                vector_id = f"{collection_name}:{point.id}"
+                self._vectors[vector_id] = point.vector
+                if hasattr(point, "payload"):
+                    self._metadata[vector_id] = point.payload
+        logger.info(f"Fallback: upserted {len(points)} points to collection '{collection_name}'")
+        return True
 
 
 class FallbackMetrics:

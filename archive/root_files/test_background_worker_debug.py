@@ -5,11 +5,15 @@ import asyncio
 import logging
 import sys
 
+
 # Set up logging to see ALL errors
 logging.basicConfig(
     level=logging.DEBUG,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    handlers=[logging.StreamHandler(sys.stdout), logging.FileHandler("/tmp/background_worker_debug.log")],
+    handlers=[
+        logging.StreamHandler(sys.stdout),
+        logging.FileHandler("/tmp/background_worker_debug.log"),
+    ],
 )
 
 logger = logging.getLogger(__name__)
@@ -21,8 +25,12 @@ async def test_background_worker():
         logger.info("🔍 Starting background worker debug test...")
 
         # Import the components
-        from ultimate_discord_intelligence_bot.autonomous_orchestrator import AutonomousIntelligenceOrchestrator
-        from ultimate_discord_intelligence_bot.background_intelligence_worker import BackgroundIntelligenceWorker
+        from ultimate_discord_intelligence_bot.autonomous_orchestrator import (
+            AutonomousIntelligenceOrchestrator,
+        )
+        from ultimate_discord_intelligence_bot.background_intelligence_worker import (
+            BackgroundIntelligenceWorker,
+        )
 
         logger.info("✅ Imports successful")
 

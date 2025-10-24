@@ -11,9 +11,13 @@ import os
 import re
 import shutil
 import sys
-from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
+from typing import TYPE_CHECKING
+
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 
 @dataclass
@@ -34,7 +38,11 @@ def check_python() -> CheckResult:
 
 def check_venv() -> CheckResult:
     ok = sys.prefix != getattr(sys, "base_prefix", sys.prefix)
-    return CheckResult("Virtualenv active", ok, "run `python scripts/bootstrap_env.py` and activate .venv")
+    return CheckResult(
+        "Virtualenv active",
+        ok,
+        "run `python scripts/bootstrap_env.py` and activate .venv",
+    )
 
 
 def check_import(pkg: str) -> CheckResult:

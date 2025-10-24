@@ -63,7 +63,7 @@ def check_file_references(doc_content: str, doc_path: Path, repo_root: Path, doc
     for raw in re.findall(md_link_pattern, doc_content):
         link = raw.strip()
         # Absolute links (starting with http) are ignored by this checker
-        if link.startswith("http://") or link.startswith("https://"):
+        if link.startswith(("http://", "https://")):
             continue
         # Resolve relative to docs dir
         candidate = (docs_dir / link).resolve()

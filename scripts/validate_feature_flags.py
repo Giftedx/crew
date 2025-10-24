@@ -46,8 +46,13 @@ from __future__ import annotations
 import logging
 import re
 import sys
-from collections.abc import Iterable
 from pathlib import Path
+from typing import TYPE_CHECKING
+
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
 
 RE_ENABLE = re.compile(r"ENABLE_[A-Z0-9_]+")
 RE_PRIVACY = re.compile(r"enable_pii_(?:detection|redaction)")
@@ -96,7 +101,7 @@ def discover_code_flags() -> set[str]:
         # flags.enabled calls
         for m in RE_FLAGS_ENABLED.finditer(text):
             name = m.group(1)
-            if name.startswith("ENABLE_") or name.startswith("enable_pii_"):
+            if name.startswith(("ENABLE_", "enable_pii_")):
                 flags.add(name)
         # RL f-string pattern marker
         if RE_FSTRING_RL.search(text):

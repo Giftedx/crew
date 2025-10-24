@@ -27,11 +27,15 @@ import statistics
 from dataclasses import asdict, dataclass
 from datetime import datetime
 
+
 # Setup logging
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    handlers=[logging.FileHandler("production_monitoring.log"), logging.StreamHandler()],
+    handlers=[
+        logging.FileHandler("production_monitoring.log"),
+        logging.StreamHandler(),
+    ],
 )
 logger = logging.getLogger(__name__)
 
@@ -147,7 +151,11 @@ class PerformanceMonitor:
                 "offset_tree": 0.63 + (len(self.snapshots) % 5) * 0.02,
             }
 
-            domain_perf = {"model_routing": 0.70, "content_analysis": 0.62, "user_engagement": 0.68}
+            domain_perf = {
+                "model_routing": 0.70,
+                "content_analysis": 0.62,
+                "user_engagement": 0.68,
+            }
 
             confidence_dist = {"high": 0.4, "medium": 0.45, "low": 0.15}
 
@@ -338,7 +346,10 @@ class PerformanceMonitor:
                 "p95": sorted(latencies)[int(0.95 * len(latencies))],
                 "max": max(latencies),
             },
-            "error_rate": {"mean": statistics.mean(error_rates), "max": max(error_rates)},
+            "error_rate": {
+                "mean": statistics.mean(error_rates),
+                "max": max(error_rates),
+            },
         }
 
     async def run_health_check(self) -> dict[str, str]:
@@ -380,7 +391,7 @@ class PerformanceMonitor:
 
             # Check active alerts
             if self.alerts_triggered:
-                critical_alerts = [k for k in self.alerts_triggered.keys() if "critical" in k]
+                critical_alerts = [k for k in self.alerts_triggered if "critical" in k]
                 if critical_alerts:
                     health_status["alerts"] = "critical"
                     health_status["overall"] = "unhealthy"
@@ -460,11 +471,36 @@ def get_default_config() -> MonitoringConfig:
     return MonitoringConfig(
         check_interval=60,
         alert_thresholds=[
-            AlertThreshold(metric_name="avg_reward", min_value=0.5, duration_seconds=300, severity="warning"),
-            AlertThreshold(metric_name="avg_reward", min_value=0.3, duration_seconds=180, severity="critical"),
-            AlertThreshold(metric_name="decision_latency_ms", max_value=100, duration_seconds=300, severity="warning"),
-            AlertThreshold(metric_name="error_rate", max_value=0.05, duration_seconds=180, severity="warning"),
-            AlertThreshold(metric_name="memory_usage_mb", max_value=400, duration_seconds=600, severity="warning"),
+            AlertThreshold(
+                metric_name="avg_reward",
+                min_value=0.5,
+                duration_seconds=300,
+                severity="warning",
+            ),
+            AlertThreshold(
+                metric_name="avg_reward",
+                min_value=0.3,
+                duration_seconds=180,
+                severity="critical",
+            ),
+            AlertThreshold(
+                metric_name="decision_latency_ms",
+                max_value=100,
+                duration_seconds=300,
+                severity="warning",
+            ),
+            AlertThreshold(
+                metric_name="error_rate",
+                max_value=0.05,
+                duration_seconds=180,
+                severity="warning",
+            ),
+            AlertThreshold(
+                metric_name="memory_usage_mb",
+                max_value=400,
+                duration_seconds=600,
+                severity="warning",
+            ),
         ],
         enable_dashboard=True,
         enable_alerts=True,
@@ -495,7 +531,10 @@ async def main():
     parser = argparse.ArgumentParser(description="Advanced Contextual Bandits Production Monitoring")
     parser.add_argument("--config", default="monitoring_config.json", help="Configuration file path")
     parser.add_argument(
-        "--mode", choices=["monitor", "dashboard", "alerts", "health"], default="monitor", help="Monitoring mode"
+        "--mode",
+        choices=["monitor", "dashboard", "alerts", "health"],
+        default="monitor",
+        help="Monitoring mode",
     )
     parser.add_argument("--interval", type=int, default=60, help="Check interval in seconds")
     parser.add_argument("--save-config", action="store_true", help="Save default configuration and exit")

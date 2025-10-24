@@ -31,9 +31,14 @@ can be imported in tests and lightweight pipelines without circular imports.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from typing import TYPE_CHECKING
 
-from .schema import Evidence  # Re‑use existing Evidence dataclass / pydantic model
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+    from .schema import Evidence
+
 
 __all__ = ["append_numeric_citations"]
 

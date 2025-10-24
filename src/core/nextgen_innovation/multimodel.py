@@ -5,6 +5,7 @@ import logging
 import random
 from typing import Any
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -81,7 +82,7 @@ class MultiModelIntelligence:
                 "innovation_potential": 0.0,
                 "ethical_alignment": 0.0,
             }
-            for model_name in self.active_models.keys():
+            for model_name in self.active_models:
                 contribution = await self._simulate_model_inference(model_name, query, domain_context)
                 fusion_result["model_contributions"][model_name] = contribution
             synthesis = await self._synthesize_contributions(fusion_result["model_contributions"])

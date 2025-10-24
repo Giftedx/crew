@@ -7,6 +7,7 @@ import logging
 from core.http_utils import resilient_post
 from core.secure_config import get_config
 
+
 logger = logging.getLogger(__name__)
 
 

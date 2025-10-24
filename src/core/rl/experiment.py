@@ -10,9 +10,13 @@ from __future__ import annotations
 import hashlib
 import logging
 import os
-from collections.abc import Callable, Mapping, MutableMapping
 from dataclasses import dataclass, field
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Mapping, MutableMapping
+
 
 try:  # Provide a patchable placeholder metrics namespace for tests
     METRICS_AVAILABLE = True
@@ -266,9 +270,17 @@ class ExperimentManager:
             return
         exp = self._experiments.get(experiment_id)
         if not exp:
-            logger.debug("Cannot record reward - experiment not found: experiment_id=%s", experiment_id)
+            logger.debug(
+                "Cannot record reward - experiment not found: experiment_id=%s",
+                experiment_id,
+            )
             return
-        logger.debug("Recording experiment reward: experiment_id=%s, arm=%s, reward=%f", experiment_id, arm, reward)
+        logger.debug(
+            "Recording experiment reward: experiment_id=%s, arm=%s, reward=%f",
+            experiment_id,
+            arm,
+            reward,
+        )
         exp.record(arm, reward)
 
     def snapshot(self) -> dict[str, Any]:

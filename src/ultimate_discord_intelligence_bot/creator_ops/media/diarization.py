@@ -12,12 +12,13 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 
-import torch
-from pyannote.audio import Pipeline
-from pyannote.core import Annotation, Segment
+import torch  # type: ignore[import-not-found]
+from pyannote.audio import Pipeline  # type: ignore[import-not-found]
+from pyannote.core import Annotation, Segment  # type: ignore[import-not-found]
 
 from ultimate_discord_intelligence_bot.creator_ops.config import CreatorOpsConfig
 from ultimate_discord_intelligence_bot.step_result import StepResult
+
 
 logger = logging.getLogger(__name__)
 
@@ -97,7 +98,7 @@ class SpeakerDiarization:
                 logger.info("Loaded diarization pipeline on CPU")
 
         except Exception as e:
-            logger.error(f"Failed to initialize diarization pipeline: {str(e)}")
+            logger.error(f"Failed to initialize diarization pipeline: {e!s}")
             raise
 
     def diarize_audio(
@@ -164,7 +165,7 @@ class SpeakerDiarization:
             processing_time = (datetime.utcnow() - start_time).total_seconds()
             result = DiarizationResult(
                 segments=segments,
-                speakers=sorted(list(speakers)),
+                speakers=sorted(speakers),
                 speaker_count=len(speakers),
                 duration=duration,
                 model_name=self.model_name,
@@ -176,8 +177,8 @@ class SpeakerDiarization:
             return StepResult.ok(data=result)
 
         except Exception as e:
-            logger.error(f"Speaker diarization failed: {str(e)}")
-            return StepResult.fail(f"Speaker diarization failed: {str(e)}")
+            logger.error(f"Speaker diarization failed: {e!s}")
+            return StepResult.fail(f"Speaker diarization failed: {e!s}")
 
     def estimate_speaker_count(
         self,
@@ -214,14 +215,14 @@ class SpeakerDiarization:
             return StepResult.ok(
                 data={
                     "estimated_speaker_count": estimated_count,
-                    "speakers": sorted(list(speakers)),
+                    "speakers": sorted(speakers),
                     "confidence": "medium",  # pyannote doesn't provide confidence
                 }
             )
 
         except Exception as e:
-            logger.error(f"Speaker count estimation failed: {str(e)}")
-            return StepResult.fail(f"Speaker count estimation failed: {str(e)}")
+            logger.error(f"Speaker count estimation failed: {e!s}")
+            return StepResult.fail(f"Speaker count estimation failed: {e!s}")
 
     def handle_overlaps(
         self,
@@ -279,8 +280,8 @@ class SpeakerDiarization:
             )
 
         except Exception as e:
-            logger.error(f"Overlap handling failed: {str(e)}")
-            return StepResult.fail(f"Overlap handling failed: {str(e)}")
+            logger.error(f"Overlap handling failed: {e!s}")
+            return StepResult.fail(f"Overlap handling failed: {e!s}")
 
     def evaluate_der(
         self,
@@ -298,7 +299,7 @@ class SpeakerDiarization:
             StepResult with DER score
         """
         try:
-            from pyannote.metrics.diarization import DiarizationErrorRate
+            from pyannote.metrics.diarization import DiarizationErrorRate  # type: ignore[import-not-found]
 
             # Convert to pyannote format
             predicted_annotation = self._to_pyannote_annotation(predicted)
@@ -319,8 +320,8 @@ class SpeakerDiarization:
             )
 
         except Exception as e:
-            logger.error(f"DER evaluation failed: {str(e)}")
-            return StepResult.fail(f"DER evaluation failed: {str(e)}")
+            logger.error(f"DER evaluation failed: {e!s}")
+            return StepResult.fail(f"DER evaluation failed: {e!s}")
 
     def _to_pyannote_annotation(self, diarization_result: DiarizationResult) -> Annotation:
         """Convert DiarizationResult to pyannote Annotation."""

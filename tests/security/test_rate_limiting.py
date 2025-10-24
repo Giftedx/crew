@@ -64,7 +64,12 @@ class TestRateLimiting:
             rate_limit = tenant_info.get("rate_limit", 100)
 
             if tenant_requests[tenant] <= rate_limit:
-                return StepResult.ok(data={"allowed": True, "remaining": rate_limit - tenant_requests[tenant]})
+                return StepResult.ok(
+                    data={
+                        "allowed": True,
+                        "remaining": rate_limit - tenant_requests[tenant],
+                    }
+                )
             else:
                 return StepResult.fail("Rate limit exceeded", status="rate_limited")
 
@@ -75,7 +80,7 @@ class TestRateLimiting:
             rate_limit = tenant_info["rate_limit"]
 
             # Make requests up to the limit
-            for i in range(rate_limit):
+            for _i in range(rate_limit):
                 result = mock_rate_limiter.check_rate_limit(tenant=tenant_id, workspace=tenant_info["workspace"])
                 assert result.success
                 assert result.data["allowed"]
@@ -103,7 +108,12 @@ class TestRateLimiting:
             endpoint_limit = 10  # requests per minute per endpoint
 
             if endpoint_requests[endpoint] <= endpoint_limit:
-                return StepResult.ok(data={"allowed": True, "remaining": endpoint_limit - endpoint_requests[endpoint]})
+                return StepResult.ok(
+                    data={
+                        "allowed": True,
+                        "remaining": endpoint_limit - endpoint_requests[endpoint],
+                    }
+                )
             else:
                 return StepResult.fail("Rate limit exceeded", status="rate_limited")
 
@@ -114,7 +124,7 @@ class TestRateLimiting:
 
         for endpoint in endpoints:
             # Make requests up to the limit for each endpoint
-            for i in range(10):
+            for _i in range(10):
                 result = mock_rate_limiter.check_rate_limit(tenant=tenant_id, workspace=workspace, endpoint=endpoint)
                 assert result.success
                 assert result.data["allowed"]
@@ -143,7 +153,12 @@ class TestRateLimiting:
             workspace_limit = 50  # requests per minute per workspace
 
             if workspace_requests[key] <= workspace_limit:
-                return StepResult.ok(data={"allowed": True, "remaining": workspace_limit - workspace_requests[key]})
+                return StepResult.ok(
+                    data={
+                        "allowed": True,
+                        "remaining": workspace_limit - workspace_requests[key],
+                    }
+                )
             else:
                 return StepResult.fail("Rate limit exceeded", status="rate_limited")
 
@@ -154,7 +169,7 @@ class TestRateLimiting:
 
         for workspace in workspaces:
             # Make requests up to the limit for each workspace
-            for i in range(50):
+            for _i in range(50):
                 result = mock_rate_limiter.check_rate_limit(tenant=tenant_id, workspace=workspace)
                 assert result.success
                 assert result.data["allowed"]
@@ -261,7 +276,7 @@ class TestRateLimiting:
         mock_rate_limiter.check_rate_limit.side_effect = mock_check_rate_limit
 
         # Make burst requests up to the limit
-        for i in range(burst_limit):
+        for _i in range(burst_limit):
             result = mock_rate_limiter.check_rate_limit(tenant=tenant_id, workspace=tenant_info["workspace"])
             assert result.success
             assert result.data["allowed"]
@@ -361,7 +376,11 @@ class TestRateLimiting:
 
         # Mock rate limiter to return retry-after information
         def mock_check_rate_limit(tenant, workspace, endpoint=None):
-            return StepResult.fail("Rate limit exceeded", status="rate_limited", headers={"Retry-After": "60"})
+            return StepResult.fail(
+                "Rate limit exceeded",
+                status="rate_limited",
+                headers={"Retry-After": "60"},
+            )
 
         mock_rate_limiter.check_rate_limit.side_effect = mock_check_rate_limit
 
@@ -432,7 +451,12 @@ class TestRateLimiting:
             ip_limit = 50  # requests per minute per IP
 
             if ip_requests[client_ip] <= ip_limit:
-                return StepResult.ok(data={"allowed": True, "remaining": ip_limit - ip_requests[client_ip]})
+                return StepResult.ok(
+                    data={
+                        "allowed": True,
+                        "remaining": ip_limit - ip_requests[client_ip],
+                    }
+                )
             else:
                 return StepResult.fail("IP rate limit exceeded", status="rate_limited")
 
@@ -443,7 +467,7 @@ class TestRateLimiting:
 
         for ip in client_ips:
             # Make requests up to the limit for each IP
-            for i in range(50):
+            for _i in range(50):
                 result = mock_rate_limiter.check_rate_limit(
                     tenant="test_tenant", workspace="test_workspace", client_ip=ip
                 )

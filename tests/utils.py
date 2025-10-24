@@ -29,7 +29,9 @@ class AsyncTestHelper:
 
     @staticmethod
     async def wait_for_condition(
-        condition_func: Callable[[], bool], timeout: float = 5.0, check_interval: float = 0.1
+        condition_func: Callable[[], bool],
+        timeout: float = 5.0,
+        check_interval: float = 0.1,
     ) -> bool:
         """Wait for a condition to become true."""
         start_time = time.time()
@@ -78,7 +80,8 @@ class MockBuilder:
 
     @staticmethod
     def create_http_client_mock(
-        responses: dict[str, Any] | None = None, raise_exceptions: list[str] | None = None
+        responses: dict[str, Any] | None = None,
+        raise_exceptions: list[str] | None = None,
     ) -> Mock:
         """Create a mock HTTP client with configurable responses."""
         mock_client = Mock()
@@ -113,7 +116,8 @@ class MockBuilder:
 
     @staticmethod
     def create_database_mock(
-        query_results: dict[str, list[dict]] | None = None, raise_exceptions: list[str] | None = None
+        query_results: dict[str, list[dict]] | None = None,
+        raise_exceptions: list[str] | None = None,
     ) -> Mock:
         """Create a mock database with configurable query results."""
         mock_db = Mock()
@@ -145,12 +149,19 @@ class MockBuilder:
         return mock_db
 
     @staticmethod
-    def create_redis_mock(cache_data: dict[str, Any] | None = None, raise_exceptions: list[str] | None = None) -> Mock:
+    def create_redis_mock(
+        cache_data: dict[str, Any] | None = None,
+        raise_exceptions: list[str] | None = None,
+    ) -> Mock:
         """Create a mock Redis client with configurable cache data."""
         mock_redis = Mock()
 
         if cache_data is None:
-            cache_data = {"key1": "value1", "key2": "value2", "key3": json.dumps({"data": "value3"})}
+            cache_data = {
+                "key1": "value1",
+                "key2": "value2",
+                "key3": json.dumps({"data": "value3"}),
+            }
 
         if raise_exceptions is None:
             raise_exceptions = []
@@ -259,7 +270,12 @@ class TestDataGenerator:
                 start_time = i * 0.5
                 end_time = start_time + 0.5
                 segments.append(
-                    {"start": start_time, "end": end_time, "text": word, "confidence": 0.9 + (i % 10) * 0.01}
+                    {
+                        "start": start_time,
+                        "end": end_time,
+                        "text": word,
+                        "confidence": 0.9 + (i % 10) * 0.01,
+                    }
                 )
 
         return {
@@ -413,7 +429,10 @@ class PerformanceTestHelper:
         times = []
 
         for _ in range(iterations):
-            _, execution_time = await PerformanceTestHelper.measure_async_execution_time(func, *args, **kwargs)
+            (
+                _,
+                execution_time,
+            ) = await PerformanceTestHelper.measure_async_execution_time(func, *args, **kwargs)
             times.append(execution_time)
 
         return {

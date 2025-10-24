@@ -36,7 +36,7 @@ def _load_manifest(plugin: str) -> dict[str, Any]:
     module_file = getattr(module, "__file__", None)
     if module_file is None:
         raise RuntimeError(f"Plugin module {plugin} has no __file__ attribute")
-    manifest_path = Path(cast(str, module_file)).parent / "manifest.json"
+    manifest_path = Path(cast("str", module_file)).parent / "manifest.json"
     with manifest_path.open("r", encoding="utf-8") as fh:
         data = json.load(fh)
     if not isinstance(data, dict):
@@ -84,7 +84,12 @@ def run(plugin: str) -> dict[str, Any]:
                 checks: list[tuple[str, bool]] = []
                 out_str = str(output)
                 if "must_include" in expected:
-                    checks.append(("must_include", scorers.must_include(expected["must_include"])(out_str)))
+                    checks.append(
+                        (
+                            "must_include",
+                            scorers.must_include(expected["must_include"])(out_str),
+                        )
+                    )
                 if "forbidden" in expected:
                     checks.append(("forbidden", scorers.forbidden(expected["forbidden"])(out_str)))
                 if "must_link" in expected:

@@ -10,13 +10,17 @@ import json
 import os
 import time
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from core.learning_engine import LearningEngine
-from core.router import Router
 from obs import metrics, tracing
 from ultimate_discord_intelligence_bot.step_result import StepResult
 from ultimate_discord_intelligence_bot.tenancy import current_tenant
+
+
+if TYPE_CHECKING:
+    from core.learning_engine import LearningEngine
+    from core.router import Router
+
 
 # Optional AgentEvals integration (Context7 recommendation)
 _AGENTEVALS_AVAILABLE = False
@@ -24,7 +28,9 @@ _agentevals_create_judge = None  # lazy handle to factory
 
 
 # Local minimal adapter function placeholder (tests monkeypatch this symbol)
-def _lc_evaluate_trajectory(outputs):  # pragma: no cover - default simple passthrough heuristic
+def _lc_evaluate_trajectory(
+    outputs,
+):  # pragma: no cover - default simple passthrough heuristic
     return {
         "score": True,
         "reasoning": "local chain evaluator placeholder",
@@ -105,7 +111,11 @@ class AgentTrajectory:
 class TrajectoryEvaluator:
     """Enhanced trajectory evaluator for CrewAI agents."""
 
-    def __init__(self, router: Router | None = None, learning_engine: LearningEngine | None = None):
+    def __init__(
+        self,
+        router: Router | None = None,
+        learning_engine: LearningEngine | None = None,
+    ):
         self.router = router
         self.learning_engine = learning_engine
         self.enabled = os.getenv("ENABLE_TRAJECTORY_EVALUATION", "0") == "1"
@@ -167,14 +177,17 @@ class TrajectoryEvaluator:
 
                         if (
                             hasattr(_mod_src, "_lc_evaluate_trajectory")
-                            and getattr(_mod_src, "_lc_evaluate_trajectory") is not _DEFAULT_LC_EVAL
+                            and _mod_src._lc_evaluate_trajectory is not _DEFAULT_LC_EVAL
                         ):
-                            injected_func = getattr(_mod_src, "_lc_evaluate_trajectory")
+                            injected_func = _mod_src._lc_evaluate_trajectory
                     except Exception:
                         pass
-                    if injected_func is None and ("_lc_evaluate_trajectory" in globals()):
-                        if _lc_evaluate_trajectory is not _DEFAULT_LC_EVAL:
-                            injected_func = _lc_evaluate_trajectory
+                    if (
+                        injected_func is None
+                        and ("_lc_evaluate_trajectory" in globals())
+                        and _lc_evaluate_trajectory is not _DEFAULT_LC_EVAL
+                    ):
+                        injected_func = _lc_evaluate_trajectory
 
                     if injected_func is not None:
                         try:
@@ -227,7 +240,11 @@ class TrajectoryEvaluator:
                 _model = self.router.route(
                     task="trajectory_evaluation",
                     candidates=["gpt-4o-mini", "gpt-3.5-turbo", "claude-3-haiku"],
-                    context={"prompt": evaluation_prompt, "expected_output_tokens": 200, "estimated_cost_usd": 0.01},
+                    context={
+                        "prompt": evaluation_prompt,
+                        "expected_output_tokens": 200,
+                        "estimated_cost_usd": 0.01,
+                    },
                 )
 
                 # This would integrate with the LLM service
@@ -265,7 +282,10 @@ class TrajectoryEvaluator:
             return StepResult.fail(f"Trajectory evaluation failed: {e}")
 
     def evaluate_trajectory_match(
-        self, trajectory: AgentTrajectory, reference_trajectory: AgentTrajectory, match_mode: str = "strict"
+        self,
+        trajectory: AgentTrajectory,
+        reference_trajectory: AgentTrajectory,
+        match_mode: str = "strict",
     ) -> StepResult:
         """Evaluate trajectory against a reference trajectory."""
         if not self.enabled:
@@ -375,8 +395,8 @@ class TrajectoryEvaluator:
 
     def _superset_trajectory_match(self, trajectory: AgentTrajectory, reference: AgentTrajectory) -> StepResult:
         """Superset trajectory matching - trajectory contains all reference tools."""
-        traj_tools = set(step.tool_name for step in trajectory.steps if step.tool_name)
-        ref_tools = set(step.tool_name for step in reference.steps if step.tool_name)
+        traj_tools = {step.tool_name for step in trajectory.steps if step.tool_name}
+        ref_tools = {step.tool_name for step in reference.steps if step.tool_name}
 
         match = ref_tools.issubset(traj_tools)
         coverage = len(ref_tools.intersection(traj_tools)) / len(ref_tools) if ref_tools else 1.0
@@ -392,8 +412,8 @@ class TrajectoryEvaluator:
 
     def _unordered_trajectory_match(self, trajectory: AgentTrajectory, reference: AgentTrajectory) -> StepResult:
         """Unordered trajectory matching - same tools, any order."""
-        traj_tools = set(step.tool_name for step in trajectory.steps if step.tool_name)
-        ref_tools = set(step.tool_name for step in reference.steps if step.tool_name)
+        traj_tools = {step.tool_name for step in trajectory.steps if step.tool_name}
+        ref_tools = {step.tool_name for step in reference.steps if step.tool_name}
 
         match = traj_tools == ref_tools
 
@@ -409,7 +429,11 @@ class TrajectoryEvaluator:
 class EnhancedCrewEvaluator:
     """Enhanced evaluator for CrewAI execution with trajectory analysis."""
 
-    def __init__(self, router: Router | None = None, learning_engine: LearningEngine | None = None):
+    def __init__(
+        self,
+        router: Router | None = None,
+        learning_engine: LearningEngine | None = None,
+    ):
         self.trajectory_evaluator = TrajectoryEvaluator(router, learning_engine)
         self.enabled = os.getenv("ENABLE_ENHANCED_CREW_EVALUATION", "0") == "1"
 
@@ -449,7 +473,7 @@ class EnhancedCrewEvaluator:
         """Calculate crew-specific performance metrics."""
         return {
             "total_steps": len(trajectory.steps),
-            "unique_agents": len(set(step.agent_role for step in trajectory.steps)),
+            "unique_agents": len({step.agent_role for step in trajectory.steps}),
             "tool_usage_count": len([step for step in trajectory.steps if step.tool_name]),
             "error_rate": len([step for step in trajectory.steps if step.error]) / len(trajectory.steps)
             if trajectory.steps
@@ -459,4 +483,9 @@ class EnhancedCrewEvaluator:
         }
 
 
-__all__ = ["TrajectoryEvaluator", "EnhancedCrewEvaluator", "AgentTrajectory", "TrajectoryStep"]
+__all__ = [
+    "AgentTrajectory",
+    "EnhancedCrewEvaluator",
+    "TrajectoryEvaluator",
+    "TrajectoryStep",
+]

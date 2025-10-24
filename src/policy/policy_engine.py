@@ -8,6 +8,7 @@ from typing import Any
 
 import yaml
 
+
 POLICY_PATH = Path("config/policy.yaml")
 TENANT_DIR = Path("tenants")
 
@@ -122,8 +123,8 @@ def check_use_case(use_case: str, context: dict[str, Any], policy: Policy) -> De
 __all__ = [
     "Decision",
     "Policy",
-    "load_policy",
-    "check_source",
     "check_payload",
+    "check_source",
     "check_use_case",
+    "load_policy",
 ]

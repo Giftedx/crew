@@ -15,6 +15,7 @@ from typing import Any
 
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -177,7 +178,7 @@ class AdvancedPromptCompressor:
 
         except Exception as e:
             logger.error(f"Prompt compression failed: {e}")
-            return StepResult.fail(f"Prompt compression failed: {str(e)}")
+            return StepResult.fail(f"Prompt compression failed: {e!s}")
 
     def _apply_compression_strategy(
         self,
@@ -506,7 +507,9 @@ class AdvancedPromptCompressor:
         """Count tokens in text using available tokenizers."""
         try:
             # Try to use existing PromptEngine token counting
-            from ultimate_discord_intelligence_bot.services.prompt_engine import PromptEngine
+            from ultimate_discord_intelligence_bot.services.prompt_engine import (
+                PromptEngine,
+            )
 
             engine = PromptEngine()
             return engine.count_tokens(text, model)
@@ -525,7 +528,7 @@ class AdvancedPromptCompressor:
         import hashlib
 
         key_data = f"{prompt}:{level.value if level else 'default'}:{strategy.value if strategy else 'default'}:{model or 'default'}"
-        return hashlib.md5(key_data.encode()).hexdigest()
+        return hashlib.md5(key_data.encode(), usedforsecurity=False).hexdigest()  # nosec B324 - cache key only
 
     def _get_cached_result(self, cache_key: str) -> CompressionResult | None:
         """Get cached compression result if available and not expired."""
@@ -579,7 +582,7 @@ class AdvancedPromptCompressor:
 
         except Exception as e:
             logger.error(f"Compression stats generation failed: {e}")
-            return StepResult.fail(f"Compression stats failed: {str(e)}")
+            return StepResult.fail(f"Compression stats failed: {e!s}")
 
     def clear_cache(self) -> StepResult:
         """Clear compression cache."""
@@ -591,7 +594,7 @@ class AdvancedPromptCompressor:
 
         except Exception as e:
             logger.error(f"Cache clearing failed: {e}")
-            return StepResult.fail(f"Cache clearing failed: {str(e)}")
+            return StepResult.fail(f"Cache clearing failed: {e!s}")
 
 
 # Global prompt compressor instance
@@ -607,10 +610,10 @@ def get_prompt_compressor() -> AdvancedPromptCompressor:
 
 
 __all__ = [
-    "CompressionStrategy",
+    "AdvancedPromptCompressor",
+    "CompressionConfig",
     "CompressionLevel",
     "CompressionResult",
-    "CompressionConfig",
-    "AdvancedPromptCompressor",
+    "CompressionStrategy",
     "get_prompt_compressor",
 ]

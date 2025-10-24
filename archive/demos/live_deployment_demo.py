@@ -22,6 +22,7 @@ import logging
 import statistics
 from datetime import datetime, timedelta
 
+
 # Setup logging
 logging.basicConfig(
     level=logging.INFO,
@@ -181,12 +182,28 @@ class LiveDeploymentDemo:
         await asyncio.sleep(0.3)
 
         dependencies = {
-            "Discord API": {"status": "healthy", "response_time_ms": 45, "uptime": 99.9},
-            "OpenAI API": {"status": "healthy", "response_time_ms": 120, "uptime": 99.8},
-            "Anthropic API": {"status": "healthy", "response_time_ms": 95, "uptime": 99.7},
+            "Discord API": {
+                "status": "healthy",
+                "response_time_ms": 45,
+                "uptime": 99.9,
+            },
+            "OpenAI API": {
+                "status": "healthy",
+                "response_time_ms": 120,
+                "uptime": 99.8,
+            },
+            "Anthropic API": {
+                "status": "healthy",
+                "response_time_ms": 95,
+                "uptime": 99.7,
+            },
             "Google API": {"status": "healthy", "response_time_ms": 80, "uptime": 99.9},
             "Database": {"status": "healthy", "response_time_ms": 12, "uptime": 100.0},
-            "Monitoring System": {"status": "healthy", "response_time_ms": 25, "uptime": 99.9},
+            "Monitoring System": {
+                "status": "healthy",
+                "response_time_ms": 25,
+                "uptime": 99.9,
+            },
         }
 
         failed_deps = [name for name, info in dependencies.items() if info["status"] != "healthy"]
@@ -400,9 +417,17 @@ class LiveDeploymentDemo:
                 "error_rate": 0.012 + (hour % 11) * 0.002,
                 "model_performance": {
                     "gpt-4-turbo": {"usage": 0.28, "satisfaction": 0.92, "cost": 0.031},
-                    "claude-3.5-sonnet": {"usage": 0.31, "satisfaction": 0.89, "cost": 0.016},
+                    "claude-3.5-sonnet": {
+                        "usage": 0.31,
+                        "satisfaction": 0.89,
+                        "cost": 0.016,
+                    },
                     "gemini-pro": {"usage": 0.26, "satisfaction": 0.82, "cost": 0.007},
-                    "llama-3.1-70b": {"usage": 0.15, "satisfaction": 0.85, "cost": 0.009},
+                    "llama-3.1-70b": {
+                        "usage": 0.15,
+                        "satisfaction": 0.85,
+                        "cost": 0.009,
+                    },
                 },
             }
 
@@ -583,7 +608,11 @@ class LiveDeploymentDemo:
             "system_stability": True,
         }
 
-        return {"success": True, "metrics": recovery_metrics, "validation_time_seconds": 30}
+        return {
+            "success": True,
+            "metrics": recovery_metrics,
+            "validation_time_seconds": 30,
+        }
 
     async def demo_final_validation(self):
         """Demo final production validation and certification"""
@@ -623,9 +652,19 @@ class LiveDeploymentDemo:
 
     async def validate_performance_targets(self):
         """Validate performance against targets"""
-        targets = {"response_time_ms": 2000, "user_satisfaction": 0.80, "error_rate": 0.02, "availability": 0.999}
+        targets = {
+            "response_time_ms": 2000,
+            "user_satisfaction": 0.80,
+            "error_rate": 0.02,
+            "availability": 0.999,
+        }
 
-        actual = {"response_time_ms": 1580, "user_satisfaction": 0.835, "error_rate": 0.012, "availability": 0.9995}
+        actual = {
+            "response_time_ms": 1580,
+            "user_satisfaction": 0.835,
+            "error_rate": 0.012,
+            "availability": 0.9995,
+        }
 
         achievements = {}
         for metric, target in targets.items():
@@ -636,7 +675,12 @@ class LiveDeploymentDemo:
 
         score = sum(achievements.values()) / len(achievements)
 
-        return {"score": score, "targets": targets, "actual": actual, "achievements": achievements}
+        return {
+            "score": score,
+            "targets": targets,
+            "actual": actual,
+            "achievements": achievements,
+        }
 
     async def validate_business_kpis(self):
         """Validate business KPIs"""

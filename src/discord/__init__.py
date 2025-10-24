@@ -15,6 +15,7 @@ from typing import Any
 
 from . import commands as commands  # re-export for ``from discord import commands``
 
+
 __all__ = ["commands"]
 """Local 'discord' shim disabled.
 

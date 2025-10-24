@@ -4,6 +4,7 @@ from datetime import datetime
 
 import dspy
 
+
 # This script is a placeholder for a more sophisticated data extraction process.
 # In a real-world scenario, this would connect to a database, log aggregator,
 # or another data source to generate high-quality examples for DSPy optimization.
@@ -28,7 +29,7 @@ def generate_training_data_from_logs(
         if filename.endswith(".json"):
             filepath = os.path.join(log_directory, filename)
             try:
-                with open(filepath, "r") as f:
+                with open(filepath) as f:
                     trace_data = json.load(f)
                     # This is a heuristic: find a step with a large-ish output
                     # that could be a good example of an answer.
@@ -40,19 +41,14 @@ def generate_training_data_from_logs(
                                 [
                                     s.get("raw_output", "")
                                     for s in trace_data["steps"]
-                                    if s["step_number"] < step["step_number"]
-                                    and s.get("raw_output")
+                                    if s["step_number"] < step["step_number"] and s.get("raw_output")
                                 ]
                             )
 
                             if context and step.get("raw_output"):
                                 example = dspy.Example(
-                                    context=context[
-                                        -2000:
-                                    ],  # Truncate for context window
-                                    question=step.get(
-                                        "tool_input", "summarize"
-                                    ),  # Placeholder
+                                    context=context[-2000:],  # Truncate for context window
+                                    question=step.get("tool_input", "summarize"),  # Placeholder
                                     answer=step.get("raw_output"),
                                 ).with_inputs("context", "question")
                                 training_examples.append(example)

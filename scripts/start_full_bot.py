@@ -14,15 +14,20 @@ optional dependencies like discord.py (tests can set LIGHTWEIGHT_IMPORT=1).
 
 from __future__ import annotations
 
+
 # LIGHTWEIGHT_IMPORT flag passthrough for tests (import-safe)
 try:
-    from ultimate_discord_intelligence_bot.discord_bot.discord_env import LIGHTWEIGHT_IMPORT
+    from ultimate_discord_intelligence_bot.discord_bot.discord_env import (
+        LIGHTWEIGHT_IMPORT,
+    )
 except Exception:  # pragma: no cover - optional dep path
     LIGHTWEIGHT_IMPORT = False  # type: ignore[assignment]
 
 # Back-compat: expose ToolContainer for downstream imports
 try:
-    from ultimate_discord_intelligence_bot.discord_bot.tools_bootstrap import ToolContainer
+    from ultimate_discord_intelligence_bot.discord_bot.tools_bootstrap import (
+        ToolContainer,
+    )
 except Exception:  # pragma: no cover - degraded mode
 
     class ToolContainer:  # type: ignore[no-redef]
@@ -32,14 +37,24 @@ except Exception:  # pragma: no cover - degraded mode
 
 # Delegation to modular runner (safe import; defer exceptions until called)
 try:
-    from ultimate_discord_intelligence_bot.discord_bot.runner import create_full_bot, main
+    from ultimate_discord_intelligence_bot.discord_bot.runner import (
+        create_full_bot,
+        main,
+    )
 except Exception as e:  # pragma: no cover - keep import-safe in lightweight envs
     _import_err_msg = str(e)
+    import traceback
+
+    _import_traceback = traceback.format_exc()
 
     def create_full_bot():  # type: ignore[no-redef]
+        print(f"❌ Runner import failed with: {_import_err_msg}")
+        print(f"📋 Full traceback:\n{_import_traceback}")
         raise RuntimeError(f"runner not available: {_import_err_msg}")
 
     async def main():  # type: ignore[no-redef]
+        print(f"❌ Runner import failed with: {_import_err_msg}")
+        print(f"📋 Full traceback:\n{_import_traceback}")
         raise RuntimeError(f"runner not available: {_import_err_msg}")
 
 
@@ -52,6 +67,7 @@ from ultimate_discord_intelligence_bot.discord_bot.helpers import (
     assess_response_quality,
 )
 
+
 if __name__ == "__main__":  # pragma: no cover - manual execution path
     import asyncio
 
@@ -59,13 +75,13 @@ if __name__ == "__main__":  # pragma: no cover - manual execution path
 
 
 __all__ = [
-    "ToolContainer",
-    "assess_response_quality",
-    "main",
-    "create_full_bot",
     "LIGHTWEIGHT_IMPORT",
-    "_infer_platform",
-    "_evaluate_claim",
+    "ToolContainer",
     "_detect_fallacies",
+    "_evaluate_claim",
     "_fallacy_database",
+    "_infer_platform",
+    "assess_response_quality",
+    "create_full_bot",
+    "main",
 ]

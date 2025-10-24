@@ -31,6 +31,7 @@ from obs.metrics import (
     label_ctx,
 )
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -70,7 +71,11 @@ class CacheMonitor:
         finally:
             if self.enable_latency_tracking:
                 duration_ms = (time.time() - start_time) * 1000
-                labels = {**self._labels, "cache_name": self.cache_name, "operation": operation}
+                labels = {
+                    **self._labels,
+                    "cache_name": self.cache_name,
+                    "operation": operation,
+                }
                 CACHE_OPERATION_LATENCY.labels(**labels).observe(duration_ms)
 
             if error_type:
@@ -87,7 +92,11 @@ class CacheMonitor:
         if not self.enable_monitoring:
             return
 
-        labels = {**self._labels, "cache_name": self.cache_name, "cache_level": cache_level}
+        labels = {
+            **self._labels,
+            "cache_name": self.cache_name,
+            "cache_level": cache_level,
+        }
         CACHE_HITS.labels(**labels).inc()
 
     def record_miss(self, cache_level: str = "l1") -> None:
@@ -95,7 +104,11 @@ class CacheMonitor:
         if not self.enable_monitoring:
             return
 
-        labels = {**self._labels, "cache_name": self.cache_name, "cache_level": cache_level}
+        labels = {
+            **self._labels,
+            "cache_name": self.cache_name,
+            "cache_level": cache_level,
+        }
         CACHE_MISSES.labels(**labels).inc()
 
     def record_promotion(self) -> None:
@@ -119,7 +132,11 @@ class CacheMonitor:
         if not self.enable_monitoring:
             return
 
-        labels = {**self._labels, "cache_name": self.cache_name, "cache_level": cache_level}
+        labels = {
+            **self._labels,
+            "cache_name": self.cache_name,
+            "cache_level": cache_level,
+        }
         CACHE_EVICTIONS.labels(**labels).inc()
 
     def record_compression(self, original_size: int, compressed_size: int) -> None:
@@ -149,7 +166,11 @@ class CacheMonitor:
         if not self.enable_monitoring:
             return
 
-        labels = {**self._labels, "cache_name": self.cache_name, "cache_level": cache_level}
+        labels = {
+            **self._labels,
+            "cache_name": self.cache_name,
+            "cache_level": cache_level,
+        }
         CACHE_SIZE_BYTES.labels(**labels).set(size_bytes)
 
     def update_entries_count(self, count: int, cache_level: str = "l1") -> None:
@@ -157,7 +178,11 @@ class CacheMonitor:
         if not self.enable_monitoring:
             return
 
-        labels = {**self._labels, "cache_name": self.cache_name, "cache_level": cache_level}
+        labels = {
+            **self._labels,
+            "cache_name": self.cache_name,
+            "cache_level": cache_level,
+        }
         CACHE_ENTRIES_COUNT.labels(**labels).set(count)
 
     def update_hit_rate(self, hit_rate: float, cache_level: str = "l1") -> None:
@@ -165,7 +190,11 @@ class CacheMonitor:
         if not self.enable_monitoring:
             return
 
-        labels = {**self._labels, "cache_name": self.cache_name, "cache_level": cache_level}
+        labels = {
+            **self._labels,
+            "cache_name": self.cache_name,
+            "cache_level": cache_level,
+        }
         CACHE_HIT_RATE_RATIO.labels(**labels).set(hit_rate)
 
     def record_invalidation(self, keys_invalidated: int, reason: str = "unknown") -> None:
@@ -174,7 +203,11 @@ class CacheMonitor:
             return
 
         # Record as a special operation type
-        labels = {**self._labels, "cache_name": self.cache_name, "operation": f"invalidate_{reason}"}
+        labels = {
+            **self._labels,
+            "cache_name": self.cache_name,
+            "operation": f"invalidate_{reason}",
+        }
         CACHE_OPERATION_LATENCY.labels(**labels).observe(0)  # We don't have latency here, so use 0
 
         # Could add a custom counter here if we extend the metrics
@@ -186,7 +219,11 @@ class CacheMonitor:
             return
 
         # Use cache_entries_count with a special label for dependency graph
-        labels = {**self._labels, "cache_name": self.cache_name, "cache_level": "dependency_graph"}
+        labels = {
+            **self._labels,
+            "cache_name": self.cache_name,
+            "cache_level": "dependency_graph",
+        }
         CACHE_ENTRIES_COUNT.labels(**labels).set(size)
 
     def record_circular_ref_detected(self) -> None:
@@ -281,4 +318,9 @@ async def _null_context():
     yield
 
 
-__all__ = ["CacheMonitor", "CacheMonitorManager", "get_cache_monitor", "get_cache_health_overview"]
+__all__ = [
+    "CacheMonitor",
+    "CacheMonitorManager",
+    "get_cache_health_overview",
+    "get_cache_monitor",
+]

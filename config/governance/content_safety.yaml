@@ -1,0 +1,189 @@
+# Content Safety Classification System
+# Four-tier content classification model
+
+# Tier Definitions
+tiers:
+  prohibited:
+    name: "Prohibited"
+    description: "Always block"
+    examples:
+      - "CSAM content"
+      - "Terrorism instructions"
+      - "Hate speech targeting protected groups"
+    handling:
+      action: "immediate_block"
+      review_required: false
+      appeal_process: false
+      
+  restricted:
+    name: "Restricted"
+    description: "Context-dependent, requires strict controls"
+    examples:
+      - "Biosecurity threats"
+      - "Cyber attack plans"
+      - "Political manipulation techniques"
+    handling:
+      action: "block_with_review"
+      review_required: true
+      appeal_process: true
+      conditions:
+        - "academic_research"
+        - "security_analysis"
+        - "policy_development"
+        
+  sensitive:
+    name: "Sensitive"
+    description: "Appropriate context only, requires consent/warning"
+    examples:
+      - "Adult content"
+      - "Violence in media"
+      - "Hate speech analysis"
+    handling:
+      action: "warn_and_continue"
+      review_required: false
+      appeal_process: true
+      conditions:
+        - "user_consent"
+        - "appropriate_context"
+        - "age_verification"
+        
+  regulated:
+    name: "Regulated"
+    description: "Guidance without advice, requires disclaimers"
+    examples:
+      - "Medical information"
+      - "Legal advice"
+      - "Financial guidance"
+    handling:
+      action: "add_disclaimer"
+      review_required: false
+      appeal_process: false
+      disclaimers:
+        - "This is not professional advice"
+        - "Consult qualified professionals"
+        - "Information may not be current"
+
+# Classification Rules
+classification:
+  # Prohibited content patterns
+  prohibited_patterns:
+    keywords:
+      - "child abuse"
+      - "csam"
+      - "terrorism"
+      - "genocide"
+      - "hate speech"
+    regex_patterns:
+      - "child.*sexual"
+      - "terrorist.*attack"
+      - "genocide.*plan"
+      
+  # Restricted content patterns
+  restricted_patterns:
+    keywords:
+      - "biosecurity"
+      - "cyber attack"
+      - "political manipulation"
+      - "weapon development"
+    regex_patterns:
+      - "hack.*system"
+      - "manipulate.*election"
+      - "develop.*weapon"
+      
+  # Sensitive content patterns
+  sensitive_patterns:
+    keywords:
+      - "adult content"
+      - "violence"
+      - "gore"
+      - "hate speech analysis"
+    regex_patterns:
+      - "explicit.*content"
+      - "graphic.*violence"
+      - "hate.*speech"
+      
+  # Regulated content patterns
+  regulated_patterns:
+    keywords:
+      - "medical advice"
+      - "legal advice"
+      - "financial advice"
+      - "investment"
+    regex_patterns:
+      - "medical.*diagnosis"
+      - "legal.*opinion"
+      - "investment.*advice"
+
+# Context Assessment
+context_assessment:
+  academic_research:
+    description: "Academic or research context"
+    indicators:
+      - "research paper"
+      - "academic study"
+      - "scholarly analysis"
+    tier_overrides:
+      restricted: "sensitive"
+      sensitive: "regulated"
+      
+  moderation_research:
+    description: "Content moderation research"
+    indicators:
+      - "moderation study"
+      - "safety research"
+      - "harm analysis"
+    tier_overrides:
+      prohibited: "restricted"
+      restricted: "sensitive"
+      
+  security_analysis:
+    description: "Security or threat analysis"
+    indicators:
+      - "threat assessment"
+      - "security analysis"
+      - "vulnerability research"
+    tier_overrides:
+      restricted: "sensitive"
+      sensitive: "regulated"
+
+# Mitigation Strategies
+mitigation:
+  prohibited:
+    - "immediate_block"
+    - "admin_notification"
+    - "audit_log"
+    
+  restricted:
+    - "context_verification"
+    - "expert_review"
+    - "controlled_access"
+    
+  sensitive:
+    - "user_warning"
+    - "consent_verification"
+    - "age_verification"
+    
+  regulated:
+    - "disclaimer_add"
+    - "professional_caveat"
+    - "source_verification"
+
+# Monitoring and Metrics
+monitoring:
+  classification_accuracy:
+    target: 0.95
+    measurement: "human_review_comparison"
+    
+  false_positive_rate:
+    target: 0.05
+    measurement: "appeal_success_rate"
+    
+  context_appropriateness:
+    target: 0.90
+    measurement: "context_override_accuracy"
+    
+  metrics:
+      - "classification_distribution"
+      - "context_override_rate"
+      - "appeal_success_rate"
+      - "mitigation_effectiveness"

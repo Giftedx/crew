@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 import time
-from typing import Any, Dict, Optional
+from typing import Any
 
 from ultimate_discord_intelligence_bot.services.websocket_service import (
     MessageType,
@@ -12,6 +12,7 @@ from ultimate_discord_intelligence_bot.services.websocket_service import (
 )
 from ultimate_discord_intelligence_bot.settings import ENABLE_WEBSOCKET_UPDATES
 from ultimate_discord_intelligence_bot.step_result import StepResult
+
 
 log = logging.getLogger(__name__)
 
@@ -21,7 +22,7 @@ class WebSocketIntegrationService:
 
     def __init__(self):
         """Initialize WebSocket integration service."""
-        self.websocket_service: Optional[WebSocketService] = None
+        self.websocket_service: WebSocketService | None = None
         self.enabled = ENABLE_WEBSOCKET_UPDATES
 
         if self.enabled:
@@ -30,9 +31,7 @@ class WebSocketIntegrationService:
         else:
             log.info("WebSocket integration service disabled via feature flag")
 
-    async def start_service(
-        self, host: str = "localhost", port: int = 8765
-    ) -> StepResult:
+    async def start_service(self, host: str = "localhost", port: int = 8765) -> StepResult:
         """Start the WebSocket integration service."""
         if not self.enabled or not self.websocket_service:
             return StepResult.fail("WebSocket integration disabled")
@@ -47,9 +46,7 @@ class WebSocketIntegrationService:
 
         except Exception as e:
             log.error(f"Failed to start WebSocket integration service: {e}")
-            return StepResult.fail(
-                f"Failed to start WebSocket integration service: {e}"
-            )
+            return StepResult.fail(f"Failed to start WebSocket integration service: {e}")
 
     async def stop_service(self) -> StepResult:
         """Stop the WebSocket integration service."""
@@ -69,7 +66,7 @@ class WebSocketIntegrationService:
         self,
         agent_id: str,
         status: str,
-        details: Dict[str, Any],
+        details: dict[str, Any],
         tenant_id: str = "default",
         workspace_id: str = "main",
     ) -> StepResult:
@@ -99,7 +96,7 @@ class WebSocketIntegrationService:
         self,
         analysis_id: str,
         progress: float,
-        results: Dict[str, Any],
+        results: dict[str, Any],
         tenant_id: str = "default",
         workspace_id: str = "main",
     ) -> StepResult:
@@ -117,9 +114,7 @@ class WebSocketIntegrationService:
             )
 
             if result.success:
-                log.debug(
-                    f"Analysis progress update sent for {analysis_id}: {progress:.1%}"
-                )
+                log.debug(f"Analysis progress update sent for {analysis_id}: {progress:.1%}")
 
             return result
 
@@ -131,7 +126,7 @@ class WebSocketIntegrationService:
         self,
         stream_id: str,
         content: str,
-        metadata: Dict[str, Any],
+        metadata: dict[str, Any],
         tenant_id: str = "default",
         workspace_id: str = "main",
     ) -> StepResult:
@@ -162,7 +157,7 @@ class WebSocketIntegrationService:
         alert_type: str,
         severity: str,
         message: str,
-        details: Dict[str, Any],
+        details: dict[str, Any],
         tenant_id: str = "default",
         workspace_id: str = "main",
     ) -> StepResult:
@@ -191,7 +186,7 @@ class WebSocketIntegrationService:
 
     async def notify_performance_metrics(
         self,
-        metrics: Dict[str, Any],
+        metrics: dict[str, Any],
         tenant_id: str = "default",
         workspace_id: str = "main",
     ) -> StepResult:
@@ -213,7 +208,7 @@ class WebSocketIntegrationService:
             log.error(f"Failed to send performance metrics: {e}")
             return StepResult.fail(f"Failed to send performance metrics: {e}")
 
-    def get_service_status(self) -> Dict[str, Any]:
+    def get_service_status(self) -> StepResult:
         """Get WebSocket integration service status."""
         if not self.websocket_service:
             return {
@@ -234,10 +229,10 @@ class WebSocketIntegrationService:
     async def broadcast_custom_message(
         self,
         message_type: str,
-        data: Dict[str, Any],
-        tenant_id: Optional[str] = None,
-        workspace_id: Optional[str] = None,
-        channel: Optional[str] = None,
+        data: dict[str, Any],
+        tenant_id: str | None = None,
+        workspace_id: str | None = None,
+        channel: str | None = None,
     ) -> StepResult:
         """Broadcast custom message to connected clients."""
         if not self.websocket_service or not self.enabled:
@@ -281,10 +276,10 @@ class WebSocketIntegrationService:
 
 
 # Global instance for easy access
-_websocket_integration: Optional[WebSocketIntegrationService] = None
+_websocket_integration: WebSocketIntegrationService | None = None
 
 
-def get_websocket_integration() -> WebSocketIntegrationService:
+def get_websocket_integration() -> StepResult:
     """Get the global WebSocket integration service instance."""
     global _websocket_integration
     if _websocket_integration is None:
@@ -292,9 +287,7 @@ def get_websocket_integration() -> WebSocketIntegrationService:
     return _websocket_integration
 
 
-async def start_websocket_service(
-    host: str = "localhost", port: int = 8765
-) -> StepResult:
+async def start_websocket_service(host: str = "localhost", port: int = 8765) -> StepResult:
     """Start the global WebSocket integration service."""
     service = get_websocket_integration()
     return await service.start_service(host, port)
@@ -310,55 +303,47 @@ async def stop_websocket_service() -> StepResult:
 async def notify_agent_status(
     agent_id: str,
     status: str,
-    details: Dict[str, Any],
+    details: dict[str, Any],
     tenant_id: str = "default",
     workspace_id: str = "main",
 ) -> StepResult:
     """Notify about agent status change."""
     service = get_websocket_integration()
-    return await service.notify_agent_status_change(
-        agent_id, status, details, tenant_id, workspace_id
-    )
+    return await service.notify_agent_status_change(agent_id, status, details, tenant_id, workspace_id)
 
 
 async def notify_analysis_progress(
     analysis_id: str,
     progress: float,
-    results: Dict[str, Any],
+    results: dict[str, Any],
     tenant_id: str = "default",
     workspace_id: str = "main",
 ) -> StepResult:
     """Notify about analysis progress."""
     service = get_websocket_integration()
-    return await service.notify_analysis_progress(
-        analysis_id, progress, results, tenant_id, workspace_id
-    )
+    return await service.notify_analysis_progress(analysis_id, progress, results, tenant_id, workspace_id)
 
 
 async def notify_stream_update(
     stream_id: str,
     content: str,
-    metadata: Dict[str, Any],
+    metadata: dict[str, Any],
     tenant_id: str = "default",
     workspace_id: str = "main",
 ) -> StepResult:
     """Notify about stream update."""
     service = get_websocket_integration()
-    return await service.notify_stream_update(
-        stream_id, content, metadata, tenant_id, workspace_id
-    )
+    return await service.notify_stream_update(stream_id, content, metadata, tenant_id, workspace_id)
 
 
 async def notify_system_alert(
     alert_type: str,
     severity: str,
     message: str,
-    details: Dict[str, Any],
+    details: dict[str, Any],
     tenant_id: str = "default",
     workspace_id: str = "main",
 ) -> StepResult:
     """Notify about system alert."""
     service = get_websocket_integration()
-    return await service.notify_system_alert(
-        alert_type, severity, message, details, tenant_id, workspace_id
-    )
+    return await service.notify_system_alert(alert_type, severity, message, details, tenant_id, workspace_id)

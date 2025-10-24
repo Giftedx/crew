@@ -25,16 +25,20 @@ rollover window. (Future enhancement can include key IDs.)
 from __future__ import annotations
 
 import time
-from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, NamedTuple
+from typing import TYPE_CHECKING, Any, NamedTuple
 
-import yaml  # noqa: I001
+import yaml
 
 from .events import log_security_event
 from .net_guard import SecurityError  # reuse exception type
 from .secrets import get_secret
 from .signing import verify_signature_headers
+
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+
 
 DEFAULT_CONFIG_PATH = Path(__file__).resolve().parents[2] / "config" / "security.yaml"
 
@@ -53,7 +57,7 @@ class _Ctx(NamedTuple):
     workspace: str | None
 
 
-def _log(decision: str, resource: str, reason: str, ctx: _Ctx, **extra: Any) -> None:  # noqa: PLR0913 - structured audit fields explicit
+def _log(decision: str, resource: str, reason: str, ctx: _Ctx, **extra: Any) -> None:
     log_security_event(
         actor=ctx.actor or "unknown",
         action="webhook",
@@ -66,11 +70,11 @@ def _log(decision: str, resource: str, reason: str, ctx: _Ctx, **extra: Any) -> 
     )
 
 
-def verify_incoming(  # noqa: PLR0913 - explicit parameters are security-critical interface
+def verify_incoming(
     body: bytes,
     headers: Mapping[str, str],
     *,
-    secret_id: str = "default",  # secret key identifier (not a secret value)  # noqa: S107 (not a password / secret)
+    secret_id: str = "default",  # secret key identifier (not a secret value)
     config_path: Path | None = None,
     actor: str | None = None,
     tenant: str | None = None,
@@ -108,7 +112,7 @@ def verify_incoming(  # noqa: PLR0913 - explicit parameters are security-critica
     ordered: list[str] = []
     if secrets_map:
         # Try the specifically requested secret first, then any others to support rotation windows
-        if secret_id in secrets_map and secrets_map[secret_id]:
+        if secrets_map.get(secret_id):
             ordered.append(str(secrets_map[secret_id]))
         for k, v in secrets_map.items():
             if k != secret_id and v:

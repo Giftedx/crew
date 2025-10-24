@@ -12,6 +12,7 @@ from typing import Any, TypeVar
 
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
+
 logger = logging.getLogger(__name__)
 
 T = TypeVar("T")
@@ -382,7 +383,7 @@ def with_result_backpressure(
                 return result
 
             except Exception as e:
-                return StepResult.fail(f"Function failed: {str(e)}")
+                return StepResult.fail(f"Function failed: {e!s}")
             finally:
                 # Always release slots
                 await handler.release(required_slots)
@@ -400,7 +401,7 @@ def with_result_backpressure(
                 result = func(*args, **kwargs)
                 return result
             except Exception as e:
-                return StepResult.fail(f"Function failed: {str(e)}")
+                return StepResult.fail(f"Function failed: {e!s}")
             finally:
                 handler.current_depth = max(0, handler.current_depth - required_slots)
 

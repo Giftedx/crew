@@ -10,7 +10,8 @@ from __future__ import annotations
 import time
 from collections import defaultdict
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import Any
+
 
 try:
     from prometheus_client import Counter, Gauge, generate_latest
@@ -65,7 +66,7 @@ class MetricPoint:
     name: str
     value: float
     timestamp: float
-    labels: Dict[str, str] = field(default_factory=dict)
+    labels: dict[str, str] = field(default_factory=dict)
 
 
 @dataclass
@@ -81,51 +82,43 @@ class Histogram:
     """Histogram for latency and duration metrics."""
 
     name: str
-    buckets: List[HistogramBucket]
+    buckets: list[HistogramBucket]
     count: int
     sum: float
-    labels: Dict[str, str] = field(default_factory=dict)
+    labels: dict[str, str] = field(default_factory=dict)
 
 
 class MetricsCollector:
     """Simple in-memory metrics collector for SLO monitoring."""
 
     def __init__(self):
-        self.counters: Dict[str, float] = defaultdict(float)
-        self.gauges: Dict[str, float] = defaultdict(float)
-        self.histograms: Dict[str, List[float]] = defaultdict(list)
-        self.start_times: Dict[str, float] = {}
+        self.counters: dict[str, float] = defaultdict(float)
+        self.gauges: dict[str, float] = defaultdict(float)
+        self.histograms: dict[str, list[float]] = defaultdict(list)
+        self.start_times: dict[str, float] = {}
 
-    def increment_counter(
-        self, name: str, value: float = 1.0, labels: Optional[Dict[str, str]] = None
-    ) -> None:
+    def increment_counter(self, name: str, value: float = 1.0, labels: dict[str, str] | None = None) -> None:
         """Increment a counter metric."""
         key = self._make_key(name, labels)
         self.counters[key] += value
 
-    def set_gauge(
-        self, name: str, value: float, labels: Optional[Dict[str, str]] = None
-    ) -> None:
+    def set_gauge(self, name: str, value: float, labels: dict[str, str] | None = None) -> None:
         """Set a gauge metric value."""
         key = self._make_key(name, labels)
         self.gauges[key] = value
 
-    def observe_histogram(
-        self, name: str, value: float, labels: Optional[Dict[str, str]] = None
-    ) -> None:
+    def observe_histogram(self, name: str, value: float, labels: dict[str, str] | None = None) -> None:
         """Record a histogram observation."""
         key = self._make_key(name, labels)
         self.histograms[key].append(value)
 
-    def start_timer(self, name: str, labels: Optional[Dict[str, str]] = None) -> str:
+    def start_timer(self, name: str, labels: dict[str, str] | None = None) -> str:
         """Start a timer and return a timer ID."""
         timer_id = f"{name}_{int(time.time() * 1000000)}"
         self.start_times[timer_id] = time.time()
         return timer_id
 
-    def stop_timer(
-        self, timer_id: str, name: str, labels: Optional[Dict[str, str]] = None
-    ) -> float:
+    def stop_timer(self, timer_id: str, name: str, labels: dict[str, str] | None = None) -> float:
         """Stop a timer and record the duration."""
         if timer_id not in self.start_times:
             return 0.0
@@ -135,19 +128,17 @@ class MetricsCollector:
         self.observe_histogram(name, duration, labels)
         return duration
 
-    def get_counter(self, name: str, labels: Optional[Dict[str, str]] = None) -> float:
+    def get_counter(self, name: str, labels: dict[str, str] | None = None) -> float:
         """Get counter value."""
         key = self._make_key(name, labels)
         return self.counters.get(key, 0.0)
 
-    def get_gauge(self, name: str, labels: Optional[Dict[str, str]] = None) -> float:
+    def get_gauge(self, name: str, labels: dict[str, str] | None = None) -> float:
         """Get gauge value."""
         key = self._make_key(name, labels)
         return self.gauges.get(key, 0.0)
 
-    def get_histogram_quantile(
-        self, name: str, quantile: float, labels: Optional[Dict[str, str]] = None
-    ) -> float:
+    def get_histogram_quantile(self, name: str, quantile: float, labels: dict[str, str] | None = None) -> float:
         """Get histogram quantile value."""
         key = self._make_key(name, labels)
         values = self.histograms.get(key, [])
@@ -158,21 +149,17 @@ class MetricsCollector:
         index = int(quantile * (len(sorted_values) - 1))
         return sorted_values[index]
 
-    def get_histogram_sum(
-        self, name: str, labels: Optional[Dict[str, str]] = None
-    ) -> float:
+    def get_histogram_sum(self, name: str, labels: dict[str, str] | None = None) -> float:
         """Get histogram sum."""
         key = self._make_key(name, labels)
         return sum(self.histograms.get(key, []))
 
-    def get_histogram_count(
-        self, name: str, labels: Optional[Dict[str, str]] = None
-    ) -> int:
+    def get_histogram_count(self, name: str, labels: dict[str, str] | None = None) -> int:
         """Get histogram count."""
         key = self._make_key(name, labels)
         return len(self.histograms.get(key, []))
 
-    def _make_key(self, name: str, labels: Optional[Dict[str, str]]) -> str:
+    def _make_key(self, name: str, labels: dict[str, str] | None) -> str:
         """Create a key for metric storage."""
         if not labels:
             return name
@@ -190,7 +177,7 @@ class MetricsCollector:
 class SLOMonitor:
     """SLO monitoring and evaluation."""
 
-    def __init__(self, slos: List[SLO]):
+    def __init__(self, slos: list[SLO]):
         self.slos = slos
         self.evaluator = SLOEvaluator(slos)
         self.metrics = MetricsCollector()
@@ -203,9 +190,7 @@ class SLOMonitor:
         self.metrics.increment_counter("requests_total", labels=labels)
 
         # Record duration
-        self.metrics.observe_histogram(
-            "request_duration_seconds", duration, labels=labels
-        )
+        self.metrics.observe_histogram("request_duration_seconds", duration, labels=labels)
 
         # Record error if applicable
         if status_code >= 400:
@@ -223,14 +208,10 @@ class SLOMonitor:
     def record_vector_search(self, duration: float, results_count: int) -> None:
         """Record vector search metrics."""
         labels = {"operation": "vector_search"}
-        self.metrics.observe_histogram(
-            "vector_search_duration_seconds", duration, labels=labels
-        )
-        self.metrics.set_gauge(
-            "vector_search_results_count", float(results_count), labels=labels
-        )
+        self.metrics.observe_histogram("vector_search_duration_seconds", duration, labels=labels)
+        self.metrics.set_gauge("vector_search_results_count", float(results_count), labels=labels)
 
-    def evaluate_slos(self) -> Dict[str, Any]:
+    def evaluate_slos(self) -> dict[str, Any]:
         """Evaluate current metrics against SLOs."""
         # Calculate current metric values
         current_metrics = {}
@@ -242,25 +223,17 @@ class SLOMonitor:
         current_metrics["error_rate"] = error_rate
 
         # Calculate P95 latency
-        p95_latency = self.metrics.get_histogram_quantile(
-            "request_duration_seconds", 0.95
-        )
+        p95_latency = self.metrics.get_histogram_quantile("request_duration_seconds", 0.95)
         current_metrics["p95_latency"] = p95_latency
 
         # Calculate cache hit rate
         cache_hits = self.metrics.get_counter("cache_hits_total")
         cache_misses = self.metrics.get_counter("cache_misses_total")
-        cache_hit_rate = (
-            cache_hits / (cache_hits + cache_misses)
-            if (cache_hits + cache_misses) > 0
-            else 0.0
-        )
+        cache_hit_rate = cache_hits / (cache_hits + cache_misses) if (cache_hits + cache_misses) > 0 else 0.0
         current_metrics["cache_hit_rate"] = cache_hit_rate
 
         # Calculate vector search latency
-        vector_search_latency = self.metrics.get_histogram_quantile(
-            "vector_search_duration_seconds", 0.95
-        )
+        vector_search_latency = self.metrics.get_histogram_quantile("vector_search_duration_seconds", 0.95)
         current_metrics["vector_search_latency"] = vector_search_latency
 
         # Evaluate SLOs
@@ -272,7 +245,7 @@ class SLOMonitor:
             "timestamp": time.time(),
         }
 
-    def get_metrics_summary(self) -> Dict[str, Any]:
+    def get_metrics_summary(self) -> dict[str, Any]:
         """Get a summary of current metrics."""
         return {
             "counters": dict(self.metrics.counters),
@@ -284,7 +257,7 @@ class SLOMonitor:
 
 # Global metrics collector instance
 _global_metrics = MetricsCollector()
-_global_slo_monitor: Optional[SLOMonitor] = None
+_global_slo_monitor: SLOMonitor | None = None
 
 
 def get_metrics() -> MetricsCollector:
@@ -292,12 +265,12 @@ def get_metrics() -> MetricsCollector:
     return _global_metrics
 
 
-def get_slo_monitor() -> Optional[SLOMonitor]:
+def get_slo_monitor() -> SLOMonitor | None:
     """Get the global SLO monitor."""
     return _global_slo_monitor
 
 
-def initialize_slo_monitoring(slos: List[SLO]) -> SLOMonitor:
+def initialize_slo_monitoring(slos: list[SLO]) -> SLOMonitor:
     """Initialize global SLO monitoring."""
     global _global_slo_monitor
     _global_slo_monitor = SLOMonitor(slos)
@@ -325,17 +298,13 @@ def record_vector_search(duration: float, results_count: int) -> None:
 # Prometheus-style metrics (if available)
 if PROMETHEUS_AVAILABLE:
     # Request metrics
-    REQUEST_COUNT = Counter(
-        "app_request_count_total", "Application Request Count", ["method", "endpoint"]
-    )
+    REQUEST_COUNT = Counter("app_request_count_total", "Application Request Count", ["method", "endpoint"])
     REQUEST_LATENCY = PrometheusHistogram(
         "app_request_latency_seconds",
         "Request latency in seconds",
         ["method", "endpoint"],
     )
-    IN_PROGRESS_REQUESTS = Gauge(
-        "app_in_progress_requests", "In-progress requests", ["method", "endpoint"]
-    )
+    IN_PROGRESS_REQUESTS = Gauge("app_in_progress_requests", "In-progress requests", ["method", "endpoint"])
     ERROR_COUNT = Counter(
         "app_error_count_total",
         "Application Error Count",
@@ -343,12 +312,8 @@ if PROMETHEUS_AVAILABLE:
     )
 
     # Cache metrics
-    CACHE_HIT_COUNT = Counter(
-        "app_cache_hit_count_total", "Cache Hit Count", ["cache_name"]
-    )
-    CACHE_MISS_COUNT = Counter(
-        "app_cache_miss_count_total", "Cache Miss Count", ["cache_name"]
-    )
+    CACHE_HIT_COUNT = Counter("app_cache_hit_count_total", "Cache Hit Count", ["cache_name"])
+    CACHE_MISS_COUNT = Counter("app_cache_miss_count_total", "Cache Miss Count", ["cache_name"])
 
     # Vector search metrics
     VECTOR_SEARCH_LATENCY = PrometheusHistogram(
@@ -356,9 +321,7 @@ if PROMETHEUS_AVAILABLE:
         "Vector search latency in seconds",
         ["operation"],
     )
-    VECTOR_SEARCH_COUNT = Counter(
-        "app_vector_search_count_total", "Vector search count", ["operation"]
-    )
+    VECTOR_SEARCH_COUNT = Counter("app_vector_search_count_total", "Vector search count", ["operation"])
     VECTOR_SEARCH_ERROR_COUNT = Counter(
         "app_vector_search_error_count_total",
         "Vector search error count",
@@ -366,9 +329,7 @@ if PROMETHEUS_AVAILABLE:
     )
 
     # Model routing metrics
-    MODEL_ROUTING_COUNT = Counter(
-        "app_model_routing_count_total", "Model routing count", ["model", "provider"]
-    )
+    MODEL_ROUTING_COUNT = Counter("app_model_routing_count_total", "Model routing count", ["model", "provider"])
     MODEL_ROUTING_LATENCY = PrometheusHistogram(
         "app_model_routing_latency_seconds",
         "Model routing latency in seconds",
@@ -413,9 +374,7 @@ if PROMETHEUS_AVAILABLE:
     )
 
     # Content analysis metrics
-    CONTENT_ANALYSIS_COUNT = Counter(
-        "app_content_analysis_count_total", "Content analysis count", ["analysis_type"]
-    )
+    CONTENT_ANALYSIS_COUNT = Counter("app_content_analysis_count_total", "Content analysis count", ["analysis_type"])
     CONTENT_ANALYSIS_ERROR_COUNT = Counter(
         "app_content_analysis_error_count_total",
         "Content analysis error count",
@@ -428,9 +387,7 @@ if PROMETHEUS_AVAILABLE:
     )
 
     # Discord metrics
-    DISCORD_MESSAGE_COUNT = Counter(
-        "app_discord_message_count_total", "Discord message count", ["message_type"]
-    )
+    DISCORD_MESSAGE_COUNT = Counter("app_discord_message_count_total", "Discord message count", ["message_type"])
     DISCORD_MESSAGE_ERROR_COUNT = Counter(
         "app_discord_message_error_count_total",
         "Discord message error count",
@@ -443,20 +400,14 @@ if PROMETHEUS_AVAILABLE:
     )
 
     # Memory metrics
-    MEMORY_STORE_COUNT = Counter(
-        "app_memory_store_count_total", "Memory store count", ["store_type"]
-    )
-    MEMORY_STORE_ERROR_COUNT = Counter(
-        "app_memory_store_error_count_total", "Memory store error count", ["store_type"]
-    )
+    MEMORY_STORE_COUNT = Counter("app_memory_store_count_total", "Memory store count", ["store_type"])
+    MEMORY_STORE_ERROR_COUNT = Counter("app_memory_store_error_count_total", "Memory store error count", ["store_type"])
     MEMORY_STORE_LATENCY = PrometheusHistogram(
         "app_memory_store_latency_seconds",
         "Memory store latency in seconds",
         ["store_type"],
     )
-    MEMORY_RETRIEVAL_COUNT = Counter(
-        "app_memory_retrieval_count_total", "Memory retrieval count", ["store_type"]
-    )
+    MEMORY_RETRIEVAL_COUNT = Counter("app_memory_retrieval_count_total", "Memory retrieval count", ["store_type"])
     MEMORY_RETRIEVAL_ERROR_COUNT = Counter(
         "app_memory_retrieval_error_count_total",
         "Memory retrieval error count",
@@ -469,9 +420,7 @@ if PROMETHEUS_AVAILABLE:
     )
 
     # MCP tool metrics
-    MCP_TOOL_CALL_COUNT = Counter(
-        "app_mcp_tool_call_count_total", "MCP tool call count", ["tool_name"]
-    )
+    MCP_TOOL_CALL_COUNT = Counter("app_mcp_tool_call_count_total", "MCP tool call count", ["tool_name"])
     MCP_TOOL_CALL_ERROR_COUNT = Counter(
         "app_mcp_tool_call_error_count_total",
         "MCP tool call error count",
@@ -528,49 +477,49 @@ else:
 
 
 __all__ = [
-    "MetricsCollector",
-    "SLOMonitor",
-    "MetricPoint",
-    "Histogram",
-    "get_metrics",
-    "get_slo_monitor",
-    "initialize_slo_monitoring",
-    "record_request",
-    "record_cache_operation",
-    "record_vector_search",
-    "get_metrics_data",
-    # Prometheus metrics
-    "REQUEST_COUNT",
-    "REQUEST_LATENCY",
-    "IN_PROGRESS_REQUESTS",
-    "ERROR_COUNT",
     "CACHE_HIT_COUNT",
     "CACHE_MISS_COUNT",
-    "VECTOR_SEARCH_LATENCY",
-    "VECTOR_SEARCH_COUNT",
-    "VECTOR_SEARCH_ERROR_COUNT",
-    "MODEL_ROUTING_COUNT",
-    "MODEL_ROUTING_LATENCY",
-    "MODEL_ROUTING_ERROR_COUNT",
-    "OAUTH_TOKEN_REFRESH_COUNT",
-    "OAUTH_TOKEN_REFRESH_ERROR_COUNT",
-    "OAUTH_TOKEN_REFRESH_LATENCY",
-    "CONTENT_INGESTION_COUNT",
-    "CONTENT_INGESTION_ERROR_COUNT",
-    "CONTENT_INGESTION_LATENCY",
     "CONTENT_ANALYSIS_COUNT",
     "CONTENT_ANALYSIS_ERROR_COUNT",
     "CONTENT_ANALYSIS_LATENCY",
+    "CONTENT_INGESTION_COUNT",
+    "CONTENT_INGESTION_ERROR_COUNT",
+    "CONTENT_INGESTION_LATENCY",
     "DISCORD_MESSAGE_COUNT",
     "DISCORD_MESSAGE_ERROR_COUNT",
     "DISCORD_MESSAGE_LATENCY",
-    "MEMORY_STORE_COUNT",
-    "MEMORY_STORE_ERROR_COUNT",
-    "MEMORY_STORE_LATENCY",
-    "MEMORY_RETRIEVAL_COUNT",
-    "MEMORY_RETRIEVAL_ERROR_COUNT",
-    "MEMORY_RETRIEVAL_LATENCY",
+    "ERROR_COUNT",
+    "IN_PROGRESS_REQUESTS",
     "MCP_TOOL_CALL_COUNT",
     "MCP_TOOL_CALL_ERROR_COUNT",
     "MCP_TOOL_CALL_LATENCY",
+    "MEMORY_RETRIEVAL_COUNT",
+    "MEMORY_RETRIEVAL_ERROR_COUNT",
+    "MEMORY_RETRIEVAL_LATENCY",
+    "MEMORY_STORE_COUNT",
+    "MEMORY_STORE_ERROR_COUNT",
+    "MEMORY_STORE_LATENCY",
+    "MODEL_ROUTING_COUNT",
+    "MODEL_ROUTING_ERROR_COUNT",
+    "MODEL_ROUTING_LATENCY",
+    "OAUTH_TOKEN_REFRESH_COUNT",
+    "OAUTH_TOKEN_REFRESH_ERROR_COUNT",
+    "OAUTH_TOKEN_REFRESH_LATENCY",
+    # Prometheus metrics
+    "REQUEST_COUNT",
+    "REQUEST_LATENCY",
+    "VECTOR_SEARCH_COUNT",
+    "VECTOR_SEARCH_ERROR_COUNT",
+    "VECTOR_SEARCH_LATENCY",
+    "Histogram",
+    "MetricPoint",
+    "MetricsCollector",
+    "SLOMonitor",
+    "get_metrics",
+    "get_metrics_data",
+    "get_slo_monitor",
+    "initialize_slo_monitoring",
+    "record_cache_operation",
+    "record_request",
+    "record_vector_search",
 ]

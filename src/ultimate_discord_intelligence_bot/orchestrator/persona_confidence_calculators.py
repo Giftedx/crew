@@ -9,6 +9,7 @@ Extracted from confidence_calculators.py to improve maintainability and organiza
 import logging
 from typing import Any
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -49,8 +50,20 @@ def calculate_persona_confidence(behavioral_data: dict[str, Any], log: logging.L
         else:
             # Fallback: analyze text for confidence indicators
             text_data = str(behavioral_data).lower()
-            confidence_words = ["consistent", "authentic", "reliable", "stable", "genuine"]
-            uncertainty_words = ["inconsistent", "fake", "unreliable", "unstable", "artificial"]
+            confidence_words = [
+                "consistent",
+                "authentic",
+                "reliable",
+                "stable",
+                "genuine",
+            ]
+            uncertainty_words = [
+                "inconsistent",
+                "fake",
+                "unreliable",
+                "unstable",
+                "artificial",
+            ]
 
             confidence_count = sum(1 for word in confidence_words if word in text_data)
             uncertainty_count = sum(1 for word in uncertainty_words if word in text_data)

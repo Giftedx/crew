@@ -16,6 +16,7 @@ from typing import Any
 
 import numpy as np
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -304,7 +305,12 @@ class ThompsonSamplingBandit:
 
         return selected_arm_id
 
-    def update_reward(self, arm_id: str, reward: float, reward_type: RewardType = RewardType.QUALITY_SCORE) -> bool:
+    def update_reward(
+        self,
+        arm_id: str,
+        reward: float,
+        reward_type: RewardType = RewardType.QUALITY_SCORE,
+    ) -> bool:
         """Update reward for a selected arm."""
         if arm_id not in self.arms:
             logger.warning(f"Arm {arm_id} not found for reward update")
@@ -489,7 +495,8 @@ class ThompsonSamplingBandit:
 
         # Find arm with highest uncertainty (confidence width)
         best_exploration_arm = max(
-            self.arms.values(), key=lambda arm: float(arm.confidence_width * (1.0 / max(1, arm.total_pulls)))
+            self.arms.values(),
+            key=lambda arm: float(arm.confidence_width * (1.0 / max(1, arm.total_pulls))),
         )
 
         return best_exploration_arm.arm_id

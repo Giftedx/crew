@@ -11,6 +11,7 @@ import sys
 import time
 from pathlib import Path
 
+
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
@@ -24,7 +25,9 @@ async def demonstrate_semantic_cache():
     print("-" * 50)
 
     try:
-        from ultimate_discord_intelligence_bot.core.cache.semantic_cache import create_semantic_cache
+        from ultimate_discord_intelligence_bot.core.cache.semantic_cache import (
+            create_semantic_cache,
+        )
 
         # Create cache with fallback (no GPTCache required)
         cache = create_semantic_cache(fallback_enabled=True)
@@ -48,7 +51,7 @@ async def demonstrate_semantic_cache():
         model = "gpt-3.5-turbo"
 
         print("Storing responses in semantic cache...")
-        for i, (prompt, response) in enumerate(zip(prompts, responses)):
+        for i, (prompt, response) in enumerate(zip(prompts, responses, strict=False)):
             await cache.set(prompt, model, response)
             print(f"  ✓ Stored response {i + 1}")
 
@@ -83,7 +86,9 @@ async def demonstrate_enhanced_observability():
     print("-" * 50)
 
     try:
-        from ultimate_discord_intelligence_bot.obs.langsmith_integration import EnhancedLLMObservability
+        from ultimate_discord_intelligence_bot.obs.langsmith_integration import (
+            EnhancedLLMObservability,
+        )
 
         # Create observability instance
         observability = EnhancedLLMObservability(enable_langsmith=False, enable_local_tracing=True)
@@ -144,7 +149,9 @@ async def demonstrate_monitoring_system():
     print("-" * 50)
 
     try:
-        from ultimate_discord_intelligence_bot.obs.enhanced_monitoring import EnhancedMonitoringSystem
+        from ultimate_discord_intelligence_bot.obs.enhanced_monitoring import (
+            EnhancedMonitoringSystem,
+        )
 
         # Create monitoring system
         monitoring = EnhancedMonitoringSystem()
@@ -184,7 +191,10 @@ async def demonstrate_circuit_breaker():
     print("-" * 50)
 
     try:
-        from ultimate_discord_intelligence_bot.core.circuit_breaker import CircuitBreaker, CircuitConfig
+        from ultimate_discord_intelligence_bot.core.circuit_breaker import (
+            CircuitBreaker,
+            CircuitConfig,
+        )
 
         # Create circuit breaker with low thresholds for demo
         config = CircuitConfig(
@@ -215,7 +225,7 @@ async def demonstrate_circuit_breaker():
                 result = await circuit_breaker.call(unreliable_service)
                 print(f"  Call {i + 1}: ✅ {result} (State: {circuit_breaker.get_state().value})")
             except Exception as e:
-                print(f"  Call {i + 1}: ❌ {str(e)} (State: {circuit_breaker.get_state().value})")
+                print(f"  Call {i + 1}: ❌ {e!s} (State: {circuit_breaker.get_state().value})")
 
             await asyncio.sleep(0.1)
 

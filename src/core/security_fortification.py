@@ -17,16 +17,20 @@ import secrets
 import time
 from collections import defaultdict
 from dataclasses import dataclass, field
-from datetime import datetime
 from enum import Enum
-from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from core.time import default_utc_now
 from obs import metrics
 
 from ..security.events import log_security_event
 from .error_handling import log_error
+
+
+if TYPE_CHECKING:
+    from datetime import datetime
+    from pathlib import Path
+
 
 logger = logging.getLogger(__name__)
 
@@ -456,26 +460,17 @@ class VulnerabilityScanner:
     def _has_hardcoded_secrets(self, content: str) -> bool:
         """Check for hardcoded secrets."""
         patterns = self.vulnerability_db["known_patterns"]["hardcoded_secrets"]
-        for pattern in patterns:
-            if re.search(pattern, content, re.IGNORECASE):
-                return True
-        return False
+        return any(re.search(pattern, content, re.IGNORECASE) for pattern in patterns)
 
     def _has_sql_injection_risk(self, content: str) -> bool:
         """Check for SQL injection risks."""
         patterns = self.vulnerability_db["known_patterns"]["sql_injection"]
-        for pattern in patterns:
-            if re.search(pattern, content, re.IGNORECASE):
-                return True
-        return False
+        return any(re.search(pattern, content, re.IGNORECASE) for pattern in patterns)
 
     def _has_insecure_randomness(self, content: str) -> bool:
         """Check for insecure randomness usage."""
         patterns = self.vulnerability_db["known_patterns"]["weak_crypto"]
-        for pattern in patterns:
-            if re.search(pattern, content, re.IGNORECASE):
-                return True
-        return False
+        return any(re.search(pattern, content, re.IGNORECASE) for pattern in patterns)
 
     def _check_dependency_file(self, file_path: Path) -> list[VulnerabilityReport]:
         """Check dependency file for vulnerabilities."""
@@ -569,13 +564,18 @@ class SecurityOrchestrator:
         )
 
         # Auto-mitigation if enabled and threat is severe
-        if self.auto_mitigation_enabled and threat.threat_level in [ThreatLevel.HIGH, ThreatLevel.CRITICAL]:
+        if self.auto_mitigation_enabled and threat.threat_level in [
+            ThreatLevel.HIGH,
+            ThreatLevel.CRITICAL,
+        ]:
             self._auto_mitigate_threat(threat)
 
         # Update metrics
         try:
             metrics.SECURITY_THREATS.labels(
-                **metrics.label_ctx(), threat_type=threat.threat_type.value, threat_level=threat.threat_level.value
+                **metrics.label_ctx(),
+                threat_type=threat.threat_type.value,
+                threat_level=threat.threat_level.value,
             ).inc()
         except Exception as e:
             log_error(e, message="Failed to update security threat metrics")
@@ -692,12 +692,12 @@ class SecurityOrchestrator:
 
 
 __all__ = [
-    "SecurityOrchestrator",
-    "ThreatDetectionEngine",
-    "VulnerabilityScanner",
-    "SecurityThreat",
-    "VulnerabilityReport",
-    "SecurityMetrics",
-    "ThreatLevel",
     "SecurityEventType",
+    "SecurityMetrics",
+    "SecurityOrchestrator",
+    "SecurityThreat",
+    "ThreatDetectionEngine",
+    "ThreatLevel",
+    "VulnerabilityReport",
+    "VulnerabilityScanner",
 ]

@@ -19,7 +19,12 @@ Enable with: ENABLE_MCP_CREATOR_INTELLIGENCE=1
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +37,6 @@ except ImportError:
     FASTMCP_AVAILABLE = False
 
     # Stub for when not installed
-    from collections.abc import Callable
     from typing import Any
 
     class FastMCP:  # type: ignore
@@ -66,7 +70,9 @@ def _get_ingestion_tools() -> Any:
 
     if _ingestion_tools is None:
         try:
-            from mcp_server.tools.creator_intelligence_ingestion import get_ingestion_tools
+            from mcp_server.tools.creator_intelligence_ingestion import (
+                get_ingestion_tools,
+            )
 
             _ingestion_tools = get_ingestion_tools(enable_vector_storage=True)
         except Exception as e:

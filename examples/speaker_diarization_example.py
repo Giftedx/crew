@@ -51,7 +51,8 @@ def main() -> int:
 
     data = result.data
 
-    print("✅ Speaker diarization completed!"    print(f"   Model: {data['model']}")
+    print("✅ Speaker diarization completed!")
+    print(f"   Model: {data['model']}")
     print(f"   Duration: {data['duration']:.2f}s")
     print(f"   Confidence: {data.get('confidence', 0):.2f}")
     print(f"   Cache hit: {data['cache_hit']}")
@@ -71,19 +72,25 @@ def main() -> int:
         print("-" * 80)
 
         for i, segment in enumerate(segments[:10]):  # Show first 10 segments
-            duration = segment['end'] - segment['start']
-            speaker_info = f"{segment['speaker_name']} ({segment['speaker_role']})" if segment.get('speaker_name') else segment['speaker_id']
+            duration = segment["end"] - segment["start"]
+            speaker_info = (
+                f"{segment['speaker_name']} ({segment['speaker_role']})"
+                if segment.get("speaker_name")
+                else segment["speaker_id"]
+            )
 
-            print(f"   {i+1:2d}. [{segment['start']:6.1f}s - {segment['end']:6.1f}s] "
-                  f"({duration:5.1f}s) {speaker_info} "
-                  f"(conf: {segment.get('confidence', 1):.2f})")
+            print(
+                f"   {i + 1:2d}. [{segment['start']:6.1f}s - {segment['end']:6.1f}s] "
+                f"({duration:5.1f}s) {speaker_info} "
+                f"(conf: {segment.get('confidence', 1):.2f})"
+            )
 
-            if segment.get('transcript_text'):
+            if segment.get("transcript_text"):
                 # Show first 60 chars of transcript
-                transcript_preview = segment['transcript_text'][:60]
-                if len(segment['transcript_text']) > 60:
+                transcript_preview = segment["transcript_text"][:60]
+                if len(segment["transcript_text"]) > 60:
                     transcript_preview += "..."
-                print(f"         \"{transcript_preview}\"")
+                print(f'         "{transcript_preview}"')
 
         if len(segments) > 10:
             print(f"   ... and {len(segments) - 10} more segments")
@@ -94,13 +101,17 @@ def main() -> int:
     print("\n⏱️  Speaking Time Breakdown:")
     speaker_times = {}
     for segment in segments:
-        speaker_id = segment['speaker_id']
-        duration = segment['end'] - segment['start']
+        speaker_id = segment["speaker_id"]
+        duration = segment["end"] - segment["start"]
         speaker_times[speaker_id] = speaker_times.get(speaker_id, 0) + duration
 
-    for speaker_id, total_time in sorted(speaker_times.items(), key=lambda x: x[1], reverse=True):
-        speaker_name = data['speaker_map'].get(speaker_id, speaker_id)
-        percentage = (total_time / data['duration']) * 100 if data['duration'] > 0 else 0
+    for speaker_id, total_time in sorted(
+        speaker_times.items(), key=lambda x: x[1], reverse=True
+    ):
+        speaker_name = data["speaker_map"].get(speaker_id, speaker_id)
+        percentage = (
+            (total_time / data["duration"]) * 100 if data["duration"] > 0 else 0
+        )
         print(f"   {speaker_name}: {total_time:6.1f}s ({percentage:5.1f}%)")
 
     return 0
@@ -108,4 +119,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
-

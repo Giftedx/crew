@@ -7,9 +7,16 @@ clever templating to keep behaviour predictable for reinforcement learning.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from typing import TYPE_CHECKING
 
-from core.privacy import privacy_filter  # import near top (moved above constant) to satisfy E402
+from core.privacy import (
+    privacy_filter,
+)  # import near top (moved above constant) to satisfy E402
+
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
 
 SAFETY_PREAMBLE = "You are a helpful assistant."
 
@@ -42,4 +49,4 @@ def build_prompt(
     return clean
 
 
-__all__ = ["build_prompt", "SAFETY_PREAMBLE"]
+__all__ = ["SAFETY_PREAMBLE", "build_prompt"]

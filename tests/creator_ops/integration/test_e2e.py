@@ -18,12 +18,22 @@ from unittest.mock import Mock
 import pytest
 
 from ultimate_discord_intelligence_bot.creator_ops.features.clip_radar import ClipRadar
-from ultimate_discord_intelligence_bot.creator_ops.features.episode_intelligence import EpisodeIntelligence
-from ultimate_discord_intelligence_bot.creator_ops.features.repurposing_studio import RepurposingStudio
-from ultimate_discord_intelligence_bot.creator_ops.integrations.twitch_client import TwitchClient
-from ultimate_discord_intelligence_bot.creator_ops.integrations.youtube_client import YouTubeClient
+from ultimate_discord_intelligence_bot.creator_ops.features.episode_intelligence import (
+    EpisodeIntelligence,
+)
+from ultimate_discord_intelligence_bot.creator_ops.features.repurposing_studio import (
+    RepurposingStudio,
+)
+from ultimate_discord_intelligence_bot.creator_ops.integrations.twitch_client import (
+    TwitchClient,
+)
+from ultimate_discord_intelligence_bot.creator_ops.integrations.youtube_client import (
+    YouTubeClient,
+)
 from ultimate_discord_intelligence_bot.creator_ops.media.asr import ASRProcessor
-from ultimate_discord_intelligence_bot.creator_ops.media.diarization import DiarizationProcessor
+from ultimate_discord_intelligence_bot.creator_ops.media.diarization import (
+    DiarizationProcessor,
+)
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
@@ -67,7 +77,11 @@ class TestCreatorOpsE2E:
                     language_probability=0.95,
                     segments=[
                         Mock(start_time=0.0, end_time=5.0, text="This is a test"),
-                        Mock(start_time=5.0, end_time=10.0, text="transcription of the video content."),
+                        Mock(
+                            start_time=5.0,
+                            end_time=10.0,
+                            text="transcription of the video content.",
+                        ),
                     ],
                     duration=10.0,
                     model_name="base",
@@ -82,8 +96,18 @@ class TestCreatorOpsE2E:
             data={
                 "result": Mock(
                     segments=[
-                        Mock(speaker_id="SPEAKER_00", start_time=0.0, end_time=5.0, duration=5.0),
-                        Mock(speaker_id="SPEAKER_01", start_time=5.0, end_time=10.0, duration=5.0),
+                        Mock(
+                            speaker_id="SPEAKER_00",
+                            start_time=0.0,
+                            end_time=5.0,
+                            duration=5.0,
+                        ),
+                        Mock(
+                            speaker_id="SPEAKER_01",
+                            start_time=5.0,
+                            end_time=10.0,
+                            duration=5.0,
+                        ),
                     ],
                     num_speakers=2,
                     total_duration=10.0,
@@ -390,12 +414,26 @@ class TestCreatorOpsE2E:
 
         # Mock YouTube video
         youtube_client.get_video_metadata.return_value = StepResult.ok(
-            data={"video": Mock(video_id="yt_video_123", title="YouTube Video", duration=600, view_count=50000)}
+            data={
+                "video": Mock(
+                    video_id="yt_video_123",
+                    title="YouTube Video",
+                    duration=600,
+                    view_count=50000,
+                )
+            }
         )
 
         # Mock Twitch stream
         twitch_client.get_stream_info.return_value = StepResult.ok(
-            data={"stream": Mock(stream_id="twitch_stream_123", title="Twitch Stream", viewer_count=500, is_live=True)}
+            data={
+                "stream": Mock(
+                    stream_id="twitch_stream_123",
+                    title="Twitch Stream",
+                    viewer_count=500,
+                    is_live=True,
+                )
+            }
         )
 
         # Mock ASR processor
@@ -465,7 +503,13 @@ class TestCreatorOpsE2E:
                 # Mock ASR processor
                 asr_processor = Mock(spec=ASRProcessor)
                 asr_processor.transcribe_audio.return_value = StepResult.ok(
-                    data={"result": Mock(text=f"Transcribed content for {video_id}", language="en", duration=300)}
+                    data={
+                        "result": Mock(
+                            text=f"Transcribed content for {video_id}",
+                            language="en",
+                            duration=300,
+                        )
+                    }
                 )
 
                 # Process video
@@ -509,7 +553,10 @@ class TestCreatorOpsE2E:
             "episode_id": "episode_123",
             "title": "Test Episode",
             "transcript": "Test transcript",
-            "metadata": {"channel_id": "test_channel", "published_at": datetime.now().isoformat()},
+            "metadata": {
+                "channel_id": "test_channel",
+                "published_at": datetime.now().isoformat(),
+            },
         }
 
         # Step 1: Store episode data
@@ -523,13 +570,21 @@ class TestCreatorOpsE2E:
 
         # Step 2: Store knowledge graph node
         kg_result = store_manager.add_kg_node(
-            tenant=self.test_tenant, type="episode", name=episode_data["episode_id"], attrs=episode_data["metadata"]
+            tenant=self.test_tenant,
+            type="episode",
+            name=episode_data["episode_id"],
+            attrs=episode_data["metadata"],
         )
         assert kg_result.success
 
         # Step 3: Store creator profile
         profile_result = store_manager.upsert_creator_profile(
-            name="test_creator", data={"platform": "youtube", "channel_id": "test_channel", "total_episodes": 1}
+            name="test_creator",
+            data={
+                "platform": "youtube",
+                "channel_id": "test_channel",
+                "total_episodes": 1,
+            },
         )
         assert profile_result.success
 
@@ -559,13 +614,16 @@ class TestCreatorOpsE2E:
 
         # Step 2: Store in existing memory service
         memory_result = memory_service.store_content(
-            content=video_result.data["video"].title, tenant=self.test_tenant, workspace=self.test_workspace
+            content=video_result.data["video"].title,
+            tenant=self.test_tenant,
+            workspace=self.test_workspace,
         )
         assert memory_result.success
 
         # Step 3: Generate prompt with existing prompt engine
         prompt_result = prompt_engine.generate_prompt(
-            template="video_analysis", variables={"title": video_result.data["video"].title}
+            template="video_analysis",
+            variables={"title": video_result.data["video"].title},
         )
         assert prompt_result.success
 

@@ -20,11 +20,15 @@ import argparse
 import os
 import subprocess
 import sys
-from collections.abc import Iterable
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from core.secure_config import get_config
+
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 config = get_config()
@@ -136,7 +140,8 @@ def _wizard(
     # Downloads and quality
     print("\nDownload preferences:")
     updates["DEFAULT_DOWNLOAD_QUALITY"] = ask(
-        "DEFAULT_DOWNLOAD_QUALITY", default=os.getenv("DEFAULT_DOWNLOAD_QUALITY", "1080p")
+        "DEFAULT_DOWNLOAD_QUALITY",
+        default=os.getenv("DEFAULT_DOWNLOAD_QUALITY", "1080p"),
     )
 
     # Paths
@@ -211,10 +216,12 @@ def _wizard(
     # Optional OTEL exporter details when tracing enabled
     if updates.get("ENABLE_TRACING") == "1":
         updates["OTEL_EXPORTER_OTLP_ENDPOINT"] = ask(
-            "OTEL_EXPORTER_OTLP_ENDPOINT", default=os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT", "")
+            "OTEL_EXPORTER_OTLP_ENDPOINT",
+            default=os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT", ""),
         )
         updates["OTEL_EXPORTER_OTLP_HEADERS"] = ask(
-            "OTEL_EXPORTER_OTLP_HEADERS", default=os.getenv("OTEL_EXPORTER_OTLP_HEADERS", "")
+            "OTEL_EXPORTER_OTLP_HEADERS",
+            default=os.getenv("OTEL_EXPORTER_OTLP_HEADERS", ""),
         )
 
     # Local web clients (CORS) and Activities dev helpers (optional)
@@ -277,10 +284,12 @@ def _wizard(
     # Discord upload limits (optional)
     _print_header("Discord Upload Limits (optional)")
     updates["DISCORD_UPLOAD_LIMIT_BYTES"] = ask(
-        "DISCORD_UPLOAD_LIMIT_BYTES", default=os.getenv("DISCORD_UPLOAD_LIMIT_BYTES", "")
+        "DISCORD_UPLOAD_LIMIT_BYTES",
+        default=os.getenv("DISCORD_UPLOAD_LIMIT_BYTES", ""),
     )
     updates["DISCORD_UPLOAD_LIMIT_WEBHOOK_BYTES"] = ask(
-        "DISCORD_UPLOAD_LIMIT_WEBHOOK_BYTES", default=os.getenv("DISCORD_UPLOAD_LIMIT_WEBHOOK_BYTES", "")
+        "DISCORD_UPLOAD_LIMIT_WEBHOOK_BYTES",
+        default=os.getenv("DISCORD_UPLOAD_LIMIT_WEBHOOK_BYTES", ""),
     )
     per_guild = ask("PER_GUILD_LIMITS (CSV guild:bytes)", default="")
     if per_guild:
@@ -343,8 +352,11 @@ def _check_ytdlp_module() -> tuple[bool, str]:
     # Fallback: probe if `python -m yt_dlp --version` works without importing in-process
     try:
         out = subprocess.check_output(
-            [sys.executable, "-m", "yt_dlp", "--version"], stderr=subprocess.STDOUT, text=True, timeout=5
-        )  # noqa: S603
+            [sys.executable, "-m", "yt_dlp", "--version"],
+            stderr=subprocess.STDOUT,
+            text=True,
+            timeout=5,
+        )
         ver = out.strip().splitlines()[0] if out else "unknown"
         return True, f"python -m yt_dlp (v{ver})"
     except Exception:
@@ -372,7 +384,12 @@ def _doctor(*, as_json: bool = False, quiet: bool = False) -> int:
 
     if not quiet:
         _print_header("Doctor")
-    report: dict[str, Any] = {"env": {}, "binaries": {}, "vector_store": {}, "status": "ok"}
+    report: dict[str, Any] = {
+        "env": {},
+        "binaries": {},
+        "vector_store": {},
+        "status": "ok",
+    }
     ok = True
     # Required
     for var in ["DISCORD_BOT_TOKEN"]:
@@ -473,6 +490,9 @@ def _run_discord() -> int:
         print("❌ start_full_bot.py not found in repo root or scripts/. Ensure repository is intact.")
         print(f"   Looked in: {', '.join(str(p) for p in candidates)}")
         return 2
+
+    # Launch bot directly - no PYTHONPATH needed since package is installed
+    print(f"🚀 Launching: {sys.executable} {target}")
     return subprocess.call([sys.executable, str(target)])
 
 
@@ -497,9 +517,23 @@ def main(argv: list[str] | None = None) -> int:
     # wizard/init
     wiz = sub.add_parser("wizard", help="Run interactive setup wizard")
     wiz.add_argument("--yes", "-y", action="store_true", help="Accept defaults (non-interactive)")
-    wiz.add_argument("--non-interactive", action="store_true", help="Do not prompt; use env/defaults/presets")
-    wiz.add_argument("--use-example", action="store_true", help="Seed from .env.example if .env missing")
-    wiz.add_argument("--set", dest="sets", action="append", default=[], help="Override KEY=VALUE (repeatable)")
+    wiz.add_argument(
+        "--non-interactive",
+        action="store_true",
+        help="Do not prompt; use env/defaults/presets",
+    )
+    wiz.add_argument(
+        "--use-example",
+        action="store_true",
+        help="Seed from .env.example if .env missing",
+    )
+    wiz.add_argument(
+        "--set",
+        dest="sets",
+        action="append",
+        default=[],
+        help="Override KEY=VALUE (repeatable)",
+    )
 
     # legacy aliases
     sub.add_parser("setup", help="Alias for wizard")
@@ -530,7 +564,10 @@ def main(argv: list[str] | None = None) -> int:
             use_example_when_missing=use_example,
         )
     if cmd == "doctor":
-        return _doctor(as_json=bool(getattr(args, "json", False)), quiet=bool(getattr(args, "quiet", False)))
+        return _doctor(
+            as_json=bool(getattr(args, "json", False)),
+            quiet=bool(getattr(args, "quiet", False)),
+        )
     if cmd == "run":
         if getattr(args, "target", None) == "discord":
             return _run_discord()

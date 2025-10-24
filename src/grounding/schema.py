@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
+
 """Lightweight models describing grounded answers."""
 
 
@@ -34,4 +35,4 @@ class AnswerContract:
             raise ValueError("at least one citation required")
 
 
-__all__ = ["Evidence", "AnswerContract"]
+__all__ = ["AnswerContract", "Evidence"]

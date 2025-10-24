@@ -6,12 +6,13 @@ import logging
 import time
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set
+from typing import Any
 
 from ultimate_discord_intelligence_bot.settings import (
     ENABLE_ENTERPRISE_TENANT_MANAGEMENT,
 )
 from ultimate_discord_intelligence_bot.step_result import StepResult
+
 
 log = logging.getLogger(__name__)
 
@@ -48,15 +49,15 @@ class ResourceQuota:
     reset_period: str = "monthly"  # daily, weekly, monthly, yearly
     last_reset: float = field(default_factory=time.time)
 
-    def is_exceeded(self) -> bool:
+    def is_exceeded(self) -> StepResult:
         """Check if quota is exceeded."""
         return self.current_usage >= self.limit
 
-    def remaining(self) -> float:
+    def remaining(self) -> StepResult:
         """Get remaining quota."""
         return max(0.0, self.limit - self.current_usage)
 
-    def usage_percentage(self) -> float:
+    def usage_percentage(self) -> StepResult:
         """Get usage as percentage of limit."""
         return (self.current_usage / self.limit * 100) if self.limit > 0 else 0.0
 
@@ -67,7 +68,7 @@ class BillingConfig:
 
     tier: TenantTier
     monthly_fee: float = 0.0
-    overage_rate: Dict[ResourceType, float] = field(default_factory=dict)
+    overage_rate: dict[ResourceType, float] = field(default_factory=dict)
     billing_email: str = ""
     payment_method: str = ""
     auto_renew: bool = True
@@ -75,9 +76,9 @@ class BillingConfig:
 
     def calculate_overage_cost(
         self,
-        usage: Dict[ResourceType, float],
-        quotas: Dict[ResourceType, ResourceQuota],
-    ) -> float:
+        usage: dict[ResourceType, float],
+        quotas: dict[ResourceType, ResourceQuota],
+    ) -> StepResult:
         """Calculate overage costs based on usage and quotas."""
         total_cost = 0.0
         for resource_type, usage_amount in usage.items():
@@ -96,11 +97,11 @@ class TenantConfig:
     tenant_id: str
     name: str
     tier: TenantTier
-    quotas: Dict[ResourceType, ResourceQuota]
+    quotas: dict[ResourceType, ResourceQuota]
     billing: BillingConfig
-    custom_agents: Set[str] = field(default_factory=set)
+    custom_agents: set[str] = field(default_factory=set)
     isolated_storage: bool = True
-    custom_domains: List[str] = field(default_factory=list)
+    custom_domains: list[str] = field(default_factory=list)
     created_at: float = field(default_factory=time.time)
     last_accessed: float = field(default_factory=time.time)
     status: str = "active"  # active, suspended, terminated
@@ -111,12 +112,12 @@ class TenantInstance:
     """Active tenant instance with runtime data."""
 
     config: TenantConfig
-    current_usage: Dict[ResourceType, float] = field(default_factory=dict)
-    active_sessions: Set[str] = field(default_factory=set)
-    performance_metrics: Dict[str, Any] = field(default_factory=dict)
+    current_usage: dict[ResourceType, float] = field(default_factory=dict)
+    active_sessions: set[str] = field(default_factory=set)
+    performance_metrics: dict[str, Any] = field(default_factory=dict)
     last_activity: float = field(default_factory=time.time)
 
-    def update_usage(self, resource_type: ResourceType, amount: float) -> bool:
+    def update_usage(self, resource_type: ResourceType, amount: float) -> StepResult:
         """Update resource usage and check if quota is exceeded."""
         if resource_type not in self.current_usage:
             self.current_usage[resource_type] = 0.0
@@ -131,7 +132,7 @@ class TenantInstance:
 
         return False
 
-    def get_usage_summary(self) -> Dict[str, Any]:
+    def get_usage_summary(self) -> StepResult:
         """Get comprehensive usage summary."""
         summary = {
             "tenant_id": self.config.tenant_id,
@@ -148,9 +149,7 @@ class TenantInstance:
 
             summary["current_usage"][resource_type.value] = current
             summary["quotas"][resource_type.value] = quota.limit if quota else None
-            summary["overages"][resource_type.value] = max(
-                0.0, current - (quota.limit if quota else 0.0)
-            )
+            summary["overages"][resource_type.value] = max(0.0, current - (quota.limit if quota else 0.0))
             summary["usage_percentages"][resource_type.value] = (
                 (current / quota.limit * 100) if quota and quota.limit > 0 else 0.0
             )
@@ -164,9 +163,9 @@ class EnterpriseTenantManager:
     def __init__(self):
         """Initialize enterprise tenant manager."""
         self.enabled = ENABLE_ENTERPRISE_TENANT_MANAGEMENT
-        self.tenants: Dict[str, TenantInstance] = {}
-        self.tenant_configs: Dict[str, TenantConfig] = {}
-        self.resource_pools: Dict[str, Dict[ResourceType, float]] = {}
+        self.tenants: dict[str, TenantInstance] = {}
+        self.tenant_configs: dict[str, TenantConfig] = {}
+        self.resource_pools: dict[str, dict[ResourceType, float]] = {}
 
         if self.enabled:
             log.info("Enterprise Tenant Manager initialized")
@@ -174,7 +173,7 @@ class EnterpriseTenantManager:
         else:
             log.info("Enterprise Tenant Manager disabled via feature flag")
 
-    def _initialize_default_tiers(self) -> None:
+    def _initialize_default_tiers(self) -> StepResult:
         """Initialize default tenant tiers and resource allocations."""
         # Default tier configurations
         tier_configs = {
@@ -226,9 +225,7 @@ class EnterpriseTenantManager:
 
         try:
             if tenant_config.tenant_id in self.tenants:
-                return StepResult.fail(
-                    f"Tenant {tenant_config.tenant_id} already exists"
-                )
+                return StepResult.fail(f"Tenant {tenant_config.tenant_id} already exists")
 
             # Validate tenant configuration
             validation_result = self._validate_tenant_config(tenant_config)
@@ -243,17 +240,13 @@ class EnterpriseTenantManager:
             self.tenants[tenant_config.tenant_id] = tenant_instance
             self.tenant_configs[tenant_config.tenant_id] = tenant_config
 
-            log.info(
-                f"Created tenant {tenant_config.tenant_id} with tier {tenant_config.tier.value}"
-            )
+            log.info(f"Created tenant {tenant_config.tenant_id} with tier {tenant_config.tier.value}")
 
             return StepResult.ok(
                 data={
                     "tenant_id": tenant_config.tenant_id,
                     "tier": tenant_config.tier.value,
-                    "quotas": {
-                        rt.value: q.limit for rt, q in tenant_config.quotas.items()
-                    },
+                    "quotas": {rt.value: q.limit for rt, q in tenant_config.quotas.items()},
                     "created_at": tenant_config.created_at,
                 }
             )
@@ -276,7 +269,7 @@ class EnterpriseTenantManager:
 
         return StepResult.ok(data={"valid": True})
 
-    def _create_tenant_resource_pool(self, config: TenantConfig) -> None:
+    def _create_tenant_resource_pool(self, config: TenantConfig) -> StepResult:
         """Create isolated resource pool for tenant."""
         pool_id = f"tenant_{config.tenant_id}"
         self.resource_pools[pool_id] = {}
@@ -284,13 +277,11 @@ class EnterpriseTenantManager:
         for resource_type, quota in config.quotas.items():
             self.resource_pools[pool_id][resource_type] = quota.limit
 
-    def get_tenant(self, tenant_id: str) -> Optional[TenantInstance]:
+    def get_tenant(self, tenant_id: str) -> StepResult:
         """Get tenant instance by ID."""
         return self.tenants.get(tenant_id)
 
-    def update_tenant_usage(
-        self, tenant_id: str, resource_type: ResourceType, amount: float
-    ) -> StepResult:
+    def update_tenant_usage(self, tenant_id: str, resource_type: ResourceType, amount: float) -> StepResult:
         """Update tenant resource usage."""
         if not self.enabled:
             return StepResult.ok(data={"quota_exceeded": False})
@@ -303,9 +294,7 @@ class EnterpriseTenantManager:
             quota_exceeded = tenant.update_usage(resource_type, amount)
 
             if quota_exceeded:
-                log.warning(
-                    f"Tenant {tenant_id} exceeded quota for {resource_type.value}"
-                )
+                log.warning(f"Tenant {tenant_id} exceeded quota for {resource_type.value}")
                 # Trigger quota exceeded handling
                 self._handle_quota_exceeded(tenant, resource_type)
 
@@ -322,14 +311,10 @@ class EnterpriseTenantManager:
             log.error(f"Failed to update usage for tenant {tenant_id}: {e}")
             return StepResult.fail(f"Failed to update usage: {e}")
 
-    def _handle_quota_exceeded(
-        self, tenant: TenantInstance, resource_type: ResourceType
-    ) -> None:
+    def _handle_quota_exceeded(self, tenant: TenantInstance, resource_type: ResourceType) -> StepResult:
         """Handle quota exceeded scenarios."""
         # Log the event
-        log.warning(
-            f"Tenant {tenant.config.tenant_id} exceeded quota for {resource_type.value}"
-        )
+        log.warning(f"Tenant {tenant.config.tenant_id} exceeded quota for {resource_type.value}")
 
         # Update tenant status if necessary
         if tenant.config.status == "active":
@@ -340,9 +325,7 @@ class EnterpriseTenantManager:
             # - Scale up their tier automatically
             pass
 
-    def check_tenant_quota(
-        self, tenant_id: str, resource_type: ResourceType, required_amount: float
-    ) -> StepResult:
+    def check_tenant_quota(self, tenant_id: str, resource_type: ResourceType, required_amount: float) -> StepResult:
         """Check if tenant has sufficient quota for a resource."""
         if not self.enabled:
             return StepResult.ok(data={"sufficient": True})
@@ -411,18 +394,14 @@ class EnterpriseTenantManager:
                     )
                 tenant.config.quotas = new_quotas
 
-            log.info(
-                f"Upgraded tenant {tenant_id} from {old_tier.value} to {new_tier.value}"
-            )
+            log.info(f"Upgraded tenant {tenant_id} from {old_tier.value} to {new_tier.value}")
 
             return StepResult.ok(
                 data={
                     "tenant_id": tenant_id,
                     "old_tier": old_tier.value,
                     "new_tier": new_tier.value,
-                    "new_quotas": {
-                        rt.value: q.limit for rt, q in tenant.config.quotas.items()
-                    },
+                    "new_quotas": {rt.value: q.limit for rt, q in tenant.config.quotas.items()},
                 }
             )
 
@@ -501,9 +480,7 @@ class EnterpriseTenantManager:
                 system_usage[resource_type.value] = {
                     "total_usage": total_usage,
                     "total_quota": total_quota,
-                    "utilization_percentage": (total_usage / total_quota * 100)
-                    if total_quota > 0
-                    else 0.0,
+                    "utilization_percentage": (total_usage / total_quota * 100) if total_quota > 0 else 0.0,
                 }
 
             return StepResult.ok(data={"system_usage": system_usage})
@@ -514,10 +491,10 @@ class EnterpriseTenantManager:
 
 
 # Global instance for easy access
-_tenant_manager: Optional[EnterpriseTenantManager] = None
+_tenant_manager: EnterpriseTenantManager | None = None
 
 
-def get_tenant_manager() -> EnterpriseTenantManager:
+def get_tenant_manager() -> StepResult:
     """Get the global tenant manager instance."""
     global _tenant_manager
     if _tenant_manager is None:
@@ -532,17 +509,13 @@ def create_tenant(tenant_config: TenantConfig) -> StepResult:
     return manager.create_tenant(tenant_config)
 
 
-def update_tenant_usage(
-    tenant_id: str, resource_type: ResourceType, amount: float
-) -> StepResult:
+def update_tenant_usage(tenant_id: str, resource_type: ResourceType, amount: float) -> StepResult:
     """Update tenant resource usage."""
     manager = get_tenant_manager()
     return manager.update_tenant_usage(tenant_id, resource_type, amount)
 
 
-def check_tenant_quota(
-    tenant_id: str, resource_type: ResourceType, required_amount: float
-) -> StepResult:
+def check_tenant_quota(tenant_id: str, resource_type: ResourceType, required_amount: float) -> StepResult:
     """Check tenant quota."""
     manager = get_tenant_manager()
     return manager.check_tenant_quota(tenant_id, resource_type, required_amount)

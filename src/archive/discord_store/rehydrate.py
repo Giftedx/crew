@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import aiohttp
 
+
 API_BASE = "https://discord.com/api/v10"
 
 
@@ -27,7 +28,10 @@ async def fetch_attachment(
     """
     headers = {"Authorization": f"Bot {token}"}
     url = f"{API_BASE}/channels/{channel_id}/messages/{message_id}"
-    async with aiohttp.ClientSession() as session, session.get(url, headers=headers) as resp:
+    async with (
+        aiohttp.ClientSession() as session,
+        session.get(url, headers=headers) as resp,
+    ):
         resp.raise_for_status()
         data = await resp.json()
     attachments = data.get("attachments", [])

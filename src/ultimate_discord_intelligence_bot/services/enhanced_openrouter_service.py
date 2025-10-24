@@ -13,29 +13,31 @@ import copy
 import logging
 import time
 from dataclasses import dataclass
-from typing import Any, Protocol, runtime_checkable, cast
-from collections.abc import Callable
-from collections.abc import Sequence
+from typing import Any, Protocol, runtime_checkable, cast, TYPE_CHECKING
 
 from core.cache.semantic_cache import get_semantic_cache
 from core.http_utils import REQUEST_TIMEOUT_SECONDS
 from core.learning_engine import LearningEngine
 from core.secure_config import get_config
-from core.settings import get_settings
 from obs import metrics
 from obs.langsmith_integration import get_enhanced_observability
-from .logging_utils import AnalyticsStore
 from .prompt_engine import PromptEngine
 from .token_meter import TokenMeter
 from ultimate_discord_intelligence_bot.tenancy.context import current_tenant
-from ultimate_discord_intelligence_bot.tenancy.registry import TenantRegistry
 
 from .cache import RedisLLMCache, make_key
 
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+    from collections.abc import Callable
+    from .logging_utils import AnalyticsStore
+    from ultimate_discord_intelligence_bot.tenancy.registry import TenantRegistry
+    from ultimate_discord_intelligence_bot.step_result import StepResult
+
 
 class LLMCacheProto(Protocol):  # minimal structural type used in this module
-    def get(self, key: str) -> dict[str, Any] | None: ...
-    def set(self, key: str, value: dict[str, Any]) -> None: ...
+    def get(self, key: str) -> StepResult: ...
+    def set(self, key: str, value: dict[str, Any]) -> StepResult: ...
 
 
 # --- LiteLLM response shape (duck-typed) -------------------------------------
@@ -54,7 +56,7 @@ class _LiteLLMResponse(Protocol):  # pragma: no cover
     choices: Sequence[_LiteLLMChoice]
 
 
-def _extract_content(resp: Any) -> str:
+def _extract_content(resp: Any) -> StepResult:
     """Best-effort extraction of response text from a LiteLLM completion.
 
     Handles both standard response objects exposing ``choices[0].message.content``
@@ -127,7 +129,7 @@ class RouterStats:
 class EnhancedOpenRouterService:
     """Enhanced LLM router with LiteLLM multi-provider support and intelligent failover."""
 
-    def __init__(  # noqa: PLR0913 - explicit parameters improve clarity for DI
+    def __init__(
         self,
         models_map: dict[str, list[str]] | None = None,
         learning_engine: LearningEngine | None = None,
@@ -151,7 +153,7 @@ class EnhancedOpenRouterService:
             fallback_to_openrouter: Whether to fallback to original OpenRouter service
         """
         self.config = get_config()
-        self.settings = get_settings()
+        self.settings = Settings()
 
         # Initialize provider configurations
         self.provider_configs = provider_configs or self._create_default_providers()
@@ -189,7 +191,7 @@ class EnhancedOpenRouterService:
 
         # Original OpenRouter service for fallback
         if self.fallback_to_openrouter:
-            from .openrouter_service import OpenRouterService  # noqa: PLC0415
+            from .openrouter_service import OpenRouterService
 
             self._fallback_service: OpenRouterService | None = OpenRouterService(
                 models_map=models_map,
@@ -209,11 +211,14 @@ class EnhancedOpenRouterService:
             if not self.fallback_to_openrouter:
                 raise ImportError("LiteLLM required but not available")
 
-    def _create_default_providers(self) -> list[ProviderConfig]:
+    def _create_default_providers(self) -> StepResult:
         """Create default provider configurations with intelligent prioritization."""
         providers = [
             ProviderConfig(
-                name="openai", models=["gpt-4o", "gpt-4o-mini", "gpt-3.5-turbo"], priority=1, cost_multiplier=1.0
+                name="openai",
+                models=["gpt-4o", "gpt-4o-mini", "gpt-3.5-turbo"],
+                priority=1,
+                cost_multiplier=1.0,
             ),
             ProviderConfig(
                 name="anthropic",
@@ -222,12 +227,23 @@ class EnhancedOpenRouterService:
                 cost_multiplier=0.9,
             ),
             ProviderConfig(
-                name="google", models=["gemini-1.5-pro", "gemini-1.5-flash"], priority=3, cost_multiplier=0.8
+                name="google",
+                models=["gemini-1.5-pro", "gemini-1.5-flash"],
+                priority=3,
+                cost_multiplier=0.8,
             ),
             ProviderConfig(
-                name="azure", models=["azure/gpt-4o", "azure/gpt-35-turbo"], priority=4, cost_multiplier=1.1
+                name="azure",
+                models=["azure/gpt-4o", "azure/gpt-35-turbo"],
+                priority=4,
+                cost_multiplier=1.1,
             ),
-            ProviderConfig(name="openrouter", models=["openrouter/auto"], priority=5, cost_multiplier=1.2),
+            ProviderConfig(
+                name="openrouter",
+                models=["openrouter/auto"],
+                priority=5,
+                cost_multiplier=1.2,
+            ),
         ]
 
         # Filter providers based on available API keys
@@ -256,13 +272,29 @@ class EnhancedOpenRouterService:
 
         return enabled_providers or [ProviderConfig(name="openrouter", models=["openai/gpt-4o-mini"], priority=1)]
 
-    def _build_enhanced_model_map(self, models_map: dict[str, list[str]] | None) -> dict[str, list[str]]:
+    def _build_enhanced_model_map(self, models_map: dict[str, list[str]] | None) -> StepResult:
         """Build enhanced model mapping with provider prefixes."""
         base_map = {
-            "general": ["openai/gpt-4o-mini", "anthropic/claude-3-haiku-20240307", "google/gemini-1.5-flash"],
-            "analysis": ["openai/gpt-4o", "anthropic/claude-3-5-sonnet-20241022", "google/gemini-1.5-pro"],
-            "creative": ["anthropic/claude-3-5-sonnet-20241022", "openai/gpt-4o", "google/gemini-1.5-pro"],
-            "fast": ["openai/gpt-4o-mini", "google/gemini-1.5-flash", "anthropic/claude-3-haiku-20240307"],
+            "general": [
+                "openai/gpt-4o-mini",
+                "anthropic/claude-3-haiku-20240307",
+                "google/gemini-1.5-flash",
+            ],
+            "analysis": [
+                "openai/gpt-4o",
+                "anthropic/claude-3-5-sonnet-20241022",
+                "google/gemini-1.5-pro",
+            ],
+            "creative": [
+                "anthropic/claude-3-5-sonnet-20241022",
+                "openai/gpt-4o",
+                "google/gemini-1.5-pro",
+            ],
+            "fast": [
+                "openai/gpt-4o-mini",
+                "google/gemini-1.5-flash",
+                "anthropic/claude-3-haiku-20240307",
+            ],
         }
 
         if models_map:
@@ -270,12 +302,13 @@ class EnhancedOpenRouterService:
 
         return base_map
 
-    def _setup_cache(self) -> LLMCacheProto | None:
+    def _setup_cache(self) -> StepResult:
         """Set up intelligent caching with semantic similarity."""
         try:
             if getattr(self.config, "enable_cache_global", True) and getattr(self.config, "rate_limit_redis_url", None):
                 return RedisLLMCache(
-                    url=str(self.config.rate_limit_redis_url), ttl=int(getattr(self.config, "cache_ttl_llm", 3600))
+                    url=str(self.config.rate_limit_redis_url),
+                    ttl=int(getattr(self.config, "cache_ttl_llm", 3600)),
                 )
         except Exception as e:
             logger.warning(f"Failed to setup cache: {e}")
@@ -311,7 +344,9 @@ class EnhancedOpenRouterService:
                 cost = _completion_cost(completion_response, model)
                 self.stats.total_cost += cost
                 metrics.LLM_ESTIMATED_COST.labels(
-                    **metrics.label_ctx(), model=model, provider=self._extract_provider_from_model(model)
+                    **metrics.label_ctx(),
+                    model=model,
+                    provider=self._extract_provider_from_model(model),
                 ).observe(cost)
         except Exception as e:
             logger.debug(f"Failed to calculate cost: {e}")
@@ -324,13 +359,13 @@ class EnhancedOpenRouterService:
 
         metrics.LLM_MODEL_SELECTED.labels(**metrics.label_ctx(), task="error", model=model, provider=provider).inc()
 
-    def _extract_provider_from_model(self, model: str) -> str:
+    def _extract_provider_from_model(self, model: str) -> StepResult:
         """Extract provider name from model string."""
         if "/" in model:
             return model.split("/")[0]
         return "unknown"
 
-    def _get_fallback_candidates(self, task_type: str) -> list[str]:
+    def _get_fallback_candidates(self, task_type: str) -> StepResult:
         """Get fallback model candidates for a task type."""
         candidates = self.models_map.get(task_type, self.models_map.get("general", []))
 
@@ -346,7 +381,7 @@ class EnhancedOpenRouterService:
 
         return candidates
 
-    async def route_async(  # noqa: PLR0913,PLR0911,PLR0915 - complex orchestration kept explicit
+    async def route_async(
         self,
         prompt: str,
         task_type: str = "general",
@@ -354,7 +389,7 @@ class EnhancedOpenRouterService:
         provider_opts: dict[str, Any] | None = None,
         max_tokens: int = 2048,
         temperature: float = 0.8,
-    ) -> dict[str, Any]:
+    ) -> StepResult:
         """Asynchronous routing with LiteLLM integration."""
         start_time = time.perf_counter()
         self.stats.total_requests += 1
@@ -453,7 +488,10 @@ class EnhancedOpenRouterService:
                 # Fallback to original OpenRouter service
                 elif self._fallback_service:
                     result = self._fallback_service.route(
-                        prompt=prompt, task_type=task_type, model=model, provider_opts=provider_opts
+                        prompt=prompt,
+                        task_type=task_type,
+                        model=model,
+                        provider_opts=provider_opts,
                     )
                 else:
                     raise RuntimeError("No LLM routing service available")
@@ -505,7 +543,10 @@ class EnhancedOpenRouterService:
                 if self._fallback_service:
                     self.stats.fallback_requests += 1
                     return self._fallback_service.route(
-                        prompt=prompt, task_type=task_type, model=model, provider_opts=provider_opts
+                        prompt=prompt,
+                        task_type=task_type,
+                        model=model,
+                        provider_opts=provider_opts,
                     )
 
                 return {
@@ -517,8 +558,13 @@ class EnhancedOpenRouterService:
         return {"status": "error", "error": "unreachable - no result from router"}
 
     async def _call_litellm(
-        self, model: str, messages: list[dict], max_tokens: int, temperature: float, task_type: str
-    ) -> dict[str, Any]:
+        self,
+        model: str,
+        messages: list[dict],
+        max_tokens: int,
+        temperature: float,
+        task_type: str,
+    ) -> StepResult:
         """Call LiteLLM with intelligent fallback."""
         fallback_models = self._get_fallback_candidates(task_type)
 
@@ -550,7 +596,7 @@ class EnhancedOpenRouterService:
                 try:
                     if _completion_cost is not None:
                         # Cast to silence mypy; runtime function can handle flexible shapes
-                        cost = _completion_cost(cast(Any, response), attempt_model)
+                        cost = _completion_cost(cast("Any", response), attempt_model)
                 except Exception as e:
                     logger.debug(f"Cost calculation failed: {e}")
 
@@ -564,13 +610,13 @@ class EnhancedOpenRouterService:
                     "provider": self._extract_provider_from_model(attempt_model),
                 }
 
-            except Exception as e:  # noqa: PERF203
+            except Exception as e:
                 logger.warning(f"Model {attempt_model} failed: {e}")
                 continue
 
         raise RuntimeError("All model attempts failed")
 
-    def _select_model(self, task_type: str) -> str:
+    def _select_model(self, task_type: str) -> StepResult:
         """Select optimal model using learning engine."""
         candidates = self._get_fallback_candidates(task_type)
 
@@ -579,14 +625,14 @@ class EnhancedOpenRouterService:
 
         return self.learning.select_model(task_type, candidates)
 
-    def _build_cache_key(self, prompt: str, model: str, provider_opts: dict | None) -> str:
+    def _build_cache_key(self, prompt: str, model: str, provider_opts: dict | None) -> StepResult:
         """Build semantic cache key."""
         norm_prompt = prompt
         opts_str = str(sorted(provider_opts.items())) if provider_opts else ""
         # Use canonical key function for compatibility with RedisLLMCache/BoundedLRUCache
         return make_key(f"{norm_prompt}|opts={opts_str}", model)
 
-    def _check_budget_limits(self, projected_cost: float, task_type: str) -> bool:
+    def _check_budget_limits(self, projected_cost: float, task_type: str) -> StepResult:
         """Check if request is within budget limits."""
         max_cost = self.token_meter.max_cost_per_request or float("inf")
 
@@ -600,7 +646,7 @@ class EnhancedOpenRouterService:
 
         return projected_cost <= max_cost
 
-    def _calculate_reward(self, cost: float, latency_ms: float) -> float:
+    def _calculate_reward(self, cost: float, latency_ms: float) -> StepResult:
         """Calculate reward for learning engine."""
         # Normalize cost and latency for reward calculation
         cost_norm = min(1.0, cost / 0.01)  # $0.01 normalization
@@ -615,7 +661,7 @@ class EnhancedOpenRouterService:
         task_type: str = "general",
         model: str | None = None,
         provider_opts: dict[str, Any] | None = None,
-    ) -> dict[str, Any]:
+    ) -> StepResult:
         """Synchronous wrapper for route_async."""
         try:
             loop = asyncio.get_event_loop()
@@ -624,11 +670,11 @@ class EnhancedOpenRouterService:
             # No event loop running, create new one
             return asyncio.run(self.route_async(prompt, task_type, model, provider_opts))
 
-    def get_stats(self) -> RouterStats:
+    def get_stats(self) -> StepResult:
         """Get router runtime statistics."""
         return copy.deepcopy(self.stats)
 
-    def get_available_models(self) -> list[str]:
+    def get_available_models(self) -> StepResult:
         """Get list of available models across all providers."""
         models = []
         for provider in self.provider_configs:

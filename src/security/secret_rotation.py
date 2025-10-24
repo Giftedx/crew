@@ -42,6 +42,7 @@ from core.time import default_utc_now
 
 from .events import log_security_event
 
+
 DEFAULT_CONFIG_PATH = Path(__file__).resolve().parents[2] / "config" / "security.yaml"
 
 
@@ -81,7 +82,7 @@ def _audit(enabled: bool, actor: str | None, action: str, logical: str, **extra:
     )
 
 
-def register(  # noqa: PLR0913 - explicit parameters improve audit clarity
+def register(
     logical: str,
     current_ref: str,
     *,
@@ -99,7 +100,14 @@ def register(  # noqa: PLR0913 - explicit parameters improve audit clarity
         activated_at=activated_at or default_utc_now(),
     )
     _registry[logical] = entry
-    _audit(auditing, actor, "register", logical, current_ref=current_ref, previous_ref=previous_ref)
+    _audit(
+        auditing,
+        actor,
+        "register",
+        logical,
+        current_ref=current_ref,
+        previous_ref=previous_ref,
+    )
 
 
 def get_current(logical: str) -> str | None:
@@ -149,7 +157,14 @@ def retire_previous(
     if not entry or not entry.previous_ref:
         return False
     if not ignore_grace and not entry.grace_elapsed(grace):
-        _audit(auditing, actor, "retire_blocked", logical, reason="grace_not_elapsed", previous_ref=entry.previous_ref)
+        _audit(
+            auditing,
+            actor,
+            "retire_blocked",
+            logical,
+            reason="grace_not_elapsed",
+            previous_ref=entry.previous_ref,
+        )
         return False
     prev = entry.previous_ref
     entry.previous_ref = None
@@ -162,12 +177,12 @@ def list_entries() -> list[SecretEntry]:  # utility for inspection / tests
 
 
 __all__ = [
-    "register",
-    "promote",
-    "retire_previous",
     "get_current",
     "get_previous",
     "list_entries",
+    "promote",
+    "register",
+    "retire_previous",
 ]
 
 
@@ -230,16 +245,44 @@ def verify_ref(
     grace = timedelta(hours=grace_hours)
     entry = _registry.get(logical)
     if not entry:
-        _audit(auditing, actor, "verify_reject", logical, reason="no_entry", attempted_ref=ref)
+        _audit(
+            auditing,
+            actor,
+            "verify_reject",
+            logical,
+            reason="no_entry",
+            attempted_ref=ref,
+        )
         return False
     if ref == entry.current_ref:
-        _audit(auditing, actor, "verify_accept", logical, attempted_ref=ref, match="current")
+        _audit(
+            auditing,
+            actor,
+            "verify_accept",
+            logical,
+            attempted_ref=ref,
+            match="current",
+        )
         return True
     if ref == entry.previous_ref and entry.previous_ref:
         if not entry.grace_elapsed(grace):
-            _audit(auditing, actor, "verify_accept", logical, attempted_ref=ref, match="previous")
+            _audit(
+                auditing,
+                actor,
+                "verify_accept",
+                logical,
+                attempted_ref=ref,
+                match="previous",
+            )
             return True
-        _audit(auditing, actor, "verify_reject", logical, reason="previous_expired", attempted_ref=ref)
+        _audit(
+            auditing,
+            actor,
+            "verify_reject",
+            logical,
+            reason="previous_expired",
+            attempted_ref=ref,
+        )
         return False
     _audit(auditing, actor, "verify_reject", logical, reason="no_match", attempted_ref=ref)
     return False

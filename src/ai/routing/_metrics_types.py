@@ -1,12 +1,15 @@
 from __future__ import annotations
 
-from collections.abc import Mapping
-from typing import Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Protocol, runtime_checkable
+
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
 
 
 @runtime_checkable
 class MetricLike(Protocol):
-    def inc(self, value: float | int = 1) -> None: ...  # noqa: D401
+    def inc(self, value: float | int = 1) -> None: ...
     def set(self, value: float, labels: Mapping[str, str] | None = None) -> None: ...
     def observe(self, value: float, labels: Mapping[str, str] | None = None) -> None: ...
 

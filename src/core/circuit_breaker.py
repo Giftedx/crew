@@ -10,14 +10,18 @@ from __future__ import annotations
 import asyncio
 import logging
 import time
-from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Generic, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Generic, TypeVar, cast
 
 from obs import metrics
 
 from .error_handling import log_error
+
+
+if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable
+
 
 logger = logging.getLogger(__name__)
 
@@ -77,8 +81,6 @@ class CircuitStats:
 class CircuitBreakerOpenError(Exception):
     """Exception raised when circuit breaker is open."""
 
-    pass
-
 
 class CircuitBreaker(Generic[T]):
     """
@@ -88,7 +90,10 @@ class CircuitBreaker(Generic[T]):
     """
 
     def __init__(
-        self, name: str, config: CircuitConfig | None = None, fallback: Callable[[], T | Awaitable[T]] | None = None
+        self,
+        name: str,
+        config: CircuitConfig | None = None,
+        fallback: Callable[[], T | Awaitable[T]] | None = None,
     ):
         """Initialize circuit breaker.
 
@@ -175,11 +180,17 @@ class CircuitBreaker(Generic[T]):
             log_error(
                 e,
                 message="Failed to update success metrics - invalid metrics configuration",
-                context={"circuit": self.name, "state": self.state.value, "operation": "metrics_update"},
+                context={
+                    "circuit": self.name,
+                    "state": self.state.value,
+                    "operation": "metrics_update",
+                },
             )
         except Exception as e:
             log_error(
-                e, message="Failed to update success metrics", context={"circuit": self.name, "state": self.state.value}
+                e,
+                message="Failed to update success metrics",
+                context={"circuit": self.name, "state": self.state.value},
             )
 
     def _on_failure(self, error: Exception | None = None):
@@ -206,11 +217,17 @@ class CircuitBreaker(Generic[T]):
             log_error(
                 e,
                 message="Failed to update failure metrics - invalid metrics configuration",
-                context={"circuit": self.name, "state": self.state.value, "operation": "metrics_update"},
+                context={
+                    "circuit": self.name,
+                    "state": self.state.value,
+                    "operation": "metrics_update",
+                },
             )
         except Exception as e:
             log_error(
-                e, message="Failed to update failure metrics", context={"circuit": self.name, "state": self.state.value}
+                e,
+                message="Failed to update failure metrics",
+                context={"circuit": self.name, "state": self.state.value},
             )
 
     def _open_circuit(self):
@@ -232,7 +249,11 @@ class CircuitBreaker(Generic[T]):
                 context={"circuit": self.name, "operation": "metrics_update"},
             )
         except Exception as e:
-            log_error(e, message="Failed to update circuit open metrics", context={"circuit": self.name})
+            log_error(
+                e,
+                message="Failed to update circuit open metrics",
+                context={"circuit": self.name},
+            )
 
     def _close_circuit(self):
         """Transition circuit to closed state."""
@@ -255,7 +276,11 @@ class CircuitBreaker(Generic[T]):
                 context={"circuit": self.name, "operation": "metrics_update"},
             )
         except Exception as e:
-            log_error(e, message="Failed to update circuit closed metrics", context={"circuit": self.name})
+            log_error(
+                e,
+                message="Failed to update circuit closed metrics",
+                context={"circuit": self.name},
+            )
 
     def _half_open_circuit(self):
         """Transition circuit to half-open state."""
@@ -275,7 +300,11 @@ class CircuitBreaker(Generic[T]):
                 context={"circuit": self.name, "operation": "metrics_update"},
             )
         except Exception as e:
-            log_error(e, message="Failed to update circuit half-open metrics", context={"circuit": self.name})
+            log_error(
+                e,
+                message="Failed to update circuit half-open metrics",
+                context={"circuit": self.name},
+            )
 
     async def call(self, func: Callable[[], T | Awaitable[T]], *args, **kwargs) -> T:
         """
@@ -303,7 +332,7 @@ class CircuitBreaker(Generic[T]):
                 if asyncio.iscoroutine(result):
                     awaited = await result
                     return awaited
-                return cast(T, result)
+                return cast("T", result)
             else:
                 raise CircuitBreakerOpenError(f"Circuit breaker '{self.name}' is open - service unavailable")
 
@@ -319,7 +348,7 @@ class CircuitBreaker(Generic[T]):
 
             # Record success
             self._on_success()
-            return cast(T, result)
+            return cast("T", result)
 
         except TimeoutError:
             self.stats.timeouts += 1
@@ -368,7 +397,10 @@ class CircuitBreakerRegistry:
         self.circuit_breakers: dict[str, CircuitBreaker] = {}
 
     def get_circuit_breaker(
-        self, name: str, config: CircuitConfig | None = None, fallback: Callable | None = None
+        self,
+        name: str,
+        config: CircuitConfig | None = None,
+        fallback: Callable | None = None,
     ) -> CircuitBreaker:
         """Get or create a circuit breaker."""
         if name not in self.circuit_breakers:
@@ -378,7 +410,11 @@ class CircuitBreakerRegistry:
     def get_all_stats(self) -> dict[str, dict[str, Any]]:
         """Get statistics for all circuit breakers."""
         return {
-            name: {"state": cb.get_state().value, "stats": cb.get_stats().__dict__, "config": cb.config.__dict__}
+            name: {
+                "state": cb.get_state().value,
+                "stats": cb.get_stats().__dict__,
+                "config": cb.config.__dict__,
+            }
             for name, cb in self.circuit_breakers.items()
         }
 
@@ -437,11 +473,11 @@ def circuit_breaker(name: str, config: CircuitConfig | None = None, fallback: Ca
 
 __all__ = [
     "CircuitBreaker",
-    "CircuitState",
-    "CircuitConfig",
-    "CircuitStats",
     "CircuitBreakerOpenError",
     "CircuitBreakerRegistry",
-    "get_circuit_breaker_registry",
+    "CircuitConfig",
+    "CircuitState",
+    "CircuitStats",
     "circuit_breaker",
+    "get_circuit_breaker_registry",
 ]

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+
 try:  # pragma: no cover - optional dependency path
     from obs import tracing as _obs_tracing
 

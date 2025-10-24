@@ -7,6 +7,7 @@ ensuring type safety and proper validation of API data.
 
 from __future__ import annotations
 
+import contextlib
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any
@@ -87,10 +88,8 @@ class YouTubeChannel:
         # Parse published_at
         published_at = None
         if snippet.get("publishedAt"):
-            try:
+            with contextlib.suppress(ValueError):
                 published_at = datetime.fromisoformat(snippet["publishedAt"].replace("Z", "+00:00"))
-            except ValueError:
-                pass
 
         # Parse thumbnails
         thumbnails = None
@@ -184,10 +183,8 @@ class YouTubeVideo:
         # Parse published_at
         published_at = None
         if snippet.get("publishedAt"):
-            try:
+            with contextlib.suppress(ValueError):
                 published_at = datetime.fromisoformat(snippet["publishedAt"].replace("Z", "+00:00"))
-            except ValueError:
-                pass
 
         # Parse thumbnails
         thumbnails = None
@@ -289,17 +286,13 @@ class YouTubeComment:
         # Parse timestamps
         published_at = None
         if comment_snippet.get("publishedAt"):
-            try:
+            with contextlib.suppress(ValueError):
                 published_at = datetime.fromisoformat(comment_snippet["publishedAt"].replace("Z", "+00:00"))
-            except ValueError:
-                pass
 
         updated_at = None
         if comment_snippet.get("updatedAt"):
-            try:
+            with contextlib.suppress(ValueError):
                 updated_at = datetime.fromisoformat(comment_snippet["updatedAt"].replace("Z", "+00:00"))
-            except ValueError:
-                pass
 
         return cls(
             id=data["id"],
@@ -355,10 +348,8 @@ class YouTubeLiveChatMessage:
         # Parse published_at
         published_at = None
         if snippet.get("publishedAt"):
-            try:
+            with contextlib.suppress(ValueError):
                 published_at = datetime.fromisoformat(snippet["publishedAt"].replace("Z", "+00:00"))
-            except ValueError:
-                pass
 
         # Extract display message
         display_message = text_message_details.get("messageText") if text_message_details else None
@@ -448,10 +439,8 @@ class YouTubeSearchResult:
         # Parse published_at
         published_at = None
         if snippet.get("publishedAt"):
-            try:
+            with contextlib.suppress(ValueError):
                 published_at = datetime.fromisoformat(snippet["publishedAt"].replace("Z", "+00:00"))
-            except ValueError:
-                pass
 
         # Parse thumbnails
         thumbnails = None
@@ -491,7 +480,12 @@ class YouTubeQuotaUsage:
 
         self.used_quota += units
         self.remaining_quota = self.total_quota - self.used_quota
-        return StepResult.ok(data={"used_quota": self.used_quota, "remaining_quota": self.remaining_quota})
+        return StepResult.ok(
+            data={
+                "used_quota": self.used_quota,
+                "remaining_quota": self.remaining_quota,
+            }
+        )
 
     def reset_quota(self) -> None:
         """Reset quota usage."""

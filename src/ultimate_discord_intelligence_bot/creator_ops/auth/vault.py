@@ -15,6 +15,7 @@ from cryptography.fernet import Fernet
 
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -34,7 +35,7 @@ class SecretsVault:
         try:
             self.fernet = Fernet(self.encryption_key.encode())
         except Exception as e:
-            raise ValueError(f"Invalid encryption key: {str(e)}")
+            raise ValueError(f"Invalid encryption key: {e!s}")
 
     def encrypt_secret(self, secret: str) -> str:
         """Encrypt a secret string.
@@ -49,7 +50,7 @@ class SecretsVault:
             encrypted_bytes = self.fernet.encrypt(secret.encode())
             return encrypted_bytes.decode()
         except Exception as e:
-            logger.error(f"Failed to encrypt secret: {str(e)}")
+            logger.error(f"Failed to encrypt secret: {e!s}")
             raise
 
     def decrypt_secret(self, encrypted_secret: str) -> str:
@@ -65,7 +66,7 @@ class SecretsVault:
             decrypted_bytes = self.fernet.decrypt(encrypted_secret.encode())
             return decrypted_bytes.decode()
         except Exception as e:
-            logger.error(f"Failed to decrypt secret: {str(e)}")
+            logger.error(f"Failed to decrypt secret: {e!s}")
             raise
 
     def store_secret(self, key: str, value: str, metadata: dict[str, Any] | None = None) -> StepResult:
@@ -94,8 +95,8 @@ class SecretsVault:
             return StepResult.ok(data={"key": key, "stored": True})
 
         except Exception as e:
-            logger.error(f"Failed to store secret {key}: {str(e)}")
-            return StepResult.fail(f"Failed to store secret: {str(e)}")
+            logger.error(f"Failed to store secret {key}: {e!s}")
+            return StepResult.fail(f"Failed to store secret: {e!s}")
 
     def retrieve_secret(self, key: str) -> StepResult:
         """Retrieve a secret by key.
@@ -121,8 +122,8 @@ class SecretsVault:
             return StepResult.ok(data={"key": key, "value": decrypted_value})
 
         except Exception as e:
-            logger.error(f"Failed to retrieve secret {key}: {str(e)}")
-            return StepResult.fail(f"Failed to retrieve secret: {str(e)}")
+            logger.error(f"Failed to retrieve secret {key}: {e!s}")
+            return StepResult.fail(f"Failed to retrieve secret: {e!s}")
 
     def delete_secret(self, key: str) -> StepResult:
         """Delete a secret by key.
@@ -143,8 +144,8 @@ class SecretsVault:
                 return StepResult.fail(f"Secret not found: {key}")
 
         except Exception as e:
-            logger.error(f"Failed to delete secret {key}: {str(e)}")
-            return StepResult.fail(f"Failed to delete secret: {str(e)}")
+            logger.error(f"Failed to delete secret {key}: {e!s}")
+            return StepResult.fail(f"Failed to delete secret: {e!s}")
 
     def list_secrets(self) -> StepResult:
         """List all stored secret keys.
@@ -162,8 +163,8 @@ class SecretsVault:
             return StepResult.ok(data={"secrets": secret_keys})
 
         except Exception as e:
-            logger.error(f"Failed to list secrets: {str(e)}")
-            return StepResult.fail(f"Failed to list secrets: {str(e)}")
+            logger.error(f"Failed to list secrets: {e!s}")
+            return StepResult.fail(f"Failed to list secrets: {e!s}")
 
 
 class PlatformSecrets:
@@ -268,12 +269,14 @@ class PlatformSecrets:
             else:
                 missing_secrets.append(secret_type)
 
-        return StepResult.ok(data={
-            "platform": platform,
-            "missing": missing_secrets,
-            "present": present_secrets,
-            "complete": len(missing_secrets) == 0,
-        })
+        return StepResult.ok(
+            data={
+                "platform": platform,
+                "missing": missing_secrets,
+                "present": present_secrets,
+                "complete": len(missing_secrets) == 0,
+            }
+        )
 
     def validate_all_platforms(self) -> StepResult:
         """Validate secrets for all platforms.
@@ -294,10 +297,12 @@ class PlatformSecrets:
                 results[platform] = {"error": result.error}
                 all_complete = False
 
-        return StepResult.ok(data={
-            "platforms": results,
-            "all_complete": all_complete,
-        })
+        return StepResult.ok(
+            data={
+                "platforms": results,
+                "all_complete": all_complete,
+            }
+        )
 
 
 def generate_encryption_key() -> str:
@@ -307,6 +312,7 @@ def generate_encryption_key() -> str:
         Base64-encoded encryption key
     """
     from cryptography.fernet import Fernet
+
     key = Fernet.generate_key()
     return key.decode()
 
@@ -323,7 +329,7 @@ def validate_secrets_configuration() -> StepResult:
         if not encryption_key:
             return StepResult.fail(
                 "CREATOR_OPS_ENCRYPTION_KEY not set. "
-                "Generate one with: python -c \"from creator_ops.auth.vault import generate_encryption_key; print(generate_encryption_key())\""
+                'Generate one with: python -c "from creator_ops.auth.vault import generate_encryption_key; print(generate_encryption_key())"'
             )
 
         # Test vault functionality
@@ -338,4 +344,4 @@ def validate_secrets_configuration() -> StepResult:
         return StepResult.ok(data={"status": "valid", "vault": "operational"})
 
     except Exception as e:
-        return StepResult.fail(f"Secrets configuration validation failed: {str(e)}")
+        return StepResult.fail(f"Secrets configuration validation failed: {e!s}")

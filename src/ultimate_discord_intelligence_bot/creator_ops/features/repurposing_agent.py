@@ -5,15 +5,18 @@ Handles intelligent clip selection and platform optimization.
 
 import logging
 
-from crewai import Agent, Task
+from crewai import Agent, Task  # type: ignore[import-not-found]
 
 from ultimate_discord_intelligence_bot.creator_ops.features.repurposing_models import (
     ClipCandidate,
     PlatformType,
     RepurposingConfig,
 )
-from ultimate_discord_intelligence_bot.creator_ops.features.repurposing_studio import RepurposingStudio
+from ultimate_discord_intelligence_bot.creator_ops.features.repurposing_studio import (
+    RepurposingStudio,
+)
 from ultimate_discord_intelligence_bot.step_result import StepResult
+
 
 logger = logging.getLogger(__name__)
 
@@ -100,8 +103,8 @@ class RepurposingAgent:
             )
 
         except Exception as e:
-            logger.error(f"Content analysis failed: {str(e)}")
-            return StepResult.fail(f"Content analysis failed: {str(e)}")
+            logger.error(f"Content analysis failed: {e!s}")
+            return StepResult.fail(f"Content analysis failed: {e!s}")
 
     def _parse_analysis_result(self, result: str) -> dict:
         """Parse the agent's analysis result into structured data."""
@@ -211,7 +214,10 @@ class RepurposingAgent:
         return recommendations
 
     async def optimize_clip_selection(
-        self, candidates: list[ClipCandidate], target_platforms: list[PlatformType], max_clips: int = 5
+        self,
+        candidates: list[ClipCandidate],
+        target_platforms: list[PlatformType],
+        max_clips: int = 5,
     ) -> StepResult:
         """
         Use AI to optimize clip selection for maximum impact.
@@ -266,8 +272,8 @@ class RepurposingAgent:
             )
 
         except Exception as e:
-            logger.error(f"Clip optimization failed: {str(e)}")
-            return StepResult.fail(f"Clip optimization failed: {str(e)}")
+            logger.error(f"Clip optimization failed: {e!s}")
+            return StepResult.fail(f"Clip optimization failed: {e!s}")
 
     def _format_candidates_for_agent(self, candidates: list[ClipCandidate]) -> str:
         """Format candidates for agent analysis."""
@@ -292,7 +298,11 @@ class RepurposingAgent:
 
         # Simple selection logic - in production, you'd want more sophisticated parsing
         # For now, select top candidates by combined score
-        sorted_candidates = sorted(candidates, key=lambda c: c.engagement_score + c.viral_potential, reverse=True)
+        sorted_candidates = sorted(
+            candidates,
+            key=lambda c: c.engagement_score + c.viral_potential,
+            reverse=True,
+        )
 
         return sorted_candidates[:max_clips]
 
@@ -314,7 +324,10 @@ class RepurposingAgent:
         return notes
 
     async def generate_content_strategy(
-        self, episode_title: str, target_platforms: list[PlatformType], clips_created: int
+        self,
+        episode_title: str,
+        target_platforms: list[PlatformType],
+        clips_created: int,
     ) -> StepResult:
         """
         Generate a comprehensive content strategy for repurposed content.
@@ -371,8 +384,8 @@ class RepurposingAgent:
             )
 
         except Exception as e:
-            logger.error(f"Strategy generation failed: {str(e)}")
-            return StepResult.fail(f"Strategy generation failed: {str(e)}")
+            logger.error(f"Strategy generation failed: {e!s}")
+            return StepResult.fail(f"Strategy generation failed: {e!s}")
 
     def _parse_strategy_result(self, result: str) -> dict:
         """Parse the agent's strategy result into structured data."""

@@ -23,6 +23,7 @@ from core.nextgen_innovation import (
     run_phase6_innovation_cycle,
 )
 
+
 __all__ = [
     "AIOrchestrationMode",
     "BreakthroughCandidate",
@@ -34,6 +35,6 @@ __all__ = [
     "KnowledgeDomain",
     "MultiModelIntelligence",
     "QuantumInspiredComputing",
-    "run_phase6_innovation_cycle",
     "demonstrate_revolutionary_capabilities",
+    "run_phase6_innovation_cycle",
 ]

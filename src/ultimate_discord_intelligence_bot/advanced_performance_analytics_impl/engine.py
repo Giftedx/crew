@@ -4,13 +4,13 @@ from __future__ import annotations
 
 import json
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from core.time import default_utc_now
-from ultimate_discord_intelligence_bot.enhanced_performance_monitor import (
+from core.time import default_utc_now  # type: ignore[import-not-found]
+from ultimate_discord_intelligence_bot.enhanced_performance_monitor import (  # type: ignore[import-not-found]
     EnhancedPerformanceMonitor,
 )
-from ultimate_discord_intelligence_bot.performance_integration import (
+from ultimate_discord_intelligence_bot.performance_integration import (  # type: ignore[import-not-found]
     PerformanceIntegrationManager,
 )
 
@@ -22,15 +22,19 @@ from .health import (
     get_key_health_indicators,
     perform_comparative_analysis,
 )
-from .models import (
-    OptimizationRecommendation,
-    PerformanceAnomaly,
-    PerformanceForecast,
-    PerformanceTrend,
-)
 from .recommendations import generate_recommendations
 from .reports import format_html_report, format_markdown_report
 from .trends import analyze_performance_trends
+
+
+if TYPE_CHECKING:
+    from .models import (
+        OptimizationRecommendation,
+        PerformanceAnomaly,
+        PerformanceForecast,
+        PerformanceTrend,
+    )
+
 
 logger = logging.getLogger(__name__)
 

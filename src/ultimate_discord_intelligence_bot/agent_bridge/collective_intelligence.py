@@ -10,10 +10,11 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
-from ultimate_discord_intelligence_bot.step_result import StepResult
-from ultimate_discord_intelligence_bot.tenancy.context import current_tenant
+from ultimate_discord_intelligence_bot.step_result import StepResult  # type: ignore[import-not-found]
+from ultimate_discord_intelligence_bot.tenancy.context import current_tenant  # type: ignore[import-not-found]
+
 
 logger = logging.getLogger(__name__)
 
@@ -46,11 +47,11 @@ class AgentContribution:
     agent_id: str
     agent_type: str
     contribution_type: str
-    data: Dict[str, Any]
+    data: dict[str, Any]
     confidence: float
     expertise_level: float
     timestamp: datetime
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -60,14 +61,14 @@ class CollectiveInsight:
     insight_id: str
     synthesis_type: SynthesisType
     intelligence_level: IntelligenceLevel
-    contributing_agents: List[str]
+    contributing_agents: list[str]
     consensus_score: float
     confidence: float
-    insight_data: Dict[str, Any]
+    insight_data: dict[str, Any]
     validation_status: str
     created_at: datetime
     last_updated: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -77,13 +78,13 @@ class SynthesisRequest:
     requesting_agent_id: str
     synthesis_type: SynthesisType
     target_intelligence_level: IntelligenceLevel
-    contributing_agents: List[str]
+    contributing_agents: list[str]
     query: str
-    context: Dict[str, Any]
+    context: dict[str, Any]
     min_contributions: int = 3
     consensus_threshold: float = 0.7
-    tenant_id: Optional[str] = None
-    workspace_id: Optional[str] = None
+    tenant_id: str | None = None
+    workspace_id: str | None = None
 
 
 @dataclass
@@ -91,11 +92,11 @@ class SynthesisResponse:
     """Response with synthesized collective intelligence"""
 
     collective_insight: CollectiveInsight
-    individual_contributions: List[AgentContribution]
-    synthesis_metrics: Dict[str, Any]
-    recommendations: List[str]
-    confidence_breakdown: Dict[str, float]
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    individual_contributions: list[AgentContribution]
+    synthesis_metrics: dict[str, Any]
+    recommendations: list[str]
+    confidence_breakdown: dict[str, float]
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -127,14 +128,14 @@ class CollectiveIntelligenceConfig:
 class CollectiveIntelligenceService:
     """Collective intelligence synthesis and management service"""
 
-    def __init__(self, config: Optional[CollectiveIntelligenceConfig] = None):
+    def __init__(self, config: CollectiveIntelligenceConfig | None = None):
         self.config = config or CollectiveIntelligenceConfig()
         self._initialized = False
-        self._collective_insights: Dict[str, CollectiveInsight] = {}
-        self._agent_contributions: Dict[str, List[AgentContribution]] = {}
-        self._synthesis_cache: Dict[str, Any] = {}
-        self._consensus_tracker: Dict[str, List[Dict[str, Any]]] = {}
-        self._expert_weights: Dict[str, float] = {}
+        self._collective_insights: dict[str, CollectiveInsight] = {}
+        self._agent_contributions: dict[str, list[AgentContribution]] = {}
+        self._synthesis_cache: dict[str, Any] = {}
+        self._consensus_tracker: dict[str, list[dict[str, Any]]] = {}
+        self._expert_weights: dict[str, float] = {}
 
         # Initialize collective intelligence service
         self._initialize_service()
@@ -153,20 +154,18 @@ class CollectiveIntelligenceService:
         requesting_agent_id: str,
         synthesis_type: SynthesisType,
         target_intelligence_level: IntelligenceLevel,
-        contributing_agents: List[str],
+        contributing_agents: list[str],
         query: str,
-        context: Dict[str, Any],
+        context: dict[str, Any],
         min_contributions: int = 3,
         consensus_threshold: float = 0.7,
-        tenant_id: Optional[str] = None,
-        workspace_id: Optional[str] = None,
+        tenant_id: str | None = None,
+        workspace_id: str | None = None,
     ) -> StepResult:
         """Synthesize collective intelligence from multiple agents"""
         try:
             if not self._initialized:
-                return StepResult.fail(
-                    "Collective Intelligence Service not initialized"
-                )
+                return StepResult.fail("Collective Intelligence Service not initialized")
 
             # Resolve tenant context
             ctx = current_tenant()
@@ -183,10 +182,7 @@ class CollectiveIntelligenceService:
                 query,
                 context,
             )
-            if (
-                self.config.cache_synthesis_results
-                and cache_key in self._synthesis_cache
-            ):
+            if self.config.cache_synthesis_results and cache_key in self._synthesis_cache:
                 cached_result = self._synthesis_cache[cache_key]
                 if datetime.now(timezone.utc) - cached_result["timestamp"] < timedelta(
                     seconds=self.config.synthesis_cache_ttl
@@ -203,9 +199,7 @@ class CollectiveIntelligenceService:
             )
 
             if len(contributions) < min_contributions:
-                return StepResult.fail(
-                    f"Insufficient contributions: {len(contributions)} < {min_contributions}"
-                )
+                return StepResult.fail(f"Insufficient contributions: {len(contributions)} < {min_contributions}")
 
             # Perform synthesis
             collective_insight = await self._perform_synthesis(
@@ -250,9 +244,7 @@ class CollectiveIntelligenceService:
             )
 
             # Store collective insight
-            self._collective_insights[collective_insight.insight_id] = (
-                collective_insight
-            )
+            self._collective_insights[collective_insight.insight_id] = collective_insight
 
             # Update agent contributions
             for contribution in contributions:
@@ -267,38 +259,30 @@ class CollectiveIntelligenceService:
                     "timestamp": datetime.now(timezone.utc),
                 }
 
-            logger.info(
-                f"Collective intelligence synthesized: {collective_insight.insight_id}"
-            )
+            logger.info(f"Collective intelligence synthesized: {collective_insight.insight_id}")
 
             return StepResult.ok(data=response)
 
         except Exception as e:
-            logger.error(
-                f"Error synthesizing collective intelligence: {e}", exc_info=True
-            )
-            return StepResult.fail(
-                f"Collective intelligence synthesis failed: {str(e)}"
-            )
+            logger.error(f"Error synthesizing collective intelligence: {e}", exc_info=True)
+            return StepResult.fail(f"Collective intelligence synthesis failed: {e!s}")
 
     async def contribute_to_synthesis(
         self,
         agent_id: str,
         agent_type: str,
         contribution_type: str,
-        data: Dict[str, Any],
+        data: dict[str, Any],
         confidence: float,
         expertise_level: float,
-        metadata: Optional[Dict[str, Any]] = None,
-        tenant_id: Optional[str] = None,
-        workspace_id: Optional[str] = None,
+        metadata: dict[str, Any] | None = None,
+        tenant_id: str | None = None,
+        workspace_id: str | None = None,
     ) -> StepResult:
         """Contribute data to collective intelligence synthesis"""
         try:
             if not self._initialized:
-                return StepResult.fail(
-                    "Collective Intelligence Service not initialized"
-                )
+                return StepResult.fail("Collective Intelligence Service not initialized")
 
             # Resolve tenant context
             ctx = current_tenant()
@@ -346,24 +330,22 @@ class CollectiveIntelligenceService:
 
         except Exception as e:
             logger.error(f"Error contributing to synthesis: {e}", exc_info=True)
-            return StepResult.fail(f"Contribution failed: {str(e)}")
+            return StepResult.fail(f"Contribution failed: {e!s}")
 
     async def validate_collective_insight(
         self,
         insight_id: str,
         validating_agent_id: str,
-        validation_data: Dict[str, Any],
+        validation_data: dict[str, Any],
         is_valid: bool,
-        feedback: Optional[str] = None,
-        tenant_id: Optional[str] = None,
-        workspace_id: Optional[str] = None,
+        feedback: str | None = None,
+        tenant_id: str | None = None,
+        workspace_id: str | None = None,
     ) -> StepResult:
         """Validate a collective insight"""
         try:
             if not self._initialized:
-                return StepResult.fail(
-                    "Collective Intelligence Service not initialized"
-                )
+                return StepResult.fail("Collective Intelligence Service not initialized")
 
             if insight_id not in self._collective_insights:
                 return StepResult.fail(f"Collective insight {insight_id} not found")
@@ -402,39 +384,33 @@ class CollectiveIntelligenceService:
                 insight.last_updated = datetime.now(timezone.utc)
                 self._collective_insights[insight_id] = insight
 
-            logger.info(
-                f"Collective insight {insight_id} validated by {validating_agent_id}: {is_valid}"
-            )
+            logger.info(f"Collective insight {insight_id} validated by {validating_agent_id}: {is_valid}")
 
             return StepResult.ok(
                 data={
                     "validated": True,
                     "insight_id": insight_id,
                     "validation_status": insight.validation_status,
-                    "consensus_ratio": valid_count / total_validations
-                    if total_validations > 0
-                    else 0,
+                    "consensus_ratio": valid_count / total_validations if total_validations > 0 else 0,
                     "total_validations": total_validations,
                 }
             )
 
         except Exception as e:
             logger.error(f"Error validating collective insight: {e}", exc_info=True)
-            return StepResult.fail(f"Collective insight validation failed: {str(e)}")
+            return StepResult.fail(f"Collective insight validation failed: {e!s}")
 
     async def get_collective_intelligence_summary(
         self,
         days: int = 30,
-        intelligence_level: Optional[IntelligenceLevel] = None,
-        tenant_id: Optional[str] = None,
-        workspace_id: Optional[str] = None,
+        intelligence_level: IntelligenceLevel | None = None,
+        tenant_id: str | None = None,
+        workspace_id: str | None = None,
     ) -> StepResult:
         """Get summary of collective intelligence activities"""
         try:
             if not self._initialized:
-                return StepResult.fail(
-                    "Collective Intelligence Service not initialized"
-                )
+                return StepResult.fail("Collective Intelligence Service not initialized")
 
             # Filter insights by date and criteria
             cutoff_date = datetime.now(timezone.utc) - timedelta(days=days)
@@ -443,24 +419,16 @@ class CollectiveIntelligenceService:
             for insight in self._collective_insights.values():
                 if insight.created_at < cutoff_date:
                     continue
-                if (
-                    intelligence_level
-                    and insight.intelligence_level != intelligence_level
-                ):
+                if intelligence_level and insight.intelligence_level != intelligence_level:
                     continue
                 if tenant_id and insight.metadata.get("tenant_id") != tenant_id:
                     continue
-                if (
-                    workspace_id
-                    and insight.metadata.get("workspace_id") != workspace_id
-                ):
+                if workspace_id and insight.metadata.get("workspace_id") != workspace_id:
                     continue
                 filtered_insights.append(insight)
 
             if not filtered_insights:
-                return StepResult.ok(
-                    data={"summary": "No collective intelligence activities found"}
-                )
+                return StepResult.ok(data={"summary": "No collective intelligence activities found"})
 
             # Calculate statistics
             total_insights = len(filtered_insights)
@@ -469,35 +437,23 @@ class CollectiveIntelligenceService:
             synthesis_type_counts = {}
             for insight in filtered_insights:
                 type_name = insight.synthesis_type.value
-                synthesis_type_counts[type_name] = (
-                    synthesis_type_counts.get(type_name, 0) + 1
-                )
+                synthesis_type_counts[type_name] = synthesis_type_counts.get(type_name, 0) + 1
 
             # Group by intelligence level
             intelligence_level_counts = {}
             for insight in filtered_insights:
                 level_name = insight.intelligence_level.value
-                intelligence_level_counts[level_name] = (
-                    intelligence_level_counts.get(level_name, 0) + 1
-                )
+                intelligence_level_counts[level_name] = intelligence_level_counts.get(level_name, 0) + 1
 
             # Calculate average metrics
-            avg_consensus_score = (
-                sum(insight.consensus_score for insight in filtered_insights)
-                / total_insights
-            )
-            avg_confidence = (
-                sum(insight.confidence for insight in filtered_insights)
-                / total_insights
-            )
+            avg_consensus_score = sum(insight.consensus_score for insight in filtered_insights) / total_insights
+            avg_confidence = sum(insight.confidence for insight in filtered_insights) / total_insights
 
             # Validation statistics
             validation_status_counts = {}
             for insight in filtered_insights:
                 status = insight.validation_status
-                validation_status_counts[status] = (
-                    validation_status_counts.get(status, 0) + 1
-                )
+                validation_status_counts[status] = validation_status_counts.get(status, 0) + 1
 
             # Agent participation
             participating_agents = set()
@@ -515,29 +471,23 @@ class CollectiveIntelligenceService:
                         "average_consensus_score": avg_consensus_score,
                         "average_confidence": avg_confidence,
                         "recent_activity": len(
-                            [
-                                i
-                                for i in filtered_insights
-                                if (datetime.now(timezone.utc) - i.created_at).days < 7
-                            ]
+                            [i for i in filtered_insights if (datetime.now(timezone.utc) - i.created_at).days < 7]
                         ),
                     }
                 }
             )
 
         except Exception as e:
-            logger.error(
-                f"Error getting collective intelligence summary: {e}", exc_info=True
-            )
-            return StepResult.fail(f"Summary retrieval failed: {str(e)}")
+            logger.error(f"Error getting collective intelligence summary: {e}", exc_info=True)
+            return StepResult.fail(f"Summary retrieval failed: {e!s}")
 
     async def _gather_agent_contributions(
         self,
-        contributing_agents: List[str],
+        contributing_agents: list[str],
         query: str,
-        context: Dict[str, Any],
+        context: dict[str, Any],
         min_contributions: int,
-    ) -> List[AgentContribution]:
+    ) -> list[AgentContribution]:
         """Gather contributions from specified agents"""
         try:
             contributions = []
@@ -549,21 +499,16 @@ class CollectiveIntelligenceService:
                     recent_contributions = [
                         c
                         for c in self._agent_contributions[agent_id]
-                        if (datetime.now(timezone.utc) - c.timestamp).seconds
-                        < 3600  # Last hour
+                        if (datetime.now(timezone.utc) - c.timestamp).seconds < 3600  # Last hour
                     ]
 
                     # Filter contributions relevant to query
-                    relevant_contributions = self._filter_relevant_contributions(
-                        recent_contributions, query, context
-                    )
+                    relevant_contributions = self._filter_relevant_contributions(recent_contributions, query, context)
 
                     contributions.extend(relevant_contributions)
 
             # Sort by relevance and confidence
-            contributions.sort(
-                key=lambda c: c.confidence * c.expertise_level, reverse=True
-            )
+            contributions.sort(key=lambda c: c.confidence * c.expertise_level, reverse=True)
 
             return contributions[: self.config.max_contributions_per_synthesis]
 
@@ -573,19 +518,17 @@ class CollectiveIntelligenceService:
 
     def _filter_relevant_contributions(
         self,
-        contributions: List[AgentContribution],
+        contributions: list[AgentContribution],
         query: str,
-        context: Dict[str, Any],
-    ) -> List[AgentContribution]:
+        context: dict[str, Any],
+    ) -> list[AgentContribution]:
         """Filter contributions relevant to the query"""
         try:
             relevant_contributions = []
 
             for contribution in contributions:
                 # Simple relevance check based on contribution type and data
-                relevance_score = self._calculate_contribution_relevance(
-                    contribution, query, context
-                )
+                relevance_score = self._calculate_contribution_relevance(contribution, query, context)
 
                 if relevance_score >= 0.5:  # 50% relevance threshold
                     relevant_contributions.append(contribution)
@@ -597,7 +540,7 @@ class CollectiveIntelligenceService:
             return []
 
     def _calculate_contribution_relevance(
-        self, contribution: AgentContribution, query: str, context: Dict[str, Any]
+        self, contribution: AgentContribution, query: str, context: dict[str, Any]
     ) -> float:
         """Calculate relevance score for a contribution"""
         try:
@@ -615,9 +558,7 @@ class CollectiveIntelligenceService:
 
             # Context similarity
             if contribution.data:
-                context_similarity = self._context_similarity(
-                    context, contribution.data
-                )
+                context_similarity = self._context_similarity(context, contribution.data)
                 score += context_similarity * 0.2
 
             return min(1.0, score)
@@ -628,50 +569,34 @@ class CollectiveIntelligenceService:
 
     async def _perform_synthesis(
         self,
-        contributions: List[AgentContribution],
+        contributions: list[AgentContribution],
         synthesis_type: SynthesisType,
         target_intelligence_level: IntelligenceLevel,
         consensus_threshold: float,
         query: str,
-        context: Dict[str, Any],
+        context: dict[str, Any],
     ) -> CollectiveInsight:
         """Perform the actual synthesis of contributions"""
         try:
             # Generate insight ID
-            insight_id = (
-                f"collective:{synthesis_type.value}:{int(datetime.now().timestamp())}"
-            )
+            insight_id = f"collective:{synthesis_type.value}:{int(datetime.now().timestamp())}"
 
             # Perform synthesis based on type
             if synthesis_type == SynthesisType.CONSENSUS:
-                insight_data, consensus_score = await self._consensus_synthesis(
-                    contributions
-                )
+                insight_data, consensus_score = await self._consensus_synthesis(contributions)
             elif synthesis_type == SynthesisType.MAJORITY_VOTE:
-                insight_data, consensus_score = await self._majority_vote_synthesis(
-                    contributions
-                )
+                insight_data, consensus_score = await self._majority_vote_synthesis(contributions)
             elif synthesis_type == SynthesisType.WEIGHTED_AVERAGE:
-                insight_data, consensus_score = await self._weighted_average_synthesis(
-                    contributions
-                )
+                insight_data, consensus_score = await self._weighted_average_synthesis(contributions)
             elif synthesis_type == SynthesisType.EXPERT_CONSENSUS:
-                insight_data, consensus_score = await self._expert_consensus_synthesis(
-                    contributions
-                )
+                insight_data, consensus_score = await self._expert_consensus_synthesis(contributions)
             elif synthesis_type == SynthesisType.HIERARCHICAL_SYNTHESIS:
-                insight_data, consensus_score = await self._hierarchical_synthesis(
-                    contributions
-                )
+                insight_data, consensus_score = await self._hierarchical_synthesis(contributions)
             else:  # ADAPTIVE_SYNTHESIS
-                insight_data, consensus_score = await self._adaptive_synthesis(
-                    contributions
-                )
+                insight_data, consensus_score = await self._adaptive_synthesis(contributions)
 
             # Calculate overall confidence
-            confidence = self._calculate_overall_confidence(
-                contributions, consensus_score
-            )
+            confidence = self._calculate_overall_confidence(contributions, consensus_score)
 
             # Create collective insight
             collective_insight = CollectiveInsight(
@@ -708,9 +633,7 @@ class CollectiveIntelligenceService:
                 created_at=datetime.now(timezone.utc),
             )
 
-    async def _consensus_synthesis(
-        self, contributions: List[AgentContribution]
-    ) -> Tuple[Dict[str, Any], float]:
+    async def _consensus_synthesis(self, contributions: list[AgentContribution]) -> tuple[dict[str, Any], float]:
         """Perform consensus-based synthesis"""
         try:
             # Find common elements across contributions
@@ -734,11 +657,7 @@ class CollectiveIntelligenceService:
                     consensus_data[key] = most_common
                     consensus_scores.append(agreement_ratio)
 
-            overall_consensus = (
-                sum(consensus_scores) / len(consensus_scores)
-                if consensus_scores
-                else 0.0
-            )
+            overall_consensus = sum(consensus_scores) / len(consensus_scores) if consensus_scores else 0.0
 
             return consensus_data, overall_consensus
 
@@ -746,9 +665,7 @@ class CollectiveIntelligenceService:
             logger.error(f"Error in consensus synthesis: {e}")
             return {}, 0.0
 
-    async def _majority_vote_synthesis(
-        self, contributions: List[AgentContribution]
-    ) -> Tuple[Dict[str, Any], float]:
+    async def _majority_vote_synthesis(self, contributions: list[AgentContribution]) -> tuple[dict[str, Any], float]:
         """Perform majority vote synthesis"""
         try:
             # Collect votes for each decision point
@@ -771,11 +688,7 @@ class CollectiveIntelligenceService:
                 majority_data[key] = majority_vote[0]
                 consensus_scores.append(majority_vote[1] / total_votes)
 
-            overall_consensus = (
-                sum(consensus_scores) / len(consensus_scores)
-                if consensus_scores
-                else 0.0
-            )
+            overall_consensus = sum(consensus_scores) / len(consensus_scores) if consensus_scores else 0.0
 
             return majority_data, overall_consensus
 
@@ -783,9 +696,7 @@ class CollectiveIntelligenceService:
             logger.error(f"Error in majority vote synthesis: {e}")
             return {}, 0.0
 
-    async def _weighted_average_synthesis(
-        self, contributions: List[AgentContribution]
-    ) -> Tuple[Dict[str, Any], float]:
+    async def _weighted_average_synthesis(self, contributions: list[AgentContribution]) -> tuple[dict[str, Any], float]:
         """Perform weighted average synthesis"""
         try:
             # Calculate weights based on confidence and expertise
@@ -818,21 +729,13 @@ class CollectiveIntelligenceService:
             for key in numeric_keys:
                 weighted_sum = 0.0
                 for i, contribution in enumerate(contributions):
-                    if key in contribution.data and isinstance(
-                        contribution.data[key], (int, float)
-                    ):
+                    if key in contribution.data and isinstance(contribution.data[key], (int, float)):
                         weighted_sum += contribution.data[key] * normalized_weights[i]
 
                 weighted_data[key] = weighted_sum
-                consensus_scores.append(
-                    0.8
-                )  # Assume high consensus for weighted averages
+                consensus_scores.append(0.8)  # Assume high consensus for weighted averages
 
-            overall_consensus = (
-                sum(consensus_scores) / len(consensus_scores)
-                if consensus_scores
-                else 0.0
-            )
+            overall_consensus = sum(consensus_scores) / len(consensus_scores) if consensus_scores else 0.0
 
             return weighted_data, overall_consensus
 
@@ -840,9 +743,7 @@ class CollectiveIntelligenceService:
             logger.error(f"Error in weighted average synthesis: {e}")
             return {}, 0.0
 
-    async def _expert_consensus_synthesis(
-        self, contributions: List[AgentContribution]
-    ) -> Tuple[Dict[str, Any], float]:
+    async def _expert_consensus_synthesis(self, contributions: list[AgentContribution]) -> tuple[dict[str, Any], float]:
         """Perform expert consensus synthesis"""
         try:
             # Weight contributions by expertise level
@@ -862,9 +763,7 @@ class CollectiveIntelligenceService:
             logger.error(f"Error in expert consensus synthesis: {e}")
             return {}, 0.0
 
-    async def _hierarchical_synthesis(
-        self, contributions: List[AgentContribution]
-    ) -> Tuple[Dict[str, Any], float]:
+    async def _hierarchical_synthesis(self, contributions: list[AgentContribution]) -> tuple[dict[str, Any], float]:
         """Perform hierarchical synthesis"""
         try:
             # Group contributions by agent type hierarchy
@@ -897,17 +796,11 @@ class CollectiveIntelligenceService:
             consensus_scores = []
 
             for agent_type, group_contributions in sorted_groups:
-                group_data, group_consensus = await self._consensus_synthesis(
-                    group_contributions
-                )
+                group_data, group_consensus = await self._consensus_synthesis(group_contributions)
                 final_data.update(group_data)
                 consensus_scores.append(group_consensus)
 
-            overall_consensus = (
-                sum(consensus_scores) / len(consensus_scores)
-                if consensus_scores
-                else 0.0
-            )
+            overall_consensus = sum(consensus_scores) / len(consensus_scores) if consensus_scores else 0.0
 
             return final_data, overall_consensus
 
@@ -915,21 +808,13 @@ class CollectiveIntelligenceService:
             logger.error(f"Error in hierarchical synthesis: {e}")
             return {}, 0.0
 
-    async def _adaptive_synthesis(
-        self, contributions: List[AgentContribution]
-    ) -> Tuple[Dict[str, Any], float]:
+    async def _adaptive_synthesis(self, contributions: list[AgentContribution]) -> tuple[dict[str, Any], float]:
         """Perform adaptive synthesis based on context"""
         try:
             # Analyze contribution characteristics
-            avg_confidence = sum(c.confidence for c in contributions) / len(
-                contributions
-            )
-            avg_expertise = sum(c.expertise_level for c in contributions) / len(
-                contributions
-            )
-            confidence_variance = sum(
-                (c.confidence - avg_confidence) ** 2 for c in contributions
-            ) / len(contributions)
+            avg_confidence = sum(c.confidence for c in contributions) / len(contributions)
+            avg_expertise = sum(c.expertise_level for c in contributions) / len(contributions)
+            confidence_variance = sum((c.confidence - avg_confidence) ** 2 for c in contributions) / len(contributions)
 
             # Choose synthesis method based on characteristics
             if confidence_variance < 0.1 and avg_confidence > 0.8:
@@ -938,7 +823,7 @@ class CollectiveIntelligenceService:
             elif avg_expertise > 0.7:
                 # High expertise - use expert consensus
                 return await self._expert_consensus_synthesis(contributions)
-            elif len(set(c.agent_type for c in contributions)) > 3:
+            elif len({c.agent_type for c in contributions}) > 3:
                 # Diverse agent types - use hierarchical
                 return await self._hierarchical_synthesis(contributions)
             else:
@@ -949,9 +834,7 @@ class CollectiveIntelligenceService:
             logger.error(f"Error in adaptive synthesis: {e}")
             return {}, 0.0
 
-    def _calculate_overall_confidence(
-        self, contributions: List[AgentContribution], consensus_score: float
-    ) -> float:
+    def _calculate_overall_confidence(self, contributions: list[AgentContribution], consensus_score: float) -> float:
         """Calculate overall confidence for the synthesis"""
         try:
             # Weight by contribution confidence and expertise
@@ -963,9 +846,7 @@ class CollectiveIntelligenceService:
                 weighted_confidence += contribution.confidence * weight
                 total_weight += weight
 
-            avg_confidence = (
-                weighted_confidence / total_weight if total_weight > 0 else 0.0
-            )
+            avg_confidence = weighted_confidence / total_weight if total_weight > 0 else 0.0
 
             # Combine with consensus score
             overall_confidence = avg_confidence * 0.6 + consensus_score * 0.4
@@ -978,18 +859,16 @@ class CollectiveIntelligenceService:
 
     async def _calculate_synthesis_metrics(
         self,
-        contributions: List[AgentContribution],
+        contributions: list[AgentContribution],
         collective_insight: CollectiveInsight,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Calculate metrics for the synthesis process"""
         try:
             return {
                 "contribution_count": len(contributions),
-                "agent_diversity": len(set(c.agent_type for c in contributions)),
-                "average_confidence": sum(c.confidence for c in contributions)
-                / len(contributions),
-                "average_expertise": sum(c.expertise_level for c in contributions)
-                / len(contributions),
+                "agent_diversity": len({c.agent_type for c in contributions}),
+                "average_confidence": sum(c.confidence for c in contributions) / len(contributions),
+                "average_expertise": sum(c.expertise_level for c in contributions) / len(contributions),
                 "consensus_score": collective_insight.consensus_score,
                 "synthesis_confidence": collective_insight.confidence,
                 "synthesis_type": collective_insight.synthesis_type.value,
@@ -1003,55 +882,37 @@ class CollectiveIntelligenceService:
     async def _generate_synthesis_recommendations(
         self,
         collective_insight: CollectiveInsight,
-        contributions: List[AgentContribution],
-        context: Dict[str, Any],
-    ) -> List[str]:
+        contributions: list[AgentContribution],
+        context: dict[str, Any],
+    ) -> list[str]:
         """Generate recommendations based on synthesis results"""
         try:
             recommendations = []
 
             # Consensus-based recommendations
             if collective_insight.consensus_score >= 0.8:
-                recommendations.append(
-                    "High consensus achieved - recommendations are highly reliable"
-                )
+                recommendations.append("High consensus achieved - recommendations are highly reliable")
             elif collective_insight.consensus_score >= 0.6:
-                recommendations.append(
-                    "Moderate consensus - recommendations are generally reliable"
-                )
+                recommendations.append("Moderate consensus - recommendations are generally reliable")
             else:
-                recommendations.append(
-                    "Low consensus - recommendations should be used with caution"
-                )
+                recommendations.append("Low consensus - recommendations should be used with caution")
 
             # Confidence-based recommendations
             if collective_insight.confidence >= 0.8:
-                recommendations.append(
-                    "High confidence synthesis - strong recommendation to proceed"
-                )
+                recommendations.append("High confidence synthesis - strong recommendation to proceed")
             elif collective_insight.confidence >= 0.6:
-                recommendations.append(
-                    "Moderate confidence synthesis - proceed with monitoring"
-                )
+                recommendations.append("Moderate confidence synthesis - proceed with monitoring")
             else:
-                recommendations.append(
-                    "Low confidence synthesis - consider additional input"
-                )
+                recommendations.append("Low confidence synthesis - consider additional input")
 
             # Agent diversity recommendations
-            agent_types = set(c.agent_type for c in contributions)
+            agent_types = {c.agent_type for c in contributions}
             if len(agent_types) >= 4:
-                recommendations.append(
-                    "High agent diversity - comprehensive perspective achieved"
-                )
+                recommendations.append("High agent diversity - comprehensive perspective achieved")
             elif len(agent_types) >= 2:
-                recommendations.append(
-                    "Moderate agent diversity - good perspective coverage"
-                )
+                recommendations.append("Moderate agent diversity - good perspective coverage")
             else:
-                recommendations.append(
-                    "Limited agent diversity - consider additional perspectives"
-                )
+                recommendations.append("Limited agent diversity - consider additional perspectives")
 
             return recommendations
 
@@ -1059,9 +920,7 @@ class CollectiveIntelligenceService:
             logger.error(f"Error generating synthesis recommendations: {e}")
             return []
 
-    def _calculate_confidence_breakdown(
-        self, contributions: List[AgentContribution]
-    ) -> Dict[str, float]:
+    def _calculate_confidence_breakdown(self, contributions: list[AgentContribution]) -> dict[str, float]:
         """Calculate confidence breakdown by agent type"""
         try:
             breakdown = {}
@@ -1082,9 +941,7 @@ class CollectiveIntelligenceService:
             logger.error(f"Error calculating confidence breakdown: {e}")
             return {}
 
-    async def _update_expert_weights(
-        self, agent_id: str, expertise_level: float, confidence: float
-    ) -> None:
+    async def _update_expert_weights(self, agent_id: str, expertise_level: float, confidence: float) -> None:
         """Update expert weights for agent"""
         try:
             # Calculate new weight
@@ -1093,9 +950,8 @@ class CollectiveIntelligenceService:
             # Update with learning rate
             if agent_id in self._expert_weights:
                 current_weight = self._expert_weights[agent_id]
-                self._expert_weights[agent_id] = (
-                    current_weight
-                    + self.config.learning_rate * (new_weight - current_weight)
+                self._expert_weights[agent_id] = current_weight + self.config.learning_rate * (
+                    new_weight - current_weight
                 )
             else:
                 self._expert_weights[agent_id] = new_weight
@@ -1107,9 +963,9 @@ class CollectiveIntelligenceService:
         self,
         synthesis_type: SynthesisType,
         intelligence_level: IntelligenceLevel,
-        contributing_agents: List[str],
+        contributing_agents: list[str],
         query: str,
-        context: Dict[str, Any],
+        context: dict[str, Any],
     ) -> str:
         """Generate cache key for synthesis request"""
         try:
@@ -1125,15 +981,13 @@ class CollectiveIntelligenceService:
             import hashlib
 
             key_string = str(key_components)
-            return hashlib.md5(key_string.encode()).hexdigest()
+            return hashlib.md5(key_string.encode(), usedforsecurity=False).hexdigest()  # nosec B324 - cache key only
 
         except Exception as e:
             logger.error(f"Error generating cache key: {e}")
             return f"error:{int(datetime.now().timestamp())}"
 
-    def _context_similarity(
-        self, context1: Dict[str, Any], context2: Dict[str, Any]
-    ) -> float:
+    def _context_similarity(self, context1: dict[str, Any], context2: dict[str, Any]) -> float:
         """Calculate context similarity"""
         try:
             if not context1 or not context2:
@@ -1152,19 +1006,14 @@ class CollectiveIntelligenceService:
         except Exception:
             return 0.0
 
-    def get_collective_intelligence_status(self) -> Dict[str, Any]:
+    def get_collective_intelligence_status(self) -> dict[str, Any]:
         """Get collective intelligence service status"""
         return {
             "initialized": self._initialized,
             "total_insights": len(self._collective_insights),
-            "total_contributions": sum(
-                len(contributions)
-                for contributions in self._agent_contributions.values()
-            ),
+            "total_contributions": sum(len(contributions) for contributions in self._agent_contributions.values()),
             "total_agents": len(self._agent_contributions),
-            "total_validations": sum(
-                len(validations) for validations in self._consensus_tracker.values()
-            ),
+            "total_validations": sum(len(validations) for validations in self._consensus_tracker.values()),
             "cache_entries": len(self._synthesis_cache),
             "expert_weights": len(self._expert_weights),
             "config": {

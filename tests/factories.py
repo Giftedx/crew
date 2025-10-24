@@ -80,8 +80,18 @@ class TranscriptFactory:
         """Create a Transcript object."""
         if segments is None:
             segments = [
-                {"start": 0.0, "end": 5.0, "text": "This is a sample", "confidence": 0.95},
-                {"start": 5.0, "end": 10.0, "text": "transcript text.", "confidence": 0.90},
+                {
+                    "start": 0.0,
+                    "end": 5.0,
+                    "text": "This is a sample",
+                    "confidence": 0.95,
+                },
+                {
+                    "start": 5.0,
+                    "end": 10.0,
+                    "text": "transcript text.",
+                    "confidence": 0.90,
+                },
             ]
 
         if metadata is None:
@@ -93,7 +103,12 @@ class TranscriptFactory:
             }
 
         return Transcript(
-            text=text, language=language, confidence=confidence, duration=duration, segments=segments, metadata=metadata
+            text=text,
+            language=language,
+            confidence=confidence,
+            duration=duration,
+            segments=segments,
+            metadata=metadata,
         )
 
     @staticmethod
@@ -105,7 +120,12 @@ class TranscriptFactory:
             confidence=0.98,
             duration=600.0,
             segments=[
-                {"start": 0.0, "end": 10.0, "text": "Welcome to my YouTube channel.", "confidence": 0.98},
+                {
+                    "start": 0.0,
+                    "end": 10.0,
+                    "text": "Welcome to my YouTube channel.",
+                    "confidence": 0.98,
+                },
                 {
                     "start": 10.0,
                     "end": 20.0,
@@ -132,8 +152,18 @@ class TranscriptFactory:
             confidence=0.92,
             duration=1800.0,
             segments=[
-                {"start": 0.0, "end": 15.0, "text": "Hey everyone, welcome to the stream!", "confidence": 0.92},
-                {"start": 15.0, "end": 30.0, "text": "Let's talk about gaming and technology.", "confidence": 0.90},
+                {
+                    "start": 0.0,
+                    "end": 15.0,
+                    "text": "Hey everyone, welcome to the stream!",
+                    "confidence": 0.92,
+                },
+                {
+                    "start": 15.0,
+                    "end": 30.0,
+                    "text": "Let's talk about gaming and technology.",
+                    "confidence": 0.90,
+                },
             ],
             metadata={
                 "source": "twitch",
@@ -154,11 +184,33 @@ class TranscriptFactory:
             confidence=0.85,
             duration=120.0,
             segments=[
-                {"start": 0.0, "end": 5.0, "text": "Bonjour tout le monde.", "confidence": 0.85, "language": "fr"},
-                {"start": 5.0, "end": 10.0, "text": "Hello everyone.", "confidence": 0.90, "language": "en"},
-                {"start": 10.0, "end": 15.0, "text": "Hola a todos.", "confidence": 0.88, "language": "es"},
+                {
+                    "start": 0.0,
+                    "end": 5.0,
+                    "text": "Bonjour tout le monde.",
+                    "confidence": 0.85,
+                    "language": "fr",
+                },
+                {
+                    "start": 5.0,
+                    "end": 10.0,
+                    "text": "Hello everyone.",
+                    "confidence": 0.90,
+                    "language": "en",
+                },
+                {
+                    "start": 10.0,
+                    "end": 15.0,
+                    "text": "Hola a todos.",
+                    "confidence": 0.88,
+                    "language": "es",
+                },
             ],
-            metadata={"source": "multilingual", "languages": ["fr", "en", "es"], "translation_quality": 0.88},
+            metadata={
+                "source": "multilingual",
+                "languages": ["fr", "en", "es"],
+                "translation_quality": 0.88,
+            },
         )
 
 
@@ -180,7 +232,11 @@ class AnalysisFactory:
 
         if entities is None:
             entities = [
-                {"text": "artificial intelligence", "type": "CONCEPT", "confidence": 0.95},
+                {
+                    "text": "artificial intelligence",
+                    "type": "CONCEPT",
+                    "confidence": 0.95,
+                },
                 {"text": "machine learning", "type": "CONCEPT", "confidence": 0.90},
             ]
 
@@ -193,7 +249,12 @@ class AnalysisFactory:
             }
 
         return Analysis(
-            sentiment=sentiment, score=score, topics=topics, entities=entities, summary=summary, metadata=metadata
+            sentiment=sentiment,
+            score=score,
+            topics=topics,
+            entities=entities,
+            summary=summary,
+            metadata=metadata,
         )
 
     @staticmethod
@@ -330,7 +391,16 @@ class TestDataFactory:
     @staticmethod
     def create_sample_content_types() -> list[str]:
         """Create a list of sample content types."""
-        return ["debate", "tutorial", "news", "entertainment", "educational", "podcast", "interview", "review"]
+        return [
+            "debate",
+            "tutorial",
+            "news",
+            "entertainment",
+            "educational",
+            "podcast",
+            "interview",
+            "review",
+        ]
 
     @staticmethod
     def create_sample_analysis_requests() -> list[dict[str, Any]]:

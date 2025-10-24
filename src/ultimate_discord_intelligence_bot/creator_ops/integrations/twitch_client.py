@@ -11,16 +11,13 @@ import asyncio
 import json
 import logging
 import time
-from collections.abc import Callable
 from datetime import datetime, timedelta
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import requests
-import websockets
-from requests.adapters import HTTPAdapter
-from urllib3.util.retry import Retry
+import websockets  # type: ignore[import-not-found]
 
-from ultimate_discord_intelligence_bot.creator_ops.auth.oauth_manager import TwitchOAuthManager
+from core import http_utils
 from ultimate_discord_intelligence_bot.creator_ops.config import CreatorOpsConfig
 from ultimate_discord_intelligence_bot.creator_ops.integrations.twitch_models import (
     TwitchChatMessage,
@@ -34,6 +31,15 @@ from ultimate_discord_intelligence_bot.creator_ops.integrations.twitch_models im
     TwitchWebSocketMessage,
 )
 from ultimate_discord_intelligence_bot.step_result import StepResult
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from ultimate_discord_intelligence_bot.creator_ops.auth.oauth_manager import (
+        TwitchOAuthManager,
+    )
+
 
 logger = logging.getLogger(__name__)
 
@@ -83,16 +89,7 @@ class TwitchClient:
         self.min_request_interval = 0.075  # 75ms between requests (800/min)
         self.rate_limit = TwitchRateLimit(limit=800, remaining=800)
 
-        # Setup session with retry strategy
-        self.session = requests.Session()
-        retry_strategy = Retry(
-            total=3,
-            backoff_factor=1,
-            status_forcelist=[429, 500, 502, 503, 504],
-        )
-        adapter = HTTPAdapter(max_retries=retry_strategy)
-        self.session.mount("http://", adapter)
-        self.session.mount("https://", adapter)
+        # HTTP session is managed centrally via core.http_utils wrappers
 
     def _get_headers(self) -> dict[str, str]:
         """Get request headers."""
@@ -141,7 +138,12 @@ class TwitchClient:
         headers = self._get_headers()
 
         try:
-            response = self.session.get(url, params=params, headers=headers, timeout=30)
+            response = http_utils.retrying_get(
+                url,
+                params=params or None,
+                headers=headers,
+                timeout_seconds=30,
+            )
             response.raise_for_status()
 
             # Update rate limit info
@@ -162,13 +164,13 @@ class TwitchClient:
             elif e.response.status_code == 403:
                 return StepResult.fail("Forbidden. Check OAuth scopes.")
             else:
-                return StepResult.fail(f"HTTP error {e.response.status_code}: {str(e)}")
+                return StepResult.fail(f"HTTP error {e.response.status_code}: {e!s}")
 
         except requests.exceptions.RequestException as e:
-            return StepResult.fail(f"Request failed: {str(e)}")
+            return StepResult.fail(f"Request failed: {e!s}")
 
         except Exception as e:
-            return StepResult.fail(f"Unexpected error: {str(e)}")
+            return StepResult.fail(f"Unexpected error: {e!s}")
 
     def _get_fixture_response(self, endpoint: str, params: dict[str, Any]) -> StepResult:
         """Get fixture response for testing."""
@@ -183,7 +185,7 @@ class TwitchClient:
         except FileNotFoundError:
             return StepResult.fail(f"Fixture file not found: {fixture_file}")
         except Exception as e:
-            return StepResult.fail(f"Fixture error: {str(e)}")
+            return StepResult.fail(f"Fixture error: {e!s}")
 
     def get_user(self, user_id: str | None = None, login: str | None = None) -> StepResult:
         """Get user information."""
@@ -352,7 +354,12 @@ class TwitchClient:
             data["description"] = description
 
         try:
-            response = self.session.post(url, json=data, headers=headers, timeout=30)
+            response = http_utils.retrying_post(
+                url,
+                json_payload=data,
+                headers=headers,
+                timeout_seconds=30,
+            )
             response.raise_for_status()
 
             # Update rate limit info
@@ -366,7 +373,7 @@ class TwitchClient:
             return StepResult.ok(data=marker)
 
         except requests.exceptions.RequestException as e:
-            return StepResult.fail(f"Failed to create stream marker: {str(e)}")
+            return StepResult.fail(f"Failed to create stream marker: {e!s}")
 
     def get_chat_messages(
         self,
@@ -447,7 +454,12 @@ class TwitchClient:
         }
 
         try:
-            response = self.session.post(url, json=data, headers=headers, timeout=30)
+            response = http_utils.retrying_post(
+                url,
+                json_payload=data,
+                headers=headers,
+                timeout_seconds=30,
+            )
             response.raise_for_status()
 
             # Update rate limit info
@@ -461,7 +473,7 @@ class TwitchClient:
             return StepResult.ok(data=subscription)
 
         except requests.exceptions.RequestException as e:
-            return StepResult.fail(f"Failed to create EventSub subscription: {str(e)}")
+            return StepResult.fail(f"Failed to create EventSub subscription: {e!s}")
 
     def delete_eventsub_subscription(self, subscription_id: str) -> StepResult:
         """Delete EventSub subscription."""
@@ -476,7 +488,12 @@ class TwitchClient:
         params = {"id": subscription_id}
 
         try:
-            response = self.session.delete(url, params=params, headers=headers, timeout=30)
+            response = http_utils.retrying_delete(
+                url,
+                params=params,
+                headers=headers,
+                timeout_seconds=30,
+            )
             response.raise_for_status()
 
             # Update rate limit info
@@ -485,7 +502,7 @@ class TwitchClient:
             return StepResult.ok(data={"deleted": True})
 
         except requests.exceptions.RequestException as e:
-            return StepResult.fail(f"Failed to delete EventSub subscription: {str(e)}")
+            return StepResult.fail(f"Failed to delete EventSub subscription: {e!s}")
 
     async def connect_eventsub_websocket(
         self,
@@ -566,7 +583,7 @@ class TwitchClient:
                 )
 
         except Exception as e:
-            return StepResult.fail(f"WebSocket connection failed: {str(e)}")
+            return StepResult.fail(f"WebSocket connection failed: {e!s}")
 
     def get_rate_limit_info(self) -> dict[str, Any]:
         """Get current rate limit information."""
@@ -578,5 +595,5 @@ class TwitchClient:
 
     def close(self) -> None:
         """Close the client and cleanup resources."""
-        if hasattr(self, "session"):
-            self.session.close()
+        # No per-instance session to close; centralized session managed by http wrappers
+        return None

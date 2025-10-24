@@ -22,6 +22,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
 
+
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
@@ -130,7 +131,7 @@ class Week4PilotMonitor:
         else:
             return "INVESTIGATE - Metrics below expectations"
 
-    def save_metrics(self, filename: str = None) -> Path:
+    def save_metrics(self, filename: str | None = None) -> Path:
         """Save metrics to file."""
         if filename is None:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")

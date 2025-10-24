@@ -28,10 +28,16 @@ class TwitchResolverTool(BaseTool[StepResult]):
         try:
             canonical = resolve_twitch_login(login)
             data = canonical.to_dict()
-            self._metrics.counter("tool_runs_total", labels={"tool": "resolver_twitch", "outcome": "success"}).inc()
+            self._metrics.counter(
+                "tool_runs_total",
+                labels={"tool": "resolver_twitch", "outcome": "success"},
+            ).inc()
             return StepResult.ok(data=data)
         except Exception as exc:
-            self._metrics.counter("tool_runs_total", labels={"tool": "resolver_twitch", "outcome": "error"}).inc()
+            self._metrics.counter(
+                "tool_runs_total",
+                labels={"tool": "resolver_twitch", "outcome": "error"},
+            ).inc()
             return StepResult.fail(error=str(exc))
 
     def run(self, login: str) -> StepResult:  # thin explicit wrapper

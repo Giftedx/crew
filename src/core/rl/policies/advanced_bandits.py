@@ -10,11 +10,14 @@ from __future__ import annotations
 import math
 import random
 from collections import defaultdict
-from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from .bandit_base import ThompsonSamplingBandit
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Sequence
 
 
 def _ctx_vector(ctx: dict[str, Any], dim: int = 8) -> list[float]:
@@ -146,7 +149,11 @@ class DoublyRobustBandit:
         self.q_values[action] = q + (reward - q) / n
 
     def update_with_importance_weight(
-        self, action: Any, reward: float, context: dict[str, Any], importance_weight: float
+        self,
+        action: Any,
+        reward: float,
+        context: dict[str, Any],
+        importance_weight: float,
     ) -> None:
         """Update with explicit importance weight for off-policy learning."""
         # Clamp importance weight to prevent instability
@@ -252,7 +259,12 @@ class OffsetTreeBandit:
     def __post_init__(self):
         """Initialize root node."""
         if "root" not in self.tree_nodes:
-            self.tree_nodes["root"] = {"is_leaf": True, "bandit": self.base_bandit_factory(), "samples": 0, "depth": 0}
+            self.tree_nodes["root"] = {
+                "is_leaf": True,
+                "bandit": self.base_bandit_factory(),
+                "samples": 0,
+                "depth": 0,
+            }
 
     def _get_node_id(self, context: dict[str, Any], node_id: str = "root") -> str:
         """Get the leaf node ID for a given context."""
@@ -289,7 +301,7 @@ class OffsetTreeBandit:
 
         # Calculate reward variance for contexts that would go to this node
         rewards = []
-        for ctx, action, reward in self.context_history[-100:]:  # Recent samples
+        for ctx, _action, reward in self.context_history[-100:]:  # Recent samples
             if self._get_node_id(ctx) == node_id:
                 rewards.append(reward)
 

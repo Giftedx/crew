@@ -6,15 +6,17 @@ import logging
 from datetime import datetime
 from typing import Any
 
-import httpx
-from tenacity import (
+import httpx  # type: ignore[import-not-found]
+from tenacity import (  # type: ignore[import-not-found]
     before_sleep_log,
     retry,
     stop_after_attempt,
     wait_exponential,
 )
 
-from ultimate_discord_intelligence_bot.creator_ops.auth.oauth_manager import OAuthManager
+from ultimate_discord_intelligence_bot.creator_ops.auth.oauth_manager import (
+    OAuthManager,
+)
 from ultimate_discord_intelligence_bot.creator_ops.config import CreatorOpsConfig
 from ultimate_discord_intelligence_bot.creator_ops.integrations.instagram_models import (
     InstagramAccountInsight,
@@ -31,6 +33,7 @@ from ultimate_discord_intelligence_bot.creator_ops.integrations.instagram_models
     InstagramWebhookSubscription,
 )
 from ultimate_discord_intelligence_bot.step_result import StepResult
+
 
 logger = logging.getLogger(__name__)
 
@@ -311,7 +314,10 @@ class InstagramClient:
 
         return StepResult.success(
             InstagramAccountInsight(
-                account_id=creator_id, insights=insights, timestamp=datetime.utcnow(), period=period
+                account_id=creator_id,
+                insights=insights,
+                timestamp=datetime.utcnow(),
+                period=period,
             )
         )
 

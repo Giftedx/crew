@@ -13,6 +13,7 @@ from typing import Any
 
 import numpy as np
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -170,13 +171,26 @@ class VisualClassification:
     @property
     def is_educational_content(self) -> bool:
         """Check if content is educational."""
-        educational_tags = {"educational", "tutorial", "lecture", "documentary", "instructional"}
+        educational_tags = {
+            "educational",
+            "tutorial",
+            "lecture",
+            "documentary",
+            "instructional",
+        }
         return any(tag in educational_tags for tag in self.content_tags)
 
     @property
     def is_entertainment_content(self) -> bool:
         """Check if content is entertainment."""
-        entertainment_tags = {"entertainment", "comedy", "music", "sports", "gaming", "movie"}
+        entertainment_tags = {
+            "entertainment",
+            "comedy",
+            "music",
+            "sports",
+            "gaming",
+            "movie",
+        }
         return any(tag in entertainment_tags for tag in self.content_tags)
 
     @property
@@ -331,7 +345,11 @@ class VideoAnalysisResult:
         """Check if video has high motion."""
         if not self.motion_analysis:
             return False
-        high_motion_types = {MotionType.FAST_MOTION, MotionType.ZOOM_IN, MotionType.ZOOM_OUT}
+        high_motion_types = {
+            MotionType.FAST_MOTION,
+            MotionType.ZOOM_IN,
+            MotionType.ZOOM_OUT,
+        }
         return any(motion.motion_type in high_motion_types for motion in self.motion_analysis)
 
     @property
@@ -449,7 +467,11 @@ class VideoAnalyzer:
                 label="person",
                 confidence=0.95,
                 trajectory=[(100, 200, 0.0), (105, 195, 1.0), (110, 190, 2.0)],
-                bounding_boxes=[(90, 180, 60, 120), (95, 175, 60, 120), (100, 170, 60, 120)],
+                bounding_boxes=[
+                    (90, 180, 60, 120),
+                    (95, 175, 60, 120),
+                    (100, 170, 60, 120),
+                ],
                 speed=7.1,
                 direction=(1.0, -1.0),
             ),
@@ -458,7 +480,11 @@ class VideoAnalyzer:
                 label="car",
                 confidence=0.87,
                 trajectory=[(300, 250, 0.0), (320, 250, 1.0), (340, 250, 2.0)],
-                bounding_boxes=[(280, 230, 80, 40), (300, 230, 80, 40), (320, 230, 80, 40)],
+                bounding_boxes=[
+                    (280, 230, 80, 40),
+                    (300, 230, 80, 40),
+                    (320, 230, 80, 40),
+                ],
                 speed=20.0,
                 direction=(1.0, 0.0),
             ),
@@ -500,7 +526,11 @@ class VideoAnalyzer:
         # Simulate activity recognition
         # In a real implementation, this would use activity recognition models
         return ActivityRecognition(
-            detected_activities=[ActivityType.TALKING, ActivityType.GESTURING, ActivityType.SITTING],
+            detected_activities=[
+                ActivityType.TALKING,
+                ActivityType.GESTURING,
+                ActivityType.SITTING,
+            ],
             primary_activity=ActivityType.TALKING,
             activity_confidence=0.9,
             activity_duration=28.5,
@@ -512,9 +542,24 @@ class VideoAnalyzer:
         # Simulate shot boundary detection
         # In a real implementation, this would use shot boundary detection algorithms
         boundaries = [
-            ShotBoundary(timestamp=5.2, boundary_type="cut", confidence=0.95, transition_duration=0.0),
-            ShotBoundary(timestamp=15.5, boundary_type="fade", confidence=0.88, transition_duration=1.2),
-            ShotBoundary(timestamp=28.0, boundary_type="cut", confidence=0.92, transition_duration=0.0),
+            ShotBoundary(
+                timestamp=5.2,
+                boundary_type="cut",
+                confidence=0.95,
+                transition_duration=0.0,
+            ),
+            ShotBoundary(
+                timestamp=15.5,
+                boundary_type="fade",
+                confidence=0.88,
+                transition_duration=1.2,
+            ),
+            ShotBoundary(
+                timestamp=28.0,
+                boundary_type="cut",
+                confidence=0.92,
+                transition_duration=0.0,
+            ),
         ]
         return boundaries
 

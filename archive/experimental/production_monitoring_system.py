@@ -12,6 +12,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -77,7 +78,10 @@ class ProductionMonitoringSystem:
 
         # Generate production insights
         production_insights = self._generate_production_insights(
-            performance_analysis, ai_routing_analysis, user_experience_analysis, system_health_analysis
+            performance_analysis,
+            ai_routing_analysis,
+            user_experience_analysis,
+            system_health_analysis,
         )
 
         # Determine overall production status
@@ -100,7 +104,10 @@ class ProductionMonitoringSystem:
         """Analyze performance trends over time."""
 
         if len(metrics_data) < 2:
-            return {"trend": "insufficient_data", "analysis": "Need more data points for trend analysis"}
+            return {
+                "trend": "insufficient_data",
+                "analysis": "Need more data points for trend analysis",
+            }
 
         # Get first and last metrics for trend analysis
         first_metrics = metrics_data[0]
@@ -186,7 +193,10 @@ class ProductionMonitoringSystem:
         satisfaction_values = [m["user_satisfaction"] for m in metrics_data]
 
         if not satisfaction_values:
-            return {"status": "no_user_data", "analysis": "User experience data not available"}
+            return {
+                "status": "no_user_data",
+                "analysis": "User experience data not available",
+            }
 
         avg_satisfaction = sum(satisfaction_values) / len(satisfaction_values)
         max_satisfaction = max(satisfaction_values)
@@ -376,7 +386,13 @@ class ProductionMonitoringSystem:
 
         # Count excellent indicators
         excellent_count = sum(
-            [performance_excellent, ai_routing_excellent, user_satisfaction_good, error_rate_good, uptime_good]
+            [
+                performance_excellent,
+                ai_routing_excellent,
+                user_satisfaction_good,
+                error_rate_good,
+                uptime_good,
+            ]
         )
 
         if excellent_count >= 4:
@@ -484,7 +500,11 @@ class ProductionMonitoringSystem:
                 "end": end_time_str,
             }
         except Exception:
-            return {"duration": "calculation_error", "start": start_time_str, "end": end_time_str}
+            return {
+                "duration": "calculation_error",
+                "start": start_time_str,
+                "end": end_time_str,
+            }
 
     def _create_executive_summary(self, analysis_results: dict, deployment_summary: dict) -> dict[str, Any]:
         """Create executive summary of production deployment."""

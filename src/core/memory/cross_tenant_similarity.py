@@ -17,6 +17,7 @@ from typing import Any
 
 import numpy as np
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -235,7 +236,7 @@ class CrossTenantSimilarityDetector:
                             tenant2=other_tenant_id,
                             similarity_score=similarity,
                             detection_method=method,
-                            content_ids=(content_id, other_content_id),
+                            content_ids=(str(hash(content)), other_content_id),
                             timestamp=time.time(),
                             severity=self._calculate_severity(similarity),
                             metadata={"similarities": similarities},
@@ -258,7 +259,11 @@ class CrossTenantSimilarityDetector:
         return None
 
     async def _calculate_similarities(
-        self, embedding1: np.ndarray, embedding2: np.ndarray, content1: Any, content2_id: str
+        self,
+        embedding1: np.ndarray,
+        embedding2: np.ndarray,
+        content1: Any,
+        content2_id: str,
     ) -> dict[SimilarityDetectionMethod, float]:
         """Calculate similarities using multiple methods."""
         similarities = {}
@@ -316,8 +321,8 @@ class CrossTenantSimilarityDetector:
         str2 = str(content2).lower()
 
         # Calculate Jaccard similarity of character n-grams
-        ngrams1 = set(str1[i : i + 3] for i in range(len(str1) - 2))
-        ngrams2 = set(str2[i : i + 3] for i in range(len(str2) - 2))
+        ngrams1 = {str1[i : i + 3] for i in range(len(str1) - 2)}
+        ngrams2 = {str2[i : i + 3] for i in range(len(str2) - 2)}
 
         if not ngrams1 and not ngrams2:
             return 1.0
@@ -330,7 +335,12 @@ class CrossTenantSimilarityDetector:
         return intersection / union if union > 0 else 0.0
 
     async def _add_content_with_isolation(
-        self, tenant_id: str, content_id: str, embedding: np.ndarray, content: Any, metadata: dict[str, Any] | None
+        self,
+        tenant_id: str,
+        content_id: str,
+        embedding: np.ndarray,
+        content: Any,
+        metadata: dict[str, Any] | None,
     ) -> None:
         """Add content with isolation measures applied."""
         # Apply isolation strategy
@@ -467,7 +477,7 @@ class CrossTenantSimilarityDetector:
     def _get_cached_violation(self, tenant_id: str, embedding: np.ndarray) -> SimilarityViolation | None:
         """Get cached violation for similar embedding."""
         # Simple cache lookup based on embedding hash
-        embedding_hash = hashlib.md5(embedding.tobytes()).hexdigest()
+        embedding_hash = hashlib.md5(embedding.tobytes(), usedforsecurity=False).hexdigest()  # nosec B324 - embedding fingerprint only
 
         # Check if we have a cached violation for this tenant and similar embedding
         for cached_tenant, cached_hash, violation in self.violation_cache:
@@ -478,7 +488,7 @@ class CrossTenantSimilarityDetector:
 
     def _cache_violation(self, tenant_id: str, embedding: np.ndarray, violation: SimilarityViolation) -> None:
         """Cache violation for future reference."""
-        embedding_hash = hashlib.md5(embedding.tobytes()).hexdigest()
+        embedding_hash = hashlib.md5(embedding.tobytes(), usedforsecurity=False).hexdigest()  # nosec B324 - embedding fingerprint only
 
         # Add to cache (implement proper cache management in production)
         if len(self.violation_cache) > 10000:  # Limit cache size

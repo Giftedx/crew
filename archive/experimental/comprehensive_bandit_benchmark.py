@@ -29,6 +29,7 @@ from typing import Any
 import numpy as np
 from scipy import stats
 
+
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
@@ -205,7 +206,13 @@ class LinUCBBandit(BanditAlgorithm):
 class DoublyRobustBandit(BanditAlgorithm):
     """Simplified DoublyRobust bandit for benchmarking."""
 
-    def __init__(self, num_actions: int, context_dim: int, alpha: float = 1.5, learning_rate: float = 0.1):
+    def __init__(
+        self,
+        num_actions: int,
+        context_dim: int,
+        alpha: float = 1.5,
+        learning_rate: float = 0.1,
+    ):
         super().__init__(num_actions, context_dim)
         self.alpha = alpha
         self.learning_rate = learning_rate
@@ -241,11 +248,20 @@ class DoublyRobustBandit(BanditAlgorithm):
 class OffsetTreeBandit(BanditAlgorithm):
     """Simplified OffsetTree bandit for benchmarking."""
 
-    def __init__(self, num_actions: int, context_dim: int, max_depth: int = 4, min_samples: int = 20):
+    def __init__(
+        self,
+        num_actions: int,
+        context_dim: int,
+        max_depth: int = 4,
+        min_samples: int = 20,
+    ):
         super().__init__(num_actions, context_dim)
         self.max_depth = max_depth
         self.min_samples = min_samples
-        self.tree = {"type": "leaf", "bandit": ThompsonSamplingBandit(num_actions, context_dim)}
+        self.tree = {
+            "type": "leaf",
+            "bandit": ThompsonSamplingBandit(num_actions, context_dim),
+        }
         self.contexts = []
         self.actions = []
         self.rewards = []
@@ -333,8 +349,14 @@ class OffsetTreeBandit(BanditAlgorithm):
             node["type"] = "split"
             node["feature"] = best_feature
             node["threshold"] = best_threshold
-            node["left"] = {"type": "leaf", "bandit": ThompsonSamplingBandit(self.num_actions, self.context_dim)}
-            node["right"] = {"type": "leaf", "bandit": ThompsonSamplingBandit(self.num_actions, self.context_dim)}
+            node["left"] = {
+                "type": "leaf",
+                "bandit": ThompsonSamplingBandit(self.num_actions, self.context_dim),
+            }
+            node["right"] = {
+                "type": "leaf",
+                "bandit": ThompsonSamplingBandit(self.num_actions, self.context_dim),
+            }
 
             # Recursively split children
             self._recursive_split(node["left"], left_indices, depth + 1)
@@ -436,7 +458,9 @@ class PerformanceBenchmark:
 
         algorithm = self._create_algorithms()[algorithm_name]
         environment = BenchmarkEnvironment(
-            self.config.context_dimension, self.config.num_actions, self.config.noise_level
+            self.config.context_dimension,
+            self.config.num_actions,
+            self.config.noise_level,
         )
 
         rewards = []
@@ -592,7 +616,10 @@ class PerformanceBenchmark:
                     "p95": np.percentile(avg_latencies, 95),
                     "p99": np.percentile(avg_latencies, 99),
                 },
-                "memory": {"mean": statistics.mean(max_memories), "max": max(max_memories)},
+                "memory": {
+                    "mean": statistics.mean(max_memories),
+                    "max": max(max_memories),
+                },
                 "convergence": {
                     "mean_rounds": statistics.mean(convergence_rounds),
                     "std_rounds": statistics.stdev(convergence_rounds) if len(convergence_rounds) > 1 else 0,
@@ -610,12 +637,16 @@ class StatisticalAnalyzer:
         self.significance_level = significance_level
 
     def compare_algorithms(
-        self, results_a: list[float], results_b: list[float], algorithm_a: str, algorithm_b: str
+        self,
+        results_a: list[float],
+        results_b: list[float],
+        algorithm_a: str,
+        algorithm_b: str,
     ) -> StatisticalAnalysis:
         """Compare two algorithms with statistical testing."""
 
         # Perform t-test
-        t_stat, p_value = stats.ttest_ind(results_a, results_b)
+        _t_stat, p_value = stats.ttest_ind(results_a, results_b)
 
         # Calculate effect size (Cohen's d)
         pooled_std = np.sqrt(
@@ -698,7 +729,13 @@ async def main():
         num_rounds=2000,  # Reduced for demo
         num_repetitions=5,  # Reduced for demo
         warmup_rounds=200,
-        algorithms=["epsilon_greedy", "thompson_sampling", "linucb", "doubly_robust", "offset_tree"],
+        algorithms=[
+            "epsilon_greedy",
+            "thompson_sampling",
+            "linucb",
+            "doubly_robust",
+            "offset_tree",
+        ],
     )
 
     print("Configuration:")
@@ -735,7 +772,7 @@ async def main():
     p_values = [c.p_value for c in comparisons]
     corrected_p_values = analyzer.multiple_comparisons_correction(p_values, "bonferroni")
 
-    for comparison, corrected_p in zip(comparisons, corrected_p_values):
+    for comparison, corrected_p in zip(comparisons, corrected_p_values, strict=False):
         comparison.p_value = corrected_p
         comparison.is_significant = corrected_p < config.significance_level
 
@@ -749,7 +786,9 @@ async def main():
 
     # Sort by final performance
     sorted_algorithms = sorted(
-        aggregated_results.items(), key=lambda x: x[1]["final_performance"]["mean"], reverse=True
+        aggregated_results.items(),
+        key=lambda x: x[1]["final_performance"]["mean"],
+        reverse=True,
     )
 
     for i, (algorithm, algorithm_stats) in enumerate(sorted_algorithms):

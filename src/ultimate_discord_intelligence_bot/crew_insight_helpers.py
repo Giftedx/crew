@@ -27,10 +27,10 @@ class CrewInsightExtractor:
         if "linguistic" in result_text or "language" in result_text:
             patterns["linguistic_patterns"].extend(
                 [
-                    "repetitive_phrasing" if "repeat" in result_text else None,
-                    "emotional_language" if "emotion" in result_text else None,
-                    "formal_language" if "formal" in result_text else None,
-                    "persuasive_language" if "persuasive" in result_text else None,
+                    "repetitive_phrasing" if "repeat" in result_text else "",
+                    "emotional_language" if "emotion" in result_text else "",
+                    "formal_language" if "formal" in result_text else "",
+                    "persuasive_language" if "persuasive" in result_text else "",
                 ]
             )
 
@@ -38,15 +38,15 @@ class CrewInsightExtractor:
         if "behavior" in result_text or "pattern" in result_text:
             patterns["behavioral_patterns"].extend(
                 [
-                    "consistency_indicators" if "consistent" in result_text else None,
-                    "deception_signals" if "deception" in result_text else None,
-                    "authority_claims" if "authority" in result_text else None,
-                    "social_proof" if "social" in result_text else None,
+                    "consistency_indicators" if "consistent" in result_text else "",
+                    "deception_signals" if "deception" in result_text else "",
+                    "authority_claims" if "authority" in result_text else "",
+                    "social_proof" if "social" in result_text else "",
                 ]
             )
 
-        # Clean None values
-        patterns = {k: [x for x in v if x is not None] for k, v in patterns.items()}
+        # Clean empty values
+        patterns = {k: [x for x in v if x] for k, v in patterns.items()}
 
         return patterns
 
@@ -145,11 +145,11 @@ class CrewInsightExtractor:
             network_data["node_count"] = int(numbers[0]) if numbers else 5
 
         if "strong connection" in result_text:
-            network_data["connection_strength"]["average"] = 0.8
+            network_data["connection_strength"] = {"average": 0.8}
         elif "weak connection" in result_text:
-            network_data["connection_strength"]["average"] = 0.3
+            network_data["connection_strength"] = {"average": 0.3}
         else:
-            network_data["connection_strength"]["average"] = 0.5
+            network_data["connection_strength"] = {"average": 0.5}
 
         return network_data
 
@@ -170,7 +170,10 @@ class CrewInsightExtractor:
             mappings["entity_relationships"] = ["primary_entity", "secondary_entity"]
 
         if "source" in result_text:
-            mappings["source_relationships"] = ["primary_source", "corroborating_source"]
+            mappings["source_relationships"] = [
+                "primary_source",
+                "corroborating_source",
+            ]
 
         return mappings
 

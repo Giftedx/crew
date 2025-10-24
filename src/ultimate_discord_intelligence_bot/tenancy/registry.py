@@ -1,9 +1,9 @@
 from __future__ import annotations
 
+import contextlib
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import yaml
 
@@ -11,6 +11,10 @@ from core.time import default_utc_now
 
 from .context import TenantContext
 from .models import Tenant
+
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 @dataclass
@@ -162,28 +166,20 @@ class TenantRegistry:
                 ("reward_latency_ms_window", "reward_latency_ms_window"),
             ):
                 if src in rl:
-                    try:
+                    with contextlib.suppress(Exception):
                         res[dst] = float(rl[src]) if "weight" in src else int(rl[src])
-                    except Exception:
-                        pass
         # routing.yaml alternative keys
         if cfg.routing and isinstance(cfg.routing.get("rewards"), dict):
             rw = cfg.routing["rewards"]
             if "cost_weight" in rw:
-                try:
+                with contextlib.suppress(Exception):
                     res.setdefault("reward_cost_weight", float(rw["cost_weight"]))
-                except Exception:
-                    pass
             if "latency_weight" in rw:
-                try:
+                with contextlib.suppress(Exception):
                     res.setdefault("reward_latency_weight", float(rw["latency_weight"]))
-                except Exception:
-                    pass
             if "latency_ms_window" in rw:
-                try:
+                with contextlib.suppress(Exception):
                     res.setdefault("reward_latency_ms_window", int(rw["latency_ms_window"]))
-                except Exception:
-                    pass
         return res
 
     def get_pricing_map(self, ctx: TenantContext) -> dict[str, float]:
@@ -320,10 +316,8 @@ class TenantRegistry:
             tasks = limits.get("tasks")
             if isinstance(tasks, dict):
                 for k, v in tasks.items():
-                    try:
+                    with contextlib.suppress(Exception):
                         out[str(k)] = float(v)
-                    except Exception:
-                        pass
             costs = limits.get("costs")
             if isinstance(costs, dict):
                 for variant in ("by_task", "per_task"):
@@ -332,10 +326,8 @@ class TenantRegistry:
                         for k, v in mapping.items():
                             if k == "default":
                                 continue
-                            try:
+                            with contextlib.suppress(Exception):
                                 out.setdefault(str(k), float(v))
-                            except Exception:
-                                pass
         return out
 
     def resolve_discord_guild(self, guild_id: int) -> TenantContext | None:

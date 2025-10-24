@@ -1,12 +1,17 @@
 from __future__ import annotations
 
+import contextlib
 import threading
 import time
 from dataclasses import dataclass, field
 from typing import Any, Literal
 
 from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
-from ultimate_discord_intelligence_bot.tenancy.context import TenantContext, current_tenant
+from ultimate_discord_intelligence_bot.tenancy.context import (
+    TenantContext,
+    current_tenant,
+)
+
 
 MessageType = Literal["note", "ask", "answer", "evidence", "warning"]
 
@@ -73,16 +78,14 @@ def with_shared_context(session_id: str, *, max_messages: int = 1000) -> SharedC
     """
 
     ctx = SharedContext(session_id=session_id, max_messages=max_messages)
-    setattr(_thread_local, "shared_ctx", ctx)
+    _thread_local.shared_ctx = ctx
     return ctx
 
 
 def clear_shared_context() -> None:
     """Remove the shared context from the current thread if present."""
-    try:
+    with contextlib.suppress(Exception):
         delattr(_thread_local, "shared_ctx")
-    except Exception:
-        pass
 
 
 def current_shared_context() -> SharedContext | None:
@@ -98,15 +101,18 @@ def tenant_labels() -> dict[str, str]:
     t: TenantContext | None = current_tenant()
     if not t:
         return {"tenant": "unknown", "workspace": "unknown"}
-    return {"tenant": t.tenant_id or "unknown", "workspace": t.workspace_id or "unknown"}
+    return {
+        "tenant": t.tenant_id or "unknown",
+        "workspace": t.workspace_id or "unknown",
+    }
 
 
 __all__ = [
-    "MessageType",
     "AgentMessage",
+    "MessageType",
     "SharedContext",
-    "with_shared_context",
     "clear_shared_context",
     "current_shared_context",
     "tenant_labels",
+    "with_shared_context",
 ]

@@ -4,10 +4,15 @@ from __future__ import annotations
 
 import argparse
 import json
-from collections.abc import Sequence
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import jsonschema
+
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
 
 SCHEMA_PATH = Path(__file__).resolve().parents[4] / "datasets/schemas/task_record.schema.json"
 with open(SCHEMA_PATH, encoding="utf-8") as fh:
@@ -19,10 +24,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     p.add_argument("--dataset", required=True)
     a = p.parse_args(argv)
     ok = True
-    for i, line in enumerate(Path(a.dataset).read_text().splitlines(), 1):  # noqa: PERF203 - per-record validation must isolate schema errors; hoisting try would hide which line failed
-        try:  # noqa: PERF203 - minimal overhead vs clarity for error localization
+    for i, line in enumerate(Path(a.dataset).read_text().splitlines(), 1):
+        try:
             jsonschema.validate(json.loads(line), SCHEMA)
-        except jsonschema.ValidationError as e:  # noqa: PERF203 - intentional fine-grained handling
+        except jsonschema.ValidationError as e:
             print(f"line {i}: {e.message}")
             ok = False
     return 0 if ok else 1

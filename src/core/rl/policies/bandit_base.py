@@ -2,12 +2,16 @@
 
 from __future__ import annotations
 
+import contextlib
 import math
-import random  # noqa: S311 - exploration randomness is non-cryptographic
+import random
 from collections import defaultdict
-from collections.abc import Sequence
 from dataclasses import dataclass, field
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 
 @dataclass
@@ -23,7 +27,7 @@ class EpsilonGreedyBandit:
     counts: defaultdict[Any, int] = field(default_factory=lambda: defaultdict(int))
     rng: random.Random | None = None
 
-    def recommend(self, context: dict[str, Any], candidates: Sequence[Any]) -> Any:  # noqa: ARG002
+    def recommend(self, context: dict[str, Any], candidates: Sequence[Any]) -> Any:
         """Return an arm to pull from candidates.
 
         When ``rng`` is set, exploration randomness is sourced from it to
@@ -34,11 +38,11 @@ class EpsilonGreedyBandit:
         eps = max(0.0, min(1.0, float(self.epsilon)))
         _rng = self.rng or random
         # Non-cryptographic randomness acceptable here: policy exploration.
-        if _rng.random() < eps:  # noqa: S311 - epsilon-greedy exploration
-            return _rng.choice(list(candidates))  # noqa: S311 - candidate selection not security sensitive
+        if _rng.random() < eps:
+            return _rng.choice(list(candidates))
         return max(candidates, key=lambda c: self.q_values[c])
 
-    def update(self, action: Any, reward: float, context: dict[str, Any]) -> None:  # noqa: ARG002
+    def update(self, action: Any, reward: float, context: dict[str, Any]) -> None:
         """Update running mean reward for ``action`` with incremental average."""
         self.counts[action] += 1
         n = self.counts[action]
@@ -72,10 +76,8 @@ class EpsilonGreedyBandit:
             return  # future version not understood
         qv = state.get("q_values") or {}
         ct = state.get("counts") or {}
-        try:
+        with contextlib.suppress(Exception):
             self.epsilon = float(state.get("epsilon", self.epsilon))
-        except Exception:
-            pass
         self.q_values.clear()
         self.q_values.update(qv)
         self.counts.clear()
@@ -95,7 +97,7 @@ class UCB1Bandit:
     counts: defaultdict[Any, int] = field(default_factory=lambda: defaultdict(int))
     total_pulls: int = 0
 
-    def recommend(self, context: dict[str, Any], candidates: Sequence[Any]) -> Any:  # noqa: ARG002
+    def recommend(self, context: dict[str, Any], candidates: Sequence[Any]) -> Any:
         """Return an arm based on UCB1; explore each arm once, then exploit."""
         if not candidates:
             raise ValueError("candidates must not be empty")
@@ -109,7 +111,7 @@ class UCB1Bandit:
             key=lambda c: self.q_values[c] + math.sqrt(2 * math.log(self.total_pulls) / self.counts[c]),
         )
 
-    def update(self, action: Any, reward: float, context: dict[str, Any]) -> None:  # noqa: ARG002
+    def update(self, action: Any, reward: float, context: dict[str, Any]) -> None:
         """Update running mean reward for ``action`` with incremental average."""
         self.counts[action] += 1
         n = self.counts[action]
@@ -136,10 +138,8 @@ class UCB1Bandit:
         self.q_values.update(qv)
         self.counts.clear()
         self.counts.update(ct)
-        try:
+        with contextlib.suppress(Exception):
             self.total_pulls = int(state.get("total_pulls", self.total_pulls))
-        except Exception:
-            pass
 
 
 __all__ = ["EpsilonGreedyBandit", "UCB1Bandit"]
@@ -162,7 +162,7 @@ class ThompsonSamplingBandit:
     counts: defaultdict[Any, int] = field(default_factory=lambda: defaultdict(int))
     rng: random.Random | None = None
 
-    def recommend(self, context: dict[str, Any], candidates: Sequence[Any]) -> Any:  # noqa: ARG002
+    def recommend(self, context: dict[str, Any], candidates: Sequence[Any]) -> Any:
         if not candidates:
             raise ValueError("candidates must not be empty")
         best_arm = None
@@ -171,13 +171,13 @@ class ThompsonSamplingBandit:
         for c in candidates:
             a = self.a_params[c]
             b = self.b_params[c]
-            s = _rng.betavariate(a, b)  # noqa: S311 - non-crypto exploration randomness
+            s = _rng.betavariate(a, b)
             if s > best_sample:
                 best_sample = s
                 best_arm = c
         return best_arm
 
-    def update(self, action: Any, reward: float, context: dict[str, Any]) -> None:  # noqa: ARG002
+    def update(self, action: Any, reward: float, context: dict[str, Any]) -> None:
         r = max(0.0, min(1.0, float(reward)))
         self.a_params[action] += r
         self.b_params[action] += 1.0 - r

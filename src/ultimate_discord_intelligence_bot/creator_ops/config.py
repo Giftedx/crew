@@ -198,7 +198,12 @@ class CreatorOpsConfig:
 
             # Check if Creator Operations is enabled
             if not self.enabled:
-                return StepResult.ok(data={"status": "disabled", "message": "Creator Operations disabled"})
+                return StepResult.ok(
+                    data={
+                        "status": "disabled",
+                        "message": "Creator Operations disabled",
+                    }
+                )
 
             # Validate required settings
             if not self.database_url:
@@ -245,11 +250,23 @@ class CreatorOpsConfig:
                 warnings.append("PROCESSING_TIMEOUT_SECONDS is very low")
 
             # Validate ML settings
-            valid_whisper_models = ["tiny", "base", "small", "medium", "large", "large-v2", "large-v3"]
+            valid_whisper_models = [
+                "tiny",
+                "base",
+                "small",
+                "medium",
+                "large",
+                "large-v2",
+                "large-v3",
+            ]
             if self.whisper_model not in valid_whisper_models:
                 warnings.append(f"Unknown Whisper model: {self.whisper_model}")
 
-            valid_embedding_models = ["text-embedding-3-large", "text-embedding-3-small", "bge-large-en-v1.5"]
+            valid_embedding_models = [
+                "text-embedding-3-large",
+                "text-embedding-3-small",
+                "bge-large-en-v1.5",
+            ]
             if self.embedding_model not in valid_embedding_models:
                 warnings.append(f"Unknown embedding model: {self.embedding_model}")
 
@@ -260,15 +277,17 @@ class CreatorOpsConfig:
             if len(errors) > 0:
                 return StepResult.fail(f"Configuration validation failed: {'; '.join(errors)}")
 
-            return StepResult.ok(data={
-                "status": "valid",
-                "enabled_platforms": enabled_platforms,
-                "warnings": warnings,
-                "fixture_mode": self.fixture_mode,
-            })
+            return StepResult.ok(
+                data={
+                    "status": "valid",
+                    "enabled_platforms": enabled_platforms,
+                    "warnings": warnings,
+                    "fixture_mode": self.fixture_mode,
+                }
+            )
 
         except Exception as e:
-            return StepResult.fail(f"Configuration validation error: {str(e)}")
+            return StepResult.fail(f"Configuration validation error: {e!s}")
 
     def get_rate_limit_config(self, platform: str) -> dict[str, int]:
         """Get rate limit configuration for a platform.

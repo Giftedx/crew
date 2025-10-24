@@ -6,6 +6,7 @@ Debug script for Claim Verifier Tool to understand the backend failure behavior.
 import sys
 from pathlib import Path
 
+
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
@@ -23,7 +24,10 @@ sys.modules["crewai_tools"] = type("MockModule", (), {"BaseTool": MockBaseTool})
 
 from unittest.mock import patch
 
-from ultimate_discord_intelligence_bot.tools.claim_verifier_tool import ClaimVerifierTool
+# ruff: noqa: E402
+from ultimate_discord_intelligence_bot.tools.claim_verifier_tool import (
+    ClaimVerifierTool,
+)
 
 
 def test_backend_failure():
@@ -33,7 +37,12 @@ def test_backend_failure():
     print("Testing backend failure scenario...")
 
     with patch.object(tool, "_verify_with_serply", side_effect=Exception("API Error")):
-        result = tool._run(claim_text="Test claim", backends=["serply"], tenant="test", workspace="test")
+        result = tool._run(
+            claim_text="Test claim",
+            backends=["serply"],
+            tenant="test",
+            workspace="test",
+        )
 
         print(f"Result success: {result.success}")
         print(f"Result error: {result.error}")

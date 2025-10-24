@@ -28,10 +28,16 @@ class YouTubeResolverTool(BaseTool[StepResult]):
         try:
             canonical = resolve_youtube_handle(handle)
             data = canonical.to_dict()
-            self._metrics.counter("tool_runs_total", labels={"tool": "resolver_youtube", "outcome": "success"}).inc()
+            self._metrics.counter(
+                "tool_runs_total",
+                labels={"tool": "resolver_youtube", "outcome": "success"},
+            ).inc()
             return StepResult.ok(data=data)
         except Exception as exc:
-            self._metrics.counter("tool_runs_total", labels={"tool": "resolver_youtube", "outcome": "error"}).inc()
+            self._metrics.counter(
+                "tool_runs_total",
+                labels={"tool": "resolver_youtube", "outcome": "error"},
+            ).inc()
             return StepResult.fail(error=str(exc))
 
     def run(self, handle: str) -> StepResult:  # thin explicit wrapper

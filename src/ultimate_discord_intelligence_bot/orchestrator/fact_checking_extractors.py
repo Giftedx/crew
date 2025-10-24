@@ -10,6 +10,7 @@ import logging
 import re
 from typing import Any
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -29,8 +30,22 @@ def extract_fact_checks_from_crew(crew_result: Any) -> dict[str, Any]:
         crew_output = str(crew_result).lower()
 
         # Look for fact-checking indicators
-        verified_keywords = ["verified", "confirmed", "accurate", "correct", "true", "factual"]
-        disputed_keywords = ["disputed", "false", "inaccurate", "misleading", "unverified", "doubtful"]
+        verified_keywords = [
+            "verified",
+            "confirmed",
+            "accurate",
+            "correct",
+            "true",
+            "factual",
+        ]
+        disputed_keywords = [
+            "disputed",
+            "false",
+            "inaccurate",
+            "misleading",
+            "unverified",
+            "doubtful",
+        ]
 
         verified_count = sum(1 for keyword in verified_keywords if keyword in crew_output)
         disputed_count = sum(1 for keyword in disputed_keywords if keyword in crew_output)
@@ -79,7 +94,11 @@ def extract_logical_analysis_from_crew(crew_result: Any) -> dict[str, Any]:
             for pattern in patterns:
                 if pattern in crew_output:
                     detected_fallacies.append(
-                        {"type": fallacy_type, "description": f"Potential {fallacy_type} detected", "confidence": 0.7}
+                        {
+                            "type": fallacy_type,
+                            "description": f"Potential {fallacy_type} detected",
+                            "confidence": 0.7,
+                        }
                     )
 
         # Calculate logical strength (inverse of fallacy count)
@@ -126,16 +145,19 @@ def extract_credibility_from_crew(crew_result: Any) -> dict[str, Any]:
             credibility_scores[factor] = min(score / len(indicators), 1.0)
 
         # Calculate overall credibility
-        if credibility_scores:
-            overall_credibility = sum(credibility_scores.values()) / len(credibility_scores)
-        else:
-            overall_credibility = 0.5
+        overall_credibility = sum(credibility_scores.values()) / len(credibility_scores) if credibility_scores else 0.5
 
         # Extract specific factors mentioned
         factors = []
         for factor, score in credibility_scores.items():
             if score > 0.3:
-                factors.append({"factor": factor, "score": score, "impact": "positive" if score > 0.6 else "neutral"})
+                factors.append(
+                    {
+                        "factor": factor,
+                        "score": score,
+                        "impact": "positive" if score > 0.6 else "neutral",
+                    }
+                )
 
         return {
             "overall_credibility": overall_credibility,
@@ -159,7 +181,11 @@ def extract_source_validation_from_crew(crew_result: Any) -> dict[str, Any]:
     """
     try:
         if not crew_result:
-            return {"sources_validated": 0, "validation_method": "none", "reliability": 0.0}
+            return {
+                "sources_validated": 0,
+                "validation_method": "none",
+                "reliability": 0.0,
+            }
 
         crew_output = str(crew_result)
 
@@ -222,9 +248,27 @@ def calculate_verification_confidence_from_crew(crew_result: Any) -> float:
         crew_output = str(crew_result).lower()
 
         # Confidence indicators
-        high_confidence_words = ["confirmed", "verified", "certain", "definite", "proven"]
-        medium_confidence_words = ["likely", "probably", "suggests", "indicates", "appears"]
-        low_confidence_words = ["uncertain", "unclear", "doubtful", "speculative", "unknown"]
+        high_confidence_words = [
+            "confirmed",
+            "verified",
+            "certain",
+            "definite",
+            "proven",
+        ]
+        medium_confidence_words = [
+            "likely",
+            "probably",
+            "suggests",
+            "indicates",
+            "appears",
+        ]
+        low_confidence_words = [
+            "uncertain",
+            "unclear",
+            "doubtful",
+            "speculative",
+            "unknown",
+        ]
 
         high_count = sum(1 for word in high_confidence_words if word in crew_output)
         medium_count = sum(1 for word in medium_confidence_words if word in crew_output)

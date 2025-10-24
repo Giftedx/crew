@@ -17,6 +17,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -163,7 +164,7 @@ class ProductionDeploymentExecutor:
         except Exception as e:
             logger.error(f"Critical deployment error: {e}")
             deployment_results["final_status"] = "critical_failure"
-            deployment_results["issues_encountered"].append(f"Critical error: {str(e)}")
+            deployment_results["issues_encountered"].append(f"Critical error: {e!s}")
 
             # Emergency rollback
             emergency_rollback = await self._execute_emergency_rollback()
@@ -289,7 +290,9 @@ class ProductionDeploymentExecutor:
             import sys
 
             sys.path.append("/home/crew/src")
-            from ultimate_discord_intelligence_bot.agent_training.performance_monitor import AgentPerformanceMonitor
+            from ultimate_discord_intelligence_bot.agent_training.performance_monitor import (
+                AgentPerformanceMonitor,
+            )
 
             AgentPerformanceMonitor(enable_ai_routing=True)
             logger.info("✅ AI-enhanced performance monitor initialized for canary")
@@ -319,7 +322,11 @@ class ProductionDeploymentExecutor:
             metrics = await self._collect_real_time_metrics()
 
             # Ensure key metrics are being collected
-            required_metrics = ["performance_score", "ai_routing_effectiveness", "error_rate"]
+            required_metrics = [
+                "performance_score",
+                "ai_routing_effectiveness",
+                "error_rate",
+            ]
             metrics_dict = self._metrics_to_dict(metrics)
 
             for metric in required_metrics:
@@ -374,7 +381,9 @@ class ProductionDeploymentExecutor:
             import sys
 
             sys.path.append("/home/crew/src")
-            from ultimate_discord_intelligence_bot.agent_training.performance_monitor import AgentPerformanceMonitor
+            from ultimate_discord_intelligence_bot.agent_training.performance_monitor import (
+                AgentPerformanceMonitor,
+            )
 
             # Create test monitor instance
             monitor = AgentPerformanceMonitor(enable_ai_routing=True)
@@ -387,8 +396,17 @@ class ProductionDeploymentExecutor:
                     routing_strategy="canary_validation",
                     selected_model="test/model",
                     routing_confidence=0.90,
-                    expected_performance={"latency_ms": 800, "cost": 0.003, "quality": 0.88},
-                    actual_performance={"latency_ms": 750, "cost": 0.0028, "quality": 0.90, "success": True},
+                    expected_performance={
+                        "latency_ms": 800,
+                        "cost": 0.003,
+                        "quality": 0.88,
+                    },
+                    actual_performance={
+                        "latency_ms": 750,
+                        "cost": 0.0028,
+                        "quality": 0.90,
+                        "success": True,
+                    },
                     optimization_target="production_validation",
                 )
 
@@ -570,7 +588,11 @@ class ProductionDeploymentExecutor:
 
     async def _check_traffic_distribution(self) -> dict[str, float]:
         """Check traffic distribution between versions."""
-        return {"canary_traffic_percentage": 5.0, "baseline_traffic_percentage": 95.0, "traffic_routing_healthy": True}
+        return {
+            "canary_traffic_percentage": 5.0,
+            "baseline_traffic_percentage": 95.0,
+            "traffic_routing_healthy": True,
+        }
 
     async def _execute_rollback(self) -> dict[str, Any]:
         """Execute planned rollback procedure."""
@@ -585,7 +607,11 @@ class ProductionDeploymentExecutor:
             "Validate system stability",
         ]
 
-        rollback_result = {"start_time": rollback_start, "steps_completed": [], "success": False}
+        rollback_result = {
+            "start_time": rollback_start,
+            "steps_completed": [],
+            "success": False,
+        }
 
         try:
             for step in rollback_steps:

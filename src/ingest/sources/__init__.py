@@ -3,11 +3,12 @@ from .twitch import TwitchConnector
 from .youtube import YouTubeConnector
 from .youtube_channel import YouTubeChannelConnector
 
+
 __all__ = [
-    "Watch",
     "DiscoveryItem",
     "SourceConnector",
-    "YouTubeConnector",
     "TwitchConnector",
+    "Watch",
     "YouTubeChannelConnector",
+    "YouTubeConnector",
 ]

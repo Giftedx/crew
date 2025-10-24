@@ -2,23 +2,23 @@
 
 from __future__ import annotations
 
-"""Configuration validation with comprehensive checks and error reporting."""
-
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from .config_schema import (
-    ArchiveConfig,
-    GlobalConfig,
-    GroundingConfig,
-    IngestConfig,
-    MonitoringConfig,
-    PolicyConfig,
-    PollerConfig,
-    RoutingConfig,
-    SecurityConfig,
-    TenantConfig,
-)
+
+if TYPE_CHECKING:
+    from .config_schema import (
+        ArchiveConfig,
+        GlobalConfig,
+        GroundingConfig,
+        IngestConfig,
+        MonitoringConfig,
+        PolicyConfig,
+        PollerConfig,
+        RoutingConfig,
+        SecurityConfig,
+        TenantConfig,
+    )
 
 
 @dataclass
@@ -112,20 +112,32 @@ class ConfigValidator:
         return ValidationResult(is_valid=len(errors) == 0, errors=errors, warnings=warnings)
 
     def _validate_service_metadata(
-        self, config: GlobalConfig, errors: list[ValidationError], warnings: list[ValidationError]
+        self,
+        config: GlobalConfig,
+        errors: list[ValidationError],
+        warnings: list[ValidationError],
     ) -> None:
         """Validate service metadata."""
         if not config.service_name:
             errors.append(ValidationError("service", "service_name", "Service name is required"))
 
         if config.environment not in self.valid_environments:
-            warnings.append(ValidationError("service", "environment", f"Unknown environment: {config.environment}"))
+            warnings.append(
+                ValidationError(
+                    "service",
+                    "environment",
+                    f"Unknown environment: {config.environment}",
+                )
+            )
 
         if not config.version:
             warnings.append(ValidationError("service", "version", "Version not specified"))
 
     def _validate_paths(
-        self, config: GlobalConfig, errors: list[ValidationError], warnings: list[ValidationError]
+        self,
+        config: GlobalConfig,
+        errors: list[ValidationError],
+        warnings: list[ValidationError],
     ) -> None:
         """Validate path configurations."""
         paths_to_check = [
@@ -150,7 +162,10 @@ class ConfigValidator:
                 errors.append(ValidationError("paths", path_name, f"Cannot create/access {path_name}: {e}"))
 
     def _validate_connections(
-        self, config: GlobalConfig, errors: list[ValidationError], warnings: list[ValidationError]
+        self,
+        config: GlobalConfig,
+        errors: list[ValidationError],
+        warnings: list[ValidationError],
     ) -> None:
         """Validate database and API connections."""
         # Check for required API keys
@@ -167,54 +182,111 @@ class ConfigValidator:
 
         # Redis connection (optional)
         if not config.redis_url:
-            warnings.append(ValidationError("connections", "redis_url", "Redis URL not configured (caching disabled)"))
+            warnings.append(
+                ValidationError(
+                    "connections",
+                    "redis_url",
+                    "Redis URL not configured (caching disabled)",
+                )
+            )
 
     def _validate_routing_config(
-        self, config: RoutingConfig, errors: list[ValidationError], warnings: list[ValidationError]
+        self,
+        config: RoutingConfig,
+        errors: list[ValidationError],
+        warnings: list[ValidationError],
     ) -> None:
         """Validate routing configuration."""
         if config.strategy not in self.valid_strategies:
-            errors.append(ValidationError("routing", "strategy", f"Invalid routing strategy: {config.strategy}"))
+            errors.append(
+                ValidationError(
+                    "routing",
+                    "strategy",
+                    f"Invalid routing strategy: {config.strategy}",
+                )
+            )
 
         if config.retry_attempts < 0:
             errors.append(ValidationError("routing", "retry_attempts", "Retry attempts must be non-negative"))
 
         if config.default_context_window <= 0:
-            errors.append(ValidationError("routing", "default_context_window", "Context window must be positive"))
+            errors.append(
+                ValidationError(
+                    "routing",
+                    "default_context_window",
+                    "Context window must be positive",
+                )
+            )
 
         if config.max_cost_per_request <= 0:
-            errors.append(ValidationError("routing", "max_cost_per_request", "Max cost per request must be positive"))
+            errors.append(
+                ValidationError(
+                    "routing",
+                    "max_cost_per_request",
+                    "Max cost per request must be positive",
+                )
+            )
 
         if not 0 <= config.cost_alert_threshold <= 1:
             errors.append(
-                ValidationError("routing", "cost_alert_threshold", "Cost alert threshold must be between 0 and 1")
+                ValidationError(
+                    "routing",
+                    "cost_alert_threshold",
+                    "Cost alert threshold must be between 0 and 1",
+                )
             )
 
     def _validate_security_config(
-        self, config: SecurityConfig, errors: list[ValidationError], warnings: list[ValidationError]
+        self,
+        config: SecurityConfig,
+        errors: list[ValidationError],
+        warnings: list[ValidationError],
     ) -> None:
         """Validate security configuration."""
         # Validate role permissions
         for role, permissions in config.role_permissions.items():
             if not isinstance(permissions, list):
-                errors.append(ValidationError("security", f"role_permissions.{role}", "Permissions must be a list"))
+                errors.append(
+                    ValidationError(
+                        "security",
+                        f"role_permissions.{role}",
+                        "Permissions must be a list",
+                    )
+                )
 
         # Validate rate limits
         if config.default_rate_limit <= 0:
-            errors.append(ValidationError("security", "default_rate_limit", "Default rate limit must be positive"))
+            errors.append(
+                ValidationError(
+                    "security",
+                    "default_rate_limit",
+                    "Default rate limit must be positive",
+                )
+            )
 
         for scope, limits in config.rate_limit_scopes.items():
             if "per_minute" in limits and limits["per_minute"] <= 0:
                 errors.append(
-                    ValidationError("security", f"rate_limit_scopes.{scope}.per_minute", "Rate limit must be positive")
+                    ValidationError(
+                        "security",
+                        f"rate_limit_scopes.{scope}.per_minute",
+                        "Rate limit must be positive",
+                    )
                 )
             if "burst" in limits and limits["burst"] <= 0:
                 errors.append(
-                    ValidationError("security", f"rate_limit_scopes.{scope}.burst", "Burst limit must be positive")
+                    ValidationError(
+                        "security",
+                        f"rate_limit_scopes.{scope}.burst",
+                        "Burst limit must be positive",
+                    )
                 )
 
     def _validate_monitoring_config(
-        self, config: MonitoringConfig, errors: list[ValidationError], warnings: list[ValidationError]
+        self,
+        config: MonitoringConfig,
+        errors: list[ValidationError],
+        warnings: list[ValidationError],
     ) -> None:
         """Validate monitoring configuration."""
         # Validate target values
@@ -237,47 +309,84 @@ class ConfigValidator:
                 errors.append(ValidationError("monitoring", field, f"{field} must be positive"))
 
     def _validate_ingest_config(
-        self, config: IngestConfig, errors: list[ValidationError], warnings: list[ValidationError]
+        self,
+        config: IngestConfig,
+        errors: list[ValidationError],
+        warnings: list[ValidationError],
     ) -> None:
         """Validate ingest configuration."""
         if config.max_chars_per_chunk <= 0:
-            errors.append(ValidationError("ingest", "max_chars_per_chunk", "Max chars per chunk must be positive"))
+            errors.append(
+                ValidationError(
+                    "ingest",
+                    "max_chars_per_chunk",
+                    "Max chars per chunk must be positive",
+                )
+            )
 
         if config.chunk_overlap < 0:
             errors.append(ValidationError("ingest", "chunk_overlap", "Chunk overlap must be non-negative"))
 
         if config.chunk_overlap >= config.max_chars_per_chunk:
             errors.append(
-                ValidationError("ingest", "chunk_overlap", "Chunk overlap must be less than max chars per chunk")
+                ValidationError(
+                    "ingest",
+                    "chunk_overlap",
+                    "Chunk overlap must be less than max chars per chunk",
+                )
             )
 
         if config.min_content_length <= 0:
-            errors.append(ValidationError("ingest", "min_content_length", "Min content length must be positive"))
+            errors.append(
+                ValidationError(
+                    "ingest",
+                    "min_content_length",
+                    "Min content length must be positive",
+                )
+            )
 
         if config.max_content_length <= config.min_content_length:
             errors.append(
                 ValidationError(
-                    "ingest", "max_content_length", "Max content length must be greater than min content length"
+                    "ingest",
+                    "max_content_length",
+                    "Max content length must be greater than min content length",
                 )
             )
 
         if config.max_concurrent_downloads <= 0:
             errors.append(
-                ValidationError("ingest", "max_concurrent_downloads", "Max concurrent downloads must be positive")
+                ValidationError(
+                    "ingest",
+                    "max_concurrent_downloads",
+                    "Max concurrent downloads must be positive",
+                )
             )
 
     def _validate_policy_config(
-        self, config: PolicyConfig, errors: list[ValidationError], warnings: list[ValidationError]
+        self,
+        config: PolicyConfig,
+        errors: list[ValidationError],
+        warnings: list[ValidationError],
     ) -> None:
         """Validate policy configuration."""
         if config.retention_days <= 0:
             errors.append(ValidationError("policy", "retention_days", "Retention days must be positive"))
 
         if config.consent_expiry_days <= 0:
-            errors.append(ValidationError("policy", "consent_expiry_days", "Consent expiry days must be positive"))
+            errors.append(
+                ValidationError(
+                    "policy",
+                    "consent_expiry_days",
+                    "Consent expiry days must be positive",
+                )
+            )
 
     def _validate_archive_config(
-        self, config: ArchiveConfig, errors: list[ValidationError], warnings: list[ValidationError]
+        self,
+        config: ArchiveConfig,
+        errors: list[ValidationError],
+        warnings: list[ValidationError],
     ) -> None:
         """Validate archive configuration."""
         if config.max_retries < 0:
@@ -287,41 +396,75 @@ class ConfigValidator:
         for content_type, visibility_routes in config.routes.items():
             if content_type not in self.valid_content_types:
                 warnings.append(
-                    ValidationError("archive", f"routes.{content_type}", f"Unknown content type: {content_type}")
+                    ValidationError(
+                        "archive",
+                        f"routes.{content_type}",
+                        f"Unknown content type: {content_type}",
+                    )
                 )
 
             for visibility, route_config in visibility_routes.items():
                 if visibility not in {"public", "private"}:
                     errors.append(
                         ValidationError(
-                            "archive", f"routes.{content_type}.{visibility}", f"Invalid visibility: {visibility}"
+                            "archive",
+                            f"routes.{content_type}.{visibility}",
+                            f"Invalid visibility: {visibility}",
                         )
                     )
 
                 if "channel_id" not in route_config:
                     errors.append(
-                        ValidationError("archive", f"routes.{content_type}.{visibility}", "Missing channel_id")
+                        ValidationError(
+                            "archive",
+                            f"routes.{content_type}.{visibility}",
+                            "Missing channel_id",
+                        )
                     )
 
     def _validate_poller_config(
-        self, config: PollerConfig, errors: list[ValidationError], warnings: list[ValidationError]
+        self,
+        config: PollerConfig,
+        errors: list[ValidationError],
+        warnings: list[ValidationError],
     ) -> None:
         """Validate poller configuration."""
         for platform, settings in config.intervals.items():
             if platform not in self.valid_platforms:
-                warnings.append(ValidationError("poller", f"intervals.{platform}", f"Unknown platform: {platform}"))
+                warnings.append(
+                    ValidationError(
+                        "poller",
+                        f"intervals.{platform}",
+                        f"Unknown platform: {platform}",
+                    )
+                )
 
             if "interval" in settings and settings["interval"] <= 0:
-                errors.append(ValidationError("poller", f"intervals.{platform}.interval", "Interval must be positive"))
+                errors.append(
+                    ValidationError(
+                        "poller",
+                        f"intervals.{platform}.interval",
+                        "Interval must be positive",
+                    )
+                )
 
         if config.batch_size <= 0:
             errors.append(ValidationError("poller", "batch_size", "Batch size must be positive"))
 
         if config.max_concurrent_polls <= 0:
-            errors.append(ValidationError("poller", "max_concurrent_polls", "Max concurrent polls must be positive"))
+            errors.append(
+                ValidationError(
+                    "poller",
+                    "max_concurrent_polls",
+                    "Max concurrent polls must be positive",
+                )
+            )
 
     def _validate_grounding_config(
-        self, config: GroundingConfig, errors: list[ValidationError], warnings: list[ValidationError]
+        self,
+        config: GroundingConfig,
+        errors: list[ValidationError],
+        warnings: list[ValidationError],
     ) -> None:
         """Validate grounding configuration."""
         if config.min_citations <= 0:
@@ -329,27 +472,43 @@ class ConfigValidator:
 
         if not 0 <= config.confidence_threshold <= 1:
             errors.append(
-                ValidationError("grounding", "confidence_threshold", "Confidence threshold must be between 0 and 1")
+                ValidationError(
+                    "grounding",
+                    "confidence_threshold",
+                    "Confidence threshold must be between 0 and 1",
+                )
             )
 
         if not 0 <= config.source_reliability_threshold <= 1:
             errors.append(
                 ValidationError(
-                    "grounding", "source_reliability_threshold", "Source reliability threshold must be between 0 and 1"
+                    "grounding",
+                    "source_reliability_threshold",
+                    "Source reliability threshold must be between 0 and 1",
                 )
             )
 
     def _validate_routing_overrides(
-        self, overrides: dict[str, Any], errors: list[ValidationError], warnings: list[ValidationError]
+        self,
+        overrides: dict[str, Any],
+        errors: list[ValidationError],
+        warnings: list[ValidationError],
     ) -> None:
         """Validate tenant routing overrides."""
         if "strategy" in overrides and overrides["strategy"] not in self.valid_strategies:
             errors.append(
-                ValidationError("tenant_routing", "strategy", f"Invalid routing strategy: {overrides['strategy']}")
+                ValidationError(
+                    "tenant_routing",
+                    "strategy",
+                    f"Invalid routing strategy: {overrides['strategy']}",
+                )
             )
 
     def _validate_budget_overrides(
-        self, overrides: dict[str, Any], errors: list[ValidationError], warnings: list[ValidationError]
+        self,
+        overrides: dict[str, Any],
+        errors: list[ValidationError],
+        warnings: list[ValidationError],
     ) -> None:
         """Validate tenant budget overrides."""
         if "monthly_total" in overrides and overrides["monthly_total"] <= 0:

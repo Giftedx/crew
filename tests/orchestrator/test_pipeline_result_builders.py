@@ -64,17 +64,28 @@ class TestBuildPipelineContentAnalysisResult:
 
     def test_keyword_extraction_from_keywords(self, minimal_inputs):
         """Test keyword extraction when keywords are provided."""
-        minimal_inputs["pipeline_analysis"]["keywords"] = ["python", "testing", "automation"]
+        minimal_inputs["pipeline_analysis"]["keywords"] = [
+            "python",
+            "testing",
+            "automation",
+        ]
 
         result = build_pipeline_content_analysis_result(**minimal_inputs)
 
         assert result.data["keywords"] == ["python", "testing", "automation"]
-        assert result.data["linguistic_patterns"]["keywords"] == ["python", "testing", "automation"]
+        assert result.data["linguistic_patterns"]["keywords"] == [
+            "python",
+            "testing",
+            "automation",
+        ]
 
     def test_keyword_extraction_from_key_phrases(self, minimal_inputs):
         """Test keyword extraction when only key_phrases are provided."""
         minimal_inputs["pipeline_analysis"].pop("keywords")
-        minimal_inputs["pipeline_analysis"]["key_phrases"] = ["data science", "machine learning"]
+        minimal_inputs["pipeline_analysis"]["key_phrases"] = [
+            "data science",
+            "machine learning",
+        ]
 
         result = build_pipeline_content_analysis_result(**minimal_inputs)
 
@@ -134,7 +145,11 @@ class TestBuildPipelineContentAnalysisResult:
         """Test thematic insights include perspectives."""
         minimal_inputs["pipeline_analysis"]["keywords"] = ["keyword1", "keyword2"]
         minimal_inputs["pipeline_perspective"] = {
-            "perspectives": ["perspective1", "perspective2", "keyword1"],  # keyword1 is duplicate
+            "perspectives": [
+                "perspective1",
+                "perspective2",
+                "keyword1",
+            ],  # keyword1 is duplicate
         }
 
         result = build_pipeline_content_analysis_result(**minimal_inputs)
@@ -304,17 +319,26 @@ class TestMergeThreatPayload:
 
         result = merge_threat_payload(base_threat_payload, verification_data, None)
 
-        assert result["deception_metrics"] == {"score": 0.8, "indicators": ["inconsistency"]}
+        assert result["deception_metrics"] == {
+            "score": 0.8,
+            "indicators": ["inconsistency"],
+        }
 
     def test_verification_credibility_assessment_merged(self, base_threat_payload):
         """Test credibility_assessment from verification_data is merged."""
         verification_data = {
-            "credibility_assessment": {"rating": "low", "reasons": ["unverified source"]},
+            "credibility_assessment": {
+                "rating": "low",
+                "reasons": ["unverified source"],
+            },
         }
 
         result = merge_threat_payload(base_threat_payload, verification_data, None)
 
-        assert result["credibility_assessment"] == {"rating": "low", "reasons": ["unverified source"]}
+        assert result["credibility_assessment"] == {
+            "rating": "low",
+            "reasons": ["unverified source"],
+        }
 
     def test_verification_deception_score_merged(self, base_threat_payload):
         """Test deception_score from verification_data is merged."""
@@ -739,7 +763,10 @@ class TestBuildKnowledgePayload:
             "fact_checks": {"claim1": "verified"},
             "logical_analysis": {"fallacy1": "ad hominem"},
         }
-        threat_data = {"deception_score": 0.75, "deception_metrics": {"confidence": 0.8}}
+        threat_data = {
+            "deception_score": 0.75,
+            "deception_metrics": {"confidence": 0.8},
+        }
         fact_data = {"perspective_synthesis": {"summary": "Perspective summary"}}
         behavioral_data = {"profile": "analytical"}
 
@@ -757,7 +784,10 @@ class TestBuildKnowledgePayload:
         assert result["title"] == "Test Video"
         assert result["platform"] == "youtube"
         assert result["analysis_summary"] == "Perspective summary"
-        assert result["content_metadata"] == {"summary": "Content summary", "duration": 300}
+        assert result["content_metadata"] == {
+            "summary": "Content summary",
+            "duration": 300,
+        }
         assert result["fact_check_results"] == {"claim1": "verified"}
         assert result["detected_fallacies"] == {"fallacy1": "ad hominem"}
         assert result["verification_results"] == verification_data
@@ -973,6 +1003,6 @@ class TestExtractKeyFindings:
         result = extract_key_findings(analysis_data, verification_data, threat_data)
 
         assert len(result) == 3
-        assert "Threat assessment: critical" == result[0]
+        assert result[0] == "Threat assessment: critical"
         assert "10 claims analyzed" in result[1]
         assert "1000 characters completed" in result[2]

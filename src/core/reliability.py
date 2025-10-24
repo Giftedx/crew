@@ -2,8 +2,11 @@ from __future__ import annotations
 
 import random
 import time
-from collections.abc import Callable
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 def retry(
@@ -21,7 +24,7 @@ def retry(
             if attempt == retries - 1:
                 raise
             # Non-crypto jitter; acceptable to use random here. If crypto needed, swap to secrets.
-            sleep = backoff * (factor**attempt) + random.random() * backoff  # noqa: S311
+            sleep = backoff * (factor**attempt) + random.random() * backoff
         time.sleep(sleep)
     return fn()  # pragma: no cover - logically unreachable
 

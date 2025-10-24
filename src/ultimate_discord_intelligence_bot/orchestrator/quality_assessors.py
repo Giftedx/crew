@@ -16,13 +16,9 @@ This file is maintained for backward compatibility.
 
 import logging
 
-logger = logging.getLogger(__name__)
-
-
 # ============================================================================
 # Backward Compatibility Imports
 # ============================================================================
-
 # Import functions from the new focused modules for backward compatibility
 from .accuracy_assessors import (
     assess_factual_accuracy,
@@ -51,26 +47,29 @@ from .quality_validators import (
     validate_stage_data,
 )
 
+
+logger = logging.getLogger(__name__)
+
 # Export all functions for backward compatibility
 __all__ = [
-    # Quality validators
-    "detect_placeholder_responses",
-    "validate_stage_data",
-    # Content quality assessors
-    "assess_content_coherence",
-    "assess_transcript_quality",
-    # Accuracy assessors
-    "clamp_score",
-    "assess_factual_accuracy",
-    "assess_source_credibility",
     # Bias manipulation assessors
     "assess_bias_levels",
+    # Content quality assessors
+    "assess_content_coherence",
     "assess_emotional_manipulation",
+    "assess_factual_accuracy",
     "assess_logical_consistency",
     # Quality calculators
     "assess_quality_trend",
+    "assess_source_credibility",
+    "assess_transcript_quality",
     "calculate_overall_confidence",
+    # Accuracy assessors
+    "clamp_score",
+    # Quality validators
+    "detect_placeholder_responses",
+    "generate_enhancement_suggestions",
     # Learning enhancement assessors
     "identify_learning_opportunities",
-    "generate_enhancement_suggestions",
+    "validate_stage_data",
 ]

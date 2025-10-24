@@ -46,9 +46,8 @@ class APIDocumentationGenerator:
 
     def _is_route_decorator(self, decorator: ast.AST) -> bool:
         """Check if decorator is a FastAPI route decorator."""
-        if isinstance(decorator, ast.Call):
-            if isinstance(decorator.func, ast.Attribute):
-                return decorator.func.attr in ["get", "post", "put", "delete", "patch"]
+        if isinstance(decorator, ast.Call) and isinstance(decorator.func, ast.Attribute):
+            return decorator.func.attr in ["get", "post", "put", "delete", "patch"]
         return False
 
     def _extract_endpoint_info(self, func_node: ast.FunctionDef, decorator: ast.Call) -> dict[str, Any] | None:
@@ -59,9 +58,8 @@ class APIDocumentationGenerator:
 
             # Get path from first argument
             path = ""
-            if decorator.args:
-                if isinstance(decorator.args[0], ast.Constant):
-                    path = decorator.args[0].value
+            if decorator.args and isinstance(decorator.args[0], ast.Constant):
+                path = decorator.args[0].value
 
             # Get docstring
             docstring = ast.get_docstring(func_node) or "No description available"
@@ -70,7 +68,12 @@ class APIDocumentationGenerator:
             params = []
             for arg in func_node.args.args:
                 if arg.arg != "self":  # Skip self parameter
-                    params.append({"name": arg.arg, "type": self._get_type_annotation(arg.annotation)})
+                    params.append(
+                        {
+                            "name": arg.arg,
+                            "type": self._get_type_annotation(arg.annotation),
+                        }
+                    )
 
             return {
                 "method": method,
@@ -208,7 +211,7 @@ class APIDocumentationGenerator:
             return [self._get_literal_value(item) for item in node.elts]
         elif isinstance(node, ast.Dict):
             result = {}
-            for key, value in zip(node.keys, node.values):
+            for key, value in zip(node.keys, node.values, strict=False):
                 key_val = self._get_literal_value(key)
                 val_val = self._get_literal_value(value)
                 if key_val is not None:

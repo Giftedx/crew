@@ -19,20 +19,21 @@ from .structured_llm.streaming import (
     StreamingStructuredRequest,
 )
 
+
 __all__ = [
+    "INSTRUCTOR_AVAILABLE",  # Expose INSTRUCTOR_AVAILABLE for testing
+    "CacheEntry",
+    "CacheKeyGenerator",
+    "EnhancedErrorRecovery",
+    "ProgressCallback",
+    "ProgressEvent",
+    "ProgressTracker",
+    "ResponseCache",
+    "StreamingResponse",
+    "StreamingStructuredRequest",
     "StructuredLLMService",
     "StructuredRequest",
     "create_structured_llm_service",
-    "ProgressEvent",
-    "ProgressCallback",
-    "ProgressTracker",
-    "StreamingResponse",
-    "StreamingStructuredRequest",
-    "CacheKeyGenerator",
-    "ResponseCache",
-    "CacheEntry",
-    "EnhancedErrorRecovery",
-    "INSTRUCTOR_AVAILABLE",  # Expose INSTRUCTOR_AVAILABLE for testing
 ]
 
 # Back-compat test knob: tests patch this symbol. Keep default False to favor fallback.

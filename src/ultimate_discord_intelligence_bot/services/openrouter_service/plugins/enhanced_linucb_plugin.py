@@ -8,11 +8,12 @@ Extracted from deprecated ai/advanced_contextual_bandits.py with improvements:
 
 import logging
 from datetime import datetime
-from typing import Any, Dict, List
+from typing import Any
 
 import numpy as np
 
 from .base_plugin import BanditPlugin
+
 
 logger = logging.getLogger(__name__)
 
@@ -37,20 +38,16 @@ class EnhancedLinUCBPlugin(BanditPlugin):
         self.context_dim = context_dim
 
         # Model parameters: A = inverse covariance, b = reward vector
-        self.A: Dict[str, np.ndarray] = {}
-        self.b: Dict[str, np.ndarray] = {}
+        self.A: dict[str, np.ndarray] = {}
+        self.b: dict[str, np.ndarray] = {}
 
         # Performance tracking
-        self.selection_counts: Dict[str, int] = {}
+        self.selection_counts: dict[str, int] = {}
         self.total_selections = 0
 
-        logger.info(
-            f"EnhancedLinUCBPlugin initialized: alpha={alpha}, context_dim={context_dim}"
-        )
+        logger.info(f"EnhancedLinUCBPlugin initialized: alpha={alpha}, context_dim={context_dim}")
 
-    def select_action(
-        self, context: Dict[str, Any], available_models: List[str]
-    ) -> str:
+    def select_action(self, context: dict[str, Any], available_models: list[str]) -> str:
         """Select model using UCB with confidence bounds.
 
         Args:
@@ -83,19 +80,14 @@ class EnhancedLinUCBPlugin(BanditPlugin):
         selected_model = max(ucb_scores, key=ucb_scores.get)
 
         # Track selection
-        self.selection_counts[selected_model] = (
-            self.selection_counts.get(selected_model, 0) + 1
-        )
+        self.selection_counts[selected_model] = self.selection_counts.get(selected_model, 0) + 1
         self.total_selections += 1
 
-        logger.debug(
-            f"Selected model: {selected_model}, "
-            f"UCB score: {ucb_scores[selected_model]:.4f}"
-        )
+        logger.debug(f"Selected model: {selected_model}, UCB score: {ucb_scores[selected_model]:.4f}")
 
         return selected_model
 
-    def update(self, context: Dict[str, Any], model: str, reward: float):
+    def update(self, context: dict[str, Any], model: str, reward: float):
         """Update model parameters with observed reward.
 
         Args:
@@ -114,7 +106,7 @@ class EnhancedLinUCBPlugin(BanditPlugin):
 
         logger.debug(f"Updated {model} with reward {reward:.4f}")
 
-    def _extract_context_features(self, context: Dict[str, Any]) -> np.ndarray:
+    def _extract_context_features(self, context: dict[str, Any]) -> np.ndarray:
         """Extract enhanced contextual features.
 
         Features include:
@@ -171,7 +163,7 @@ class EnhancedLinUCBPlugin(BanditPlugin):
         self.b[model] = np.zeros(self.context_dim)
         logger.debug(f"Initialized parameters for model: {model}")
 
-    def get_state(self) -> Dict[str, Any]:
+    def get_state(self) -> dict[str, Any]:
         """Get current bandit state for serialization.
 
         Returns:
@@ -186,7 +178,7 @@ class EnhancedLinUCBPlugin(BanditPlugin):
             "total_selections": self.total_selections,
         }
 
-    def load_state(self, state: Dict[str, Any]):
+    def load_state(self, state: dict[str, Any]):
         """Load bandit state from serialized form.
 
         Args:

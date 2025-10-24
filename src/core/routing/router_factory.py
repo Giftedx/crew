@@ -3,12 +3,16 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from ultimate_discord_intelligence_bot.tenancy.registry import TenantRegistry
-
-from ..learning_engine import LearningEngine
 from .base_router import BaseRouter
+
+
+if TYPE_CHECKING:
+    from ultimate_discord_intelligence_bot.tenancy.registry import TenantRegistry
+
+    from ..learning_engine import LearningEngine
+
 
 logger = logging.getLogger(__name__)
 
@@ -212,6 +216,6 @@ def reset_global_router() -> None:
 __all__ = [
     "RouterFactory",
     "get_global_router",
-    "set_global_router",
     "reset_global_router",
+    "set_global_router",
 ]

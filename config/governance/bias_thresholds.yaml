@@ -1,0 +1,372 @@
+# Bias Detection Thresholds Configuration
+# Thresholds and parameters for political bias detection
+
+bias_metrics:
+  political_leaning:
+    description: "Political leaning score (-1.0 left to +1.0 right)"
+    neutral_threshold: 0.2
+    moderate_threshold: 0.5
+    extreme_threshold: 0.8
+    action_thresholds:
+      - score: 0.2
+        action: "monitor"
+        description: "Slight leaning, monitor for consistency"
+      - score: 0.5
+        action: "flag"
+        description: "Moderate leaning, flag for review"
+      - score: 0.8
+        action: "block"
+        description: "Extreme leaning, block content"
+
+  partisan_intensity:
+    description: "Intensity of partisan language (0.0 balanced to 1.0 extreme)"
+    balanced_threshold: 0.3
+    moderate_threshold: 0.6
+    extreme_threshold: 0.8
+    action_thresholds:
+      - score: 0.3
+        action: "approve"
+        description: "Balanced language"
+      - score: 0.6
+        action: "flag"
+        description: "Moderate partisan intensity"
+      - score: 0.8
+        action: "block"
+        description: "Extreme partisan language"
+
+  viewpoint_diversity:
+    description: "Diversity of viewpoints (0.0 single to 1.0 diverse)"
+    single_view_threshold: 0.2
+    limited_diversity_threshold: 0.4
+    good_diversity_threshold: 0.7
+    action_thresholds:
+      - score: 0.2
+        action: "flag"
+        description: "Single viewpoint detected"
+      - score: 0.4
+        action: "warn"
+        description: "Limited diversity"
+      - score: 0.7
+        action: "approve"
+        description: "Good diversity"
+
+  evidence_balance:
+    description: "Balance of supporting vs opposing evidence (0.0 one-sided to 1.0 balanced)"
+    one_sided_threshold: 0.3
+    moderate_balance_threshold: 0.6
+    well_balanced_threshold: 0.8
+    action_thresholds:
+      - score: 0.3
+        action: "flag"
+        description: "One-sided evidence"
+      - score: 0.6
+        action: "warn"
+        description: "Moderate balance"
+      - score: 0.8
+        action: "approve"
+        description: "Well balanced"
+
+  framing_neutrality:
+    description: "Neutrality of framing (0.0 biased to 1.0 neutral)"
+    biased_threshold: 0.3
+    moderate_neutrality_threshold: 0.6
+    neutral_threshold: 0.8
+    action_thresholds:
+      - score: 0.3
+        action: "flag"
+        description: "Biased framing detected"
+      - score: 0.6
+        action: "warn"
+        description: "Moderate neutrality"
+      - score: 0.8
+        action: "approve"
+        description: "Neutral framing"
+
+  source_diversity:
+    description: "Diversity of sources (0.0 single to 1.0 diverse)"
+    single_source_threshold: 0.2
+    limited_sources_threshold: 0.4
+    diverse_sources_threshold: 0.7
+    action_thresholds:
+      - score: 0.2
+        action: "flag"
+        description: "Single source"
+      - score: 0.4
+        action: "warn"
+        description: "Limited sources"
+      - score: 0.7
+        action: "approve"
+        description: "Diverse sources"
+
+detection_patterns:
+  left_wing_indicators:
+    - "progressive"
+    - "liberal"
+    - "leftist"
+    - "socialist"
+    - "democrat"
+    - "woke"
+    - "social justice"
+    - "equity"
+    - "inclusion"
+    - "diversity"
+    - "climate change"
+    - "environmental"
+    - "sustainable"
+    - "renewable"
+    - "universal healthcare"
+    - "public education"
+    - "social safety net"
+
+  right_wing_indicators:
+    - "conservative"
+    - "republican"
+    - "right-wing"
+    - "traditional"
+    - "patriot"
+    - "freedom"
+    - "liberty"
+    - "individual"
+    - "merit"
+    - "hard work"
+    - "free market"
+    - "capitalism"
+    - "entrepreneurship"
+    - "self-reliance"
+    - "law and order"
+    - "national security"
+    - "family values"
+
+  partisan_intensity_indicators:
+    - "radical"
+    - "extreme"
+    - "fanatic"
+    - "zealot"
+    - "militant"
+    - "revolutionary"
+    - "counter-revolutionary"
+    - "subversive"
+    - "treasonous"
+    - "unpatriotic"
+    - "anti-American"
+
+  emotional_manipulation:
+    - "outrage"
+    - "shocking"
+    - "devastating"
+    - "terrifying"
+    - "appalling"
+    - "inspiring"
+    - "heartbreaking"
+    - "unbelievable"
+    - "incredible"
+    - "disgusting"
+    - "revolting"
+    - "nauseating"
+    - "sickening"
+
+  loaded_language:
+    - "radical"
+    - "extreme"
+    - "dangerous"
+    - "threat"
+    - "crisis"
+    - "heroic"
+    - "brave"
+    - "courageous"
+    - "noble"
+    - "righteous"
+    - "shocking"
+    - "devastating"
+    - "terrifying"
+    - "appalling"
+
+  strawman_indicators:
+    - "they believe"
+    - "some people think"
+    - "the argument goes"
+    - "it's claimed that"
+    - "supposedly"
+    - "allegedly"
+
+  false_balance_indicators:
+    - "both sides"
+    - "two sides"
+    - "different perspectives"
+    - "some say"
+    - "others argue"
+    - "on one hand"
+    - "on the other hand"
+
+  evidence_indicators:
+    supporting:
+      - "proves"
+      - "demonstrates"
+      - "shows"
+      - "confirms"
+      - "validates"
+      - "supports"
+      - "evidence"
+      - "data"
+      - "research"
+      - "studies"
+    
+    opposing:
+      - "refutes"
+      - "contradicts"
+      - "disproves"
+      - "challenges"
+      - "questions"
+      - "undermines"
+      - "disputes"
+      - "rejects"
+      - "denies"
+      - "opposes"
+
+  source_indicators:
+    - "according to"
+    - "studies show"
+    - "research indicates"
+    - "experts say"
+    - "data suggests"
+    - "findings show"
+    - "reports indicate"
+    - "analysis reveals"
+    - "investigation shows"
+
+  perspective_indicators:
+    - "some believe"
+    - "others argue"
+    - "proponents say"
+    - "critics claim"
+    - "supporters argue"
+    - "opponents say"
+    - "advocates believe"
+    - "on one hand"
+    - "on the other hand"
+    - "different perspectives"
+
+  balanced_indicators:
+    - "both sides"
+    - "different views"
+    - "various opinions"
+    - "multiple perspectives"
+    - "diverse viewpoints"
+
+  temporal_indicators:
+    - "historically"
+    - "traditionally"
+    - "recently"
+    - "currently"
+    - "in the past"
+    - "nowadays"
+    - "modern"
+    - "contemporary"
+
+  demographic_indicators:
+    - "women"
+    - "men"
+    - "youth"
+    - "elderly"
+    - "minority"
+    - "majority"
+    - "urban"
+    - "rural"
+    - "educated"
+    - "working class"
+
+  fear_mongering:
+    - "dangerous"
+    - "threat"
+    - "crisis"
+    - "alarming"
+    - "disturbing"
+    - "concerning"
+    - "worrisome"
+    - "frightening"
+    - "terrifying"
+
+  us_vs_them:
+    - "we"
+    - "us"
+    - "our"
+    - "they"
+    - "them"
+    - "their"
+    - "our side"
+    - "their side"
+    - "our people"
+    - "those people"
+
+  victim_hero_villain:
+    - "victim"
+    - "hero"
+    - "villain"
+    - "innocent"
+    - "guilty"
+    - "good"
+    - "evil"
+    - "righteous"
+    - "wicked"
+    - "noble"
+    - "corrupt"
+
+  cherry_picking:
+    - "studies show"
+    - "research indicates"
+    - "data proves"
+    - "evidence suggests"
+    - "findings demonstrate"
+
+  neutral_language:
+    - "according to"
+    - "research shows"
+    - "data indicates"
+    - "studies suggest"
+    - "evidence points to"
+    - "findings reveal"
+
+  source_types:
+    - "study"
+    - "research"
+    - "survey"
+    - "poll"
+    - "report"
+    - "analysis"
+    - "investigation"
+    - "interview"
+    - "testimony"
+
+enforcement:
+  real_time_detection: true
+  batch_analysis: true
+  human_review_threshold: 0.7
+  escalation_required: true
+  audit_trail: true
+  transparency_reports: true
+
+mitigation_strategies:
+  high_bias:
+    - "Include more diverse perspectives"
+    - "Present balanced evidence"
+    - "Use neutral language"
+    - "Add multiple sources"
+    - "Acknowledge limitations"
+  
+  moderate_bias:
+    - "Consider alternative viewpoints"
+    - "Balance supporting and opposing evidence"
+    - "Reduce emotional language"
+    - "Include additional sources"
+  
+  low_bias:
+    - "Minor adjustments recommended"
+    - "Consider adding context"
+    - "Review for completeness"
+
+reporting:
+  bias_reports: true
+  trend_analysis: true
+  comparative_analysis: true
+  transparency_reports: true
+  user_notifications: true

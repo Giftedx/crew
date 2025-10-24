@@ -17,8 +17,13 @@ from pathlib import Path
 from typing import Any
 
 from core.cache.enhanced_semantic_cache import create_enhanced_semantic_cache
-from core.cache.semantic_cache import CacheStats, SemanticCacheInterface, create_semantic_cache
+from core.cache.semantic_cache import (
+    CacheStats,
+    SemanticCacheInterface,
+    create_semantic_cache,
+)
 from core.secure_config import get_config
+
 
 SanitiseNamespaceFn = Callable[[str | None], str]
 SemanticCacheFactory = Callable[..., SemanticCacheInterface]
@@ -107,20 +112,20 @@ class TenantSemanticCache(SemanticCacheInterface):
             return cache
 
     # ------------------------------------------------------------------
-    def get(self, prompt: str, model: str, **kwargs: Any) -> dict[str, Any] | None:  # noqa: D401
+    def get(self, prompt: str, model: str, **kwargs: Any) -> dict[str, Any] | None:
         cache = self._get_cache(kwargs.get("namespace"))
         cache_kwargs = dict(kwargs)
         cache_kwargs.setdefault("namespace", kwargs.get("namespace"))
         return cache.get(prompt, model, **cache_kwargs)
 
-    def set(self, prompt: str, model: str, response: dict[str, Any], **kwargs: Any) -> None:  # noqa: D401
+    def set(self, prompt: str, model: str, response: dict[str, Any], **kwargs: Any) -> None:
         cache = self._get_cache(kwargs.get("namespace"))
         cache_kwargs = dict(kwargs)
         cache_kwargs.setdefault("namespace", kwargs.get("namespace"))
         cache.set(prompt, model, response, **cache_kwargs)
 
     # ------------------------------------------------------------------
-    def get_stats(self) -> CacheStats:  # noqa: D401
+    def get_stats(self) -> CacheStats:
         aggregate = CacheStats()
         weighted_similarity = 0.0
         with self._lock:

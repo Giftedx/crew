@@ -75,7 +75,9 @@ async def basic_caching_example():
 
     # Create identical requests
     request1 = StructuredRequest(
-        prompt="Generate a profile for a software engineer", response_model=UserProfile, task_type="general"
+        prompt="Generate a profile for a software engineer",
+        response_model=UserProfile,
+        task_type="general",
     )
 
     request2 = StructuredRequest(
@@ -130,7 +132,9 @@ async def ttl_based_caching_example():
 
     print("TTL values for different task types:")
     for task_type, expected_ttl in tasks_and_ttls:
-        request = StructuredRequest(prompt="test", response_model=UserProfile, task_type=task_type)
+        request = StructuredRequest(
+            prompt="test", response_model=UserProfile, task_type=task_type
+        )
         ttl = cache.get_ttl_for_request(request)
         print(f"  {task_type}: {ttl} seconds ({ttl / 3600:.1f} hours)")
 
@@ -182,7 +186,9 @@ async def streaming_caching_example():
 
     # Create streaming request
     request = StreamingStructuredRequest(
-        prompt="Recommend a product for music enthusiasts", response_model=ProductRecommendation, task_type="general"
+        prompt="Recommend a product for music enthusiasts",
+        response_model=ProductRecommendation,
+        task_type="general",
     )
 
     # Track progress events
@@ -239,7 +245,11 @@ async def cache_key_generation_example():
 
     # Create various requests
     requests = [
-        StructuredRequest(prompt="Generate a user profile", response_model=UserProfile, task_type="general"),
+        StructuredRequest(
+            prompt="Generate a user profile",
+            response_model=UserProfile,
+            task_type="general",
+        ),
         StructuredRequest(
             prompt="Generate a user profile",  # Same prompt
             response_model=UserProfile,

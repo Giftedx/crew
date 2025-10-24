@@ -17,6 +17,7 @@ from typing import Any
 
 import numpy as np
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -53,7 +54,10 @@ class CompactionConfig:
     # Strategy selection
     primary_strategy: CompactionStrategy = CompactionStrategy.HYBRID
     fallback_strategies: list[CompactionStrategy] = field(
-        default_factory=lambda: [CompactionStrategy.FREQUENCY_BASED, CompactionStrategy.RECENCY_BASED]
+        default_factory=lambda: [
+            CompactionStrategy.FREQUENCY_BASED,
+            CompactionStrategy.RECENCY_BASED,
+        ]
     )
 
     # Compaction parameters
@@ -189,7 +193,11 @@ class AdvancedMemoryCompactor:
         logger.info(f"Advanced memory compactor initialized with config: {self.config}")
 
     async def add_entry(
-        self, entry_id: str, embedding: np.ndarray, content: Any, metadata: dict[str, Any] | None = None
+        self,
+        entry_id: str,
+        embedding: np.ndarray,
+        content: Any,
+        metadata: dict[str, Any] | None = None,
     ) -> None:
         """Add entry to memory with compaction tracking."""
         if metadata is None:
@@ -431,7 +439,12 @@ class AdvancedMemoryCompactor:
         await asyncio.gather(*tasks)
 
     async def _compute_similarity_pair(
-        self, entry1: MemoryEntry, entry2: MemoryEntry, i: int, j: int, similarity_matrix: np.ndarray
+        self,
+        entry1: MemoryEntry,
+        entry2: MemoryEntry,
+        i: int,
+        j: int,
+        similarity_matrix: np.ndarray,
     ) -> None:
         """Compute similarity for a pair of entries."""
         similarity = self._calculate_similarity(entry1, entry2)
@@ -453,10 +466,7 @@ class AdvancedMemoryCompactor:
         norm1 = np.linalg.norm(emb1)
         norm2 = np.linalg.norm(emb2)
 
-        if norm1 == 0 or norm2 == 0:
-            similarity = 0.0
-        else:
-            similarity = np.dot(emb1, emb2) / (norm1 * norm2)
+        similarity = 0.0 if norm1 == 0 or norm2 == 0 else np.dot(emb1, emb2) / (norm1 * norm2)
 
         # Cache result
         self._similarity_cache[cache_key] = similarity
@@ -499,7 +509,11 @@ class AdvancedMemoryCompactor:
         return strategy
 
     def _update_metrics(
-        self, strategy: CompactionStrategy, trigger: CompactionTrigger, compaction_time: float, result: dict[str, Any]
+        self,
+        strategy: CompactionStrategy,
+        trigger: CompactionTrigger,
+        compaction_time: float,
+        result: dict[str, Any],
     ) -> None:
         """Update compaction metrics."""
         self.metrics.total_compactions += 1

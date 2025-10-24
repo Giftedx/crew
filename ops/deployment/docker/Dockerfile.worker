@@ -9,14 +9,46 @@ RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements and install Python dependencies
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
 # Copy application code
 COPY src/ ./src/
 COPY config/ ./config/
 COPY scripts/ ./scripts/
+
+# Install common dependencies from pyproject.toml
+RUN pip install --no-cache-dir \
+    'openai>=1.0.0' \
+    'anthropic>=0.18.0' \
+    'qdrant-client>=1.7.3' \
+    'redis[hiredis]>=5.0.0' \
+    'psycopg2-binary>=2.9.0' \
+    'python-dotenv>=1.0.0' \
+    'pydantic>=2.7.0' \
+    'pydantic-settings>=2.2.1' \
+    'httpx>=0.27.0' \
+    'aiohttp>=3.9.0' \
+    'requests>=2.31.0' \
+    'PyYAML>=6.0' \
+    'fastapi>=0.110' \
+    'python-multipart>=0.0.20' \
+    'discord.py>=2.3.2' \
+    'uvicorn[standard]>=0.29.0' \
+    'yt-dlp>=2025.7.7' \
+    'faster-whisper>=1.0.0' \
+    'crewai[tools]>=0.150.0' \
+    'litellm>=1.40.0' \
+    'langsmith>=0.1.0' \
+    'structlog>=23.1.0' \
+    'nltk>=3.8.1' \
+    'instructor>=1.6.0' \
+    'agentops>=0.3.0' \
+    'google-api-python-client>=2.130.0' \
+    'google-auth-oauthlib>=1.2.0' \
+    'numpy>=1.24.0' \
+    'scipy>=1.10.0' \
+    'opentelemetry-sdk>=1.25.0' \
+    'opentelemetry-exporter-otlp>=1.25.0' \
+    'curl-cffi>=0.5.0' \
+    'prometheus-client>=0.20.0'
 
 # Create non-root user
 RUN useradd --create-home --shell /bin/bash app \
@@ -32,4 +64,6 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD python -c "import sys; sys.exit(0)"
 
 # Run the worker process
-CMD ["python", "-m", "ultimate_discord_intelligence_bot.main", "worker"]
+# Run the worker process (background tasks)
+# For now, this is a placeholder - adjust based on your worker implementation
+CMD [\"python\", \"-c\", \"import time; print('Worker ready'); [time.sleep(60) for _ in iter(int, 1)]\"]

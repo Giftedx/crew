@@ -28,6 +28,7 @@ from typing import TYPE_CHECKING, Any, Literal
 from memory.enhanced_vector_store import EnhancedVectorStore, SearchResult
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
+
 if TYPE_CHECKING:  # pragma: no cover
     from qdrant_client.http import models as _qmodels
 else:
@@ -45,7 +46,13 @@ EMBEDDING_DIMENSIONS = {
 
 # Semantic cache hit threshold
 CACHE_SIMILARITY_THRESHOLD = 0.95
-CACHE_TTL_SECONDS = 3600  # 1 hour
+# Resolve cache TTL from unified configuration (analysis domain) with safe fallback
+try:
+    from core.cache.unified_config import get_unified_cache_config
+
+    CACHE_TTL_SECONDS = int(get_unified_cache_config().get_ttl_for_domain("analysis"))
+except Exception:
+    CACHE_TTL_SECONDS = 3600  # 1 hour fallback
 
 
 @dataclass
@@ -227,7 +234,7 @@ class CreatorIntelligenceCollectionManager:
             initialized = []
             failed = []
 
-            for collection_type, config in COLLECTION_CONFIGS.items():
+            for _collection_type, config in COLLECTION_CONFIGS.items():
                 namespace = self._get_namespace(tenant, workspace, config.name)
 
                 # Check if already initialized
@@ -267,7 +274,7 @@ class CreatorIntelligenceCollectionManager:
 
         except Exception as e:
             logger.error(f"Collection initialization failed: {e}")
-            return StepResult.fail(f"Collection initialization failed: {str(e)}")
+            return StepResult.fail(f"Collection initialization failed: {e!s}")
 
     def query_with_cache(
         self,
@@ -345,7 +352,7 @@ class CreatorIntelligenceCollectionManager:
 
         except Exception as e:
             logger.error(f"Query failed for {collection_type}: {e}")
-            return StepResult.fail(f"Query failed: {str(e)}", status="retryable")
+            return StepResult.fail(f"Query failed: {e!s}", status="retryable")
 
     def _check_semantic_cache(self, query_embedding: list[float], namespace: str, limit: int) -> CachedQuery | None:
         """Check if a semantically similar query exists in cache.
@@ -383,7 +390,11 @@ class CreatorIntelligenceCollectionManager:
         return None
 
     def _cache_query_results(
-        self, query_embedding: list[float], namespace: str, results: list[SearchResult], limit: int
+        self,
+        query_embedding: list[float],
+        namespace: str,
+        results: list[SearchResult],
+        limit: int,
     ) -> None:
         """Cache query results for future semantic lookups.
 
@@ -443,13 +454,16 @@ class CreatorIntelligenceCollectionManager:
             stats = self.vector_store.get_collection_stats(namespace)
 
             if not stats:
-                return StepResult.fail(f"Collection {namespace} not found or not initialized", status="bad_request")
+                return StepResult.fail(
+                    f"Collection {namespace} not found or not initialized",
+                    status="bad_request",
+                )
 
             return StepResult.ok(data=stats)
 
         except Exception as e:
             logger.error(f"Failed to get collection stats: {e}")
-            return StepResult.fail(f"Failed to get stats: {str(e)}", status="retryable")
+            return StepResult.fail(f"Failed to get stats: {e!s}", status="retryable")
 
     def clear_semantic_cache(self) -> StepResult:
         """Clear all cached queries.
@@ -468,7 +482,7 @@ class CreatorIntelligenceCollectionManager:
 
         except Exception as e:
             logger.error(f"Failed to clear cache: {e}")
-            return StepResult.fail(f"Failed to clear cache: {str(e)}")
+            return StepResult.fail(f"Failed to clear cache: {e!s}")
 
     def _get_namespace(self, tenant: str, workspace: str, collection_name: str) -> str:
         """Build tenant-aware namespace for collection.
@@ -515,7 +529,7 @@ class CreatorIntelligenceCollectionManager:
         if len(vec1) != len(vec2):
             return 0.0
 
-        dot_product = sum(a * b for a, b in zip(vec1, vec2))
+        dot_product = sum(a * b for a, b in zip(vec1, vec2, strict=False))
         norm1 = math.sqrt(sum(a * a for a in vec1))
         norm2 = math.sqrt(sum(b * b for b in vec2))
 
@@ -525,7 +539,9 @@ class CreatorIntelligenceCollectionManager:
         return float(dot_product / (norm1 * norm2))
 
 
-def get_collection_manager(enable_semantic_cache: bool = True) -> CreatorIntelligenceCollectionManager:
+def get_collection_manager(
+    enable_semantic_cache: bool = True,
+) -> CreatorIntelligenceCollectionManager:
     """Factory function to create collection manager.
 
     Args:

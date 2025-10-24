@@ -8,6 +8,7 @@ from typing import Any
 
 from . import APIRouter, Request
 
+
 # Prevent pytest from attempting to collect this module/class as tests
 __test__ = False  # type: ignore[var-annotated]
 
@@ -52,7 +53,12 @@ class FastAPITestClient:
         try:
             import os as _os
 
-            if _os.getenv("ENABLE_RATE_LIMITING", "0").lower() in ("1", "true", "yes", "on"):
+            if _os.getenv("ENABLE_RATE_LIMITING", "0").lower() in (
+                "1",
+                "true",
+                "yes",
+                "on",
+            ):
                 burst = int(_os.getenv("RATE_LIMIT_BURST", _os.getenv("RATE_LIMIT_RPS", "10")))
                 self._rl_remaining = burst
                 self._rl_burst = burst
@@ -65,7 +71,7 @@ class FastAPITestClient:
         method: str,
         path: str,
         *,
-        json: Any | None = None,  # noqa: A002 - keep param name for test parity
+        json: Any | None = None,
         headers: dict[str, str] | None = None,
         multipart: dict[str, Any] | None = None,
     ) -> _Resp:
@@ -109,7 +115,7 @@ class FastAPITestClient:
                     continue
                 candidate: dict[str, str] = {}
                 matched = True
-                for pp, pv in zip(pattern_parts, path_parts):
+                for pp, pv in zip(pattern_parts, path_parts, strict=False):
                     if pp.startswith("{") and pp.endswith("}"):
                         name = pp[1:-1]
                         candidate[name] = pv
@@ -153,14 +159,20 @@ class FastAPITestClient:
                     content = str(val).encode()
                 norm_files[field] = (filename, content)
             form_files = norm_files
-            form_data = {k: v for k, v in raw_data.items()}
+            form_data = dict(raw_data.items())
             # Replace multipart files with pure bytes tuples for builder
             build_files = {k: (v[0], v[1]) for k, v in norm_files.items()}
             body, headers = self._build_multipart({"files": build_files, "data": raw_data}, headers)
         else:
             body = b"" if json is None else (json if isinstance(json, bytes | bytearray) else json_to_bytes(json))
 
-        req = Request(body=body, headers=headers or {}, method=method.upper(), path=raw_path, query=raw_query)
+        req = Request(
+            body=body,
+            headers=headers or {},
+            method=method.upper(),
+            path=raw_path,
+            query=raw_query,
+        )
 
         # Shim-level rate limiting (only if middleware chain absent and enabled)
         if getattr(self, "_rl_remaining", None) is not None:
@@ -266,7 +278,9 @@ class FastAPITestClient:
 
         # Support pydantic BaseModel (used in cache endpoints) by converting to dict
         try:  # pragma: no cover - lightweight defensive conversion
-            from pydantic import BaseModel as _BM  # local import avoids hard dependency for non-pydantic tests
+            from pydantic import (
+                BaseModel as _BM,
+            )  # local import avoids hard dependency for non-pydantic tests
 
             if isinstance(result, _BM):
                 return _Resp(200, json_obj=result.model_dump())
@@ -278,7 +292,13 @@ class FastAPITestClient:
             return _Resp(200, json_obj=result)
         # Allow simple objects with 'url'/'filename' attributes (rehydrate) to map to dict
         if hasattr(result, "url") and hasattr(result, "filename"):
-            return _Resp(200, json_obj={"url": getattr(result, "url"), "filename": getattr(result, "filename")})
+            return _Resp(
+                200,
+                json_obj={
+                    "url": result.url,
+                    "filename": result.filename,
+                },
+            )
         status = getattr(result, "status_code", 200)
         # Starlette Response uses `.body`; shim Response exposes `.content`
         content = getattr(result, "body", getattr(result, "content", b""))
@@ -288,7 +308,7 @@ class FastAPITestClient:
         self,
         path: str,
         *,
-        json: Any | None = None,  # noqa: A002
+        json: Any | None = None,
         headers: dict[str, str] | None = None,
         files: dict[str, tuple[str, bytes]] | None = None,
         data: dict[str, Any] | None = None,
@@ -337,7 +357,10 @@ class FastAPITestClient:
             parts.append(b"\r\n")
         parts.append(f"--{boundary}--\r\n".encode())
         body = b"".join(parts)
-        new_headers = {**(headers or {}), "Content-Type": f"multipart/form-data; boundary={boundary}"}
+        new_headers = {
+            **(headers or {}),
+            "Content-Type": f"multipart/form-data; boundary={boundary}",
+        }
         return body, new_headers
 
 

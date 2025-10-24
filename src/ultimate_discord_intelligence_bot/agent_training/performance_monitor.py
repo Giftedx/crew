@@ -17,24 +17,25 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from core.time import default_utc_now, ensure_utc
-from ultimate_discord_intelligence_bot.agent_training.perf import helpers as _perf
-from ultimate_discord_intelligence_bot.agent_training.perf.models import (
+from core.time import default_utc_now, ensure_utc  # type: ignore[import-not-found]
+from ultimate_discord_intelligence_bot.agent_training.perf import helpers as _perf  # type: ignore[import-not-found]
+from ultimate_discord_intelligence_bot.agent_training.perf.models import (  # type: ignore[import-not-found]
     AgentPerformanceReport as _AgentPerformanceReport,
 )
-from ultimate_discord_intelligence_bot.agent_training.perf.models import (
+from ultimate_discord_intelligence_bot.agent_training.perf.models import (  # type: ignore[import-not-found]
     AIRoutingMetrics as _AIRoutingMetrics,
 )
-from ultimate_discord_intelligence_bot.agent_training.perf.models import (
+from ultimate_discord_intelligence_bot.agent_training.perf.models import (  # type: ignore[import-not-found]
     PerformanceMetric as _PerformanceMetric,
 )
-from ultimate_discord_intelligence_bot.agent_training.perf.models import (
+from ultimate_discord_intelligence_bot.agent_training.perf.models import (  # type: ignore[import-not-found]
     ToolUsagePattern as _ToolUsagePattern,
 )
 
+
 if TYPE_CHECKING:  # type-only imports to avoid runtime dependencies
-    from ai.adaptive_ai_router import AdaptiveAIRouter
-    from ai.performance_router import PerformanceBasedRouter
+    from ai.adaptive_ai_router import AdaptiveAIRouter  # type: ignore[import-not-found]
+    from ai.performance_router import PerformanceBasedRouter  # type: ignore[import-not-found]
 
 # AI Routing Integration
 try:
@@ -212,10 +213,16 @@ class AgentPerformanceMonitor:
         quality_score = actual_performance.get("quality", 0.0)
         response_time = actual_performance.get("latency_ms", 0.0) / 1000.0
 
-        tools_used = [f"ai_router_{routing_strategy}", f"model_{selected_model.split('/')[-1]}"]
+        tools_used = [
+            f"ai_router_{routing_strategy}",
+            f"model_{selected_model.split('/')[-1]}",
+        ]
         tool_sequence = [
             {"tool": f"ai_router_{routing_strategy}", "action": "model_selection"},
-            {"tool": f"model_{selected_model.split('/')[-1]}", "action": "generate_response"},
+            {
+                "tool": f"model_{selected_model.split('/')[-1]}",
+                "action": "generate_response",
+            },
         ]
 
         self.record_agent_interaction(
@@ -287,7 +294,11 @@ class AgentPerformanceMonitor:
         strategy_counts: dict[str, int] = defaultdict(int)
         total_confidence: float = 0.0
         model_usage: dict[str, int] = defaultdict(int)
-        optimization_scores: dict[str, list[float]] = {"cost": [], "latency": [], "quality": []}
+        optimization_scores: dict[str, list[float]] = {
+            "cost": [],
+            "latency": [],
+            "quality": [],
+        }
         accuracy_samples: list[float] = []
 
         for interaction in recent_interactions:
@@ -490,17 +501,17 @@ class AgentPerformanceMonitor:
             sequence_bonus = 0.0
             if tool_sequence and len(tool_sequence) > 1:
                 # Simple heuristic: penalize if too many tools without improvement
-                if len(tool_sequence) > len(tools_used) * 1.5:
-                    sequence_bonus = -0.1
-                else:
-                    sequence_bonus = 0.1
+                sequence_bonus = -0.1 if len(tool_sequence) > len(tools_used) * 1.5 else 0.1
 
             efficiency_scores.append(min(1.0, base_efficiency + sequence_bonus))
 
         return sum(efficiency_scores) / len(efficiency_scores)
 
     def generate_recommendations(
-        self, agent_name: str, metrics: list[PerformanceMetric], tool_patterns: list[ToolUsagePattern]
+        self,
+        agent_name: str,
+        metrics: list[PerformanceMetric],
+        tool_patterns: list[ToolUsagePattern],
     ) -> list[str]:
         """Generate actionable recommendations based on performance analysis."""
         recommendations = []
@@ -548,7 +559,10 @@ class AgentPerformanceMonitor:
         return recommendations
 
     def generate_training_suggestions(
-        self, agent_name: str, metrics: list[PerformanceMetric], tool_patterns: list[ToolUsagePattern]
+        self,
+        agent_name: str,
+        metrics: list[PerformanceMetric],
+        tool_patterns: list[ToolUsagePattern],
     ) -> list[str]:
         """Generate specific training suggestions based on performance gaps."""
         suggestions = []
@@ -587,7 +601,10 @@ class AgentPerformanceMonitor:
             for metric in metrics:
                 if metric.target_value > 0:
                     score = min(1.0, metric.actual_value / metric.target_value)
-                    if metric.metric_name in ["response_time", "error_rate"]:  # Lower is better
+                    if metric.metric_name in [
+                        "response_time",
+                        "error_rate",
+                    ]:  # Lower is better
                         score = max(0.0, 2.0 - score)
                     metric_scores.append(score)
             overall_score = sum(metric_scores) / len(metric_scores) if metric_scores else 0.0
@@ -828,7 +845,12 @@ def main() -> dict[str, Any]:
 
         # Simulate AI routing decisions
         ai_scenarios = [
-            ("analysis", "adaptive_learning", "anthropic/claude-3-5-sonnet-20241022", 0.92),
+            (
+                "analysis",
+                "adaptive_learning",
+                "anthropic/claude-3-5-sonnet-20241022",
+                0.92,
+            ),
             ("general", "performance_based", "openai/gpt-4o", 0.85),
             ("fast", "speed_optimized", "google/gemini-1.5-flash", 0.78),
         ]

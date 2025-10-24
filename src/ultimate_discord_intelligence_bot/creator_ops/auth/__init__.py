@@ -7,16 +7,17 @@ for all supported platforms.
 
 from __future__ import annotations
 
+
 __all__ = [
-    "OAuthManager",
-    "YouTubeOAuthManager",
-    "TwitchOAuthManager",
-    "TikTokOAuthManager",
-    "InstagramOAuthManager",
-    "XOAuthManager",
-    "TokenStorage",
-    "ScopeValidator",
     "AuditLogger",
+    "InstagramOAuthManager",
+    "OAuthManager",
+    "ScopeValidator",
+    "TikTokOAuthManager",
+    "TokenStorage",
+    "TwitchOAuthManager",
+    "XOAuthManager",
+    "YouTubeOAuthManager",
 ]
 
 from .audit import AuditLogger

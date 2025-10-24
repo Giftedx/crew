@@ -7,11 +7,11 @@ import logging
 import os
 import pathlib
 import random
-from collections.abc import Iterable
 from importlib import import_module
 from typing import TYPE_CHECKING, Any, cast
 
 from core.settings import get_settings
+
 from obs import metrics
 from security.rate_limit import TokenBucket
 from ultimate_discord_intelligence_bot.tenancy import current_tenant, with_tenant
@@ -25,20 +25,27 @@ from ..tools.discord_post_tool import DiscordPostTool
 from ..tools.graph_memory_tool import GraphMemoryTool
 from ..tools.hipporag_continual_memory_tool import HippoRagContinualMemoryTool
 
+
 try:  # pragma: no cover - optional dependency fallback
     from ..tools.drive_upload_tool import DriveUploadTool
 except Exception:  # pragma: no cover - degrade gracefully
-    from ..tools.drive_upload_tool_bypass import DriveUploadTool  # type: ignore[assignment]
+    from ..tools.drive_upload_tool_bypass import (
+        DriveUploadTool,  # type: ignore[assignment]
+    )
 
 from ..services.prompt_engine import PromptEngine
 from ..tools.logical_fallacy_tool import LogicalFallacyTool
 from ..tools.memory_storage_tool import MemoryStorageTool
 from ..tools.perspective_synthesizer_tool import PerspectiveSynthesizerTool
 from ..tools.text_analysis_tool import TextAnalysisTool
+from .log_pattern_middleware import LogPatternMiddleware
 from .middleware import PipelineStepMiddleware, TracingStepMiddleware
 from .tracing import TRACING_AVAILABLE
 
+
 if TYPE_CHECKING:  # pragma: no cover - typing only
+    from collections.abc import Iterable
+
     from ..tools.multi_platform_download_tool import MultiPlatformDownloadTool
 
 
@@ -79,11 +86,14 @@ class PipelineBase:
         self._orchestrator = self.__class__.__name__
         self._pipeline_pkg = import_module("ultimate_discord_intelligence_bot.pipeline")
         self._step_middlewares: list[PipelineStepMiddleware] = list(step_middlewares or [])
+        self._step_observability: dict[str, dict[str, Any]] = {}
         if TRACING_AVAILABLE and not any(isinstance(m, TracingStepMiddleware) for m in self._step_middlewares):
             self._step_middlewares.append(TracingStepMiddleware())
+        if not any(isinstance(m, LogPatternMiddleware) for m in self._step_middlewares):
+            self._step_middlewares.append(LogPatternMiddleware())
 
         if downloader is None:
-            from ..tools.multi_platform_download_tool import (  # noqa: PLC0415 - lazy import to avoid heavy deps at module import
+            from ..tools.multi_platform_download_tool import (
                 MultiPlatformDownloadTool,
             )
 
@@ -108,13 +118,16 @@ class PipelineBase:
                     def run(self, text: str) -> StepResult:
                         return StepResult.skip(
                             reason="text_analysis_unavailable",
-                            details={"tokens": len(text.split()), "note": "NLTK missing"},
+                            details={
+                                "tokens": len(text.split()),
+                                "note": "NLTK missing",
+                            },
                         )
 
                     def _run(self, text: str) -> StepResult:
                         return self.run(text)
 
-                self.analyzer = cast(TextAnalysisTool, _DegradedAnalyzer())
+                self.analyzer = cast("TextAnalysisTool", _DegradedAnalyzer())
         else:
             self.analyzer = analyzer
 
@@ -227,7 +240,12 @@ class PipelineBase:
         # Disable transcript cache by default to avoid nondeterministic test interference
         # and ensure transcriber runs are executed each time unless explicitly enabled.
         try:
-            enable_cache_env = os.getenv("ENABLE_TRANSCRIPT_CACHE", "0").lower() in {"1", "true", "yes", "on"}
+            enable_cache_env = os.getenv("ENABLE_TRANSCRIPT_CACHE", "0").lower() in {
+                "1",
+                "true",
+                "yes",
+                "on",
+            }
         except Exception:
             enable_cache_env = False
         self.transcript_cache = transcript_cache or TranscriptCache(enabled=enable_cache_env)
@@ -312,7 +330,10 @@ class PipelineBase:
             )
             return transcript, meta
 
-        ratio = max(0.0, float(getattr(self, "_transcript_compression_target_ratio", 0.0) or 0.0))
+        ratio = max(
+            0.0,
+            float(getattr(self, "_transcript_compression_target_ratio", 0.0) or 0.0),
+        )
         max_tokens = getattr(self, "_transcript_compression_max_tokens", None)
 
         try:
@@ -533,7 +554,10 @@ class PipelineBase:
 
         try:
             registry: TenantRegistry | None = None
-            for candidate in (getattr(self, "analyzer", None), getattr(self, "perspective", None)):
+            for candidate in (
+                getattr(self, "analyzer", None),
+                getattr(self, "perspective", None),
+            ):
                 router = getattr(candidate, "router", None)
                 if router is not None:
                     maybe_registry = getattr(router, "tenant_registry", None)

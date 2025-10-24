@@ -1,0 +1,104 @@
+# CI Caching Configuration
+# This file defines optimized caching strategies for the CI pipeline
+
+cache_strategies:
+  # Multi-layer pip caching
+  pip_cache:
+    paths:
+      - ~/.cache/pip
+      - ~/.cache/pip-tools
+      - ~/.cache/uv
+      - ~/.cache/pip-http
+    key_template: "${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('**/pyproject.toml', '**/requirements.lock') }}"
+    restore_keys:
+      - "${{ runner.os }}-pip-${{ matrix.python-version }}-"
+      - "${{ runner.os }}-pip-"
+
+  # Python build artifacts caching
+  build_cache:
+    paths:
+      - ~/.cache/pip-http
+      - ~/.cache/pip-tools
+    key_template: "${{ runner.os }}-build-${{ matrix.python-version }}-${{ hashFiles('**/pyproject.toml') }}"
+    restore_keys:
+      - "${{ runner.os }}-build-${{ matrix.python-version }}-"
+      - "${{ runner.os }}-build-"
+
+  # Docker layer caching
+  docker_cache:
+    cache_from:
+      - type: gha
+      - type: registry
+        ref: ultimate-discord-intelligence-bot:cache
+    cache_to:
+      - type: gha
+        mode: max
+      - type: registry
+        ref: ultimate-discord-intelligence-bot:cache
+        mode: max
+
+  # Node.js caching (if needed)
+  node_cache:
+    paths:
+      - ~/.npm
+      - node_modules
+    key_template: "${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}"
+    restore_keys:
+      - "${{ runner.os }}-node-"
+
+# Cache optimization settings
+optimization:
+  # Use uv for faster dependency resolution
+  use_uv: true
+  
+  # Parallel dependency installation
+  parallel_installs: true
+  
+  # Cache warming strategies
+  cache_warming:
+    - pip install --no-deps --find-links ~/.cache/pip
+    - uv pip install --no-deps --find-links ~/.cache/uv
+  
+  # Cache eviction policies
+  eviction:
+    max_age_days: 7
+    max_size_gb: 5
+  
+  # Cache hit rate monitoring
+  monitoring:
+    track_hit_rate: true
+    alert_threshold: 0.6  # Alert if hit rate drops below 60%
+
+# Performance targets
+performance_targets:
+  fast_ci: 3  # minutes
+  full_ci: 15  # minutes
+  cache_hit_rate: 0.85  # 85%
+  parallel_utilization: 0.7  # 70%
+
+# Conditional execution rules
+conditional_execution:
+  performance_tests:
+    trigger_paths:
+      - src/
+      - tests/performance/
+    trigger_events:
+      - push
+      - pull_request
+  
+  compatibility_tests:
+    trigger_branches:
+      - main
+      - develop
+    trigger_events:
+      - push
+      - pull_request
+  
+  docker_build:
+    trigger_paths:
+      - Dockerfile
+      - docker/
+      - .github/workflows/
+    trigger_events:
+      - push
+      - pull_request

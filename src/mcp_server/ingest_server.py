@@ -16,8 +16,12 @@ Notes:
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
 
 try:
     from fastmcp import FastMCP  # type: ignore
@@ -139,7 +143,9 @@ def _summarize_subtitles_impl(url: str, lang: str | None = None, max_chars: int 
         return {"error": f"unsupported_provider:{host}"}
 
     try:
-        from ultimate_discord_intelligence_bot.tools.yt_dlp_download_tool import youtube_fetch_metadata  # noqa: PLC0415
+        from ultimate_discord_intelligence_bot.tools.yt_dlp_download_tool import (
+            youtube_fetch_metadata,
+        )
     except Exception as exc:
         return {"error": f"metadata_helpers_unavailable:{exc}"}
 
@@ -186,7 +192,11 @@ def _list_channel_videos_impl(channel_url: str, limit: int = 50) -> dict:
     try:
         videos = youtube_list_channel_videos(channel_url)
         lim = max(1, min(int(limit), 250))
-        return {"provider": "youtube", "videos": videos[:lim], "count": min(len(videos), lim)}
+        return {
+            "provider": "youtube",
+            "videos": videos[:lim],
+            "count": min(len(videos), lim),
+        }
     except Exception as exc:
         return {"error": str(exc)}
 
@@ -201,7 +211,10 @@ def _fetch_transcript_local_impl(path: str, model: str = "tiny", max_chars: int 
         import os
 
         if isinstance(path, str) and path.startswith("http"):
-            return {"error": "remote_not_supported", "detail": "Provide a local file path."}
+            return {
+                "error": "remote_not_supported",
+                "detail": "Provide a local file path.",
+            }
         if not os.path.exists(path):
             return {"error": "file_not_found"}
         from analysis.transcribe import run_whisper  # type: ignore
@@ -223,7 +236,10 @@ def _fetch_transcript_local_impl(path: str, model: str = "tiny", max_chars: int 
                 continue
         full_text = "\n".join(texts)
         # Cap segments to avoid payload blowups
-        return {"text": full_text[: max(0, int(max_chars))], "segments": seg_items[:500]}
+        return {
+            "text": full_text[: max(0, int(max_chars))],
+            "segments": seg_items[:500],
+        }
     except Exception as exc:
         return {"error": str(exc)}
 
@@ -276,14 +292,14 @@ def providers() -> dict:
 
 
 __all__ = [
-    "ingest_mcp",
     "extract_metadata",
     "extract_metadata_tool",
-    "list_channel_videos",
-    "list_channel_videos_tool",
     "fetch_transcript_local",
     "fetch_transcript_local_tool",
+    "ingest_mcp",
+    "list_channel_videos",
+    "list_channel_videos_tool",
+    "providers",
     "summarize_subtitles",
     "summarize_subtitles_tool",
-    "providers",
 ]

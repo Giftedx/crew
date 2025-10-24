@@ -1,0 +1,177 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "Ultimate Discord Intelligence Bot - Alerts & Thresholds",
+    "description": "Alerts and threshold monitoring dashboard",
+    "tags": [
+      "discord-bot",
+      "alerts",
+      "thresholds"
+    ],
+    "timezone": "browser",
+    "refresh": "10s",
+    "time": {
+      "from": "now-24h",
+      "to": "now"
+    },
+    "panels": [
+      {
+        "id": 16,
+        "title": "Alert Status",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "ALERTS{alertstate=\"firing\"}",
+            "legendFormat": "Firing Alerts",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 0
+        },
+        "options": {
+          "colorMode": "value",
+          "graphMode": "area",
+          "justifyMode": "auto",
+          "orientation": "auto",
+          "reduceOptions": {
+            "values": false,
+            "calcs": [
+              "lastNotNull"
+            ],
+            "fields": ""
+          },
+          "textMode": "auto",
+          "unit": "short"
+        },
+        "fieldConfig": {
+          "defaults": {},
+          "overrides": []
+        }
+      },
+      {
+        "id": 17,
+        "title": "Threshold Monitoring",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "discord_bot_memory_usage_percent",
+            "legendFormat": "Memory Usage %",
+            "refId": "A"
+          },
+          {
+            "expr": "80",
+            "legendFormat": "Memory Threshold",
+            "refId": "B"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 0
+        },
+        "options": {
+          "legend": {
+            "displayMode": "table",
+            "placement": "bottom"
+          },
+          "tooltip": {
+            "mode": "single"
+          },
+          "unit": "percent"
+        },
+        "fieldConfig": {
+          "defaults": {},
+          "overrides": []
+        }
+      },
+      {
+        "id": 18,
+        "title": "Performance Regression",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "discord_bot_performance_baseline_duration_seconds",
+            "legendFormat": "Baseline",
+            "refId": "A"
+          },
+          {
+            "expr": "discord_bot_workflow_duration_seconds",
+            "legendFormat": "Current",
+            "refId": "B"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 8
+        },
+        "options": {
+          "legend": {
+            "displayMode": "table",
+            "placement": "bottom"
+          },
+          "tooltip": {
+            "mode": "single"
+          },
+          "unit": "s"
+        },
+        "fieldConfig": {
+          "defaults": {},
+          "overrides": []
+        }
+      },
+      {
+        "id": 19,
+        "title": "Resource Exhaustion",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "discord_bot_memory_usage_percent",
+            "legendFormat": "Memory %",
+            "refId": "A"
+          },
+          {
+            "expr": "discord_bot_cpu_usage_percent",
+            "legendFormat": "CPU %",
+            "refId": "B"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 8
+        },
+        "options": {
+          "legend": {
+            "displayMode": "table",
+            "placement": "bottom"
+          },
+          "tooltip": {
+            "mode": "single"
+          },
+          "unit": "percent"
+        },
+        "fieldConfig": {
+          "defaults": {},
+          "overrides": []
+        }
+      }
+    ],
+    "templating": {
+      "list": []
+    },
+    "annotations": {
+      "list": []
+    },
+    "schemaVersion": 30,
+    "version": 1,
+    "links": []
+  }
+}

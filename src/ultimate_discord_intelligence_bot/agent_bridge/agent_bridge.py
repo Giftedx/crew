@@ -9,9 +9,9 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from ultimate_discord_intelligence_bot.step_result import StepResult
+from ultimate_discord_intelligence_bot.step_result import StepResult  # type: ignore[import-not-found]
 
 from .collective_intelligence import (
     CollectiveIntelligenceConfig,
@@ -31,6 +31,7 @@ from .knowledge_bridge import (
     InsightType,
     KnowledgeBridgeConfig,
 )
+
 
 logger = logging.getLogger(__name__)
 
@@ -69,7 +70,7 @@ class AgentBridgeConfig:
 class AgentBridge:
     """Unified interface for cross-agent knowledge sharing and learning"""
 
-    def __init__(self, config: Optional[AgentBridgeConfig] = None):
+    def __init__(self, config: AgentBridgeConfig | None = None):
         self.config = config or AgentBridgeConfig()
         self._initialized = False
 
@@ -111,9 +112,7 @@ class AgentBridge:
                     enable_consensus_tracking=self.config.enable_consensus_tracking,
                     enable_expert_weighting=self.config.enable_expert_weighting,
                 )
-                self._collective_intelligence = CollectiveIntelligenceService(
-                    collective_config
-                )
+                self._collective_intelligence = CollectiveIntelligenceService(collective_config)
 
             self._initialized = True
             logger.info("Agent Bridge initialized successfully")
@@ -129,20 +128,18 @@ class AgentBridge:
         insight_type: InsightType,
         title: str,
         description: str,
-        context: Dict[str, Any],
-        tags: List[str],
+        context: dict[str, Any],
+        tags: list[str],
         confidence_score: float,
         priority: InsightPriority = InsightPriority.NORMAL,
-        expires_at: Optional[datetime] = None,
-        tenant_id: Optional[str] = None,
-        workspace_id: Optional[str] = None,
+        expires_at: datetime | None = None,
+        tenant_id: str | None = None,
+        workspace_id: str | None = None,
     ) -> StepResult:
         """Share an insight with other agents"""
         try:
             if not self._initialized or not self._knowledge_bridge:
-                return StepResult.fail(
-                    "Agent Bridge not initialized or knowledge sharing disabled"
-                )
+                return StepResult.fail("Agent Bridge not initialized or knowledge sharing disabled")
 
             return await self._knowledge_bridge.share_insight(
                 agent_id=agent_id,
@@ -161,27 +158,25 @@ class AgentBridge:
 
         except Exception as e:
             logger.error(f"Error sharing insight through agent bridge: {e}")
-            return StepResult.fail(f"Insight sharing failed: {str(e)}")
+            return StepResult.fail(f"Insight sharing failed: {e!s}")
 
     async def request_insights(
         self,
         requesting_agent_id: str,
         agent_type: str,
         query: str,
-        context: Dict[str, Any],
-        insight_types: List[InsightType],
+        context: dict[str, Any],
+        insight_types: list[InsightType],
         max_results: int = 10,
         min_confidence: float = 0.5,
-        tags: Optional[List[str]] = None,
-        tenant_id: Optional[str] = None,
-        workspace_id: Optional[str] = None,
+        tags: list[str] | None = None,
+        tenant_id: str | None = None,
+        workspace_id: str | None = None,
     ) -> StepResult:
         """Request relevant insights from other agents"""
         try:
             if not self._initialized or not self._knowledge_bridge:
-                return StepResult.fail(
-                    "Agent Bridge not initialized or knowledge sharing disabled"
-                )
+                return StepResult.fail("Agent Bridge not initialized or knowledge sharing disabled")
 
             return await self._knowledge_bridge.request_insights(
                 requesting_agent_id=requesting_agent_id,
@@ -198,26 +193,24 @@ class AgentBridge:
 
         except Exception as e:
             logger.error(f"Error requesting insights through agent bridge: {e}")
-            return StepResult.fail(f"Insight request failed: {str(e)}")
+            return StepResult.fail(f"Insight request failed: {e!s}")
 
     async def learn_from_experience(
         self,
         agent_id: str,
         agent_type: str,
         experience_type: LearningType,
-        context: Dict[str, Any],
-        outcome: Dict[str, Any],
+        context: dict[str, Any],
+        outcome: dict[str, Any],
         success: bool,
-        metadata: Optional[Dict[str, Any]] = None,
-        tenant_id: Optional[str] = None,
-        workspace_id: Optional[str] = None,
+        metadata: dict[str, Any] | None = None,
+        tenant_id: str | None = None,
+        workspace_id: str | None = None,
     ) -> StepResult:
         """Learn from an agent's experience"""
         try:
             if not self._initialized or not self._learning_service:
-                return StepResult.fail(
-                    "Agent Bridge not initialized or learning disabled"
-                )
+                return StepResult.fail("Agent Bridge not initialized or learning disabled")
 
             result = await self._learning_service.learn_from_experience(
                 agent_id=agent_id,
@@ -239,25 +232,23 @@ class AgentBridge:
 
         except Exception as e:
             logger.error(f"Error learning from experience through agent bridge: {e}")
-            return StepResult.fail(f"Experience learning failed: {str(e)}")
+            return StepResult.fail(f"Experience learning failed: {e!s}")
 
     async def get_learning_patterns(
         self,
         requesting_agent_id: str,
         agent_type: str,
-        context: Dict[str, Any],
-        learning_types: List[LearningType],
+        context: dict[str, Any],
+        learning_types: list[LearningType],
         min_confidence: float = 0.6,
         max_patterns: int = 20,
-        tenant_id: Optional[str] = None,
-        workspace_id: Optional[str] = None,
+        tenant_id: str | None = None,
+        workspace_id: str | None = None,
     ) -> StepResult:
         """Get relevant learning patterns for an agent"""
         try:
             if not self._initialized or not self._learning_service:
-                return StepResult.fail(
-                    "Agent Bridge not initialized or learning disabled"
-                )
+                return StepResult.fail("Agent Bridge not initialized or learning disabled")
 
             return await self._learning_service.get_learning_patterns(
                 requesting_agent_id=requesting_agent_id,
@@ -272,77 +263,65 @@ class AgentBridge:
 
         except Exception as e:
             logger.error(f"Error getting learning patterns through agent bridge: {e}")
-            return StepResult.fail(f"Learning pattern retrieval failed: {str(e)}")
+            return StepResult.fail(f"Learning pattern retrieval failed: {e!s}")
 
     async def synthesize_collective_intelligence(
         self,
         requesting_agent_id: str,
         synthesis_type: SynthesisType,
         target_intelligence_level: IntelligenceLevel,
-        contributing_agents: List[str],
+        contributing_agents: list[str],
         query: str,
-        context: Dict[str, Any],
+        context: dict[str, Any],
         min_contributions: int = 3,
         consensus_threshold: float = 0.7,
-        tenant_id: Optional[str] = None,
-        workspace_id: Optional[str] = None,
+        tenant_id: str | None = None,
+        workspace_id: str | None = None,
     ) -> StepResult:
         """Synthesize collective intelligence from multiple agents"""
         try:
             if not self._initialized or not self._collective_intelligence:
-                return StepResult.fail(
-                    "Agent Bridge not initialized or synthesis disabled"
-                )
+                return StepResult.fail("Agent Bridge not initialized or synthesis disabled")
 
-            result = (
-                await self._collective_intelligence.synthesize_collective_intelligence(
-                    requesting_agent_id=requesting_agent_id,
-                    synthesis_type=synthesis_type,
-                    target_intelligence_level=target_intelligence_level,
-                    contributing_agents=contributing_agents,
-                    query=query,
-                    context=context,
-                    min_contributions=min_contributions,
-                    consensus_threshold=consensus_threshold,
-                    tenant_id=tenant_id,
-                    workspace_id=workspace_id,
-                )
+            result = await self._collective_intelligence.synthesize_collective_intelligence(
+                requesting_agent_id=requesting_agent_id,
+                synthesis_type=synthesis_type,
+                target_intelligence_level=target_intelligence_level,
+                contributing_agents=contributing_agents,
+                query=query,
+                context=context,
+                min_contributions=min_contributions,
+                consensus_threshold=consensus_threshold,
+                tenant_id=tenant_id,
+                workspace_id=workspace_id,
             )
 
             # Auto-share insights if enabled and synthesis was successful
             if result.success and self.config.auto_share_insights:
-                await self._auto_share_synthesis_insights(
-                    result.data, requesting_agent_id
-                )
+                await self._auto_share_synthesis_insights(result.data, requesting_agent_id)
 
             return result
 
         except Exception as e:
-            logger.error(
-                f"Error synthesizing collective intelligence through agent bridge: {e}"
-            )
-            return StepResult.fail(
-                f"Collective intelligence synthesis failed: {str(e)}"
-            )
+            logger.error(f"Error synthesizing collective intelligence through agent bridge: {e}")
+            return StepResult.fail(f"Collective intelligence synthesis failed: {e!s}")
 
     async def contribute_to_synthesis(
         self,
         agent_id: str,
         agent_type: str,
         contribution_type: str,
-        data: Dict[str, Any],
+        data: dict[str, Any],
         confidence: float,
         expertise_level: float,
-        metadata: Optional[Dict[str, Any]] = None,
-        tenant_id: Optional[str] = None,
-        workspace_id: Optional[str] = None,
+        metadata: dict[str, Any] | None = None,
+        tenant_id: str | None = None,
+        workspace_id: str | None = None,
     ) -> StepResult:
         """Contribute data to collective intelligence synthesis"""
         try:
             if not self._initialized or not self._collective_intelligence:
-                return StepResult.fail(
-                    "Agent Bridge not initialized or synthesis disabled"
-                )
+                return StepResult.fail("Agent Bridge not initialized or synthesis disabled")
 
             return await self._collective_intelligence.contribute_to_synthesis(
                 agent_id=agent_id,
@@ -358,16 +337,16 @@ class AgentBridge:
 
         except Exception as e:
             logger.error(f"Error contributing to synthesis through agent bridge: {e}")
-            return StepResult.fail(f"Contribution failed: {str(e)}")
+            return StepResult.fail(f"Contribution failed: {e!s}")
 
     async def validate_insight(
         self,
         insight_id: str,
         validating_agent_id: str,
         is_successful: bool,
-        feedback: Optional[str] = None,
-        tenant_id: Optional[str] = None,
-        workspace_id: Optional[str] = None,
+        feedback: str | None = None,
+        tenant_id: str | None = None,
+        workspace_id: str | None = None,
     ) -> StepResult:
         """Validate an insight based on experience"""
         try:
@@ -403,7 +382,7 @@ class AgentBridge:
 
         except Exception as e:
             logger.error(f"Error validating insight through agent bridge: {e}")
-            return StepResult.fail(f"Insight validation failed: {str(e)}")
+            return StepResult.fail(f"Insight validation failed: {e!s}")
 
     async def get_agent_knowledge_summary(
         self,
@@ -412,8 +391,8 @@ class AgentBridge:
         include_insights: bool = True,
         include_learning: bool = True,
         include_synthesis: bool = True,
-        tenant_id: Optional[str] = None,
-        workspace_id: Optional[str] = None,
+        tenant_id: str | None = None,
+        workspace_id: str | None = None,
     ) -> StepResult:
         """Get comprehensive knowledge summary for an agent"""
         try:
@@ -428,19 +407,13 @@ class AgentBridge:
 
             # Get insights summary
             if include_insights and self._knowledge_bridge:
-                insights_result = await self._knowledge_bridge.get_agent_insights(
-                    agent_id=agent_id, limit=100
-                )
+                insights_result = await self._knowledge_bridge.get_agent_insights(agent_id=agent_id, limit=100)
                 if insights_result.success:
                     summary["insights"] = insights_result.data
 
             # Get learning summary
             if include_learning and self._learning_service:
-                learning_result = (
-                    await self._learning_service.get_agent_learning_summary(
-                        agent_id=agent_id, days=days
-                    )
-                )
+                learning_result = await self._learning_service.get_agent_learning_summary(agent_id=agent_id, days=days)
                 if learning_result.success:
                     summary["learning"] = learning_result.data
 
@@ -453,11 +426,9 @@ class AgentBridge:
 
         except Exception as e:
             logger.error(f"Error getting agent knowledge summary: {e}")
-            return StepResult.fail(f"Knowledge summary retrieval failed: {str(e)}")
+            return StepResult.fail(f"Knowledge summary retrieval failed: {e!s}")
 
-    async def get_bridge_statistics(
-        self, tenant_id: Optional[str] = None, workspace_id: Optional[str] = None
-    ) -> StepResult:
+    async def get_bridge_statistics(self, tenant_id: str | None = None, workspace_id: str | None = None) -> StepResult:
         """Get comprehensive statistics from all bridge services"""
         try:
             if not self._initialized:
@@ -470,15 +441,11 @@ class AgentBridge:
 
             # Get knowledge bridge statistics
             if self._knowledge_bridge:
-                statistics["knowledge_bridge"] = (
-                    self._knowledge_bridge.get_bridge_status()
-                )
+                statistics["knowledge_bridge"] = self._knowledge_bridge.get_bridge_status()
 
             # Get learning service statistics
             if self._learning_service:
-                statistics["learning_service"] = (
-                    self._learning_service.get_learning_status()
-                )
+                statistics["learning_service"] = self._learning_service.get_learning_status()
 
             # Get collective intelligence statistics
             if self._collective_intelligence:
@@ -510,7 +477,7 @@ class AgentBridge:
 
         except Exception as e:
             logger.error(f"Error getting bridge statistics: {e}")
-            return StepResult.fail(f"Statistics retrieval failed: {str(e)}")
+            return StepResult.fail(f"Statistics retrieval failed: {e!s}")
 
     async def _auto_share_synthesis_insights(
         self, synthesis_response: SynthesisResponse, requesting_agent_id: str
@@ -536,9 +503,7 @@ class AgentBridge:
                     collective_insight.synthesis_type.value,
                 ],
                 confidence_score=collective_insight.confidence,
-                priority=InsightPriority.HIGH
-                if collective_insight.consensus_score >= 0.8
-                else InsightPriority.NORMAL,
+                priority=InsightPriority.HIGH if collective_insight.consensus_score >= 0.8 else InsightPriority.NORMAL,
                 metadata={
                     "synthesis_type": collective_insight.synthesis_type.value,
                     "intelligence_level": collective_insight.intelligence_level.value,
@@ -547,21 +512,18 @@ class AgentBridge:
                 },
             )
 
-            logger.info(
-                f"Auto-shared synthesis insight: {collective_insight.insight_id}"
-            )
+            logger.info(f"Auto-shared synthesis insight: {collective_insight.insight_id}")
 
         except Exception as e:
             logger.error(f"Error auto-sharing synthesis insights: {e}")
 
-    def get_bridge_status(self) -> Dict[str, Any]:
+    def get_bridge_status(self) -> dict[str, Any]:
         """Get agent bridge status"""
         return {
             "initialized": self._initialized,
             "knowledge_bridge_available": self._knowledge_bridge is not None,
             "learning_service_available": self._learning_service is not None,
-            "collective_intelligence_available": self._collective_intelligence
-            is not None,
+            "collective_intelligence_available": self._collective_intelligence is not None,
             "config": {
                 "enable_knowledge_sharing": self.config.enable_knowledge_sharing,
                 "enable_cross_agent_learning": self.config.enable_cross_agent_learning,

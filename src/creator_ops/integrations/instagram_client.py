@@ -9,6 +9,7 @@ import httpx
 
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -23,7 +24,7 @@ class InstagramClient:
             "Content-Type": "application/json",
         }
 
-    def _make_request(self, endpoint: str, params: dict[str, Any] = None) -> StepResult:
+    def _make_request(self, endpoint: str, params: dict[str, Any] | None = None) -> StepResult:
         """Make authenticated request to Instagram Graph API."""
         try:
             params = params or {}
@@ -45,15 +46,22 @@ class InstagramClient:
 
         except httpx.HTTPError as e:
             logger.error(f"Instagram API request failed: {e}")
-            return StepResult.fail(f"Instagram API request failed: {str(e)}")
+            return StepResult.fail(f"Instagram API request failed: {e!s}")
         except Exception as e:
             logger.error(f"Unexpected error in Instagram API request: {e}")
-            return StepResult.fail(f"Unexpected error: {str(e)}")
+            return StepResult.fail(f"Unexpected error: {e!s}")
 
     def get_user_info(self, user_id: str, fields: list[str] | None = None) -> StepResult:
         """Get user information."""
         if not fields:
-            fields = ["id", "username", "account_type", "media_count", "followers_count", "follows_count"]
+            fields = [
+                "id",
+                "username",
+                "account_type",
+                "media_count",
+                "followers_count",
+                "follows_count",
+            ]
 
         params = {
             "fields": ",".join(fields),
@@ -108,7 +116,12 @@ class InstagramClient:
         return self._make_request(f"{user_id}/stories")
 
     def get_insights(
-        self, user_id: str, metric: str, period: str = "day", since: str | None = None, until: str | None = None
+        self,
+        user_id: str,
+        metric: str,
+        period: str = "day",
+        since: str | None = None,
+        until: str | None = None,
     ) -> StepResult:
         """Get user insights (requires Instagram Business Account)."""
         params = {
@@ -204,13 +217,15 @@ class InstagramClient:
     def get_available_insights_metrics(self, user_id: str) -> StepResult:
         """Get available insights metrics for a user."""
         return self._make_request(
-            f"{user_id}/insights", params={"metric": "impressions,reach,follower_count,website_clicks"}
+            f"{user_id}/insights",
+            params={"metric": "impressions,reach,follower_count,website_clicks"},
         )
 
     def get_available_media_insights_metrics(self, media_id: str) -> StepResult:
         """Get available insights metrics for media."""
         return self._make_request(
-            f"{media_id}/insights", params={"metric": "impressions,reach,likes,comments,shares,saved"}
+            f"{media_id}/insights",
+            params={"metric": "impressions,reach,likes,comments,shares,saved"},
         )
 
     def extract_user_id_from_url(self, url: str) -> str | None:
@@ -263,4 +278,4 @@ class InstagramClient:
 
         except Exception as e:
             logger.error(f"Instagram client health check failed: {e}")
-            return StepResult.fail(f"Health check failed: {str(e)}")
+            return StepResult.fail(f"Health check failed: {e!s}")

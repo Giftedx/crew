@@ -23,6 +23,7 @@ from ai.advanced_contextual_bandits import (
     get_orchestrator,
 )
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -39,12 +40,29 @@ class AdvancedBanditsAIRouter:
         self.orchestrator = get_orchestrator()
 
         # Routing configuration
-        self.model_mapping = {"0": "gpt-4-turbo", "1": "claude-3.5-sonnet", "2": "gemini-pro", "3": "llama-3.1-70b"}
+        self.model_mapping = {
+            "0": "gpt-4-turbo",
+            "1": "claude-3.5-sonnet",
+            "2": "gemini-pro",
+            "3": "llama-3.1-70b",
+        }
 
         self.domain_configs = {
-            "model_routing": {"priority_weight": 0.4, "complexity_weight": 0.3, "speed_weight": 0.3},
-            "content_analysis": {"accuracy_weight": 0.5, "depth_weight": 0.3, "efficiency_weight": 0.2},
-            "user_engagement": {"personalization_weight": 0.4, "response_quality_weight": 0.4, "speed_weight": 0.2},
+            "model_routing": {
+                "priority_weight": 0.4,
+                "complexity_weight": 0.3,
+                "speed_weight": 0.3,
+            },
+            "content_analysis": {
+                "accuracy_weight": 0.5,
+                "depth_weight": 0.3,
+                "efficiency_weight": 0.2,
+            },
+            "user_engagement": {
+                "personalization_weight": 0.4,
+                "response_quality_weight": 0.4,
+                "speed_weight": 0.2,
+            },
         }
 
         logger.info("Advanced Bandits AI Router initialized")
@@ -171,7 +189,14 @@ class AdvancedBanditsAIRouter:
         # Adjust based on prompt length and complexity indicators
         length_factor = min(len(prompt) / 1000, 1.0)  # Normalize to [0, 1]
 
-        complexity_keywords = ["analyze", "complex", "detailed", "comprehensive", "research", "compare"]
+        complexity_keywords = [
+            "analyze",
+            "complex",
+            "detailed",
+            "comprehensive",
+            "research",
+            "compare",
+        ]
         keyword_factor = sum(1 for keyword in complexity_keywords if keyword in prompt.lower()) / len(
             complexity_keywords
         )
@@ -278,7 +303,10 @@ class AdvancedBanditsAIRouter:
 
             # Make routing decision
             routing_result = await self.route_request(
-                user_id=user_id, prompt=f"Test request {i}", domain=domain, algorithm=algorithm
+                user_id=user_id,
+                prompt=f"Test request {i}",
+                domain=domain,
+                algorithm=algorithm,
             )
 
             # Simulate performance and provide feedback

@@ -15,6 +15,7 @@ import numpy as np
 
 from .social_monitor import ContentType, PlatformType, SentimentType, SocialContent
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -178,12 +179,42 @@ class ContentDiscovery:
 
         # Ranking weights
         self.ranking_weights = {
-            ContentRankingMethod.RELEVANCE: {"relevance": 0.4, "engagement": 0.3, "recency": 0.2, "authority": 0.1},
-            ContentRankingMethod.ENGAGEMENT: {"engagement": 0.5, "relevance": 0.2, "recency": 0.2, "authority": 0.1},
-            ContentRankingMethod.RECENCY: {"recency": 0.5, "relevance": 0.2, "engagement": 0.2, "authority": 0.1},
-            ContentRankingMethod.AUTHORITY: {"authority": 0.4, "relevance": 0.3, "engagement": 0.2, "recency": 0.1},
-            ContentRankingMethod.DIVERSITY: {"diversity": 0.4, "relevance": 0.3, "engagement": 0.2, "recency": 0.1},
-            ContentRankingMethod.QUALITY: {"quality": 0.5, "relevance": 0.2, "engagement": 0.2, "authority": 0.1},
+            ContentRankingMethod.RELEVANCE: {
+                "relevance": 0.4,
+                "engagement": 0.3,
+                "recency": 0.2,
+                "authority": 0.1,
+            },
+            ContentRankingMethod.ENGAGEMENT: {
+                "engagement": 0.5,
+                "relevance": 0.2,
+                "recency": 0.2,
+                "authority": 0.1,
+            },
+            ContentRankingMethod.RECENCY: {
+                "recency": 0.5,
+                "relevance": 0.2,
+                "engagement": 0.2,
+                "authority": 0.1,
+            },
+            ContentRankingMethod.AUTHORITY: {
+                "authority": 0.4,
+                "relevance": 0.3,
+                "engagement": 0.2,
+                "recency": 0.1,
+            },
+            ContentRankingMethod.DIVERSITY: {
+                "diversity": 0.4,
+                "relevance": 0.3,
+                "engagement": 0.2,
+                "recency": 0.1,
+            },
+            ContentRankingMethod.QUALITY: {
+                "quality": 0.5,
+                "relevance": 0.2,
+                "engagement": 0.2,
+                "authority": 0.1,
+            },
         }
 
         logger.info("Content discovery system initialized")
@@ -285,7 +316,10 @@ class ContentDiscovery:
                     recommendations.append(content)
 
             # Sort by relevance and engagement
-            recommendations.sort(key=lambda x: (x.relevance_score, sum(x.engagement_metrics.values())), reverse=True)
+            recommendations.sort(
+                key=lambda x: (x.relevance_score, sum(x.engagement_metrics.values())),
+                reverse=True,
+            )
 
             return recommendations[:limit]
 
@@ -601,7 +635,7 @@ class ContentDiscovery:
                 cluster_items = [content_item]
                 used_content.add(content_item.content_id)
 
-                for j, other_item in enumerate(content[i + 1 :], i + 1):
+                for _j, other_item in enumerate(content[i + 1 :], i + 1):
                     if other_item.content_id in used_content:
                         continue
 
@@ -651,7 +685,7 @@ class ContentDiscovery:
                     engagement_summary[metric] = engagement_summary.get(metric, 0) + value
 
             # Calculate sentiment summary
-            sentiment_summary = {sentiment: 0 for sentiment in SentimentType}
+            sentiment_summary = dict.fromkeys(SentimentType, 0)
             for item in content_items:
                 sentiment_summary[item.sentiment] += 1
 

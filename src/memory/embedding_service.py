@@ -25,6 +25,7 @@ from typing import Any, Literal
 
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
+
 logger = logging.getLogger(__name__)
 
 # Try to import sentence-transformers (optional dependency)
@@ -143,7 +144,7 @@ class EmbeddingService:
 
         except Exception as e:
             logger.error(f"Embedding generation failed: {e}")
-            return StepResult.fail(f"Embedding failed: {str(e)}", status="retryable")
+            return StepResult.fail(f"Embedding failed: {e!s}", status="retryable")
 
     def embed_batch(
         self,
@@ -193,7 +194,7 @@ class EmbeddingService:
 
         except Exception as e:
             logger.error(f"Batch embedding failed: {e}")
-            return StepResult.fail(f"Batch embedding failed: {str(e)}")
+            return StepResult.fail(f"Batch embedding failed: {e!s}")
 
     def _select_model(self, model_alias: str) -> str:
         """Select actual model name from alias.
@@ -439,7 +440,7 @@ class EmbeddingService:
 
         except Exception as e:
             logger.error(f"Failed to get cache stats: {e}")
-            return StepResult.fail(f"Failed to get cache stats: {str(e)}")
+            return StepResult.fail(f"Failed to get cache stats: {e!s}")
 
 
 # Singleton instance

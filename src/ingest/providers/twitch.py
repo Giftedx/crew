@@ -3,12 +3,13 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass
 
-# Optional dependency hook: tests may monkeypatch this symbol (no direct import to satisfy guardrails)
-yt_dlp = None
-
 from ultimate_discord_intelligence_bot.tools.yt_dlp_download_tool import (
     twitch_fetch_metadata,
 )
+
+
+# Optional dependency hook: tests may monkeypatch this symbol (no direct import to satisfy guardrails)
+yt_dlp = None
 
 """Twitch ingestion utilities using centralized yt-dlp helpers."""
 

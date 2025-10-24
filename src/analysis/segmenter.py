@@ -2,12 +2,16 @@
 
 from __future__ import annotations
 
+import contextlib
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
-from core.settings import get_settings
 from obs import metrics
+from ultimate_discord_intelligence_bot.settings import Settings
 
-from .transcribe import Transcript
+
+if TYPE_CHECKING:
+    from .transcribe import Transcript
 
 
 @dataclass
@@ -36,7 +40,7 @@ def chunk_transcript(transcript: Transcript, *, max_chars: int = 800, overlap: i
     end = 0.0
     lbl = metrics.label_ctx()
     merges = 0
-    settings = get_settings()
+    settings = Settings()
     token_mode = getattr(settings, "enable_token_aware_chunker", False)
     approx_tokens_per_char = 0.25  # heuristic (4 chars ~ 1 token)
     target_tokens = getattr(settings, "token_chunk_target_tokens", 220)
@@ -49,9 +53,7 @@ def chunk_transcript(transcript: Transcript, *, max_chars: int = 800, overlap: i
         candidate_len = sum(len(t) for t in buf) + len(seg.text) + len(buf)
         candidate_tokens = int(candidate_len * approx_tokens_per_char) if token_mode else 0
         flush = False
-        if token_mode and candidate_tokens > target_tokens and buf:
-            flush = True
-        elif candidate_len > max_chars and buf:
+        if (token_mode and candidate_tokens > target_tokens and buf) or (candidate_len > max_chars and buf):
             flush = True
         if flush:
             text = " ".join(buf)
@@ -83,12 +85,10 @@ def chunk_transcript(transcript: Transcript, *, max_chars: int = 800, overlap: i
     try:
         metrics.PIPELINE_STEPS_COMPLETED.labels(lbl["tenant"], lbl["workspace"], "segment_chunks").inc()
     except TypeError:
-        try:
+        with contextlib.suppress(Exception):
             metrics.PIPELINE_STEPS_COMPLETED.labels(
                 tenant=lbl["tenant"], workspace=lbl["workspace"], step="segment_chunks"
             ).inc()
-        except Exception:
-            pass
     if merges:
         metrics.SEGMENT_CHUNK_MERGES.labels(lbl["tenant"], lbl["workspace"]).inc()
     return chunks

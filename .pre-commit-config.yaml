@@ -18,11 +18,11 @@ repos:
     rev: v1.10.0
     hooks:
       - id: mypy
-        name: "mypy (allowlist: crew.py, profiles/schema.py, services/prompt_engine.py, services/memory_service.py, core/flags.py, core/time.py, core/typing_utils.py, core/error_handling.py, core/log_schema.py)"
+        name: "mypy (Phase 2: core + services + pipeline_components)"
         additional_dependencies:
           - types-PyYAML
           - types-requests
-        # Use explicit target path and prevent import graph expansion to keep Phase 1 narrow.
+        # Phase 2: Expanded to include pipeline_components and additional core modules
         args:
           [
             "--config-file",
@@ -33,6 +33,9 @@ repos:
             "src/ultimate_discord_intelligence_bot/profiles/schema.py",
             "src/ultimate_discord_intelligence_bot/services/prompt_engine.py",
             "src/ultimate_discord_intelligence_bot/services/memory_service.py",
+            "src/ultimate_discord_intelligence_bot/pipeline_components/base.py",
+            "src/ultimate_discord_intelligence_bot/pipeline_components/types.py",
+            "src/ultimate_discord_intelligence_bot/pipeline_components/mixins.py",
             "src/core/flags.py",
             "src/core/time.py",
             "src/core/typing_utils.py",

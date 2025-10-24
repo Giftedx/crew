@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import time
-from typing import Any, Literal, Optional, TypedDict
+from typing import Any, Literal, TypedDict
+
 
 try:  # Prefer persistent checkpoints when available
     from langgraph.checkpoint.sqlite import SqliteSaver  # type: ignore
@@ -31,22 +32,20 @@ class MissionState(TypedDict, total=False):
 
     request_url: str
     quality: str
-    error: Optional[str]
+    error: str | None
 
     # Each major step will populate its result here
-    acquisition_result: Optional[StepResult]
-    transcription_result: Optional[StepResult]
-    analysis_result: Optional[StepResult]
-    verification_result: Optional[StepResult]
+    acquisition_result: StepResult | None
+    transcription_result: StepResult | None
+    analysis_result: StepResult | None
+    verification_result: StepResult | None
 
     # To track which step we are in
     current_step: str
 
 
 # Node function for the acquisition step
-def _run_with_retries(
-    fn: Any, *, max_attempts: int = 3, step_name: str = "step"
-) -> StepResult:
+def _run_with_retries(fn: Any, *, max_attempts: int = 3, step_name: str = "step") -> StepResult:
     """Run a tool or callable with basic retry logic based on StepResult."""
     attempt = 1
     while True:
@@ -98,11 +97,7 @@ def transcription_node(state: MissionState) -> dict:
     state["current_step"] = "transcription"
 
     acquisition_result = state.get("acquisition_result")
-    if (
-        not acquisition_result
-        or not acquisition_result.success
-        or not acquisition_result.data
-    ):
+    if not acquisition_result or not acquisition_result.success or not acquisition_result.data:
         error_msg = "Transcription failed: No successful acquisition result found."
         print(f"--- {error_msg} ---")
         return {"error": error_msg}
@@ -116,9 +111,7 @@ def transcription_node(state: MissionState) -> dict:
         return {"error": error_msg}
 
     transcription_tool = AudioTranscriptionTool()
-    result = _run_with_retries(
-        lambda: transcription_tool.run(file_path=file_path), step_name="transcription"
-    )
+    result = _run_with_retries(lambda: transcription_tool.run(file_path=file_path), step_name="transcription")
 
     if not result.success:
         print(f"--- Transcription Failed: {result.error} ---")
@@ -134,11 +127,7 @@ def analysis_node(state: MissionState) -> dict:
     state["current_step"] = "analysis"
 
     transcription_result = state.get("transcription_result")
-    if (
-        not transcription_result
-        or not transcription_result.success
-        or not transcription_result.data
-    ):
+    if not transcription_result or not transcription_result.success or not transcription_result.data:
         error_msg = "Analysis failed: No successful transcription result found."
         print(f"--- {error_msg} ---")
         return {"error": error_msg}
@@ -146,16 +135,12 @@ def analysis_node(state: MissionState) -> dict:
     # Assuming the transcript text is in the data
     transcript_text = transcription_result.data.get("transcript")
     if not transcript_text:
-        error_msg = (
-            "Analysis failed: Transcript text not found in transcription result."
-        )
+        error_msg = "Analysis failed: Transcript text not found in transcription result."
         print(f"--- {error_msg} ---")
         return {"error": error_msg}
 
     analysis_tool = EnhancedAnalysisTool()
-    result = _run_with_retries(
-        lambda: analysis_tool.run(transcript=transcript_text), step_name="analysis"
-    )
+    result = _run_with_retries(lambda: analysis_tool.run(transcript=transcript_text), step_name="analysis")
 
     if not result.success:
         print(f"--- Analysis Failed: {result.error} ---")
@@ -179,18 +164,14 @@ def verification_node(state: MissionState) -> dict:
     # Assuming the analysis text is in the data
     analysis_text = analysis_result.data.get("analysis_summary")
     if not analysis_text:
-        error_msg = (
-            "Verification failed: Analysis summary not found in analysis result."
-        )
+        error_msg = "Verification failed: Analysis summary not found in analysis result."
         print(f"--- {error_msg} ---")
         return {"error": error_msg}
 
     claim_extractor = ClaimExtractorTool()
     fact_checker = FactCheckTool()
 
-    claims_result = _run_with_retries(
-        lambda: claim_extractor.run(text=analysis_text), step_name="claim_extract"
-    )
+    claims_result = _run_with_retries(lambda: claim_extractor.run(text=analysis_text), step_name="claim_extract")
     if not claims_result.success or not claims_result.data:
         # If no claims are extracted, we can consider this a success for this path.
         print("--- No claims to verify ---")
@@ -198,16 +179,12 @@ def verification_node(state: MissionState) -> dict:
 
     verified_claims = []
     for claim in claims_result.data.get("claims", []):
-        fact_check_result = _run_with_retries(
-            lambda: fact_checker.run(claim=claim), step_name="fact_check"
-        )
+        fact_check_result = _run_with_retries(lambda: fact_checker.run(claim=claim), step_name="fact_check")
         if fact_check_result.success:
             verified_claims.append(fact_check_result.data)
 
     print("--- Verification Successful ---")
-    return {
-        "verification_result": StepResult.ok(data={"verified_claims": verified_claims})
-    }
+    return {"verification_result": StepResult.ok(data={"verified_claims": verified_claims})}
 
 
 # This function decides whether to continue to the next step or end the process
@@ -237,17 +214,11 @@ def create_mission_graph():
     workflow.add_edge(START, "acquisition")
 
     # Add a conditional edge from acquisition to transcription or end
-    workflow.add_conditional_edges(
-        "acquisition", should_continue, {"continue": "transcription", "end": END}
-    )
+    workflow.add_conditional_edges("acquisition", should_continue, {"continue": "transcription", "end": END})
 
-    workflow.add_conditional_edges(
-        "transcription", should_continue, {"continue": "analysis", "end": END}
-    )
+    workflow.add_conditional_edges("transcription", should_continue, {"continue": "analysis", "end": END})
 
-    workflow.add_conditional_edges(
-        "analysis", should_continue, {"continue": "verification", "end": END}
-    )
+    workflow.add_conditional_edges("analysis", should_continue, {"continue": "verification", "end": END})
     workflow.add_edge("verification", END)
 
     return workflow

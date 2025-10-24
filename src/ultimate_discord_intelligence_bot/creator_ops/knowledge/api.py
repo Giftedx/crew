@@ -9,13 +9,21 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from datetime import datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from ultimate_discord_intelligence_bot.creator_ops.config import CreatorOpsConfig
-from ultimate_discord_intelligence_bot.creator_ops.knowledge.retrieval import ContentRetriever
-from ultimate_discord_intelligence_bot.creator_ops.knowledge.social_graph import SocialGraphMapper
+from ultimate_discord_intelligence_bot.creator_ops.knowledge.retrieval import (
+    ContentRetriever,
+)
+from ultimate_discord_intelligence_bot.creator_ops.knowledge.social_graph import (
+    SocialGraphMapper,
+)
 from ultimate_discord_intelligence_bot.step_result import StepResult
+
+
+if TYPE_CHECKING:
+    from datetime import datetime
+
 
 logger = logging.getLogger(__name__)
 
@@ -173,8 +181,8 @@ class KnowledgeAPI:
             return StepResult.ok(data=episodes)
 
         except Exception as e:
-            logger.error(f"Failed to get episodes by creator: {str(e)}")
-            return StepResult.fail(f"Failed to get episodes by creator: {str(e)}")
+            logger.error(f"Failed to get episodes by creator: {e!s}")
+            return StepResult.fail(f"Failed to get episodes by creator: {e!s}")
 
     def search_content(
         self,
@@ -236,8 +244,8 @@ class KnowledgeAPI:
             return StepResult.ok(data=search_results)
 
         except Exception as e:
-            logger.error(f"Failed to search content: {str(e)}")
-            return StepResult.fail(f"Failed to search content: {str(e)}")
+            logger.error(f"Failed to search content: {e!s}")
+            return StepResult.fail(f"Failed to search content: {e!s}")
 
     def get_related_clips(
         self,
@@ -292,8 +300,8 @@ class KnowledgeAPI:
             return StepResult.ok(data=clips)
 
         except Exception as e:
-            logger.error(f"Failed to get related clips: {str(e)}")
-            return StepResult.fail(f"Failed to get related clips: {str(e)}")
+            logger.error(f"Failed to get related clips: {e!s}")
+            return StepResult.fail(f"Failed to get related clips: {e!s}")
 
     def get_community_pulse(
         self,
@@ -352,8 +360,8 @@ class KnowledgeAPI:
             return StepResult.ok(data=community_pulse)
 
         except Exception as e:
-            logger.error(f"Failed to get community pulse: {str(e)}")
-            return StepResult.fail(f"Failed to get community pulse: {str(e)}")
+            logger.error(f"Failed to get community pulse: {e!s}")
+            return StepResult.fail(f"Failed to get community pulse: {e!s}")
 
     def get_creator_collaborations(
         self,
@@ -392,8 +400,8 @@ class KnowledgeAPI:
             )
 
         except Exception as e:
-            logger.error(f"Failed to get creator collaborations: {str(e)}")
-            return StepResult.fail(f"Failed to get creator collaborations: {str(e)}")
+            logger.error(f"Failed to get creator collaborations: {e!s}")
+            return StepResult.fail(f"Failed to get creator collaborations: {e!s}")
 
     def deduplicate_content(
         self,
@@ -441,8 +449,8 @@ class KnowledgeAPI:
             )
 
         except Exception as e:
-            logger.error(f"Failed to deduplicate content: {str(e)}")
-            return StepResult.fail(f"Failed to deduplicate content: {str(e)}")
+            logger.error(f"Failed to deduplicate content: {e!s}")
+            return StepResult.fail(f"Failed to deduplicate content: {e!s}")
 
     def _analyze_sentiment_distribution(self, interactions: dict[str, Any]) -> dict[str, int]:
         """Analyze sentiment distribution from interactions."""
@@ -553,7 +561,7 @@ class KnowledgeAPI:
         import hashlib
 
         content_string = f"{normalized_title}_{duration}"
-        return hashlib.md5(content_string.encode()).hexdigest()
+        return hashlib.md5(content_string.encode(), usedforsecurity=False).hexdigest()  # nosec B324 - content fingerprint only
 
     def _select_best_representative(self, group: list[dict[str, Any]]) -> dict[str, Any]:
         """Select best representative from a group of similar content."""

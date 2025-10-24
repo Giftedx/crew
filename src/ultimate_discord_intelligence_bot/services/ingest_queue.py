@@ -9,15 +9,20 @@ from __future__ import annotations
 
 import os
 import pathlib
-import sqlite3
+from typing import TYPE_CHECKING
 
 from ingest.models import connect as connect_models
 from scheduler.priority_queue import PriorityQueue
 
+
+if TYPE_CHECKING:
+    from ultimate_discord_intelligence_bot.step_result import StepResult
+
+
 _QUEUE: PriorityQueue | None = None
 
 
-def _ensure_db_connection(path: str) -> sqlite3.Connection:
+def _ensure_db_connection(path: str) -> StepResult:
     # Ensure parent directory exists
     p = pathlib.Path(path)
     if not p.parent.exists():
@@ -26,7 +31,7 @@ def _ensure_db_connection(path: str) -> sqlite3.Connection:
     return connect_models(str(p))
 
 
-def get_ingest_queue() -> PriorityQueue:
+def get_ingest_queue() -> StepResult:
     """Return a process-wide PriorityQueue instance.
 
     Respects INGEST_DB_PATH environment variable for the SQLite path.

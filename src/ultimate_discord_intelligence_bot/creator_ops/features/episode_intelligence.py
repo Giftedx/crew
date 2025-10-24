@@ -26,9 +26,16 @@ from ultimate_discord_intelligence_bot.creator_ops.features.intelligence_models 
     ThumbnailSuggestion,
 )
 from ultimate_discord_intelligence_bot.creator_ops.knowledge.api import KnowledgeAPI
-from ultimate_discord_intelligence_bot.creator_ops.media.alignment import AlignedSegment, AlignedTranscript
-from ultimate_discord_intelligence_bot.creator_ops.media.nlp import NLPPipeline, NLPResult
+from ultimate_discord_intelligence_bot.creator_ops.media.alignment import (
+    AlignedSegment,
+    AlignedTranscript,
+)
+from ultimate_discord_intelligence_bot.creator_ops.media.nlp import (
+    NLPPipeline,
+    NLPResult,
+)
 from ultimate_discord_intelligence_bot.step_result import StepResult
+
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +55,7 @@ class EpisodeIntelligencePack:
         episode_id: str,
         transcript: AlignedTranscript,
         nlp_result: NLPResult | None = None,
-        intelligence_config: IntelligenceConfig | None = None
+        intelligence_config: IntelligenceConfig | None = None,
     ) -> StepResult:
         """
         Generate a comprehensive intelligence pack for an episode.
@@ -76,8 +83,8 @@ class EpisodeIntelligencePack:
                 episode_duration=transcript.duration,
                 created_at=start_time,
                 updated_at=start_time,
-                total_speakers=len(set(segment.speakers[0] for segment in transcript.segments if segment.speakers)),
-                total_segments=len(transcript.segments)
+                total_speakers=len({segment.speakers[0] for segment in transcript.segments if segment.speakers}),
+                total_segments=len(transcript.segments),
             )
 
             # Generate agenda if enabled
@@ -124,7 +131,9 @@ class EpisodeIntelligencePack:
 
             # Generate defamation risk assessment if enabled
             if intelligence_config.include_defamation_risk:
-                defamation_result = await self._generate_defamation_risk(transcript, intelligence.claims, intelligence_config)
+                defamation_result = await self._generate_defamation_risk(
+                    transcript, intelligence.claims, intelligence_config
+                )
                 if defamation_result.success:
                     intelligence.defamation_risk = defamation_result.data["defamation_risk"]
 
@@ -163,22 +172,18 @@ class EpisodeIntelligencePack:
                     "quotations": len(intelligence.quotations),
                     "links": len(intelligence.links),
                     "thumbnail_suggestions": len(intelligence.thumbnail_suggestions),
-                    "export_formats": intelligence.export_formats
-                }
+                    "export_formats": intelligence.export_formats,
+                },
             )
 
             logger.info(f"Intelligence pack generation completed for episode {episode_id} in {processing_time:.2f}s")
             return StepResult.ok(data={"result": result})
 
         except Exception as e:
-            logger.error(f"Intelligence pack generation failed: {str(e)}")
-            return StepResult.fail(f"Intelligence pack generation failed: {str(e)}")
+            logger.error(f"Intelligence pack generation failed: {e!s}")
+            return StepResult.fail(f"Intelligence pack generation failed: {e!s}")
 
-    async def _generate_agenda(
-        self,
-        transcript: AlignedTranscript,
-        config: IntelligenceConfig
-    ) -> StepResult:
+    async def _generate_agenda(self, transcript: AlignedTranscript, config: IntelligenceConfig) -> StepResult:
         """Generate agenda items from transcript segments."""
         try:
             agenda_items = []
@@ -200,7 +205,7 @@ class EpisodeIntelligencePack:
                             duration=segment.start_time - current_start_time,
                             description=f"Discussion about {current_topic}",
                             speakers=list(current_speakers),
-                            topics=list(current_topics)
+                            topics=list(current_topics),
                         )
                         agenda_items.append(agenda_item)
 
@@ -226,19 +231,19 @@ class EpisodeIntelligencePack:
                     duration=end_time - current_start_time,
                     description=f"Discussion about {current_topic}",
                     speakers=list(current_speakers),
-                    topics=list(current_topics)
+                    topics=list(current_topics),
                 )
                 agenda_items.append(agenda_item)
 
             # Limit to max items
             if len(agenda_items) > config.max_agenda_items:
-                agenda_items = agenda_items[:config.max_agenda_items]
+                agenda_items = agenda_items[: config.max_agenda_items]
 
             return StepResult.ok(data={"agenda": agenda_items})
 
         except Exception as e:
-            logger.error(f"Failed to generate agenda: {str(e)}")
-            return StepResult.fail(f"Failed to generate agenda: {str(e)}")
+            logger.error(f"Failed to generate agenda: {e!s}")
+            return StepResult.fail(f"Failed to generate agenda: {e!s}")
 
     async def _generate_guest_info(self, transcript: AlignedTranscript) -> StepResult:
         """Generate guest information from transcript."""
@@ -254,7 +259,7 @@ class EpisodeIntelligencePack:
                             "total_time": 0,
                             "segments": 0,
                             "first_mentioned": segment.start_time,
-                            "contributions": []
+                            "contributions": [],
                         }
 
                     speaker_stats[speaker]["total_time"] += segment.end_time - segment.start_time
@@ -287,7 +292,7 @@ class EpisodeIntelligencePack:
                     total_speaking_time=stats["total_time"],
                     segments=stats["segments"],
                     key_contributions=stats["contributions"][:5],  # Top 5 contributions
-                    expertise_areas=self._extract_expertise_areas(stats["contributions"])
+                    expertise_areas=self._extract_expertise_areas(stats["contributions"]),
                 )
 
                 guests.append(guest)
@@ -295,14 +300,14 @@ class EpisodeIntelligencePack:
             return StepResult.ok(data={"guests": guests})
 
         except Exception as e:
-            logger.error(f"Failed to generate guest info: {str(e)}")
-            return StepResult.fail(f"Failed to generate guest info: {str(e)}")
+            logger.error(f"Failed to generate guest info: {e!s}")
+            return StepResult.fail(f"Failed to generate guest info: {e!s}")
 
     async def _generate_claims(
         self,
         transcript: AlignedTranscript,
         nlp_result: NLPResult | None,
-        config: IntelligenceConfig
+        config: IntelligenceConfig,
     ) -> StepResult:
         """Generate fact-checkable claims from transcript."""
         try:
@@ -311,9 +316,18 @@ class EpisodeIntelligencePack:
 
             # Keywords that indicate claims
             claim_indicators = [
-                "according to", "studies show", "research indicates", "statistics show",
-                "data reveals", "experts say", "scientists found", "it's been proven",
-                "the truth is", "actually", "in fact", "the reality is"
+                "according to",
+                "studies show",
+                "research indicates",
+                "statistics show",
+                "data reveals",
+                "experts say",
+                "scientists found",
+                "it's been proven",
+                "the truth is",
+                "actually",
+                "in fact",
+                "the reality is",
             ]
 
             for segment in transcript.segments:
@@ -338,7 +352,7 @@ class EpisodeIntelligencePack:
                             status=ClaimStatus.UNVERIFIED,
                             confidence=confidence,
                             sources_mentioned=self._extract_sources(segment.text),
-                            verification_notes="Requires manual verification"
+                            verification_notes="Requires manual verification",
                         )
 
                         claims.append(claim)
@@ -347,14 +361,10 @@ class EpisodeIntelligencePack:
             return StepResult.ok(data={"claims": claims})
 
         except Exception as e:
-            logger.error(f"Failed to generate claims: {str(e)}")
-            return StepResult.fail(f"Failed to generate claims: {str(e)}")
+            logger.error(f"Failed to generate claims: {e!s}")
+            return StepResult.fail(f"Failed to generate claims: {e!s}")
 
-    async def _generate_quotations(
-        self,
-        transcript: AlignedTranscript,
-        config: IntelligenceConfig
-    ) -> StepResult:
+    async def _generate_quotations(self, transcript: AlignedTranscript, config: IntelligenceConfig) -> StepResult:
         """Generate notable quotations from transcript."""
         try:
             quotations = []
@@ -362,8 +372,15 @@ class EpisodeIntelligencePack:
 
             # Indicators of notable quotations
             quotation_indicators = [
-                "quote", "saying", "proverb", "wise words", "insight",
-                "perspective", "opinion", "belief", "philosophy"
+                "quote",
+                "saying",
+                "proverb",
+                "wise words",
+                "insight",
+                "perspective",
+                "opinion",
+                "belief",
+                "philosophy",
             ]
 
             for segment in transcript.segments:
@@ -391,7 +408,7 @@ class EpisodeIntelligencePack:
                             significance=f"Significance score: {significance:.2f}",
                             topics=segment.topics or [],
                             sentiment=segment.sentiment_score or 0.0,
-                            viral_potential=viral_potential
+                            viral_potential=viral_potential,
                         )
 
                         quotations.append(quotation)
@@ -400,8 +417,8 @@ class EpisodeIntelligencePack:
             return StepResult.ok(data={"quotations": quotations})
 
         except Exception as e:
-            logger.error(f"Failed to generate quotations: {str(e)}")
-            return StepResult.fail(f"Failed to generate quotations: {str(e)}")
+            logger.error(f"Failed to generate quotations: {e!s}")
+            return StepResult.fail(f"Failed to generate quotations: {e!s}")
 
     async def _generate_links(self, transcript: AlignedTranscript) -> StepResult:
         """Generate outbound links mentioned in transcript."""
@@ -409,7 +426,7 @@ class EpisodeIntelligencePack:
             links = []
 
             # URL regex pattern
-            url_pattern = r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+'
+            url_pattern = r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+"
 
             for segment in transcript.segments:
                 # Find URLs in segment text
@@ -426,7 +443,7 @@ class EpisodeIntelligencePack:
                         link_type=self._determine_link_type(url),
                         domain=self._extract_domain(url),
                         is_affiliate=self._is_affiliate_link(url),
-                        is_sponsored=self._is_sponsored_link(url)
+                        is_sponsored=self._is_sponsored_link(url),
                     )
 
                     links.append(link)
@@ -434,13 +451,11 @@ class EpisodeIntelligencePack:
             return StepResult.ok(data={"links": links})
 
         except Exception as e:
-            logger.error(f"Failed to generate links: {str(e)}")
-            return StepResult.fail(f"Failed to generate links: {str(e)}")
+            logger.error(f"Failed to generate links: {e!s}")
+            return StepResult.fail(f"Failed to generate links: {e!s}")
 
     async def _generate_thumbnail_suggestions(
-        self,
-        transcript: AlignedTranscript,
-        config: IntelligenceConfig
+        self, transcript: AlignedTranscript, config: IntelligenceConfig
     ) -> StepResult:
         """Generate thumbnail suggestions based on high-engagement moments."""
         try:
@@ -456,7 +471,7 @@ class EpisodeIntelligencePack:
             engagement_scores.sort(key=lambda x: x[1], reverse=True)
 
             # Select top moments for thumbnails
-            for i, (timestamp, score) in enumerate(engagement_scores[:config.max_thumbnail_suggestions]):
+            for i, (timestamp, score) in enumerate(engagement_scores[: config.max_thumbnail_suggestions]):
                 thumbnail = ThumbnailSuggestion(
                     timestamp=timestamp,
                     frame_url=f"frame_at_{timestamp:.1f}s.jpg",
@@ -464,7 +479,7 @@ class EpisodeIntelligencePack:
                     engagement_score=score,
                     visual_elements=["speaker", "text_overlay"],
                     text_overlay=self._generate_thumbnail_text(transcript, timestamp),
-                    recommended=i == 0  # First one is recommended
+                    recommended=i == 0,  # First one is recommended
                 )
 
                 thumbnails.append(thumbnail)
@@ -472,13 +487,11 @@ class EpisodeIntelligencePack:
             return StepResult.ok(data={"thumbnails": thumbnails})
 
         except Exception as e:
-            logger.error(f"Failed to generate thumbnail suggestions: {str(e)}")
-            return StepResult.fail(f"Failed to generate thumbnail suggestions: {str(e)}")
+            logger.error(f"Failed to generate thumbnail suggestions: {e!s}")
+            return StepResult.fail(f"Failed to generate thumbnail suggestions: {e!s}")
 
     async def _generate_brand_safety_analysis(
-        self,
-        transcript: AlignedTranscript,
-        nlp_result: NLPResult | None
+        self, transcript: AlignedTranscript, nlp_result: NLPResult | None
     ) -> StepResult:
         """Generate brand safety analysis."""
         try:
@@ -494,12 +507,14 @@ class EpisodeIntelligencePack:
                 segment_toxicity = segment.sentiment_score or 0.0
                 if segment_toxicity < -0.5:  # Negative sentiment
                     toxicity_score += abs(segment_toxicity)
-                    flagged_segments.append({
-                        "timestamp": segment.start_time,
-                        "text": segment.text,
-                        "reason": "negative_sentiment",
-                        "score": abs(segment_toxicity)
-                    })
+                    flagged_segments.append(
+                        {
+                            "timestamp": segment.start_time,
+                            "text": segment.text,
+                            "reason": "negative_sentiment",
+                            "score": abs(segment_toxicity),
+                        }
+                    )
 
                 # Check for controversial topics
                 if segment.topics:
@@ -533,20 +548,20 @@ class EpisodeIntelligencePack:
                 advertiser_friendliness=advertiser_friendliness,
                 flagged_segments=flagged_segments,
                 content_warnings=content_warnings,
-                brand_mentions=brand_mentions
+                brand_mentions=brand_mentions,
             )
 
             return StepResult.ok(data={"brand_safety": brand_safety})
 
         except Exception as e:
-            logger.error(f"Failed to generate brand safety analysis: {str(e)}")
-            return StepResult.fail(f"Failed to generate brand safety analysis: {str(e)}")
+            logger.error(f"Failed to generate brand safety analysis: {e!s}")
+            return StepResult.fail(f"Failed to generate brand safety analysis: {e!s}")
 
     async def _generate_defamation_risk(
         self,
         transcript: AlignedTranscript,
         claims: list[FactCheckableClaim],
-        config: IntelligenceConfig
+        config: IntelligenceConfig,
     ) -> StepResult:
         """Generate defamation risk assessment."""
         try:
@@ -566,22 +581,26 @@ class EpisodeIntelligencePack:
                     if self._mentions_individual(claim.text):
                         risk_score += 0.3
                         individuals_mentioned.extend(self._extract_individuals(claim.text))
-                        flagged_statements.append({
-                            "timestamp": claim.timestamp,
-                            "text": claim.text,
-                            "reason": "unverified_claim_about_individual",
-                            "risk": "medium"
-                        })
+                        flagged_statements.append(
+                            {
+                                "timestamp": claim.timestamp,
+                                "text": claim.text,
+                                "reason": "unverified_claim_about_individual",
+                                "risk": "medium",
+                            }
+                        )
 
                     if self._mentions_organization(claim.text):
                         risk_score += 0.2
                         organizations_mentioned.extend(self._extract_organizations(claim.text))
-                        flagged_statements.append({
-                            "timestamp": claim.timestamp,
-                            "text": claim.text,
-                            "reason": "unverified_claim_about_organization",
-                            "risk": "medium"
-                        })
+                        flagged_statements.append(
+                            {
+                                "timestamp": claim.timestamp,
+                                "text": claim.text,
+                                "reason": "unverified_claim_about_organization",
+                                "risk": "medium",
+                            }
+                        )
 
             # Normalize risk score
             risk_score = min(1.0, risk_score)
@@ -605,14 +624,14 @@ class EpisodeIntelligencePack:
                 individuals_mentioned=list(set(individuals_mentioned)),
                 organizations_mentioned=list(set(organizations_mentioned)),
                 unverified_claims=unverified_claims,
-                recommendations=recommendations
+                recommendations=recommendations,
             )
 
             return StepResult.ok(data={"defamation_risk": defamation_risk})
 
         except Exception as e:
-            logger.error(f"Failed to generate defamation risk assessment: {str(e)}")
-            return StepResult.fail(f"Failed to generate defamation risk assessment: {str(e)}")
+            logger.error(f"Failed to generate defamation risk assessment: {e!s}")
+            return StepResult.fail(f"Failed to generate defamation risk assessment: {e!s}")
 
     async def _generate_key_insights(self, intelligence: EpisodeIntelligence) -> StepResult:
         """Generate key insights from the intelligence pack."""
@@ -664,8 +683,8 @@ class EpisodeIntelligencePack:
             return StepResult.ok(data={"insights": insights})
 
         except Exception as e:
-            logger.error(f"Failed to generate key insights: {str(e)}")
-            return StepResult.fail(f"Failed to generate key insights: {str(e)}")
+            logger.error(f"Failed to generate key insights: {e!s}")
+            return StepResult.fail(f"Failed to generate key insights: {e!s}")
 
     def _calculate_average_sentiment(self, transcript: AlignedTranscript) -> float:
         """Calculate average sentiment across all segments."""
@@ -685,9 +704,7 @@ class EpisodeIntelligencePack:
         return [topic for topic, count in sorted_topics[:5]]
 
     async def _export_intelligence_pack(
-        self,
-        intelligence: EpisodeIntelligence,
-        config: IntelligenceConfig
+        self, intelligence: EpisodeIntelligence, config: IntelligenceConfig
     ) -> StepResult:
         """Export intelligence pack to requested formats."""
         try:
@@ -718,8 +735,8 @@ class EpisodeIntelligencePack:
             return StepResult.ok(data={"formats": formats, "file_paths": file_paths})
 
         except Exception as e:
-            logger.error(f"Failed to export intelligence pack: {str(e)}")
-            return StepResult.fail(f"Failed to export intelligence pack: {str(e)}")
+            logger.error(f"Failed to export intelligence pack: {e!s}")
+            return StepResult.fail(f"Failed to export intelligence pack: {e!s}")
 
     async def _export_to_markdown(self, intelligence: EpisodeIntelligence) -> Path | None:
         """Export intelligence pack to Markdown format."""
@@ -727,13 +744,13 @@ class EpisodeIntelligencePack:
             markdown_content = self._generate_markdown_content(intelligence)
 
             file_path = self.output_dir / f"{intelligence.episode_id}_intelligence.md"
-            with open(file_path, 'w', encoding='utf-8') as f:
+            with open(file_path, "w", encoding="utf-8") as f:
                 f.write(markdown_content)
 
             return file_path
 
         except Exception as e:
-            logger.error(f"Failed to export to Markdown: {str(e)}")
+            logger.error(f"Failed to export to Markdown: {e!s}")
             return None
 
     async def _export_to_json(self, intelligence: EpisodeIntelligence) -> Path | None:
@@ -743,13 +760,13 @@ class EpisodeIntelligencePack:
             intelligence_dict = self._intelligence_to_dict(intelligence)
 
             file_path = self.output_dir / f"{intelligence.episode_id}_intelligence.json"
-            with open(file_path, 'w', encoding='utf-8') as f:
+            with open(file_path, "w", encoding="utf-8") as f:
                 json.dump(intelligence_dict, f, indent=2, ensure_ascii=False, default=str)
 
             return file_path
 
         except Exception as e:
-            logger.error(f"Failed to export to JSON: {str(e)}")
+            logger.error(f"Failed to export to JSON: {e!s}")
             return None
 
     async def _export_to_html(self, intelligence: EpisodeIntelligence) -> Path | None:
@@ -758,13 +775,13 @@ class EpisodeIntelligencePack:
             html_content = self._generate_html_content(intelligence)
 
             file_path = self.output_dir / f"{intelligence.episode_id}_intelligence.html"
-            with open(file_path, 'w', encoding='utf-8') as f:
+            with open(file_path, "w", encoding="utf-8") as f:
                 f.write(html_content)
 
             return file_path
 
         except Exception as e:
-            logger.error(f"Failed to export to HTML: {str(e)}")
+            logger.error(f"Failed to export to HTML: {e!s}")
             return None
 
     def _generate_markdown_content(self, intelligence: EpisodeIntelligence) -> str:
@@ -773,7 +790,7 @@ class EpisodeIntelligencePack:
 
 **Episode ID:** {intelligence.episode_id}
 **Duration:** {intelligence.episode_duration:.1f} seconds
-**Generated:** {intelligence.created_at.strftime('%Y-%m-%d %H:%M:%S')}
+**Generated:** {intelligence.created_at.strftime("%Y-%m-%d %H:%M:%S")}
 
 ## Agenda
 
@@ -866,7 +883,7 @@ class EpisodeIntelligencePack:
     <div class="metadata">
         <p><strong>Episode ID:</strong> {intelligence.episode_id}</p>
         <p><strong>Duration:</strong> {intelligence.episode_duration:.1f} seconds</p>
-        <p><strong>Generated:</strong> {intelligence.created_at.strftime('%Y-%m-%d %H:%M:%S')}</p>
+        <p><strong>Generated:</strong> {intelligence.created_at.strftime("%Y-%m-%d %H:%M:%S")}</p>
     </div>
 
     <h2>Agenda</h2>
@@ -877,8 +894,8 @@ class EpisodeIntelligencePack:
     <div>
         <h3>{item.title}</h3>
         <p><strong>Time:</strong> {item.start_time:.1f}s - {item.end_time:.1f}s ({item.duration:.1f}s)</p>
-        <p><strong>Speakers:</strong> {', '.join(item.speakers)}</p>
-        <p><strong>Topics:</strong> {', '.join(item.topics)}</p>
+        <p><strong>Speakers:</strong> {", ".join(item.speakers)}</p>
+        <p><strong>Topics:</strong> {", ".join(item.topics)}</p>
         <p><strong>Description:</strong> {item.description}</p>
     </div>
 """
@@ -946,7 +963,7 @@ class EpisodeIntelligencePack:
                     "description": item.description,
                     "speakers": item.speakers,
                     "topics": item.topics,
-                    "key_points": item.key_points
+                    "key_points": item.key_points,
                 }
                 for item in intelligence.agenda
             ],
@@ -960,7 +977,7 @@ class EpisodeIntelligencePack:
                     "segments": guest.segments,
                     "key_contributions": guest.key_contributions,
                     "social_links": guest.social_links,
-                    "expertise_areas": guest.expertise_areas
+                    "expertise_areas": guest.expertise_areas,
                 }
                 for guest in intelligence.guests
             ],
@@ -976,7 +993,7 @@ class EpisodeIntelligencePack:
                     "confidence": claim.confidence,
                     "sources_mentioned": claim.sources_mentioned,
                     "verification_notes": claim.verification_notes,
-                    "risk_assessment": claim.risk_assessment.value
+                    "risk_assessment": claim.risk_assessment.value,
                 }
                 for claim in intelligence.claims
             ],
@@ -990,7 +1007,7 @@ class EpisodeIntelligencePack:
                     "significance": quote.significance,
                     "topics": quote.topics,
                     "sentiment": quote.sentiment,
-                    "viral_potential": quote.viral_potential
+                    "viral_potential": quote.viral_potential,
                 }
                 for quote in intelligence.quotations
             ],
@@ -1005,7 +1022,7 @@ class EpisodeIntelligencePack:
                     "link_type": link.link_type,
                     "domain": link.domain,
                     "is_affiliate": link.is_affiliate,
-                    "is_sponsored": link.is_sponsored
+                    "is_sponsored": link.is_sponsored,
                 }
                 for link in intelligence.links
             ],
@@ -1016,23 +1033,27 @@ class EpisodeIntelligencePack:
                 "advertiser_friendliness": intelligence.brand_safety.advertiser_friendliness,
                 "flagged_segments": intelligence.brand_safety.flagged_segments,
                 "content_warnings": intelligence.brand_safety.content_warnings,
-                "brand_mentions": intelligence.brand_safety.brand_mentions
-            } if intelligence.brand_safety else None,
+                "brand_mentions": intelligence.brand_safety.brand_mentions,
+            }
+            if intelligence.brand_safety
+            else None,
             "defamation_risk": {
                 "risk_level": intelligence.defamation_risk.risk_level.value,
                 "risk_score": intelligence.defamation_risk.risk_score,
                 "flagged_statements": intelligence.defamation_risk.flagged_statements,
                 "individuals_mentioned": intelligence.defamation_risk.individuals_mentioned,
                 "organizations_mentioned": intelligence.defamation_risk.organizations_mentioned,
-                "recommendations": intelligence.defamation_risk.recommendations
-            } if intelligence.defamation_risk else None,
+                "recommendations": intelligence.defamation_risk.recommendations,
+            }
+            if intelligence.defamation_risk
+            else None,
             "total_speakers": intelligence.total_speakers,
             "total_segments": intelligence.total_segments,
             "average_sentiment": intelligence.average_sentiment,
             "top_topics": intelligence.top_topics,
             "key_insights": intelligence.key_insights,
             "export_formats": intelligence.export_formats,
-            "file_paths": intelligence.file_paths
+            "file_paths": intelligence.file_paths,
         }
 
     # Helper methods for analysis
@@ -1086,10 +1107,11 @@ class EpisodeIntelligencePack:
             r"according to ([^,\.]+)",
             r"([^,\.]+) study",
             r"([^,\.]+) research",
-            r"([^,\.]+) report"
+            r"([^,\.]+) report",
         ]
 
         import re
+
         for pattern in source_patterns:
             matches = re.findall(pattern, text_lower)
             sources.extend(matches)
@@ -1128,7 +1150,13 @@ class EpisodeIntelligencePack:
         text_lower = text.lower()
 
         # Viral indicators
-        viral_words = ["amazing", "incredible", "unbelievable", "shocking", "controversial"]
+        viral_words = [
+            "amazing",
+            "incredible",
+            "unbelievable",
+            "shocking",
+            "controversial",
+        ]
         for word in viral_words:
             if word in text_lower:
                 potential += 0.2
@@ -1156,7 +1184,8 @@ class EpisodeIntelligencePack:
     def _extract_domain(self, url: str) -> str:
         """Extract domain from URL."""
         import re
-        match = re.search(r'https?://([^/]+)', url)
+
+        match = re.search(r"https?://([^/]+)", url)
         return match.group(1) if match else url
 
     def _determine_link_type(self, url: str) -> str:
@@ -1225,21 +1254,43 @@ class EpisodeIntelligencePack:
     def _is_controversial_topic(self, topic: str) -> bool:
         """Check if a topic is controversial."""
         controversial_topics = [
-            "politics", "religion", "controversy", "scandal", "breaking news",
-            "conspiracy", "conspiracy theory", "controversial", "debate"
+            "politics",
+            "religion",
+            "controversy",
+            "scandal",
+            "breaking news",
+            "conspiracy",
+            "conspiracy theory",
+            "controversial",
+            "debate",
         ]
         return any(controversial in topic.lower() for controversial in controversial_topics)
 
     def _mentions_individual(self, text: str) -> bool:
         """Check if text mentions an individual."""
         # Simple check - in production, you'd want more sophisticated NER
-        individual_indicators = ["mr.", "mrs.", "ms.", "dr.", "professor", "ceo", "president"]
+        individual_indicators = [
+            "mr.",
+            "mrs.",
+            "ms.",
+            "dr.",
+            "professor",
+            "ceo",
+            "president",
+        ]
         return any(indicator in text.lower() for indicator in individual_indicators)
 
     def _mentions_organization(self, text: str) -> bool:
         """Check if text mentions an organization."""
         # Simple check - in production, you'd want more sophisticated NER
-        org_indicators = ["company", "corporation", "inc.", "llc", "organization", "institution"]
+        org_indicators = [
+            "company",
+            "corporation",
+            "inc.",
+            "llc",
+            "organization",
+            "institution",
+        ]
         return any(indicator in text.lower() for indicator in org_indicators)
 
     def _extract_individuals(self, text: str) -> list[str]:
@@ -1266,7 +1317,7 @@ class EpisodeIntelligencePack:
             "business": ["business", "entrepreneur", "startup", "marketing", "sales"],
             "science": ["science", "research", "study", "experiment", "data"],
             "entertainment": ["entertainment", "music", "movie", "tv", "celebrity"],
-            "politics": ["politics", "government", "policy", "election", "democracy"]
+            "politics": ["politics", "government", "policy", "election", "democracy"],
         }
 
         for contribution in contributions:

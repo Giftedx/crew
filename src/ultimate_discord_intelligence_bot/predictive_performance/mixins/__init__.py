@@ -6,10 +6,11 @@ from .scenarios import ScenarioGenerationMixin
 from .trend import TrendAnalysisMixin
 from .warnings import WarningDetectionMixin
 
+
 __all__ = [
-    "TrendAnalysisMixin",
-    "WarningDetectionMixin",
     "CapacityForecastingMixin",
     "DriftDetectionMixin",
     "ScenarioGenerationMixin",
+    "TrendAnalysisMixin",
+    "WarningDetectionMixin",
 ]

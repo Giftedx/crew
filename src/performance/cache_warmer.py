@@ -15,8 +15,8 @@ from datetime import timedelta
 from typing import Any
 
 from core.cache.semantic_cache import create_semantic_cache
-from core.settings import get_settings
 from core.time import default_utc_now, ensure_utc
+
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +36,7 @@ class PredictiveCacheWarmer:
     """Predictive cache warming for improved performance."""
 
     def __init__(self):
-        self.settings = get_settings()
+        self.settings = Settings()
         self.cache = create_semantic_cache(fallback_enabled=True)
         self.request_patterns: Counter[str] = Counter()
         # Use UTC-aware timestamps to avoid naive/aware comparison issues
@@ -189,10 +189,19 @@ async def optimize_cache_performance(pipeline) -> dict[str, Any]:
 
     # Mock recent requests (in production, this would come from request logs)
     recent_requests = [
-        {"prompt": "Analyze this video content for key claims", "timestamp": time.time()},
+        {
+            "prompt": "Analyze this video content for key claims",
+            "timestamp": time.time(),
+        },
         {"prompt": "Summarize the main arguments presented", "timestamp": time.time()},
-        {"prompt": "Fact check the claims made in this content", "timestamp": time.time()},
-        {"prompt": "Identify logical fallacies in the reasoning", "timestamp": time.time()},
+        {
+            "prompt": "Fact check the claims made in this content",
+            "timestamp": time.time(),
+        },
+        {
+            "prompt": "Identify logical fallacies in the reasoning",
+            "timestamp": time.time(),
+        },
     ]
 
     # Perform cache warming

@@ -2,9 +2,14 @@ from __future__ import annotations
 
 import logging
 import statistics
-from collections import deque
+from typing import TYPE_CHECKING
 
 from ..models import PredictionConfidence
+
+
+if TYPE_CHECKING:
+    from collections import deque
+
 
 logger = logging.getLogger(__name__)
 

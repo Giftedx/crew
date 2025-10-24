@@ -14,6 +14,7 @@ from __future__ import annotations
 import subprocess
 import sys
 
+
 # Directories marked as deprecated (relative to repo root)
 DEPRECATED_DIRS = [
     "src/core/routing",
@@ -76,9 +77,7 @@ def main() -> int:
     violations = check_deprecated_violations(new_files)
 
     if not violations:
-        print(
-            f"✓ Checked {len(new_files)} new files - no deprecated directory violations"
-        )
+        print(f"✓ Checked {len(new_files)} new files - no deprecated directory violations")
         return 0
 
     print(f"❌ Found {len(violations)} violations:")

@@ -18,13 +18,14 @@ from __future__ import annotations
 _patched_resilient_post = globals().get("resilient_post")
 _patched_resilient_get = globals().get("resilient_get")
 
+# ruff: noqa: E402
 # Standard module alias so tests can patch http_utils.time.sleep
 import time as time  # re-exported below via __all__
 import requests as requests  # tests expect http_utils.requests.ConnectionError
 from pathlib import Path
 
 # Import underlying modular implementations
-from .http import (  # noqa: E402
+from .http import (
     DEFAULT_HTTP_RETRY_ATTEMPTS,
     DEFAULT_RATE_LIMIT_RETRY,
     HTTP_RATE_LIMITED,
@@ -35,19 +36,23 @@ from .http import (  # noqa: E402
     is_retry_enabled,
     validate_public_https_url,
 )
-from .http import requests_wrappers as _rq  # noqa: E402
-from .http import retry_config as _retry_cfg  # noqa: E402
-from .http.retry import _is_retry_enabled as _is_retry_enabled  # noqa: E402,F401
+from .http import requests_wrappers as _rq
+from .http import retry_config as _retry_cfg
+from .http.retry import _is_retry_enabled as _is_retry_enabled
+import contextlib
 
 # Back-compat seams expected by tests
 try:  # optional Redis cache class
-    from core.cache.redis_cache import RedisCache as _RedisCache  # type: ignore
+    from core.cache.redis_cache import RedisCache as _RedisCache
 except Exception:  # pragma: no cover - optional
-    _RedisCache = None  # type: ignore
+    _RedisCache = None  # type: ignore[assignment]
 
 # get_settings used by cached_get tests
 try:
-    from core.settings import get_settings as get_settings  # type: ignore # noqa: F401
+    from ultimate_discord_intelligence_bot.settings import Settings
+
+    def get_settings():  # type: ignore[no-redef]
+        return Settings()
 except Exception:  # pragma: no cover
     # Lightweight fallback returning object with expected attributes
     class _FallbackSettings:
@@ -63,9 +68,9 @@ except Exception:  # pragma: no cover
 # Optional override hook for retry attempts tests (monkeypatched by tests)
 def _load_retry_config() -> dict[str, int | None]:  # pragma: no cover - overridden in tests
     try:
-        return _retry_cfg._load_retry_config()  # type: ignore[attr-defined]
+        return _retry_cfg._load_retry_config()
     except Exception:
-        return {"max_attempts": None}
+        return {"max_retries": 3, "backoff_factor": 1.0, "retry_statuses": (429, 500, 502, 503, 504)}
 
 
 # Module-level caches (cleared/inspected by tests)
@@ -126,6 +131,26 @@ def resilient_get(
     )
 
 
+def resilient_delete(
+    url: str,
+    *,
+    params: dict[str, object] | None = None,
+    headers: dict[str, str] | None = None,
+    timeout_seconds: int | None = None,
+    allow_legacy_timeout_fallback: bool = True,
+    request_fn: object | None = None,
+):
+    eff_timeout = int(timeout_seconds if timeout_seconds is not None else get_request_timeout())
+    return _rq.resilient_delete(
+        url,
+        params=params or None,
+        headers=headers,
+        timeout_seconds=eff_timeout,
+        allow_legacy_timeout_fallback=allow_legacy_timeout_fallback,
+        request_fn=request_fn,
+    )
+
+
 def http_request_with_retry(
     method: str,
     url: str,
@@ -150,7 +175,7 @@ def http_request_with_retry(
     """
     # Delegate entirely to modular implementation when circuit breaker is enabled
     if is_circuit_breaker_enabled():
-        from .http.retry import http_request_with_retry as _cb_retry  # noqa: PLC0415
+        from .http.retry import http_request_with_retry as _cb_retry
 
         return _cb_retry(
             method,
@@ -169,29 +194,19 @@ def http_request_with_retry(
         attempts += 1
         try:
             resp = request_callable(url, **call_kwargs)
-        except requests.RequestException as exc:  # type: ignore[attr-defined]
+        except requests.RequestException as exc:
             if attempts >= max_attempts or not is_retry_enabled():
                 if on_give_up:
-                    try:
+                    with contextlib.suppress(Exception):
                         on_give_up(exc, attempts)
-                    except Exception:
-                        pass
                 raise
             # Exponential backoff with legacy scaling for connection errors
             sleep_for = base_backoff * (2 ** (attempts - 1))
-            if isinstance(exc, requests.ConnectionError):  # type: ignore[attr-defined]
+            if isinstance(exc, requests.ConnectionError):
                 sleep_for *= 0.3
-            sleep_for += jitter * sleep_for
-            time.sleep(sleep_for)
-            continue
-        # Response path
-        status = getattr(resp, "status_code", None)
-        if status is not None and int(status) in statuses_to_retry and attempts < max_attempts and is_retry_enabled():
-            sleep_for = base_backoff * (2 ** (attempts - 1))
-            sleep_for += jitter * sleep_for
-            time.sleep(sleep_for)
-            continue
-        return resp
+            sleep_fn(wait_time)
+        except requests.RequestException:
+            attempts += 1
 
 
 def resolve_retry_attempts(call_arg: int | None = None) -> int:
@@ -227,7 +242,9 @@ def resolve_retry_attempts(call_arg: int | None = None) -> int:
     try:
         tenant_id = "global"
         try:
-            from ultimate_discord_intelligence_bot.tenancy.context import current_tenant as _ct  # noqa: PLC0415
+            from ultimate_discord_intelligence_bot.tenancy.context import (
+                current_tenant as _ct,
+            )
 
             ctx = _ct()
             if ctx and getattr(ctx, "tenant_id", None):
@@ -296,7 +313,7 @@ def resolve_retry_attempts(call_arg: int | None = None) -> int:
         except Exception:
             ...
     try:
-        from core.secure_config import get_config as _get_cfg  # noqa: PLC0415
+        from core.secure_config import get_config as _get_cfg
 
         sc = _get_cfg()
         env_val2 = getattr(sc, "retry_max_attempts", None)
@@ -386,6 +403,40 @@ def retrying_get(
     )
 
 
+def retrying_delete(
+    url: str,
+    *,
+    params: dict[str, object] | None = None,
+    headers: dict[str, str] | None = None,
+    timeout_seconds: int | None = None,
+    max_attempts: int | None = None,
+    request_callable=None,
+    **kwargs,
+):
+    eff_timeout = int(timeout_seconds if timeout_seconds is not None else get_request_timeout())
+    effective_max = max_attempts if max_attempts is not None else resolve_retry_attempts()
+    if is_retry_enabled():
+        if request_callable is None:
+            request_callable = lambda u, **_: resilient_delete(  # noqa: E731
+                u,
+                params=params,
+                headers=headers,
+                timeout_seconds=eff_timeout,
+            )
+        return http_request_with_retry(
+            "DELETE",
+            url,
+            request_callable=request_callable,
+            max_attempts=effective_max,
+        )
+    return resilient_delete(
+        url,
+        params=params,
+        headers=headers,
+        timeout_seconds=eff_timeout,
+    )
+
+
 def cached_get(
     url: str,
     *,
@@ -443,24 +494,46 @@ def cached_get(
         )
     key = _cache_key(url, params)
     now = _t.time()
-    ttl = int(ttl_seconds if ttl_seconds is not None else getattr(settings, "http_cache_ttl_seconds", 300) or 300)
+    # Resolve TTL precedence: explicit param > settings.http_cache_ttl_seconds > unified 'tool' TTL > 300
+    if ttl_seconds is not None:
+        ttl = int(ttl_seconds)
+    else:
+        ttl_from_settings = getattr(settings, "http_cache_ttl_seconds", None)
+        if isinstance(ttl_from_settings, (int, float)) and int(ttl_from_settings) > 0:
+            ttl = int(ttl_from_settings)
+        else:
+            try:
+                from core.cache.unified_config import get_unified_cache_config  # local import to avoid cycles
+
+                ttl = int(get_unified_cache_config().get_ttl_for_domain("tool"))
+            except Exception:
+                ttl = 300
     redis_url = getattr(settings, "rate_limit_redis_url", None)
     # Redis-backed cache
     if _RedisCache is not None and redis_url:
         try:
-            rc = _RedisCache(url=str(redis_url), namespace="http", ttl=ttl)  # type: ignore[operator]
+            rc = _RedisCache(url=str(redis_url), namespace="http", ttl=ttl)
             raw = rc.get_str(key)
             if raw:
                 try:
                     obj = _json.loads(raw)
-                    return _CachedResponse(text=str(obj.get("text", "")), status_code=int(obj.get("status", 200)))
+                    return _CachedResponse(
+                        text=str(obj.get("text", "")),
+                        status_code=int(obj.get("status", 200)),
+                    )
                 except Exception:
                     ...
             resp = resilient_get(
-                url, params=params, headers=headers, timeout_seconds=timeout_seconds or get_request_timeout()
+                url,
+                params=params,
+                headers=headers,
+                timeout_seconds=timeout_seconds or get_request_timeout(),
             )
             if 200 <= getattr(resp, "status_code", 0) < 300:
-                rc.set_str(key, _json.dumps({"status": resp.status_code, "text": getattr(resp, "text", "")}))
+                rc.set_str(
+                    key,
+                    _json.dumps({"status": resp.status_code, "text": getattr(resp, "text", "")}),
+                )
             return resp
         except Exception:
             ...
@@ -480,9 +553,18 @@ def cached_get(
             neg_exp, neg_status = (0.0, 404)
         if neg_exp > now:
             return _CachedResponse(text="", status_code=int(neg_status))
-    resp = resilient_get(url, params=params, headers=headers, timeout_seconds=timeout_seconds or get_request_timeout())
+    resp = resilient_get(
+        url,
+        params=params,
+        headers=headers,
+        timeout_seconds=timeout_seconds or get_request_timeout(),
+    )
     if 200 <= getattr(resp, "status_code", 0) < 300:
-        _MEM_HTTP_CACHE[key] = (_t.time() + ttl, getattr(resp, "text", ""), int(resp.status_code))
+        _MEM_HTTP_CACHE[key] = (
+            _t.time() + ttl,
+            getattr(resp, "text", ""),
+            int(resp.status_code),
+        )
     else:
         if getattr(settings, "enable_http_negative_cache", False) and getattr(resp, "status_code", 0) in {404, 429}:
             retry_after_s: float | None = None
@@ -509,30 +591,32 @@ def cached_get(
 
 # Preserve patched functions if they were set before module reload
 if _patched_resilient_post and getattr(_patched_resilient_post, "__module__", __name__) != __name__:
-    resilient_post = _patched_resilient_post  # type: ignore[assignment]
+    resilient_post = _patched_resilient_post
 if _patched_resilient_get and getattr(_patched_resilient_get, "__module__", __name__) != __name__:
-    resilient_get = _patched_resilient_get  # type: ignore[assignment]
+    resilient_get = _patched_resilient_get
 
 __all__ = [
-    "REQUEST_TIMEOUT_SECONDS",
-    "get_request_timeout",
-    "HTTP_SUCCESS_NO_CONTENT",
-    "HTTP_RATE_LIMITED",
-    "DEFAULT_RATE_LIMIT_RETRY",
     "DEFAULT_HTTP_RETRY_ATTEMPTS",
-    "validate_public_https_url",
-    "resilient_post",
-    "resilient_get",
-    "http_request_with_retry",
-    "retrying_post",
-    "retrying_get",
-    "is_retry_enabled",
-    "resolve_retry_attempts",
-    "is_circuit_breaker_enabled",
-    "cached_get",
+    "DEFAULT_RATE_LIMIT_RETRY",
+    "HTTP_RATE_LIMITED",
+    "HTTP_SUCCESS_NO_CONTENT",
+    "REQUEST_TIMEOUT_SECONDS",
     # Back-compat seams
     "_RedisCache",
-    "get_settings",
     "_load_retry_config",
+    "cached_get",
+    "get_request_timeout",
+    "get_settings",
+    "http_request_with_retry",
+    "is_circuit_breaker_enabled",
+    "is_retry_enabled",
+    "resilient_get",
+    "resilient_post",
+    "resilient_delete",
+    "resolve_retry_attempts",
+    "retrying_get",
+    "retrying_delete",
+    "retrying_post",
     "time",
+    "validate_public_https_url",
 ]

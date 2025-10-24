@@ -1,8 +1,11 @@
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
 
-from fastapi import FastAPI
+
+if TYPE_CHECKING:
+    from fastapi import FastAPI
 
 
 def register_alert_routes(app: FastAPI) -> None:

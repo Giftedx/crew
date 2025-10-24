@@ -3,11 +3,15 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from ... import token_meter
-from ...learning_engine import LearningEngine
 from ..base_router import RoutingContext, RoutingStrategy
+
+
+if TYPE_CHECKING:
+    from ...learning_engine import LearningEngine
+
 
 logger = logging.getLogger(__name__)
 

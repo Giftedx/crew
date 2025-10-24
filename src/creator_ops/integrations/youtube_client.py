@@ -9,6 +9,7 @@ import httpx
 
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -50,10 +51,10 @@ class YouTubeClient:
 
         except httpx.HTTPError as e:
             logger.error(f"YouTube API request failed: {e}")
-            return StepResult.fail(f"YouTube API request failed: {str(e)}")
+            return StepResult.fail(f"YouTube API request failed: {e!s}")
         except Exception as e:
             logger.error(f"Unexpected error in YouTube API request: {e}")
-            return StepResult.fail(f"Unexpected error: {str(e)}")
+            return StepResult.fail(f"Unexpected error: {e!s}")
 
     def get_channel_info(self, channel_id: str) -> StepResult:
         """Get channel information."""
@@ -270,4 +271,4 @@ class YouTubeClient:
 
         except Exception as e:
             logger.error(f"YouTube client health check failed: {e}")
-            return StepResult.fail(f"Health check failed: {str(e)}")
+            return StepResult.fail(f"Health check failed: {e!s}")

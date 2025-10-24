@@ -10,9 +10,10 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from heapq import heappop, heappush
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any
 
 from ultimate_discord_intelligence_bot.step_result import StepResult
+
 
 logger = logging.getLogger(__name__)
 
@@ -36,11 +37,11 @@ class TaskNode:
     task_id: str
     task_type: str
     priority: int
-    dependencies: Set[str]
-    dependents: Set[str]
+    dependencies: set[str]
+    dependents: set[str]
     status: str = "pending"
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -51,19 +52,17 @@ class TaskSchedule:
     scheduled_time: datetime
     priority: int
     estimated_duration: int = 0
-    resource_requirements: Dict[str, Any] = field(default_factory=dict)
+    resource_requirements: dict[str, Any] = field(default_factory=dict)
 
 
 class TaskDependencyResolver:
     """Resolves task dependencies and detects cycles"""
 
     def __init__(self):
-        self._dependency_graph: Dict[str, Set[str]] = {}
-        self._reverse_dependency_graph: Dict[str, Set[str]] = {}
+        self._dependency_graph: dict[str, set[str]] = {}
+        self._reverse_dependency_graph: dict[str, set[str]] = {}
 
-    def add_task_dependencies(
-        self, task_id: str, dependencies: List[str]
-    ) -> StepResult:
+    def add_task_dependencies(self, task_id: str, dependencies: list[str]) -> StepResult:
         """Add task dependencies to the graph"""
         try:
             # Validate dependencies
@@ -83,15 +82,13 @@ class TaskDependencyResolver:
             # Check for cycles
             cycle = self._detect_cycle(task_id)
             if cycle:
-                return StepResult.fail(
-                    f"Cycle detected in dependencies: {' -> '.join(cycle)}"
-                )
+                return StepResult.fail(f"Cycle detected in dependencies: {' -> '.join(cycle)}")
 
             return StepResult.ok(data={"dependencies_added": len(dependencies)})
 
         except Exception as e:
             logger.error(f"Error adding task dependencies: {e}")
-            return StepResult.fail(f"Dependency addition failed: {str(e)}")
+            return StepResult.fail(f"Dependency addition failed: {e!s}")
 
     def remove_task(self, task_id: str) -> StepResult:
         """Remove task from dependency graph"""
@@ -120,9 +117,9 @@ class TaskDependencyResolver:
 
         except Exception as e:
             logger.error(f"Error removing task: {e}")
-            return StepResult.fail(f"Task removal failed: {str(e)}")
+            return StepResult.fail(f"Task removal failed: {e!s}")
 
-    def get_ready_tasks(self, completed_tasks: Set[str]) -> List[str]:
+    def get_ready_tasks(self, completed_tasks: set[str]) -> list[str]:
         """Get tasks that are ready to execute (dependencies satisfied)"""
         try:
             ready_tasks = []
@@ -139,7 +136,7 @@ class TaskDependencyResolver:
             logger.error(f"Error getting ready tasks: {e}")
             return []
 
-    def get_dependents(self, task_id: str) -> List[str]:
+    def get_dependents(self, task_id: str) -> list[str]:
         """Get all tasks that depend on the given task"""
         try:
             return list(self._reverse_dependency_graph.get(task_id, set()))
@@ -147,7 +144,7 @@ class TaskDependencyResolver:
             logger.error(f"Error getting dependents: {e}")
             return []
 
-    def _detect_cycle(self, start_task: str) -> Optional[List[str]]:
+    def _detect_cycle(self, start_task: str) -> list[str] | None:
         """Detect cycles in the dependency graph using DFS"""
         try:
             visited = set()
@@ -188,22 +185,20 @@ class TaskDependencyResolver:
 class TaskScheduler:
     """Priority-based task scheduler with resource management"""
 
-    def __init__(self, config: Optional[TaskManagerConfig] = None):
+    def __init__(self, config: TaskManagerConfig | None = None):
         self.config = config or TaskManagerConfig()
-        self._priority_queue: List[
-            Tuple[int, datetime, str]
-        ] = []  # (priority, time, task_id)
-        self._scheduled_tasks: Dict[str, TaskSchedule] = {}
-        self._resource_usage: Dict[str, int] = {}
-        self._max_resources: Dict[str, int] = {"cpu": 100, "memory": 100, "io": 100}
+        self._priority_queue: list[tuple[int, datetime, str]] = []  # (priority, time, task_id)
+        self._scheduled_tasks: dict[str, TaskSchedule] = {}
+        self._resource_usage: dict[str, int] = {}
+        self._max_resources: dict[str, int] = {"cpu": 100, "memory": 100, "io": 100}
 
     def schedule_task(
         self,
         task_id: str,
         priority: int,
         estimated_duration: int = 0,
-        resource_requirements: Optional[Dict[str, Any]] = None,
-        scheduled_time: Optional[datetime] = None,
+        resource_requirements: dict[str, Any] | None = None,
+        scheduled_time: datetime | None = None,
     ) -> StepResult:
         """Schedule a task for execution"""
         try:
@@ -235,9 +230,9 @@ class TaskScheduler:
 
         except Exception as e:
             logger.error(f"Error scheduling task: {e}")
-            return StepResult.fail(f"Task scheduling failed: {str(e)}")
+            return StepResult.fail(f"Task scheduling failed: {e!s}")
 
-    def get_next_task(self) -> Optional[str]:
+    def get_next_task(self) -> str | None:
         """Get the next task to execute based on priority and schedule"""
         try:
             if not self._priority_queue:
@@ -248,9 +243,8 @@ class TaskScheduler:
                 priority, scheduled_time, task_id = heappop(self._priority_queue)
 
                 # Check if task is ready to execute
-                if scheduled_time <= datetime.now(timezone.utc):
-                    if task_id in self._scheduled_tasks:
-                        return task_id
+                if scheduled_time <= datetime.now(timezone.utc) and task_id in self._scheduled_tasks:
+                    return task_id
 
                 # Put back if not ready
                 heappush(self._priority_queue, (priority, scheduled_time, task_id))
@@ -278,7 +272,7 @@ class TaskScheduler:
 
         except Exception as e:
             logger.error(f"Error completing task: {e}")
-            return StepResult.fail(f"Task completion failed: {str(e)}")
+            return StepResult.fail(f"Task completion failed: {e!s}")
 
     def cancel_task(self, task_id: str) -> StepResult:
         """Cancel a scheduled task"""
@@ -291,9 +285,7 @@ class TaskScheduler:
                     self._release_resources(task_schedule.resource_requirements)
 
                 # Remove from priority queue
-                self._priority_queue = [
-                    (p, t, tid) for p, t, tid in self._priority_queue if tid != task_id
-                ]
+                self._priority_queue = [(p, t, tid) for p, t, tid in self._priority_queue if tid != task_id]
 
                 return StepResult.ok(data={"cancelled": True, "task_id": task_id})
 
@@ -301,9 +293,9 @@ class TaskScheduler:
 
         except Exception as e:
             logger.error(f"Error cancelling task: {e}")
-            return StepResult.fail(f"Task cancellation failed: {str(e)}")
+            return StepResult.fail(f"Task cancellation failed: {e!s}")
 
-    def _check_resources_available(self, requirements: Dict[str, Any]) -> bool:
+    def _check_resources_available(self, requirements: dict[str, Any]) -> bool:
         """Check if required resources are available"""
         try:
             for resource, amount in requirements.items():
@@ -316,29 +308,25 @@ class TaskScheduler:
             logger.error(f"Error checking resources: {e}")
             return False
 
-    def _reserve_resources(self, requirements: Dict[str, Any]) -> None:
+    def _reserve_resources(self, requirements: dict[str, Any]) -> None:
         """Reserve resources for a task"""
         try:
             for resource, amount in requirements.items():
                 if resource in self._max_resources:
-                    self._resource_usage[resource] = (
-                        self._resource_usage.get(resource, 0) + amount
-                    )
+                    self._resource_usage[resource] = self._resource_usage.get(resource, 0) + amount
         except Exception as e:
             logger.error(f"Error reserving resources: {e}")
 
-    def _release_resources(self, requirements: Dict[str, Any]) -> None:
+    def _release_resources(self, requirements: dict[str, Any]) -> None:
         """Release resources for a task"""
         try:
             for resource, amount in requirements.items():
                 if resource in self._resource_usage:
-                    self._resource_usage[resource] = max(
-                        0, self._resource_usage[resource] - amount
-                    )
+                    self._resource_usage[resource] = max(0, self._resource_usage[resource] - amount)
         except Exception as e:
             logger.error(f"Error releasing resources: {e}")
 
-    def get_scheduler_status(self) -> Dict[str, Any]:
+    def get_scheduler_status(self) -> dict[str, Any]:
         """Get scheduler status and metrics"""
         try:
             return {
@@ -346,9 +334,7 @@ class TaskScheduler:
                 "scheduled_tasks": len(self._scheduled_tasks),
                 "resource_usage": self._resource_usage.copy(),
                 "max_resources": self._max_resources.copy(),
-                "next_task": self._priority_queue[0][2]
-                if self._priority_queue
-                else None,
+                "next_task": self._priority_queue[0][2] if self._priority_queue else None,
             }
         except Exception as e:
             logger.error(f"Error getting scheduler status: {e}")
@@ -358,23 +344,23 @@ class TaskScheduler:
 class TaskManager:
     """Unified task manager coordinating dependencies and scheduling"""
 
-    def __init__(self, config: Optional[TaskManagerConfig] = None):
+    def __init__(self, config: TaskManagerConfig | None = None):
         self.config = config or TaskManagerConfig()
         self._dependency_resolver = TaskDependencyResolver()
         self._task_scheduler = TaskScheduler(config)
-        self._task_nodes: Dict[str, TaskNode] = {}
-        self._completed_tasks: Set[str] = set()
-        self._running_tasks: Set[str] = set()
+        self._task_nodes: dict[str, TaskNode] = {}
+        self._completed_tasks: set[str] = set()
+        self._running_tasks: set[str] = set()
 
     def add_task(
         self,
         task_id: str,
         task_type: str,
         priority: int = 2,
-        dependencies: Optional[List[str]] = None,
+        dependencies: list[str] | None = None,
         estimated_duration: int = 0,
-        resource_requirements: Optional[Dict[str, Any]] = None,
-        metadata: Optional[Dict[str, Any]] = None,
+        resource_requirements: dict[str, Any] | None = None,
+        metadata: dict[str, Any] | None = None,
     ) -> StepResult:
         """Add a task to the manager"""
         try:
@@ -390,9 +376,7 @@ class TaskManager:
 
             # Add dependencies
             if dependencies:
-                dep_result = self._dependency_resolver.add_task_dependencies(
-                    task_id, dependencies
-                )
+                dep_result = self._dependency_resolver.add_task_dependencies(task_id, dependencies)
                 if not dep_result.success:
                     return dep_result
 
@@ -414,15 +398,13 @@ class TaskManager:
 
         except Exception as e:
             logger.error(f"Error adding task: {e}")
-            return StepResult.fail(f"Task addition failed: {str(e)}")
+            return StepResult.fail(f"Task addition failed: {e!s}")
 
-    def get_ready_tasks(self) -> List[str]:
+    def get_ready_tasks(self) -> list[str]:
         """Get tasks that are ready to execute"""
         try:
             # Get tasks with satisfied dependencies
-            ready_tasks = self._dependency_resolver.get_ready_tasks(
-                self._completed_tasks
-            )
+            ready_tasks = self._dependency_resolver.get_ready_tasks(self._completed_tasks)
 
             # Filter out running tasks
             ready_tasks = [tid for tid in ready_tasks if tid not in self._running_tasks]
@@ -455,11 +437,9 @@ class TaskManager:
 
         except Exception as e:
             logger.error(f"Error starting task: {e}")
-            return StepResult.fail(f"Task start failed: {str(e)}")
+            return StepResult.fail(f"Task start failed: {e!s}")
 
-    def complete_task(
-        self, task_id: str, result_data: Optional[Any] = None
-    ) -> StepResult:
+    def complete_task(self, task_id: str, result_data: Any | None = None) -> StepResult:
         """Mark task as completed"""
         try:
             if task_id not in self._task_nodes:
@@ -483,7 +463,7 @@ class TaskManager:
 
         except Exception as e:
             logger.error(f"Error completing task: {e}")
-            return StepResult.fail(f"Task completion failed: {str(e)}")
+            return StepResult.fail(f"Task completion failed: {e!s}")
 
     def fail_task(self, task_id: str, error_message: str) -> StepResult:
         """Mark task as failed"""
@@ -505,7 +485,7 @@ class TaskManager:
 
         except Exception as e:
             logger.error(f"Error failing task: {e}")
-            return StepResult.fail(f"Task failure handling failed: {str(e)}")
+            return StepResult.fail(f"Task failure handling failed: {e!s}")
 
     def get_task_status(self, task_id: str) -> StepResult:
         """Get status of a specific task"""
@@ -530,9 +510,9 @@ class TaskManager:
 
         except Exception as e:
             logger.error(f"Error getting task status: {e}")
-            return StepResult.fail(f"Task status retrieval failed: {str(e)}")
+            return StepResult.fail(f"Task status retrieval failed: {e!s}")
 
-    def get_manager_metrics(self) -> Dict[str, Any]:
+    def get_manager_metrics(self) -> dict[str, Any]:
         """Get task manager metrics"""
         try:
             scheduler_status = self._task_scheduler.get_scheduler_status()
@@ -543,12 +523,8 @@ class TaskManager:
                 "completed_tasks": len(self._completed_tasks),
                 "ready_tasks": len(self.get_ready_tasks()),
                 "scheduler_status": scheduler_status,
-                "dependency_graph_size": len(
-                    self._dependency_resolver._dependency_graph
-                ),
-                "reverse_dependency_graph_size": len(
-                    self._dependency_resolver._reverse_dependency_graph
-                ),
+                "dependency_graph_size": len(self._dependency_resolver._dependency_graph),
+                "reverse_dependency_graph_size": len(self._dependency_resolver._reverse_dependency_graph),
             }
 
         except Exception as e:

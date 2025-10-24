@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping, Sequence
-from typing import Any, Protocol, cast
+from typing import TYPE_CHECKING, Any, Protocol, cast
 
 from . import flags, reward_pipe
 from .rl import feature_store, registry
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Mapping, Sequence
 
 
 class _PolicyLike(Protocol):  # mirrors interface used in learning_engine
@@ -14,7 +17,7 @@ class _PolicyLike(Protocol):  # mirrors interface used in learning_engine
     def update(self, action: Any, reward: float, context: Mapping[str, Any]) -> None: ...
 
 
-def learn(  # noqa: PLR0913 - explicit parameters map RL loop stages clearly (domain, context, candidates, act_fn, registry, weights)
+def learn(
     domain: str,
     context: Mapping[str, Any],
     candidates: Sequence[Any],
@@ -22,7 +25,7 @@ def learn(  # noqa: PLR0913 - explicit parameters map RL loop stages clearly (do
     *,
     policy_registry: registry.PolicyRegistry | None = None,
     reward_weights: Mapping[str, float] | None = None,
-):  # noqa: PLR0913 - explicit parameters reflect RL loop stages; bundling reduces readability & type clarity
+):
     """Run a single recommend/act/update loop for ``domain``.
 
     Parameters
@@ -69,7 +72,7 @@ def learn(  # noqa: PLR0913 - explicit parameters map RL loop stages clearly (do
         )
 
     reg = policy_registry or registry.PolicyRegistry()
-    policy = cast(_PolicyLike, reg.get(domain))
+    policy = cast("_PolicyLike", reg.get(domain))
     arm = policy.recommend(features, candidates)
     outcome, signals = act_fn(arm)
     feature_store.update_stats(dict(outcome))

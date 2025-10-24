@@ -155,6 +155,6 @@ __all__ = [
     "Debate",
     "DebateAgent",
     "DebateCritique",
-    "DebateVote",
     "DebateStore",
+    "DebateVote",
 ]

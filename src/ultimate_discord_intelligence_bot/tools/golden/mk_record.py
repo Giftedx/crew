@@ -4,10 +4,15 @@ from __future__ import annotations
 
 import argparse
 import json
-from collections.abc import Sequence
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import jsonschema
+
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
 
 SCHEMA_PATH = Path(__file__).resolve().parents[4] / "datasets/schemas/task_record.schema.json"
 with open(SCHEMA_PATH, encoding="utf-8") as fh:

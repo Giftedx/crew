@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+
 try:
     import discord  # type: ignore
 except Exception:  # pragma: no cover

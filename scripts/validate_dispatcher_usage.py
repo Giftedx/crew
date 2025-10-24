@@ -15,6 +15,7 @@ from __future__ import annotations
 import pathlib
 import sys
 
+
 ALLOWED = {
     "src/ultimate_discord_intelligence_bot/tools/yt_dlp_download_tool.py",
     "src/ultimate_discord_intelligence_bot/tools/multi_platform_download_tool.py",

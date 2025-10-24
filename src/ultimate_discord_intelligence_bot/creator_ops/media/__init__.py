@@ -15,10 +15,11 @@ from .diarization import SpeakerDiarization
 from .embeddings import EmbeddingsGenerator
 from .nlp import NLPPipeline
 
+
 __all__ = [
-    "WhisperASR",
+    "EmbeddingsGenerator",
+    "NLPPipeline",
     "SpeakerDiarization",
     "TranscriptAlignment",
-    "NLPPipeline",
-    "EmbeddingsGenerator",
+    "WhisperASR",
 ]

@@ -9,10 +9,14 @@ from __future__ import annotations
 
 import logging
 import os
-from collections.abc import Callable
-from typing import Any
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from .dependency_manager import get_dependency_manager
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
 
 logger = logging.getLogger(__name__)
 
@@ -321,6 +325,9 @@ def get_feature_status() -> dict[str, Any]:
 
 
 # Convenience functions for common patterns
+T = TypeVar("T")
+
+
 def with_feature_flag(flag_name: str, fallback_func: Callable[[], Any] | None = None):
     """Decorator to enable/disable functionality based on feature flags."""
 

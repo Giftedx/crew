@@ -37,19 +37,41 @@ OFFICIAL_MODEL_CONFIGS = {
     "gpt-4-vision": ModelConfig(model_id="gpt-4-vision-preview", temperature=0.7, max_tokens=4096, top_p=0.9),
     # Anthropic Models
     "claude-opus": ModelConfig(
-        model_id="claude-3-opus-20240229", temperature=0.8, max_tokens=4096, top_p=0.9, top_k=40
+        model_id="claude-3-opus-20240229",
+        temperature=0.8,
+        max_tokens=4096,
+        top_p=0.9,
+        top_k=40,
     ),
     "claude-sonnet": ModelConfig(
-        model_id="claude-3-7-sonnet-20250219", temperature=0.7, max_tokens=2048, top_p=0.9, top_k=40
+        model_id="claude-3-7-sonnet-20250219",
+        temperature=0.7,
+        max_tokens=2048,
+        top_p=0.9,
+        top_k=40,
     ),
     "claude-haiku": ModelConfig(
-        model_id="claude-3-haiku-20240307", temperature=0.5, max_tokens=1024, top_p=0.8, top_k=30
+        model_id="claude-3-haiku-20240307",
+        temperature=0.5,
+        max_tokens=1024,
+        top_p=0.8,
+        top_k=30,
     ),
     # Google Gemini Models
     "gemini-pro": ModelConfig(model_id="gemini-2.5-pro", temperature=0.8, max_tokens=2048, top_p=0.8, top_k=10),
-    "gemini-flash": ModelConfig(model_id="gemini-2.5-flash", temperature=0.7, max_tokens=1024, top_p=0.8, top_k=10),
+    "gemini-flash": ModelConfig(
+        model_id="gemini-2.5-flash",
+        temperature=0.7,
+        max_tokens=1024,
+        top_p=0.8,
+        top_k=10,
+    ),
     "gemini-pro-vision": ModelConfig(
-        model_id="gemini-pro-vision", temperature=0.7, max_tokens=2048, top_p=0.8, top_k=10
+        model_id="gemini-pro-vision",
+        temperature=0.7,
+        max_tokens=2048,
+        top_p=0.8,
+        top_k=10,
     ),
 }
 
@@ -340,15 +362,15 @@ def create_optimized_prompt(
 
 
 __all__ = [
-    "ModelConfig",
-    "OFFICIAL_MODEL_CONFIGS",
-    "TEMPERATURE_BY_TASK",
-    "REASONING_EFFORT_MAP",
-    "OFFICIAL_PROMPT_TEMPLATES",
     "BEST_PRACTICE_TAGS",
+    "OFFICIAL_MODEL_CONFIGS",
+    "OFFICIAL_PROMPT_TEMPLATES",
+    "REASONING_EFFORT_MAP",
+    "TEMPERATURE_BY_TASK",
+    "ModelConfig",
+    "create_optimized_prompt",
+    "get_best_practice_tag",
     "get_model_config",
     "get_prompt_template",
-    "get_best_practice_tag",
     "get_reasoning_config",
-    "create_optimized_prompt",
 ]

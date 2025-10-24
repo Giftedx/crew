@@ -18,6 +18,7 @@ import pytest
 
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
+
 # ========================================
 # FIXTURES
 # ========================================
@@ -46,7 +47,9 @@ def mock_error_handler():
 @pytest.fixture
 def orchestrator(mock_logger, mock_synthesizer, mock_error_handler):
     """Create mock AutonomousIntelligenceOrchestrator with necessary dependencies."""
-    from ultimate_discord_intelligence_bot.autonomous_orchestrator import AutonomousIntelligenceOrchestrator
+    from ultimate_discord_intelligence_bot.autonomous_orchestrator import (
+        AutonomousIntelligenceOrchestrator,
+    )
 
     # Create minimal orchestrator instance
     orchestrator = MagicMock(spec=AutonomousIntelligenceOrchestrator)
@@ -217,7 +220,11 @@ class TestCoreSynthesisMethods:
         orchestrator.synthesizer.synthesize_intelligence_results = AsyncMock(
             return_value=(
                 StepResult.ok(data=synthesized_data),
-                {"overall_quality": 0.92, "completeness": 0.88, "overall_grade": "high"},
+                {
+                    "overall_quality": 0.92,
+                    "completeness": 0.88,
+                    "overall_grade": "high",
+                },
             )
         )
         orchestrator.error_handler.get_recovery_metrics = Mock(return_value={"recovery_count": 0})
@@ -263,7 +270,11 @@ class TestCoreSynthesisMethods:
         self, orchestrator, sample_complete_results
     ):
         """Test quality assessment integration."""
-        quality_assessment = {"overall_quality": 0.95, "completeness": 0.90, "overall_grade": "excellent"}
+        quality_assessment = {
+            "overall_quality": 0.95,
+            "completeness": 0.90,
+            "overall_grade": "excellent",
+        }
         orchestrator.synthesizer.synthesize_intelligence_results = AsyncMock(
             return_value=(
                 StepResult.ok(data={"enhanced_summary": "High quality analysis"}),
@@ -425,16 +436,10 @@ class TestFallbackSynthesis:
 class TestInsightGeneration:
     """Test insight generation methods."""
 
-    pass
-
 
 class TestConfidenceCalculation:
     """Test confidence calculation methods."""
 
-    pass
-
 
 class TestSpecializedExecution:
     """Test specialized execution methods."""
-
-    pass

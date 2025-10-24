@@ -22,6 +22,7 @@ import numpy as np
 
 from kg.store import KGEdge, KGNode, KGStore
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -268,7 +269,7 @@ class EnhancedKnowledgeGraph:
                 if len(path_edges) >= context.max_hops:
                     continue
 
-                new_path_edges = path_edges + [edge]
+                new_path_edges = [*path_edges, edge]
                 new_weight = path_weight + edge.weight
 
                 queue.append((self.store.get_node(neighbor_id), new_path_edges, new_weight))
@@ -308,7 +309,11 @@ class EnhancedKnowledgeGraph:
         return temporal_analysis
 
     def find_similar_entities(
-        self, entity_name: str, tenant: str, limit: int = 10, similarity_threshold: float = 0.7
+        self,
+        entity_name: str,
+        tenant: str,
+        limit: int = 10,
+        similarity_threshold: float = 0.7,
     ) -> list[tuple[EntityProfile, float]]:
         """Find entities similar to the given entity."""
         target_profile = self.query_entity_profile(entity_name, tenant)
@@ -392,7 +397,7 @@ class EnhancedKnowledgeGraph:
             activities2.extend([0.0] * (max_len - len(activities2)))
 
         # Calculate cosine similarity
-        dot_product = sum(a * b for a, b in zip(activities1, activities2))
+        dot_product = sum(a * b for a, b in zip(activities1, activities2, strict=False))
         norm1 = np.sqrt(sum(a * a for a in activities1))
         norm2 = np.sqrt(sum(b * b for b in activities2))
 
@@ -619,7 +624,10 @@ class AdvancedReasoningEngine:
 
         # Sort by confidence and path length
         filtered_paths.sort(
-            key=lambda p: (p.confidence, -len(p.edges)),  # Higher confidence, shorter paths first
+            key=lambda p: (
+                p.confidence,
+                -len(p.edges),
+            ),  # Higher confidence, shorter paths first
             reverse=True,
         )
 
@@ -639,7 +647,7 @@ class AdvancedReasoningEngine:
         best_path = paths[0]
 
         answer_parts = []
-        for i, edge in enumerate(best_path.edges):
+        for _i, edge in enumerate(best_path.edges):
             source_name = self._get_node_name(edge.src_id, tenant)
             target_name = self._get_node_name(edge.dst_id, tenant)
 
@@ -665,7 +673,9 @@ class AdvancedReasoningEngine:
 _enhanced_kg: EnhancedKnowledgeGraph | None = None
 
 
-def get_enhanced_knowledge_graph(store_path: str = ":memory:") -> EnhancedKnowledgeGraph:
+def get_enhanced_knowledge_graph(
+    store_path: str = ":memory:",
+) -> EnhancedKnowledgeGraph:
     """Get or create the global enhanced knowledge graph."""
     global _enhanced_kg
 
@@ -684,10 +694,10 @@ def initialize_enhanced_knowledge_graph(store_path: str = ":memory:") -> None:
 
 
 __all__ = [
-    "EnhancedKnowledgeGraph",
     "AdvancedReasoningEngine",
-    "KnowledgePath",
+    "EnhancedKnowledgeGraph",
     "EntityProfile",
+    "KnowledgePath",
     "ReasoningContext",
     "get_enhanced_knowledge_graph",
     "initialize_enhanced_knowledge_graph",

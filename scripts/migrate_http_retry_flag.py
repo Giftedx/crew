@@ -26,6 +26,7 @@ import re
 import sys
 from pathlib import Path
 
+
 ROOT = Path(__file__).resolve().parent.parent
 
 # Maximum examples to show per file in report
@@ -63,7 +64,13 @@ PATTERNS = {
 class MigrationResult:
     """Result of a migration operation."""
 
-    def __init__(self, file_path: Path, line_number: int, old_content: str, new_content: str | None = None):
+    def __init__(
+        self,
+        file_path: Path,
+        line_number: int,
+        old_content: str,
+        new_content: str | None = None,
+    ):
         self.file_path = file_path
         self.line_number = line_number
         self.old_content = old_content
@@ -94,7 +101,14 @@ def find_usage_patterns(file_path: Path) -> list[MigrationResult]:
             for pattern_name, pattern in PATTERNS.items():
                 if pattern.search(line_str):
                     # Generate replacement based on pattern type
-                    if pattern_name in ["env_var", "env_get", "setenv", "delenv", "env_dict", "patch_dict"]:
+                    if pattern_name in [
+                        "env_var",
+                        "env_get",
+                        "setenv",
+                        "delenv",
+                        "env_dict",
+                        "patch_dict",
+                    ]:
                         new_content = line_str.replace("ENABLE_ANALYSIS_HTTP_RETRY", "ENABLE_HTTP_RETRY")
 
                     results.append(MigrationResult(file_path, i, line_str, new_content))
@@ -222,7 +236,9 @@ def main():
     )
     parser.add_argument("--apply", action="store_true", help="Apply the migration changes")
     parser.add_argument(
-        "--report-only", action="store_true", help="Only generate report, don't show individual changes"
+        "--report-only",
+        action="store_true",
+        help="Only generate report, don't show individual changes",
     )
 
     args = parser.parse_args()

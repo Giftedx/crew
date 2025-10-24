@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+
+if TYPE_CHECKING:
+    from datetime import datetime, timedelta
 
 
 class PredictionConfidence(Enum):
@@ -84,10 +87,10 @@ class ModelDriftAlert:
 
 
 __all__ = [
-    "PredictionConfidence",
     "AlertSeverity",
-    "PerformancePrediction",
-    "EarlyWarningAlert",
     "CapacityForecast",
+    "EarlyWarningAlert",
     "ModelDriftAlert",
+    "PerformancePrediction",
+    "PredictionConfidence",
 ]

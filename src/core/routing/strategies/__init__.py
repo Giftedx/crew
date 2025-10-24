@@ -10,10 +10,11 @@ from .fallback_strategy import (
     PerformanceStrategy,
 )
 
+
 __all__ = [
+    "BalancedStrategy",
     "BanditStrategy",
     "CostAwareStrategy",
     "FallbackStrategy",
     "PerformanceStrategy",
-    "BalancedStrategy",
 ]

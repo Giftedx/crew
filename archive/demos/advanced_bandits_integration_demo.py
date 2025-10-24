@@ -19,6 +19,7 @@ import logging
 from datetime import UTC, datetime
 from pathlib import Path
 
+
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
@@ -36,7 +37,11 @@ async def main():
 
         # Initialize the system
         print("⚡ Initializing Advanced Bandits AI Router...")
-        config = {"context_dimension": 8, "num_actions": 4, "default_algorithm": "doubly_robust"}
+        config = {
+            "context_dimension": 8,
+            "num_actions": 4,
+            "default_algorithm": "doubly_robust",
+        }
 
         router = await initialize_advanced_router(config)
         print("✅ Advanced Bandits AI Router initialized successfully")
@@ -101,7 +106,11 @@ async def main():
 
         user_ids = [f"ab_test_user_{i}" for i in range(20)]
 
-        test_config = {"algorithms": ["doubly_robust", "offset_tree"], "domain": "model_routing", "num_requests": 50}
+        test_config = {
+            "algorithms": ["doubly_robust", "offset_tree"],
+            "domain": "model_routing",
+            "num_requests": 50,
+        }
 
         ab_results = await router.run_ab_test(user_ids, test_config)
 

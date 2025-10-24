@@ -4,11 +4,13 @@ from __future__ import annotations
 
 import time
 from dataclasses import dataclass, field
-from typing import Any, Protocol
-
-from ultimate_discord_intelligence_bot.step_result import StepResult
+from typing import TYPE_CHECKING, Any, Protocol
 
 from .tracing import tracing_module
+
+
+if TYPE_CHECKING:
+    from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 @dataclass(slots=True)
@@ -114,8 +116,8 @@ class TracingStepMiddleware(BasePipelineStepMiddleware):
 
 
 __all__ = [
-    "StepContext",
-    "PipelineStepMiddleware",
     "BasePipelineStepMiddleware",
+    "PipelineStepMiddleware",
+    "StepContext",
     "TracingStepMiddleware",
 ]

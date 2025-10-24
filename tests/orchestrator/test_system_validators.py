@@ -139,10 +139,10 @@ class TestCheckYtdlpAvailable:
         mock_which.return_value = None
 
         # This will try to import YTDLP_DIR and fail, returning False
-        result = system_validators.check_ytdlp_available()
+        system_validators.check_ytdlp_available()
 
         # Should return False when not in PATH and import fails
-        assert not result or result  # Function may return True if YTDLP_DIR exists
+        assert True  # Function may return True if YTDLP_DIR exists
 
     @patch("shutil.which")
     def test_handles_import_error_gracefully(self, mock_which):
@@ -222,7 +222,11 @@ class TestCheckDiscordAvailable:
         result = system_validators.check_discord_available()
         assert result is True
 
-    @patch.dict(os.environ, {"DISCORD_WEBHOOK": "https://discord.com/api/webhooks/123/abc"}, clear=True)
+    @patch.dict(
+        os.environ,
+        {"DISCORD_WEBHOOK": "https://discord.com/api/webhooks/123/abc"},
+        clear=True,
+    )
     def test_returns_true_for_valid_webhook(self):
         """Test detection of valid Discord webhook."""
         result = system_validators.check_discord_available()
@@ -253,7 +257,11 @@ class TestCheckDiscordAvailable:
         result = system_validators.check_discord_available()
         assert not result
 
-    @patch.dict(os.environ, {"DISCORD_WEBHOOK": "https://discord.com/api/webhooks/YOUR_"}, clear=True)
+    @patch.dict(
+        os.environ,
+        {"DISCORD_WEBHOOK": "https://discord.com/api/webhooks/YOUR_"},
+        clear=True,
+    )
     def test_returns_false_for_placeholder_webhook(self):
         """Test that placeholder Discord webhooks are rejected."""
         result = system_validators.check_discord_available()

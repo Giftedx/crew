@@ -29,6 +29,7 @@ Reward Feedback:
 
 from __future__ import annotations
 
+import contextlib
 import logging
 import math
 import os
@@ -37,13 +38,21 @@ import time
 from collections import deque
 from collections.abc import Sequence
 from dataclasses import dataclass, field
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from ai.routing.bandit_router import ThompsonBanditRouter
 from ai.routing.linucb_router import LinUCBRouter
-from ai.routing.router_registry import RewardNormalizer, get_tenant_router, record_selection
+from ai.routing.router_registry import (
+    RewardNormalizer,
+    get_tenant_router,
+    record_selection,
+)
 from ai.routing.vw_bandit_router import VWBanditRouter
-from core.llm_client import LLMCallResult, LLMClient
+
+
+if TYPE_CHECKING:
+    from core.llm_client import LLMCallResult, LLMClient
+
 
 logger = logging.getLogger(__name__)
 
@@ -132,17 +141,40 @@ class TaskComplexityMetrics:
                 content_lower = content.lower()
 
                 # Check for reasoning indicators
-                reasoning_words = ["reason", "think", "analyze", "explain", "why", "how", "because"]
+                reasoning_words = [
+                    "reason",
+                    "think",
+                    "analyze",
+                    "explain",
+                    "why",
+                    "how",
+                    "because",
+                ]
                 if any(word in content_lower for word in reasoning_words):
                     has_reasoning = True
 
                 # Check for creative indicators
-                creative_words = ["create", "write", "generate", "imagine", "design", "story", "poem"]
+                creative_words = [
+                    "create",
+                    "write",
+                    "generate",
+                    "imagine",
+                    "design",
+                    "story",
+                    "poem",
+                ]
                 if any(word in content_lower for word in creative_words):
                     has_creativity = True
 
                 # Check for factual indicators
-                factual_words = ["fact", "true", "correct", "accurate", "verify", "source"]
+                factual_words = [
+                    "fact",
+                    "true",
+                    "correct",
+                    "accurate",
+                    "verify",
+                    "source",
+                ]
                 if any(word in content_lower for word in factual_words):
                     has_facts = True
 
@@ -227,7 +259,12 @@ class LLMRouter:
         self._clients = clients
 
         # Enhanced feature flags
-        self._tenant_mode = os.getenv("ENABLE_BANDIT_TENANT", "0").lower() in {"1", "true", "yes", "on"}
+        self._tenant_mode = os.getenv("ENABLE_BANDIT_TENANT", "0").lower() in {
+            "1",
+            "true",
+            "yes",
+            "on",
+        }
         self._contextual_enabled = os.getenv("ENABLE_CONTEXTUAL_BANDIT", "0").lower() in {"1", "true", "yes", "on"}
         self._cost_aware_enabled = os.getenv("ENABLE_COST_AWARE_ROUTING", "1").lower() in {"1", "true", "yes", "on"}
         self._adaptive_quality_enabled = os.getenv("ENABLE_ADAPTIVE_QUALITY", "1").lower() in {"1", "true", "yes", "on"}
@@ -250,21 +287,79 @@ class LLMRouter:
         # Enhanced model selection configuration
         self._content_type_weights = {
             "text": {"accuracy": 0.8, "latency": 0.6, "cost": 0.4},
-            "image": {"accuracy": 0.9, "latency": 0.5, "cost": 0.3},  # Vision models need high accuracy
-            "video": {"accuracy": 0.9, "latency": 0.4, "cost": 0.2},  # Video analysis needs high accuracy
-            "audio": {"accuracy": 0.8, "latency": 0.7, "cost": 0.5},  # Audio needs good latency
-            "multimodal": {"accuracy": 0.95, "latency": 0.3, "cost": 0.1},  # Multi-modal needs highest accuracy
+            "image": {
+                "accuracy": 0.9,
+                "latency": 0.5,
+                "cost": 0.3,
+            },  # Vision models need high accuracy
+            "video": {
+                "accuracy": 0.9,
+                "latency": 0.4,
+                "cost": 0.2,
+            },  # Video analysis needs high accuracy
+            "audio": {
+                "accuracy": 0.8,
+                "latency": 0.7,
+                "cost": 0.5,
+            },  # Audio needs good latency
+            "multimodal": {
+                "accuracy": 0.95,
+                "latency": 0.3,
+                "cost": 0.1,
+            },  # Multi-modal needs highest accuracy
         }
 
         # Model capability mapping for different content types
         self._model_capabilities = {
-            "gpt-4": {"text": True, "image": True, "video": False, "audio": False, "multimodal": False},
-            "gpt-4-turbo": {"text": True, "image": True, "video": False, "audio": False, "multimodal": False},
-            "gpt-4-vision": {"text": True, "image": True, "video": False, "audio": False, "multimodal": False},
-            "claude-3-opus": {"text": True, "image": True, "video": False, "audio": False, "multimodal": False},
-            "claude-3-sonnet": {"text": True, "image": True, "video": False, "audio": False, "multimodal": False},
-            "gemini-pro": {"text": True, "image": True, "video": False, "audio": False, "multimodal": False},
-            "gemini-pro-vision": {"text": True, "image": True, "video": False, "audio": False, "multimodal": False},
+            "gpt-4": {
+                "text": True,
+                "image": True,
+                "video": False,
+                "audio": False,
+                "multimodal": False,
+            },
+            "gpt-4-turbo": {
+                "text": True,
+                "image": True,
+                "video": False,
+                "audio": False,
+                "multimodal": False,
+            },
+            "gpt-4-vision": {
+                "text": True,
+                "image": True,
+                "video": False,
+                "audio": False,
+                "multimodal": False,
+            },
+            "claude-3-opus": {
+                "text": True,
+                "image": True,
+                "video": False,
+                "audio": False,
+                "multimodal": False,
+            },
+            "claude-3-sonnet": {
+                "text": True,
+                "image": True,
+                "video": False,
+                "audio": False,
+                "multimodal": False,
+            },
+            "gemini-pro": {
+                "text": True,
+                "image": True,
+                "video": False,
+                "audio": False,
+                "multimodal": False,
+            },
+            "gemini-pro-vision": {
+                "text": True,
+                "image": True,
+                "video": False,
+                "audio": False,
+                "multimodal": False,
+            },
         }
 
         # Performance tracking
@@ -274,23 +369,42 @@ class LLMRouter:
 
         # Routing decision caching
         self._routing_cache: dict[str, tuple[str, float]] = {}
-        self._routing_cache_ttl = int(os.getenv("ROUTING_CACHE_TTL", "600"))  # 10 minutes default
+        try:
+            from core.cache.unified_config import get_unified_cache_config
+
+            self._routing_cache_ttl = get_unified_cache_config().get_ttl_for_domain("routing")
+        except Exception:
+            # Fallback to previous environment-based value
+            self._routing_cache_ttl = int(os.getenv("ROUTING_CACHE_TTL", "600"))  # 10 minutes default
         self._routing_cache_max_size = int(os.getenv("ROUTING_CACHE_MAX_SIZE", "1000"))  # Max cache entries
 
         # Initialize model profiles
-        for model_name in clients.keys():
+        for model_name in clients:
             self._model_profiles[model_name] = ModelPerformanceProfile(model=model_name)
 
         # Existing bandit router configuration (unchanged)
         self._linucb_dimension = int(os.getenv("LINUCB_DIMENSION", "0") or 0)
-        self._hybrid_enabled = os.getenv("ENABLE_CONTEXTUAL_HYBRID", "1").lower() in {"1", "true", "yes", "on"}
+        self._hybrid_enabled = os.getenv("ENABLE_CONTEXTUAL_HYBRID", "1").lower() in {
+            "1",
+            "true",
+            "yes",
+            "on",
+        }
         # Feature quality gating configuration
         self._feature_quality_min = float(os.getenv("FEATURE_QUALITY_MIN", "0.5") or 0.5)
         self._feature_min_norm = float(os.getenv("FEATURE_MIN_NORM", "0.0") or 0.0)
         self._feature_max_norm = float(os.getenv("FEATURE_MAX_NORM", "10.0") or 10.0)
-        self._vw_enabled = os.getenv("ENABLE_VW_BANDIT", "0").lower() in {"1", "true", "yes", "on"} or os.getenv(
-            "ENABLE_VOWPAL_WABBIT_BANDIT", "0"
-        ).lower() in {"1", "true", "yes", "on"}
+        self._vw_enabled = os.getenv("ENABLE_VW_BANDIT", "0").lower() in {
+            "1",
+            "true",
+            "yes",
+            "on",
+        } or os.getenv("ENABLE_VOWPAL_WABBIT_BANDIT", "0").lower() in {
+            "1",
+            "true",
+            "yes",
+            "on",
+        }
 
         # Initialize bandit router (unchanged)
         self._bandit: VWBanditRouter | ThompsonBanditRouter
@@ -355,7 +469,11 @@ class LLMRouter:
         return min(0.95, threshold * complexity_multiplier)  # Cap at 95%
 
     def _calculate_cost_utility_score(
-        self, model: str, estimated_cost: float, estimated_quality: float, estimated_latency: float
+        self,
+        model: str,
+        estimated_cost: float,
+        estimated_quality: float,
+        estimated_latency: float,
     ) -> float:
         """Calculate cost-utility score for model selection."""
         # Normalize metrics (0-1 scale)
@@ -406,7 +524,7 @@ class LLMRouter:
         import hashlib
 
         cache_str = ":".join(cache_params)
-        cache_hash = hashlib.md5(cache_str.encode()).hexdigest()[:12]
+        cache_hash = hashlib.md5(cache_str.encode(), usedforsecurity=False).hexdigest()[:12]  # nosec B324 - routing cache key only
 
         return f"routing:{cache_hash}"
 
@@ -515,7 +633,10 @@ class LLMRouter:
 
         if not model_options:
             # Fallback to best available model if none meet quality threshold
-            best_model = max(available_models, key=lambda m: self._model_profiles[m].avg_quality_score)
+            best_model = max(
+                available_models,
+                key=lambda m: self._model_profiles[m].avg_quality_score,
+            )
             profile = self._model_profiles[best_model]
             estimated_cost = complexity_metrics.estimated_tokens * profile.avg_cost_per_token
 
@@ -531,14 +652,20 @@ class LLMRouter:
             )
 
         # Select model with highest utility score
-        best_option = max(model_options, key=lambda x: x["utility_score"])  # type: ignore[return-value,arg-type]
+        best_option = max(model_options, key=lambda x: x["utility_score"])  # type: ignore[arg-type,return-value]
 
         # Calculate confidence based on utility gap and historical performance
-        utility_gap = best_option["utility_score"] - min(o["utility_score"] for o in model_options)  # type: ignore[operator,type-var]
+        utility_gap = best_option["utility_score"] - min(  # type: ignore[operator,type-var]
+            o["utility_score"] for o in model_options
+        )
         confidence = min(1.0, utility_gap + 0.3)  # Base confidence + utility gap bonus
 
         # Determine fallback models (next best options)
-        sorted_options = sorted(model_options, key=lambda x: x["utility_score"], reverse=True)  # type: ignore[return-value,arg-type]
+        sorted_options = sorted(
+            model_options,
+            key=lambda x: x["utility_score"],
+            reverse=True,  # type: ignore[arg-type,return-value]
+        )
         fallback_models = [opt["model"] for opt in sorted_options[1:3]]  # Top 2 alternatives
 
         # Generate reasoning
@@ -556,7 +683,10 @@ class LLMRouter:
         )
 
     def _generate_selection_reasoning(
-        self, selected_option: dict[str, Any], complexity: TaskComplexityMetrics, quality_threshold: float
+        self,
+        selected_option: dict[str, Any],
+        complexity: TaskComplexityMetrics,
+        quality_threshold: float,
     ) -> str:
         """Generate human-readable reasoning for model selection."""
         model = selected_option["model"]
@@ -719,10 +849,8 @@ class LLMRouter:
                         if cost_saved > self._min_cost_savings_threshold:
                             self._cost_optimization_stats.record_decision(True, cost_saved, baseline_cost)
                             if self._cost_savings_counter:
-                                try:
+                                with contextlib.suppress(Exception):
                                     self._cost_savings_counter.inc(cost_saved)
-                                except Exception:
-                                    pass
                         else:
                             self._cost_optimization_stats.record_decision(True, 0.0, cost)
                     else:
@@ -992,7 +1120,10 @@ class LLMRouter:
         return model, result, reward
 
     def select_model_for_content_type(
-        self, content_type: str, task_complexity: str = "standard", quality_requirement: float | None = None
+        self,
+        content_type: str,
+        task_complexity: str = "standard",
+        quality_requirement: float | None = None,
     ) -> str:
         """Select the best model for a specific content type and task requirements.
 
@@ -1020,9 +1151,12 @@ class LLMRouter:
         content_weights = self._content_type_weights.get(content_type, self._content_type_weights["text"])
 
         # Adjust quality threshold based on task complexity
-        complexity_multiplier = {"quick": 0.8, "standard": 1.0, "comprehensive": 1.2, "expert": 1.4}.get(
-            task_complexity, 1.0
-        )
+        complexity_multiplier = {
+            "quick": 0.8,
+            "standard": 1.0,
+            "comprehensive": 1.2,
+            "expert": 1.4,
+        }.get(task_complexity, 1.0)
 
         effective_quality_threshold = (quality_requirement or self._quality_threshold_base) * complexity_multiplier
         effective_quality_threshold = min(1.0, effective_quality_threshold)  # Cap at 1.0

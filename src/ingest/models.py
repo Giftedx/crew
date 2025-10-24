@@ -288,7 +288,8 @@ def upsert_creator_by_youtube_channel(conn: sqlite3.Connection, *, tenant: str, 
     if row:
         cid = int(row[0])
         conn.execute(
-            "UPDATE creator_profile SET youtube_id=?, last_checked_at=datetime('now') WHERE id=?", (channel_id, cid)
+            "UPDATE creator_profile SET youtube_id=?, last_checked_at=datetime('now') WHERE id=?",
+            (channel_id, cid),
         )
         conn.commit()
         return cid
@@ -393,14 +394,18 @@ def get_creator_by_slug(conn: sqlite3.Connection, slug: str) -> CreatorProfile |
 def get_episodes_by_creator(conn: sqlite3.Connection, creator_id: int, limit: int = 50) -> list[Episode]:
     """Get episodes by creator ID with pagination (uses index)."""
     cursor = conn.execute(
-        "SELECT * FROM episode WHERE creator_id = ? ORDER BY published_at DESC LIMIT ?", (creator_id, limit)
+        "SELECT * FROM episode WHERE creator_id = ? ORDER BY published_at DESC LIMIT ?",
+        (creator_id, limit),
     )
     return [Episode(*row) for row in cursor.fetchall()]
 
 
 def get_transcript_segments(conn: sqlite3.Connection, episode_id: int) -> list[TranscriptSegment]:
     """Get transcript segments for an episode (uses index)."""
-    cursor = conn.execute("SELECT * FROM transcript_segment WHERE episode_id = ? ORDER BY start", (episode_id,))
+    cursor = conn.execute(
+        "SELECT * FROM transcript_segment WHERE episode_id = ? ORDER BY start",
+        (episode_id,),
+    )
     return [TranscriptSegment(*row) for row in cursor.fetchall()]
 
 
@@ -425,7 +430,8 @@ def get_usage_by_call_id(conn: sqlite3.Connection, call_id: str) -> UsageLog | N
 def get_watchlist_by_tenant_workspace(conn: sqlite3.Connection, tenant: str, workspace: str) -> list[Watchlist]:
     """Get watchlist entries by tenant and workspace (uses index)."""
     cursor = conn.execute(
-        "SELECT * FROM watchlist WHERE tenant = ? AND workspace = ? AND enabled = 1", (tenant, workspace)
+        "SELECT * FROM watchlist WHERE tenant = ? AND workspace = ? AND enabled = 1",
+        (tenant, workspace),
     )
     return [Watchlist(*row) for row in cursor.fetchall()]
 
@@ -449,14 +455,18 @@ def get_pending_ingest_jobs(
 def get_ingest_jobs_by_status(conn: sqlite3.Connection, status: str, limit: int = 100) -> list[IngestJobRecord]:
     """Get ingest jobs by status (uses index)."""
     cursor = conn.execute(
-        "SELECT * FROM ingest_job WHERE status = ? ORDER BY scheduled_at DESC LIMIT ?", (status, limit)
+        "SELECT * FROM ingest_job WHERE status = ? ORDER BY scheduled_at DESC LIMIT ?",
+        (status, limit),
     )
     return [IngestJobRecord(*row) for row in cursor.fetchall()]
 
 
 def get_recent_usage_logs(conn: sqlite3.Connection, channel_id: str, limit: int = 50) -> list[UsageLog]:
     """Get recent usage logs for a channel (uses indexes)."""
-    cursor = conn.execute("SELECT * FROM usage_log WHERE channel_id = ? ORDER BY ts DESC LIMIT ?", (channel_id, limit))
+    cursor = conn.execute(
+        "SELECT * FROM usage_log WHERE channel_id = ? ORDER BY ts DESC LIMIT ?",
+        (channel_id, limit),
+    )
     return [UsageLog(*row) for row in cursor.fetchall()]
 
 

@@ -19,6 +19,7 @@ from typing import Any
 
 import psutil
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -391,7 +392,10 @@ class PerformanceProfiler:
 
                     # Create profile entry
                     entry = self._create_profile_entry(
-                        function_name, filename, func.__code__.co_firstlineno, is_async=True
+                        function_name,
+                        filename,
+                        func.__code__.co_firstlineno,
+                        is_async=True,
                     )
 
                     # Add to call stack
@@ -422,7 +426,10 @@ class PerformanceProfiler:
 
                     # Create profile entry
                     entry = self._create_profile_entry(
-                        function_name, filename, func.__code__.co_firstlineno, is_async=False
+                        function_name,
+                        filename,
+                        func.__code__.co_firstlineno,
+                        is_async=False,
                     )
 
                     # Add to call stack

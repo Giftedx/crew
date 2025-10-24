@@ -24,6 +24,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
+
 ROOT = Path(__file__).resolve().parent.parent
 
 # Maximum examples to show per file in report
@@ -62,7 +63,13 @@ REPLACEMENTS = {
 class MigrationResult:
     """Result of a migration operation."""
 
-    def __init__(self, file_path: Path, line_number: int, old_content: str, new_content: str | None = None):
+    def __init__(
+        self,
+        file_path: Path,
+        line_number: int,
+        old_content: str,
+        new_content: str | None = None,
+    ):
         self.file_path = file_path
         self.line_number = line_number
         self.old_content = old_content
@@ -90,11 +97,16 @@ def find_usage_patterns(file_path: Path) -> list[MigrationResult]:
             line_str = line.strip()
 
             # Check each replacement pattern
-            for pattern_type, replacements in REPLACEMENTS.items():
+            for _pattern_type, replacements in REPLACEMENTS.items():
                 for old_pattern, new_pattern in replacements.items():
                     if old_pattern in line_str:
                         results.append(
-                            MigrationResult(file_path, i, line_str, line_str.replace(old_pattern, new_pattern))
+                            MigrationResult(
+                                file_path,
+                                i,
+                                line_str,
+                                line_str.replace(old_pattern, new_pattern),
+                            )
                         )
                         break  # Only one replacement per line
 
@@ -222,7 +234,9 @@ def main():
     )
     parser.add_argument("--apply", action="store_true", help="Apply the migration changes")
     parser.add_argument(
-        "--report-only", action="store_true", help="Only generate report, don't show individual changes"
+        "--report-only",
+        action="store_true",
+        help="Only generate report, don't show individual changes",
     )
 
     args = parser.parse_args()

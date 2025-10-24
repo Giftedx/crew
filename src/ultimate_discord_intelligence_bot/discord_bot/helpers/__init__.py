@@ -6,10 +6,11 @@ from .fallacies import _detect_fallacies, _fallacy_database
 from .platform import _infer_platform
 from .quality import assess_response_quality
 
+
 __all__ = [
-    "_infer_platform",
+    "_detect_fallacies",
     "_evaluate_claim",
     "_fallacy_database",
-    "_detect_fallacies",
+    "_infer_platform",
     "assess_response_quality",
 ]

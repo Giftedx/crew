@@ -9,19 +9,31 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from ultimate_discord_intelligence_bot.creator_ops.config import CreatorOpsConfig
-from ultimate_discord_intelligence_bot.creator_ops.integrations.twitch_client import TwitchClient
-from ultimate_discord_intelligence_bot.creator_ops.integrations.youtube_client import YouTubeClient
-from ultimate_discord_intelligence_bot.creator_ops.media.alignment import TranscriptAlignment
+from ultimate_discord_intelligence_bot.creator_ops.integrations.twitch_client import (
+    TwitchClient,
+)
+from ultimate_discord_intelligence_bot.creator_ops.integrations.youtube_client import (
+    YouTubeClient,
+)
+from ultimate_discord_intelligence_bot.creator_ops.media.alignment import (
+    TranscriptAlignment,
+)
 from ultimate_discord_intelligence_bot.creator_ops.media.asr import WhisperASR
-from ultimate_discord_intelligence_bot.creator_ops.media.diarization import SpeakerDiarization
+from ultimate_discord_intelligence_bot.creator_ops.media.diarization import (
+    SpeakerDiarization,
+)
 from ultimate_discord_intelligence_bot.creator_ops.media.nlp import NLPPipeline
 from ultimate_discord_intelligence_bot.step_result import StepResult
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
 
 logger = logging.getLogger(__name__)
 
@@ -156,8 +168,8 @@ class LiveClipRadar:
                 return result
 
         except Exception as e:
-            logger.error(f"Failed to start monitoring: {str(e)}")
-            return StepResult.fail(f"Failed to start monitoring: {str(e)}")
+            logger.error(f"Failed to start monitoring: {e!s}")
+            return StepResult.fail(f"Failed to start monitoring: {e!s}")
 
     async def stop_monitoring(self, monitor_id: str) -> StepResult:
         """
@@ -197,8 +209,8 @@ class LiveClipRadar:
             )
 
         except Exception as e:
-            logger.error(f"Failed to stop monitoring: {str(e)}")
-            return StepResult.fail(f"Failed to stop monitoring: {str(e)}")
+            logger.error(f"Failed to stop monitoring: {e!s}")
+            return StepResult.fail(f"Failed to stop monitoring: {e!s}")
 
     async def _start_youtube_monitoring(
         self,
@@ -237,8 +249,8 @@ class LiveClipRadar:
             return monitor_result
 
         except Exception as e:
-            logger.error(f"Failed to start YouTube monitoring: {str(e)}")
-            return StepResult.fail(f"Failed to start YouTube monitoring: {str(e)}")
+            logger.error(f"Failed to start YouTube monitoring: {e!s}")
+            return StepResult.fail(f"Failed to start YouTube monitoring: {e!s}")
 
     async def _start_twitch_monitoring(
         self,
@@ -281,8 +293,8 @@ class LiveClipRadar:
             return monitor_result
 
         except Exception as e:
-            logger.error(f"Failed to start Twitch monitoring: {str(e)}")
-            return StepResult.fail(f"Failed to start Twitch monitoring: {str(e)}")
+            logger.error(f"Failed to start Twitch monitoring: {e!s}")
+            return StepResult.fail(f"Failed to start Twitch monitoring: {e!s}")
 
     def _create_chat_callback(
         self,
@@ -391,7 +403,7 @@ class LiveClipRadar:
             return None
 
         except Exception as e:
-            logger.error(f"Failed to detect viral moment from chat: {str(e)}")
+            logger.error(f"Failed to detect viral moment from chat: {e!s}")
             return None
 
     def _detect_viral_moment_from_events(
@@ -433,7 +445,7 @@ class LiveClipRadar:
             return None
 
         except Exception as e:
-            logger.error(f"Failed to detect viral moment from events: {str(e)}")
+            logger.error(f"Failed to detect viral moment from events: {e!s}")
             return None
 
     def _detect_laughter_indicators(self, messages: list) -> list[str]:
@@ -471,8 +483,23 @@ class LiveClipRadar:
                 return 0.0
 
             # Simple sentiment analysis based on keywords
-            positive_keywords = ["love", "amazing", "great", "awesome", "best", "fire", "🔥"]
-            negative_keywords = ["hate", "terrible", "awful", "worst", "trash", "boring"]
+            positive_keywords = [
+                "love",
+                "amazing",
+                "great",
+                "awesome",
+                "best",
+                "fire",
+                "🔥",
+            ]
+            negative_keywords = [
+                "hate",
+                "terrible",
+                "awful",
+                "worst",
+                "trash",
+                "boring",
+            ]
 
             positive_count = 0
             negative_count = 0
@@ -494,7 +521,7 @@ class LiveClipRadar:
             return (positive_count - negative_count) / total_sentiment_words
 
         except Exception as e:
-            logger.warning(f"Failed to calculate chat sentiment: {str(e)}")
+            logger.warning(f"Failed to calculate chat sentiment: {e!s}")
             return 0.0
 
     async def generate_clip_candidate(
@@ -566,8 +593,8 @@ class LiveClipRadar:
             return StepResult.ok(data=clip_candidate)
 
         except Exception as e:
-            logger.error(f"Failed to generate clip candidate: {str(e)}")
-            return StepResult.fail(f"Failed to generate clip candidate: {str(e)}")
+            logger.error(f"Failed to generate clip candidate: {e!s}")
+            return StepResult.fail(f"Failed to generate clip candidate: {e!s}")
 
     async def create_stream_marker(
         self,
@@ -626,8 +653,8 @@ class LiveClipRadar:
                 return StepResult.fail(f"Unsupported platform for stream markers: {platform}")
 
         except Exception as e:
-            logger.error(f"Failed to create stream marker: {str(e)}")
-            return StepResult.fail(f"Failed to create stream marker: {str(e)}")
+            logger.error(f"Failed to create stream marker: {e!s}")
+            return StepResult.fail(f"Failed to create stream marker: {e!s}")
 
     def _extract_youtube_video_id(self, url: str) -> str | None:
         """Extract YouTube video ID from URL."""
@@ -674,13 +701,45 @@ class LiveClipRadar:
             temp_path = temp_file.name
             temp_file.close()
 
-            # TODO: Implement actual FFmpeg extraction
-            # ffmpeg -i stream_url -ss start_time -t duration -vn -acodec pcm_s16le temp_path
+            # Implemented: FFmpeg audio extraction
+            try:
+                import subprocess
 
-            return temp_path if os.path.exists(temp_path) else None
+                # Build FFmpeg command
+                cmd = [
+                    "ffmpeg",
+                    "-i",
+                    stream_url,
+                    "-ss",
+                    str(start_time),
+                    "-t",
+                    str(duration),
+                    "-vn",  # No video
+                    "-acodec",
+                    "pcm_s16le",  # Audio codec
+                    "-y",  # Overwrite output file
+                    temp_path,
+                ]
+
+                # Execute FFmpeg command
+                result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+
+                if result.returncode == 0:
+                    logger.info(f"Audio extracted successfully: {temp_path}")
+                    return temp_path if os.path.exists(temp_path) else None
+                else:
+                    logger.error(f"FFmpeg failed: {result.stderr}")
+                    return None
+
+            except subprocess.TimeoutExpired:
+                logger.error("FFmpeg extraction timed out")
+                return None
+            except Exception as e:
+                logger.error(f"FFmpeg extraction failed: {e}")
+                return None
 
         except Exception as e:
-            logger.error(f"Failed to extract audio segment: {str(e)}")
+            logger.error(f"Failed to extract audio segment: {e!s}")
             return None
 
     def _generate_clip_title(
@@ -707,7 +766,7 @@ class LiveClipRadar:
             return f"Viral Moment - {viral_moment.trigger_type}"
 
         except Exception as e:
-            logger.warning(f"Failed to generate clip title: {str(e)}")
+            logger.warning(f"Failed to generate clip title: {e!s}")
             return f"Viral Moment - {viral_moment.trigger_type}"
 
     def _generate_clip_description(
@@ -734,7 +793,7 @@ class LiveClipRadar:
             return description
 
         except Exception as e:
-            logger.warning(f"Failed to generate clip description: {str(e)}")
+            logger.warning(f"Failed to generate clip description: {e!s}")
             return f"Viral moment detected: {viral_moment.trigger_type}"
 
     def get_monitoring_status(self) -> dict[str, Any]:

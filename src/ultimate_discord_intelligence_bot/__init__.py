@@ -7,6 +7,7 @@ code rather than an untyped third-party dependency.
 
 from typing import Any
 
+
 __all__: list[str] = []
 
 

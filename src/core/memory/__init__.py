@@ -31,6 +31,7 @@ from .multimodal_embeddings import (
     MultiModalEmbeddingGenerator,
 )
 
+
 __all__ = [
     # Advanced compaction exports
     "AdvancedMemoryCompactor",
@@ -38,19 +39,19 @@ __all__ = [
     "CompactionMetrics",
     "CompactionStrategy",
     "CompactionTrigger",
-    "MemoryEntry",
     # Cross-tenant similarity exports
     "CrossTenantConfig",
     "CrossTenantSimilarityDetector",
-    "IsolationStrategy",
-    "SimilarityDetectionMethod",
-    "SimilarityViolation",
-    "TenantIsolationMetrics",
     # Multi-modal embeddings exports
     "EmbeddingConfig",
     "EmbeddingModel",
     "EmbeddingResult",
     "EmbeddingType",
+    "IsolationStrategy",
+    "MemoryEntry",
     "MultiModalEmbedding",
     "MultiModalEmbeddingGenerator",
+    "SimilarityDetectionMethod",
+    "SimilarityViolation",
+    "TenantIsolationMetrics",
 ]

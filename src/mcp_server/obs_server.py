@@ -14,7 +14,13 @@ Notes:
 
 from __future__ import annotations
 
-from collections.abc import Callable
+import contextlib
+from typing import TYPE_CHECKING
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
 
 try:
     from fastmcp import FastMCP  # type: ignore
@@ -57,15 +63,13 @@ def _summarize_health_impl() -> dict:
         prom_ok = bool(getattr(metrics, "PROMETHEUS_AVAILABLE", False))
         # Attempt a render to ensure registry is functional
         data = b""
-        try:
+        with contextlib.suppress(Exception):
             data = metrics.render()
-        except Exception:
-            pass
         status = "ok" if (prom_ok or len(data) >= 0) else "degraded"
         return {
             "status": status,
             "prometheus_available": prom_ok,
-            "exposition_bytes": int(len(data)) if isinstance(data, (bytes, bytearray)) else 0,
+            "exposition_bytes": len(data) if isinstance(data, (bytes, bytearray)) else 0,
         }
     except Exception as exc:
         return {"status": "degraded", "error": str(exc)}
@@ -161,7 +165,12 @@ def metrics_prom() -> str:
 
     import os as _os
 
-    if _os.getenv("ENABLE_MCP_OBS_PROM_RESOURCE", "0").lower() not in ("1", "true", "yes", "on"):
+    if _os.getenv("ENABLE_MCP_OBS_PROM_RESOURCE", "0").lower() not in (
+        "1",
+        "true",
+        "yes",
+        "on",
+    ):
         return "prom_resource_disabled"
     try:
         from obs import metrics  # type: ignore
@@ -185,13 +194,13 @@ def degradations_recent() -> dict:
 
 
 __all__ = [
-    "obs_mcp",
-    "summarize_health",
-    "summarize_health_tool",
+    "degradations_recent",
     "get_counters",
     "get_counters_tool",
+    "metrics_prom",
+    "obs_mcp",
     "recent_degradations",
     "recent_degradations_tool",
-    "metrics_prom",
-    "degradations_recent",
+    "summarize_health",
+    "summarize_health_tool",
 ]

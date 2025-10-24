@@ -1,0 +1,40 @@
+# Content Ingestion Configuration
+# TODO: Implement multi-platform content ingestion settings
+
+# Platform configurations
+platforms:
+  youtube:
+    enabled: true
+    # TODO: Add YouTube API configuration
+  twitch:
+    enabled: true
+    # TODO: Add Twitch API configuration
+  tiktok:
+    enabled: true
+    # TODO: Add TikTok API configuration
+  reddit:
+    enabled: true
+    # TODO: Add Reddit API configuration
+
+# Download settings
+download:
+  max_file_size_mb: 100
+  timeout_seconds: 300
+  retry_attempts: 3
+  # TODO: Add download optimization settings
+
+# Processing settings
+processing:
+  transcription:
+    enabled: true
+    model: "whisper"
+    # TODO: Add transcription configuration
+  analysis:
+    enabled: true
+    # TODO: Add content analysis configuration
+
+# Storage settings
+storage:
+  local_path: "/tmp/ingest"
+  cleanup_after_days: 7
+  # TODO: Add storage optimization settings

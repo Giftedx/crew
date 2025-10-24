@@ -6,6 +6,7 @@ from collections.abc import Callable
 
 from .reward_pipe import RewardResult, compute
 
+
 CandidateFn = Callable[[], tuple[dict[str, float], dict[str, float]]]
 
 

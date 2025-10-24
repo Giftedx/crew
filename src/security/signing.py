@@ -14,7 +14,12 @@ import hmac
 import secrets
 import time
 from collections import OrderedDict
-from collections.abc import Mapping
+from typing import TYPE_CHECKING
+
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+
 
 # ``OrderedDict`` gives us a tiny LRU cache so replay protection does not grow
 # without bound.  Keys are nonces, values are the timestamp they were first
@@ -69,7 +74,7 @@ def build_signature_headers(
     return {"X-Signature": sig, "X-Timestamp": str(ts), "X-Nonce": n}
 
 
-def verify_signature(  # noqa: PLR0913 - cryptographic interface requires explicit parameters for auditability (payload, secret, signature, timestamp, nonce, tolerance)
+def verify_signature(
     payload: bytes,
     secret: str,
     signature: str,
@@ -77,7 +82,7 @@ def verify_signature(  # noqa: PLR0913 - cryptographic interface requires explic
     nonce: str,
     *,
     tolerance: int = 300,
-) -> bool:  # noqa: PLR0913 - explicit parameters reflect cryptographic inputs; bundling harms auditability
+) -> bool:
     """Validate ``signature`` for ``payload`` and check freshness.
 
     Parameters
@@ -114,7 +119,7 @@ def verify_signature(  # noqa: PLR0913 - cryptographic interface requires explic
     return True
 
 
-def verify_signature_headers(  # noqa: PLR0913 - explicit header names improve security review & maintainability
+def verify_signature_headers(
     payload: bytes,
     secret: str,
     headers: Mapping[str, str],
@@ -123,7 +128,7 @@ def verify_signature_headers(  # noqa: PLR0913 - explicit header names improve s
     timestamp_header: str = "X-Timestamp",
     nonce_header: str = "X-Nonce",
     tolerance: int = 300,
-) -> bool:  # noqa: PLR0913 - explicit header names aid transparency & security review
+) -> bool:
     """Validate signature contained in HTTP-style ``headers``.
 
     The helper expects the same header names produced by

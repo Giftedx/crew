@@ -4,7 +4,11 @@ from __future__ import annotations
 
 import argparse
 import json
-from collections.abc import Sequence
+from typing import TYPE_CHECKING
+
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 
 def main(argv: Sequence[str] | None = None) -> int:

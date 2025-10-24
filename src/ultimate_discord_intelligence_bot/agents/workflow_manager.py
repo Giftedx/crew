@@ -10,12 +10,15 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set
-
-from crewai import Agent
+from typing import TYPE_CHECKING, Any
 
 from ..step_result import StepResult
 from ..tools._base import BaseTool
+
+
+if TYPE_CHECKING:
+    from crewai import Agent
+
 
 logger = logging.getLogger(__name__)
 
@@ -50,17 +53,17 @@ class WorkflowTask:
     description: str
     agent_type: str
     priority: TaskPriority
-    dependencies: Set[str] = field(default_factory=set)
+    dependencies: set[str] = field(default_factory=set)
     estimated_duration_seconds: int = 60
-    resource_requirements: Dict[str, Any] = field(default_factory=dict)
+    resource_requirements: dict[str, Any] = field(default_factory=dict)
     status: TaskStatus = TaskStatus.PENDING
     created_at: str = ""
-    started_at: Optional[str] = None
-    completed_at: Optional[str] = None
-    assigned_agent: Optional[str] = None
+    started_at: str | None = None
+    completed_at: str | None = None
+    assigned_agent: str | None = None
     retry_count: int = 0
     max_retries: int = 3
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -69,14 +72,14 @@ class WorkflowExecution:
 
     id: str
     name: str
-    tasks: List[WorkflowTask]
+    tasks: list[WorkflowTask]
     status: TaskStatus
     created_at: str
-    started_at: Optional[str] = None
-    completed_at: Optional[str] = None
+    started_at: str | None = None
+    completed_at: str | None = None
     tenant: str = ""
     workspace: str = ""
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -85,12 +88,12 @@ class AgentCapability:
 
     agent_id: str
     agent_type: str
-    capabilities: List[str]
+    capabilities: list[str]
     current_load: float  # 0.0 to 1.0
     max_concurrent_tasks: int
     average_completion_time: float
     success_rate: float
-    specializations: List[str] = field(default_factory=list)
+    specializations: list[str] = field(default_factory=list)
 
 
 class TaskRoutingTool(BaseTool):
@@ -98,8 +101,8 @@ class TaskRoutingTool(BaseTool):
 
     def _run(
         self,
-        workflow_execution: Dict[str, Any],
-        available_agents: List[Dict[str, Any]],
+        workflow_execution: dict[str, Any],
+        available_agents: list[dict[str, Any]],
         tenant: str,
         workspace: str,
     ) -> StepResult:
@@ -117,13 +120,9 @@ class TaskRoutingTool(BaseTool):
         """
         try:
             if not workflow_execution or not available_agents:
-                return StepResult.fail(
-                    "Workflow execution and available agents are required"
-                )
+                return StepResult.fail("Workflow execution and available agents are required")
 
-            routing_plan = self._create_routing_plan(
-                workflow_execution, available_agents, tenant, workspace
-            )
+            routing_plan = self._create_routing_plan(workflow_execution, available_agents, tenant, workspace)
 
             return StepResult.ok(
                 data={
@@ -136,16 +135,16 @@ class TaskRoutingTool(BaseTool):
             )
 
         except Exception as e:
-            logger.error(f"Task routing failed: {str(e)}")
-            return StepResult.fail(f"Task routing failed: {str(e)}")
+            logger.error(f"Task routing failed: {e!s}")
+            return StepResult.fail(f"Task routing failed: {e!s}")
 
     def _create_routing_plan(
         self,
-        workflow: Dict[str, Any],
-        agents: List[Dict[str, Any]],
+        workflow: dict[str, Any],
+        agents: list[dict[str, Any]],
         tenant: str,
         workspace: str,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Create intelligent task routing plan."""
         tasks = workflow.get("tasks", [])
         agent_capabilities = [self._parse_agent_capability(agent) for agent in agents]
@@ -154,17 +153,13 @@ class TaskRoutingTool(BaseTool):
         sorted_tasks = self._sort_tasks_by_priority_and_dependencies(tasks)
 
         assignments = []
-        agent_loads = {
-            agent.agent_id: agent.current_load for agent in agent_capabilities
-        }
+        agent_loads = {agent.agent_id: agent.current_load for agent in agent_capabilities}
 
         for task_data in sorted_tasks:
             task = self._parse_workflow_task(task_data)
 
             # Find best agent for this task
-            best_agent = self._find_best_agent_for_task(
-                task, agent_capabilities, agent_loads
-            )
+            best_agent = self._find_best_agent_for_task(task, agent_capabilities, agent_loads)
 
             if best_agent:
                 assignment = {
@@ -198,18 +193,12 @@ class TaskRoutingTool(BaseTool):
             "workflow_id": workflow.get("id", "unknown"),
             "assignments": assignments,
             "routing_strategy": "capability_and_load_based",
-            "total_agents_used": len(
-                set(a["assigned_agent"] for a in assignments if a["assigned_agent"])
-            ),
-            "load_distribution": self._calculate_load_distribution(
-                assignments, agent_capabilities
-            ),
-            "estimated_completion_time": self._estimate_workflow_completion_time(
-                assignments
-            ),
+            "total_agents_used": len({a["assigned_agent"] for a in assignments if a["assigned_agent"]}),
+            "load_distribution": self._calculate_load_distribution(assignments, agent_capabilities),
+            "estimated_completion_time": self._estimate_workflow_completion_time(assignments),
         }
 
-    def _parse_agent_capability(self, agent_data: Dict[str, Any]) -> AgentCapability:
+    def _parse_agent_capability(self, agent_data: dict[str, Any]) -> AgentCapability:
         """Parse agent capability from data."""
         return AgentCapability(
             agent_id=agent_data.get("id", "unknown"),
@@ -222,7 +211,7 @@ class TaskRoutingTool(BaseTool):
             specializations=agent_data.get("specializations", []),
         )
 
-    def _parse_workflow_task(self, task_data: Dict[str, Any]) -> WorkflowTask:
+    def _parse_workflow_task(self, task_data: dict[str, Any]) -> WorkflowTask:
         """Parse workflow task from data."""
         return WorkflowTask(
             id=task_data.get("id", "unknown"),
@@ -236,9 +225,7 @@ class TaskRoutingTool(BaseTool):
             metadata=task_data.get("metadata", {}),
         )
 
-    def _sort_tasks_by_priority_and_dependencies(
-        self, tasks: List[Dict[str, Any]]
-    ) -> List[Dict[str, Any]]:
+    def _sort_tasks_by_priority_and_dependencies(self, tasks: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """Sort tasks by priority and resolve dependencies."""
         # Simple topological sort by priority
         return sorted(
@@ -252,19 +239,15 @@ class TaskRoutingTool(BaseTool):
     def _find_best_agent_for_task(
         self,
         task: WorkflowTask,
-        agents: List[AgentCapability],
-        agent_loads: Dict[str, float],
-    ) -> Optional[AgentCapability]:
+        agents: list[AgentCapability],
+        agent_loads: dict[str, float],
+    ) -> AgentCapability | None:
         """Find the best agent for a specific task."""
         suitable_agents = []
 
         for agent in agents:
             # Check if agent can handle this task type
-            if (
-                task.agent_type in agent.capabilities
-                or "general" in agent.capabilities
-                or task.agent_type == "general"
-            ):
+            if task.agent_type in agent.capabilities or "general" in agent.capabilities or task.agent_type == "general":
                 # Check if agent has capacity
                 if agent_loads.get(agent.agent_id, 0) < 0.9:  # 90% load threshold
                     suitable_agents.append(agent)
@@ -280,7 +263,7 @@ class TaskRoutingTool(BaseTool):
         return best_agent
 
     def _calculate_agent_score(
-        self, task: WorkflowTask, agent: AgentCapability, agent_loads: Dict[str, float]
+        self, task: WorkflowTask, agent: AgentCapability, agent_loads: dict[str, float]
     ) -> float:
         """Calculate agent suitability score for a task."""
         # Base score from success rate
@@ -316,10 +299,10 @@ class TaskRoutingTool(BaseTool):
         return ", ".join(reasons)
 
     def _calculate_load_distribution(
-        self, assignments: List[Dict[str, Any]], agents: List[AgentCapability]
-    ) -> Dict[str, Any]:
+        self, assignments: list[dict[str, Any]], agents: list[AgentCapability]
+    ) -> dict[str, Any]:
         """Calculate load distribution across agents."""
-        agent_assignments: Dict[str, int] = {}
+        agent_assignments: dict[str, int] = {}
         for assignment in assignments:
             agent_id = assignment.get("assigned_agent")
             if agent_id:
@@ -327,20 +310,12 @@ class TaskRoutingTool(BaseTool):
 
         return {
             "agent_assignments": agent_assignments,
-            "load_balance_score": self._calculate_load_balance_score(
-                agent_assignments, agents
-            ),
-            "most_loaded_agent": max(agent_assignments.items(), key=lambda x: x[1])[0]
-            if agent_assignments
-            else None,
-            "least_loaded_agent": min(agent_assignments.items(), key=lambda x: x[1])[0]
-            if agent_assignments
-            else None,
+            "load_balance_score": self._calculate_load_balance_score(agent_assignments, agents),
+            "most_loaded_agent": max(agent_assignments.items(), key=lambda x: x[1])[0] if agent_assignments else None,
+            "least_loaded_agent": min(agent_assignments.items(), key=lambda x: x[1])[0] if agent_assignments else None,
         }
 
-    def _calculate_load_balance_score(
-        self, assignments: Dict[str, int], agents: List[AgentCapability]
-    ) -> float:
+    def _calculate_load_balance_score(self, assignments: dict[str, int], agents: list[AgentCapability]) -> float:
         """Calculate load balance score (0-1, higher is better)."""
         if not assignments:
             return 1.0
@@ -351,9 +326,7 @@ class TaskRoutingTool(BaseTool):
 
         # Calculate coefficient of variation (lower is better)
         mean_assignments = sum(assignment_counts) / len(assignment_counts)
-        variance = sum((x - mean_assignments) ** 2 for x in assignment_counts) / len(
-            assignment_counts
-        )
+        variance = sum((x - mean_assignments) ** 2 for x in assignment_counts) / len(assignment_counts)
         std_dev = variance**0.5
 
         if mean_assignments == 0:
@@ -363,13 +336,9 @@ class TaskRoutingTool(BaseTool):
         # Convert to 0-1 score (lower CV = higher score)
         return max(0, 1 - cv)
 
-    def _estimate_workflow_completion_time(
-        self, assignments: List[Dict[str, Any]]
-    ) -> str:
+    def _estimate_workflow_completion_time(self, assignments: list[dict[str, Any]]) -> str:
         """Estimate total workflow completion time."""
-        total_seconds = sum(
-            assignment.get("estimated_duration", 60) for assignment in assignments
-        )
+        total_seconds = sum(assignment.get("estimated_duration", 60) for assignment in assignments)
 
         if total_seconds < 60:
             return f"{total_seconds} seconds"
@@ -388,9 +357,7 @@ class TaskRoutingTool(BaseTool):
 class DependencyResolverTool(BaseTool):
     """Tool for managing inter-agent dependencies and task ordering."""
 
-    def _run(
-        self, workflow_tasks: List[Dict[str, Any]], tenant: str, workspace: str
-    ) -> StepResult:
+    def _run(self, workflow_tasks: list[dict[str, Any]], tenant: str, workspace: str) -> StepResult:
         """
         Resolve task dependencies and create execution order.
 
@@ -419,12 +386,10 @@ class DependencyResolverTool(BaseTool):
             )
 
         except Exception as e:
-            logger.error(f"Dependency resolution failed: {str(e)}")
-            return StepResult.fail(f"Dependency resolution failed: {str(e)}")
+            logger.error(f"Dependency resolution failed: {e!s}")
+            return StepResult.fail(f"Dependency resolution failed: {e!s}")
 
-    def _resolve_dependencies(
-        self, tasks: List[Dict[str, Any]], tenant: str, workspace: str
-    ) -> Dict[str, Any]:
+    def _resolve_dependencies(self, tasks: list[dict[str, Any]], tenant: str, workspace: str) -> dict[str, Any]:
         """Resolve task dependencies using topological sort."""
         # Build dependency graph
         task_map = {task["id"]: task for task in tasks}
@@ -443,9 +408,7 @@ class DependencyResolverTool(BaseTool):
 
         while ready_queue:
             # Sort by priority
-            ready_queue.sort(
-                key=lambda tid: task_map[tid].get("priority", 2), reverse=True
-            )
+            ready_queue.sort(key=lambda tid: task_map[tid].get("priority", 2), reverse=True)
             current_task = ready_queue.pop(0)
             execution_order.append(current_task)
 
@@ -468,21 +431,19 @@ class DependencyResolverTool(BaseTool):
 
         return {
             "execution_order": execution_order,
-            "execution_phases": self._create_execution_phases(
-                execution_order, task_map
-            ),
+            "execution_phases": self._create_execution_phases(execution_order, task_map),
             "dependency_graph": self._build_dependency_graph(tasks),
             "critical_path": self._find_critical_path(execution_order, task_map),
             "resolution_status": "complete",
         }
 
     def _create_execution_phases(
-        self, execution_order: List[str], task_map: Dict[str, Dict[str, Any]]
-    ) -> List[Dict[str, Any]]:
+        self, execution_order: list[str], task_map: dict[str, dict[str, Any]]
+    ) -> list[dict[str, Any]]:
         """Create execution phases based on dependencies."""
-        phases: List[Dict[str, Any]] = []
+        phases: list[dict[str, Any]] = []
         current_phase = []
-        completed_tasks: Set[str] = set()
+        completed_tasks: set[str] = set()
 
         for task_id in execution_order:
             task = task_map[task_id]
@@ -498,9 +459,7 @@ class DependencyResolverTool(BaseTool):
                         {
                             "phase_id": f"phase_{len(phases) + 1}",
                             "tasks": current_phase,
-                            "estimated_duration": self._estimate_phase_duration(
-                                current_phase, task_map
-                            ),
+                            "estimated_duration": self._estimate_phase_duration(current_phase, task_map),
                         }
                     )
                 current_phase = [task_id]
@@ -511,22 +470,15 @@ class DependencyResolverTool(BaseTool):
                 {
                     "phase_id": f"phase_{len(phases) + 1}",
                     "tasks": current_phase,
-                    "estimated_duration": self._estimate_phase_duration(
-                        current_phase, task_map
-                    ),
+                    "estimated_duration": self._estimate_phase_duration(current_phase, task_map),
                 }
             )
 
         return phases
 
-    def _estimate_phase_duration(
-        self, task_ids: List[str], task_map: Dict[str, Dict[str, Any]]
-    ) -> str:
+    def _estimate_phase_duration(self, task_ids: list[str], task_map: dict[str, dict[str, Any]]) -> str:
         """Estimate phase duration."""
-        total_seconds = sum(
-            task_map[task_id].get("estimated_duration_seconds", 60)
-            for task_id in task_ids
-        )
+        total_seconds = sum(task_map[task_id].get("estimated_duration_seconds", 60) for task_id in task_ids)
 
         if total_seconds < 60:
             return f"{total_seconds} seconds"
@@ -535,7 +487,7 @@ class DependencyResolverTool(BaseTool):
         else:
             return f"{total_seconds // 3600} hours"
 
-    def _build_dependency_graph(self, tasks: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def _build_dependency_graph(self, tasks: list[dict[str, Any]]) -> dict[str, Any]:
         """Build dependency graph visualization."""
         nodes = []
         edges = []
@@ -560,9 +512,7 @@ class DependencyResolverTool(BaseTool):
             "total_edges": len(edges),
         }
 
-    def _find_critical_path(
-        self, execution_order: List[str], task_map: Dict[str, Dict[str, Any]]
-    ) -> List[str]:
+    def _find_critical_path(self, execution_order: list[str], task_map: dict[str, dict[str, Any]]) -> list[str]:
         """Find critical path through the workflow."""
         # Simple critical path: tasks with highest priority and longest duration
         critical_tasks = []
@@ -584,8 +534,8 @@ class WorkflowOptimizationTool(BaseTool):
 
     def _run(
         self,
-        workflow_analysis: Dict[str, Any],
-        optimization_goals: List[str],
+        workflow_analysis: dict[str, Any],
+        optimization_goals: list[str],
         tenant: str,
         workspace: str,
     ) -> StepResult:
@@ -603,38 +553,30 @@ class WorkflowOptimizationTool(BaseTool):
         """
         try:
             if not workflow_analysis or not optimization_goals:
-                return StepResult.fail(
-                    "Workflow analysis and optimization goals are required"
-                )
+                return StepResult.fail("Workflow analysis and optimization goals are required")
 
-            optimizations = self._generate_optimizations(
-                workflow_analysis, optimization_goals, tenant, workspace
-            )
+            optimizations = self._generate_optimizations(workflow_analysis, optimization_goals, tenant, workspace)
 
             return StepResult.ok(
                 data={
                     "optimization_recommendations": optimizations,
                     "optimization_goals": optimization_goals,
-                    "potential_improvements": self._calculate_improvement_potential(
-                        optimizations
-                    ),
+                    "potential_improvements": self._calculate_improvement_potential(optimizations),
                     "tenant": tenant,
                     "workspace": workspace,
                 }
             )
 
         except Exception as e:
-            logger.error(f"Workflow optimization failed: {str(e)}")
-            return StepResult.fail(f"Workflow optimization failed: {str(e)}")
+            logger.error(f"Workflow optimization failed: {e!s}")
+            return StepResult.fail(f"Workflow optimization failed: {e!s}")
 
     def _generate_optimizations(
-        self, analysis: Dict[str, Any], goals: List[str], tenant: str, workspace: str
-    ) -> Dict[str, Any]:
+        self, analysis: dict[str, Any], goals: list[str], tenant: str, workspace: str
+    ) -> dict[str, Any]:
         """Generate optimization recommendations."""
         recommendations = {
-            "parallelization_opportunities": self._find_parallelization_opportunities(
-                analysis
-            ),
+            "parallelization_opportunities": self._find_parallelization_opportunities(analysis),
             "resource_optimizations": self._find_resource_optimizations(analysis),
             "bottleneck_eliminations": self._find_bottlenecks(analysis),
             "quality_improvements": self._find_quality_improvements(analysis),
@@ -649,20 +591,12 @@ class WorkflowOptimizationTool(BaseTool):
 
         return {
             "recommendations": filtered_recommendations,
-            "implementation_priority": self._prioritize_optimizations(
-                filtered_recommendations
-            ),
-            "estimated_impact": self._estimate_optimization_impact(
-                filtered_recommendations
-            ),
-            "implementation_effort": self._estimate_implementation_effort(
-                filtered_recommendations
-            ),
+            "implementation_priority": self._prioritize_optimizations(filtered_recommendations),
+            "estimated_impact": self._estimate_optimization_impact(filtered_recommendations),
+            "implementation_effort": self._estimate_implementation_effort(filtered_recommendations),
         }
 
-    def _find_parallelization_opportunities(
-        self, analysis: Dict[str, Any]
-    ) -> List[Dict[str, Any]]:
+    def _find_parallelization_opportunities(self, analysis: dict[str, Any]) -> list[dict[str, Any]]:
         """Find opportunities for parallel task execution."""
         opportunities = []
 
@@ -683,9 +617,7 @@ class WorkflowOptimizationTool(BaseTool):
 
         return opportunities
 
-    def _find_resource_optimizations(
-        self, analysis: Dict[str, Any]
-    ) -> List[Dict[str, Any]]:
+    def _find_resource_optimizations(self, analysis: dict[str, Any]) -> list[dict[str, Any]]:
         """Find resource optimization opportunities."""
         return [
             {
@@ -702,7 +634,7 @@ class WorkflowOptimizationTool(BaseTool):
             },
         ]
 
-    def _find_bottlenecks(self, analysis: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def _find_bottlenecks(self, analysis: dict[str, Any]) -> list[dict[str, Any]]:
         """Find and suggest bottleneck eliminations."""
         return [
             {
@@ -719,9 +651,7 @@ class WorkflowOptimizationTool(BaseTool):
             },
         ]
 
-    def _find_quality_improvements(
-        self, analysis: Dict[str, Any]
-    ) -> List[Dict[str, Any]]:
+    def _find_quality_improvements(self, analysis: dict[str, Any]) -> list[dict[str, Any]]:
         """Find quality improvement opportunities."""
         return [
             {
@@ -738,7 +668,7 @@ class WorkflowOptimizationTool(BaseTool):
             },
         ]
 
-    def _find_cost_reductions(self, analysis: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def _find_cost_reductions(self, analysis: dict[str, Any]) -> list[dict[str, Any]]:
         """Find cost reduction opportunities."""
         return [
             {
@@ -755,9 +685,7 @@ class WorkflowOptimizationTool(BaseTool):
             },
         ]
 
-    def _prioritize_optimizations(
-        self, recommendations: Dict[str, Any]
-    ) -> List[Dict[str, Any]]:
+    def _prioritize_optimizations(self, recommendations: dict[str, Any]) -> list[dict[str, Any]]:
         """Prioritize optimization recommendations."""
         priority_scores = {
             "parallelization_opportunities": 0.9,
@@ -767,7 +695,7 @@ class WorkflowOptimizationTool(BaseTool):
             "quality_improvements": 0.5,
         }
 
-        prioritized: List[Dict[str, Any]] = []
+        prioritized: list[dict[str, Any]] = []
         for category, items in recommendations.items():
             score = priority_scores.get(category, 0.5)
             for item in items:
@@ -784,9 +712,7 @@ class WorkflowOptimizationTool(BaseTool):
         prioritized.sort(key=lambda x: x["priority_score"], reverse=True)
         return prioritized
 
-    def _calculate_improvement_potential(
-        self, optimizations: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def _calculate_improvement_potential(self, optimizations: dict[str, Any]) -> dict[str, Any]:
         """Calculate potential improvements from optimizations."""
         total_opportunities = sum(len(items) for items in optimizations.values())
 
@@ -803,9 +729,7 @@ class WorkflowOptimizationTool(BaseTool):
             "implementation_timeline": "2-4 weeks",
         }
 
-    def _estimate_optimization_impact(
-        self, recommendations: Dict[str, Any]
-    ) -> Dict[str, str]:
+    def _estimate_optimization_impact(self, recommendations: dict[str, Any]) -> dict[str, str]:
         """Estimate the impact of optimizations."""
         return {
             "performance_improvement": "20-40%",
@@ -814,9 +738,7 @@ class WorkflowOptimizationTool(BaseTool):
             "reliability_improvement": "15-25%",
         }
 
-    def _estimate_implementation_effort(
-        self, recommendations: Dict[str, Any]
-    ) -> Dict[str, str]:
+    def _estimate_implementation_effort(self, recommendations: dict[str, Any]) -> dict[str, str]:
         """Estimate implementation effort for optimizations."""
         return {
             "low_effort": "1-2 weeks",
@@ -841,33 +763,29 @@ class WorkflowManagerAgent:
 
     async def route_tasks(
         self,
-        workflow_execution: Dict[str, Any],
-        available_agents: List[Dict[str, Any]],
+        workflow_execution: dict[str, Any],
+        available_agents: list[dict[str, Any]],
         tenant: str,
         workspace: str,
     ) -> StepResult:
         """Route tasks to optimal agents."""
-        return self.task_routing_tool._run(
-            workflow_execution, available_agents, tenant, workspace
-        )
+        return self.task_routing_tool._run(workflow_execution, available_agents, tenant, workspace)
 
     async def resolve_dependencies(
-        self, workflow_tasks: List[Dict[str, Any]], tenant: str, workspace: str
+        self, workflow_tasks: list[dict[str, Any]], tenant: str, workspace: str
     ) -> StepResult:
         """Resolve task dependencies and create execution order."""
         return self.dependency_resolver_tool._run(workflow_tasks, tenant, workspace)
 
     async def optimize_workflow(
         self,
-        workflow_analysis: Dict[str, Any],
-        optimization_goals: List[str],
+        workflow_analysis: dict[str, Any],
+        optimization_goals: list[str],
         tenant: str,
         workspace: str,
     ) -> StepResult:
         """Optimize workflow execution paths."""
-        return self.workflow_optimization_tool._run(
-            workflow_analysis, optimization_goals, tenant, workspace
-        )
+        return self.workflow_optimization_tool._run(workflow_analysis, optimization_goals, tenant, workspace)
 
     def get_agent(self) -> Agent:
         """Get the CrewAI agent instance."""

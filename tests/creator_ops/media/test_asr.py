@@ -119,13 +119,19 @@ class TestASRProcessor:
                 "start": 0.0,
                 "end": 2.5,
                 "text": "Hello world",
-                "words": [{"start": 0.0, "end": 1.0, "word": "Hello"}, {"start": 1.0, "end": 2.5, "word": "world"}],
+                "words": [
+                    {"start": 0.0, "end": 1.0, "word": "Hello"},
+                    {"start": 1.0, "end": 2.5, "word": "world"},
+                ],
             },
             {
                 "start": 2.5,
                 "end": 5.0,
                 "text": "This is a test",
-                "words": [{"start": 2.5, "end": 3.5, "word": "This"}, {"start": 3.5, "end": 5.0, "word": "is a test"}],
+                "words": [
+                    {"start": 2.5, "end": 3.5, "word": "This"},
+                    {"start": 3.5, "end": 5.0, "word": "is a test"},
+                ],
             },
         ]
 
@@ -349,7 +355,12 @@ class TestASRProcessor:
 
     def test_confidence_threshold_filtering(self):
         """Test filtering based on confidence thresholds."""
-        config = WhisperConfig(model_name="base", device="cpu", no_speech_threshold=0.5, log_prob_threshold=-0.5)
+        config = WhisperConfig(
+            model_name="base",
+            device="cpu",
+            no_speech_threshold=0.5,
+            log_prob_threshold=-0.5,
+        )
         processor = ASRProcessor(config=config)
 
         @patch("faster_whisper.WhisperModel")
@@ -375,7 +386,10 @@ class TestASRProcessor:
                 },
             ]
 
-            mock_transcribe_result = (mock_segments, {"language": "en", "language_probability": 0.9, "duration": 4.0})
+            mock_transcribe_result = (
+                mock_segments,
+                {"language": "en", "language_probability": 0.9, "duration": 4.0},
+            )
             mock_model.transcribe.return_value = mock_transcribe_result
 
             with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as audio_file:
@@ -449,8 +463,19 @@ class TestASRProcessor:
                     mock_whisper_model.return_value = mock_model
 
                     mock_transcribe_result = (
-                        [{"start": 0.0, "end": 2.0, "text": f"Test {audio_file_path}", "words": []}],
-                        {"language": "en", "language_probability": 0.9, "duration": 2.0},
+                        [
+                            {
+                                "start": 0.0,
+                                "end": 2.0,
+                                "text": f"Test {audio_file_path}",
+                                "words": [],
+                            }
+                        ],
+                        {
+                            "language": "en",
+                            "language_probability": 0.9,
+                            "duration": 2.0,
+                        },
                     )
                     mock_model.transcribe.return_value = mock_transcribe_result
 

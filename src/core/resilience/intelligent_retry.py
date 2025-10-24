@@ -11,10 +11,14 @@ import asyncio
 import logging
 import random
 import time
-from collections.abc import Callable
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
 
 logger = logging.getLogger(__name__)
 
@@ -164,7 +168,8 @@ class IntelligentRetry:
                 else:
                     # Execute with timeout
                     result = await asyncio.wait_for(
-                        self._execute_function(func, *args, **kwargs), timeout=self.config.operation_timeout
+                        self._execute_function(func, *args, **kwargs),
+                        timeout=self.config.operation_timeout,
                     )
 
                 # Record success
@@ -321,7 +326,11 @@ class IntelligentRetry:
         self.current_strategy = RetryStrategy.EXPONENTIAL_BACKOFF
 
 
-def retry(name: str, config: RetryConfig | None = None, condition: RetryCondition = RetryCondition.ON_EXCEPTION):
+def retry(
+    name: str,
+    config: RetryConfig | None = None,
+    condition: RetryCondition = RetryCondition.ON_EXCEPTION,
+):
     """
     Decorator for applying intelligent retry to functions.
 

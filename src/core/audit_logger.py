@@ -16,6 +16,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -168,7 +169,8 @@ class AuditLogger:
         if self.enable_console:
             console_handler = logging.StreamHandler()
             console_formatter = logging.Formatter(
-                fmt="%(asctime)s - AUDIT - %(levelname)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
+                fmt="%(asctime)s - AUDIT - %(levelname)s - %(message)s",
+                datefmt="%Y-%m-%d %H:%M:%S",
             )
             console_handler.setFormatter(console_formatter)
             self.logger.addHandler(console_handler)
@@ -183,10 +185,13 @@ class AuditLogger:
             from logging.handlers import RotatingFileHandler
 
             file_handler = RotatingFileHandler(
-                self.log_file, maxBytes=self.max_file_size_mb * 1024 * 1024, backupCount=self.backup_count
+                self.log_file,
+                maxBytes=self.max_file_size_mb * 1024 * 1024,
+                backupCount=self.backup_count,
             )
             file_formatter = logging.Formatter(
-                fmt="%(asctime)s | %(name)s | %(levelname)s | %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
+                fmt="%(asctime)s | %(name)s | %(levelname)s | %(message)s",
+                datefmt="%Y-%m-%d %H:%M:%S",
             )
             file_handler.setFormatter(file_formatter)
             self.logger.addHandler(file_handler)
@@ -314,7 +319,12 @@ class AuditLogger:
         self.log_event(event)
 
     def log_system_event(
-        self, action: str, component: str, success: bool = True, error_message: str | None = None, **details
+        self,
+        action: str,
+        component: str,
+        success: bool = True,
+        error_message: str | None = None,
+        **details,
     ) -> None:
         """Log system-level events."""
         event_type = {
@@ -519,7 +529,10 @@ class AuditLogger:
         return events[:limit]
 
     def export_audit_log(
-        self, start_time: float | None = None, end_time: float | None = None, format: str = "json"
+        self,
+        start_time: float | None = None,
+        end_time: float | None = None,
+        format: str = "json",
     ) -> str:
         """Export audit events in various formats."""
         events = self.query_audit_events(
@@ -684,7 +697,11 @@ def log_security_violation(
 
 
 def log_privacy_breach(
-    breach_type: str, data_type: str, user_id: str | None = None, tenant_id: str | None = None, **details
+    breach_type: str,
+    data_type: str,
+    user_id: str | None = None,
+    tenant_id: str | None = None,
+    **details,
 ) -> None:
     """Log a privacy breach event."""
     logger = get_audit_logger()
@@ -728,17 +745,17 @@ def initialize_audit_logging() -> None:
 
 
 __all__ = [
-    "AuditLogger",
     "AuditEvent",
     "AuditEventType",
+    "AuditLogger",
+    "export_audit_log",
     "get_audit_logger",
-    "log_user_action",
-    "log_command_execution",
-    "log_data_operation",
-    "log_security_violation",
-    "log_privacy_breach",
     "get_audit_summary",
     "get_security_summary",
-    "export_audit_log",
     "initialize_audit_logging",
+    "log_command_execution",
+    "log_data_operation",
+    "log_privacy_breach",
+    "log_security_violation",
+    "log_user_action",
 ]

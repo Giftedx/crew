@@ -13,12 +13,16 @@ from __future__ import annotations
 import logging
 import time
 from dataclasses import dataclass, field
-from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from obs.metrics import get_metrics
 
 from ..step_result import StepResult
+
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
 
 logger = logging.getLogger(__name__)
 
@@ -74,9 +78,7 @@ class AnalyticsService:
 
                 self._agent_monitor = AgentPerformanceMonitor(data_dir=self._data_dir)
             except ImportError as exc:
-                logger.warning(
-                    f"AgentPerformanceMonitor not available: {exc}. Agent monitoring disabled."
-                )
+                logger.warning(f"AgentPerformanceMonitor not available: {exc}. Agent monitoring disabled.")
                 self._agent_monitor = None
         return self._agent_monitor
 
@@ -216,13 +218,9 @@ class AnalyticsService:
             if not component.get("healthy", False):
                 recommendations.append(f"Component unhealthy: investigate {component}")
             elif component.get("score", 100.0) < 70.0:
-                recommendations.append(
-                    f"Component score low: {component.get('score', 0)}%"
-                )
+                recommendations.append(f"Component score low: {component.get('score', 0)}%")
 
-        return (
-            recommendations if recommendations else ["All systems operating normally"]
-        )
+        return recommendations if recommendations else ["All systems operating normally"]
 
     # ========== Agent Performance Monitoring (Phase 7) ==========
     # Unified interface delegating to canonical agent_training/performance_monitor.py
@@ -278,13 +276,9 @@ class AnalyticsService:
             )
         except Exception as exc:
             logger.error(f"Failed to record agent performance: {exc}", exc_info=True)
-            return StepResult.fail(
-                f"Recording failed: {exc}", step="record_agent_performance"
-            )
+            return StepResult.fail(f"Recording failed: {exc}", step="record_agent_performance")
 
-    def get_agent_performance_report(
-        self, agent_name: str, days: int = 30
-    ) -> StepResult:
+    def get_agent_performance_report(self, agent_name: str, days: int = 30) -> StepResult:
         """Get comprehensive performance report for an agent.
 
         Phase 7: Unified facade for agent performance reporting.
@@ -298,9 +292,7 @@ class AnalyticsService:
         """
         monitor = self._get_agent_monitor()
         if monitor is None:
-            return StepResult.fail(
-                "Agent monitoring not available", step="get_agent_performance_report"
-            )
+            return StepResult.fail("Agent monitoring not available", step="get_agent_performance_report")
 
         try:
             report = monitor.generate_performance_report(agent_name, days)
@@ -331,9 +323,7 @@ class AnalyticsService:
                 step="get_agent_performance_report",
             )
 
-    def get_comparative_agent_analysis(
-        self, agent_names: list[str], days: int = 30
-    ) -> StepResult:
+    def get_comparative_agent_analysis(self, agent_names: list[str], days: int = 30) -> StepResult:
         """Get comparative analysis across multiple agents.
 
         Phase 7: Unified facade for comparative agent analysis.
@@ -356,9 +346,7 @@ class AnalyticsService:
             reports = {}
             for agent_name in agent_names:
                 try:
-                    reports[agent_name] = monitor.generate_performance_report(
-                        agent_name, days
-                    )
+                    reports[agent_name] = monitor.generate_performance_report(agent_name, days)
                 except Exception as exc:
                     logger.warning(f"Could not generate report for {agent_name}: {exc}")
 
@@ -369,9 +357,7 @@ class AnalyticsService:
                 )
 
             # Calculate comparative metrics
-            agent_scores = {
-                name: report.overall_score for name, report in reports.items()
-            }
+            agent_scores = {name: report.overall_score for name, report in reports.items()}
             avg_score = sum(agent_scores.values()) / len(agent_scores)
             best_agent = max(agent_scores, key=agent_scores.get)
             worst_agent = min(agent_scores, key=agent_scores.get)
@@ -413,8 +399,8 @@ def get_analytics_service() -> AnalyticsService:
 
 __all__ = [
     "AnalyticsService",
-    "SystemHealth",
     "PerformanceMetrics",
+    "SystemHealth",
     "get_analytics_service",
     # Phase 7: Agent performance methods now available via AnalyticsService
     # - record_agent_performance

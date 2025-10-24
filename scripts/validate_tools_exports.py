@@ -44,6 +44,43 @@ def main(argv: list[str] | None = None) -> int:
     tools_root = Path("src/ultimate_discord_intelligence_bot/tools")
     exported = set(getattr(mod, "__all__", []))
 
+    # Allowlist for tool-like classes intentionally not exported via tools.__all__
+    # These include abstract bases, internal wrappers, or experimental tools.
+    ALLOWED_MISSING_EXPORTS: set[str] = {
+        # Base/abstract classes and templates
+        "MemoryBaseTool",
+        "AnalysisBaseTool",
+        "VerificationBaseTool",
+        "AcquisitionBaseTool",
+        "AnalysisTool",
+        "AcquisitionTool",
+        "TranscriptionTool",
+        "StandardTool",
+        "TemplateTool",
+        # MCP wrappers and internal tools
+        "WebSearchTool",
+        "DataAnalysisTool",
+        "CodeReviewTool",
+        # Observability/Cache/Router internal tools (not exported at top-level)
+        "CacheV2Tool",
+        "CostTrackingTool",
+        "RouterStatusTool",
+        "MCPResourceTool",
+        "CacheOptimizationTool",
+        "CacheStatusTool",
+        "TaskManagementTool",
+        "OrchestrationStatusTool",
+        # Memory tools that are not exposed at top-level
+        "UnifiedMemoryStoreTool",
+        "UnifiedContextTool",
+        "MemoryV2Tool",
+        # Analysis tools
+        "MultiModalAnalysisTool",
+        "OpenAIEnhancedAnalysisTool",
+        # Lazy-load stub placeholder
+        "StubTool",
+    }
+
     def _is_tool_class(node: ast.ClassDef) -> bool:
         # Name heuristic first
         if not node.name.endswith("Tool") or node.name.startswith("_"):
@@ -66,8 +103,9 @@ def main(argv: list[str] | None = None) -> int:
             continue  # non-fatal; import-based check above should catch runtime issues
         for node in ast.walk(tree):
             if isinstance(node, ast.ClassDef) and _is_tool_class(node):
-                if node.name not in exported:
-                    missing_exports.append(f"{node.name} (in {py.relative_to(tools_root)})")
+                if node.name in exported or node.name in ALLOWED_MISSING_EXPORTS:
+                    continue
+                missing_exports.append(f"{node.name} (in {py.relative_to(tools_root)})")
 
     if missing_exports:
         print("[tools-validate] Missing exports for BaseTool subclasses:")

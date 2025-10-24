@@ -13,9 +13,17 @@ import logging
 import os
 import re
 from dataclasses import dataclass, field
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from obs import metrics
+
+from .optimization_pipeline import OptimizationConfig, OptimizationPipeline
+from .prompt_compressor import CompressionConfig, PromptCompressor
+
+
+if TYPE_CHECKING:
+    from ultimate_discord_intelligence_bot.step_result import StepResult
+
 
 try:  # lightweight tracing shim available in repo
     from opentelemetry import trace
@@ -26,7 +34,7 @@ except Exception:  # pragma: no cover - fallback to local noop-like tracer
             return None
 
     class _NoopTracer:
-        def start_as_current_span(self, *_a, **_k):  # noqa: D401 - simple context manager
+        def start_as_current_span(self, *_a, **_k):
             class _Ctx:
                 def __enter__(self):
                     return _NoopSpan()
@@ -37,16 +45,16 @@ except Exception:  # pragma: no cover - fallback to local noop-like tracer
             return _Ctx()
 
     class _NoopTraceAPI:
-        def get_tracer(self, *_a, **_k):  # noqa: D401 - return noop tracer
+        def get_tracer(self, *_a, **_k):
             return _NoopTracer()
 
     trace = _NoopTraceAPI()
 
 try:
-    from core.settings import get_settings
+    pass
 except Exception:  # pragma: no cover - defensive fallback
 
-    def get_settings() -> Any:  # broad return type for fallback stub
+    def get_settings() -> StepResult:  # broad return type for fallback stub
         class _S:
             enable_prompt_compression = False
             prompt_compression_max_repeated_blank_lines = 1
@@ -54,18 +62,23 @@ except Exception:  # pragma: no cover - defensive fallback
         return _S()
 
 
-from .memory_service import MemoryService
+import contextlib
+
+
+if TYPE_CHECKING:
+    from .memory_service import MemoryService
+
 
 try:  # optional LLMLingua integration
     from prompt_engine.llmlingua_adapter import compress_prompt_with_details  # type: ignore
 except Exception:  # pragma: no cover - fallback when dependency or module is missing
 
-    def compress_prompt_with_details(prompt: str, **_: Any) -> tuple[str, dict[str, Any]]:  # type: ignore[override]
+    def compress_prompt_with_details(prompt: str, **_: Any) -> StepResult:  # type: ignore[override]
         return prompt, {"applied": False, "reason": "unavailable"}
 
 
 try:  # pragma: no cover - optional heavy dependency (performance tokenization fallback)
-    import tiktoken as _tiktoken  # noqa: F401
+    import tiktoken as _tiktoken
 except Exception:  # pragma: no cover
     _tiktoken = None
 
@@ -73,9 +86,9 @@ except Exception:  # pragma: no cover
 tiktoken = _tiktoken  # may be None at runtime
 
 try:  # pragma: no cover - optional dependency (covered by mypy ignore-missing-imports override)
-    from transformers import AutoTokenizer  # noqa: F401
+    from transformers import AutoTokenizer
 except Exception:  # pragma: no cover
-    AutoTokenizer = None  # noqa: N816 (capitalised from external lib convention, fallback sentinel)
+    AutoTokenizer = None
 
 
 @dataclass
@@ -84,12 +97,121 @@ class PromptEngine:
 
     memory: MemoryService | None = None
     _tokenizers: dict[str, Any] = field(default_factory=dict, init=False, repr=False)
+    _optimization_pipeline: OptimizationPipeline | None = None
+    _compression_enabled: bool = False
 
-    def generate(self, template: str, variables: dict[str, Any]) -> str:
+    def generate(self, template: str, variables: dict[str, Any]) -> StepResult:
         """Fill ``template`` with ``variables`` using ``str.format``."""
         return template.format(**variables)
 
-    def count_tokens(self, text: str, model: str | None = None) -> int:
+    def enable_optimization(
+        self,
+        compression_config: CompressionConfig | None = None,
+        optimization_config: OptimizationConfig | None = None,
+    ) -> None:
+        """Enable prompt optimization.
+
+        Args:
+            compression_config: Compression configuration
+            optimization_config: Optimization configuration
+        """
+        if compression_config is None:
+            compression_config = CompressionConfig()
+        if optimization_config is None:
+            optimization_config = OptimizationConfig()
+
+        self._optimization_pipeline = OptimizationPipeline(
+            compressor=PromptCompressor(compression_config),
+            config=optimization_config,
+        )
+        self._compression_enabled = True
+        logger.info("Prompt optimization enabled")
+
+    def disable_optimization(self) -> None:
+        """Disable prompt optimization."""
+        self._optimization_pipeline = None
+        self._compression_enabled = False
+        logger.info("Prompt optimization disabled")
+
+    async def generate_optimized(
+        self,
+        template: str,
+        variables: dict[str, Any],
+        prompt_id: str | None = None,
+        tenant: str = "",
+        workspace: str = "",
+    ) -> StepResult:
+        """Generate and optimize a prompt.
+
+        Args:
+            template: Prompt template
+            variables: Template variables
+            prompt_id: Unique identifier for the prompt
+            tenant: Tenant identifier
+            workspace: Workspace identifier
+
+        Returns:
+            StepResult with optimized prompt and metrics
+        """
+        try:
+            # Generate base prompt
+            base_prompt = self.generate(template, variables)
+            if not base_prompt.success:
+                return base_prompt
+
+            # Return original if optimization is disabled
+            if not self._compression_enabled or self._optimization_pipeline is None:
+                return StepResult.ok(
+                    data={
+                        "prompt": base_prompt,
+                        "optimized": False,
+                        "metrics": {"optimization_disabled": True},
+                    }
+                )
+
+            # Optimize the prompt
+            optimization_result = await self._optimization_pipeline.optimize_prompt(
+                prompt=base_prompt,
+                prompt_id=prompt_id,
+                tenant=tenant,
+                workspace=workspace,
+            )
+
+            if optimization_result.success:
+                return StepResult.ok(
+                    data={
+                        "prompt": optimization_result.data["optimized_prompt"],
+                        "optimized": True,
+                        "metrics": optimization_result.data["metrics"],
+                    }
+                )
+            else:
+                # Fall back to original prompt if optimization fails
+                logger.warning("Prompt optimization failed, using original: %s", optimization_result.error)
+                return StepResult.ok(
+                    data={
+                        "prompt": base_prompt,
+                        "optimized": False,
+                        "metrics": {"optimization_failed": True, "error": optimization_result.error},
+                    }
+                )
+
+        except Exception as e:
+            logger.error("Optimized prompt generation failed: %s", str(e))
+            return StepResult.fail(f"Optimized prompt generation failed: {e!s}")
+
+    def get_optimization_stats(self) -> StepResult:
+        """Get optimization statistics.
+
+        Returns:
+            StepResult with optimization statistics
+        """
+        if not self._compression_enabled or self._optimization_pipeline is None:
+            return StepResult.ok(data={"optimization_disabled": True})
+
+        return self._optimization_pipeline.get_optimization_stats()
+
+    def count_tokens(self, text: str, model: str | None = None) -> StepResult:
         """Return an estimated token count for ``text``.
 
         Parameters
@@ -145,7 +267,7 @@ class PromptEngine:
         *,
         model: str | None = None,
         force_enable: bool = False,
-    ) -> str:
+    ) -> StepResult:
         text, _ = self.optimise_with_metadata(
             prompt,
             model=model,
@@ -164,13 +286,13 @@ class PromptEngine:
         max_tokens: int | None = None,
         llmlingua_ratio: float | None = None,
         force_enable: bool = False,
-    ) -> tuple[str, dict[str, Any]]:
+    ) -> StepResult:
         """Optimise ``prompt`` returning the compressed text and observability metadata."""
 
         truthy = {"1", "true", "yes", "on"}
         tracer = trace.get_tracer(__name__)
         metadata: dict[str, Any] = {"stages": []}
-        settings = get_settings()
+        settings = Settings()
 
         with tracer.start_as_current_span("prompt.optimise") as span:
             original = prompt
@@ -241,10 +363,8 @@ class PromptEngine:
                 metadata["final_tokens"] = original_tokens
                 metadata["reduction"] = 0.0
                 if span:
-                    try:
+                    with contextlib.suppress(Exception):
                         span.set_attribute("prompt.compress.forced", bool(force_enable))
-                    except Exception:
-                        pass
                 return original.strip(), metadata
 
             lbl = metrics.label_ctx()
@@ -349,7 +469,14 @@ class PromptEngine:
                     ratio_effective = (
                         llmlingua_ratio
                         if llmlingua_ratio is not None
-                        else float(getattr(settings, "llmlingua_target_ratio", target_token_reduction or 0.0) or 0.0)
+                        else float(
+                            getattr(
+                                settings,
+                                "llmlingua_target_ratio",
+                                target_token_reduction or 0.0,
+                            )
+                            or 0.0
+                        )
                     )
                     if ratio_effective <= 0 and target_token_reduction > 0:
                         ratio_effective = target_token_reduction
@@ -425,7 +552,10 @@ class PromptEngine:
                     try:
                         span.set_attribute("prompt.tokens.final", int(final_tokens))
                         span.set_attribute("prompt.compress.ratio", float(ratio))
-                        span.set_attribute("prompt.compress.reduction_achieved", float(reduction_achieved))
+                        span.set_attribute(
+                            "prompt.compress.reduction_achieved",
+                            float(reduction_achieved),
+                        )
                     except Exception:
                         pass
             except Exception:
@@ -433,7 +563,7 @@ class PromptEngine:
 
         return text, metadata
 
-    def _apply_basic_compression(self, text: str, settings: Any) -> str:
+    def _apply_basic_compression(self, text: str, settings: Any) -> StepResult:
         """Apply basic compression techniques (existing optimise logic)."""
         # 1. Collapse excessive blank lines (configurable)
         max_blanks = int(getattr(settings, "prompt_compression_max_repeated_blank_lines", 1) or 1)
@@ -460,8 +590,8 @@ class PromptEngine:
         text = "\n".join(deduped)
 
         # 3. Trim repeated spaces within lines while preserving indentation inside code fences
-        def _squeeze_spaces(line: str) -> str:
-            if line.startswith("    ") or line.startswith("\t"):
+        def _squeeze_spaces(line: str) -> StepResult:
+            if line.startswith(("    ", "\t")):
                 return line  # assume preformatted/code
             return re.sub(r"\s{2,}", " ", line)
 
@@ -479,7 +609,7 @@ class PromptEngine:
                         head = current[:HEAD_TAIL_KEEP]
                         tail = current[-HEAD_TAIL_KEEP:]
                         omitted = len(current) - (HEAD_TAIL_KEEP * 2)
-                        current = head + [f"...[omitted {omitted} lines]..."] + tail
+                        current = [*head, f"...[omitted {omitted} lines]...", *tail]
                     compressed_sections.append("\n".join(current))
                     current = []
                 compressed_sections.append("")
@@ -490,13 +620,13 @@ class PromptEngine:
                 head = current[:HEAD_TAIL_KEEP]
                 tail = current[-HEAD_TAIL_KEEP:]
                 omitted = len(current) - (HEAD_TAIL_KEEP * 2)
-                current = head + [f"...[omitted {omitted} lines]..."] + tail
+                current = [*head, f"...[omitted {omitted} lines]...", *tail]
             compressed_sections.append("\n".join(current))
         text = "\n".join(compressed_sections).strip()
 
         return text
 
-    def _apply_context_trimming(self, text: str, target_tokens: int, current_tokens: int) -> str:
+    def _apply_context_trimming(self, text: str, target_tokens: int, current_tokens: int) -> StepResult:
         """Apply intelligent context trimming strategies."""
         lines = text.splitlines()
         if not lines:
@@ -569,7 +699,7 @@ class PromptEngine:
         result_lines = [line for line in kept_lines if line is not None]
         return "\n".join(result_lines)
 
-    def _truncate_line_to_tokens(self, line: str, max_tokens: int) -> str:
+    def _truncate_line_to_tokens(self, line: str, max_tokens: int) -> StepResult:
         """Truncate a line to approximately max_tokens while preserving meaning."""
         if self.count_tokens(line) <= max_tokens:
             return line
@@ -601,7 +731,7 @@ class PromptEngine:
 
         return best_result
 
-    def _apply_emergency_truncation(self, text: str, max_tokens: int) -> str:
+    def _apply_emergency_truncation(self, text: str, max_tokens: int) -> StepResult:
         """Apply emergency truncation when all else fails."""
         if self.count_tokens(text) <= max_tokens:
             return text
@@ -643,13 +773,15 @@ class PromptEngine:
             end_lines = lines[-keep_end:] if keep_end > 0 else []
 
             if start_lines and end_lines:
-                candidate_lines = (
-                    start_lines + [f"...[omitted {total_lines - keep_start - keep_end} lines]..."] + end_lines
-                )
+                candidate_lines = [
+                    *start_lines,
+                    f"...[omitted {total_lines - keep_start - keep_end} lines]...",
+                    *end_lines,
+                ]
             elif start_lines:
-                candidate_lines = start_lines + [f"...[omitted {total_lines - keep_start} lines]..."]
+                candidate_lines = [*start_lines, f"...[omitted {total_lines - keep_start} lines]..."]
             else:
-                candidate_lines = [f"...[omitted {total_lines - keep_end} lines]..."] + end_lines
+                candidate_lines = [f"...[omitted {total_lines - keep_end} lines]...", *end_lines]
 
             candidate = "\n".join(candidate_lines)
             if self.count_tokens(candidate) <= max_tokens:
@@ -676,7 +808,7 @@ class PromptEngine:
         query: str,
         k: int = 3,
         metadata: dict[str, Any] | None = None,
-    ) -> str:
+    ) -> StepResult:
         """Build a prompt that includes top-``k`` context snippets.
 
         ``metadata`` may be provided to scope memory lookups to a specific

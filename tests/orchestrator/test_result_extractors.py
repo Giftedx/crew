@@ -146,7 +146,11 @@ class TestDeceptionAnalysisExtraction:
         assert "deception_score" in result
         assert result["deception_score"] > 0.5  # Should be high for deceptive content
         assert "assessment" in result
-        assert result["assessment"] in ["low_deception", "moderate_deception", "high_deception"]
+        assert result["assessment"] in [
+            "low_deception",
+            "moderate_deception",
+            "high_deception",
+        ]
 
     def test_extract_deception_from_authentic_content(self, orchestrator):
         """Should detect authenticity and return low deception score."""
@@ -224,7 +228,11 @@ class TestNarrativeIntegrityExtraction:
         assert isinstance(result, dict)
         assert "score" in result
         assert result["score"] > 0.5  # Should be high for consistent narrative
-        assert result["assessment"] in ["low_integrity", "medium_integrity", "high_integrity"]
+        assert result["assessment"] in [
+            "low_integrity",
+            "medium_integrity",
+            "high_integrity",
+        ]
 
     def test_extract_inconsistent_narrative(self, orchestrator):
         """Should detect low narrative integrity."""

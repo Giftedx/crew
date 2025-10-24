@@ -5,6 +5,7 @@ from typing import Any
 
 import discord
 
+
 # Constants for display limits
 MAX_URL_DISPLAY_LENGTH = 100
 MAX_TITLE_DISPLAY_LENGTH = 80
@@ -124,7 +125,11 @@ def add_sentiment_field(embed: Any, analysis_results: dict[str, Any] | None) -> 
     else:
         sentiment_text = f"😐 Neutral ({compound:.2f})"
         sentiment_color = "🟡"
-    embed.add_field(name="🎭 Sentiment Analysis", value=f"{sentiment_color} {sentiment_text}", inline=True)
+    embed.add_field(
+        name="🎭 Sentiment Analysis",
+        value=f"{sentiment_color} {sentiment_text}",
+        inline=True,
+    )
 
 
 def add_keywords_field(embed: Any, analysis_results: dict[str, Any] | None) -> None:
@@ -178,7 +183,9 @@ def add_transcript_field(embed: Any, transcription_info: dict[str, Any] | None) 
     transcript_length = transcription_info.get("length")
     if transcript_length:
         embed.add_field(
-            name="📋 Transcript", value=f"Transcript available ({transcript_length} characters)", inline=True
+            name="📋 Transcript",
+            value=f"Transcript available ({transcript_length} characters)",
+            inline=True,
         )
 
 

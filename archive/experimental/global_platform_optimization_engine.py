@@ -14,6 +14,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
@@ -160,7 +161,11 @@ class GlobalPlatformOptimizationEngine:
                 component_name="Advanced AI Effectiveness Optimization System",
                 optimization_type="ai_enhancement",
                 complexity="enterprise",
-                target_metrics=["global_effectiveness", "ai_routing_effectiveness", "innovation_score"],
+                target_metrics=[
+                    "global_effectiveness",
+                    "ai_routing_effectiveness",
+                    "innovation_score",
+                ],
                 optimization_impact="Enhanced AI algorithms with adaptive learning and cultural intelligence",
                 development_effort="high",
                 business_value="Global platform effectiveness and competitive differentiation",
@@ -176,7 +181,11 @@ class GlobalPlatformOptimizationEngine:
                 component_name="Regional Adoption Acceleration Platform",
                 optimization_type="market_expansion",
                 complexity="enterprise",
-                target_metrics=["regional_adoption", "market_penetration", "user_satisfaction"],
+                target_metrics=[
+                    "regional_adoption",
+                    "market_penetration",
+                    "user_satisfaction",
+                ],
                 optimization_impact="Targeted regional optimization with cultural adaptation and local partnerships",
                 development_effort="high",
                 business_value="Accelerated global market penetration and user growth",
@@ -192,7 +201,11 @@ class GlobalPlatformOptimizationEngine:
                 component_name="Innovation Leadership Acceleration Engine",
                 optimization_type="innovation",
                 complexity="enterprise",
-                target_metrics=["innovation_score", "market_leadership", "competitive_advantage"],
+                target_metrics=[
+                    "innovation_score",
+                    "market_leadership",
+                    "competitive_advantage",
+                ],
                 optimization_impact="Breakthrough AI research and development with industry-leading capabilities",
                 development_effort="high",
                 business_value="Unquestioned market leadership and technological superiority",
@@ -208,7 +221,12 @@ class GlobalPlatformOptimizationEngine:
                 component_name="Performance Excellence Optimization Suite",
                 optimization_type="performance",
                 complexity="advanced",
-                target_metrics=["performance_score", "response_time", "system_reliability", "resource_efficiency"],
+                target_metrics=[
+                    "performance_score",
+                    "response_time",
+                    "system_reliability",
+                    "resource_efficiency",
+                ],
                 optimization_impact="Ultra-high performance optimization with advanced caching and AI-driven resource management",
                 development_effort="medium",
                 business_value="World-class user experience and operational excellence",
@@ -225,7 +243,11 @@ class GlobalPlatformOptimizationEngine:
                 component_name="Regulatory Excellence and Compliance Platform",
                 optimization_type="compliance",
                 complexity="advanced",
-                target_metrics=["regulatory_compliance", "risk_mitigation", "legal_readiness"],
+                target_metrics=[
+                    "regulatory_compliance",
+                    "risk_mitigation",
+                    "legal_readiness",
+                ],
                 optimization_impact="Advanced compliance automation with predictive regulatory adaptation",
                 development_effort="medium",
                 business_value="Global legal compliance and risk mitigation excellence",
@@ -241,7 +263,11 @@ class GlobalPlatformOptimizationEngine:
                 component_name="Market Dominance Consolidation System",
                 optimization_type="market_leadership",
                 complexity="enterprise",
-                target_metrics=["market_leadership", "business_impact", "competitive_position"],
+                target_metrics=[
+                    "market_leadership",
+                    "business_impact",
+                    "competitive_position",
+                ],
                 optimization_impact="Strategic market consolidation with competitive intelligence and dominance strategies",
                 development_effort="high",
                 business_value="Unquestioned global market leadership and business growth",
@@ -271,9 +297,12 @@ class GlobalPlatformOptimizationEngine:
         # Calculate implementation effectiveness based on complexity and scope
         base_effectiveness = 0.80 + (random.random() * 0.15)  # 80-95% base effectiveness
 
-        complexity_multiplier = {"basic": 1.0, "intermediate": 0.95, "advanced": 0.90, "enterprise": 0.85}.get(
-            component.complexity, 0.85
-        )
+        complexity_multiplier = {
+            "basic": 1.0,
+            "intermediate": 0.95,
+            "advanced": 0.90,
+            "enterprise": 0.85,
+        }.get(component.complexity, 0.85)
 
         optimization_effectiveness = base_effectiveness * complexity_multiplier
 
@@ -298,13 +327,17 @@ class GlobalPlatformOptimizationEngine:
                     # Positive improvements
                     optimized_value = min(
                         0.999
-                        if metric.endswith("_score")
-                        or metric.endswith("_effectiveness")
-                        or metric.endswith("_adoption")
-                        or metric.endswith("_compliance")
-                        or metric.endswith("_satisfaction")
-                        or metric.endswith("_reliability")
-                        or metric.endswith("_efficiency")
+                        if metric.endswith(
+                            (
+                                "_score",
+                                "_effectiveness",
+                                "_adoption",
+                                "_compliance",
+                                "_satisfaction",
+                                "_reliability",
+                                "_efficiency",
+                            )
+                        )
                         else 10.0,
                         baseline_value + actual_improvement,
                     )
@@ -561,7 +594,7 @@ class GlobalPlatformOptimizationEngine:
             return results
 
         except Exception as e:
-            logger.error(f"❌ Global Optimization Error: {str(e)}")
+            logger.error(f"❌ Global Optimization Error: {e!s}")
             raise
 
     def _calculate_performance_enhancements(self, final_metrics: dict[str, float]) -> dict[str, float]:
@@ -654,7 +687,7 @@ async def main():
         return results
 
     except Exception as e:
-        logger.error(f"❌ Global optimization failed: {str(e)}")
+        logger.error(f"❌ Global optimization failed: {e!s}")
         raise
 
 

@@ -9,14 +9,14 @@ class Middleware(Protocol):
     Hooks are optional; implement what's needed. Keep low-cardinality labels.
     """
 
-    def before(self, context: dict[str, Any]) -> None:  # noqa: D401
+    def before(self, context: dict[str, Any]) -> None:
         """Called before step.run."""
         ...
 
-    def after(self, context: dict[str, Any], result: dict[str, Any]) -> None:  # noqa: D401
+    def after(self, context: dict[str, Any], result: dict[str, Any]) -> None:
         """Called after step.run with result."""
         ...
 
-    def on_error(self, context: dict[str, Any], error: Exception) -> None:  # noqa: D401
+    def on_error(self, context: dict[str, Any], error: Exception) -> None:
         """Called when step.run raises; MUST NOT raise."""
         ...

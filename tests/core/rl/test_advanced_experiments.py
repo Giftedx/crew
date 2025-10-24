@@ -8,7 +8,10 @@ from ultimate_discord_intelligence_bot.core.rl.advanced_experiments import (
     AdvancedBanditStats,
     create_default_advanced_bandit_experiments,
 )
-from ultimate_discord_intelligence_bot.core.rl.policies.advanced_bandits import DoublyRobustBandit, OffsetTreeBandit
+from ultimate_discord_intelligence_bot.core.rl.policies.advanced_bandits import (
+    DoublyRobustBandit,
+    OffsetTreeBandit,
+)
 
 
 class TestAdvancedBanditStats:
@@ -117,7 +120,11 @@ class TestAdvancedBanditExperimentManager:
 
         # Create a mock DoublyRobust bandit
         bandit = DoublyRobustBandit()
-        bandit.reward_models["doubly_robust"] = {"weights": [0.1, 0.2], "bias": 0.5, "variance": 0.25}
+        bandit.reward_models["doubly_robust"] = {
+            "weights": [0.1, 0.2],
+            "bias": 0.5,
+            "variance": 0.25,
+        }
         bandit.importance_weights["doubly_robust"] = [1.5]
 
         context = {"feature1": 0.5}
@@ -206,11 +213,11 @@ class TestAdvancedBanditExperimentManager:
         exp = manager._experiments["advanced_bandits::test"]
 
         # Simulate baseline performance - record multiple rewards for epsilon_greedy
-        for i in range(20):
+        for _i in range(20):
             manager.record("advanced_bandits::test", "epsilon_greedy", 0.5)
 
         # Add consistent doubly_robust data
-        for i in range(30):
+        for _i in range(30):
             manager.record("advanced_bandits::test", "doubly_robust", 0.6)
 
         analysis = manager._analyze_advanced_performance(exp)
@@ -287,7 +294,11 @@ class TestUtilityFunctions:
         manager = AdvancedBanditExperimentManager()
 
         # Mock register method to raise an error
-        with patch.object(manager, "register_advanced_bandit_experiment", side_effect=Exception("Test error")):
+        with patch.object(
+            manager,
+            "register_advanced_bandit_experiment",
+            side_effect=Exception("Test error"),
+        ):
             # Should not raise an exception
             create_default_advanced_bandit_experiments(manager)
 

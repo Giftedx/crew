@@ -2,25 +2,29 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from typing import Any, TypedDict
+from typing import TYPE_CHECKING, Any, TypedDict
 
+from .tools.acquisition.multi_platform_download_tool import MultiPlatformDownloadTool
 from .tools.audio_transcription_tool import AudioTranscriptionTool
 from .tools.character_profile_tool import CharacterProfileTool
 from .tools.context_verification_tool import ContextVerificationTool
 from .tools.fact_check_tool import FactCheckTool
 from .tools.leaderboard_tool import LeaderboardTool
-from .tools.memory_storage_tool import MemoryStorageTool
 from .tools.timeline_tool import TimelineTool
 from .tools.transcript_index_tool import TranscriptIndexTool
 from .tools.trustworthiness_tracker_tool import TrustworthinessTrackerTool
-from .tools.yt_dlp_download_tool import YouTubeDownloadTool, YtDlpDownloadTool
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from .tools.memory_storage_tool import MemoryStorageTool
 
 
 class DebateAnalysisPipeline:
     """Download, transcribe and analyse clips for context and accuracy."""
 
-    def __init__(  # noqa: PLR0913 - explicit optional dependencies improve test injection & readability
+    def __init__(
         self,
         downloader: YtDlpDownloadTool | None = None,
         transcriber: AudioTranscriptionTool | None = None,
@@ -35,7 +39,7 @@ class DebateAnalysisPipeline:
         ethan_defender: Callable[[str], str] | None = None,
         hasan_defender: Callable[[str], str] | None = None,
     ) -> None:
-        self.downloader = downloader or YouTubeDownloadTool()
+        self.downloader = downloader or MultiPlatformDownloadTool()
         self.transcriber = transcriber or AudioTranscriptionTool()
         self.index_tool = index_tool or TranscriptIndexTool()
         self.context_tool = context_tool or ContextVerificationTool(self.index_tool)

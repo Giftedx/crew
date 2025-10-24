@@ -13,6 +13,7 @@ import subprocess
 import sys
 from typing import Any
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -132,7 +133,11 @@ class DependencyChecker:
     def check_pip_available(self) -> bool:
         """Check if pip is available."""
         try:
-            subprocess.run([sys.executable, "-m", "pip", "--version"], capture_output=True, check=True)
+            subprocess.run(
+                [sys.executable, "-m", "pip", "--version"],
+                capture_output=True,
+                check=True,
+            )
             return True
         except (subprocess.CalledProcessError, FileNotFoundError):
             return False

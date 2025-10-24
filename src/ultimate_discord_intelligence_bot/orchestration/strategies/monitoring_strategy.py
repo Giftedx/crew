@@ -14,6 +14,7 @@ from ultimate_discord_intelligence_bot.services.monitoring_orchestrator import (
 )
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -65,21 +66,15 @@ class MonitoringStrategy:
         )
 
         try:
-            logger.info(
-                f"Executing monitoring workflow: url={url}, tenant={tenant}, workspace={workspace}"
-            )
+            logger.info(f"Executing monitoring workflow: url={url}, tenant={tenant}, workspace={workspace}")
 
             # Extract platform from kwargs or URL
             platform = kwargs.get("platform", self._extract_platform_from_url(url))
 
             # Start monitoring orchestrator if not already running
-            start_result = await self._orchestrator.start_monitoring(
-                tenant=tenant, workspace=workspace
-            )
+            start_result = await self._orchestrator.start_monitoring(tenant=tenant, workspace=workspace)
 
-            if not start_result.success and "already running" not in (
-                start_result.error or ""
-            ):
+            if not start_result.success and "already running" not in (start_result.error or ""):
                 return StepResult.fail(
                     f"Failed to start monitoring: {start_result.error}",
                     step="monitoring_start",

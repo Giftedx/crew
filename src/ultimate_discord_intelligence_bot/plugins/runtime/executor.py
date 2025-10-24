@@ -5,9 +5,9 @@ import json
 import multiprocessing as mp
 import pathlib
 import time
-from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
 
 try:  # Support different jsonschema versions
     from jsonschema import validate as _js_validate
@@ -15,9 +15,14 @@ except Exception:  # pragma: no cover - fallback when jsonschema missing or API 
     _js_validate = None  # type: ignore[assignment]
 
 from core import learn
-from core.rl import registry as rl_registry
 
 from .perm_guard import PermissionError, PermissionGuard
+
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from core.rl import registry as rl_registry
 
 
 @dataclass
@@ -55,7 +60,7 @@ class PluginExecutor:
             _js_validate(manifest, self._schema)
         else:  # pragma: no cover - degraded validation path
             # Minimal structural checks as fallback
-            if not isinstance(manifest, dict):  # type: ignore[unreachable]  # noqa: TRY301 - defensive check
+            if not isinstance(manifest, dict):  # type: ignore[unreachable]
                 raise ValueError("Invalid manifest structure")
             required = self._schema.get("required", []) if isinstance(self._schema, dict) else []
             missing = [k for k in required if k not in manifest]
@@ -63,7 +68,7 @@ class PluginExecutor:
                 raise ValueError(f"Manifest missing required fields: {missing}")
         return manifest
 
-    def run(  # noqa: PLR0913 - parameters mirror sandbox policy + execution knobs; **kwargs would obscure contract
+    def run(
         self,
         plugin_dir: str | pathlib.Path,
         granted_scopes: Iterable[str],

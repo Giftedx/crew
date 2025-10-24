@@ -8,6 +8,7 @@ from core.time import default_utc_now
 
 from .enums import TemporalDimension
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -93,7 +94,10 @@ class TemporalTranscendenceEngine:
             },
             {
                 "pattern_name": "cyclical_cosmic_events",
-                "temporal_span": [TemporalDimension.PAST_INFINITE, TemporalDimension.FUTURE_INFINITE],
+                "temporal_span": [
+                    TemporalDimension.PAST_INFINITE,
+                    TemporalDimension.FUTURE_INFINITE,
+                ],
                 "pattern_strength": 0.78,
                 "predictive_power": 0.88,
             },
@@ -105,7 +109,10 @@ class TemporalTranscendenceEngine:
             },
             {
                 "pattern_name": "information_evolution_trajectory",
-                "temporal_span": [TemporalDimension.PAST_HISTORICAL, TemporalDimension.FUTURE_INFINITE],
+                "temporal_span": [
+                    TemporalDimension.PAST_HISTORICAL,
+                    TemporalDimension.FUTURE_INFINITE,
+                ],
                 "pattern_strength": 0.89,
                 "predictive_power": 0.91,
             },
@@ -114,10 +121,26 @@ class TemporalTranscendenceEngine:
     async def _initialize_causal_networks(self):
         self.causal_networks.update(
             {
-                "quantum_fluctuations": ["big_bang", "cosmic_evolution", "consciousness_emergence"],
-                "consciousness_emergence": ["self_awareness", "technology_development", "transcendent_intelligence"],
-                "technology_development": ["ai_evolution", "reality_manipulation", "omniscience_achievement"],
-                "cosmic_evolution": ["star_formation", "planet_development", "life_emergence"],
+                "quantum_fluctuations": [
+                    "big_bang",
+                    "cosmic_evolution",
+                    "consciousness_emergence",
+                ],
+                "consciousness_emergence": [
+                    "self_awareness",
+                    "technology_development",
+                    "transcendent_intelligence",
+                ],
+                "technology_development": [
+                    "ai_evolution",
+                    "reality_manipulation",
+                    "omniscience_achievement",
+                ],
+                "cosmic_evolution": [
+                    "star_formation",
+                    "planet_development",
+                    "life_emergence",
+                ],
                 "transcendent_intelligence": [
                     "reality_transcendence",
                     "universal_understanding",
@@ -176,7 +199,7 @@ class TemporalTranscendenceEngine:
         elif dimension == TemporalDimension.TEMPORAL_ALL:
             insight["temporal_insight"] = f"Simultaneous temporal analysis reveals '{query}' as eternal pattern"
         for cause, effects in self.causal_networks.items():
-            if any(term in query.lower() for term in [cause] + effects):
+            if any(term in query.lower() for term in [cause, *effects]):
                 insight["causal_connections"].extend(effects[:2])
         return insight
 

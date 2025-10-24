@@ -11,12 +11,23 @@ from __future__ import annotations
 
 from typing import Literal
 
+
 Kind = Literal["counter", "histogram", "gauge"]
 
 
 METRIC_SPECS: list[tuple[Kind, str, str, list[str]]] = [
-    ("counter", "router_decisions_total", "Number of routing decisions made", ["tenant", "workspace"]),
-    ("histogram", "llm_latency_ms", "Latency of LLM calls in milliseconds", ["tenant", "workspace"]),
+    (
+        "counter",
+        "router_decisions_total",
+        "Number of routing decisions made",
+        ["tenant", "workspace"],
+    ),
+    (
+        "histogram",
+        "llm_latency_ms",
+        "Latency of LLM calls in milliseconds",
+        ["tenant", "workspace"],
+    ),
     (
         "counter",
         "llm_model_selected_total",
@@ -35,8 +46,18 @@ METRIC_SPECS: list[tuple[Kind, str, str, list[str]]] = [
         "Estimated cost (USD) of LLM calls",
         ["tenant", "workspace", "model", "provider"],
     ),
-    ("counter", "llm_cache_hits_total", "Total LLM cache hits", ["tenant", "workspace", "model", "provider"]),
-    ("counter", "llm_cache_misses_total", "Total LLM cache misses", ["tenant", "workspace", "model", "provider"]),
+    (
+        "counter",
+        "llm_cache_hits_total",
+        "Total LLM cache hits",
+        ["tenant", "workspace", "model", "provider"],
+    ),
+    (
+        "counter",
+        "llm_cache_misses_total",
+        "Total LLM cache misses",
+        ["tenant", "workspace", "model", "provider"],
+    ),
     # Structured LLM metrics
     (
         "counter",
@@ -136,8 +157,18 @@ METRIC_SPECS: list[tuple[Kind, str, str, list[str]]] = [
         "Total structured LLM cache misses",
         ["tenant", "workspace", "task", "method"],
     ),
-    ("histogram", "http_request_latency_ms", "Latency of inbound HTTP requests (FastAPI)", ["route", "method"]),
-    ("counter", "http_requests_total", "Total inbound HTTP requests", ["route", "method", "status"]),
+    (
+        "histogram",
+        "http_request_latency_ms",
+        "Latency of inbound HTTP requests (FastAPI)",
+        ["route", "method"],
+    ),
+    (
+        "counter",
+        "http_requests_total",
+        "Total inbound HTTP requests",
+        ["route", "method", "status"],
+    ),
     (
         "counter",
         "rate_limit_rejections_total",
@@ -164,15 +195,30 @@ METRIC_SPECS: list[tuple[Kind, str, str, list[str]]] = [
         ["tenant", "workspace", "component"],
     ),
     # Pipeline-specific metrics
-    ("counter", "pipeline_requests_total", "Total pipeline processing requests", ["tenant", "workspace"]),
+    (
+        "counter",
+        "pipeline_requests_total",
+        "Total pipeline processing requests",
+        ["tenant", "workspace"],
+    ),
     (
         "counter",
         "pipeline_steps_completed_total",
         "Total pipeline steps completed successfully",
         ["tenant", "workspace", "step"],
     ),
-    ("counter", "pipeline_steps_failed_total", "Total pipeline steps that failed", ["tenant", "workspace", "step"]),
-    ("counter", "pipeline_steps_skipped_total", "Total pipeline steps skipped", ["tenant", "workspace", "step"]),
+    (
+        "counter",
+        "pipeline_steps_failed_total",
+        "Total pipeline steps that failed",
+        ["tenant", "workspace", "step"],
+    ),
+    (
+        "counter",
+        "pipeline_steps_skipped_total",
+        "Total pipeline steps skipped",
+        ["tenant", "workspace", "step"],
+    ),
     (
         "histogram",
         "pipeline_duration_seconds",
@@ -191,7 +237,12 @@ METRIC_SPECS: list[tuple[Kind, str, str, list[str]]] = [
         "Duration of full pipeline processing (orchestrator-specific)",
         ["tenant", "workspace", "orchestrator", "status"],
     ),
-    ("gauge", "pipeline_inflight", "Current number of inflight pipeline runs", ["tenant", "workspace", "orchestrator"]),
+    (
+        "gauge",
+        "pipeline_inflight",
+        "Current number of inflight pipeline runs",
+        ["tenant", "workspace", "orchestrator"],
+    ),
     (
         "counter",
         "circuit_breaker_requests_total",
@@ -218,17 +269,42 @@ METRIC_SPECS: list[tuple[Kind, str, str, list[str]]] = [
         ["tenant", "workspace", "source"],
     ),
     # Scheduler metrics
-    ("counter", "scheduler_enqueued_total", "Jobs enqueued by scheduler", ["tenant", "workspace", "source"]),
+    (
+        "counter",
+        "scheduler_enqueued_total",
+        "Jobs enqueued by scheduler",
+        ["tenant", "workspace", "source"],
+    ),
     (
         "counter",
         "scheduler_processed_total",
         "Jobs processed successfully by worker",
         ["tenant", "workspace", "source"],
     ),
-    ("counter", "scheduler_errors_total", "Worker errors while processing jobs", ["tenant", "workspace", "source"]),
-    ("gauge", "scheduler_queue_backlog", "Current number of pending jobs in queue", ["tenant", "workspace"]),
-    ("gauge", "system_health_score", "Overall system health score (0-100)", ["tenant", "workspace"]),
-    ("gauge", "cost_per_interaction", "Average cost per user interaction in USD", ["tenant", "workspace"]),
+    (
+        "counter",
+        "scheduler_errors_total",
+        "Worker errors while processing jobs",
+        ["tenant", "workspace", "source"],
+    ),
+    (
+        "gauge",
+        "scheduler_queue_backlog",
+        "Current number of pending jobs in queue",
+        ["tenant", "workspace"],
+    ),
+    (
+        "gauge",
+        "system_health_score",
+        "Overall system health score (0-100)",
+        ["tenant", "workspace"],
+    ),
+    (
+        "gauge",
+        "cost_per_interaction",
+        "Average cost per user interaction in USD",
+        ["tenant", "workspace"],
+    ),
     # Cache performance metrics
     (
         "counter",
@@ -260,15 +336,30 @@ METRIC_SPECS: list[tuple[Kind, str, str, list[str]]] = [
         "Total entries evicted due to capacity limits",
         ["tenant", "workspace", "cache_name", "cache_level"],
     ),
-    ("counter", "cache_compressions_total", "Total entries compressed", ["tenant", "workspace", "cache_name"]),
-    ("counter", "cache_decompressions_total", "Total entries decompressed", ["tenant", "workspace", "cache_name"]),
+    (
+        "counter",
+        "cache_compressions_total",
+        "Total entries compressed",
+        ["tenant", "workspace", "cache_name"],
+    ),
+    (
+        "counter",
+        "cache_decompressions_total",
+        "Total entries decompressed",
+        ["tenant", "workspace", "cache_name"],
+    ),
     (
         "counter",
         "cache_errors_total",
         "Total cache operation errors",
         ["tenant", "workspace", "cache_name", "operation", "error_type"],
     ),
-    ("gauge", "cache_size_bytes", "Current cache size in bytes", ["tenant", "workspace", "cache_name", "cache_level"]),
+    (
+        "gauge",
+        "cache_size_bytes",
+        "Current cache size in bytes",
+        ["tenant", "workspace", "cache_name", "cache_level"],
+    ),
     (
         "gauge",
         "cache_entries_count",

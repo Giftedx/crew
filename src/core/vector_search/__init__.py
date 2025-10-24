@@ -8,6 +8,7 @@ from .optimized_vector_store import (
     optimize_all_vector_stores,
 )
 
+
 __all__ = [
     "OptimizedVectorStore",
     "SearchOptimizationConfig",

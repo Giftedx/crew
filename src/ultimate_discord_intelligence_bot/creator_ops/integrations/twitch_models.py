@@ -7,6 +7,7 @@ ensuring type safety and proper validation of API data.
 
 from __future__ import annotations
 
+import contextlib
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any
@@ -34,10 +35,8 @@ class TwitchUser:
         # Parse created_at
         created_at = None
         if data.get("created_at"):
-            try:
+            with contextlib.suppress(ValueError):
                 created_at = datetime.fromisoformat(data["created_at"].replace("Z", "+00:00"))
-            except ValueError:
-                pass
 
         return cls(
             id=data["id"],
@@ -80,10 +79,8 @@ class TwitchStream:
         # Parse started_at
         started_at = None
         if data.get("started_at"):
-            try:
+            with contextlib.suppress(ValueError):
                 started_at = datetime.fromisoformat(data["started_at"].replace("Z", "+00:00"))
-            except ValueError:
-                pass
 
         return cls(
             id=data["id"],
@@ -132,17 +129,13 @@ class TwitchVideo:
         # Parse timestamps
         created_at = None
         if data.get("created_at"):
-            try:
+            with contextlib.suppress(ValueError):
                 created_at = datetime.fromisoformat(data["created_at"].replace("Z", "+00:00"))
-            except ValueError:
-                pass
 
         published_at = None
         if data.get("published_at"):
-            try:
+            with contextlib.suppress(ValueError):
                 published_at = datetime.fromisoformat(data["published_at"].replace("Z", "+00:00"))
-            except ValueError:
-                pass
 
         return cls(
             id=data["id"],
@@ -192,10 +185,8 @@ class TwitchClip:
         # Parse created_at
         created_at = None
         if data.get("created_at"):
-            try:
+            with contextlib.suppress(ValueError):
                 created_at = datetime.fromisoformat(data["created_at"].replace("Z", "+00:00"))
-            except ValueError:
-                pass
 
         return cls(
             id=data["id"],
@@ -243,10 +234,8 @@ class TwitchChatMessage:
         # Parse timestamp
         timestamp = None
         if data.get("timestamp"):
-            try:
+            with contextlib.suppress(ValueError):
                 timestamp = datetime.fromisoformat(data["timestamp"].replace("Z", "+00:00"))
-            except ValueError:
-                pass
 
         # Parse badges
         badges = []
@@ -293,10 +282,8 @@ class TwitchStreamMarker:
         # Parse created_at
         created_at = None
         if data.get("created_at"):
-            try:
+            with contextlib.suppress(ValueError):
                 created_at = datetime.fromisoformat(data["created_at"].replace("Z", "+00:00"))
-            except ValueError:
-                pass
 
         return cls(
             id=data["id"],
@@ -326,10 +313,8 @@ class TwitchEventSubEvent:
         # Parse created_at
         created_at = None
         if data.get("created_at"):
-            try:
+            with contextlib.suppress(ValueError):
                 created_at = datetime.fromisoformat(data["created_at"].replace("Z", "+00:00"))
-            except ValueError:
-                pass
 
         return cls(
             id=data["id"],
@@ -359,10 +344,8 @@ class TwitchWebSocketMessage:
         # Parse timestamp
         message_timestamp = None
         if data.get("metadata", {}).get("message_timestamp"):
-            try:
+            with contextlib.suppress(ValueError):
                 message_timestamp = datetime.fromisoformat(data["metadata"]["message_timestamp"].replace("Z", "+00:00"))
-            except ValueError:
-                pass
 
         return cls(
             metadata=data.get("metadata", {}),

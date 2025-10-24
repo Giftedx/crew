@@ -9,9 +9,12 @@ from __future__ import annotations
 import functools
 import logging
 import os
-from collections.abc import Callable
 from importlib import metadata
-from typing import Any, ParamSpec, Protocol, TypeVar, cast, runtime_checkable
+from typing import TYPE_CHECKING, Any, ParamSpec, Protocol, TypeVar, cast, runtime_checkable
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 @runtime_checkable
@@ -65,14 +68,14 @@ except Exception:  # pragma: no cover - dependency missing
     class _FallbackConsoleSpanExporter(_FallbackSpanExporter):
         pass
 
-    class _FallbackSimpleSpanProcessor:  # noqa: D401 - minimal
+    class _FallbackSimpleSpanProcessor:
         def __init__(self, *_a, **_k):
             pass
 
-    class _FallbackTracerProvider:  # noqa: D401 - minimal
+    class _FallbackTracerProvider:
         pass
 
-    class _FallbackResource:  # noqa: D401 - minimal
+    class _FallbackResource:
         @staticmethod
         def create(_attrs: dict[str, Any]):
             return None
@@ -93,28 +96,28 @@ class _NoopSpan:
         # Returning None is equivalent to False (do not suppress exceptions)
         return None
 
-    def set_attribute(self, *_a: Any, **_k: Any) -> None:  # noqa: D401 - simple noop
+    def set_attribute(self, *_a: Any, **_k: Any) -> None:
         return None
 
 
 class _NoopTracer:
-    def start_as_current_span(self, *_a: Any, **_k: Any) -> _NoopSpan:  # noqa: D401 - simple noop
+    def start_as_current_span(self, *_a: Any, **_k: Any) -> _NoopSpan:
         return _NoopSpan()
 
 
 class _NoopTraceAPI:
-    def get_tracer_provider(self) -> None:  # noqa: D401 - simple noop
+    def get_tracer_provider(self) -> None:
         return None
 
-    def set_tracer_provider(self, _p: object) -> None:  # noqa: D401 - simple noop
+    def set_tracer_provider(self, _p: object) -> None:
         return None
 
-    def get_tracer(self, _name: str) -> _NoopTracer:  # noqa: D401 - simple noop
+    def get_tracer(self, _name: str) -> _NoopTracer:
         return _NoopTracer()
 
 
 trace: _TraceAPI | _NoopTraceAPI = (
-    cast(_TraceAPI, _otel_trace) if _OTEL_AVAILABLE and _otel_trace is not None else _NoopTraceAPI()
+    cast("_TraceAPI", _otel_trace) if _OTEL_AVAILABLE and _otel_trace is not None else _NoopTraceAPI()
 )
 
 

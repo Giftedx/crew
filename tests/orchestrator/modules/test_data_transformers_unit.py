@@ -33,7 +33,10 @@ class TestNormalizeAcquisitionData:
 
     def test_handles_dict_input_with_pipeline_keys(self):
         """Test normalization of dict with pipeline keys."""
-        data = {"download": {"file": "test.mp3"}, "analysis": {"summary": "test summary"}}
+        data = {
+            "download": {"file": "test.mp3"},
+            "analysis": {"summary": "test summary"},
+        }
         normalized = data_transformers.normalize_acquisition_data(data)
 
         assert normalized == data
@@ -42,7 +45,12 @@ class TestNormalizeAcquisitionData:
 
     def test_unwraps_nested_data_structure(self):
         """Test unwrapping of legacy nested data."""
-        nested_data = {"data": {"transcription": {"text": "unwrapped"}, "download": {"url": "test"}}}
+        nested_data = {
+            "data": {
+                "transcription": {"text": "unwrapped"},
+                "download": {"url": "test"},
+            }
+        }
         normalized = data_transformers.normalize_acquisition_data(nested_data)
 
         assert "transcription" in normalized
@@ -50,7 +58,12 @@ class TestNormalizeAcquisitionData:
 
     def test_unwraps_raw_pipeline_payload(self):
         """Test unwrapping of raw_pipeline_payload."""
-        data = {"raw_pipeline_payload": {"download": {"source": "youtube"}, "fallacy": {"count": 3}}}
+        data = {
+            "raw_pipeline_payload": {
+                "download": {"source": "youtube"},
+                "fallacy": {"count": 3},
+            }
+        }
         normalized = data_transformers.normalize_acquisition_data(data)
 
         assert "download" in normalized
@@ -160,7 +173,11 @@ class TestTransformEvidenceToVerdicts:
         """Test extraction of verdicts from items list."""
         fact_data = {
             "items": [
-                {"verdict": "verified", "confidence": 0.9, "claim": "AI uses neural networks"},
+                {
+                    "verdict": "verified",
+                    "confidence": 0.9,
+                    "claim": "AI uses neural networks",
+                },
                 {"verdict": "disputed", "confidence": 0.4, "claim": "AGI by 2025"},
             ]
         }
@@ -225,7 +242,10 @@ class TestTransformEvidenceToVerdicts:
 
     def test_fallback_creates_needs_context_with_multiple_evidence(self):
         """Test fallback when multiple evidence sources but no items."""
-        fact_data = {"claim": "Complex claim", "evidence": ["source1", "source2", "source3", "source4"]}
+        fact_data = {
+            "claim": "Complex claim",
+            "evidence": ["source1", "source2", "source3", "source4"],
+        }
 
         verdicts = data_transformers.transform_evidence_to_verdicts(fact_data)
 
@@ -263,7 +283,11 @@ class TestExtractFallacyData:
         """Test extraction from fallacies as list of dicts."""
         analysis = {
             "fallacies": [
-                {"type": "ad hominem", "confidence": 0.8, "context": "Attack on person"},
+                {
+                    "type": "ad hominem",
+                    "confidence": 0.8,
+                    "context": "Attack on person",
+                },
                 {"type": "strawman", "confidence": 0.6},
             ]
         }
@@ -471,7 +495,10 @@ class TestCalculateEnhancedSummaryStatistics:
     def test_extracts_workflow_metadata(self):
         """Test extraction of workflow metadata."""
         results = {
-            "workflow_metadata": {"processing_time": 12.5, "capabilities_used": ["transcribe", "analyze", "verify"]},
+            "workflow_metadata": {
+                "processing_time": 12.5,
+                "capabilities_used": ["transcribe", "analyze", "verify"],
+            },
             "transcription": {"text": "test"},
         }
 
@@ -492,7 +519,11 @@ class TestCalculateEnhancedSummaryStatistics:
         """Test counting of fact checks performed."""
         results = {
             "information_verification": {
-                "fact_checks": {"claim1": "verified", "claim2": "disputed", "claim3": "uncertain"}
+                "fact_checks": {
+                    "claim1": "verified",
+                    "claim2": "disputed",
+                    "claim3": "uncertain",
+                }
             }
         }
 

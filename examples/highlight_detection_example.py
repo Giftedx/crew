@@ -19,7 +19,9 @@ from pathlib import Path
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from analysis.highlight.highlight_detection_service import get_highlight_detection_service
+from analysis.highlight.highlight_detection_service import (
+    get_highlight_detection_service,
+)
 
 
 def main() -> int:
@@ -54,7 +56,8 @@ def main() -> int:
 
     data = result.data
 
-    print("✅ Highlight detection completed!"    print(f"   Total duration: {data['total_duration']:.2f}s")
+    print("✅ Highlight detection completed!")
+    print(f"   Total duration: {data['total_duration']:.2f}s")
     print(f"   Detection method: {data['detection_method']}")
     print(f"   Cache hit: {data['cache_hit']}")
     print(f"   Processing time: {data['processing_time_ms']:.0f}ms")
@@ -75,29 +78,33 @@ def main() -> int:
         print("-" * 100)
 
         for i, highlight in enumerate(highlights[:8]):  # Show first 8 highlights
-            start_time = highlight['start_time']
-            end_time = highlight['end_time']
-            duration = highlight['duration']
-            score = highlight['highlight_score']
-            confidence = highlight['confidence']
+            start_time = highlight["start_time"]
+            end_time = highlight["end_time"]
+            duration = highlight["duration"]
+            score = highlight["highlight_score"]
+            confidence = highlight["confidence"]
 
-            print(f"   {i+1}. [{start_time:6.1f}s - {end_time:6.1f}s] "
-                  f"({duration:5.1f}s) Score: {score:.2f} "
-                  f"(conf: {confidence:.2f})")
+            print(
+                f"   {i + 1}. [{start_time:6.1f}s - {end_time:6.1f}s] "
+                f"({duration:5.1f}s) Score: {score:.2f} "
+                f"(conf: {confidence:.2f})"
+            )
 
             # Show signal contributions
-            audio_score = highlight.get('audio_energy_score', 0)
-            chat_score = highlight.get('chat_spike_score', 0)
-            novelty_score = highlight.get('semantic_novelty_score', 0)
+            audio_score = highlight.get("audio_energy_score", 0)
+            chat_score = highlight.get("chat_spike_score", 0)
+            novelty_score = highlight.get("semantic_novelty_score", 0)
 
-            print(f"         Audio: {audio_score:.2f} | Chat: {chat_score:.2f} | Novelty: {novelty_score:.2f}")
+            print(
+                f"         Audio: {audio_score:.2f} | Chat: {chat_score:.2f} | Novelty: {novelty_score:.2f}"
+            )
 
             # Show transcript if available
-            if highlight.get('transcript_text'):
-                text_preview = highlight['transcript_text'][:60]
-                if len(highlight['transcript_text']) > 60:
+            if highlight.get("transcript_text"):
+                text_preview = highlight["transcript_text"][:60]
+                if len(highlight["transcript_text"]) > 60:
                     text_preview += "..."
-                print(f"         \"{text_preview}\"")
+                print(f'         "{text_preview}"')
 
         if len(highlights) > 8:
             print(f"   ... and {len(highlights) - 8} more highlights")
@@ -106,20 +113,24 @@ def main() -> int:
 
     # Show highlight statistics
     if highlights:
-        scores = [h['highlight_score'] for h in highlights]
-        durations = [h['duration'] for h in highlights]
+        scores = [h["highlight_score"] for h in highlights]
+        durations = [h["duration"] for h in highlights]
 
-        print("📊 Highlight Statistics:"        print(f"   Total highlights: {len(highlights)}")
+        print("📊 Highlight Statistics:")
+        print(f"   Total highlights: {len(highlights)}")
         print(f"   Average score: {sum(scores) / len(scores):.2f}")
         print(f"   Average duration: {sum(durations) / len(durations):.1f}s")
-        print(f"   High-confidence highlights: {sum(1 for h in highlights if h['confidence'] > 0.8)}")
+        print(
+            f"   High-confidence highlights: {sum(1 for h in highlights if h['confidence'] > 0.8)}"
+        )
 
         # Show score distribution
         high_scores = sum(1 for s in scores if s > 0.8)
         med_scores = sum(1 for s in scores if 0.6 <= s <= 0.8)
         low_scores = sum(1 for s in scores if s < 0.6)
 
-        print("   Score distribution:"        print(f"     High (0.8+): {high_scores}")
+        print("   Score distribution:")
+        print(f"     High (0.8+): {high_scores}")
         print(f"     Medium (0.6-0.8): {med_scores}")
         print(f"     Low (<0.6): {low_scores}")
 
@@ -128,4 +139,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
-

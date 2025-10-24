@@ -15,6 +15,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -41,10 +42,22 @@ class ProductionDeploymentOptimizer:
 
         # Deployment strategies
         self.deployment_strategies = {
-            "blue_green": {"risk": "low", "rollback_time": "instant", "complexity": "medium"},
-            "rolling": {"risk": "medium", "rollback_time": "minutes", "complexity": "low"},
+            "blue_green": {
+                "risk": "low",
+                "rollback_time": "instant",
+                "complexity": "medium",
+            },
+            "rolling": {
+                "risk": "medium",
+                "rollback_time": "minutes",
+                "complexity": "low",
+            },
             "canary": {"risk": "low", "rollback_time": "seconds", "complexity": "high"},
-            "feature_flag": {"risk": "very_low", "rollback_time": "instant", "complexity": "medium"},
+            "feature_flag": {
+                "risk": "very_low",
+                "rollback_time": "instant",
+                "complexity": "medium",
+            },
         }
 
     def assess_production_readiness(self) -> dict[str, Any]:
@@ -150,10 +163,23 @@ class ProductionDeploymentOptimizer:
 
         # Simulate infrastructure assessment
         components = {
-            "load_balancer": {"available": True, "health_check": True, "auto_scaling": True},
-            "database": {"available": True, "replication": True, "backup": True, "monitoring": True},
+            "load_balancer": {
+                "available": True,
+                "health_check": True,
+                "auto_scaling": True,
+            },
+            "database": {
+                "available": True,
+                "replication": True,
+                "backup": True,
+                "monitoring": True,
+            },
             "redis_cache": {"available": True, "clustering": True, "persistence": True},
-            "message_queue": {"available": True, "durability": True, "monitoring": True},
+            "message_queue": {
+                "available": True,
+                "durability": True,
+                "monitoring": True,
+            },
             "cdn": {"available": True, "global_distribution": True, "ssl": True},
             "monitoring_stack": {"prometheus": True, "grafana": True, "alerting": True},
         }
@@ -175,11 +201,31 @@ class ProductionDeploymentOptimizer:
         """Assess security readiness for production deployment."""
 
         security_checks = {
-            "authentication": {"multi_factor": True, "session_management": True, "password_policy": True},
-            "authorization": {"rbac": True, "api_security": True, "resource_protection": True},
-            "encryption": {"data_at_rest": True, "data_in_transit": True, "key_management": True},
-            "compliance": {"gdpr": True, "security_audit": True, "vulnerability_scan": True},
-            "monitoring": {"security_events": True, "intrusion_detection": True, "log_analysis": True},
+            "authentication": {
+                "multi_factor": True,
+                "session_management": True,
+                "password_policy": True,
+            },
+            "authorization": {
+                "rbac": True,
+                "api_security": True,
+                "resource_protection": True,
+            },
+            "encryption": {
+                "data_at_rest": True,
+                "data_in_transit": True,
+                "key_management": True,
+            },
+            "compliance": {
+                "gdpr": True,
+                "security_audit": True,
+                "vulnerability_scan": True,
+            },
+            "monitoring": {
+                "security_events": True,
+                "intrusion_detection": True,
+                "log_analysis": True,
+            },
         }
 
         total_checks = sum(len(checks) for checks in security_checks.values())
@@ -200,7 +246,11 @@ class ProductionDeploymentOptimizer:
         monitoring_capabilities = {
             "metrics": {"application": True, "infrastructure": True, "business": True},
             "logging": {"centralized": True, "structured": True, "searchable": True},
-            "tracing": {"distributed": True, "performance": True, "error_tracking": True},
+            "tracing": {
+                "distributed": True,
+                "performance": True,
+                "error_tracking": True,
+            },
             "alerting": {"intelligent": True, "escalation": True, "notification": True},
             "dashboards": {"operational": True, "business": True, "executive": True},
         }
@@ -221,10 +271,25 @@ class ProductionDeploymentOptimizer:
         """Assess system scalability and auto-scaling readiness."""
 
         scalability_features = {
-            "horizontal_scaling": {"auto_scaling": True, "load_distribution": True, "service_mesh": True},
-            "vertical_scaling": {"resource_optimization": True, "dynamic_allocation": True},
-            "data_scaling": {"database_sharding": True, "cache_scaling": True, "storage_scaling": True},
-            "traffic_management": {"rate_limiting": True, "circuit_breaker": True, "bulkhead": True},
+            "horizontal_scaling": {
+                "auto_scaling": True,
+                "load_distribution": True,
+                "service_mesh": True,
+            },
+            "vertical_scaling": {
+                "resource_optimization": True,
+                "dynamic_allocation": True,
+            },
+            "data_scaling": {
+                "database_sharding": True,
+                "cache_scaling": True,
+                "storage_scaling": True,
+            },
+            "traffic_management": {
+                "rate_limiting": True,
+                "circuit_breaker": True,
+                "bulkhead": True,
+            },
         }
 
         total_checks = sum(len(checks) for checks in scalability_features.values())
@@ -243,10 +308,26 @@ class ProductionDeploymentOptimizer:
         """Assess regulatory and operational compliance readiness."""
 
         compliance_areas = {
-            "data_protection": {"privacy_policy": True, "data_retention": True, "consent_management": True},
-            "operational": {"sla_monitoring": True, "incident_response": True, "change_management": True},
-            "quality": {"code_quality": True, "test_coverage": True, "documentation": True},
-            "business_continuity": {"disaster_recovery": True, "backup_strategy": True, "failover": True},
+            "data_protection": {
+                "privacy_policy": True,
+                "data_retention": True,
+                "consent_management": True,
+            },
+            "operational": {
+                "sla_monitoring": True,
+                "incident_response": True,
+                "change_management": True,
+            },
+            "quality": {
+                "code_quality": True,
+                "test_coverage": True,
+                "documentation": True,
+            },
+            "business_continuity": {
+                "disaster_recovery": True,
+                "backup_strategy": True,
+                "failover": True,
+            },
         }
 
         total_checks = sum(len(checks) for checks in compliance_areas.values())

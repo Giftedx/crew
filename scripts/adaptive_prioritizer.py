@@ -16,6 +16,7 @@ from typing import Any
 
 import structlog
 
+
 logger = structlog.get_logger()
 
 # Constants for scoring thresholds
@@ -211,9 +212,18 @@ class AdaptivePrioritizer:
 
         # Context-specific multipliers
         self.context_multipliers = {
-            "emergency": {"P0_CRITICAL": 2.0, "P1_HIGH": 0.5, "P2_MEDIUM": 0.1, "P3_LOW": 0.1},
+            "emergency": {
+                "P0_CRITICAL": 2.0,
+                "P1_HIGH": 0.5,
+                "P2_MEDIUM": 0.1,
+                "P3_LOW": 0.1,
+            },
             "budget_constrained": {"cost_reduction": 2.0, "performance": 1.5},
-            "growth_focus": {"user_satisfaction": 1.8, "performance": 1.5, "strategic_alignment": 1.3},
+            "growth_focus": {
+                "user_satisfaction": 1.8,
+                "performance": 1.5,
+                "strategic_alignment": 1.3,
+            },
         }
 
     def add_task(self, task: AdaptiveTask):
@@ -343,7 +353,11 @@ class AdaptivePrioritizer:
 
         # Record prioritization history
         self.prioritization_history.append(
-            {"timestamp": time.time(), "context": asdict(context), "task_scores": updated_tasks.copy()}
+            {
+                "timestamp": time.time(),
+                "context": asdict(context),
+                "task_scores": updated_tasks.copy(),
+            }
         )
 
         # Limit history size
@@ -353,7 +367,10 @@ class AdaptivePrioritizer:
         return updated_tasks
 
     def get_prioritized_tasks(
-        self, context: PrioritizationContext, statuses: list[TaskStatus] | None = None, limit: int | None = None
+        self,
+        context: PrioritizationContext,
+        statuses: list[TaskStatus] | None = None,
+        limit: int | None = None,
     ) -> list[AdaptiveTask]:
         """Get tasks ordered by current priority."""
 
@@ -367,7 +384,11 @@ class AdaptivePrioritizer:
         eligible_tasks = [task for task in self.tasks.values() if task.status in statuses]
 
         # Sort by priority score (descending)
-        prioritized_tasks = sorted(eligible_tasks, key=lambda t: (t.priority_score, -t.age_in_hours()), reverse=True)
+        prioritized_tasks = sorted(
+            eligible_tasks,
+            key=lambda t: (t.priority_score, -t.age_in_hours()),
+            reverse=True,
+        )
 
         # Apply limit if specified
         if limit:
@@ -507,7 +528,9 @@ def create_example_tasks() -> list[AdaptiveTask]:
             base_priority=TaskPriority.P1_HIGH,
             estimated_hours=16.0,
             business_impact=BusinessImpactMetrics(
-                cost_reduction_dollars=500.0, performance_improvement_percent=30.0, user_satisfaction_improvement=0.2
+                cost_reduction_dollars=500.0,
+                performance_improvement_percent=30.0,
+                user_satisfaction_improvement=0.2,
             ),
             constraints=[
                 TaskConstraint(ResourceType.DEVELOPER_TIME, 16.0, 20.0),
@@ -530,7 +553,9 @@ def create_example_tasks() -> list[AdaptiveTask]:
             base_priority=TaskPriority.P2_MEDIUM,
             estimated_hours=40.0,
             business_impact=BusinessImpactMetrics(
-                user_satisfaction_improvement=0.4, strategic_alignment_score=0.7, performance_improvement_percent=15.0
+                user_satisfaction_improvement=0.4,
+                strategic_alignment_score=0.7,
+                performance_improvement_percent=15.0,
             ),
             constraints=[
                 TaskConstraint(ResourceType.DEVELOPER_TIME, 40.0, 20.0),  # Over capacity

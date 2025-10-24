@@ -19,7 +19,10 @@ from pathlib import Path
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from pipeline.multimodal_analysis_pipeline import get_multimodal_analysis_pipeline, PipelineConfig
+from pipeline.multimodal_analysis_pipeline import (
+    PipelineConfig,
+    get_multimodal_analysis_pipeline,
+)
 
 
 def main() -> int:
@@ -38,7 +41,9 @@ def main() -> int:
         status = status_result.data
         print(f"   Services initialized: {status['services_initialized']}")
         print(f"   Available services: {len(status['available_services'])}")
-        print(f"   Service health: {sum(1 for h in status['service_health'].values() if h == 'available')} / {len(status['service_health'])}")
+        print(
+            f"   Service health: {sum(1 for h in status['service_health'].values() if h == 'available')} / {len(status['service_health'])}"
+        )
 
         for service, health in status["service_health"].items():
             print(f"     {service}: {health}")
@@ -73,7 +78,8 @@ def main() -> int:
 
     if fast_result.success:
         data = fast_result.data
-        print("✅ Fast analysis completed!"        print(f"   Processing time: {data['total_processing_time']:.1f}s")
+        print("✅ Fast analysis completed!")
+        print(f"   Processing time: {data['total_processing_time']:.1f}s")
         print(f"   Analysis results: {len(data['analysis_results'])} services")
         print(f"   Errors: {len(data['errors'])}")
         print(f"   Warnings: {len(data['warnings'])}")
@@ -110,7 +116,8 @@ def main() -> int:
 
     if balanced_result.success:
         data = balanced_result.data
-        print("✅ Balanced analysis completed!"        print(f"   Processing time: {data['total_processing_time']:.1f}s")
+        print("✅ Balanced analysis completed!")
+        print(f"   Processing time: {data['total_processing_time']:.1f}s")
         print(f"   Analysis results: {len(data['analysis_results'])} services")
         print(f"   Published reports: {len(data['published_reports'])}")
 
@@ -158,9 +165,13 @@ def main() -> int:
     print("   Configuration:")
     print(f"     Model quality: {custom_config.model_quality}")
     print(f"     Max processing time: {custom_config.max_processing_time}s")
-    print(f"     Services enabled: {sum([custom_config.enable_asr, custom_config.enable_speaker_diarization, custom_config.enable_visual_parsing, custom_config.enable_topic_segmentation, custom_config.enable_claim_extraction, custom_config.enable_highlight_detection, custom_config.enable_sentiment_analysis, custom_config.enable_safety_analysis, custom_config.enable_deduplication, custom_config.enable_publishing])}")
+    print(
+        f"     Services enabled: {sum([custom_config.enable_asr, custom_config.enable_speaker_diarization, custom_config.enable_visual_parsing, custom_config.enable_topic_segmentation, custom_config.enable_claim_extraction, custom_config.enable_highlight_detection, custom_config.enable_sentiment_analysis, custom_config.enable_safety_analysis, custom_config.enable_deduplication, custom_config.enable_publishing])}"
+    )
     print(f"     Caching: {'enabled' if custom_config.enable_caching else 'disabled'}")
-    print(f"     Publishing: {'enabled' if custom_config.publish_reports else 'disabled'}")
+    print(
+        f"     Publishing: {'enabled' if custom_config.publish_reports else 'disabled'}"
+    )
 
     print()
 
@@ -206,4 +217,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
-

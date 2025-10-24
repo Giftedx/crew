@@ -25,6 +25,7 @@ from typing import Any, Literal
 
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -146,13 +147,24 @@ class SmartClipComposerService:
             # Generate clip suggestions
             model_name = self._select_model(model)
             composition_result = self._generate_clip_suggestions(
-                content_analysis, max_clips, min_clip_duration, max_clip_duration, target_platforms, model_name
+                content_analysis,
+                max_clips,
+                min_clip_duration,
+                max_clip_duration,
+                target_platforms,
+                model_name,
             )
 
             if composition_result:
                 # Cache result
                 if use_cache:
-                    self._cache_result(content_analysis, max_clips, min_clip_duration, model, composition_result)
+                    self._cache_result(
+                        content_analysis,
+                        max_clips,
+                        min_clip_duration,
+                        model,
+                        composition_result,
+                    )
 
                 processing_time = (time.time() - start_time) * 1000
 
@@ -170,7 +182,7 @@ class SmartClipComposerService:
 
         except Exception as e:
             logger.error(f"Smart clip composition failed: {e}")
-            return StepResult.fail(f"Clip composition failed: {str(e)}", status="retryable")
+            return StepResult.fail(f"Clip composition failed: {e!s}", status="retryable")
 
     def generate_clip_variants(
         self,
@@ -246,7 +258,7 @@ class SmartClipComposerService:
 
         except Exception as e:
             logger.error(f"Clip extraction failed: {e}")
-            return StepResult.fail(f"Clip extraction failed: {str(e)}")
+            return StepResult.fail(f"Clip extraction failed: {e!s}")
 
     def generate_thumbnail(
         self,
@@ -285,7 +297,7 @@ class SmartClipComposerService:
 
         except Exception as e:
             logger.error(f"Thumbnail generation failed: {e}")
-            return StepResult.fail(f"Thumbnail generation failed: {str(e)}")
+            return StepResult.fail(f"Thumbnail generation failed: {e!s}")
 
     def _select_model(self, model_alias: str) -> str:
         """Select actual model configuration from alias.
@@ -430,7 +442,9 @@ class SmartClipComposerService:
         return suggestions
 
     def _generate_from_transcript(
-        self, transcript_segments: list[dict[str, Any]], target_platforms: list[str] | None
+        self,
+        transcript_segments: list[dict[str, Any]],
+        target_platforms: list[str] | None,
     ) -> list[ClipSuggestion]:
         """Generate clip suggestions from transcript segments.
 
@@ -612,10 +626,7 @@ class SmartClipComposerService:
         """
         # Extract key phrases from transcript
         words = transcript.split()[:8]  # First 8 words
-        if words:
-            title = " ".join(words) + "..."
-        else:
-            title = "Amazing Moment"
+        title = " ".join(words) + "..." if words else "Amazing Moment"
 
         # Add emoji based on highlight type
         highlight_type = highlight.get("highlight_type", "general")
@@ -994,7 +1005,7 @@ class SmartClipComposerService:
 
         except Exception as e:
             logger.error(f"Failed to get cache stats: {e}")
-            return StepResult.fail(f"Failed to get cache stats: {str(e)}")
+            return StepResult.fail(f"Failed to get cache stats: {e!s}")
 
 
 # Singleton instance

@@ -21,6 +21,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
@@ -86,7 +87,12 @@ class DomainInterface:
     def __init__(self, name: str):
         self.name = name
         self.decision_history = []
-        self.performance_metrics = {"avg_reward": 0.0, "avg_latency": 0.0, "decision_count": 0, "success_rate": 1.0}
+        self.performance_metrics = {
+            "avg_reward": 0.0,
+            "avg_latency": 0.0,
+            "decision_count": 0,
+            "success_rate": 1.0,
+        }
 
     async def make_decision(self, global_context: GlobalContext, candidates: list[str]) -> DomainDecision:
         """Make a decision based on global context and available candidates."""
@@ -115,14 +121,34 @@ class ModelRoutingDomain(DomainInterface):
     def __init__(self):
         super().__init__("model_routing")
         self.models = {
-            "gpt-4-turbo": {"quality": 0.9, "latency": 800, "cost": 20, "complexity_boost": 0.1},
-            "gpt-3.5-turbo": {"quality": 0.75, "latency": 300, "cost": 5, "complexity_boost": -0.1},
-            "claude-3-opus": {"quality": 0.92, "latency": 1200, "cost": 25, "complexity_boost": 0.15},
-            "claude-3-sonnet": {"quality": 0.8, "latency": 600, "cost": 12, "complexity_boost": 0.05},
+            "gpt-4-turbo": {
+                "quality": 0.9,
+                "latency": 800,
+                "cost": 20,
+                "complexity_boost": 0.1,
+            },
+            "gpt-3.5-turbo": {
+                "quality": 0.75,
+                "latency": 300,
+                "cost": 5,
+                "complexity_boost": -0.1,
+            },
+            "claude-3-opus": {
+                "quality": 0.92,
+                "latency": 1200,
+                "cost": 25,
+                "complexity_boost": 0.15,
+            },
+            "claude-3-sonnet": {
+                "quality": 0.8,
+                "latency": 600,
+                "cost": 12,
+                "complexity_boost": 0.05,
+            },
         }
         self.alpha = 1.5  # Exploration parameter
 
-    async def make_decision(self, global_context: GlobalContext, candidates: list[str] = None) -> DomainDecision:
+    async def make_decision(self, global_context: GlobalContext, candidates: list[str] | None = None) -> DomainDecision:
         if candidates is None:
             candidates = list(self.models.keys())
 
@@ -187,9 +213,21 @@ class ContentAnalysisDomain(DomainInterface):
         super().__init__("content_analysis")
         self.processors = {
             "fast_nlp": {"quality": 0.6, "latency": 200, "complexity_threshold": 0.3},
-            "advanced_nlp": {"quality": 0.85, "latency": 800, "complexity_threshold": 0.6},
-            "specialized_tech": {"quality": 0.9, "latency": 1000, "complexity_threshold": 0.8},
-            "multimedia_processor": {"quality": 0.8, "latency": 1500, "complexity_threshold": 0.5},
+            "advanced_nlp": {
+                "quality": 0.85,
+                "latency": 800,
+                "complexity_threshold": 0.6,
+            },
+            "specialized_tech": {
+                "quality": 0.9,
+                "latency": 1000,
+                "complexity_threshold": 0.8,
+            },
+            "multimedia_processor": {
+                "quality": 0.8,
+                "latency": 1500,
+                "complexity_threshold": 0.5,
+            },
         }
         self.decision_tree = self._build_decision_tree()
 
@@ -229,7 +267,7 @@ class ContentAnalysisDomain(DomainInterface):
         else:
             return self._traverse_tree(node["right"], context)
 
-    async def make_decision(self, global_context: GlobalContext, candidates: list[str] = None) -> DomainDecision:
+    async def make_decision(self, global_context: GlobalContext, candidates: list[str] | None = None) -> DomainDecision:
         if candidates is None:
             candidates = list(self.processors.keys())
 
@@ -279,14 +317,30 @@ class UserEngagementDomain(DomainInterface):
     def __init__(self):
         super().__init__("user_engagement")
         self.strategies = {
-            "immediate_response": {"satisfaction": 0.7, "engagement": 0.6, "latency": 150},
-            "detailed_analysis": {"satisfaction": 0.85, "engagement": 0.9, "latency": 800},
-            "interactive_followup": {"satisfaction": 0.8, "engagement": 0.85, "latency": 400},
-            "educational_context": {"satisfaction": 0.75, "engagement": 0.8, "latency": 600},
+            "immediate_response": {
+                "satisfaction": 0.7,
+                "engagement": 0.6,
+                "latency": 150,
+            },
+            "detailed_analysis": {
+                "satisfaction": 0.85,
+                "engagement": 0.9,
+                "latency": 800,
+            },
+            "interactive_followup": {
+                "satisfaction": 0.8,
+                "engagement": 0.85,
+                "latency": 400,
+            },
+            "educational_context": {
+                "satisfaction": 0.75,
+                "engagement": 0.8,
+                "latency": 600,
+            },
         }
         self.user_preferences = {}  # Track per-user preferences
 
-    async def make_decision(self, global_context: GlobalContext, candidates: list[str] = None) -> DomainDecision:
+    async def make_decision(self, global_context: GlobalContext, candidates: list[str] | None = None) -> DomainDecision:
         if candidates is None:
             candidates = list(self.strategies.keys())
 
@@ -361,7 +415,12 @@ class MultiBanditOrchestrator:
             "cost_optimized": self._cost_optimized_optimization,
         }
 
-        self.global_stats = {"total_requests": 0, "avg_satisfaction": 0.0, "avg_latency": 0.0, "success_rate": 1.0}
+        self.global_stats = {
+            "total_requests": 0,
+            "avg_satisfaction": 0.0,
+            "avg_latency": 0.0,
+            "success_rate": 1.0,
+        }
 
         logger.info("Multi-Domain Bandit Orchestrator initialized")
 
@@ -536,7 +595,12 @@ class MultiBanditOrchestrator:
         """Execute a global decision plan and return results."""
 
         start_time = time.time()
-        results = {"session_id": plan.session_id, "execution_results": {}, "actual_metrics": {}, "success": True}
+        results = {
+            "session_id": plan.session_id,
+            "execution_results": {},
+            "actual_metrics": {},
+            "success": True,
+        }
 
         try:
             # Execute domains in order
@@ -762,7 +826,13 @@ async def demo_orchestrator():
         else:
             print(f"  ❌ Execution failed: {execution_result.get('error', 'Unknown error')}")
 
-        results.append({"scenario": scenario["name"], "plan": asdict(plan), "execution": execution_result})
+        results.append(
+            {
+                "scenario": scenario["name"],
+                "plan": asdict(plan),
+                "execution": execution_result,
+            }
+        )
 
         # Small delay between scenarios
         await asyncio.sleep(0.1)
@@ -793,7 +863,11 @@ async def demo_orchestrator():
     output_file = Path("multi_domain_orchestrator_results.json")
     with open(output_file, "w") as f:
         json.dump(
-            {"demo_results": results, "performance_summary": summary, "timestamp": datetime.now(UTC).isoformat()},
+            {
+                "demo_results": results,
+                "performance_summary": summary,
+                "timestamp": datetime.now(UTC).isoformat(),
+            },
             f,
             indent=2,
             default=str,

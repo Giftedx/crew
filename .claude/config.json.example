@@ -1,0 +1,179 @@
+{
+  "mcpServers": {
+    "ultimate-discord-intelligence-bot": {
+      "command": "python",
+      "args": [
+        "-m",
+        "ultimate_discord_intelligence_bot.mcp_server"
+      ],
+      "env": {
+        "DISCORD_BOT_TOKEN": "your_discord_bot_token_here",
+        "OPENAI_API_KEY": "your_openai_api_key_here",
+        "QDRANT_URL": "http://localhost:6333",
+        "ENABLE_DEBATE_ANALYSIS": "true",
+        "ENABLE_FACT_CHECKING": "true",
+        "ENABLE_MULTI_PLATFORM_MONITORING": "true",
+        "ENABLE_UNIFIED_KNOWLEDGE": "true",
+        "ENABLE_UNIFIED_METRICS": "true",
+        "ENABLE_UNIFIED_ORCHESTRATION": "true",
+        "ENABLE_UNIFIED_ROUTER": "true",
+        "CREW_MAX_RPM": "10",
+        "LOG_LEVEL": "INFO"
+      }
+    },
+    "browserbase": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@browserbase/mcp-server"
+      ],
+      "env": {
+        "BROWSERBASE_API_KEY": "your_browserbase_api_key_here",
+        "BROWSERBASE_PROJECT_ID": "your_browserbase_project_id_here"
+      }
+    },
+    "hugging-face": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@huggingface/mcp-server"
+      ],
+      "env": {
+        "HUGGINGFACE_API_KEY": "your_huggingface_api_key_here"
+      }
+    },
+    "neon": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@neondatabase/mcp-server"
+      ],
+      "env": {
+        "NEON_API_KEY": "your_neon_api_key_here"
+      }
+    },
+    "launchdarkly": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@launchdarkly/mcp-server"
+      ],
+      "env": {
+        "LAUNCHDARKLY_ACCESS_TOKEN": "your_launchdarkly_access_token_here"
+      }
+    }
+  },
+  "globalSettings": {
+    "logLevel": "info",
+    "timeout": 30000,
+    "retries": 3,
+    "retryDelay": 1000
+  },
+  "features": {
+    "ultimate-discord-intelligence-bot": {
+      "enabled": true,
+      "capabilities": [
+        "content_analysis",
+        "fact_checking",
+        "multi_platform_monitoring",
+        "quality_assurance",
+        "performance_optimization",
+        "memory_management",
+        "workflow_orchestration"
+      ],
+      "settings": {
+        "max_concurrent_requests": 10,
+        "default_timeout": 300,
+        "enable_caching": true,
+        "cache_ttl": 3600,
+        "enable_metrics": true,
+        "enable_tracing": true
+      }
+    }
+  },
+  "integrations": {
+    "discord": {
+      "enabled": true,
+      "bot_token": "your_discord_bot_token_here",
+      "guild_id": "your_discord_guild_id_here",
+      "channels": {
+        "analysis": "your_analysis_channel_id_here",
+        "alerts": "your_alerts_channel_id_here",
+        "logs": "your_logs_channel_id_here"
+      }
+    },
+    "openai": {
+      "enabled": true,
+      "api_key": "your_openai_api_key_here",
+      "base_url": "https://api.openai.com/v1",
+      "models": {
+        "default": "gpt-4",
+        "fast": "gpt-3.5-turbo",
+        "analysis": "gpt-4-turbo"
+      }
+    },
+    "qdrant": {
+      "enabled": true,
+      "url": "http://localhost:6333",
+      "api_key": "your_qdrant_api_key_here",
+      "collection_name": "ultimate_discord_intelligence",
+      "vector_size": 1536
+    }
+  },
+  "monitoring": {
+    "enabled": true,
+    "metrics": {
+      "enabled": true,
+      "endpoint": "http://localhost:9090/metrics",
+      "interval": 30
+    },
+    "logging": {
+      "enabled": true,
+      "level": "INFO",
+      "format": "json",
+      "output": "stdout"
+    },
+    "tracing": {
+      "enabled": true,
+      "endpoint": "http://localhost:14268/api/traces",
+      "sampling_rate": 0.1
+    }
+  },
+  "security": {
+    "enabled": true,
+    "authentication": {
+      "type": "api_key",
+      "api_key": "your_secure_api_key_here"
+    },
+    "authorization": {
+      "enabled": true,
+      "roles": {
+        "admin": ["*"],
+        "analyst": ["content_analysis", "fact_checking"],
+        "viewer": ["read_only"]
+      }
+    },
+    "encryption": {
+      "enabled": true,
+      "algorithm": "AES-256-GCM",
+      "key_rotation_interval": 86400
+    }
+  },
+  "performance": {
+    "optimization": {
+      "enabled": true,
+      "cache_size": 1000,
+      "cache_ttl": 3600,
+      "max_concurrent_requests": 10,
+      "request_timeout": 300
+    },
+    "scaling": {
+      "enabled": true,
+      "auto_scaling": true,
+      "min_instances": 1,
+      "max_instances": 10,
+      "scale_up_threshold": 0.8,
+      "scale_down_threshold": 0.2
+    }
+  }
+}

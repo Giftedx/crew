@@ -12,10 +12,21 @@ from unittest.mock import Mock
 import pytest
 
 from ultimate_discord_intelligence_bot.creator_ops.config import CreatorOpsConfig
-from ultimate_discord_intelligence_bot.creator_ops.integrations.twitch_models import TwitchStream, TwitchUser
-from ultimate_discord_intelligence_bot.creator_ops.integrations.youtube_models import YouTubeVideo
-from ultimate_discord_intelligence_bot.creator_ops.media.asr import ASRResult, ASRSegment
-from ultimate_discord_intelligence_bot.creator_ops.media.diarization import DiarizationResult, SpeakerSegment
+from ultimate_discord_intelligence_bot.creator_ops.integrations.twitch_models import (
+    TwitchStream,
+    TwitchUser,
+)
+from ultimate_discord_intelligence_bot.creator_ops.integrations.youtube_models import (
+    YouTubeVideo,
+)
+from ultimate_discord_intelligence_bot.creator_ops.media.asr import (
+    ASRResult,
+    ASRSegment,
+)
+from ultimate_discord_intelligence_bot.creator_ops.media.diarization import (
+    DiarizationResult,
+    SpeakerSegment,
+)
 
 
 @pytest.fixture
@@ -32,7 +43,7 @@ def test_config():
         enable_diarization=True,
         enable_clip_radar=True,
         enable_repurposing=True,
-        log_level="DEBUG"
+        log_level="DEBUG",
     )
 
 
@@ -66,7 +77,7 @@ def sample_youtube_video():
         tags=["test", "video"],
         category_id="22",
         language="en",
-        country="US"
+        country="US",
     )
 
 
@@ -87,7 +98,7 @@ def sample_twitch_stream():
         language="en",
         thumbnail_url="https://example.com/thumb.jpg",
         tag_ids=["6ea6bca4-4712-4ab9-a906-e3336a9d8039"],
-        is_mature=False
+        is_mature=False,
     )
 
 
@@ -104,7 +115,7 @@ def sample_twitch_user():
         profile_image_url="https://example.com/profile.jpg",
         offline_image_url="https://example.com/offline.jpg",
         view_count=1000000,
-        created_at=datetime.now()
+        created_at=datetime.now(),
     )
 
 
@@ -119,7 +130,7 @@ def sample_asr_result():
             confidence=0.95,
             language="en",
             language_probability=0.98,
-            no_speech_prob=0.02
+            no_speech_prob=0.02,
         ),
         ASRSegment(
             start_time=5.0,
@@ -128,8 +139,8 @@ def sample_asr_result():
             confidence=0.92,
             language="en",
             language_probability=0.98,
-            no_speech_prob=0.03
-        )
+            no_speech_prob=0.03,
+        ),
     ]
 
     return ASRResult(
@@ -139,7 +150,7 @@ def sample_asr_result():
         segments=segments,
         duration=10.0,
         model_name="base",
-        processing_time=2.5
+        processing_time=2.5,
     )
 
 
@@ -147,18 +158,8 @@ def sample_asr_result():
 def sample_diarization_result():
     """Provide sample diarization result."""
     segments = [
-        SpeakerSegment(
-            speaker_id="SPEAKER_00",
-            start_time=0.0,
-            end_time=5.0,
-            duration=5.0
-        ),
-        SpeakerSegment(
-            speaker_id="SPEAKER_01",
-            start_time=5.0,
-            end_time=10.0,
-            duration=5.0
-        )
+        SpeakerSegment(speaker_id="SPEAKER_00", start_time=0.0, end_time=5.0, duration=5.0),
+        SpeakerSegment(speaker_id="SPEAKER_01", start_time=5.0, end_time=10.0, duration=5.0),
     ]
 
     return DiarizationResult(
@@ -166,7 +167,7 @@ def sample_diarization_result():
         num_speakers=2,
         total_duration=10.0,
         model_name="pyannote/speaker-diarization-3.1",
-        processing_time=3.0
+        processing_time=3.0,
     )
 
 
@@ -202,14 +203,8 @@ def temp_video_file():
 def mock_oauth_manager():
     """Provide mock OAuth manager."""
     oauth_manager = Mock()
-    oauth_manager.get_valid_token.return_value = Mock(
-        success=True,
-        data={"access_token": "valid_token"}
-    )
-    oauth_manager.refresh_token.return_value = Mock(
-        success=True,
-        data={"access_token": "refreshed_token"}
-    )
+    oauth_manager.get_valid_token.return_value = Mock(success=True, data={"access_token": "valid_token"})
+    oauth_manager.refresh_token.return_value = Mock(success=True, data={"access_token": "refreshed_token"})
     return oauth_manager
 
 
@@ -226,17 +221,10 @@ def mock_circuit_breaker():
 def mock_store_manager():
     """Provide mock store manager."""
     store_manager = Mock()
-    store_manager.health_check.return_value = Mock(
-        success=True,
-        data={"status": "healthy"}
-    )
-    store_manager.add_memory_item.return_value = Mock(
-        success=True,
-        data={"id": "memory_123"}
-    )
+    store_manager.health_check.return_value = Mock(success=True, data={"status": "healthy"})
+    store_manager.add_memory_item.return_value = Mock(success=True, data={"id": "memory_123"})
     store_manager.get_memory_item.return_value = Mock(
-        success=True,
-        data={"item": {"id": "memory_123", "content": "test content"}}
+        success=True, data={"item": {"id": "memory_123", "content": "test content"}}
     )
     return store_manager
 
@@ -255,26 +243,26 @@ def sample_episode_data():
                 "start_time": 0,
                 "end_time": 300,
                 "text": "Introduction segment",
-                "speaker": "SPEAKER_00"
+                "speaker": "SPEAKER_00",
             },
             {
                 "start_time": 300,
                 "end_time": 900,
                 "text": "Main content segment 1",
-                "speaker": "SPEAKER_01"
+                "speaker": "SPEAKER_01",
             },
             {
                 "start_time": 900,
                 "end_time": 1500,
                 "text": "Main content segment 2",
-                "speaker": "SPEAKER_00"
+                "speaker": "SPEAKER_00",
             },
             {
                 "start_time": 1500,
                 "end_time": 1800,
                 "text": "Conclusion segment",
-                "speaker": "SPEAKER_01"
-            }
+                "speaker": "SPEAKER_01",
+            },
         ],
         "metadata": {
             "channel_id": "test_channel",
@@ -283,8 +271,8 @@ def sample_episode_data():
             "view_count": 100000,
             "like_count": 5000,
             "comment_count": 500,
-            "engagement_rate": 0.055
-        }
+            "engagement_rate": 0.055,
+        },
     }
 
 
@@ -299,7 +287,7 @@ def sample_chat_messages():
             "message": "This is AMAZING!",
             "created_at": datetime.now(),
             "sentiment": 0.9,
-            "engagement": 150
+            "engagement": 150,
         },
         {
             "message_id": "msg_2",
@@ -308,7 +296,7 @@ def sample_chat_messages():
             "message": "EPIC moment!",
             "created_at": datetime.now(),
             "sentiment": 0.8,
-            "engagement": 120
+            "engagement": 120,
         },
         {
             "message_id": "msg_3",
@@ -317,7 +305,7 @@ def sample_chat_messages():
             "message": "WOW that was incredible!",
             "created_at": datetime.now(),
             "sentiment": 0.95,
-            "engagement": 200
+            "engagement": 200,
         },
         {
             "message_id": "msg_4",
@@ -326,8 +314,8 @@ def sample_chat_messages():
             "message": "hello",
             "created_at": datetime.now(),
             "sentiment": 0.5,
-            "engagement": 10
-        }
+            "engagement": 10,
+        },
     ]
 
 
@@ -348,7 +336,7 @@ def sample_clip_data():
         "moment_score": 0.9,
         "keywords": ["epic", "amazing", "gaming"],
         "sentiment_score": 0.85,
-        "engagement_score": 200
+        "engagement_score": 200,
     }
 
 
@@ -367,7 +355,7 @@ def sample_short_data():
         "content_score": 0.9,
         "engagement_potential": 0.85,
         "target_audience": "gaming_enthusiasts",
-        "hashtags": ["#gaming", "#epic", "#short"]
+        "hashtags": ["#gaming", "#epic", "#short"],
     }
 
 
@@ -380,7 +368,7 @@ def sample_intelligence_pack():
         "key_points": [
             "Key insight 1: Important information",
             "Key insight 2: Significant finding",
-            "Key insight 3: Notable observation"
+            "Key insight 3: Notable observation",
         ],
         "topics": ["gaming", "technology", "entertainment"],
         "sentiment": "positive",
@@ -390,21 +378,21 @@ def sample_intelligence_pack():
         "recommendations": [
             "Consider creating more content on this topic",
             "Engage with audience comments",
-            "Collaborate with similar creators"
+            "Collaborate with similar creators",
         ],
         "trends": [
             "Gaming content trending up 15%",
             "Technology discussions increasing",
-            "Entertainment content performing well"
+            "Entertainment content performing well",
         ],
         "competitor_analysis": {
             "similar_content_count": 25,
             "average_engagement": 0.65,
-            "performance_vs_competitors": "above_average"
+            "performance_vs_competitors": "above_average",
         },
         "generated_at": datetime.now().isoformat(),
         "model_version": "1.0",
-        "confidence_score": 0.88
+        "confidence_score": 0.88,
     }
 
 
@@ -412,9 +400,10 @@ def sample_intelligence_pack():
 def setup_test_logging():
     """Set up test logging."""
     import logging
+
     logging.basicConfig(
         level=logging.DEBUG,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
 
 
@@ -422,14 +411,8 @@ def setup_test_logging():
 def mock_requests_session():
     """Provide mock requests session."""
     session = Mock()
-    session.get.return_value = Mock(
-        status_code=200,
-        json=lambda: {"data": []}
-    )
-    session.post.return_value = Mock(
-        status_code=200,
-        json=lambda: {"success": True}
-    )
+    session.get.return_value = Mock(status_code=200, json=lambda: {"data": []})
+    session.post.return_value = Mock(status_code=200, json=lambda: {"success": True})
     return session
 
 
@@ -445,15 +428,9 @@ def mock_async_context_manager():
 # Pytest configuration
 def pytest_configure(config):
     """Configure pytest."""
-    config.addinivalue_line(
-        "markers", "integration: mark test as integration test"
-    )
-    config.addinivalue_line(
-        "markers", "chaos: mark test as chaos test"
-    )
-    config.addinivalue_line(
-        "markers", "slow: mark test as slow running"
-    )
+    config.addinivalue_line("markers", "integration: mark test as integration test")
+    config.addinivalue_line("markers", "chaos: mark test as chaos test")
+    config.addinivalue_line("markers", "slow: mark test as slow running")
 
 
 def pytest_collection_modifyitems(config, items):

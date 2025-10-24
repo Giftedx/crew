@@ -9,10 +9,11 @@ from typing import TYPE_CHECKING, Any
 
 from obs import metrics
 
-log = logging.getLogger(__name__)
-
 from ..request_budget import current_request_tracker as _crt
 from .state import RouteState
+
+
+log = logging.getLogger(__name__)
 
 if TYPE_CHECKING:  # pragma: no cover
     from .service import OpenRouterService
@@ -53,11 +54,7 @@ def prepare_route_state(
                     if key != "default":
                         effective_models[key] = [value]
 
-    candidate_models = list(
-        dict.fromkeys(
-            effective_models.get(task_type, effective_models.get("general", []))
-        )
-    )
+    candidate_models = list(dict.fromkeys(effective_models.get(task_type, effective_models.get("general", []))))
     fallback_choice = service._choose_model_from_map(task_type, effective_models)
 
     if not service.api_key and not service.offline_mode:
@@ -92,9 +89,7 @@ def prepare_route_state(
                 chosen = rl_selection.get("model", fallback_choice)
                 log.debug(f"RL Router selected model: {chosen}")
         except Exception as rl_exc:  # pragma: no cover
-            log.warning(
-                f"RL Router selection failed, falling back to standard routing: {rl_exc}"
-            )
+            log.warning(f"RL Router selection failed, falling back to standard routing: {rl_exc}")
 
     # Fallback to adaptive routing if RL router not available or failed
     manager = getattr(service, "adaptive_routing", None)
@@ -151,23 +146,15 @@ def prepare_route_state(
     except Exception:
         provider_family = "unknown"
 
-    optimised_prompt, compression_meta = service.prompt_engine.optimise_with_metadata(
-        prompt, model=chosen
-    )
+    optimised_prompt, compression_meta = service.prompt_engine.optimise_with_metadata(prompt, model=chosen)
     prompt = optimised_prompt
-    tokens_in = int(
-        compression_meta.get(
-            "final_tokens", service.prompt_engine.count_tokens(prompt, chosen)
-        )
-    )
+    tokens_in = int(compression_meta.get("final_tokens", service.prompt_engine.count_tokens(prompt, chosen)))
     effective_prices = dict(service.token_meter.model_prices)
     if service.tenant_registry:
         ctx = ctx_effective
         if ctx:
             effective_prices.update(service.tenant_registry.get_pricing_map(ctx))
-    projected_cost = service.token_meter.estimate_cost(
-        tokens_in, chosen, prices=effective_prices
-    )
+    projected_cost = service.token_meter.estimate_cost(tokens_in, chosen, prices=effective_prices)
     affordable = service.token_meter.affordable_model(
         tokens_in,
         effective_models.get(task_type, effective_models.get("general", [])),

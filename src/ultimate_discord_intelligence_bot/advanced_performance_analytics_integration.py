@@ -17,8 +17,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from datetime import datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from core.time import default_utc_now
 
@@ -26,6 +25,11 @@ from .advanced_performance_analytics import AdvancedPerformanceAnalytics
 from .enhanced_performance_monitor import EnhancedPerformanceMonitor
 from .performance_optimization_engine import PerformanceOptimizationEngine
 from .predictive_performance_insights import PredictivePerformanceInsights
+
+
+if TYPE_CHECKING:
+    from datetime import datetime
+
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +48,8 @@ class AdvancedPerformanceAnalyticsSystem:
         # Initialize all components
         self.analytics_engine = AdvancedPerformanceAnalytics(enhanced_monitor=self.enhanced_monitor)
         self.predictive_engine = PredictivePerformanceInsights(
-            analytics_engine=self.analytics_engine, enhanced_monitor=self.enhanced_monitor
+            analytics_engine=self.analytics_engine,
+            enhanced_monitor=self.enhanced_monitor,
         )
         self.optimization_engine = PerformanceOptimizationEngine(
             analytics_engine=self.analytics_engine,
@@ -89,7 +94,10 @@ class AdvancedPerformanceAnalyticsSystem:
 
             # Combine and synthesize results
             comprehensive_results = self._synthesize_results(
-                analytics_results, predictive_results, optimization_recommendations, optimization_results
+                analytics_results,
+                predictive_results,
+                optimization_recommendations,
+                optimization_results,
             )
 
             # Update system insights
@@ -261,7 +269,12 @@ class AdvancedPerformanceAnalyticsSystem:
                 },
                 "priority_recommendations": sorted(
                     priority_recommendations,
-                    key=lambda x: {"critical": 3, "urgent": 3, "high": 2, "medium": 1}.get(x["priority"], 0),
+                    key=lambda x: {
+                        "critical": 3,
+                        "urgent": 3,
+                        "high": 2,
+                        "medium": 1,
+                    }.get(x["priority"], 0),
                     reverse=True,
                 )[:5],
                 "status_indicators": status_indicators,

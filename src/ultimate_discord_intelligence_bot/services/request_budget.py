@@ -29,11 +29,17 @@ from __future__ import annotations
 import threading
 from contextlib import contextmanager
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
+
+
+if TYPE_CHECKING:
+    from ultimate_discord_intelligence_bot.step_result import StepResult
+
 
 __all__ = [
     "RequestCostTracker",
-    "track_request_budget",
     "current_request_tracker",
+    "track_request_budget",
 ]
 
 _thread_local = threading.local()
@@ -46,7 +52,7 @@ class RequestCostTracker:
     total_spent: float = 0.0
     per_task_spent: dict[str, float] = field(default_factory=dict)
 
-    def can_charge(self, amount: float, task: str) -> bool:
+    def can_charge(self, amount: float, task: str) -> StepResult:
         new_total = self.total_spent + amount
         if self.total_limit is not None and new_total > self.total_limit:
             return False
@@ -56,7 +62,7 @@ class RequestCostTracker:
                 return False
         return True
 
-    def charge(self, amount: float, task: str) -> None:
+    def charge(self, amount: float, task: str) -> StepResult:
         if amount < 0:
             return
         self.total_spent += amount
@@ -75,5 +81,5 @@ def track_request_budget(total_limit: float | None, per_task_limits: dict[str, f
         _thread_local.req_budget = prev
 
 
-def current_request_tracker() -> RequestCostTracker | None:
+def current_request_tracker() -> StepResult:
     return getattr(_thread_local, "req_budget", None)

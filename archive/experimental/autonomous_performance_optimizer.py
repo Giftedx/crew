@@ -25,6 +25,7 @@ from typing import Any
 
 import numpy as np
 
+
 # Setup logging
 logger = logging.getLogger(__name__)
 
@@ -277,7 +278,11 @@ class BayesianOptimizer:
             "improvement": scores[-1] - scores[0] if len(scores) > 1 else 0,
             "convergence_trend": self._calculate_convergence_trend(scores),
             "evaluation_history": [
-                {"experiment_id": r.experiment_id, "score": r.objective_score, "timestamp": r.timestamp.isoformat()}
+                {
+                    "experiment_id": r.experiment_id,
+                    "score": r.objective_score,
+                    "timestamp": r.timestamp.isoformat(),
+                }
                 for r in self.evaluation_history[-10:]  # Last 10 evaluations
             ],
         }
@@ -300,7 +305,7 @@ class BayesianOptimizer:
 class AutonomousOptimizer:
     """Main autonomous optimization system"""
 
-    def __init__(self, orchestrator, config: dict = None):
+    def __init__(self, orchestrator, config: dict | None = None):
         self.orchestrator = orchestrator
         self.config = config or self._get_default_config()
         self.performance_analyzer = PerformanceAnalyzer()
@@ -320,11 +325,25 @@ class AutonomousOptimizer:
             "optimization_interval": 3600,  # 1 hour
             "min_data_points": 100,
             "performance_threshold": 0.6,
-            "safety_constraints": {"max_latency_ms": 200, "max_error_rate": 0.1, "min_reward": 0.3},
+            "safety_constraints": {
+                "max_latency_ms": 200,
+                "max_error_rate": 0.1,
+                "min_reward": 0.3,
+            },
             "optimization_targets": [
                 {"metric_name": "avg_reward", "target_value": 0.8, "weight": 0.6},
-                {"metric_name": "decision_latency_ms", "target_value": 50, "weight": 0.2, "minimize": True},
-                {"metric_name": "error_rate", "target_value": 0.02, "weight": 0.2, "minimize": True},
+                {
+                    "metric_name": "decision_latency_ms",
+                    "target_value": 50,
+                    "weight": 0.2,
+                    "minimize": True,
+                },
+                {
+                    "metric_name": "error_rate",
+                    "target_value": 0.02,
+                    "weight": 0.2,
+                    "minimize": True,
+                },
             ],
         }
 
@@ -344,7 +363,12 @@ class AutonomousOptimizer:
         offset_tree_space = [
             HyperparameterSpace("max_tree_depth", "int", 2, 8, current_value=4),
             HyperparameterSpace("min_samples", "int", 5, 50, current_value=20),
-            HyperparameterSpace("split_criteria", "categorical", categories=["mse", "mae"], current_value="mse"),
+            HyperparameterSpace(
+                "split_criteria",
+                "categorical",
+                categories=["mse", "mae"],
+                current_value="mse",
+            ),
         ]
 
         # Combined parameter space
@@ -497,7 +521,12 @@ class AutonomousOptimizer:
 
         except Exception as e:
             logger.error(f"Failed to collect performance data: {e}")
-            return {"avg_reward": 0, "total_decisions": 0, "decision_latency_ms": 999, "error_rate": 1.0}
+            return {
+                "avg_reward": 0,
+                "total_decisions": 0,
+                "decision_latency_ms": 999,
+                "error_rate": 1.0,
+            }
 
     async def _evaluate_parameters(self, parameters: dict, experiment_id: str) -> dict:
         """Evaluate performance with given parameters"""
@@ -549,9 +578,9 @@ class AutonomousOptimizer:
             safety_constraints = self.config["safety_constraints"]
             if target.metric_name in safety_constraints:
                 constraint = safety_constraints[target.metric_name]
-                if target.minimize and metric_value > constraint:
-                    return 0.0  # Constraint violation
-                elif not target.minimize and metric_value < constraint:
+                if (target.minimize and metric_value > constraint) or (
+                    not target.minimize and metric_value < constraint
+                ):
                     return 0.0  # Constraint violation
 
             # Calculate normalized score
@@ -560,13 +589,13 @@ class AutonomousOptimizer:
                 if metric_value <= target.target_value:
                     score = 1.0
                 else:
-                    score = max(0.0, 1.0 - (metric_value - target.target_value) / target.target_value)
+                    score = max(
+                        0.0,
+                        1.0 - (metric_value - target.target_value) / target.target_value,
+                    )
             else:
                 # For metrics we want to maximize (like reward)
-                if metric_value >= target.target_value:
-                    score = 1.0
-                else:
-                    score = metric_value / target.target_value
+                score = 1.0 if metric_value >= target.target_value else metric_value / target.target_value
 
             total_score += score * target.weight
             total_weight += target.weight
@@ -579,13 +608,10 @@ class AutonomousOptimizer:
             return False
 
         # Apply if this is the best result so far
-        if (
+        return bool(
             self.bayesian_optimizer.best_result is None
             or result.objective_score > self.bayesian_optimizer.best_result.objective_score
-        ):
-            return True
-
-        return False
+        )
 
     async def _apply_parameters(self, parameters: dict):
         """Apply new parameters to the orchestrator"""
@@ -595,7 +621,7 @@ class AutonomousOptimizer:
             logger.info(f"Applying optimized parameters: {parameters}")
 
             # Update algorithm configurations
-            for domain_name, domain_bandits in self.orchestrator.domains.items():
+            for _domain_name, domain_bandits in self.orchestrator.domains.items():
                 for algorithm_name, bandit in domain_bandits.items():
                     if algorithm_name == "doubly_robust" and hasattr(bandit, "alpha"):
                         if "doubly_robust_alpha" in parameters:
@@ -636,7 +662,7 @@ class AutonomousOptimizer:
         return self.get_optimization_status()
 
 
-async def create_autonomous_optimizer(orchestrator, config: dict = None) -> AutonomousOptimizer:
+async def create_autonomous_optimizer(orchestrator, config: dict | None = None) -> AutonomousOptimizer:
     """Factory function to create and initialize autonomous optimizer"""
     optimizer = AutonomousOptimizer(orchestrator, config)
     logger.info("Autonomous optimizer created and ready")
@@ -679,7 +705,10 @@ async def main():
 
 if __name__ == "__main__":
     # Setup logging for standalone execution
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    )
 
     # Run example
     asyncio.run(main())

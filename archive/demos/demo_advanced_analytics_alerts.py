@@ -12,12 +12,17 @@ import logging
 import sys
 from datetime import datetime
 
+
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
 # Import the alert system components
 try:
+    from src.ultimate_discord_intelligence_bot.tools.advanced_performance_analytics_tool import (
+        AdvancedPerformanceAnalyticsTool,
+    )
+
     from src.ultimate_discord_intelligence_bot.advanced_performance_analytics_alert_engine import (
         AdvancedPerformanceAnalyticsAlertEngine,
     )
@@ -28,9 +33,6 @@ try:
     from src.ultimate_discord_intelligence_bot.advanced_performance_analytics_discord_integration import (
         AdvancedPerformanceAnalyticsDiscordIntegration,
         send_analytics_monitoring_batch,
-    )
-    from src.ultimate_discord_intelligence_bot.tools.advanced_performance_analytics_tool import (
-        AdvancedPerformanceAnalyticsTool,
     )
 
     logger.info("✅ Successfully imported Advanced Performance Analytics Alert System components")
@@ -52,7 +54,7 @@ async def demonstrate_alert_engine():
 
         print(f"Alert Rules Configured: {len(alert_engine.alert_rules)}")
         print("Default Alert Rules:")
-        for rule_id, rule in list(alert_engine.alert_rules.items())[:3]:
+        for _rule_id, rule in list(alert_engine.alert_rules.items())[:3]:
             print(f"  • {rule.name} ({rule.severity.value}) - {rule.category.value}")
 
         # Evaluate analytics for alerts
@@ -180,7 +182,10 @@ async def demonstrate_crew_tool():
             print(f"\n🔧 Testing: {description}")
 
             result = analytics_tool._run(
-                action=action, lookback_hours=4, include_optimization=False, send_notifications=False
+                action=action,
+                lookback_hours=4,
+                include_optimization=False,
+                send_notifications=False,
             )
 
             print(f"Action: {action}")
@@ -232,14 +237,14 @@ async def demonstrate_alert_management():
         print(f"Alert Policies: {len(alert_manager.alert_policies)}")
 
         print("\nDefault Monitoring Schedules:")
-        for schedule_id, schedule in list(alert_manager.monitoring_schedules.items())[:3]:
+        for _schedule_id, schedule in list(alert_manager.monitoring_schedules.items())[:3]:
             print(f"  • {schedule.name}")
             print(f"    Frequency: {schedule.frequency.value}")
             print(f"    Lookback: {schedule.lookback_hours}h")
             print(f"    Escalation: {schedule.escalation_level.value}")
 
         print("\nDefault Alert Policies:")
-        for policy_id, policy in list(alert_manager.alert_policies.items())[:2]:
+        for _policy_id, policy in list(alert_manager.alert_policies.items())[:2]:
             print(f"  • {policy.name}")
             print(f"    Priority: {policy.priority}")
             print(f"    Actions: {len(policy.actions)}")

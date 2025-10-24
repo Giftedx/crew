@@ -14,12 +14,16 @@ structured feature spaces when feature dimension is small (<= 16).
 
 from __future__ import annotations
 
+import contextlib
 import math
-import random  # noqa: S311 - non-crypto randomness acceptable for exploration
+import random
 from collections import defaultdict
-from collections.abc import Sequence
 from dataclasses import dataclass, field
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 
 def _ctx_vector(ctx: dict[str, Any], dim: int = 8) -> list[float]:
@@ -58,8 +62,7 @@ class LinTSDiagBandit:
         # variance for each dimension ~ sigma^2 / A[i]
         _rng = self.rng or random
         return [
-            theta_mean[i] + (self.sigma / math.sqrt(max(A[i], 1e-9))) * _rng.gauss(0.0, 1.0)  # noqa: S311
-            for i in range(self.dim)
+            theta_mean[i] + (self.sigma / math.sqrt(max(A[i], 1e-9))) * _rng.gauss(0.0, 1.0) for i in range(self.dim)
         ]
 
     def recommend(self, context: dict[str, Any], candidates: Sequence[Any]) -> Any:
@@ -107,14 +110,10 @@ class LinTSDiagBandit:
         ver = state.get("version")
         if ver is not None and ver > 1:
             return
-        try:
+        with contextlib.suppress(Exception):
             self.dim = int(state.get("dim", self.dim))
-        except Exception:
-            pass
-        try:
+        with contextlib.suppress(Exception):
             self.sigma = float(state.get("sigma", self.sigma))
-        except Exception:
-            pass
 
         def _mk_A_default() -> list[float]:
             return [1.0] * self.dim

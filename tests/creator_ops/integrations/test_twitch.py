@@ -16,7 +16,9 @@ from unittest.mock import Mock, patch
 import pytest
 from requests.exceptions import ConnectionError
 
-from ultimate_discord_intelligence_bot.creator_ops.integrations.twitch_client import TwitchClient
+from ultimate_discord_intelligence_bot.creator_ops.integrations.twitch_client import (
+    TwitchClient,
+)
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
@@ -26,7 +28,10 @@ class TestTwitchClient:
     def setup_method(self):
         """Set up test fixtures."""
         self.client = TwitchClient(
-            client_id="test_client_id", client_secret="test_client_secret", oauth_manager=Mock(), config=Mock()
+            client_id="test_client_id",
+            client_secret="test_client_secret",
+            oauth_manager=Mock(),
+            config=Mock(),
         )
         self.test_user_id = "12345"
         self.test_stream_id = "67890"
@@ -85,7 +90,11 @@ class TestTwitchClient:
         """Test user information retrieval with API error."""
         mock_response = Mock()
         mock_response.status_code = 400
-        mock_response.json.return_value = {"error": "Bad Request", "status": 400, "message": "Invalid user login"}
+        mock_response.json.return_value = {
+            "error": "Bad Request",
+            "status": 400,
+            "message": "Invalid user login",
+        }
 
         with patch("requests.get", return_value=mock_response):
             result = self.client.get_user_info("invalid_user")
@@ -256,7 +265,11 @@ class TestTwitchClient:
         """Test clip creation when stream is not live."""
         mock_response = Mock()
         mock_response.status_code = 400
-        mock_response.json.return_value = {"error": "Bad Request", "status": 400, "message": "Stream is not live"}
+        mock_response.json.return_value = {
+            "error": "Bad Request",
+            "status": 400,
+            "message": "Stream is not live",
+        }
 
         with patch("requests.post", return_value=mock_response):
             result = self.client.create_clip(self.test_user_id, "Test clip")
@@ -333,7 +346,11 @@ class TestTwitchClient:
         # Mock expired token response
         mock_401_response = Mock()
         mock_401_response.status_code = 401
-        mock_401_response.json.return_value = {"error": "Unauthorized", "status": 401, "message": "Invalid token"}
+        mock_401_response.json.return_value = {
+            "error": "Unauthorized",
+            "status": 401,
+            "message": "Invalid token",
+        }
 
         # Mock successful response after token refresh
         mock_success_response = Mock()
@@ -361,9 +378,11 @@ class TestTwitchClient:
         mock_success_response.status_code = 200
         mock_success_response.json.return_value = {"data": []}
 
-        with patch("requests.get", side_effect=[mock_429_response, mock_success_response]):
-            with patch("time.sleep") as mock_sleep:
-                result = self.client.get_user_info("testuser")
+        with (
+            patch("requests.get", side_effect=[mock_429_response, mock_success_response]),
+            patch("time.sleep") as mock_sleep,
+        ):
+            result = self.client.get_user_info("testuser")
 
         # Should have slept due to rate limiting
         mock_sleep.assert_called_once()
@@ -533,7 +552,9 @@ class TestTwitchClient:
 
         with patch("requests.post", return_value=mock_response):
             result = self.client.create_eventsub_subscription(
-                "stream.online", {"broadcaster_user_id": self.test_user_id}, "https://example.com/webhook"
+                "stream.online",
+                {"broadcaster_user_id": self.test_user_id},
+                "https://example.com/webhook",
             )
 
         assert result.success

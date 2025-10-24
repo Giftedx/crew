@@ -16,6 +16,7 @@ from typing import Any
 
 import psutil
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -88,7 +89,10 @@ class MetricData:
     last_update: float = 0.0
 
     def add_value(
-        self, value: float, labels: dict[str, str] | None = None, metadata: dict[str, Any] | None = None
+        self,
+        value: float,
+        labels: dict[str, str] | None = None,
+        metadata: dict[str, Any] | None = None,
     ) -> None:
         """Add a new value to the metric."""
         metric_value = MetricValue(
@@ -202,7 +206,7 @@ class MetricsCollector:
         """Initialize metric backends."""
         if self.config.enable_prometheus:
             try:
-                from prometheus_client import CollectorRegistry, Counter, Gauge, Histogram, Summary
+                from prometheus_client import CollectorRegistry
 
                 self.backends[MetricBackend.PROMETHEUS] = {
                     "registry": CollectorRegistry(),
@@ -335,19 +339,31 @@ class MetricsCollector:
 
                 if config.metric_type == MetricType.COUNTER:
                     prometheus_backend["counters"][config.name] = Counter(
-                        config.name, config.description, list(config.labels.keys()), registry=registry
+                        config.name,
+                        config.description,
+                        list(config.labels.keys()),
+                        registry=registry,
                     )
                 elif config.metric_type == MetricType.GAUGE:
                     prometheus_backend["gauges"][config.name] = Gauge(
-                        config.name, config.description, list(config.labels.keys()), registry=registry
+                        config.name,
+                        config.description,
+                        list(config.labels.keys()),
+                        registry=registry,
                     )
                 elif config.metric_type == MetricType.HISTOGRAM:
                     prometheus_backend["histograms"][config.name] = Histogram(
-                        config.name, config.description, list(config.labels.keys()), registry=registry
+                        config.name,
+                        config.description,
+                        list(config.labels.keys()),
+                        registry=registry,
                     )
                 elif config.metric_type == MetricType.SUMMARY:
                     prometheus_backend["summaries"][config.name] = Summary(
-                        config.name, config.description, list(config.labels.keys()), registry=registry
+                        config.name,
+                        config.description,
+                        list(config.labels.keys()),
+                        registry=registry,
                     )
             except ImportError:
                 pass
@@ -531,7 +547,7 @@ class MetricsCollector:
             "system_metrics_enabled": self.config.enable_system_metrics,
             "collection_interval": self.config.collection_interval,
             "export_interval": self.config.export_interval,
-            "backends_configured": [backend.value for backend in self.backends.keys()],
+            "backends_configured": [backend.value for backend in self.backends],
             "system_metrics": self.get_system_metrics(),
         }
 

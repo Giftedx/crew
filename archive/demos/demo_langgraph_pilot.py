@@ -17,7 +17,10 @@ from src.graphs.langgraph_pilot import run_ingest_analysis_pilot
 
 def _ingest(job: dict):
     # Simulate making transcript chunks and a namespace
-    return {"chunks": 2, "namespace": f"{job.get('tenant', 'default')}:{job.get('workspace', 'main')}:demo"}
+    return {
+        "chunks": 2,
+        "namespace": f"{job.get('tenant', 'default')}:{job.get('workspace', 'main')}:demo",
+    }
 
 
 def _analyze(ctx: dict):
@@ -27,9 +30,22 @@ def _analyze(ctx: dict):
 
 
 def main():
-    job = {"tenant": os.getenv("DEMO_TENANT", "default"), "workspace": os.getenv("DEMO_WORKSPACE", "main")}
-    enable_segment = os.getenv("DEMO_ENABLE_SEGMENT", "0").lower() in ("1", "true", "yes", "on")
-    enable_embed = os.getenv("DEMO_ENABLE_EMBED", "0").lower() in ("1", "true", "yes", "on")
+    job = {
+        "tenant": os.getenv("DEMO_TENANT", "default"),
+        "workspace": os.getenv("DEMO_WORKSPACE", "main"),
+    }
+    enable_segment = os.getenv("DEMO_ENABLE_SEGMENT", "0").lower() in (
+        "1",
+        "true",
+        "yes",
+        "on",
+    )
+    enable_embed = os.getenv("DEMO_ENABLE_EMBED", "0").lower() in (
+        "1",
+        "true",
+        "yes",
+        "on",
+    )
 
     def _segment(ctx: dict):
         n = int(ctx.get("chunks", 0))

@@ -11,10 +11,12 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
+
 # Add the project root to the path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root / "src"))
 
+# ruff: noqa: E402
 from ultimate_discord_intelligence_bot.creator_ops.integrations.instagram_models import (
     InstagramComment,
     InstagramInsight,
@@ -36,7 +38,11 @@ from ultimate_discord_intelligence_bot.creator_ops.integrations.twitch_models im
     TwitchUser,
     TwitchVideo,
 )
-from ultimate_discord_intelligence_bot.creator_ops.integrations.x_models import XMedia, XTweet, XUser
+from ultimate_discord_intelligence_bot.creator_ops.integrations.x_models import (
+    XMedia,
+    XTweet,
+    XUser,
+)
 from ultimate_discord_intelligence_bot.creator_ops.integrations.youtube_models import (
     YouTubeCaption,
     YouTubeChannel,
@@ -45,6 +51,7 @@ from ultimate_discord_intelligence_bot.creator_ops.integrations.youtube_models i
     YouTubeSearchResult,
     YouTubeVideo,
 )
+
 
 logger = logging.getLogger(__name__)
 
@@ -77,7 +84,10 @@ class FixtureValidator:
                 file_path = self.fixtures_dir / filename
                 if not file_path.exists():
                     self.errors.append(f"YouTube fixture {filename} not found")
-                    results[fixture_name] = {"status": "missing", "error": "File not found"}
+                    results[fixture_name] = {
+                        "status": "missing",
+                        "error": "File not found",
+                    }
                     continue
 
                 with open(file_path) as f:
@@ -128,10 +138,10 @@ class FixtureValidator:
                 }
 
             except (json.JSONDecodeError, ValidationError) as e:
-                self.errors.append(f"YouTube fixture {filename} validation error: {str(e)}")
+                self.errors.append(f"YouTube fixture {filename} validation error: {e!s}")
                 results[fixture_name] = {"status": "invalid", "error": str(e)}
             except Exception as e:
-                self.errors.append(f"YouTube fixture {filename} unexpected error: {str(e)}")
+                self.errors.append(f"YouTube fixture {filename} unexpected error: {e!s}")
                 results[fixture_name] = {"status": "error", "error": str(e)}
 
         return results
@@ -156,7 +166,10 @@ class FixtureValidator:
                 file_path = self.fixtures_dir / filename
                 if not file_path.exists():
                     self.errors.append(f"Twitch fixture {filename} not found")
-                    results[fixture_name] = {"status": "missing", "error": "File not found"}
+                    results[fixture_name] = {
+                        "status": "missing",
+                        "error": "File not found",
+                    }
                     continue
 
                 with open(file_path) as f:
@@ -207,10 +220,10 @@ class FixtureValidator:
                 }
 
             except (json.JSONDecodeError, ValidationError) as e:
-                self.errors.append(f"Twitch fixture {filename} validation error: {str(e)}")
+                self.errors.append(f"Twitch fixture {filename} validation error: {e!s}")
                 results[fixture_name] = {"status": "invalid", "error": str(e)}
             except Exception as e:
-                self.errors.append(f"Twitch fixture {filename} unexpected error: {str(e)}")
+                self.errors.append(f"Twitch fixture {filename} unexpected error: {e!s}")
                 results[fixture_name] = {"status": "error", "error": str(e)}
 
         return results
@@ -233,7 +246,10 @@ class FixtureValidator:
                 file_path = self.fixtures_dir / filename
                 if not file_path.exists():
                     self.errors.append(f"TikTok fixture {filename} not found")
-                    results[fixture_name] = {"status": "missing", "error": "File not found"}
+                    results[fixture_name] = {
+                        "status": "missing",
+                        "error": "File not found",
+                    }
                     continue
 
                 with open(file_path) as f:
@@ -268,10 +284,10 @@ class FixtureValidator:
                 }
 
             except (json.JSONDecodeError, ValidationError) as e:
-                self.errors.append(f"TikTok fixture {filename} validation error: {str(e)}")
+                self.errors.append(f"TikTok fixture {filename} validation error: {e!s}")
                 results[fixture_name] = {"status": "invalid", "error": str(e)}
             except Exception as e:
-                self.errors.append(f"TikTok fixture {filename} unexpected error: {str(e)}")
+                self.errors.append(f"TikTok fixture {filename} unexpected error: {e!s}")
                 results[fixture_name] = {"status": "error", "error": str(e)}
 
         return results
@@ -295,7 +311,10 @@ class FixtureValidator:
                 file_path = self.fixtures_dir / filename
                 if not file_path.exists():
                     self.errors.append(f"Instagram fixture {filename} not found")
-                    results[fixture_name] = {"status": "missing", "error": "File not found"}
+                    results[fixture_name] = {
+                        "status": "missing",
+                        "error": "File not found",
+                    }
                     continue
 
                 with open(file_path) as f:
@@ -336,10 +355,10 @@ class FixtureValidator:
                 }
 
             except (json.JSONDecodeError, ValidationError) as e:
-                self.errors.append(f"Instagram fixture {filename} validation error: {str(e)}")
+                self.errors.append(f"Instagram fixture {filename} validation error: {e!s}")
                 results[fixture_name] = {"status": "invalid", "error": str(e)}
             except Exception as e:
-                self.errors.append(f"Instagram fixture {filename} unexpected error: {str(e)}")
+                self.errors.append(f"Instagram fixture {filename} unexpected error: {e!s}")
                 results[fixture_name] = {"status": "error", "error": str(e)}
 
         return results
@@ -363,7 +382,10 @@ class FixtureValidator:
                 file_path = self.fixtures_dir / filename
                 if not file_path.exists():
                     self.errors.append(f"X fixture {filename} not found")
-                    results[fixture_name] = {"status": "missing", "error": "File not found"}
+                    results[fixture_name] = {
+                        "status": "missing",
+                        "error": "File not found",
+                    }
                     continue
 
                 with open(file_path) as f:
@@ -372,19 +394,7 @@ class FixtureValidator:
                 # Validate based on fixture type
                 if fixture_name == "user":
                     XUser(**data)
-                elif fixture_name == "tweets":
-                    if "data" in data:
-                        for item in data["data"]:
-                            XTweet(**item)
-                    else:
-                        XTweet(**data)
-                elif fixture_name == "mentions":
-                    if "data" in data:
-                        for item in data["data"]:
-                            XTweet(**item)
-                    else:
-                        XTweet(**data)
-                elif fixture_name == "search":
+                elif fixture_name == "tweets" or fixture_name == "mentions" or fixture_name == "search":
                     if "data" in data:
                         for item in data["data"]:
                             XTweet(**item)
@@ -404,10 +414,10 @@ class FixtureValidator:
                 }
 
             except (json.JSONDecodeError, ValidationError) as e:
-                self.errors.append(f"X fixture {filename} validation error: {str(e)}")
+                self.errors.append(f"X fixture {filename} validation error: {e!s}")
                 results[fixture_name] = {"status": "invalid", "error": str(e)}
             except Exception as e:
-                self.errors.append(f"X fixture {filename} unexpected error: {str(e)}")
+                self.errors.append(f"X fixture {filename} unexpected error: {e!s}")
                 results[fixture_name] = {"status": "error", "error": str(e)}
 
         return results

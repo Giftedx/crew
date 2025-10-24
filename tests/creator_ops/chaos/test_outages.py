@@ -17,8 +17,12 @@ import pytest
 from requests.exceptions import ConnectionError, Timeout
 
 from ultimate_discord_intelligence_bot.creator_ops.features.clip_radar import ClipRadar
-from ultimate_discord_intelligence_bot.creator_ops.integrations.twitch_client import TwitchClient
-from ultimate_discord_intelligence_bot.creator_ops.integrations.youtube_client import YouTubeClient
+from ultimate_discord_intelligence_bot.creator_ops.integrations.twitch_client import (
+    TwitchClient,
+)
+from ultimate_discord_intelligence_bot.creator_ops.integrations.youtube_client import (
+    YouTubeClient,
+)
 from ultimate_discord_intelligence_bot.creator_ops.media.asr import ASRProcessor
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
@@ -40,7 +44,9 @@ class TestCreatorOpsChaos:
             mock_create_engine.side_effect = Exception("Database connection failed")
 
             # Attempt to initialize store manager
-            from ultimate_discord_intelligence_bot.core.store_adapter import UnifiedStoreManager
+            from ultimate_discord_intelligence_bot.core.store_adapter import (
+                UnifiedStoreManager,
+            )
 
             try:
                 store_manager = UnifiedStoreManager("postgresql://test:test@localhost/test")
@@ -79,7 +85,10 @@ class TestCreatorOpsChaos:
     def test_twitch_api_outage(self):
         """Test Twitch API outage scenarios."""
         twitch_client = TwitchClient(
-            client_id="test_client_id", client_secret="test_client_secret", oauth_manager=Mock(), config=Mock()
+            client_id="test_client_id",
+            client_secret="test_client_secret",
+            oauth_manager=Mock(),
+            config=Mock(),
         )
 
         # Test rate limiting
@@ -124,7 +133,10 @@ class TestCreatorOpsChaos:
 
     def test_circuit_breaker_behavior(self):
         """Test circuit breaker behavior under failure conditions."""
-        from ultimate_discord_intelligence_bot.core.circuit_breaker_canonical import CircuitBreaker, CircuitConfig
+        from ultimate_discord_intelligence_bot.core.circuit_breaker_canonical import (
+            CircuitBreaker,
+            CircuitConfig,
+        )
 
         # Create circuit breaker with low failure threshold
         config = CircuitConfig(failure_threshold=2, recovery_timeout=1.0, success_threshold=1)
@@ -169,7 +181,12 @@ class TestCreatorOpsChaos:
             with patch.object(clip_radar, "_get_chat_messages") as mock_chat:
                 # Stream data succeeds but chat fails
                 mock_stream.return_value = StepResult.ok(
-                    data={"stream_id": "12345", "title": "Test Stream", "viewer_count": 1000, "is_live": True}
+                    data={
+                        "stream_id": "12345",
+                        "title": "Test Stream",
+                        "viewer_count": 1000,
+                        "is_live": True,
+                    }
                 )
 
                 mock_chat.return_value = StepResult.fail("Chat service unavailable")
@@ -308,7 +325,12 @@ class TestCreatorOpsChaos:
         with patch("requests.get") as mock_get:
             mock_response = Mock()
             mock_response.json.return_value = {
-                "items": [{"id": self.test_video_id, "snippet": {"title": "Test Video", "channelId": "test_channel"}}]
+                "items": [
+                    {
+                        "id": self.test_video_id,
+                        "snippet": {"title": "Test Video", "channelId": "test_channel"},
+                    }
+                ]
             }
             mock_response.status_code = 200
             mock_get.return_value = mock_response
@@ -319,7 +341,9 @@ class TestCreatorOpsChaos:
 
     def test_health_check_during_outage(self):
         """Test health check behavior during outages."""
-        from ultimate_discord_intelligence_bot.core.store_adapter import UnifiedStoreManager
+        from ultimate_discord_intelligence_bot.core.store_adapter import (
+            UnifiedStoreManager,
+        )
 
         # Mock database connection
         with patch("sqlalchemy.create_engine") as mock_create_engine:
@@ -389,14 +413,17 @@ class TestCreatorOpsChaos:
                 content_type="test",
                 content_json='{"test": "data"}',
             )
-            assert False, "Should have raised exception"
+            raise AssertionError("Should have raised exception")
         except Exception as e:
             assert "Database unavailable" in str(e)
 
         # Test that system can recover
         store_manager.add_memory_item.return_value = StepResult.ok(data={"id": "memory_123"})
         result = store_manager.add_memory_item(
-            tenant=self.test_tenant, workspace=self.test_workspace, content_type="test", content_json='{"test": "data"}'
+            tenant=self.test_tenant,
+            workspace=self.test_workspace,
+            content_type="test",
+            content_json='{"test": "data"}',
         )
         assert result.success
 

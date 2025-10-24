@@ -22,6 +22,7 @@ import re
 import sys
 from pathlib import Path
 
+
 RE_FLAG = re.compile(r"ENABLE_ANALYSIS_HTTP_RETRY")
 ROOT = Path(__file__).parent.parent
 SRC = ROOT / "src"

@@ -12,7 +12,8 @@ import logging
 from datetime import UTC, datetime
 from typing import Any
 
-from ultimate_discord_intelligence_bot.step_result import StepResult
+from ultimate_discord_intelligence_bot.step_result import StepResult  # type: ignore[import-not-found]
+
 
 logger = logging.getLogger(__name__)
 
@@ -36,9 +37,7 @@ class AuditLogger:
         # Create handler if not exists
         if not audit_logger.handlers:
             handler = logging.StreamHandler()
-            formatter = logging.Formatter(
-                '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-            )
+            formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
             handler.setFormatter(formatter)
             audit_logger.addHandler(handler)
             audit_logger.propagate = False
@@ -447,22 +446,24 @@ class AuditLogger:
                 }
             ]
 
-            return StepResult.ok(data={
-                "events": mock_events,
-                "total_count": len(mock_events),
-                "filters_applied": {
-                    "tenant": tenant,
-                    "workspace": workspace,
-                    "platform": platform,
-                    "event_type": event_type,
-                    "start_time": start_time.isoformat() if start_time else None,
-                    "end_time": end_time.isoformat() if end_time else None,
-                },
-            })
+            return StepResult.ok(
+                data={
+                    "events": mock_events,
+                    "total_count": len(mock_events),
+                    "filters_applied": {
+                        "tenant": tenant,
+                        "workspace": workspace,
+                        "platform": platform,
+                        "event_type": event_type,
+                        "start_time": start_time.isoformat() if start_time else None,
+                        "end_time": end_time.isoformat() if end_time else None,
+                    },
+                }
+            )
 
         except Exception as e:
-            logger.error(f"Failed to get audit events: {str(e)}")
-            return StepResult.fail(f"Audit event retrieval failed: {str(e)}")
+            logger.error(f"Failed to get audit events: {e!s}")
+            return StepResult.fail(f"Audit event retrieval failed: {e!s}")
 
     def export_audit_log(
         self,
@@ -515,13 +516,15 @@ class AuditLogger:
             else:
                 return StepResult.fail(f"Unsupported export format: {format}")
 
-            return StepResult.ok(data={
-                "export_data": export_data,
-                "format": format,
-                "event_count": len(events),
-                "export_timestamp": datetime.now(UTC).isoformat(),
-            })
+            return StepResult.ok(
+                data={
+                    "export_data": export_data,
+                    "format": format,
+                    "event_count": len(events),
+                    "export_timestamp": datetime.now(UTC).isoformat(),
+                }
+            )
 
         except Exception as e:
-            logger.error(f"Failed to export audit log: {str(e)}")
-            return StepResult.fail(f"Audit log export failed: {str(e)}")
+            logger.error(f"Failed to export audit log: {e!s}")
+            return StepResult.fail(f"Audit log export failed: {e!s}")

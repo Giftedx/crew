@@ -31,9 +31,17 @@ from typing import Any
 
 # Core imports
 from src.core.learning_engine import LearningEngine
-from src.core.rl.advanced_config import DoublyRobustConfig, OffsetTreeConfig, get_config_manager
+from src.core.rl.advanced_config import (
+    DoublyRobustConfig,
+    OffsetTreeConfig,
+    get_config_manager,
+)
 from src.core.rl.advanced_experiments import AdvancedBanditExperimentManager
-from src.ultimate_discord_intelligence_bot.tenancy.context import TenantContext, with_tenant
+from src.ultimate_discord_intelligence_bot.tenancy.context import (
+    TenantContext,
+    with_tenant,
+)
+
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
@@ -296,9 +304,21 @@ class AdvancedBanditsDemo:
         # Model characteristics (simplified simulation)
         model_characteristics = {
             "gpt-4-turbo": {"quality_base": 0.9, "latency_base": 800, "cost_base": 20},
-            "gpt-3.5-turbo": {"quality_base": 0.75, "latency_base": 300, "cost_base": 5},
-            "claude-3-opus": {"quality_base": 0.92, "latency_base": 1200, "cost_base": 25},
-            "claude-3-sonnet": {"quality_base": 0.8, "latency_base": 600, "cost_base": 12},
+            "gpt-3.5-turbo": {
+                "quality_base": 0.75,
+                "latency_base": 300,
+                "cost_base": 5,
+            },
+            "claude-3-opus": {
+                "quality_base": 0.92,
+                "latency_base": 1200,
+                "cost_base": 25,
+            },
+            "claude-3-sonnet": {
+                "quality_base": 0.8,
+                "latency_base": 600,
+                "cost_base": 12,
+            },
         }
 
         char = model_characteristics[selected_model]
@@ -390,9 +410,21 @@ class AdvancedBanditsDemo:
         # Simulate content processing
         processor_characteristics = {
             "fast_nlp": {"quality_base": 0.6, "latency_base": 200, "accuracy": 0.75},
-            "advanced_nlp": {"quality_base": 0.85, "latency_base": 800, "accuracy": 0.92},
-            "specialized_tech": {"quality_base": 0.9, "latency_base": 1000, "accuracy": 0.95},
-            "multimedia_processor": {"quality_base": 0.8, "latency_base": 1500, "accuracy": 0.88},
+            "advanced_nlp": {
+                "quality_base": 0.85,
+                "latency_base": 800,
+                "accuracy": 0.92,
+            },
+            "specialized_tech": {
+                "quality_base": 0.9,
+                "latency_base": 1000,
+                "accuracy": 0.95,
+            },
+            "multimedia_processor": {
+                "quality_base": 0.8,
+                "latency_base": 1500,
+                "accuracy": 0.88,
+            },
         }
 
         char = processor_characteristics[selected_processor]
@@ -406,9 +438,12 @@ class AdvancedBanditsDemo:
         latency_ms = max(50, latency_ms)
 
         # Processing cost (simulated)
-        cost_cents = {"fast_nlp": 2, "advanced_nlp": 8, "specialized_tech": 12, "multimedia_processor": 15}[
-            selected_processor
-        ]
+        cost_cents = {
+            "fast_nlp": 2,
+            "advanced_nlp": 8,
+            "specialized_tech": 12,
+            "multimedia_processor": 15,
+        }[selected_processor]
 
         # User satisfaction for content analysis
         accuracy_satisfaction = char["accuracy"]
@@ -478,7 +513,10 @@ class AdvancedBanditsDemo:
         strategy_characteristics = {
             "immediate_response": {"satisfaction_base": 0.7, "engagement_boost": 0.6},
             "detailed_analysis": {"satisfaction_base": 0.85, "engagement_boost": 0.9},
-            "interactive_followup": {"satisfaction_base": 0.8, "engagement_boost": 0.85},
+            "interactive_followup": {
+                "satisfaction_base": 0.8,
+                "engagement_boost": 0.85,
+            },
             "educational_context": {"satisfaction_base": 0.75, "engagement_boost": 0.8},
         }
 
@@ -725,8 +763,17 @@ async def main():
         default="all",
         help="Demo scenario to run",
     )
-    parser.add_argument("--interactions", type=int, default=150, help="Number of interactions to simulate")
-    parser.add_argument("--output", default="advanced_bandits_demo_results.json", help="Output file for results")
+    parser.add_argument(
+        "--interactions",
+        type=int,
+        default=150,
+        help="Number of interactions to simulate",
+    )
+    parser.add_argument(
+        "--output",
+        default="advanced_bandits_demo_results.json",
+        help="Output file for results",
+    )
 
     args = parser.parse_args()
 

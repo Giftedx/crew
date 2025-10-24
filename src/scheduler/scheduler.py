@@ -4,9 +4,8 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import sqlite3
 from datetime import datetime, timedelta
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from core.batching import BulkInserter, RequestBatcher
 from core.db_locks import get_lock_for_connection
@@ -15,10 +14,16 @@ from core.learning_engine import LearningEngine
 from core.time import default_utc_now
 from ingest import models, pipeline
 from ingest.sources.base import SourceConnector, Watch
-from memory.vector_store import VectorStore
 from obs import metrics
 
 from .priority_queue import PriorityQueue
+
+
+if TYPE_CHECKING:
+    import sqlite3
+
+    from memory.vector_store import VectorStore
+
 
 logger = logging.getLogger(__name__)
 
@@ -134,7 +139,16 @@ class Scheduler:
         # Bulk insert watchlists
         self._bulk_inserter.add_row(
             "watchlist",
-            ["tenant", "workspace", "source_type", "handle", "label", "enabled", "created_at", "updated_at"],
+            [
+                "tenant",
+                "workspace",
+                "source_type",
+                "handle",
+                "label",
+                "enabled",
+                "created_at",
+                "updated_at",
+            ],
             watchlist_rows[0],  # Add first row to start batching
         )
 
@@ -155,7 +169,14 @@ class Scheduler:
             for srow in state_rows:
                 self._bulk_inserter.add_row(
                     "ingest_state",
-                    ["watchlist_id", "cursor", "last_seen_at", "etag", "failure_count", "backoff_until"],
+                    [
+                        "watchlist_id",
+                        "cursor",
+                        "last_seen_at",
+                        "etag",
+                        "failure_count",
+                        "backoff_until",
+                    ],
                     srow,
                 )
 
@@ -203,7 +224,11 @@ class Scheduler:
                 for update in state_updates:
                     self.conn.execute(
                         "UPDATE ingest_state SET cursor=?, last_seen_at=? WHERE watchlist_id=?",
-                        (update["cursor"], update["last_seen_at"], update["watchlist_id"]),
+                        (
+                            update["cursor"],
+                            update["last_seen_at"],
+                            update["watchlist_id"],
+                        ),
                     )
                 self.conn.commit()
 
@@ -338,4 +363,4 @@ class Scheduler:
         self.queue.flush_pending_operations()
 
 
-__all__ = ["Scheduler", "PriorityQueue"]
+__all__ = ["PriorityQueue", "Scheduler"]

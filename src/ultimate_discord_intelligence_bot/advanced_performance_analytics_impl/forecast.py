@@ -5,9 +5,10 @@ import math
 import statistics
 from typing import Any
 
-from scipy import stats  # type: ignore[import-not-found]
+from scipy import stats  # type: ignore[import-untyped]
 
 from .models import PerformanceForecast
+
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +17,10 @@ def generate_performance_forecasts(engine) -> dict[str, dict[str, Any]]:
     forecasts: dict[str, dict[str, Any]] = {}
     try:
         if hasattr(engine.enhanced_monitor, "real_time_metrics"):
-            for agent_name, agent_data in engine.enhanced_monitor.real_time_metrics.items():
+            for (
+                agent_name,
+                agent_data,
+            ) in engine.enhanced_monitor.real_time_metrics.items():
                 recent_interactions = agent_data.get("recent_interactions", [])
                 if len(recent_interactions) >= 15:
                     quality_values = [i.get("response_quality", 0) for i in recent_interactions]

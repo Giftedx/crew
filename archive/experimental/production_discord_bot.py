@@ -31,6 +31,7 @@ from discord.ext import commands, tasks
 
 import discord
 
+
 # Setup logging
 logger = logging.getLogger(__name__)
 
@@ -94,7 +95,11 @@ class ProductionDiscordBot(commands.Bot):
         intents.message_content = True
         intents.guilds = True
 
-        super().__init__(command_prefix=config.get("command_prefix", "!"), intents=intents, help_command=None)
+        super().__init__(
+            command_prefix=config.get("command_prefix", "!"),
+            intents=intents,
+            help_command=None,
+        )
 
         self.config = config
         self.orchestrator = None
@@ -185,7 +190,11 @@ class ProductionDiscordBot(commands.Bot):
             from src.ai import initialize_advanced_bandits
 
             self.orchestrator = await initialize_advanced_bandits(
-                {"context_dimension": 8, "num_actions": len(self.api_endpoints), "default_algorithm": "doubly_robust"}
+                {
+                    "context_dimension": 8,
+                    "num_actions": len(self.api_endpoints),
+                    "default_algorithm": "doubly_robust",
+                }
             )
 
             # Initialize autonomous optimizer
@@ -337,7 +346,7 @@ class ProductionDiscordBot(commands.Bot):
 
             # Map action to model
             model_mapping = {str(i): name for i, name in enumerate(self.api_endpoints.keys())}
-            selected_model = model_mapping.get(action.action_id, list(self.api_endpoints.keys())[0])
+            selected_model = model_mapping.get(action.action_id, next(iter(self.api_endpoints.keys())))
 
             # Generate response using selected model
             response = await self.generate_ai_response(message.content, selected_model, context_features)
@@ -379,7 +388,7 @@ class ProductionDiscordBot(commands.Bot):
 
             else:
                 # Default to first available model
-                selected_model = list(self.api_endpoints.keys())[0]
+                selected_model = next(iter(self.api_endpoints.keys()))
 
             # Generate response
             response = await self.generate_ai_response(message.content, selected_model, context_features)
@@ -429,12 +438,18 @@ class ProductionDiscordBot(commands.Bot):
     async def call_openai_api(self, message: str, endpoint: APIEndpoint) -> str:
         """Call OpenAI API"""
         async with aiohttp.ClientSession() as session:
-            headers = {"Authorization": f"Bearer {endpoint.api_key}", "Content-Type": "application/json"}
+            headers = {
+                "Authorization": f"Bearer {endpoint.api_key}",
+                "Content-Type": "application/json",
+            }
 
             payload = {
                 "model": endpoint.model_name,
                 "messages": [
-                    {"role": "system", "content": "You are a helpful AI assistant integrated with Discord."},
+                    {
+                        "role": "system",
+                        "content": "You are a helpful AI assistant integrated with Discord.",
+                    },
                     {"role": "user", "content": message},
                 ],
                 "max_tokens": min(endpoint.max_tokens, 500),  # Limit for Discord
@@ -502,11 +517,17 @@ class ProductionDiscordBot(commands.Bot):
 
             payload = {
                 "contents": [{"parts": [{"text": message}]}],
-                "generationConfig": {"maxOutputTokens": min(endpoint.max_tokens, 500), "temperature": 0.7},
+                "generationConfig": {
+                    "maxOutputTokens": min(endpoint.max_tokens, 500),
+                    "temperature": 0.7,
+                },
             }
 
             async with session.post(
-                url, params=params, json=payload, timeout=aiohttp.ClientTimeout(total=endpoint.timeout_seconds)
+                url,
+                params=params,
+                json=payload,
+                timeout=aiohttp.ClientTimeout(total=endpoint.timeout_seconds),
             ) as response:
                 if response.status == 200:
                     data = await response.json()
@@ -607,7 +628,10 @@ class ProductionDiscordBot(commands.Bot):
         endpoint = self.api_endpoints[model_name]
 
         # Calculate cost
-        total_tokens = usage.get("total_tokens", usage.get("prompt_tokens", 0) + usage.get("completion_tokens", 0))
+        total_tokens = usage.get(
+            "total_tokens",
+            usage.get("prompt_tokens", 0) + usage.get("completion_tokens", 0),
+        )
         cost = (total_tokens / 1000) * endpoint.cost_per_1k_tokens
 
         # Update cost tracking
@@ -647,7 +671,9 @@ class ProductionDiscordBot(commands.Bot):
             from src.ai import BanditFeedback
 
             feedback = BanditFeedback(
-                context=routing_info["context"], action=routing_info["action"], reward=satisfaction
+                context=routing_info["context"],
+                action=routing_info["action"],
+                reward=satisfaction,
             )
 
             await self.orchestrator.provide_feedback(feedback)
@@ -856,7 +882,9 @@ class ProductionDiscordBot(commands.Bot):
         await ctx.send(benchmark_text)
 
 
-async def create_production_bot(config_path: str = "production_bot_config.json") -> ProductionDiscordBot:
+async def create_production_bot(
+    config_path: str = "production_bot_config.json",
+) -> ProductionDiscordBot:
     """Create and configure production Discord bot"""
     # Load configuration
     try:

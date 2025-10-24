@@ -1,6 +1,11 @@
 from __future__ import annotations
 
-from fastapi import FastAPI
+from typing import TYPE_CHECKING
+
+
+if TYPE_CHECKING:
+    from fastapi import FastAPI
+
 
 """Health endpoints for service and Activities.
 

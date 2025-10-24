@@ -12,13 +12,16 @@ import pickle
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import numpy as np
+
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 from ..step_result import StepResult
 from .rl_cache_optimizer import CacheContext, RLCacheOptimizer
 from .rl_model_router import RLModelRouter, RoutingContext, TaskComplexity
+
 
 logger = logging.getLogger(__name__)
 
@@ -48,13 +51,13 @@ class OptimizationRequest:
 
     request_id: str
     optimization_level: OptimizationLevel
-    goals: List[OptimizationGoal]
-    context: Dict[str, Any]
-    constraints: Dict[str, Any] = field(default_factory=dict)
+    goals: list[OptimizationGoal]
+    context: dict[str, Any]
+    constraints: dict[str, Any] = field(default_factory=dict)
     priority: int = 5  # 1-10, higher is more important
     tenant: str = ""
     workspace: str = ""
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -63,10 +66,10 @@ class OptimizationResult:
 
     request_id: str
     success: bool
-    optimizations_applied: List[Dict[str, Any]]
-    performance_improvements: Dict[str, float]
-    estimated_impact: Dict[str, Any]
-    recommendations: List[Dict[str, Any]]
+    optimizations_applied: list[dict[str, Any]]
+    performance_improvements: dict[str, float]
+    estimated_impact: dict[str, Any]
+    recommendations: list[dict[str, Any]]
     execution_time_ms: float
     timestamp: datetime = field(default_factory=datetime.utcnow)
 
@@ -85,7 +88,7 @@ class SystemMetrics:
     model_routing_accuracy: float = 0.0
     cost_per_request_usd: float = 0.0
     throughput_per_second: float = 0.0
-    resource_utilization: Dict[str, float] = field(default_factory=dict)
+    resource_utilization: dict[str, float] = field(default_factory=dict)
 
 
 class PerformanceLearningEngine:
@@ -97,9 +100,9 @@ class PerformanceLearningEngine:
         self.cache_optimizer = RLCacheOptimizer()
 
         # Performance tracking
-        self.optimization_history: List[OptimizationResult] = []
-        self.system_metrics_history: List[SystemMetrics] = []
-        self.performance_baselines: Dict[str, float] = {}
+        self.optimization_history: list[OptimizationResult] = []
+        self.system_metrics_history: list[SystemMetrics] = []
+        self.performance_baselines: dict[str, float] = {}
 
         # Learning parameters
         self.learning_rate = 0.01
@@ -140,10 +143,7 @@ class PerformanceLearningEngine:
             performance_improvements = {}
 
             # Model routing optimization
-            if (
-                "model_routing" in request.goals
-                or OptimizationGoal.BALANCED in request.goals
-            ):
+            if "model_routing" in request.goals or OptimizationGoal.BALANCED in request.goals:
                 routing_result = await self.model_router.route_request(routing_context)
                 if routing_result.success:
                     optimizations_applied.append(
@@ -155,13 +155,8 @@ class PerformanceLearningEngine:
                     )
 
             # Cache optimization
-            if (
-                "cache_optimization" in request.goals
-                or OptimizationGoal.BALANCED in request.goals
-            ):
-                cache_result = await self.cache_optimizer.optimize_cache_operation(
-                    cache_context, "store"
-                )
+            if "cache_optimization" in request.goals or OptimizationGoal.BALANCED in request.goals:
+                cache_result = await self.cache_optimizer.optimize_cache_operation(cache_context, "store")
                 if cache_result.success:
                     optimizations_applied.append(
                         {
@@ -172,9 +167,7 @@ class PerformanceLearningEngine:
                     )
 
             # Calculate performance improvements
-            performance_improvements = self._calculate_performance_improvements(
-                request, optimizations_applied
-            )
+            performance_improvements = self._calculate_performance_improvements(request, optimizations_applied)
 
             # Generate recommendations
             recommendations = self._generate_optimization_recommendations(
@@ -208,8 +201,8 @@ class PerformanceLearningEngine:
             )
 
         except Exception as e:
-            logger.error(f"Request optimization failed: {str(e)}")
-            return StepResult.fail(f"Request optimization failed: {str(e)}")
+            logger.error(f"Request optimization failed: {e!s}")
+            return StepResult.fail(f"Request optimization failed: {e!s}")
 
     async def optimize_system(self, system_metrics: SystemMetrics) -> StepResult:
         """
@@ -233,9 +226,7 @@ class PerformanceLearningEngine:
 
             # Model routing system optimization
             if performance_analysis["model_routing_needs_optimization"]:
-                routing_optimization = await self._optimize_model_routing_system(
-                    system_metrics
-                )
+                routing_optimization = await self._optimize_model_routing_system(system_metrics)
                 if routing_optimization:
                     system_optimizations.append(routing_optimization)
 
@@ -247,9 +238,7 @@ class PerformanceLearningEngine:
 
             # Resource allocation optimization
             if performance_analysis["resource_allocation_needs_optimization"]:
-                resource_optimization = self._optimize_resource_allocation(
-                    system_metrics
-                )
+                resource_optimization = self._optimize_resource_allocation(system_metrics)
                 if resource_optimization:
                     system_optimizations.append(resource_optimization)
 
@@ -258,13 +247,9 @@ class PerformanceLearningEngine:
                 request_id=f"system_opt_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}",
                 success=len(system_optimizations) > 0,
                 optimizations_applied=system_optimizations,
-                performance_improvements=self._calculate_system_improvements(
-                    system_optimizations
-                ),
+                performance_improvements=self._calculate_system_improvements(system_optimizations),
                 estimated_impact=self._estimate_system_impact(system_optimizations),
-                recommendations=self._generate_system_recommendations(
-                    performance_analysis
-                ),
+                recommendations=self._generate_system_recommendations(performance_analysis),
                 execution_time_ms=0.0,  # System optimization is ongoing
             )
 
@@ -284,12 +269,10 @@ class PerformanceLearningEngine:
             )
 
         except Exception as e:
-            logger.error(f"System optimization failed: {str(e)}")
-            return StepResult.fail(f"System optimization failed: {str(e)}")
+            logger.error(f"System optimization failed: {e!s}")
+            return StepResult.fail(f"System optimization failed: {e!s}")
 
-    async def update_performance_feedback(
-        self, feedback_data: Dict[str, Any]
-    ) -> StepResult:
+    async def update_performance_feedback(self, feedback_data: dict[str, Any]) -> StepResult:
         """
         Update performance feedback for learning.
 
@@ -312,9 +295,7 @@ class PerformanceLearningEngine:
             # Update cache optimizer with feedback
             if "cache_feedback" in feedback_data:
                 cache_feedback = feedback_data["cache_feedback"]
-                await self.cache_optimizer.update_cache_performance(
-                    cache_feedback["action"], cache_feedback
-                )
+                await self.cache_optimizer.update_cache_performance(cache_feedback["action"], cache_feedback)
 
             # Update performance baselines
             self._update_performance_baselines(feedback_data)
@@ -333,8 +314,8 @@ class PerformanceLearningEngine:
             )
 
         except Exception as e:
-            logger.error(f"Performance feedback update failed: {str(e)}")
-            return StepResult.fail(f"Performance feedback update failed: {str(e)}")
+            logger.error(f"Performance feedback update failed: {e!s}")
+            return StepResult.fail(f"Performance feedback update failed: {e!s}")
 
     def get_optimization_statistics(self) -> StepResult:
         """
@@ -356,12 +337,8 @@ class PerformanceLearningEngine:
             return StepResult.ok(
                 data={
                     "engine_statistics": engine_stats,
-                    "model_router_statistics": router_stats.data
-                    if router_stats.success
-                    else {},
-                    "cache_optimizer_statistics": cache_stats.data
-                    if cache_stats.success
-                    else {},
+                    "model_router_statistics": router_stats.data if router_stats.success else {},
+                    "cache_optimizer_statistics": cache_stats.data if cache_stats.success else {},
                     "performance_baselines": self.performance_baselines,
                     "performance_targets": self.performance_targets,
                     "optimization_history_size": len(self.optimization_history),
@@ -370,10 +347,10 @@ class PerformanceLearningEngine:
             )
 
         except Exception as e:
-            logger.error(f"Failed to get optimization statistics: {str(e)}")
-            return StepResult.fail(f"Failed to get optimization statistics: {str(e)}")
+            logger.error(f"Failed to get optimization statistics: {e!s}")
+            return StepResult.fail(f"Failed to get optimization statistics: {e!s}")
 
-    def _extract_routing_context(self, request: OptimizationRequest) -> RoutingContext:
+    def _extract_routing_context(self, request: OptimizationRequest) -> StepResult:
         """Extract routing context from optimization request."""
         context_data = request.context
 
@@ -389,7 +366,7 @@ class PerformanceLearningEngine:
             metadata=request.metadata,
         )
 
-    def _extract_cache_context(self, request: OptimizationRequest) -> CacheContext:
+    def _extract_cache_context(self, request: OptimizationRequest) -> StepResult:
         """Extract cache context from optimization request."""
         context_data = request.context
 
@@ -406,37 +383,29 @@ class PerformanceLearningEngine:
         )
 
     def _calculate_performance_improvements(
-        self, request: OptimizationRequest, optimizations: List[Dict[str, Any]]
-    ) -> Dict[str, float]:
+        self, request: OptimizationRequest, optimizations: list[dict[str, Any]]
+    ) -> StepResult:
         """Calculate estimated performance improvements."""
         improvements = {}
 
         for optimization in optimizations:
             if optimization["type"] == "model_routing":
                 # Estimate latency and cost improvements
-                improvements["latency_improvement"] = (
-                    improvements.get("latency_improvement", 0) + 0.15
-                )
-                improvements["cost_improvement"] = (
-                    improvements.get("cost_improvement", 0) + 0.20
-                )
+                improvements["latency_improvement"] = improvements.get("latency_improvement", 0) + 0.15
+                improvements["cost_improvement"] = improvements.get("cost_improvement", 0) + 0.20
             elif optimization["type"] == "cache_optimization":
                 # Estimate cache hit rate improvement
-                improvements["cache_hit_rate_improvement"] = (
-                    improvements.get("cache_hit_rate_improvement", 0) + 0.10
-                )
-                improvements["latency_improvement"] = (
-                    improvements.get("latency_improvement", 0) + 0.25
-                )
+                improvements["cache_hit_rate_improvement"] = improvements.get("cache_hit_rate_improvement", 0) + 0.10
+                improvements["latency_improvement"] = improvements.get("latency_improvement", 0) + 0.25
 
         return improvements
 
     def _generate_optimization_recommendations(
         self,
         request: OptimizationRequest,
-        optimizations: List[Dict[str, Any]],
-        improvements: Dict[str, float],
-    ) -> List[Dict[str, Any]]:
+        optimizations: list[dict[str, Any]],
+        improvements: dict[str, float],
+    ) -> StepResult:
         """Generate optimization recommendations."""
         recommendations = []
 
@@ -475,7 +444,7 @@ class PerformanceLearningEngine:
 
         return recommendations
 
-    def _estimate_impact(self, optimizations: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def _estimate_impact(self, optimizations: list[dict[str, Any]]) -> StepResult:
         """Estimate impact of optimizations."""
         total_impact = {
             "latency_reduction_percent": 0.0,
@@ -495,7 +464,7 @@ class PerformanceLearningEngine:
 
         return total_impact
 
-    def _analyze_system_performance(self, metrics: SystemMetrics) -> Dict[str, Any]:
+    def _analyze_system_performance(self, metrics: SystemMetrics) -> StepResult:
         """Analyze system performance against targets."""
         analysis = {
             "overall_health": "good",
@@ -521,18 +490,12 @@ class PerformanceLearningEngine:
             analysis["cache_needs_optimization"] = True
 
         # Check cost per request
-        if (
-            metrics.cost_per_request_usd
-            > self.performance_targets["cost_per_request_usd"]
-        ):
+        if metrics.cost_per_request_usd > self.performance_targets["cost_per_request_usd"]:
             analysis["performance_issues"].append("High cost per request")
             analysis["model_routing_needs_optimization"] = True
 
         # Check throughput
-        if (
-            metrics.throughput_per_second
-            < self.performance_targets["throughput_per_second"]
-        ):
+        if metrics.throughput_per_second < self.performance_targets["throughput_per_second"]:
             analysis["performance_issues"].append("Low throughput")
             analysis["resource_allocation_needs_optimization"] = True
 
@@ -544,19 +507,13 @@ class PerformanceLearningEngine:
 
         return analysis
 
-    async def _optimize_model_routing_system(
-        self, metrics: SystemMetrics
-    ) -> Optional[Dict[str, Any]]:
+    async def _optimize_model_routing_system(self, metrics: SystemMetrics) -> StepResult:
         """Optimize model routing system-wide."""
         # Adjust exploration rate based on performance
         if metrics.error_rate > 0.05:  # High error rate
-            self.model_router.bandit.exploration_rate = min(
-                0.2, self.model_router.bandit.exploration_rate + 0.05
-            )
+            self.model_router.bandit.exploration_rate = min(0.2, self.model_router.bandit.exploration_rate + 0.05)
         elif metrics.error_rate < 0.01:  # Low error rate
-            self.model_router.bandit.exploration_rate = max(
-                0.05, self.model_router.bandit.exploration_rate - 0.02
-            )
+            self.model_router.bandit.exploration_rate = max(0.05, self.model_router.bandit.exploration_rate - 0.02)
 
         return {
             "type": "model_routing_system",
@@ -565,9 +522,7 @@ class PerformanceLearningEngine:
             "reasoning": "System-wide model routing optimization",
         }
 
-    async def _optimize_cache_system(
-        self, metrics: SystemMetrics
-    ) -> Optional[Dict[str, Any]]:
+    async def _optimize_cache_system(self, metrics: SystemMetrics) -> StepResult:
         """Optimize cache system-wide."""
         # Adjust cache strategy based on hit rate
         if metrics.cache_hit_rate < 0.5:  # Low hit rate
@@ -580,15 +535,11 @@ class PerformanceLearningEngine:
 
         return None
 
-    def _optimize_resource_allocation(
-        self, metrics: SystemMetrics
-    ) -> Optional[Dict[str, Any]]:
+    def _optimize_resource_allocation(self, metrics: SystemMetrics) -> StepResult:
         """Optimize resource allocation system-wide."""
         # Analyze resource utilization
         high_utilization_resources = [
-            resource
-            for resource, utilization in metrics.resource_utilization.items()
-            if utilization > 0.8
+            resource for resource, utilization in metrics.resource_utilization.items() if utilization > 0.8
         ]
 
         if high_utilization_resources:
@@ -601,9 +552,7 @@ class PerformanceLearningEngine:
 
         return None
 
-    def _calculate_system_improvements(
-        self, optimizations: List[Dict[str, Any]]
-    ) -> Dict[str, float]:
+    def _calculate_system_improvements(self, optimizations: list[dict[str, Any]]) -> StepResult:
         """Calculate system-wide improvements."""
         improvements = {}
 
@@ -617,9 +566,7 @@ class PerformanceLearningEngine:
 
         return improvements
 
-    def _estimate_system_impact(
-        self, optimizations: List[Dict[str, Any]]
-    ) -> Dict[str, Any]:
+    def _estimate_system_impact(self, optimizations: list[dict[str, Any]]) -> StepResult:
         """Estimate system-wide impact."""
         return {
             "expected_latency_improvement": "5-15%",
@@ -628,9 +575,7 @@ class PerformanceLearningEngine:
             "optimization_count": len(optimizations),
         }
 
-    def _generate_system_recommendations(
-        self, analysis: Dict[str, Any]
-    ) -> List[Dict[str, Any]]:
+    def _generate_system_recommendations(self, analysis: dict[str, Any]) -> StepResult:
         """Generate system-level recommendations."""
         recommendations = []
 
@@ -666,37 +611,27 @@ class PerformanceLearningEngine:
 
         return recommendations
 
-    def _update_performance_baselines(self, feedback_data: Dict[str, Any]):
+    def _update_performance_baselines(self, feedback_data: dict[str, Any]):
         """Update performance baselines with new feedback."""
         # Update baselines with exponential moving average
         alpha = 0.1
 
         if "latency_ms" in feedback_data:
-            current_latency = self.performance_baselines.get(
-                "average_latency_ms", 1000.0
-            )
+            current_latency = self.performance_baselines.get("average_latency_ms", 1000.0)
             new_latency = feedback_data["latency_ms"]
-            self.performance_baselines["average_latency_ms"] = (
-                1 - alpha
-            ) * current_latency + alpha * new_latency
+            self.performance_baselines["average_latency_ms"] = (1 - alpha) * current_latency + alpha * new_latency
 
         if "cost_usd" in feedback_data:
             current_cost = self.performance_baselines.get("average_cost_usd", 0.001)
             new_cost = feedback_data["cost_usd"]
-            self.performance_baselines["average_cost_usd"] = (
-                1 - alpha
-            ) * current_cost + alpha * new_cost
+            self.performance_baselines["average_cost_usd"] = (1 - alpha) * current_cost + alpha * new_cost
 
         if "quality_score" in feedback_data:
-            current_quality = self.performance_baselines.get(
-                "average_quality_score", 0.8
-            )
+            current_quality = self.performance_baselines.get("average_quality_score", 0.8)
             new_quality = feedback_data["quality_score"]
-            self.performance_baselines["average_quality_score"] = (
-                1 - alpha
-            ) * current_quality + alpha * new_quality
+            self.performance_baselines["average_quality_score"] = (1 - alpha) * current_quality + alpha * new_quality
 
-    def _should_trigger_learning(self) -> bool:
+    def _should_trigger_learning(self) -> StepResult:
         """Determine if learning should be triggered."""
         time_since_last = (datetime.utcnow() - self.last_optimization).total_seconds()
         return time_since_last >= self.optimization_frequency
@@ -708,9 +643,7 @@ class PerformanceLearningEngine:
         # Update learning rates based on recent performance
         if len(self.optimization_history) > 10:
             recent_results = self.optimization_history[-10:]
-            success_rate = sum(1 for r in recent_results if r.success) / len(
-                recent_results
-            )
+            success_rate = sum(1 for r in recent_results if r.success) / len(recent_results)
 
             if success_rate > 0.8:
                 # High success rate, reduce exploration
@@ -719,30 +652,22 @@ class PerformanceLearningEngine:
                 # Low success rate, increase exploration
                 self.exploration_rate = min(0.2, self.exploration_rate + 0.02)
 
-    def _calculate_engine_statistics(self) -> Dict[str, Any]:
+    def _calculate_engine_statistics(self) -> StepResult:
         """Calculate engine-level statistics."""
         if not self.optimization_history:
             return {"status": "no_data"}
 
         total_optimizations = len(self.optimization_history)
-        successful_optimizations = sum(
-            1 for r in self.optimization_history if r.success
-        )
+        successful_optimizations = sum(1 for r in self.optimization_history if r.success)
         success_rate = successful_optimizations / total_optimizations
 
         # Calculate average improvements
-        all_improvements = [
-            r.performance_improvements
-            for r in self.optimization_history
-            if r.performance_improvements
-        ]
+        all_improvements = [r.performance_improvements for r in self.optimization_history if r.performance_improvements]
 
         avg_improvements = {}
         if all_improvements:
-            for key in all_improvements[0].keys():
-                avg_improvements[key] = np.mean(
-                    [imp.get(key, 0) for imp in all_improvements]
-                )
+            for key in all_improvements[0]:
+                avg_improvements[key] = np.mean([imp.get(key, 0) for imp in all_improvements])
 
         return {
             "total_optimizations": total_optimizations,
@@ -770,27 +695,17 @@ class PerformanceLearningEngine:
             # Save model router state
             router_state_result = self.model_router.save_state(f"{filepath}_router.pkl")
             if not router_state_result.success:
-                logger.warning(
-                    f"Failed to save router state: {router_state_result.error}"
-                )
+                logger.warning(f"Failed to save router state: {router_state_result.error}")
 
             # Save cache optimizer state
-            cache_state_result = self.cache_optimizer.save_state(
-                f"{filepath}_cache.pkl"
-            )
+            cache_state_result = self.cache_optimizer.save_state(f"{filepath}_cache.pkl")
             if not cache_state_result.success:
-                logger.warning(
-                    f"Failed to save cache state: {cache_state_result.error}"
-                )
+                logger.warning(f"Failed to save cache state: {cache_state_result.error}")
 
             # Save engine state
             engine_state = {
-                "optimization_history": self.optimization_history[
-                    -1000:
-                ],  # Keep last 1000
-                "system_metrics_history": self.system_metrics_history[
-                    -1000:
-                ],  # Keep last 1000
+                "optimization_history": self.optimization_history[-1000:],  # Keep last 1000
+                "system_metrics_history": self.system_metrics_history[-1000:],  # Keep last 1000
                 "performance_baselines": self.performance_baselines,
                 "learning_rate": self.learning_rate,
                 "exploration_rate": self.exploration_rate,
@@ -803,8 +718,8 @@ class PerformanceLearningEngine:
             return StepResult.ok(data={"saved_to": filepath})
 
         except Exception as e:
-            logger.error(f"Failed to save engine state: {str(e)}")
-            return StepResult.fail(f"Failed to save engine state: {str(e)}")
+            logger.error(f"Failed to save engine state: {e!s}")
+            return StepResult.fail(f"Failed to save engine state: {e!s}")
 
     def load_state(self, filepath: str) -> StepResult:
         """Load engine state from file."""
@@ -812,18 +727,12 @@ class PerformanceLearningEngine:
             # Load model router state
             router_state_result = self.model_router.load_state(f"{filepath}_router.pkl")
             if not router_state_result.success:
-                logger.warning(
-                    f"Failed to load router state: {router_state_result.error}"
-                )
+                logger.warning(f"Failed to load router state: {router_state_result.error}")
 
             # Load cache optimizer state
-            cache_state_result = self.cache_optimizer.load_state(
-                f"{filepath}_cache.pkl"
-            )
+            cache_state_result = self.cache_optimizer.load_state(f"{filepath}_cache.pkl")
             if not cache_state_result.success:
-                logger.warning(
-                    f"Failed to load cache state: {cache_state_result.error}"
-                )
+                logger.warning(f"Failed to load cache state: {cache_state_result.error}")
 
             # Load engine state
             with open(f"{filepath}_engine.pkl", "rb") as f:
@@ -831,19 +740,13 @@ class PerformanceLearningEngine:
 
             self.optimization_history = engine_state.get("optimization_history", [])
             self.system_metrics_history = engine_state.get("system_metrics_history", [])
-            self.performance_baselines = engine_state.get(
-                "performance_baselines", self.performance_baselines
-            )
+            self.performance_baselines = engine_state.get("performance_baselines", self.performance_baselines)
             self.learning_rate = engine_state.get("learning_rate", self.learning_rate)
-            self.exploration_rate = engine_state.get(
-                "exploration_rate", self.exploration_rate
-            )
-            self.last_optimization = engine_state.get(
-                "last_optimization", datetime.utcnow()
-            )
+            self.exploration_rate = engine_state.get("exploration_rate", self.exploration_rate)
+            self.last_optimization = engine_state.get("last_optimization", datetime.utcnow())
 
             return StepResult.ok(data={"loaded_from": filepath})
 
         except Exception as e:
-            logger.error(f"Failed to load engine state: {str(e)}")
-            return StepResult.fail(f"Failed to load engine state: {str(e)}")
+            logger.error(f"Failed to load engine state: {e!s}")
+            return StepResult.fail(f"Failed to load engine state: {e!s}")

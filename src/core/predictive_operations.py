@@ -22,6 +22,7 @@ from typing import Any
 
 from .error_handling import log_error
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -190,7 +191,7 @@ class TimeSeriesAnalyzer:
         # Calculate regression coefficients
         sum_x = sum(x_values)
         sum_y = sum(y_values)
-        sum_xy = sum(x * y for x, y in zip(x_values, y_values))
+        sum_xy = sum(x * y for x, y in zip(x_values, y_values, strict=False))
         sum_x2 = sum(x * x for x in x_values)
 
         # Avoid division by zero
@@ -209,7 +210,7 @@ class TimeSeriesAnalyzer:
         # Calculate confidence (simplified R-squared)
         y_mean = statistics.mean(y_values)
         ss_tot = sum((y - y_mean) ** 2 for y in y_values)
-        ss_res = sum((y - (slope * x + intercept)) ** 2 for x, y in zip(x_values, y_values))
+        ss_res = sum((y - (slope * x + intercept)) ** 2 for x, y in zip(x_values, y_values, strict=False))
 
         confidence = 1 - (ss_res / ss_tot) if ss_tot > 0 else 0.5
         confidence = max(0.0, min(1.0, confidence))  # Clamp to [0, 1]
@@ -645,13 +646,13 @@ class PredictiveOperationsEngine:
 
 
 __all__ = [
-    "PredictiveOperationsEngine",
-    "PerformanceOptimizer",
-    "TimeSeriesAnalyzer",
-    "PerformanceMetric",
-    "ResourcePrediction",
     "OptimizationRecommendation",
-    "SystemCapacity",
     "OptimizationStrategy",
+    "PerformanceMetric",
+    "PerformanceOptimizer",
+    "PredictiveOperationsEngine",
+    "ResourcePrediction",
     "ResourceType",
+    "SystemCapacity",
+    "TimeSeriesAnalyzer",
 ]

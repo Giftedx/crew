@@ -30,6 +30,7 @@ from .advanced_performance_analytics import AdvancedPerformanceAnalytics
 from .enhanced_performance_monitor import EnhancedPerformanceMonitor
 from .predictive_performance_insights import PredictivePerformanceInsights
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -230,7 +231,7 @@ class PerformanceOptimizationEngine:
             # From capacity forecasts
             if "capacity_forecasts" in predictive_results:
                 forecasts = predictive_results["capacity_forecasts"].get("forecasts", {})
-                for forecast_name, forecast in forecasts.items():
+                for _forecast_name, forecast in forecasts.items():
                     if hasattr(forecast, "projected_breach_time") and forecast.projected_breach_time:
                         opportunities.append(
                             {
@@ -347,7 +348,10 @@ class PerformanceOptimizationEngine:
                     "priority": opportunity.get("priority", "medium"),
                 },
                 risk_level=getattr(rec, "implementation_effort", "medium"),
-                rollback_plan={"revert_to_previous_config": True, "backup_required": True},
+                rollback_plan={
+                    "revert_to_previous_config": True,
+                    "backup_required": True,
+                },
             )
 
         except Exception as e:
@@ -460,7 +464,10 @@ class PerformanceOptimizationEngine:
                     ],
                 },
                 risk_level="medium",
-                rollback_plan={"health_monitoring": True, "gradual_implementation": True},
+                rollback_plan={
+                    "health_monitoring": True,
+                    "gradual_implementation": True,
+                },
             )
 
         except Exception as e:
@@ -656,7 +663,11 @@ class PerformanceOptimizationEngine:
 
     async def _validate_optimization_results(self, results: list[OptimizationResult]) -> dict[str, Any]:
         """Validate optimization results and check for side effects."""
-        validation_results: dict[str, Any] = {"improvements": {}, "side_effects": [], "overall_success": True}
+        validation_results: dict[str, Any] = {
+            "improvements": {},
+            "side_effects": [],
+            "overall_success": True,
+        }
 
         try:
             successful_results = [r for r in results if r.status == OptimizationStatus.COMPLETED]
@@ -702,7 +713,10 @@ class PerformanceOptimizationEngine:
         try:
             # Get recent performance data
             if hasattr(self.enhanced_monitor, "real_time_metrics"):
-                for agent_name, agent_data in self.enhanced_monitor.real_time_metrics.items():
+                for (
+                    agent_name,
+                    agent_data,
+                ) in self.enhanced_monitor.real_time_metrics.items():
                     recent_interactions = agent_data.get("recent_interactions", [])
 
                     if len(recent_interactions) >= 10:
@@ -725,12 +739,18 @@ class PerformanceOptimizationEngine:
                         config = self.auto_tuning_configs[quality_config_key]
                         if avg_quality > config.current_value + 0.1:
                             # Performance is good, can raise threshold
-                            new_value = min(config.value_range[1], config.current_value + config.adjustment_step)
+                            new_value = min(
+                                config.value_range[1],
+                                config.current_value + config.adjustment_step,
+                            )
                             config.current_value = new_value
 
                         elif avg_quality < config.current_value - 0.1:
                             # Performance is poor, lower threshold
-                            new_value = max(config.value_range[0], config.current_value - config.adjustment_step)
+                            new_value = max(
+                                config.value_range[0],
+                                config.current_value - config.adjustment_step,
+                            )
                             config.current_value = new_value
 
         except Exception as e:
@@ -811,14 +831,18 @@ class PerformanceOptimizationEngine:
 
             # Check for failed optimizations that need retry
             failed_types = list(
-                set(result.action_id.split("_")[0] for result in results if result.status == OptimizationStatus.FAILED)
+                {result.action_id.split("_")[0] for result in results if result.status == OptimizationStatus.FAILED}
             )
 
             focus_areas.extend(failed_types[:2])
 
             # Default focus areas if none identified
             if not focus_areas:
-                focus_areas = ["performance_monitoring", "quality_improvement", "cost_optimization"]
+                focus_areas = [
+                    "performance_monitoring",
+                    "quality_improvement",
+                    "cost_optimization",
+                ]
 
         except Exception as e:
             logger.debug(f"Focus areas identification error: {e}")
@@ -831,7 +855,7 @@ class PerformanceOptimizationEngine:
         adjustments = []
 
         try:
-            for config_name, config in self.auto_tuning_configs.items():
+            for _config_name, config in self.auto_tuning_configs.items():
                 adjustments.append(
                     {
                         "parameter": config.parameter_name,

@@ -4,11 +4,15 @@ from __future__ import annotations
 
 import json
 import sqlite3
-from collections.abc import Iterable
-from datetime import datetime
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from .schema import CreatorProfile
+
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+    from datetime import datetime
 
 
 class ProfileStore:
@@ -75,7 +79,7 @@ class ProfileStore:
             (source, target),
         ).fetchone()
         if row:
-            count, first_seen = row
+            count, _first_seen = row
             cur.execute(
                 "UPDATE cross_profile_links SET count = ?, last_seen = ? WHERE source = ? AND target = ?",
                 (count + 1, timestamp.isoformat(), source, target),

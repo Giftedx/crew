@@ -16,6 +16,7 @@ from typing import Any
 
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -118,7 +119,10 @@ class PipelineEvaluationHarness:
                 duration_seconds=3600,  # 1 hour
                 expected_speakers=3,
                 expected_topics=["technology", "podcasting", "entertainment"],
-                expected_claims=["AI will revolutionize content creation", "Podcasting is the future of media"],
+                expected_claims=[
+                    "AI will revolutionize content creation",
+                    "Podcasting is the future of media",
+                ],
                 ground_truth_transcript="Welcome to the H3 Podcast. Today we're discussing technology trends...",
                 ground_truth_diarization={
                     "Ethan": [(0.0, 300.0), (600.0, 900.0)],
@@ -134,9 +138,15 @@ class PipelineEvaluationHarness:
                 duration_seconds=2700,  # 45 minutes
                 expected_speakers=2,
                 expected_topics=["gaming", "streaming", "entertainment"],
-                expected_claims=["Streaming platforms are changing gaming", "Mobile gaming is the future"],
+                expected_claims=[
+                    "Streaming platforms are changing gaming",
+                    "Mobile gaming is the future",
+                ],
                 ground_truth_transcript="Today we're talking about the gaming industry and how streaming has changed everything...",
-                ground_truth_diarization={"Ethan": [(0.0, 1350.0)], "Hila": [(1350.0, 2700.0)]},
+                ground_truth_diarization={
+                    "Ethan": [(0.0, 1350.0)],
+                    "Hila": [(1350.0, 2700.0)],
+                },
             ),
             # Hasan Piker episodes
             TestEpisode(
@@ -147,7 +157,10 @@ class PipelineEvaluationHarness:
                 duration_seconds=7200,  # 2 hours
                 expected_speakers=1,
                 expected_topics=["politics", "news", "reaction"],
-                expected_claims=["Current political system needs reform", "Media bias affects public opinion"],
+                expected_claims=[
+                    "Current political system needs reform",
+                    "Media bias affects public opinion",
+                ],
                 ground_truth_transcript="Welcome back to the stream. Today we're reacting to the latest political news...",
                 ground_truth_diarization={"Hasan": [(0.0, 7200.0)]},
             ),
@@ -159,7 +172,10 @@ class PipelineEvaluationHarness:
                 duration_seconds=5400,  # 1.5 hours
                 expected_speakers=1,
                 expected_topics=["gaming", "valorant", "streaming"],
-                expected_claims=["Valorant is the best tactical shooter", "Streaming improves gaming skills"],
+                expected_claims=[
+                    "Valorant is the best tactical shooter",
+                    "Streaming improves gaming skills",
+                ],
                 ground_truth_transcript="Alright, let's jump into some Valorant. I've been practicing my aim...",
                 ground_truth_diarization={"Hasan": [(0.0, 5400.0)]},
             ),
@@ -171,7 +187,10 @@ class PipelineEvaluationHarness:
                 duration_seconds=1800,  # 30 minutes
                 expected_speakers=1,
                 expected_topics=["drama", "reaction", "entertainment"],
-                expected_claims=["Drama content is harmful to creators", "Reaction content adds value"],
+                expected_claims=[
+                    "Drama content is harmful to creators",
+                    "Reaction content adds value",
+                ],
                 ground_truth_transcript="Today we're reacting to some drama that's been going around...",
                 ground_truth_diarization={"Hasan": [(0.0, 1800.0)]},
             ),
@@ -208,7 +227,9 @@ class PipelineEvaluationHarness:
         return dp[m][n] / n
 
     def calculate_diarization_error_rate(
-        self, predicted: dict[str, list[tuple[float, float]]], ground_truth: dict[str, list[tuple[float, float]]]
+        self,
+        predicted: dict[str, list[tuple[float, float]]],
+        ground_truth: dict[str, list[tuple[float, float]]],
     ) -> float:
         """Calculate Diarization Error Rate (DER) between predicted and ground truth."""
         if not ground_truth:
@@ -340,7 +361,7 @@ class PipelineEvaluationHarness:
             metrics.claim_extraction_quality = 0.8 if "claim_extraction" in metrics.stages_completed else 0.0
 
         except Exception as e:
-            logger.error(f"Evaluation failed for episode {episode.title}: {str(e)}")
+            logger.error(f"Evaluation failed for episode {episode.title}: {e!s}")
             metrics.stages_failed.append("evaluation")
 
         return metrics
@@ -404,7 +425,9 @@ class PipelineEvaluationHarness:
         }
 
     def generate_summary(
-        self, results: list[tuple[TestEpisode, EvaluationMetrics]], aggregate_metrics: dict[str, Any]
+        self,
+        results: list[tuple[TestEpisode, EvaluationMetrics]],
+        aggregate_metrics: dict[str, Any],
     ) -> dict[str, Any]:
         """Generate evaluation summary with pass/fail criteria."""
         summary = {
@@ -478,4 +501,4 @@ class PipelineEvaluationHarness:
             return StepResult.ok(data={"filepath": filepath, "results_count": len(self.results)})
 
         except Exception as e:
-            return StepResult.fail(f"Failed to save results: {str(e)}")
+            return StepResult.fail(f"Failed to save results: {e!s}")

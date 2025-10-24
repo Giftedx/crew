@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from ultimate_discord_intelligence_bot.tenancy.context import TenantContext
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from ultimate_discord_intelligence_bot.tenancy.context import TenantContext
 
 
 @dataclass(slots=True)

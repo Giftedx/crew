@@ -2,12 +2,17 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
 
-from core.learning_engine import LearningEngine
-from core.router import Router
 from obs import tracing
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from core.learning_engine import LearningEngine
+    from core.router import Router
 
 
 @dataclass
@@ -36,7 +41,7 @@ class DebateReport:
 
 
 @tracing.trace_call("debate.run_panel")
-def run_panel(  # noqa: PLR0913 - explicit parameters clarify API; grouping into a context object would obscure call sites
+def run_panel(
     query: str,
     router: Router,
     call_model: Callable[[str, str], str],
@@ -88,4 +93,4 @@ def run_panel(  # noqa: PLR0913 - explicit parameters clarify API; grouping into
     return DebateReport(agents=agents, final=final, votes=votes)
 
 
-__all__ = ["PanelConfig", "run_panel", "DebateReport", "AgentResult"]
+__all__ = ["AgentResult", "DebateReport", "PanelConfig", "run_panel"]

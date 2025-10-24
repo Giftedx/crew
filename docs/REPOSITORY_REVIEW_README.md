@@ -25,22 +25,22 @@ This is a **complete repository analysis and optimization roadmap** for the Gift
 
 #### **For Everyone → Navigation Hub**
 
-📑 **[REVIEW_INDEX.md](REVIEW_INDEX.md)** - Master navigation for all documents  
+📑 **[REVIEW_INDEX.md](fixes/archive/2025-01/REVIEW_INDEX.md)** - Master navigation for all documents  
 ⏱️ 5 minutes | 🎯 Understand the document structure
 
 #### **For Leadership & Decision Makers → Executive Summary**
 
-📊 **[REVIEW_EXECUTIVE_SUMMARY.md](REVIEW_EXECUTIVE_SUMMARY.md)** - High-level findings & ROI  
+📊 **[REVIEW_EXECUTIVE_SUMMARY.md](fixes/archive/2025-01/REVIEW_EXECUTIVE_SUMMARY.md)** - High-level findings & ROI  
 ⏱️ 10 minutes | 🎯 Strategic overview, metrics, recommendations
 
 #### **For Engineers & Architects → Technical Deep Dive**
 
-📚 **[COMPREHENSIVE_REPOSITORY_REVIEW.md](COMPREHENSIVE_REPOSITORY_REVIEW.md)** - Full analysis  
+📚 **[COMPREHENSIVE_REPOSITORY_REVIEW.md](fixes/archive/2025-01/COMPREHENSIVE_REPOSITORY_REVIEW.md)** - Full analysis  
 ⏱️ 60-90 minutes | 🎯 Complete technical assessment, architecture, opportunities
 
 #### **For Development Team → Execution Plan**
 
-⚡ **[QUICK_ACTION_PLAN.md](QUICK_ACTION_PLAN.md)** - 30-day step-by-step plan  
+⚡ **[QUICK_ACTION_PLAN.md](fixes/archive/2025-01/QUICK_ACTION_PLAN.md)** - 30-day step-by-step plan  
 ⏱️ 15 minutes | 🎯 Day-by-day tasks, commands, checklists
 
 #### **For Project Managers → Task Tracking**
@@ -166,9 +166,9 @@ This is a **complete repository analysis and optimization roadmap** for the Gift
 ### **Today (Team Lead)**
 
 1. **Read Documents (2 hours)**
-   - Start: [REVIEW_INDEX.md](REVIEW_INDEX.md)
-   - Overview: [REVIEW_EXECUTIVE_SUMMARY.md](REVIEW_EXECUTIVE_SUMMARY.md)
-   - Execution: [QUICK_ACTION_PLAN.md](QUICK_ACTION_PLAN.md)
+   - Start: [REVIEW_INDEX.md](fixes/archive/2025-01/REVIEW_INDEX.md)
+   - Overview: [REVIEW_EXECUTIVE_SUMMARY.md](fixes/archive/2025-01/REVIEW_EXECUTIVE_SUMMARY.md)
+   - Execution: [QUICK_ACTION_PLAN.md](fixes/archive/2025-01/QUICK_ACTION_PLAN.md)
 
 2. **Stakeholder Communication (2 hours)**
    - Share executive summary with leadership
@@ -181,15 +181,15 @@ This is a **complete repository analysis and optimization roadmap** for the Gift
    - Assign initial owners
 
 4. **Team Alignment (1 hour)**
-   - Share [TEAM_HANDOFF.md](TEAM_HANDOFF.md) with team
+   - Share [TEAM_HANDOFF.md](fixes/archive/2025-01/TEAM_HANDOFF.md) with team
    - Schedule kickoff meeting
    - Establish communication channels
 
 ### **Today (Development Team)**
 
 1. **Review Context (1 hour)**
-   - Read: [QUICK_ACTION_PLAN.md](QUICK_ACTION_PLAN.md) - Week 1
-   - Scan: [COMPREHENSIVE_REPOSITORY_REVIEW.md](COMPREHENSIVE_REPOSITORY_REVIEW.md) - Part 4
+   - Read: [QUICK_ACTION_PLAN.md](fixes/archive/2025-01/QUICK_ACTION_PLAN.md) - Week 1
+   - Scan: [COMPREHENSIVE_REPOSITORY_REVIEW.md](fixes/archive/2025-01/COMPREHENSIVE_REPOSITORY_REVIEW.md) - Part 4
    - Review: Assigned tasks in [PROJECT_BOARD.md](.github/PROJECT_BOARD.md)
 
 2. **Environment Setup (1 hour)**

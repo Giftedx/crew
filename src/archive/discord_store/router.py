@@ -8,6 +8,7 @@ from typing import Any
 
 import yaml
 
+
 _CONFIG_PATH = Path(os.environ.get("ARCHIVE_ROUTES_PATH", "config/archive_routes.yaml"))
 
 
@@ -75,4 +76,4 @@ def pick_channel(
     return route["channel_id"], route.get("thread_id")
 
 
-__all__ = ["pick_channel", "kind_from_path", "RouteConfigError"]
+__all__ = ["RouteConfigError", "kind_from_path", "pick_channel"]

@@ -19,6 +19,7 @@ from typing import Any
 import numpy as np
 from PIL import Image
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -265,7 +266,10 @@ class MultiModalEmbeddingGenerator:
                 embedding_type=EmbeddingType.TEXT,
                 model_used=model or self.config.text_model,
                 content_hash=content_hash,
-                metadata={"text_length": len(text), "truncated": len(text) > self.config.max_text_length},
+                metadata={
+                    "text_length": len(text),
+                    "truncated": len(text) > self.config.max_text_length,
+                },
                 processing_time=time.time() - start_time,
                 confidence_score=1.0,
             )
@@ -281,7 +285,9 @@ class MultiModalEmbeddingGenerator:
             raise
 
     async def generate_image_embedding(
-        self, image_data: str | bytes | Image.Image | Path, model: EmbeddingModel | None = None
+        self,
+        image_data: str | bytes | Image.Image | Path,
+        model: EmbeddingModel | None = None,
     ) -> EmbeddingResult:
         """Generate embedding for image content."""
         start_time = time.time()
@@ -521,7 +527,10 @@ class MultiModalEmbeddingGenerator:
         return hashlib.sha256(audio_array.tobytes()).hexdigest()
 
     def _generate_content_id(
-        self, text: str | None = None, image_data: Any | None = None, audio_data: Any | None = None
+        self,
+        text: str | None = None,
+        image_data: Any | None = None,
+        audio_data: Any | None = None,
     ) -> str:
         """Generate unique content ID."""
         content_parts = []
@@ -532,14 +541,16 @@ class MultiModalEmbeddingGenerator:
         if audio_data:
             content_parts.append(f"audio:{hash(str(audio_data))}")
 
-        return hashlib.md5("|".join(content_parts).encode()).hexdigest()
+        return hashlib.md5("|".join(content_parts).encode(), usedforsecurity=False).hexdigest()  # nosec B324 - content fingerprint only
 
     def _is_cache_valid(self, result: EmbeddingResult) -> bool:
         """Check if cached result is still valid."""
         return time.time() - result.metadata.get("cached_at", 0) < self.config.cache_ttl_seconds
 
     def calculate_similarity(
-        self, embedding1: EmbeddingResult | MultiModalEmbedding, embedding2: EmbeddingResult | MultiModalEmbedding
+        self,
+        embedding1: EmbeddingResult | MultiModalEmbedding,
+        embedding2: EmbeddingResult | MultiModalEmbedding,
     ) -> float:
         """Calculate cosine similarity between embeddings."""
         # Get primary embeddings

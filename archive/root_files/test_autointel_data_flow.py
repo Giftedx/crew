@@ -10,6 +10,7 @@ import logging
 import sys
 from pathlib import Path
 
+
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
@@ -49,7 +50,9 @@ async def test_context_population():
 
     try:
         # Import orchestrator
-        from ultimate_discord_intelligence_bot.autonomous_orchestrator import AutonomousIntelligenceOrchestrator
+        from ultimate_discord_intelligence_bot.autonomous_orchestrator import (
+            AutonomousIntelligenceOrchestrator,
+        )
 
         logger.info("✅ Imported AutonomousIntelligenceOrchestrator")
 
@@ -126,7 +129,9 @@ async def test_tool_wrapper_aliasing():
     logger.info("=" * 80)
 
     try:
-        from ultimate_discord_intelligence_bot.crewai_tool_wrappers import CrewAIToolWrapper
+        from ultimate_discord_intelligence_bot.crewai_tool_wrappers import (
+            CrewAIToolWrapper,
+        )
 
         logger.info("✅ Imported tool wrapper")
 

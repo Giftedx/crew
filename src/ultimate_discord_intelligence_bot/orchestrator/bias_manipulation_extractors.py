@@ -9,6 +9,7 @@ Extracted from extractors.py to improve maintainability and organization.
 import logging
 from typing import Any
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -29,7 +30,14 @@ def extract_bias_indicators_from_crew(crew_result: Any) -> list[dict[str, Any]]:
 
         # Define bias types and their indicators
         bias_types = {
-            "political_bias": ["liberal", "conservative", "republican", "democrat", "left", "right"],
+            "political_bias": [
+                "liberal",
+                "conservative",
+                "republican",
+                "democrat",
+                "left",
+                "right",
+            ],
             "confirmation_bias": ["confirms", "supports", "validates", "proves"],
             "selection_bias": ["cherry-pick", "selective", "chosen examples"],
             "cultural_bias": ["western", "eastern", "cultural", "traditional"],
@@ -131,7 +139,13 @@ def extract_manipulation_indicators_from_crew(crew_result: Any) -> list[dict[str
 
         # Manipulation techniques
         manipulation_techniques = {
-            "emotional_manipulation": ["guilt", "fear", "anger", "emotional", "heartstrings"],
+            "emotional_manipulation": [
+                "guilt",
+                "fear",
+                "anger",
+                "emotional",
+                "heartstrings",
+            ],
             "gaslighting": ["gaslight", "deny", "question reality", "make doubt"],
             "projection": ["project", "accuse", "blame", "deflect responsibility"],
             "love_bombing": ["love bomb", "excessive praise", "overwhelming affection"],
@@ -201,10 +215,7 @@ def extract_narrative_integrity_from_crew(crew_result: Any) -> dict[str, Any]:
         negative_count = sum(1 for indicator in negative_indicators if indicator in crew_output)
 
         total_indicators = positive_count + negative_count
-        if total_indicators == 0:
-            integrity_score = 0.5
-        else:
-            integrity_score = positive_count / total_indicators
+        integrity_score = 0.5 if total_indicators == 0 else positive_count / total_indicators
 
         # Assess coherence (how well the narrative flows)
         coherence_indicators = ["flow", "structure", "organization", "sequence"]

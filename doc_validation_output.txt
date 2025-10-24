@@ -1,0 +1,634 @@
+Checking agent_tool_mapping_guide.md...
+  ✅ No issues found
+Checking tenancy.md...
+  ✅ No issues found
+Checking distributed_rate_limiting.md...
+  ✅ No issues found
+Checking PHASE_3_UNIT_TESTS_COMPLETE.md...
+  ✅ No issues found
+Checking WEEK_7_REALITY_CHECK.md...
+  ✅ No issues found
+Checking performance_optimization_guide.md...
+  Import issues in performance_optimization_guide.md:
+    ⚠️  Import may need PYTHONPATH: from ultimate_discord_intelligence_bot.services.cache_optimizer import CacheOptimizer
+    ⚠️  Import may need PYTHONPATH: from ultimate_discord_intelligence_bot.services.model_router import ModelRouter
+    ⚠️  Import may need PYTHONPATH: from ultimate_discord_intelligence_bot.services.performance_optimizer import PerformanceOptimizer
+Checking ai_ml_enhancement_status.md...
+  ✅ No issues found
+Checking PERFORMANCE_OPTIMIZATION_PLAN.md...
+  File reference issues in PERFORMANCE_OPTIMIZATION_PLAN.md:
+    ❌ Missing file/directory: ./NEXT_STEPS_LOGICAL_PROGRESSION.md
+  Import issues in PERFORMANCE_OPTIMIZATION_PLAN.md:
+    ⚠️  Import may need PYTHONPATH: from ultimate_discord_intelligence_bot.autonomous_orchestrator import (
+Checking PHASE_2_WEEK_6_DELEGATION_AUDIT.md...
+  File reference issues in PHASE_2_WEEK_6_DELEGATION_AUDIT.md:
+    ❌ Missing file/directory: memory_integrators.py
+    ❌ Missing file/directory: result_processors.py
+    ❌ Missing file/directory: workflow_state.py
+Checking mcp.md...
+  File reference issues in mcp.md:
+    ❌ Missing file/directory: ~/.claude/config.json
+Checking setup_cli.md...
+  ✅ No issues found
+Checking PERFORMANCE_OPTIMIZATION_SUMMARY.md...
+  ✅ No issues found
+Checking ingestion.md...
+  ✅ No issues found
+Checking configuration.md...
+  File reference issues in configuration.md:
+    ❌ Missing file/directory: README.md
+Checking CREWAI_WORKFLOW_FIXES.md...
+  File reference issues in CREWAI_WORKFLOW_FIXES.md:
+    ❌ Missing file/directory: /src/ultimate_discord_intelligence_bot/crewai_tool_wrappers.py
+    ❌ Missing file/directory: /src/ultimate_discord_intelligence_bot/enhanced_autonomous_orchestrator.py
+    ❌ Missing file/directory: /src/ultimate_discord_intelligence_bot/discord_bot/registrations.py
+Checking phase1_environment_setup_guide.md...
+  ✅ No issues found
+Checking activities_local_dev.md...
+  ✅ No issues found
+Checking SESSION_SUMMARY_2025_10_06_PHASE_2_PLANNING.md...
+  File reference issues in SESSION_SUMMARY_2025_10_06_PHASE_2_PLANNING.md:
+    ❌ Missing file/directory: WEEK_4_PHASE_1_DELIVERY_COMPLETE.md
+    ❌ Missing file/directory: WHERE_WE_ARE_NOW.md
+    ❌ Missing file/directory: docs/WEEK_4_PHASE_2_PLANNING.md
+    ❌ Missing file/directory: WHERE_WE_ARE_NOW.md
+    ❌ Missing file/directory: docs/WEEK_4_PHASE_2_PLANNING.md
+    ❌ Missing file/directory: WHERE_WE_ARE_NOW.md
+    ❌ Missing file/directory: docs/WEEK_4_PHASE_1_DELIVERY_COMPLETE.md
+    ❌ Missing file/directory: config/content_types.yaml
+    ❌ Missing file/directory: docs/WEEK_4_PHASE_1_DELIVERY_COMPLETE.md
+    ❌ Missing file/directory: docs/WEEK_4_PHASE_2_PLANNING.md
+    ❌ Missing file/directory: WHERE_WE_ARE_NOW.md
+Checking agent_reference.md...
+  ✅ No issues found
+Checking REPOSITORY_REVIEW_README.md...
+  File reference issues in REPOSITORY_REVIEW_README.md:
+    ❌ Missing file/directory: DEVELOPER_ONBOARDING_GUIDE.md
+    ❌ Missing file/directory: REVIEW_INDEX.md
+    ❌ Missing file/directory: REVIEW_EXECUTIVE_SUMMARY.md
+    ❌ Missing file/directory: COMPREHENSIVE_REPOSITORY_REVIEW.md
+    ❌ Missing file/directory: QUICK_ACTION_PLAN.md
+    ❌ Missing file/directory: .github/PROJECT_BOARD.md
+    ❌ Missing file/directory: TEAM_HANDOFF.md
+    ❌ Missing file/directory: REVIEW_INDEX.md
+    ❌ Missing file/directory: REVIEW_EXECUTIVE_SUMMARY.md
+    ❌ Missing file/directory: QUICK_ACTION_PLAN.md
+    ❌ Missing file/directory: .github/PROJECT_BOARD.md
+    ❌ Missing file/directory: TEAM_HANDOFF.md
+    ❌ Missing file/directory: QUICK_ACTION_PLAN.md
+    ❌ Missing file/directory: COMPREHENSIVE_REPOSITORY_REVIEW.md
+    ❌ Missing file/directory: .github/PROJECT_BOARD.md
+    ❌ Missing file/directory: QUICK_ACTION_PLAN.md
+    ❌ Missing file/directory: QUICK_ACTION_PLAN.md
+Checking advanced-contextual-bandits.md...
+  ✅ No issues found
+Checking retention.md...
+  ✅ No issues found
+Checking agent_training_guide.md...
+  ✅ No issues found
+Checking grounding_examples.md...
+  ✅ No issues found
+Checking SLO_DOCUMENT.md...
+  ✅ No issues found
+Checking WEEK_5_DAY_2_STEP_3_COMPLETE.md...
+  ✅ No issues found
+Checking core_services.md...
+  ✅ No issues found
+Checking connectors.md...
+  ✅ No issues found
+Checking semantic_cache.md...
+  ✅ No issues found
+Checking memory.md...
+  ✅ No issues found
+Checking PHASE_2_COMPLETE.md...
+  ✅ No issues found
+Checking EXTRACTORS_UNIT_TESTS_COMPLETE.md...
+  File reference issues in EXTRACTORS_UNIT_TESTS_COMPLETE.md:
+    ❌ Missing file/directory: test_quality_assessors_unit.py
+    ❌ Missing file/directory: test_crew_builders_unit.py
+Checking quality_filtering.md...
+  ✅ No issues found
+Checking PHASE_3_IMPLEMENTATION_PLAN.md...
+  File reference issues in PHASE_3_IMPLEMENTATION_PLAN.md:
+    ❌ Missing file/directory: orchestrator/error_handlers.py
+    ❌ Missing file/directory: docs/PHASE_3_WEEK_1_ERROR_HANDLERS_COMPLETE.md
+    ❌ Missing file/directory: orchestrator/system_validators.py
+    ❌ Missing file/directory: docs/PHASE_3_WEEK_2_SYSTEM_VALIDATORS_COMPLETE.md
+    ❌ Missing file/directory: orchestrator/result_processors.py
+    ❌ Missing file/directory: orchestrator/discord_helpers.py
+  Import issues in PHASE_3_IMPLEMENTATION_PLAN.md:
+    ⚠️  Import may need PYTHONPATH: from ultimate_discord_intelligence_bot.orchestrator import error_handlers
+    ⚠️  Import may need PYTHONPATH: from ultimate_discord_intelligence_bot.orchestrator import system_validators
+Checking debate.md...
+  ✅ No issues found
+Checking dev_assistants.md...
+  File reference issues in dev_assistants.md:
+    ❌ Missing file/directory: ~/.claude/config.json
+Checking PROJECT_REORGANIZATION_SUMMARY.md...
+  ✅ No issues found
+Checking network_conventions.md...
+  Import issues in network_conventions.md:
+    ⚠️  Import may need PYTHONPATH: from ultimate_discord_intelligence_bot.core.http_utils import http_request_with_retry, resilient_get, REQUEST_TIMEOUT_SECONDS
+    ⚠️  Import may need PYTHONPATH: from ultimate_discord_intelligence_bot.core.http_utils import (
+Checking TEST_INFRASTRUCTURE_SUCCESS_SUMMARY.md...
+  ✅ No issues found
+Checking PRODUCTION_DEPLOYMENT_GUIDE.md...
+  ✅ No issues found
+Checking advanced-bandits-api.md...
+  Import issues in advanced-bandits-api.md:
+    ⚠️  Import may need PYTHONPATH: from ultimate_discord_intelligence_bot.tenancy import with_tenant, TenantContext
+Checking PHASE_2_WEEK_5_SUCCESS_SUMMARY.md...
+  File reference issues in PHASE_2_WEEK_5_SUCCESS_SUMMARY.md:
+    ❌ Missing file/directory: orchestrator/crew_builders.py
+Checking DATA_TRANSFORMERS_UNIT_TESTS_COMPLETE.md...
+  ✅ No issues found
+Checking enhanced_performance_deployment.md...
+  ✅ No issues found
+Checking advanced-bandits-performance.md...
+  ✅ No issues found
+Checking ORCHESTRATOR_TEST_INFRASTRUCTURE_COMPLETE.md...
+  ✅ No issues found
+Checking PHASE_2_IMPLEMENTATION_PLAN.md...
+  File reference issues in PHASE_2_IMPLEMENTATION_PLAN.md:
+    ❌ Missing file/directory: docs/ARCHITECTURE.md
+    ❌ Missing file/directory: README.md
+    ❌ Missing file/directory: docs/ORCHESTRATOR_DECOMPOSITION_LOG.md
+  Import issues in PHASE_2_IMPLEMENTATION_PLAN.md:
+    ⚠️  Import may need PYTHONPATH: from ultimate_discord_intelligence_bot.orchestrator.extractors import (
+Checking COMPREHENSIVE_REPOSITORY_REVIEW_2025_01_04.md...
+  File reference issues in COMPREHENSIVE_REPOSITORY_REVIEW_2025_01_04.md:
+    ❌ Missing file/directory: discord_bot/runner.py
+    ❌ Missing file/directory: mcp_server/server.py
+    ❌ Missing file/directory: ai/routing/router_registry.py
+    ❌ Missing file/directory: archive/discord_store/api.py
+    ❌ Missing file/directory: AUTOINTEL_*.md
+    ❌ Missing file/directory: config/agents.yaml
+    ❌ Missing file/directory: test_result_extractors.py
+    ❌ Missing file/directory: test_quality_assessors.py
+    ❌ Missing file/directory: test_data_transformers.py
+    ❌ Missing file/directory: docs/architecture/orchestrator.md
+    ❌ Missing file/directory: orchestration/result_extractors.py
+    ❌ Missing file/directory: orchestration/quality_assessors.py
+    ❌ Missing file/directory: orchestration/data_transformers.py
+    ❌ Missing file/directory: orchestration/crew_builder.py
+Checking cost_and_caching.md...
+  ✅ No issues found
+Checking phase1_completion_summary.md...
+  ✅ No issues found
+Checking memory_examples.md...
+  ✅ No issues found
+Checking caching.md...
+  ✅ No issues found
+Checking mypy_remediation_plan.md...
+  ✅ No issues found
+Checking monitoring_setup_report.md...
+  ✅ No issues found
+Checking resources_index.md...
+  ✅ No issues found
+Checking end_to_end_workflow_test_report.md...
+  ✅ No issues found
+Checking phase0_performance_baseline_findings.md...
+  File reference issues in phase0_performance_baseline_findings.md:
+    ❌ Missing file/directory: performance_baseline_report.md
+    ❌ Missing file/directory: performance_baseline_data.json
+Checking SESSION_RESILIENCE_OPS_GUIDE.md...
+  ✅ No issues found
+Checking ARCHITECTURE_SYNC_REPORT_2025-09-21.md...
+  ✅ No issues found
+Checking pipeline_modularization_proposal.md...
+  File reference issues in pipeline_modularization_proposal.md:
+    ❌ Missing file/directory: src/pipeline/registry.py
+Checking PHASE_2_PLANNING.md...
+  File reference issues in PHASE_2_PLANNING.md:
+    ❌ Missing file/directory: workflow_state.py
+    ❌ Missing file/directory: result_processors.py
+    ❌ Missing file/directory: memory_integrators.py
+    ❌ Missing file/directory: budget_trackers.py
+    ❌ Missing file/directory: recovery_coordinators.py
+    ❌ Missing file/directory: workflow_optimizers.py
+    ❌ Missing file/directory: workflow_state.py
+    ❌ Missing file/directory: test_workflow_state_unit.py
+    ❌ Missing file/directory: result_processors.py
+    ❌ Missing file/directory: test_result_processors_unit.py
+    ❌ Missing file/directory: result_processors.py
+    ❌ Missing file/directory: result_processors.py
+    ❌ Missing file/directory: summary_generators.py
+    ❌ Missing file/directory: summary_generators.py
+    ❌ Missing file/directory: wc -l autonomous_orchestrator.py
+    ❌ Missing file/directory: src/ultimate_discord_intelligence_bot/orchestrator/workflow_state.py
+    ❌ Missing file/directory: src/ultimate_discord_intelligence_bot/orchestrator/result_processors.py
+    ❌ Missing file/directory: src/ultimate_discord_intelligence_bot/orchestrator/memory_integrators.py
+    ❌ Missing file/directory: src/ultimate_discord_intelligence_bot/orchestrator/budget_trackers.py
+    ❌ Missing file/directory: src/ultimate_discord_intelligence_bot/orchestrator/recovery_coordinators.py
+    ❌ Missing file/directory: src/ultimate_discord_intelligence_bot/orchestrator/workflow_optimizers.py
+Checking kg_examples.md...
+  ✅ No issues found
+Checking production_deployment.md...
+  Import issues in production_deployment.md:
+    ⚠️  Import may need PYTHONPATH: from ultimate_discord_intelligence_bot.monitoring import get_production_monitor
+Checking phase0_completion_report.md...
+  File reference issues in phase0_completion_report.md:
+    ❌ Missing file/directory: oauth_validation_report.md
+    ❌ Missing file/directory: performance_baseline_report.md
+    ❌ Missing file/directory: performance_baseline_data.json
+    ❌ Missing file/directory: oauth_validation_report.md
+    ❌ Missing file/directory: performance_baseline_report.md
+    ❌ Missing file/directory: performance_baseline_data.json
+Checking rate_limiting.md...
+  ✅ No issues found
+Checking scoped_discord_bot_guide.md...
+  ✅ No issues found
+Checking QUALITY_FILTERING_PRODUCTIONIZATION_COMPLETE.md...
+  ✅ No issues found
+Checking WEEK_6_DAY_2_METHOD_CATEGORIZATION.md...
+  File reference issues in WEEK_6_DAY_2_METHOD_CATEGORIZATION.md:
+    ❌ Missing file/directory: result_processors.py
+    ❌ Missing file/directory: summary_generators.py
+    ❌ Missing file/directory: result_processors.py
+    ❌ Missing file/directory: summary_generators.py
+    ❌ Missing file/directory: result_processors.py
+    ❌ Missing file/directory: summary_generators.py
+Checking phase1_progress_report.md...
+  ✅ No issues found
+Checking streaming_guide.md...
+  ✅ No issues found
+Checking PRODUCTION_PACKAGE_README.md...
+  File reference issues in PRODUCTION_PACKAGE_README.md:
+    ❌ Missing file/directory: production_config_template.json
+    ❌ Missing file/directory: production_config_template.json
+Checking WEEK_5_DAY_1_COMPLETE.md...
+  ✅ No issues found
+Checking observability.md...
+  Import issues in observability.md:
+    ⚠️  Import may need PYTHONPATH: from ultimate_discord_intelligence_bot.tenancy import TenantContext, with_tenant
+    ⚠️  Import may need PYTHONPATH: from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
+    ⚠️  Import may need PYTHONPATH: from ultimate_discord_intelligence_bot.step_result import StepResult
+Checking ORCHESTRATOR_REFACTORING_STATUS.md...
+  File reference issues in ORCHESTRATOR_REFACTORING_STATUS.md:
+    ❌ Missing file/directory: tests/orchestrator/test_autonomous_orchestrator.py
+    ❌ Missing file/directory: tests/orchestrator/test_autonomous_orchestrator.py
+    ❌ Missing file/directory: tests/orchestrator/test_autonomous_orchestrator.py
+Checking README.md...
+  File reference issues in README.md:
+    ❌ Missing file/directory: ../../current/execution_blueprint.md
+    ❌ Missing file/directory: ../../current/feature_roadmap.md
+    ❌ Missing file/directory: ../../current/understand-cursor-rules.plan.md
+    ❌ Missing file/directory: ../../core/README.md
+Checking WEEK_7_DAY_1_PROGRESS.md...
+  ✅ No issues found
+Checking deployment_guide.md...
+  File reference issues in deployment_guide.md:
+    ❌ Missing file/directory: /docs/configuration.md
+    ❌ Missing file/directory: /docs/troubleshooting.md
+Checking PHASE_3_COMPLETE.md...
+  File reference issues in PHASE_3_COMPLETE.md:
+    ❌ Missing file/directory: orchestrator/result_processors.py
+    ❌ Missing file/directory: orchestrator/discord_helpers.py
+    ❌ Missing file/directory: PHASE_3_IMPLEMENTATION_PLAN.md
+  Import issues in PHASE_3_COMPLETE.md:
+    ⚠️  Import may need PYTHONPATH: from ultimate_discord_intelligence_bot.orchestrator import error_handlers
+    ⚠️  Import may need PYTHONPATH: from ultimate_discord_intelligence_bot.orchestrator import system_validators
+Checking rag.md...
+  ✅ No issues found
+Checking unified_system_architecture.md...
+  ✅ No issues found
+Checking WEEK_6_DAY_1_DELEGATION_AUDIT_COMPLETE.md...
+  File reference issues in WEEK_6_DAY_1_DELEGATION_AUDIT_COMPLETE.md:
+    ❌ Missing file/directory: grep -n "^    def _" autonomous_orchestrator.py
+Checking quality_filtering_feature.md...
+  File reference issues in quality_filtering_feature.md:
+    ❌ Missing file/directory: tests/test_quality_filtering*.py
+  Import issues in quality_filtering_feature.md:
+    ⚠️  Import may need PYTHONPATH: from ultimate_discord_intelligence_bot.tools import ContentQualityAssessmentTool
+    ⚠️  Import may need PYTHONPATH: from ultimate_discord_intelligence_bot.pipeline import ContentPipeline
+Checking AI_ENHANCEMENT_REVIEW_2025.md...
+  File reference issues in AI_ENHANCEMENT_REVIEW_2025.md:
+    ❌ Missing file/directory: validate_http_wrappers_usage.py
+  Import issues in AI_ENHANCEMENT_REVIEW_2025.md:
+    ⚠️  Import may need PYTHONPATH: from ultimate_discord_intelligence_bot.tools import PromptCompressionTool
+    ⚠️  Import may need PYTHONPATH: from ultimate_discord_intelligence_bot.tools import PromptCompressionTool
+    ⚠️  Import may need PYTHONPATH: from ultimate_discord_intelligence_bot.tenancy import current_tenant
+    ⚠️  Import may need PYTHONPATH: from ultimate_discord_intelligence_bot.tenancy import current_tenant
+    ⚠️  Import may need PYTHONPATH: from ultimate_discord_intelligence_bot.tools import Mem0MemoryTool
+    ⚠️  Import may need PYTHONPATH: from ultimate_discord_intelligence_bot.tools import Mem0MemoryTool
+    ⚠️  Import may need PYTHONPATH: from ultimate_discord_intelligence_bot.tools._base import BaseTool
+    ⚠️  Import may need PYTHONPATH: from ultimate_discord_intelligence_bot.step_result import StepResult
+Checking PHASE_1_COMPLETE.md...
+  File reference issues in PHASE_1_COMPLETE.md:
+    ❌ Missing file/directory: ../INDEX.md
+    ❌ Missing file/directory: ./IMMEDIATE_ACTION_PLAN_2025_01_04.md
+    ❌ Missing file/directory: ./WEEK_4_SESSION_1_COMPLETE.md
+    ❌ Missing file/directory: ../100_PERCENT_UNIT_TEST_COVERAGE_MILESTONE_2025_01_04.md
+    ❌ Missing file/directory: ../UNIT_TEST_COVERAGE_STATUS_2025_01_04.md
+Checking OPTIONAL_DEPENDENCIES.md...
+  ✅ No issues found
+Checking eval.md...
+  ✅ No issues found
+Checking ORCHESTRATOR_TESTS_97_PERCENT_COMPLETE.md...
+  Import issues in ORCHESTRATOR_TESTS_97_PERCENT_COMPLETE.md:
+    ⚠️  Import may need PYTHONPATH: from ultimate_discord_intelligence_bot.autonomous_orchestrator import (
+Checking incidents.md...
+  ✅ No issues found
+Checking deployment_report_staging_deploy_1760809933.md...
+  ✅ No issues found
+Checking PHASE_2_WEEK_5_KICKOFF.md...
+  File reference issues in PHASE_2_WEEK_5_KICKOFF.md:
+    ❌ Missing file/directory: orchestrator/__init__.py
+    ❌ Missing file/directory: docs/WEEK_5_RESULT_SYNTHESIZERS_COMPLETE.md
+    ❌ Missing file/directory: INDEX.md
+    ❌ Missing file/directory: memory_integrators.py
+  Import issues in PHASE_2_WEEK_5_KICKOFF.md:
+    ⚠️  Import may need PYTHONPATH: from ultimate_discord_intelligence_bot.orchestrator import result_synthesizers
+    ⚠️  Import may need PYTHONPATH: from ultimate_discord_intelligence_bot.step_result import StepResult
+    ⚠️  Import may need PYTHONPATH: from ultimate_discord_intelligence_bot.step_result import StepResult
+    ⚠️  Import may need PYTHONPATH: from ultimate_discord_intelligence_bot.multi_modal_synthesizer import MultiModalSynthesizer
+    ⚠️  Import may need PYTHONPATH: from ultimate_discord_intelligence_bot.crew_error_handler import CrewErrorHandler
+Checking SESSION_COMPLETE_2025_01_05_WEEK_3_DAYS_2_3.md...
+  File reference issues in SESSION_COMPLETE_2025_01_05_WEEK_3_DAYS_2_3.md:
+    ❌ Missing file/directory: docs/WEEK_3_DAYS_2_3_EXECUTION_GUIDE.md
+    ❌ Missing file/directory: docs/WEEK_3_DAYS_2_3_INFRASTRUCTURE_COMPLETE.md
+    ❌ Missing file/directory: docs/WEEK_3_DAYS_2_3_EXECUTION_GUIDE.md
+    ❌ Missing file/directory: docs/WEEK_3_DAYS_2_3_INFRASTRUCTURE_COMPLETE.md
+    ❌ Missing file/directory: docs/WEEK_3_DAYS_2_3_EXECUTION_GUIDE.md
+    ❌ Missing file/directory: docs/WEEK_3_DAYS_2_3_INFRASTRUCTURE_COMPLETE.md
+Checking kg.md...
+  ✅ No issues found
+Checking crewai_integration.md...
+  ✅ No issues found
+Checking AUTONOMOUS_AGENTIC_IMPLEMENTATION_PLAN.md...
+  ✅ No issues found
+Checking a2a_api.md...
+  ✅ No issues found
+Checking api_reference.md...
+  Import issues in api_reference.md:
+    ⚠️  Import may need PYTHONPATH: from ultimate_discord_intelligence_bot import UnifiedSystemClient
+Checking tools_reference.md...
+  Import issues in tools_reference.md:
+    ⚠️  Import may need PYTHONPATH: from ultimate_discord_intelligence_bot.tools.logical_fallacy_tool import LogicalFallacyTool
+    ⚠️  Import may need PYTHONPATH: from ultimate_discord_intelligence_bot.tools.mem0_memory_tool import Mem0MemoryTool
+    ⚠️  Import may need PYTHONPATH: from ultimate_discord_intelligence_bot.tools.discord_download_tool import DiscordDownloadTool
+    ⚠️  Import may need PYTHONPATH: from ultimate_discord_intelligence_bot.observability.stepresult_observer import observe_stepresult
+Checking performance_optimization_test_report.md...
+  ✅ No issues found
+Checking CHANGELOG_AGENT_GUIDE.md...
+  ✅ No issues found
+Checking AUTOINTEL_FIX_GUIDE.md...
+  Import issues in AUTOINTEL_FIX_GUIDE.md:
+    ⚠️  Import may need PYTHONPATH: from ultimate_discord_intelligence_bot.pipeline_components.orchestrator import ContentPipeline
+    ⚠️  Import may need PYTHONPATH: from ultimate_discord_intelligence_bot.autonomous_orchestrator import AutonomousIntelligenceOrchestrator
+Checking mcp_tools_validation_report.md...
+  ✅ No issues found
+Checking WEEK4_VALIDATION_RESULTS_ANALYSIS.md...
+  File reference issues in WEEK4_VALIDATION_RESULTS_ANALYSIS.md:
+    ❌ Missing file/directory: config/quality_filtering.yaml
+    ❌ Missing file/directory: config/early_exit.yaml
+    ❌ Missing file/directory: config/quality_filtering.yaml
+    ❌ Missing file/directory: config/early_exit.yaml
+    ❌ Missing file/directory: config/content_routing.yaml
+Checking SESSION_SUMMARY_2025_10_06_WEEK_4_COMPLETE.md...
+  File reference issues in SESSION_SUMMARY_2025_10_06_WEEK_4_COMPLETE.md:
+    ❌ Missing file/directory: docs/WEEK_4_PHASE_1_COMPLETE_SUMMARY.md
+    ❌ Missing file/directory: docs/WEEK_4_PRODUCTION_INTEGRATION_COMPLETE.md
+    ❌ Missing file/directory: docs/WEEK_4_VALIDATION_SUCCESS_ANALYSIS.md
+    ❌ Missing file/directory: docs/WEEK_4_STRATEGIC_NEXT_STEPS_PLAN.md
+    ❌ Missing file/directory: README_ENHANCEMENTS.md
+    ❌ Missing file/directory: docs/WEEK_3_PHASE_1_FINAL_REPORT.md
+    ❌ Missing file/directory: docs/WEEK_3_PHASE_2_PROGRESS.md
+    ❌ Missing file/directory: docs/WEEK_3_PHASE_2_FINAL_REPORT.md
+    ❌ Missing file/directory: benchmarks/week4_results_20251006_000745.json
+    ❌ Missing file/directory: benchmarks/week4_summary_20251006_000745.md
+    ❌ Missing file/directory: benchmarks/week4_direct_validation_20251006_005754.json
+    ❌ Missing file/directory: test_quality_filtering_integration.py
+    ❌ Missing file/directory: test_quality_filtering_lightweight_path.py
+    ❌ Missing file/directory: test_content_pipeline_e2e.py
+    ❌ Missing file/directory: docs/WEEK_4_PHASE_1_COMPLETE_SUMMARY.md
+    ❌ Missing file/directory: docs/WEEK_4_PRODUCTION_INTEGRATION_COMPLETE.md
+    ❌ Missing file/directory: docs/WEEK_4_VALIDATION_SUCCESS_ANALYSIS.md
+    ❌ Missing file/directory: docs/WEEK_4_STRATEGIC_NEXT_STEPS_PLAN.md
+    ❌ Missing file/directory: README_ENHANCEMENTS.md
+    ❌ Missing file/directory: scripts/test_week4_production_readiness.py
+    ❌ Missing file/directory: benchmarks/week4_results_20251006_000745.json
+    ❌ Missing file/directory: benchmarks/week4_summary_20251006_000745.md
+Checking AUTOINTEL_CRITICAL_ISSUES.md...
+  File reference issues in AUTOINTEL_CRITICAL_ISSUES.md:
+    ❌ Missing file/directory: tests/test_autointel_integration.py
+Checking phase1_minimal_config_template.md...
+  ✅ No issues found
+Checking FULL_STACK_DEPLOYMENT.md...
+  ✅ No issues found
+Checking ORCHESTRATOR_DECOMPOSITION_STATUS_2025_01_04.md...
+  File reference issues in ORCHESTRATOR_DECOMPOSITION_STATUS_2025_01_04.md:
+    ❌ Missing file/directory: result_processors.py
+    ❌ Missing file/directory: budget_planners.py
+    ❌ Missing file/directory: specialized_analyzers.py
+    ❌ Missing file/directory: result_processors.py
+Checking plugins_testing.md...
+  ✅ No issues found
+Checking service_integration_test_report.md...
+  ✅ No issues found
+Checking phase1_environment_setup_report.md...
+  ✅ No issues found
+Checking development_mode_setup_report.md...
+  ✅ No issues found
+Checking runtime_data.md...
+  ✅ No issues found
+Checking advanced-bandits-examples.md...
+  ✅ No issues found
+Checking retries.md...
+  ✅ No issues found
+Checking feature_flags.md...
+  File reference issues in feature_flags.md:
+    ❌ Missing file/directory: docs/WEEK_3_PHASE_1_FINAL_REPORT.md
+    ❌ Missing file/directory: docs/WEEK_3_PHASE_1_EXECUTIVE_SUMMARY.md
+Checking repository_analysis.md...
+  ✅ No issues found
+Checking WEEK_5_COMPLETE.md...
+  File reference issues in WEEK_5_COMPLETE.md:
+    ❌ Missing file/directory: PHASE_2_WEEK_5_KICKOFF.md
+    ❌ Missing file/directory: WEEK_5_DAY_2_METHOD_ANALYSIS.md
+    ❌ Missing file/directory: WEEK_5_DAY_2_STEP_2_COMPLETE.md
+    ❌ Missing file/directory: WEEK_5_DAY_2_STEP_3_COMPLETE.md
+    ❌ Missing file/directory: WEEK_5_COMPLETE.md
+Checking phase2_implementation_test_report.md...
+  File reference issues in phase2_implementation_test_report.md:
+    ❌ Missing file/directory: test_phase2_implementations.py
+    ❌ Missing file/directory: test_phase2_simple.py
+    ❌ Missing file/directory: test_phase2_basic.py
+    ❌ Missing file/directory: test_phase2_minimal.py
+Checking ROADMAP_IMPLEMENTATION.md...
+  ✅ No issues found
+Checking WEEK_7_COMPLETE.md...
+  File reference issues in WEEK_7_COMPLETE.md:
+    ❌ Missing file/directory: test_crew_builders_unit.py
+Checking WEEK_5_DAY_2_METHOD_ANALYSIS.md...
+  ✅ No issues found
+Checking PRODUCTION_DEPLOYMENT_PLAN_QUALITY_FILTERING.md...
+  Import issues in PRODUCTION_DEPLOYMENT_PLAN_QUALITY_FILTERING.md:
+    ⚠️  Import may need PYTHONPATH: from ultimate_discord_intelligence_bot.tools import ContentQualityAssessmentTool
+    ⚠️  Import may need PYTHONPATH: from ultimate_discord_intelligence_bot.tools import MemoryStorageTool
+Checking provenance.md...
+  ✅ No issues found
+Checking TEST_COVERAGE_100_PERCENT_COMPLETE.md...
+  File reference issues in TEST_COVERAGE_100_PERCENT_COMPLETE.md:
+    ❌ Missing file/directory: SECOND_PASS_FIXES_IMPLEMENTATION_REPORT.md
+Checking rl_overview.md...
+  ✅ No issues found
+Checking experiment_harness.md...
+  ✅ No issues found
+Checking marketplace.md...
+  ✅ No issues found
+Checking plugins.md...
+  ✅ No issues found
+Checking WEEK_6_COMPLETE.md...
+  File reference issues in WEEK_6_COMPLETE.md:
+    ❌ Missing file/directory: result_processors.py
+    ❌ Missing file/directory: result_processors.py
+    ❌ Missing file/directory: summary_generators.py
+    ❌ Missing file/directory: summary_generators.py
+Checking phase2_implementation_summary.md...
+  ✅ No issues found
+Checking PHASE_2_REALISTIC_TARGETS.md...
+  File reference issues in PHASE_2_REALISTIC_TARGETS.md:
+    ❌ Missing file/directory: memory_integrators.py
+    ❌ Missing file/directory: tests/orchestrator/test_memory_integrators_unit.py
+    ❌ Missing file/directory: pipeline_coordinators.py
+    ❌ Missing file/directory: tests/orchestrator/test_pipeline_coordinators_unit.py
+    ❌ Missing file/directory: docs/WEEK_5_RESULT_SYNTHESIZERS_COMPLETE.md
+    ❌ Missing file/directory: tests/orchestrator/test_memory_integrators_unit.py
+    ❌ Missing file/directory: tests/orchestrator/test_pipeline_coordinators_unit.py
+Checking PHASE_2_WEEK_2_EXTRACTORS_COMPLETE.md...
+  File reference issues in PHASE_2_WEEK_2_EXTRACTORS_COMPLETE.md:
+    ❌ Missing file/directory: orchestrator/extractors.py
+    ❌ Missing file/directory: orchestrator/extractors.py
+    ❌ Missing file/directory: orchestrator/__init__.py
+    ❌ Missing file/directory: test_result_extractors.py
+    ❌ Missing file/directory: test_quality_assessors.py
+    ❌ Missing file/directory: test_data_transformers.py
+    ❌ Missing file/directory: orchestrator/extractors.py
+    ❌ Missing file/directory: orchestrator/quality_assessors.py
+Checking ROOT_DOCS_INDEX.md...
+  File reference issues in ROOT_DOCS_INDEX.md:
+    ❌ Missing file/directory: DEVELOPER_ONBOARDING_GUIDE.md
+Checking WEEK_7_EXTRACTION_PLAN.md...
+  Import issues in WEEK_7_EXTRACTION_PLAN.md:
+    ⚠️  Import may need PYTHONPATH: from ultimate_discord_intelligence_bot.step_result import StepResult
+    ⚠️  Import may need PYTHONPATH: from ultimate_discord_intelligence_bot.orchestrator import result_synthesizers
+    ⚠️  Import may need PYTHONPATH: from ultimate_discord_intelligence_bot.step_result import StepResult
+Checking types_and_stubs.md...
+  ✅ No issues found
+Checking PHASE_2_WEEK_3_QUALITY_ASSESSORS_COMPLETE.md...
+  File reference issues in PHASE_2_WEEK_3_QUALITY_ASSESSORS_COMPLETE.md:
+    ❌ Missing file/directory: orchestrator/quality_assessors.py
+    ❌ Missing file/directory: orchestrator/quality_assessors.py
+    ❌ Missing file/directory: orchestrator/__init__.py
+    ❌ Missing file/directory: test_quality_assessors.py
+    ❌ Missing file/directory: test_result_extractors.py
+    ❌ Missing file/directory: test_data_transformers.py
+Checking PHASE_2_WEEK_5_CREW_BUILDERS_COMPLETE.md...
+  File reference issues in PHASE_2_WEEK_5_CREW_BUILDERS_COMPLETE.md:
+    ❌ Missing file/directory: orchestrator/crew_builders.py
+Checking SESSION_SUMMARY_2025_10_06_QUALITY_FILTERING.md...
+  ✅ No issues found
+Checking PHASE_2_PRODUCTION_DEPLOYMENT.md...
+  File reference issues in PHASE_2_PRODUCTION_DEPLOYMENT.md:
+    ❌ Missing file/directory: config/quality_filtering.yaml
+    ❌ Missing file/directory: config/content_routing.yaml
+    ❌ Missing file/directory: config/early_exit.yaml
+    ❌ Missing file/directory: config/quality_filtering.yaml
+    ❌ Missing file/directory: config/content_routing.yaml
+    ❌ Missing file/directory: config/early_exit.yaml
+    ❌ Missing file/directory: config/monitoring.yaml
+    ❌ Missing file/directory: config/monitoring.yaml
+Checking DEVELOPER_ONBOARDING_GUIDE.md...
+  File reference issues in DEVELOPER_ONBOARDING_GUIDE.md:
+    ❌ Missing file/directory: test_autointel.py
+    ❌ Missing file/directory: test_crew_fixes.py
+  Import issues in DEVELOPER_ONBOARDING_GUIDE.md:
+    ⚠️  Import may need PYTHONPATH: from ultimate_discord_intelligence_bot.step_result import StepResult
+    ⚠️  Import may need PYTHONPATH: from ultimate_discord_intelligence_bot.tenancy import TenantContext, with_tenant
+    ⚠️  Import may need PYTHONPATH: from ultimate_discord_intelligence_bot.tools._base import BaseTool
+    ⚠️  Import may need PYTHONPATH: from ultimate_discord_intelligence_bot.step_result import StepResult
+    ⚠️  Import may need PYTHONPATH: from ultimate_discord_intelligence_bot.step_result import StepResult
+    ⚠️  Import may need PYTHONPATH: from ultimate_discord_intelligence_bot.step_result import StepResult
+    ⚠️  Import may need PYTHONPATH: from ultimate_discord_intelligence_bot.step_result import StepResult
+    ⚠️  Import may need PYTHONPATH: from ultimate_discord_intelligence_bot.tenancy import with_tenant
+Checking quality_matrix.md...
+  ✅ No issues found
+Checking enhanced_performance_monitoring_guide.md...
+  Import issues in enhanced_performance_monitoring_guide.md:
+    ⚠️  Import may need PYTHONPATH: from ultimate_discord_intelligence_bot.enhanced_performance_monitor import EnhancedPerformanceMonitor
+    ⚠️  Import may need PYTHONPATH: from ultimate_discord_intelligence_bot.enhanced_crew_integration import EnhancedCrewExecutor
+    ⚠️  Import may need PYTHONPATH: from ultimate_discord_intelligence_bot.performance_integration import track_agent_interaction
+    ⚠️  Import may need PYTHONPATH: from ultimate_discord_intelligence_bot.enhanced_crew_integration import enhanced_crew_execution
+    ⚠️  Import may need PYTHONPATH: from ultimate_discord_intelligence_bot.performance_integration import PerformanceIntegrationManager
+    ⚠️  Import may need PYTHONPATH: from src.ultimate_discord_intelligence_bot.enhanced_performance_monitor import EnhancedPerformanceMonitor
+    ⚠️  Import may need PYTHONPATH: from src.ultimate_discord_intelligence_bot.enhanced_performance_monitor import EnhancedPerformanceMonitor
+Checking crewai_tracing_guide.md...
+  ✅ No issues found
+Checking PHASE_1_FINAL_SUMMARY.md...
+  ✅ No issues found
+Checking autonomous_video_follow.md...
+  ✅ No issues found
+Checking CURRENT_STATE_SUMMARY.md...
+  ✅ No issues found
+Checking phase0_final_summary.md...
+  File reference issues in phase0_final_summary.md:
+    ❌ Missing file/directory: oauth_validation_report.md
+    ❌ Missing file/directory: performance_baseline_report.md
+    ❌ Missing file/directory: performance_baseline_data.json
+Checking scheduler.md...
+  ✅ No issues found
+Checking conventions.md...
+  ✅ No issues found
+Checking WEEK_5_DAY_2_STEP_2_COMPLETE.md...
+  Import issues in WEEK_5_DAY_2_STEP_2_COMPLETE.md:
+    ⚠️  Import may need PYTHONPATH: from ultimate_discord_intelligence_bot.autonomous_orchestrator import (
+Checking prompt_compression.md...
+  ✅ No issues found
+Checking debate_examples.md...
+  ✅ No issues found
+Checking COPILOT_INSTRUCTIONS_UPDATE.md...
+  ✅ No issues found
+Checking WEEK_7_DAY_1_EXTRACTION.md...
+  Import issues in WEEK_7_DAY_1_EXTRACTION.md:
+    ⚠️  Import may need PYTHONPATH: from ultimate_discord_intelligence_bot.orchestrator.pipeline_result_builders import (
+Checking PHASE_2_WEEK_4_DATA_TRANSFORMERS_COMPLETE.md...
+  File reference issues in PHASE_2_WEEK_4_DATA_TRANSFORMERS_COMPLETE.md:
+    ❌ Missing file/directory: orchestrator/data_transformers.py
+    ❌ Missing file/directory: orchestrator/data_transformers.py
+    ❌ Missing file/directory: orchestrator/__init__.py
+    ❌ Missing file/directory: test_data_transformers.py
+    ❌ Missing file/directory: test_quality_assessors.py
+    ❌ Missing file/directory: test_result_extractors.py
+Checking phase0_oauth_validation_findings.md...
+  File reference issues in phase0_oauth_validation_findings.md:
+    ❌ Missing file/directory: oauth_validation_report.md
+Checking grounding.md...
+  ✅ No issues found
+Checking integration_coverage_report.md...
+  File reference issues in integration_coverage_report.md:
+    ❌ Missing file/directory: pipeline_components/base.py
+    ❌ Missing file/directory: docs/architecture.md
+Checking GETTING_STARTED.md...
+  ✅ No issues found
+Checking slo.md...
+  ✅ No issues found
+Checking local_model_selection.md...
+  ✅ No issues found
+Checking archiver.md...
+  ✅ No issues found
+Checking A2A_ADAPTER.md...
+  ✅ No issues found
+Checking performance_monitoring_integration.md...
+  Import issues in performance_monitoring_integration.md:
+    ⚠️  Import may need PYTHONPATH: from src.ultimate_discord_intelligence_bot.agent_training.performance_monitor import AgentPerformanceMonitor
+Checking capability_map.md...
+  ✅ No issues found
+Checking ENHANCEMENT_SUMMARY.md...
+  ✅ No issues found
+Checking privacy.md...
+  ✅ No issues found
+Checking analysis_modules.md...
+  ✅ No issues found
+
+Summary: Found 226 file reference issues across all docs

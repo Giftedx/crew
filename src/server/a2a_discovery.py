@@ -5,9 +5,7 @@ Separated from the main router for readability and maintainability.
 
 from __future__ import annotations
 
-from typing import Any
-
-from fastapi import APIRouter
+from typing import TYPE_CHECKING, Any
 
 from .a2a_schemas import (
     schema_lc_summarize,
@@ -22,6 +20,10 @@ from .a2a_schemas import (
 )
 from .a2a_tools import get_tools as _get_tools
 from .a2a_tools import is_enabled as _is_enabled
+
+
+if TYPE_CHECKING:
+    from fastapi import APIRouter
 
 
 def _skill_entries() -> list[dict[str, Any]]:
@@ -68,7 +70,10 @@ def _skill_entries() -> list[dict[str, Any]]:
                             "type": "object",
                             "properties": {
                                 "summary": {"type": "string"},
-                                "sentences": {"type": "array", "items": {"type": "string"}},
+                                "sentences": {
+                                    "type": "array",
+                                    "items": {"type": "string"},
+                                },
                                 "count": {"type": "integer"},
                             },
                             "required": ["summary", "sentences"],
@@ -143,7 +148,10 @@ def _skill_entries() -> list[dict[str, Any]]:
                                     },
                                 },
                                 "count": {"type": "integer"},
-                                "source": {"type": "string", "enum": ["vector", "offline"]},
+                                "source": {
+                                    "type": "string",
+                                    "enum": ["vector", "offline"],
+                                },
                             },
                             "required": ["hits", "count", "source"],
                         },
@@ -173,7 +181,12 @@ def _skill_entries() -> list[dict[str, Any]]:
                                 "index": {"type": "string"},
                                 "tenant_scoped": {"type": "boolean"},
                             },
-                            "required": ["inserted", "chunks", "index", "tenant_scoped"],
+                            "required": [
+                                "inserted",
+                                "chunks",
+                                "index",
+                                "tenant_scoped",
+                            ],
                         },
                         "error": {"type": ["string", "null"]},
                     },
@@ -202,7 +215,13 @@ def _skill_entries() -> list[dict[str, Any]]:
                                 "index": {"type": "string"},
                                 "tenant_scoped": {"type": "boolean"},
                             },
-                            "required": ["fetched", "inserted", "chunks", "index", "tenant_scoped"],
+                            "required": [
+                                "fetched",
+                                "inserted",
+                                "chunks",
+                                "index",
+                                "tenant_scoped",
+                            ],
                         },
                         "error": {"type": ["string", "null"]},
                     },
@@ -263,13 +282,22 @@ def _skill_entries() -> list[dict[str, Any]]:
                         "data": {
                             "type": "object",
                             "properties": {
-                                "outline": {"type": "array", "items": {"type": "string"}},
-                                "key_findings": {"type": "array", "items": {"type": "string"}},
+                                "outline": {
+                                    "type": "array",
+                                    "items": {"type": "string"},
+                                },
+                                "key_findings": {
+                                    "type": "array",
+                                    "items": {"type": "string"},
+                                },
                                 "citations": {
                                     "type": "array",
                                     "items": {
                                         "type": "object",
-                                        "properties": {"type": {"type": "string"}, "index": {"type": "integer"}},
+                                        "properties": {
+                                            "type": {"type": "string"},
+                                            "index": {"type": "integer"},
+                                        },
                                     },
                                 },
                                 "risks": {"type": "array", "items": {"type": "string"}},
@@ -281,7 +309,13 @@ def _skill_entries() -> list[dict[str, Any]]:
                                     },
                                 },
                             },
-                            "required": ["outline", "key_findings", "citations", "risks", "counts"],
+                            "required": [
+                                "outline",
+                                "key_findings",
+                                "citations",
+                                "risks",
+                                "counts",
+                            ],
                         },
                         "error": {"type": ["string", "null"]},
                     },
@@ -304,13 +338,22 @@ def _skill_entries() -> list[dict[str, Any]]:
                         "data": {
                             "type": "object",
                             "properties": {
-                                "outline": {"type": "array", "items": {"type": "string"}},
-                                "key_findings": {"type": "array", "items": {"type": "string"}},
+                                "outline": {
+                                    "type": "array",
+                                    "items": {"type": "string"},
+                                },
+                                "key_findings": {
+                                    "type": "array",
+                                    "items": {"type": "string"},
+                                },
                                 "citations": {
                                     "type": "array",
                                     "items": {
                                         "type": "object",
-                                        "properties": {"type": {"type": "string"}, "index": {"type": "integer"}},
+                                        "properties": {
+                                            "type": {"type": "string"},
+                                            "index": {"type": "integer"},
+                                        },
                                     },
                                 },
                                 "risks": {"type": "array", "items": {"type": "string"}},
@@ -330,7 +373,14 @@ def _skill_entries() -> list[dict[str, Any]]:
                                     },
                                 },
                             },
-                            "required": ["outline", "key_findings", "citations", "risks", "counts", "meta"],
+                            "required": [
+                                "outline",
+                                "key_findings",
+                                "citations",
+                                "risks",
+                                "counts",
+                                "meta",
+                            ],
                         },
                         "error": {"type": ["string", "null"]},
                     },

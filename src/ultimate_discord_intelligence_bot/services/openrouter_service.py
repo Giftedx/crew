@@ -7,9 +7,11 @@ import time as _time
 
 from core.http_utils import resilient_post as _default_resilient_post
 
+
 __path__ = [_os.path.join(_os.path.dirname(__file__), "openrouter_service")]
 
 from .openrouter_service.service import OpenRouterService
+
 
 resilient_post = _default_resilient_post
 time = _time
@@ -40,10 +42,10 @@ try:
     from src.core.settings import get_settings  # type: ignore
 except Exception:
     try:
-        from core.settings import get_settings  # type: ignore
+        from ultimate_discord_intelligence_bot.settings import Settings  # type: ignore
     except Exception:  # pragma: no cover - fallback when pydantic/settings unavailable
         # Create fallback function to avoid redefinition error
-        def _get_settings_fallback() -> Any:  # minimal shim (return object with expected attrs)
+        def _get_settings_fallback() -> StepResult:  # minimal shim (return object with expected attrs)
             class _S:  # minimal shim for tests
                 reward_cost_weight = 0.5
                 reward_latency_weight = 0.5
@@ -63,11 +65,11 @@ from obs import metrics
 try:
     from obs.enhanced_langsmith_integration import trace_llm_call as _trace_llm_call
 
-    def trace_llm_call(*args: Any, **kwargs: Any) -> None:
+    def trace_llm_call(*args: Any, **kwargs: Any) -> StepResult:
         _trace_llm_call(*args, **kwargs)
 except Exception:  # pragma: no cover
 
-    def trace_llm_call(*args: Any, **kwargs: Any) -> None:
+    def trace_llm_call(*args: Any, **kwargs: Any) -> StepResult:
         return None
 
 
@@ -91,6 +93,7 @@ from .openrouter_helpers import (
 from .prompt_engine import PromptEngine
 from .request_budget import current_request_tracker as _crt
 from .token_meter import TokenMeter
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 # Optional semantic cache (guarded by feature flag in settings)
 _semantic_cache_get = None
@@ -112,7 +115,7 @@ except Exception:  # pragma: no cover
 vllm_adapter_ctor: Any | None = _VLLMAdapterCtor
 
 
-def _has_vllm() -> bool:
+def _has_vllm() -> StepResult:
     """Return True if local vLLM adapter is importable and available."""
     try:
         if _is_vllm_available is None:
@@ -138,7 +141,7 @@ class OpenRouterService:
         token_meter: TokenMeter | None = None,
         cache: Any | None = None,
         tenant_registry: TenantRegistry | None = None,
-    ) -> None:
+    ) -> StepResult:
         """Initialise the router.
 
         Args:
@@ -231,7 +234,7 @@ class OpenRouterService:
         self.tenant_registry = tenant_registry
         # Semantic cache instance (only if enabled via settings or env fallback)
         try:
-            settings = get_settings()
+            settings = Settings()
             enabled_sem = bool(getattr(settings, "enable_semantic_cache", False))
             if not enabled_sem:
                 raw = (_os.getenv("ENABLE_SEMANTIC_CACHE") or "").lower()
@@ -280,20 +283,20 @@ class OpenRouterService:
 
     # --- Tenancy helpers -------------------------------------------------
     @staticmethod
-    def _ctx_or_fallback(component: str) -> TenantContext | None:
+    def _ctx_or_fallback(component: str) -> StepResult:
         """Delegate to shared helper for tenancy fallback logic."""
         return _ctx_or_fallback_helper(component)
 
     @staticmethod
-    def _deep_merge(base: dict[str, Any], overrides: Mapping[str, Any]) -> dict[str, Any]:
+    def _deep_merge(base: dict[str, Any], overrides: Mapping[str, Any]) -> StepResult:
         """Delegate to shared helper for deep merge logic."""
         return _deep_merge_helper(base, overrides)
 
-    def _update_shadow_hit_ratio(self, labels: dict[str, str], is_hit: bool) -> None:
+    def _update_shadow_hit_ratio(self, labels: dict[str, str], is_hit: bool) -> StepResult:
         """Delegate to shared helper for shadow hit ratio metric updates."""
         _update_shadow_hit_ratio_helper(labels, is_hit)
 
-    def _choose_model_from_map(self, task_type: str, models_map: dict[str, list[str]]) -> str:
+    def _choose_model_from_map(self, task_type: str, models_map: dict[str, list[str]]) -> StepResult:
         """Delegate to shared helper for model selection from map (keeps signature)."""
         return _choose_model_from_map_helper(task_type, models_map, self.learning)
 
@@ -303,7 +306,7 @@ class OpenRouterService:
         task_type: str = "general",
         model: str | None = None,
         provider_opts: dict[str, Any] | None = None,
-    ) -> dict[str, Any]:
+    ) -> StepResult:
         """Route a prompt with provider preferences and budget enforcement.
 
         Note: This function coordinates several concerns (tenancy, pricing,
@@ -317,7 +320,7 @@ class OpenRouterService:
         # Ensure metrics are attributed to the effective tenant/workspace even when no
         # TenantContext was pre-set by the caller. We avoid mutating thread-local state
         # and instead provide a local label factory for metric calls.
-        def _labels() -> dict[str, str]:
+        def _labels() -> StepResult:
             if ctx_effective is not None:
                 return {
                     "tenant": getattr(ctx_effective, "tenant_id", "unknown"),
@@ -497,7 +500,7 @@ class OpenRouterService:
 
                 sc = self.semantic_cache
 
-                def _runner() -> None:
+                def _runner() -> StepResult:
                     try:
                         if sc is not None:
                             _holder["result"] = _asyncio.run(sc.get(prompt, chosen, namespace=ns))
@@ -613,7 +616,7 @@ class OpenRouterService:
         if self.cache:
             norm_prompt = prompt
 
-            def _sig(obj: Any) -> str:
+            def _sig(obj: Any) -> StepResult:
                 if isinstance(obj, dict):
                     return "{" + ",".join(f"{k}:{_sig(obj[k])}" for k in sorted(obj)) + "}"
                 if isinstance(obj, list):
@@ -637,7 +640,7 @@ class OpenRouterService:
             response = prompt.upper()
             latency_ms = (time.perf_counter() - start) * 1000
             tokens_out = self.prompt_engine.count_tokens(response, chosen)
-            settings = get_settings()
+            settings = Settings()
             rl: dict[str, float] = {}
             if self.tenant_registry:
                 ctx_t = ctx_effective
@@ -714,7 +717,7 @@ class OpenRouterService:
 
                     sc = self.semantic_cache
 
-                    def _runner_set() -> None:
+                    def _runner_set() -> StepResult:
                         try:
                             if sc is not None:
                                 _asyncio.run(sc.set(prompt, chosen, result, namespace=ns))
@@ -746,7 +749,7 @@ class OpenRouterService:
             payload: dict[str, Any] = {"model": chosen, "messages": [{"role": "user", "content": prompt}]}
             if provider:
                 payload["provider"] = provider
-            settings = get_settings()
+            settings = Settings()
             if (
                 chosen.startswith("local/")
                 and vllm_adapter_ctor is not None
@@ -880,7 +883,7 @@ class OpenRouterService:
             message = data.get("choices", [{}])[0].get("message", {}).get("content", "")
             latency_ms = (time.perf_counter() - start) * 1000
             tokens_out = self.prompt_engine.count_tokens(message, chosen)
-            settings = get_settings()
+            settings = Settings()
             rl = {}
             if self.tenant_registry:
                 ctx_t = ctx_effective
@@ -953,7 +956,7 @@ class OpenRouterService:
 
                     sc = self.semantic_cache
 
-                    def _runner_set() -> None:
+                    def _runner_set() -> StepResult:
                         try:
                             if sc is not None:
                                 _asyncio.run(sc.set(prompt, chosen, result, namespace=ns))

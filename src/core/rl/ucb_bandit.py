@@ -16,6 +16,7 @@ from typing import Any
 
 import numpy as np
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -239,7 +240,10 @@ class UCBArm:
         else:
             self.lower_confidence_bound = 0.0
 
-        self.confidence_interval = (self.lower_confidence_bound, self.upper_confidence_bound)
+        self.confidence_interval = (
+            self.lower_confidence_bound,
+            self.upper_confidence_bound,
+        )
 
 
 @dataclass
@@ -335,7 +339,10 @@ class UCBBandit:
             arm.update_confidence_bounds(self.metrics.total_selections, self.config, self.config.strategy)
 
         # Select arm with highest UCB bound
-        selected_arm_id = max(self.arms.keys(), key=lambda arm_id: float(self.arms[arm_id].upper_confidence_bound))
+        selected_arm_id = max(
+            self.arms.keys(),
+            key=lambda arm_id: float(self.arms[arm_id].upper_confidence_bound),
+        )
 
         # Update metrics
         self.metrics.total_selections += 1
@@ -588,6 +595,9 @@ class UCBBandit:
             return None
 
         # Find arm with highest uncertainty-to-pulls ratio
-        best_exploration_arm = max(self.arms.values(), key=lambda arm: arm.confidence_width / max(1, arm.total_pulls))
+        best_exploration_arm = max(
+            self.arms.values(),
+            key=lambda arm: arm.confidence_width / max(1, arm.total_pulls),
+        )
 
         return best_exploration_arm.arm_id

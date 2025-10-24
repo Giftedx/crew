@@ -17,7 +17,10 @@ from typing import Any
 from fastmcp import FastMCP
 
 from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
-from ultimate_discord_intelligence_bot.tools.multi_modal_analysis_tool import MultiModalAnalysisTool
+from ultimate_discord_intelligence_bot.tools.multi_modal_analysis_tool import (
+    MultiModalAnalysisTool,
+)
+
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +29,11 @@ def create_multimodal_server() -> FastMCP:
     """Create the multi-modal analysis MCP server."""
 
     # Create FastMCP server instance
-    mcp = FastMCP("multimodal-analysis", description="Advanced multi-modal content analysis server", version="1.0.0")
+    mcp = FastMCP(
+        "multimodal-analysis",
+        description="Advanced multi-modal content analysis server",
+        version="1.0.0",
+    )
 
     # Initialize the multi-modal analysis tool
     multimodal_tool = MultiModalAnalysisTool()
@@ -48,7 +55,10 @@ def create_multimodal_server() -> FastMCP:
             result = multimodal_tool._run(image_url, "image", tenant, workspace)
 
             if result.status == "success":
-                metrics.counter("mcp_tool_calls_total", labels={"tool": "analyze_image", "outcome": "success"}).inc()
+                metrics.counter(
+                    "mcp_tool_calls_total",
+                    labels={"tool": "analyze_image", "outcome": "success"},
+                ).inc()
                 return {
                     "success": True,
                     "analysis": result.data,
@@ -57,12 +67,22 @@ def create_multimodal_server() -> FastMCP:
                     "unified_sentiment": result.data.get("unified_sentiment", "neutral"),
                 }
             else:
-                metrics.counter("mcp_tool_calls_total", labels={"tool": "analyze_image", "outcome": "error"}).inc()
-                return {"success": False, "error": result.error, "content_type": "image"}
+                metrics.counter(
+                    "mcp_tool_calls_total",
+                    labels={"tool": "analyze_image", "outcome": "error"},
+                ).inc()
+                return {
+                    "success": False,
+                    "error": result.error,
+                    "content_type": "image",
+                }
 
         except Exception as e:
             logger.error(f"Image analysis failed: {e}")
-            metrics.counter("mcp_tool_calls_total", labels={"tool": "analyze_image", "outcome": "error"}).inc()
+            metrics.counter(
+                "mcp_tool_calls_total",
+                labels={"tool": "analyze_image", "outcome": "error"},
+            ).inc()
             return {"success": False, "error": str(e), "content_type": "image"}
 
     @mcp.tool()
@@ -81,7 +101,10 @@ def create_multimodal_server() -> FastMCP:
             result = multimodal_tool._run(video_url, "video", tenant, workspace)
 
             if result.status == "success":
-                metrics.counter("mcp_tool_calls_total", labels={"tool": "analyze_video", "outcome": "success"}).inc()
+                metrics.counter(
+                    "mcp_tool_calls_total",
+                    labels={"tool": "analyze_video", "outcome": "success"},
+                ).inc()
                 return {
                     "success": True,
                     "analysis": result.data,
@@ -90,12 +113,22 @@ def create_multimodal_server() -> FastMCP:
                     "unified_sentiment": result.data.get("unified_sentiment", "neutral"),
                 }
             else:
-                metrics.counter("mcp_tool_calls_total", labels={"tool": "analyze_video", "outcome": "error"}).inc()
-                return {"success": False, "error": result.error, "content_type": "video"}
+                metrics.counter(
+                    "mcp_tool_calls_total",
+                    labels={"tool": "analyze_video", "outcome": "error"},
+                ).inc()
+                return {
+                    "success": False,
+                    "error": result.error,
+                    "content_type": "video",
+                }
 
         except Exception as e:
             logger.error(f"Video analysis failed: {e}")
-            metrics.counter("mcp_tool_calls_total", labels={"tool": "analyze_video", "outcome": "error"}).inc()
+            metrics.counter(
+                "mcp_tool_calls_total",
+                labels={"tool": "analyze_video", "outcome": "error"},
+            ).inc()
             return {"success": False, "error": str(e), "content_type": "video"}
 
     @mcp.tool()
@@ -114,7 +147,10 @@ def create_multimodal_server() -> FastMCP:
             result = multimodal_tool._run(audio_url, "audio", tenant, workspace)
 
             if result.status == "success":
-                metrics.counter("mcp_tool_calls_total", labels={"tool": "analyze_audio", "outcome": "success"}).inc()
+                metrics.counter(
+                    "mcp_tool_calls_total",
+                    labels={"tool": "analyze_audio", "outcome": "success"},
+                ).inc()
                 return {
                     "success": True,
                     "analysis": result.data,
@@ -123,12 +159,22 @@ def create_multimodal_server() -> FastMCP:
                     "unified_sentiment": result.data.get("unified_sentiment", "neutral"),
                 }
             else:
-                metrics.counter("mcp_tool_calls_total", labels={"tool": "analyze_audio", "outcome": "error"}).inc()
-                return {"success": False, "error": result.error, "content_type": "audio"}
+                metrics.counter(
+                    "mcp_tool_calls_total",
+                    labels={"tool": "analyze_audio", "outcome": "error"},
+                ).inc()
+                return {
+                    "success": False,
+                    "error": result.error,
+                    "content_type": "audio",
+                }
 
         except Exception as e:
             logger.error(f"Audio analysis failed: {e}")
-            metrics.counter("mcp_tool_calls_total", labels={"tool": "analyze_audio", "outcome": "error"}).inc()
+            metrics.counter(
+                "mcp_tool_calls_total",
+                labels={"tool": "analyze_audio", "outcome": "error"},
+            ).inc()
             return {"success": False, "error": str(e), "content_type": "audio"}
 
     @mcp.tool()
@@ -148,7 +194,8 @@ def create_multimodal_server() -> FastMCP:
 
             if result.status == "success":
                 metrics.counter(
-                    "mcp_tool_calls_total", labels={"tool": "analyze_content_auto", "outcome": "success"}
+                    "mcp_tool_calls_total",
+                    labels={"tool": "analyze_content_auto", "outcome": "success"},
                 ).inc()
                 return {
                     "success": True,
@@ -160,13 +207,21 @@ def create_multimodal_server() -> FastMCP:
                 }
             else:
                 metrics.counter(
-                    "mcp_tool_calls_total", labels={"tool": "analyze_content_auto", "outcome": "error"}
+                    "mcp_tool_calls_total",
+                    labels={"tool": "analyze_content_auto", "outcome": "error"},
                 ).inc()
-                return {"success": False, "error": result.error, "content_type": "unknown"}
+                return {
+                    "success": False,
+                    "error": result.error,
+                    "content_type": "unknown",
+                }
 
         except Exception as e:
             logger.error(f"Auto content analysis failed: {e}")
-            metrics.counter("mcp_tool_calls_total", labels={"tool": "analyze_content_auto", "outcome": "error"}).inc()
+            metrics.counter(
+                "mcp_tool_calls_total",
+                labels={"tool": "analyze_content_auto", "outcome": "error"},
+            ).inc()
             return {"success": False, "error": str(e), "content_type": "unknown"}
 
     @mcp.tool()
@@ -233,11 +288,21 @@ def create_multimodal_server() -> FastMCP:
                     "cross_modal_insights": result.data.get("cross_modal_insights", {}),
                 }
             else:
-                return {"success": False, "error": result.error, "dominant_themes": [], "content_type": content_type}
+                return {
+                    "success": False,
+                    "error": result.error,
+                    "dominant_themes": [],
+                    "content_type": content_type,
+                }
 
         except Exception as e:
             logger.error(f"Theme extraction failed: {e}")
-            return {"success": False, "error": str(e), "dominant_themes": [], "content_type": content_type}
+            return {
+                "success": False,
+                "error": str(e),
+                "dominant_themes": [],
+                "content_type": content_type,
+            }
 
     @mcp.resource("analysis://templates")
     def get_analysis_templates() -> str:

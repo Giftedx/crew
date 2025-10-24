@@ -15,6 +15,7 @@ import time
 from textwrap import dedent
 from typing import TYPE_CHECKING, Any
 
+
 # Third-party imports for validation
 try:
     from pydantic import BaseModel, Field, ValidationError, field_validator
@@ -66,7 +67,7 @@ except Exception:  # pragma: no cover - tests/environment without crewai
 
 
 # Local imports - Core
-from core.settings import get_settings
+from ultimate_discord_intelligence_bot.settings import Settings
 
 from .config import prompts as prompt_config
 from .crew import UltimateDiscordIntelligenceBotCrew
@@ -87,7 +88,19 @@ from .orchestrator import (
     system_validators,
     workflow_planners,
 )
-from .services.semantic_router_service import SemanticRouterService
+
+
+# Optional: Semantic Router Service (requires semantic-router extra)
+try:
+    from .services.semantic_router_service import SemanticRouterService
+
+    SEMANTIC_ROUTER_AVAILABLE = True
+except ImportError:
+    SEMANTIC_ROUTER_AVAILABLE = False
+    SemanticRouterService = None  # type: ignore[assignment,misc]
+
+import contextlib
+
 from .step_result import StepResult
 
 # Local imports - Tools (only the ones actually used in imports)
@@ -109,11 +122,19 @@ from .tools import (
     XMonitorTool,
 )
 
+
+if TYPE_CHECKING:
+    from crewai import CrewOutput
+
+
+# Initialize logger before using it
+logger = logging.getLogger(__name__)
+
 # Attempt to import and initialize AgentOps for observability
 try:
     import agentops
 
-    settings = get_settings()
+    settings = Settings()
     if settings.enable_agent_ops and settings.agent_ops_api_key:
         agentops.init(settings.agent_ops_api_key)
         logger.info("✅ AgentOps initialized successfully.")
@@ -123,12 +144,6 @@ except ImportError:
     logger.debug("AgentOps not installed, skipping initialization.")
 except Exception as e:
     logger.error(f"Failed to initialize AgentOps: {e}", exc_info=True)
-
-
-if TYPE_CHECKING:  # pragma: no cover - typing only
-    pass
-
-logger = logging.getLogger(__name__)
 
 
 # ========================================
@@ -224,7 +239,10 @@ class AutonomousIntelligenceOrchestrator:
         try:
             self.system_health = self._validate_system_prerequisites()
         except Exception:
-            self.system_health = {"healthy": False, "errors": ["init_validation_failed"]}
+            self.system_health = {
+                "healthy": False,
+                "errors": ["init_validation_failed"],
+            }
         try:
             self._llm_available = bool(self._check_llm_api_available())
         except Exception:
@@ -241,13 +259,19 @@ class AutonomousIntelligenceOrchestrator:
     def _populate_agent_tool_context(self, agent: Any, context_data: dict[str, Any]) -> None:
         """Populate shared context on all tool wrappers for an agent (delegates to crew_builders)."""
         return crew_builders.populate_agent_tool_context(
-            agent, context_data, logger_instance=self.logger, metrics_instance=self.metrics
+            agent,
+            context_data,
+            logger_instance=self.logger,
+            metrics_instance=self.metrics,
         )
 
     def _get_or_create_agent(self, agent_name: str) -> Any:
         """Get agent from coordinators cache or create and cache it (delegates to crew_builders)."""
         return crew_builders.get_or_create_agent(
-            agent_name, self.agent_coordinators, self.crew_instance, logger_instance=self.logger
+            agent_name,
+            self.agent_coordinators,
+            self.crew_instance,
+            logger_instance=self.logger,
         )
 
     def _task_completion_callback(self, task_output: Any) -> None:
@@ -285,7 +309,7 @@ class AutonomousIntelligenceOrchestrator:
             self.crew_instance = UltimateDiscordIntelligenceBotCrew()
             self.logger.debug("✨ Initialized crew_instance for agent creation")
 
-        settings = get_settings()
+        settings = Settings()
         return crew_builders.build_intelligence_crew(
             url,
             depth,
@@ -296,6 +320,153 @@ class AutonomousIntelligenceOrchestrator:
             enable_parallel_analysis=settings.enable_parallel_analysis,
             enable_parallel_fact_checking=settings.enable_parallel_fact_checking,
         )
+
+    def _build_specialized_crew(self, routed_tool: str, url: str, depth: str) -> Crew | None:
+        """Build a specialized crew for a specific routed tool.
+
+        Args:
+            routed_tool: The tool that was routed to
+            url: The URL to analyze
+            depth: The analysis depth
+
+        Returns:
+            Specialized crew or None if not supported
+        """
+        try:
+            # Map routed tools to specialized crew configurations
+            tool_crew_mappings = {
+                "debate_analysis": self._build_debate_focused_crew,
+                "fact_checking": self._build_fact_check_focused_crew,
+                "sentiment_analysis": self._build_sentiment_focused_crew,
+                "content_moderation": self._build_moderation_focused_crew,
+                "transcription": self._build_transcription_focused_crew,
+            }
+
+            if routed_tool in tool_crew_mappings:
+                return tool_crew_mappings[routed_tool](url, depth)
+            else:
+                self.logger.warning(f"No specialized crew mapping for tool: {routed_tool}")
+                return None
+
+        except Exception as e:
+            self.logger.error(f"Failed to build specialized crew for {routed_tool}: {e}")
+            return None
+
+    def _build_debate_focused_crew(self, url: str, depth: str) -> Crew:
+        """Build a crew focused on debate analysis."""
+        # Initialize crew instance if needed
+        if self.crew_instance is None:
+            from .crew import UltimateDiscordIntelligenceBotCrew
+
+            self.crew_instance = UltimateDiscordIntelligenceBotCrew()
+
+        # Create specialized agents for debate analysis
+        debate_agent = self._get_or_create_agent("debate_specialist")
+        fact_checker = self._get_or_create_agent("fact_checker")
+
+        # Create focused tasks
+        debate_task = Task(
+            description=f"Analyze debate content from {url} with focus on argument structure, logical fallacies, and evidence quality",
+            agent=debate_agent,
+            expected_output="Comprehensive debate analysis with argument mapping and fallacy detection",
+        )
+
+        fact_check_task = Task(
+            description="Verify factual claims made in the debate content",
+            agent=fact_checker,
+            expected_output="Fact-checking report with claim verification status",
+        )
+
+        return Crew(agents=[debate_agent, fact_checker], tasks=[debate_task, fact_check_task], verbose=True)
+
+    def _build_fact_check_focused_crew(self, url: str, depth: str) -> Crew:
+        """Build a crew focused on fact-checking."""
+        if self.crew_instance is None:
+            from .crew import UltimateDiscordIntelligenceBotCrew
+
+            self.crew_instance = UltimateDiscordIntelligenceBotCrew()
+
+        fact_checker = self._get_or_create_agent("fact_checker")
+        researcher = self._get_or_create_agent("researcher")
+
+        fact_check_task = Task(
+            description=f"Perform comprehensive fact-checking of content from {url}",
+            agent=fact_checker,
+            expected_output="Detailed fact-checking report with claim verification",
+        )
+
+        research_task = Task(
+            description="Research and verify claims using reliable sources",
+            agent=researcher,
+            expected_output="Research findings with source citations",
+        )
+
+        return Crew(agents=[fact_checker, researcher], tasks=[fact_check_task, research_task], verbose=True)
+
+    def _build_sentiment_focused_crew(self, url: str, depth: str) -> Crew:
+        """Build a crew focused on sentiment analysis."""
+        if self.crew_instance is None:
+            from .crew import UltimateDiscordIntelligenceBotCrew
+
+            self.crew_instance = UltimateDiscordIntelligenceBotCrew()
+
+        sentiment_analyst = self._get_or_create_agent("sentiment_analyst")
+
+        sentiment_task = Task(
+            description=f"Analyze sentiment and emotional tone of content from {url}",
+            agent=sentiment_analyst,
+            expected_output="Comprehensive sentiment analysis with emotional insights",
+        )
+
+        return Crew(agents=[sentiment_analyst], tasks=[sentiment_task], verbose=True)
+
+    def _build_moderation_focused_crew(self, url: str, depth: str) -> Crew:
+        """Build a crew focused on content moderation."""
+        if self.crew_instance is None:
+            from .crew import UltimateDiscordIntelligenceBotCrew
+
+            self.crew_instance = UltimateDiscordIntelligenceBotCrew()
+
+        moderator = self._get_or_create_agent("content_moderator")
+        safety_analyst = self._get_or_create_agent("safety_analyst")
+
+        moderation_task = Task(
+            description=f"Moderate content from {url} for policy violations and safety concerns",
+            agent=moderator,
+            expected_output="Content moderation report with policy violation assessment",
+        )
+
+        safety_task = Task(
+            description="Analyze content for safety and brand suitability",
+            agent=safety_analyst,
+            expected_output="Safety analysis with risk assessment",
+        )
+
+        return Crew(agents=[moderator, safety_analyst], tasks=[moderation_task, safety_task], verbose=True)
+
+    def _build_transcription_focused_crew(self, url: str, depth: str) -> Crew:
+        """Build a crew focused on transcription and content extraction."""
+        if self.crew_instance is None:
+            from .crew import UltimateDiscordIntelligenceBotCrew
+
+            self.crew_instance = UltimateDiscordIntelligenceBotCrew()
+
+        transcriber = self._get_or_create_agent("transcriber")
+        content_analyzer = self._get_or_create_agent("content_analyzer")
+
+        transcription_task = Task(
+            description=f"Transcribe and extract content from {url} with high accuracy",
+            agent=transcriber,
+            expected_output="High-quality transcript with metadata",
+        )
+
+        analysis_task = Task(
+            description="Analyze the transcribed content for key themes and insights",
+            agent=content_analyzer,
+            expected_output="Content analysis with key themes and insights",
+        )
+
+        return Crew(agents=[transcriber, content_analyzer], tasks=[transcription_task, analysis_task], verbose=True)
 
     def _validate_stage_data(self, stage_name: str, required_keys: list[str], data: dict[str, Any]) -> None:
         """Validate that required keys are present in stage data."""
@@ -336,12 +507,20 @@ class AutonomousIntelligenceOrchestrator:
         self.crew_instance = None
 
     @staticmethod
-    def _normalize_acquisition_data(acquisition: StepResult | dict[str, Any] | None) -> dict[str, Any]:
+    def _normalize_acquisition_data(
+        acquisition: StepResult | dict[str, Any] | None,
+    ) -> dict[str, Any]:
         """Return a flattened ContentPipeline payload for downstream stages."""
         return data_transformers.normalize_acquisition_data(acquisition)
 
     async def _execute_stage_with_recovery(
-        self, stage_function, stage_name: str, agent_name: str, workflow_depth: str, *args, **kwargs
+        self,
+        stage_function,
+        stage_name: str,
+        agent_name: str,
+        workflow_depth: str,
+        *args,
+        **kwargs,
     ):
         """Execute a workflow stage with intelligent error handling and recovery."""
         return await error_handlers.execute_stage_with_recovery(
@@ -380,7 +559,9 @@ class AutonomousIntelligenceOrchestrator:
 
         Delegates to orchestrator.pipeline_result_builders.merge_threat_payload.
         """
-        from ultimate_discord_intelligence_bot.orchestrator.pipeline_result_builders import merge_threat_payload
+        from ultimate_discord_intelligence_bot.orchestrator.pipeline_result_builders import (
+            merge_threat_payload,
+        )
 
         return merge_threat_payload(threat_payload, verification_data, fact_data)
 
@@ -396,7 +577,9 @@ class AutonomousIntelligenceOrchestrator:
         fallback_url: str | None = None,
     ) -> dict[str, Any]:
         """Delegate to pipeline_result_builders.build_knowledge_payload."""
-        from ultimate_discord_intelligence_bot.orchestrator.pipeline_result_builders import build_knowledge_payload
+        from ultimate_discord_intelligence_bot.orchestrator.pipeline_result_builders import (
+            build_knowledge_payload,
+        )
 
         return build_knowledge_payload(
             acquisition_data,
@@ -409,7 +592,11 @@ class AutonomousIntelligenceOrchestrator:
         )
 
     async def execute_autonomous_intelligence_workflow(
-        self, interaction: Any, url: str, depth: str = "standard", tenant_ctx: Any = None
+        self,
+        interaction: Any,
+        url: str,
+        depth: str = "standard",
+        tenant_ctx: Any = None,
     ) -> None:
         """Execute the complete autonomous intelligence workflow using proper CrewAI architecture.
 
@@ -449,7 +636,11 @@ class AutonomousIntelligenceOrchestrator:
 
                 tenant_ctx = TenantContext(
                     tenant_id=f"guild_{getattr(interaction, 'guild_id', 'dm') or 'dm'}",
-                    workspace_id=getattr(getattr(interaction, "channel", None), "name", "autointel_workspace"),
+                    workspace_id=getattr(
+                        getattr(interaction, "channel", None),
+                        "name",
+                        "autointel_workspace",
+                    ),
                 )
                 self.logger.info(f"Created tenant context for workflow: {tenant_ctx}")
             except Exception as e:
@@ -475,21 +666,24 @@ class AutonomousIntelligenceOrchestrator:
         # Optional feature gate: allow deployments to disable the heaviest path by default.
         # If experimental depth is requested but not explicitly enabled, fall back safely.
         try:
-            exp_enabled = os.getenv("ENABLE_EXPERIMENTAL_DEPTH", "0").lower() in {"1", "true", "yes", "on"}
+            exp_enabled = os.getenv("ENABLE_EXPERIMENTAL_DEPTH", "0").lower() in {
+                "1",
+                "true",
+                "yes",
+                "on",
+            }
         except Exception:
             exp_enabled = False
         if depth == "experimental" and not exp_enabled:
             depth = "comprehensive"
             # Inform the user that we're degrading the analysis level for safety/config reasons
-            try:
+            with contextlib.suppress(Exception):
                 await self._send_progress_update(
                     interaction,
                     "⚠️ Experimental mode disabled by configuration. Falling back to 'comprehensive' depth.",
                     0,
                     1,
                 )
-            except Exception:
-                pass
 
         # Initialize progress tracking
         await self._send_progress_update(interaction, f"🚀 Starting {depth} intelligence analysis for: {url}", 0, 5)
@@ -512,7 +706,10 @@ class AutonomousIntelligenceOrchestrator:
                 pass  # Already initialized or not available
 
             # Wrap execution with request budget tracking
-            with track_request_budget(total_limit=budget_limits["total"], per_task_limits=budget_limits["per_task"]):
+            with track_request_budget(
+                total_limit=budget_limits["total"],
+                per_task_limits=budget_limits["per_task"],
+            ):
                 # Execute workflow within tenant context if available
                 if tenant_ctx:
                     try:
@@ -551,7 +748,12 @@ class AutonomousIntelligenceOrchestrator:
             self.metrics.counter("autointel_workflows_total", labels={"depth": depth, "outcome": "error"}).inc()
 
     async def _execute_crew_workflow(
-        self, interaction: Any, url: str, depth: str, workflow_id: str, start_time: float
+        self,
+        interaction: Any,
+        url: str,
+        depth: str,
+        workflow_id: str,
+        start_time: float,
     ) -> None:
         """Execute workflow using proper CrewAI architecture with task chaining.
 
@@ -561,7 +763,6 @@ class AutonomousIntelligenceOrchestrator:
         import asyncio
 
         import agentops
-        from crewai import CrewOutput
 
         try:
             # CRITICAL FIX: Reset global crew context at workflow start
@@ -574,7 +775,7 @@ class AutonomousIntelligenceOrchestrator:
                 self.logger.warning(f"Failed to reset global crew context: {ctx_reset_error}")
 
             # Start AgentOps session
-            settings = get_settings()
+            settings = Settings()
             if settings.enable_agent_ops:
                 session_tags = [
                     f"depth:{depth}",
@@ -582,8 +783,14 @@ class AutonomousIntelligenceOrchestrator:
                     f"workflow_id:{workflow_id}",
                     "autointel_workflow",
                 ]
-                if tenant_ctx:
-                    session_tags.append(f"tenant:{tenant_ctx.tenant_id}")
+                try:
+                    from .tenancy.context import current_tenant
+
+                    _tc = current_tenant()
+                    if _tc is not None and getattr(_tc, "tenant_id", None):
+                        session_tags.append(f"tenant:{_tc.tenant_id}")
+                except Exception:
+                    pass
                 agentops.start_session(tags=session_tags)
                 self.logger.info(f"AgentOps session started with tags: {session_tags}")
 
@@ -591,8 +798,13 @@ class AutonomousIntelligenceOrchestrator:
             routed_tool = self._route_query_to_tool(url)
             if routed_tool:
                 self.logger.info(f"Semantic router selected tool: {routed_tool}. Overriding default crew.")
-                # TODO: Implement logic to build a specialized crew/task for the routed tool
-                # For now, we will log and proceed with the default crew.
+                # Build specialized crew for the routed tool
+                specialized_crew = self._build_specialized_crew(routed_tool, url, depth)
+                if specialized_crew:
+                    crew = specialized_crew
+                    self.logger.info(f"Using specialized crew for tool: {routed_tool}")
+                else:
+                    self.logger.warning(f"Failed to build specialized crew for {routed_tool}, using default")
                 await self._send_progress_update(
                     interaction,
                     f"🧠 Semantic router selected `{routed_tool}`. Proceeding with specialized analysis.",
@@ -686,7 +898,7 @@ class AutonomousIntelligenceOrchestrator:
             elif hasattr(result, "final_output"):
                 result_message += f"**Analysis:**\n{result.final_output}\n\n"
             else:
-                result_message += f"**Analysis:**\n{str(result)}\n\n"
+                result_message += f"**Analysis:**\n{result!s}\n\n"
 
             # Send results
             await self._send_progress_update(interaction, "✅ Intelligence analysis complete!", 5, 5)
@@ -713,11 +925,14 @@ class AutonomousIntelligenceOrchestrator:
 
             # Record metrics
             processing_time = time.time() - start_time
-            self.metrics.counter("autointel_workflows_total", labels={"depth": depth, "outcome": "success"}).inc()
+            self.metrics.counter(
+                "autointel_workflows_total",
+                labels={"depth": depth, "outcome": "success"},
+            ).inc()
             self.metrics.histogram("autointel_workflow_duration", processing_time, labels={"depth": depth})
 
             # End AgentOps session
-            if get_settings().enable_agent_ops:
+            if Settings().feature_flags.ENABLE_AGENT_COLLABORATION:
                 agentops.end_session("Success")
                 self.logger.info("AgentOps session ended with status: Success")
 
@@ -726,7 +941,7 @@ class AutonomousIntelligenceOrchestrator:
             await self._send_error_response(interaction, "Crew Workflow", str(e))
             self.metrics.counter("autointel_workflows_total", labels={"depth": depth, "outcome": "error"}).inc()
             # End AgentOps session with failure status
-            if get_settings().enable_agent_ops:
+            if Settings().feature_flags.ENABLE_AGENT_COLLABORATION:
                 agentops.end_session("Fail")
                 self.logger.info("AgentOps session ended with status: Fail")
 
@@ -760,12 +975,22 @@ class AutonomousIntelligenceOrchestrator:
 
     def _route_query_to_tool(self, query: str) -> str | None:
         """Use semantic router to select the best tool for a query."""
-        settings = get_settings()
+        settings = Settings()
         if not settings.enable_semantic_router:
             self.logger.debug("Semantic router is disabled by settings.")
             return None
 
-        from semantic_router import Route
+        if not SEMANTIC_ROUTER_AVAILABLE:
+            self.logger.warning(
+                "Semantic router requested but semantic-router library not installed. Install with: pip install -e '.[semantic_router]'"
+            )
+            return None
+
+        try:
+            from semantic_router import Route
+        except ImportError:
+            self.logger.warning("Failed to import semantic_router.Route")
+            return None
 
         # Define routes for different tools/capabilities
         routes = [
@@ -835,7 +1060,10 @@ class AutonomousIntelligenceOrchestrator:
             # Skip agent coordination entirely when LLM APIs are unavailable
             if not getattr(self, "_llm_available", False):
                 self.agent_coordinators = {}
-                return StepResult.skip(reason="llm_unavailable", message="Agent system not initialized (no API key)")
+                return StepResult.skip(
+                    reason="llm_unavailable",
+                    message="Agent system not initialized (no API key)",
+                )
             # Initialize CrewAI crew instance
             from .crew import UltimateDiscordIntelligenceBotCrew
 
@@ -876,7 +1104,11 @@ class AutonomousIntelligenceOrchestrator:
                     "knowledge_integrator",
                 ]
             else:  # standard
-                active_agents = ["mission_orchestrator", "acquisition_specialist", "analysis_cartographer"]
+                active_agents = [
+                    "mission_orchestrator",
+                    "acquisition_specialist",
+                    "analysis_cartographer",
+                ]
 
             # Initialize agent coordination system
             self.crew_instance = crew_instance
@@ -933,14 +1165,17 @@ class AutonomousIntelligenceOrchestrator:
         """Execute mission planning using CrewAI Mission Orchestrator agent."""
         try:
             if not getattr(self, "_llm_available", False):
-                return StepResult.skip(reason="llm_unavailable", message="Mission planning skipped (no API key)")
+                return StepResult.skip(
+                    reason="llm_unavailable",
+                    message="Mission planning skipped (no API key)",
+                )
             # Use the mission orchestrator agent to plan the autonomous workflow
             if getattr(self, "_llm_available", False):
                 # CRITICAL FIX: Use _get_or_create_agent to ensure agent exists
                 mission_agent = self._get_or_create_agent("mission_orchestrator")
 
                 # Critical data propagation: ensure tools on this agent receive structured context
-                try:
+                with contextlib.suppress(Exception):
                     self._populate_agent_tool_context(
                         mission_agent,
                         {
@@ -950,8 +1185,6 @@ class AutonomousIntelligenceOrchestrator:
                             "depth": depth,
                         },
                     )
-                except Exception:
-                    pass
 
                 # Create mission planning task
                 planning_task = Task(
@@ -962,7 +1195,10 @@ class AutonomousIntelligenceOrchestrator:
 
                 # Create single-agent crew for mission planning
                 planning_crew = Crew(
-                    agents=[mission_agent], tasks=[planning_task], verbose=True, process=Process.sequential
+                    agents=[mission_agent],
+                    tasks=[planning_task],
+                    verbose=True,
+                    process=Process.sequential,
                 )
 
                 # Execute mission planning
@@ -1097,17 +1333,11 @@ class AutonomousIntelligenceOrchestrator:
 
             # Get transcript from ContentPipeline transcription block
             transcription_block = pipeline_data.get("transcription", {}) if isinstance(pipeline_data, dict) else {}
-            if not isinstance(transcription_block, dict):
-                transcription_block = {}
-            else:
-                transcription_block = dict(transcription_block)
+            transcription_block = {} if not isinstance(transcription_block, dict) else dict(transcription_block)
             transcript = transcription_block.get("transcript", "")
 
             media_info = pipeline_data.get("download", {}) if isinstance(pipeline_data, dict) else {}
-            if not isinstance(media_info, dict):
-                media_info = {}
-            else:
-                media_info = dict(media_info)
+            media_info = {} if not isinstance(media_info, dict) else dict(media_info)
 
             analysis_block = pipeline_data.get("analysis") if isinstance(pipeline_data, dict) else None
             fallacy_block = pipeline_data.get("fallacy") if isinstance(pipeline_data, dict) else None
@@ -1123,7 +1353,8 @@ class AutonomousIntelligenceOrchestrator:
 
             if not transcript:
                 return StepResult.skip(
-                    reason="No transcript available for advanced analysis", data={"pipeline_data": pipeline_data}
+                    reason="No transcript available for advanced analysis",
+                    data={"pipeline_data": pipeline_data},
                 )
 
             # Use CrewAI transcription engineer agent if available
@@ -1151,7 +1382,8 @@ class AutonomousIntelligenceOrchestrator:
                         self._populate_agent_tool_context(transcription_agent, context_payload)
                     except Exception as _ctx_err:  # pragma: no cover - defensive
                         self.logger.warning(
-                            f"⚠️ Transcription agent context population FAILED: {_ctx_err}", exc_info=True
+                            f"⚠️ Transcription agent context population FAILED: {_ctx_err}",
+                            exc_info=True,
                         )
 
                     # Create transcription enhancement task
@@ -1362,10 +1594,14 @@ class AutonomousIntelligenceOrchestrator:
                         self._populate_agent_tool_context(analysis_agent, context_data)
                         self.logger.info("✅ Analysis context populated successfully")
                     except Exception as _ctx_err:  # pragma: no cover - defensive
-                        self.logger.error(f"❌ Analysis agent context population FAILED: {_ctx_err}", exc_info=True)
+                        self.logger.error(
+                            f"❌ Analysis agent context population FAILED: {_ctx_err}",
+                            exc_info=True,
+                        )
                         # Return early instead of continuing with empty data
                         return StepResult.fail(
-                            error=f"Analysis context preparation failed: {_ctx_err}", step="analysis_context_population"
+                            error=f"Analysis context preparation failed: {_ctx_err}",
+                            step="analysis_context_population",
                         )
 
                     # Create comprehensive content analysis task with full context
@@ -1418,7 +1654,10 @@ class AutonomousIntelligenceOrchestrator:
 
                     # Create single-agent crew for content analysis
                     analysis_crew = Crew(
-                        agents=[analysis_agent], tasks=[analysis_task], verbose=True, process=Process.sequential
+                        agents=[analysis_agent],
+                        tasks=[analysis_task],
+                        verbose=True,
+                        process=Process.sequential,
                     )
 
                     # Execute content analysis
@@ -1570,7 +1809,10 @@ class AutonomousIntelligenceOrchestrator:
                     )
                     self._populate_agent_tool_context(verification_agent, context_data)
                 except Exception as _ctx_err:  # pragma: no cover - defensive
-                    self.logger.warning(f"⚠️ Verification agent context population FAILED: {_ctx_err}", exc_info=True)
+                    self.logger.warning(
+                        f"⚠️ Verification agent context population FAILED: {_ctx_err}",
+                        exc_info=True,
+                    )
 
                 # Create comprehensive verification task
                 # CRITICAL: Description should be INSTRUCTIONS for the agent, not content to analyze
@@ -1583,7 +1825,10 @@ class AutonomousIntelligenceOrchestrator:
 
                 # Create verification crew
                 verification_crew = Crew(
-                    agents=[verification_agent], tasks=[verification_task], verbose=True, process=Process.sequential
+                    agents=[verification_agent],
+                    tasks=[verification_task],
+                    verbose=True,
+                    process=Process.sequential,
                 )
 
                 # Execute comprehensive verification
@@ -1612,11 +1857,17 @@ class AutonomousIntelligenceOrchestrator:
             else:
                 # Fallback verification if agent not available
                 fallback_results = {
-                    "fact_checks": {"status": "agent_unavailable", "basic_analysis": True},
+                    "fact_checks": {
+                        "status": "agent_unavailable",
+                        "basic_analysis": True,
+                    },
                     "logical_analysis": {"fallacies_detected": [], "confidence": 0.0},
                     "credibility_assessment": {"score": 0.5, "factors": []},
                     "bias_indicators": [],
-                    "source_validation": {"validated": False, "reason": "agent_unavailable"},
+                    "source_validation": {
+                        "validated": False,
+                        "reason": "agent_unavailable",
+                    },
                     "verification_confidence": 0.3,
                     "verification_metadata": {
                         "analysis_timestamp": time.time(),
@@ -1678,7 +1929,12 @@ class AutonomousIntelligenceOrchestrator:
                 )
 
                 # Create threat analysis crew
-                threat_crew = Crew(agents=[threat_agent], tasks=[threat_task], verbose=True, process=Process.sequential)
+                threat_crew = Crew(
+                    agents=[threat_agent],
+                    tasks=[threat_task],
+                    verbose=True,
+                    process=Process.sequential,
+                )
 
                 # Execute comprehensive threat analysis
                 crew_result = await asyncio.to_thread(threat_crew.kickoff)
@@ -1699,7 +1955,12 @@ class AutonomousIntelligenceOrchestrator:
                         "threat_method": "crewai_comprehensive_threat_analysis",
                         "agent_confidence": self._calculate_agent_confidence_from_crew(crew_result),
                         "comprehensive_assessment": True,
-                        "data_sources": ["transcript", "verification", "sentiment", "credibility"],
+                        "data_sources": [
+                            "transcript",
+                            "verification",
+                            "sentiment",
+                            "credibility",
+                        ],
                     },
                 }
 
@@ -1715,7 +1976,10 @@ class AutonomousIntelligenceOrchestrator:
                 )
 
                 fallback_results = {
-                    "deception_analysis": {"status": "agent_unavailable", "basic_assessment": True},
+                    "deception_analysis": {
+                        "status": "agent_unavailable",
+                        "basic_assessment": True,
+                    },
                     "manipulation_indicators": [],
                     "narrative_integrity": {"score": 0.5, "assessment": "unknown"},
                     "psychological_profiling": {},
@@ -1784,7 +2048,10 @@ class AutonomousIntelligenceOrchestrator:
                     )
                     self._populate_agent_tool_context(social_intel_agent, context_data)
                 except Exception as _ctx_err:  # pragma: no cover - defensive
-                    self.logger.warning(f"⚠️ Social agent context population FAILED: {_ctx_err}", exc_info=True)
+                    self.logger.warning(
+                        f"⚠️ Social agent context population FAILED: {_ctx_err}",
+                        exc_info=True,
+                    )
 
                 # Create comprehensive social intelligence task
                 social_intel_task = Task(
@@ -1795,7 +2062,10 @@ class AutonomousIntelligenceOrchestrator:
 
                 # Create social intelligence crew
                 social_crew = Crew(
-                    agents=[social_intel_agent], tasks=[social_intel_task], verbose=True, process=Process.sequential
+                    agents=[social_intel_agent],
+                    tasks=[social_intel_task],
+                    verbose=True,
+                    process=Process.sequential,
                 )
 
                 # Execute comprehensive social intelligence
@@ -1816,7 +2086,12 @@ class AutonomousIntelligenceOrchestrator:
                         "intelligence_method": "crewai_signal_recon_specialist",
                         "agent_confidence": self._calculate_agent_confidence_from_crew(crew_result),
                         "comprehensive_monitoring": True,
-                        "data_sources": ["content", "sentiment", "linguistic_patterns", "keywords"],
+                        "data_sources": [
+                            "content",
+                            "sentiment",
+                            "linguistic_patterns",
+                            "keywords",
+                        ],
                     },
                 }
 
@@ -1828,13 +2103,22 @@ class AutonomousIntelligenceOrchestrator:
             else:
                 # Enhanced fallback with available data
                 fallback_intelligence = {
-                    "cross_platform_monitoring": {"status": "agent_unavailable", "basic_analysis": True},
+                    "cross_platform_monitoring": {
+                        "status": "agent_unavailable",
+                        "basic_analysis": True,
+                    },
                     "narrative_tracking": {"patterns": [], "confidence": 0.0},
                     "sentiment_monitoring": {"overall_trend": sentiment_analysis.get("overall_sentiment", "unknown")},
                     "influence_mapping": {"influencers": [], "network_strength": 0.0},
-                    "community_dynamics": {"engagement": "unknown", "polarization": 0.0},
+                    "community_dynamics": {
+                        "engagement": "unknown",
+                        "polarization": 0.0,
+                    },
                     "emergent_patterns": [],
-                    "platform_intelligence": {"platforms_monitored": [], "coverage": "limited"},
+                    "platform_intelligence": {
+                        "platforms_monitored": [],
+                        "coverage": "limited",
+                    },
                     "social_metadata": {
                         "analysis_timestamp": time.time(),
                         "intelligence_method": "fallback_basic",
@@ -1848,7 +2132,10 @@ class AutonomousIntelligenceOrchestrator:
             return StepResult.fail(f"Social intelligence analysis failed: {e}")
 
     async def _execute_specialized_behavioral_analysis(
-        self, intelligence_data: dict[str, Any], verification_data: dict[str, Any], deception_data: dict[str, Any]
+        self,
+        intelligence_data: dict[str, Any],
+        verification_data: dict[str, Any],
+        deception_data: dict[str, Any],
     ) -> StepResult:
         """Execute behavioral analysis using the Behavioral Pattern Analyst."""
         try:
@@ -2014,7 +2301,10 @@ class AutonomousIntelligenceOrchestrator:
         try:
             analytics_tool = AdvancedPerformanceAnalyticsTool()
             result = await asyncio.to_thread(
-                analytics_tool._run, "analyze", lookback_hours=24, include_optimization=True
+                analytics_tool._run,
+                "analyze",
+                lookback_hours=24,
+                include_optimization=True,
             )
             return result
         except Exception as e:
@@ -2160,7 +2450,10 @@ class AutonomousIntelligenceOrchestrator:
         """Execute specialized research synthesis and context building using CrewAI agents."""
         try:
             if not getattr(self, "_llm_available", False):
-                return StepResult.skip(reason="llm_unavailable", message="Research synthesis skipped (no API key)")
+                return StepResult.skip(
+                    reason="llm_unavailable",
+                    message="Research synthesis skipped (no API key)",
+                )
             # Extract key topics and claims for research
             transcript = analysis_data.get("transcript", "")
             claims = verification_data.get("fact_checks", {})
@@ -2259,7 +2552,11 @@ class AutonomousIntelligenceOrchestrator:
                         analysis_data, verification_data, threat_data, research_data
                     ),
                     "data_completeness": self._calculate_data_completeness(
-                        analysis_data, verification_data, threat_data, knowledge_data, research_data
+                        analysis_data,
+                        verification_data,
+                        threat_data,
+                        knowledge_data,
+                        research_data,
                     ),
                 },
                 "intelligence_grade": self._assign_intelligence_grade(analysis_data, threat_data, verification_data),
@@ -2310,7 +2607,8 @@ class AutonomousIntelligenceOrchestrator:
 
                 # Track metric
                 get_metrics().counter(
-                    "discord_session_closed_total", labels={"stage": "communication_reporting", "depth": depth}
+                    "discord_session_closed_total",
+                    labels={"stage": "communication_reporting", "depth": depth},
                 )
                 return
 
@@ -2335,7 +2633,11 @@ class AutonomousIntelligenceOrchestrator:
 
                     # Track metric
                     get_metrics().counter(
-                        "discord_session_closed_total", labels={"stage": "communication_reporting_send", "depth": depth}
+                        "discord_session_closed_total",
+                        labels={
+                            "stage": "communication_reporting_send",
+                            "depth": depth,
+                        },
                     )
                     return
                 else:
@@ -2457,7 +2759,11 @@ class AutonomousIntelligenceOrchestrator:
     ) -> list[str]:
         """Delegates to analytics_calculators.generate_ai_recommendations."""
         return analytics_calculators.generate_ai_recommendations(
-            quality_dimensions, ai_quality_score, analysis_data, verification_data, self.logger
+            quality_dimensions,
+            ai_quality_score,
+            analysis_data,
+            verification_data,
+            self.logger,
         )
 
     def _identify_learning_opportunities(
@@ -2495,7 +2801,11 @@ class AutonomousIntelligenceOrchestrator:
         return quality_assessors.assess_quality_trend(ai_quality_score)
 
     def _calculate_comprehensive_threat_score(
-        self, deception_result: Any, truth_result: Any, trust_result: Any, verification_data: dict[str, Any]
+        self,
+        deception_result: Any,
+        truth_result: Any,
+        trust_result: Any,
+        verification_data: dict[str, Any],
     ) -> float:
         """Calculate comprehensive threat score from multiple analysis sources.
 
@@ -2589,7 +2899,10 @@ class AutonomousIntelligenceOrchestrator:
                         pass
 
                     pipeline_result = await pipeline_tool._run_async(
-                        url, quality=quality, tenant_id=tenant_id, workspace_id=workspace_id
+                        url,
+                        quality=quality,
+                        tenant_id=tenant_id,
+                        workspace_id=workspace_id,
                     )
 
                     if pipeline_result.success:
@@ -2639,7 +2952,11 @@ class AutonomousIntelligenceOrchestrator:
                 raw_claims = claim_res.data.get("claims", []) if isinstance(claim_res.data, dict) else []
                 if isinstance(raw_claims, list):
                     # Heuristic: keep up to 5 most informative claims (by length)
-                    claims = sorted([str(c) for c in raw_claims if isinstance(c, str)], key=len, reverse=True)[:5]
+                    claims = sorted(
+                        [str(c) for c in raw_claims if isinstance(c, str)],
+                        key=len,
+                        reverse=True,
+                    )[:5]
 
             # 2) Run fact checks per-claim in parallel; aggregate evidence
             per_claim_results: list[StepResult] = []
@@ -2650,7 +2967,7 @@ class AutonomousIntelligenceOrchestrator:
             if claims:
                 tasks = [asyncio.create_task(self._to_thread_with_tenant(fact_check_tool.run, c)) for c in claims]
                 per_claim_results = list(await asyncio.gather(*tasks, return_exceptions=True))
-                for r, c in zip(per_claim_results, claims):
+                for r, c in zip(per_claim_results, claims, strict=False):
                     if isinstance(r, StepResult) and r.success:
                         ev = r.data.get("evidence", []) if isinstance(r.data, dict) else []
                         if isinstance(ev, list):
@@ -2784,8 +3101,13 @@ class AutonomousIntelligenceOrchestrator:
 
             # Cross-platform monitoring expects structured data. To avoid misusing tools with
             # synthetic posts, require explicit opt-in via env flag.
-            search_terms = [title] + keywords[:3] if keywords else [title]
-            if os.getenv("ENABLE_PLACEHOLDER_SOCIAL_INTEL", "0").lower() not in {"1", "true", "yes", "on"}:
+            search_terms = [title, *keywords[:3]] if keywords else [title]
+            if os.getenv("ENABLE_PLACEHOLDER_SOCIAL_INTEL", "0").lower() not in {
+                "1",
+                "true",
+                "yes",
+                "on",
+            }:
                 return StepResult.skip(
                     reason="social_connectors_not_configured",
                     message=(
@@ -2802,7 +3124,7 @@ class AutonomousIntelligenceOrchestrator:
             x_monitor = XMonitorTool()
 
             # Search terms for intelligence gathering
-            search_terms = [title] + keywords[:3] if keywords else [title]
+            search_terms = [title, *keywords[:3]] if keywords else [title]
             search_query = " OR ".join(search_terms)
 
             # Create placeholder posts data for the monitoring tools
@@ -2962,7 +3284,10 @@ class AutonomousIntelligenceOrchestrator:
             return StepResult.fail(f"Deception scoring failed: {e}")
 
     async def _execute_knowledge_integration(
-        self, content_data: dict[str, Any], fact_data: dict[str, Any], deception_data: dict[str, Any]
+        self,
+        content_data: dict[str, Any],
+        fact_data: dict[str, Any],
+        deception_data: dict[str, Any],
     ) -> StepResult:
         """Integrate results with knowledge base and memory systems."""
         try:
@@ -3082,7 +3407,11 @@ class AutonomousIntelligenceOrchestrator:
         )
 
     def _calculate_composite_deception_score(
-        self, deception_result: Any, truth_result: Any, trust_result: Any, fact_data: dict[str, Any]
+        self,
+        deception_result: Any,
+        truth_result: Any,
+        trust_result: Any,
+        fact_data: dict[str, Any],
     ) -> float:
         """Calculate a composite deception score from multiple analysis sources.
 
@@ -3254,20 +3583,30 @@ class AutonomousIntelligenceOrchestrator:
 
     def _create_executive_summary(self, analysis_data: dict[str, Any], threat_data: dict[str, Any]) -> str:
         """Delegate to pipeline_result_builders.create_executive_summary."""
-        from ultimate_discord_intelligence_bot.orchestrator.pipeline_result_builders import create_executive_summary
+        from ultimate_discord_intelligence_bot.orchestrator.pipeline_result_builders import (
+            create_executive_summary,
+        )
 
         return create_executive_summary(analysis_data, threat_data)
 
     def _extract_key_findings(
-        self, analysis_data: dict[str, Any], verification_data: dict[str, Any], threat_data: dict[str, Any]
+        self,
+        analysis_data: dict[str, Any],
+        verification_data: dict[str, Any],
+        threat_data: dict[str, Any],
     ) -> list[str]:
         """Delegate to pipeline_result_builders.extract_key_findings."""
-        from ultimate_discord_intelligence_bot.orchestrator.pipeline_result_builders import extract_key_findings
+        from ultimate_discord_intelligence_bot.orchestrator.pipeline_result_builders import (
+            extract_key_findings,
+        )
 
         return extract_key_findings(analysis_data, verification_data, threat_data)
 
     def _generate_strategic_recommendations(
-        self, analysis_data: dict[str, Any], threat_data: dict[str, Any], verification_data: dict[str, Any]
+        self,
+        analysis_data: dict[str, Any],
+        threat_data: dict[str, Any],
+        verification_data: dict[str, Any],
     ) -> list[str]:
         """Delegates to analytics_calculators.generate_strategic_recommendations."""
         return analytics_calculators.generate_strategic_recommendations(
@@ -3283,7 +3622,10 @@ class AutonomousIntelligenceOrchestrator:
         return analytics_calculators.calculate_data_completeness(*data_sources, log=self.logger)
 
     def _assign_intelligence_grade(
-        self, analysis_data: dict[str, Any], threat_data: dict[str, Any], verification_data: dict[str, Any]
+        self,
+        analysis_data: dict[str, Any],
+        threat_data: dict[str, Any],
+        verification_data: dict[str, Any],
     ) -> str:
         """Assign intelligence grade based on analysis quality."""
         return data_transformers.assign_intelligence_grade(analysis_data, threat_data, verification_data)
@@ -3428,7 +3770,10 @@ class AutonomousIntelligenceOrchestrator:
             return StepResult.fail(f"Cross-reference network failed: {e}")
 
     async def _execute_predictive_threat_assessment(
-        self, threat_data: dict[str, Any], behavioral_data: dict[str, Any], pattern_data: dict[str, Any]
+        self,
+        threat_data: dict[str, Any],
+        behavioral_data: dict[str, Any],
+        pattern_data: dict[str, Any],
     ) -> StepResult:
         """Execute predictive threat assessment using threat intelligence analyst."""
         try:
@@ -3492,7 +3837,10 @@ class AutonomousIntelligenceOrchestrator:
             return StepResult.fail(f"Predictive threat assessment failed: {e}")
 
     async def _execute_multimodal_synthesis(
-        self, acquisition_data: dict[str, Any], analysis_data: dict[str, Any], behavioral_data: dict[str, Any]
+        self,
+        acquisition_data: dict[str, Any],
+        analysis_data: dict[str, Any],
+        behavioral_data: dict[str, Any],
     ) -> StepResult:
         """Execute multi-modal content synthesis using CrewAI agents."""
         try:
@@ -3511,7 +3859,10 @@ class AutonomousIntelligenceOrchestrator:
                         },
                     )
                 except Exception as _ctx_err:  # pragma: no cover - defensive
-                    self.logger.warning(f"⚠️ Multimodal agent context population FAILED: {_ctx_err}", exc_info=True)
+                    self.logger.warning(
+                        f"⚠️ Multimodal agent context population FAILED: {_ctx_err}",
+                        exc_info=True,
+                    )
 
                 multimodal_task = Task(
                     description=f"Synthesize multi-modal content from acquisition: {acquisition_data}, analysis: {analysis_data}, and behavioral data: {behavioral_data}",
@@ -3520,7 +3871,10 @@ class AutonomousIntelligenceOrchestrator:
                 )
 
                 multimodal_crew = Crew(
-                    agents=[synthesis_agent], tasks=[multimodal_task], verbose=True, process=Process.sequential
+                    agents=[synthesis_agent],
+                    tasks=[multimodal_task],
+                    verbose=True,
+                    process=Process.sequential,
                 )
 
                 crew_result = await asyncio.to_thread(multimodal_crew.kickoff)
@@ -3550,7 +3904,10 @@ class AutonomousIntelligenceOrchestrator:
                         },
                     )
                 except Exception as _ctx_err:  # pragma: no cover - defensive
-                    self.logger.warning(f"⚠️ Graph agent context population FAILED: {_ctx_err}", exc_info=True)
+                    self.logger.warning(
+                        f"⚠️ Graph agent context population FAILED: {_ctx_err}",
+                        exc_info=True,
+                    )
 
                 graph_task = Task(
                     description=f"Construct dynamic knowledge graphs from knowledge data: {knowledge_data} and network intelligence: {network_data}",
@@ -3558,11 +3915,19 @@ class AutonomousIntelligenceOrchestrator:
                     agent=graph_agent,
                 )
 
-                graph_crew = Crew(agents=[graph_agent], tasks=[graph_task], verbose=True, process=Process.sequential)
+                graph_crew = Crew(
+                    agents=[graph_agent],
+                    tasks=[graph_task],
+                    verbose=True,
+                    process=Process.sequential,
+                )
 
                 crew_result = await asyncio.to_thread(graph_crew.kickoff)
 
-                return StepResult.ok(message="Knowledge graph construction completed", crew_analysis=crew_result)
+                return StepResult.ok(
+                    message="Knowledge graph construction completed",
+                    crew_analysis=crew_result,
+                )
             else:
                 return StepResult.skip(reason="Knowledge graph agent not available")
         except Exception as e:
@@ -3587,7 +3952,10 @@ class AutonomousIntelligenceOrchestrator:
                         },
                     )
                 except Exception as _ctx_err:  # pragma: no cover - defensive
-                    self.logger.warning(f"⚠️ Learning agent context population FAILED: {_ctx_err}", exc_info=True)
+                    self.logger.warning(
+                        f"⚠️ Learning agent context population FAILED: {_ctx_err}",
+                        exc_info=True,
+                    )
 
                 learning_task = Task(
                     description=f"Integrate autonomous learning systems with quality data: {quality_data} and analytics: {analytics_data}",
@@ -3596,12 +3964,18 @@ class AutonomousIntelligenceOrchestrator:
                 )
 
                 learning_crew = Crew(
-                    agents=[learning_agent], tasks=[learning_task], verbose=True, process=Process.sequential
+                    agents=[learning_agent],
+                    tasks=[learning_task],
+                    verbose=True,
+                    process=Process.sequential,
                 )
 
                 crew_result = await asyncio.to_thread(learning_crew.kickoff)
 
-                return StepResult.ok(message="Autonomous learning integration completed", crew_analysis=crew_result)
+                return StepResult.ok(
+                    message="Autonomous learning integration completed",
+                    crew_analysis=crew_result,
+                )
             else:
                 return StepResult.skip(reason="Learning integration agent not available")
         except Exception as e:
@@ -3626,7 +4000,10 @@ class AutonomousIntelligenceOrchestrator:
                         },
                     )
                 except Exception as _ctx_err:  # pragma: no cover - defensive
-                    self.logger.warning(f"⚠️ Bandits agent context population FAILED: {_ctx_err}", exc_info=True)
+                    self.logger.warning(
+                        f"⚠️ Bandits agent context population FAILED: {_ctx_err}",
+                        exc_info=True,
+                    )
 
                 bandits_task = Task(
                     description=f"Optimize contextual bandits decision system with analytics: {analytics_data} and learning data: {learning_data}",
@@ -3635,12 +4012,18 @@ class AutonomousIntelligenceOrchestrator:
                 )
 
                 bandits_crew = Crew(
-                    agents=[bandits_agent], tasks=[bandits_task], verbose=True, process=Process.sequential
+                    agents=[bandits_agent],
+                    tasks=[bandits_task],
+                    verbose=True,
+                    process=Process.sequential,
                 )
 
                 crew_result = await asyncio.to_thread(bandits_crew.kickoff)
 
-                return StepResult.ok(message="Contextual bandits optimization completed", crew_analysis=crew_result)
+                return StepResult.ok(
+                    message="Contextual bandits optimization completed",
+                    crew_analysis=crew_result,
+                )
             else:
                 return StepResult.skip(reason="Bandits optimization agent not available")
         except Exception as e:
@@ -3671,12 +4054,18 @@ class AutonomousIntelligenceOrchestrator:
                 )
 
                 community_crew = Crew(
-                    agents=[community_agent], tasks=[community_task], verbose=True, process=Process.sequential
+                    agents=[community_agent],
+                    tasks=[community_task],
+                    verbose=True,
+                    process=Process.sequential,
                 )
 
                 crew_result = await asyncio.to_thread(community_crew.kickoff)
 
-                return StepResult.ok(message="Community intelligence synthesis completed", crew_analysis=crew_result)
+                return StepResult.ok(
+                    message="Community intelligence synthesis completed",
+                    crew_analysis=crew_result,
+                )
             else:
                 return StepResult.skip(reason="Community intelligence agent not available")
         except Exception as e:
@@ -3707,12 +4096,18 @@ class AutonomousIntelligenceOrchestrator:
                 )
 
                 adaptive_crew = Crew(
-                    agents=[adaptive_agent], tasks=[adaptive_task], verbose=True, process=Process.sequential
+                    agents=[adaptive_agent],
+                    tasks=[adaptive_task],
+                    verbose=True,
+                    process=Process.sequential,
                 )
 
                 crew_result = await asyncio.to_thread(adaptive_crew.kickoff)
 
-                return StepResult.ok(message="Adaptive workflow optimization completed", crew_analysis=crew_result)
+                return StepResult.ok(
+                    message="Adaptive workflow optimization completed",
+                    crew_analysis=crew_result,
+                )
             else:
                 return StepResult.skip(reason="Adaptive workflow agent not available")
         except Exception as e:
@@ -3742,11 +4137,19 @@ class AutonomousIntelligenceOrchestrator:
                     agent=memory_agent,
                 )
 
-                memory_crew = Crew(agents=[memory_agent], tasks=[memory_task], verbose=True, process=Process.sequential)
+                memory_crew = Crew(
+                    agents=[memory_agent],
+                    tasks=[memory_task],
+                    verbose=True,
+                    process=Process.sequential,
+                )
 
                 crew_result = await asyncio.to_thread(memory_crew.kickoff)
 
-                return StepResult.ok(message="Enhanced memory consolidation completed", crew_analysis=crew_result)
+                return StepResult.ok(
+                    message="Enhanced memory consolidation completed",
+                    crew_analysis=crew_result,
+                )
             else:
                 return StepResult.skip(reason="Memory consolidation agent not available")
         except Exception as e:
@@ -3754,12 +4157,22 @@ class AutonomousIntelligenceOrchestrator:
 
     def _route_query_to_tool(self, query: str) -> str | None:
         """Use semantic router to select the best tool for a query."""
-        settings = get_settings()
+        settings = Settings()
         if not settings.enable_semantic_router:
             self.logger.debug("Semantic router is disabled by settings.")
             return None
 
-        from semantic_router import Route
+        if not SEMANTIC_ROUTER_AVAILABLE:
+            self.logger.warning(
+                "Semantic router requested but semantic-router library not installed. Install with: pip install -e '.[semantic_router]'"
+            )
+            return None
+
+        try:
+            from semantic_router import Route
+        except ImportError:
+            self.logger.warning("Failed to import semantic_router.Route")
+            return None
 
         # Define routes for different tools/capabilities
         routes = [
@@ -3829,7 +4242,10 @@ class AutonomousIntelligenceOrchestrator:
             # Skip agent coordination entirely when LLM APIs are unavailable
             if not getattr(self, "_llm_available", False):
                 self.agent_coordinators = {}
-                return StepResult.skip(reason="llm_unavailable", message="Agent system not initialized (no API key)")
+                return StepResult.skip(
+                    reason="llm_unavailable",
+                    message="Agent system not initialized (no API key)",
+                )
             # Initialize CrewAI crew instance
             from .crew import UltimateDiscordIntelligenceBotCrew
 
@@ -3870,7 +4286,11 @@ class AutonomousIntelligenceOrchestrator:
                     "knowledge_integrator",
                 ]
             else:  # standard
-                active_agents = ["mission_orchestrator", "acquisition_specialist", "analysis_cartographer"]
+                active_agents = [
+                    "mission_orchestrator",
+                    "acquisition_specialist",
+                    "analysis_cartographer",
+                ]
 
             # Initialize agent coordination system
             self.crew_instance = crew_instance
@@ -3927,14 +4347,17 @@ class AutonomousIntelligenceOrchestrator:
         """Execute mission planning using CrewAI Mission Orchestrator agent."""
         try:
             if not getattr(self, "_llm_available", False):
-                return StepResult.skip(reason="llm_unavailable", message="Mission planning skipped (no API key)")
+                return StepResult.skip(
+                    reason="llm_unavailable",
+                    message="Mission planning skipped (no API key)",
+                )
             # Use the mission orchestrator agent to plan the autonomous workflow
             if getattr(self, "_llm_available", False):
                 # CRITICAL FIX: Use _get_or_create_agent to ensure agent exists
                 mission_agent = self._get_or_create_agent("mission_orchestrator")
 
                 # Critical data propagation: ensure tools on this agent receive structured context
-                try:
+                with contextlib.suppress(Exception):
                     self._populate_agent_tool_context(
                         mission_agent,
                         {
@@ -3944,8 +4367,6 @@ class AutonomousIntelligenceOrchestrator:
                             "depth": depth,
                         },
                     )
-                except Exception:
-                    pass
 
                 # Create mission planning task
                 planning_task = Task(
@@ -3956,7 +4377,10 @@ class AutonomousIntelligenceOrchestrator:
 
                 # Create single-agent crew for mission planning
                 planning_crew = Crew(
-                    agents=[mission_agent], tasks=[planning_task], verbose=True, process=Process.sequential
+                    agents=[mission_agent],
+                    tasks=[planning_task],
+                    verbose=True,
+                    process=Process.sequential,
                 )
 
                 # Execute mission planning
@@ -4091,17 +4515,11 @@ class AutonomousIntelligenceOrchestrator:
 
             # Get transcript from ContentPipeline transcription block
             transcription_block = pipeline_data.get("transcription", {}) if isinstance(pipeline_data, dict) else {}
-            if not isinstance(transcription_block, dict):
-                transcription_block = {}
-            else:
-                transcription_block = dict(transcription_block)
+            transcription_block = {} if not isinstance(transcription_block, dict) else dict(transcription_block)
             transcript = transcription_block.get("transcript", "")
 
             media_info = pipeline_data.get("download", {}) if isinstance(pipeline_data, dict) else {}
-            if not isinstance(media_info, dict):
-                media_info = {}
-            else:
-                media_info = dict(media_info)
+            media_info = {} if not isinstance(media_info, dict) else dict(media_info)
 
             analysis_block = pipeline_data.get("analysis") if isinstance(pipeline_data, dict) else None
             fallacy_block = pipeline_data.get("fallacy") if isinstance(pipeline_data, dict) else None
@@ -4117,7 +4535,8 @@ class AutonomousIntelligenceOrchestrator:
 
             if not transcript:
                 return StepResult.skip(
-                    reason="No transcript available for advanced analysis", data={"pipeline_data": pipeline_data}
+                    reason="No transcript available for advanced analysis",
+                    data={"pipeline_data": pipeline_data},
                 )
 
             # Use CrewAI transcription engineer agent if available
@@ -4145,7 +4564,8 @@ class AutonomousIntelligenceOrchestrator:
                         self._populate_agent_tool_context(transcription_agent, context_payload)
                     except Exception as _ctx_err:  # pragma: no cover - defensive
                         self.logger.warning(
-                            f"⚠️ Transcription agent context population FAILED: {_ctx_err}", exc_info=True
+                            f"⚠️ Transcription agent context population FAILED: {_ctx_err}",
+                            exc_info=True,
                         )
 
                     # Create transcription enhancement task

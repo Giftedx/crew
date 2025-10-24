@@ -1,14 +1,17 @@
 from __future__ import annotations
 
 import asyncio
-import sqlite3
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from core.batching import get_batching_metrics, get_bulk_inserter, get_request_batcher
 from core.db_locks import get_lock_for_connection
 from core.time import default_utc_now
 from ingest import pipeline
+
+
+if TYPE_CHECKING:
+    import sqlite3
 
 
 @dataclass
@@ -107,7 +110,17 @@ class PriorityQueue:
             ).fetchone()
             if not row:
                 return None
-            job_id, tenant, workspace, source, external_id, url, tags, visibility, attempts = row
+            (
+                job_id,
+                tenant,
+                workspace,
+                source,
+                external_id,
+                url,
+                tags,
+                visibility,
+                attempts,
+            ) = row
             self.conn.execute(
                 "UPDATE ingest_job SET status='running', picked_at=? WHERE id=?",
                 (default_utc_now().isoformat(), job_id),

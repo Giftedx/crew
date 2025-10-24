@@ -14,6 +14,7 @@ import time
 from datetime import datetime
 from pathlib import Path
 
+
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
@@ -36,10 +37,9 @@ from ultimate_discord_intelligence_bot.services.rl_model_router import (
     TaskComplexity,
 )
 
+
 # Configure logging
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
 
@@ -72,7 +72,7 @@ async def test_executive_supervisor():
             logger.error(f"❌ Strategic Planning - FAILED: {result.error}")
             return False
     except Exception as e:
-        logger.error(f"❌ Strategic Planning - ERROR: {str(e)}")
+        logger.error(f"❌ Strategic Planning - ERROR: {e!s}")
         return False
 
 
@@ -106,9 +106,7 @@ async def test_workflow_manager():
     ]
 
     try:
-        result = await manager.route_tasks(
-            workflow_execution, available_agents, "test_tenant", "test_workspace"
-        )
+        result = await manager.route_tasks(workflow_execution, available_agents, "test_tenant", "test_workspace")
         if result.success:
             logger.info("✅ Task Routing - PASSED")
             return True
@@ -116,7 +114,7 @@ async def test_workflow_manager():
             logger.error(f"❌ Task Routing - FAILED: {result.error}")
             return False
     except Exception as e:
-        logger.error(f"❌ Task Routing - ERROR: {str(e)}")
+        logger.error(f"❌ Task Routing - ERROR: {e!s}")
         return False
 
 
@@ -138,7 +136,7 @@ async def test_hierarchical_orchestrator():
             logger.error(f"❌ Orchestration Session - FAILED: {result.error}")
             return False
     except Exception as e:
-        logger.error(f"❌ Orchestration Session - ERROR: {str(e)}")
+        logger.error(f"❌ Orchestration Session - ERROR: {e!s}")
         return False
 
 
@@ -170,7 +168,7 @@ async def test_rl_model_router():
             logger.error(f"❌ Model Routing - FAILED: {result.error}")
             return False
     except Exception as e:
-        logger.error(f"❌ Model Routing - ERROR: {str(e)}")
+        logger.error(f"❌ Model Routing - ERROR: {e!s}")
         return False
 
 
@@ -200,7 +198,7 @@ async def test_rl_cache_optimizer():
             logger.error(f"❌ Cache Optimization - FAILED: {result.error}")
             return False
     except Exception as e:
-        logger.error(f"❌ Cache Optimization - ERROR: {str(e)}")
+        logger.error(f"❌ Cache Optimization - ERROR: {e!s}")
         return False
 
 
@@ -230,9 +228,7 @@ async def main():
         status = "✅ PASSED" if result else "❌ FAILED"
         logger.info(f"{component.replace('_', ' ').title()}: {status}")
 
-    logger.info(
-        f"\nOverall: {passed}/{total} components passed ({passed / total * 100:.1f}%)"
-    )
+    logger.info(f"\nOverall: {passed}/{total} components passed ({passed / total * 100:.1f}%)")
 
     # Save results
     report_path = f"docs/basic_phase2_test_report_{int(time.time())}.json"

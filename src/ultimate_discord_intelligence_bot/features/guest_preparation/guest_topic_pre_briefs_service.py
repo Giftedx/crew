@@ -27,6 +27,7 @@ from typing import Any, Literal
 
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -132,7 +133,13 @@ class GuestTopicPreBriefsService:
 
         # Topic controversy indicators
         self._controversy_indicators = {
-            "high": ["controversial", "debated", "disputed", "contentious", "polarizing"],
+            "high": [
+                "controversial",
+                "debated",
+                "disputed",
+                "contentious",
+                "polarizing",
+            ],
             "medium": ["complex", "nuanced", "challenging", "sensitive"],
             "low": ["straightforward", "clear", "obvious", "simple"],
         }
@@ -206,7 +213,7 @@ class GuestTopicPreBriefsService:
 
         except Exception as e:
             logger.error(f"Interview brief generation failed: {e}")
-            return StepResult.fail(f"Brief generation failed: {str(e)}", status="retryable")
+            return StepResult.fail(f"Brief generation failed: {e!s}", status="retryable")
 
     def generate_live_fact_check_prompts(
         self,
@@ -484,7 +491,14 @@ class GuestTopicPreBriefsService:
             "generally accepted",
         ]
 
-        low_quality_evidence = ["I think", "I feel", "in my opinion", "people say", "I heard", "I believe"]
+        low_quality_evidence = [
+            "I think",
+            "I feel",
+            "in my opinion",
+            "people say",
+            "I heard",
+            "I believe",
+        ]
 
         # Count evidence indicators
         high_count = sum(1 for indicator in high_quality_evidence if indicator in text_lower)
@@ -713,7 +727,9 @@ class GuestTopicPreBriefsService:
         return strategy
 
     def _generate_key_questions(
-        self, arguments: list[ArgumentAnalysis], audience_prediction: AudienceReactionPrediction
+        self,
+        arguments: list[ArgumentAnalysis],
+        audience_prediction: AudienceReactionPrediction,
     ) -> list[str]:
         """Generate key questions to ask during interview.
 
@@ -746,7 +762,9 @@ class GuestTopicPreBriefsService:
         return questions[:8]  # Limit to 8 questions
 
     def _calculate_brief_confidence(
-        self, arguments: list[ArgumentAnalysis], audience_prediction: AudienceReactionPrediction
+        self,
+        arguments: list[ArgumentAnalysis],
+        audience_prediction: AudienceReactionPrediction,
     ) -> float:
         """Calculate overall confidence in the brief.
 
@@ -869,7 +887,17 @@ class GuestTopicPreBriefsService:
             "findings",
         ]
 
-        abstract_words = ["think", "feel", "believe", "maybe", "possibly", "general", "overall", "concept", "idea"]
+        abstract_words = [
+            "think",
+            "feel",
+            "believe",
+            "maybe",
+            "possibly",
+            "general",
+            "overall",
+            "concept",
+            "idea",
+        ]
 
         text_lower = text.lower()
         concrete_count = sum(1 for word in concrete_words if word in text_lower)
@@ -971,7 +999,7 @@ class GuestTopicPreBriefsService:
 
         except Exception as e:
             logger.error(f"Failed to get cache stats: {e}")
-            return StepResult.fail(f"Failed to get cache stats: {str(e)}")
+            return StepResult.fail(f"Failed to get cache stats: {e!s}")
 
 
 # Singleton instance

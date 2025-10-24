@@ -37,12 +37,14 @@ from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock
 
+
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 from ultimate_discord_intelligence_bot.autonomous_orchestrator import (
     AutonomousIntelligenceOrchestrator,
 )
+
 
 # ============================================================================
 # CONFIGURATION
@@ -163,7 +165,12 @@ EXTRA_FLAG_NAMES = [
 
 
 async def run_single_benchmark(
-    combination_id: int, iteration: int, url: str, depth: str, output_dir: Path, logger: logging.Logger
+    combination_id: int,
+    iteration: int,
+    url: str,
+    depth: str,
+    output_dir: Path,
+    logger: logging.Logger,
 ) -> dict[str, Any]:
     """Run a single benchmark iteration for a flag combination.
 
@@ -183,7 +190,11 @@ async def run_single_benchmark(
 
     # Set core parallelization environment variables for this combination while preserving originals
     env_backup: dict[str, str | None] = {}
-    core_flags = ["ENABLE_PARALLEL_MEMORY_OPS", "ENABLE_PARALLEL_ANALYSIS", "ENABLE_PARALLEL_FACT_CHECKING"]
+    core_flags = [
+        "ENABLE_PARALLEL_MEMORY_OPS",
+        "ENABLE_PARALLEL_ANALYSIS",
+        "ENABLE_PARALLEL_FACT_CHECKING",
+    ]
     for flag in core_flags:
         env_backup[flag] = os.environ.get(flag)
         os.environ[flag] = combo[flag]
@@ -253,7 +264,7 @@ async def run_single_benchmark(
         return result
 
     except Exception as e:
-        logger.error(f"  ERROR: {str(e)}", exc_info=True)
+        logger.error(f"  ERROR: {e!s}", exc_info=True)
         return {
             "combination_id": combination_id,
             "combination_name": combo["name"],
@@ -275,7 +286,12 @@ async def run_single_benchmark(
 
 
 async def run_combination_benchmarks(
-    combination_id: int, iterations: int, url: str, depth: str, output_dir: Path, logger: logging.Logger
+    combination_id: int,
+    iterations: int,
+    url: str,
+    depth: str,
+    output_dir: Path,
+    logger: logging.Logger,
 ) -> list[dict[str, Any]]:
     """Run multiple iterations for a single combination.
 
@@ -489,9 +505,18 @@ async def main():
         choices=["standard", "deep", "comprehensive", "experimental"],
         help="Analysis depth",
     )
-    parser.add_argument("--iterations", type=int, default=3, help="Iterations per combination (default: 3)")
     parser.add_argument(
-        "--combinations", nargs="+", type=int, default=list(range(1, 9)), help="Combinations to run (default: all 1-8)"
+        "--iterations",
+        type=int,
+        default=3,
+        help="Iterations per combination (default: 3)",
+    )
+    parser.add_argument(
+        "--combinations",
+        nargs="+",
+        type=int,
+        default=list(range(1, 9)),
+        help="Combinations to run (default: all 1-8)",
     )
     parser.add_argument("--output-dir", type=Path, default=Path("benchmarks"), help="Output directory")
     parser.add_argument("--verbose", "-v", action="store_true", help="Verbose logging")

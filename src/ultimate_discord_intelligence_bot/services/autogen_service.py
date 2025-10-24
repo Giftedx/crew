@@ -1,13 +1,20 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Callable
+from typing import TYPE_CHECKING
 
 from autogen import AssistantAgent, UserProxyAgent
 from autogen.agentchat.groupchat import GroupChat
 from autogen.agentchat.manager import GroupChatManager
 
+from ultimate_discord_intelligence_bot.step_result import StepResult
+
 from ..step_result import StepResult
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
 
 # This is a conceptual implementation and will require a running Discord bot
 # instance to be fully integrated.
@@ -20,7 +27,7 @@ class DiscordUserProxy(UserProxyAgent):
         super().__init__(name=name, human_input_mode="ALWAYS")
         self._get_input_func = get_input_func
 
-    def get_human_input(self, prompt: str) -> str:
+    def get_human_input(self, prompt: str) -> StepResult:
         """Overrides the default get_human_input to use a Discord channel."""
         return asyncio.run(self._get_input_func(prompt))
 
@@ -52,9 +59,7 @@ class AutoGenDiscordService:
         """
         try:
             # Define the agents
-            user_proxy = DiscordUserProxy(
-                name="user_proxy", get_input_func=self.get_input_func
-            )
+            user_proxy = DiscordUserProxy(name="user_proxy", get_input_func=self.get_input_func)
 
             analyst_agent = AssistantAgent(
                 name="content_analyst",
@@ -63,9 +68,7 @@ class AutoGenDiscordService:
             )
 
             # Create the group chat and manager
-            groupchat = GroupChat(
-                agents=[user_proxy, analyst_agent], messages=[], max_round=10
-            )
+            groupchat = GroupChat(agents=[user_proxy, analyst_agent], messages=[], max_round=10)
             manager = GroupChatManager(groupchat=groupchat, llm_config=self.llm_config)
 
             # Initiate the chat
@@ -91,14 +94,19 @@ async def example_discord_command_handler(message, initial_task):
     """Example handler for a Discord command like `!analyze-interactive`."""
 
     # Define how to get input and send messages in the context of the Discord message
-    async def get_input_from_discord(prompt: str) -> str:
+    async def get_input_from_discord(prompt: str) -> StepResult:
         await message.channel.send(f"🤖 **Analyst:** {prompt}")
 
         def check(m):
             return m.author == message.author and m.channel == message.channel
 
         try:
-            response_message = await bot.wait_for("message", check=check, timeout=300.0)
+            # NOTE: `bot` should be an injected or module-level Discord client.
+            # If not available in this environment, raise a clear error.
+            try:
+                response_message = await bot.wait_for("message", check=check, timeout=300.0)  # type: ignore[name-defined]
+            except NameError as _e:
+                raise RuntimeError("Discord bot client not available in this runtime") from _e
             return response_message.content
         except asyncio.TimeoutError:
             return "No response. Please try again."

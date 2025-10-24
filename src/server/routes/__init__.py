@@ -15,15 +15,16 @@ from .performance_dashboard import register_performance_dashboard
 from .pilot import register_pilot_route
 from .pipeline_api import register_pipeline_routes
 
+
 __all__ = [
-    "register_metrics_endpoint",
-    "register_health_routes",
-    "register_activities_echo",
     "register_a2a_router",
-    "register_pilot_route",
-    "register_archive_routes",
+    "register_activities_echo",
     "register_alert_routes",
-    "register_pipeline_routes",
+    "register_archive_routes",
     "register_autointel_routes",
+    "register_health_routes",
+    "register_metrics_endpoint",
     "register_performance_dashboard",
+    "register_pilot_route",
+    "register_pipeline_routes",
 ]

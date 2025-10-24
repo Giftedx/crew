@@ -1,0 +1,292 @@
+name: Optimized Test Matrix
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+env:
+  PYTHON_VERSION: '3.12'
+
+jobs:
+  # Fast Unit Tests (parallel execution)
+  fast-unit-tests:
+    name: Fast Unit Tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        worker: [1, 2, 3, 4]  # Parallel workers
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/pip
+            ~/.cache/pip-tools
+            ~/.cache/uv
+          key: ${{ runner.os }}-pip-${{ env.PYTHON_VERSION }}-${{ hashFiles('**/pyproject.toml', '**/requirements.lock') }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip uv
+          uv pip install -e .[dev]
+
+      - name: Run fast unit tests in parallel
+        run: |
+          pytest tests/unit/ -v --maxfail=5 -n auto --dist=loadfile
+
+  # Integration Tests (sequential)
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+      qdrant:
+        image: qdrant/qdrant:v1.7.4
+        options: >-
+          --health-cmd "curl -f http://localhost:6333/health"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6333:6333
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/pip
+            ~/.cache/pip-tools
+            ~/.cache/uv
+          key: ${{ runner.os }}-pip-${{ env.PYTHON_VERSION }}-${{ hashFiles('**/pyproject.toml', '**/requirements.lock') }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip uv
+          uv pip install -e .[dev]
+
+      - name: Run integration tests
+        env:
+          POSTGRES_URL: postgresql://postgres:postgres@localhost:5432/test_db
+          REDIS_URL: redis://localhost:6379
+          QDRANT_URL: http://localhost:6333
+          TESTING: true
+        run: |
+          pytest tests/integration/ -v --maxfail=3
+
+  # E2E Tests (sequential)
+  e2e-tests:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    needs: integration-tests
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+      qdrant:
+        image: qdrant/qdrant:v1.7.4
+        options: >-
+          --health-cmd "curl -f http://localhost:6333/health"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6333:6333
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/pip
+            ~/.cache/pip-tools
+            ~/.cache/uv
+          key: ${{ runner.os }}-pip-${{ env.PYTHON_VERSION }}-${{ hashFiles('**/pyproject.toml', '**/requirements.lock') }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip uv
+          uv pip install -e .[dev]
+
+      - name: Run E2E tests
+        env:
+          POSTGRES_URL: postgresql://postgres:postgres@localhost:5432/test_db
+          REDIS_URL: redis://localhost:6379
+          QDRANT_URL: http://localhost:6333
+          MOCK_EXTERNAL_APIS: true
+          MOCK_LLM_RESPONSES: true
+          MOCK_DISCORD_API: true
+          TESTING: true
+        run: |
+          pytest tests/e2e/ -v --maxfail=2
+
+  # Performance Tests (parallel)
+  performance-tests:
+    name: Performance Tests
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'push' && 
+      (contains(github.event.head_commit.modified, 'src/') || 
+       contains(github.event.head_commit.modified, 'tests/performance/'))
+    strategy:
+      matrix:
+        worker: [1, 2, 3, 4]  # Parallel workers
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+      qdrant:
+        image: qdrant/qdrant:v1.7.4
+        options: >-
+          --health-cmd "curl -f http://localhost:6333/health"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6333:6333
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/pip
+            ~/.cache/pip-tools
+            ~/.cache/uv
+          key: ${{ runner.os }}-pip-${{ env.PYTHON_VERSION }}-${{ hashFiles('**/pyproject.toml', '**/requirements.lock') }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip uv
+          uv pip install -e .[dev]
+
+      - name: Run performance tests in parallel
+        env:
+          POSTGRES_URL: postgresql://postgres:postgres@localhost:5432/test_db
+          REDIS_URL: redis://localhost:6379
+          QDRANT_URL: http://localhost:6333
+          TESTING: true
+        run: |
+          pytest tests/performance/ -v --benchmark-only --benchmark-save=performance
+
+      - name: Upload performance results
+        uses: actions/upload-artifact@v3
+        with:
+          name: performance-results-${{ matrix.worker }}
+          path: .benchmarks/
+
+  # Test Status Summary
+  test-status:
+    name: Test Status Summary
+    runs-on: ubuntu-latest
+    needs: [fast-unit-tests, integration-tests, e2e-tests, performance-tests]
+    if: always()
+    steps:
+      - name: Check test status
+        run: |
+          if [[ "${{ needs.fast-unit-tests.result }}" == "success" && 
+                "${{ needs.integration-tests.result }}" == "success" && 
+                "${{ needs.e2e-tests.result }}" == "success" && 
+                "${{ needs.performance-tests.result }}" == "success" ]]; then
+            echo "✅ All test matrices passed!"
+            exit 0
+          else
+            echo "❌ Some test matrices failed!"
+            exit 1
+          fi

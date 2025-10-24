@@ -16,6 +16,7 @@ import httpx
 
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -305,7 +306,7 @@ class OAuthManager:
             return StepResult.ok(data={"platform": platform, "status": "registered"})
         except Exception as e:
             logger.error(f"Failed to register OAuth provider for {platform}: {e}")
-            return StepResult.fail(f"OAuth registration failed: {str(e)}")
+            return StepResult.fail(f"OAuth registration failed: {e!s}")
 
     def set_credentials(self, platform: str, credentials: OAuthCredentials) -> StepResult:
         """Set OAuth credentials for a platform."""
@@ -321,7 +322,7 @@ class OAuthManager:
             return StepResult.ok(data={"platform": platform, "status": "credentials_set"})
         except Exception as e:
             logger.error(f"Failed to set OAuth credentials for {platform}: {e}")
-            return StepResult.fail(f"Failed to set credentials: {str(e)}")
+            return StepResult.fail(f"Failed to set credentials: {e!s}")
 
     def get_access_token(self, platform: str) -> StepResult:
         """Get valid access token, refreshing if needed."""
@@ -347,15 +348,20 @@ class OAuthManager:
                         self._storage_backend(platform, refreshed.to_dict())
 
                     logger.info(f"Refreshed access token for {platform}")
-                    return StepResult.ok(data={"access_token": refreshed.access_token, "platform": platform})
+                    return StepResult.ok(
+                        data={
+                            "access_token": refreshed.access_token,
+                            "platform": platform,
+                        }
+                    )
                 except Exception as e:
                     logger.error(f"Failed to refresh token for {platform}: {e}")
-                    return StepResult.fail(f"Token refresh failed: {str(e)}")
+                    return StepResult.fail(f"Token refresh failed: {e!s}")
 
             return StepResult.ok(data={"access_token": credentials.access_token, "platform": platform})
         except Exception as e:
             logger.error(f"Failed to get access token for {platform}: {e}")
-            return StepResult.fail(f"Failed to get access token: {str(e)}")
+            return StepResult.fail(f"Failed to get access token: {e!s}")
 
     def get_auth_url(self, platform: str, state: str, redirect_uri: str) -> StepResult:
         """Get authorization URL for a platform."""
@@ -369,7 +375,7 @@ class OAuthManager:
             return StepResult.ok(data={"auth_url": auth_url, "platform": platform, "state": state})
         except Exception as e:
             logger.error(f"Failed to get auth URL for {platform}: {e}")
-            return StepResult.fail(f"Failed to get auth URL: {str(e)}")
+            return StepResult.fail(f"Failed to get auth URL: {e!s}")
 
     def exchange_code(self, platform: str, code: str, redirect_uri: str) -> StepResult:
         """Exchange authorization code for tokens."""
@@ -390,7 +396,7 @@ class OAuthManager:
             return StepResult.ok(data={"credentials": credentials.to_dict(), "platform": platform})
         except Exception as e:
             logger.error(f"Failed to exchange code for {platform}: {e}")
-            return StepResult.fail(f"Code exchange failed: {str(e)}")
+            return StepResult.fail(f"Code exchange failed: {e!s}")
 
     def revoke_token(self, platform: str) -> StepResult:
         """Revoke OAuth credentials for a platform."""
@@ -408,7 +414,7 @@ class OAuthManager:
                 return StepResult.not_found(f"No credentials found for platform: {platform}")
         except Exception as e:
             logger.error(f"Failed to revoke credentials for {platform}: {e}")
-            return StepResult.fail(f"Failed to revoke credentials: {str(e)}")
+            return StepResult.fail(f"Failed to revoke credentials: {e!s}")
 
     def set_storage_backend(self, backend: callable) -> None:
         """Set storage backend for credential persistence."""
@@ -445,7 +451,7 @@ class OAuthManager:
             )
         except Exception as e:
             logger.error(f"Failed to get platform status for {platform}: {e}")
-            return StepResult.fail(f"Failed to get platform status: {str(e)}")
+            return StepResult.fail(f"Failed to get platform status: {e!s}")
 
     def health_check(self) -> StepResult:
         """Perform health check on OAuth manager."""
@@ -462,7 +468,7 @@ class OAuthManager:
             healthy_credentials = 0
             expired_credentials = 0
 
-            for platform, credentials in self.credentials.items():
+            for _platform, credentials in self.credentials.items():
                 if credentials.is_expired():
                     expired_credentials += 1
                 else:
@@ -478,7 +484,7 @@ class OAuthManager:
             return StepResult.ok(data=status)
         except Exception as e:
             logger.error(f"OAuth health check failed: {e}")
-            return StepResult.fail(f"Health check failed: {str(e)}")
+            return StepResult.fail(f"Health check failed: {e!s}")
 
 
 # Global OAuth manager instance

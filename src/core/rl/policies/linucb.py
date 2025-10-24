@@ -7,10 +7,14 @@ dictionary (bias + first few numeric/string-derived features).
 
 from __future__ import annotations
 
+import contextlib
 from collections import defaultdict
-from collections.abc import Sequence
 from dataclasses import dataclass, field
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 
 def _ctx_vector(ctx: dict[str, Any], dim: int = 8) -> list[float]:
@@ -100,10 +104,8 @@ class LinUCBDiagBandit:
         ver = state.get("version")
         if ver is not None and ver > 1:
             return
-        try:
+        with contextlib.suppress(Exception):
             self.alpha = float(state.get("alpha", self.alpha))
-        except Exception:
-            pass
         dim_val = state.get("dim", self.dim)
         try:
             self.dim = int(dim_val)

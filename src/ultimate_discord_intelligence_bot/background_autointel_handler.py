@@ -16,14 +16,20 @@ Usage:
 
 from __future__ import annotations
 
+import contextlib
 import logging
 import os
 from typing import TYPE_CHECKING
 
+
 if TYPE_CHECKING:
     from discord import Interaction
-    from ultimate_discord_intelligence_bot.autonomous_orchestrator import AutonomousIntelligenceOrchestrator
-    from ultimate_discord_intelligence_bot.background_intelligence_worker import BackgroundIntelligenceWorker
+    from ultimate_discord_intelligence_bot.autonomous_orchestrator import (
+        AutonomousIntelligenceOrchestrator,
+    )
+    from ultimate_discord_intelligence_bot.background_intelligence_worker import (
+        BackgroundIntelligenceWorker,
+    )
 
 logger = logging.getLogger(__name__)
 
@@ -119,16 +125,14 @@ async def handle_autointel_background(
             await interaction.followup.send(
                 f"❌ **Failed to Start Analysis**\n\n"
                 f"An error occurred while initiating background processing:\n"
-                f"```{str(e)}```\n\n"
+                f"```{e!s}```\n\n"
                 f"Please try again or contact an administrator.",
                 ephemeral=True,
             )
         except Exception:
             # If followup fails, try response (might still be within initial response window)
-            try:
-                await interaction.response.send_message(f"❌ Error: {str(e)}", ephemeral=True)
-            except Exception:
-                pass
+            with contextlib.suppress(Exception):
+                await interaction.response.send_message(f"❌ Error: {e!s}", ephemeral=True)
 
 
 async def handle_retrieve_results(
@@ -233,10 +237,8 @@ async def handle_retrieve_results(
     except Exception as e:
         logger.error(f"Failed to retrieve results: {e}", exc_info=True)
 
-        try:
+        with contextlib.suppress(Exception):
             await interaction.followup.send(
-                f"❌ **Retrieval Error**\n\nFailed to retrieve results for workflow `{workflow_id}`:\n```{str(e)}```",
+                f"❌ **Retrieval Error**\n\nFailed to retrieve results for workflow `{workflow_id}`:\n```{e!s}```",
                 ephemeral=True,
             )
-        except Exception:
-            pass

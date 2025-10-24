@@ -10,11 +10,16 @@ import json
 import sys
 from pathlib import Path
 
+
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
-from ultimate_discord_intelligence_bot.enhanced_performance_monitor import EnhancedPerformanceMonitor
-from ultimate_discord_intelligence_bot.performance_integration import PerformanceIntegrationManager
+from ultimate_discord_intelligence_bot.enhanced_performance_monitor import (
+    EnhancedPerformanceMonitor,
+)
+from ultimate_discord_intelligence_bot.performance_integration import (
+    PerformanceIntegrationManager,
+)
 
 
 async def demo_working_api():

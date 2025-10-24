@@ -9,16 +9,21 @@ from __future__ import annotations
 
 import json
 import sqlite3
-from collections.abc import Iterable
 from dataclasses import dataclass
-from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from core.time import default_utc_now
 
 
-def _as_list(value: Iterable[str] | None) -> str:
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+    from datetime import datetime
+
+    from ultimate_discord_intelligence_bot.step_result import StepResult
+
+
+def _as_list(value: Iterable[str] | None) -> StepResult:
     """Return a comma separated list or empty string."""
     if not value:
         return ""
@@ -42,13 +47,13 @@ class AnalyticsStore:
 
     db_path: str | Path = "analytics.db"
 
-    def __post_init__(self) -> None:  # pragma: no cover - simple setup
+    def __post_init__(self) -> StepResult:  # pragma: no cover - simple setup
         self.path = Path(self.db_path)
         self.conn = sqlite3.connect(self.path)
         self._init_schema()
 
     # -- schema -----------------------------------------------------------------
-    def _init_schema(self) -> None:
+    def _init_schema(self) -> StepResult:
         cur = self.conn.cursor()
         cur.execute(
             """
@@ -104,7 +109,7 @@ class AnalyticsStore:
         self.conn.commit()
 
     # -- logging helpers --------------------------------------------------------
-    def log_llm_call(  # noqa: PLR0913 - arguments map 1:1 to schema columns; grouping preserves explicitness
+    def log_llm_call(
         self,
         task: str,
         model: str,
@@ -117,7 +122,7 @@ class AnalyticsStore:
         success: bool,
         toolset: Iterable[str] | None = None,
         ts: datetime | None = None,
-    ) -> None:  # noqa: PLR0913 - arguments mirror fixed analytics schema columns; packing into **kwargs loses type safety
+    ) -> StepResult:
         """Record a language model invocation.
 
         Only high-level metrics are stored; no prompt or response text is
@@ -148,15 +153,15 @@ class AnalyticsStore:
         )
         self.conn.commit()
 
-    def fetch_llm_calls(self) -> Iterable[tuple[str, str]]:
+    def fetch_llm_calls(self) -> StepResult:
         """Yield minimal info about logged calls for tests or dashboards."""
         cur = self.conn.cursor()
         yield from cur.execute("SELECT task, model FROM llm_calls")
 
-    def close(self) -> None:  # pragma: no cover - trivial
+    def close(self) -> StepResult:  # pragma: no cover - trivial
         self.conn.close()
 
-    def log_bandit_event(self, event: dict[str, Any], ts: datetime | None = None) -> None:
+    def log_bandit_event(self, event: dict[str, Any], ts: datetime | None = None) -> StepResult:
         """Persist adaptive routing or bandit feedback events."""
 
         payload = {key: value for key, value in event.items() if key not in {"task_type", "model", "reward"}}

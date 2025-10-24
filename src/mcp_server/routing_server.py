@@ -12,7 +12,12 @@ Notes:
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from typing import TYPE_CHECKING
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
 
 try:
     from fastmcp import FastMCP  # type: ignore
@@ -90,7 +95,12 @@ def _route_completion_impl(task: str, tokens_hint: dict | None = None) -> dict:
 
         pricing = _load_pricing()
         if not pricing:
-            return {"model": None, "reason": "no_pricing_available", "est_cost_usd": 0.0, "latency_class": "unknown"}
+            return {
+                "model": None,
+                "reason": "no_pricing_available",
+                "est_cost_usd": 0.0,
+                "latency_class": "unknown",
+            }
 
         # derive token estimates
         tokens_in = 0
@@ -126,7 +136,13 @@ def _route_completion_impl(task: str, tokens_hint: dict | None = None) -> dict:
             "tokens": {"input": tokens_in, "output": tokens_out},
         }
     except Exception as exc:
-        return {"model": None, "reason": "error", "error": str(exc), "est_cost_usd": 0.0, "latency_class": "unknown"}
+        return {
+            "model": None,
+            "reason": "error",
+            "error": str(exc),
+            "est_cost_usd": 0.0,
+            "latency_class": "unknown",
+        }
 
 
 def _choose_embedding_model_impl(dimensions_required: int | None = None) -> dict:
@@ -169,16 +185,18 @@ def route_completion_tool(task: str, tokens_hint: dict | None = None) -> dict:  
 
 
 @routing_mcp.tool
-def choose_embedding_model_tool(dimensions_required: int | None = None) -> dict:  # pragma: no cover
+def choose_embedding_model_tool(
+    dimensions_required: int | None = None,
+) -> dict:  # pragma: no cover
     return _choose_embedding_model_impl(dimensions_required)
 
 
 __all__ = [
-    "routing_mcp",
+    "choose_embedding_model",
+    "choose_embedding_model_tool",
     "estimate_cost",
     "estimate_cost_tool",
     "route_completion",
     "route_completion_tool",
-    "choose_embedding_model",
-    "choose_embedding_model_tool",
+    "routing_mcp",
 ]

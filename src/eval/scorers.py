@@ -3,8 +3,11 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Sequence
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 
 def must_include(output: str, substrings: Sequence[str]) -> bool:
@@ -34,9 +37,9 @@ def json_schema(output: str, schema: dict[str, type[Any]]) -> bool:
 
 
 __all__ = [
-    "must_include",
-    "forbidden",
-    "classification",
     "claimcheck",
+    "classification",
+    "forbidden",
     "json_schema",
+    "must_include",
 ]

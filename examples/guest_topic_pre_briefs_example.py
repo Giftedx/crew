@@ -19,7 +19,9 @@ from pathlib import Path
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from features.guest_preparation.guest_topic_pre_briefs_service import get_guest_topic_pre_briefs_service
+from features.guest_preparation.guest_topic_pre_briefs_service import (
+    get_guest_topic_pre_briefs_service,
+)
 
 
 def main() -> int:
@@ -67,7 +69,8 @@ def main() -> int:
 
     data = result.data
 
-    print("✅ Interview brief generated!"    print(f"   Guest: {data['interview_brief']['guest_name']}")
+    print("✅ Interview brief generated!")
+    print(f"   Guest: {data['interview_brief']['guest_name']}")
     print(f"   Topic overview: {data['interview_brief']['topic_overview']}")
     print(f"   Confidence score: {data['interview_brief']['confidence_score']:.2f}")
     print(f"   Cache hit: {data['cache_hit']}")
@@ -85,7 +88,7 @@ def main() -> int:
         for i, arg in enumerate(key_arguments[:3]):
             strength = arg.get("strength_category", "unknown")
             evidence = arg.get("evidence_quality", 0)
-            print(f"     {i+1}. {arg['argument_text'][:60]}...")
+            print(f"     {i + 1}. {arg['argument_text'][:60]}...")
             print(f"        Strength: {strength} | Evidence: {evidence:.2f}")
 
     print()
@@ -141,14 +144,14 @@ def main() -> int:
     key_questions = data["interview_brief"]["key_questions_to_ask"]
     print("❓ Key Questions to Ask:")
     for i, question in enumerate(key_questions[:5]):
-        print(f"   {i+1}. {question}")
+        print(f"   {i + 1}. {question}")
     print()
 
     # Show live fact-check prompts
     fact_check_prompts = data["interview_brief"]["live_fact_check_prompts"]
     print("🔍 Live Fact-Check Prompts:")
     for i, prompt in enumerate(fact_check_prompts[:3]):
-        print(f"   {i+1}. {prompt}")
+        print(f"   {i + 1}. {prompt}")
     print()
 
     # Demonstrate audience reaction prediction
@@ -157,7 +160,8 @@ def main() -> int:
 
     prediction = service.predict_audience_reactions(content_topics)
 
-    print("✅ Audience reaction prediction completed!"    print(f"   Primary Reaction: {prediction.primary_reaction}")
+    print("✅ Audience reaction prediction completed!")
+    print(f"   Primary Reaction: {prediction.primary_reaction}")
     print(f"   Engagement Potential: {prediction.engagement_potential:.1%}")
     print(f"   Controversy Risk: {prediction.controversy_risk:.1%}")
 
@@ -195,4 +199,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
-

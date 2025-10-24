@@ -9,16 +9,18 @@ from __future__ import annotations
 import importlib
 import logging
 import os
-from collections.abc import Callable
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
 
 logger = logging.getLogger(__name__)
 
 
 class DependencyError(Exception):
     """Raised when a required dependency is unavailable."""
-
-    pass
 
 
 class DependencyManager:
@@ -186,11 +188,7 @@ class DependencyManager:
 
         # Check if feature has dependency requirements
         feature_deps = self._get_feature_dependencies(feature_name)
-        for dep in feature_deps:
-            if not self.check_dependency(dep):
-                return False
-
-        return True
+        return all(self.check_dependency(dep) for dep in feature_deps)
 
     def _get_feature_dependencies(self, feature_name: str) -> set[str]:
         """Get dependencies required for a feature."""

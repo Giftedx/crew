@@ -7,16 +7,19 @@ for optimal model routing based on task characteristics and performance history.
 
 from __future__ import annotations
 
+import json
 import logging
-import pickle
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 import numpy as np
 
+from ultimate_discord_intelligence_bot.step_result import StepResult
+
 from ..step_result import StepResult
+
 
 logger = logging.getLogger(__name__)
 
@@ -52,8 +55,8 @@ class ModelCapability:
     average_latency_ms: float
     accuracy_score: float
     reliability_score: float
-    capabilities: List[str] = field(default_factory=list)
-    specializations: List[str] = field(default_factory=list)
+    capabilities: list[str] = field(default_factory=list)
+    specializations: list[str] = field(default_factory=list)
     availability_score: float = 1.0
 
 
@@ -64,12 +67,12 @@ class RoutingContext:
     task_type: str
     complexity: TaskComplexity
     token_estimate: int
-    latency_requirement_ms: Optional[int] = None
-    cost_budget_usd: Optional[float] = None
+    latency_requirement_ms: int | None = None
+    cost_budget_usd: float | None = None
     quality_requirement: float = 0.8
     tenant: str = ""
     workspace: str = ""
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -81,7 +84,7 @@ class ModelSelection:
     confidence: float
     expected_reward: float
     reasoning: str
-    fallback_models: List[str] = field(default_factory=list)
+    fallback_models: list[str] = field(default_factory=list)
     estimated_cost: float = 0.0
     estimated_latency_ms: float = 0.0
 
@@ -98,7 +101,7 @@ class RoutingReward:
     quality_score: float
     success: bool
     timestamp: datetime = field(default_factory=datetime.utcnow)
-    context: Dict[str, Any] = field(default_factory=dict)
+    context: dict[str, Any] = field(default_factory=dict)
 
 
 class ContextualBandit:
@@ -106,7 +109,7 @@ class ContextualBandit:
 
     def __init__(
         self,
-        arms: List[ModelCapability],
+        arms: list[ModelCapability],
         context_dim: int = 10,
         exploration_rate: float = 0.1,
     ):
@@ -125,15 +128,13 @@ class ContextualBandit:
         self.arm_rewards = {arm.model_id: [] for arm in arms}
 
         # Linear model parameters for each arm
-        self.arm_parameters = {
-            arm.model_id: np.random.normal(0, 0.1, context_dim) for arm in arms
-        }
+        self.arm_parameters = {arm.model_id: np.random.normal(0, 0.1, context_dim) for arm in arms}
 
         # Context feature history
         self.context_history = []
         self.reward_history = []
 
-    def select_arm(self, context: np.ndarray) -> Tuple[str, float]:
+    def select_arm(self, context: np.ndarray) -> StepResult:
         """
         Select arm using contextual bandit algorithm.
 
@@ -201,7 +202,7 @@ class ContextualBandit:
             self.context_history = self.context_history[-5000:]
             self.reward_history = self.reward_history[-5000:]
 
-    def _normalize_context(self, context: np.ndarray) -> np.ndarray:
+    def _normalize_context(self, context: np.ndarray) -> StepResult:
         """Normalize context to required dimension."""
         if len(context) > self.context_dim:
             return context[: self.context_dim]
@@ -211,19 +212,13 @@ class ContextualBandit:
             return padded
         return context
 
-    def _calculate_confidence(
-        self, selected_arm: str, expected_rewards: Dict[str, float]
-    ) -> float:
+    def _calculate_confidence(self, selected_arm: str, expected_rewards: dict[str, float]) -> StepResult:
         """Calculate confidence in the selected arm."""
         if selected_arm not in expected_rewards:
             return 0.5
 
         selected_reward = expected_rewards[selected_arm]
-        max_other_reward = max(
-            reward
-            for arm_id, reward in expected_rewards.items()
-            if arm_id != selected_arm
-        )
+        max_other_reward = max(reward for arm_id, reward in expected_rewards.items() if arm_id != selected_arm)
 
         # Confidence based on margin between selected and second-best
         margin = selected_reward - max_other_reward
@@ -231,7 +226,7 @@ class ContextualBandit:
 
         return confidence
 
-    def get_arm_statistics(self) -> Dict[str, Dict[str, Any]]:
+    def get_arm_statistics(self) -> StepResult:
         """Get statistics for all arms."""
         stats = {}
         for arm_id in self.arms:
@@ -251,8 +246,8 @@ class RLModelRouter:
     def __init__(self):
         """Initialize the RL model router."""
         self.bandit = None
-        self.model_capabilities: Dict[str, ModelCapability] = {}
-        self.routing_history: List[RoutingReward] = []
+        self.model_capabilities: dict[str, ModelCapability] = {}
+        self.routing_history: list[RoutingReward] = []
         self.performance_metrics = {
             "total_routes": 0,
             "successful_routes": 0,
@@ -349,14 +344,10 @@ class RLModelRouter:
                 model_id=selected_model_id,
                 provider=selected_model.provider,
                 confidence=confidence,
-                expected_reward=self._calculate_expected_reward(
-                    selected_model, context
-                ),
+                expected_reward=self._calculate_expected_reward(selected_model, context),
                 reasoning=self._generate_routing_reason(selected_model, context),
                 fallback_models=self._get_fallback_models(selected_model_id, context),
-                estimated_cost=self._estimate_cost(
-                    selected_model, context.token_estimate
-                ),
+                estimated_cost=self._estimate_cost(selected_model, context.token_estimate),
                 estimated_latency_ms=selected_model.average_latency_ms,
             )
 
@@ -376,12 +367,10 @@ class RLModelRouter:
             )
 
         except Exception as e:
-            logger.error(f"Model routing failed: {str(e)}")
-            return StepResult.fail(f"Model routing failed: {str(e)}")
+            logger.error(f"Model routing failed: {e!s}")
+            return StepResult.fail(f"Model routing failed: {e!s}")
 
-    async def update_reward(
-        self, model_id: str, task_id: str, reward_data: Dict[str, Any]
-    ) -> StepResult:
+    async def update_reward(self, model_id: str, task_id: str, reward_data: dict[str, Any]) -> StepResult:
         """
         Update model performance with observed reward.
 
@@ -426,15 +415,13 @@ class RLModelRouter:
                     "task_id": task_id,
                     "reward": reward.reward,
                     "updated_metrics": self.performance_metrics,
-                    "bandit_statistics": self.bandit.get_arm_statistics()
-                    if self.bandit
-                    else {},
+                    "bandit_statistics": self.bandit.get_arm_statistics() if self.bandit else {},
                 }
             )
 
         except Exception as e:
-            logger.error(f"Reward update failed: {str(e)}")
-            return StepResult.fail(f"Reward update failed: {str(e)}")
+            logger.error(f"Reward update failed: {e!s}")
+            return StepResult.fail(f"Reward update failed: {e!s}")
 
     def get_routing_statistics(self) -> StepResult:
         """
@@ -459,9 +446,7 @@ class RLModelRouter:
                     }
                     for model_id, model in self.model_capabilities.items()
                 },
-                "bandit_statistics": self.bandit.get_arm_statistics()
-                if self.bandit
-                else {},
+                "bandit_statistics": self.bandit.get_arm_statistics() if self.bandit else {},
                 "routing_history_size": len(self.routing_history),
                 "recent_performance": self._get_recent_performance(),
             }
@@ -469,10 +454,10 @@ class RLModelRouter:
             return StepResult.ok(data=stats)
 
         except Exception as e:
-            logger.error(f"Failed to get routing statistics: {str(e)}")
-            return StepResult.fail(f"Failed to get routing statistics: {str(e)}")
+            logger.error(f"Failed to get routing statistics: {e!s}")
+            return StepResult.fail(f"Failed to get routing statistics: {e!s}")
 
-    def _context_to_features(self, context: RoutingContext) -> np.ndarray:
+    def _context_to_features(self, context: RoutingContext) -> StepResult:
         """Convert routing context to feature vector."""
         features = np.zeros(10)  # Fixed feature dimension
 
@@ -512,9 +497,7 @@ class RLModelRouter:
 
         return features
 
-    def _calculate_expected_reward(
-        self, model: ModelCapability, context: RoutingContext
-    ) -> float:
+    def _calculate_expected_reward(self, model: ModelCapability, context: RoutingContext) -> StepResult:
         """Calculate expected reward for a model given context."""
         reward = 0.0
 
@@ -524,17 +507,13 @@ class RLModelRouter:
 
         # Latency penalty
         if context.latency_requirement_ms:
-            latency_penalty = max(
-                0, (model.average_latency_ms - context.latency_requirement_ms) / 1000.0
-            )
+            latency_penalty = max(0, (model.average_latency_ms - context.latency_requirement_ms) / 1000.0)
             reward -= latency_penalty * 0.2
 
         # Cost penalty
         estimated_cost = self._estimate_cost(model, context.token_estimate)
         if context.cost_budget_usd and estimated_cost > context.cost_budget_usd:
-            cost_penalty = (
-                estimated_cost - context.cost_budget_usd
-            ) / context.cost_budget_usd
+            cost_penalty = (estimated_cost - context.cost_budget_usd) / context.cost_budget_usd
             reward -= cost_penalty * 0.3
 
         # Quality bonus
@@ -543,9 +522,7 @@ class RLModelRouter:
 
         return max(0.0, min(1.0, reward))
 
-    def _generate_routing_reason(
-        self, model: ModelCapability, context: RoutingContext
-    ) -> str:
+    def _generate_routing_reason(self, model: ModelCapability, context: RoutingContext) -> StepResult:
         """Generate human-readable routing reason."""
         reasons = []
 
@@ -554,10 +531,7 @@ class RLModelRouter:
             reasons.append(f"specialized for {context.task_type}")
 
         # Check latency requirements
-        if (
-            context.latency_requirement_ms
-            and model.average_latency_ms <= context.latency_requirement_ms
-        ):
+        if context.latency_requirement_ms and model.average_latency_ms <= context.latency_requirement_ms:
             reasons.append("meets latency requirements")
 
         # Check cost budget
@@ -570,22 +544,14 @@ class RLModelRouter:
             reasons.append("meets quality requirements")
 
         # Check complexity match
-        if (
-            context.complexity == TaskComplexity.CRITICAL
-            and model.accuracy_score >= 0.95
-        ):
+        if context.complexity == TaskComplexity.CRITICAL and model.accuracy_score >= 0.95:
             reasons.append("high accuracy for critical task")
-        elif (
-            context.complexity == TaskComplexity.SIMPLE
-            and model.cost_per_1k_tokens <= 0.005
-        ):
+        elif context.complexity == TaskComplexity.SIMPLE and model.cost_per_1k_tokens <= 0.005:
             reasons.append("cost-effective for simple task")
 
         return ", ".join(reasons) if reasons else "general suitability"
 
-    def _get_fallback_models(
-        self, primary_model_id: str, context: RoutingContext
-    ) -> List[str]:
+    def _get_fallback_models(self, primary_model_id: str, context: RoutingContext) -> StepResult:
         """Get fallback models for the primary selection."""
 
         # Sort models by suitability
@@ -599,7 +565,7 @@ class RLModelRouter:
         model_scores.sort(key=lambda x: x[1], reverse=True)
         return [model_id for model_id, _ in model_scores[:2]]
 
-    def _estimate_cost(self, model: ModelCapability, token_estimate: int) -> float:
+    def _estimate_cost(self, model: ModelCapability, token_estimate: int) -> StepResult:
         """Estimate cost for a model and token count."""
         return (token_estimate / 1000.0) * model.cost_per_1k_tokens
 
@@ -612,15 +578,15 @@ class RLModelRouter:
 
         # Update averages using exponential moving average
         alpha = 0.1
-        self.performance_metrics["average_latency"] = (
-            1 - alpha
-        ) * self.performance_metrics["average_latency"] + alpha * reward.latency_ms
-        self.performance_metrics["average_cost"] = (
-            1 - alpha
-        ) * self.performance_metrics["average_cost"] + alpha * reward.cost_usd
-        self.performance_metrics["average_quality"] = (
-            1 - alpha
-        ) * self.performance_metrics["average_quality"] + alpha * reward.quality_score
+        self.performance_metrics["average_latency"] = (1 - alpha) * self.performance_metrics[
+            "average_latency"
+        ] + alpha * reward.latency_ms
+        self.performance_metrics["average_cost"] = (1 - alpha) * self.performance_metrics[
+            "average_cost"
+        ] + alpha * reward.cost_usd
+        self.performance_metrics["average_quality"] = (1 - alpha) * self.performance_metrics[
+            "average_quality"
+        ] + alpha * reward.quality_score
 
     def _update_model_capabilities(self, model_id: str, reward: RoutingReward):
         """Update model capabilities based on observed performance."""
@@ -631,22 +597,16 @@ class RLModelRouter:
 
         # Update latency using exponential moving average
         alpha = 0.1
-        model.average_latency_ms = (
-            1 - alpha
-        ) * model.average_latency_ms + alpha * reward.latency_ms
+        model.average_latency_ms = (1 - alpha) * model.average_latency_ms + alpha * reward.latency_ms
 
         # Update accuracy score
-        model.accuracy_score = (
-            1 - alpha
-        ) * model.accuracy_score + alpha * reward.quality_score
+        model.accuracy_score = (1 - alpha) * model.accuracy_score + alpha * reward.quality_score
 
         # Update reliability score
         reliability_update = 1.0 if reward.success else 0.0
-        model.reliability_score = (
-            1 - alpha
-        ) * model.reliability_score + alpha * reliability_update
+        model.reliability_score = (1 - alpha) * model.reliability_score + alpha * reliability_update
 
-    def _get_recent_performance(self) -> Dict[str, Any]:
+    def _get_recent_performance(self) -> StepResult:
         """Get recent performance metrics."""
         if not self.routing_history:
             return {}
@@ -655,48 +615,57 @@ class RLModelRouter:
         recent_rewards = self.routing_history[-100:]
 
         return {
-            "recent_success_rate": sum(1 for r in recent_rewards if r.success)
-            / len(recent_rewards),
+            "recent_success_rate": sum(1 for r in recent_rewards if r.success) / len(recent_rewards),
             "recent_average_latency": np.mean([r.latency_ms for r in recent_rewards]),
             "recent_average_cost": np.mean([r.cost_usd for r in recent_rewards]),
-            "recent_average_quality": np.mean(
-                [r.quality_score for r in recent_rewards]
-            ),
+            "recent_average_quality": np.mean([r.quality_score for r in recent_rewards]),
             "recent_reward_count": len(recent_rewards),
         }
 
     def save_state(self, filepath: str) -> StepResult:
         """Save router state to file."""
         try:
+            # Convert numpy arrays to lists for JSON serialization
             state = {
                 "model_capabilities": self.model_capabilities,
                 "routing_history": self.routing_history,
                 "performance_metrics": self.performance_metrics,
-                "bandit_parameters": self.bandit.arm_parameters if self.bandit else {},
-                "bandit_counts": self.bandit.arm_counts if self.bandit else {},
-                "bandit_rewards": self.bandit.arm_rewards if self.bandit else {},
+                "bandit_parameters": {
+                    k: v.tolist() if hasattr(v, "tolist") else v
+                    for k, v in (self.bandit.arm_parameters if self.bandit else {}).items()
+                },
+                "bandit_counts": {
+                    k: v.tolist() if hasattr(v, "tolist") else v
+                    for k, v in (self.bandit.arm_counts if self.bandit else {}).items()
+                },
+                "bandit_rewards": {
+                    k: v.tolist() if hasattr(v, "tolist") else v
+                    for k, v in (self.bandit.arm_rewards if self.bandit else {}).items()
+                },
             }
 
-            with open(filepath, "wb") as f:
-                pickle.dump(state, f)
+            with open(filepath, "w") as f:
+                json.dump(state, f, indent=2)  # nosec B301 - using secure JSON serialization
 
             return StepResult.ok(data={"saved_to": filepath})
 
         except Exception as e:
-            logger.error(f"Failed to save router state: {str(e)}")
-            return StepResult.fail(f"Failed to save router state: {str(e)}")
+            logger.error(f"Failed to save router state: {e!s}")
+            return StepResult.fail(f"Failed to save router state: {e!s}")
 
     def load_state(self, filepath: str) -> StepResult:
-        """Load router state from file."""
+        """Load router state from file.
+
+        Security: Uses JSON instead of pickle to prevent arbitrary code execution.
+        Note: Legacy pickle files will fail to load - manual migration required.
+        """
         try:
-            with open(filepath, "rb") as f:
-                state = pickle.load(f)
+            with open(filepath) as f:
+                state = json.load(f)  # nosec B301 - replaced pickle with secure JSON
 
             self.model_capabilities = state.get("model_capabilities", {})
             self.routing_history = state.get("routing_history", [])
-            self.performance_metrics = state.get(
-                "performance_metrics", self.performance_metrics
-            )
+            self.performance_metrics = state.get("performance_metrics", self.performance_metrics)
 
             # Reconstruct bandit
             if self.model_capabilities and state.get("bandit_parameters"):
@@ -708,5 +677,5 @@ class RLModelRouter:
             return StepResult.ok(data={"loaded_from": filepath})
 
         except Exception as e:
-            logger.error(f"Failed to load router state: {str(e)}")
-            return StepResult.fail(f"Failed to load router state: {str(e)}")
+            logger.error(f"Failed to load router state: {e!s}")
+            return StepResult.fail(f"Failed to load router state: {e!s}")

@@ -10,14 +10,23 @@ from __future__ import annotations
 import logging
 from collections import defaultdict
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
-import networkx as nx
-from sqlalchemy import and_
-from sqlalchemy.orm import Session
+import networkx as nx  # type: ignore[import-not-found]
+from sqlalchemy import and_  # type: ignore[import-untyped]
 
 from ultimate_discord_intelligence_bot.creator_ops.config import CreatorOpsConfig
-from ultimate_discord_intelligence_bot.creator_ops.models.schema import Account, Media, Person
+from ultimate_discord_intelligence_bot.creator_ops.models.schema import (
+    Account,
+    Media,
+    Person,
+)
 from ultimate_discord_intelligence_bot.step_result import StepResult
+
+
+if TYPE_CHECKING:
+    from sqlalchemy.orm import Session
+
 
 logger = logging.getLogger(__name__)
 
@@ -147,7 +156,12 @@ class SocialGraphMapper:
                     # Try to find account for this person
                     account = (
                         self.db_session.query(Account)
-                        .filter(and_(Account.handle == person.name, Account.platform == media.account.platform))
+                        .filter(
+                            and_(
+                                Account.handle == person.name,
+                                Account.platform == media.account.platform,
+                            )
+                        )
                         .first()
                     )
 
@@ -211,8 +225,8 @@ class SocialGraphMapper:
             return StepResult.ok(data=stats)
 
         except Exception as e:
-            logger.error(f"Failed to build social graph: {str(e)}")
-            return StepResult.fail(f"Failed to build social graph: {str(e)}")
+            logger.error(f"Failed to build social graph: {e!s}")
+            return StepResult.fail(f"Failed to build social graph: {e!s}")
 
     def analyze_creator_network(self, creator_handle: str) -> StepResult:
         """
@@ -275,8 +289,8 @@ class SocialGraphMapper:
             return StepResult.ok(data=analysis)
 
         except Exception as e:
-            logger.error(f"Failed to analyze creator network: {str(e)}")
-            return StepResult.fail(f"Failed to analyze creator network: {str(e)}")
+            logger.error(f"Failed to analyze creator network: {e!s}")
+            return StepResult.fail(f"Failed to analyze creator network: {e!s}")
 
     def get_collaboration_recommendations(
         self,
@@ -347,8 +361,8 @@ class SocialGraphMapper:
             return StepResult.ok(data=recommendations)
 
         except Exception as e:
-            logger.error(f"Failed to get collaboration recommendations: {str(e)}")
-            return StepResult.fail(f"Failed to get collaboration recommendations: {str(e)}")
+            logger.error(f"Failed to get collaboration recommendations: {e!s}")
+            return StepResult.fail(f"Failed to get collaboration recommendations: {e!s}")
 
     def get_audience_overlap_estimation(
         self,
@@ -392,8 +406,8 @@ class SocialGraphMapper:
             return StepResult.ok(data=estimation)
 
         except Exception as e:
-            logger.error(f"Failed to estimate audience overlap: {str(e)}")
-            return StepResult.fail(f"Failed to estimate audience overlap: {str(e)}")
+            logger.error(f"Failed to estimate audience overlap: {e!s}")
+            return StepResult.fail(f"Failed to estimate audience overlap: {e!s}")
 
     def _calculate_audience_overlap(self, creator1: str, creator2: str) -> float:
         """Calculate audience overlap between two creators."""
@@ -427,7 +441,7 @@ class SocialGraphMapper:
             return min(overlap_score, 1.0)  # Cap at 100%
 
         except Exception as e:
-            logger.warning(f"Failed to calculate audience overlap: {str(e)}")
+            logger.warning(f"Failed to calculate audience overlap: {e!s}")
             return 0.0
 
     def _calculate_collaboration_score(self, creator1: str, creator2: str) -> float:
@@ -456,7 +470,7 @@ class SocialGraphMapper:
             return min(score, 1.0)  # Cap at 1.0
 
         except Exception as e:
-            logger.warning(f"Failed to calculate collaboration score: {str(e)}")
+            logger.warning(f"Failed to calculate collaboration score: {e!s}")
             return 0.0
 
     def _generate_recommendation_reasons(
@@ -523,7 +537,7 @@ class SocialGraphMapper:
             return count
 
         except Exception as e:
-            logger.warning(f"Failed to get content count for {creator_handle}: {str(e)}")
+            logger.warning(f"Failed to get content count for {creator_handle}: {e!s}")
             return 0
 
     def _calculate_graph_statistics(self) -> NetworkAnalysis:
@@ -567,7 +581,7 @@ class SocialGraphMapper:
             )
 
         except Exception as e:
-            logger.error(f"Failed to calculate graph statistics: {str(e)}")
+            logger.error(f"Failed to calculate graph statistics: {e!s}")
             return NetworkAnalysis(
                 creator_count=0,
                 collaboration_count=0,

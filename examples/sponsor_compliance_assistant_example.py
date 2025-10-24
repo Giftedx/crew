@@ -77,9 +77,16 @@ def main() -> int:
     if compliance_result.success:
         compliance_report = compliance_result.data["compliance_report"]
 
-        print("✅ Compliance analysis completed!"        print(f"   Overall compliance score: {compliance_report.overall_compliance_score:.1%}")
-        print(f"   Brand suitability score: {compliance_report.brand_suitability_score:.1%}")
-        print(f"   Safe content percentage: {compliance_report.safe_content_percentage:.1%}")
+        print("✅ Compliance analysis completed!")
+        print(
+            f"   Overall compliance score: {compliance_report.overall_compliance_score:.1%}"
+        )
+        print(
+            f"   Brand suitability score: {compliance_report.brand_suitability_score:.1%}"
+        )
+        print(
+            f"   Safe content percentage: {compliance_report.safe_content_percentage:.1%}"
+        )
 
         if compliance_report.policy_violations:
             print(f"   Policy violations: {len(compliance_report.policy_violations)}")
@@ -108,7 +115,8 @@ def main() -> int:
     if cut_list_result.success:
         cut_list = cut_list_result.data["cut_list"]
 
-        print("✅ Cut list generated!"        print(f"   Total duration: {cut_list.total_duration:.1f}s")
+        print("✅ Cut list generated!")
+        print(f"   Total duration: {cut_list.total_duration:.1f}s")
         print(f"   Safe segments: {len(cut_list.safe_segments)}")
         print(f"   Unsafe segments: {len(cut_list.unsafe_segments)}")
         print(f"   Sponsor placements: {len(cut_list.sponsor_placements)}")
@@ -117,15 +125,19 @@ def main() -> int:
         if cut_list.safe_segments:
             print("   Safe segments:")
             for i, segment in enumerate(cut_list.safe_segments[:3]):
-                print(f"     {i+1}. [{segment.start_time:.1f}s - {segment.end_time:.1f}s] "
-                      f"({segment.duration:.1f}s) - {segment.content_type}")
+                print(
+                    f"     {i + 1}. [{segment.start_time:.1f}s - {segment.end_time:.1f}s] "
+                    f"({segment.duration:.1f}s) - {segment.content_type}"
+                )
 
         # Show unsafe segments
         if cut_list.unsafe_segments:
             print("   Unsafe segments (to be removed):")
             for i, segment in enumerate(cut_list.unsafe_segments[:2]):
-                print(f"     {i+1}. [{segment.start_time:.1f}s - {segment.end_time:.1f}s] "
-                      f"- Risk factors: {', '.join(segment.risk_factors)}")
+                print(
+                    f"     {i + 1}. [{segment.start_time:.1f}s - {segment.end_time:.1f}s] "
+                    f"- Risk factors: {', '.join(segment.risk_factors)}"
+                )
     else:
         print(f"❌ Cut list generation failed: {cut_list_result.error}")
 
@@ -144,10 +156,15 @@ def main() -> int:
     if sponsor_script_result.success:
         sponsor_script = sponsor_script_result.data["sponsor_script"]
 
-        print("✅ Sponsor script generated!"        print(f"   Total script duration: {sponsor_script.total_script_duration:.1f}s")
+        print("✅ Sponsor script generated!")
+        print(f"   Total script duration: {sponsor_script.total_script_duration:.1f}s")
         print(f"   Script segments: {len(sponsor_script.script_segments)}")
-        print(f"   Brand guidelines applied: {len(sponsor_script.brand_guidelines_applied)}")
-        print(f"   Sponsor integration points: {len(sponsor_script.sponsor_integration_points)}")
+        print(
+            f"   Brand guidelines applied: {len(sponsor_script.brand_guidelines_applied)}"
+        )
+        print(
+            f"   Sponsor integration points: {len(sponsor_script.sponsor_integration_points)}"
+        )
 
         # Show brand guidelines
         print("   Brand guidelines applied:")
@@ -157,7 +174,9 @@ def main() -> int:
         # Show script segments
         print("   Script segments:")
         for i, segment in enumerate(sponsor_script.script_segments[:3]):
-            print(f"     {i+1}. {segment['segment_type']}: {segment['content'][:50]}{'...' if len(segment['content']) > 50 else ''}")
+            print(
+                f"     {i + 1}. {segment['segment_type']}: {segment['content'][:50]}{'...' if len(segment['content']) > 50 else ''}"
+            )
     else:
         print(f"❌ Sponsor script generation failed: {sponsor_script_result.error}")
 
@@ -197,16 +216,29 @@ def main() -> int:
         family_report = family_result.data["compliance_report"]
         professional_report = professional_result.data["compliance_report"]
 
-        print("✅ Brand comparison completed!"        print("   Family-friendly compliance:"        print(f"     Score: {family_report.overall_compliance_score:.1%}")
+        print("✅ Brand comparison completed!")
+        print("   Family-friendly compliance:")
+        print(f"     Score: {family_report.overall_compliance_score:.1%}")
         print(f"     Violations: {len(family_report.policy_violations)}")
 
-        print("   Professional compliance:"        print(f"     Score: {professional_report.overall_compliance_score:.1%}")
+        print("   Professional compliance:")
+        print(f"     Score: {professional_report.overall_compliance_score:.1%}")
         print(f"     Violations: {len(professional_report.policy_violations)}")
 
         # Show the difference in compliance scores
-        score_diff = abs(family_report.overall_compliance_score - professional_report.overall_compliance_score)
-        stricter_brand = "Family" if family_report.overall_compliance_score < professional_report.overall_compliance_score else "Professional"
-        print(f"   {stricter_brand} guidelines are stricter (difference: {score_diff:.1%})")
+        score_diff = abs(
+            family_report.overall_compliance_score
+            - professional_report.overall_compliance_score
+        )
+        stricter_brand = (
+            "Family"
+            if family_report.overall_compliance_score
+            < professional_report.overall_compliance_score
+            else "Professional"
+        )
+        print(
+            f"   {stricter_brand} guidelines are stricter (difference: {score_diff:.1%})"
+        )
 
     print()
 
@@ -238,4 +270,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
-

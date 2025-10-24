@@ -4,13 +4,18 @@ from __future__ import annotations
 
 import argparse
 import json
-from collections.abc import Callable
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import jsonschema
 import yaml
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 @dataclass
@@ -32,7 +37,7 @@ class EvalResult:
 # --- Scorers ---------------------------------------------------------------
 
 
-def score_must_include(output: str, expected: dict[str, Any]) -> float:
+def score_must_include(output: str, expected: dict[str, Any]) -> StepResult:
     phrases = expected.get("must_include", [])
     if not phrases:
         return 1.0
@@ -40,7 +45,7 @@ def score_must_include(output: str, expected: dict[str, Any]) -> float:
     return hits / len(phrases)
 
 
-def score_must_link(output: str, expected: dict[str, Any]) -> float:
+def score_must_link(output: str, expected: dict[str, Any]) -> StepResult:
     links = expected.get("must_link", [])
     if not links:
         return 1.0
@@ -48,19 +53,19 @@ def score_must_link(output: str, expected: dict[str, Any]) -> float:
     return hits / len(links)
 
 
-def score_forbidden(output: str, expected: dict[str, Any]) -> float:
+def score_forbidden(output: str, expected: dict[str, Any]) -> StepResult:
     bad = expected.get("forbidden", [])
     return 1.0 if all(b.lower() not in output.lower() for b in bad) else 0.0
 
 
-def score_coverage(output: str, expected: dict[str, Any]) -> float:
+def score_coverage(output: str, expected: dict[str, Any]) -> StepResult:
     phrases = expected.get("must_include", [])
     if not phrases:
         return 1.0
     return score_must_include(output, expected)
 
 
-def score_grounded(output: str, record: dict[str, Any]) -> float:
+def score_grounded(output: str, record: dict[str, Any]) -> StepResult:
     refs = record.get("input", {}).get("context_refs", [])
     if not refs:
         return 1.0
@@ -83,7 +88,7 @@ def run_dataset(
     dataset_path: Path,
     runner: Callable[[dict[str, Any]], dict[str, Any]],
     seed: int = 0,
-) -> EvalResult:
+) -> StepResult:
     with open("datasets/schemas/task_record.schema.json", encoding="utf-8") as schema_f:
         schema = json.load(schema_f)
     samples: list[SampleResult] = []
@@ -129,7 +134,7 @@ def run_dataset(
 # --- Baseline comparison ---------------------------------------------------
 
 
-def compare_to_baseline(result: EvalResult, key: str, tolerances: dict[str, float]) -> bool:
+def compare_to_baseline(result: EvalResult, key: str, tolerances: dict[str, float]) -> StepResult:
     with open("benchmarks/baselines.yaml", encoding="utf-8") as base_f:
         baseline = yaml.safe_load(base_f)
     if key not in baseline:
@@ -144,7 +149,7 @@ def compare_to_baseline(result: EvalResult, key: str, tolerances: dict[str, floa
 # --- CLI ------------------------------------------------------------------
 
 
-def main(argv: list[str] | None = None) -> int:
+def main(argv: list[str] | None = None) -> StepResult:
     parser = argparse.ArgumentParser(prog="eval_harness")
     sub = parser.add_subparsers(dest="cmd", required=True)
     run_p = sub.add_parser("run")
@@ -155,7 +160,7 @@ def main(argv: list[str] | None = None) -> int:
     run_p.add_argument("--out", required=True)
     args = parser.parse_args(argv)
 
-    def dummy_runner(_input: dict[str, Any]) -> dict[str, Any]:
+    def dummy_runner(_input: dict[str, Any]) -> StepResult:
         return {"output": "no", "cost_usd": 0.0, "latency_ms": 0.0}
 
     result = run_dataset(Path(args.dataset), dummy_runner, seed=args.seed)

@@ -13,14 +13,18 @@ from __future__ import annotations
 import ipaddress
 import socket
 import urllib.request
-from collections.abc import Iterable
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from urllib.parse import urlparse
 
 import yaml
 
 from .events import log_security_event
+
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
 
 DEFAULT_CONFIG_PATH = Path(__file__).resolve().parents[2] / "config" / "security.yaml"
 
@@ -96,7 +100,7 @@ HTTP_REDIRECT_MIN = 300
 HTTP_REDIRECT_MAX = 400
 
 
-def safe_fetch(  # noqa: PLR0915 - readability prioritized over splitting small helpers
+def safe_fetch(
     url: str,
     *,
     config_path: Path | None = None,
@@ -140,14 +144,20 @@ def safe_fetch(  # noqa: PLR0915 - readability prioritized over splitting small 
         if not _scheme_ok:  # pragma: no cover - defensive
             raise SecurityError("invalid scheme post-validation")
         # Safe construction after explicit scheme validation; suppress bandit/ruff warning.
-        req = urllib.request.Request(current, method="GET")  # nosec B310  # noqa: S310
+        req = urllib.request.Request(current, method="GET")  # nosec B310
         try:
             # Safe open: scheme already validated (http/https) and host vetted.
-            with urllib.request.urlopen(req, timeout=10) as resp:  # nosec B310  # noqa: S310
+            with urllib.request.urlopen(req, timeout=10) as resp:  # nosec B310
                 # Handle redirect manually if follow_redirects disabled.
                 if HTTP_REDIRECT_MIN <= resp.status < HTTP_REDIRECT_MAX and resp.getheader("Location"):
                     if not follow_redirects:
-                        _log_block(actor, tenant, workspace, current, reason="redirect_disallowed")
+                        _log_block(
+                            actor,
+                            tenant,
+                            workspace,
+                            current,
+                            reason="redirect_disallowed",
+                        )
                         raise SecurityError("redirect disallowed")
                     current = resp.getheader("Location")
                     hops += 1
@@ -171,11 +181,24 @@ def safe_fetch(  # noqa: PLR0915 - readability prioritized over splitting small 
         except SecurityError:
             raise
         except Exception as exc:  # pragma: no cover - network variability
-            _log_block(actor, tenant, workspace, current, reason=f"fetch_error:{type(exc).__name__}")
+            _log_block(
+                actor,
+                tenant,
+                workspace,
+                current,
+                reason=f"fetch_error:{type(exc).__name__}",
+            )
             raise SecurityError("fetch failed") from exc
 
 
-def _log_block(actor: str | None, tenant: str | None, workspace: str | None, url: str, *, reason: str) -> None:
+def _log_block(
+    actor: str | None,
+    tenant: str | None,
+    workspace: str | None,
+    url: str,
+    *,
+    reason: str,
+) -> None:
     log_security_event(
         actor=actor or "unknown",
         action="net_guard",
@@ -207,7 +230,7 @@ def _log_allow(
 
 
 __all__ = [
+    "SecurityError",
     "is_safe_url",
     "safe_fetch",
-    "SecurityError",
 ]

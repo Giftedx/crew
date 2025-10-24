@@ -4,8 +4,9 @@ import os
 import time
 from typing import Any
 
+
 try:
-    from src.core.time import default_utc_now
+    from core.time import default_utc_now
 except ImportError:
     # Fallback if core time module is not available (py311 target)
     from datetime import datetime
@@ -14,7 +15,10 @@ except ImportError:
         return datetime.now(datetime.UTC)
 
 
+import contextlib
+
 from .discord_env import LIGHTWEIGHT_IMPORT, app_commands, commands, discord
+
 
 try:
     from .ingest import start_ingest_workers
@@ -42,9 +46,11 @@ def _register_events(bot: Any) -> None:
 
         # Optionally start background ingest worker(s)
         try:
-            if os.getenv("ENABLE_INGEST_WORKER", "0") in {"1", "true", "True"} and not getattr(
-                bot, "_ingest_workers_started", False
-            ):
+            if os.getenv("ENABLE_INGEST_WORKER", "0") in {
+                "1",
+                "true",
+                "True",
+            } and not getattr(bot, "_ingest_workers_started", False):
                 bot._ingest_workers_started = True  # type: ignore[attr-defined]
                 await start_ingest_workers(bot.loop)
         except Exception as e:
@@ -55,17 +61,19 @@ def _register_events(bot: Any) -> None:
         if isinstance(error, commands.CommandNotFound):
             await ctx.send("❓ Command not found. Use `!help` for available commands.")
         else:
-            try:
+            with contextlib.suppress(Exception):
                 await ctx.send(f"❌ Error: {error}")
-            except Exception:
-                pass
             print(f"Command error: {error}")
 
 
 def _register_prefix_commands(bot: Any) -> None:
     if LIGHTWEIGHT_IMPORT:
         return
-    if os.getenv("ENABLE_DISCORD_USER_COMMANDS", "0").lower() not in {"1", "true", "yes"}:
+    if os.getenv("ENABLE_DISCORD_USER_COMMANDS", "0").lower() not in {
+        "1",
+        "true",
+        "yes",
+    }:
         return
 
     @bot.command(name="status")
@@ -154,14 +162,12 @@ def _register_prefix_commands(bot: Any) -> None:
                 depth = _normalize_depth(_extract_depth(text))
 
                 if not url:
-                    try:
+                    with contextlib.suppress(Exception):
                         await message.channel.send(
                             "❌ Could not parse URL. Usage examples:\n"
                             "• /autointel url:https://youtu.be/VIDEO depth:Experimental - Cutting-Edge AI\n"
                             "• !autointel https://youtu.be/VIDEO depth:experimental",
                         )
-                    except Exception:
-                        pass
                     return
 
                 # Build interaction-like adapter
@@ -169,12 +175,12 @@ def _register_prefix_commands(bot: Any) -> None:
                     async def defer(self):
                         return None
 
-                    async def send_message(self, content: str | None = None, ephemeral: bool = False):  # noqa: ARG002
+                    async def send_message(self, content: str | None = None, ephemeral: bool = False):
                         if content:
                             await message.channel.send(content)
 
                 class _Followup:
-                    async def send(self, content: str | None = None, ephemeral: bool = False):  # noqa: ARG002
+                    async def send(self, content: str | None = None, ephemeral: bool = False):
                         if content:
                             await message.channel.send(content)
 
@@ -187,18 +193,14 @@ def _register_prefix_commands(bot: Any) -> None:
                         self.channel = getattr(msg, "channel", None)
 
                 adapter = _Adapter(message)
-                try:
+                with contextlib.suppress(Exception):
                     await message.channel.send(f"🤖 Starting autointel for: {url} (depth: {depth})")
-                except Exception:
-                    pass
                 await _execute_autointel(adapter, url, depth)
                 return  # Don't process as a normal command
         finally:
             # Ensure other commands still work
-            try:
+            with contextlib.suppress(Exception):
                 await bot.process_commands(message)
-            except Exception:
-                pass
 
     # Add a robust text command fallback for users typing '/autointel url:... depth:...'
     @bot.command(name="autointel")
@@ -248,12 +250,12 @@ def _register_prefix_commands(bot: Any) -> None:
             async def defer(self):
                 return None
 
-            async def send_message(self, content: str | None = None, ephemeral: bool = False):  # noqa: ARG002
+            async def send_message(self, content: str | None = None, ephemeral: bool = False):
                 if content:
                     await ctx.send(content)
 
         class _Followup:
-            async def send(self, content: str | None = None, ephemeral: bool = False):  # noqa: ARG002
+            async def send(self, content: str | None = None, ephemeral: bool = False):
                 if content:
                     await ctx.send(content)
 
@@ -268,10 +270,8 @@ def _register_prefix_commands(bot: Any) -> None:
         adapter = _Adapter(ctx)
 
         # Give quick feedback
-        try:
+        with contextlib.suppress(Exception):
             await ctx.send(f"🤖 Starting autointel for: {url} (depth: {depth})")
-        except Exception:
-            pass
 
         await _execute_autointel(adapter, url, depth)
 
@@ -281,13 +281,11 @@ async def _execute_autointel(interaction: Any, url: str, depth: str = "standard"
     try:
         # Validate inputs first
         if not url or not url.startswith(("http://", "https://")):
-            try:
+            with contextlib.suppress(Exception):
                 await interaction.followup.send(
                     "❌ Invalid URL provided. Please provide a valid HTTP/HTTPS URL.",
                     ephemeral=True,
                 )
-            except Exception:
-                pass
             return
 
         # Normalize depth strings coming from UI labels or free text
@@ -336,15 +334,21 @@ async def _execute_autointel(interaction: Any, url: str, depth: str = "standard"
 
         # Priority order: Try AutonomousIntelligenceOrchestrator first (most stable)
         import_attempts = [
-            ("direct", "..autonomous_orchestrator", "AutonomousIntelligenceOrchestrator"),
+            (
+                "direct",
+                "..autonomous_orchestrator",
+                "AutonomousIntelligenceOrchestrator",
+            ),
             ("crew", "..crew", "UltimateDiscordIntelligenceBotCrew"),
         ]
 
         last_error = None
-        for attempt_type, module_name, class_name in import_attempts:
+        for attempt_type, _module_name, _class_name in import_attempts:
             try:
                 if attempt_type == "direct":
-                    from ..autonomous_orchestrator import AutonomousIntelligenceOrchestrator
+                    from ..autonomous_orchestrator import (
+                        AutonomousIntelligenceOrchestrator,
+                    )
 
                     orchestrator = AutonomousIntelligenceOrchestrator()
                     orchestrator_type = "direct"
@@ -373,13 +377,11 @@ async def _execute_autointel(interaction: Any, url: str, depth: str = "standard"
                 f"• Import path problems\n\n"
                 f"Please run 'python -m ultimate_discord_intelligence_bot.setup_cli doctor' to diagnose."
             )
-            try:
+            with contextlib.suppress(Exception):
                 await interaction.followup.send(
                     error_msg,
                     ephemeral=True,
                 )
-            except Exception:
-                pass
             return
 
         # Create tenant context for isolation. This is now done for all orchestrator types
@@ -401,13 +403,11 @@ async def _execute_autointel(interaction: Any, url: str, depth: str = "standard"
             TenantContext = None
         except Exception as tenant_error:
             print(f"❌ Tenant context creation failed: {tenant_error}")
-            try:
+            with contextlib.suppress(Exception):
                 await interaction.followup.send(
                     f"⚠️ Tenant context setup failed: {tenant_error}\nProceeding with basic execution.",
                     ephemeral=True,
                 )
-            except Exception:
-                pass
             tenant_ctx = None
 
         if orchestrator_type in ("fallback", "enhanced", "direct", "crew"):
@@ -465,13 +465,11 @@ async def _execute_autointel(interaction: Any, url: str, depth: str = "standard"
             print("✅ Successfully imported tenancy modules for 'with' statement")
         except ImportError as tenancy_error:
             print(f"❌ Import error for tenancy context manager: {tenancy_error}")
-            try:
+            with contextlib.suppress(Exception):
                 await interaction.followup.send(
                     f"⚠️ Tenancy system import failed: {tenancy_error}\nRunning without tenant isolation.",
                     ephemeral=True,
                 )
-            except Exception:
-                pass
             with_tenant = None
 
         print("🚀 Executing autonomous intelligence workflow...")
@@ -492,10 +490,10 @@ async def _execute_autointel(interaction: Any, url: str, depth: str = "standard"
             import traceback
 
             traceback.print_exc()
-            try:
+            with contextlib.suppress(Exception):
                 await interaction.followup.send(
                     (
-                        f"❌ Autonomous intelligence workflow failed: {str(orchestrator_error)}\n\n"
+                        f"❌ Autonomous intelligence workflow failed: {orchestrator_error!s}\n\n"
                         f"**Error Details:**\n- URL: {url}\n- Analysis Depth: {depth}\n- Error Type: {type(orchestrator_error).__name__}\n\n"
                         "The system encountered an error during autonomous processing. This may be due to:\n"
                         "• Missing CrewAI dependencies\n• Network connectivity issues\n• Content access restrictions\n• System resource limitations\n\n"
@@ -503,8 +501,6 @@ async def _execute_autointel(interaction: Any, url: str, depth: str = "standard"
                     ),
                     ephemeral=True,
                 )
-            except Exception:
-                pass
     except Exception as e:
         print(f"❌ Critical command failure: {e}")
         import traceback
@@ -513,7 +509,7 @@ async def _execute_autointel(interaction: Any, url: str, depth: str = "standard"
         try:
             await interaction.followup.send(
                 (
-                    f"❌ Critical system error: {str(e)}\n"
+                    f"❌ Critical system error: {e!s}\n"
                     "The /autointel command encountered an unexpected error. Please try again or contact support."
                 ),
                 ephemeral=True,
@@ -535,13 +531,12 @@ def _register_slash_commands(bot: Any) -> None:
             try:
                 await interaction.response.send_message("✅ Bot is alive", ephemeral=True)
             except Exception:
-                try:
+                with contextlib.suppress(Exception):
                     await interaction.followup.send("✅ Bot is alive", ephemeral=True)
-                except Exception:
-                    pass
 
         @bot.tree.command(
-            name="autointel", description="Enhanced autonomous URL intelligence analysis with full AI agentic workflow"
+            name="autointel",
+            description="Enhanced autonomous URL intelligence analysis with full AI agentic workflow",
         )
         @app_commands.describe(
             url="URL to analyze (YouTube, Twitter, TikTok, Instagram, Reddit, etc.)",
@@ -577,7 +572,10 @@ def _register_slash_commands(bot: Any) -> None:
             print(f"🤖 /autointel command started: URL={url}, Depth={depth}")
             await _execute_autointel(interaction, url, depth)
 
-        @bot.tree.command(name="retrieve_results", description="Retrieve completed intelligence analysis results")
+        @bot.tree.command(
+            name="retrieve_results",
+            description="Retrieve completed intelligence analysis results",
+        )
         @app_commands.describe(workflow_id="Workflow ID from the /autointel acknowledgment message")
         async def _retrieve_results(interaction, workflow_id: str):  # type: ignore
             """Retrieve results from a background intelligence analysis workflow."""
@@ -592,15 +590,13 @@ def _register_slash_commands(bot: Any) -> None:
             background_worker = getattr(interaction.client, "background_worker", None)
 
             if not background_worker:
-                try:
+                with contextlib.suppress(Exception):
                     await interaction.followup.send(
                         "❌ **Background Worker Not Available**\n\n"
                         "The background processing system is not enabled. "
                         "Results retrieval is only available when background processing is active.",
                         ephemeral=True,
                     )
-                except Exception:
-                    pass
                 return
 
             # Use the handler
@@ -614,27 +610,27 @@ def _register_slash_commands(bot: Any) -> None:
                 )
             except Exception as e:
                 print(f"❌ Result retrieval failed: {e}")
-                try:
+                with contextlib.suppress(Exception):
                     await interaction.followup.send(
-                        f"❌ **Retrieval Error**\n\nFailed to retrieve results: {str(e)}",
+                        f"❌ **Retrieval Error**\n\nFailed to retrieve results: {e!s}",
                         ephemeral=True,
                     )
-                except Exception:
-                    pass
 
-        if os.getenv("ENABLE_DISCORD_USER_COMMANDS", "0").lower() in {"1", "true", "yes"}:
+        if os.getenv("ENABLE_DISCORD_USER_COMMANDS", "0").lower() in {
+            "1",
+            "true",
+            "yes",
+        }:
 
             @bot.tree.command(name="status", description="Bot status overview")
             async def _status(interaction):  # type: ignore
-                tool_count = len(getattr(bot, "get_all_tools", lambda: {})())
+                tool_count = len(getattr(bot, "get_all_tools", dict)())
                 msg = f"🟢 Status: OK — {tool_count} tools loaded"
                 try:
                     await interaction.response.send_message(msg, ephemeral=True)
                 except Exception:
-                    try:
+                    with contextlib.suppress(Exception):
                         await interaction.followup.send(msg, ephemeral=True)
-                    except Exception:
-                        pass
     except Exception as e:  # pragma: no cover
         print(f"⚠️  Failed to register slash commands: {e}")
 

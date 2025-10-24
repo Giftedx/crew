@@ -38,6 +38,7 @@ from typing import Any, Literal
 
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -210,7 +211,9 @@ class MultimodalAnalysisPipeline:
             if config.enable_claim_extraction and "speaker_diarization" in analysis_results:
                 logger.info("Step 6: Claim & Quote Extraction")
                 claim_result = self._perform_claim_extraction(
-                    analysis_results["speaker_diarization"], config.model_quality, config.enable_caching
+                    analysis_results["speaker_diarization"],
+                    config.model_quality,
+                    config.enable_caching,
                 )
                 if claim_result.success:
                     analysis_results["claim_extraction"] = claim_result.data
@@ -303,7 +306,7 @@ class MultimodalAnalysisPipeline:
 
         except Exception as e:
             logger.error(f"Pipeline execution failed: {e}")
-            return StepResult.fail(f"Pipeline execution failed: {str(e)}", status="internal_error")
+            return StepResult.fail(f"Pipeline execution failed: {e!s}", status="internal_error")
 
     def _ingest_content(self, content_url: str, platform: str) -> StepResult:
         """Ingest content from platform (placeholder for MCP integration).
@@ -351,12 +354,14 @@ class MultimodalAnalysisPipeline:
 
         except Exception as e:
             logger.error(f"ASR analysis failed: {e}")
-            return StepResult.fail(f"ASR analysis failed: {str(e)}")
+            return StepResult.fail(f"ASR analysis failed: {e!s}")
 
     def _perform_speaker_analysis(self, asr_data: dict[str, Any], model: str, use_cache: bool) -> StepResult:
         """Perform speaker diarization analysis."""
         try:
-            from analysis.transcription.speaker_diarization_service import get_diarization_service
+            from analysis.transcription.speaker_diarization_service import (
+                get_diarization_service,
+            )
 
             diarization_service = get_diarization_service()
 
@@ -384,12 +389,14 @@ class MultimodalAnalysisPipeline:
 
         except Exception as e:
             logger.error(f"Speaker analysis failed: {e}")
-            return StepResult.fail(f"Speaker analysis failed: {str(e)}")
+            return StepResult.fail(f"Speaker analysis failed: {e!s}")
 
     def _perform_visual_analysis(self, ingestion_data: dict[str, Any], model: str, use_cache: bool) -> StepResult:
         """Perform visual parsing analysis."""
         try:
-            from analysis.vision.visual_parsing_service import get_visual_parsing_service
+            from analysis.vision.visual_parsing_service import (
+                get_visual_parsing_service,
+            )
 
             visual_service = get_visual_parsing_service()
 
@@ -408,12 +415,14 @@ class MultimodalAnalysisPipeline:
 
         except Exception as e:
             logger.error(f"Visual analysis failed: {e}")
-            return StepResult.fail(f"Visual analysis failed: {str(e)}")
+            return StepResult.fail(f"Visual analysis failed: {e!s}")
 
     def _perform_topic_analysis(self, asr_data: dict[str, Any], model: str, use_cache: bool) -> StepResult:
         """Perform topic segmentation analysis."""
         try:
-            from analysis.topic.topic_segmentation_service import get_topic_segmentation_service
+            from analysis.topic.topic_segmentation_service import (
+                get_topic_segmentation_service,
+            )
 
             topic_service = get_topic_segmentation_service()
 
@@ -430,12 +439,14 @@ class MultimodalAnalysisPipeline:
 
         except Exception as e:
             logger.error(f"Topic analysis failed: {e}")
-            return StepResult.fail(f"Topic analysis failed: {str(e)}")
+            return StepResult.fail(f"Topic analysis failed: {e!s}")
 
     def _perform_claim_extraction(self, speaker_data: dict[str, Any], model: str, use_cache: bool) -> StepResult:
         """Perform claim and quote extraction analysis."""
         try:
-            from analysis.nlp.claim_quote_extraction_service import get_claim_quote_extraction_service
+            from analysis.nlp.claim_quote_extraction_service import (
+                get_claim_quote_extraction_service,
+            )
 
             extraction_service = get_claim_quote_extraction_service()
 
@@ -452,12 +463,14 @@ class MultimodalAnalysisPipeline:
 
         except Exception as e:
             logger.error(f"Claim extraction failed: {e}")
-            return StepResult.fail(f"Claim extraction failed: {str(e)}")
+            return StepResult.fail(f"Claim extraction failed: {e!s}")
 
     def _perform_highlight_detection(self, asr_data: dict[str, Any], model: str, use_cache: bool) -> StepResult:
         """Perform highlight detection analysis."""
         try:
-            from analysis.highlight.highlight_detection_service import get_highlight_detection_service
+            from analysis.highlight.highlight_detection_service import (
+                get_highlight_detection_service,
+            )
 
             highlight_service = get_highlight_detection_service()
 
@@ -474,12 +487,14 @@ class MultimodalAnalysisPipeline:
 
         except Exception as e:
             logger.error(f"Highlight detection failed: {e}")
-            return StepResult.fail(f"Highlight detection failed: {str(e)}")
+            return StepResult.fail(f"Highlight detection failed: {e!s}")
 
     def _perform_sentiment_analysis(self, asr_data: dict[str, Any], model: str, use_cache: bool) -> StepResult:
         """Perform sentiment and stance analysis."""
         try:
-            from analysis.sentiment.sentiment_stance_analysis_service import get_sentiment_stance_analysis_service
+            from analysis.sentiment.sentiment_stance_analysis_service import (
+                get_sentiment_stance_analysis_service,
+            )
 
             sentiment_service = get_sentiment_stance_analysis_service()
 
@@ -496,12 +511,14 @@ class MultimodalAnalysisPipeline:
 
         except Exception as e:
             logger.error(f"Sentiment analysis failed: {e}")
-            return StepResult.fail(f"Sentiment analysis failed: {str(e)}")
+            return StepResult.fail(f"Sentiment analysis failed: {e!s}")
 
     def _perform_safety_analysis(self, asr_data: dict[str, Any], model: str, use_cache: bool) -> StepResult:
         """Perform safety and brand suitability analysis."""
         try:
-            from analysis.safety.safety_brand_suitability_service import get_safety_brand_suitability_service
+            from analysis.safety.safety_brand_suitability_service import (
+                get_safety_brand_suitability_service,
+            )
 
             safety_service = get_safety_brand_suitability_service()
 
@@ -518,7 +535,7 @@ class MultimodalAnalysisPipeline:
 
         except Exception as e:
             logger.error(f"Safety analysis failed: {e}")
-            return StepResult.fail(f"Safety analysis failed: {str(e)}")
+            return StepResult.fail(f"Safety analysis failed: {e!s}")
 
     def _perform_deduplication_analysis(
         self, analysis_results: dict[str, Any], model: str, use_cache: bool
@@ -557,12 +574,14 @@ class MultimodalAnalysisPipeline:
 
         except Exception as e:
             logger.error(f"Deduplication analysis failed: {e}")
-            return StepResult.fail(f"Deduplication analysis failed: {str(e)}")
+            return StepResult.fail(f"Deduplication analysis failed: {e!s}")
 
     def _publish_analysis_results(self, analysis_results: dict[str, Any], platform: str, model: str) -> StepResult:
         """Publish analysis results to configured platforms."""
         try:
-            from publishing.artifact_publishing_service import get_artifact_publishing_service
+            from publishing.artifact_publishing_service import (
+                get_artifact_publishing_service,
+            )
 
             publishing_service = get_artifact_publishing_service()
             published_reports = []
@@ -611,7 +630,7 @@ class MultimodalAnalysisPipeline:
 
         except Exception as e:
             logger.error(f"Publishing failed: {e}")
-            return StepResult.fail(f"Publishing failed: {str(e)}")
+            return StepResult.fail(f"Publishing failed: {e!s}")
 
     def get_pipeline_status(self) -> StepResult:
         """Get the current status of the pipeline and all services.
@@ -629,14 +648,26 @@ class MultimodalAnalysisPipeline:
             # Check each service availability
             service_checks = [
                 ("ASR", "analysis.transcription.asr_service"),
-                ("Speaker Diarization", "analysis.transcription.speaker_diarization_service"),
+                (
+                    "Speaker Diarization",
+                    "analysis.transcription.speaker_diarization_service",
+                ),
                 ("Visual Parsing", "analysis.vision.visual_parsing_service"),
                 ("Topic Segmentation", "analysis.topic.topic_segmentation_service"),
                 ("Claim Extraction", "analysis.nlp.claim_quote_extraction_service"),
-                ("Highlight Detection", "analysis.highlight.highlight_detection_service"),
-                ("Sentiment Analysis", "analysis.sentiment.sentiment_stance_analysis_service"),
+                (
+                    "Highlight Detection",
+                    "analysis.highlight.highlight_detection_service",
+                ),
+                (
+                    "Sentiment Analysis",
+                    "analysis.sentiment.sentiment_stance_analysis_service",
+                ),
                 ("Safety Analysis", "analysis.safety.safety_brand_suitability_service"),
-                ("Deduplication", "analysis.deduplication.cross_platform_deduplication_service"),
+                (
+                    "Deduplication",
+                    "analysis.deduplication.cross_platform_deduplication_service",
+                ),
                 ("Publishing", "publishing.artifact_publishing_service"),
             ]
 
@@ -648,13 +679,13 @@ class MultimodalAnalysisPipeline:
                 except ImportError:
                     status_info["service_health"][service_name] = "unavailable"
                 except Exception as e:
-                    status_info["service_health"][service_name] = f"error: {str(e)}"
+                    status_info["service_health"][service_name] = f"error: {e!s}"
 
             return StepResult.ok(data=status_info)
 
         except Exception as e:
             logger.error(f"Pipeline status check failed: {e}")
-            return StepResult.fail(f"Pipeline status check failed: {str(e)}")
+            return StepResult.fail(f"Pipeline status check failed: {e!s}")
 
 
 # Singleton instance

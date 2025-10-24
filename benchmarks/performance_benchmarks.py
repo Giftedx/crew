@@ -70,7 +70,12 @@ class PerformanceBenchmarker:
             json.dump(data, f, indent=2)
 
     async def benchmark_operation(
-        self, operation_name: str, operation_func: Any, *args: Any, iterations: int = 10, **kwargs: Any
+        self,
+        operation_name: str,
+        operation_func: Any,
+        *args: Any,
+        iterations: int = 10,
+        **kwargs: Any,
     ) -> list[BenchmarkResult]:
         """Benchmark a specific operation."""
         results = []
@@ -120,7 +125,11 @@ class PerformanceBenchmarker:
                 cpu_percent=max(0, cpu_used),
                 success=success,
                 timestamp=time.strftime("%Y-%m-%d %H:%M:%S"),
-                metadata={"iteration": i + 1, "args_count": len(args), "kwargs_count": len(kwargs)},
+                metadata={
+                    "iteration": i + 1,
+                    "args_count": len(args),
+                    "kwargs_count": len(kwargs),
+                },
             )
             results.append(result)
 
@@ -286,7 +295,11 @@ class TestPerformanceBenchmarks:
 
         with with_tenant(TenantContext("benchmark_tenant", "benchmark_workspace")):
             results = await benchmarker.benchmark_operation(
-                "pipeline_process_video", mock_pipeline.process_video, test_url, quality="720p", iterations=5
+                "pipeline_process_video",
+                mock_pipeline.process_video,
+                test_url,
+                quality="720p",
+                iterations=5,
             )
 
         # Analyze results

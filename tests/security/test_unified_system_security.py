@@ -18,21 +18,13 @@ class TestUnifiedSystemSecurity:
     def mock_services(self):
         """Mock external services for security testing"""
         with (
-            patch(
-                "ultimate_discord_intelligence_bot.knowledge.unified_memory.QdrantClient"
-            ) as mock_qdrant,
-            patch(
-                "ultimate_discord_intelligence_bot.knowledge.unified_memory.sqlite3.connect"
-            ) as mock_sqlite,
+            patch("ultimate_discord_intelligence_bot.knowledge.unified_memory.QdrantClient") as mock_qdrant,
+            patch("ultimate_discord_intelligence_bot.knowledge.unified_memory.sqlite3.connect") as mock_sqlite,
             patch(
                 "ultimate_discord_intelligence_bot.observability.unified_metrics.prometheus_client"
             ) as mock_prometheus,
-            patch(
-                "ultimate_discord_intelligence_bot.routing.unified_router.OpenRouterService"
-            ) as mock_openrouter,
-            patch(
-                "ultimate_discord_intelligence_bot.caching.unified_cache.redis.Redis"
-            ) as mock_redis,
+            patch("ultimate_discord_intelligence_bot.routing.unified_router.OpenRouterService") as mock_openrouter,
+            patch("ultimate_discord_intelligence_bot.caching.unified_cache.redis.Redis") as mock_redis,
         ):
             # Mock Qdrant
             mock_qdrant.return_value = AsyncMock()
@@ -374,15 +366,11 @@ class TestUnifiedSystemSecurity:
         rate_limited_count = sum(
             1
             for r in results
-            if isinstance(r, dict)
-            and not r.get("success")
-            and "rate" in str(r.get("error", "")).lower()
+            if isinstance(r, dict) and not r.get("success") and "rate" in str(r.get("error", "")).lower()
         )
 
         # Should have some rate limiting in place
-        assert (
-            rate_limited_count > 0 or rapid_requests < 50
-        )  # Allow if rate limiting is not yet implemented
+        assert rate_limited_count > 0 or rapid_requests < 50  # Allow if rate limiting is not yet implemented
 
     def test_injection_attack_prevention(self, mock_services):
         """Test injection attack prevention"""
@@ -526,11 +514,7 @@ class TestUnifiedSystemSecurity:
             )
 
             # Should reject or limit large payloads
-            assert (
-                not result.success
-                or "large" in result.error.lower()
-                or "limit" in result.error.lower()
-            )
+            assert not result.success or "large" in result.error.lower() or "limit" in result.error.lower()
 
     def test_cross_site_request_forgery_prevention(self, mock_services):
         """Test CSRF prevention"""

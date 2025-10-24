@@ -14,6 +14,7 @@ You can control these with environment variables:
 
 from __future__ import annotations
 
+import contextlib
 import faulthandler
 import os
 import sys
@@ -21,6 +22,7 @@ from pathlib import Path
 from types import ModuleType
 
 import pytest
+
 
 try:
     import signal
@@ -87,7 +89,7 @@ def _install_crewai_stub() -> None:
         def __init__(self, *args, **kwargs):
             pass
 
-        def _run(self, *args, **kwargs):  # noqa: D401 - shim
+        def _run(self, *args, **kwargs):
             return None
 
     tools.BaseTool = BaseTool
@@ -325,13 +327,10 @@ def pytest_configure(config):  # pragma: no cover - environment hygiene
         for name in list(pluginmanager.list_name_plugin()):
             lname = str(name).lower()
             if (
-                lname.startswith("chromadb")
+                lname.startswith(("chromadb", "lance", "lancedb", "pyarrow"))
                 or ".chromadb" in lname
-                or lname.startswith("lance")
                 or ".lance" in lname
-                or lname.startswith("lancedb")
                 or ".lancedb" in lname
-                or lname.startswith("pyarrow")
                 or ".pyarrow" in lname
             ):
                 try:
@@ -362,7 +361,11 @@ def _global_traceback_dumps():  # pragma: no cover - diagnostic facility
     Controlled by PYTEST_GLOBAL_TRACEBACK_TIMEOUT_SECONDS (default: 900).
     Disable via PYTEST_DISABLE_GLOBAL_TRACEBACK=1.
     """
-    if os.getenv("PYTEST_DISABLE_GLOBAL_TRACEBACK", "0").lower() in {"1", "true", "yes"}:
+    if os.getenv("PYTEST_DISABLE_GLOBAL_TRACEBACK", "0").lower() in {
+        "1",
+        "true",
+        "yes",
+    }:
         return
     delay = _int_from_env("PYTEST_GLOBAL_TRACEBACK_TIMEOUT_SECONDS", 900)
     try:
@@ -372,10 +375,8 @@ def _global_traceback_dumps():  # pragma: no cover - diagnostic facility
         # Non-fatal; continue without global dumps
         pass
     yield
-    try:
+    with contextlib.suppress(Exception):
         faulthandler.cancel_dump_traceback_later()
-    except Exception:
-        pass
 
 
 @pytest.fixture(autouse=True)
@@ -411,10 +412,8 @@ def _per_test_timeout(request):  # pragma: no cover - timing behavior
             signal.alarm(timeout)
             yield
         finally:
-            try:
+            with contextlib.suppress(Exception):
                 signal.alarm(0)
-            except Exception:
-                pass
             try:
                 if prev_handler is not None:
                     signal.signal(signal.SIGALRM, prev_handler)  # type: ignore[arg-type]
@@ -423,8 +422,6 @@ def _per_test_timeout(request):  # pragma: no cover - timing behavior
     else:
         # Fallback: no reliable way to interrupt the test without signals.
         # We still enable faulthandler to provide diagnostics if a hang occurs.
-        try:
+        with contextlib.suppress(Exception):
             faulthandler.enable()
-        except Exception:
-            pass
         yield

@@ -14,6 +14,7 @@ from ultimate_discord_intelligence_bot.fallback_orchestrator import (
 )
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -61,9 +62,7 @@ class FallbackStrategy:
         )
 
         try:
-            logger.info(
-                f"Executing fallback workflow: url={url}, tenant={tenant}, workspace={workspace}"
-            )
+            logger.info(f"Executing fallback workflow: url={url}, tenant={tenant}, workspace={workspace}")
 
             # Check if interaction was provided for Discord updates
             interaction = kwargs.get("interaction")
@@ -122,14 +121,10 @@ class FallbackStrategy:
 
             # Execute basic analysis
             pipeline_data = pipeline_result.data.get("data", pipeline_result.data)
-            analysis_result = await self._orchestrator._execute_basic_analysis(
-                pipeline_data
-            )
+            analysis_result = await self._orchestrator._execute_basic_analysis(pipeline_data)
 
             # Execute basic fact check
-            fact_result = await self._orchestrator._execute_basic_fact_check(
-                pipeline_data
-            )
+            fact_result = await self._orchestrator._execute_basic_fact_check(pipeline_data)
 
             # Combine results
             return StepResult.ok(
@@ -141,9 +136,7 @@ class FallbackStrategy:
             )
 
         except Exception as exc:
-            return StepResult.fail(
-                f"Pipeline execution failed: {exc}", step="fallback_pipeline"
-            )
+            return StepResult.fail(f"Pipeline execution failed: {exc}", step="fallback_pipeline")
 
     async def initialize(self) -> None:
         """Initialize strategy resources."""

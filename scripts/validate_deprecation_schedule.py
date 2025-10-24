@@ -25,12 +25,17 @@ import logging
 import os
 import re
 import sys
-from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import yaml
+
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
 
 ROOT = Path(__file__).resolve().parent.parent
 SCHEDULE = ROOT / "config" / "deprecations.yaml"
@@ -70,7 +75,7 @@ def _load_schedule() -> list[DeprecationEntry]:
     for item in raw.get("flags", []) or []:
         try:
             remove_after = datetime.strptime(str(item["remove_after"]), "%Y-%m-%d").date()
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             print(f"invalid remove_after for {item}: {e}", file=sys.stderr)
             continue
         entries.append(
@@ -109,7 +114,7 @@ def _scan_for(flag: str) -> list[Path]:
     for file in _iter_code_files():
         try:
             text = file.read_text(encoding="utf-8", errors="ignore")
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logging.debug("Failed reading %s: %s", file, exc)
             continue
         if pattern.search(text):
@@ -125,7 +130,10 @@ def main() -> int:
         try:
             today = datetime.strptime(override, "%Y-%m-%d").date()
         except ValueError:
-            logging.warning("Invalid DEPRECATION_AS_OF=%s (expected YYYY-MM-DD) - ignoring", override)
+            logging.warning(
+                "Invalid DEPRECATION_AS_OF=%s (expected YYYY-MM-DD) - ignoring",
+                override,
+            )
 
     if not entries:
         print("No deprecations scheduled.")

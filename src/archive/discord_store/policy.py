@@ -7,6 +7,7 @@ from pathlib import Path
 
 from policy import policy_engine
 
+
 # Basic allowlist for file extensions per kind
 _ALLOWLIST = {
     "images": {".png", ".jpg", ".jpeg", ".webp"},
@@ -47,4 +48,4 @@ def check(path: str | Path, meta: dict) -> tuple[bool, list[str]]:
     return not reasons, reasons
 
 
-__all__ = ["check", "PolicyError"]
+__all__ = ["PolicyError", "check"]

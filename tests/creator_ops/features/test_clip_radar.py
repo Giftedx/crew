@@ -88,7 +88,11 @@ class TestClipRadar:
         chat_messages = [
             {"message": "This is AMAZING!", "sentiment": 0.9, "engagement": 150},
             {"message": "EPIC moment!", "sentiment": 0.8, "engagement": 120},
-            {"message": "WOW that was incredible!", "sentiment": 0.95, "engagement": 200},
+            {
+                "message": "WOW that was incredible!",
+                "sentiment": 0.95,
+                "engagement": 200,
+            },
         ]
 
         with patch.object(self.clip_radar, "_analyze_chat_engagement") as mock_analyze:
@@ -221,7 +225,11 @@ class TestClipRadar:
         chat_messages = [
             {"message": "This is AMAZING!", "sentiment": 0.9, "engagement": 150},
             {"message": "EPIC moment!", "sentiment": 0.8, "engagement": 120},
-            {"message": "WOW that was incredible!", "sentiment": 0.95, "engagement": 200},
+            {
+                "message": "WOW that was incredible!",
+                "sentiment": 0.95,
+                "engagement": 200,
+            },
             {"message": "hello", "sentiment": 0.5, "engagement": 10},
         ]
 
@@ -267,7 +275,12 @@ class TestClipRadar:
 
     def test_calculate_moment_score_low_metrics(self):
         """Test moment score calculation with low metrics."""
-        engagement_data = {"avg_sentiment": 0.3, "total_engagement": 20, "keyword_matches": 0, "moment_score": 0.0}
+        engagement_data = {
+            "avg_sentiment": 0.3,
+            "total_engagement": 20,
+            "keyword_matches": 0,
+            "moment_score": 0.0,
+        }
 
         stream_data = {"viewer_count": 50, "chat_rate": 2}
 
@@ -294,7 +307,11 @@ class TestClipRadar:
         chat_messages = [
             {"message": "This is AMAZING!", "sentiment": 0.9, "engagement": 150},
             {"message": "EPIC moment!", "sentiment": 0.8, "engagement": 120},
-            {"message": "WOW that was incredible!", "sentiment": 0.95, "engagement": 200},
+            {
+                "message": "WOW that was incredible!",
+                "sentiment": 0.95,
+                "engagement": 200,
+            },
         ]
 
         with patch.object(self.clip_radar, "_get_stream_data") as mock_stream:
@@ -310,7 +327,10 @@ class TestClipRadar:
                             "moment_score": 0.9,
                         }
                         mock_clip.return_value = StepResult.ok(
-                            data={"clip_id": "clip_123", "url": "https://clips.twitch.tv/clip_123"}
+                            data={
+                                "clip_id": "clip_123",
+                                "url": "https://clips.twitch.tv/clip_123",
+                            }
                         )
 
                         # Start monitoring
@@ -340,7 +360,10 @@ class TestClipRadar:
 
         assert result.success
         mock_post.assert_called_once_with(
-            self.config.notification_webhook, json=clip_data, headers={"Content-Type": "application/json"}, timeout=10
+            self.config.notification_webhook,
+            json=clip_data,
+            headers={"Content-Type": "application/json"},
+            timeout=10,
         )
 
     def test_notification_webhook_failure(self):
@@ -379,7 +402,11 @@ class TestClipRadar:
                 }
 
                 chat_messages = [
-                    {"message": "This is AMAZING!", "sentiment": 0.9, "engagement": 150},
+                    {
+                        "message": "This is AMAZING!",
+                        "sentiment": 0.9,
+                        "engagement": 150,
+                    },
                     {"message": "EPIC moment!", "sentiment": 0.8, "engagement": 120},
                 ]
 
@@ -467,7 +494,10 @@ class TestClipRadar:
         """Test YouTube platform integration."""
         with patch.object(self.clip_radar, "_create_youtube_clip") as mock_youtube:
             mock_youtube.return_value = StepResult.ok(
-                data={"clip_id": "clip_456", "url": "https://youtube.com/watch?v=clip_456"}
+                data={
+                    "clip_id": "clip_456",
+                    "url": "https://youtube.com/watch?v=clip_456",
+                }
             )
 
             moment = ClipMoment(

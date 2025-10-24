@@ -16,6 +16,7 @@ from dataclasses import asdict, dataclass, field
 from enum import Enum
 from typing import Any
 
+
 try:
     import psutil
 
@@ -25,6 +26,7 @@ except ImportError:
 
 from core.time import default_utc_now
 from obs import metrics
+
 
 logger = logging.getLogger(__name__)
 
@@ -303,7 +305,10 @@ class AlertManager:
             if rule.evaluate(metrics):
                 # Create new alert
                 alert = Alert(
-                    rule_name=rule.name, level=rule.level, message=rule.description, metrics_snapshot=asdict(metrics)
+                    rule_name=rule.name,
+                    level=rule.level,
+                    message=rule.description,
+                    metrics_snapshot=asdict(metrics),
                 )
 
                 new_alerts.append(alert)
@@ -345,7 +350,6 @@ class QualityGate(ABC):
         Returns:
             (passed, score, message)
         """
-        pass
 
 
 class PerformanceQualityGate(QualityGate):
@@ -567,7 +571,12 @@ class EnhancedMonitoringSystem:
 
             try:
                 passed, score, message = await gate.evaluate(metrics)
-                results[gate.name] = {"passed": passed, "score": score, "threshold": gate.threshold, "message": message}
+                results[gate.name] = {
+                    "passed": passed,
+                    "score": score,
+                    "threshold": gate.threshold,
+                    "message": message,
+                }
             except Exception as e:
                 logger.error(f"Quality gate {gate.name} evaluation failed: {e}")
                 results[gate.name] = {
@@ -591,7 +600,10 @@ class EnhancedMonitoringSystem:
 
         # Check quality gates
         failed_gates = [name for name, result in quality_gates.items() if not result["passed"]]
-        critical_gates = ["response_latency", "success_rate"]  # Gates that indicate degradation
+        critical_gates = [
+            "response_latency",
+            "success_rate",
+        ]  # Gates that indicate degradation
 
         if any(gate in failed_gates for gate in critical_gates):
             return MonitoringStatus.DEGRADED
@@ -745,7 +757,12 @@ class EnhancedMonitoringSystem:
 
         except Exception as e:
             logger.error(f"Health check failed: {e}")
-            return {"healthy": False, "status": "error", "error": str(e), "timestamp": default_utc_now().isoformat()}
+            return {
+                "healthy": False,
+                "status": "error",
+                "error": str(e),
+                "timestamp": default_utc_now().isoformat(),
+            }
 
 
 class MonitoringManager:
@@ -779,13 +796,13 @@ async def stop_monitoring_system():
 
 
 __all__ = [
-    "EnhancedMonitoringSystem",
-    "SystemHealthMetrics",
-    "AlertLevel",
-    "MonitoringStatus",
     "Alert",
+    "AlertLevel",
     "AlertRule",
+    "EnhancedMonitoringSystem",
+    "MonitoringStatus",
     "QualityGate",
+    "SystemHealthMetrics",
     "get_enhanced_monitoring",
     "start_monitoring_system",
     "stop_monitoring_system",

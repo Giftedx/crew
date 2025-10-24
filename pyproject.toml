@@ -1,0 +1,356 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ultimate-discord-intelligence-bot"
+version = "0.1.0"
+description = "Ultimate Discord Intelligence Bot - Advanced AI-powered content analysis and debate intelligence system"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [
+    {name = "Ultimate Discord Intelligence Bot Team"},
+]
+keywords = ["discord", "ai", "crewai", "content-analysis", "debate", "intelligence"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Communications :: Chat",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+dependencies = [
+    # Core AI/ML Framework
+    "crewai>=0.80.0",
+    "crewai-tools>=0.12.0",
+    
+    # Discord Integration
+    "discord.py>=2.3.0",
+    
+    # LLM Services
+    "openai>=1.0.0",
+    "anthropic>=0.69.0",
+    
+    # Vector Storage & Memory
+    "qdrant-client>=1.7.0",
+    
+    # Data Processing
+    "pydantic>=2.0.0",
+    "pydantic-settings>=2.0.0",
+    
+    # HTTP & Async
+    "aiohttp>=3.8.0",
+    "httpx>=0.24.0",
+    
+    # Content Processing
+    "yt-dlp>=2023.12.30",
+    "beautifulsoup4>=4.12.0",
+    "requests>=2.31.0",
+    
+    # Database & Storage
+    "sqlalchemy>=2.0.0",
+    "alembic>=1.12.0",
+    "redis>=5.0.0",
+    
+    # Utilities
+    "python-dotenv>=1.0.0",
+    "click>=8.1.0",
+    "rich>=13.0.0",
+    "typer>=0.9.0",
+    
+    # Monitoring & Observability
+    "prometheus-client>=0.17.0",
+    "structlog>=23.0.0",
+    
+    # Security & Authentication
+    "cryptography>=41.0.0",
+    "bcrypt>=4.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-cov>=4.1.0",
+    "pytest-mock>=3.11.0",
+    "black>=23.0.0",
+    "ruff>=0.1.0",
+    "mypy>=1.5.0",
+    "pre-commit>=3.4.0",
+    "mypy-baseline>=0.1.0",
+    # Type stubs for optional dependencies
+    "types-requests>=2.31.0",
+    "types-redis>=4.6.0",
+    "types-beautifulsoup4>=4.12.0",
+    # Type stubs for MyPy error resolution
+    "types-sqlalchemy>=1.4.0",
+    "types-aiofiles>=23.0.0",
+    "pandas-stubs>=2.0.0",
+]
+
+docs = [
+    "mkdocs>=1.5.0",
+    "mkdocs-material>=9.4.0",
+    "mkdocstrings[python]>=0.24.0",
+]
+
+ml = [
+    "torch>=2.0.0",
+    "torchaudio>=2.0.0",
+    "transformers>=4.35.0",
+    "accelerate>=0.24.0",
+    "datasets>=2.14.0",
+    "sentence-transformers>=2.2.0",
+    "scikit-learn>=1.3.0",
+    "numpy>=1.24.0",
+    "pandas>=2.0.0",
+]
+
+# Computer Vision dependencies
+vision = [
+    "opencv-python>=4.8.0",
+    "pillow>=10.0.0",
+    "imageio>=2.31.0",
+    "scikit-image>=0.21.0",
+]
+
+# Advanced Memory & Storage
+memory = [
+    "chromadb>=0.4.0",
+    "mem0ai>=0.1.0",
+    "networkx>=3.1.0",
+    "neo4j>=5.0.0",
+]
+
+all = [
+    "ultimate-discord-intelligence-bot[dev,docs,ml,vision,memory]",
+]
+
+[project.urls]
+Homepage = "https://github.com/ultimate-discord-intelligence-bot/ultimate-discord-intelligence-bot"
+Documentation = "https://ultimate-discord-intelligence-bot.readthedocs.io"
+Repository = "https://github.com/ultimate-discord-intelligence-bot/ultimate-discord-intelligence-bot.git"
+Issues = "https://github.com/ultimate-discord-intelligence-bot/ultimate-discord-intelligence-bot/issues"
+
+[project.scripts]
+discord-intelligence-bot = "ultimate_discord_intelligence_bot.main:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-dir]
+"" = "src"
+
+# Ruff Configuration
+[tool.ruff]
+target-version = "py310"
+line-length = 120
+
+[tool.ruff.lint]
+select = [
+    "E",  # pycodestyle errors
+    "W",  # pycodestyle warnings
+    "F",  # pyflakes
+    "I",  # isort
+    "B",  # flake8-bugbear
+    "C4", # flake8-comprehensions
+    "UP", # pyupgrade
+    "ARG001", # unused-function-args
+    "SIM", # flake8-simplify
+    "TCH", # flake8-type-checking
+    "PIE", # flake8-pie
+    "A", # flake8-builtins
+    "COM812", # missing-trailing-comma
+    "ISC001", # implicit-string-concatenation
+    "Q", # flake8-quotes
+    "RUF", # ruff-specific rules
+]
+ignore = [
+    "E501", # line too long, handled by black
+    "B008", # do not perform function calls in argument defaults
+    "C901", # too complex
+    "W191", # indentation contains tabs
+    "ISC001", # implicit string concatenation
+    "COM812", # missing trailing comma
+    "Q000", # single quotes
+    "Q001", # single quotes multiline
+    "Q002", # single quotes docstring
+    "Q003", # single quotes multiline docstring
+]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]
+"tests/**/*.py" = ["S101", "ARG", "FBT", "PLR2004", "SLF001"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["ultimate_discord_intelligence_bot"]
+force-single-line = false
+lines-after-imports = 2
+
+# MyPy Configuration
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+mypy_path = "src"
+namespace_packages = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+explicit_package_bases = true
+exclude = ["scripts/", "scripts/helpers/"]
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_equality = true
+show_error_codes = true
+
+[[tool.mypy.overrides]]
+module = [
+    "crewai",
+    "crewai.*",
+    "crewai_tools",
+    "crewai_tools.*",
+    "discord",
+    "discord.*",
+    "qdrant_client",
+    "qdrant_client.*",
+    "chromadb",
+    "chromadb.*",
+    "torch",
+    "torch.*",
+    "torchaudio",
+    "torchaudio.*",
+    "cv2",
+    "cv2.*",
+    "PIL",
+    "PIL.*",
+    "youtube_dl",
+    "youtube_dl.*",
+    "yt_dlp",
+    "yt_dlp.*",
+    "bs4",
+    "bs4.*",
+    "redis",
+    "redis.*",
+    "prometheus_client",
+    "prometheus_client.*",
+    "structlog",
+    "structlog.*",
+    "cryptography",
+    "cryptography.*",
+    "bcrypt",
+    "bcrypt.*",
+    "scipy",
+    "scipy.*",
+    "sqlalchemy",
+    "sqlalchemy.*",
+    "httpx",
+    "httpx.*",
+    "tenacity",
+    "tenacity.*",
+    "websockets",
+    "websockets.*",
+    "whisper",
+    "whisper.*",
+    "faster_whisper",
+    "faster_whisper.*",
+    "pyannote",
+    "pyannote.*",
+    "networkx",
+    "networkx.*",
+    "loguru",
+    "loguru.*",
+    "langchain_openai",
+    "langchain_openai.*",
+    "transformers",
+    "transformers.*",
+    "sentence_transformers",
+    "sentence_transformers.*",
+]
+ignore_missing_imports = true
+
+# Pytest Configuration
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = [
+    "-ra",
+    "--strict-markers",
+    "--strict-config",
+    "--cov=src/ultimate_discord_intelligence_bot",
+    "--cov-report=term-missing",
+    "--cov-report=html",
+    "--cov-report=xml",
+    "--cov-fail-under=80",
+]
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+    "unit: marks tests as unit tests",
+    "e2e: marks tests as end-to-end tests",
+]
+asyncio_mode = "auto"
+filterwarnings = [
+    "error",
+    "ignore::UserWarning",
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning",
+]
+
+# Coverage Configuration
+[tool.coverage.run]
+source = ["src"]
+omit = [
+    "*/tests/*",
+    "*/test_*",
+    "*/__pycache__/*",
+    "*/migrations/*",
+    "*/venv/*",
+    "*/.venv/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod",
+]
+
+# Black Configuration
+[tool.black]
+line-length = 120
+target-version = ['py310']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''

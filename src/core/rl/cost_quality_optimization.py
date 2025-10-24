@@ -16,6 +16,7 @@ from typing import Any
 
 import numpy as np
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -99,7 +100,10 @@ class ModelSpecification:
             else:
                 return tokens * self.cost_per_token
         elif self.cost_model == CostModel.HYBRID:
-            return max(self.minimum_cost, (tokens * self.cost_per_token) + (requests * self.cost_per_request))
+            return max(
+                self.minimum_cost,
+                (tokens * self.cost_per_token) + (requests * self.cost_per_request),
+            )
         else:
             return self.minimum_cost
 
@@ -327,7 +331,11 @@ class CostQualityOptimizer:
         return feasible_models
 
     def _perform_optimization(
-        self, feasible_models: list[ModelSpecification], tokens: int, requests: int, context: dict[str, Any] | None
+        self,
+        feasible_models: list[ModelSpecification],
+        tokens: int,
+        requests: int,
+        context: dict[str, Any] | None,
     ) -> OptimizationResult:
         """Perform optimization using the configured algorithm."""
         if self.config.algorithm == OptimizationAlgorithm.WEIGHTED_SUM:
@@ -344,7 +352,11 @@ class CostQualityOptimizer:
             return self._optimize_weighted_sum(feasible_models, tokens, requests, context)
 
     def _optimize_weighted_sum(
-        self, feasible_models: list[ModelSpecification], tokens: int, requests: int, context: dict[str, Any] | None
+        self,
+        feasible_models: list[ModelSpecification],
+        tokens: int,
+        requests: int,
+        context: dict[str, Any] | None,
     ) -> OptimizationResult:
         """Optimize using weighted sum approach."""
         best_model = None
@@ -388,7 +400,11 @@ class CostQualityOptimizer:
         return OptimizationResult()
 
     def _optimize_pareto_front(
-        self, feasible_models: list[ModelSpecification], tokens: int, requests: int, context: dict[str, Any] | None
+        self,
+        feasible_models: list[ModelSpecification],
+        tokens: int,
+        requests: int,
+        context: dict[str, Any] | None,
     ) -> OptimizationResult:
         """Optimize using Pareto front approach."""
         # Calculate cost and quality for all models
@@ -402,7 +418,7 @@ class CostQualityOptimizer:
         pareto_optimal = []
         for i, (model, cost, quality) in enumerate(model_scores):
             is_pareto = True
-            for j, (other_model, other_cost, other_quality) in enumerate(model_scores):
+            for j, (_other_model, other_cost, other_quality) in enumerate(model_scores):
                 if i != j:
                     # Check if other solution dominates this one
                     if (
@@ -441,7 +457,11 @@ class CostQualityOptimizer:
         return OptimizationResult()
 
     def _optimize_constraint_satisfaction(
-        self, feasible_models: list[ModelSpecification], tokens: int, requests: int, context: dict[str, Any] | None
+        self,
+        feasible_models: list[ModelSpecification],
+        tokens: int,
+        requests: int,
+        context: dict[str, Any] | None,
     ) -> OptimizationResult:
         """Optimize using constraint satisfaction approach."""
         # All models are already feasible, so find the one that best satisfies constraints
@@ -455,7 +475,8 @@ class CostQualityOptimizer:
             # Calculate constraint satisfaction score
             cost_satisfaction = max(0, 1.0 - (cost / self.config.max_cost_per_request))
             quality_satisfaction = max(
-                0, (quality - self.config.min_quality_threshold) / (1.0 - self.config.min_quality_threshold)
+                0,
+                (quality - self.config.min_quality_threshold) / (1.0 - self.config.min_quality_threshold),
             )
             time_satisfaction = max(0, 1.0 - (model.expected_response_time / self.config.max_response_time))
 
@@ -483,7 +504,11 @@ class CostQualityOptimizer:
         return OptimizationResult()
 
     def _optimize_genetic_algorithm(
-        self, feasible_models: list[ModelSpecification], tokens: int, requests: int, context: dict[str, Any] | None
+        self,
+        feasible_models: list[ModelSpecification],
+        tokens: int,
+        requests: int,
+        context: dict[str, Any] | None,
     ) -> OptimizationResult:
         """Optimize using genetic algorithm approach."""
         # Simplified genetic algorithm for model selection
@@ -538,7 +563,11 @@ class CostQualityOptimizer:
         return OptimizationResult()
 
     def _optimize_simulated_annealing(
-        self, feasible_models: list[ModelSpecification], tokens: int, requests: int, context: dict[str, Any] | None
+        self,
+        feasible_models: list[ModelSpecification],
+        tokens: int,
+        requests: int,
+        context: dict[str, Any] | None,
     ) -> OptimizationResult:
         """Optimize using simulated annealing approach."""
         if not feasible_models:
@@ -630,7 +659,11 @@ class CostQualityOptimizer:
         }
 
     def update_model_performance(
-        self, model_id: str, actual_cost: float, actual_quality: float, actual_response_time: float
+        self,
+        model_id: str,
+        actual_cost: float,
+        actual_quality: float,
+        actual_response_time: float,
     ) -> bool:
         """Update model performance based on actual results."""
         if model_id not in self.models:

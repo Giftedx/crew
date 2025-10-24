@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import re
 
+
 """Prompt guards for enforcing citation markers."""
 
 

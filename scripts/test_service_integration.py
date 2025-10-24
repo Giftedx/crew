@@ -9,7 +9,8 @@ proper integration and functionality across the entire system.
 import sys
 import time
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
+
 
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
@@ -46,11 +47,11 @@ class ServiceIntegrationTester:
 
     def __init__(self):
         """Initialize the tester."""
-        self.results: Dict[str, Any] = {}
+        self.results: dict[str, Any] = {}
         self.test_tenant = "integration_test"
         self.test_workspace = "test_workspace"
 
-    def test_mcp_tools(self) -> Dict[str, Any]:
+    def test_mcp_tools(self) -> dict[str, Any]:
         """Test MCP tool integration."""
         print("\n🔧 Testing MCP Tools Integration...")
 
@@ -78,13 +79,11 @@ class ServiceIntegrationTester:
                 mcp_results["tool_details"]["mcp_call_tool"] = "✅ Working"
             else:
                 mcp_results["tools_failed"] += 1
-                mcp_results["tool_details"]["mcp_call_tool"] = (
-                    f"❌ Failed: {test_result.error}"
-                )
+                mcp_results["tool_details"]["mcp_call_tool"] = f"❌ Failed: {test_result.error}"
 
         except Exception as e:
             mcp_results["tools_failed"] += 1
-            mcp_results["tool_details"]["mcp_call_tool"] = f"❌ Exception: {str(e)}"
+            mcp_results["tool_details"]["mcp_call_tool"] = f"❌ Exception: {e!s}"
 
         # Test specific MCP tools if available
         test_tools = [
@@ -120,11 +119,11 @@ class ServiceIntegrationTester:
             except Exception as e:
                 mcp_results["tools_failed"] += 1
                 MCP_TOOL_CALL_ERROR_COUNT.labels(tool_name=tool_name).inc()
-                mcp_results["tool_details"][tool_name] = f"❌ Exception: {str(e)}"
+                mcp_results["tool_details"][tool_name] = f"❌ Exception: {e!s}"
 
         return mcp_results
 
-    def test_memory_service(self) -> Dict[str, Any]:
+    def test_memory_service(self) -> dict[str, Any]:
         """Test memory service integration."""
         print("\n🧠 Testing Memory Service Integration...")
 
@@ -174,13 +173,11 @@ class ServiceIntegrationTester:
 
         except Exception as e:
             memory_results["operations_failed"] += 1
-            memory_results["operation_details"]["memory_service"] = (
-                f"❌ Exception: {str(e)}"
-            )
+            memory_results["operation_details"]["memory_service"] = f"❌ Exception: {e!s}"
 
         return memory_results
 
-    def test_prompt_engine(self) -> Dict[str, Any]:
+    def test_prompt_engine(self) -> dict[str, Any]:
         """Test prompt engine integration."""
         print("\n📝 Testing Prompt Engine Integration...")
 
@@ -206,13 +203,11 @@ class ServiceIntegrationTester:
 
         except Exception as e:
             prompt_results["operations_failed"] += 1
-            prompt_results["operation_details"]["prompt_engine"] = (
-                f"❌ Exception: {str(e)}"
-            )
+            prompt_results["operation_details"]["prompt_engine"] = f"❌ Exception: {e!s}"
 
         return prompt_results
 
-    def test_openrouter_service(self) -> Dict[str, Any]:
+    def test_openrouter_service(self) -> dict[str, Any]:
         """Test OpenRouter service integration."""
         print("\n🤖 Testing OpenRouter Service Integration...")
 
@@ -236,9 +231,7 @@ class ServiceIntegrationTester:
             )
 
             duration = time.time() - start_time
-            REQUEST_LATENCY.labels(method="POST", endpoint="/api/route").observe(
-                duration
-            )
+            REQUEST_LATENCY.labels(method="POST", endpoint="/api/route").observe(duration)
 
             openrouter_results["operations_tested"] += 1
             openrouter_results["operations_successful"] += 1
@@ -247,16 +240,12 @@ class ServiceIntegrationTester:
 
         except Exception as e:
             openrouter_results["operations_failed"] += 1
-            ERROR_COUNT.labels(
-                method="POST", endpoint="/api/route", error_type="exception"
-            ).inc()
-            openrouter_results["operation_details"]["openrouter_service"] = (
-                f"❌ Exception: {str(e)}"
-            )
+            ERROR_COUNT.labels(method="POST", endpoint="/api/route", error_type="exception").inc()
+            openrouter_results["operation_details"]["openrouter_service"] = f"❌ Exception: {e!s}"
 
         return openrouter_results
 
-    def test_oauth_managers(self) -> Dict[str, Any]:
+    def test_oauth_managers(self) -> dict[str, Any]:
         """Test OAuth manager integration."""
         print("\n🔐 Testing OAuth Managers Integration...")
 
@@ -306,11 +295,11 @@ class ServiceIntegrationTester:
 
             except Exception as e:
                 oauth_results["managers_failed"] += 1
-                oauth_results["manager_details"][platform] = f"❌ Failed: {str(e)}"
+                oauth_results["manager_details"][platform] = f"❌ Failed: {e!s}"
 
         return oauth_results
 
-    def test_end_to_end_workflow(self) -> Dict[str, Any]:
+    def test_end_to_end_workflow(self) -> dict[str, Any]:
         """Test end-to-end workflow integration."""
         print("\n🔄 Testing End-to-End Workflow...")
 
@@ -337,41 +326,31 @@ class ServiceIntegrationTester:
             ]
 
             workflow_success = True
-            for step in steps:
+            for _step in steps:
                 # Simulate step execution
                 time.sleep(0.1)  # Simulate processing time
 
             duration = time.time() - start_time
-            REQUEST_LATENCY.labels(method="POST", endpoint="/api/workflow").observe(
-                duration
-            )
+            REQUEST_LATENCY.labels(method="POST", endpoint="/api/workflow").observe(duration)
 
             workflow_results["workflows_tested"] += 1
             if workflow_success:
                 workflow_results["workflows_successful"] += 1
                 REQUEST_COUNT.labels(method="POST", endpoint="/api/workflow").inc()
-                workflow_results["workflow_details"]["content_processing"] = (
-                    "✅ Working"
-                )
+                workflow_results["workflow_details"]["content_processing"] = "✅ Working"
             else:
                 workflow_results["workflows_failed"] += 1
-                ERROR_COUNT.labels(
-                    method="POST", endpoint="/api/workflow", error_type="workflow"
-                ).inc()
+                ERROR_COUNT.labels(method="POST", endpoint="/api/workflow", error_type="workflow").inc()
                 workflow_results["workflow_details"]["content_processing"] = "❌ Failed"
 
         except Exception as e:
             workflow_results["workflows_failed"] += 1
-            ERROR_COUNT.labels(
-                method="POST", endpoint="/api/workflow", error_type="exception"
-            ).inc()
-            workflow_results["workflow_details"]["content_processing"] = (
-                f"❌ Exception: {str(e)}"
-            )
+            ERROR_COUNT.labels(method="POST", endpoint="/api/workflow", error_type="exception").inc()
+            workflow_results["workflow_details"]["content_processing"] = f"❌ Exception: {e!s}"
 
         return workflow_results
 
-    def run_all_tests(self) -> Dict[str, Any]:
+    def run_all_tests(self) -> dict[str, Any]:
         """Run all integration tests."""
         print("🚀 Starting Service Integration Tests...")
 
@@ -479,9 +458,7 @@ class ServiceIntegrationTester:
                 "tool_details",
                 suite_results.get(
                     "operation_details",
-                    suite_results.get(
-                        "manager_details", suite_results.get("workflow_details", {})
-                    ),
+                    suite_results.get("manager_details", suite_results.get("workflow_details", {})),
                 ),
             )
             for item_name, status in details.items():

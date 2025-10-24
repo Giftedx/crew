@@ -6,6 +6,7 @@ advanced authentication, rate limiting, and data synchronization capabilities.
 """
 
 import asyncio
+import contextlib
 import logging
 import time
 from dataclasses import dataclass, field
@@ -15,6 +16,7 @@ from typing import Any
 import numpy as np
 
 from .social_monitor import ContentType, PlatformType, SocialContent
+
 
 logger = logging.getLogger(__name__)
 
@@ -246,10 +248,8 @@ class PlatformIntegration:
             sync_task = self.active_syncs[platform]
             sync_task.cancel()
 
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await sync_task
-            except asyncio.CancelledError:
-                pass
 
             del self.active_syncs[platform]
 

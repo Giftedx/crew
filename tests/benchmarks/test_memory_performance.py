@@ -94,11 +94,17 @@ class TestMemoryPerformance:
         store_times = []
 
         for i in range(iterations):
-            content = {"id": f"test_content_{i}", "text": f"Sample content {i}", "metadata": {"index": i}}
+            content = {
+                "id": f"test_content_{i}",
+                "text": f"Sample content {i}",
+                "metadata": {"index": i},
+            }
 
             start_time = time.time()
             result = await mock_vector_store.store(
-                content=content, tenant=sample_tenant_context["tenant"], workspace=sample_tenant_context["workspace"]
+                content=content,
+                tenant=sample_tenant_context["tenant"],
+                workspace=sample_tenant_context["workspace"],
             )
             end_time = time.time()
 
@@ -134,7 +140,7 @@ class TestMemoryPerformance:
         iterations = 100
         search_times = []
 
-        for i in range(iterations):
+        for _i in range(iterations):
             query_vector = [0.1] * 768  # Standard embedding dimension
 
             start_time = time.time()
@@ -231,7 +237,13 @@ class TestMemoryPerformance:
             end_time = time.time()
 
             batch_time = end_time - start_time
-            batch_results.append({"batch_size": batch_size, "time": batch_time, "throughput": batch_size / batch_time})
+            batch_results.append(
+                {
+                    "batch_size": batch_size,
+                    "time": batch_time,
+                    "throughput": batch_size / batch_time,
+                }
+            )
 
             assert all(result.success for result in results)
 
@@ -263,7 +275,13 @@ class TestMemoryPerformance:
             end_time = time.time()
 
             batch_time = end_time - start_time
-            batch_results.append({"batch_size": batch_size, "time": batch_time, "throughput": batch_size / batch_time})
+            batch_results.append(
+                {
+                    "batch_size": batch_size,
+                    "time": batch_time,
+                    "throughput": batch_size / batch_time,
+                }
+            )
 
             assert len(embeddings) == batch_size
             assert all(len(emb) == 768 for emb in embeddings)
@@ -309,7 +327,13 @@ class TestMemoryPerformance:
             end_time = time.time()
 
             search_time = end_time - start_time
-            scale_results.append({"scale": scale, "time": search_time, "latency_per_result": search_time / scale})
+            scale_results.append(
+                {
+                    "scale": scale,
+                    "time": search_time,
+                    "latency_per_result": search_time / scale,
+                }
+            )
 
             assert result.success
 
@@ -396,7 +420,8 @@ class TestMemoryPerformance:
 
         start_time = time.time()
         result = await mock_vector_store.compact(
-            tenant=sample_tenant_context["tenant"], workspace=sample_tenant_context["workspace"]
+            tenant=sample_tenant_context["tenant"],
+            workspace=sample_tenant_context["workspace"],
         )
         end_time = time.time()
 

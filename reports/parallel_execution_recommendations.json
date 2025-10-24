@@ -1,0 +1,49 @@
+{
+  "current_dependencies": {
+    "quality-gates": [],
+    "unit-tests": [
+      "quality-gates"
+    ],
+    "integration-tests": [
+      "quality-gates"
+    ],
+    "e2e-tests": [
+      "unit-tests",
+      "integration-tests"
+    ],
+    "docs-tests": [
+      "quality-gates"
+    ],
+    "performance-tests": [
+      "unit-tests",
+      "integration-tests"
+    ],
+    "docker-build": [
+      "quality-gates"
+    ],
+    "security-scan": [
+      "quality-gates"
+    ]
+  },
+  "optimization_opportunities": [],
+  "parallel_groups": [
+    [
+      "quality-gates",
+      "unit-tests",
+      "integration-tests",
+      "docs-tests",
+      "docker-build",
+      "security-scan"
+    ],
+    [
+      "e2e-tests",
+      "performance-tests"
+    ]
+  ],
+  "estimated_time_savings": {
+    "parallel_execution": "5-8 minutes",
+    "caching_optimization": "2-4 minutes",
+    "dependency_optimization": "1-2 minutes",
+    "total_estimated_savings": "8-14 minutes"
+  }
+}

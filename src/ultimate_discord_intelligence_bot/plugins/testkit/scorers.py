@@ -7,7 +7,11 @@ met and ``False`` otherwise.
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable
+from typing import TYPE_CHECKING
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Iterable
 
 
 def must_include(strs: Iterable[str]) -> Callable[[str], bool]:
@@ -64,8 +68,8 @@ def status_ok() -> Callable[[object], bool]:
 
 
 __all__ = [
-    "must_include",
     "forbidden",
+    "must_include",
     "must_link",
     "status_ok",
 ]

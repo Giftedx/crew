@@ -22,10 +22,11 @@ from .orchestrator import CrewAITrainingOrchestrator
 from .performance_monitor import AgentPerformanceMonitor
 from .synthetic_data_generator import SyntheticDataGenerator
 
+
 __all__ = [
+    "AgentPerformanceMonitor",
     "AgentTrainingCoordinator",
     "CrewAITrainingOrchestrator",
-    "AgentPerformanceMonitor",
     "SyntheticDataGenerator",
 ]
 

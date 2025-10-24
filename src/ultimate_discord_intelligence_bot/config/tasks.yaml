@@ -218,3 +218,55 @@ insight_generation_task:
   human_input: false
   async_execution: true
   output_file: output/insight_generation_{url_hash}.json
+
+# ========================================
+# DISCORD AI CONVERSATIONAL TASKS
+# ========================================
+
+evaluate_message_response:
+  description: >-
+    Evaluate whether the bot should respond to a Discord message based on context, relevance, and conversation flow.
+    Analyze the message content, user interaction history, channel context, and opt-in status to make an intelligent
+    decision about response appropriateness. Consider factors like direct mentions, conversation relevance, user preferences,
+    and personality appropriateness for timing.
+  expected_output: Decision (respond/skip) with confidence score and detailed reasoning.
+  agent: conversational_response_agent
+  human_input: false
+  async_execution: false
+  output_file: output/message_evaluation_{message_id}.json
+
+generate_contextual_response:
+  description: >-
+    Generate a personality-appropriate response using conversation history and knowledge base context.
+    Craft a natural Discord message that matches the bot's evolving personality traits, incorporates relevant
+    context from memory and knowledge graphs, and responds appropriately to the user's message while maintaining
+    conversational flow and engagement.
+  expected_output: Natural Discord message with appropriate tone and formatting.
+  agent: conversational_response_agent
+  context:
+    - evaluate_message_response
+  human_input: false
+  async_execution: false
+  output_file: output/discord_response_{message_id}.md
+
+adapt_personality_traits:
+  description: >-
+    Analyze user interaction feedback and adapt personality traits using reinforcement learning.
+    Process reward signals from user engagement, reactions, and conversation outcomes to optimize
+    the bot's personality traits for better user satisfaction and engagement over time.
+  expected_output: Updated personality traits with adaptation rationale and performance metrics.
+  agent: personality_evolution_agent
+  human_input: false
+  async_execution: true
+  output_file: output/personality_adaptation_{timestamp}.json
+
+compute_interaction_rewards:
+  description: >-
+    Compute reward signals from user interactions and engagement metrics for personality optimization.
+    Analyze user reactions, conversation continuation, temporal patterns, and content quality to generate
+    meaningful feedback signals that guide personality adaptation through reinforcement learning.
+  expected_output: Reward signal analysis with engagement metrics and confidence scores.
+  agent: personality_evolution_agent
+  human_input: false
+  async_execution: false
+  output_file: output/reward_analysis_{interaction_id}.json

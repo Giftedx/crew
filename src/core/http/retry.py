@@ -8,17 +8,25 @@ import os
 import threading
 import time
 import warnings
-from collections.abc import Callable
 from datetime import date
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from urllib.parse import urlparse
 
 import requests
 
 from obs import metrics as _metrics
 
-from .config import DEFAULT_HTTP_RETRY_ATTEMPTS, HTTP_RATE_LIMITED, REQUEST_TIMEOUT_SECONDS
+from .config import (
+    DEFAULT_HTTP_RETRY_ATTEMPTS,
+    HTTP_RATE_LIMITED,
+    REQUEST_TIMEOUT_SECONDS,
+)
 from .requests_wrappers import resilient_get, resilient_post
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
 
 try:  # optional opentelemetry
     from opentelemetry import trace  # pragma: no cover
@@ -199,17 +207,29 @@ def _breaker_for(url: str) -> tuple[str, _CircuitBreaker]:
         if "openrouter" in host.lower():
             # OpenRouter API - more tolerant due to rate limits
             br = _CircuitBreaker(
-                name=host, failure_threshold=10, recovery_timeout=120.0, success_threshold=5, half_open_max_calls=5
+                name=host,
+                failure_threshold=10,
+                recovery_timeout=120.0,
+                success_threshold=5,
+                half_open_max_calls=5,
             )
         elif "qdrant" in host.lower():
             # Vector database - more strict for data consistency
             br = _CircuitBreaker(
-                name=host, failure_threshold=3, recovery_timeout=30.0, success_threshold=3, half_open_max_calls=2
+                name=host,
+                failure_threshold=3,
+                recovery_timeout=30.0,
+                success_threshold=3,
+                half_open_max_calls=2,
             )
         else:
             # Default configuration for other services
             br = _CircuitBreaker(
-                name=host, failure_threshold=5, recovery_timeout=60.0, success_threshold=3, half_open_max_calls=3
+                name=host,
+                failure_threshold=5,
+                recovery_timeout=60.0,
+                success_threshold=3,
+                half_open_max_calls=3,
             )
         _BREAKERS[host] = br
     return host, br
@@ -392,11 +412,11 @@ def is_circuit_breaker_enabled() -> bool:
 
 
 __all__ = [
-    "http_request_with_retry",
-    "retrying_post",
-    "retrying_get",
-    "is_retry_enabled",
-    "is_circuit_breaker_enabled",
     "get_circuit_breaker_status",
+    "http_request_with_retry",
+    "is_circuit_breaker_enabled",
+    "is_retry_enabled",
     "reset_circuit_breakers",
+    "retrying_get",
+    "retrying_post",
 ]

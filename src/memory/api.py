@@ -4,17 +4,22 @@ from __future__ import annotations
 
 import json
 import tempfile
-from collections.abc import Sequence
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from analysis.rerank import rerank
 from archive import archive_file
-from core.learning_engine import LearningEngine
 from core.privacy import privacy_filter
 from core.secure_config import get_config
 from core.time import default_utc_now
 from memory import embeddings, vector_store
 from memory.store import MemoryItem, MemoryStore
+
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+    from core.learning_engine import LearningEngine
 
 
 @dataclass
@@ -25,7 +30,7 @@ class MemoryHit:
     meta: dict
 
 
-def store(  # noqa: PLR0913,PLR0912 - explicit param groups (identity/payload/classification/policy) improve readability & validation; collapsing into **kwargs or a dict would reduce static typing
+def store(
     store: MemoryStore,
     vstore: vector_store.VectorStore,
     *,
@@ -61,11 +66,14 @@ def store(  # noqa: PLR0913,PLR0912 - explicit param groups (identity/payload/cl
     )
     item_id = store.add_item(item)
     namespace = vector_store.VectorStore.namespace(tenant, workspace, "memory")
-    vstore.upsert(namespace, [vector_store.VectorRecord(vector=vec, payload={"id": item_id, "text": clean})])
+    vstore.upsert(
+        namespace,
+        [vector_store.VectorRecord(vector=vec, payload={"id": item_id, "text": clean})],
+    )
     return item_id
 
 
-def retrieve(  # noqa: PLR0913,PLR0912 - explicit search knobs aid experimentation; refactoring into a config object would spread logic to call sites
+def retrieve(
     store: MemoryStore,
     vstore: vector_store.VectorStore,
     *,
@@ -100,7 +108,14 @@ def retrieve(  # noqa: PLR0913,PLR0912 - explicit search knobs aid experimentati
     if "symbolic" in strategies:
         for item in store.search_keyword(tenant, workspace, query, limit=k):
             payload = json.loads(item.content_json)
-            hits.append(MemoryHit(id=item.id or 0, score=0.5, text=payload.get("text", ""), meta=payload))
+            hits.append(
+                MemoryHit(
+                    id=item.id or 0,
+                    score=0.5,
+                    text=payload.get("text", ""),
+                    meta=payload,
+                )
+            )
     # Optional reranker stage
     cfg = get_config()
     if getattr(cfg, "enable_reranker", False) and hits:
@@ -139,9 +154,14 @@ def archive(store: MemoryStore, item_id: int, *, tenant: str, workspace: str) ->
         tmp.flush()
         archive_file(
             tmp.name,
-            {"kind": "memory", "tenant": tenant, "workspace": workspace, "visibility": "private"},
+            {
+                "kind": "memory",
+                "tenant": tenant,
+                "workspace": workspace,
+                "visibility": "private",
+            },
         )
     store.mark_archived(item_id)
 
 
-__all__ = ["store", "retrieve", "prune", "pin", "archive", "MemoryHit"]
+__all__ = ["MemoryHit", "archive", "pin", "prune", "retrieve", "store"]

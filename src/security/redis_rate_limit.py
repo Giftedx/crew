@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 """Distributed token bucket using Redis + Lua.
 
 Atomic refill+consume implemented via EVAL to avoid race conditions. Falls back
@@ -7,8 +5,11 @@ to deny on script errors only for the current call (callers should also deploy
 local rate limiting as a safety belt when distributed mode is unavailable).
 """
 
+from __future__ import annotations
+
 from dataclasses import dataclass
 from typing import Any
+
 
 try:  # optional dependency
     import redis

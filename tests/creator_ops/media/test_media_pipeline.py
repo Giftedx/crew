@@ -14,7 +14,11 @@ from ultimate_discord_intelligence_bot.creator_ops.media.alignment import (
     AlignedTranscript,
     TranscriptAlignment,
 )
-from ultimate_discord_intelligence_bot.creator_ops.media.asr import ASRResult, ASRSegment, WhisperASR
+from ultimate_discord_intelligence_bot.creator_ops.media.asr import (
+    ASRResult,
+    ASRSegment,
+    WhisperASR,
+)
 from ultimate_discord_intelligence_bot.creator_ops.media.diarization import (
     DiarizationResult,
     DiarizationSegment,
@@ -360,7 +364,11 @@ class TestMediaPipeline:
         )
 
         self.embeddings.generate_transcript_embeddings.return_value = StepResult.ok(
-            data={"stored_ids": ["embedding_1"], "collection_name": "test_collection", "embedding_count": 1}
+            data={
+                "stored_ids": ["embedding_1"],
+                "collection_name": "test_collection",
+                "embedding_count": 1,
+            }
         )
 
         # Test embeddings generation

@@ -10,10 +10,13 @@ import json
 import sys
 from pathlib import Path
 
+
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
-from ultimate_discord_intelligence_bot.enhanced_performance_monitor import EnhancedPerformanceMonitor
+from ultimate_discord_intelligence_bot.enhanced_performance_monitor import (
+    EnhancedPerformanceMonitor,
+)
 
 
 async def demonstrate_core_features():
@@ -33,19 +36,31 @@ async def demonstrate_core_features():
     test_responses = [
         {
             "response": "Based on thorough analysis and evidence review, I can confirm this claim is accurate with 95% confidence.",
-            "context": {"agent_name": "fact_checker", "tools_used": ["FactCheckTool"], "complexity": "high"},
+            "context": {
+                "agent_name": "fact_checker",
+                "tools_used": ["FactCheckTool"],
+                "complexity": "high",
+            },
             "expected": "High quality (evidence-based)",
         },
         {
             "response": "I think this might be true but I'm not sure.",
-            "context": {"agent_name": "basic_agent", "tools_used": [], "complexity": "low"},
+            "context": {
+                "agent_name": "basic_agent",
+                "tools_used": [],
+                "complexity": "low",
+            },
             "expected": "Low quality (uncertain)",
         },
         {
             "response": "After comprehensive research using multiple verification tools, cross-referencing credible sources, and applying logical reasoning frameworks, the analysis indicates substantial evidence supporting the claim with high confidence.",
             "context": {
                 "agent_name": "research_agent",
-                "tools_used": ["FactCheckTool", "LogicalFallacyTool", "TruthScoringTool"],
+                "tools_used": [
+                    "FactCheckTool",
+                    "LogicalFallacyTool",
+                    "TruthScoringTool",
+                ],
                 "complexity": "very_high",
             },
             "expected": "Very high quality (comprehensive)",
@@ -65,17 +80,41 @@ async def demonstrate_core_features():
         {
             "agent": "content_analyzer",
             "interactions": [
-                {"response_quality": 0.85, "response_time": 2.1, "error_occurred": False},
-                {"response_quality": 0.78, "response_time": 3.2, "error_occurred": False},
-                {"response_quality": 0.92, "response_time": 1.8, "error_occurred": False},
+                {
+                    "response_quality": 0.85,
+                    "response_time": 2.1,
+                    "error_occurred": False,
+                },
+                {
+                    "response_quality": 0.78,
+                    "response_time": 3.2,
+                    "error_occurred": False,
+                },
+                {
+                    "response_quality": 0.92,
+                    "response_time": 1.8,
+                    "error_occurred": False,
+                },
             ],
         },
         {
             "agent": "fact_checker",
             "interactions": [
-                {"response_quality": 0.95, "response_time": 4.5, "error_occurred": False},
-                {"response_quality": 0.88, "response_time": 5.1, "error_occurred": False},
-                {"response_quality": 0.91, "response_time": 3.9, "error_occurred": False},
+                {
+                    "response_quality": 0.95,
+                    "response_time": 4.5,
+                    "error_occurred": False,
+                },
+                {
+                    "response_quality": 0.88,
+                    "response_time": 5.1,
+                    "error_occurred": False,
+                },
+                {
+                    "response_quality": 0.91,
+                    "response_time": 3.9,
+                    "error_occurred": False,
+                },
             ],
         },
     ]
@@ -103,14 +142,24 @@ async def demonstrate_core_features():
     # Good performance first
     for quality in [0.9, 0.85, 0.88, 0.92, 0.87]:
         await monitor.monitor_real_time_performance(
-            alert_test_agent, {"response_quality": quality, "response_time": 2.0, "error_occurred": False}
+            alert_test_agent,
+            {
+                "response_quality": quality,
+                "response_time": 2.0,
+                "error_occurred": False,
+            },
         )
 
     # Then degraded performance
     degraded_interactions = [0.65, 0.55, 0.45, 0.40, 0.35]
     for quality in degraded_interactions:
         result = await monitor.monitor_real_time_performance(
-            alert_test_agent, {"response_quality": quality, "response_time": 4.5, "error_occurred": False}
+            alert_test_agent,
+            {
+                "response_quality": quality,
+                "response_time": 4.5,
+                "error_occurred": False,
+            },
         )
         if result["alerts"]:
             for alert in result["alerts"]:
@@ -124,7 +173,7 @@ async def demonstrate_core_features():
         dashboard = await monitor.generate_real_time_dashboard_data()
 
         # Check what we got
-        agents_with_data = len([agent for agent in monitor.real_time_metrics.keys()])
+        agents_with_data = len(list(monitor.real_time_metrics.keys()))
         print(f"   Agents monitored: {agents_with_data}")
         print(f"   Dashboard sections: {len(dashboard.keys())}")
 

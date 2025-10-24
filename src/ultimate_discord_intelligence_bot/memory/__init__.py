@@ -12,11 +12,15 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from typing import Any, Dict, Optional, Protocol, Sequence
-
-from memory.vector_store import VectorRecord, VectorStore
+from typing import TYPE_CHECKING, Any, Dict, Optional, Protocol
 
 from ..step_result import StepResult
+from .vector_store import VectorRecord, VectorStore
+
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
 
 logger = logging.getLogger(__name__)
 
@@ -43,9 +47,7 @@ class MemoryPlugin(Protocol):
     - Graph memory (knowledge graph operations)
     """
 
-    async def store(
-        self, namespace: str, records: Sequence[Dict[str, Any]]
-    ) -> StepResult:
+    async def store(self, namespace: str, records: Sequence[dict[str, Any]]) -> StepResult:
         """Store records in specialty backend.
 
         Args:
@@ -86,7 +88,7 @@ class UnifiedMemoryService:
             vector_store: Optional VectorStore instance; uses global singleton if None
         """
         self._store = vector_store or VectorStore()
-        self._plugins: Dict[str, MemoryPlugin] = {}
+        self._plugins: dict[str, MemoryPlugin] = {}
         logger.info("UnifiedMemoryService initialized")
 
     def register_plugin(self, name: str, plugin: MemoryPlugin):
@@ -109,7 +111,7 @@ class UnifiedMemoryService:
         workspace: str,
         records: Sequence[VectorRecord],
         creator: str = "",
-        plugin: Optional[str] = None,
+        plugin: str | None = None,
     ) -> StepResult:
         """Upsert vectors into tenant-scoped collection.
 
@@ -151,8 +153,8 @@ class UnifiedMemoryService:
         vector: Sequence[float],
         top_k: int = 3,
         creator: str = "",
-        plugin: Optional[str] = None,
-        query_text: Optional[str] = None,
+        plugin: str | None = None,
+        query_text: str | None = None,
     ) -> StepResult:
         """Query similar vectors from tenant-scoped collection.
 
@@ -175,15 +177,11 @@ class UnifiedMemoryService:
             if plugin and plugin in self._plugins:
                 if not query_text:
                     return StepResult.fail("Plugin query requires query_text parameter")
-                return await self._plugins[plugin].retrieve(
-                    namespace, query_text, top_k
-                )
+                return await self._plugins[plugin].retrieve(namespace, query_text, top_k)
 
             # Default: use vector store
             results = self._store.query(namespace, vector, top_k=top_k)
-            return StepResult.ok(
-                results=results, namespace=namespace, count=len(results)
-            )
+            return StepResult.ok(results=results, namespace=namespace, count=len(results))
         except Exception as exc:
             return StepResult.fail(f"Memory query failed: {exc}")
 
@@ -205,10 +203,10 @@ def get_memory_namespace(tenant: str, workspace: str, creator: str) -> MemoryNam
 
 
 __all__ = [
-    "UnifiedMemoryService",
-    "get_unified_memory",
-    "get_memory_namespace",
     "MemoryNamespace",
     "MemoryPlugin",
+    "UnifiedMemoryService",
     "VectorRecord",
+    "get_memory_namespace",
+    "get_unified_memory",
 ]

@@ -16,7 +16,11 @@ from pathlib import Path
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--db", required=True, help="Path to scheduler sqlite database (ingest_job table)")
+    ap.add_argument(
+        "--db",
+        required=True,
+        help="Path to scheduler sqlite database (ingest_job table)",
+    )
     args = ap.parse_args()
 
     db_path = Path(args.db)

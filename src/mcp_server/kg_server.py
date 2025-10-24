@@ -15,8 +15,12 @@ Notes:
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
 
 try:
     from fastmcp import FastMCP  # type: ignore
@@ -158,7 +162,7 @@ def policy_keys_tool() -> dict:  # pragma: no cover - MCP wrapper
 
         with open("config/policy.yaml", encoding="utf-8") as f:
             data = yaml.safe_load(f) or {}
-        keys = sorted([str(k) for k in data.keys()]) if isinstance(data, dict) else []
+        keys = sorted([str(k) for k in data]) if isinstance(data, dict) else []
         return {"keys": keys}
     except Exception as exc:
         return {"keys": [], "error": str(exc)}
@@ -171,7 +175,7 @@ def policy_keys() -> dict:
 
         with open("config/policy.yaml", encoding="utf-8") as f:
             data = yaml.safe_load(f) or {}
-        keys = sorted([str(k) for k in data.keys()]) if isinstance(data, dict) else []
+        keys = sorted([str(k) for k in data]) if isinstance(data, dict) else []
         return {"keys": keys}
     except Exception as exc:
         return {"keys": [], "error": str(exc)}
@@ -191,13 +195,13 @@ def grounding_profiles() -> Any:
 
 
 __all__ = [
+    "grounding_profiles",
     "kg_mcp",
     "kg_query",
     "kg_query_tool",
     "kg_timeline",
     "kg_timeline_tool",
-    "policy_resource",
-    "grounding_profiles",
     "policy_keys",
     "policy_keys_tool",
+    "policy_resource",
 ]

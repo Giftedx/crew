@@ -8,7 +8,9 @@ from unittest.mock import Mock, patch
 import pytest
 
 from ultimate_discord_intelligence_bot.creator_ops.config import CreatorOpsConfig
-from ultimate_discord_intelligence_bot.creator_ops.features.clip_radar_agent import LiveClipRadarAgent
+from ultimate_discord_intelligence_bot.creator_ops.features.clip_radar_agent import (
+    LiveClipRadarAgent,
+)
 from ultimate_discord_intelligence_bot.creator_ops.features.clip_radar_models import (
     ChatMessage,
     ClipCandidate,
@@ -21,7 +23,9 @@ from ultimate_discord_intelligence_bot.creator_ops.features.clip_radar_models im
     StreamStatus,
     ViralMoment,
 )
-from ultimate_discord_intelligence_bot.creator_ops.features.live_clip_radar import LiveClipRadar
+from ultimate_discord_intelligence_bot.creator_ops.features.live_clip_radar import (
+    LiveClipRadar,
+)
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
@@ -152,7 +156,10 @@ class TestLiveClipRadar:
         # Mock sentiment analysis
         with patch.object(self.clip_radar, "_analyze_sentiment") as mock_sentiment:
             mock_sentiment.return_value = SentimentScore(
-                score=0.8, confidence=0.9, label="positive", keywords=["amazing", "great"]
+                score=0.8,
+                confidence=0.9,
+                label="positive",
+                keywords=["amazing", "great"],
             )
 
             # Mock viral moment checking
@@ -305,18 +312,20 @@ class TestLiveClipRadar:
         )
 
         # Mock title and description generation
-        with patch.object(self.clip_radar, "_generate_clip_title") as mock_title:
-            with patch.object(self.clip_radar, "_generate_clip_description") as mock_desc:
-                mock_title.return_value = "Hilarious Moment"
-                mock_desc.return_value = "Funny clip from live stream"
+        with (
+            patch.object(self.clip_radar, "_generate_clip_title") as mock_title,
+            patch.object(self.clip_radar, "_generate_clip_description") as mock_desc,
+        ):
+            mock_title.return_value = "Hilarious Moment"
+            mock_desc.return_value = "Funny clip from live stream"
 
-                result = await self.clip_radar._generate_clip_candidate(viral_moment, self.monitoring_config)
+            result = await self.clip_radar._generate_clip_candidate(viral_moment, self.monitoring_config)
 
-                assert result is not None
-                assert result.title == "Hilarious Moment"
-                assert result.description == "Funny clip from live stream"
-                assert result.duration == 30.0  # min_clip_duration
-                assert result.status == ClipStatus.DETECTED
+            assert result is not None
+            assert result.title == "Hilarious Moment"
+            assert result.description == "Funny clip from live stream"
+            assert result.duration == 30.0  # min_clip_duration
+            assert result.status == ClipStatus.DETECTED
 
     def test_analyze_sentiment_positive(self):
         """Test sentiment analysis for positive text."""
@@ -445,7 +454,12 @@ class TestLiveClipRadarAgent:
         """Test agent creation."""
         agents = self.agent._create_agents()
 
-        expected_roles = ["viral_analyst", "clip_optimizer", "engagement_predictor", "platform_strategist"]
+        expected_roles = [
+            "viral_analyst",
+            "clip_optimizer",
+            "engagement_predictor",
+            "platform_strategist",
+        ]
         for role in expected_roles:
             assert role in agents
             assert agents[role].role == role.replace("_", " ").title()
@@ -454,7 +468,12 @@ class TestLiveClipRadarAgent:
         """Test task creation."""
         tasks = self.agent._create_tasks()
 
-        expected_tasks = ["viral_analysis", "clip_optimization", "engagement_prediction", "platform_strategy"]
+        expected_tasks = [
+            "viral_analysis",
+            "clip_optimization",
+            "engagement_prediction",
+            "platform_strategy",
+        ]
         for task in expected_tasks:
             assert task in tasks
             assert tasks[task].description is not None
@@ -613,7 +632,10 @@ class TestLiveClipRadarAgent:
         clip_optimization.title_optimization = "Optimized Title"
         clip_optimization.description_optimization = "Optimized description"
         clip_optimization.hashtag_recommendations = ["#viral", "#funny", "#gaming"]
-        clip_optimization.platform_specific_hooks = {"youtube": "SEO", "tiktok": "Trending"}
+        clip_optimization.platform_specific_hooks = {
+            "youtube": "SEO",
+            "tiktok": "Trending",
+        }
         clip_optimization.engagement_strategies = ["Hashtags", "Timing", "Hooks"]
 
         result = await self.agent.get_analysis_summary(viral_analysis, clip_optimization)

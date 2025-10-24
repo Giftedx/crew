@@ -29,6 +29,7 @@ from .advanced_performance_analytics_alert_engine import (
 )
 from .tools.discord_private_alert_tool import DiscordPrivateAlertTool
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -186,7 +187,10 @@ class AdvancedPerformanceAnalyticsDiscordIntegration:
         """
         try:
             if not self.config.enabled:
-                return {"status": "disabled", "message": "Discord notifications are disabled"}
+                return {
+                    "status": "disabled",
+                    "message": "Discord notifications are disabled",
+                }
 
             # Check notification cooldown
             cooldown_key = f"{alert.severity.value}_{alert.category.value}"
@@ -358,7 +362,7 @@ class AdvancedPerformanceAnalyticsDiscordIntegration:
             severity_emojis = {
                 AlertSeverity.CRITICAL: "🚨",
                 AlertSeverity.WARNING: "⚠️",
-                AlertSeverity.INFO: "ℹ️",
+                AlertSeverity.INFO: "i",
             }
 
             severity_emoji = severity_emojis.get(severity, "🔔")
@@ -514,7 +518,10 @@ class AdvancedPerformanceAnalyticsDiscordIntegration:
             # Send to executive channel or fallback to primary
             alert_tool = self.executive_alert_tool or self.primary_alert_tool
             if not alert_tool:
-                return {"status": "no_tool", "message": "No Discord tool configured for executive summaries"}
+                return {
+                    "status": "no_tool",
+                    "message": "No Discord tool configured for executive summaries",
+                }
 
             result = alert_tool._run(message=summary_content)
 

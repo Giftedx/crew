@@ -1,7 +1,7 @@
 """Base interface for routing bandit plugins."""
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List
+from typing import Any
 
 
 class BanditPlugin(ABC):
@@ -12,9 +12,7 @@ class BanditPlugin(ABC):
     """
 
     @abstractmethod
-    def select_action(
-        self, context: Dict[str, Any], available_models: List[str]
-    ) -> str:
+    def select_action(self, context: dict[str, Any], available_models: list[str]) -> str:
         """Select model based on context and RL policy.
 
         Args:
@@ -25,10 +23,9 @@ class BanditPlugin(ABC):
         Returns:
             Selected model identifier
         """
-        pass
 
     @abstractmethod
-    def update(self, context: Dict[str, Any], model: str, reward: float):
+    def update(self, context: dict[str, Any], model: str, reward: float):
         """Update bandit with observed reward.
 
         Args:
@@ -36,21 +33,18 @@ class BanditPlugin(ABC):
             model: Model that was selected
             reward: Observed reward (e.g., quality score, cost efficiency)
         """
-        pass
 
     @abstractmethod
-    def get_state(self) -> Dict[str, Any]:
+    def get_state(self) -> dict[str, Any]:
         """Get current bandit state for serialization.
 
         Returns:
             Serializable dictionary of bandit state
         """
-        pass
 
-    def load_state(self, state: Dict[str, Any]):
+    def load_state(self, state: dict[str, Any]):
         """Load bandit state from serialized form.
 
         Args:
             state: Previously serialized state dictionary
         """
-        pass

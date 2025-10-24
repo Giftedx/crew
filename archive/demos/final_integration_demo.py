@@ -10,6 +10,7 @@ import json
 import logging
 from datetime import datetime
 
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -27,7 +28,9 @@ def demonstrate_final_integration():
         import sys
 
         sys.path.append("/home/crew/src")
-        from ultimate_discord_intelligence_bot.agent_training.performance_monitor_final import AgentPerformanceMonitor
+        from ultimate_discord_intelligence_bot.agent_training.performance_monitor_final import (
+            AgentPerformanceMonitor,
+        )
 
         print("✅ Successfully imported AI-Enhanced Performance Monitor")
 
@@ -63,8 +66,17 @@ def demonstrate_final_integration():
                 routing_strategy="test_strategy",
                 selected_model="test/model",
                 routing_confidence=0.85,
-                expected_performance={"latency_ms": 1000, "cost": 0.005, "quality": 0.85},
-                actual_performance={"latency_ms": 950, "cost": 0.0048, "quality": 0.88, "success": True},
+                expected_performance={
+                    "latency_ms": 1000,
+                    "cost": 0.005,
+                    "quality": 0.85,
+                },
+                actual_performance={
+                    "latency_ms": 950,
+                    "cost": 0.0048,
+                    "quality": 0.88,
+                    "success": True,
+                },
                 optimization_target="balanced",
             )
             print("   ✅ AI routing interaction recording: WORKING")

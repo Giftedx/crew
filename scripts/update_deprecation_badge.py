@@ -25,6 +25,7 @@ from textwrap import dedent
 # Local import (works because both scripts live in scripts/ directory)
 import check_deprecations  # type: ignore
 
+
 ROOT = Path(__file__).resolve().parent.parent
 README = ROOT / "README.md"
 START = "<!-- DEPRECATIONS:START -->"

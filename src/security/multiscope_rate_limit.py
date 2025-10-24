@@ -22,15 +22,19 @@ Escalation:
 from __future__ import annotations
 
 import time
-from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import yaml
 
 from .events import log_security_event
 from .rate_limit import TokenBucket
+
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
 
 DEFAULT_CONFIG_PATH = Path(__file__).resolve().parents[2] / "config" / "security.yaml"
 
@@ -80,7 +84,7 @@ class MultiScopeRateLimiter:
         return cls(buckets=buckets, escalation_thresholds=thresholds, reset_window=reset_window)
 
     # ---------------------- Public API -----------------------------------
-    def check(  # noqa: PLR0913 - explicit parameters aid call clarity across varied callers
+    def check(
         self,
         *,
         user_id: str | None = None,
@@ -175,7 +179,7 @@ class MultiScopeRateLimiter:
             if vs and now - vs.last_violation > self._reset_window and now >= vs.cooldown_until:
                 self._violations.pop(k, None)
 
-    def _log_event(  # noqa: PLR0913 - explicit structured security log fields
+    def _log_event(
         self,
         *,
         actor: str | None,
@@ -186,7 +190,7 @@ class MultiScopeRateLimiter:
         decision: str,
         reason: str,
         extra: dict[str, Any] | None = None,
-    ) -> None:  # noqa: PLR0913 - structured security log fields explicit
+    ) -> None:
         log_security_event(
             actor=actor or "unknown",
             action="rate_limit",

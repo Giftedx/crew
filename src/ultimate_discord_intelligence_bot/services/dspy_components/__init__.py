@@ -8,10 +8,11 @@ from .signature import (
     SummaryGenerationSignature,
 )
 
+
 __all__ = [
+    "ClaimExtractionSignature",
     "DebateAnalysisSignature",
     "FactCheckingSignature",
-    "ClaimExtractionSignature",
     "SentimentAnalysisSignature",
     "SummaryGenerationSignature",
 ]

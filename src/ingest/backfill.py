@@ -11,14 +11,19 @@ Network-heavy paths are feature-flagged so tests can run offline safely.
 from __future__ import annotations
 
 import logging
-from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from core.time import default_utc_now
 from ingest import pipeline as ingest_pipeline
-from scheduler.priority_queue import PriorityQueue
+
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from scheduler.priority_queue import PriorityQueue
+
 
 logger = logging.getLogger(__name__)
 
@@ -160,6 +165,6 @@ def enqueue_backfill(plan: BackfillPlan, queue: PriorityQueue) -> int:
 
 __all__ = [
     "BackfillPlan",
-    "enumerate_youtube_recent_videos",
     "enqueue_backfill",
+    "enumerate_youtube_recent_videos",
 ]

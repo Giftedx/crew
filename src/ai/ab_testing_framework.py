@@ -16,6 +16,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -40,7 +41,11 @@ class ABTestConfig:
     min_samples_per_strategy: int = 50
     max_duration_hours: float = 24.0
     success_criteria: dict[str, float] = field(
-        default_factory=lambda: {"min_success_rate": 0.85, "max_avg_latency_ms": 2000, "max_avg_cost": 0.01}
+        default_factory=lambda: {
+            "min_success_rate": 0.85,
+            "max_avg_latency_ms": 2000,
+            "max_avg_cost": 0.01,
+        }
     )
 
 
@@ -69,7 +74,13 @@ class ExperimentMetrics:
     def add_sample(self, latency_ms: float, cost: float, quality: float, success: bool):
         """Add a sample to the experiment."""
         self.samples.append(
-            {"timestamp": time.time(), "latency_ms": latency_ms, "cost": cost, "quality": quality, "success": success}
+            {
+                "timestamp": time.time(),
+                "latency_ms": latency_ms,
+                "cost": cost,
+                "quality": quality,
+                "success": success,
+            }
         )
 
     def get_summary_stats(self) -> dict[str, float]:
@@ -188,7 +199,7 @@ class AIRouterABTester:
 
     def _select_strategy(self, config: ABTestConfig) -> TestStrategy:
         """Select strategy based on traffic split configuration."""
-        rand = random.random()
+        rand = random.random()  # nosec B311 - A/B test traffic split, not cryptographic
         cumulative = 0.0
 
         for strategy, weight in config.traffic_split.items():
@@ -197,7 +208,7 @@ class AIRouterABTester:
                 return strategy
 
         # Fallback to first strategy
-        return list(config.strategies)[0]
+        return next(iter(config.strategies))
 
     def _assess_quality(self, response: str, task_type: str) -> float:
         """Simple quality assessment for A/B testing."""
@@ -210,9 +221,9 @@ class AIRouterABTester:
 
         # Task-specific bonuses
         task_bonus = 0.0
-        if task_type == "analysis" and any(word in response.lower() for word in ["analyze", "data", "conclusion"]):
-            task_bonus = 0.1
-        elif task_type == "creative" and len(response) > 150:
+        if (
+            task_type == "analysis" and any(word in response.lower() for word in ["analyze", "data", "conclusion"])
+        ) or (task_type == "creative" and len(response) > 150):
             task_bonus = 0.1
 
         return min(1.0, length_score * 0.4 + coherence_score * 0.5 + task_bonus)
@@ -359,7 +370,7 @@ class AIRouterABTester:
 
         return {
             "status": "complete",
-            "total_experiments": len(set(r.strategy for r in self.global_results)),
+            "total_experiments": len({r.strategy for r in self.global_results}),
             "total_samples": sum(r.sample_count for r in self.global_results),
             "strategy_performance": strategy_summary,
             "best_strategy": best_strategy[0],
@@ -403,14 +414,18 @@ async def cost_optimized_router(prompt: str, task_type: str, optimization_target
 
 async def random_baseline_router(prompt: str, task_type: str, optimization_target: str, **kwargs) -> dict[str, Any]:
     """Mock random baseline routing strategy."""
-    models = ["openai/gpt-4o-mini", "google/gemini-1.5-flash", "anthropic/claude-3-haiku-20240307"]
-    selected_model = random.choice(models)
-    await asyncio.sleep(random.uniform(0.05, 0.15))  # Variable latency
+    models = [
+        "openai/gpt-4o-mini",
+        "google/gemini-1.5-flash",
+        "anthropic/claude-3-haiku-20240307",
+    ]
+    selected_model = random.choice(models)  # nosec B311 - test simulation, not cryptographic
+    await asyncio.sleep(random.uniform(0.05, 0.15))  # nosec B311 - test latency simulation
     return {
         "status": "success",
         "model": selected_model,
         "response": f"Random baseline response for {task_type}",
-        "cost": random.uniform(0.001, 0.010),
+        "cost": random.uniform(0.001, 0.010),  # nosec B311 - test cost simulation
     }
 
 
@@ -467,7 +482,10 @@ if __name__ == "__main__":
             prompt, task_type, target = scenario
 
             result = await tester.route_with_ab_testing(
-                experiment_name=experiment_name, prompt=prompt, task_type=task_type, optimization_target=target
+                experiment_name=experiment_name,
+                prompt=prompt,
+                task_type=task_type,
+                optimization_target=target,
             )
 
             if i % 15 == 0:  # Progress update every 15 requests

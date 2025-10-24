@@ -2,4 +2,5 @@
 
 from .oauth_manager import OAuthCredentials, OAuthManager
 
-__all__ = ["OAuthManager", "OAuthCredentials"]
+
+__all__ = ["OAuthCredentials", "OAuthManager"]

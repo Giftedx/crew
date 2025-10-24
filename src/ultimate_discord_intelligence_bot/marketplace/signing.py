@@ -10,11 +10,15 @@ from __future__ import annotations
 
 import hashlib
 from dataclasses import dataclass
-from datetime import datetime
+from typing import TYPE_CHECKING
 
 from core.time import default_utc_now
 
-from .store import MarketplaceStore
+
+if TYPE_CHECKING:
+    from datetime import datetime
+
+    from .store import MarketplaceStore
 
 
 @dataclass(slots=True)

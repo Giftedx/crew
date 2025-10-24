@@ -20,13 +20,14 @@ from ultimate_discord_intelligence_bot.cache import (
 )
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
+
 logger = logging.getLogger(__name__)
 
 
 class CacheShadowHarness:
     """Shadow harness for comparing cache V2 vs legacy hit rates."""
 
-    def __init__(self) -> None:
+    def __init__(self) -> StepResult:
         """Initialize the shadow harness."""
         self.unified_cache: UnifiedCache | None = None
         self.legacy_cache: BoundedLRUCache | None = None
@@ -37,13 +38,13 @@ class CacheShadowHarness:
             "legacy_misses": 0,
         }
 
-    def _get_unified_cache(self) -> UnifiedCache:
+    def _get_unified_cache(self) -> StepResult:
         """Get unified cache instance."""
         if self.unified_cache is None:
             self.unified_cache = get_unified_cache()
         return self.unified_cache
 
-    def _get_legacy_cache(self) -> BoundedLRUCache:
+    def _get_legacy_cache(self) -> StepResult:
         """Get legacy cache instance."""
         if self.legacy_cache is None:
             self.legacy_cache = BoundedLRUCache(max_size=1000)
@@ -55,7 +56,7 @@ class CacheShadowHarness:
         key: str,
         tenant: str = "default",
         workspace: str = "main",
-    ) -> tuple[Any | None, dict[str, Any]]:
+    ) -> StepResult:
         """Get value from both unified and legacy cache (shadow mode).
 
         Args:
@@ -136,9 +137,7 @@ class CacheShadowHarness:
             try:
                 cache = self._get_unified_cache()
                 namespace = get_cache_namespace(tenant, workspace)
-                result = await cache.set(
-                    namespace, cache_name, key, value, dependencies=dependencies
-                )
+                result = await cache.set(namespace, cache_name, key, value, dependencies=dependencies)
                 if not result.success:
                     errors.append(f"Unified cache set failed: {result.error}")
             except Exception as exc:
@@ -156,30 +155,17 @@ class CacheShadowHarness:
             return StepResult.fail(f"Shadow set errors: {'; '.join(errors)}")
         return StepResult.ok()
 
-    def get_shadow_metrics(self) -> dict[str, Any]:
+    def get_shadow_metrics(self) -> StepResult:
         """Get shadow mode hit rate metrics.
 
         Returns:
             Dictionary with hit rates and raw counts
         """
-        total_unified = (
-            self._shadow_metrics["unified_hits"]
-            + self._shadow_metrics["unified_misses"]
-        )
-        total_legacy = (
-            self._shadow_metrics["legacy_hits"] + self._shadow_metrics["legacy_misses"]
-        )
+        total_unified = self._shadow_metrics["unified_hits"] + self._shadow_metrics["unified_misses"]
+        total_legacy = self._shadow_metrics["legacy_hits"] + self._shadow_metrics["legacy_misses"]
 
-        unified_hit_rate = (
-            self._shadow_metrics["unified_hits"] / total_unified
-            if total_unified > 0
-            else 0.0
-        )
-        legacy_hit_rate = (
-            self._shadow_metrics["legacy_hits"] / total_legacy
-            if total_legacy > 0
-            else 0.0
-        )
+        unified_hit_rate = self._shadow_metrics["unified_hits"] / total_unified if total_unified > 0 else 0.0
+        legacy_hit_rate = self._shadow_metrics["legacy_hits"] / total_legacy if total_legacy > 0 else 0.0
 
         return {
             "unified_hit_rate": unified_hit_rate,
@@ -192,7 +178,7 @@ class CacheShadowHarness:
             "total_requests": total_unified + total_legacy,
         }
 
-    def reset_metrics(self) -> None:
+    def reset_metrics(self) -> StepResult:
         """Reset shadow metrics counters."""
         self._shadow_metrics = {
             "unified_hits": 0,
@@ -206,7 +192,7 @@ class CacheShadowHarness:
 _shadow_harness: CacheShadowHarness | None = None
 
 
-def get_cache_shadow_harness() -> CacheShadowHarness:
+def get_cache_shadow_harness() -> StepResult:
     """Get global cache shadow harness instance."""
     global _shadow_harness
     if _shadow_harness is None:

@@ -3,8 +3,12 @@ from __future__ import annotations
 import importlib
 import logging
 import time
-from collections.abc import Callable
-from typing import Any, Protocol
+from typing import TYPE_CHECKING, Any, Protocol
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +58,9 @@ class DependencyManager:
 
         # Redis cache fallback
         self._dependencies["redis"] = OptionalDependency(
-            module_name="redis", fallback_fn=self._create_redis_fallback, feature_flag="ENABLE_REDIS_CACHE"
+            module_name="redis",
+            fallback_fn=self._create_redis_fallback,
+            feature_flag="ENABLE_REDIS_CACHE",
         )
 
         # Sentence transformers fallback
@@ -117,7 +123,11 @@ class DependencyManager:
         return MockTranscription()
 
     def register_dependency(
-        self, name: str, module_name: str, fallback_fn: Callable | None = None, feature_flag: str | None = None
+        self,
+        name: str,
+        module_name: str,
+        fallback_fn: Callable | None = None,
+        feature_flag: str | None = None,
     ) -> None:
         """Register an optional dependency."""
         self._dependencies[name] = OptionalDependency(
@@ -187,7 +197,12 @@ class DependencyManager:
 class OptionalDependency:
     """Wrapper for optional dependencies with fallbacks."""
 
-    def __init__(self, module_name: str, fallback_fn: Callable | None = None, feature_flag: str | None = None):
+    def __init__(
+        self,
+        module_name: str,
+        fallback_fn: Callable | None = None,
+        feature_flag: str | None = None,
+    ):
         self.module_name = module_name
         self.fallback_fn = fallback_fn
         self.feature_flag = feature_flag
@@ -268,11 +283,10 @@ class InMemoryCache:
         """Get value from cache."""
         if key in self._cache:
             # Check TTL
-            if key in self._ttl_cache:
-                if time.time() > self._ttl_cache[key]:
-                    del self._cache[key]
-                    del self._ttl_cache[key]
-                    return None
+            if key in self._ttl_cache and time.time() > self._ttl_cache[key]:
+                del self._cache[key]
+                del self._ttl_cache[key]
+                return None
             return self._cache[key].get("value")
         return None
 
@@ -306,7 +320,7 @@ class HashEmbeddingModel:
         embeddings = []
         for text in texts:
             # Create deterministic hash from text
-            hash_val = int(hashlib.md5(text.encode()).hexdigest()[:8], 16)
+            hash_val = int(hashlib.md5(text.encode(), usedforsecurity=False).hexdigest()[:8], 16)  # nosec B324 - mock embedding generation only
 
             # Create embedding vector
             embedding = [float((hash_val + i) % 1000) / 1000.0 for i in range(self.embedding_dim)]
@@ -347,7 +361,13 @@ class InMemoryVectorStore:
             # Simple cosine similarity (mock implementation)
             similarity = self._cosine_similarity(query_vector, vector)
 
-            results.append({"id": vector_id, "score": similarity, "payload": self._metadata.get(vector_id, {})})
+            results.append(
+                {
+                    "id": vector_id,
+                    "score": similarity,
+                    "payload": self._metadata.get(vector_id, {}),
+                }
+            )
 
         # Sort by similarity and return top results
         results.sort(key=lambda x: x["score"], reverse=True)
@@ -361,7 +381,7 @@ class InMemoryVectorStore:
 
     def _cosine_similarity(self, a: list[float], b: list[float]) -> float:
         """Calculate cosine similarity between two vectors."""
-        dot_product = sum(x * y for x, y in zip(a, b))
+        dot_product = sum(x * y for x, y in zip(a, b, strict=False))
         norm_a = sum(x * x for x in a) ** 0.5
         norm_b = sum(x * x for x in b) ** 0.5
 

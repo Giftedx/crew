@@ -11,6 +11,7 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import Any, Protocol, runtime_checkable
 
+
 try:
     METRICS_AVAILABLE = True
 except ImportError:
@@ -95,11 +96,14 @@ class ShadowRegretTracker:
     def get_summary(self) -> dict[str, Any]:
         """Get summary statistics for all tracked policies."""
         summary: dict[str, Any] = {
-            "baseline": {"avg_reward": self.baseline_reward, "count": self.baseline_count},
+            "baseline": {
+                "avg_reward": self.baseline_reward,
+                "count": self.baseline_count,
+            },
             "policies": {},
         }
 
-        for policy_name in self.cumulative_regret.keys():
+        for policy_name in self.cumulative_regret:
             if self.total_pulls[policy_name] > 0:
                 avg_reward = self.total_rewards[policy_name] / self.total_pulls[policy_name]
                 avg_regret = self.cumulative_regret[policy_name] / self.total_pulls[policy_name]
@@ -165,4 +169,9 @@ def record_shadow_evaluation(
         pass
 
 
-__all__ = ["ShadowRegretTracker", "get_shadow_tracker", "is_lints_shadow_enabled", "record_shadow_evaluation"]
+__all__ = [
+    "ShadowRegretTracker",
+    "get_shadow_tracker",
+    "is_lints_shadow_enabled",
+    "record_shadow_evaluation",
+]

@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import json
 
-from sqlalchemy import (
+from sqlalchemy import (  # type: ignore[import-untyped]
     JSON,
     Boolean,
     Column,
@@ -17,8 +17,9 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
 )
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.sql import func
+from sqlalchemy.ext.declarative import declarative_base  # type: ignore[import-untyped]
+from sqlalchemy.sql import func  # type: ignore[import-untyped]
+
 
 BaseModel = declarative_base()
 
@@ -31,9 +32,7 @@ class Account(BaseModel):
     id = Column(Integer, primary_key=True)
     tenant = Column(String(255), nullable=False)
     workspace = Column(String(255), nullable=False)
-    platform = Column(
-        String(50), nullable=False
-    )  # youtube, twitch, tiktok, instagram, x
+    platform = Column(String(50), nullable=False)  # youtube, twitch, tiktok, instagram, x
     handle = Column(String(255), nullable=False)
     display_name = Column(String(255))
     platform_id = Column(String(255), nullable=False)  # Platform-specific ID
@@ -97,9 +96,7 @@ class Media(BaseModel):
     published_at = Column(DateTime)
     media_metadata = Column(JSON)
     is_processed = Column(Boolean, default=False)
-    processing_status = Column(
-        String(50), default="pending"
-    )  # pending, processing, completed, failed
+    processing_status = Column(String(50), default="pending")  # pending, processing, completed, failed
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
 
@@ -123,9 +120,7 @@ class Unit(BaseModel):
     tenant = Column(String(255), nullable=False)
     workspace = Column(String(255), nullable=False)
     media_id = Column(Integer, ForeignKey("creator_ops_media.id"), nullable=False)
-    unit_type = Column(
-        String(50), nullable=False
-    )  # episode, clip, segment, story, post
+    unit_type = Column(String(50), nullable=False)  # episode, clip, segment, story, post
     title = Column(String(500))
     content = Column(Text)  # Transcript, post text, etc.
     start_time_seconds = Column(Integer)  # For clips/segments

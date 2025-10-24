@@ -7,4 +7,5 @@ from .executor import Executor
 from .middleware import Middleware
 from .step import Step
 
-__all__ = ["Step", "Middleware", "Executor"]
+
+__all__ = ["Executor", "Middleware", "Step"]

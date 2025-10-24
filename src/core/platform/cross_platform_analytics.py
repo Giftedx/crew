@@ -15,6 +15,7 @@ import numpy as np
 
 from .social_monitor import ContentType, PlatformType, SentimentType, SocialContent
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -679,7 +680,10 @@ class CrossPlatformAnalytics:
             return {}
 
     async def _generate_insights(
-        self, data_points: list[AnalyticsDataPoint], trends: dict[str, Any], query: AnalyticsQuery
+        self,
+        data_points: list[AnalyticsDataPoint],
+        trends: dict[str, Any],
+        query: AnalyticsQuery,
     ) -> list[str]:
         """Generate insights from analytics data."""
         try:
@@ -737,7 +741,10 @@ class CrossPlatformAnalytics:
                             }
                         ],
                     },
-                    "options": {"responsive": True, "scales": {"x": {"type": "time"}, "y": {"beginAtZero": True}}},
+                    "options": {
+                        "responsive": True,
+                        "scales": {"x": {"type": "time"}, "y": {"beginAtZero": True}},
+                    },
                 }
                 visualizations.append(line_chart)
 
@@ -763,7 +770,10 @@ class CrossPlatformAnalytics:
                             }
                         ],
                     },
-                    "options": {"responsive": True, "scales": {"y": {"beginAtZero": True}}},
+                    "options": {
+                        "responsive": True,
+                        "scales": {"y": {"beginAtZero": True}},
+                    },
                 }
                 visualizations.append(bar_chart)
 
@@ -992,7 +1002,10 @@ class CrossPlatformAnalytics:
 
     async def _generate_campaign_recommendations(self, campaign_data: dict[str, Any]) -> list[str]:
         """Generate campaign recommendations."""
-        return ["Optimize content for better engagement", "Focus on top-performing platforms"]
+        return [
+            "Optimize content for better engagement",
+            "Focus on top-performing platforms",
+        ]
 
     async def _get_time_range_data(
         self, time_range: tuple[float, float], platforms: list[PlatformType]
@@ -1019,7 +1032,13 @@ class CrossPlatformAnalytics:
 
     async def _identify_top_content(self, time_data: list[SocialContent]) -> dict[str, Any]:
         """Identify top content."""
-        return {"top_content": sorted(time_data, key=lambda x: sum(x.engagement_metrics.values()), reverse=True)[:10]}
+        return {
+            "top_content": sorted(
+                time_data,
+                key=lambda x: sum(x.engagement_metrics.values()),
+                reverse=True,
+            )[:10]
+        }
 
     async def _identify_trending_topics(self, time_data: list[SocialContent]) -> dict[str, Any]:
         """Identify trending topics."""

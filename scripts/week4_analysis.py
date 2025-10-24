@@ -61,7 +61,8 @@ class Week4Analyzer:
                     analysis[test_name]["iterations"] += stats.get("successful_iterations", 0)
                     analysis[test_name]["total_time"] += stats["mean_seconds"]
                     analysis[test_name]["min_time"] = min(
-                        analysis[test_name]["min_time"], stats.get("min_seconds", float("inf"))
+                        analysis[test_name]["min_time"],
+                        stats.get("min_seconds", float("inf")),
                     )
                     analysis[test_name]["max_time"] = max(analysis[test_name]["max_time"], stats.get("max_seconds", 0))
 
@@ -150,7 +151,10 @@ class Week4Analyzer:
             realistic = combined_improvement
         else:
             # Conservative: Take max + half of second + third of third
-            sorted_improvements = sorted([quality_improvement, routing_improvement, exit_improvement], reverse=True)
+            sorted_improvements = sorted(
+                [quality_improvement, routing_improvement, exit_improvement],
+                reverse=True,
+            )
             realistic = sorted_improvements[0] + sorted_improvements[1] * 0.5 + sorted_improvements[2] * 0.33
 
         return {

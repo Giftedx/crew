@@ -15,11 +15,12 @@ from .fallback_strategy import FallbackStrategy
 from .hierarchical_strategy import HierarchicalStrategy
 from .monitoring_strategy import MonitoringStrategy
 
+
 __all__ = [
-    "OrchestrationStrategyProtocol",
-    "StrategyRegistry",
-    "get_strategy_registry",
     "FallbackStrategy",
     "HierarchicalStrategy",
     "MonitoringStrategy",
+    "OrchestrationStrategyProtocol",
+    "StrategyRegistry",
+    "get_strategy_registry",
 ]

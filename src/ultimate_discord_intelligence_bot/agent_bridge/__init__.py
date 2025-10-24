@@ -34,33 +34,34 @@ from .knowledge_bridge import (
     KnowledgeBridgeConfig,
 )
 
+
 __all__ = [
     # Main bridge interface
     "AgentBridge",
     "AgentBridgeConfig",
+    "AgentContribution",
+    "AgentInsight",
     # Knowledge bridge
     "AgentKnowledgeBridge",
-    "KnowledgeBridgeConfig",
-    "InsightType",
-    "InsightPriority",
-    "AgentInsight",
-    "InsightRequest",
-    "InsightResponse",
+    "CollectiveInsight",
+    "CollectiveIntelligenceConfig",
+    # Collective intelligence
+    "CollectiveIntelligenceService",
+    "CrossAgentLearningConfig",
     # Cross-agent learning
     "CrossAgentLearningService",
-    "CrossAgentLearningConfig",
-    "LearningType",
-    "LearningSource",
+    "InsightPriority",
+    "InsightRequest",
+    "InsightResponse",
+    "InsightType",
+    "IntelligenceLevel",
+    "KnowledgeBridgeConfig",
     "LearningPattern",
     "LearningRequest",
     "LearningResponse",
-    # Collective intelligence
-    "CollectiveIntelligenceService",
-    "CollectiveIntelligenceConfig",
-    "SynthesisType",
-    "IntelligenceLevel",
-    "AgentContribution",
-    "CollectiveInsight",
+    "LearningSource",
+    "LearningType",
     "SynthesisRequest",
     "SynthesisResponse",
+    "SynthesisType",
 ]

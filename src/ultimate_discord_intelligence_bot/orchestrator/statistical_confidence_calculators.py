@@ -9,11 +9,14 @@ Extracted from confidence_calculators.py to improve maintainability and organiza
 import logging
 import math
 
+
 logger = logging.getLogger(__name__)
 
 
 def calculate_confidence_interval(
-    data_points: list[float], confidence_level: float = 0.95, log: logging.Logger | None = None
+    data_points: list[float],
+    confidence_level: float = 0.95,
+    log: logging.Logger | None = None,
 ) -> tuple[float, float]:
     """Calculate confidence interval for a set of data points.
 
@@ -87,7 +90,9 @@ def calculate_standard_error(data_points: list[float], log: logging.Logger | Non
 
 
 def calculate_confidence_score(
-    data_points: list[float], target_value: float = None, log: logging.Logger | None = None
+    data_points: list[float],
+    target_value: float | None = None,
+    log: logging.Logger | None = None,
 ) -> float:
     """Calculate confidence score based on data consistency.
 

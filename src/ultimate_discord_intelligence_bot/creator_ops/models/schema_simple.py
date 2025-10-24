@@ -2,9 +2,10 @@
 Simple schema for testing OAuth imports without SQLAlchemy 2.0 dependencies.
 """
 
-from sqlalchemy import Boolean, Column, DateTime, Integer, String, Text
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.sql import func
+from sqlalchemy import Boolean, Column, DateTime, Integer, String, Text  # type: ignore[import-untyped]
+from sqlalchemy.ext.declarative import declarative_base  # type: ignore[import-untyped]
+from sqlalchemy.sql import func  # type: ignore[import-untyped]
+
 
 BaseModel = declarative_base()
 

@@ -24,6 +24,7 @@ from typing import Any
 
 import yaml
 
+
 ROOT = Path(__file__).resolve().parent.parent
 DEP_FILE = ROOT / "config" / "deprecations.yaml"
 MIGRATION_SCRIPTS = {
@@ -189,7 +190,10 @@ class DeprecationDashboard:
             return self._generate_console_report(scan_results, health_score, recommendations)
 
     def _generate_console_report(
-        self, scan_results: dict[str, Any], health_score: float, recommendations: list[str]
+        self,
+        scan_results: dict[str, Any],
+        health_score: float,
+        recommendations: list[str],
     ) -> str:
         """Generate console-formatted report."""
         lines = []
@@ -246,7 +250,10 @@ class DeprecationDashboard:
         return "\n".join(lines)
 
     def _generate_json_report(
-        self, scan_results: dict[str, Any], health_score: float, recommendations: list[str]
+        self,
+        scan_results: dict[str, Any],
+        health_score: float,
+        recommendations: list[str],
     ) -> str:
         """Generate JSON-formatted report."""
         report = {
@@ -259,7 +266,10 @@ class DeprecationDashboard:
         return _json.dumps(report, indent=2)
 
     def _generate_html_report(
-        self, scan_results: dict[str, Any], health_score: float, recommendations: list[str]
+        self,
+        scan_results: dict[str, Any],
+        health_score: float,
+        recommendations: list[str],
     ) -> str:
         """Generate HTML-formatted report."""
         html = f"""
@@ -321,7 +331,13 @@ class DeprecationDashboard:
 
 def main():
     parser = argparse.ArgumentParser(description="Enhanced Deprecation Reporting Dashboard")
-    parser.add_argument("--format", "-f", choices=["console", "json", "html"], default="console", help="Output format")
+    parser.add_argument(
+        "--format",
+        "-f",
+        choices=["console", "json", "html"],
+        default="console",
+        help="Output format",
+    )
     parser.add_argument("--output", "-o", help="Output file (default: stdout)")
 
     args = parser.parse_args()

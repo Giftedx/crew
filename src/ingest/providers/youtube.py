@@ -3,16 +3,20 @@
 from __future__ import annotations
 
 import math
-from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Any
-
-# Optional dependency hook: tests may monkeypatch this symbol (no direct import to satisfy guardrails)
-yt_dlp = None
+from typing import TYPE_CHECKING, Any
 
 from ultimate_discord_intelligence_bot.tools.yt_dlp_download_tool import (
     youtube_fetch_metadata,
 )
+
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+
+# Optional dependency hook: tests may monkeypatch this symbol (no direct import to satisfy guardrails)
+yt_dlp = None
 
 
 @dataclass
@@ -98,9 +102,9 @@ def fetch_transcript(url: str) -> str | None:
     for lang in ("en", "en-US"):
         tracks = subs.get(lang)
         if tracks:
-            import urllib.request  # noqa: PLC0415 - narrow scope network helper
+            import urllib.request
 
-            with urllib.request.urlopen(tracks[0]["url"]) as resp:  # noqa: S310
+            with urllib.request.urlopen(tracks[0]["url"]) as resp:
                 data: bytes = resp.read()
                 text = data.decode("utf-8")
                 track_url = tracks[0]["url"]

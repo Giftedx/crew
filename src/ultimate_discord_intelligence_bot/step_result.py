@@ -8,6 +8,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, cast
 
+
 """Enhanced error handling and result normalization across the pipeline.
 
 This module provides a comprehensive error handling system with granular
@@ -300,17 +301,14 @@ class StepResult(Mapping[str, Any]):
         if explicit_retryable:
             return True
 
-        if error_category in {
+        return error_category in {
             ErrorCategory.NETWORK,
             ErrorCategory.TIMEOUT,
             ErrorCategory.SERVICE_UNAVAILABLE,
             ErrorCategory.RATE_LIMIT,
             ErrorCategory.TRANSIENT,
             ErrorCategory.RETRYABLE,
-        }:
-            return True
-
-        return False
+        }
 
     @classmethod
     def _calculate_error_severity(cls, error_category: ErrorCategory | None, error: str | None) -> ErrorSeverity:
@@ -372,6 +370,11 @@ class StepResult(Mapping[str, Any]):
         """
         return cls(success=True, data=data, custom_status="skipped")
 
+    @property
+    def skipped(self) -> bool:
+        """Check if this result represents a skipped operation."""
+        return self.custom_status == "skipped"
+
     @classmethod
     def with_context(
         cls,
@@ -382,7 +385,13 @@ class StepResult(Mapping[str, Any]):
         **data: Any,
     ) -> StepResult:
         """Create a StepResult with enhanced error context."""
-        result = cls(success=success, data=data, error=error, error_category=error_category, error_context=context)
+        result = cls(
+            success=success,
+            data=data,
+            error=error,
+            error_category=error_category,
+            error_context=context,
+        )
 
         if error_category and context:
             result.error_severity = cls._calculate_error_severity(error_category, error)
@@ -407,15 +416,37 @@ class StepResult(Mapping[str, Any]):
                 ]
             )
         elif error_category == ErrorCategory.TIMEOUT:
-            actions.extend(["Increase timeout values", "Optimize resource usage", "Check for resource contention"])
+            actions.extend(
+                [
+                    "Increase timeout values",
+                    "Optimize resource usage",
+                    "Check for resource contention",
+                ]
+            )
         elif error_category == ErrorCategory.RATE_LIMIT:
-            actions.extend(["Implement rate limiting", "Add exponential backoff", "Consider batching requests"])
+            actions.extend(
+                [
+                    "Implement rate limiting",
+                    "Add exponential backoff",
+                    "Consider batching requests",
+                ]
+            )
         elif error_category == ErrorCategory.MODEL_ERROR:
             actions.extend(
-                ["Check model configuration", "Verify API keys and credentials", "Consider model fallback strategies"]
+                [
+                    "Check model configuration",
+                    "Verify API keys and credentials",
+                    "Consider model fallback strategies",
+                ]
             )
         elif error_category == ErrorCategory.DATABASE_ERROR:
-            actions.extend(["Check database connectivity", "Verify database credentials", "Check for schema issues"])
+            actions.extend(
+                [
+                    "Check database connectivity",
+                    "Verify database credentials",
+                    "Check for schema issues",
+                ]
+            )
 
         return actions
 
@@ -429,7 +460,13 @@ class StepResult(Mapping[str, Any]):
         **data: Any,
     ) -> StepResult:
         """Enhanced shortcut for a failed result with comprehensive error handling."""
-        result = cls(success=False, error=str(error), data=data, error_category=error_category, retryable=retryable)
+        result = cls(
+            success=False,
+            error=str(error),
+            data=data,
+            error_category=error_category,
+            retryable=retryable,
+        )
 
         if context:
             result.error_context = context
@@ -440,38 +477,83 @@ class StepResult(Mapping[str, Any]):
 
     @classmethod
     def network_error(
-        cls, error: str = "Network operation failed", context: ErrorContext | None = None, **data: Any
+        cls,
+        error: str = "Network operation failed",
+        context: ErrorContext | None = None,
+        **data: Any,
     ) -> StepResult:
         """Create a network error result with appropriate categorization."""
-        return cls.fail(error, error_category=ErrorCategory.NETWORK, retryable=True, context=context, **data)
+        return cls.fail(
+            error,
+            error_category=ErrorCategory.NETWORK,
+            retryable=True,
+            context=context,
+            **data,
+        )
 
     @classmethod
     def timeout_error(
-        cls, error: str = "Operation timed out", context: ErrorContext | None = None, **data: Any
+        cls,
+        error: str = "Operation timed out",
+        context: ErrorContext | None = None,
+        **data: Any,
     ) -> StepResult:
         """Create a timeout error result."""
-        return cls.fail(error, error_category=ErrorCategory.TIMEOUT, retryable=True, context=context, **data)
+        return cls.fail(
+            error,
+            error_category=ErrorCategory.TIMEOUT,
+            retryable=True,
+            context=context,
+            **data,
+        )
 
     @classmethod
     def model_error(
-        cls, error: str = "Model inference failed", context: ErrorContext | None = None, **data: Any
+        cls,
+        error: str = "Model inference failed",
+        context: ErrorContext | None = None,
+        **data: Any,
     ) -> StepResult:
         """Create a model error result."""
-        return cls.fail(error, error_category=ErrorCategory.MODEL_ERROR, retryable=True, context=context, **data)
+        return cls.fail(
+            error,
+            error_category=ErrorCategory.MODEL_ERROR,
+            retryable=True,
+            context=context,
+            **data,
+        )
 
     @classmethod
     def database_error(
-        cls, error: str = "Database operation failed", context: ErrorContext | None = None, **data: Any
+        cls,
+        error: str = "Database operation failed",
+        context: ErrorContext | None = None,
+        **data: Any,
     ) -> StepResult:
         """Create a database error result."""
-        return cls.fail(error, error_category=ErrorCategory.DATABASE_ERROR, retryable=True, context=context, **data)
+        return cls.fail(
+            error,
+            error_category=ErrorCategory.DATABASE_ERROR,
+            retryable=True,
+            context=context,
+            **data,
+        )
 
     @classmethod
     def validation_error(
-        cls, error: str = "Input validation failed", context: ErrorContext | None = None, **data: Any
+        cls,
+        error: str = "Input validation failed",
+        context: ErrorContext | None = None,
+        **data: Any,
     ) -> StepResult:
         """Create a validation error result."""
-        return cls.fail(error, error_category=ErrorCategory.VALIDATION, retryable=False, context=context, **data)
+        return cls.fail(
+            error,
+            error_category=ErrorCategory.VALIDATION,
+            retryable=False,
+            context=context,
+            **data,
+        )
 
     @classmethod
     def bad_request(cls, error: str, **data: Any) -> StepResult:
@@ -496,7 +578,12 @@ class StepResult(Mapping[str, Any]):
     @classmethod
     def service_unavailable(cls, error: str = "Service unavailable", **data: Any) -> StepResult:
         """Create a service unavailable error result."""
-        return cls.fail(error, error_category=ErrorCategory.SERVICE_UNAVAILABLE, retryable=True, **data)
+        return cls.fail(
+            error,
+            error_category=ErrorCategory.SERVICE_UNAVAILABLE,
+            retryable=True,
+            **data,
+        )
 
     @classmethod
     def processing_error(cls, error: str, **data: Any) -> StepResult:
@@ -507,7 +594,10 @@ class StepResult(Mapping[str, Any]):
     def success_with_warnings(cls, warnings: list[str], **data: Any) -> StepResult:
         """Create a success result with warnings."""
         return cls(
-            success=True, data=data, error_category=ErrorCategory.SUCCESS_WITH_WARNINGS, metadata={"warnings": warnings}
+            success=True,
+            data=data,
+            error_category=ErrorCategory.SUCCESS_WITH_WARNINGS,
+            metadata={"warnings": warnings},
         )
 
     def to_dict(self) -> dict[str, Any]:
@@ -659,6 +749,65 @@ class StepResult(Mapping[str, Any]):
         except KeyError:
             return default
 
+    def __str__(self) -> str:
+        """String representation with PII filtering for safe logging."""
+        # Create a safe representation that filters sensitive data
+        safe_data = self._filter_pii(self.data)
+
+        if self.success:
+            if self.custom_status == "skipped":
+                return f"StepResult(skipped=True, data={safe_data})"
+            elif self.custom_status == "uncertain":
+                return f"StepResult(uncertain=True, data={safe_data})"
+            else:
+                return f"StepResult(success=True, data={safe_data})"
+        else:
+            safe_error = self._filter_pii_string(self.error) if self.error else None
+            return f"StepResult(success=False, error={safe_error}, data={safe_data})"
+
+    def _filter_pii(self, data: Any) -> Any:
+        """Recursively filter PII from data structures."""
+        if isinstance(data, dict):
+            filtered = {}
+            for key, value in data.items():
+                # Filter out common PII keys
+                if any(
+                    pii_key in key.lower()
+                    for pii_key in ["password", "token", "key", "secret", "email", "phone", "ssn", "credit"]
+                ):
+                    filtered[key] = "[FILTERED]"
+                else:
+                    filtered[key] = self._filter_pii(value)
+            return filtered
+        elif isinstance(data, list):
+            return [self._filter_pii(item) for item in data]
+        elif isinstance(data, str):
+            return self._filter_pii_string(data)
+        else:
+            return data
+
+    def _filter_pii_string(self, text: str) -> str:
+        """Filter PII patterns from string content."""
+        if not text:
+            return text
+
+        import re
+
+        # Common PII patterns
+        patterns = [
+            (r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b", "[EMAIL]"),  # Email
+            (r"\b\d{3}-\d{2}-\d{4}\b", "[SSN]"),  # SSN
+            (r"\b\d{4}[-\s]?\d{4}[-\s]?\d{4}[-\s]?\d{4}\b", "[CARD]"),  # Credit card
+            (r"\b\d{3}-\d{3}-\d{4}\b", "[PHONE]"),  # Phone
+            (r"\b[A-Za-z0-9]{20,}\b", "[TOKEN]"),  # Long tokens/keys
+        ]
+
+        filtered_text = text
+        for pattern, replacement in patterns:
+            filtered_text = re.sub(pattern, replacement, filtered_text)
+
+        return filtered_text
+
     # Heuristic equality helpers so legacy tests comparing a tool result directly to a list or
     # dict continue to pass. If comparing to a list and our (possibly nested) payload has a sole
     # 'results' key, compare against that value. If comparing to a dict, compare against a
@@ -674,7 +823,7 @@ class StepResult(Mapping[str, Any]):
             # Accept 'hits' only mapping (legacy vector search)
             if set(inner.keys()) == {"hits"} and isinstance(inner.get("hits"), list):
                 return bool(inner["hits"] == other)
-            # Accept combined mapping where hits/results both present – prefer 'results'
+            # Accept combined mapping where hits/results both present - prefer 'results'
             if "results" in inner and isinstance(inner.get("results"), list):
                 return bool(inner["results"] == other)
             if "hits" in inner and isinstance(inner.get("hits"), list):
@@ -683,7 +832,7 @@ class StepResult(Mapping[str, Any]):
             flat: dict[str, Any] = {}
             # merge nested mapping first (so top-level overrides win)
             if isinstance(self.data.get("data"), dict):
-                flat.update(cast(dict[str, Any], self.data["data"]))
+                flat.update(cast("dict[str, Any]", self.data["data"]))
             flat.update({k: v for k, v in self.data.items() if k != "data"})
             flat["status"] = self.custom_status or ("success" if self.success else "error")
             if self.error is not None:
@@ -696,9 +845,14 @@ class StepResult(Mapping[str, Any]):
         try:
             flat_items: list[tuple[str, Any]] = []
             if isinstance(self.data.get("data"), dict):
-                flat_items.extend(cast(dict[str, Any], self.data["data"]).items())
+                flat_items.extend(cast("dict[str, Any]", self.data["data"]).items())
             flat_items.extend([(k, v) for k, v in self.data.items() if k != "data"])
-            flat_items.append(("status", self.custom_status or ("success" if self.success else "error")))
+            flat_items.append(
+                (
+                    "status",
+                    self.custom_status or ("success" if self.success else "error"),
+                )
+            )
             if self.error is not None:
                 flat_items.append(("error", self.error))
             return hash(tuple(sorted(flat_items)))
@@ -706,8 +860,7 @@ class StepResult(Mapping[str, Any]):
             # Fallback when values are unhashable
             return id(self)
 
-
-# ---------------------- Error Analysis and Recovery Utilities ----------------------
+    # ---------------------- Error Analysis and Recovery Utilities ----------------------
 
 
 class ErrorAnalyzer:
@@ -788,7 +941,11 @@ class ErrorRecoveryManager:
     def record_failure(self, component: str, error_category: ErrorCategory) -> None:
         """Record a failure for circuit breaker tracking."""
         if component not in self.circuit_breakers:
-            self.circuit_breakers[component] = {"failures": 0, "last_failure": time.time(), "state": "closed"}
+            self.circuit_breakers[component] = {
+                "failures": 0,
+                "last_failure": time.time(),
+                "state": "closed",
+            }
 
         cb = self.circuit_breakers[component]
         cb["failures"] += 1
@@ -806,7 +963,11 @@ class ErrorRecoveryManager:
     def reset_circuit(self, component: str) -> None:
         """Reset circuit breaker for a component."""
         if component in self.circuit_breakers:
-            self.circuit_breakers[component] = {"failures": 0, "last_failure": time.time(), "state": "closed"}
+            self.circuit_breakers[component] = {
+                "failures": 0,
+                "last_failure": time.time(),
+                "state": "closed",
+            }
 
 
 # Global error analysis instances
@@ -835,13 +996,13 @@ def record_error_for_analysis(result: StepResult) -> None:
 
 
 __all__ = [
-    "StepResult",
-    "ErrorCategory",
-    "ErrorSeverity",
-    "ErrorRecoveryStrategy",
-    "ErrorContext",
     "ErrorAnalyzer",
+    "ErrorCategory",
+    "ErrorContext",
     "ErrorRecoveryManager",
+    "ErrorRecoveryStrategy",
+    "ErrorSeverity",
+    "StepResult",
     "get_error_analyzer",
     "get_recovery_manager",
     "record_error_for_analysis",
