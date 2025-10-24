@@ -186,7 +186,61 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401"]
-"tests/**/*.py" = ["S101", "ARG", "FBT", "PLR2004", "SLF001"]
+"tests/**/*.py" = [
+    "S101",   # allow assertions
+    "ARG",    # unused-argument patterns
+    "FBT",    # boolean trap
+    "PLR2004",# magic value comparisons
+    "SLF001", # private member access
+    "SIM117", # combine nested with statements
+    "F811",   # redefinition of name from parametrization
+    "RUF001", # ambiguous unicode in test data
+    "RUF012", # mutable class var (tests)
+    "F821",   # undefined names in stubbed/mocked contexts
+    "B904",   # `raise from` clarity not required in tests
+    "B007",   # loop control variable unused
+    "B017",   # blind exception pattern in tests
+    "SIM108", # if/else to ternary (style)
+    "SIM105", # prefer contextlib.suppress (style)
+    "A001",   # builtin shadowing in tests
+    "A002",   # builtin arg shadowing in tests
+    "RUF003", # ambiguous dash in comments
+    "A004",   # import shadowing builtin name (tests)
+    "F841",   # assigned but unused variables in tests
+    "SIM222", # True instead of ... or True (tests)
+    "B004",   # use callable() (tests style)
+    "SIM116", # suggest dict over if-elif chain (tests)
+]
+"tests_new/**/*.py" = [
+    "S101",   # allow assertions in tests
+    "ARG",    # ignore unused-argument patterns common in parametrize/fixtures
+    "FBT",    # boolean trap not relevant for tests
+    "PLR2004",# magic value comparisons in tests
+    "SLF001", # private member access in white-box tests
+    "SIM117", # combined with statements
+    "F811",   # redefinition of name (parametrize patterns)
+    "RUF001", # ambiguous unicode in test data
+    "RUF012", # mutable classvar in test helpers
+    "F821",   # undefined names in stubbed/mocked contexts
+    "B904",   # `raise from` clarity not required in tests
+    "B007",   # loop control variable unused
+    "B017",   # blind exception pattern in tests
+    "SIM108", # if/else to ternary (style)
+    "SIM105", # prefer contextlib.suppress (style)
+    "A001",   # builtin shadowing in tests
+    "A002",   # builtin arg shadowing in tests
+    "RUF003", # ambiguous dash in comments
+    "A004",   # import shadowing builtin name (tests)
+    "F841",   # assigned but unused variables in tests
+    "SIM222", # True instead of ... or True (tests)
+    "B004",   # use callable() (tests style)
+    "SIM116", # suggest dict over if-elif chain (tests)
+]
+"stubs/**/*.pyi" = [
+    "F811",  # redefinitions in type stubs
+    "A001",  # builtin shadowing in stubs
+    "A002",  # builtin arg shadowing in stubs
+]
 
 [tool.ruff.lint.isort]
 known-first-party = ["ultimate_discord_intelligence_bot"]
@@ -292,7 +346,7 @@ addopts = [
     "--cov-report=xml",
     "--cov-fail-under=80",
 ]
-testpaths = ["tests"]
+testpaths = ["tests", "tests_new"]
 python_files = ["test_*.py", "*_test.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]

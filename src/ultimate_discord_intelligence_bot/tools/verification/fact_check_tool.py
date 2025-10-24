@@ -2,7 +2,7 @@
 
 The test suite monkeypatches internal backend search methods such as
 ``_search_duckduckgo`` and ``_search_serply`` and expects ``run`` to
-return a mapping (dict‑like) containing:
+return a mapping (dict-like) containing:
 
     * status: "success" | "error" (StepResult supplies this automatically)
     * evidence: list of {title, url, snippet}
@@ -123,14 +123,14 @@ class FactCheckTool:
                 else:
                     _logger.debug(f"FactCheckTool: Backend '{name}' returned no results (likely no API key or no data)")
             except RequestException as e:
-                # Backend unavailable – skip silently per tests expecting overall success
+                # Backend unavailable - skip silently per tests expecting overall success
                 failed_backends.append(name)
                 _logger.warning(
                     f"FactCheckTool: Backend '{name}' failed (RequestException): {e} - possibly rate limited or unavailable"
                 )
                 continue
             except Exception as e:  # pragma: no cover - defensive guard
-                # Unexpected error – treat whole tool as failed for visibility
+                # Unexpected error - treat whole tool as failed for visibility
                 failed_backends.append(name)
                 _logger.error(f"FactCheckTool: Backend '{name}' encountered unexpected error: {e}")
                 self._metrics.counter("tool_runs_total", labels={"tool": "fact_check", "outcome": "error"}).inc()
@@ -195,7 +195,7 @@ class FactCheckTool:
 
             return evidence
         except Exception:  # pragma: no cover - network errors should be caught as RequestException
-            raise RequestException("DuckDuckGo search failed")
+            raise RequestException("DuckDuckGo search failed") from None
 
     def _search_serply(self, query: str) -> list[dict]:
         """Search via Serply API (requires API key)."""
@@ -227,7 +227,7 @@ class FactCheckTool:
 
             return evidence
         except Exception:  # pragma: no cover - network errors
-            raise RequestException("Serply search failed")
+            raise RequestException("Serply search failed") from None
 
     def _search_exa(self, query: str) -> list[dict]:
         """Search via Exa AI (requires API key)."""
@@ -259,7 +259,7 @@ class FactCheckTool:
 
             return evidence
         except Exception:  # pragma: no cover - network errors
-            raise RequestException("Exa search failed")
+            raise RequestException("Exa search failed") from None
 
     def _search_perplexity(self, query: str) -> list[dict]:
         """Search via Perplexity API (requires API key)."""
@@ -321,7 +321,7 @@ class FactCheckTool:
 
             return evidence
         except Exception:  # pragma: no cover - network errors
-            raise RequestException("Perplexity search failed")
+            raise RequestException("Perplexity search failed") from None
 
     def _search_wolfram(self, query: str) -> list[dict]:
         """Search via Wolfram Alpha API (requires App ID)."""
@@ -363,4 +363,4 @@ class FactCheckTool:
 
             return evidence
         except Exception:  # pragma: no cover - network errors
-            raise RequestException("Wolfram Alpha search failed")
+            raise RequestException("Wolfram Alpha search failed") from None

@@ -28,7 +28,7 @@ def test_openrouter_includes_recommended_headers(monkeypatch):
         def json(self):
             return {"choices": [{"message": {"content": "ok"}}]}
 
-    def fake_post(url, headers=None, json_payload=None, timeout_seconds=None):  # noqa: ARG001 - signature mirrors resilient_post
+    def fake_post(url, headers=None, json_payload=None, timeout_seconds=None):
         captured["headers"] = headers
         return FakeResp()
 

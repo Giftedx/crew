@@ -7,7 +7,7 @@ import logging
 import os
 from pathlib import Path
 from threading import Lock
-from typing import TypedDict
+from typing import TypedDict, ClassVar
 
 from core.time import default_utc_now
 from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
@@ -41,7 +41,7 @@ class TrustworthinessTrackerTool(BaseTool[StepResult]):
 
     name: str = "Trustworthiness Tracker Tool"
     description: str = "Updates and returns per-person trust scores based on fact-check verdicts."
-    model_config = {"extra": "allow"}
+    model_config: ClassVar[dict[str, str]] = {"extra": "allow"}
 
     def __init__(self, storage_path: str | Path | None = None, namespace: str | None = None):
         super().__init__()

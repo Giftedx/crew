@@ -24,7 +24,7 @@ def test_retry_metrics_exposed(monkeypatch):
 
     attempts: dict[str, int] = {"count": 0}
 
-    def always_500(url, **kwargs):  # noqa: ARG001
+    def always_500(url, **kwargs):
         attempts["count"] += 1
         return FakeResp(500)
 

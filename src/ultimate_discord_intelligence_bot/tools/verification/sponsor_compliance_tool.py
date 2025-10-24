@@ -434,14 +434,13 @@ class SponsorComplianceTool(BaseTool):
 
     def _generate_disclosure_text(self, sponsor_name: str, platform: str, jurisdiction: str) -> str:
         """Generate appropriate disclosure text."""
-        if platform == "youtube":
-            return f"This video is sponsored by {sponsor_name}. All opinions are my own."
-        elif platform == "twitch":
-            return f"Thanks to {sponsor_name} for sponsoring this stream!"
-        elif platform == "tiktok":
-            return f"#ad #sponsored by {sponsor_name}"
-        else:
-            return f"Sponsored by {sponsor_name}"
+        p = platform.lower().strip()
+        templates = {
+            "youtube": f"This video is sponsored by {sponsor_name}. All opinions are my own.",
+            "twitch": f"Thanks to {sponsor_name} for sponsoring this stream!",
+            "tiktok": f"#ad #sponsored by {sponsor_name}",
+        }
+        return templates.get(p, f"Sponsored by {sponsor_name}")
 
     def _calculate_compliance_score(
         self,

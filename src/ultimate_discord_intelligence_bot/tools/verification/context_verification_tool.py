@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TypedDict
+from typing import TypedDict, ClassVar
 
 from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 from ultimate_discord_intelligence_bot.step_result import StepResult
@@ -23,7 +23,7 @@ class ContextVerificationTool(BaseTool[StepResult]):
     name: str = "Context Verification Tool"
     description: str = "Compare clip text to indexed transcript context to flag missing context."
     # Allow tests/pipeline to attach helper objects dynamically (pydantic v2 strict by default)
-    model_config = {"extra": "allow"}
+    model_config: ClassVar[dict[str, str]] = {"extra": "allow"}
 
     def __init__(self, index_tool: TranscriptIndexTool | None = None):
         super().__init__()

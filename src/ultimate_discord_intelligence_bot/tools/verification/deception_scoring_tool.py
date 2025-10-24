@@ -22,6 +22,7 @@ Returns StepResult with:
 from __future__ import annotations
 
 from typing import Any, TypedDict
+from contextlib import suppress
 
 from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 from ultimate_discord_intelligence_bot.step_result import StepResult
@@ -171,12 +172,9 @@ class DeceptionScoringTool(BaseTool[StepResult]):
                 float(weights["fallacy_cap"]),
             )
 
-            # Aggregate score
+            # Aggregate score (0..1 normalized risk from fact-checks)
             # If there are no fact-checks, base score derives only from fallacies
-            if total_weight > 0:
-                fc_score = contribution / max(total_weight, 1e-9)  # 0..1 normalized risk from fact-checks
-            else:
-                fc_score = 0.0
+            fc_score = contribution / max(total_weight, 1e-9) if total_weight > 0 else 0.0
 
             score = max(0.0, min(1.0, fc_score + fallacy_contrib))
 
@@ -214,10 +212,8 @@ class DeceptionScoringTool(BaseTool[StepResult]):
             )
 
             # Metrics (best-effort)
-            try:
+            with suppress(Exception):
                 self._metrics.histogram("deception_score", score, labels={"bucket": label}).observe(score)  # type: ignore[attr-defined]
-            except Exception:
-                pass
 
             return StepResult.ok(
                 score=score,

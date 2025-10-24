@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any
-
-from ultimate_discord_intelligence_bot.step_result import StepResult
+from typing import Any, TYPE_CHECKING
 from ultimate_discord_intelligence_bot.tools._base import BaseTool
+
+if TYPE_CHECKING:  # ruff: noqa: TCH001
+    from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 class VerificationBaseTool(BaseTool, ABC):
