@@ -18,8 +18,10 @@ MAPPING = {
     "DiscordDownloadTool": ".acquisition.discord_download_tool",
     "InstagramStoriesArchiverTool": ".acquisition.instagram_stories_archiver_tool",
     "MultiPlatformDownloadTool": ".acquisition.multi_platform_download_tool",
+    "RedditAPITool": ".acquisition.reddit_api_tool",
     "TikTokEnhancedDownloadTool": ".acquisition.tiktok_enhanced_download_tool",
     "TranscriptIndexTool": ".acquisition.transcript_index_tool",
+    "TwitterAPITool": ".acquisition.twitter_api_tool",
     "YtDlpDownloadTool": ".acquisition.yt_dlp_download_tool",
     "PlaywrightAutomationTool": ".web.playwright_automation_tool",
     # Analysis tools
@@ -209,6 +211,7 @@ __all__ = [
     "RagIngestUrlTool",
     "RagQueryVectorStoreTool",
     "ReanalysisTriggerTool",
+    "RedditAPITool",
     "RedditDownloadTool",
     "ResearchAndBriefMultiTool",
     "ResearchAndBriefTool",
@@ -233,6 +236,7 @@ __all__ = [
     "TruthScoringTool",
     "TwitchDownloadTool",
     "TwitchResolverTool",
+    "TwitterAPITool",
     "TwitterDownloadTool",
     "TwitterThreadReconstructorTool",
     "UnifiedCacheTool",
@@ -278,7 +282,7 @@ def __getattr__(name: str):  # PEP 562: lazy attribute loading
                         )
                     except Exception:
                         # Last-resort preserve original import error
-                        raise _error
+                        raise _error from None
                     return _StepResult.fail(error=f"{_tool_name} is unavailable", details=str(_error))
 
             _MissingDependencyTool.__name__ = _tool_name

@@ -4,8 +4,22 @@ All notable changes to the Ultimate Discord Intelligence Bot project will be doc
 
 ## [Unreleased] - 2025-01-04
 
+### Security
+
+- **CRITICAL FIX**: Added input validation to prevent Cypher injection in Neo4j store (`src/kg/neo4j/store.py`)
+  - Added bounds checking for `depth` and `max_depth` parameters (1-10 range)
+  - Prevents potential injection via variable-length path patterns
+
 ### Added
 
+- **Tool Registration**: Added `RedditAPITool` and `TwitterAPITool` to tools MAPPING and __all__
+- **Environment Configuration**: Added comprehensive environment variable documentation to `.env.example`
+  - Reddit API credentials (`REDDIT_CLIENT_ID`, `REDDIT_CLIENT_SECRET`, `REDDIT_USER_AGENT`)
+  - Twitter/X API credentials (`TWITTER_BEARER_TOKEN`, etc.)
+  - Neo4j configuration (`NEO4J_URI`, `NEO4J_USER`, `NEO4J_PASSWORD`)
+  - ARQ Redis queue configuration (`ARQ_REDIS_URL`)
+  - Playwright web automation settings (`ENABLE_PLAYWRIGHT`, `PLAYWRIGHT_HEADLESS`, `PLAYWRIGHT_BROWSER`)
+  - LlamaIndex integration settings (`LLAMAINDEX_PERSIST_DIR`, `LLAMAINDEX_CHUNK_SIZE`, `LLAMAINDEX_CHUNK_OVERLAP`)
 - **Architecture Documentation**: Comprehensive architecture overview and Mermaid diagrams
 - **Quality Gates**: Detailed quality gate requirements and compliance checking
 - **Crew Consolidation**: Unified crew entry points with feature flag support
