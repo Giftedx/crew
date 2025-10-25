@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 _thread_local = threading.local()
 
 
-@dataclass
+@dataclass(init=False)
 class TenantContext:
     """Holds identifiers required to scope operations to a tenant."""
 
@@ -23,6 +23,36 @@ class TenantContext:
     budget_id: str | None = None
     policy_binding_id: str | None = None
     flags: dict[str, str] | None = None
+
+    def __init__(
+        self,
+        tenant_id: str | None = None,
+        workspace_id: str | None = None,
+        *,
+        # Backward-compatible aliases expected by tests
+        tenant: str | None = None,
+        workspace: str | None = None,
+        routing_profile_id: str | None = None,
+        budget_id: str | None = None,
+        policy_binding_id: str | None = None,
+        flags: dict[str, str] | None = None,
+    ) -> None:
+        # Prefer explicit ids; fall back to alias names for compatibility
+        self.tenant_id = tenant_id or tenant or "default"
+        self.workspace_id = workspace_id or workspace or "main"
+        self.routing_profile_id = routing_profile_id
+        self.budget_id = budget_id
+        self.policy_binding_id = policy_binding_id
+        self.flags = flags
+
+    # Alias properties for ergonomic access in legacy code/tests
+    @property
+    def tenant(self) -> str:
+        return self.tenant_id
+
+    @property
+    def workspace(self) -> str:
+        return self.workspace_id
 
 
 @contextmanager

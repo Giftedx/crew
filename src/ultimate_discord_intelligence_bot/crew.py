@@ -16,8 +16,7 @@ from typing import TYPE_CHECKING, Any
 # Import the new agent system
 from .agents import get_agent
 
-# Import Discord integration
-from .discord import create_artifact_handler
+# Discord integration is imported lazily to avoid optional dependency failures
 from .services.artifact_publisher import ArtifactPublisher, DiscordConfig
 from .services.mcp_client import MCPClient
 
@@ -148,9 +147,16 @@ class UltimateDiscordIntelligenceBotCrew:
             self.discord_config.webhook_url = webhook_url
 
         if bot:
-            self.artifact_handler = create_artifact_handler(bot, self.discord_config)
-            self.artifact_handler.set_crew_system(self)
-            print("Discord integration configured with bot")
+            try:
+                # Lazy import to avoid requiring discord.py in minimal environments
+                from .discord import create_artifact_handler as _create_artifact_handler
+
+                self.artifact_handler = _create_artifact_handler(bot, self.discord_config)
+                self.artifact_handler.set_crew_system(self)
+                print("Discord integration configured with bot")
+            except Exception as exc:
+                # In test/minimal environments, silently disable Discord integration
+                print(f"Discord integration unavailable (skipping): {exc}")
 
         print(f"Discord integration configured with webhook: {bool(webhook_url)}")
 

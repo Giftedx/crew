@@ -1,0 +1,351 @@
+{
+    "dashboard": {
+        "title": "HippoRAG Continual Learning Metrics",
+        "tags": [
+            "hipporag",
+            "memory",
+            "continual-learning",
+            "ai"
+        ],
+        "timezone": "browser",
+        "schemaVersion": 30,
+        "version": 1,
+        "refresh": "30s",
+        "panels": [
+            {
+                "id": 1,
+                "title": "HippoRAG Indexing Latency",
+                "type": "graph",
+                "gridPos": {
+                    "x": 0,
+                    "y": 0,
+                    "w": 12,
+                    "h": 8
+                },
+                "targets": [
+                    {
+                        "expr": "histogram_quantile(0.50, rate(hipporag_indexing_latency_seconds_bucket[5m]))",
+                        "legendFormat": "p50 - {{namespace}}",
+                        "refId": "A"
+                    },
+                    {
+                        "expr": "histogram_quantile(0.95, rate(hipporag_indexing_latency_seconds_bucket[5m]))",
+                        "legendFormat": "p95 - {{namespace}}",
+                        "refId": "B"
+                    },
+                    {
+                        "expr": "histogram_quantile(0.99, rate(hipporag_indexing_latency_seconds_bucket[5m]))",
+                        "legendFormat": "p99 - {{namespace}}",
+                        "refId": "C"
+                    }
+                ],
+                "yaxes": [
+                    {
+                        "label": "Latency (seconds)",
+                        "format": "s"
+                    },
+                    {
+                        "show": false
+                    }
+                ],
+                "description": "Time taken to index documents in HippoRAG memory system. Lower is better."
+            },
+            {
+                "id": 2,
+                "title": "Memory Size Growth Over Time",
+                "type": "graph",
+                "gridPos": {
+                    "x": 12,
+                    "y": 0,
+                    "w": 12,
+                    "h": 8
+                },
+                "targets": [
+                    {
+                        "expr": "hipporag_memory_size_bytes",
+                        "legendFormat": "{{namespace}}",
+                        "refId": "A"
+                    }
+                ],
+                "yaxes": [
+                    {
+                        "label": "Size (bytes)",
+                        "format": "bytes"
+                    },
+                    {
+                        "show": false
+                    }
+                ],
+                "description": "Total size of HippoRAG memory storage per namespace. Monitor for unbounded growth."
+            },
+            {
+                "id": 3,
+                "title": "Document Count by Namespace",
+                "type": "stat",
+                "gridPos": {
+                    "x": 0,
+                    "y": 8,
+                    "w": 6,
+                    "h": 4
+                },
+                "targets": [
+                    {
+                        "expr": "hipporag_document_count",
+                        "legendFormat": "{{namespace}}",
+                        "refId": "A"
+                    }
+                ],
+                "options": {
+                    "colorMode": "value",
+                    "graphMode": "area",
+                    "orientation": "auto"
+                },
+                "description": "Number of documents stored in HippoRAG per namespace."
+            },
+            {
+                "id": 4,
+                "title": "Consolidation Frequency",
+                "type": "stat",
+                "gridPos": {
+                    "x": 6,
+                    "y": 8,
+                    "w": 6,
+                    "h": 4
+                },
+                "targets": [
+                    {
+                        "expr": "rate(hipporag_consolidations_total[5m]) * 60",
+                        "legendFormat": "{{namespace}}",
+                        "refId": "A"
+                    }
+                ],
+                "options": {
+                    "colorMode": "value",
+                    "graphMode": "area",
+                    "orientation": "auto"
+                },
+                "fieldConfig": {
+                    "defaults": {
+                        "unit": "cpm"
+                    }
+                },
+                "description": "Memory consolidations per minute. Higher values indicate active learning."
+            },
+            {
+                "id": 5,
+                "title": "HippoRAG Operation Success Rate",
+                "type": "graph",
+                "gridPos": {
+                    "x": 12,
+                    "y": 8,
+                    "w": 12,
+                    "h": 8
+                },
+                "targets": [
+                    {
+                        "expr": "rate(tool_runs_total{tool=\"hipporag_continual_memory\",outcome=\"success\"}[5m]) / rate(tool_runs_total{tool=\"hipporag_continual_memory\"}[5m])",
+                        "legendFormat": "Success Rate",
+                        "refId": "A"
+                    },
+                    {
+                        "expr": "rate(tool_runs_total{tool=\"hipporag_continual_memory\",outcome=\"error\"}[5m])",
+                        "legendFormat": "Error Rate",
+                        "refId": "B"
+                    },
+                    {
+                        "expr": "rate(tool_runs_total{tool=\"hipporag_continual_memory\",outcome=\"fallback\"}[5m])",
+                        "legendFormat": "Fallback Rate",
+                        "refId": "C"
+                    }
+                ],
+                "yaxes": [
+                    {
+                        "label": "Rate",
+                        "format": "percentunit",
+                        "min": 0,
+                        "max": 1
+                    },
+                    {
+                        "show": false
+                    }
+                ],
+                "description": "Success, error, and fallback rates for HippoRAG operations."
+            },
+            {
+                "id": 6,
+                "title": "Memory Operations by Type",
+                "type": "piechart",
+                "gridPos": {
+                    "x": 0,
+                    "y": 12,
+                    "w": 6,
+                    "h": 6
+                },
+                "targets": [
+                    {
+                        "expr": "sum by (operation) (hipporag_memory_operations)",
+                        "legendFormat": "{{operation}}",
+                        "refId": "A"
+                    }
+                ],
+                "options": {
+                    "legend": {
+                        "displayMode": "list",
+                        "placement": "bottom"
+                    },
+                    "pieType": "pie"
+                },
+                "description": "Distribution of HippoRAG operations (index, consolidate, retrieve)."
+            },
+            {
+                "id": 7,
+                "title": "Initialization Failures",
+                "type": "stat",
+                "gridPos": {
+                    "x": 6,
+                    "y": 12,
+                    "w": 6,
+                    "h": 6
+                },
+                "targets": [
+                    {
+                        "expr": "sum(hipporag_init_failures)",
+                        "legendFormat": "Total Failures",
+                        "refId": "A"
+                    }
+                ],
+                "options": {
+                    "colorMode": "background",
+                    "graphMode": "none",
+                    "orientation": "auto"
+                },
+                "fieldConfig": {
+                    "defaults": {
+                        "thresholds": {
+                            "mode": "absolute",
+                            "steps": [
+                                {
+                                    "value": null,
+                                    "color": "green"
+                                },
+                                {
+                                    "value": 1,
+                                    "color": "yellow"
+                                },
+                                {
+                                    "value": 10,
+                                    "color": "red"
+                                }
+                            ]
+                        }
+                    }
+                },
+                "description": "Number of HippoRAG initialization failures. Should be zero in healthy system."
+            },
+            {
+                "id": 8,
+                "title": "Memory Efficiency (Bytes per Document)",
+                "type": "graph",
+                "gridPos": {
+                    "x": 12,
+                    "y": 12,
+                    "w": 12,
+                    "h": 6
+                },
+                "targets": [
+                    {
+                        "expr": "hipporag_memory_size_bytes / hipporag_document_count",
+                        "legendFormat": "{{namespace}}",
+                        "refId": "A"
+                    }
+                ],
+                "yaxes": [
+                    {
+                        "label": "Bytes per Document",
+                        "format": "bytes"
+                    },
+                    {
+                        "show": false
+                    }
+                ],
+                "description": "Average storage efficiency per document. Monitor for memory bloat."
+            },
+            {
+                "id": 9,
+                "title": "Continual Learning ROI",
+                "type": "table",
+                "gridPos": {
+                    "x": 0,
+                    "y": 18,
+                    "w": 24,
+                    "h": 8
+                },
+                "targets": [
+                    {
+                        "expr": "hipporag_document_count",
+                        "legendFormat": "Documents",
+                        "refId": "A",
+                        "instant": true
+                    },
+                    {
+                        "expr": "hipporag_memory_size_bytes / 1024 / 1024",
+                        "legendFormat": "Size (MB)",
+                        "refId": "B",
+                        "instant": true
+                    },
+                    {
+                        "expr": "rate(hipporag_consolidations_total[1h]) * 3600",
+                        "legendFormat": "Consolidations/hr",
+                        "refId": "C",
+                        "instant": true
+                    },
+                    {
+                        "expr": "rate(tool_runs_total{tool=\"hipporag_continual_memory\",outcome=\"success\"}[1h]) / rate(tool_runs_total{tool=\"hipporag_continual_memory\"}[1h])",
+                        "legendFormat": "Success Rate",
+                        "refId": "D",
+                        "instant": true
+                    }
+                ],
+                "transformations": [
+                    {
+                        "id": "seriesToColumns",
+                        "options": {
+                            "byField": "namespace"
+                        }
+                    }
+                ],
+                "description": "Comprehensive view of continual learning effectiveness per namespace."
+            }
+        ],
+        "annotations": {
+            "list": [
+                {
+                    "datasource": "-- Grafana --",
+                    "enable": true,
+                    "hide": false,
+                    "iconColor": "red",
+                    "name": "Memory Degradation Alert",
+                    "type": "tags",
+                    "tags": [
+                        "hipporag",
+                        "degradation"
+                    ]
+                }
+            ]
+        },
+        "templating": {
+            "list": [
+                {
+                    "name": "namespace",
+                    "type": "query",
+                    "datasource": "Prometheus",
+                    "query": "label_values(hipporag_memory_size_bytes, namespace)",
+                    "multi": true,
+                    "includeAll": true,
+                    "allValue": ".*",
+                    "refresh": 2
+                }
+            ]
+        }
+    }
+}

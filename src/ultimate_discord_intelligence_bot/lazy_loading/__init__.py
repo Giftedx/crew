@@ -13,4 +13,13 @@ __all__ = [
     "DependencyManager",
     "ImportCache",
     "LazyToolLoader",
+    "get_lazy_loader",
 ]
+
+
+def get_lazy_loader() -> LazyToolLoader:
+    """Factory for a default LazyToolLoader instance.
+
+    Provided for compatibility with fast tests expecting a simple accessor.
+    """
+    return LazyToolLoader()

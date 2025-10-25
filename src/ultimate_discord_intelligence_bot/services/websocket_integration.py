@@ -1,17 +1,27 @@
-"""WebSocket integration service for connecting WebSocket updates with system components."""
+"""WebSocket integration service for connecting WebSocket updates with system components.
+
+This module avoids importing optional heavy dependencies (like the `websockets`
+package) at import time so that minimal test environments can import the
+application without requiring optional extras. Runtime imports are performed
+inside methods and guarded with try/except to degrade gracefully when the
+WebSocket stack is unavailable.
+"""
 
 from __future__ import annotations
 
 import logging
 import time
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from ultimate_discord_intelligence_bot.services.websocket_service import (
-    MessageType,
-    WebSocketService,
-)
 from ultimate_discord_intelligence_bot.settings import ENABLE_WEBSOCKET_UPDATES
 from ultimate_discord_intelligence_bot.step_result import StepResult
+
+
+if TYPE_CHECKING:  # pragma: no cover - typing-only imports
+    # Import types only for static analysis; do not execute at runtime
+    from ultimate_discord_intelligence_bot.services.websocket_service import (
+        MessageType,  # noqa: F401
+    )
 
 
 log = logging.getLogger(__name__)
@@ -22,12 +32,26 @@ class WebSocketIntegrationService:
 
     def __init__(self):
         """Initialize WebSocket integration service."""
-        self.websocket_service: WebSocketService | None = None
+        # Lazy-initialized service; keep type loose to avoid runtime imports
+        self.websocket_service: Any | None = None
         self.enabled = ENABLE_WEBSOCKET_UPDATES
 
         if self.enabled:
-            self.websocket_service = WebSocketService()
-            log.info("WebSocket integration service initialized")
+            # Import at runtime to avoid hard dependency at import time
+            try:
+                from ultimate_discord_intelligence_bot.services.websocket_service import (
+                    WebSocketService,
+                )
+
+                self.websocket_service = WebSocketService()
+                log.info("WebSocket integration service initialized")
+            except Exception as e:  # websockets or other deps may be missing
+                self.enabled = False
+                self.websocket_service = None
+                log.info(
+                    "WebSocket integration disabled (missing optional dependency): %s",
+                    e,
+                )
         else:
             log.info("WebSocket integration service disabled via feature flag")
 
@@ -239,16 +263,19 @@ class WebSocketIntegrationService:
             return StepResult.ok(data={"notifications_sent": 0})
 
         try:
-            # Convert string message type to enum
-            try:
-                msg_type = MessageType(message_type)
-            except ValueError:
-                # Create a custom message type for unknown types
-                msg_type = MessageType.HEARTBEAT  # Fallback to heartbeat type
-
+            # Convert string message type to enum using runtime import
+            from ultimate_discord_intelligence_bot.services.websocket_service import (
+                MessageType as _MessageType,
+            )
             from ultimate_discord_intelligence_bot.services.websocket_service import (
                 WebSocketMessage,
             )
+
+            try:
+                msg_type = _MessageType(message_type)
+            except ValueError:
+                # Fallback to heartbeat type for unknown message strings
+                msg_type = _MessageType.HEARTBEAT
 
             message = WebSocketMessage(
                 message_type=msg_type,

@@ -24,6 +24,7 @@ SRC = ROOT / "src"
 
 ALLOWED_FILES = {
     "src/core/http_utils.py",
+    "src/core/connection_pool.py",  # Uses Session for pooling but routes through http_utils
     # This tool contains a string literal reference used for debugging output only.
     "src/ultimate_discord_intelligence_bot/tools/discord_download_tool.py",
 }
@@ -32,7 +33,10 @@ ALLOWED_FILES = {
 # to catch variable/param usages too; allowed files are excluded above.
 # Match an opening parenthesis with optional whitespace (no string literal required)
 # so calls like `requests.get(url)` are detected.
-PATTERN = re.compile(r"\brequests\.(get|post|put|delete|patch|head)\s*\(")
+# ALSO catch session.get/post and client.get/post patterns to prevent Session/httpx.Client bypass
+PATTERN = re.compile(
+    r"\b(?:requests\.|session\.|client\.)[_a-z]*\s*\.\s*(?:get|post|put|delete|patch|head)\s*\(", re.IGNORECASE
+)
 
 
 def strip_strings_and_comments(text: str) -> str:

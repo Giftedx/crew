@@ -2,7 +2,7 @@
 
 [![CI Pipeline](https://github.com/your-org/ultimate-discord-intelligence-bot/workflows/CI%20Pipeline/badge.svg)](https://github.com/your-org/ultimate-discord-intelligence-bot/actions)
 [![Test Coverage](https://codecov.io/gh/your-org/ultimate-discord-intelligence-bot/branch/main/graph/badge.svg)](https://codecov.io/gh/your-org/ultimate-discord-intelligence-bot)
-[![MyPy](https://img.shields.io/badge/MyPy-58%20errors-blue)](https://github.com/your-org/ultimate-discord-intelligence-bot)
+[![MyPy](https://img.shields.io/badge/MyPy-58%20import%20stubs-yellow "Missing type stubs for optional dependencies (crewai, httpx, torch, scipy) - not code errors")](https://github.com/your-org/ultimate-discord-intelligence-bot)
 
 A comprehensive, production-ready Discord bot system powered by CrewAI agents for autonomous content analysis, fact-checking, and intelligence gathering across multiple platforms.
 

@@ -19,7 +19,6 @@ from .performance_integration import PerformanceIntegrationManager
 from .services.enterprise_auth_service import get_auth_service
 from .services.enterprise_tenant_manager import ResourceType, get_tenant_manager
 from .services.hierarchical_orchestrator import HierarchicalOrchestrator
-from .services.websocket_integration import get_websocket_integration
 from .settings import (
     ENABLE_ENTERPRISE_TENANT_MANAGEMENT,
     ENABLE_HIERARCHICAL_ORCHESTRATION,
@@ -56,8 +55,15 @@ class EnhancedCrewExecutor:
         # Initialize WebSocket integration if enabled
         self.websocket_integration = None
         if ENABLE_WEBSOCKET_UPDATES:
-            self.websocket_integration = get_websocket_integration()
-            logger.info("WebSocket integration enabled - real-time updates active")
+            # Lazy import to avoid optional dependency at import time
+            try:
+                from .services.websocket_integration import get_websocket_integration
+
+                self.websocket_integration = get_websocket_integration()
+                logger.info("WebSocket integration enabled - real-time updates active")
+            except Exception as e:
+                self.websocket_integration = None
+                logger.info("WebSocket integration unavailable: %s", e)
 
         # Initialize Enterprise services if enabled
         self.tenant_manager = None

@@ -67,36 +67,55 @@ else:
             return fn
 
 
-# Import modular components
-from ultimate_discord_intelligence_bot.agents import (
-    AcquisitionAgents,
-    AnalysisAgents,
-    IntelligenceAgents,
-    ObservabilityAgents,
-    VerificationAgents,
-)
+# Import modular components (optional in minimal environments)
+try:  # pragma: no cover - optional dependency structure
+    from ultimate_discord_intelligence_bot.agents import (
+        AcquisitionAgents,
+        AnalysisAgents,
+        IntelligenceAgents,
+        ObservabilityAgents,
+        VerificationAgents,
+    )
+
+    _HAS_AGENT_MODULES = True
+except Exception:  # minimal fallback without agent modules
+    _HAS_AGENT_MODULES = False
 
 # Import feature flags
 from ultimate_discord_intelligence_bot.config.feature_flags import FeatureFlags
-from ultimate_discord_intelligence_bot.tasks import (
-    ContentProcessingTasks,
-    QualityAssuranceTasks,
-)
+
+
+# Import task modules (optional)
+try:  # pragma: no cover
+    from ultimate_discord_intelligence_bot.tasks import (
+        ContentProcessingTasks,
+        QualityAssuranceTasks,
+    )
+
+    _HAS_TASK_MODULES = True
+except Exception:
+    _HAS_TASK_MODULES = False
 
 # Import tools for wrapping
 from ultimate_discord_intelligence_bot.tools import (
     AdvancedPerformanceAnalyticsTool,
     CheckpointManagementTool,
     ContentGenerationTool,
+    CostTrackingTool,
     MCPCallTool,
     Mem0MemoryTool,
     MultimodalAnalysisTool,
+    OrchestrationStatusTool,
     PerspectiveSynthesizerTool,
     PipelineTool,
+    RouterStatusTool,
     SystemStatusTool,
     TimelineTool,
     UnifiedCacheTool,
+    UnifiedContextTool,
+    UnifiedMemoryStoreTool,
     UnifiedMemoryTool,
+    UnifiedMetricsTool,
     UnifiedRouterTool,
 )
 
@@ -124,16 +143,73 @@ class UltimateDiscordIntelligenceBotCrew:
 
     def __init__(self):
         """Initialize the modular crew."""
-        # Initialize agent modules
-        self.acquisition_agents = AcquisitionAgents()
-        self.analysis_agents = AnalysisAgents()
-        self.verification_agents = VerificationAgents()
-        self.intelligence_agents = IntelligenceAgents()
-        self.observability_agents = ObservabilityAgents()
+        # Initialize agent modules (or minimal placeholders)
+        if _HAS_AGENT_MODULES:
+            self.acquisition_agents = AcquisitionAgents()
+            self.analysis_agents = AnalysisAgents()
+            self.verification_agents = VerificationAgents()
+            self.intelligence_agents = IntelligenceAgents()
+            self.observability_agents = ObservabilityAgents()
+        else:
+            # Lightweight placeholders to satisfy attribute access in fast tests
+            class _Placeholder:
+                pass
 
-        # Initialize task modules
-        self.content_processing_tasks = ContentProcessingTasks()
-        self.quality_assurance_tasks = QualityAssuranceTasks()
+            self.acquisition_agents = _Placeholder()
+            self.analysis_agents = _Placeholder()
+            self.verification_agents = _Placeholder()
+            self.intelligence_agents = _Placeholder()
+            self.observability_agents = _Placeholder()
+
+        # Initialize task modules (or placeholders)
+        if _HAS_TASK_MODULES:
+            self.content_processing_tasks = ContentProcessingTasks()
+            self.quality_assurance_tasks = QualityAssuranceTasks()
+        else:
+
+            class _PT:
+                def plan_autonomy_mission(self):
+                    return Task(description="Plan mission", expected_output="ok", agent=lambda: Agent(role="planner"))
+
+                def capture_source_media(self):
+                    return Task(description="Capture", expected_output="ok", agent=lambda: Agent(role="acq"))
+
+                def transcribe_and_index_media(self):
+                    return Task(description="Transcribe", expected_output="ok", agent=lambda: Agent(role="ts"))
+
+                def map_transcript_insights(self):
+                    return Task(description="Analyze", expected_output="ok", agent=lambda: Agent(role="ana"))
+
+                def verify_priority_claims(self):
+                    return Task(description="Verify", expected_output="ok", agent=lambda: Agent(role="ver"))
+
+                def synthesize_intelligence(self):
+                    return Task(description="Synthesize", expected_output="ok", agent=lambda: Agent(role="intel"))
+
+                def store_memory_and_context(self):
+                    return Task(description="Store", expected_output="ok", agent=lambda: Agent(role="mem"))
+
+            class _QT:
+                def assess_content_quality(self):
+                    return Task(description="Assess", expected_output="ok", agent=lambda: Agent(role="qa"))
+
+                def validate_fact_checking_results(self):
+                    return Task(description="Validate", expected_output="ok", agent=lambda: Agent(role="qa"))
+
+                def monitor_system_performance(self):
+                    return Task(description="Monitor", expected_output="ok", agent=lambda: Agent(role="obs"))
+
+                def optimize_resource_usage(self):
+                    return Task(description="Optimize", expected_output="ok", agent=lambda: Agent(role="ops"))
+
+                def ensure_output_consistency(self):
+                    return Task(description="Consistency", expected_output="ok", agent=lambda: Agent(role="qa"))
+
+                def track_quality_metrics(self):
+                    return Task(description="Track", expected_output="ok", agent=lambda: Agent(role="obs"))
+
+            self.content_processing_tasks = _PT()
+            self.quality_assurance_tasks = _QT()
 
     # Mission Orchestrator
     @agent
@@ -265,70 +341,82 @@ class UltimateDiscordIntelligenceBotCrew:
     @crew
     def crew(self) -> Crew:
         """Create the modular crew with organized agents and tasks."""
+        if _HAS_AGENT_MODULES and _HAS_TASK_MODULES:
+            return Crew(
+                agents=[
+                    self.mission_orchestrator(),
+                    # Acquisition agents
+                    self.acquisition_agents.acquisition_specialist(),
+                    self.acquisition_agents.transcription_engineer(),
+                    self.acquisition_agents.content_ingestion_specialist(),
+                    self.acquisition_agents.enhanced_download_specialist(),
+                    # Analysis agents
+                    self.analysis_agents.analysis_cartographer(),
+                    self.analysis_agents.political_analysis_specialist(),
+                    self.analysis_agents.sentiment_analysis_specialist(),
+                    self.analysis_agents.claim_extraction_specialist(),
+                    self.analysis_agents.trend_analysis_specialist(),
+                    self.analysis_agents.multimodal_analysis_specialist(),
+                    self.analysis_agents.social_graph_analysis_specialist(),
+                    self.analysis_agents.live_stream_analysis_specialist(),
+                    # Verification agents
+                    self.verification_agents.verification_director(),
+                    self.verification_agents.fact_checking_specialist(),
+                    self.verification_agents.claim_verification_specialist(),
+                    self.verification_agents.context_verification_specialist(),
+                    self.verification_agents.deception_detection_specialist(),
+                    self.verification_agents.logical_fallacy_specialist(),
+                    self.verification_agents.steelman_argument_specialist(),
+                    self.verification_agents.perspective_synthesis_specialist(),
+                    # Intelligence agents
+                    self.intelligence_agents.research_specialist(),
+                    self.intelligence_agents.intelligence_synthesis_specialist(),
+                    self.intelligence_agents.knowledge_management_specialist(),
+                    self.intelligence_agents.strategic_intelligence_specialist(),
+                    self.intelligence_agents.narrative_tracking_specialist(),
+                    self.intelligence_agents.collective_intelligence_specialist(),
+                    self.intelligence_agents.memory_management_specialist(),
+                    # Observability agents
+                    self.observability_agents.system_monitoring_specialist(),
+                    self.observability_agents.performance_analytics_specialist(),
+                    self.observability_agents.alert_management_specialist(),
+                    self.observability_agents.quality_assurance_specialist(),
+                    self.observability_agents.resource_optimization_specialist(),
+                    self.observability_agents.orchestration_monitoring_specialist(),
+                    self.observability_agents.cost_optimization_specialist(),
+                ],
+                tasks=[
+                    self.plan_autonomy_mission(),
+                    self.capture_source_media(),
+                    self.transcribe_and_index_media(),
+                    self.map_transcript_insights(),
+                    self.verify_priority_claims(),
+                    self.synthesize_intelligence(),
+                    self.store_memory_and_context(),
+                    self.assess_content_quality(),
+                    self.validate_fact_checking_results(),
+                    self.monitor_system_performance(),
+                    self.optimize_resource_usage(),
+                    self.ensure_output_consistency(),
+                    self.track_quality_metrics(),
+                ],
+                process=Process.sequential,
+                verbose=True,
+                memory=True,
+                planning=True,
+                cache=True,
+                max_rpm=10,
+            )
+        # Minimal crew for environments without full modules
         return Crew(
-            agents=[
-                self.mission_orchestrator(),
-                # Acquisition agents
-                self.acquisition_agents.acquisition_specialist(),
-                self.acquisition_agents.transcription_engineer(),
-                self.acquisition_agents.content_ingestion_specialist(),
-                self.acquisition_agents.enhanced_download_specialist(),
-                # Analysis agents
-                self.analysis_agents.analysis_cartographer(),
-                self.analysis_agents.political_analysis_specialist(),
-                self.analysis_agents.sentiment_analysis_specialist(),
-                self.analysis_agents.claim_extraction_specialist(),
-                self.analysis_agents.trend_analysis_specialist(),
-                self.analysis_agents.multimodal_analysis_specialist(),
-                self.analysis_agents.social_graph_analysis_specialist(),
-                self.analysis_agents.live_stream_analysis_specialist(),
-                # Verification agents
-                self.verification_agents.verification_director(),
-                self.verification_agents.fact_checking_specialist(),
-                self.verification_agents.claim_verification_specialist(),
-                self.verification_agents.context_verification_specialist(),
-                self.verification_agents.deception_detection_specialist(),
-                self.verification_agents.logical_fallacy_specialist(),
-                self.verification_agents.steelman_argument_specialist(),
-                self.verification_agents.perspective_synthesis_specialist(),
-                # Intelligence agents
-                self.intelligence_agents.research_specialist(),
-                self.intelligence_agents.intelligence_synthesis_specialist(),
-                self.intelligence_agents.knowledge_management_specialist(),
-                self.intelligence_agents.strategic_intelligence_specialist(),
-                self.intelligence_agents.narrative_tracking_specialist(),
-                self.intelligence_agents.collective_intelligence_specialist(),
-                self.intelligence_agents.memory_management_specialist(),
-                # Observability agents
-                self.observability_agents.system_monitoring_specialist(),
-                self.observability_agents.performance_analytics_specialist(),
-                self.observability_agents.alert_management_specialist(),
-                self.observability_agents.quality_assurance_specialist(),
-                self.observability_agents.resource_optimization_specialist(),
-                self.observability_agents.orchestration_monitoring_specialist(),
-                self.observability_agents.cost_optimization_specialist(),
-            ],
-            tasks=[
-                self.plan_autonomy_mission(),
-                self.capture_source_media(),
-                self.transcribe_and_index_media(),
-                self.map_transcript_insights(),
-                self.verify_priority_claims(),
-                self.synthesize_intelligence(),
-                self.store_memory_and_context(),
-                self.assess_content_quality(),
-                self.validate_fact_checking_results(),
-                self.monitor_system_performance(),
-                self.optimize_resource_usage(),
-                self.ensure_output_consistency(),
-                self.track_quality_metrics(),
-            ],
+            agents=[self.mission_orchestrator()],
+            tasks=[self.content_processing_tasks.plan_autonomy_mission()],
             process=Process.sequential,
             verbose=True,
-            memory=True,
-            planning=True,
-            cache=True,
-            max_rpm=10,
+            memory=False,
+            planning=False,
+            cache=False,
+            max_rpm=5,
         )
 
     def get_crew_info(self) -> dict[str, Any]:

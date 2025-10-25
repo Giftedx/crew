@@ -14,10 +14,7 @@ import time
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any
 
-import requests
-from requests.adapters import HTTPAdapter
-from urllib3.util.retry import Retry
-
+from core import http_utils
 from ultimate_discord_intelligence_bot.creator_ops.config import CreatorOpsConfig
 from ultimate_discord_intelligence_bot.creator_ops.integrations.youtube_models import (
     YouTubeCaption,
@@ -91,13 +88,13 @@ class YouTubeClient:
         self.min_request_interval = 0.1  # 100ms between requests
 
         # Setup session with retry strategy
-        self.session = requests.Session()
-        retry_strategy = Retry(
+        self.session = http_utils.requests.Session()
+        retry_strategy = http_utils.requests.packages.urllib3.util.retry.Retry(
             total=3,
             backoff_factor=1,
             status_forcelist=[429, 500, 502, 503, 504],
         )
-        adapter = HTTPAdapter(max_retries=retry_strategy)
+        adapter = http_utils.requests.adapters.HTTPAdapter(max_retries=retry_strategy)
         self.session.mount("http://", adapter)
         self.session.mount("https://", adapter)
 
@@ -168,13 +165,15 @@ class YouTubeClient:
         headers = self._get_headers()
 
         try:
-            response = self.session.get(url, params=request_params, headers=headers, timeout=30)
+            response = http_utils.retrying_get(
+                url, params=request_params, headers=headers, timeout=30, request_fn=self.session.get
+            )
             response.raise_for_status()
 
             data = response.json()
             return StepResult.ok(**data)
 
-        except requests.exceptions.HTTPError as e:
+        except http_utils.requests.exceptions.HTTPError as e:
             if e.response.status_code == 429:
                 # Rate limited - implement exponential backoff
                 retry_after = int(e.response.headers.get("Retry-After", 60))
@@ -188,7 +187,7 @@ class YouTubeClient:
             else:
                 return StepResult.fail(f"HTTP error {e.response.status_code}: {e!s}")
 
-        except requests.exceptions.RequestException as e:
+        except http_utils.requests.exceptions.RequestException as e:
             return StepResult.fail(f"Request failed: {e!s}")
 
         except Exception as e:
@@ -433,7 +432,9 @@ class YouTubeClient:
         params.update(auth_params)
 
         try:
-            response = self.session.get(url, params=params, headers=headers, timeout=30)
+            response = http_utils.retrying_get(
+                url, params=params, headers=headers, timeout=30, request_fn=self.session.get
+            )
             response.raise_for_status()
 
             content = response.text

@@ -1,0 +1,88 @@
+groups:
+  - name: rl-feedback-loop
+    interval: 30s
+    rules:
+      # Alert when feedback processing fails
+      - alert: RLFeedbackProcessingFailures
+        expr: sum(increase(rl_feedback_failed_total[15m])) > 0
+        for: 10m
+        labels:
+          severity: page
+          component: rl_feedback
+        annotations:
+          summary: "RL feedback processing failures detected"
+          description: "{{ $value }} RL feedback items failed processing in the last 15 minutes. Check logs for errors."
+          runbook_url: "https://docs.internal/runbooks/rl-feedback-failures"
+
+      # Alert when queue depth is growing
+      - alert: RLFeedbackQueueDepthHigh
+        expr: avg_over_time(rl_feedback_queue_depth[15m]) > 25
+        for: 15m
+        labels:
+          severity: ticket
+          component: rl_feedback
+        annotations:
+          summary: "RL feedback queue depth elevated"
+          description: "Queue depth averaging {{ $value }} items over 15 minutes. May indicate slow processing or increased load."
+          runbook_url: "https://docs.internal/runbooks/rl-feedback-queue"
+
+      # Alert when queue depth is critical
+      - alert: RLFeedbackQueueDepthCritical
+        expr: avg_over_time(rl_feedback_queue_depth[15m]) > 100
+        for: 10m
+        labels:
+          severity: page
+          component: rl_feedback
+        annotations:
+          summary: "RL feedback queue depth critical"
+          description: "Queue depth averaging {{ $value }} items. Immediate investigation required."
+          runbook_url: "https://docs.internal/runbooks/rl-feedback-queue"
+
+      # Alert when no feedback is being processed (loop may be stuck)
+      - alert: RLFeedbackProcessingStalled
+        expr: |
+          (sum(increase(rl_feedback_processed_total[30m])) == 0)
+          and
+          (avg_over_time(rl_feedback_queue_depth[5m]) > 0)
+        for: 20m
+        labels:
+          severity: page
+          component: rl_feedback
+        annotations:
+          summary: "RL feedback processing stalled"
+          description: "No feedback processed in 30 minutes despite non-zero queue depth. Loop may be stuck."
+          runbook_url: "https://docs.internal/runbooks/rl-feedback-stalled"
+
+      # Alert when processing rate drops significantly
+      - alert: RLFeedbackProcessingRateDropped
+        expr: |
+          (
+            sum(rate(rl_feedback_processed_total[5m]))
+            /
+            sum(rate(rl_feedback_processed_total[30m]) offset 1h)
+          ) < 0.5
+        for: 15m
+        labels:
+          severity: ticket
+          component: rl_feedback
+        annotations:
+          summary: "RL feedback processing rate dropped"
+          description: "Processing rate is {{ $value | humanizePercentage }} of recent baseline. Investigate for performance degradation."
+          runbook_url: "https://docs.internal/runbooks/rl-feedback-performance"
+
+      # Alert when success rate drops
+      - alert: RLFeedbackSuccessRateLow
+        expr: |
+          (
+            sum(increase(rl_feedback_processed_total[1h]))
+            /
+            (sum(increase(rl_feedback_processed_total[1h])) + sum(increase(rl_feedback_failed_total[1h])))
+          ) < 0.95
+        for: 15m
+        labels:
+          severity: ticket
+          component: rl_feedback
+        annotations:
+          summary: "RL feedback success rate below 95%"
+          description: "Success rate is {{ $value | humanizePercentage }}. Investigate failure patterns."
+          runbook_url: "https://docs.internal/runbooks/rl-feedback-failures"

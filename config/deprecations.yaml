@@ -1,6 +1,9 @@
 # Deprecations Configuration
 # TODO: Implement deprecation tracking and management
 
+# Minimal list required by scripts/check_deprecations.py
+flags: []
+
 # Deprecation tracking
 tracking:
   enabled: true

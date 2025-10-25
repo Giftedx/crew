@@ -1,0 +1,215 @@
+{
+    "dashboard": {
+        "title": "RL Feedback Loop Monitoring",
+        "tags": [
+            "rl",
+            "reinforcement-learning",
+            "feedback"
+        ],
+        "timezone": "browser",
+        "panels": [
+            {
+                "id": 1,
+                "title": "Feedback Items Processed (5m rate)",
+                "type": "stat",
+                "targets": [
+                    {
+                        "expr": "sum by (tenant, workspace)(rate(rl_feedback_processed_total[5m]))",
+                        "legendFormat": "{{tenant}}/{{workspace}}"
+                    }
+                ],
+                "gridPos": {
+                    "x": 0,
+                    "y": 0,
+                    "w": 6,
+                    "h": 4
+                }
+            },
+            {
+                "id": 2,
+                "title": "Failed Feedback Items (5m rate)",
+                "type": "stat",
+                "targets": [
+                    {
+                        "expr": "sum by (tenant, workspace)(rate(rl_feedback_failed_total[5m]))",
+                        "legendFormat": "{{tenant}}/{{workspace}}"
+                    }
+                ],
+                "gridPos": {
+                    "x": 6,
+                    "y": 0,
+                    "w": 6,
+                    "h": 4
+                },
+                "fieldConfig": {
+                    "defaults": {
+                        "thresholds": {
+                            "mode": "absolute",
+                            "steps": [
+                                {
+                                    "value": 0,
+                                    "color": "green"
+                                },
+                                {
+                                    "value": 0.001,
+                                    "color": "red"
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            {
+                "id": 3,
+                "title": "Current Queue Depth",
+                "type": "gauge",
+                "targets": [
+                    {
+                        "expr": "avg by (tenant, workspace)(rl_feedback_queue_depth)",
+                        "legendFormat": "{{tenant}}/{{workspace}}"
+                    }
+                ],
+                "gridPos": {
+                    "x": 12,
+                    "y": 0,
+                    "w": 6,
+                    "h": 4
+                },
+                "fieldConfig": {
+                    "defaults": {
+                        "min": 0,
+                        "max": 50,
+                        "thresholds": {
+                            "mode": "absolute",
+                            "steps": [
+                                {
+                                    "value": 0,
+                                    "color": "green"
+                                },
+                                {
+                                    "value": 10,
+                                    "color": "yellow"
+                                },
+                                {
+                                    "value": 25,
+                                    "color": "red"
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            {
+                "id": 4,
+                "title": "Processed vs Failed (30m)",
+                "type": "timeseries",
+                "targets": [
+                    {
+                        "expr": "sum(increase(rl_feedback_processed_total[30m])) by (tenant, workspace)",
+                        "legendFormat": "Processed - {{tenant}}/{{workspace}}"
+                    },
+                    {
+                        "expr": "sum(increase(rl_feedback_failed_total[30m])) by (tenant, workspace)",
+                        "legendFormat": "Failed - {{tenant}}/{{workspace}}"
+                    }
+                ],
+                "gridPos": {
+                    "x": 0,
+                    "y": 4,
+                    "w": 12,
+                    "h": 6
+                }
+            },
+            {
+                "id": 5,
+                "title": "Queue Depth Over Time",
+                "type": "timeseries",
+                "targets": [
+                    {
+                        "expr": "avg_over_time(rl_feedback_queue_depth[5m])",
+                        "legendFormat": "{{tenant}}/{{workspace}}"
+                    }
+                ],
+                "gridPos": {
+                    "x": 12,
+                    "y": 4,
+                    "w": 12,
+                    "h": 6
+                }
+            },
+            {
+                "id": 6,
+                "title": "Success Rate (1h)",
+                "type": "stat",
+                "targets": [
+                    {
+                        "expr": "sum(increase(rl_feedback_processed_total[1h])) / (sum(increase(rl_feedback_processed_total[1h])) + sum(increase(rl_feedback_failed_total[1h]))) * 100",
+                        "legendFormat": "Success %"
+                    }
+                ],
+                "gridPos": {
+                    "x": 18,
+                    "y": 0,
+                    "w": 6,
+                    "h": 4
+                },
+                "fieldConfig": {
+                    "defaults": {
+                        "unit": "percent",
+                        "decimals": 1,
+                        "thresholds": {
+                            "mode": "absolute",
+                            "steps": [
+                                {
+                                    "value": 0,
+                                    "color": "red"
+                                },
+                                {
+                                    "value": 95,
+                                    "color": "yellow"
+                                },
+                                {
+                                    "value": 99,
+                                    "color": "green"
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        ],
+        "templating": {
+            "list": [
+                {
+                    "name": "tenant",
+                    "type": "query",
+                    "query": "label_values(rl_feedback_processed_total, tenant)",
+                    "current": {
+                        "text": "All",
+                        "value": "$__all"
+                    },
+                    "includeAll": true,
+                    "multi": true
+                },
+                {
+                    "name": "workspace",
+                    "type": "query",
+                    "query": "label_values(rl_feedback_processed_total{tenant=~\"$tenant\"}, workspace)",
+                    "current": {
+                        "text": "All",
+                        "value": "$__all"
+                    },
+                    "includeAll": true,
+                    "multi": true
+                }
+            ]
+        },
+        "time": {
+            "from": "now-1h",
+            "to": "now"
+        },
+        "refresh": "30s",
+        "schemaVersion": 36,
+        "version": 1
+    }
+}

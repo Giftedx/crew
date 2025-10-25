@@ -349,7 +349,14 @@ class StepResult(Mapping[str, Any]):
     @classmethod
     def ok(cls, **data: Any) -> StepResult:
         """Shortcut for a successful result."""
-        return cls(success=True, data=data)
+        # If called like ok(data={...}), unwrap the nested payload for
+        # backward-compatibility with tests expecting direct access
+        # to keys via result.data["k"].
+        if set(data.keys()) == {"data"} and isinstance(data.get("data"), dict):
+            payload = data["data"]  # type: ignore[index]
+        else:
+            payload = data
+        return cls(success=True, data=payload)
 
     @classmethod
     def uncertain(cls, **data: Any) -> StepResult:

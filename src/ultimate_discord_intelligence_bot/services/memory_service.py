@@ -12,7 +12,7 @@ import logging
 import time
 from copy import deepcopy
 from dataclasses import dataclass, field
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import yaml
 
@@ -23,7 +23,10 @@ from ..observability.stepresult_observer import observe_step_result
 from ..step_result import StepResult
 from ..tenancy.context import TenantContext, current_tenant, mem_ns
 from ..tenancy.helpers import require_tenant
-from .embedding_service import EmbeddingService, create_embedding_service
+
+
+if TYPE_CHECKING:  # pragma: no cover - typing only
+    from .embedding_service import EmbeddingService  # noqa: F401
 
 
 @dataclass
@@ -36,7 +39,7 @@ class MemoryService:
     # Vector database components
     # Use provider-returned client type to avoid hard dependency during import
     qdrant_client: Any | None = None
-    embedding_service: EmbeddingService | None = None
+    embedding_service: Any | None = None
 
     # Collection names
     requests_collection: str = "requests"
@@ -53,7 +56,14 @@ class MemoryService:
         if self.qdrant_client is None:
             self._initialize_qdrant()
         if self.embedding_service is None:
-            self.embedding_service = create_embedding_service()
+            # Lazy import to avoid hard dependency (openai) during module import
+            try:
+                from .embedding_service import create_embedding_service as _create_embedding_service
+
+                self.embedding_service = _create_embedding_service()
+            except Exception as exc:
+                logging.getLogger(__name__).debug("Embedding service unavailable: %s", exc)
+                self.embedding_service = None
 
     def _initialize_qdrant(self) -> None:
         """Initialize Qdrant client and collections."""

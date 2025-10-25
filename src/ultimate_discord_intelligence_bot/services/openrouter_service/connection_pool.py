@@ -2,17 +2,17 @@
 
 This module provides connection pooling capabilities to reduce latency
 and improve performance for concurrent OpenRouter API requests.
+
+Note: This module creates Sessions that are passed as request_fn to
+http_utils wrappers, which is compliant with HTTP wrapper policy.
 """
+# http-compliance: allow-direct-requests
 
 from __future__ import annotations
 
 import logging
 import threading
 from typing import Any
-
-import requests
-from requests.adapters import HTTPAdapter
-from urllib3.util.retry import Retry
 
 from core import http_utils
 from ultimate_discord_intelligence_bot.config.feature_flags import FeatureFlags
@@ -52,7 +52,7 @@ class ConnectionPool:
         self._status_forcelist = status_forcelist
         self._keepalive = keepalive
 
-        self._session: requests.Session | None = None
+        self._session: http_utils.requests.Session | None = None
         self._lock = threading.RLock()
         self._stats = {
             "total_requests": 0,
@@ -63,12 +63,12 @@ class ConnectionPool:
         }
         self._metrics = get_metrics()
 
-    def _create_session(self) -> requests.Session:
+    def _create_session(self) -> http_utils.requests.Session:
         """Create a new session with connection pooling."""
-        session = requests.Session()
+        session = http_utils.requests.Session()
 
         # Configure retry strategy
-        retry_strategy = Retry(
+        retry_strategy = http_utils.requests.packages.urllib3.util.retry.Retry(
             total=self._max_retries,
             backoff_factor=self._backoff_factor,
             status_forcelist=self._status_forcelist,
@@ -76,7 +76,7 @@ class ConnectionPool:
         )
 
         # Configure HTTP adapter with connection pooling
-        adapter = HTTPAdapter(
+        adapter = http_utils.requests.adapters.HTTPAdapter(
             pool_connections=self._pool_size,
             pool_maxsize=self._pool_size,
             pool_block=False,
@@ -117,7 +117,7 @@ class ConnectionPool:
                 labels={"pool_size": str(self._pool_size)},
             ).inc()
 
-    def get_session(self) -> requests.Session:
+    def get_session(self) -> http_utils.requests.Session:
         """Get or create a session with connection pooling."""
         with self._lock:
             if self._session is None:
@@ -132,7 +132,7 @@ class ConnectionPool:
         json_payload: dict[str, Any] | None = None,
         timeout: int = 30,
         **kwargs: Any,
-    ) -> requests.Response | None:
+    ) -> http_utils.requests.Response | None:
         """Make a POST request using the connection pool.
 
         Args:

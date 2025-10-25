@@ -14,7 +14,6 @@ import time
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any
 
-import requests
 import websockets  # type: ignore[import-not-found]
 
 from core import http_utils
@@ -117,7 +116,7 @@ class TwitchClient:
 
         self.last_request_time = time.time()
 
-    def _update_rate_limit(self, response: requests.Response) -> None:
+    def _update_rate_limit(self, response: http_utils.requests.Response) -> None:
         """Update rate limit from response headers."""
         self.rate_limit = TwitchRateLimit.from_headers(response.headers)
 
@@ -152,21 +151,21 @@ class TwitchClient:
             data = response.json()
             return StepResult.ok(data=data)
 
-        except requests.exceptions.HTTPError as e:
+        except http_utils.requests.exceptions.HTTPError as e:
             if e.response.status_code == 429:
-                # Rate limited - implement exponential backoff
-                retry_after = int(e.response.headers.get("Retry-After", 60))
+                # Rate limited
+                retry_after = int(e.response.headers.get("Ratelimit-Reset", 60))
                 logger.warning(f"Rate limited. Retrying after {retry_after} seconds")
                 time.sleep(retry_after)
                 return self._make_request(endpoint, params)
             elif e.response.status_code == 401:
-                return StepResult.fail("Authentication failed. Check OAuth token.")
+                return StepResult.unauthorized("Twitch API authentication failed")
             elif e.response.status_code == 403:
-                return StepResult.fail("Forbidden. Check OAuth scopes.")
+                return StepResult.fail("Forbidden - check OAuth scopes")
             else:
                 return StepResult.fail(f"HTTP error {e.response.status_code}: {e!s}")
 
-        except requests.exceptions.RequestException as e:
+        except http_utils.requests.exceptions.RequestException as e:
             return StepResult.fail(f"Request failed: {e!s}")
 
         except Exception as e:
@@ -372,7 +371,7 @@ class TwitchClient:
             marker = TwitchStreamMarker.from_api_data(response_data["data"][0])
             return StepResult.ok(data=marker)
 
-        except requests.exceptions.RequestException as e:
+        except http_utils.requests.exceptions.RequestException as e:
             return StepResult.fail(f"Failed to create stream marker: {e!s}")
 
     def get_chat_messages(
@@ -472,7 +471,7 @@ class TwitchClient:
             subscription = TwitchEventSubEvent.from_api_data(response_data["data"][0])
             return StepResult.ok(data=subscription)
 
-        except requests.exceptions.RequestException as e:
+        except http_utils.requests.exceptions.RequestException as e:
             return StepResult.fail(f"Failed to create EventSub subscription: {e!s}")
 
     def delete_eventsub_subscription(self, subscription_id: str) -> StepResult:
@@ -501,7 +500,7 @@ class TwitchClient:
 
             return StepResult.ok(data={"deleted": True})
 
-        except requests.exceptions.RequestException as e:
+        except http_utils.requests.exceptions.RequestException as e:
             return StepResult.fail(f"Failed to delete EventSub subscription: {e!s}")
 
     async def connect_eventsub_websocket(

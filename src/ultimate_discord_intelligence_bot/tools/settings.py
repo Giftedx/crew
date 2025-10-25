@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import os
 import warnings
+from pathlib import Path
 from typing import Any
 
 
@@ -16,6 +17,15 @@ try:
     from core.cache.unified_config import get_cache_ttl as _unified_get_cache_ttl  # type: ignore
 except Exception:  # pragma: no cover - optional dependency path
     _unified_get_cache_ttl = None  # type: ignore
+
+# Project base directory for tool storage paths
+try:  # Prefer main application BASE_DIR if available
+    from ultimate_discord_intelligence_bot.settings import BASE_DIR as _BASE_DIR  # type: ignore
+except Exception:  # pragma: no cover - optional in minimal envs
+    _BASE_DIR = Path.cwd()
+
+# Public constant for tools to consume
+BASE_DIR: Path = _BASE_DIR
 
 
 def get_tool_setting(key: str, default: Any = None) -> Any:
