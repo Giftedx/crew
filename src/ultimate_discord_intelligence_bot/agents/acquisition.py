@@ -57,11 +57,11 @@ class AcquisitionAgents:
                 RedditDownloadTool(),
                 KickDownloadTool(),
         ]
-        
+
         # Add Playwright tool if enabled
         if self.flags.enable_playwright_automation:
             tools.append(PlaywrightAutomationTool())
-        
+
         return Agent(
             role="Multi-Platform Acquisition Specialist",
             goal="Download and prepare content from any supported platform with quality optimization.",
