@@ -127,7 +127,7 @@ class MemoryProfiler:
 
         # Create tool instances
         instances = []
-        for i in range(count):
+        for _i in range(count):
             for tool_class in tool_classes:
                 try:
                     instance = tool_class()
@@ -207,7 +207,7 @@ class MemoryProfiler:
         baseline = self.get_memory_usage()
 
         # Import tools and measure memory
-        import_start = self.get_memory_usage()
+        self.get_memory_usage()
 
         # Import various tool modules
         tool_imports = [

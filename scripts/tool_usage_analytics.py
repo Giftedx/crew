@@ -202,7 +202,7 @@ class ToolUsageAnalyzer:
             file_path = self.project_root / agent_file
             if file_path.exists():
                 content = file_path.read_text()
-                for tool_name in self.tool_mapping.keys():
+                for tool_name in self.tool_mapping:
                     if tool_name in content:
                         self.usage_stats[tool_name].agent_assignments += 1
 
@@ -220,7 +220,7 @@ class ToolUsageAnalyzer:
 
             test_found = False
             for pattern in test_patterns:
-                for root, dirs, files in os.walk(self.project_root / "tests"):
+                for _root, _dirs, files in os.walk(self.project_root / "tests"):
                     if pattern in files:
                         test_found = True
                         break
@@ -233,7 +233,7 @@ class ToolUsageAnalyzer:
         """Analyze documentation quality for tools."""
         logger.info("Analyzing documentation quality...")
 
-        for tool_name, stats in self.usage_stats.items():
+        for _tool_name, stats in self.usage_stats.items():
             tool_file = self.project_root / "src" / "ultimate_discord_intelligence_bot" / stats.file_path.lstrip(".")
 
             if tool_file.exists():
@@ -263,7 +263,7 @@ class ToolUsageAnalyzer:
 
             complexity = 1  # Base complexity
             for node in ast.walk(tree):
-                if isinstance(node, (ast.If, ast.While, ast.For, ast.AsyncFor)) or isinstance(node, ast.ExceptHandler):
+                if isinstance(node, (ast.If, ast.While, ast.For, ast.AsyncFor, ast.ExceptHandler)):
                     complexity += 1
                 elif isinstance(node, ast.BoolOp):
                     complexity += len(node.values) - 1
@@ -286,13 +286,13 @@ class ToolUsageAnalyzer:
             category_groups[stats.category].append((tool_name, stats))
 
         # Look for overlapping functionality within categories
-        for category, tools in category_groups.items():
+        for _category, tools in category_groups.items():
             if len(tools) < 2:
                 continue
 
             # Simple heuristic: tools with similar names and low usage
             for i, (name1, stats1) in enumerate(tools):
-                for j, (name2, stats2) in enumerate(tools[i + 1 :], i + 1):
+                for _j, (name2, stats2) in enumerate(tools[i + 1 :], i + 1):
                     # Check for name similarity
                     name1_words = set(name1.lower().split())
                     name2_words = set(name2.lower().split())
@@ -321,7 +321,7 @@ class ToolUsageAnalyzer:
         """Generate recommendations based on analysis."""
         recommendations = {"deprecate": [], "consolidate": [], "optimize": [], "document": [], "test": []}
 
-        total_tools = len(self.usage_stats)
+        len(self.usage_stats)
 
         for tool_name, stats in self.usage_stats.items():
             usage_score = stats.import_count + stats.instantiation_count + stats.method_call_count
@@ -374,7 +374,7 @@ class ToolUsageAnalyzer:
             "consolidation_candidates": len(self.consolidation_candidates),
             "category_breakdown": {
                 category: len([t for t in self.usage_stats.values() if t.category == category])
-                for category in set(stats.category for stats in self.usage_stats.values())
+                for category in {stats.category for stats in self.usage_stats.values()}
             },
         }
 

@@ -21,10 +21,6 @@ from .optimization_pipeline import OptimizationConfig, OptimizationPipeline
 from .prompt_compressor import CompressionConfig, PromptCompressor
 
 
-if TYPE_CHECKING:
-    from ultimate_discord_intelligence_bot.step_result import StepResult
-
-
 try:  # lightweight tracing shim available in repo
     from opentelemetry import trace
 except Exception:  # pragma: no cover - fallback to local noop-like tracer
@@ -63,6 +59,8 @@ except Exception:  # pragma: no cover - defensive fallback
 
 
 import contextlib
+
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 if TYPE_CHECKING:

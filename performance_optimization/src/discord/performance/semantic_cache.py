@@ -8,6 +8,7 @@ processing and improve response times through similarity-based caching.
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import hashlib
 import time
 from collections import OrderedDict
@@ -252,7 +253,7 @@ class SemanticCache:
             else:
                 # Remove oldest entry
                 oldest_key = min(self._cache.keys(), key=lambda k: self._cache[k].timestamp)
-                key, entry = self._cache.pop(oldest_key), self._cache[oldest_key]
+                key, _entry = self._cache.pop(oldest_key), self._cache[oldest_key]
 
             # Remove from embedding index
             self._embedding_index.pop(key, None)
@@ -267,7 +268,7 @@ class SemanticCache:
 
                 async with self._lock:
                     expired_keys = []
-                    current_time = time.time()
+                    time.time()
 
                     for key, entry in self._cache.items():
                         if entry.age_seconds > self.config.max_age_seconds:
@@ -345,10 +346,8 @@ class SemanticCache:
         # Cancel background task
         self._cleanup_task.cancel()
 
-        try:
+        with contextlib.suppress(asyncio.CancelledError):
             await self._cleanup_task
-        except asyncio.CancelledError:
-            pass
 
         # Clear cache
         await self.clear()

@@ -10,11 +10,14 @@ import gc
 import time
 import tracemalloc
 from collections import defaultdict
-from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
 
 import psutil
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 T = TypeVar("T")
@@ -149,7 +152,7 @@ class MemoryPool:
 
     def _cleanup_idle_resources(self):
         """Remove idle resources from pools."""
-        for resource_type, pool in self._pools.items():
+        for _resource_type, pool in self._pools.items():
             idle_resources = [r for r in pool if current_time - r.last_used > self.max_idle_time]
 
             for resource in idle_resources:

@@ -51,11 +51,11 @@ class TaskQueueService:
 
     async def enqueue(self, job_function: str, **kwargs: Any) -> str | None:
         """Enqueue a job for background processing.
-        
+
         Args:
             job_function: Name of the job function to execute
             **kwargs: Arguments to pass to the job function
-            
+
         Returns:
             Job ID if successful, None otherwise
         """
@@ -73,10 +73,10 @@ class TaskQueueService:
 
     async def get_status(self, job_id: str) -> dict[str, Any] | None:
         """Get status of a job.
-        
+
         Args:
             job_id: Job identifier
-            
+
         Returns:
             dict with job status or None if not found
         """
@@ -99,10 +99,10 @@ class TaskQueueService:
 
     async def cancel(self, job_id: str) -> bool:
         """Cancel a pending job.
-        
+
         Args:
             job_id: Job identifier
-            
+
         Returns:
             True if cancelled successfully, False otherwise
         """
@@ -119,10 +119,10 @@ class TaskQueueService:
 
     async def retry(self, job_id: str) -> str | None:
         """Retry a failed job.
-        
+
         Args:
             job_id: Job identifier
-            
+
         Returns:
             New job ID if successful, None otherwise
         """

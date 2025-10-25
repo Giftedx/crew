@@ -104,7 +104,7 @@ class PipelineProfiler:
             for tool_name, tool_class in tools_to_test:
                 try:
                     start_time = time.perf_counter()
-                    instance = tool_class()
+                    tool_class()
                     end_time = time.perf_counter()
                     instantiation_times[tool_name] = end_time - start_time
                     print(f"  ✅ {tool_name}: {instantiation_times[tool_name]:.4f}s")

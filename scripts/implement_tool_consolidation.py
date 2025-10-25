@@ -140,27 +140,27 @@ from ultimate_discord_intelligence_bot.tools._base import BaseTool
 
 class AcquisitionBaseTool(BaseTool, ABC):
     """Base class for content acquisition tools."""
-    
+
     def __init__(self, **kwargs: Any) -> None:
         """Initialize acquisition tool."""
         super().__init__(**kwargs)
         self.supported_platforms: List[str] = []
         self.max_file_size: int = 100 * 1024 * 1024  # 100MB
         self.supported_formats: List[str] = []
-    
+
     @abstractmethod
     def _run(self, url: str, tenant: str, workspace: str, **kwargs: Any) -> StepResult:
         """Acquire content from URL."""
         pass
-    
+
     def validate_url(self, url: str) -> bool:
         """Validate URL format and platform support."""
         if not url or not isinstance(url, str):
             return False
-        
+
         # Check if URL is supported by this tool
         return any(platform in url.lower() for platform in self.supported_platforms)
-    
+
     def get_metadata(self, url: str) -> Dict[str, Any]:
         """Extract metadata from URL."""
         return {
@@ -168,7 +168,7 @@ class AcquisitionBaseTool(BaseTool, ABC):
             "platform": self._detect_platform(url),
             "supported": self.validate_url(url),
         }
-    
+
     def _detect_platform(self, url: str) -> str:
         """Detect platform from URL."""
         url_lower = url.lower()
@@ -193,29 +193,29 @@ from ultimate_discord_intelligence_bot.tools._base import BaseTool
 
 class AnalysisBaseTool(BaseTool, ABC):
     """Base class for content analysis tools."""
-    
+
     def __init__(self, **kwargs: Any) -> None:
         """Initialize analysis tool."""
         super().__init__(**kwargs)
         self.analysis_types: List[str] = []
         self.confidence_threshold: float = 0.7
         self.max_content_length: int = 10000
-    
+
     @abstractmethod
     def _run(self, content: str, tenant: str, workspace: str, **kwargs: Any) -> StepResult:
         """Analyze content."""
         pass
-    
+
     def validate_content(self, content: str) -> bool:
         """Validate content for analysis."""
         if not content or not isinstance(content, str):
             return False
-        
+
         if len(content) > self.max_content_length:
             return False
-        
+
         return True
-    
+
     def get_analysis_metadata(self, content: str) -> Dict[str, Any]:
         """Get metadata for analysis."""
         return {
@@ -241,29 +241,29 @@ from ultimate_discord_intelligence_bot.tools._base import BaseTool
 
 class MemoryBaseTool(BaseTool, ABC):
     """Base class for memory tools."""
-    
+
     def __init__(self, **kwargs: Any) -> None:
         """Initialize memory tool."""
         super().__init__(**kwargs)
         self.memory_types: List[str] = []
         self.max_retrieval_count: int = 10
         self.similarity_threshold: float = 0.8
-    
+
     @abstractmethod
     def _run(self, query: str, tenant: str, workspace: str, **kwargs: Any) -> StepResult:
         """Process memory operation."""
         pass
-    
+
     def validate_query(self, query: str) -> bool:
         """Validate query for memory operations."""
         if not query or not isinstance(query, str):
             return False
-        
+
         if len(query.strip()) < 3:
             return False
-        
+
         return True
-    
+
     def get_memory_metadata(self, query: str) -> Dict[str, Any]:
         """Get metadata for memory operations."""
         return {
@@ -289,29 +289,29 @@ from ultimate_discord_intelligence_bot.tools._base import BaseTool
 
 class VerificationBaseTool(BaseTool, ABC):
     """Base class for verification tools."""
-    
+
     def __init__(self, **kwargs: Any) -> None:
         """Initialize verification tool."""
         super().__init__(**kwargs)
         self.verification_types: List[str] = []
         self.confidence_threshold: float = 0.8
         self.max_claims: int = 50
-    
+
     @abstractmethod
     def _run(self, content: str, tenant: str, workspace: str, **kwargs: Any) -> StepResult:
         """Verify content."""
         pass
-    
+
     def validate_claims(self, claims: List[str]) -> bool:
         """Validate claims for verification."""
         if not claims or not isinstance(claims, list):
             return False
-        
+
         if len(claims) > self.max_claims:
             return False
-        
+
         return all(isinstance(claim, str) and claim.strip() for claim in claims)
-    
+
     def get_verification_metadata(self, claims: List[str]) -> Dict[str, Any]:
         """Get metadata for verification."""
         return {

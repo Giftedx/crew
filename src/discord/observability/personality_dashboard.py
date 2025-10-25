@@ -307,7 +307,7 @@ class PersonalityDashboard:
 
         # Calculate trend using linear regression
         n = len(points)
-        x_values = [i for i in range(n)]
+        x_values = list(range(n))
         y_values = [p.value for p in points]
 
         # Simple linear regression

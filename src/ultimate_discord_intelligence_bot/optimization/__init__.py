@@ -34,22 +34,22 @@ from ultimate_discord_intelligence_bot.optimization.memory_pool import (
 
 
 __all__ = [
+    # Memory optimizer
+    "MemoryOptimizer",
     # Memory pool
     "MemoryPool",
     "MemoryStats",
     "PooledResource",
-    "ResourceManager",
     "ResourceContext",
-    "get_resource_manager",
-    "register_resource_type",
+    "ResourceManager",
+    "analyze_memory_usage",
+    "get_memory_optimizer",
+    "get_memory_stats",
+    "get_pool_stats",
     "get_pooled_resource",
+    "get_resource_manager",
+    "optimize_memory",
+    "register_resource_type",
     "return_pooled_resource",
     "with_pooled_resource",
-    "get_pool_stats",
-    # Memory optimizer
-    "MemoryOptimizer",
-    "get_memory_optimizer",
-    "analyze_memory_usage",
-    "optimize_memory",
-    "get_memory_stats",
 ]

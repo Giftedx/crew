@@ -498,7 +498,7 @@ class UnifiedCacheService:
 
             # Clear memory cache
             keys_to_remove = []
-            for key in self._memory_cache.keys():
+            for key in self._memory_cache:
                 if tenant and workspace:
                     if key.startswith(f"tenant:{tenant}:workspace:{workspace}:"):
                         keys_to_remove.append(key)

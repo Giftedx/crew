@@ -5,6 +5,8 @@ This agent guards pipeline health and visibility.
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from ultimate_discord_intelligence_bot.agents.base import BaseAgent
 from ultimate_discord_intelligence_bot.agents.registry import register_agent
 from ultimate_discord_intelligence_bot.settings import (
@@ -19,7 +21,10 @@ from ultimate_discord_intelligence_bot.tools import (
     SystemStatusTool,
     TimelineTool,
 )
-from ultimate_discord_intelligence_bot.tools._base import BaseTool
+
+
+if TYPE_CHECKING:
+    from ultimate_discord_intelligence_bot.tools._base import BaseTool
 
 
 @register_agent("system_reliability_officer")

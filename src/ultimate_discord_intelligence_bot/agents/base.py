@@ -7,10 +7,14 @@ ensuring consistent patterns and testability.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from typing import TYPE_CHECKING
 
 from crewai import Agent  # type: ignore[import-untyped]
 from ultimate_discord_intelligence_bot.crewai_tool_wrappers import wrap_tool_for_crewai
-from ultimate_discord_intelligence_bot.tools._base import BaseTool
+
+
+if TYPE_CHECKING:
+    from ultimate_discord_intelligence_bot.tools._base import BaseTool
 
 
 class BaseAgent(ABC):

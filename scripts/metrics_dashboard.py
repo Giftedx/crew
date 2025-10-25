@@ -215,7 +215,7 @@ class MetricsDashboard:
         except Exception as e:
             print(f"❌ Failed to generate detailed report: {e}")
 
-    def export_metrics(self, export_file: str = None):
+    def export_metrics(self, export_file: str | None = None):
         """Export metrics to file."""
         if not METRICS_AVAILABLE:
             print("❌ Metrics not available")

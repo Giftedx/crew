@@ -250,10 +250,7 @@ class ContentClassifier:
 
         # Check for appropriate user role
         user_role = context.get("user_role", "")
-        if user_role in ["moderator", "researcher", "educator"]:
-            return True
-
-        return False
+        return user_role in ["moderator", "researcher", "educator"]
 
     def _has_sensitive_content_consent(self, context: dict[str, Any]) -> bool:
         """Check if user has consented to sensitive content."""
@@ -268,10 +265,7 @@ class ContentClassifier:
 
         # Check for appropriate user intent
         intent = context.get("intent", "")
-        if intent in ["educational", "informational", "research"]:
-            return True
-
-        return False
+        return intent in ["educational", "informational", "research"]
 
     def generate_safety_report(self, content: str, context: dict[str, Any] | None = None) -> StepResult:
         """Generate a comprehensive safety report.

@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from ultimate_discord_intelligence_bot.step_result import StepResult
 from ultimate_discord_intelligence_bot.tools._base import BaseTool
+
+
+if TYPE_CHECKING:
+    from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 class MemoryBaseTool(BaseTool, ABC):
@@ -28,10 +31,7 @@ class MemoryBaseTool(BaseTool, ABC):
         if not query or not isinstance(query, str):
             return False
 
-        if len(query.strip()) < 3:
-            return False
-
-        return True
+        return not len(query.strip()) < 3
 
     def get_memory_metadata(self, query: str) -> dict[str, Any]:
         """Get metadata for memory operations."""

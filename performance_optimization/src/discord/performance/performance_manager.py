@@ -8,15 +8,19 @@ and adaptive tuning for the Discord AI system.
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import threading
 import time
 from collections import defaultdict, deque
-from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import psutil
 from performance_optimization.src.ultimate_discord_intelligence_bot.step_result import StepResult
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 @dataclass
@@ -465,17 +469,13 @@ class PerformanceManager:
         # Cancel background tasks
         if self._monitoring_task:
             self._monitoring_task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await self._monitoring_task
-            except asyncio.CancelledError:
-                pass
 
         if self._optimization_task:
             self._optimization_task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await self._optimization_task
-            except asyncio.CancelledError:
-                pass
 
         return StepResult.ok(data={"action": "performance_manager_shutdown_complete"})
 

@@ -10,10 +10,13 @@ import asyncio
 import logging
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from ultimate_discord_intelligence_bot.config.feature_flags import FeatureFlags
 from ultimate_discord_intelligence_bot.step_result import StepResult
+
+
+if TYPE_CHECKING:
+    from ultimate_discord_intelligence_bot.config.feature_flags import FeatureFlags
 
 
 logger = logging.getLogger(__name__)
@@ -69,7 +72,7 @@ class AgentCollaboration:
         """Check if agent collaboration is enabled."""
         return self.feature_flags.ENABLE_AGENT_COLLABORATION
 
-    async def execute_sequential(self, tasks: list[AgentTask], collaboration_id: str = None) -> CollaborationResult:
+    async def execute_sequential(self, tasks: list[AgentTask], collaboration_id: str | None = None) -> CollaborationResult:
         """Execute tasks sequentially, passing results between agents.
 
         Args:
@@ -128,7 +131,7 @@ class AgentCollaboration:
 
         return result
 
-    async def execute_parallel(self, tasks: list[AgentTask], collaboration_id: str = None) -> CollaborationResult:
+    async def execute_parallel(self, tasks: list[AgentTask], collaboration_id: str | None = None) -> CollaborationResult:
         """Execute tasks in parallel with synchronization.
 
         Args:
@@ -181,7 +184,7 @@ class AgentCollaboration:
         return result
 
     async def execute_hierarchical(
-        self, coordinator_task: AgentTask, subordinate_tasks: list[AgentTask], collaboration_id: str = None
+        self, coordinator_task: AgentTask, subordinate_tasks: list[AgentTask], collaboration_id: str | None = None
     ) -> CollaborationResult:
         """Execute hierarchical pattern with coordinator and subordinates.
 
@@ -256,7 +259,7 @@ class AgentCollaboration:
         return result
 
     async def execute_pipeline(
-        self, pipeline_stages: list[list[AgentTask]], collaboration_id: str = None
+        self, pipeline_stages: list[list[AgentTask]], collaboration_id: str | None = None
     ) -> CollaborationResult:
         """Execute tasks in pipeline stages with data flow between stages.
 

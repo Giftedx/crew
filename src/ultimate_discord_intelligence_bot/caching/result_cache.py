@@ -9,13 +9,16 @@ from __future__ import annotations
 import hashlib
 import json
 import time
-from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from functools import wraps
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from ultimate_discord_intelligence_bot.step_result import StepResult
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 @dataclass
@@ -194,7 +197,7 @@ class ResultCache:
     def invalidate_pattern(self, pattern: str) -> int:
         """Invalidate entries matching a pattern."""
         invalidated = 0
-        keys_to_remove = [key for key in self._cache.keys() if pattern in key]
+        keys_to_remove = [key for key in self._cache if pattern in key]
 
         for key in keys_to_remove:
             if self.invalidate(key):

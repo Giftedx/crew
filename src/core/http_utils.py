@@ -193,7 +193,7 @@ def http_request_with_retry(
     while True:
         attempts += 1
         try:
-            resp = request_callable(url, **call_kwargs)
+            request_callable(url, **call_kwargs)
         except requests.RequestException as exc:
             if attempts >= max_attempts or not is_retry_enabled():
                 if on_give_up:
@@ -610,12 +610,12 @@ __all__ = [
     "http_request_with_retry",
     "is_circuit_breaker_enabled",
     "is_retry_enabled",
+    "resilient_delete",
     "resilient_get",
     "resilient_post",
-    "resilient_delete",
     "resolve_retry_attempts",
-    "retrying_get",
     "retrying_delete",
+    "retrying_get",
     "retrying_post",
     "time",
     "validate_public_https_url",

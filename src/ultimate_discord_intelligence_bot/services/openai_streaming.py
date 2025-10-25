@@ -2,10 +2,14 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncGenerator
+from typing import TYPE_CHECKING
 
 from ultimate_discord_intelligence_bot.services.openai_service import OpenAIService
 from ultimate_discord_intelligence_bot.step_result import StepResult
+
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncGenerator
 
 
 class OpenAIStreamingService(OpenAIService):
@@ -55,9 +59,9 @@ class OpenAIStreamingService(OpenAIService):
         """Stream content analysis in real-time."""
         prompt = f"""
         Analyze the following content for {analysis_type}:
-        
+
         Content: {content}
-        
+
         Provide a detailed analysis including:
         1. Overall assessment
         2. Key findings

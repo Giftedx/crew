@@ -107,7 +107,6 @@ def benchmark_caching_performance():
 
     # Test data
     test_content = "This is a test content for analysis. " * 100  # 3600 characters
-    analysis_types = ["basic", "advanced", "deep"]
 
     # Test without caching
     print("\n📊 Testing Without Caching")
@@ -116,7 +115,7 @@ def benchmark_caching_performance():
     tool = ExpensiveAnalysisTool()
     for i in range(5):
         start_time = time.time()
-        result = tool._run(test_content, "advanced")
+        tool._run(test_content, "advanced")
         end_time = time.time()
         no_cache_times.append(end_time - start_time)
         print(f"  Run {i + 1}: {end_time - start_time:.4f}s")
@@ -128,7 +127,7 @@ def benchmark_caching_performance():
     cached_tool = CachedAnalysisTool()
     for i in range(5):
         start_time = time.time()
-        result = cached_tool._run(test_content, "advanced")
+        cached_tool._run(test_content, "advanced")
         end_time = time.time()
         cache_times.append(end_time - start_time)
         print(f"  Run {i + 1}: {end_time - start_time:.4f}s")
@@ -170,7 +169,7 @@ def test_cache_hit_rates():
     print("📝 Test Operations:")
     for i, (content, analysis_type) in enumerate(test_data):
         start_time = time.time()
-        result = tool._run(content, analysis_type)
+        tool._run(content, analysis_type)
         end_time = time.time()
 
         status = "🔄 Cache Miss" if end_time - start_time > 0.01 else "⚡ Cache Hit"
@@ -204,7 +203,7 @@ def test_smart_cache_analysis():
 
     print("📊 Generating Usage Patterns:")
     for i, (content, analysis_type) in enumerate(test_scenarios):
-        result = tool._run(content, analysis_type)
+        tool._run(content, analysis_type)
         print(f"  {i + 1}. Processed: {content} ({analysis_type})")
 
     # Analyze performance
@@ -245,7 +244,7 @@ def test_function_caching():
     print("📝 Function Cache Tests:")
     for i, (data, complexity) in enumerate(test_data):
         start_time = time.time()
-        result = expensive_computation(data, complexity)
+        expensive_computation(data, complexity)
         end_time = time.time()
 
         status = "🔄 Cache Miss" if end_time - start_time > 0.05 else "⚡ Cache Hit"
@@ -291,7 +290,7 @@ def main():
 
     try:
         # Run benchmarks
-        benchmark_results = benchmark_caching_performance()
+        benchmark_caching_performance()
 
         # Test cache hit rates
         test_cache_hit_rates()

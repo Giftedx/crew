@@ -7,6 +7,7 @@ and interaction history tracking.
 
 from __future__ import annotations
 
+import contextlib
 import json
 import logging
 import sqlite3
@@ -66,22 +67,22 @@ class OptInManager:
 
                 # Create indexes for performance
                 cursor.execute("""
-                    CREATE INDEX IF NOT EXISTS idx_opt_ins_guild 
+                    CREATE INDEX IF NOT EXISTS idx_opt_ins_guild
                     ON discord_user_opt_ins (guild_id)
                 """)
 
                 cursor.execute("""
-                    CREATE INDEX IF NOT EXISTS idx_opt_ins_active 
+                    CREATE INDEX IF NOT EXISTS idx_opt_ins_active
                     ON discord_user_opt_ins (active)
                 """)
 
                 cursor.execute("""
-                    CREATE INDEX IF NOT EXISTS idx_interactions_user_guild 
+                    CREATE INDEX IF NOT EXISTS idx_interactions_user_guild
                     ON discord_interactions (user_id, guild_id)
                 """)
 
                 cursor.execute("""
-                    CREATE INDEX IF NOT EXISTS idx_interactions_timestamp 
+                    CREATE INDEX IF NOT EXISTS idx_interactions_timestamp
                     ON discord_interactions (timestamp)
                 """)
 
@@ -105,7 +106,7 @@ class OptInManager:
                 # Check if user already exists
                 cursor.execute(
                     """
-                    SELECT active FROM discord_user_opt_ins 
+                    SELECT active FROM discord_user_opt_ins
                     WHERE user_id = ? AND guild_id = ?
                 """,
                     (user_id, guild_id),
@@ -117,8 +118,8 @@ class OptInManager:
                     # Update existing user
                     cursor.execute(
                         """
-                        UPDATE discord_user_opt_ins 
-                        SET username = ?, active = TRUE, 
+                        UPDATE discord_user_opt_ins
+                        SET username = ?, active = TRUE,
                             personality_preferences = ?, updated_at = CURRENT_TIMESTAMP
                         WHERE user_id = ? AND guild_id = ?
                     """,
@@ -130,7 +131,7 @@ class OptInManager:
                     # Insert new user
                     cursor.execute(
                         """
-                        INSERT INTO discord_user_opt_ins 
+                        INSERT INTO discord_user_opt_ins
                         (user_id, username, guild_id, personality_preferences)
                         VALUES (?, ?, ?, ?)
                     """,
@@ -163,7 +164,7 @@ class OptInManager:
 
                 cursor.execute(
                     """
-                    UPDATE discord_user_opt_ins 
+                    UPDATE discord_user_opt_ins
                     SET active = FALSE, updated_at = CURRENT_TIMESTAMP
                     WHERE user_id = ? AND guild_id = ?
                 """,
@@ -189,9 +190,9 @@ class OptInManager:
 
                 cursor.execute(
                     """
-                    SELECT username, opted_in_at, interaction_count, 
+                    SELECT username, opted_in_at, interaction_count,
                            last_interaction, personality_preferences, active
-                    FROM discord_user_opt_ins 
+                    FROM discord_user_opt_ins
                     WHERE user_id = ? AND guild_id = ?
                 """,
                     (user_id, guild_id),
@@ -241,7 +242,7 @@ class OptInManager:
 
                 cursor.execute(
                     """
-                    UPDATE discord_user_opt_ins 
+                    UPDATE discord_user_opt_ins
                     SET personality_preferences = ?, updated_at = CURRENT_TIMESTAMP
                     WHERE user_id = ? AND guild_id = ? AND active = TRUE
                 """,
@@ -285,8 +286,8 @@ class OptInManager:
                 # Insert interaction record
                 cursor.execute(
                     """
-                    INSERT INTO discord_interactions 
-                    (user_id, guild_id, message_id, interaction_type, content, 
+                    INSERT INTO discord_interactions
+                    (user_id, guild_id, message_id, interaction_type, content,
                      bot_response, user_reactions, engagement_score)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 """,
@@ -305,7 +306,7 @@ class OptInManager:
                 # Update interaction count and last interaction time
                 cursor.execute(
                     """
-                    UPDATE discord_user_opt_ins 
+                    UPDATE discord_user_opt_ins
                     SET interaction_count = interaction_count + 1,
                         last_interaction = CURRENT_TIMESTAMP,
                         updated_at = CURRENT_TIMESTAMP
@@ -338,9 +339,9 @@ class OptInManager:
                 # Get basic user info
                 cursor.execute(
                     """
-                    SELECT username, interaction_count, last_interaction, 
+                    SELECT username, interaction_count, last_interaction,
                            personality_preferences, opted_in_at
-                    FROM discord_user_opt_ins 
+                    FROM discord_user_opt_ins
                     WHERE user_id = ? AND guild_id = ?
                 """,
                     (user_id, guild_id),
@@ -357,7 +358,7 @@ class OptInManager:
                 cursor.execute(
                     """
                     SELECT interaction_type, engagement_score, timestamp
-                    FROM discord_interactions 
+                    FROM discord_interactions
                     WHERE user_id = ? AND guild_id = ?
                     ORDER BY timestamp DESC
                     LIMIT 20
@@ -378,10 +379,8 @@ class OptInManager:
                 # Parse personality preferences
                 personality_preferences = {}
                 if prefs_json:
-                    try:
+                    with contextlib.suppress(json.JSONDecodeError):
                         personality_preferences = json.loads(prefs_json)
-                    except json.JSONDecodeError:
-                        pass
 
                 return StepResult.ok(
                     data={
@@ -413,7 +412,7 @@ class OptInManager:
                 # Get total users
                 cursor.execute(
                     """
-                    SELECT COUNT(*) FROM discord_user_opt_ins 
+                    SELECT COUNT(*) FROM discord_user_opt_ins
                     WHERE guild_id = ?
                 """,
                     (guild_id,),
@@ -423,7 +422,7 @@ class OptInManager:
                 # Get active users
                 cursor.execute(
                     """
-                    SELECT COUNT(*) FROM discord_user_opt_ins 
+                    SELECT COUNT(*) FROM discord_user_opt_ins
                     WHERE guild_id = ? AND active = TRUE
                 """,
                     (guild_id,),
@@ -433,7 +432,7 @@ class OptInManager:
                 # Get total interactions
                 cursor.execute(
                     """
-                    SELECT COUNT(*) FROM discord_interactions 
+                    SELECT COUNT(*) FROM discord_interactions
                     WHERE guild_id = ?
                 """,
                     (guild_id,),
@@ -443,7 +442,7 @@ class OptInManager:
                 # Get recent activity (last 7 days)
                 cursor.execute(
                     """
-                    SELECT COUNT(*) FROM discord_interactions 
+                    SELECT COUNT(*) FROM discord_interactions
                     WHERE guild_id = ? AND timestamp > datetime('now', '-7 days')
                 """,
                     (guild_id,),
@@ -473,9 +472,9 @@ class OptInManager:
 
                 cursor.execute(
                     """
-                    SELECT user_id, username, interaction_count, 
+                    SELECT user_id, username, interaction_count,
                            last_interaction, opted_in_at
-                    FROM discord_user_opt_ins 
+                    FROM discord_user_opt_ins
                     WHERE guild_id = ? AND active = TRUE
                     ORDER BY last_interaction DESC, interaction_count DESC
                 """,

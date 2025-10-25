@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from ultimate_discord_intelligence_bot.step_result import StepResult
 from ultimate_discord_intelligence_bot.tools._base import BaseTool
+
+
+if TYPE_CHECKING:
+    from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 class AnalysisBaseTool(BaseTool, ABC):
@@ -28,10 +31,7 @@ class AnalysisBaseTool(BaseTool, ABC):
         if not content or not isinstance(content, str):
             return False
 
-        if len(content) > self.max_content_length:
-            return False
-
-        return True
+        return not len(content) > self.max_content_length
 
     def get_analysis_metadata(self, content: str) -> dict[str, Any]:
         """Get metadata for analysis."""

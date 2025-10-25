@@ -38,39 +38,39 @@ from .semantic_cache import AdaptiveSemanticCache, CacheEntry, SemanticCache, Se
 
 
 __all__ = [
-    # Message batching
-    "MessageBatcher",
-    "SmartMessageBatcher",
-    "MessageBatch",
-    "BatchedMessage",
-    "BatchConfig",
-    "create_message_batcher",
-    # Semantic caching
-    "SemanticCache",
     "AdaptiveSemanticCache",
+    "BatchConfig",
+    "BatchedMessage",
     "CacheEntry",
-    "SemanticCacheConfig",
-    "create_semantic_cache",
-    # Embedding optimization
-    "EmbeddingOptimizer",
+    # Integration
+    "DiscordAIOptimizationSystem",
     "EmbeddingCacheEntry",
     "EmbeddingConfig",
-    "create_embedding_optimizer",
+    # Embedding optimization
+    "EmbeddingOptimizer",
+    "MessageBatch",
+    # Message batching
+    "MessageBatcher",
+    "OptimizationConfig",
+    "PerformanceConfigManager",
     # Performance monitoring
     "PerformanceManager",
     "PerformanceMetrics",
-    "ProcessingMetrics",
-    "OptimizationConfig",
-    "create_performance_manager",
-    # Integration
-    "DiscordAIOptimizationSystem",
-    "create_discord_ai_optimization_system",
     # Configuration
     "PerformanceOptimizationConfig",
-    "PerformanceConfigManager",
+    "ProcessingMetrics",
+    # Semantic caching
+    "SemanticCache",
+    "SemanticCacheConfig",
+    "SmartMessageBatcher",
+    "create_discord_ai_optimization_system",
+    "create_embedding_optimizer",
+    "create_message_batcher",
+    "create_performance_manager",
+    "create_semantic_cache",
+    "get_environment_optimized_config",
     "get_performance_config",
     "load_performance_config",
     "update_performance_config",
     "validate_performance_config",
-    "get_environment_optimized_config",
 ]

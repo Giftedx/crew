@@ -166,7 +166,7 @@ class DiscordMetricsCollector:
                     conversation.topics_discussed = topics_discussed
 
                 # Calculate final metrics
-                duration = conversation.end_time - conversation.start_time
+                conversation.end_time - conversation.start_time
                 if conversation.bot_responses > 0:
                     conversation.avg_response_time_ms = (
                         conversation.avg_response_time_ms * (conversation.bot_responses - 1)

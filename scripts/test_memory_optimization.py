@@ -150,7 +150,7 @@ def test_memory_analysis():
     # Create some memory pressure
     print("📊 Creating Memory Pressure...")
     large_objects = []
-    for i in range(20):
+    for _i in range(20):
         obj = [0] * (1024 * 1024)  # 1MB object
         large_objects.append(obj)
 
@@ -207,7 +207,7 @@ def test_comprehensive_optimization():
     # Create initial memory pressure
     print("📊 Creating Initial Memory Pressure...")
     initial_objects = []
-    for i in range(30):
+    for _i in range(30):
         obj = [0] * (512 * 1024)  # 512KB object
         initial_objects.append(obj)
 
@@ -270,16 +270,16 @@ def main():
 
     try:
         # Run benchmarks
-        benchmark_results = benchmark_memory_pooling()
+        benchmark_memory_pooling()
 
         # Test memory analysis
-        analysis_results = test_memory_analysis()
+        test_memory_analysis()
 
         # Test optimization strategies
         test_optimization_strategies()
 
         # Test comprehensive optimization
-        optimization_results = test_comprehensive_optimization()
+        test_comprehensive_optimization()
 
         # Test memory pool stats
         test_memory_pool_stats()

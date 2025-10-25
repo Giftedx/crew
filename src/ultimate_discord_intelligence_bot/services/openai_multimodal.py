@@ -41,7 +41,7 @@ class MultimodalAnalysisService(OpenAIService):
             user_content.append({"type": "text", "text": f"Text content to analyze:\n{text}"})
 
             # Add image content
-            for i, image_data in enumerate(images):
+            for _i, image_data in enumerate(images):
                 image_base64 = base64.b64encode(image_data).decode("utf-8")
                 user_content.append({"type": "image_url", "image_url": f"data:image/jpeg;base64,{image_base64}"})
 
@@ -73,33 +73,6 @@ class MultimodalAnalysisService(OpenAIService):
         self, transcript: str, thumbnails: list[bytes], audio_data: bytes | None, tenant: str, workspace: str
     ) -> StepResult:
         """Analyze debate content using multimodal approach."""
-        prompt = """
-        Analyze this debate content across multiple modalities:
-        
-        1. Text Analysis:
-           - Identify key arguments and claims
-           - Assess logical structure and reasoning
-           - Detect bias and emotional language
-           - Evaluate evidence quality
-        
-        2. Visual Analysis:
-           - Assess visual presentation quality
-           - Identify visual bias indicators
-           - Analyze body language and expressions
-           - Evaluate visual evidence
-        
-        3. Audio Analysis (if available):
-           - Assess tone and delivery
-           - Identify emotional indicators
-           - Evaluate speaking quality
-           - Detect interruptions or manipulation
-        
-        Provide a comprehensive analysis including:
-        - Overall debate quality score (0-10)
-        - Bias assessment across modalities
-        - Fact-checking recommendations
-        - Key insights and recommendations
-        """
 
         return await self.analyze_multimodal_content(
             text=transcript, images=thumbnails, audio_data=audio_data, tenant=tenant, workspace=workspace
@@ -107,23 +80,6 @@ class MultimodalAnalysisService(OpenAIService):
 
     async def fact_check_multimodal(self, text: str, images: list[bytes], tenant: str, workspace: str) -> StepResult:
         """Fact-check content using multimodal evidence."""
-        prompt = f"""
-        Fact-check the following content using both text and visual evidence:
-        
-        Text: {text}
-        
-        Analyze the visual content for:
-        1. Supporting or contradicting evidence
-        2. Data visualizations or charts
-        3. Screenshots or documents
-        4. Visual context that might affect interpretation
-        
-        Provide fact-check results with:
-        - Claim verification status
-        - Confidence level
-        - Supporting evidence from both text and images
-        - Recommendations for further verification
-        """
 
         return await self.analyze_multimodal_content(
             text=text, images=images, audio_data=None, tenant=tenant, workspace=workspace
@@ -131,23 +87,6 @@ class MultimodalAnalysisService(OpenAIService):
 
     async def detect_bias_multimodal(self, text: str, images: list[bytes], tenant: str, workspace: str) -> StepResult:
         """Detect bias across multiple modalities."""
-        prompt = f"""
-        Detect bias indicators across text and visual content:
-        
-        Text: {text}
-        
-        Analyze for:
-        1. Language bias in text
-        2. Visual bias in images (framing, composition, color)
-        3. Cross-modal bias (inconsistencies between text and images)
-        4. Overall presentation bias
-        
-        Provide bias assessment with:
-        - Bias level (low, moderate, high)
-        - Specific bias indicators found
-        - Confidence in assessment
-        - Recommendations for bias mitigation
-        """
 
         return await self.analyze_multimodal_content(
             text=text, images=images, audio_data=None, tenant=tenant, workspace=workspace
@@ -157,20 +96,6 @@ class MultimodalAnalysisService(OpenAIService):
         self, text: str, images: list[bytes], tenant: str, workspace: str
     ) -> StepResult:
         """Generate comprehensive summary using multimodal content."""
-        prompt = f"""
-        Create a comprehensive summary of the following multimodal content:
-        
-        Text: {text}
-        
-        Include in the summary:
-        1. Key points from text
-        2. Visual insights from images
-        3. Overall message and themes
-        4. Important details and context
-        5. Recommendations or conclusions
-        
-        Make the summary clear, concise, and informative.
-        """
 
         return await self.analyze_multimodal_content(
             text=text, images=images, audio_data=None, tenant=tenant, workspace=workspace

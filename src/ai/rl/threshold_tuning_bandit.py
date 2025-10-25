@@ -14,6 +14,7 @@ and the unified feedback orchestrator, adding:
 
 from __future__ import annotations
 
+import contextlib
 import logging
 from collections import deque
 from dataclasses import dataclass
@@ -274,15 +275,13 @@ class ThresholdTuningBandit:
 
         # Add optimizer metrics if available
         if optimizer:
-            try:
+            with contextlib.suppress(Exception):
                 metrics["optimizer_state"] = {
                     "exploration_rate": optimizer.exploration_rate,
                     "total_pulls": sum(
                         arm.pulls for arms in optimizer.arms_by_context.values() for arm in arms.values()
                     ),
                 }
-            except Exception:
-                pass
 
         return metrics
 

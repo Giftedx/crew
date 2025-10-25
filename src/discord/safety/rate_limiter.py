@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import time
 from collections import defaultdict, deque
 from dataclasses import dataclass
@@ -324,7 +325,7 @@ class RateLimiter:
         # Integration point: Requires Discord bot instance with MODERATE_MEMBERS permission
         # Implementation should call discord.Member.timeout() for temporary mute
         # Store action details for external executor
-        action_data = {
+        {
             "type": "rate_limit_cooldown",
             "user_id": user_id,
             "guild_id": guild_id,
@@ -349,7 +350,7 @@ class RateLimiter:
             channel_id: Discord channel ID (optional)
             rule: Rate limit rule that was approached
         """
-        warning_message = {
+        {
             "type": "rate_limit_warning",
             "user_id": user_id,
             "guild_id": guild_id,
@@ -545,10 +546,8 @@ class RateLimiter:
         """Clean up resources."""
         if hasattr(self, "_cleanup_task"):
             self._cleanup_task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await self._cleanup_task
-            except asyncio.CancelledError:
-                pass
 
 
 def create_rate_limiter(config: RateLimitConfig | None = None) -> RateLimiter:

@@ -108,9 +108,9 @@ class OpenAIStructuredOutputsService(OpenAIService):
 
         prompt = f"""
         Analyze the following content for {analysis_type}:
-        
+
         Content: {content}
-        
+
         Provide a comprehensive analysis including:
         1. Overall score (0-10)
         2. Confidence level (0-1)

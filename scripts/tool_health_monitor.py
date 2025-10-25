@@ -56,7 +56,7 @@ class ToolHealthMonitor:
         for tool_name, module_path in tool_imports:
             try:
                 start_time = time.perf_counter()
-                module = importlib.import_module(module_path)
+                importlib.import_module(module_path)
                 end_time = time.perf_counter()
 
                 import_time = end_time - start_time
@@ -187,9 +187,8 @@ class ToolHealthMonitor:
                 # Check for tool classes
                 tool_classes = []
                 for node in ast.walk(tree):
-                    if isinstance(node, ast.ClassDef):
-                        if "Tool" in node.name:
-                            tool_classes.append(node.name)
+                    if isinstance(node, ast.ClassDef) and "Tool" in node.name:
+                        tool_classes.append(node.name)
 
                 if tool_classes:
                     compliance_results["compliant_tools"].extend(tool_classes)

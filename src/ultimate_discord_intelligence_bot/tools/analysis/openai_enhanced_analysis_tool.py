@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncGenerator
+from typing import TYPE_CHECKING
 
 from ultimate_discord_intelligence_bot.services.openai_integration_service import OpenAIIntegrationService
 from ultimate_discord_intelligence_bot.step_result import StepResult
 from ultimate_discord_intelligence_bot.tools._base import BaseTool
+
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncGenerator
 
 
 class OpenAIEnhancedAnalysisTool(BaseTool):

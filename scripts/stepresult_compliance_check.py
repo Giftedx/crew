@@ -26,31 +26,29 @@ def check_stepresult_compliance(file_path: Path) -> dict:
                             has_stepresult_import = True
                             break
 
-            elif isinstance(node, ast.ClassDef):
-                if "Tool" in node.name:
-                    tool_classes.append(node.name)
+            elif isinstance(node, ast.ClassDef) and "Tool" in node.name:
+                tool_classes.append(node.name)
 
-                    # Check methods in the class
-                    for item in node.body:
-                        if isinstance(item, ast.FunctionDef) and item.name in ["_run", "run"]:
-                            # Check return type annotation
-                            if item.returns and hasattr(item.returns, "id"):
-                                if item.returns.id == "StepResult":
+                # Check methods in the class
+                for item in node.body:
+                    if isinstance(item, ast.FunctionDef) and item.name in ["_run", "run"]:
+                        # Check return type annotation
+                        if item.returns and hasattr(item.returns, "id"):
+                            if item.returns.id == "StepResult":
+                                has_stepresult_returns = True
+
+                        # Check for StepResult.ok/fail/skip in return statements
+                        for stmt in item.body:
+                            if isinstance(stmt, ast.Return) and stmt.value:
+                                if isinstance(stmt.value, ast.Call) and ((
+                                    hasattr(stmt.value.func, "attr")
+                                    and stmt.value.attr in ["ok", "fail", "skip"]
+                                ) or (
+                                    hasattr(stmt.value.func, "value")
+                                    and hasattr(stmt.value.func.value, "id")
+                                    and stmt.value.func.value.id == "StepResult"
+                                )):
                                     has_stepresult_returns = True
-
-                            # Check for StepResult.ok/fail/skip in return statements
-                            for stmt in item.body:
-                                if isinstance(stmt, ast.Return) and stmt.value:
-                                    if isinstance(stmt.value, ast.Call):
-                                        if (
-                                            hasattr(stmt.value.func, "attr")
-                                            and stmt.value.attr in ["ok", "fail", "skip"]
-                                        ) or (
-                                            hasattr(stmt.value.func, "value")
-                                            and hasattr(stmt.value.func.value, "id")
-                                            and stmt.value.func.value.id == "StepResult"
-                                        ):
-                                            has_stepresult_returns = True
 
         return {
             "file": str(file_path),

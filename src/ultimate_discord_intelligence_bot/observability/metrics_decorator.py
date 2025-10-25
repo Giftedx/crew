@@ -8,11 +8,14 @@ from __future__ import annotations
 
 import functools
 import time
-from collections.abc import Callable
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from ultimate_discord_intelligence_bot.observability.metrics_collector import record_tool_usage
 from ultimate_discord_intelligence_bot.step_result import StepResult
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 def instrument_tool(tool_name: str | None = None):

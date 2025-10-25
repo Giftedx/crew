@@ -57,7 +57,7 @@ class OpenAIVisionService(OpenAIService):
         3. Key themes or topics visible
         4. Overall quality and professionalism
         5. Any text or captions visible
-        
+
         Video URL: {video_url}
         """
 
@@ -74,7 +74,7 @@ class OpenAIVisionService(OpenAIService):
             # Prepare content with multiple images
             content = [{"type": "text", "text": f"{prompt}\nTenant: {tenant}, Workspace: {workspace}"}]
 
-            for i, image_data in enumerate(images):
+            for _i, image_data in enumerate(images):
                 image_base64 = base64.b64encode(image_data).decode("utf-8")
                 content.append({"type": "image_url", "image_url": f"data:image/jpeg;base64,{image_base64}"})
 
@@ -107,7 +107,7 @@ class OpenAIVisionService(OpenAIService):
         3. Text or captions that might be biased
         4. Overall presentation style
         5. Any elements that might influence perception
-        
+
         Provide a bias assessment with confidence level.
         """
 

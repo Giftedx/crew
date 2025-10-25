@@ -175,8 +175,7 @@ def test_memory_usage():
         clear_lazy_cache()
         initial_memory = process.memory_info().rss / 1024 / 1024  # MB
 
-        agent_eager = AcquisitionSpecialistAgent()
-        tools_eager = agent_eager._tools
+        AcquisitionSpecialistAgent()
         eager_memory = process.memory_info().rss / 1024 / 1024  # MB
 
         print(f"  Initial memory: {initial_memory:.1f} MB")
@@ -188,11 +187,10 @@ def test_memory_usage():
         clear_lazy_cache()
         lazy_initial_memory = process.memory_info().rss / 1024 / 1024  # MB
 
-        agent_lazy = LazyAcquisitionSpecialistAgent()
+        LazyAcquisitionSpecialistAgent()
         lazy_creation_memory = process.memory_info().rss / 1024 / 1024  # MB
 
         # Access tools to trigger loading
-        tools_lazy = agent_lazy.tools
         lazy_final_memory = process.memory_info().rss / 1024 / 1024  # MB
 
         print(f"  Initial memory: {lazy_initial_memory:.1f} MB")
@@ -218,7 +216,7 @@ def main():
 
     try:
         # Run benchmarks
-        benchmark_results = benchmark_agent_creation()
+        benchmark_agent_creation()
 
         # Test individual tool loading
         test_lazy_tool_loading()

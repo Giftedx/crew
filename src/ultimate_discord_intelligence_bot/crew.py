@@ -7,6 +7,7 @@ It uses the new modular agent system for better testability and maintainability.
 
 from __future__ import annotations
 
+import contextlib
 import json
 import os
 import time
@@ -599,10 +600,8 @@ class UltimateDiscordIntelligenceBotCrew:
             )
 
             # Attach embedder config post-construction to satisfy tests without provider validation
-            try:
+            with contextlib.suppress(Exception):
                 crew_obj.embedder = embedder_config
-            except Exception:
-                pass
 
             return crew_obj
         except Exception:
@@ -715,9 +714,9 @@ class UltimateDiscordIntelligenceBotCrew:
                 "latest_trace_file": trace_filename,
                 "execution_summary": {
                     "total_steps": self._current_step_count,
-                    "agents_used": list(set(step["agent_role"] for step in self._execution_trace)),
+                    "agents_used": list({step["agent_role"] for step in self._execution_trace}),
                     "tools_used": list(
-                        set(step["tool"] for step in self._execution_trace if step["tool"] != "unknown")
+                        {step["tool"] for step in self._execution_trace if step["tool"] != "unknown"}
                     ),
                     "total_duration": time.time() - self._execution_start_time if self._execution_start_time else 0,
                 },
@@ -735,8 +734,8 @@ class UltimateDiscordIntelligenceBotCrew:
         return {
             "total_steps": self._current_step_count,
             "execution_duration": time.time() - self._execution_start_time if self._execution_start_time else 0,
-            "agents_involved": list(set(step["agent_role"] for step in self._execution_trace)),
-            "tools_used": list(set(step["tool"] for step in self._execution_trace if step["tool"] != "unknown")),
+            "agents_involved": list({step["agent_role"] for step in self._execution_trace}),
+            "tools_used": list({step["tool"] for step in self._execution_trace if step["tool"] != "unknown"}),
             "recent_steps": self._execution_trace[-5:] if len(self._execution_trace) > 5 else self._execution_trace,
         }
 

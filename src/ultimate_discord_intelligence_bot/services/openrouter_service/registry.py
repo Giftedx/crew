@@ -8,13 +8,14 @@ from __future__ import annotations
 
 import logging
 import threading
-from collections.abc import Callable
 from typing import TYPE_CHECKING, Any
 
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from .facade import OpenRouterServiceFacade
     from .service import OpenRouterService
 

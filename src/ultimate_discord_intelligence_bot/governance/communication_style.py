@@ -83,7 +83,7 @@ class CommunicationStyleEnforcer:
             r"\b(?:it is obvious|it is clear|it is evident)\b",
         ]
 
-    def check_communication_style(self, response: str, context: dict[str, Any] = None) -> StepResult:
+    def check_communication_style(self, response: str, context: dict[str, Any] | None = None) -> StepResult:
         """Check response against communication style guidelines.
 
         Args:
@@ -295,7 +295,7 @@ class CommunicationStyleEnforcer:
 
         return recommendations
 
-    def enforce_style_guidelines(self, response: str, context: dict[str, Any] = None) -> StepResult:
+    def enforce_style_guidelines(self, response: str, context: dict[str, Any] | None = None) -> StepResult:
         """Enforce communication style guidelines on a response.
 
         Args:

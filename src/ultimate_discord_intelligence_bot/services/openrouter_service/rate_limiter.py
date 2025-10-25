@@ -332,7 +332,7 @@ class RateLimitManager:
         Returns:
             Dictionary mapping tenant names to their status
         """
-        return {tenant: self.get_tenant_status(tenant) for tenant in self._tenant_limiters.keys()}
+        return {tenant: self.get_tenant_status(tenant) for tenant in self._tenant_limiters}
 
     def reset_tenant_stats(self, tenant: str) -> None:
         """Reset statistics for a specific tenant.

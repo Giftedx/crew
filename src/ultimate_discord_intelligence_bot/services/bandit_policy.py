@@ -233,17 +233,15 @@ class BanditPolicy:
         if context.expected_complexity == "complex":
             if "gpt-4" in model_id or "claude-3-opus" in model_id:
                 factor *= 1.3
-        elif context.expected_complexity == "simple":
-            if "gpt-3.5" in model_id or "claude-haiku" in model_id:
-                factor *= 1.2
+        elif context.expected_complexity == "simple" and ("gpt-3.5" in model_id or "claude-haiku" in model_id):
+            factor *= 1.2
 
         # Adjust based on task type
         if context.task_type == "reasoning":
             if "gpt-4" in model_id or "claude-3" in model_id:
                 factor *= 1.2
-        elif context.task_type == "coding":
-            if "claude" in model_id:  # Claude is generally better at coding
-                factor *= 1.1
+        elif context.task_type == "coding" and "claude" in model_id:  # Claude is generally better at coding
+            factor *= 1.1
 
         return min(factor, 2.0)  # Cap at 2x multiplier
 

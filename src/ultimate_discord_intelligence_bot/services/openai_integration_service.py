@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncGenerator
+from typing import TYPE_CHECKING
 
 from ultimate_discord_intelligence_bot.services.openai_function_calling import OpenAIFunctionCallingService
 from ultimate_discord_intelligence_bot.services.openai_multimodal import MultimodalAnalysisService
@@ -12,6 +12,10 @@ from ultimate_discord_intelligence_bot.services.openai_structured_outputs import
 from ultimate_discord_intelligence_bot.services.openai_vision import OpenAIVisionService
 from ultimate_discord_intelligence_bot.services.openai_voice import OpenAIVoiceService
 from ultimate_discord_intelligence_bot.step_result import StepResult
+
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncGenerator
 
 
 class OpenAIIntegrationService(OpenAIService):
@@ -166,7 +170,7 @@ class OpenAIIntegrationService(OpenAIService):
 
             # Test basic OpenAI connectivity
             try:
-                response = await self.client.chat.completions.create(
+                await self.client.chat.completions.create(
                     model="gpt-3.5-turbo", messages=[{"role": "user", "content": "Hello"}], max_tokens=10
                 )
                 health_status["openai_available"] = True
@@ -183,7 +187,7 @@ class OpenAIIntegrationService(OpenAIService):
                 ("multimodal", self.multimodal),
             ]
 
-            for service_name, service in services_to_test:
+            for service_name, _service in services_to_test:
                 try:
                     # Simple health check for each service
                     health_status["services"][service_name] = "healthy"

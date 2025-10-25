@@ -242,10 +242,7 @@ class OpenAICostMonitoringService:
         try:
             # Calculate daily average
             days_with_data = len(self.daily_metrics)
-            if days_with_data > 0:
-                avg_daily_cost = self.monthly_cost / days_with_data
-            else:
-                avg_daily_cost = 0.0
+            avg_daily_cost = self.monthly_cost / days_with_data if days_with_data > 0 else 0.0
 
             # Project monthly cost
             days_in_month = 30
@@ -290,8 +287,8 @@ class OpenAICostMonitoringService:
         """Export all metrics for analysis."""
         return {
             "current_metrics": self.get_current_metrics(),
-            "daily_metrics": {date: self.get_daily_metrics(date) for date in self.daily_metrics.keys()},
-            "monthly_metrics": {month: self.get_monthly_metrics(month) for month in self.monthly_metrics.keys()},
+            "daily_metrics": {date: self.get_daily_metrics(date) for date in self.daily_metrics},
+            "monthly_metrics": {month: self.get_monthly_metrics(month) for month in self.monthly_metrics},
             "cost_summary": self.get_cost_summary(),
             "export_timestamp": datetime.utcnow().isoformat(),
         }

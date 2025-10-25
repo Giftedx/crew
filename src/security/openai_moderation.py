@@ -30,7 +30,7 @@ class OpenAIModerationService:
 
     def __init__(self, api_key: str | None = None):
         """Initialize OpenAI moderation service.
-        
+
         Args:
             api_key: OpenAI API key (defaults to OPENAI_API_KEY env var)
         """
@@ -51,10 +51,10 @@ class OpenAIModerationService:
 
     def check_content(self, text: str) -> ModerationResult:
         """Check content against OpenAI moderation API.
-        
+
         Args:
             text: Text content to check
-            
+
         Returns:
             ModerationResult with flagged status and categories
         """
@@ -109,10 +109,10 @@ class OpenAIModerationService:
 
     def check_batch(self, texts: list[str]) -> list[ModerationResult]:
         """Check multiple texts against OpenAI moderation API.
-        
+
         Args:
             texts: List of text content to check
-            
+
         Returns:
             List of ModerationResult objects
         """

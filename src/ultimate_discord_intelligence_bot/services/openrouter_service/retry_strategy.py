@@ -10,7 +10,6 @@ import asyncio
 import logging
 import random
 import time
-from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
@@ -19,6 +18,8 @@ from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from .service import OpenRouterService
 
 
@@ -109,16 +110,11 @@ class RetryStrategy:
             return False
 
         # Check status code
-        if status_code is not None:
-            if status_code in self._config.retryable_status_codes:
-                return True
+        if status_code is not None and status_code in self._config.retryable_status_codes:
+            return True
 
         # Check exception type
-        if exception is not None:
-            if isinstance(exception, self._config.retryable_exceptions):
-                return True
-
-        return False
+        return bool(exception is not None and isinstance(exception, self._config.retryable_exceptions))
 
     def execute_with_retry(
         self,

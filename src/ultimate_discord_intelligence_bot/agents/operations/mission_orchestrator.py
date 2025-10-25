@@ -5,6 +5,8 @@ This agent coordinates end-to-end missions, sequencing depth, specialists, and b
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from ultimate_discord_intelligence_bot.agents.base import BaseAgent
 from ultimate_discord_intelligence_bot.agents.registry import register_agent
 from ultimate_discord_intelligence_bot.settings import (
@@ -27,7 +29,6 @@ from ultimate_discord_intelligence_bot.tools import (
     PipelineTool,
     TimelineTool,
 )
-from ultimate_discord_intelligence_bot.tools._base import BaseTool
 from ultimate_discord_intelligence_bot.tools.memory.unified_memory_tool import (
     UnifiedContextTool,
     UnifiedMemoryStoreTool,
@@ -58,6 +59,10 @@ from ultimate_discord_intelligence_bot.tools.observability.unified_router_tool i
     RouterStatusTool,
     UnifiedRouterTool,
 )
+
+
+if TYPE_CHECKING:
+    from ultimate_discord_intelligence_bot.tools._base import BaseTool
 
 
 @register_agent("mission_orchestrator")

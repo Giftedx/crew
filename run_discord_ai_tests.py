@@ -21,7 +21,7 @@ def run_command(command, description):
     print(f"{'=' * 60}")
 
     try:
-        result = subprocess.run(command, shell=True, check=True, capture_output=False, text=True)
+        subprocess.run(command, shell=True, check=True, capture_output=False, text=True)
         print(f"✅ {description} completed successfully")
         return True
     except subprocess.CalledProcessError as e:

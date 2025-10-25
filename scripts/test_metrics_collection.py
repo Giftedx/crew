@@ -116,7 +116,7 @@ def test_metrics_api():
         from ultimate_discord_intelligence_bot.observability.metrics_api import create_metrics_api
 
         # Create API instance
-        api = create_metrics_api()
+        create_metrics_api()
         print("✅ Metrics API created successfully")
 
         # Test API routes (without actually running the server)
@@ -152,7 +152,7 @@ def test_metrics_dashboard():
 
         if all_metrics:
             # Display sample metrics
-            sample_tool = list(all_metrics.values())[0]
+            sample_tool = next(iter(all_metrics.values()))
             print("📊 Sample tool metrics:")
             print(f"  • Tool: {sample_tool.tool_name}")
             print(f"  • Total calls: {sample_tool.total_calls}")

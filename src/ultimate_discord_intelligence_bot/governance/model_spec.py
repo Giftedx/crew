@@ -369,13 +369,12 @@ class ModelSpecEnforcer:
         response_lower = response.lower()
 
         # Check for violations
-        if rule.level == "root":
-            if any(term in response_lower for term in ["harmful", "dangerous", "illegal"]):
-                return {
-                    "violation": True,
-                    "warning": False,
-                    "reason": f"Response violates root principle: {rule.principle}",
-                }
+        if rule.level == "root" and any(term in response_lower for term in ["harmful", "dangerous", "illegal"]):
+            return {
+                "violation": True,
+                "warning": False,
+                "reason": f"Response violates root principle: {rule.principle}",
+            }
 
         return {"violation": False, "warning": False, "reason": "No issues detected"}
 

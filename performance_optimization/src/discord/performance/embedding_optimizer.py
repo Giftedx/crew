@@ -8,6 +8,7 @@ computation for Discord message processing.
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import hashlib
 import time
 from dataclasses import dataclass, field
@@ -429,10 +430,8 @@ class EmbeddingOptimizer:
         # Cancel batch processing task
         if self._batch_processing_task:
             self._batch_processing_task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await self._batch_processing_task
-            except asyncio.CancelledError:
-                pass
 
         # Clear cache
         await self.clear_cache()

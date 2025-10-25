@@ -312,7 +312,7 @@ class ContentFilter:
         import hashlib
 
         try:
-            content_hash = hashlib.md5(content.lower().encode(), usedforsecurity=False).hexdigest()  # nosec B324
+            hashlib.md5(content.lower().encode(), usedforsecurity=False).hexdigest()  # nosec B324
             # Placeholder: In production, query vector store for semantic similarity
             return {"categories": [], "scores": []}
         except Exception:

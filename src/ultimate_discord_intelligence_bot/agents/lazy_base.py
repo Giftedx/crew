@@ -6,11 +6,14 @@ instantiation until the tools are actually needed, reducing startup time.
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from ultimate_discord_intelligence_bot.agents.base import BaseAgent
-from ultimate_discord_intelligence_bot.tools._base import BaseTool
 from ultimate_discord_intelligence_bot.tools.lazy_loader import LazyToolWrapper, create_lazy_tool_wrapper
+
+
+if TYPE_CHECKING:
+    from ultimate_discord_intelligence_bot.tools._base import BaseTool
 
 
 class LazyBaseAgent(BaseAgent):

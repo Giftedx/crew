@@ -3,11 +3,14 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Callable
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from ultimate_discord_intelligence_bot.services.openai_service import OpenAIService
 from ultimate_discord_intelligence_bot.step_result import StepResult
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 class OpenAIFunctionCallingService(OpenAIService):
@@ -116,9 +119,9 @@ class OpenAIFunctionCallingService(OpenAIService):
         """Analyze content using function calling for enhanced capabilities."""
         prompt = f"""
         Analyze the following content for {analysis_type}:
-        
+
         Content: {content}
-        
+
         Use the available functions to:
         1. Analyze the debate quality and bias
         2. Fact-check any specific claims

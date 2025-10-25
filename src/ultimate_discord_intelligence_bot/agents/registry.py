@@ -6,7 +6,11 @@ enabling dynamic agent loading and testing.
 
 from __future__ import annotations
 
-from .base import BaseAgent
+from typing import TYPE_CHECKING
+
+
+if TYPE_CHECKING:
+    from .base import BaseAgent
 
 
 # Global agent registry

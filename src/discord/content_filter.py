@@ -27,11 +27,11 @@ class ContentFilter:
 
     def check_content(self, content: str, trusted_source: bool = False) -> StepResult:
         """Check content before publication.
-        
+
         Args:
             content: Content to check
             trusted_source: Whether source is trusted (allows override)
-            
+
         Returns:
             StepResult with filtered content or blocking decision
         """
@@ -69,11 +69,11 @@ class ContentFilter:
 
     def check_batch(self, contents: list[str], trusted_source: bool = False) -> list[StepResult]:
         """Check multiple contents in batch.
-        
+
         Args:
             contents: List of content to check
             trusted_source: Whether source is trusted
-            
+
         Returns:
             List of StepResult objects
         """

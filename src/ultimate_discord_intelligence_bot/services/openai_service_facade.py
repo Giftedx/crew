@@ -38,8 +38,7 @@ Usage:
 from __future__ import annotations
 
 import logging
-from collections.abc import AsyncGenerator
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from ultimate_discord_intelligence_bot.config.base import BaseConfig
 from ultimate_discord_intelligence_bot.config.feature_flags import FeatureFlags
@@ -55,6 +54,10 @@ from .openai_streaming import OpenAIStreamingService
 from .openai_structured_outputs import OpenAIStructuredOutputsService
 from .openai_vision import OpenAIVisionService
 from .openai_voice import OpenAIVoiceService
+
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncGenerator
 
 
 logger = logging.getLogger(__name__)
@@ -430,7 +433,7 @@ class OpenAIServiceFacade:
 
             # Test basic OpenAI connectivity
             try:
-                response = await self.base_service.client.chat.completions.create(
+                await self.base_service.client.chat.completions.create(
                     model="gpt-3.5-turbo", messages=[{"role": "user", "content": "Hello"}], max_tokens=10
                 )
                 health_status["openai_available"] = True
@@ -447,7 +450,7 @@ class OpenAIServiceFacade:
                 ("multimodal", self.multimodal),
             ]
 
-            for service_name, service in services_to_test:
+            for service_name, _service in services_to_test:
                 try:
                     # Simple health check for each service
                     health_status["services"][service_name] = "healthy"

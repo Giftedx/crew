@@ -129,10 +129,7 @@ class UnifiedConfig:
                     value = env_value
                 elif hasattr(field_type, "__origin__") and field_type.__origin__ is type(None):
                     # Optional type
-                    if env_value:
-                        value = env_value
-                    else:
-                        value = None
+                    value = env_value or None
                 else:
                     value = env_value
 
@@ -193,7 +190,7 @@ class UnifiedConfig:
     def to_dict(self) -> dict[str, Any]:
         """Convert configuration to dictionary."""
         result = {}
-        for field_name, field_info in self.__dataclass_fields__.items():
+        for field_name, _field_info in self.__dataclass_fields__.items():
             value = getattr(self, field_name)
             if field_name == "custom_settings":
                 result.update(value)

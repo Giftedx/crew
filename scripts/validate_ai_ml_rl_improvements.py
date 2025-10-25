@@ -207,7 +207,7 @@ def validate_improvement_6_backpressure():
         print("✓ BackpressureCoordinator instantiated")
 
         # Test singleton factory
-        global_coordinator = get_backpressure_coordinator()
+        get_backpressure_coordinator()
         print("✓ Global coordinator obtained")
 
         # Test health registration

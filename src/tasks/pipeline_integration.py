@@ -20,12 +20,12 @@ class PipelineIntegration:
 
     async def enqueue_video_processing(self, video_url: str, tenant: str, workspace: str) -> str | None:
         """Enqueue video processing job.
-        
+
         Args:
             video_url: URL of video to process
             tenant: Tenant identifier
             workspace: Workspace identifier
-            
+
         Returns:
             Job ID if successful, None otherwise
         """
@@ -44,10 +44,10 @@ class PipelineIntegration:
 
     async def get_processing_status(self, job_id: str) -> dict[str, Any] | None:
         """Get status of video processing job.
-        
+
         Args:
             job_id: Job identifier
-            
+
         Returns:
             dict with job status or None
         """

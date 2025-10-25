@@ -12,19 +12,22 @@ import asyncio
 import logging
 import time
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
-from ultimate_discord_intelligence_bot.services.memory_service import MemoryService
-from ultimate_discord_intelligence_bot.services.openrouter_service.adaptive_routing import AdaptiveRoutingManager
-from ultimate_discord_intelligence_bot.services.prompt_engine import PromptEngine
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
 from .message_evaluator import EvaluationResult, MessageEvaluator
 from .opt_in_manager import OptInManager
 from .personality.personality_manager import PersonalityContext, PersonalityStateManager
 from .personality.reward_computer import InteractionMetrics, RewardComputer
+
+
+if TYPE_CHECKING:
+    from ultimate_discord_intelligence_bot.services.memory_service import MemoryService
+    from ultimate_discord_intelligence_bot.services.openrouter_service.adaptive_routing import AdaptiveRoutingManager
+    from ultimate_discord_intelligence_bot.services.prompt_engine import PromptEngine
 
 
 logger = logging.getLogger(__name__)

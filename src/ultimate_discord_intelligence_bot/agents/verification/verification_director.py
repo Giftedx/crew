@@ -5,6 +5,8 @@ This agent delivers defensible verdicts and reasoning for significant claims.
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from ultimate_discord_intelligence_bot.agents.base import BaseAgent
 from ultimate_discord_intelligence_bot.agents.registry import register_agent
 from ultimate_discord_intelligence_bot.tools import (
@@ -15,7 +17,10 @@ from ultimate_discord_intelligence_bot.tools import (
     LogicalFallacyTool,
     PerspectiveSynthesizerTool,
 )
-from ultimate_discord_intelligence_bot.tools._base import BaseTool
+
+
+if TYPE_CHECKING:
+    from ultimate_discord_intelligence_bot.tools._base import BaseTool
 
 
 @register_agent("verification_director")

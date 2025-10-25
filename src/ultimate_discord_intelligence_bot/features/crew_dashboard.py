@@ -10,10 +10,13 @@ import json
 import logging
 import time
 from dataclasses import dataclass, field
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from ultimate_discord_intelligence_bot.features.crew_analytics import CrewAnalytics
 from ultimate_discord_intelligence_bot.step_result import StepResult
+
+
+if TYPE_CHECKING:
+    from ultimate_discord_intelligence_bot.features.crew_analytics import CrewAnalytics
 
 
 logger = logging.getLogger(__name__)
@@ -494,7 +497,7 @@ class CrewDashboard:
         <h1>Crew Performance Dashboard</h1>
         <p>Generated: {dashboard_data.timestamp}</p>
     </div>
-    
+
     <h2>Performance Metrics</h2>
     <table class="metrics-table">
         <tr>
@@ -519,7 +522,7 @@ class CrewDashboard:
 
             html_content += """
     </table>
-    
+
     <h2>Performance Charts</h2>
 """
 
@@ -544,7 +547,7 @@ class CrewDashboard:
             html_content += """
         </ul>
     </div>
-    
+
     <script>
 """
 

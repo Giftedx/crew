@@ -9,12 +9,15 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from ultimate_discord_intelligence_bot.services.memory_service import MemoryService
-from ultimate_discord_intelligence_bot.services.openrouter_service.adaptive_routing import AdaptiveRoutingManager
-from ultimate_discord_intelligence_bot.services.prompt_engine import PromptEngine
 from ultimate_discord_intelligence_bot.step_result import StepResult
+
+
+if TYPE_CHECKING:
+    from ultimate_discord_intelligence_bot.services.memory_service import MemoryService
+    from ultimate_discord_intelligence_bot.services.openrouter_service.adaptive_routing import AdaptiveRoutingManager
+    from ultimate_discord_intelligence_bot.services.prompt_engine import PromptEngine
 
 
 logger = logging.getLogger(__name__)

@@ -10,11 +10,14 @@ import logging
 import time
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from uuid import uuid4
 
-from ultimate_discord_intelligence_bot.config.feature_flags import FeatureFlags
 from ultimate_discord_intelligence_bot.step_result import StepResult
+
+
+if TYPE_CHECKING:
+    from ultimate_discord_intelligence_bot.config.feature_flags import FeatureFlags
 
 
 logger = logging.getLogger(__name__)

@@ -9,8 +9,7 @@ from __future__ import annotations
 
 import asyncio
 import time
-from collections.abc import Awaitable, Callable
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from performance_optimization.src.ultimate_discord_intelligence_bot.step_result import StepResult
 
@@ -20,6 +19,10 @@ from .embedding_optimizer import EmbeddingConfig, EmbeddingOptimizer
 from .message_batcher import BatchConfig, MessageBatch, MessageBatcher
 from .performance_manager import OptimizationConfig, PerformanceManager, ProcessingMetrics
 from .semantic_cache import SemanticCache, SemanticCacheConfig
+
+
+if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable
 
 
 class DiscordAIOptimizationSystem:

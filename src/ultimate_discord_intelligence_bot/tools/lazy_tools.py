@@ -38,11 +38,6 @@ LAZY_TOOL_MAPPING = {
         "module": "ultimate_discord_intelligence_bot.tools.acquisition.yt_dlp_download_tool",
         "dependencies": ["yt_dlp"],
     },
-    "MultiPlatformDownloadTool": {
-        "class": "MultiPlatformDownloadTool",
-        "module": "ultimate_discord_intelligence_bot.tools.acquisition.multi_platform_download_tool",
-        "dependencies": ["yt_dlp"],
-    },
     "TranscriptIndexTool": {
         "class": "TranscriptIndexTool",
         "module": "ultimate_discord_intelligence_bot.tools.acquisition.transcript_index_tool",

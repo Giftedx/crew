@@ -9,12 +9,14 @@ from __future__ import annotations
 
 import logging
 import time
-from typing import Any
-
-from discord.ext import commands
+from typing import TYPE_CHECKING, Any
 
 from ..services.artifact_publisher import ArtifactMetadata, ArtifactPublisher, DiscordConfig
 from ..step_result import StepResult
+
+
+if TYPE_CHECKING:
+    from discord.ext import commands
 
 
 logger = logging.getLogger(__name__)

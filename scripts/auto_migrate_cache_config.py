@@ -15,8 +15,12 @@ from __future__ import annotations
 
 import argparse
 import re
-from collections.abc import Iterator
 from pathlib import Path
+from typing import TYPE_CHECKING
+
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -71,7 +75,7 @@ def scan_file(path: Path) -> list[tuple[str, int, str]]:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--apply", action="store_true", help="Reserved for future automatic edits")
-    args = parser.parse_args()
+    parser.parse_args()
 
     print("=" * 80)
     print("CACHE CONFIG MIGRATION - SCAN REPORT")

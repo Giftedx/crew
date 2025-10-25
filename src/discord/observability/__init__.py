@@ -29,24 +29,24 @@ from .personality_dashboard import (
 
 
 __all__ = [
-    # Metrics collection
-    "DiscordMetricsCollector",
     "ConversationMetrics",
-    "UserEngagementMetrics",
-    "GuildMetrics",
-    "PersonalityMetrics",
-    "create_discord_metrics_collector",
     # Conversation tracing
     "ConversationTracer",
-    "create_conversation_tracer",
-    # Personality dashboard
-    "PersonalityDashboard",
-    "PersonalityTraitSnapshot",
-    "PersonalityEvolution",
-    "UserPersonalityProfile",
-    "PersonalityAnalytics",
-    "create_personality_dashboard",
+    # Metrics collection
+    "DiscordMetricsCollector",
+    "GuildMetrics",
     # Unified management
     "ObservabilityManager",
+    "PersonalityAnalytics",
+    # Personality dashboard
+    "PersonalityDashboard",
+    "PersonalityEvolution",
+    "PersonalityMetrics",
+    "PersonalityTraitSnapshot",
+    "UserEngagementMetrics",
+    "UserPersonalityProfile",
+    "create_conversation_tracer",
+    "create_discord_metrics_collector",
     "create_observability_manager",
+    "create_personality_dashboard",
 ]

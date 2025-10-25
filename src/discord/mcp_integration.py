@@ -8,10 +8,13 @@ conversational pipeline, handling feature flag gating and graceful degradation.
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from ultimate_discord_intelligence_bot.config.feature_flags import FeatureFlags
 from ultimate_discord_intelligence_bot.step_result import StepResult
+
+
+if TYPE_CHECKING:
+    from ultimate_discord_intelligence_bot.config.feature_flags import FeatureFlags
 
 
 logger = logging.getLogger(__name__)

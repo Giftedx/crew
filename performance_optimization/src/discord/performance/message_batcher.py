@@ -8,13 +8,17 @@ throughput and reduce API calls while maintaining responsiveness.
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import time
 from collections import defaultdict
-from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from performance_optimization.src.ultimate_discord_intelligence_bot.step_result import StepResult
+
+
+if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable
 
 
 @dataclass
@@ -281,7 +285,7 @@ class MessageBatcher:
                 await asyncio.sleep(1.0)  # Check every second
 
                 async with self._batch_lock:
-                    current_time = time.time()
+                    time.time()
 
                     # Process expired batches
                     for guild_key in list(self._batches.keys()):
@@ -355,10 +359,8 @@ class MessageBatcher:
         # Cancel background task
         self._background_task.cancel()
 
-        try:
+        with contextlib.suppress(asyncio.CancelledError):
             await self._background_task
-        except asyncio.CancelledError:
-            pass
 
         # Flush all remaining batches
         await self.flush_all_batches()

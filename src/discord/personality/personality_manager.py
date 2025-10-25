@@ -9,12 +9,15 @@ from __future__ import annotations
 
 import logging
 from dataclasses import asdict, dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
-from ultimate_discord_intelligence_bot.services.memory_service import MemoryService
 from ultimate_discord_intelligence_bot.step_result import StepResult
+
+
+if TYPE_CHECKING:
+    from ultimate_discord_intelligence_bot.services.memory_service import MemoryService
 
 
 logger = logging.getLogger(__name__)

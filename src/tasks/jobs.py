@@ -20,13 +20,13 @@ logger = logging.getLogger(__name__)
 
 async def process_video_async(ctx: dict[str, Any], video_url: str, tenant: str, workspace: str) -> dict[str, Any]:
     """Background job to process video content asynchronously.
-    
+
     Args:
         ctx: Arq context
         video_url: URL of video to process
         tenant: Tenant identifier
         workspace: Workspace identifier
-        
+
     Returns:
         dict with processing results
     """
@@ -65,13 +65,13 @@ async def process_video_async(ctx: dict[str, Any], video_url: str, tenant: str, 
 
 async def batch_analysis_async(ctx: dict[str, Any], content_items: list[str], tenant: str, workspace: str) -> dict[str, Any]:
     """Background job to analyze multiple content items in batch.
-    
+
     Args:
         ctx: Arq context
         content_items: List of content URLs or text to analyze
         tenant: Tenant identifier
         workspace: Workspace identifier
-        
+
     Returns:
         dict with batch analysis results
     """
@@ -105,10 +105,10 @@ async def batch_analysis_async(ctx: dict[str, Any], content_items: list[str], te
 
 async def scheduled_monitoring_async(ctx: dict[str, Any]) -> dict[str, Any]:
     """Scheduled job to monitor system health and content sources.
-    
+
     Args:
         ctx: Arq context
-        
+
     Returns:
         dict with monitoring results
     """
@@ -148,5 +148,5 @@ ARQ_FUNCTIONS = [
 # Scheduled cron jobs
 ARQ_CRON_JOBS = [
     # Run monitoring every 5 minutes
-    cron(scheduled_monitoring_async, hour={i for i in range(24)}, minute={0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55}),
+    cron(scheduled_monitoring_async, hour=set(range(24)), minute={0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55}),
 ] if ARQ_AVAILABLE else []

@@ -323,7 +323,7 @@ class BiasDashboard:
                 "min_bias": min(bias_scores),
                 "average_leaning": sum(leanings) / len(leanings),
                 "trend_direction": self._calculate_trend_direction(trends),
-                "sources_analyzed": len(set(trend.source for trend in trends)),
+                "sources_analyzed": len({trend.source for trend in trends}),
             }
 
             return StepResult.ok(
@@ -387,7 +387,7 @@ class BiasDashboard:
                 return StepResult.ok(data={"report": "No data available for transparency report"})
 
             avg_bias = sum(trend.bias_score for trend in self.bias_history) / total_analyses
-            sources_analyzed = len(set(trend.source for trend in self.bias_history))
+            sources_analyzed = len({trend.source for trend in self.bias_history})
 
             # Calculate bias distribution
             low_bias = len([t for t in self.bias_history if t.bias_score < 0.3])
@@ -488,13 +488,13 @@ class BiasDashboard:
         <h1>Bias Analysis Transparency Report</h1>
         <p>Generated: {time.ctime(report_data["report_metadata"]["generated_at"])}</p>
     </div>
-    
+
     <div class="section">
         <h2>Report Metadata</h2>
         <div class="metric">Total Analyses: {report_data["report_metadata"]["total_analyses"]}</div>
         <div class="metric">Sources Analyzed: {report_data["report_metadata"]["sources_analyzed"]}</div>
     </div>
-    
+
     <div class="section">
         <h2>Bias Statistics</h2>
         <div class="metric">Average Bias Score: {report_data["bias_statistics"]["average_bias_score"]:.3f}</div>
@@ -503,13 +503,13 @@ class BiasDashboard:
         <div class="metric">Moderate Bias: {report_data["bias_statistics"]["bias_distribution"]["moderate_bias"]} ({report_data["bias_statistics"]["bias_percentages"]["moderate_bias_pct"]:.1f}%)</div>
         <div class="metric">High Bias: {report_data["bias_statistics"]["bias_distribution"]["high_bias"]} ({report_data["bias_statistics"]["bias_percentages"]["high_bias_pct"]:.1f}%)</div>
     </div>
-    
+
     <div class="section">
         <h2>Mitigation Efforts</h2>
         <div class="metric">Total Recommendations: {report_data["mitigation_efforts"]["total_recommendations"]}</div>
         <div class="metric">Comparative Analyses: {report_data["mitigation_efforts"]["comparative_analyses"]}</div>
     </div>
-    
+
     <div class="section">
         <h2>Transparency Commitments</h2>
 """

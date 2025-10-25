@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import logging
 import time
-from collections.abc import Callable
 from dataclasses import dataclass
 from enum import Enum
 from typing import TYPE_CHECKING, Any
@@ -18,6 +17,8 @@ from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from .service import OpenRouterService
 
 
@@ -111,10 +112,7 @@ class CircuitBreaker:
                 self._stats["requests_blocked"] += 1
                 return False
 
-        if self._state == CircuitState.HALF_OPEN:
-            return True
-
-        return False
+        return self._state == CircuitState.HALF_OPEN
 
     def _on_success(self) -> None:
         """Handle successful request."""
@@ -122,12 +120,11 @@ class CircuitBreaker:
         self._success_count += 1
         self._stats["successful_requests"] += 1
 
-        if self._state == CircuitState.HALF_OPEN:
-            if self._success_count >= self._config.success_threshold:
-                self._state = CircuitState.CLOSED
-                self._failure_count = 0
-                self._stats["circuit_closes"] += 1
-                log.info("Circuit breaker %s closed after successful recovery", self._name)
+        if self._state == CircuitState.HALF_OPEN and self._success_count >= self._config.success_threshold:
+            self._state = CircuitState.CLOSED
+            self._failure_count = 0
+            self._stats["circuit_closes"] += 1
+            log.info("Circuit breaker %s closed after successful recovery", self._name)
 
     def _on_failure(self) -> None:
         """Handle failed request."""
