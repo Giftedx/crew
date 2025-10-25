@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+
 
 try:
     import praw
@@ -12,8 +12,9 @@ except ImportError:
     PRAW_AVAILABLE = False
     praw = None  # type: ignore[assignment,misc]
 
-from ultimate_discord_intelligence_bot.step_result import ErrorCategory, ErrorContext, StepResult
+from ultimate_discord_intelligence_bot.step_result import ErrorCategory, StepResult
 from ultimate_discord_intelligence_bot.tools._base import BaseTool
+
 
 _logger = logging.getLogger(__name__)
 
@@ -38,7 +39,7 @@ class RedditAPITool(BaseTool[StepResult]):
         self.client_secret = client_secret
         self.user_agent = user_agent
         self.reddit = None
-        
+
         if PRAW_AVAILABLE and client_id and client_secret:
             self.reddit = praw.Reddit(
                 client_id=client_id,
@@ -61,7 +62,7 @@ class RedditAPITool(BaseTool[StepResult]):
                 context="Reddit API dependency missing",
                 error_category=ErrorCategory.DEPENDENCY,
             )
-        
+
         if not self.reddit:
             return self._handle_error(
                 ValueError("Reddit API credentials not configured"),
@@ -95,7 +96,7 @@ class RedditAPITool(BaseTool[StepResult]):
         """Fetch a Reddit post by URL."""
         try:
             submission = self.reddit.submission(url=url)
-            
+
             post_data = {
                 "id": submission.id,
                 "title": submission.title,
@@ -112,9 +113,9 @@ class RedditAPITool(BaseTool[StepResult]):
                 "is_video": submission.is_video,
                 "is_gallery": submission.is_gallery,
             }
-            
+
             return StepResult.ok(data={"post": post_data})
-            
+
         except Exception as e:
             return self._handle_error(
                 e,
@@ -127,7 +128,7 @@ class RedditAPITool(BaseTool[StepResult]):
         try:
             subreddit = self.reddit.subreddit(subreddit_name)
             posts = []
-            
+
             for submission in subreddit.hot(limit=limit):
                 posts.append({
                     "id": submission.id,
@@ -138,9 +139,9 @@ class RedditAPITool(BaseTool[StepResult]):
                     "url": submission.url,
                     "permalink": submission.permalink,
                 })
-            
+
             return StepResult.ok(data={"subreddit": subreddit_name, "posts": posts})
-            
+
         except Exception as e:
             return self._handle_error(
                 e,
@@ -152,7 +153,7 @@ class RedditAPITool(BaseTool[StepResult]):
         """Search across Reddit."""
         try:
             results = []
-            
+
             for submission in self.reddit.subreddit("all").search(query, limit=limit):
                 results.append({
                     "id": submission.id,
@@ -161,9 +162,9 @@ class RedditAPITool(BaseTool[StepResult]):
                     "score": submission.score,
                     "url": submission.url,
                 })
-            
+
             return StepResult.ok(data={"query": query, "results": results})
-            
+
         except Exception as e:
             return self._handle_error(
                 e,
@@ -176,7 +177,7 @@ class RedditAPITool(BaseTool[StepResult]):
         try:
             user = self.reddit.redditor(username)
             posts = []
-            
+
             for submission in user.submissions.new(limit=limit):
                 posts.append({
                     "id": submission.id,
@@ -185,9 +186,9 @@ class RedditAPITool(BaseTool[StepResult]):
                     "score": submission.score,
                     "url": submission.url,
                 })
-            
+
             return StepResult.ok(data={"username": username, "posts": posts})
-            
+
         except Exception as e:
             return self._handle_error(
                 e,

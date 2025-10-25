@@ -1,7 +1,9 @@
 """Tests for Reddit API tool."""
 
-import pytest
 from unittest.mock import Mock, patch
+
+import pytest
+
 
 try:
     import praw
@@ -48,7 +50,7 @@ class TestRedditAPITool:
         mock_submission.is_self = True
         mock_submission.is_video = False
         mock_submission.is_gallery = False
-        
+
         with patch.object(tool.reddit, 'submission', return_value=mock_submission):
             result = tool._run(
                 url="https://reddit.com/r/test/comments/test",
@@ -56,7 +58,7 @@ class TestRedditAPITool:
                 workspace="test",
                 action="fetch_post"
             )
-            
+
             assert result.success
             assert result.data["post"]["title"] == "Test Post"
 
@@ -73,10 +75,10 @@ class TestRedditAPITool:
         mock_submission.num_comments = 10
         mock_submission.url = "https://example.com"
         mock_submission.permalink = "/r/test/comments/test"
-        
+
         mock_subreddit = Mock()
         mock_subreddit.hot.return_value = [mock_submission]
-        
+
         with patch.object(tool.reddit, 'subreddit', return_value=mock_subreddit):
             result = tool._run(
                 url="programming",
@@ -85,20 +87,20 @@ class TestRedditAPITool:
                 action="fetch_subreddit",
                 limit=5
             )
-            
+
             assert result.success
             assert len(result.data["posts"]) == 1
 
     def test_missing_credentials(self):
         """Test handling of missing credentials."""
         from src.ultimate_discord_intelligence_bot.tools.acquisition.reddit_api_tool import RedditAPITool
-        
+
         tool = RedditAPITool()
         result = tool._run(
             url="test",
             tenant="test",
             workspace="test"
         )
-        
+
         assert not result.success
         assert "credentials" in result.error.lower()

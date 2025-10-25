@@ -2,6 +2,7 @@
 
 import pytest
 
+
 try:
     from neo4j import GraphDatabase
     NEO4J_AVAILABLE = True
@@ -50,7 +51,7 @@ class TestNeo4jKGStore:
             name="Query Test",
             attrs={"role": "developer"}
         )
-        
+
         # Query nodes
         nodes = store.query_nodes("test", type="Person")
         assert len(nodes) > 0
@@ -63,7 +64,7 @@ class TestNeo4jKGStore:
             type="Organization",
             name="Test Org"
         )
-        
+
         node = store.get_node(node_id)
         assert node is not None
         assert node.name == "Test Org"
@@ -74,7 +75,7 @@ class TestNeo4jKGStore:
         # Create two nodes
         src_id = store.add_node("test", "Person", "Alice")
         dst_id = store.add_node("test", "Person", "Bob")
-        
+
         # Add edge
         edge_id = store.add_edge(
             src_id=src_id,
@@ -90,7 +91,7 @@ class TestNeo4jKGStore:
         src_id = store.add_node("test", "Person", "Charlie")
         dst_id = store.add_node("test", "Person", "David")
         store.add_edge(src_id, dst_id, "WORKS_WITH")
-        
+
         # Query edges
         edges = store.query_edges(src_id=src_id)
         assert len(edges) > 0
@@ -102,11 +103,11 @@ class TestNeo4jKGStore:
         center_id = store.add_node("test", "Person", "Center")
         neighbor1_id = store.add_node("test", "Person", "Neighbor1")
         neighbor2_id = store.add_node("test", "Person", "Neighbor2")
-        
+
         # Add edges
         store.add_edge(center_id, neighbor1_id, "CONNECTED")
         store.add_edge(center_id, neighbor2_id, "CONNECTED")
-        
+
         # Find neighbors
         neighbors = list(store.neighbors(center_id, depth=1))
         assert len(neighbors) == 2
@@ -117,7 +118,7 @@ class TestNeo4jKGStore:
         """Test custom Cypher query."""
         # Add test data
         store.add_node("test", "Entity", "TestEntity")
-        
+
         # Execute Cypher query
         result = store.cypher_query(
             "MATCH (n:Node {tenant: $tenant}) RETURN count(n) as count",
@@ -132,7 +133,7 @@ class TestNeo4jKGStore:
         center_id = store.add_node("test", "Person", "Center")
         neighbor_id = store.add_node("test", "Person", "Neighbor")
         store.add_edge(center_id, neighbor_id, "RELATES")
-        
+
         # Get graph
         graph = store.get_relationship_graph(center_id, max_depth=1)
         assert "nodes" in graph
@@ -143,19 +144,19 @@ class TestNeo4jKGStore:
     def test_neighbors_depth_validation(self, store):
         """Test that neighbors() validates depth parameter to prevent injection."""
         center_id = store.add_node("test", "Person", "TestPerson")
-        
+
         # Test invalid depth (too large)
         with pytest.raises(ValueError, match="Invalid depth: must be an integer between 1 and 10"):
             list(store.neighbors(center_id, depth=100))
-        
+
         # Test invalid depth (negative)
         with pytest.raises(ValueError, match="Invalid depth: must be an integer between 1 and 10"):
             list(store.neighbors(center_id, depth=-1))
-        
+
         # Test invalid depth (zero)
         with pytest.raises(ValueError, match="Invalid depth: must be an integer between 1 and 10"):
             list(store.neighbors(center_id, depth=0))
-        
+
         # Test valid depth (should not raise)
         neighbors = list(store.neighbors(center_id, depth=1))
         assert isinstance(neighbors, list)
@@ -163,19 +164,19 @@ class TestNeo4jKGStore:
     def test_relationship_graph_depth_validation(self, store):
         """Test that get_relationship_graph() validates max_depth to prevent injection."""
         center_id = store.add_node("test", "Person", "TestPerson")
-        
+
         # Test invalid max_depth (too large)
         with pytest.raises(ValueError, match="Invalid max_depth: must be an integer between 1 and 10"):
             store.get_relationship_graph(center_id, max_depth=100)
-        
+
         # Test invalid max_depth (negative)
         with pytest.raises(ValueError, match="Invalid max_depth: must be an integer between 1 and 10"):
             store.get_relationship_graph(center_id, max_depth=-1)
-        
+
         # Test invalid max_depth (zero)
         with pytest.raises(ValueError, match="Invalid max_depth: must be an integer between 1 and 10"):
             store.get_relationship_graph(center_id, max_depth=0)
-        
+
         # Test valid max_depth (should not raise)
         graph = store.get_relationship_graph(center_id, max_depth=2)
         assert isinstance(graph, dict)

@@ -47,15 +47,15 @@ class AcquisitionAgents:
         from crewai import Agent
 
         tools = [
-                MultiPlatformDownloadTool(),
-                YtDlpDownloadTool(),
-                DiscordDownloadTool(),
-                InstagramDownloadTool(),
-                TikTokDownloadTool(),
-                TwitchDownloadTool(),
-                TwitterDownloadTool(),
-                RedditDownloadTool(),
-                KickDownloadTool(),
+            MultiPlatformDownloadTool(),
+            YtDlpDownloadTool(),
+            DiscordDownloadTool(),
+            InstagramDownloadTool(),
+            TikTokDownloadTool(),
+            TwitchDownloadTool(),
+            TwitterDownloadTool(),
+            RedditDownloadTool(),
+            KickDownloadTool(),
         ]
 
         # Add Playwright tool if enabled

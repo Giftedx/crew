@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+
 
 try:
     import tweepy
@@ -12,8 +12,9 @@ except ImportError:
     TWEEPY_AVAILABLE = False
     tweepy = None  # type: ignore[assignment,misc]
 
-from ultimate_discord_intelligence_bot.step_result import ErrorCategory, ErrorContext, StepResult
+from ultimate_discord_intelligence_bot.step_result import ErrorCategory, StepResult
 from ultimate_discord_intelligence_bot.tools._base import BaseTool
+
 
 _logger = logging.getLogger(__name__)
 
@@ -38,7 +39,7 @@ class TwitterAPITool(BaseTool[StepResult]):
         super().__init__()
         self.bearer_token = bearer_token
         self.api = None
-        
+
         if TWEEPY_AVAILABLE and bearer_token:
             # Use OAuth 2.0 Bearer Token for read-only access
             self.api = tweepy.Client(
@@ -65,7 +66,7 @@ class TwitterAPITool(BaseTool[StepResult]):
                 context="Twitter API dependency missing",
                 error_category=ErrorCategory.DEPENDENCY,
             )
-        
+
         if not self.api:
             return self._handle_error(
                 ValueError("Twitter API credentials not configured"),
@@ -103,7 +104,7 @@ class TwitterAPITool(BaseTool[StepResult]):
                 max_results=max_results,
                 tweet_fields=["created_at", "author_id", "public_metrics"],
             )
-            
+
             results = []
             if tweets.data:
                 for tweet in tweets.data:
@@ -118,9 +119,9 @@ class TwitterAPITool(BaseTool[StepResult]):
                             "reply_count": tweet.public_metrics.get("reply_count", 0),
                         } if tweet.public_metrics else {},
                     })
-            
+
             return StepResult.ok(data={"query": query, "results": results})
-            
+
         except Exception as e:
             return self._handle_error(
                 e,
@@ -135,14 +136,14 @@ class TwitterAPITool(BaseTool[StepResult]):
                 id=tweet_id,
                 tweet_fields=["created_at", "author_id", "public_metrics"],
             )
-            
+
             if not tweet.data:
                 return self._handle_error(
                     ValueError(f"Tweet not found: {tweet_id}"),
                     context="Tweet not found",
                     error_category=ErrorCategory.INPUT,
                 )
-            
+
             tweet_data = {
                 "id": tweet.data.id,
                 "text": tweet.data.text,
@@ -154,9 +155,9 @@ class TwitterAPITool(BaseTool[StepResult]):
                     "reply_count": tweet.data.public_metrics.get("reply_count", 0),
                 } if tweet.data.public_metrics else {},
             }
-            
+
             return StepResult.ok(data={"tweet": tweet_data})
-            
+
         except Exception as e:
             return self._handle_error(
                 e,
@@ -168,14 +169,14 @@ class TwitterAPITool(BaseTool[StepResult]):
         """Get a user's profile."""
         try:
             user = self.api.get_user(username=username)
-            
+
             if not user.data:
                 return self._handle_error(
                     ValueError(f"User not found: {username}"),
                     context="User not found",
                     error_category=ErrorCategory.INPUT,
                 )
-            
+
             user_data = {
                 "id": user.data.id,
                 "username": user.data.username,
@@ -185,9 +186,9 @@ class TwitterAPITool(BaseTool[StepResult]):
                 "following_count": user.data.public_metrics.get("following_count", 0) if user.data.public_metrics else 0,
                 "tweet_count": user.data.public_metrics.get("tweet_count", 0) if user.data.public_metrics else 0,
             }
-            
+
             return StepResult.ok(data={"user": user_data})
-            
+
         except Exception as e:
             return self._handle_error(
                 e,
@@ -205,7 +206,7 @@ class TwitterAPITool(BaseTool[StepResult]):
                 context="Trends endpoint not implemented",
                 error_category=ErrorCategory.FEATURE,
             )
-            
+
         except Exception as e:
             return self._handle_error(
                 e,

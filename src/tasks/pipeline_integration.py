@@ -5,9 +5,8 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from ultimate_discord_intelligence_bot.step_result import StepResult
-
 from src.tasks.queue_service import TaskQueueService
+
 
 logger = logging.getLogger(__name__)
 

@@ -11,7 +11,8 @@ from ultimate_discord_intelligence_bot.tools._base import BaseTool
 
 
 try:
-    from playwright.sync_api import Page, sync_playwright, TimeoutError as PlaywrightTimeoutError
+    from playwright.sync_api import Page, sync_playwright
+    from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
 
     PLAYWRIGHT_AVAILABLE = True
 except ImportError:
@@ -99,7 +100,7 @@ class PlaywrightAutomationTool(BaseTool[StepResult]):
 
         except PlaywrightTimeoutError as e:
             return StepResult.fail(
-                f"Timeout waiting for page to load: {str(e)}",
+                f"Timeout waiting for page to load: {e!s}",
                 error_category=ErrorCategory.TIMEOUT,
                 error_context=ErrorContext(
                     operation="navigation",
@@ -110,7 +111,7 @@ class PlaywrightAutomationTool(BaseTool[StepResult]):
 
         except Exception as e:
             return StepResult.fail(
-                f"Browser automation failed: {str(e)}",
+                f"Browser automation failed: {e!s}",
                 error_category=ErrorCategory.PROCESSING,
                 error_context=ErrorContext(
                     operation="browser_automation",
@@ -140,7 +141,7 @@ class PlaywrightAutomationTool(BaseTool[StepResult]):
                 )
         except Exception as e:
             return StepResult.fail(
-                f"URL parsing failed: {str(e)}",
+                f"URL parsing failed: {e!s}",
                 error_category=ErrorCategory.INVALID_INPUT,
                 error_context=ErrorContext(operation="validation", component="playwright_automation"),
             )
@@ -245,7 +246,7 @@ class PlaywrightAutomationTool(BaseTool[StepResult]):
 
         except Exception as e:
             return StepResult.fail(
-                f"Action execution failed: {str(e)}",
+                f"Action execution failed: {e!s}",
                 error_category=ErrorCategory.PROCESSING,
                 error_context=ErrorContext(
                     operation="action_execution",

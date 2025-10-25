@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from typing import Any
+
 
 try:
     from openai import OpenAI
@@ -38,15 +38,15 @@ class OpenAIModerationService:
             logger.warning("OpenAI not available, moderation disabled")
             self.client = None
             return
-        
+
         import os
         api_key = api_key or os.getenv("OPENAI_API_KEY")
-        
+
         if not api_key:
             logger.warning("No OpenAI API key provided, moderation disabled")
             self.client = None
             return
-        
+
         self.client = OpenAI(api_key=api_key)
 
     def check_content(self, text: str) -> ModerationResult:
@@ -66,14 +66,14 @@ class OpenAIModerationService:
                 category_scores={},
                 action="allow"
             )
-        
+
         try:
             response = self.client.moderations.create(input=text)
             result = response.results[0]
-            
+
             # Determine action based on flagged status
             action = "block" if result.flagged else "allow"
-            
+
             return ModerationResult(
                 flagged=result.flagged,
                 categories={
@@ -96,7 +96,7 @@ class OpenAIModerationService:
                 },
                 action=action
             )
-            
+
         except Exception as e:
             logger.error(f"OpenAI moderation check failed: {e}")
             # Fallback: allow content on API failure
@@ -127,14 +127,14 @@ class OpenAIModerationService:
                 )
                 for _ in texts
             ]
-        
+
         try:
             response = self.client.moderations.create(input=texts)
-            
+
             results = []
             for result in response.results:
                 action = "block" if result.flagged else "allow"
-                
+
                 results.append(ModerationResult(
                     flagged=result.flagged,
                     categories={
@@ -157,9 +157,9 @@ class OpenAIModerationService:
                     },
                     action=action
                 ))
-            
+
             return results
-            
+
         except Exception as e:
             logger.error(f"OpenAI batch moderation check failed: {e}")
             # Fallback: allow all content

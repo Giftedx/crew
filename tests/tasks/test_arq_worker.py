@@ -1,7 +1,9 @@
 """Tests for Arq worker and task queue."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
+
 import pytest
+
 
 try:
     from arq import ArqRedis
@@ -35,7 +37,7 @@ class TestArqWorker:
         with patch('src.tasks.worker.Worker') as mock_worker_class:
             mock_worker = AsyncMock()
             mock_worker_class.return_value = mock_worker
-            
+
             await worker.start()
             assert worker.worker is not None
 
@@ -55,7 +57,7 @@ class TestTaskQueueService:
         """Test service initialization."""
         assert service is not None
         assert service.redis_pool is None  # Not initialized yet
-        
+
         # Initialize service
         await service.initialize()
         # Service may be None if Redis unavailable, which is OK for tests
@@ -65,7 +67,7 @@ class TestTaskQueueService:
     async def test_enqueue_job(self, service):
         """Test job enqueueing."""
         await service.initialize()
-        
+
         if service.redis_pool:
             job_id = await service.enqueue("test_function", arg1="value1")
             # job_id may be None if Redis not running, which is OK for tests

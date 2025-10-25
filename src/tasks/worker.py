@@ -7,6 +7,7 @@ import logging
 import signal
 from typing import Any
 
+
 try:
     from arq import ArqRedis, Worker
     from arq.connections import RedisSettings
@@ -19,6 +20,7 @@ except ImportError:
 
 from src.tasks.arq_config import get_arq_settings
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -29,7 +31,7 @@ class ArqWorker:
         """Initialize Arq worker."""
         if not ARQ_AVAILABLE:
             raise ImportError("Arq not available. Install with: pip install arq")
-        
+
         self.settings = get_arq_settings()
         self.worker: Worker | None = None
         self.shutdown_event = asyncio.Event()
@@ -42,7 +44,7 @@ class ArqWorker:
 
         try:
             redis_settings = RedisSettings(**self.settings["redis_settings"])
-            
+
             # Create worker with job functions from jobs module
             self.worker = Worker(
                 functions=[],  # Will be populated from jobs.py
@@ -50,14 +52,14 @@ class ArqWorker:
                 max_jobs=self.settings["max_jobs"],
                 job_timeout=self.settings["timeout"],
             )
-            
+
             # Setup signal handlers for graceful shutdown
             signal.signal(signal.SIGTERM, self._handle_shutdown)
             signal.signal(signal.SIGINT, self._handle_shutdown)
-            
+
             logger.info("Starting Arq worker...")
             await self.worker.async_run()
-            
+
         except Exception as e:
             logger.error(f"Failed to start Arq worker: {e}")
             raise
@@ -81,7 +83,7 @@ class ArqWorker:
         """Get worker statistics."""
         if not self.worker:
             return {"status": "not_started"}
-        
+
         return {
             "status": "running",
             "max_jobs": self.settings["max_jobs"],

@@ -1,7 +1,9 @@
 """Tests for Twitter API tool."""
 
-import pytest
 from unittest.mock import Mock, patch
+
+import pytest
+
 
 try:
     import tweepy
@@ -38,10 +40,10 @@ class TestTwitterAPITool:
             "like_count": 50,
             "reply_count": 5,
         }
-        
+
         mock_response = Mock()
         mock_response.data = [mock_tweet]
-        
+
         with patch.object(tool.api, 'search_recent_tweets', return_value=mock_response):
             result = tool._run(
                 query="test query",
@@ -50,7 +52,7 @@ class TestTwitterAPITool:
                 action="search_tweets",
                 max_results=10
             )
-            
+
             assert result.success
             assert len(result.data["results"]) == 1
             assert result.data["results"][0]["text"] == "Test tweet"
@@ -69,10 +71,10 @@ class TestTwitterAPITool:
             "like_count": 50,
             "reply_count": 5,
         }
-        
+
         mock_response = Mock()
         mock_response.data = mock_tweet
-        
+
         with patch.object(tool.api, 'get_tweet', return_value=mock_response):
             result = tool._run(
                 query="123456",
@@ -80,20 +82,20 @@ class TestTwitterAPITool:
                 workspace="test",
                 action="get_tweet"
             )
-            
+
             assert result.success
             assert result.data["tweet"]["text"] == "Test tweet"
 
     def test_missing_credentials(self):
         """Test handling of missing credentials."""
         from src.ultimate_discord_intelligence_bot.tools.acquisition.twitter_api_tool import TwitterAPITool
-        
+
         tool = TwitterAPITool()
         result = tool._run(
             query="test",
             tenant="test",
             workspace="test"
         )
-        
+
         assert not result.success
         assert "credentials" in result.error.lower()

@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+
 try:
     from arq import ArqRedis, create_pool
     from arq.connections import RedisSettings
@@ -15,9 +16,9 @@ except ImportError:
     create_pool = None  # type: ignore[assignment,misc]
     RedisSettings = None  # type: ignore[assignment,misc]
 
-from ultimate_discord_intelligence_bot.step_result import StepResult
 
 from src.tasks.arq_config import get_arq_settings
+
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +32,7 @@ class TaskQueueService:
             logger.warning("Arq not available, task queue operations will be no-ops")
             self.redis_pool: ArqRedis | None = None
             return
-        
+
         self.settings = get_arq_settings()
         self.redis_pool: ArqRedis | None = None
 
@@ -39,7 +40,7 @@ class TaskQueueService:
         """Initialize Redis connection pool."""
         if not ARQ_AVAILABLE:
             return
-        
+
         try:
             redis_settings = RedisSettings(**self.settings["redis_settings"])
             self.redis_pool = await create_pool(redis_settings)
@@ -61,7 +62,7 @@ class TaskQueueService:
         if not self.redis_pool:
             logger.error("Task queue not initialized")
             return None
-        
+
         try:
             job = await self.redis_pool.enqueue_job(job_function, **kwargs)
             logger.info(f"Enqueued job: {job.job_id}")
@@ -81,7 +82,7 @@ class TaskQueueService:
         """
         if not self.redis_pool:
             return None
-        
+
         try:
             job = await self.redis_pool.get_job_result(job_id)
             if job:
@@ -107,7 +108,7 @@ class TaskQueueService:
         """
         if not self.redis_pool:
             return False
-        
+
         try:
             await self.redis_pool.abort_job(job_id)
             logger.info(f"Cancelled job: {job_id}")
@@ -127,7 +128,7 @@ class TaskQueueService:
         """
         if not self.redis_pool:
             return None
-        
+
         try:
             # Get original job info and retry
             job = await self.redis_pool.get_job_result(job_id)

@@ -1,7 +1,9 @@
 """Tests for Playwright Automation Tool."""
 
 from unittest.mock import MagicMock, patch
+
 import pytest
+
 
 try:
     from playwright.sync_api import Page
@@ -10,8 +12,8 @@ except ImportError:
     PLAYWRIGHT_AVAILABLE = False
     Page = None
 
-from ultimate_discord_intelligence_bot.tools.web.playwright_automation_tool import PlaywrightAutomationTool
 from ultimate_discord_intelligence_bot.step_result import ErrorCategory
+from ultimate_discord_intelligence_bot.tools.web.playwright_automation_tool import PlaywrightAutomationTool
 
 
 class TestPlaywrightAutomationTool:
@@ -42,7 +44,7 @@ class TestPlaywrightAutomationTool:
             "https://example.com/path",
             "https://example.com:8080/path?query=value",
         ]
-        
+
         for url in valid_urls:
             result = tool._validate_inputs(url=url, action="screenshot", selector=None)
             assert result is None, f"Valid URL rejected: {url}"
@@ -55,7 +57,7 @@ class TestPlaywrightAutomationTool:
             "//example.com",  # Missing scheme
             "",  # Empty
         ]
-        
+
         for url in invalid_urls:
             result = tool._validate_inputs(url=url, action="screenshot", selector=None)
             assert result is not None, f"Invalid URL accepted: {url}"
@@ -66,7 +68,7 @@ class TestPlaywrightAutomationTool:
         """Test action type validation."""
         valid_actions = ["screenshot", "content", "wait_for_selector", "click", "fill"]
         invalid_actions = ["invalid", "screeenshot", "contentt", ""]
-        
+
         for action in valid_actions:
             result = tool._validate_inputs(url=sample_url, action=action, selector=None)
             if action in ["wait_for_selector", "click", "fill"]:
@@ -74,7 +76,7 @@ class TestPlaywrightAutomationTool:
                 assert result is not None
             else:
                 assert result is None, f"Valid action rejected: {action}"
-        
+
         for action in invalid_actions:
             result = tool._validate_inputs(url=sample_url, action=action, selector=None)
             assert result is not None, f"Invalid action accepted: {action}"
@@ -82,7 +84,7 @@ class TestPlaywrightAutomationTool:
     def test_validate_selector_required(self, tool, sample_url):
         """Test that selector is required for certain actions."""
         actions_requiring_selector = ["wait_for_selector", "click", "fill"]
-        
+
         for action in actions_requiring_selector:
             result = tool._validate_inputs(url=sample_url, action=action, selector=None)
             assert result is not None
@@ -109,12 +111,12 @@ class TestPlaywrightAutomationTool:
             mock_page.screenshot.return_value = b"fake_screenshot_data"
             mock_page.set_default_timeout.return_value = None
             mock_page.goto.return_value = None
-            
+
             mock_playwright.return_value.__enter__ = MagicMock(return_value=MagicMock())
             mock_playwright.return_value.__enter__().chromium.launch.return_value = mock_browser
             mock_browser.new_page.return_value = mock_page
             mock_browser.close.return_value = None
-            
+
             result = tool._run(
                 url=sample_url,
                 action="screenshot",
@@ -122,13 +124,13 @@ class TestPlaywrightAutomationTool:
                 workspace="test",
                 wait_timeout=30000
             )
-            
+
             assert result.success
             assert "screenshot" in result.data
             assert result.data["url"] == sample_url
             assert result.data["title"] == "Test Page"
 
-    @pytest.mark.skipif(not PLAYWRIGHT_AVAILABLE, reason="Playwright not available")  
+    @pytest.mark.skipif(not PLAYWRIGHT_AVAILABLE, reason="Playwright not available")
     def test_content_action(self, tool, sample_url):
         """Test content extraction action."""
         with patch('ultimate_discord_intelligence_bot.tools.web.playwright_automation_tool.sync_playwright') as mock_playwright:
@@ -140,19 +142,19 @@ class TestPlaywrightAutomationTool:
             mock_page.inner_text.return_value = "Test Content"
             mock_page.set_default_timeout.return_value = None
             mock_page.goto.return_value = None
-            
+
             mock_playwright.return_value.__enter__ = MagicMock(return_value=MagicMock())
             mock_playwright.return_value.__enter__().chromium.launch.return_value = mock_browser
             mock_browser.new_page.return_value = mock_page
             mock_browser.close.return_value = None
-            
+
             result = tool._run(
                 url=sample_url,
                 action="content",
                 tenant="test",
                 workspace="test"
             )
-            
+
             assert result.success
             assert "html" in result.data
             assert "text" in result.data

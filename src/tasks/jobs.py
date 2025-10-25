@@ -6,6 +6,7 @@ import asyncio
 import logging
 from typing import Any
 
+
 try:
     from arq import cron
     ARQ_AVAILABLE = True
@@ -13,7 +14,6 @@ except ImportError:
     ARQ_AVAILABLE = False
     cron = None  # type: ignore[assignment,misc]
 
-from ultimate_discord_intelligence_bot.step_result import StepResult
 
 logger = logging.getLogger(__name__)
 
@@ -32,13 +32,13 @@ async def process_video_async(ctx: dict[str, Any], video_url: str, tenant: str, 
     """
     try:
         logger.info(f"Processing video: {video_url} for tenant: {tenant}")
-        
+
         # Import here to avoid circular dependencies
         from ultimate_discord_intelligence_bot.tools import MultiPlatformDownloadTool
-        
+
         tool = MultiPlatformDownloadTool()
         result = tool._run(url=video_url, tenant=tenant, workspace=workspace)
-        
+
         if result.success:
             return {
                 "status": "success",
@@ -53,7 +53,7 @@ async def process_video_async(ctx: dict[str, Any], video_url: str, tenant: str, 
                 "error": result.error,
                 "url": video_url,
             }
-            
+
     except Exception as e:
         logger.error(f"Video processing failed: {e}")
         return {
@@ -77,7 +77,7 @@ async def batch_analysis_async(ctx: dict[str, Any], content_items: list[str], te
     """
     try:
         logger.info(f"Batch analyzing {len(content_items)} items for tenant: {tenant}")
-        
+
         results = []
         for item in content_items:
             # Simulate analysis - replace with actual analysis tool
@@ -86,7 +86,7 @@ async def batch_analysis_async(ctx: dict[str, Any], content_items: list[str], te
                 "item": item,
                 "status": "analyzed",
             })
-        
+
         return {
             "status": "success",
             "processed_count": len(results),
@@ -94,7 +94,7 @@ async def batch_analysis_async(ctx: dict[str, Any], content_items: list[str], te
             "tenant": tenant,
             "workspace": workspace,
         }
-        
+
     except Exception as e:
         logger.error(f"Batch analysis failed: {e}")
         return {
@@ -114,7 +114,7 @@ async def scheduled_monitoring_async(ctx: dict[str, Any]) -> dict[str, Any]:
     """
     try:
         logger.info("Running scheduled monitoring check")
-        
+
         # Simulate monitoring checks
         checks = {
             "timestamp": "2024-01-01T00:00:00Z",
@@ -124,12 +124,12 @@ async def scheduled_monitoring_async(ctx: dict[str, Any]) -> dict[str, Any]:
                 "qdrant": "healthy",
             },
         }
-        
+
         return {
             "status": "success",
             "checks": checks,
         }
-        
+
     except Exception as e:
         logger.error(f"Scheduled monitoring failed: {e}")
         return {

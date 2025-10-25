@@ -1,7 +1,9 @@
 """Tests for OpenAI moderation service."""
 
 from unittest.mock import MagicMock, patch
+
 import pytest
+
 
 try:
     from openai import OpenAI
@@ -36,10 +38,10 @@ class TestOpenAIModerationService:
         mock_result.category_scores.hate = 0.95
         mock_result.category_scores.violence = 0.1
         mock_response.results = [mock_result]
-        
+
         with patch.object(service.client.moderations, 'create', return_value=mock_response):
             result = service.check_content("hateful content")
-            
+
             assert result.flagged is True
             assert result.action == "block"
             assert result.categories["hate"] is True
@@ -53,21 +55,21 @@ class TestOpenAIModerationService:
         mock_result.categories.hate = False
         mock_result.category_scores.hate = 0.1
         mock_response.results = [mock_result]
-        
+
         with patch.object(service.client.moderations, 'create', return_value=mock_response):
             result = service.check_content("safe content")
-            
+
             assert result.flagged is False
             assert result.action == "allow"
 
     def test_check_content_fallback(self):
         """Test content check fallback when OpenAI unavailable."""
         from src.security.openai_moderation import OpenAIModerationService
-        
+
         # Service without OpenAI client
         service = OpenAIModerationService(api_key=None)
         result = service.check_content("test content")
-        
+
         # Should allow content on fallback
         assert result.flagged is False
         assert result.action == "allow"
@@ -80,17 +82,17 @@ class TestOpenAIModerationService:
         mock_result1.flagged = False
         mock_result1.categories.hate = False
         mock_result1.category_scores.hate = 0.1
-        
+
         mock_result2 = MagicMock()
         mock_result2.flagged = True
         mock_result2.categories.violence = True
         mock_result2.category_scores.violence = 0.9
-        
+
         mock_response.results = [mock_result1, mock_result2]
-        
+
         with patch.object(service.client.moderations, 'create', return_value=mock_response):
             results = service.check_batch(["safe content", "violent content"])
-            
+
             assert len(results) == 2
             assert results[0].flagged is False
             assert results[1].flagged is True

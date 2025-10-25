@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 from ultimate_discord_intelligence_bot.step_result import StepResult
+
 
 logger = logging.getLogger(__name__)
 
@@ -40,11 +40,11 @@ class ContentFilter:
             if trusted_source:
                 logger.debug("Skipping moderation check for trusted source")
                 return StepResult.ok(data={"content": content, "action": "allow"})
-            
+
             # Check with OpenAI moderation
             moderation = self._get_moderation_service()
             result = moderation.check_content(content)
-            
+
             if result.flagged:
                 logger.warning(f"Content flagged by moderation: {result.categories}")
                 return StepResult.fail(
@@ -55,13 +55,13 @@ class ContentFilter:
                         "action": "block"
                     }
                 )
-            
+
             return StepResult.ok(data={
                 "content": content,
                 "action": "allow",
                 "moderation_result": result.category_scores
             })
-            
+
         except Exception as e:
             logger.error(f"Content filter error: {e}")
             # Fail-safe: allow content on error
@@ -79,13 +79,13 @@ class ContentFilter:
         """
         if trusted_source:
             return [StepResult.ok(data={"content": c, "action": "allow"}) for c in contents]
-        
+
         try:
             moderation = self._get_moderation_service()
             results = moderation.check_batch(contents)
-            
+
             step_results = []
-            for content, result in zip(contents, results):
+            for content, result in zip(contents, results, strict=False):
                 if result.flagged:
                     step_results.append(StepResult.fail(
                         f"Content blocked: {list(result.categories.keys())}",
@@ -96,9 +96,9 @@ class ContentFilter:
                         "content": content,
                         "action": "allow"
                     }))
-            
+
             return step_results
-            
+
         except Exception as e:
             logger.error(f"Batch content filter error: {e}")
             # Fail-safe: allow all content
