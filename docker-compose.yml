@@ -114,6 +114,30 @@ services:
       - ultimate-discord-intelligence-network
     restart: unless-stopped
 
+  # Neo4j Graph Database
+  neo4j:
+    image: neo4j:5.14
+    container_name: ultimate-discord-intelligence-neo4j
+    ports:
+      - "7474:7474"  # HTTP
+      - "7687:7687"  # Bolt
+    volumes:
+      - neo4j_data:/data
+      - neo4j_logs:/logs
+    environment:
+      - NEO4J_AUTH=neo4j/${NEO4J_PASSWORD:-defaultpassword}
+      - NEO4J_PLUGINS=["apoc"]
+      - NEO4J_dbms_memory_heap_max__size=512m
+      - NEO4J_dbms_memory_pagecache_size=256m
+    networks:
+      - ultimate-discord-intelligence-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "cypher-shell", "-u", "neo4j", "-p", "${NEO4J_PASSWORD:-defaultpassword}", "RETURN 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
   # Ultimate Discord Intelligence Bot
   bot:
     build:
@@ -152,6 +176,37 @@ services:
       timeout: 10s
       retries: 3
 
+  # Arq Worker for Background Jobs
+  arq-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ultimate-discord-intelligence-arq-worker
+    command: python -m src.tasks.worker
+    volumes:
+      - ./logs:/app/logs
+      - ./data:/app/data
+      - ./config:/app/config
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-defaultpassword}
+      - REDIS_DB=0
+      - ARQ_MAX_JOBS=${ARQ_MAX_JOBS:-10}
+      - ARQ_TIMEOUT=${ARQ_TIMEOUT:-300}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    networks:
+      - ultimate-discord-intelligence-network
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "python", "-c", "import redis; r=redis.Redis(host='redis', port=6379, password='${REDIS_PASSWORD:-defaultpassword}'); r.ping()" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
   # Nginx Reverse Proxy
   nginx:
     image: nginx:alpine
@@ -179,6 +234,10 @@ volumes:
   prometheus_data:
     driver: local
   grafana_data:
+    driver: local
+  neo4j_data:
+    driver: local
+  neo4j_logs:
     driver: local
 
 networks:

@@ -39,6 +39,9 @@ dependencies = [
     
     # Vector Storage & Memory
     "qdrant-client>=1.7.0",
+    "llama-index>=0.10.0",
+    "llama-index-embeddings-openai>=0.1.0",
+    "llama-index-vector-stores-qdrant>=0.1.0",
     
     # Data Processing
     "pydantic>=2.0.0",
@@ -47,16 +50,26 @@ dependencies = [
     # HTTP & Async
     "aiohttp>=3.8.0",
     "httpx>=0.24.0",
+    "websockets>=12.0",  # WebSocket support
+    "sse-starlette>=1.8.0",  # Server-Sent Events
     
     # Content Processing
+    # Browser Automation
+    "playwright>=1.40.0",
     "yt-dlp>=2023.12.30",
     "beautifulsoup4>=4.12.0",
     "requests>=2.31.0",
+    "praw>=7.7.0",  # Reddit API
+    "tweepy>=4.14.0",  # Twitter/X API
     
     # Database & Storage
     "sqlalchemy>=2.0.0",
     "alembic>=1.12.0",
     "redis>=5.0.0",
+    "neo4j>=5.14.0",
+    
+    # Async Task Queue
+    "arq>=0.25.0",
     
     # Utilities
     "python-dotenv>=1.0.0",

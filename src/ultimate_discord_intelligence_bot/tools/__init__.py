@@ -21,6 +21,7 @@ MAPPING = {
     "TikTokEnhancedDownloadTool": ".acquisition.tiktok_enhanced_download_tool",
     "TranscriptIndexTool": ".acquisition.transcript_index_tool",
     "YtDlpDownloadTool": ".acquisition.yt_dlp_download_tool",
+    "PlaywrightAutomationTool": ".web.playwright_automation_tool",
     # Analysis tools
     "CharacterProfileTool": ".analysis.character_profile_tool",
     "ContentQualityAssessmentTool": ".analysis.content_quality_assessment_tool",

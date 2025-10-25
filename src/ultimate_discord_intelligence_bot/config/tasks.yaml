@@ -270,3 +270,37 @@ compute_interaction_rewards:
   human_input: false
   async_execution: false
   output_file: output/reward_analysis_{interaction_id}.json
+
+# Web Automation Tasks (Playwright)
+scrape_dynamic_content:
+  description: >-
+    Use PlaywrightAutomationTool to scrape dynamic JavaScript-rendered content from {url}.
+    Navigate to the URL, wait for content to load, and extract HTML and text content from the page.
+    Handle SPAs, lazy-loaded content, and JavaScript-rendered elements that traditional scrapers cannot access.
+  expected_output: Extracted content including HTML, text, and page metadata (title, URL).
+  agent: acquisition_specialist
+  human_input: false
+  async_execution: true
+  output_file: output/scraped_content_{url_hash}.json
+
+monitor_live_stream:
+  description: >-
+    Use PlaywrightAutomationTool to monitor live stream metadata and status from {url}.
+    Capture screenshots at intervals, extract viewer counts, chat messages, and stream status.
+    Detect when streams go live or end. Useful for real-time monitoring of YouTube, Twitch, or other streaming platforms.
+  expected_output: Stream status report with screenshots, metadata, and monitoring interval data.
+  agent: acquisition_specialist
+  human_input: false
+  async_execution: true
+  output_file: output/stream_monitor_{stream_id}_{timestamp}.json
+
+capture_social_media_post:
+  description: >-
+    Use PlaywrightAutomationTool to capture social media post content from {url}.
+    Extract post text, images, engagement metrics, and metadata from dynamic social media pages.
+    Handle authenticated content and JavaScript-rendered posts that require browser execution.
+  expected_output: Social media post content with images, text, engagement metrics, and metadata.
+  agent: acquisition_specialist
+  human_input: false
+  async_execution: true
+  output_file: output/social_post_{post_id}.json

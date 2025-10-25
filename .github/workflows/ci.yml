@@ -163,6 +163,11 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.lock
 
+      - name: Install Playwright browsers
+        run: |
+          pip install playwright
+          playwright install chromium
+
       - name: Run integration tests
         env:
           POSTGRES_URL: postgresql://postgres:postgres@localhost:5432/test_db
