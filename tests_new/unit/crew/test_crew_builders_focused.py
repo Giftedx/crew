@@ -3,7 +3,6 @@
 from unittest.mock import Mock, patch
 
 from crewai import Task
-
 from src.ultimate_discord_intelligence_bot.orchestrator import crew_builders_focused
 
 

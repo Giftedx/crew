@@ -6,9 +6,9 @@ Provides intelligent analysis and optimization for viral moment detection.
 import logging
 from datetime import datetime
 
-from crewai import Agent, Crew, Task  # type: ignore[import-not-found]
 from pydantic import BaseModel
 
+from crewai import Agent, Crew, Task  # type: ignore[import-not-found]
 from ultimate_discord_intelligence_bot.creator_ops.config import CreatorOpsConfig
 from ultimate_discord_intelligence_bot.creator_ops.features.clip_radar_models import (
     ClipCandidate,

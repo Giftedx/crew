@@ -17,7 +17,6 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 try:
     from crewai import Task
-
     from ultimate_discord_intelligence_bot.crew import (
         UltimateDiscordIntelligenceBotCrew,
     )

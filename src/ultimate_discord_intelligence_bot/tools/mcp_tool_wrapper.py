@@ -10,8 +10,9 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from crewai import BaseTool
 from pydantic import BaseModel, Field
+
+from crewai import BaseTool
 
 from ..services.mcp_client import MCPClient
 from ..step_result import StepResult

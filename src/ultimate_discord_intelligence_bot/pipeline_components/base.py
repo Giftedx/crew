@@ -11,7 +11,6 @@ from importlib import import_module
 from typing import TYPE_CHECKING, Any, cast
 
 from core.settings import get_settings
-
 from obs import metrics
 from security.rate_limit import TokenBucket
 from ultimate_discord_intelligence_bot.tenancy import current_tenant, with_tenant

@@ -5,9 +5,9 @@ Provides intelligent content analysis and recommendations for creators.
 
 import logging
 
-from crewai import Agent, Crew, Task  # type: ignore[import-not-found]
 from pydantic import BaseModel
 
+from crewai import Agent, Crew, Task  # type: ignore[import-not-found]
 from ultimate_discord_intelligence_bot.creator_ops.config import CreatorOpsConfig
 from ultimate_discord_intelligence_bot.creator_ops.features.intelligence_models import (
     EpisodeIntelligence,

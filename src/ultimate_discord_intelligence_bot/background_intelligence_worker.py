@@ -37,7 +37,6 @@ from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from crewai import CrewOutput
-
     from ultimate_discord_intelligence_bot.autonomous_orchestrator import (
         AutonomousIntelligenceOrchestrator,
     )

@@ -10,7 +10,6 @@ import logging
 from typing import Any
 
 from crewai import Crew, Process, Task
-
 from ultimate_discord_intelligence_bot.settings import Settings
 
 

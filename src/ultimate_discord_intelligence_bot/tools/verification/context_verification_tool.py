@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TypedDict, ClassVar
+from typing import ClassVar, TypedDict
 
 from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 from ultimate_discord_intelligence_bot.step_result import StepResult

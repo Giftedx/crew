@@ -7,7 +7,7 @@ import logging
 import os
 from pathlib import Path
 from threading import Lock
-from typing import TypedDict, ClassVar
+from typing import ClassVar, TypedDict
 
 from core.time import default_utc_now
 from ultimate_discord_intelligence_bot.obs.metrics import get_metrics

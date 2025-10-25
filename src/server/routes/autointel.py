@@ -3,9 +3,8 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from fastapi.responses import JSONResponse
-
 from fastapi import Body, FastAPI, HTTPException, status
+from fastapi.responses import JSONResponse
 
 
 logger = logging.getLogger(__name__)
