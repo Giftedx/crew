@@ -8,11 +8,11 @@ from __future__ import annotations
 
 import json
 import logging
-from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
+
 try:
-    from neo4j import GraphDatabase, Driver
+    from neo4j import Driver, GraphDatabase
     NEO4J_AVAILABLE = True
 except ImportError:
     NEO4J_AVAILABLE = False
@@ -38,7 +38,7 @@ class Neo4jKGStore:
     ):
         if not NEO4J_AVAILABLE:
             raise ImportError("Neo4j driver not available. Install with: pip install neo4j")
-        
+
         self.driver: Driver = GraphDatabase.driver(uri, auth=(user, password))
         self._ensure_constraints()
 
@@ -79,7 +79,7 @@ class Neo4jKGStore:
     ) -> int:
         """Add a node to the graph."""
         attrs_json = json.dumps(attrs or {})
-        
+
         with self.driver.session() as session:
             result = session.run(
                 """
@@ -108,21 +108,21 @@ class Neo4jKGStore:
         """Query nodes matching criteria."""
         conditions = ["n.tenant = $tenant"]
         params: dict[str, Any] = {"tenant": tenant}
-        
+
         if type:
             conditions.append("n.type = $type")
             params["type"] = type
         if name:
             conditions.append("n.name = $name")
             params["name"] = name
-        
+
         query = f"""
         MATCH (n:Node)
         WHERE {' AND '.join(conditions)}
-        RETURN id(n) as id, n.tenant as tenant, n.type as type, 
+        RETURN id(n) as id, n.tenant as tenant, n.type as type,
                n.name as name, n.attrs_json as attrs_json, n.created_at as created_at
         """
-        
+
         with self.driver.session() as session:
             result = session.run(query, **params)
             return [
@@ -152,7 +152,7 @@ class Neo4jKGStore:
             record = result.single()
             if not record:
                 return None
-            
+
             return KGNode(
                 id=record["id"],
                 tenant=record["tenant"],
@@ -178,8 +178,8 @@ class Neo4jKGStore:
                 """
                 MATCH (src:Node), (dst:Node)
                 WHERE id(src) = $src_id AND id(dst) = $dst_id
-                CREATE (src)-[r:RELATES {type: $type, weight: $weight, 
-                                         provenance_id: $provenance_id, 
+                CREATE (src)-[r:RELATES {type: $type, weight: $weight,
+                                         provenance_id: $provenance_id,
                                          created_at: $created_at}]->(dst)
                 RETURN id(r) as edge_id
                 """,
@@ -204,7 +204,7 @@ class Neo4jKGStore:
         query = "MATCH (src:Node)-[r:RELATES]->(dst:Node)"
         conditions: list[str] = []
         params: dict[str, Any] = {}
-        
+
         if src_id is not None:
             conditions.append("id(src) = $src_id")
             params["src_id"] = src_id
@@ -214,16 +214,16 @@ class Neo4jKGStore:
         if type is not None:
             conditions.append("r.type = $type")
             params["type"] = type
-        
+
         if conditions:
             query += " WHERE " + " AND ".join(conditions)
-        
+
         query += """
         RETURN id(r) as id, id(src) as src_id, id(dst) as dst_id,
-               r.type as type, r.weight as weight, 
+               r.type as type, r.weight as weight,
                r.provenance_id as provenance_id, r.created_at as created_at
         """
-        
+
         with self.driver.session() as session:
             result = session.run(query, **params)
             return [
@@ -241,6 +241,10 @@ class Neo4jKGStore:
 
     def neighbors(self, node_id: int, depth: int = 1) -> Iterable[int]:
         """Return node IDs reachable within depth hops."""
+        # Validate depth to prevent injection (Cypher variable-length patterns cannot be parameterized)
+        if not isinstance(depth, int) or depth < 1 or depth > 10:
+            raise ValueError(f"Invalid depth: must be an integer between 1 and 10, got {depth}")
+
         with self.driver.session() as session:
             result = session.run(
                 """
@@ -260,6 +264,10 @@ class Neo4jKGStore:
 
     def get_relationship_graph(self, node_id: int, max_depth: int = 2) -> dict[str, Any]:
         """Get a subgraph centered on a node for visualization."""
+        # Validate max_depth to prevent injection (Cypher variable-length patterns cannot be parameterized)
+        if not isinstance(max_depth, int) or max_depth < 1 or max_depth > 10:
+            raise ValueError(f"Invalid max_depth: must be an integer between 1 and 10, got {max_depth}")
+
         with self.driver.session() as session:
             result = session.run(
                 """
@@ -270,10 +278,10 @@ class Neo4jKGStore:
                 """ % max_depth,
                 node_id=node_id,
             )
-            
+
             nodes = set()
             edges = []
-            
+
             for record in result:
                 for node in record["nodes"]:
                     nodes.add((id(node), node["name"], node["type"]))
@@ -284,7 +292,7 @@ class Neo4jKGStore:
                         "type": edge.get("type", "RELATES"),
                         "weight": edge.get("weight", 1.0),
                     })
-            
+
             return {
                 "nodes": [{"id": n[0], "name": n[1], "type": n[2]} for n in nodes],
                 "edges": edges,
