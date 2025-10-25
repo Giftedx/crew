@@ -1167,3 +1167,97 @@ agent = Agent(
 ```
 
 For more detailed information about specific tools, refer to their individual documentation files in the `src/ultimate_discord_intelligence_bot/tools/` directory.
+
+---
+
+## Web Automation Tools
+
+### Playwright Automation Tool
+
+**File:** `src/ultimate_discord_intelligence_bot/tools/web/playwright_automation_tool.py`
+
+Automates browser interactions using Playwright for dynamic content scraping. Supports JavaScript-rendered content, element interaction, and multi-page workflows.
+
+**Features:**
+
+- Screenshot capture (full page or element-specific)
+- Content extraction (HTML and text)
+- Element interaction (click, fill, wait for selector)
+- Dynamic content scraping
+- Graceful degradation when Playwright unavailable
+
+**Actions:**
+
+- `screenshot`: Capture page or element screenshot
+- `content`: Extract HTML and text content
+- `wait_for_selector`: Wait for element to appear
+- `click`: Click an element by selector
+- `fill`: Fill form fields with text
+
+**Configuration:**
+
+- `ENABLE_PLAYWRIGHT_AUTOMATION`: Enable/disable browser automation (default: false)
+- `PLAYWRIGHT_TIMEOUT_MS`: Browser timeout in milliseconds (default: 30000)
+- `PLAYWRIGHT_HEADLESS`: Run browser in headless mode (default: true)
+
+**Installation:**
+
+```bash
+pip install playwright
+playwright install chromium
+```
+
+**Usage:**
+
+```python
+from ultimate_discord_intelligence_bot.tools.web import PlaywrightAutomationTool
+
+tool = PlaywrightAutomationTool()
+
+# Capture screenshot
+result = tool._run(
+    url="https://example.com",
+    action="screenshot",
+    tenant="test",
+    workspace="test"
+)
+
+# Extract content
+result = tool._run(
+    url="https://example.com",
+    action="content",
+    tenant="test",
+    workspace="test"
+)
+
+# Click element
+result = tool._run(
+    url="https://example.com",
+    action="click",
+    selector="button#submit",
+    tenant="test",
+    workspace="test"
+)
+```
+
+**Error Handling:**
+
+- Returns StepResult with DEPENDENCY error when Playwright unavailable
+- Returns StepResult with INVALID_INPUT for malformed URLs or missing selectors
+- Returns StepResult with TIMEOUT for pages that exceed timeout threshold
+- Returns StepResult with PROCESSING error for general automation failures
+
+**Performance:**
+
+- Screenshot latency: < 5s for simple pages
+- Content extraction: < 3s for typical pages
+- Element interaction: < 2s per action
+
+**Security:**
+
+- Runs in headless mode by default
+- Sandboxed browser context
+- No JavaScript execution without explicit commands
+- Tenant-aware isolation
+
+For more detailed information about specific tools, refer to their individual documentation files in the `src/ultimate_discord_intelligence_bot/tools/` directory.

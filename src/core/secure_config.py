@@ -163,6 +163,7 @@ class SecureConfig(BaseSettings):
     # Security and privacy
     enable_pii_detection: bool = Field(default=True, env="ENABLE_PII_DETECTION")
     enable_content_moderation: bool = Field(default=True, env="ENABLE_CONTENT_MODERATION")
+    enable_playwright_automation: bool = Field(default=False, env="ENABLE_PLAYWRIGHT_AUTOMATION")
     enable_rate_limiting: bool = Field(default=True, env="ENABLE_RATE_LIMITING")
     enable_audit_logging: bool = Field(default=True, env="ENABLE_AUDIT_LOGGING")
 

@@ -28,6 +28,7 @@ from ultimate_discord_intelligence_bot.tools import (  # type: ignore[import-not
     TwitterDownloadTool,
     YtDlpDownloadTool,
 )
+from ultimate_discord_intelligence_bot.tools.web import PlaywrightAutomationTool  # type: ignore[import-not-found]
 
 
 # Initialize feature flags
@@ -45,11 +46,7 @@ class AcquisitionAgents:
         """Multi-platform content acquisition specialist."""
         from crewai import Agent
 
-        return Agent(
-            role="Multi-Platform Acquisition Specialist",
-            goal="Download and prepare content from any supported platform with quality optimization.",
-            backstory="Expert in content acquisition across platforms with focus on quality and metadata preservation.",
-            tools=[
+        tools = [
                 MultiPlatformDownloadTool(),
                 YtDlpDownloadTool(),
                 DiscordDownloadTool(),
@@ -59,7 +56,17 @@ class AcquisitionAgents:
                 TwitterDownloadTool(),
                 RedditDownloadTool(),
                 KickDownloadTool(),
-            ],
+        ]
+        
+        # Add Playwright tool if enabled
+        if self.flags.enable_playwright_automation:
+            tools.append(PlaywrightAutomationTool())
+        
+        return Agent(
+            role="Multi-Platform Acquisition Specialist",
+            goal="Download and prepare content from any supported platform with quality optimization.",
+            backstory="Expert in content acquisition across platforms with focus on quality and metadata preservation.",
+            tools=tools,
             verbose=True,
             allow_delegation=False,
         )
