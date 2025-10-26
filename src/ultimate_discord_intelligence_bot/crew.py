@@ -123,9 +123,7 @@ class UltimateDiscordIntelligenceBotCrew:
         self._after_kickoff: dict[str, Any] = {}
 
         # Minimal agent config footprint for validation tests
-        self.agents_config: dict[str, dict[str, Any]] = {
-            "default": {"date_format": "%Y-%m-%d", "timezone": "UTC"}
-        }
+        self.agents_config: dict[str, dict[str, Any]] = {"default": {"date_format": "%Y-%m-%d", "timezone": "UTC"}}
 
     async def _initialize_mcp_tools(self):
         """Initialize MCP tools and register them with agents."""
