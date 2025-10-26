@@ -105,7 +105,6 @@ class RequestBatcher:
 
             # Group requests by model (should all be the same for a batch)
             model = requests[0].model
-            requests[0].task_type
 
             # Create batch payload
             batch_payload = {

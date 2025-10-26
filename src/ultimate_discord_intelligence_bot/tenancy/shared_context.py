@@ -51,11 +51,8 @@ class SharedContext:
                 overflow = len(self._messages) - self.max_messages
                 del self._messages[0:overflow]
         # low-cardinality metrics: type only
-        try:
+        with contextlib.suppress(Exception):
             self._metrics.counter("agent_comms_messages_total", labels={"type": message.type}).inc()
-        except Exception:
-            # metrics are best-effort
-            pass
 
     def history(self, msg_type: MessageType | None = None) -> list[AgentMessage]:
         """Return a snapshot of messages, optionally filtered by type."""

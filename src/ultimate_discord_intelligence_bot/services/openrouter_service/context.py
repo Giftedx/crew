@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import copy
 import logging
 import os as _os
@@ -116,15 +117,13 @@ def prepare_route_state(
             chosen = suggested_model
 
     if manager is not None and getattr(manager, "enabled", False):
-        try:
+        with contextlib.suppress(Exception):  # pragma: no cover - metrics best effort
             metrics.ACTIVE_BANDIT_POLICY.labels(
                 tenant=labels_initial.get("tenant", "unknown"),
                 workspace=labels_initial.get("workspace", "unknown"),
                 domain=task_type,
                 policy="ax_adaptive",
             ).set(1.0 if adaptive_trial_index is not None else 0.0)
-        except Exception:  # pragma: no cover - metrics best effort
-            pass
 
     provider: dict[str, Any] = {}
     if service.tenant_registry:

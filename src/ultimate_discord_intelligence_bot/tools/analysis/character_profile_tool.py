@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from typing import TYPE_CHECKING, Any, TypedDict
+from typing import TYPE_CHECKING, Any, ClassVar, TypedDict
 
 from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 from ultimate_discord_intelligence_bot.step_result import StepResult
@@ -42,7 +42,7 @@ class CharacterProfileTool(BaseTool[StepResult]):
 
     name: str = "Character Profile Tool"
     description: str = "Persist events with sources and return combined trust metrics for a person."
-    model_config = {"extra": "allow"}
+    model_config: ClassVar[dict[str, Any]] = {"extra": "allow"}
 
     def __init__(
         self,
@@ -132,12 +132,8 @@ class CharacterProfileTool(BaseTool[StepResult]):
 
     def run(self, *args, **kwargs) -> StepResult:  # pragma: no cover - thin wrapper
         try:
-            person = ""
-            if args and len(args) > 0:
-                person = str(args[0])
-            else:
-                # Accept alias 'name' used by some agents
-                person = str(kwargs.get("person", kwargs.get("name", "")))
+            # Accept alias 'name' used by some agents
+            person = str(args[0]) if args and len(args) > 0 else str(kwargs.get("person", kwargs.get("name", "")))
             return self._run(person)
         except Exception as exc:  # pragma: no cover - unexpected
             self._metrics.counter(

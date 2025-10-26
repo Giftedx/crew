@@ -7,8 +7,6 @@ from langfuse.model import CreateSpan, CreateTrace, UpdateSpan
 
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
-from ..step_result import StepResult
-
 
 class LangfuseService:
     """A service for integrating with Langfuse for observability."""

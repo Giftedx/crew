@@ -28,7 +28,7 @@ class _BaseToolProto(Protocol):
 
     We intentionally keep the surface area small while still mirroring the
     commonly present ``name`` and ``description`` attributes from the vendor
-    BaseTool so future upstream introspection (e.g. auto‑documentation or
+    BaseTool so future upstream introspection (e.g. auto-documentation or
     selection UIs) does not break when interacting with our shimmed tools.
     """
 
@@ -67,6 +67,68 @@ class BaseTool(Generic[R_co]):
     # agent communication bus when present. No hard dependency is introduced
     # and absence of the bus is silently ignored.
     def publish_message(self, msg_type: str, content: str, **metadata: Any) -> None:
+        # Try Redis-backed message bus first (if enabled)
+        try:
+            from core.secure_config import get_config
+
+            config = get_config()
+            if getattr(config, "enable_agent_message_bus", False):
+                from ai.agent_messaging.redis_bus import AgentMessage, MessagePriority, MessageType
+
+                # Map legacy types to new enum
+                type_mapping = {
+                    "note": MessageType.NOTE,
+                    "evidence": MessageType.EVIDENCE,
+                    "warning": MessageType.WARNING,
+                    "ask": MessageType.REQUEST_INSIGHT,
+                    "answer": MessageType.ANSWER,
+                }
+
+                message_type = type_mapping.get(msg_type, MessageType.NOTE)
+
+                # Get tenant context
+                from ultimate_discord_intelligence_bot.tenancy.context import current_tenant
+
+                ctx = current_tenant()
+                tenant_id = ctx.tenant_id if ctx else "default"
+
+                # Create and publish message asynchronously
+                import asyncio
+
+                from ai.agent_messaging import AgentMessageBus
+
+                # Get or create event loop
+                try:
+                    asyncio.get_running_loop()
+                except RuntimeError:
+                    # No running loop, skip async publish
+                    return
+
+                # Create message bus and publish (fire-and-forget)
+                async def _publish():
+                    bus = AgentMessageBus()
+                    await bus.connect()
+                    try:
+                        message = AgentMessage(
+                            type=message_type,
+                            content=content,
+                            sender_agent_id=metadata.get("agent_id"),
+                            priority=MessagePriority.NORMAL,
+                            metadata=metadata,
+                        )
+                        await bus.publish(message, tenant_id=tenant_id)
+                    finally:
+                        await bus.disconnect()
+
+                # Keep a reference to avoid task being garbage-collected
+                if not hasattr(self, "_background_tasks"):
+                    self._background_tasks = []  # type: ignore[attr-defined]
+                self._background_tasks.append(asyncio.create_task(_publish()))  # type: ignore[attr-defined]
+                return
+        except Exception:
+            pass  # Fall back to legacy bus
+
+        # Fall back to legacy in-memory bus
         try:
             from typing import cast
 

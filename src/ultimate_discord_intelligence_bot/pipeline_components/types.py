@@ -21,3 +21,11 @@ class PipelineRunResult(TypedDict, total=False):
     error: str
     rate_limit_exceeded: bool
     status_code: int
+    # Optional observability and metrics fields
+    observability: dict[str, Any]
+    processing_type: str
+    quality_score: float
+    exit_checkpoint: str | None
+    exit_reason: str | None
+    exit_confidence: float | None
+    time_saved_estimate: float | str

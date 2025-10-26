@@ -211,10 +211,7 @@ class ContentQualityAssessmentTool(BaseTool[dict[str, Any]]):
 
         # Penalize if any single word dominates too much
         dominance_penalty = max_frequency / total_words
-        if dominance_penalty > 0.2:  # Single word >20% of content
-            dominance_penalty = dominance_penalty * 2
-        else:
-            dominance_penalty = 0
+        dominance_penalty = dominance_penalty * 2 if dominance_penalty > 0.2 else 0
 
         # Reward reasonable repetition
         repetition_score = min(1.0, len(repeated_words) / 10)  # Up to 10 repeated words is good

@@ -179,9 +179,7 @@ async def example_graph_plugin():
             print(f"  [{i}] Graph ID: {graph_item.get('graph_id', 'N/A')}")
             print(f"      Score: {graph_item.get('score', 0.0):.3f}")
             print(f"      Keywords: {', '.join(graph_item.get('keywords', [])[:5])}")
-            print(
-                f"      Nodes: {graph_item.get('node_count', 0)}, Edges: {graph_item.get('edge_count', 0)}"
-            )
+            print(f"      Nodes: {graph_item.get('node_count', 0)}, Edges: {graph_item.get('edge_count', 0)}")
 
 
 async def example_plugin_comparison():
@@ -211,9 +209,7 @@ async def example_plugin_comparison():
         records=[{"content": content, "metadata": {"type": "learning_pattern"}}],
         plugin="mem0",
     )
-    print(
-        f"  Mem0: {mem0_result.success} (backend: {mem0_result.data.get('backend', 'N/A')})"
-    )
+    print(f"  Mem0: {mem0_result.success} (backend: {mem0_result.data.get('backend', 'N/A')})")
 
     # HippoRAG: Continual knowledge
     hippo_result = await memory.upsert(
@@ -222,9 +218,7 @@ async def example_plugin_comparison():
         records=[{"content": content, "metadata": {"type": "knowledge"}}],
         plugin="hipporag",
     )
-    print(
-        f"  HippoRAG: {hippo_result.success} (backend: {hippo_result.data.get('backend', 'N/A')})"
-    )
+    print(f"  HippoRAG: {hippo_result.success} (backend: {hippo_result.data.get('backend', 'N/A')})")
 
     # Graph: Knowledge relationships
     graph_result = await memory.upsert(
@@ -233,9 +227,7 @@ async def example_plugin_comparison():
         records=[{"content": content, "metadata": {"type": "relationships"}}],
         plugin="graph",
     )
-    print(
-        f"  Graph: {graph_result.success} (backend: {graph_result.data.get('backend', 'N/A')})"
-    )
+    print(f"  Graph: {graph_result.success} (backend: {graph_result.data.get('backend', 'N/A')})")
 
     # Query same question across all backends
     query = "How to train models with limited data?"
@@ -250,9 +242,7 @@ async def example_plugin_comparison():
         plugin="mem0",
         query_text=query,
     )
-    print(
-        f"  Mem0: Found {mem0_query.data.get('count', 0) if mem0_query.success else 0} results"
-    )
+    print(f"  Mem0: Found {mem0_query.data.get('count', 0) if mem0_query.success else 0} results")
 
     # HippoRAG retrieval
     hippo_query = await memory.query(
@@ -262,9 +252,7 @@ async def example_plugin_comparison():
         plugin="hipporag",
         query_text=query,
     )
-    print(
-        f"  HippoRAG: Found {hippo_query.data.get('count', 0) if hippo_query.success else 0} results"
-    )
+    print(f"  HippoRAG: Found {hippo_query.data.get('count', 0) if hippo_query.success else 0} results")
 
     # Graph retrieval
     graph_query = await memory.query(
@@ -274,9 +262,7 @@ async def example_plugin_comparison():
         plugin="graph",
         query_text=query,
     )
-    print(
-        f"  Graph: Found {graph_query.data.get('count', 0) if graph_query.success else 0} results"
-    )
+    print(f"  Graph: Found {graph_query.data.get('count', 0) if graph_query.success else 0} results")
 
 
 async def main():

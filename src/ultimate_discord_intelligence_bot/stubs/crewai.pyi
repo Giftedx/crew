@@ -58,9 +58,5 @@ class Memory:
 class LongTermMemory:
     def __init__(self, **kwargs: Any) -> None: ...
 
-# Process classes
-class Process:
-    def __init__(self, **kwargs: Any) -> None: ...
-
 class CrewAIProcess(Process):
     def __init__(self, **kwargs: Any) -> None: ...

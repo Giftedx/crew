@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import asyncio
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from autogen import AssistantAgent, UserProxyAgent
 from autogen.agentchat.groupchat import GroupChat
@@ -9,11 +9,9 @@ from autogen.agentchat.manager import GroupChatManager
 
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
-from ..step_result import StepResult
-
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
+    from collections.abc import Callable, Coroutine
 
 
 # This is a conceptual implementation and will require a running Discord bot
@@ -23,11 +21,11 @@ if TYPE_CHECKING:
 class DiscordUserProxy(UserProxyAgent):
     """A UserProxyAgent that interacts with a user through Discord."""
 
-    def __init__(self, name: str, get_input_func: Callable):
+    def __init__(self, name: str, get_input_func: Callable[[str], Coroutine[Any, Any, str]]):
         super().__init__(name=name, human_input_mode="ALWAYS")
         self._get_input_func = get_input_func
 
-    def get_human_input(self, prompt: str) -> StepResult:
+    def get_human_input(self, prompt: str) -> str:
         """Overrides the default get_human_input to use a Discord channel."""
         return asyncio.run(self._get_input_func(prompt))
 
@@ -35,7 +33,11 @@ class DiscordUserProxy(UserProxyAgent):
 class AutoGenDiscordService:
     """A service for managing interactive AutoGen chats in Discord."""
 
-    def __init__(self, get_input_func: Callable, send_message_func: Callable):
+    def __init__(
+        self,
+        get_input_func: Callable[[str], Coroutine[Any, Any, str]],
+        send_message_func: Callable[[str], Coroutine[Any, Any, None]],
+    ):
         """
         Initializes the AutoGenDiscordService.
 
@@ -94,7 +96,7 @@ async def example_discord_command_handler(message, initial_task):
     """Example handler for a Discord command like `!analyze-interactive`."""
 
     # Define how to get input and send messages in the context of the Discord message
-    async def get_input_from_discord(prompt: str) -> StepResult:
+    async def get_input_from_discord(prompt: str) -> str:
         await message.channel.send(f"🤖 **Analyst:** {prompt}")
 
         def check(m):

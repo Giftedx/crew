@@ -19,6 +19,7 @@ import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from obs.logfire_config import setup_logfire
 from server.middleware_shim import install_middleware_support
 
 
@@ -93,6 +94,12 @@ async def _lifespan(app: FastAPI):  # pragma: no cover - integration tested indi
         logging.info("Enhanced monitoring system started")
     except Exception as exc:
         logging.warning(f"Failed to start enhanced monitoring system: {exc}")
+
+    # Initialize Logfire observability if enabled (safe no-op otherwise)
+    try:
+        setup_logfire(app)
+    except Exception as exc:
+        logging.debug(f"Logfire setup skipped: {exc}")
 
     # Force Qdrant client instantiation early to surface config errors
     try:

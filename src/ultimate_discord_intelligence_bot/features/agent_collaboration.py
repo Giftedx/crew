@@ -72,7 +72,9 @@ class AgentCollaboration:
         """Check if agent collaboration is enabled."""
         return self.feature_flags.ENABLE_AGENT_COLLABORATION
 
-    async def execute_sequential(self, tasks: list[AgentTask], collaboration_id: str | None = None) -> CollaborationResult:
+    async def execute_sequential(
+        self, tasks: list[AgentTask], collaboration_id: str | None = None
+    ) -> CollaborationResult:
         """Execute tasks sequentially, passing results between agents.
 
         Args:
@@ -131,7 +133,9 @@ class AgentCollaboration:
 
         return result
 
-    async def execute_parallel(self, tasks: list[AgentTask], collaboration_id: str | None = None) -> CollaborationResult:
+    async def execute_parallel(
+        self, tasks: list[AgentTask], collaboration_id: str | None = None
+    ) -> CollaborationResult:
         """Execute tasks in parallel with synchronization.
 
         Args:

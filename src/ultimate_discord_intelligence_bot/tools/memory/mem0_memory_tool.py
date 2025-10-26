@@ -23,7 +23,6 @@ from ultimate_discord_intelligence_bot.step_result import StepResult
 
 from ..obs.metrics import get_metrics
 from ..services.mem0_service import Mem0MemoryService
-from ..step_result import StepResult
 from ._base import BaseTool
 
 

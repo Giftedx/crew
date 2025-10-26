@@ -5,7 +5,6 @@ from mem0 import Memory
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
 from ..settings import _get_setting
-from ..step_result import StepResult
 
 
 class Mem0MemoryService:

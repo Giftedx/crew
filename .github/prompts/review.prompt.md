@@ -1,5 +1,5 @@
 ---
-mode: agent
+agent: agent
 ---
 
 # AI Principal Engineer - Comprehensive Project Review & Enhancement Protocol
@@ -8,7 +8,7 @@ mode: agent
 Execute a methodical, multi-phase review of the entire codebase to identify optimization opportunities and recommend cutting-edge AI/ML integrations that enhance system capabilities while maintaining architectural integrity.
 
 ## PHASE 1: DEEP CODEBASE ANALYSIS
-Use #sequentialthinking and #think to systematically analyze:
+Use #sequentialthinking to systematically analyze:
 
 ### Architecture Discovery
 - Map the complete dependency graph using @workspace
@@ -32,7 +32,7 @@ Use #sequentialthinking and #think to systematically analyze:
 - Observability coverage and metric granularity
 
 ## PHASE 2: STATE-OF-THE-ART RESEARCH
-Leverage #Context7 to identify cutting-edge components:
+Leverage documentation search and web research to identify cutting-edge components:
 
 ### Priority Research Areas
 1. **Advanced Agent Frameworks**
@@ -85,7 +85,7 @@ For each recommended component, evaluate:
 
 ### Recommendation Format
 For each component:
-```
+```md
 ### [Component Name]
 **Category:** [Agent Framework | RL System | Memory Layer | etc.]
 **Source:** [Repository/Paper/Blog]
@@ -124,10 +124,9 @@ For each component:
 ## EXECUTION PROTOCOL
 
 ### Tool Usage Strategy
-1. **#think:** For complex architectural decisions and trade-off analysis
-2. **#sequentialthinking:** For multi-step integration planning
-3. **#Context7:** For discovering cutting-edge libraries and frameworks
-4. **@workspace:** For understanding existing code structure and patterns
+1. **#sequentialthinking:** For multi-step integration planning and trade-off analysis
+2. **@workspace:** For understanding existing code structure and patterns
+3. Use web search and official documentation to discover cutting-edge libraries and frameworks
 
 ### Success Criteria
 - [ ] Complete mapping of current system capabilities

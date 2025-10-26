@@ -138,12 +138,8 @@ class LCSummarizeTool(BaseTool[StepResult]):
 
     def run(self, *args, **kwargs) -> StepResult:  # pragma: no cover - thin wrapper
         # Accept flexible args to tolerate agent mis-specification
-        text = ""
-        if args and len(args) > 0:
-            text = str(args[0])
-        else:
-            # Accept alias 'content' used by some agents
-            text = str(kwargs.get("text", kwargs.get("content", "")))
+        # Accept alias 'content' used by some agents
+        text = str(args[0]) if args and len(args) > 0 else str(kwargs.get("text", kwargs.get("content", "")))
         try:
             max_sentences = int(max(1, min(10, int(kwargs.get("max_sentences", 3)))))
         except Exception:

@@ -31,10 +31,7 @@ class PipelineIntegration:
         """
         try:
             job_id = await self.queue_service.enqueue(
-                "process_video_async",
-                video_url=video_url,
-                tenant=tenant,
-                workspace=workspace
+                "process_video_async", video_url=video_url, tenant=tenant, workspace=workspace
             )
             logger.info(f"Enqueued video processing: {video_url} -> {job_id}")
             return job_id
@@ -52,4 +49,3 @@ class PipelineIntegration:
             dict with job status or None
         """
         return await self.queue_service.get_status(job_id)
-

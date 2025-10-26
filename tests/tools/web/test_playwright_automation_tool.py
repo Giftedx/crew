@@ -7,6 +7,7 @@ import pytest
 
 try:
     from playwright.sync_api import Page
+
     PLAYWRIGHT_AVAILABLE = True
 except ImportError:
     PLAYWRIGHT_AVAILABLE = False
@@ -91,7 +92,7 @@ class TestPlaywrightAutomationTool:
             assert "Selector required" in result.error
             assert result.error_category == ErrorCategory.INVALID_INPUT
 
-    @patch('ultimate_discord_intelligence_bot.tools.web.playwright_automation_tool.PLAYWRIGHT_AVAILABLE', False)
+    @patch("ultimate_discord_intelligence_bot.tools.web.playwright_automation_tool.PLAYWRIGHT_AVAILABLE", False)
     def test_graceful_degradation_no_playwright(self, tool, sample_url):
         """Test graceful degradation when Playwright is unavailable."""
         result = tool._run(url=sample_url, action="screenshot", tenant="test", workspace="test")
@@ -102,7 +103,9 @@ class TestPlaywrightAutomationTool:
     @pytest.mark.skipif(not PLAYWRIGHT_AVAILABLE, reason="Playwright not available")
     def test_screenshot_action(self, tool, sample_url):
         """Test screenshot action with mocked Playwright."""
-        with patch('ultimate_discord_intelligence_bot.tools.web.playwright_automation_tool.sync_playwright') as mock_playwright:
+        with patch(
+            "ultimate_discord_intelligence_bot.tools.web.playwright_automation_tool.sync_playwright"
+        ) as mock_playwright:
             # Setup mocks
             mock_browser = MagicMock()
             mock_page = MagicMock()
@@ -117,13 +120,7 @@ class TestPlaywrightAutomationTool:
             mock_browser.new_page.return_value = mock_page
             mock_browser.close.return_value = None
 
-            result = tool._run(
-                url=sample_url,
-                action="screenshot",
-                tenant="test",
-                workspace="test",
-                wait_timeout=30000
-            )
+            result = tool._run(url=sample_url, action="screenshot", tenant="test", workspace="test", wait_timeout=30000)
 
             assert result.success
             assert "screenshot" in result.data
@@ -133,7 +130,9 @@ class TestPlaywrightAutomationTool:
     @pytest.mark.skipif(not PLAYWRIGHT_AVAILABLE, reason="Playwright not available")
     def test_content_action(self, tool, sample_url):
         """Test content extraction action."""
-        with patch('ultimate_discord_intelligence_bot.tools.web.playwright_automation_tool.sync_playwright') as mock_playwright:
+        with patch(
+            "ultimate_discord_intelligence_bot.tools.web.playwright_automation_tool.sync_playwright"
+        ) as mock_playwright:
             mock_browser = MagicMock()
             mock_page = MagicMock()
             mock_page.url = sample_url
@@ -148,12 +147,7 @@ class TestPlaywrightAutomationTool:
             mock_browser.new_page.return_value = mock_page
             mock_browser.close.return_value = None
 
-            result = tool._run(
-                url=sample_url,
-                action="content",
-                tenant="test",
-                workspace="test"
-            )
+            result = tool._run(url=sample_url, action="content", tenant="test", workspace="test")
 
             assert result.success
             assert "html" in result.data
@@ -170,14 +164,10 @@ class TestPlaywrightAutomationTool:
         """Test that tenant and workspace parameters are handled."""
         # This test checks that the tool accepts tenant/workspace parameters
         # without requiring Playwright
-        with patch('ultimate_discord_intelligence_bot.tools.web.playwright_automation_tool.PLAYWRIGHT_AVAILABLE', False):
-            result = tool._run(
-                url=sample_url,
-                action="screenshot",
-                tenant="test_tenant",
-                workspace="test_workspace"
-            )
+        with patch(
+            "ultimate_discord_intelligence_bot.tools.web.playwright_automation_tool.PLAYWRIGHT_AVAILABLE", False
+        ):
+            result = tool._run(url=sample_url, action="screenshot", tenant="test_tenant", workspace="test_workspace")
             # Should fail due to Playwright unavailable, but should have handled tenant/workspace
             assert not result.success
             assert "tenant" in str(result).lower() or "test_tenant" not in str(result)
-

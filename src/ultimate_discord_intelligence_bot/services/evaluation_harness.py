@@ -62,7 +62,7 @@ class EvaluationHarness:
             except OSError as exc:
                 # Logging failure should not abort benchmark loop; emit structured
                 # diagnostic for observability instead of swallowing silently.
-                # Using print keeps harness dependency‑light; upstream caller can
+                # Using print keeps harness dependency-light; upstream caller can
                 # redirect stdout to logging if desired.
                 print(
                     json.dumps(

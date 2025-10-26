@@ -959,14 +959,10 @@ class TrendForecastingTool(BaseTool[StepResult]):
 
     def _predict_next_phase_transition(self, cycle_data: dict[str, Any]) -> float:
         """Predict next phase transition time."""
-        current_phase = cycle_data.get("current_phase", "unknown")
         phase_duration = cycle_data.get("phase_duration", 3.5)
 
         # Estimate time to next transition
-        if current_phase == "expansion":
-            time_to_transition = phase_duration * 0.5  # Halfway through expansion
-        else:
-            time_to_transition = phase_duration * 0.5  # Halfway through contraction
+        time_to_transition = phase_duration * 0.5
 
         current_time = time.time()
         return current_time + (time_to_transition * 86400)

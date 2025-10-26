@@ -16,6 +16,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
@@ -169,9 +170,7 @@ def main() -> int:
         f"     Services enabled: {sum([custom_config.enable_asr, custom_config.enable_speaker_diarization, custom_config.enable_visual_parsing, custom_config.enable_topic_segmentation, custom_config.enable_claim_extraction, custom_config.enable_highlight_detection, custom_config.enable_sentiment_analysis, custom_config.enable_safety_analysis, custom_config.enable_deduplication, custom_config.enable_publishing])}"
     )
     print(f"     Caching: {'enabled' if custom_config.enable_caching else 'disabled'}")
-    print(
-        f"     Publishing: {'enabled' if custom_config.publish_reports else 'disabled'}"
-    )
+    print(f"     Publishing: {'enabled' if custom_config.publish_reports else 'disabled'}")
 
     print()
 

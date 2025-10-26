@@ -49,16 +49,12 @@ async def example_external_client_calls_crewai():
         # Connect to our CrewAI MCP server
         async with Client("stdio://crew_mcp") as client:
             # 1. List available crews
-            crews_result = await client.call_tool(
-                name="crewai_list_available_crews", arguments={}
-            )
+            crews_result = await client.call_tool(name="crewai_list_available_crews", arguments={})
             print("Available CrewAI Crews:")
             print(json.dumps(crews_result, indent=2))
 
             # 2. Get crew status
-            status_result = await client.call_tool(
-                name="crewai_get_crew_status", arguments={}
-            )
+            status_result = await client.call_tool(name="crewai_get_crew_status", arguments={})
             print("\nCrewAI Status:")
             print(json.dumps(status_result, indent=2))
 
@@ -230,14 +226,10 @@ def example_setup_and_configuration():
     # 4. Testing the Integration
     print("\n4. Testing the Integration:")
     print("   # Test MCP server health")
-    print(
-        "   python -c \"from mcp_server.server import mcp; print('MCP Server:', mcp.name)\""
-    )
+    print("   python -c \"from mcp_server.server import mcp; print('MCP Server:', mcp.name)\"")
     print()
     print("   # Test CrewAI integration")
-    print(
-        "   python -c \"from mcp_server.crewai_server import crewai_mcp; print('CrewAI MCP:', crewai_mcp.name)\""
-    )
+    print("   python -c \"from mcp_server.crewai_server import crewai_mcp; print('CrewAI MCP:', crewai_mcp.name)\"")
     print()
     print("   # Test tool availability")
     print(

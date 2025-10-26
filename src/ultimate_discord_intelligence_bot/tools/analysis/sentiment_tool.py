@@ -18,7 +18,7 @@ NEGATIVE_THRESHOLD = -0.05
 class SentimentTool(BaseTool[StepResult]):
     """Classify text as positive, neutral or negative using a lexical heuristic.
 
-    Rationale: A deterministic, dependency‑free heuristic keeps unit tests fast and
+    Rationale: A deterministic, dependency-free heuristic keeps unit tests fast and
     avoids optional NLTK/VADER imports that previously introduced mypy noise and
     internal cache corruption. We intentionally keep the implementation minimal;
     a future feature flag could reintroduce a model-backed analyzer.
@@ -26,7 +26,9 @@ class SentimentTool(BaseTool[StepResult]):
 
     name: str = "Sentiment Tool"
     description: str = "Return overall sentiment for a piece of text."
-    model_config = {"extra": "allow"}
+    from typing import Any, ClassVar
+
+    model_config: ClassVar[dict[str, Any]] = {"extra": "allow"}
 
     def __init__(self):
         super().__init__()

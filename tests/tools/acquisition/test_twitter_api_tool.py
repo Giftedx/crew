@@ -1,15 +1,12 @@
 """Tests for Twitter API tool."""
 
+import importlib.util
 from unittest.mock import Mock, patch
 
 import pytest
 
 
-try:
-    import tweepy
-    TWEEPY_AVAILABLE = True
-except ImportError:
-    TWEEPY_AVAILABLE = False
+TWEEPY_AVAILABLE = importlib.util.find_spec("tweepy") is not None
 
 
 class TestTwitterAPITool:
@@ -19,6 +16,7 @@ class TestTwitterAPITool:
     def tool(self):
         """Create TwitterAPITool instance."""
         from src.ultimate_discord_intelligence_bot.tools.acquisition.twitter_api_tool import TwitterAPITool
+
         return TwitterAPITool(bearer_token="test_token")
 
     def test_tool_initialization(self, tool):
@@ -44,13 +42,9 @@ class TestTwitterAPITool:
         mock_response = Mock()
         mock_response.data = [mock_tweet]
 
-        with patch.object(tool.api, 'search_recent_tweets', return_value=mock_response):
+        with patch.object(tool.api, "search_recent_tweets", return_value=mock_response):
             result = tool._run(
-                query="test query",
-                tenant="test",
-                workspace="test",
-                action="search_tweets",
-                max_results=10
+                query="test query", tenant="test", workspace="test", action="search_tweets", max_results=10
             )
 
             assert result.success
@@ -75,13 +69,8 @@ class TestTwitterAPITool:
         mock_response = Mock()
         mock_response.data = mock_tweet
 
-        with patch.object(tool.api, 'get_tweet', return_value=mock_response):
-            result = tool._run(
-                query="123456",
-                tenant="test",
-                workspace="test",
-                action="get_tweet"
-            )
+        with patch.object(tool.api, "get_tweet", return_value=mock_response):
+            result = tool._run(query="123456", tenant="test", workspace="test", action="get_tweet")
 
             assert result.success
             assert result.data["tweet"]["text"] == "Test tweet"
@@ -91,11 +80,7 @@ class TestTwitterAPITool:
         from src.ultimate_discord_intelligence_bot.tools.acquisition.twitter_api_tool import TwitterAPITool
 
         tool = TwitterAPITool()
-        result = tool._run(
-            query="test",
-            tenant="test",
-            workspace="test"
-        )
+        result = tool._run(query="test", tenant="test", workspace="test")
 
         assert not result.success
         assert "credentials" in result.error.lower()

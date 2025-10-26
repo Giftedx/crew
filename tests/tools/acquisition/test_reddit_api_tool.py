@@ -1,15 +1,12 @@
 """Tests for Reddit API tool."""
 
+import importlib.util
 from unittest.mock import Mock, patch
 
 import pytest
 
 
-try:
-    import praw
-    PRAW_AVAILABLE = True
-except ImportError:
-    PRAW_AVAILABLE = False
+PRAW_AVAILABLE = importlib.util.find_spec("praw") is not None
 
 
 class TestRedditAPITool:
@@ -19,11 +16,8 @@ class TestRedditAPITool:
     def tool(self):
         """Create RedditAPITool instance."""
         from src.ultimate_discord_intelligence_bot.tools.acquisition.reddit_api_tool import RedditAPITool
-        return RedditAPITool(
-            client_id="test_id",
-            client_secret="test_secret",
-            user_agent="test"
-        )
+
+        return RedditAPITool(client_id="test_id", client_secret="test_secret", user_agent="test")
 
     def test_tool_initialization(self, tool):
         """Test tool initialization."""
@@ -51,12 +45,9 @@ class TestRedditAPITool:
         mock_submission.is_video = False
         mock_submission.is_gallery = False
 
-        with patch.object(tool.reddit, 'submission', return_value=mock_submission):
+        with patch.object(tool.reddit, "submission", return_value=mock_submission):
             result = tool._run(
-                url="https://reddit.com/r/test/comments/test",
-                tenant="test",
-                workspace="test",
-                action="fetch_post"
+                url="https://reddit.com/r/test/comments/test", tenant="test", workspace="test", action="fetch_post"
             )
 
             assert result.success
@@ -79,14 +70,8 @@ class TestRedditAPITool:
         mock_subreddit = Mock()
         mock_subreddit.hot.return_value = [mock_submission]
 
-        with patch.object(tool.reddit, 'subreddit', return_value=mock_subreddit):
-            result = tool._run(
-                url="programming",
-                tenant="test",
-                workspace="test",
-                action="fetch_subreddit",
-                limit=5
-            )
+        with patch.object(tool.reddit, "subreddit", return_value=mock_subreddit):
+            result = tool._run(url="programming", tenant="test", workspace="test", action="fetch_subreddit", limit=5)
 
             assert result.success
             assert len(result.data["posts"]) == 1
@@ -96,11 +81,7 @@ class TestRedditAPITool:
         from src.ultimate_discord_intelligence_bot.tools.acquisition.reddit_api_tool import RedditAPITool
 
         tool = RedditAPITool()
-        result = tool._run(
-            url="test",
-            tenant="test",
-            workspace="test"
-        )
+        result = tool._run(url="test", tenant="test", workspace="test")
 
         assert not result.success
         assert "credentials" in result.error.lower()

@@ -16,6 +16,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
@@ -54,9 +55,7 @@ def main() -> int:
         },
     ]
 
-    print(
-        f"📝 Analyzing {len(content_segments)} content segments for rights compliance..."
-    )
+    print(f"📝 Analyzing {len(content_segments)} content segments for rights compliance...")
 
     # Analyze content rights
     result = rights_service.analyze_content_rights(
@@ -96,9 +95,7 @@ def main() -> int:
             rights_holder = fragment["license_info"]["rights_holder"]
 
             print(f"   {i + 1}. **{fragment_id}**")
-            print(
-                f"      Duration: {duration:.1f}s ({start_time:.1f}s - {end_time:.1f}s)"
-            )
+            print(f"      Duration: {duration:.1f}s ({start_time:.1f}s - {end_time:.1f}s)")
             print(f"      License: {license_type}")
             print(f"      Rights Holder: {rights_holder}")
             print(f"      Risk Score: {risk_score:.2f}")
@@ -154,12 +151,8 @@ def main() -> int:
         print(f"   Overall Risk: {risk_assessment.get('overall_risk', 0):.2f}")
         print(f"   Max Risk: {risk_assessment.get('max_risk', 0):.2f}")
         print(f"   Min Risk: {risk_assessment.get('min_risk', 0):.2f}")
-        print(
-            f"   High Risk Fragments: {risk_assessment.get('high_risk_fragments', 0)}"
-        )
-        print(
-            f"   Medium Risk Fragments: {risk_assessment.get('medium_risk_fragments', 0)}"
-        )
+        print(f"   High Risk Fragments: {risk_assessment.get('high_risk_fragments', 0)}")
+        print(f"   Medium Risk Fragments: {risk_assessment.get('medium_risk_fragments', 0)}")
         print(f"   Low Risk Fragments: {risk_assessment.get('low_risk_fragments', 0)}")
 
     print("-" * 80)
@@ -214,9 +207,7 @@ def main() -> int:
         "description": "Recent viral news footage with copyright restrictions",
     }
 
-    alternatives = rights_service.suggest_alternative_content(
-        original_content, risk_threshold=0.5
-    )
+    alternatives = rights_service.suggest_alternative_content(original_content, risk_threshold=0.5)
 
     print("✅ Alternative content suggestions generated!")
     print(f"   Suggestions: {len(alternatives)}")

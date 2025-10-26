@@ -397,7 +397,7 @@ def _per_test_timeout(request):  # pragma: no cover - timing behavior
     if _HAS_SIGNAL and hasattr(signal, "SIGALRM"):
         test_id = getattr(getattr(request, "node", None), "nodeid", "<unknown test>")
 
-        def _on_timeout(signum, frame):  # noqa: ARG001
+        def _on_timeout(*_):
             try:
                 # Dump current stacks to help debugging
                 faulthandler.dump_traceback()

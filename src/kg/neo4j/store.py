@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING, Any
 
 try:
     from neo4j import Driver, GraphDatabase
+
     NEO4J_AVAILABLE = True
 except ImportError:
     NEO4J_AVAILABLE = False
@@ -118,7 +119,7 @@ class Neo4jKGStore:
 
         query = f"""
         MATCH (n:Node)
-        WHERE {' AND '.join(conditions)}
+        WHERE {" AND ".join(conditions)}
         RETURN id(n) as id, n.tenant as tenant, n.type as type,
                n.name as name, n.attrs_json as attrs_json, n.created_at as created_at
         """
@@ -251,7 +252,8 @@ class Neo4jKGStore:
                 MATCH path = (start:Node)-[*1..%d]->(neighbor:Node)
                 WHERE id(start) = $node_id
                 RETURN DISTINCT id(neighbor) as neighbor_id
-                """ % depth,
+                """
+                % depth,
                 node_id=node_id,
             )
             return [record["neighbor_id"] for record in result]
@@ -275,7 +277,8 @@ class Neo4jKGStore:
                 WHERE id(center) = $node_id
                 RETURN path, nodes(path) as nodes, relationships(path) as edges
                 LIMIT 100
-                """ % max_depth,
+                """
+                % max_depth,
                 node_id=node_id,
             )
 
@@ -286,12 +289,14 @@ class Neo4jKGStore:
                 for node in record["nodes"]:
                     nodes.add((id(node), node["name"], node["type"]))
                 for edge in record["edges"]:
-                    edges.append({
-                        "src": edge.start_node["name"],
-                        "dst": edge.end_node["name"],
-                        "type": edge.get("type", "RELATES"),
-                        "weight": edge.get("weight", 1.0),
-                    })
+                    edges.append(
+                        {
+                            "src": edge.start_node["name"],
+                            "dst": edge.end_node["name"],
+                            "type": edge.get("type", "RELATES"),
+                            "weight": edge.get("weight", 1.0),
+                        }
+                    )
 
             return {
                 "nodes": [{"id": n[0], "name": n[1], "type": n[2]} for n in nodes],

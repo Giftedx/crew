@@ -1,13 +1,11 @@
 """Tests for Neo4j knowledge graph store."""
 
+import importlib.util
+
 import pytest
 
 
-try:
-    from neo4j import GraphDatabase
-    NEO4J_AVAILABLE = True
-except ImportError:
-    NEO4J_AVAILABLE = False
+NEO4J_AVAILABLE = importlib.util.find_spec("neo4j") is not None
 
 
 @pytest.mark.skipif(not NEO4J_AVAILABLE, reason="Neo4j driver not available")
@@ -18,11 +16,8 @@ class TestNeo4jKGStore:
     def store(self):
         """Create Neo4j store instance."""
         from src.kg.neo4j.store import Neo4jKGStore
-        store = Neo4jKGStore(
-            uri="bolt://localhost:7687",
-            user="neo4j",
-            password="password"
-        )
+
+        store = Neo4jKGStore(uri="bolt://localhost:7687", user="neo4j", password="password")
         yield store
         store.close()
 
@@ -34,23 +29,14 @@ class TestNeo4jKGStore:
     def test_add_node(self, store):
         """Test adding a node."""
         node_id = store.add_node(
-            tenant="test",
-            type="Person",
-            name="Test Person",
-            attrs={"age": 30},
-            created_at="2024-01-01"
+            tenant="test", type="Person", name="Test Person", attrs={"age": 30}, created_at="2024-01-01"
         )
         assert node_id > 0
 
     def test_query_nodes(self, store):
         """Test querying nodes."""
         # Add test node
-        store.add_node(
-            tenant="test",
-            type="Person",
-            name="Query Test",
-            attrs={"role": "developer"}
-        )
+        store.add_node(tenant="test", type="Person", name="Query Test", attrs={"role": "developer"})
 
         # Query nodes
         nodes = store.query_nodes("test", type="Person")
@@ -59,11 +45,7 @@ class TestNeo4jKGStore:
 
     def test_get_node(self, store):
         """Test getting a node by ID."""
-        node_id = store.add_node(
-            tenant="test",
-            type="Organization",
-            name="Test Org"
-        )
+        node_id = store.add_node(tenant="test", type="Organization", name="Test Org")
 
         node = store.get_node(node_id)
         assert node is not None
@@ -77,12 +59,7 @@ class TestNeo4jKGStore:
         dst_id = store.add_node("test", "Person", "Bob")
 
         # Add edge
-        edge_id = store.add_edge(
-            src_id=src_id,
-            dst_id=dst_id,
-            type="KNOWS",
-            weight=0.8
-        )
+        edge_id = store.add_edge(src_id=src_id, dst_id=dst_id, type="KNOWS", weight=0.8)
         assert edge_id > 0
 
     def test_query_edges(self, store):
@@ -120,10 +97,7 @@ class TestNeo4jKGStore:
         store.add_node("test", "Entity", "TestEntity")
 
         # Execute Cypher query
-        result = store.cypher_query(
-            "MATCH (n:Node {tenant: $tenant}) RETURN count(n) as count",
-            tenant="test"
-        )
+        result = store.cypher_query("MATCH (n:Node {tenant: $tenant}) RETURN count(n) as count", tenant="test")
         assert len(result) > 0
         assert result[0]["count"] > 0
 

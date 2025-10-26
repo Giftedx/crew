@@ -16,6 +16,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
 from obs import metrics
+from ultimate_discord_intelligence_bot.settings import Settings
 
 from .optimization_pipeline import OptimizationConfig, OptimizationPipeline
 from .prompt_compressor import CompressionConfig, PromptCompressor
@@ -123,12 +124,14 @@ class PromptEngine:
             config=optimization_config,
         )
         self._compression_enabled = True
+        logger = logging.getLogger(__name__)
         logger.info("Prompt optimization enabled")
 
     def disable_optimization(self) -> None:
         """Disable prompt optimization."""
         self._optimization_pipeline = None
         self._compression_enabled = False
+        logger = logging.getLogger(__name__)
         logger.info("Prompt optimization disabled")
 
     async def generate_optimized(
@@ -185,6 +188,7 @@ class PromptEngine:
                 )
             else:
                 # Fall back to original prompt if optimization fails
+                logger = logging.getLogger(__name__)
                 logger.warning("Prompt optimization failed, using original: %s", optimization_result.error)
                 return StepResult.ok(
                     data={
@@ -195,6 +199,7 @@ class PromptEngine:
                 )
 
         except Exception as e:
+            logger = logging.getLogger(__name__)
             logger.error("Optimized prompt generation failed: %s", str(e))
             return StepResult.fail(f"Optimized prompt generation failed: {e!s}")
 

@@ -42,7 +42,7 @@ class _QdrantLike(Protocol):
         limit: int = 100,
         with_payload: bool = True,
         offset: int | None = None,
-        filter: Any | None = None,
+        flt: Any | None = None,
     ) -> tuple[list[Any], int | None]: ...
     def delete_points(
         self,
@@ -50,7 +50,7 @@ class _QdrantLike(Protocol):
         collection_name: str,
         ids: Sequence[int | str] | None = None,
         points: Sequence[int | str] | None = None,
-        filter: Any | None = None,
+        flt: Any | None = None,
     ) -> Any: ...
 
 
@@ -68,7 +68,9 @@ class MemoryCompactionTool(BaseTool[StepResult]):
     name: str = "Qdrant Memory Compaction Tool"
     description: str = "Deletes expired memory points based on created_at + _ttl."
 
-    model_config = {"arbitrary_types_allowed": True, "extra": "allow"}
+    from typing import ClassVar
+
+    model_config: ClassVar[dict[str, Any]] = {"arbitrary_types_allowed": True, "extra": "allow"}
 
     def __init__(self, client: object | None = None, collection: str | None = None) -> None:
         super().__init__()

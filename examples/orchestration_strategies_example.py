@@ -22,6 +22,7 @@ from ultimate_discord_intelligence_bot.orchestration.strategies import (
 )
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -47,9 +48,7 @@ async def example_fallback_strategy() -> None:
 
     print(f"\nDirect instantiation result: {result.status}")
     if result.data:
-        print(
-            f"Pipeline output: {result.data.get('pipeline_result', {}).get('status')}"
-        )
+        print(f"Pipeline output: {result.data.get('pipeline_result', {}).get('status')}")
         print(f"Analysis: {result.data.get('analysis_result', {}).get('status')}")
 
     # Option B: Via facade with enum
@@ -227,11 +226,11 @@ async def example_registry_inspection() -> None:
     class CustomStrategy:
         name = "custom"
         description = "Custom workflow logic"
-        
+
         async def execute_workflow(self, url, depth, tenant, workspace, **kwargs):
             # Custom implementation
             return StepResult.ok({"custom": "result"})
-    
+
     registry.register(CustomStrategy)
     print(f"\nRegistered custom strategy: {CustomStrategy.name}")
     """

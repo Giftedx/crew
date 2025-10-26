@@ -1,13 +1,11 @@
 """Integration tests for Playwright Automation Tool against real web pages."""
 
+import importlib.util
+
 import pytest
 
 
-try:
-    from playwright.sync_api import sync_playwright
-    PLAYWRIGHT_AVAILABLE = True
-except ImportError:
-    PLAYWRIGHT_AVAILABLE = False
+PLAYWRIGHT_AVAILABLE = importlib.util.find_spec("playwright.sync_api") is not None
 
 pytestmark = pytest.mark.skipif(not PLAYWRIGHT_AVAILABLE, reason="Playwright not available")
 
@@ -21,12 +19,7 @@ class TestPlaywrightAutomationIntegration:
 
         tool = PlaywrightAutomationTool()
 
-        result = tool._run(
-            url="https://example.com",
-            action="screenshot",
-            tenant="test",
-            workspace="test"
-        )
+        result = tool._run(url="https://example.com", action="screenshot", tenant="test", workspace="test")
 
         assert result.success
         assert "screenshot" in result.data
@@ -38,12 +31,7 @@ class TestPlaywrightAutomationIntegration:
 
         tool = PlaywrightAutomationTool()
 
-        result = tool._run(
-            url="https://example.com",
-            action="content",
-            tenant="test",
-            workspace="test"
-        )
+        result = tool._run(url="https://example.com", action="content", tenant="test", workspace="test")
 
         assert result.success
         assert "html" in result.data
@@ -59,14 +47,8 @@ class TestPlaywrightAutomationIntegration:
         tool = PlaywrightAutomationTool()
 
         start_time = time.time()
-        result = tool._run(
-            url="https://example.com",
-            action="screenshot",
-            tenant="test",
-            workspace="test"
-        )
+        result = tool._run(url="https://example.com", action="screenshot", tenant="test", workspace="test")
         elapsed_time = time.time() - start_time
 
         assert result.success
         assert elapsed_time < 10.0, f"Automation took {elapsed_time}s, exceeds 10s limit"
-

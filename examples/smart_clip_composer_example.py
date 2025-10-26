@@ -16,6 +16,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
@@ -121,9 +122,7 @@ def main() -> int:
             platforms = suggestion.get("suggested_platforms", [])
 
             print(f"   {i + 1}. **{title}**")
-            print(
-                f"      Duration: {duration:.1f}s ({start_time:.1f}s - {end_time:.1f}s)"
-            )
+            print(f"      Duration: {duration:.1f}s ({start_time:.1f}s - {end_time:.1f}s)")
             print(f"      Confidence: {confidence:.2f}")
             print(f"      Platforms: {', '.join(platforms)}")
 
@@ -137,9 +136,7 @@ def main() -> int:
             # Show description preview
             description = suggestion.get("description", "")
             if description:
-                desc_preview = (
-                    description[:80] + "..." if len(description) > 80 else description
-                )
+                desc_preview = description[:80] + "..." if len(description) > 80 else description
                 print(f'      Description: "{desc_preview}"')
 
             print()
@@ -159,9 +156,7 @@ def main() -> int:
         print(f"   Base: {base_suggestion['title']}")
 
         # Generate variants
-        variant_objects = composer.generate_clip_variants(
-            base_suggestion, num_variants=2
-        )
+        variant_objects = composer.generate_clip_variants(base_suggestion, num_variants=2)
 
         for i, variant in enumerate(variant_objects[:3]):
             expected_perf = variant.expected_performance

@@ -7,7 +7,7 @@ import time
 from copy import deepcopy
 from typing import TYPE_CHECKING, Any
 
-from obs import metrics
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
 from .middleware import PipelineStepMiddleware, StepContext
@@ -39,21 +39,18 @@ class PipelineMetricsMixin:
         return "success" if result.success else "error"
 
     def _record_step_metrics(self, step: str, outcome: str, duration: float | None) -> None:
-        labels = metrics.label_ctx()
+        m = get_metrics()
+        labels = {"orchestrator": getattr(self, "_orchestrator", "unknown"), "step": step, "status": outcome}
         try:
-            if outcome == "success":
-                metrics.PIPELINE_STEPS_COMPLETED.labels(**labels, step=step).inc()
-            elif outcome == "skipped":
-                metrics.PIPELINE_STEPS_SKIPPED.labels(**labels, step=step).inc()
-            else:
-                metrics.PIPELINE_STEPS_FAILED.labels(**labels, step=step).inc()
+            # Counters for step outcomes
+            name = {
+                "success": "pipeline_steps_completed",
+                "skipped": "pipeline_steps_skipped",
+            }.get(outcome, "pipeline_steps_failed")
+            m.counter(name, labels=labels).inc()
+            # Duration histogram if provided
             if duration is not None:
-                metrics.PIPELINE_STEP_DURATION.labels(
-                    **labels,
-                    step=step,
-                    orchestrator=self._orchestrator,
-                    status=outcome,
-                ).observe(duration)
+                m.histogram("pipeline_step_duration_seconds", duration, labels=labels)
         except Exception:  # pragma: no cover - metrics optional
             logger = getattr(self, "logger", None)
             if logger is not None:
@@ -64,12 +61,10 @@ class PipelineMetricsMixin:
 
     @contextlib.contextmanager
     def _pipeline_inflight(self) -> Any:
-        labels = metrics.label_ctx()
+        m = get_metrics()
+        labels = {"orchestrator": getattr(self, "_orchestrator", "unknown")}
         try:
-            metrics.PIPELINE_INFLIGHT.labels(
-                **labels,
-                orchestrator=self._orchestrator,
-            ).inc()
+            m.gauge("pipeline_inflight", labels=labels).add(1)
         except Exception:  # pragma: no cover - metrics optional
             logger = getattr(self, "logger", None)
             if logger is not None:
@@ -78,24 +73,18 @@ class PipelineMetricsMixin:
             yield
         finally:
             try:
-                metrics.PIPELINE_INFLIGHT.labels(
-                    **labels,
-                    orchestrator=self._orchestrator,
-                ).dec()
+                m.gauge("pipeline_inflight", labels=labels).add(-1)
             except Exception:  # pragma: no cover - metrics optional
                 logger = getattr(self, "logger", None)
                 if logger is not None:
                     logger.debug("metrics emit failed (inflight dec)")
 
     def _record_pipeline_duration(self, status: str, duration: float) -> None:
-        labels = metrics.label_ctx()
+        m = get_metrics()
+        labels = {"status": status, "orchestrator": getattr(self, "_orchestrator", "unknown")}
         try:
-            metrics.PIPELINE_DURATION.labels(**labels, status=status).observe(duration)
-            metrics.PIPELINE_TOTAL_DURATION.labels(
-                **labels,
-                orchestrator=self._orchestrator,
-                status=status,
-            ).observe(duration)
+            m.histogram("pipeline_duration_seconds", duration, labels=labels)
+            m.histogram("pipeline_total_duration_seconds", duration, labels=labels)
         except Exception:  # pragma: no cover - metrics optional
             logger = getattr(self, "logger", None)
             if logger is not None:
@@ -116,8 +105,13 @@ class PipelineMetricsMixin:
 
         step_observability = getattr(self, "_step_observability", None)
         if isinstance(step_observability, dict) and step_observability:
-            pipeline_observability = payload.setdefault("observability", {})
-            pipeline_observability["log_patterns"] = {
+            # Avoid TypedDict key error by normalizing field explicitly
+            obs = payload.get("observability")
+            if not isinstance(obs, dict):
+                obs = {}
+                with contextlib.suppress(Exception):
+                    payload["observability"] = obs
+            obs["log_patterns"] = {
                 "summary": merge_log_pattern_summaries(step_observability),
                 "per_step": deepcopy(step_observability),
             }
@@ -147,7 +141,7 @@ class PipelineMetricsMixin:
         )
 
         # Determine processing type
-        processing_type = payload.get("processing_type", "full")
+        processing_type = str(payload.get("processing_type", "full"))
 
         # Extract content type if available
         content_type = None
@@ -157,16 +151,18 @@ class PipelineMetricsMixin:
                 content_type = download_data.get("content_type")
 
         # Extract quality score
-        quality_score = payload.get("quality_score")
+        from typing import cast
+
+        quality_score = cast("float | None", payload.get("quality_score"))
         if quality_score is None and "analysis" in payload:
             analysis_data = payload["analysis"]
             if isinstance(analysis_data, dict) and "data" in analysis_data:
                 quality_score = analysis_data["data"].get("overall_quality")
 
         # Extract early exit info
-        exit_checkpoint = payload.get("exit_checkpoint")
-        exit_reason = payload.get("exit_reason")
-        exit_confidence = payload.get("exit_confidence")
+        exit_checkpoint = cast("str | None", payload.get("exit_checkpoint"))
+        exit_reason = cast("str | None", payload.get("exit_reason"))
+        exit_confidence = cast("float | None", payload.get("exit_confidence"))
 
         # Calculate time savings estimate
         time_saved_pct = None
@@ -186,8 +182,10 @@ class PipelineMetricsMixin:
         try:
             loop = asyncio.get_event_loop()
             if loop.is_running():
-                # Schedule as background task
-                loop.create_task(
+                # Schedule as background task and retain reference to avoid GC
+                if not hasattr(self, "_background_tasks"):
+                    self._background_tasks = set()
+                task = loop.create_task(
                     record_pipeline_metrics(
                         processing_type=processing_type,
                         content_type=content_type,
@@ -199,6 +197,7 @@ class PipelineMetricsMixin:
                         time_saved_pct=time_saved_pct,
                     )
                 )
+                self._background_tasks.add(task)
         except Exception:
             # Silently fail - dashboard recording is optional
             pass
@@ -237,6 +236,9 @@ class PipelineExecutionMixin(PipelineMetricsMixin):
             context.result = result
             await self._dispatch_after_step(context, middlewares)
             self._capture_step_observability(step, context)
+            if result is None:
+                # Defensive fallback: enforce StepResult return type
+                result = StepResult.fail("Step returned no result")
             return result
         except Exception as exc:  # pragma: no cover - unexpected path
             error = exc

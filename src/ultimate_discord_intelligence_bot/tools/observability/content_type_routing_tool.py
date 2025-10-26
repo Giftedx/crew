@@ -2,15 +2,32 @@
 
 This module implements content classification and routing to enable specialized
 processing pipelines for different content types (educational, entertainment, news, etc).
+
+Supports both LLM-based classification (via Instructor) and pattern-matching fallback.
 """
 
 from __future__ import annotations
 
+import logging
 import re
 from dataclasses import dataclass
 
-from ultimate_discord_intelligence_bot.step_result import StepResult
+from core.secure_config import get_config
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
+from ultimate_discord_intelligence_bot.step_result import ErrorCategory, StepResult
 from ultimate_discord_intelligence_bot.tools._base import BaseTool
+
+
+# Conditional imports for optional dependencies
+try:
+    from ai.response_models import ContentTypeClassification
+    from ai.structured_outputs import InstructorClientFactory
+
+    INSTRUCTOR_AVAILABLE = True
+except ImportError:
+    INSTRUCTOR_AVAILABLE = False
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -25,10 +42,20 @@ class ContentClassification:
 
 
 class ContentTypeRoutingTool(BaseTool[dict]):
-    """Classifies content and determines optimal processing pipeline."""
+    """Classifies content and determines optimal processing pipeline.
+
+    Supports two analysis methods:
+    1. LLM-based classification (via Instructor) - when enabled and available
+    2. Pattern-matching fallback - always available, used when LLM fails or disabled
+    """
 
     name: str = "content_type_routing_tool"
     description: str = "Analyzes content to determine type and route to appropriate processing pipeline"
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._metrics = get_metrics()
+        self._config = get_config()
 
     def run(self, input_data: dict) -> StepResult:
         """Run content type classification and routing.
@@ -46,9 +73,21 @@ class ContentTypeRoutingTool(BaseTool[dict]):
             metadata = input_data.get("metadata", {})
 
             if not transcript:
-                return StepResult.fail(error="No transcript provided for content classification")
+                return StepResult.fail(
+                    error="No transcript provided for content classification",
+                    error_category=ErrorCategory.MISSING_REQUIRED_FIELD,
+                )
 
-            # Perform content classification
+            # Attempt LLM-based classification first if enabled
+            llm_result = self._try_llm_classification(transcript, title, description)
+            if llm_result is not None:
+                self._metrics.counter(
+                    "tool_runs_total",
+                    labels={"tool": self.name, "method": "llm_instructor", "outcome": "success"},
+                ).inc()
+                return llm_result
+
+            # Fallback to pattern-matching classification
             classification = self._classify_content(transcript, title, description, metadata)
 
             # Determine routing decision
@@ -66,12 +105,110 @@ class ContentTypeRoutingTool(BaseTool[dict]):
                     "estimated_speedup": routing_config.get("estimated_speedup", 1.0),
                 },
                 "recommendations": self._generate_recommendations(classification),
+                "analysis_method": "pattern_matching",
+            }
+
+            self._metrics.counter(
+                "tool_runs_total",
+                labels={"tool": self.name, "method": "pattern_matching", "outcome": "success"},
+            ).inc()
+
+            return StepResult.ok(result=result)
+
+        except Exception as e:
+            self._metrics.counter(
+                "tool_runs_total",
+                labels={"tool": self.name, "method": "unknown", "outcome": "error"},
+            ).inc()
+            return StepResult.fail(
+                error=f"Content type routing failed: {e!s}",
+                error_category=ErrorCategory.PROCESSING,
+            )
+
+    def _try_llm_classification(self, transcript: str, title: str, description: str) -> StepResult | None:
+        """Attempt LLM-based content classification using Instructor.
+
+        Returns:
+            StepResult with classification if successful, None to trigger fallback
+        """
+        # Check if Instructor is enabled and available
+        if not INSTRUCTOR_AVAILABLE:
+            return None
+
+        if not InstructorClientFactory.is_enabled():
+            return None
+
+        try:
+            # Create Instructor client
+            client = InstructorClientFactory.create_openrouter_client()
+            if client is None:
+                logger.warning("Failed to create Instructor client for content routing")
+                return None
+
+            # Prepare context for LLM
+            combined_text = (
+                f"Title: {title}\n\nDescription: {description}\n\nTranscript (first 3000 chars): {transcript[:3000]}"
+            )
+
+            # Build prompt
+            prompt = f"""Analyze the following content and classify it into appropriate content types.
+
+Provide:
+1. Primary content type (e.g., educational, entertainment, news, technology, discussion, general)
+2. Confidence level (0.0-1.0)
+3. Secondary content types if applicable
+4. Recommended processing pipeline
+5. Processing flags for optimization
+6. Recommendations for analysis
+
+Content to analyze:
+{combined_text}
+"""
+
+            # Call LLM with structured output
+            response = client.chat.completions.create(
+                model=self._config.openrouter_llm_model,
+                response_model=ContentTypeClassification,
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "You are an expert content classifier. Analyze content and provide structured classification results.",
+                    },
+                    {"role": "user", "content": prompt},
+                ],
+                max_tokens=1000,
+                temperature=0.3,  # Lower temperature for more consistent classifications
+            )
+
+            # Extract validated Pydantic model
+            decision = response.parsed if hasattr(response, "parsed") else response
+
+            # Convert to result format
+            result = {
+                "classification": {
+                    "primary_type": decision.primary_type.value,
+                    "confidence": decision.confidence,
+                    "secondary_types": [t.value for t in decision.secondary_types],
+                },
+                "routing": {
+                    "pipeline": decision.recommended_pipeline,
+                    "processing_flags": decision.processing_flags,
+                    "estimated_speedup": decision.estimated_processing_time / 100.0,  # Normalize
+                },
+                "recommendations": decision.recommendations,
+                "analysis_method": "llm_instructor",
+                "quality_score": decision.quality_score,
             }
 
             return StepResult.ok(result=result)
 
         except Exception as e:
-            return StepResult.fail(error=f"Content type routing failed: {e!s}")
+            logger.warning(f"LLM classification failed, falling back to pattern matching: {e}")
+            self._metrics.counter(
+                "tool_runs_total",
+                labels={"tool": self.name, "method": "llm_instructor", "outcome": "error"},
+            ).inc()
+            return None  # Trigger fallback to pattern matching
 
     def _classify_content(self, transcript: str, title: str, description: str, metadata: dict) -> ContentClassification:
         """Classify content based on multiple signals."""

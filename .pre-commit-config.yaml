@@ -71,9 +71,10 @@ repos:
         language: python
         types: [python]
         files: ^src/.*\.py$
-      - id: organize-root-directory
-        name: Keep root directory organized
-        entry: scripts/cleanup_root.py
-        language: python
-        always_run: true
-        pass_filenames: false
+      # Temporarily disabled - script missing
+      # - id: organize-root-directory
+      #   name: Keep root directory organized
+      #   entry: scripts/cleanup_root.py
+      #   language: python
+      #   always_run: true
+      #   pass_filenames: false

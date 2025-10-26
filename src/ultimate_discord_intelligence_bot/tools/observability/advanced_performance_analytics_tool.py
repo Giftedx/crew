@@ -31,7 +31,6 @@ from ..advanced_performance_analytics_integration import (
     run_full_performance_analysis,
 )
 from ..obs.metrics import get_metrics
-from ..step_result import StepResult
 from ._base import BaseTool
 
 

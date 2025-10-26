@@ -15,8 +15,6 @@ The caching system provides:
 
 import asyncio
 
-from pydantic import BaseModel
-
 from core.structured_llm_service import (
     CacheKeyGenerator,
     ResponseCache,
@@ -24,6 +22,7 @@ from core.structured_llm_service import (
     StructuredLLMService,
     StructuredRequest,
 )
+from pydantic import BaseModel
 
 
 class UserProfile(BaseModel):
@@ -132,9 +131,7 @@ async def ttl_based_caching_example():
 
     print("TTL values for different task types:")
     for task_type, expected_ttl in tasks_and_ttls:
-        request = StructuredRequest(
-            prompt="test", response_model=UserProfile, task_type=task_type
-        )
+        request = StructuredRequest(prompt="test", response_model=UserProfile, task_type=task_type)
         ttl = cache.get_ttl_for_request(request)
         print(f"  {task_type}: {ttl} seconds ({ttl / 3600:.1f} hours)")
 

@@ -100,13 +100,32 @@ else:
 class UltimateDiscordIntelligenceBotCrew:
     """Autonomous intelligence crew with specialised mission roles."""
 
-    def __init__(self):
-        """Initialize the crew with MCP tools and Discord integration."""
+    def __init__(self) -> None:
+        """Initialize the crew with MCP tools, Discord integration, and tracing capabilities."""
+        # MCP and Discord setup
         self.mcp_client = MCPClient()
         self._mcp_tools_initialized = False
         self.artifact_publisher = ArtifactPublisher()
         self.discord_config = DiscordConfig()
         self.artifact_handler = None
+
+        # Enhanced tracing setup
+        self._execution_trace: list[dict[str, Any]] = []
+        self._execution_start_time: float | None = None
+        self._current_step_count = 0
+
+        # Compatibility attributes expected by some tests/wrappers
+        self._original_tasks: dict[str, Any] = {}
+        self._original_agents: dict[str, Any] = {}
+
+        # Hooks expected by crewai.project.annotations wrapper
+        self._before_kickoff: dict[str, Any] = {}
+        self._after_kickoff: dict[str, Any] = {}
+
+        # Minimal agent config footprint for validation tests
+        self.agents_config: dict[str, dict[str, Any]] = {
+            "default": {"date_format": "%Y-%m-%d", "timezone": "UTC"}
+        }
 
     async def _initialize_mcp_tools(self):
         """Initialize MCP tools and register them with agents."""
@@ -616,22 +635,6 @@ class UltimateDiscordIntelligenceBotCrew:
     # ENHANCED STEP LOGGER & TRACING
     # ========================================
 
-    def __init__(self) -> None:
-        """Initialize crew with enhanced tracing capabilities."""
-        self._execution_trace: list[dict[str, Any]] = []
-        self._execution_start_time: float | None = None
-        self._current_step_count = 0
-        # Compatibility attributes expected by some tests/wrappers
-        self._original_tasks: dict[str, Any] = getattr(self, "_original_tasks", {}) or {}
-        self._original_agents: dict[str, Any] = getattr(self, "_original_agents", {}) or {}
-        # Hooks expected by crewai.project.annotations wrapper
-        self._before_kickoff: dict[str, Any] = {}
-        self._after_kickoff: dict[str, Any] = {}
-        # Minimal agent config footprint for validation tests
-        self.agents_config: dict[str, dict[str, Any]] = getattr(self, "agents_config", None) or {
-            "default": {"date_format": "%Y-%m-%d", "timezone": "UTC"}
-        }
-
     def _enhanced_step_logger(self, step: Any) -> None:
         """Enhanced step logging with structured tracing and optional verbose output."""
         if self._execution_start_time is None:
@@ -715,9 +718,7 @@ class UltimateDiscordIntelligenceBotCrew:
                 "execution_summary": {
                     "total_steps": self._current_step_count,
                     "agents_used": list({step["agent_role"] for step in self._execution_trace}),
-                    "tools_used": list(
-                        {step["tool"] for step in self._execution_trace if step["tool"] != "unknown"}
-                    ),
+                    "tools_used": list({step["tool"] for step in self._execution_trace if step["tool"] != "unknown"}),
                     "total_duration": time.time() - self._execution_start_time if self._execution_start_time else 0,
                 },
                 "trace_url_template": "Use this for local analysis: file://" + os.path.abspath(trace_path),

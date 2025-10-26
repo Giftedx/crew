@@ -52,14 +52,14 @@ class _MetricsFacade:
             return _NoOpMetric()
         if not hasattr(labeled, "add"):
             try:
-                labeled.add = labeled.inc  # type: ignore[attr-defined]
+                labeled.add = labeled.inc
             except Exception:  # pragma: no cover
                 return _NoOpMetric()
         if not hasattr(labeled, "set"):
-            labeled.set = lambda *a, **k: None  # type: ignore[attr-defined]
+            labeled.set = lambda *a, **k: None
         if not hasattr(labeled, "observe"):
-            labeled.observe = lambda *a, **k: None  # type: ignore[attr-defined]
-        return labeled  # type: ignore[return-value]
+            labeled.observe = lambda *a, **k: None
+        return labeled
 
     def counter(self, name: str, *_, labels: dict[str, str] | None = None, **__) -> _Metric:  # swallow extra args
         labels = labels or {}
@@ -82,10 +82,10 @@ class _MetricsFacade:
                 labeled = g.labels(*labels.values())
                 # Provide add alias (increment) though seldom used for gauges
                 if not hasattr(labeled, "add"):
-                    labeled.add = lambda v, *_a, **_k: labeled.inc(v) if hasattr(labeled, "inc") else None  # type: ignore[attr-defined]
+                    labeled.add = lambda v, *_a, **_k: labeled.inc(v) if hasattr(labeled, "inc") else None
                 if not hasattr(labeled, "observe"):
-                    labeled.observe = lambda *a, **k: None  # type: ignore[attr-defined]
-                return labeled  # type: ignore[return-value]
+                    labeled.observe = lambda *a, **k: None
+                return labeled
         except Exception as exc:  # pragma: no cover
             logging.getLogger(__name__).debug("gauge backend failure: %s", exc)
         return _NoOpMetric()

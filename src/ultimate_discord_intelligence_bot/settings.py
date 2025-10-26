@@ -218,20 +218,15 @@ def _get_setting(key: str, default: str = "") -> str:
 def _get_path_setting(key: str, default_path: Path) -> Path:
     """Get a path setting with backward compatibility."""
     settings = get_settings()
-    if key == "crewai_base_dir":
-        return settings.base_dir
-    elif key == "crewai_downloads_dir":
-        return settings.downloads_dir
-    elif key == "crewai_config_dir":
-        return settings.config_dir
-    elif key == "crewai_logs_dir":
-        return settings.logs_dir
-    elif key == "crewai_processing_dir":
-        return settings.processing_dir
-    elif key == "crewai_temp_dir":
-        return settings.temp_dir
-    else:
-        return default_path
+    mapping = {
+        "crewai_base_dir": settings.base_dir,
+        "crewai_downloads_dir": settings.downloads_dir,
+        "crewai_config_dir": settings.config_dir,
+        "crewai_logs_dir": settings.logs_dir,
+        "crewai_processing_dir": settings.processing_dir,
+        "crewai_temp_dir": settings.temp_dir,
+    }
+    return mapping.get(key, default_path)
 
 
 # Export commonly used settings for backward compatibility

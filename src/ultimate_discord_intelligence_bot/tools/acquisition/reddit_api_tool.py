@@ -7,6 +7,7 @@ import logging
 
 try:
     import praw
+
     PRAW_AVAILABLE = True
 except ImportError:
     PRAW_AVAILABLE = False
@@ -130,15 +131,17 @@ class RedditAPITool(BaseTool[StepResult]):
             posts = []
 
             for submission in subreddit.hot(limit=limit):
-                posts.append({
-                    "id": submission.id,
-                    "title": submission.title,
-                    "author": str(submission.author) if submission.author else None,
-                    "score": submission.score,
-                    "num_comments": submission.num_comments,
-                    "url": submission.url,
-                    "permalink": submission.permalink,
-                })
+                posts.append(
+                    {
+                        "id": submission.id,
+                        "title": submission.title,
+                        "author": str(submission.author) if submission.author else None,
+                        "score": submission.score,
+                        "num_comments": submission.num_comments,
+                        "url": submission.url,
+                        "permalink": submission.permalink,
+                    }
+                )
 
             return StepResult.ok(data={"subreddit": subreddit_name, "posts": posts})
 
@@ -155,13 +158,15 @@ class RedditAPITool(BaseTool[StepResult]):
             results = []
 
             for submission in self.reddit.subreddit("all").search(query, limit=limit):
-                results.append({
-                    "id": submission.id,
-                    "title": submission.title,
-                    "subreddit": str(submission.subreddit),
-                    "score": submission.score,
-                    "url": submission.url,
-                })
+                results.append(
+                    {
+                        "id": submission.id,
+                        "title": submission.title,
+                        "subreddit": str(submission.subreddit),
+                        "score": submission.score,
+                        "url": submission.url,
+                    }
+                )
 
             return StepResult.ok(data={"query": query, "results": results})
 
@@ -179,13 +184,15 @@ class RedditAPITool(BaseTool[StepResult]):
             posts = []
 
             for submission in user.submissions.new(limit=limit):
-                posts.append({
-                    "id": submission.id,
-                    "title": submission.title,
-                    "subreddit": str(submission.subreddit),
-                    "score": submission.score,
-                    "url": submission.url,
-                })
+                posts.append(
+                    {
+                        "id": submission.id,
+                        "title": submission.title,
+                        "subreddit": str(submission.subreddit),
+                        "score": submission.score,
+                        "url": submission.url,
+                    }
+                )
 
             return StepResult.ok(data={"username": username, "posts": posts})
 

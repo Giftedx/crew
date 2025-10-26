@@ -214,10 +214,10 @@ class HealthChecker:
             retrieved = self._service.cache.get(test_key)
 
             # Clean up
-            try:
+            import contextlib
+
+            with contextlib.suppress(Exception):
                 self._service.cache.delete(test_key)
-            except Exception:
-                pass  # Ignore cleanup errors
 
             healthy = retrieved is not None and retrieved.get("test") == "data"
 

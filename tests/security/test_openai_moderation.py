@@ -7,6 +7,7 @@ import pytest
 
 try:
     from openai import OpenAI
+
     OPENAI_AVAILABLE = True
 except ImportError:
     OPENAI_AVAILABLE = False
@@ -20,6 +21,7 @@ class TestOpenAIModerationService:
     def service(self):
         """Create OpenAI moderation service instance."""
         from src.security.openai_moderation import OpenAIModerationService
+
         return OpenAIModerationService(api_key="test_key")
 
     def test_service_initialization(self, service):
@@ -39,7 +41,7 @@ class TestOpenAIModerationService:
         mock_result.category_scores.violence = 0.1
         mock_response.results = [mock_result]
 
-        with patch.object(service.client.moderations, 'create', return_value=mock_response):
+        with patch.object(service.client.moderations, "create", return_value=mock_response):
             result = service.check_content("hateful content")
 
             assert result.flagged is True
@@ -56,7 +58,7 @@ class TestOpenAIModerationService:
         mock_result.category_scores.hate = 0.1
         mock_response.results = [mock_result]
 
-        with patch.object(service.client.moderations, 'create', return_value=mock_response):
+        with patch.object(service.client.moderations, "create", return_value=mock_response):
             result = service.check_content("safe content")
 
             assert result.flagged is False
@@ -90,7 +92,7 @@ class TestOpenAIModerationService:
 
         mock_response.results = [mock_result1, mock_result2]
 
-        with patch.object(service.client.moderations, 'create', return_value=mock_response):
+        with patch.object(service.client.moderations, "create", return_value=mock_response):
             results = service.check_batch(["safe content", "violent content"])
 
             assert len(results) == 2

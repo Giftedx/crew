@@ -527,8 +527,8 @@ __all__ = [
 # Content Moderation Metrics
 MODERATION_CHECKS_COUNT = Counter("moderation_checks_total", "Content Moderation Checks", ["category", "action"])
 MODERATION_BLOCKS_COUNT = Counter("moderation_blocks_total", "Content Blocked by Moderation", ["category"])
-MODERATION_LATENCY = PrometheusHistogram(
-    "moderation_latency_seconds",
-    "Moderation check latency in seconds",
-    ["provider"]
-) if PROMETHEUS_AVAILABLE else None
+MODERATION_LATENCY = (
+    PrometheusHistogram("moderation_latency_seconds", "Moderation check latency in seconds", ["provider"])
+    if PROMETHEUS_AVAILABLE
+    else None
+)

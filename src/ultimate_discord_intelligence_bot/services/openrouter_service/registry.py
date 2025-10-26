@@ -30,9 +30,11 @@ class ServiceRegistry:
     service instances throughout the application lifecycle.
     """
 
-    _instances: dict[str, Any] = {}
-    _factories: dict[str, Callable[[], Any]] = {}
-    _lock = threading.RLock()
+    from typing import ClassVar
+
+    _instances: ClassVar[dict[str, Any]] = {}
+    _factories: ClassVar[dict[str, Callable[[], Any]]] = {}
+    _lock: ClassVar[threading.RLock] = threading.RLock()
 
     @classmethod
     def register(cls, name: str, instance: Any) -> None:

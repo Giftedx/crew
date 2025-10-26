@@ -16,6 +16,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
@@ -27,9 +28,7 @@ from analysis.safety.safety_brand_suitability_service import (
 def main() -> int:
     """Main example function."""
     if len(sys.argv) < 2:
-        print(
-            'Usage: python examples/safety_brand_suitability_example.py "content to analyze"'
-        )
+        print('Usage: python examples/safety_brand_suitability_example.py "content to analyze"')
         print("Example:")
         print(
             'python examples/safety_brand_suitability_example.py "This is professional content about technology and education. It contains no inappropriate material and is suitable for all audiences."'
@@ -38,14 +37,10 @@ def main() -> int:
 
     content = sys.argv[1]
     if len(content) < 20:
-        print(
-            "Error: Content too short for meaningful analysis (minimum 20 characters)"
-        )
+        print("Error: Content too short for meaningful analysis (minimum 20 characters)")
         return 1
 
-    print(
-        f"🛡️  Analyzing safety and brand suitability in: {len(content)} characters of content"
-    )
+    print(f"🛡️  Analyzing safety and brand suitability in: {len(content)} characters of content")
 
     # Get safety analysis service
     safety_service = get_safety_brand_suitability_service()

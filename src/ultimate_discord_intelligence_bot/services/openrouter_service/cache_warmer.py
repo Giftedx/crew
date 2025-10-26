@@ -249,8 +249,10 @@ class CacheWarmer:
             for prompt in prompts
         ]
 
-        # Start warming in background
-        asyncio.create_task(self.warm_cache(prompt_configs))
+        # Start warming in background and retain reference
+        task = asyncio.create_task(self.warm_cache(prompt_configs))
+        self._warming_tasks.add(task)
+        task.add_done_callback(self._warming_tasks.discard)
 
     def get_stats(self) -> dict[str, Any]:
         """Get cache warming statistics.
@@ -333,14 +335,12 @@ class EnhancedCacheManager:
                 self._stats["cache_hits"] += 1
 
                 # Handle compressed data if advanced caching is enabled
-                if self._feature_flags.ENABLE_OPENROUTER_ADVANCED_CACHING:
-                    if isinstance(cached_data, bytes):
-                        decompressed = self._compressor.decompress(cached_data)
-                        if decompressed:
-                            return decompressed
-                        else:
-                            # Fall back to treating as regular data
-                            return cached_data
+                if self._feature_flags.ENABLE_OPENROUTER_ADVANCED_CACHING and isinstance(cached_data, bytes):
+                    decompressed = self._compressor.decompress(cached_data)
+                    if decompressed:
+                        return decompressed
+                    # Fall back to treating as regular data
+                    return cached_data
 
                 return cached_data
             else:

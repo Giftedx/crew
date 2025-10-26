@@ -12,8 +12,6 @@ from typing import TYPE_CHECKING, Any
 
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
-from ..step_result import StepResult
-
 
 if TYPE_CHECKING:
     from ..tenancy.context import TenantContext
@@ -32,11 +30,11 @@ class CacheOptimizer:
             tenant_context: Tenant context for data isolation
         """
         self.tenant_context = tenant_context
-        self.cache_stats = {}
-        self.optimization_rules = []
+        self.cache_stats: dict[str, Any] = {}
+        self.optimization_rules: list[dict[str, Any]] = []
         self._initialize_optimization_rules()
 
-    def _initialize_optimization_rules(self) -> StepResult:
+    def _initialize_optimization_rules(self) -> None:
         """Initialize cache optimization rules."""
         self.optimization_rules = [
             {
@@ -95,11 +93,14 @@ class CacheOptimizer:
             else:  # balanced
                 optimized_data = self._apply_balanced_optimization(cache_data)
 
-            optimization_results["optimized_size"] = len(optimized_data)
-            optimization_results["size_reduction"] = len(cache_data) - len(optimized_data)
-            optimization_results["reduction_percentage"] = (
-                optimization_results["size_reduction"] / len(cache_data) * 100 if len(cache_data) > 0 else 0
-            )
+            original_size = len(cache_data)
+            optimized_size = len(optimized_data)
+            size_reduction = original_size - optimized_size
+            reduction_percentage = (size_reduction / original_size * 100) if original_size > 0 else 0
+
+            optimization_results["optimized_size"] = optimized_size
+            optimization_results["size_reduction"] = size_reduction
+            optimization_results["reduction_percentage"] = reduction_percentage
 
             # Calculate performance metrics
             optimization_results["performance_metrics"] = self._calculate_performance_metrics(
@@ -119,7 +120,7 @@ class CacheOptimizer:
             logger.error(f"Cache optimization failed: {e}")
             return StepResult.fail(f"Cache optimization failed: {e!s}")
 
-    def _apply_aggressive_optimization(self, cache_data: dict[str, Any]) -> StepResult:
+    def _apply_aggressive_optimization(self, cache_data: dict[str, Any]) -> dict[str, Any]:
         """Apply aggressive cache optimization.
 
         Args:
@@ -140,7 +141,7 @@ class CacheOptimizer:
 
         return optimized
 
-    def _apply_balanced_optimization(self, cache_data: dict[str, Any]) -> StepResult:
+    def _apply_balanced_optimization(self, cache_data: dict[str, Any]) -> dict[str, Any]:
         """Apply balanced cache optimization.
 
         Args:
@@ -161,7 +162,7 @@ class CacheOptimizer:
 
         return optimized
 
-    def _apply_conservative_optimization(self, cache_data: dict[str, Any]) -> StepResult:
+    def _apply_conservative_optimization(self, cache_data: dict[str, Any]) -> dict[str, Any]:
         """Apply conservative cache optimization.
 
         Args:
@@ -182,7 +183,7 @@ class CacheOptimizer:
 
         return optimized
 
-    def _should_keep_item_aggressive(self, key: str, value: Any, cache_data: dict[str, Any]) -> StepResult:
+    def _should_keep_item_aggressive(self, key: str, value: Any, cache_data: dict[str, Any]) -> bool:
         """Check if item should be kept with aggressive optimization.
 
         Args:
@@ -202,7 +203,7 @@ class CacheOptimizer:
 
         return not self._is_old_item(value)
 
-    def _should_keep_item_balanced(self, key: str, value: Any, cache_data: dict[str, Any]) -> StepResult:
+    def _should_keep_item_balanced(self, key: str, value: Any, cache_data: dict[str, Any]) -> bool:
         """Check if item should be kept with balanced optimization.
 
         Args:
@@ -227,7 +228,7 @@ class CacheOptimizer:
 
         return score >= 2
 
-    def _should_keep_item_conservative(self, key: str, value: Any, cache_data: dict[str, Any]) -> StepResult:
+    def _should_keep_item_conservative(self, key: str, value: Any, cache_data: dict[str, Any]) -> bool:
         """Check if item should be kept with conservative optimization.
 
         Args:
@@ -244,7 +245,7 @@ class CacheOptimizer:
 
         return not self._is_very_large_item(value)
 
-    def _is_frequently_accessed(self, key: str, value: Any) -> StepResult:
+    def _is_frequently_accessed(self, key: str, value: Any) -> bool:
         """Check if item is frequently accessed.
 
         Args:
@@ -258,7 +259,7 @@ class CacheOptimizer:
             return value["access_count"] >= 5
         return True  # Default to keeping if no access count
 
-    def _is_large_item(self, value: Any) -> StepResult:
+    def _is_large_item(self, value: Any) -> bool:
         """Check if item is large.
 
         Args:
@@ -275,7 +276,7 @@ class CacheOptimizer:
         except Exception:
             return False
 
-    def _is_very_large_item(self, value: Any) -> StepResult:
+    def _is_very_large_item(self, value: Any) -> bool:
         """Check if item is very large.
 
         Args:
@@ -292,7 +293,7 @@ class CacheOptimizer:
         except Exception:
             return False
 
-    def _is_old_item(self, value: Any) -> StepResult:
+    def _is_old_item(self, value: Any) -> bool:
         """Check if item is old.
 
         Args:
@@ -310,7 +311,7 @@ class CacheOptimizer:
                 pass
         return False
 
-    def _is_very_old_item(self, value: Any) -> StepResult:
+    def _is_very_old_item(self, value: Any) -> bool:
         """Check if item is very old.
 
         Args:
@@ -328,7 +329,7 @@ class CacheOptimizer:
                 pass
         return False
 
-    def _optimize_item_value(self, value: Any) -> StepResult:
+    def _optimize_item_value(self, value: Any) -> Any:
         """Optimize individual cache item value.
 
         Args:
@@ -346,10 +347,9 @@ class CacheOptimizer:
                 optimized.pop(key, None)
 
             # Compress large text content
-            if "content" in optimized and isinstance(optimized["content"], str):
-                if len(optimized["content"]) > 10000:
-                    optimized["content"] = optimized["content"][:10000] + "... [truncated]"
-                    optimized["content_truncated"] = True
+            if "content" in optimized and isinstance(optimized["content"], str) and len(optimized["content"]) > 10000:
+                optimized["content"] = optimized["content"][:10000] + "... [truncated]"
+                optimized["content_truncated"] = True
 
             return optimized
 
@@ -357,7 +357,7 @@ class CacheOptimizer:
 
     def _calculate_performance_metrics(
         self, original_data: dict[str, Any], optimized_data: dict[str, Any]
-    ) -> StepResult:
+    ) -> dict[str, Any]:
         """Calculate performance metrics for optimization.
 
         Args:
@@ -448,7 +448,7 @@ class CacheOptimizationManager:
         """Initialize cache optimization manager."""
         self.optimizers: dict[str, CacheOptimizer] = {}
 
-    def get_optimizer(self, tenant_context: TenantContext) -> StepResult:
+    def get_optimizer(self, tenant_context: TenantContext) -> CacheOptimizer:
         """Get or create cache optimizer for tenant.
 
         Args:
@@ -488,7 +488,7 @@ class CacheOptimizationManager:
 _cache_optimization_manager = CacheOptimizationManager()
 
 
-def get_cache_optimizer(tenant_context: TenantContext) -> StepResult:
+def get_cache_optimizer(tenant_context: TenantContext) -> CacheOptimizer:
     """Get cache optimizer for tenant.
 
     Args:

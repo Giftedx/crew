@@ -91,7 +91,7 @@ def _build_graph(text: str) -> dict[str, Any]:
     for kw in keywords:
         kw_id = f"keyword_{kw}"
         graph.add_node(kw_id, label=kw, type="keyword")
-        for idx, sentence in enumerate(sentences[:3]):
+        for idx, _sentence in enumerate(sentences[:3]):
             graph.add_edge(kw_id, f"sentence_{idx + 1}", relation="mentions")
     return {
         "nodes": [{"id": node, **(graph.nodes[node] or {})} for node in graph.nodes],
@@ -114,12 +114,25 @@ class GraphMemoryTool(BaseTool[StepResult]):
     name: str = "Graph Memory Tool"
     description: str = "Store heuristic knowledge graphs derived from text in a tenant-scoped namespace."
 
-    def __init__(self, storage_dir: str | os.PathLike[str] | None = None) -> None:
+    def __init__(self, storage_dir: str | os.PathLike[str] | None = None, *, use_unified_store: bool = False) -> None:
         super().__init__()
         base_dir = storage_dir or os.getenv("GRAPH_MEMORY_STORAGE", "crew_data/Processing/graph_memory")
         self._base_path = Path(base_dir)
         self._base_path.mkdir(parents=True, exist_ok=True)
         self._metrics = get_metrics()
+        self._use_unified_store = use_unified_store
+        self._unified_store = None
+
+        # Initialize unified graph store if requested
+        if use_unified_store:
+            try:
+                from memory.unified_graph_store import UnifiedGraphStore
+
+                self._unified_store = UnifiedGraphStore()
+            except Exception as e:
+                import logging
+
+                logging.getLogger(__name__).warning(f"Failed to initialize unified graph store: {e}")
 
     @staticmethod
     def _physical_namespace(namespace: str) -> str:
@@ -179,6 +192,45 @@ class GraphMemoryTool(BaseTool[StepResult]):
             graph_payload.setdefault("edges", [])
             graph_payload["metadata"]["node_count"] = len(graph_payload["nodes"])
             graph_payload["metadata"]["edge_count"] = len(graph_payload["edges"])
+
+            # Optionally persist to unified graph store (Neo4j/NetworkX/Qdrant)
+            if self._use_unified_store and self._unified_store is not None:
+                try:
+                    # Add nodes
+                    for node in graph_payload["nodes"]:
+                        node_id = str(node.get("id"))
+                        label = node.get("label")
+                        node_type = node.get("type")
+                        labels = []
+                        if isinstance(node_type, str) and node_type:
+                            labels.append(node_type.capitalize())
+                        # Heuristic: infer label from id prefix
+                        if node_id.startswith("sentence_"):
+                            labels.append("Sentence")
+                        if node_id.startswith("keyword_"):
+                            labels.append("Keyword")
+                        props = {k: v for k, v in node.items() if k not in {"id"}}
+                        if label:
+                            props.setdefault("label", label)
+                        self._unified_store.add_node(
+                            node_id, labels=labels or ["Node"], properties=props, namespace=namespace
+                        )
+
+                    # Add edges
+                    for edge in graph_payload["edges"]:
+                        src = str(edge.get("source"))
+                        dst = str(edge.get("target"))
+                        relation = str(edge.get("relation") or "RELATED_TO").upper()
+                        props = {k: v for k, v in edge.items() if k not in {"source", "target", "relation"}}
+                        self._unified_store.add_edge(src, dst, relation=relation, properties=props, namespace=namespace)
+                except Exception:
+                    # Best-effort: don't fail the tool if the store write fails
+                    with contextlib.suppress(Exception):
+                        self._metrics.counter(
+                            "graph_memory_store_errors_total",
+                            labels={"namespace": namespace},
+                        ).inc()
+                    # Continue with JSON persistence fallback
 
             ns_path = self._namespace_path(namespace)
             file_path = ns_path / f"{graph_id}.json"

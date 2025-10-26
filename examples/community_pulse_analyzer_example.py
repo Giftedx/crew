@@ -5,6 +5,7 @@ import sys
 import time
 from pathlib import Path
 
+
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 from features.community_pulse.community_pulse_analyzer_service import (
@@ -54,9 +55,7 @@ def main() -> int:
 
     print("\nPer-Platform:")
     for s in data.platform_summaries:
-        print(
-            f" - {s.platform}: n={s.total_items}, sentiment={s.avg_sentiment:.2f}, momentum={s.momentum_score:.2f}"
-        )
+        print(f" - {s.platform}: n={s.total_items}, sentiment={s.avg_sentiment:.2f}, momentum={s.momentum_score:.2f}")
 
     return 0
 

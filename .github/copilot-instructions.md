@@ -1,24 +1,22 @@
 ## AI Agent Guide
 
-- **Runtime surfaces**: Launch Discord/crew via `python -m ultimate_discord_intelligence_bot.setup_cli run {discord|crew}` (enhanced flags: `make run-discord-enhanced`); API is built in `src/server/app.py`; optional MCP entrypoint sits under `mcp_server/`.
-- **FastAPI wiring**: `create_app()` layers CORS → metrics → API cache → Prometheus `/metrics` → rate limiting; keep `/metrics` and `/health` outside rate-limit/tenant guards.
-- **Pipeline flow**: `ContentPipeline` (`pipeline_components/orchestrator.py`) executes download → transcription → content routing → quality gate → analysis/finalization; each phase returns a `StepResult` so fan-out tasks cancel cleanly on first failure.
-- **StepResult discipline**: Prefer `StepResult.ok/skip/uncertain/with_context` and populate `error_category`, `ErrorContext`, and `metadata` so `_pipeline_context` can score retries, severity, and observability.
-- **Tenancy & namespaces**: Use `with_tenant(...)`, `current_tenant()`, and `mem_ns()` (`tenancy/__init__.py`) when touching storage, caches, or metrics; tenant configs live under `tenants/<slug>` and are created by the setup CLI.
-- **LLM routing & budgeting**: `services/openrouter_service.py` orchestrates contextual bandits under `src/ai/`, tracks spend with `TokenMeter`, and consults semantic caches in `cache/semantic/`; respect `ENABLE_SEMANTIC_CACHE*` when adding new calls.
-- **Tool pattern**: Subclass `tools/_base.BaseTool`, register module paths in `tools/__init__.py::MAPPING`, export in `__all__`, and increment `obs.metrics.get_metrics().counter("tool_runs_total", labels={...})` inside `run()` implementations.
-- **Content routing**: `ContentTypeRoutingTool` feeds classifications into `config/content_types.yaml`; fall back to env thresholds (`QUALITY_MIN_*`) just like the orchestrator.
-- **Caching direction**: Follow `docs/architecture/adr-0001-cache-platform.md`; prefer `core/cache/multi_level_cache.py` adapters and document new flags with `make docs-flags-write`.
-- **HTTP access**: All outbound HTTP goes through `core/http_utils.resilient_get/resilient_post/retrying_*`; `scripts/validate_http_wrappers_usage.py` blocks raw `requests.*` usage.
-- **Downloads**: Reuse `tools/multi_platform_download_tool.MultiPlatformDownloadTool`; never invoke `yt-dlp` via subprocess—`make guards` enforces this guardrail.
-- **Memory integration**: Obtain vector clients via `memory/qdrant_provider.get_qdrant_client()`; it returns a pooled client or dummy in tests, so avoid instantiating `QdrantClient` directly.
-- **Observability**: Emit counters/histograms via `obs.metrics`, tag spans with tenant/workspace/content type using `pipeline_components/tracing.py`, and ensure long-running tasks publish notes via `BaseTool.publish_message` when available.
-- **Secrets & policy**: Resolve secrets through `core.secure_config.get_config()` and `security/secrets.get_secret`; keep tenant policy overrides in `tenants/<slug>/policy_overrides.yaml` aligned with feature flags and routing limits.
-- **Feature flags & settings**: `src/core/settings.py` provides the lightweight env overlay; `core/secure_config.get_config()` exposes secrets/flags for tools and pipeline; mirror new toggles in docs with `make docs-flags-write`.
-- **Guarded directories**: `scripts/guards/deprecated_directories_guard.py` forbids new code in `core/routing/`, `ai/routing/`, and `performance/`; add features under `ultimate_discord_intelligence_bot/` instead.
-- **Developer bootstrap**: Run `make init-env`, then `make first-run` (prefers `uv`) or `python -m ultimate_discord_intelligence_bot.setup_cli wizard`; `make doctor` verifies environment/tenant wiring.
-- **Daily loop**: Use `make quick-check` (format + lint + test-fast), `make guards` after editing networking/tools, `make compliance` for HTTP/StepResult audits, and `scripts/dev-workflow.sh full-check` for CI parity.
-- **Testing**: Execute `PYTHONPATH=src pytest -q -c .config/pytest.ini`; targeted sweeps live behind `make test-fast`, `make test-a2a`, `make test-mcp`, and `make compliance-summary` for reporting.
-- **Compliance & docs**: `make compliance-fix` auto-remediates common findings; `make docs`/`docs-strict` validate dashboards + feature-flag docs; `make deprecations-badge` refreshes README metadata.
-- **Data surfaces**: Runtime artifacts land under `crew_data/` (Downloads/Logs/Processing) and archival outputs under `archive/` + `benchmarks/`; ensure new pipelines respect these directories to keep tooling operational.
-- **Runbooks & references**: Keep `docs/core_services.md`, `docs/ARCHITECTURE_SYNC_REPORT_*.md`, and `docs/dev_assistants/*.md` nearby when wiring cross-service integrations or tracing data flows.
+```instructions
+- Architecture: Multi-agent Discord intelligence system; main app under `src/ultimate_discord_intelligence_bot/`; platform services in `src/core/` (routing/cache/resilience), `src/ai/` (LLM routing), `src/memory/` (vector/graph), `src/obs/` (metrics/tracing), `src/server/` (FastAPI).
+- Pipeline: `ContentPipeline` (`src/ultimate_discord_intelligence_bot/pipeline_components/orchestrator.py`) runs download → transcription → content routing → quality gate → analysis (fallacy + perspective in parallel) → finalization (memory/Discord fan-out). Each phase returns `StepResult`; on failure, downstream tasks are cancelled.
+- Early exits: Post-download and post-transcription checkpoints (`_check_early_exit_condition`) use `src/ultimate_discord_intelligence_bot/config/early_exit_checkpoints.yaml` to skip low-value content (saves ~75–90%).
+- StepResult pattern: Use `src/ultimate_discord_intelligence_bot/step_result.py` with `.ok()/.skip()/.fail()/.uncertain()/.with_context()` and `error_category` from `ErrorCategory`. Prefer returning structured `data` and fill `metadata` for observability and retries.
+- Tools: Subclass `tools/_base.BaseTool`; implement `run()` returning `StepResult`; export via module `__all__`, register in `MAPPING`, and increment `obs.metrics.get_metrics().counter("tool_runs_total", labels={"tool": self.name})` inside `run()`.
+- HTTP & downloads: Use `core/http_utils.resilient_get/resilient_post/retrying_*`; never `requests.*` directly (guarded by `scripts/validate_http_wrappers_usage.py`). Use `tools/acquisition/multi_platform_download_tool.MultiPlatformDownloadTool`; don’t shell out to `yt-dlp`.
+- Tenancy: Wrap storage/cache/metrics with `with_tenant(TenantContext(...))` (`src/ultimate_discord_intelligence_bot/tenancy/context.py`); read via `current_tenant()`; namespace keys with `mem_ns(ctx, "collection")`. Tenant configs live under `tenants/<slug>/` (created by setup wizard).
+- API service: `src/server/app.py::create_app()` wires CORS → metrics (`add_metrics_middleware`) → API cache → Prometheus `/metrics` (flag: `ENABLE_PROMETHEUS_ENDPOINT`) → rate limiting. Keep `/metrics` and `/health` outside tenant/rate-limit guards.
+- LLM routing & cache: `services/openrouter_service.py` selects models (LinUCB/VW) under `src/ai/`, tracks spend with TokenMeter, consults semantic caches (`cache/semantic/`). Respect `ENABLE_SEMANTIC_CACHE*` flags.
+- Memory & caching: Get Qdrant via `memory/qdrant_provider.get_qdrant_client()` (pooled/dummy in tests). Prefer unified multi-level cache (`core/cache/multi_level_cache.py`); see ADR `docs/architecture/adr-0001-cache-platform.md`.
+- Content routing & quality: `ContentTypeRoutingTool` + `config/content_types.yaml` set thresholds (`QUALITY_MIN_*`) per content type. Orchestrator falls back to env defaults if disabled.
+- Developer workflow: `make init-env` → `make first-run` → `make doctor`. Daily: `make quick-check` or `make full-check`; run `make guards` after changing HTTP/tools; `make compliance` for HTTP/StepResult audits.
+- Run targets: `make run-discord`, `make run-discord-enhanced`, `make run-crew`, `make run-mcp`, `python -m server.app`.
+- Tests: `make test-fast`, `make test-a2a`, `make test-mcp` (or run pytest with repo’s config). CI uses `ci-all` (doctor + format-check + lint + type + guards + test + compliance + deprecations-strict).
+- Guardrails: No new code in `src/core/routing/`, `src/ai/routing/`, `src/performance/`; avoid legacy cache optimizers (enforced by `scripts/guards/deprecated_directories_guard.py`).
+- Feature flags: Use `src/core/settings.py` + `core/secure_config.get_config()`; document new flags in `.env.example`. Key: `ENABLE_CONTENT_ROUTING`, `ENABLE_SEMANTIC_CACHE*`, `ENABLE_GRAPH_MEMORY`, `ENABLE_HIPPORAG_MEMORY`, `ENABLE_PROMETHEUS_ENDPOINT`.
+- Data & config: Runtime artifacts in `crew_data/`; archives in `archive/` + `benchmarks/`. YAML config in `src/ultimate_discord_intelligence_bot/config/` (e.g., `content_types.yaml`, `early_exit_checkpoints.yaml`).
+- References: `README.md`, `CLAUDE.md`, `docs/dev_assistants/`, ADRs under `docs/architecture/`.
+```

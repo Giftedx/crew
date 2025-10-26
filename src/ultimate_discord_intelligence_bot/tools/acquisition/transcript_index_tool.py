@@ -21,7 +21,9 @@ class TranscriptIndexTool(BaseTool[StepResult]):
 
     name: str = "Transcript Index Tool"
     description: str = "Index transcripts into timestamped windows and fetch surrounding context."
-    model_config = {"extra": "allow"}
+    from typing import Any, ClassVar
+
+    model_config: ClassVar[dict[str, Any]] = {"extra": "allow"}
 
     def __init__(self, window: float = 30.0):
         super().__init__()

@@ -285,11 +285,12 @@ class TestConsolidationFeatureFlags:
         assert cache is not None
 
         # Flag determines which backend is used
-        os.getenv("ENABLE_CACHE_V2", "false").lower() in [
+        flag_enabled = os.getenv("ENABLE_CACHE_V2", "false").lower() in [
             "true",
             "1",
             "yes",
         ]
+        assert isinstance(flag_enabled, bool)
         # Cache should exist regardless
         assert cache is not None
 

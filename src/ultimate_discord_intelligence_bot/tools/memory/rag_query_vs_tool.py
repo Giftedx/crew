@@ -3,7 +3,7 @@
 This tool queries a tenant-scoped VectorStore (Qdrant via memory.vector_store)
 for nearest neighbours to a query embedding. If the vector index is empty or
 unavailable, and optional `documents` are provided, it falls back to an
-offline TF‑IDF cosine ranking over those documents.
+offline TF-IDF cosine ranking over those documents.
 
 Contract:
 - run(query: str, index: str = "memory", top_k: int = 3, documents: list[str] | None = None) -> StepResult

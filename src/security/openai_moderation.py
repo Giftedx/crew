@@ -8,6 +8,7 @@ from dataclasses import dataclass
 
 try:
     from openai import OpenAI
+
     OPENAI_AVAILABLE = True
 except ImportError:
     OPENAI_AVAILABLE = False
@@ -19,6 +20,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class ModerationResult:
     """Result from OpenAI moderation check."""
+
     flagged: bool
     categories: dict[str, bool]
     category_scores: dict[str, float]
@@ -40,6 +42,7 @@ class OpenAIModerationService:
             return
 
         import os
+
         api_key = api_key or os.getenv("OPENAI_API_KEY")
 
         if not api_key:
@@ -60,12 +63,7 @@ class OpenAIModerationService:
         """
         if not self.client:
             # Fallback: allow content if moderation unavailable
-            return ModerationResult(
-                flagged=False,
-                categories={},
-                category_scores={},
-                action="allow"
-            )
+            return ModerationResult(flagged=False, categories={}, category_scores={}, action="allow")
 
         try:
             response = self.client.moderations.create(input=text)
@@ -94,18 +92,13 @@ class OpenAIModerationService:
                     "violence": result.category_scores.violence,
                     "violence/graphic": result.category_scores.violence_graphic,
                 },
-                action=action
+                action=action,
             )
 
         except Exception as e:
             logger.error(f"OpenAI moderation check failed: {e}")
             # Fallback: allow content on API failure
-            return ModerationResult(
-                flagged=False,
-                categories={},
-                category_scores={},
-                action="allow"
-            )
+            return ModerationResult(flagged=False, categories={}, category_scores={}, action="allow")
 
     def check_batch(self, texts: list[str]) -> list[ModerationResult]:
         """Check multiple texts against OpenAI moderation API.
@@ -118,15 +111,7 @@ class OpenAIModerationService:
         """
         if not self.client:
             # Fallback: allow all content
-            return [
-                ModerationResult(
-                    flagged=False,
-                    categories={},
-                    category_scores={},
-                    action="allow"
-                )
-                for _ in texts
-            ]
+            return [ModerationResult(flagged=False, categories={}, category_scores={}, action="allow") for _ in texts]
 
         try:
             response = self.client.moderations.create(input=texts)
@@ -135,40 +120,34 @@ class OpenAIModerationService:
             for result in response.results:
                 action = "block" if result.flagged else "allow"
 
-                results.append(ModerationResult(
-                    flagged=result.flagged,
-                    categories={
-                        "hate": result.categories.hate,
-                        "hate/threatening": result.categories.hate_threatening,
-                        "self-harm": result.categories.self_harm,
-                        "sexual": result.categories.sexual,
-                        "sexual/minors": result.categories.sexual_minors,
-                        "violence": result.categories.violence,
-                        "violence/graphic": result.categories.violence_graphic,
-                    },
-                    category_scores={
-                        "hate": result.category_scores.hate,
-                        "hate/threatening": result.category_scores.hate_threatening,
-                        "self-harm": result.category_scores.self_harm,
-                        "sexual": result.category_scores.sexual,
-                        "sexual/minors": result.category_scores.sexual_minors,
-                        "violence": result.category_scores.violence,
-                        "violence/graphic": result.category_scores.violence_graphic,
-                    },
-                    action=action
-                ))
+                results.append(
+                    ModerationResult(
+                        flagged=result.flagged,
+                        categories={
+                            "hate": result.categories.hate,
+                            "hate/threatening": result.categories.hate_threatening,
+                            "self-harm": result.categories.self_harm,
+                            "sexual": result.categories.sexual,
+                            "sexual/minors": result.categories.sexual_minors,
+                            "violence": result.categories.violence,
+                            "violence/graphic": result.categories.violence_graphic,
+                        },
+                        category_scores={
+                            "hate": result.category_scores.hate,
+                            "hate/threatening": result.category_scores.hate_threatening,
+                            "self-harm": result.category_scores.self_harm,
+                            "sexual": result.category_scores.sexual,
+                            "sexual/minors": result.category_scores.sexual_minors,
+                            "violence": result.category_scores.violence,
+                            "violence/graphic": result.category_scores.violence_graphic,
+                        },
+                        action=action,
+                    )
+                )
 
             return results
 
         except Exception as e:
             logger.error(f"OpenAI batch moderation check failed: {e}")
             # Fallback: allow all content
-            return [
-                ModerationResult(
-                    flagged=False,
-                    categories={},
-                    category_scores={},
-                    action="allow"
-                )
-                for _ in texts
-            ]
+            return [ModerationResult(flagged=False, categories={}, category_scores={}, action="allow") for _ in texts]

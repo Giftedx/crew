@@ -7,6 +7,7 @@ import logging
 
 try:
     import tweepy
+
     TWEEPY_AVAILABLE = True
 except ImportError:
     TWEEPY_AVAILABLE = False
@@ -24,8 +25,7 @@ class TwitterAPITool(BaseTool[StepResult]):
 
     name: str = "twitter_api"
     description: str = (
-        "Retrieve Twitter/X content using the official API. "
-        "Supports tweets, user profiles, trends, and search."
+        "Retrieve Twitter/X content using the official API. Supports tweets, user profiles, trends, and search."
     )
 
     def __init__(
@@ -108,17 +108,21 @@ class TwitterAPITool(BaseTool[StepResult]):
             results = []
             if tweets.data:
                 for tweet in tweets.data:
-                    results.append({
-                        "id": tweet.id,
-                        "text": tweet.text,
-                        "created_at": str(tweet.created_at) if tweet.created_at else None,
-                        "author_id": tweet.author_id,
-                        "metrics": {
-                            "retweet_count": tweet.public_metrics.get("retweet_count", 0),
-                            "like_count": tweet.public_metrics.get("like_count", 0),
-                            "reply_count": tweet.public_metrics.get("reply_count", 0),
-                        } if tweet.public_metrics else {},
-                    })
+                    results.append(
+                        {
+                            "id": tweet.id,
+                            "text": tweet.text,
+                            "created_at": str(tweet.created_at) if tweet.created_at else None,
+                            "author_id": tweet.author_id,
+                            "metrics": {
+                                "retweet_count": tweet.public_metrics.get("retweet_count", 0),
+                                "like_count": tweet.public_metrics.get("like_count", 0),
+                                "reply_count": tweet.public_metrics.get("reply_count", 0),
+                            }
+                            if tweet.public_metrics
+                            else {},
+                        }
+                    )
 
             return StepResult.ok(data={"query": query, "results": results})
 
@@ -153,7 +157,9 @@ class TwitterAPITool(BaseTool[StepResult]):
                     "retweet_count": tweet.data.public_metrics.get("retweet_count", 0),
                     "like_count": tweet.data.public_metrics.get("like_count", 0),
                     "reply_count": tweet.data.public_metrics.get("reply_count", 0),
-                } if tweet.data.public_metrics else {},
+                }
+                if tweet.data.public_metrics
+                else {},
             }
 
             return StepResult.ok(data={"tweet": tweet_data})
@@ -182,8 +188,12 @@ class TwitterAPITool(BaseTool[StepResult]):
                 "username": user.data.username,
                 "name": user.data.name,
                 "description": user.data.description,
-                "followers_count": user.data.public_metrics.get("followers_count", 0) if user.data.public_metrics else 0,
-                "following_count": user.data.public_metrics.get("following_count", 0) if user.data.public_metrics else 0,
+                "followers_count": user.data.public_metrics.get("followers_count", 0)
+                if user.data.public_metrics
+                else 0,
+                "following_count": user.data.public_metrics.get("following_count", 0)
+                if user.data.public_metrics
+                else 0,
                 "tweet_count": user.data.public_metrics.get("tweet_count", 0) if user.data.public_metrics else 0,
             }
 

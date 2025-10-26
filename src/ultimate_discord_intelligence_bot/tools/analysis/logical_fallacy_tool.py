@@ -2,15 +2,24 @@
 
 Enhanced from basic keyword matching to include more sophisticated pattern
 recognition for common logical fallacies in debates and arguments.
+
+With ENABLE_INSTRUCTOR=True, uses LLM-based analysis for more accurate detection.
 """
 
+import logging
 import re
 from typing import ClassVar
 
+from ai.response_models import FallacyAnalysisResult
+from ai.structured_outputs import InstructorClientFactory
+from core.secure_config import get_config
 from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
 from ._base import BaseTool
+
+
+logger = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
@@ -113,12 +122,79 @@ class LogicalFallacyTool(BaseTool[StepResult]):
         super().__init__()
         self._metrics = get_metrics()
 
+    def _run_llm_analysis(self, text: str) -> StepResult:
+        """Use LLM with Instructor for structured fallacy detection.
+
+        Args:
+            text: Content to analyze for logical fallacies
+
+        Returns:
+            StepResult with FallacyAnalysisResult data
+
+        Raises:
+            Exception: Any error during LLM call (caught by caller for fallback)
+        """
+        config = get_config()
+
+        # Create Instructor-wrapped OpenRouter client
+        client = InstructorClientFactory.create_openrouter_client()
+
+        # Craft analysis prompt
+        prompt = f"""Analyze the following text for logical fallacies. Identify specific instances with quotes, explain why each is a fallacy, assess severity, and provide an overall credibility score.
+
+Text to analyze:
+{text}
+
+Be thorough but fair. Not every argument flaw is a fallacy. Focus on clear logical errors that undermine the argument's validity."""
+
+        # Make structured LLM call
+        result: FallacyAnalysisResult = client.chat.completions.create(  # type: ignore[call-overload]
+            model=config.openrouter_analysis_model or "anthropic/claude-3.5-sonnet",
+            response_model=FallacyAnalysisResult,
+            messages=[
+                {
+                    "role": "system",
+                    "content": "You are an expert in critical thinking and logical reasoning. Analyze arguments for fallacies with precision and fairness.",
+                },
+                {"role": "user", "content": prompt},
+            ],
+            max_retries=config.instructor_max_retries,
+        )
+
+        # Convert FallacyAnalysisResult to StepResult format
+        # Build confidence_scores dict from fallacy instances
+        confidence_scores = {}
+        for fallacy in result.fallacies:
+            # Map ConfidenceLevel enum to float
+            confidence_map = {"low": 0.3, "medium": 0.6, "high": 0.8, "very_high": 0.95}
+            confidence_scores[fallacy.fallacy_type.value] = confidence_map.get(fallacy.confidence.value, 0.5)
+
+        # Build details dict with explanations
+        details = {fallacy.fallacy_type.value: fallacy.explanation for fallacy in result.fallacies}
+
+        self._metrics.counter(
+            "tool_runs_total",
+            labels={"tool": "logical_fallacy", "outcome": "success_llm"},
+        ).inc()
+
+        return StepResult.ok(
+            fallacies=[f.fallacy_type.value for f in result.fallacies],
+            count=len(result.fallacies),
+            confidence_scores=confidence_scores,
+            details=details,
+            # Additional rich data from LLM analysis
+            overall_quality=result.overall_quality.value,
+            credibility_score=result.credibility_score,
+            summary=result.summary,
+            recommendations=result.recommendations,
+            key_issues=result.key_issues,
+            analysis_method="llm_instructor",
+        )
+
     def _run(self, text: str) -> StepResult:
         # NOTE: Branch count is intentionally high due to sequential heuristic
         # pattern groups. Refactoring into many tiny helper methods would reduce
         # readability; kept as-is with clear section comments.
-        findings = []
-        confidence_scores = {}
 
         if not text or not text.strip():
             self._metrics.counter(
@@ -133,6 +209,17 @@ class LogicalFallacyTool(BaseTool[StepResult]):
                 details={},
             )
 
+        # Check if Instructor is enabled for LLM-based analysis
+        if InstructorClientFactory.is_enabled():
+            try:
+                return self._run_llm_analysis(text)
+            except Exception as exc:
+                logger.warning(f"LLM analysis failed, falling back to pattern matching: {exc}")
+                # Fall through to pattern matching
+
+        # Pattern-matching fallback
+        findings = []
+        confidence_scores = {}
         text_lower = text.lower()
 
         # Check keyword-based fallacies
@@ -172,6 +259,7 @@ class LogicalFallacyTool(BaseTool[StepResult]):
             "count": len(findings),
             "confidence_scores": confidence_scores,
             "details": self._generate_explanations(findings),
+            "analysis_method": "pattern_matching",
         }
         outcome = "success"
         self._metrics.counter("tool_runs_total", labels={"tool": "logical_fallacy", "outcome": outcome}).inc()

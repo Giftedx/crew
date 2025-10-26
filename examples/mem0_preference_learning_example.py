@@ -56,9 +56,7 @@ def example_service_usage():
 
     # 3. Recall relevant preferences
     print("\n2. Recalling preferences based on query...")
-    recall_result = service.recall(
-        query="How should I format the final report output?", user_id=user_id, limit=3
-    )
+    recall_result = service.recall(query="How should I format the final report output?", user_id=user_id, limit=3)
 
     if recall_result.success:
         print(f"✅ Found {len(recall_result.data['results'])} relevant memories:")
@@ -196,13 +194,9 @@ def example_tenant_isolation():
     # 2. Verify isolation - tenant 1 can't see tenant 2's memories
     print("\n2. Verifying tenant isolation...")
 
-    h3_memories = service.recall(
-        query="What type of analysis?", user_id="tenant_h3:workspace_main"
-    )
+    h3_memories = service.recall(query="What type of analysis?", user_id="tenant_h3:workspace_main")
 
-    hasan_memories = service.recall(
-        query="What type of analysis?", user_id="tenant_hasan:workspace_main"
-    )
+    hasan_memories = service.recall(query="What type of analysis?", user_id="tenant_hasan:workspace_main")
 
     print(f"✅ H3 tenant memories: {len(h3_memories.data.get('results', []))}")
     print(f"✅ Hasan tenant memories: {len(hasan_memories.data.get('results', []))}")

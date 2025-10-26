@@ -1,13 +1,17 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import TYPE_CHECKING, Any
 
 import dspy
 
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
-from ..step_result import StepResult
 from .dspy_components.signature import DebateAnalysisSignature
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 class AgentOptimizer:
@@ -30,7 +34,7 @@ class AgentOptimizer:
         self,
         agent_signature: dspy.Signature,
         training_examples: list[dspy.Example],
-        metric: callable,
+        metric: Callable[[Any, Any], float],
         optimization_level: str = "medium",
     ) -> StepResult:
         """
@@ -146,7 +150,7 @@ class AgentOptimizer:
         optimized_module: dspy.Module,
         baseline_module: dspy.Module,
         test_examples: list[dspy.Example],
-        metric: callable,
+        metric: Callable[[Any, Any], float],
     ) -> StepResult:
         """
         Compares optimized module performance against baseline.
@@ -205,7 +209,9 @@ class AgentOptimizer:
         except Exception as e:
             return StepResult.fail(f"A/B comparison failed: {e}")
 
-    def calculate_metric(self, module: dspy.Module, examples: list[dspy.Example], metric: callable) -> StepResult:
+    def calculate_metric(
+        self, module: dspy.Module, examples: list[dspy.Example], metric: Callable[[Any, Any], float]
+    ) -> StepResult:
         """
         Calculate performance metric for a module on a set of examples.
 
@@ -245,7 +251,7 @@ class AgentOptimizer:
 
 
 # Example Usage (for demonstration)
-def example_metric(example, prediction, trace=None):
+def example_metric(example, prediction, _trace=None):
     # A simple metric for demonstration purposes
     return example.answer == prediction.answer
 

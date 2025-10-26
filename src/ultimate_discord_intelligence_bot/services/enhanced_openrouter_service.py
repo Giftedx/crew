@@ -24,6 +24,7 @@ from obs.langsmith_integration import get_enhanced_observability
 from .prompt_engine import PromptEngine
 from .token_meter import TokenMeter
 from ultimate_discord_intelligence_bot.tenancy.context import current_tenant
+from ultimate_discord_intelligence_bot.settings import Settings
 
 from .cache import RedisLLMCache, make_key
 

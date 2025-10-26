@@ -18,6 +18,7 @@ import os
 import sys
 from pathlib import Path
 
+
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
@@ -69,18 +70,14 @@ def main() -> int:
         "duration": 1800.0,
     }
 
-    highlight_result = publishing_service.publish_highlight_summary(
-        highlights, episode_info
-    )
+    highlight_result = publishing_service.publish_highlight_summary(highlights, episode_info)
 
     if highlight_result.success:
         print("✅ Highlight summary published successfully!")
         print(f"   Artifact ID: {highlight_result.data['artifact_id']}")
         print(f"   Published at: {highlight_result.data['published_at']}")
         if highlight_result.data.get("platform_response"):
-            print(
-                f"   Platform response: {highlight_result.data['platform_response']['status_code']}"
-            )
+            print(f"   Platform response: {highlight_result.data['platform_response']['status_code']}")
     else:
         print(f"❌ Highlight summary publishing failed: {highlight_result.error}")
 
@@ -119,18 +116,14 @@ def main() -> int:
         },
     ]
 
-    claim_quote_result = publishing_service.publish_claim_summary(
-        claims, quotes, episode_info
-    )
+    claim_quote_result = publishing_service.publish_claim_summary(claims, quotes, episode_info)
 
     if claim_quote_result.success:
         print("✅ Claims & quotes summary published successfully!")
         print(f"   Artifact ID: {claim_quote_result.data['artifact_id']}")
         print(f"   Published at: {claim_quote_result.data['published_at']}")
     else:
-        print(
-            f"❌ Claims & quotes summary publishing failed: {claim_quote_result.error}"
-        )
+        print(f"❌ Claims & quotes summary publishing failed: {claim_quote_result.error}")
 
     print()
 
@@ -160,9 +153,7 @@ def main() -> int:
         },
     }
 
-    analysis_result = publishing_service.publish_report(
-        analysis_data, report_type="analysis"
-    )
+    analysis_result = publishing_service.publish_report(analysis_data, report_type="analysis")
 
     if analysis_result.success:
         print("✅ Analysis report published successfully!")

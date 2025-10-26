@@ -15,6 +15,7 @@ try:  # pragma: no cover - optional distributed cache
 except Exception:  # pragma: no cover
     DistributedLLMCache = None
 
+from ai.litellm_router import LLMRouterSingleton
 from core.cache.bounded_cache import BoundedLRUCache
 from core.cache.unified_config import get_unified_cache_config
 from core.learning_engine import LearningEngine
@@ -335,6 +336,20 @@ class OpenRouterService:
                     rl_exc,
                 )
                 self.rl_router = None
+
+        # Initialize LiteLLM Router if enabled
+        self.litellm_router = None
+        if LLMRouterSingleton.is_enabled():
+            try:
+                self.litellm_router = LLMRouterSingleton.get()
+                if self.litellm_router is not None:
+                    log.info("LiteLLM Router enabled - multi-provider routing active")
+            except Exception as lite_exc:  # pragma: no cover
+                log.warning(
+                    "LiteLLM Router initialization failed, falling back to standard routing: %s",
+                    lite_exc,
+                )
+                self.litellm_router = None
 
     @staticmethod
     def _ctx_or_fallback(component: str) -> TenantContext | None:

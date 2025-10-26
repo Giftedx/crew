@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 from urllib.parse import urlparse
 
 from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
@@ -82,7 +82,7 @@ class MultiPlatformDownloadTool(BaseTool[StepResult]):
 
     name: str = "Multi-Platform Download Tool"
     description: str = "Download media from supported platforms via yt-dlp. Provide url and optional quality."
-    model_config = {"extra": "allow"}  # allow setting dynamic attributes
+    model_config: ClassVar[dict[str, Any]] = {"extra": "allow"}  # allow setting dynamic attributes
 
     def __init__(self, download_dir: Path | None = None) -> None:
         super().__init__()

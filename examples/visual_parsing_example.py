@@ -16,6 +16,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
@@ -106,10 +107,7 @@ def main() -> int:
     if ocr_results:
         print(f"\n🔤 OCR Results ({len(ocr_results)} text detections):")
         for i, ocr in enumerate(ocr_results[:3]):  # Show first 3
-            print(
-                f'   {i + 1}. "{ocr["text"]}" (conf: {ocr["confidence"]:.2f}) '
-                f"at {ocr['bounding_box']}"
-            )
+            print(f'   {i + 1}. "{ocr["text"]}" (conf: {ocr["confidence"]:.2f}) at {ocr["bounding_box"]}')
         if len(ocr_results) > 3:
             print(f"   ... and {len(ocr_results) - 3} more text detections")
 

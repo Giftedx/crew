@@ -133,10 +133,8 @@ def check_caches(service: OpenRouterService, state: RouteState) -> dict[str, Any
                     result["cache_type"] = "semantic"
                     result["cache_info"] = cache_meta
                     _record_similarity(labels, chosen, float(result.get("similarity", 0.0)))
-                    try:
+                    with contextlib.suppress(Exception):  # pragma: no cover
                         metrics.SEMANTIC_CACHE_PREFETCH_USED.labels(**labels).inc()
-                    except Exception:  # pragma: no cover
-                        pass
                     metrics.LLM_CACHE_HITS.labels(**labels, model=chosen, provider=provider_family).inc()
                     try:
                         similarity_val = float(result.get("similarity", 0.0))
@@ -222,8 +220,8 @@ def check_caches(service: OpenRouterService, state: RouteState) -> dict[str, Any
     return None
 
 
-def _record_similarity(labels: dict[str, str], model: str, similarity: float) -> None:
-    try:
+def _record_similarity(labels: dict[str, str], _model: str, similarity: float) -> None:
+    with contextlib.suppress(Exception):  # pragma: no cover - best effort
         if similarity >= 0.9:
             bucket = ">=0.9"
         elif similarity >= 0.75:
@@ -231,8 +229,6 @@ def _record_similarity(labels: dict[str, str], model: str, similarity: float) ->
         else:
             bucket = "<0.75"
         metrics.SEMANTIC_CACHE_SIMILARITY.labels(**labels, bucket=bucket).observe(similarity)
-    except Exception:  # pragma: no cover - best effort
-        pass
 
 
 def _record_cache_hit(

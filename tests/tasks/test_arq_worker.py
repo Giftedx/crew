@@ -7,6 +7,7 @@ import pytest
 
 try:
     from arq import ArqRedis
+
     ARQ_AVAILABLE = True
 except ImportError:
     ARQ_AVAILABLE = False
@@ -20,6 +21,7 @@ class TestArqWorker:
     def worker(self):
         """Create Arq worker instance."""
         from src.tasks.worker import ArqWorker
+
         return ArqWorker()
 
     @pytest.mark.skipif(not ARQ_AVAILABLE, reason="Arq not available")
@@ -34,7 +36,7 @@ class TestArqWorker:
     async def test_worker_start_stop(self, worker):
         """Test worker start and stop."""
         # Mock Worker class to avoid actual Redis connection
-        with patch('src.tasks.worker.Worker') as mock_worker_class:
+        with patch("src.tasks.worker.Worker") as mock_worker_class:
             mock_worker = AsyncMock()
             mock_worker_class.return_value = mock_worker
 
@@ -49,6 +51,7 @@ class TestTaskQueueService:
     def service(self):
         """Create task queue service instance."""
         from src.tasks.queue_service import TaskQueueService
+
         return TaskQueueService()
 
     @pytest.mark.skipif(not ARQ_AVAILABLE, reason="Arq not available")

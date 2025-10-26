@@ -30,7 +30,7 @@ class ResultProcessor:
             tenant_context: Tenant context for data isolation
         """
         self.tenant_context = tenant_context
-        self.processors = []
+        self.processors: list[Any] = []
         self._initialize_processors()
 
     def _initialize_processors(self) -> None:
@@ -64,12 +64,13 @@ class ResultProcessor:
                 return result
 
             processed_data = result.data
-            processing_metadata = {
+            processing_steps: list[dict[str, Any]] = []
+            processing_metadata: dict[str, Any] = {
                 "original_result_type": result_type,
                 "tenant": self.tenant_context.tenant,
                 "workspace": self.tenant_context.workspace,
                 "processing_timestamp": datetime.now(timezone.utc).isoformat(),
-                "processing_steps": [],
+                "processing_steps": processing_steps,
             }
 
             if metadata:
@@ -87,7 +88,7 @@ class ResultProcessor:
 
                     if step_result.success:
                         processed_data = step_result.data
-                        processing_metadata["processing_steps"].append(
+                        processing_steps.append(
                             {
                                 "processor": processor.__class__.__name__,
                                 "status": "success",
@@ -95,7 +96,7 @@ class ResultProcessor:
                             }
                         )
                     else:
-                        processing_metadata["processing_steps"].append(
+                        processing_steps.append(
                             {
                                 "processor": processor.__class__.__name__,
                                 "status": "failed",
@@ -107,7 +108,7 @@ class ResultProcessor:
 
                 except Exception as e:
                     logger.error(f"Processor {processor.__class__.__name__} error: {e}")
-                    processing_metadata["processing_steps"].append(
+                    processing_steps.append(
                         {
                             "processor": processor.__class__.__name__,
                             "status": "error",
@@ -151,17 +152,18 @@ class ValidationProcessor:
             Validation result
         """
         try:
-            validation_results = {
+            issues: list[str] = []
+            validation_results: dict[str, Any] = {
                 "structure_valid": True,
                 "content_valid": True,
                 "type_valid": True,
-                "issues": [],
+                "issues": issues,
             }
 
             # Validate data structure
             if not isinstance(data, (dict, list, str, int, float, bool)):
                 validation_results["structure_valid"] = False
-                validation_results["issues"].append("Invalid data structure")
+                issues.append("Invalid data structure")
 
             # Validate content based on result type
             if result_type == "analysis" and isinstance(data, dict):
@@ -169,20 +171,20 @@ class ValidationProcessor:
                 for field in required_fields:
                     if field not in data:
                         validation_results["content_valid"] = False
-                        validation_results["issues"].append(f"Missing required field: {field}")
+                        issues.append(f"Missing required field: {field}")
 
             elif result_type == "verification" and isinstance(data, dict):
                 required_fields = ["claim", "verdict", "confidence"]
                 for field in required_fields:
                     if field not in data:
                         validation_results["content_valid"] = False
-                        validation_results["issues"].append(f"Missing required field: {field}")
+                        issues.append(f"Missing required field: {field}")
 
             # Check for empty or null values
             if isinstance(data, dict):
                 for key, value in data.items():
                     if value is None or (isinstance(value, str) and not value.strip()):
-                        validation_results["issues"].append(f"Empty value for field: {key}")
+                        issues.append(f"Empty value for field: {key}")
 
             return StepResult.ok(data={"validated_data": data, "validation_results": validation_results})
 
@@ -224,7 +226,7 @@ class TransformationProcessor:
 
             # Standardize common fields
             if isinstance(transformed_data, dict):
-                transformed_data = self._standardize_fields(transformed_data)
+                transformed_data = self._standardize_fields(transformed_data, tenant_context)
 
             return StepResult.ok(data=transformed_data)
 
@@ -270,7 +272,7 @@ class TransformationProcessor:
             }
         return {"content": str(data), "content_type": "text"}
 
-    def _standardize_fields(self, data: dict[str, Any]) -> dict[str, Any]:
+    def _standardize_fields(self, data: dict[str, Any], tenant_context: TenantContext) -> dict[str, Any]:
         """Standardize common fields."""
         standardized = data.copy()
 
@@ -279,8 +281,8 @@ class TransformationProcessor:
             standardized["timestamp"] = datetime.now(timezone.utc).isoformat()
 
         # Ensure tenant context is present
-        standardized["tenant"] = self.tenant_context.tenant
-        standardized["workspace"] = self.tenant_context.workspace
+        standardized["tenant"] = tenant_context.tenant
+        standardized["workspace"] = tenant_context.workspace
 
         return standardized
 
@@ -419,10 +421,9 @@ class OptimizationProcessor:
             optimized.pop(field, None)
 
         # Compress large text content
-        if "content" in optimized and isinstance(optimized["content"], str):
-            if len(optimized["content"]) > 10000:  # Large content
-                optimized["content"] = optimized["content"][:10000] + "... [truncated]"
-                optimized["content_truncated"] = True
+        if "content" in optimized and isinstance(optimized["content"], str) and len(optimized["content"]) > 10000:
+            optimized["content"] = optimized["content"][:10000] + "... [truncated]"
+            optimized["content_truncated"] = True
 
         # Optimize metadata
         if "metadata" in optimized and isinstance(optimized["metadata"], dict):

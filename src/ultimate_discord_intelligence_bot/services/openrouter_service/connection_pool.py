@@ -14,6 +14,8 @@ import logging
 import threading
 from typing import Any
 
+import requests
+
 from core import http_utils
 from ultimate_discord_intelligence_bot.config.feature_flags import FeatureFlags
 from ultimate_discord_intelligence_bot.obs.metrics import get_metrics

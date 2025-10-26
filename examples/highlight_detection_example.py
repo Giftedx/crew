@@ -16,6 +16,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
@@ -95,9 +96,7 @@ def main() -> int:
             chat_score = highlight.get("chat_spike_score", 0)
             novelty_score = highlight.get("semantic_novelty_score", 0)
 
-            print(
-                f"         Audio: {audio_score:.2f} | Chat: {chat_score:.2f} | Novelty: {novelty_score:.2f}"
-            )
+            print(f"         Audio: {audio_score:.2f} | Chat: {chat_score:.2f} | Novelty: {novelty_score:.2f}")
 
             # Show transcript if available
             if highlight.get("transcript_text"):
@@ -120,9 +119,7 @@ def main() -> int:
         print(f"   Total highlights: {len(highlights)}")
         print(f"   Average score: {sum(scores) / len(scores):.2f}")
         print(f"   Average duration: {sum(durations) / len(durations):.1f}s")
-        print(
-            f"   High-confidence highlights: {sum(1 for h in highlights if h['confidence'] > 0.8)}"
-        )
+        print(f"   High-confidence highlights: {sum(1 for h in highlights if h['confidence'] > 0.8)}")
 
         # Show score distribution
         high_scores = sum(1 for s in scores if s > 0.8)

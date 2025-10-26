@@ -167,6 +167,19 @@ class SecureConfig(BaseSettings):
     enable_rate_limiting: bool = Field(default=True, env="ENABLE_RATE_LIMITING")
     enable_audit_logging: bool = Field(default=True, env="ENABLE_AUDIT_LOGGING")
 
+    # AI enhancements
+    enable_instructor: bool = Field(default=True, env="ENABLE_INSTRUCTOR")
+    enable_litellm_router: bool = Field(default=False, env="ENABLE_LITELLM_ROUTER")
+    enable_logfire: bool = Field(default=False, env="ENABLE_LOGFIRE")
+
+    # Autonomous AI features
+    enable_self_eval_gates: bool = Field(default=False, env="ENABLE_SELF_EVAL_GATES")
+    enable_ts_routing: bool = Field(default=False, env="ENABLE_TS_ROUTING")
+    enable_hybrid_retrieval: bool = Field(default=False, env="ENABLE_HYBRID_RETRIEVAL")
+    enable_cache_promotion: bool = Field(default=False, env="ENABLE_CACHE_PROMOTION")
+    enable_prompt_compression: bool = Field(default=False, env="ENABLE_PROMPT_COMPRESSION")
+    enable_self_improvement: bool = Field(default=False, env="ENABLE_SELF_IMPROVEMENT")
+
     # HTTP retry (unified flag)
     enable_http_retry: bool = Field(
         default=False,
@@ -219,6 +232,68 @@ class SecureConfig(BaseSettings):
     local_llm_url: str | None = Field(default=None, env="LOCAL_LLM_URL")
     disable_google_drive: bool = Field(default=False, env="DISABLE_GOOGLE_DRIVE")
     ingest_db_path: str | None = Field(default=None, env="INGEST_DB_PATH")
+
+    # ====== AI ENHANCEMENT SETTINGS ======
+    # Instructor (structured LLM outputs)
+    instructor_max_retries: int = Field(default=3, env="INSTRUCTOR_MAX_RETRIES")
+    instructor_timeout: int = Field(default=30, env="INSTRUCTOR_TIMEOUT")
+
+    # LiteLLM router
+    litellm_routing_strategy: str = Field(default="usage-based-routing", env="LITELLM_ROUTING_STRATEGY")
+    litellm_cache_enabled: bool = Field(default=True, env="LITELLM_CACHE_ENABLED")
+    litellm_fallback_enabled: bool = Field(default=True, env="LITELLM_FALLBACK_ENABLED")
+    litellm_budget_per_model: float = Field(default=10.0, env="LITELLM_BUDGET_PER_MODEL")
+    litellm_budget_duration: str = Field(default="1d", env="LITELLM_BUDGET_DURATION")
+
+    # Autonomous AI settings
+    self_eval_shadow_mode: bool = Field(default=True, env="SELF_EVAL_SHADOW_MODE")
+    self_eval_regression_threshold: float = Field(default=0.1, env="SELF_EVAL_REGRESSION_THRESHOLD")
+    ts_routing_cold_start_trials: int = Field(default=100, env="TS_ROUTING_COLD_START_TRIALS")
+    hybrid_retrieval_fusion_method: str = Field(default="rrf", env="HYBRID_RETRIEVAL_FUSION_METHOD")
+    cache_promotion_hit_threshold: int = Field(default=5, env="CACHE_PROMOTION_HIT_THRESHOLD")
+    prompt_compression_ratio: float = Field(default=0.5, env="PROMPT_COMPRESSION_RATIO")
+    self_improvement_sandbox_mode: str = Field(default="docker", env="SELF_IMPROVEMENT_SANDBOX_MODE")
+
+    # LangSmith evaluation
+    langsmith_api_key: str | None = Field(default=None, env="LANGSMITH_API_KEY")
+    langsmith_project: str = Field(default="discord-intel-evals", env="LANGSMITH_PROJECT")
+
+    # Reranker configuration
+    reranker_model: str = Field(default="Xenova/ms-marco-MiniLM-L-6-v2", env="RERANKER_MODEL")
+    reranker_top_k: int = Field(default=10, env="RERANKER_TOP_K")
+
+    # ====== COLLABORATIVE INTELLIGENCE SETTINGS ======
+    # Graph memory backends (neo4j, networkx, qdrant)
+    graph_backend: str = Field(default="neo4j", env="GRAPH_BACKEND")
+    neo4j_uri: str = Field(default="bolt://neo4j:7687", env="NEO4J_URI")
+    neo4j_user: str = Field(default="neo4j", env="NEO4J_USER")
+    neo4j_password: str = Field(default="neo4j", env="NEO4J_PASSWORD")
+    enable_multi_graph_backends: bool = Field(default=True, env="ENABLE_MULTI_GRAPH_BACKENDS")
+
+    # Agent message bus
+    enable_agent_message_bus: bool = Field(default=False, env="ENABLE_AGENT_MESSAGE_BUS")
+    agent_bus_redis_url: str = Field(default="redis://redis:6379", env="AGENT_BUS_REDIS_URL")
+    agent_bus_redis_db: int = Field(default=2, env="AGENT_BUS_REDIS_DB")
+    agent_bus_ttl_seconds: int = Field(default=3600, env="AGENT_BUS_TTL_SECONDS")
+    enable_global_agent_broadcast: bool = Field(default=True, env="ENABLE_GLOBAL_AGENT_BROADCAST")
+
+    # Cross-tenant meta-learning
+    enable_cross_tenant_learning: bool = Field(default=False, env="ENABLE_CROSS_TENANT_LEARNING")
+    cross_tenant_epsilon: float = Field(default=1.0, env="CROSS_TENANT_EPSILON")
+    meta_learning_sync_interval_seconds: int = Field(default=300, env="META_LEARNING_SYNC_INTERVAL_SECONDS")
+    enable_differential_privacy: bool = Field(default=True, env="ENABLE_DIFFERENTIAL_PRIVACY")
+
+    # Multi-agent deliberation
+    enable_agent_deliberation: bool = Field(default=False, env="ENABLE_AGENT_DELIBERATION")
+    deliberation_confidence_threshold: float = Field(default=0.7, env="DELIBERATION_CONFIDENCE_THRESHOLD")
+    deliberation_min_agents: int = Field(default=3, env="DELIBERATION_MIN_AGENTS")
+    deliberation_timeout_seconds: int = Field(default=30, env="DELIBERATION_TIMEOUT_SECONDS")
+
+    # Logfire observability
+    logfire_token: str | None = Field(default=None, env="LOGFIRE_TOKEN")
+    logfire_project_name: str = Field(default="discord-intelligence-bot", env="LOGFIRE_PROJECT_NAME")
+    logfire_service_version: str | None = Field(default=None, env="LOGFIRE_SERVICE_VERSION")
+    logfire_send_to_logfire: bool = Field(default=True, env="LOGFIRE_SEND_TO_LOGFIRE")
 
     # ====== CACHING SETTINGS ======
     cache_ttl_llm: int = Field(default=3600, env="CACHE_TTL_LLM")

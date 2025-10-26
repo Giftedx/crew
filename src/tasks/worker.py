@@ -11,6 +11,7 @@ from typing import Any
 try:
     from arq import ArqRedis, Worker
     from arq.connections import RedisSettings
+
     ARQ_AVAILABLE = True
 except ImportError:
     ARQ_AVAILABLE = False

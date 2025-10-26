@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import logging
+
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
-from ..step_result import StepResult
+
+log = logging.getLogger(__name__)
 
 
 class MultimodalUnderstandingService:
@@ -60,7 +63,7 @@ class MultimodalUnderstandingService:
         # 1. Use a library like OpenCV to extract keyframes from the video.
         # 2. Send the frames to a vision model API.
         # 3. Process the results.
-        self.logger.debug(f"Analyzing vision for {video_path} (placeholder implementation)")
+        log.debug(f"Analyzing vision for {video_path} (placeholder implementation)")
         mock_vision_data = {
             "summary": "The video contains a debate between two individuals in a studio setting.",
             "elements": ["person_a", "person_b", "desk", "microphone"],

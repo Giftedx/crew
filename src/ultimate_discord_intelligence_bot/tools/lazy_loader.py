@@ -7,7 +7,7 @@ startup time and memory usage by only loading tools when they are actually neede
 from __future__ import annotations
 
 import time
-from functools import lru_cache
+from functools import lru_cache  # noqa: F401  # retained import for backward compat notes
 from typing import Any
 
 from ultimate_discord_intelligence_bot.tools._base import BaseTool
@@ -21,6 +21,7 @@ class LazyToolLoader:
         self._tool_cache: dict[str, BaseTool] = {}
         self._loading_times: dict[str, float] = {}
         self._import_errors: dict[str, Exception] = {}
+        self._class_cache: dict[str, type[BaseTool]] = {}
 
     def get_tool(self, tool_name: str, *args, **kwargs) -> BaseTool:
         """Get a tool instance, loading it lazily if not already cached."""
@@ -49,14 +50,18 @@ class LazyToolLoader:
             # Return a stub tool that fails gracefully
             return self._create_stub_tool(tool_name, e)
 
-    @lru_cache(maxsize=128)
     def _import_tool_class(self, tool_name: str) -> type[BaseTool]:
         """Import a tool class with caching."""
+        # Avoid functools.lru_cache on methods (can leak bound self)
+        if tool_name in self._class_cache:
+            return self._class_cache[tool_name]
         try:
             # Use the existing lazy loading mechanism from tools.__init__
             from ultimate_discord_intelligence_bot.tools import __getattr__
 
-            return __getattr__(tool_name)
+            cls = __getattr__(tool_name)
+            self._class_cache[tool_name] = cls
+            return cls
         except Exception as e:
             raise ImportError(f"Failed to import {tool_name}: {e}") from e
 

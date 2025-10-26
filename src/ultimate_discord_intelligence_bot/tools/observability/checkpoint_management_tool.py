@@ -1,8 +1,3 @@
-from __future__ import annotations
-
-
-# ruff: noqa: E402
-
 """Checkpoint management tool for LangGraph runs.
 
 Actions:
@@ -10,6 +5,8 @@ Actions:
 - load: Load checkpoint metadata for a thread_id.
 - delete: Delete checkpoint(s) for a thread_id.
 """
+
+from __future__ import annotations
 
 import json
 from pathlib import Path
@@ -19,7 +16,6 @@ from pydantic import BaseModel, Field
 
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
-from ..step_result import StepResult
 from ._base import BaseTool
 
 

@@ -1,0 +1,92 @@
+# Early Exit Checkpoints Configuration
+# Controls conditions under which the pipeline can safely skip full analysis
+# and produce a lightweight summary. See orchestrator._check_early_exit_condition
+# for the available context fields per checkpoint.
+
+enabled: true
+
+global:
+  # Minimum confidence required for any early exit condition to trigger
+  min_exit_confidence: 0.80
+  # If false, an evaluation error in one condition will abort the check
+  continue_on_error: true
+
+# Optional content-type specific overrides keyed by classification.primary_type
+# from the ContentTypeRoutingTool (e.g., "video", "audio", "text", etc.).
+content_type_overrides:
+  video:
+    checkpoints:
+      post_download:
+        enabled: true
+        exit_conditions:
+          - name: very_short_video
+            condition: "duration < 45"
+            confidence: 0.90
+            reason: "Short video (<45s) — low analysis value"
+            enabled: true
+
+checkpoints:
+  # Checkpoint 1: evaluated after download/metadata (no transcript yet)
+  post_download:
+    enabled: true
+    exit_conditions:
+      - name: short_content
+        condition: "duration < 30"
+        confidence: 0.95
+        reason: "Very short content (<30s)"
+        enabled: true
+      - name: low_views_stale
+        condition: "view_count < 50 and age_days > 30"
+        confidence: 0.90
+        reason: "Low engagement and stale content"
+        enabled: true
+      - name: spammy_title
+        condition: "title_spam_score > 0.90"
+        confidence: 0.90
+        reason: "High spam score in title"
+        enabled: true
+
+  # Checkpoint 2: evaluated after transcription
+  post_transcription:
+    enabled: true
+    exit_conditions:
+      - name: very_short_transcript
+        condition: "transcript_length < 200"
+        confidence: 0.90
+        reason: "Transcript too short for deep analysis"
+        enabled: true
+      - name: unreliable_transcription
+        condition: "transcription_confidence < 0.50"
+        confidence: 0.85
+        reason: "Low transcription confidence"
+        enabled: true
+      - name: high_word_error_rate
+        condition: "word_error_rate > 0.50"
+        confidence: 0.85
+        reason: "High WER suggests poor transcript quality"
+        enabled: true
+      - name: highly_repetitive
+        condition: "repetition_ratio > 0.20"
+        confidence: 0.90
+        reason: "Transcript appears highly repetitive"
+        enabled: true
+      - name: low_vocab_diversity
+        condition: "unique_word_ratio < 0.20"
+        confidence: 0.90
+        reason: "Low vocabulary diversity"
+        enabled: true
+
+  # Checkpoint 3: evaluated after quality filtering step
+  post_quality_filtering:
+    enabled: true
+    exit_conditions:
+      - name: low_overall_quality
+        condition: "overall_quality < 0.50 and assessment_confidence >= 0.80"
+        confidence: 0.90
+        reason: "Low overall quality with high assessment confidence"
+        enabled: true
+      - name: weak_across_dimensions
+        condition: "coherence_score < 0.50 and completeness_score < 0.50 and informativeness_score < 0.50 and assessment_confidence >= 0.70"
+        confidence: 0.90
+        reason: "Weak across coherence/completeness/informativeness"
+        enabled: true

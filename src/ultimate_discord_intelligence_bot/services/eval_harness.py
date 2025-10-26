@@ -87,7 +87,7 @@ SCORERS = {
 def run_dataset(
     dataset_path: Path,
     runner: Callable[[dict[str, Any]], dict[str, Any]],
-    seed: int = 0,
+    _seed: int = 0,
 ) -> StepResult:
     with open("datasets/schemas/task_record.schema.json", encoding="utf-8") as schema_f:
         schema = json.load(schema_f)

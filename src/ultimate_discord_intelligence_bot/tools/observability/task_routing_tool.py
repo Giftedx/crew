@@ -260,11 +260,9 @@ class TaskRoutingTool(BaseTool):
         suitable_agents = []
 
         for agent in agent_capabilities:
-            # Check if agent has required capabilities
-            if self._agent_has_capabilities(agent, task.required_capabilities):
-                # Check if agent has capacity
-                if agent.current_load < 0.9:  # Allow up to 90% load
-                    suitable_agents.append(agent)
+            # Check if agent has required capabilities and capacity
+            if self._agent_has_capabilities(agent, task.required_capabilities) and agent.current_load < 0.9:
+                suitable_agents.append(agent)
 
         return suitable_agents
 

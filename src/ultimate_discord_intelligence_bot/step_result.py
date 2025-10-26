@@ -352,10 +352,7 @@ class StepResult(Mapping[str, Any]):
         # If called like ok(data={...}), unwrap the nested payload for
         # backward-compatibility with tests expecting direct access
         # to keys via result.data["k"].
-        if set(data.keys()) == {"data"} and isinstance(data.get("data"), dict):
-            payload = data["data"]  # type: ignore[index]
-        else:
-            payload = data
+        payload = data["data"] if set(data.keys()) == {"data"} and isinstance(data.get("data"), dict) else data
         return cls(success=True, data=payload)
 
     @classmethod

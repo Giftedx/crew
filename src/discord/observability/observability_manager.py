@@ -115,9 +115,7 @@ class ObservabilityManager:
                 return StepResult.fail("Observability system not initialized")
 
             # End conversation tracking in metrics collector
-            await self.metrics_collector.end_conversation(
-                conversation_id, satisfaction_score, topics_discussed
-            )
+            await self.metrics_collector.end_conversation(conversation_id, satisfaction_score, topics_discussed)
 
             # Get trace ID for this conversation
             traces_result = await self.conversation_tracer.get_conversation_traces(conversation_id)

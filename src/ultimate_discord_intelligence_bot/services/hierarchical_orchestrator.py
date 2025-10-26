@@ -19,7 +19,6 @@ from ultimate_discord_intelligence_bot.step_result import StepResult
 
 from ..agents.executive_supervisor import ExecutiveSupervisorAgent
 from ..agents.workflow_manager import WorkflowManagerAgent
-from ..step_result import StepResult
 
 
 logger = logging.getLogger(__name__)
@@ -389,7 +388,9 @@ class HierarchicalOrchestrator:
             logger.error(f"Failed to get orchestration status: {e!s}")
             return StepResult.fail(f"Failed to get orchestration status: {e!s}")
 
-    def _create_tasks_from_strategic_plan(self, strategic_plan: dict[str, Any], session_id: str) -> StepResult:
+    def _create_tasks_from_strategic_plan(
+        self, strategic_plan: dict[str, Any], session_id: str
+    ) -> list[OrchestrationTask]:
         """Create orchestration tasks from strategic plan."""
         tasks = []
 
@@ -411,7 +412,7 @@ class HierarchicalOrchestrator:
 
         return tasks
 
-    def _task_to_dict(self, task: OrchestrationTask) -> StepResult:
+    def _task_to_dict(self, task: OrchestrationTask) -> dict[str, Any]:
         """Convert orchestration task to dictionary."""
         return {
             "id": task.id,
@@ -426,7 +427,7 @@ class HierarchicalOrchestrator:
             "metadata": task.metadata,
         }
 
-    def _get_available_agents(self) -> StepResult:
+    def _get_available_agents(self) -> list[dict[str, Any]]:
         """Get list of available agents for task routing."""
         available_agents = []
 
@@ -449,7 +450,7 @@ class HierarchicalOrchestrator:
 
     async def _execute_tasks_with_monitoring(
         self, session: OrchestrationSession, routing_data: dict[str, Any]
-    ) -> StepResult:
+    ) -> list[dict[str, Any]]:
         """Execute tasks with monitoring and failure handling."""
         execution_results = []
         assignments = routing_data.get("assignments", [])
@@ -531,14 +532,14 @@ class HierarchicalOrchestrator:
 
         return execution_results
 
-    def _get_task_status_summary(self, tasks: list[OrchestrationTask]) -> StepResult:
+    def _get_task_status_summary(self, tasks: list[OrchestrationTask]) -> dict[str, int]:
         """Get summary of task statuses."""
         status_counts = {}
         for task in tasks:
             status_counts[task.status] = status_counts.get(task.status, 0) + 1
         return status_counts
 
-    def _get_agent_utilization(self) -> StepResult:
+    def _get_agent_utilization(self) -> dict[str, Any]:
         """Get agent utilization metrics."""
         if not self.agent_registry:
             return {"average_utilization": 0.0, "total_agents": 0}
@@ -553,7 +554,7 @@ class HierarchicalOrchestrator:
             "busy_agents": sum(1 for agent in self.agent_registry.values() if agent.current_load >= 0.1),
         }
 
-    def _get_session_performance_metrics(self, session: OrchestrationSession) -> StepResult:
+    def _get_session_performance_metrics(self, session: OrchestrationSession) -> dict[str, Any]:
         """Get performance metrics for a session."""
         if not session.started_at:
             return {"status": "not_started"}
@@ -573,7 +574,7 @@ class HierarchicalOrchestrator:
             "failed_tasks": sum(1 for task in session.tasks if task.status == "failed"),
         }
 
-    async def _perform_health_checks(self, session: OrchestrationSession) -> StepResult:
+    async def _perform_health_checks(self, session: OrchestrationSession) -> dict[str, Any]:
         """Perform health checks on the session."""
         health_checks = {
             "session_health": "healthy",
@@ -612,7 +613,7 @@ class HierarchicalOrchestrator:
 
         return health_checks
 
-    def _identify_bottlenecks(self, session: OrchestrationSession) -> StepResult:
+    def _identify_bottlenecks(self, session: OrchestrationSession) -> list[dict[str, Any]]:
         """Identify bottlenecks in the session."""
         bottlenecks = []
 
@@ -651,7 +652,7 @@ class HierarchicalOrchestrator:
 
         return bottlenecks
 
-    def _generate_monitoring_recommendations(self, session: OrchestrationSession) -> StepResult:
+    def _generate_monitoring_recommendations(self, session: OrchestrationSession) -> list[dict[str, Any]]:
         """Generate monitoring recommendations."""
         recommendations = []
 
@@ -686,7 +687,7 @@ class HierarchicalOrchestrator:
 
         return recommendations
 
-    def _analyze_failure(self, failure_context: dict[str, Any], session: OrchestrationSession) -> StepResult:
+    def _analyze_failure(self, failure_context: dict[str, Any], session: OrchestrationSession) -> dict[str, Any]:
         """Analyze failure context and determine root cause."""
         return {
             "failure_type": failure_context.get("type", "unknown"),
@@ -697,7 +698,7 @@ class HierarchicalOrchestrator:
             "root_cause_analysis": self._perform_root_cause_analysis(failure_context),
         }
 
-    def _assess_session_impact(self, failure_context: dict[str, Any], session: OrchestrationSession) -> StepResult:
+    def _assess_session_impact(self, failure_context: dict[str, Any], session: OrchestrationSession) -> str:
         """Assess impact of failure on session."""
         affected_components = failure_context.get("affected_components", [])
 
@@ -708,7 +709,7 @@ class HierarchicalOrchestrator:
         else:
             return "medium"
 
-    def _perform_root_cause_analysis(self, failure_context: dict[str, Any]) -> StepResult:
+    def _perform_root_cause_analysis(self, failure_context: dict[str, Any]) -> dict[str, Any]:
         """Perform root cause analysis."""
         return {
             "likely_causes": [
@@ -726,7 +727,7 @@ class HierarchicalOrchestrator:
             ],
         }
 
-    def _determine_recovery_strategy(self, failure_analysis: dict[str, Any]) -> StepResult:
+    def _determine_recovery_strategy(self, failure_analysis: dict[str, Any]) -> dict[str, Any]:
         """Determine recovery strategy based on failure analysis."""
         session_impact = failure_analysis.get("session_impact", "medium")
 
@@ -766,7 +767,7 @@ class HierarchicalOrchestrator:
 
     async def _execute_recovery_actions(
         self, session: OrchestrationSession, recovery_strategy: dict[str, Any]
-    ) -> StepResult:
+    ) -> dict[str, Any]:
         """Execute recovery actions based on strategy."""
         strategy = recovery_strategy.get("strategy", "graceful_degradation")
 
@@ -822,7 +823,7 @@ class HierarchicalOrchestrator:
             total_load = sum(agent.current_load for agent in self.agent_registry.values())
             self.performance_metrics["agent_utilization"] = total_load / len(self.agent_registry)
 
-    def _assess_system_health(self) -> StepResult:
+    def _assess_system_health(self) -> dict[str, Any]:
         """Assess overall system health."""
         health_score = 1.0
 

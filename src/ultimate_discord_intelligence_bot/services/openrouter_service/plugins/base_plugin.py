@@ -42,6 +42,7 @@ class BanditPlugin(ABC):
             Serializable dictionary of bandit state
         """
 
+    @abstractmethod
     def load_state(self, state: dict[str, Any]):
         """Load bandit state from serialized form.
 

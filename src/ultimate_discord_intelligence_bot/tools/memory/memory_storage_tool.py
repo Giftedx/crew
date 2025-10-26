@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import os
 import uuid
-from typing import TYPE_CHECKING, Any, Protocol, TypedDict, cast, runtime_checkable
+from typing import TYPE_CHECKING, Any, ClassVar, Protocol, TypedDict, cast, runtime_checkable
 
 from core.secure_config import get_config
 from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
@@ -103,13 +103,13 @@ class MemoryStorageTool(BaseTool[StepResult]):
     description: str = "Stores documents in a tenant-isolated Qdrant vector database for later retrieval."
 
     # Provide loose config so pydantic doesn't require field population pre-init
-    model_config = {"arbitrary_types_allowed": True, "extra": "allow"}
+    model_config: ClassVar[dict[str, Any]] = {"arbitrary_types_allowed": True, "extra": "allow"}
     # Annotations for readability; set at runtime (avoid pydantic required errors)
     base_collection: str | None = None
     embedding_fn: Callable[[str], list[float]] | None = None
     client: _QdrantLike | None = None
     # maintain a simple logical->physical mapping to keep return values logical
-    _physical_names: dict[str, str] = {}
+    _physical_names: ClassVar[dict[str, str]] = {}
 
     def __init__(
         self,

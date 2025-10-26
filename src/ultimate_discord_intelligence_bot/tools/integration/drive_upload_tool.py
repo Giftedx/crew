@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import Any
+from typing import Any, ClassVar
 
 from core.secure_config import get_config
 from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
@@ -56,7 +56,7 @@ class DriveUploadTool(BaseTool[StepResult]):
     name: str = "Google Drive Upload Tool"
     description: str = "Upload files to Google Drive and create shareable links"
     # Allow dynamic attributes (service, folders) assigned in __init__ under pydantic v2
-    model_config = {"extra": "allow"}
+    model_config: ClassVar[dict[str, Any]] = {"extra": "allow"}
 
     def __init__(self) -> None:
         super().__init__()
@@ -86,7 +86,7 @@ class DriveUploadTool(BaseTool[StepResult]):
         # Check if Google Drive is explicitly disabled
         config = get_config()
         if config.disable_google_drive:
-            print("ℹ️  Google Drive disabled via DISABLE_GOOGLE_DRIVE=1")
+            print("i  Google Drive disabled via DISABLE_GOOGLE_DRIVE=1")
             return None
 
         if not _GOOGLE_LIBS_AVAILABLE:  # pragma: no cover - exercised via import path
@@ -146,7 +146,7 @@ class DriveUploadTool(BaseTool[StepResult]):
                         logging.warning("Failed to build Drive client with OAuth creds: %s", exc)
                         # Fall through to service account
                 else:
-                    print("ℹ️  PREFER_GOOGLE_OAUTH set but no token file found; falling back to service account")
+                    print("i  PREFER_GOOGLE_OAUTH set but no token file found; falling back to service account")
             except Exception as exc:  # pragma: no cover - defensive
                 logging.warning("Google OAuth credentials unavailable: %s", exc)
                 # Fall through to service account
@@ -169,7 +169,7 @@ class DriveUploadTool(BaseTool[StepResult]):
                 print("⚠️  Google Drive credentials invalid - Drive uploads disabled")
             else:
                 # Silent soft-disable when default path is missing and not explicitly configured
-                print("ℹ️  Google Drive not configured (no credentials provided)")
+                print("i  Google Drive not configured (no credentials provided)")
             return None
         # Disable discovery file cache to avoid oauth2client<4.0.0 warning
         try:

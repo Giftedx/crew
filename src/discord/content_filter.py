@@ -22,6 +22,7 @@ class ContentFilter:
         """Get OpenAI moderation service (lazy loaded)."""
         if self._moderation_service is None:
             from src.security.openai_moderation import OpenAIModerationService
+
             self._moderation_service = OpenAIModerationService()
         return self._moderation_service
 
@@ -49,18 +50,12 @@ class ContentFilter:
                 logger.warning(f"Content flagged by moderation: {result.categories}")
                 return StepResult.fail(
                     f"Content blocked by moderation. Flagged categories: {list(result.categories.keys())}",
-                    metadata={
-                        "categories": result.categories,
-                        "scores": result.category_scores,
-                        "action": "block"
-                    }
+                    metadata={"categories": result.categories, "scores": result.category_scores, "action": "block"},
                 )
 
-            return StepResult.ok(data={
-                "content": content,
-                "action": "allow",
-                "moderation_result": result.category_scores
-            })
+            return StepResult.ok(
+                data={"content": content, "action": "allow", "moderation_result": result.category_scores}
+            )
 
         except Exception as e:
             logger.error(f"Content filter error: {e}")
@@ -87,15 +82,14 @@ class ContentFilter:
             step_results = []
             for content, result in zip(contents, results, strict=False):
                 if result.flagged:
-                    step_results.append(StepResult.fail(
-                        f"Content blocked: {list(result.categories.keys())}",
-                        metadata={"categories": result.categories, "action": "block"}
-                    ))
+                    step_results.append(
+                        StepResult.fail(
+                            f"Content blocked: {list(result.categories.keys())}",
+                            metadata={"categories": result.categories, "action": "block"},
+                        )
+                    )
                 else:
-                    step_results.append(StepResult.ok(data={
-                        "content": content,
-                        "action": "allow"
-                    }))
+                    step_results.append(StepResult.ok(data={"content": content, "action": "allow"}))
 
             return step_results
 

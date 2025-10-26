@@ -12,8 +12,6 @@ from typing import TYPE_CHECKING, Any
 
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
-from ..step_result import StepResult
-
 
 if TYPE_CHECKING:
     from ..tenancy.context import TenantContext
@@ -32,12 +30,12 @@ class ModelRouter:
             tenant_context: Tenant context for data isolation
         """
         self.tenant_context = tenant_context
-        self.model_performance = {}
-        self.routing_rules = []
-        self.cost_metrics = {}
+        self.model_performance: dict[str, Any] = {}
+        self.routing_rules: list[dict[str, Any]] = []
+        self.cost_metrics: dict[str, Any] = {}
         self._initialize_routing_rules()
 
-    def _initialize_routing_rules(self) -> StepResult:
+    def _initialize_routing_rules(self) -> None:
         """Initialize model routing rules."""
         self.routing_rules = [
             {
@@ -90,7 +88,7 @@ class ModelRouter:
             StepResult with routing decision
         """
         try:
-            routing_decision = {
+            routing_decision: dict[str, Any] = {
                 "selected_model": None,
                 "routing_reason": "",
                 "confidence": 0.0,
@@ -141,7 +139,7 @@ class ModelRouter:
             logger.error(f"Model routing failed: {e}")
             return StepResult.fail(f"Model routing failed: {e!s}")
 
-    def _analyze_task_complexity(self, task_description: str, task_type: str) -> StepResult:
+    def _analyze_task_complexity(self, task_description: str, task_type: str) -> str:
         """Analyze task complexity.
 
         Args:
@@ -174,7 +172,7 @@ class ModelRouter:
         else:
             return "medium"
 
-    def _get_available_models(self) -> StepResult:
+    def _get_available_models(self) -> list[dict[str, Any]]:
         """Get list of available models with their capabilities.
 
         Returns:
@@ -243,7 +241,7 @@ class ModelRouter:
         complexity: str,
         task_type: str,
         requirements: dict[str, Any] | None,
-    ) -> StepResult:
+    ) -> list[dict[str, Any]]:
         """Apply routing rules to filter candidate models.
 
         Args:
@@ -302,7 +300,7 @@ class ModelRouter:
         self,
         candidate_models: list[dict[str, Any]],
         requirements: dict[str, Any] | None,
-    ) -> StepResult:
+    ) -> dict[str, Any] | None:
         """Select optimal model from candidates.
 
         Args:
@@ -316,33 +314,33 @@ class ModelRouter:
             return None
 
         # Score models based on multiple factors
-        scored_models = []
+        scored_models: list[dict[str, Any]] = []
         for model in candidate_models:
             score = 0.0
-        reasons = []
+            reasons: list[str] = []
 
-        # Cost score (lower is better)
-        cost_score = 1.0 / (model["cost_per_1k_tokens"] + 0.001)
-        score += cost_score * 0.3
-        reasons.append(f"cost_efficient: {model['cost_per_1k_tokens']}")
+            # Cost score (lower is better)
+            cost_score = 1.0 / (model["cost_per_1k_tokens"] + 0.001)
+            score += cost_score * 0.3
+            reasons.append(f"cost_efficient: {model['cost_per_1k_tokens']}")
 
-        # Performance score (higher success rate and lower latency is better)
-        performance_score = model["success_rate"] / (model["avg_latency"] + 0.1)
-        score += performance_score * 0.4
-        reasons.append(f"performance: {model['success_rate']} success, {model['avg_latency']}s latency")
+            # Performance score (higher success rate and lower latency is better)
+            performance_score = model["success_rate"] / (model["avg_latency"] + 0.1)
+            score += performance_score * 0.4
+            reasons.append(f"performance: {model['success_rate']} success, {model['avg_latency']}s latency")
 
-        # Capability score
-        capability_score = len(model["capabilities"]) / 5.0  # Normalize to 0-1
-        score += capability_score * 0.2
-        reasons.append(f"capabilities: {len(model['capabilities'])} features")
+            # Capability score
+            capability_score = len(model["capabilities"]) / 5.0  # Normalize to 0-1
+            score += capability_score * 0.2
+            reasons.append(f"capabilities: {len(model['capabilities'])} features")
 
-        # Token limit score
-        if requirements and "max_tokens" in requirements:
-            required_tokens = requirements["max_tokens"]
-            if model["max_tokens"] >= required_tokens:
-                token_score = min(1.0, model["max_tokens"] / required_tokens)
-                score += token_score * 0.1
-                reasons.append(f"token_capacity: {model['max_tokens']}")
+            # Token limit score
+            if requirements and "max_tokens" in requirements:
+                required_tokens = requirements["max_tokens"]
+                if model["max_tokens"] >= required_tokens:
+                    token_score = min(1.0, model["max_tokens"] / required_tokens)
+                    score += token_score * 0.1
+                    reasons.append(f"token_capacity: {model['max_tokens']}")
 
             scored_models.append(
                 {
@@ -439,7 +437,7 @@ class ModelRoutingManager:
         """Initialize model routing manager."""
         self.routers: dict[str, ModelRouter] = {}
 
-    def get_router(self, tenant_context: TenantContext) -> StepResult:
+    def get_router(self, tenant_context: TenantContext) -> ModelRouter:
         """Get or create model router for tenant.
 
         Args:
@@ -481,7 +479,7 @@ class ModelRoutingManager:
 _model_routing_manager = ModelRoutingManager()
 
 
-def get_model_router(tenant_context: TenantContext) -> StepResult:
+def get_model_router(tenant_context: TenantContext) -> ModelRouter:
     """Get model router for tenant.
 
     Args:

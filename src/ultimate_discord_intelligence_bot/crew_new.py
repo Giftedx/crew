@@ -503,9 +503,7 @@ class UltimateDiscordIntelligenceBotCrew:
                 "execution_summary": {
                     "total_steps": self._current_step_count,
                     "agents_used": list({step["agent_role"] for step in self._execution_trace}),
-                    "tools_used": list(
-                        {step["tool"] for step in self._execution_trace if step["tool"] != "unknown"}
-                    ),
+                    "tools_used": list({step["tool"] for step in self._execution_trace if step["tool"] != "unknown"}),
                     "total_duration": time.time() - self._execution_start_time if self._execution_start_time else 0,
                 },
                 "trace_url_template": "Use this for local analysis: file://" + os.path.abspath(trace_path),

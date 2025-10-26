@@ -16,6 +16,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
@@ -78,15 +79,9 @@ def main() -> int:
         compliance_report = compliance_result.data["compliance_report"]
 
         print("✅ Compliance analysis completed!")
-        print(
-            f"   Overall compliance score: {compliance_report.overall_compliance_score:.1%}"
-        )
-        print(
-            f"   Brand suitability score: {compliance_report.brand_suitability_score:.1%}"
-        )
-        print(
-            f"   Safe content percentage: {compliance_report.safe_content_percentage:.1%}"
-        )
+        print(f"   Overall compliance score: {compliance_report.overall_compliance_score:.1%}")
+        print(f"   Brand suitability score: {compliance_report.brand_suitability_score:.1%}")
+        print(f"   Safe content percentage: {compliance_report.safe_content_percentage:.1%}")
 
         if compliance_report.policy_violations:
             print(f"   Policy violations: {len(compliance_report.policy_violations)}")
@@ -159,12 +154,8 @@ def main() -> int:
         print("✅ Sponsor script generated!")
         print(f"   Total script duration: {sponsor_script.total_script_duration:.1f}s")
         print(f"   Script segments: {len(sponsor_script.script_segments)}")
-        print(
-            f"   Brand guidelines applied: {len(sponsor_script.brand_guidelines_applied)}"
-        )
-        print(
-            f"   Sponsor integration points: {len(sponsor_script.sponsor_integration_points)}"
-        )
+        print(f"   Brand guidelines applied: {len(sponsor_script.brand_guidelines_applied)}")
+        print(f"   Sponsor integration points: {len(sponsor_script.sponsor_integration_points)}")
 
         # Show brand guidelines
         print("   Brand guidelines applied:")
@@ -204,9 +195,7 @@ def main() -> int:
     )
 
     # Analyze same content with different guidelines
-    family_result = assistant.analyze_compliance(
-        content_segments, family_guidelines, policy_pack="family_friendly"
-    )
+    family_result = assistant.analyze_compliance(content_segments, family_guidelines, policy_pack="family_friendly")
 
     professional_result = assistant.analyze_compliance(
         content_segments, professional_guidelines, policy_pack="professional"
@@ -226,19 +215,13 @@ def main() -> int:
         print(f"     Violations: {len(professional_report.policy_violations)}")
 
         # Show the difference in compliance scores
-        score_diff = abs(
-            family_report.overall_compliance_score
-            - professional_report.overall_compliance_score
-        )
+        score_diff = abs(family_report.overall_compliance_score - professional_report.overall_compliance_score)
         stricter_brand = (
             "Family"
-            if family_report.overall_compliance_score
-            < professional_report.overall_compliance_score
+            if family_report.overall_compliance_score < professional_report.overall_compliance_score
             else "Professional"
         )
-        print(
-            f"   {stricter_brand} guidelines are stricter (difference: {score_diff:.1%})"
-        )
+        print(f"   {stricter_brand} guidelines are stricter (difference: {score_diff:.1%})")
 
     print()
 

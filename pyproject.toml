@@ -29,30 +29,36 @@ dependencies = [
     # Core AI/ML Framework
     "crewai>=0.80.0",
     "crewai-tools>=0.12.0",
-    
+
     # Discord Integration
     "discord.py>=2.3.0",
-    
+
     # LLM Services
     "openai>=1.0.0",
     "anthropic>=0.69.0",
-    
+
+    # Enhanced LLM capabilities
+    "instructor>=1.7.0",  # Structured outputs with validation
+    "litellm>=1.51.0",    # Multi-provider routing & fallbacks
+    "logfire[fastapi,httpx]>=2.5.0",  # Pydantic-native observability
+
     # Vector Storage & Memory
     "qdrant-client>=1.7.0",
     "llama-index>=0.10.0",
     "llama-index-embeddings-openai>=0.1.0",
     "llama-index-vector-stores-qdrant>=0.1.0",
-    
+
     # Data Processing
     "pydantic>=2.0.0",
     "pydantic-settings>=2.0.0",
-    
+
     # HTTP & Async
     "aiohttp>=3.8.0",
     "httpx>=0.24.0",
     "websockets>=12.0",  # WebSocket support
     "sse-starlette>=1.8.0",  # Server-Sent Events
-    
+    "fastapi[standard]>=0.115,<0.120",
+
     # Content Processing
     # Browser Automation
     "playwright>=1.40.0",
@@ -61,26 +67,26 @@ dependencies = [
     "requests>=2.31.0",
     "praw>=7.7.0",  # Reddit API
     "tweepy>=4.14.0",  # Twitter/X API
-    
+
     # Database & Storage
     "sqlalchemy>=2.0.0",
     "alembic>=1.12.0",
     "redis>=5.0.0",
     "neo4j>=5.14.0",
-    
+
     # Async Task Queue
     "arq>=0.25.0",
-    
+
     # Utilities
     "python-dotenv>=1.0.0",
     "click>=8.1.0",
     "rich>=13.0.0",
     "typer>=0.9.0",
-    
+
     # Monitoring & Observability
     "prometheus-client>=0.17.0",
     "structlog>=23.0.0",
-    
+
     # Security & Authentication
     "cryptography>=41.0.0",
     "bcrypt>=4.0.0",
@@ -262,7 +268,7 @@ lines-after-imports = 2
 
 # MyPy Configuration
 [tool.mypy]
-python_version = "3.10"
+python_version = "3.11"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true

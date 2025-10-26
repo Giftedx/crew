@@ -25,6 +25,8 @@ if TYPE_CHECKING:  # pragma: no cover - typing only
 
     from .types import PipelineRunResult
 
+from obs.logfire_spans import span as logfire_span
+
 from .base import PipelineBase
 from .mixins import PipelineExecutionMixin
 from .tracing import tracing_module
@@ -121,7 +123,8 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
             yield _PipelineContext(span=span, start_time=start_time, tracker=tracker)
 
     async def _run_pipeline(self, ctx: _PipelineContext, url: str, quality: str) -> PipelineRunResult:
-        download_info, failure = await self._download_phase(ctx, url, quality)
+        with logfire_span("pipeline.download_phase", url=url, quality=quality):
+            download_info, failure = await self._download_phase(ctx, url, quality)
         if failure is not None:
             return failure
         assert download_info is not None  # for type checkers
@@ -144,7 +147,8 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
         if should_exit:
             return await self._early_exit_processing(ctx, download_info, None, exit_reason, exit_confidence)
 
-        transcription_bundle, failure = await self._transcription_phase(ctx, download_info)
+        with logfire_span("pipeline.transcription_phase"):
+            transcription_bundle, failure = await self._transcription_phase(ctx, download_info)
         if failure is not None:
             return failure
         assert transcription_bundle is not None
@@ -214,7 +218,8 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
         if should_skip_analysis:
             return await self._lightweight_processing_phase(ctx, download_info, transcription_bundle, quality_result)
 
-        analysis_bundle, failure = await self._analysis_phase(ctx, download_info, transcription_bundle)
+        with logfire_span("pipeline.analysis_phase"):
+            analysis_bundle, failure = await self._analysis_phase(ctx, download_info, transcription_bundle)
         if failure is not None:
             return failure
         assert analysis_bundle is not None
@@ -1408,10 +1413,8 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
         )
 
     async def _await_transcript_best_effort(self, task: asyncio.Task[StepResult]) -> None:
-        try:
+        with suppress(Exception):  # pragma: no cover - best effort logging already handled elsewhere
             await asyncio.wait_for(task, timeout=2)
-        except Exception:  # pragma: no cover - best effort logging already handled elsewhere
-            pass
 
     def _schedule_discord_post(
         self,

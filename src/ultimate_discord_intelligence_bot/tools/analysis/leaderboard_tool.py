@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from typing import TYPE_CHECKING, Any, TypedDict, cast
+from typing import TYPE_CHECKING, Any, ClassVar, TypedDict, cast
 
 from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 from ultimate_discord_intelligence_bot.step_result import StepResult
@@ -33,7 +33,7 @@ class LeaderboardTool(BaseTool[StepResult]):
 
     name: str = "Leaderboard Tool"
     description: str = "Maintain counts of lies, misquotes and misinfo per person."
-    model_config = {"extra": "allow"}
+    model_config: ClassVar[dict[str, Any]] = {"extra": "allow"}
 
     def __init__(self, storage_path: Path | None = None):
         super().__init__()

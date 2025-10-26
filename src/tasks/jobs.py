@@ -9,6 +9,7 @@ from typing import Any
 
 try:
     from arq import cron
+
     ARQ_AVAILABLE = True
 except ImportError:
     ARQ_AVAILABLE = False
@@ -63,7 +64,9 @@ async def process_video_async(ctx: dict[str, Any], video_url: str, tenant: str, 
         }
 
 
-async def batch_analysis_async(ctx: dict[str, Any], content_items: list[str], tenant: str, workspace: str) -> dict[str, Any]:
+async def batch_analysis_async(
+    ctx: dict[str, Any], content_items: list[str], tenant: str, workspace: str
+) -> dict[str, Any]:
     """Background job to analyze multiple content items in batch.
 
     Args:
@@ -82,10 +85,12 @@ async def batch_analysis_async(ctx: dict[str, Any], content_items: list[str], te
         for item in content_items:
             # Simulate analysis - replace with actual analysis tool
             await asyncio.sleep(0.1)  # Simulate processing time
-            results.append({
-                "item": item,
-                "status": "analyzed",
-            })
+            results.append(
+                {
+                    "item": item,
+                    "status": "analyzed",
+                }
+            )
 
         return {
             "status": "success",
@@ -146,7 +151,11 @@ ARQ_FUNCTIONS = [
 ]
 
 # Scheduled cron jobs
-ARQ_CRON_JOBS = [
-    # Run monitoring every 5 minutes
-    cron(scheduled_monitoring_async, hour=set(range(24)), minute={0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55}),
-] if ARQ_AVAILABLE else []
+ARQ_CRON_JOBS = (
+    [
+        # Run monitoring every 5 minutes
+        cron(scheduled_monitoring_async, hour=set(range(24)), minute={0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55}),
+    ]
+    if ARQ_AVAILABLE
+    else []
+)

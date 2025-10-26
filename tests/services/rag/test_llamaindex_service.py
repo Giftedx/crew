@@ -1,13 +1,11 @@
 """Tests for LlamaIndex RAG service."""
 
+import importlib.util
+
 import pytest
 
 
-try:
-    from llama_index.core import Document
-    LLAMAINDEX_AVAILABLE = True
-except ImportError:
-    LLAMAINDEX_AVAILABLE = False
+LLAMAINDEX_AVAILABLE = importlib.util.find_spec("llama_index.core") is not None
 
 
 @pytest.mark.skipif(not LLAMAINDEX_AVAILABLE, reason="LlamaIndex not available")
@@ -18,10 +16,9 @@ class TestLlamaIndexRAGService:
     def service(self):
         """Create LlamaIndex RAG service instance."""
         from src.services.rag.llamaindex_service import LlamaIndexRAGService
+
         return LlamaIndexRAGService(
-            qdrant_url="http://localhost:6333",
-            collection_name="test_collection",
-            openai_api_key="test_key"
+            qdrant_url="http://localhost:6333", collection_name="test_collection", openai_api_key="test_key"
         )
 
     def test_service_initialization(self, service):

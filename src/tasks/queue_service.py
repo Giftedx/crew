@@ -9,6 +9,7 @@ from typing import Any
 try:
     from arq import ArqRedis, create_pool
     from arq.connections import RedisSettings
+
     ARQ_AVAILABLE = True
 except ImportError:
     ARQ_AVAILABLE = False
@@ -134,11 +135,7 @@ class TaskQueueService:
             job = await self.redis_pool.get_job_result(job_id)
             if job and job.info:
                 # Re-enqueue with same parameters
-                new_job = await self.redis_pool.enqueue_job(
-                    job.info.function_name,
-                    *job.info.args,
-                    **job.info.kwargs
-                )
+                new_job = await self.redis_pool.enqueue_job(job.info.function_name, *job.info.args, **job.info.kwargs)
                 logger.info(f"Retrying job {job_id} as {new_job.job_id}")
                 return new_job.job_id if new_job else None
             return None

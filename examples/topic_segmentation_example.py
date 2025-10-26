@@ -16,6 +16,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
@@ -33,9 +34,7 @@ def main() -> int:
 
     text = sys.argv[1]
     if len(text) < 100:
-        print(
-            "Error: Text too short for meaningful topic analysis (minimum 100 characters)"
-        )
+        print("Error: Text too short for meaningful topic analysis (minimum 100 characters)")
         return 1
 
     print(f"🧠 Analyzing topics in: {len(text)} characters of text")
@@ -78,9 +77,7 @@ def main() -> int:
     topic_distribution = data.get("topic_distribution", {})
     if topic_distribution:
         print("📈 Topic Distribution:")
-        sorted_topics = sorted(
-            topic_distribution.items(), key=lambda x: x[1], reverse=True
-        )
+        sorted_topics = sorted(topic_distribution.items(), key=lambda x: x[1], reverse=True)
         for topic_id, frequency in sorted_topics[:5]:  # Show top 5
             print(f"   {topic_id}: {frequency:.1%}")
         if len(topic_distribution) > 5:
@@ -102,10 +99,7 @@ def main() -> int:
             dominant_topic = segment.get("dominant_topic", "unknown")
             topic_names = segment.get("topic_names", [])
 
-            print(
-                f"   {i + 1:2d}. [{start_time:6.1f}s - {end_time:6.1f}s] "
-                f"({duration:5.1f}s) Topic: {dominant_topic}"
-            )
+            print(f"   {i + 1:2d}. [{start_time:6.1f}s - {end_time:6.1f}s] ({duration:5.1f}s) Topic: {dominant_topic}")
 
             # Show topic names if available
             if topic_names:
@@ -129,9 +123,7 @@ def main() -> int:
 
         print("\n📊 Coherence Analysis:")
         print(f"   Average segment coherence: {avg_coherence:.2f}")
-        print(
-            f"   High coherence segments: {sum(1 for c in coherences if c > 0.7)}/{len(coherences)}"
-        )
+        print(f"   High coherence segments: {sum(1 for c in coherences if c > 0.7)}/{len(coherences)}")
 
     return 0
 

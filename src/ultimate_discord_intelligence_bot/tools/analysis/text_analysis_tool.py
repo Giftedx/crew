@@ -32,7 +32,7 @@ stopwords: Any | None = None
 SentimentIntensityAnalyzer: Any = object
 
 
-def word_tokenize(s: str) -> list[str]:
+def word_tokenize(_s: str) -> list[str]:
     return []
 
 
@@ -719,16 +719,15 @@ class TextAnalysisTool(BaseTool[StepResult]):
 
         # Generate content themes (broader categories)
         content_themes = []
-        if any(score > 0.01 for score in topic_scores.values()):  # At least some topical content
+        if any(score > 0.01 for score in topic_scores.values()) and sorted_topics:
             # Determine dominant theme based on highest scoring topic category
-            if sorted_topics:
-                dominant_topic = sorted_topics[0][0]
-                content_themes.append(dominant_topic)
+            dominant_topic = sorted_topics[0][0]
+            content_themes.append(dominant_topic)
 
-                # Add secondary themes if they have significant scores
-                for topic, score in sorted_topics[1:3]:
-                    if score > 0.005:  # Lower threshold for secondary themes
-                        content_themes.append(topic)
+            # Add secondary themes if they have significant scores
+            for topic, score in sorted_topics[1:3]:
+                if score > 0.005:  # Lower threshold for secondary themes
+                    content_themes.append(topic)
 
         return {
             "primary_topics": primary_topics,

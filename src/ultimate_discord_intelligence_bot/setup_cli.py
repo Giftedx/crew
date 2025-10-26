@@ -103,7 +103,7 @@ def _wizard(
         current = _load_env(env_path)
     elif use_example_when_missing and (REPO_ROOT / ".env.example").exists():
         current = _load_env(REPO_ROOT / ".env.example")
-        print("ℹ️  Using .env.example as base since .env was missing")
+        print("i  Using .env.example as base since .env was missing")
     else:
         current = []
 
@@ -404,7 +404,7 @@ def _doctor(*, as_json: bool = False, quiet: bool = False) -> int:
     for var in ["QDRANT_URL"]:
         if not os.getenv(var):
             if not quiet:
-                print(f"ℹ️  Optional env not set: {var}")
+                print(f"i  Optional env not set: {var}")
             report["env"][var] = "unset"
         else:
             report["env"][var] = "present"
@@ -455,7 +455,7 @@ def _doctor(*, as_json: bool = False, quiet: bool = False) -> int:
                 report["vector_store"] = {"mode": mode, "reachable": False}
         else:
             if not quiet:
-                print("ℹ️  QDRANT_URL not set; vector search will use in-memory dummy store for tests")
+                print("i  QDRANT_URL not set; vector search will use in-memory dummy store for tests")
             report["vector_store"] = {"mode": "dummy", "reachable": True}
     except Exception as e:
         ok = False

@@ -16,6 +16,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
@@ -27,9 +28,7 @@ from analysis.sentiment.sentiment_stance_analysis_service import (
 def main() -> int:
     """Main example function."""
     if len(sys.argv) < 2:
-        print(
-            'Usage: python examples/sentiment_stance_analysis_example.py "text to analyze"'
-        )
+        print('Usage: python examples/sentiment_stance_analysis_example.py "text to analyze"')
         print("Example:")
         print(
             'python examples/sentiment_stance_analysis_example.py "This is absolutely amazing! I love this content so much. The discussion was incredible and I completely agree with everything said."'
@@ -84,9 +83,7 @@ def main() -> int:
         emotion_scores = emotion.get("emotion_scores", {})
         if emotion_scores:
             print("   Emotion scores:")
-            for emotion_name, score in sorted(
-                emotion_scores.items(), key=lambda x: x[1], reverse=True
-            )[:3]:
+            for emotion_name, score in sorted(emotion_scores.items(), key=lambda x: x[1], reverse=True)[:3]:
                 print(f"     {emotion_name}: {score:.2f}")
         print()
 

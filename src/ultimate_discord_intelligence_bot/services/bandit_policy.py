@@ -224,10 +224,9 @@ class BanditPolicy:
             # Prefer models with larger context windows
             if "gpt-4" in model_id or "claude-3" in model_id:
                 factor *= 1.2
-        elif context.prompt_length < 500:
+        elif context.prompt_length < 500 and ("gpt-3.5" in model_id or "claude-haiku" in model_id):
             # Prefer faster, cheaper models for short prompts
-            if "gpt-3.5" in model_id or "claude-haiku" in model_id:
-                factor *= 1.1
+            factor *= 1.1
 
         # Adjust based on task complexity
         if context.expected_complexity == "complex":

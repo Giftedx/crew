@@ -126,7 +126,7 @@ def check_use_case(use_case: str, policy: Policy) -> Decision:
 
     If the use case is absent from ``per_command`` treat as blocked. Honor a
     ``max_tokens`` field when present (the caller must supply token count via
-    a context layer – omitted here for lightweight parity with top-level engine).
+    a context layer - omitted here for lightweight parity with top-level engine).
     """
     rules = policy.per_command.get(use_case) if hasattr(policy, "per_command") else None
     if not rules:

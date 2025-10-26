@@ -16,6 +16,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
@@ -105,13 +106,9 @@ def main() -> int:
         duration = segment["end"] - segment["start"]
         speaker_times[speaker_id] = speaker_times.get(speaker_id, 0) + duration
 
-    for speaker_id, total_time in sorted(
-        speaker_times.items(), key=lambda x: x[1], reverse=True
-    ):
+    for speaker_id, total_time in sorted(speaker_times.items(), key=lambda x: x[1], reverse=True):
         speaker_name = data["speaker_map"].get(speaker_id, speaker_id)
-        percentage = (
-            (total_time / data["duration"]) * 100 if data["duration"] > 0 else 0
-        )
+        percentage = (total_time / data["duration"]) * 100 if data["duration"] > 0 else 0
         print(f"   {speaker_name}: {total_time:6.1f}s ({percentage:5.1f}%)")
 
     return 0

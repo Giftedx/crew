@@ -40,14 +40,14 @@ def check_stepresult_compliance(file_path: Path) -> dict:
                         # Check for StepResult.ok/fail/skip in return statements
                         for stmt in item.body:
                             if isinstance(stmt, ast.Return) and stmt.value:
-                                if isinstance(stmt.value, ast.Call) and ((
-                                    hasattr(stmt.value.func, "attr")
-                                    and stmt.value.attr in ["ok", "fail", "skip"]
-                                ) or (
-                                    hasattr(stmt.value.func, "value")
-                                    and hasattr(stmt.value.func.value, "id")
-                                    and stmt.value.func.value.id == "StepResult"
-                                )):
+                                if isinstance(stmt.value, ast.Call) and (
+                                    (hasattr(stmt.value.func, "attr") and stmt.value.attr in ["ok", "fail", "skip"])
+                                    or (
+                                        hasattr(stmt.value.func, "value")
+                                        and hasattr(stmt.value.func.value, "id")
+                                        and stmt.value.func.value.id == "StepResult"
+                                    )
+                                ):
                                     has_stepresult_returns = True
 
         return {

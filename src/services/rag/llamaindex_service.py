@@ -12,6 +12,7 @@ try:
     from llama_index.embeddings.openai import OpenAIEmbedding
     from llama_index.vector_stores.qdrant import QdrantVectorStore
     from qdrant_client import QdrantClient
+
     LLAMAINDEX_AVAILABLE = True
 except ImportError:
     LLAMAINDEX_AVAILABLE = False
@@ -35,9 +36,7 @@ class LlamaIndexRAGService:
         openai_api_key: str | None = None,
     ):
         if not LLAMAINDEX_AVAILABLE:
-            raise ImportError(
-                "LlamaIndex not available. Install with: pip install llama-index"
-            )
+            raise ImportError("LlamaIndex not available. Install with: pip install llama-index")
 
         self.qdrant_url = qdrant_url
         self.collection_name = collection_name
@@ -56,9 +55,7 @@ class LlamaIndexRAGService:
         )
 
         # Initialize storage context
-        self.storage_context = StorageContext.from_defaults(
-            vector_store=self.vector_store
-        )
+        self.storage_context = StorageContext.from_defaults(vector_store=self.vector_store)
 
         # Initialize index
         self.index = VectorStoreIndex(
@@ -92,10 +89,12 @@ class LlamaIndexRAGService:
 
             _logger.info(f"Ingested {len(documents)} documents into RAG system")
 
-            return StepResult.ok(data={
-                "documents_ingested": len(documents),
-                "nodes_created": len(nodes),
-            })
+            return StepResult.ok(
+                data={
+                    "documents_ingested": len(documents),
+                    "nodes_created": len(nodes),
+                }
+            )
 
         except Exception as e:
             _logger.error(f"Error ingesting documents: {e}")
@@ -121,20 +120,24 @@ class LlamaIndexRAGService:
             # Extract results
             results = []
             for node in response.source_nodes:
-                results.append({
-                    "text": node.text,
-                    "score": node.score,
-                    "metadata": node.metadata,
-                })
+                results.append(
+                    {
+                        "text": node.text,
+                        "score": node.score,
+                        "metadata": node.metadata,
+                    }
+                )
 
             _logger.info(f"Query returned {len(results)} results")
 
-            return StepResult.ok(data={
-                "query": query_text,
-                "response": str(response),
-                "results": results,
-                "top_k": top_k,
-            })
+            return StepResult.ok(
+                data={
+                    "query": query_text,
+                    "response": str(response),
+                    "results": results,
+                    "top_k": top_k,
+                }
+            )
 
         except Exception as e:
             _logger.error(f"Error querying RAG system: {e}")
@@ -156,19 +159,23 @@ class LlamaIndexRAGService:
             # Format context
             context_parts = []
             for node in nodes:
-                context_parts.append({
-                    "text": node.text,
-                    "score": node.score,
-                    "metadata": node.metadata,
-                })
+                context_parts.append(
+                    {
+                        "text": node.text,
+                        "score": node.score,
+                        "metadata": node.metadata,
+                    }
+                )
 
             _logger.info(f"Retrieved {len(context_parts)} context items")
 
-            return StepResult.ok(data={
-                "query": query_text,
-                "context": context_parts,
-                "top_k": top_k,
-            })
+            return StepResult.ok(
+                data={
+                    "query": query_text,
+                    "context": context_parts,
+                    "top_k": top_k,
+                }
+            )
 
         except Exception as e:
             _logger.error(f"Error retrieving context: {e}")

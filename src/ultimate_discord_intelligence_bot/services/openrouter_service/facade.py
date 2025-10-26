@@ -61,9 +61,12 @@ class FacadeBudgetManager:
             projected_cost = self._service.token_meter.estimate_cost(tokens_in, model)
 
             # Check cumulative budget if tracker exists
-            if hasattr(self._service, "request_tracker") and self._service.request_tracker:
-                if not self._service.request_tracker.can_charge(projected_cost, task_type):
-                    return StepResult.fail("Cumulative cost exceeds limit")
+            if (
+                hasattr(self._service, "request_tracker")
+                and self._service.request_tracker
+                and not self._service.request_tracker.can_charge(projected_cost, task_type)
+            ):
+                return StepResult.fail("Cumulative cost exceeds limit")
 
             # Check per-request limit if available
             if hasattr(self._service.token_meter, "max_cost_per_request"):

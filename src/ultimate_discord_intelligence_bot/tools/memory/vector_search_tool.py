@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Protocol, TypedDict, cast, runtime_checkable
+from typing import TYPE_CHECKING, Any, ClassVar, Protocol, TypedDict, cast, runtime_checkable
 
 from memory.qdrant_provider import get_qdrant_client
 from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
@@ -60,7 +60,7 @@ class VectorSearchTool(BaseTool[StepResult]):
 
     name: str = "Qdrant Vector Search Tool"
     description: str = "Query the vector database for similar documents."
-    model_config = {"extra": "allow"}
+    model_config: ClassVar[dict[str, Any]] = {"extra": "allow"}
 
     def __init__(
         self,
@@ -127,7 +127,7 @@ class VectorSearchTool(BaseTool[StepResult]):
                         else:
                             create(collection_name=physical)
                 else:  # pragma: no cover - unexpected client surface
-                    raise RuntimeError("Qdrant client does not support collection creation APIs")
+                    raise RuntimeError("Qdrant client does not support collection creation APIs") from None
 
     def _run(self, query: str, limit: int = 3, collection: str | None = None) -> StepResult:
         # Prefer explicit collection, else tenant-scoped default computed at init time

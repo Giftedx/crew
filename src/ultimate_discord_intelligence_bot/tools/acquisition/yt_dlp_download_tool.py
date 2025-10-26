@@ -33,7 +33,7 @@ class YtDlpDownloadTool(BaseTool[StepResult]):
     """
 
     platform: ClassVar[str] = "generic"
-    model_config = {"extra": "allow"}  # allow dynamic fields set by subclasses/tests
+    model_config: ClassVar[dict[str, Any]] = {"extra": "allow"}  # allow dynamic fields set by subclasses/tests
 
     def __init__(self):
         super().__init__()

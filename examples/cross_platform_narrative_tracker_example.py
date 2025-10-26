@@ -16,6 +16,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
@@ -142,12 +143,8 @@ def main() -> int:
         contradiction_data = contradiction_result.data
 
         print("✅ Contradiction analysis completed!")
-        print(
-            f"   Contradictions found: {contradiction_data.get('contradictions_found', 0)}"
-        )
-        print(
-            f"   Clarifications found: {contradiction_data.get('clarifications_found', 0)}"
-        )
+        print(f"   Contradictions found: {contradiction_data.get('contradictions_found', 0)}")
+        print(f"   Clarifications found: {contradiction_data.get('clarifications_found', 0)}")
 
         # Show contradictions
         contradictions = contradiction_data.get("contradictions", [])
@@ -156,12 +153,8 @@ def main() -> int:
             for i, contradiction in enumerate(contradictions[:2]):
                 score = contradiction.get("contradiction_score", 0)
                 print(f"     {i + 1}. Score: {score:.2f}")
-                print(
-                    f"        Original: {contradiction['item1'].get('title', 'Unknown')}"
-                )
-                print(
-                    f"        Contradiction: {contradiction['item2'].get('title', 'Unknown')}"
-                )
+                print(f"        Original: {contradiction['item1'].get('title', 'Unknown')}")
+                print(f"        Contradiction: {contradiction['item2'].get('title', 'Unknown')}")
 
         # Show clarifications
         clarifications = contradiction_data.get("clarifications", [])
@@ -170,12 +163,8 @@ def main() -> int:
             for i, clarification in enumerate(clarifications[:2]):
                 score = clarification.get("clarification_score", 0)
                 print(f"     {i + 1}. Score: {score:.2f}")
-                print(
-                    f"        Original: {clarification['original_item'].get('title', 'Unknown')}"
-                )
-                print(
-                    f"        Clarification: {clarification['clarifying_item'].get('title', 'Unknown')}"
-                )
+                print(f"        Original: {clarification['original_item'].get('title', 'Unknown')}")
+                print(f"        Clarification: {clarification['clarifying_item'].get('title', 'Unknown')}")
     else:
         print(f"❌ Contradiction analysis failed: {contradiction_result.error}")
 
@@ -230,9 +219,7 @@ def main() -> int:
             print("✅ Timeline generated!")
             print(f"   Thread ID: {timeline_data['thread_id']}")
             print(f"   Total events: {timeline_data['total_events']}")
-            print(
-                f"   Platforms involved: {', '.join(timeline_data['platforms_involved'])}"
-            )
+            print(f"   Platforms involved: {', '.join(timeline_data['platforms_involved'])}")
 
             # Show timeline events
             events = timeline_data.get("timeline_events", [])
@@ -242,9 +229,7 @@ def main() -> int:
                     timestamp = event.get("timestamp", 0)
                     event_type = event.get("narrative_type", "unknown")
                     platform_count = len(event.get("platform_sequence", []))
-                    print(
-                        f"     {i + 1}. {event_type.title()} at {timestamp} ({platform_count} platforms)"
-                    )
+                    print(f"     {i + 1}. {event_type.title()} at {timestamp} ({platform_count} platforms)")
         else:
             print(f"❌ Timeline generation failed: {timeline_result.error}")
 

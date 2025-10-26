@@ -131,7 +131,7 @@ class DiscordPostTool(BaseTool[StepResult]):
             "fields": (
                 [
                     {
-                        "name": "ℹ️ Drive Upload",
+                        "name": "i Drive Upload",
                         "value": skip_message or "Drive upload skipped",
                         "inline": False,
                     }
