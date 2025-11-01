@@ -2,7 +2,7 @@
 
 This module implements a 4-layer reasoning architecture:
 1. Pre-processing Layer: Token interpretation, filtering, normalization
-2. Context Analysis Layer: Memory retrieval, context building, relevance scoring  
+2. Context Analysis Layer: Memory retrieval, context building, relevance scoring
 3. Decision Making Layer: Response decision, priority determination, agent routing
 4. Response Generation Layer: Content generation, formatting, validation
 """
@@ -73,10 +73,10 @@ class HierarchicalReasoningEngine:
         self.memory_service = memory_service
         self.retrieval_engine = retrieval_engine
         self.context_builder = context_builder
-        
+
         # Initialize token interpreter
         self.token_interpreter = ContextualTokenInterpreter()
-        
+
         # Initialize adaptive decision tree
         self.decision_tree = AdaptiveDecisionTree(routing_manager, prompt_engine)
 
@@ -84,23 +84,23 @@ class HierarchicalReasoningEngine:
         self, message_data: dict[str, Any], recent_messages: list[dict[str, Any]], user_opt_in_status: bool
     ) -> StepResult[ReasoningResult]:
         """Execute complete hierarchical reasoning process.
-        
+
         Args:
             message_data: Discord message data
             recent_messages: Recent conversation history
             user_opt_in_status: Whether user has opted in to AI interactions
-            
+
         Returns:
             StepResult with ReasoningResult containing decision and reasoning trace
         """
         try:
             reasoning_ctx = ReasoningContext(message_data=message_data)
-            
+
             # Layer 1: Pre-processing
             preprocess_result = await self._preprocess_layer(message_data, reasoning_ctx)
             if not preprocess_result.success:
                 return StepResult.fail(f"Pre-processing failed: {preprocess_result.error}")
-            
+
             # Skip processing if message should be ignored
             if reasoning_ctx.interpreted_tokens and reasoning_ctx.interpreted_tokens.action.action_type == "ignore":
                 return StepResult.ok(
@@ -113,19 +113,24 @@ class HierarchicalReasoningEngine:
                         context_summary="Message marked for ignoring",
                     )
                 )
-            
+
             # Layer 2: Context Analysis
-            context_result = await self._context_analysis_layer(message_data, recent_messages, reasoning_ctx, user_opt_in_status)
+            context_result = await self._context_analysis_layer(
+                message_data, recent_messages, reasoning_ctx, user_opt_in_status
+            )
             if not context_result.success:
                 logger.warning(f"Context analysis failed: {context_result.error}, continuing with limited context")
-            
+
             # Layer 3: Decision Making (using adaptive decision tree)
             if reasoning_ctx.interpreted_tokens:
                 decision_tree_result = await self.decision_tree.evaluate(
                     interpreted_tokens=reasoning_ctx.interpreted_tokens,
-                    message_metadata={"mentions": message_data.get("mentions", []), "user_opt_in_status": user_opt_in_status},
+                    message_metadata={
+                        "mentions": message_data.get("mentions", []),
+                        "user_opt_in_status": user_opt_in_status,
+                    },
                 )
-                
+
                 if decision_tree_result.success:
                     tree_path = decision_tree_result.data
                     decision = {
@@ -134,12 +139,14 @@ class HierarchicalReasoningEngine:
                         "reasoning": tree_path.reasoning,
                         "used_llm": tree_path.used_llm,
                     }
-                    reasoning_ctx.reasoning_trace.append({
-                        "layer": "decision_making",
-                        "method": "adaptive_decision_tree",
-                        "path": tree_path.nodes_visited,
-                        "decision": decision,
-                    })
+                    reasoning_ctx.reasoning_trace.append(
+                        {
+                            "layer": "decision_making",
+                            "method": "adaptive_decision_tree",
+                            "path": tree_path.nodes_visited,
+                            "decision": decision,
+                        }
+                    )
                 else:
                     # Fallback to basic decision making
                     decision_result = await self._decision_making_layer(message_data, reasoning_ctx, user_opt_in_status)
@@ -152,25 +159,31 @@ class HierarchicalReasoningEngine:
                 if not decision_result.success:
                     return StepResult.fail(f"Decision making failed: {decision_result.error}")
                 decision = decision_result.data
-            
+
             # Layer 4: Response Generation planning
             # (Actual generation happens in pipeline, but we plan here)
             planning_result = await self._response_generation_layer_planning(reasoning_ctx, decision)
-            
+
             # Build final reasoning result
             reasoning_result = ReasoningResult(
                 should_respond=decision.get("should_respond", False),
                 confidence=decision.get("confidence", 0.0),
                 reasoning_steps=reasoning_ctx.reasoning_trace,
-                recommended_action=reasoning_ctx.interpreted_tokens.action.action_type if reasoning_ctx.interpreted_tokens else "respond",
+                recommended_action=reasoning_ctx.interpreted_tokens.action.action_type
+                if reasoning_ctx.interpreted_tokens
+                else "respond",
                 priority=reasoning_ctx.interpreted_tokens.action.priority if reasoning_ctx.interpreted_tokens else 0,
                 context_summary=self._build_context_summary(reasoning_ctx),
-                requires_crewmai=reasoning_ctx.interpreted_tokens.action.requires_crewmai if reasoning_ctx.interpreted_tokens else False,
-                suggested_agents=reasoning_ctx.interpreted_tokens.action.suggested_agents if reasoning_ctx.interpreted_tokens else [],
+                requires_crewmai=reasoning_ctx.interpreted_tokens.action.requires_crewmai
+                if reasoning_ctx.interpreted_tokens
+                else False,
+                suggested_agents=reasoning_ctx.interpreted_tokens.action.suggested_agents
+                if reasoning_ctx.interpreted_tokens
+                else [],
             )
-            
+
             return StepResult.ok(data=reasoning_result)
-            
+
         except Exception as e:
             logger.error(f"Hierarchical reasoning failed: {e}", exc_info=True)
             return StepResult.fail(f"Reasoning process failed: {e!s}")
@@ -179,24 +192,26 @@ class HierarchicalReasoningEngine:
         """Layer 1: Pre-processing - token interpretation and normalization."""
         try:
             content = message_data.get("content", "")
-            
+
             # Interpret tokens
             interpreted = self.token_interpreter.interpret(content, message_data)
             ctx.interpreted_tokens = interpreted
-            
+
             # Record reasoning step
-            ctx.reasoning_trace.append({
-                "layer": "preprocessing",
-                "action": "token_interpretation",
-                "intent": interpreted.intent.primary_intent,
-                "confidence": interpreted.confidence_score,
-            })
-            
+            ctx.reasoning_trace.append(
+                {
+                    "layer": "preprocessing",
+                    "action": "token_interpretation",
+                    "intent": interpreted.intent.primary_intent,
+                    "confidence": interpreted.confidence_score,
+                }
+            )
+
             # Store confidence
             ctx.confidence_scores["interpretation"] = interpreted.confidence_score
-            
+
             return StepResult.ok(data={"interpreted": True})
-            
+
         except Exception as e:
             logger.error(f"Pre-processing layer failed: {e}")
             return StepResult.fail(f"Pre-processing failed: {e!s}")
@@ -212,28 +227,28 @@ class HierarchicalReasoningEngine:
         try:
             content = message_data.get("content", "")
             guild_id = str(message_data.get("guild_id", ""))
-            
+
             if not ctx.interpreted_tokens:
                 return StepResult.fail("No interpreted tokens available for context analysis")
-            
+
             # Memory retrieval using UnifiedRetrievalEngine if available
             if self.retrieval_engine:
                 from ultimate_discord_intelligence_bot.knowledge.retrieval_engine import RetrievalQuery
-                
+
                 query = RetrievalQuery(
                     text=content,
                     intent=ctx.interpreted_tokens.intent.primary_intent,
                     limit=10,
                     min_confidence=0.5,
                 )
-                
+
                 retrieval_result = await self.retrieval_engine.retrieve(
                     query=query,
                     unified_memory_service=self.memory_service,
                     tenant_id=guild_id,
                     workspace_id="discord",
                 )
-                
+
                 if retrieval_result.success:
                     results = retrieval_result.data.get("results", [])
                     ctx.retrieved_context = [
@@ -252,7 +267,7 @@ class HierarchicalReasoningEngine:
                     workspace="discord_interactions",
                     limit=10,
                 )
-                
+
                 if search_result.success:
                     memories = search_result.data.get("memories", [])
                     ctx.retrieved_context = [
@@ -263,11 +278,11 @@ class HierarchicalReasoningEngine:
                         }
                         for mem in memories
                     ]
-            
+
             # Build unified context if context builder available
             if self.context_builder:
                 from ultimate_discord_intelligence_bot.knowledge.context_builder import ContextRequest
-                
+
                 context_request = ContextRequest(
                     agent_id="discord_bot",
                     task_type="conversation",
@@ -275,7 +290,7 @@ class HierarchicalReasoningEngine:
                     current_context={"recent_messages": recent_messages, "user_opt_in": user_opt_in_status},
                     max_context_length=4000,
                 )
-                
+
                 build_result = await self.context_builder.build_context(
                     request=context_request,
                     unified_memory_service=self.memory_service,
@@ -283,24 +298,26 @@ class HierarchicalReasoningEngine:
                     tenant_id=guild_id,
                     workspace_id="discord",
                 )
-                
+
                 if build_result.success:
                     ctx.unified_context = build_result.data
-            
+
             # Record reasoning step
-            ctx.reasoning_trace.append({
-                "layer": "context_analysis",
-                "action": "memory_retrieval",
-                "contexts_retrieved": len(ctx.retrieved_context),
-                "has_unified_context": ctx.unified_context is not None,
-            })
-            
+            ctx.reasoning_trace.append(
+                {
+                    "layer": "context_analysis",
+                    "action": "memory_retrieval",
+                    "contexts_retrieved": len(ctx.retrieved_context),
+                    "has_unified_context": ctx.unified_context is not None,
+                }
+            )
+
             # Calculate context relevance score
             relevance_score = self._calculate_context_relevance(ctx)
             ctx.confidence_scores["context_relevance"] = relevance_score
-            
+
             return StepResult.ok(data={"context_retrieved": True, "relevance_score": relevance_score})
-            
+
         except Exception as e:
             logger.error(f"Context analysis layer failed: {e}")
             return StepResult.fail(f"Context analysis failed: {e!s}")
@@ -312,15 +329,17 @@ class HierarchicalReasoningEngine:
         try:
             if not ctx.interpreted_tokens:
                 return StepResult.fail("No interpreted tokens for decision making")
-            
+
             tokens = ctx.interpreted_tokens
-            
+
             # Fast-path rules for common cases
             if tokens.action.action_type == "ignore":
-                return StepResult.ok(data={"should_respond": False, "confidence": 1.0, "reasoning": "Message marked for ignoring"})
-            
+                return StepResult.ok(
+                    data={"should_respond": False, "confidence": 1.0, "reasoning": "Message marked for ignoring"}
+                )
+
             # Check opt-in status
-            if not user_opt_in_status and not tokens.context.urgency == "critical":
+            if not user_opt_in_status and tokens.context.urgency != "critical":
                 # Only respond if direct mention or high priority
                 if not message_data.get("mentions") and tokens.action.priority < 7:
                     return StepResult.ok(
@@ -330,16 +349,16 @@ class HierarchicalReasoningEngine:
                             "reasoning": "User not opted in and message not high priority",
                         }
                     )
-            
+
             # Determine response decision based on intent and context
             should_respond = True
             confidence = tokens.confidence_score
-            
+
             # Adjust based on urgency
             if tokens.context.urgency in ["critical", "high"]:
                 should_respond = True
                 confidence = min(1.0, confidence + 0.2)
-            
+
             # Adjust based on intent
             if tokens.intent.primary_intent in ["question", "command", "request"]:
                 should_respond = True
@@ -350,23 +369,25 @@ class HierarchicalReasoningEngine:
             elif tokens.intent.primary_intent == "statement" and tokens.action.priority < 3:
                 should_respond = False  # Low priority statements can be ignored
                 confidence = 0.6
-            
+
             # Record reasoning step
-            ctx.reasoning_trace.append({
-                "layer": "decision_making",
-                "action": "response_decision",
-                "should_respond": should_respond,
-                "confidence": confidence,
-                "factors": {
-                    "intent": tokens.intent.primary_intent,
-                    "urgency": tokens.context.urgency,
-                    "priority": tokens.action.priority,
-                    "opt_in": user_opt_in_status,
-                },
-            })
-            
+            ctx.reasoning_trace.append(
+                {
+                    "layer": "decision_making",
+                    "action": "response_decision",
+                    "should_respond": should_respond,
+                    "confidence": confidence,
+                    "factors": {
+                        "intent": tokens.intent.primary_intent,
+                        "urgency": tokens.context.urgency,
+                        "priority": tokens.action.priority,
+                        "opt_in": user_opt_in_status,
+                    },
+                }
+            )
+
             ctx.confidence_scores["decision"] = confidence
-            
+
             return StepResult.ok(
                 data={
                     "should_respond": should_respond,
@@ -374,7 +395,7 @@ class HierarchicalReasoningEngine:
                     "reasoning": f"Intent: {tokens.intent.primary_intent}, Urgency: {tokens.context.urgency}, Priority: {tokens.action.priority}",
                 }
             )
-            
+
         except Exception as e:
             logger.error(f"Decision making layer failed: {e}")
             return StepResult.fail(f"Decision making failed: {e!s}")
@@ -385,9 +406,9 @@ class HierarchicalReasoningEngine:
             # Plan response generation strategy
             if not ctx.interpreted_tokens:
                 return StepResult.fail("No interpreted tokens for response planning")
-            
+
             tokens = ctx.interpreted_tokens
-            
+
             # Determine response strategy
             strategy = "direct"
             if tokens.action.requires_crewmai:
@@ -396,18 +417,20 @@ class HierarchicalReasoningEngine:
                 strategy = "knowledge_enhanced"
             elif len(ctx.retrieved_context) > 0:
                 strategy = "context_enhanced"
-            
+
             # Record reasoning step
-            ctx.reasoning_trace.append({
-                "layer": "response_generation_planning",
-                "action": "strategy_selection",
-                "strategy": strategy,
-                "requires_crewmai": tokens.action.requires_crewmai,
-                "requires_knowledge": tokens.action.requires_knowledge,
-            })
-            
+            ctx.reasoning_trace.append(
+                {
+                    "layer": "response_generation_planning",
+                    "action": "strategy_selection",
+                    "strategy": strategy,
+                    "requires_crewmai": tokens.action.requires_crewmai,
+                    "requires_knowledge": tokens.action.requires_knowledge,
+                }
+            )
+
             return StepResult.ok(data={"strategy": strategy})
-            
+
         except Exception as e:
             logger.error(f"Response generation planning failed: {e}")
             return StepResult.fail(f"Response planning failed: {e!s}")
@@ -416,28 +439,27 @@ class HierarchicalReasoningEngine:
         """Calculate how relevant the retrieved context is."""
         if not ctx.retrieved_context:
             return 0.0
-        
+
         # Average confidence of retrieved contexts
         confidences = [c.get("confidence", 0.0) for c in ctx.retrieved_context]
         if confidences:
             return sum(confidences) / len(confidences)
-        
+
         return 0.0
 
     def _build_context_summary(self, ctx: ReasoningContext) -> str:
         """Build a summary of the reasoning context."""
         summary_parts: list[str] = []
-        
+
         if ctx.interpreted_tokens:
             summary_parts.append(f"Intent: {ctx.interpreted_tokens.intent.primary_intent}")
             summary_parts.append(f"Action: {ctx.interpreted_tokens.action.action_type}")
             summary_parts.append(f"Priority: {ctx.interpreted_tokens.action.priority}")
-        
+
         if ctx.retrieved_context:
             summary_parts.append(f"Context items: {len(ctx.retrieved_context)}")
-        
+
         if ctx.unified_context:
             summary_parts.append("Unified context available")
-        
-        return "; ".join(summary_parts) if summary_parts else "Minimal context"
 
+        return "; ".join(summary_parts) if summary_parts else "Minimal context"

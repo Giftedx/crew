@@ -64,7 +64,7 @@ class AdaptiveDecisionTree:
             condition="always",
             next_nodes=["check_ignore", "check_priority"],
         )
-        
+
         # Fast-path: Ignore node
         self.nodes["check_ignore"] = DecisionNode(
             node_id="check_ignore",
@@ -72,7 +72,7 @@ class AdaptiveDecisionTree:
             action="skip_response",
             next_nodes=[],
         )
-        
+
         # Fast-path: High priority direct mention
         self.nodes["check_priority"] = DecisionNode(
             node_id="check_priority",
@@ -81,7 +81,7 @@ class AdaptiveDecisionTree:
             confidence=0.95,
             next_nodes=["llm_evaluate"],
         )
-        
+
         # Fast-path: Greeting
         self.nodes["check_greeting"] = DecisionNode(
             node_id="check_greeting",
@@ -90,7 +90,7 @@ class AdaptiveDecisionTree:
             confidence=0.9,
             next_nodes=[],
         )
-        
+
         # Fast-path: Low priority statement
         self.nodes["check_low_priority"] = DecisionNode(
             node_id="check_low_priority",
@@ -99,7 +99,7 @@ class AdaptiveDecisionTree:
             confidence=0.8,
             next_nodes=[],
         )
-        
+
         # LLM reasoning branch
         self.nodes["llm_evaluate"] = DecisionNode(
             node_id="llm_evaluate",
@@ -112,30 +112,30 @@ class AdaptiveDecisionTree:
         self, interpreted_tokens: InterpretedTokens, message_metadata: dict[str, Any]
     ) -> StepResult[DecisionPath]:
         """Evaluate message using adaptive decision tree.
-        
+
         Args:
             interpreted_tokens: Interpreted tokens from token interpreter
             message_metadata: Additional message metadata
-            
+
         Returns:
             StepResult with DecisionPath showing decision and reasoning
         """
         try:
             path = DecisionPath(nodes_visited=[], final_decision={}, confidence=0.0, reasoning="")
-            
+
             # Start at root
             current_node_id = "root"
             visited: set[str] = set()
-            
+
             while current_node_id and current_node_id not in visited:
                 visited.add(current_node_id)
                 path.nodes_visited.append(current_node_id)
-                
+
                 node = self.nodes.get(current_node_id)
                 if not node:
                     logger.warning(f"Node {current_node_id} not found in tree")
                     break
-                
+
                 # Check if this is a terminal node (has action, no next nodes)
                 if node.action and not node.next_nodes:
                     path.final_decision = {
@@ -146,7 +146,7 @@ class AdaptiveDecisionTree:
                     path.confidence = node.confidence
                     path.reasoning = f"Fast-path decision via {node.node_id}: {node.action}"
                     return StepResult.ok(data=path)
-                
+
                 # Evaluate condition or use LLM
                 if node.requires_llm:
                     # LLM-based reasoning
@@ -168,10 +168,10 @@ class AdaptiveDecisionTree:
                         path.confidence = 0.6
                         path.reasoning = "LLM reasoning failed, using fallback"
                         return StepResult.ok(data=path)
-                
+
                 # Fast-path rule evaluation
                 condition_result = self._evaluate_condition(node.condition, interpreted_tokens, message_metadata)
-                
+
                 if condition_result:
                     # Condition matched - follow to next node or take action
                     if node.action:
@@ -187,7 +187,7 @@ class AdaptiveDecisionTree:
                         # Move to next node
                         current_node_id = node.next_nodes[0]  # Simple: take first next node
                         continue
-                
+
                 # Condition didn't match - check other branches or default
                 if node.next_nodes:
                     # Try next node in sequence
@@ -206,7 +206,7 @@ class AdaptiveDecisionTree:
                     path.confidence = 0.5
                     path.reasoning = "Reached terminal node without decision, using default"
                     return StepResult.ok(data=path)
-            
+
             # Loop prevention fallback
             path.final_decision = {
                 "action": "respond",
@@ -216,7 +216,7 @@ class AdaptiveDecisionTree:
             path.confidence = 0.6
             path.reasoning = "Decision tree evaluation completed with fallback"
             return StepResult.ok(data=path)
-            
+
         except Exception as e:
             logger.error(f"Decision tree evaluation failed: {e}", exc_info=True)
             return StepResult.fail(f"Decision tree evaluation failed: {e!s}")
@@ -225,17 +225,17 @@ class AdaptiveDecisionTree:
         """Evaluate a fast-path condition against tokens and metadata."""
         if not condition or condition == "always":
             return True
-        
+
         try:
             # Simple condition evaluation
             # In production, would use a proper expression evaluator
-            
+
             # Extract variables from context
             action_type = tokens.action.action_type
             priority = tokens.action.priority
             intent = tokens.intent.primary_intent
             is_direct_mention = bool(metadata.get("mentions"))
-            
+
             # Evaluate condition string (simplified evaluation)
             if "action_type == 'ignore'" in condition:
                 return action_type == "ignore"
@@ -243,13 +243,17 @@ class AdaptiveDecisionTree:
                 return priority >= 8 and is_direct_mention
             elif "intent == 'greeting'" in condition:
                 return intent == "greeting"
-            elif "intent == 'statement'" in condition and "priority < 3" in condition and "NOT is_direct_mention" in condition:
+            elif (
+                "intent == 'statement'" in condition
+                and "priority < 3" in condition
+                and "NOT is_direct_mention" in condition
+            ):
                 return intent == "statement" and priority < 3 and not is_direct_mention
             elif "intent == 'statement'" in condition:
                 return intent == "statement"
-            
+
             return False
-            
+
         except Exception as e:
             logger.error(f"Condition evaluation failed: {e}")
             return False
@@ -277,18 +281,18 @@ Analyze this message and provide a JSON response with:
 
 Respond with ONLY valid JSON, no additional text.
 """
-            
+
             # Get model suggestion
             model_suggestion = await self.routing_manager.suggest_model(
                 task_type="decision_making",
                 context={"complexity": "high", "requires_reasoning": True},
             )
-            
+
             if not model_suggestion.success:
                 return StepResult.fail("Failed to get model for LLM reasoning")
-            
+
             model = model_suggestion.data.get("model")
-            
+
             # Generate reasoning using prompt engine (via adapter)
             if hasattr(self.prompt_engine, "generate_response"):
                 result = await self.prompt_engine.generate_response(
@@ -297,11 +301,12 @@ Respond with ONLY valid JSON, no additional text.
                     max_tokens=300,
                     temperature=0.3,
                 )
-                
+
                 if result.success:
                     import json
+
                     response_text = result.data
-                    
+
                     # Parse JSON response
                     try:
                         json_start = response_text.find("{")
@@ -309,34 +314,39 @@ Respond with ONLY valid JSON, no additional text.
                         if json_start >= 0 and json_end > json_start:
                             json_str = response_text[json_start:json_end]
                             decision_data = json.loads(json_str)
-                            
-                            return StepResult.ok(data={
-                                "action": "respond" if decision_data.get("should_respond") else "skip",
-                                "confidence": float(decision_data.get("confidence", 0.7)),
-                                "reasoning": str(decision_data.get("reasoning", "LLM reasoning")),
-                                "priority": str(decision_data.get("recommended_priority", "medium")),
-                            })
+
+                            return StepResult.ok(
+                                data={
+                                    "action": "respond" if decision_data.get("should_respond") else "skip",
+                                    "confidence": float(decision_data.get("confidence", 0.7)),
+                                    "reasoning": str(decision_data.get("reasoning", "LLM reasoning")),
+                                    "priority": str(decision_data.get("recommended_priority", "medium")),
+                                }
+                            )
                     except json.JSONDecodeError as e:
                         logger.warning(f"Failed to parse LLM JSON response: {e}")
                         # Fallback parsing
-                        return StepResult.ok(data={
-                            "action": "respond",
-                            "confidence": 0.7,
-                            "reasoning": "LLM reasoning (parse error, using defaults)",
-                            "priority": "medium",
-                        })
-                
+                        return StepResult.ok(
+                            data={
+                                "action": "respond",
+                                "confidence": 0.7,
+                                "reasoning": "LLM reasoning (parse error, using defaults)",
+                                "priority": "medium",
+                            }
+                        )
+
                 return StepResult.fail("LLM reasoning generation failed")
             else:
                 # Prompt engine doesn't have generate_response - fallback
-                return StepResult.ok(data={
-                    "action": "respond",
-                    "confidence": 0.7,
-                    "reasoning": "LLM reasoning unavailable, using default",
-                    "priority": "medium",
-                })
-                
+                return StepResult.ok(
+                    data={
+                        "action": "respond",
+                        "confidence": 0.7,
+                        "reasoning": "LLM reasoning unavailable, using default",
+                        "priority": "medium",
+                    }
+                )
+
         except Exception as e:
             logger.error(f"LLM reasoning failed: {e}", exc_info=True)
             return StepResult.fail(f"LLM reasoning failed: {e!s}")
-

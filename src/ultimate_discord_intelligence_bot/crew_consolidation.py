@@ -1,4 +1,6 @@
 from __future__ import annotations
+
+
 """
 DEPRECATED: This file is deprecated and will be removed in a future version.
 Please use ultimate_discord_intelligence_bot.crew_core instead.
@@ -18,6 +20,7 @@ Example:
 """
 
 import warnings
+
 
 warnings.warn(
     "This module is deprecated. Use ultimate_discord_intelligence_bot.crew_core instead.",

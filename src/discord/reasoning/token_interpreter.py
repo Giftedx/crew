@@ -11,8 +11,6 @@ import re
 from dataclasses import dataclass, field
 from typing import Any
 
-from ultimate_discord_intelligence_bot.step_result import StepResult
-
 
 logger = logging.getLogger(__name__)
 
@@ -101,16 +99,48 @@ class ContextualTokenInterpreter:
         # Context extraction patterns
         self.sentiment_indicators = {
             "positive": [
-                "good", "great", "excellent", "awesome", "amazing", "thanks", "thank you", "love", "like",
-                "wonderful", "fantastic", "perfect", "best", "brilliant",
+                "good",
+                "great",
+                "excellent",
+                "awesome",
+                "amazing",
+                "thanks",
+                "thank you",
+                "love",
+                "like",
+                "wonderful",
+                "fantastic",
+                "perfect",
+                "best",
+                "brilliant",
             ],
             "negative": [
-                "bad", "terrible", "awful", "hate", "dislike", "worst", "horrible", "wrong", "broken",
-                "error", "problem", "issue", "stupid", "dumb",
+                "bad",
+                "terrible",
+                "awful",
+                "hate",
+                "dislike",
+                "worst",
+                "horrible",
+                "wrong",
+                "broken",
+                "error",
+                "problem",
+                "issue",
+                "stupid",
+                "dumb",
             ],
             "urgency": [
-                "urgent", "asap", "immediately", "now", "quickly", "fast", "emergency", "critical",
-                "important", "please hurry",
+                "urgent",
+                "asap",
+                "immediately",
+                "now",
+                "quickly",
+                "fast",
+                "emergency",
+                "critical",
+                "important",
+                "please hurry",
             ],
         }
 
@@ -124,30 +154,30 @@ class ContextualTokenInterpreter:
 
     def interpret(self, message_content: str, message_metadata: dict[str, Any] | None = None) -> InterpretedTokens:
         """Interpret a message and extract intent, context, and action tokens.
-        
+
         Args:
             message_content: The message text to interpret
             message_metadata: Additional metadata about the message (optional)
-            
+
         Returns:
             InterpretedTokens object with complete interpretation
         """
         try:
             message_metadata = message_metadata or {}
             content_lower = message_content.lower().strip()
-            
+
             # Extract intent
             intent = self._extract_intent(content_lower, message_content)
-            
+
             # Extract context
             context = self._extract_context(content_lower, message_metadata)
-            
+
             # Extract action
             action = self._extract_action(content_lower, intent, context, message_metadata)
-            
+
             # Calculate overall confidence
             confidence = self._calculate_confidence(intent, context, action)
-            
+
             return InterpretedTokens(
                 intent=intent,
                 context=context,
@@ -155,7 +185,7 @@ class ContextualTokenInterpreter:
                 raw_message=message_content,
                 confidence_score=confidence,
             )
-            
+
         except Exception as e:
             logger.error(f"Token interpretation failed: {e}", exc_info=True)
             # Return safe defaults
@@ -170,7 +200,7 @@ class ContextualTokenInterpreter:
     def _extract_intent(self, content_lower: str, original_content: str) -> IntentToken:
         """Extract intent tokens from message content."""
         matched_intents: list[tuple[str, float]] = []
-        
+
         # Check each intent pattern
         for intent_type, patterns in self.intent_patterns.items():
             for pattern in patterns:
@@ -179,7 +209,7 @@ class ContextualTokenInterpreter:
                     confidence = 0.8 if pattern.startswith("^") else 0.6  # Anchored patterns are stronger
                     matched_intents.append((intent_type, confidence))
                     break
-        
+
         # Determine primary intent
         if matched_intents:
             # Prioritize: question > command > request > greeting > complaint > statement
@@ -202,7 +232,7 @@ class ContextualTokenInterpreter:
                 sub_intents=[i for i, _ in matched_intents if i != primary],
                 keywords=self._extract_keywords(original_content),
             )
-        
+
         # Default to statement if no pattern matches
         return IntentToken(
             primary_intent="statement",
@@ -214,19 +244,19 @@ class ContextualTokenInterpreter:
         """Extract context tokens from message."""
         # Extract sentiment
         sentiment = self._detect_sentiment(content_lower)
-        
+
         # Extract urgency
         urgency = self._detect_urgency(content_lower)
-        
+
         # Extract topic (simplified - would use NLP in production)
         topic = self._extract_topic(content_lower)
-        
+
         # Extract temporal references
         temporal_refs = self._extract_temporal_references(content_lower)
-        
+
         # Extract entity mentions (simplified)
         entity_mentions = self._extract_entities(content_lower, metadata)
-        
+
         return ContextToken(
             topic=topic,
             sentiment=sentiment,
@@ -236,11 +266,13 @@ class ContextualTokenInterpreter:
             channel_context=metadata.get("channel_context", {}),
         )
 
-    def _extract_action(self, content_lower: str, intent: IntentToken, context: ContextToken, metadata: dict[str, Any]) -> ActionToken:
+    def _extract_action(
+        self, content_lower: str, intent: IntentToken, context: ContextToken, metadata: dict[str, Any]
+    ) -> ActionToken:
         """Extract action tokens based on intent and context."""
         # Determine action type based on intent
         action_type = "respond"  # Default
-        
+
         if intent.primary_intent == "command":
             # Check if it's a specific command that requires CrewAI
             if any(trigger in content_lower for trigger in self.action_triggers["analyze"]):
@@ -270,10 +302,10 @@ class ContextualTokenInterpreter:
             requires_knowledge = False
             requires_crewmai = False
             requires_reasoning = False
-        
+
         # Calculate priority
         priority = self._calculate_priority(intent, context, action_type)
-        
+
         # Suggest agents if CrewAI needed
         suggested_agents: list[str] = []
         if requires_crewmai:
@@ -281,13 +313,13 @@ class ContextualTokenInterpreter:
                 suggested_agents = ["content_analyst", "fact_checker", "debate_scorer"]
             elif "fact" in content_lower or "verify" in content_lower:
                 suggested_agents = ["fact_checker", "verification_director"]
-        
+
         return ActionToken(
             action_type=action_type,
             priority=priority,
-            requires_knowledge=requires_knowledge if 'requires_knowledge' in locals() else False,
-            requires_crewmai=requires_crewmai if 'requires_crewmai' in locals() else False,
-            requires_reasoning=requires_reasoning if 'requires_reasoning' in locals() else False,
+            requires_knowledge=requires_knowledge if "requires_knowledge" in locals() else False,
+            requires_crewmai=requires_crewmai if "requires_crewmai" in locals() else False,
+            requires_reasoning=requires_reasoning if "requires_reasoning" in locals() else False,
             suggested_agents=suggested_agents,
             metadata={"intent": intent.primary_intent, "urgency": context.urgency},
         )
@@ -296,7 +328,7 @@ class ContextualTokenInterpreter:
         """Detect sentiment from content."""
         positive_count = sum(1 for word in self.sentiment_indicators["positive"] if word in content)
         negative_count = sum(1 for word in self.sentiment_indicators["negative"] if word in content)
-        
+
         if positive_count > negative_count and positive_count > 0:
             return "positive"
         elif negative_count > positive_count and negative_count > 0:
@@ -326,7 +358,23 @@ class ContextualTokenInterpreter:
             # Return first few words as topic indication
             words = content.split()[:5]
             # Filter out common words
-            stop_words = {"the", "a", "an", "is", "are", "was", "were", "be", "been", "have", "has", "had", "do", "does", "did"}
+            stop_words = {
+                "the",
+                "a",
+                "an",
+                "is",
+                "are",
+                "was",
+                "were",
+                "be",
+                "been",
+                "have",
+                "has",
+                "had",
+                "do",
+                "does",
+                "did",
+            }
             topic_words = [w for w in words if w.lower() not in stop_words]
             if topic_words:
                 return " ".join(topic_words[:3])
@@ -339,26 +387,26 @@ class ContextualTokenInterpreter:
             r"(last|next)\s+(week|month|year|day)",
             r"\d+\s+(days?|weeks?|months?|years?)\s+(ago|from now)",
         ]
-        
+
         refs: list[str] = []
         for pattern in temporal_patterns:
             matches = re.findall(pattern, content, re.IGNORECASE)
             refs.extend([m if isinstance(m, str) else " ".join(m) for m in matches])
-        
+
         return list(set(refs))  # Deduplicate
 
     def _extract_entities(self, content: str, metadata: dict[str, Any]) -> list[str]:
         """Extract entity mentions (simplified)."""
         entities: list[str] = []
-        
+
         # Extract mentions from metadata if available
         if "mentions" in metadata:
             entities.extend([str(m) for m in metadata["mentions"]])
-        
+
         # Extract URLs
         url_pattern = r"https?://\S+"
         entities.extend(re.findall(url_pattern, content))
-        
+
         return entities
 
     def _extract_keywords(self, content: str) -> list[str]:
@@ -366,10 +414,51 @@ class ContextualTokenInterpreter:
         # Simple keyword extraction (would use NLP in production)
         words = content.lower().split()
         stop_words = {
-            "the", "a", "an", "is", "are", "was", "were", "be", "been", "have", "has", "had",
-            "do", "does", "did", "will", "would", "should", "could", "can", "may", "might",
-            "this", "that", "these", "those", "i", "you", "he", "she", "it", "we", "they",
-            "to", "of", "in", "on", "at", "for", "with", "by", "from", "and", "or", "but",
+            "the",
+            "a",
+            "an",
+            "is",
+            "are",
+            "was",
+            "were",
+            "be",
+            "been",
+            "have",
+            "has",
+            "had",
+            "do",
+            "does",
+            "did",
+            "will",
+            "would",
+            "should",
+            "could",
+            "can",
+            "may",
+            "might",
+            "this",
+            "that",
+            "these",
+            "those",
+            "i",
+            "you",
+            "he",
+            "she",
+            "it",
+            "we",
+            "they",
+            "to",
+            "of",
+            "in",
+            "on",
+            "at",
+            "for",
+            "with",
+            "by",
+            "from",
+            "and",
+            "or",
+            "but",
         }
         keywords = [w for w in words if w.lower() not in stop_words and len(w) > 2]
         # Return top 10 keywords
@@ -378,7 +467,7 @@ class ContextualTokenInterpreter:
     def _calculate_priority(self, intent: IntentToken, context: ContextToken, action_type: str) -> int:
         """Calculate action priority (0-10)."""
         priority = 0
-        
+
         # Base priority by action type
         if action_type == "ignore":
             return 0
@@ -388,15 +477,15 @@ class ContextualTokenInterpreter:
             priority = 6
         elif action_type == "respond":
             priority = 4
-        
+
         # Boost for urgency
         urgency_boost = {"low": 0, "normal": 0, "high": 2, "critical": 4}
         priority += urgency_boost.get(context.urgency, 0)
-        
+
         # Boost for direct mention
         if intent.primary_intent in ["command", "question"]:
             priority += 1
-        
+
         # Cap at 10
         return min(10, priority)
 
@@ -405,9 +494,8 @@ class ContextualTokenInterpreter:
         # Average confidence from components
         intent_conf = intent.confidence
         action_conf = 0.8 if action.action_type != "ignore" else 1.0  # Action type is usually reliable
-        
+
         # Context confidence (simplified)
         context_conf = 0.7  # Would be more sophisticated with actual NLP
-        
-        return (intent_conf * 0.4 + action_conf * 0.4 + context_conf * 0.2)
 
+        return intent_conf * 0.4 + action_conf * 0.4 + context_conf * 0.2

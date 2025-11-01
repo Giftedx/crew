@@ -18,6 +18,7 @@ Example:
 
 import warnings
 
+
 warnings.warn(
     "This module is deprecated. Use ultimate_discord_intelligence_bot.crew_core instead.",
     DeprecationWarning,

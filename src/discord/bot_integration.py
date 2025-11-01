@@ -7,7 +7,6 @@ handling message format conversion, tenant resolution, and service initializatio
 from __future__ import annotations
 
 import logging
-from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from ultimate_discord_intelligence_bot.step_result import StepResult
@@ -16,14 +15,6 @@ from ultimate_discord_intelligence_bot.tenancy.registry import TenantRegistry
 
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
-
-    from core.learning_engine import LearningEngine
-
-    from ultimate_discord_intelligence_bot.services.memory_service import MemoryService
-    from ultimate_discord_intelligence_bot.services.openrouter_service.adaptive_routing import AdaptiveRoutingManager
-    from ultimate_discord_intelligence_bot.services.prompt_engine import PromptEngine
-
     from .conversational_pipeline import ConversationalPipeline
 
 
@@ -73,7 +64,9 @@ class DiscordPipelineService:
         from core.learning_engine import LearningEngine
         from ultimate_discord_intelligence_bot.services.memory_service import MemoryService
         from ultimate_discord_intelligence_bot.services.openrouter_service import OpenRouterService
-        from ultimate_discord_intelligence_bot.services.openrouter_service.adaptive_routing import AdaptiveRoutingManager
+        from ultimate_discord_intelligence_bot.services.openrouter_service.adaptive_routing import (
+            AdaptiveRoutingManager,
+        )
         from ultimate_discord_intelligence_bot.services.prompt_engine import PromptEngine
 
         # Create LearningEngine
@@ -93,13 +86,13 @@ class DiscordPipelineService:
 
         # Create AdaptiveRoutingManager
         routing_manager_base = AdaptiveRoutingManager(enabled=True)
-        
+
         # Create adapter layer to bridge interface gaps
-        from .routing_adapter import RoutingAdapter, PromptEngineAdapter
-        
+        from .routing_adapter import PromptEngineAdapter, RoutingAdapter
+
         # Create routing adapter that provides suggest_model() and estimate_cost()
         routing_manager = RoutingAdapter(routing_manager_base, openrouter_service)
-        
+
         # Wrap prompt_engine to provide generate_response() method
         prompt_engine_wrapped = PromptEngineAdapter(prompt_engine, openrouter_service)
 
@@ -156,8 +149,12 @@ class DiscordPipelineService:
                     "username": str(getattr(discord_message.author, "username", "")),
                     "bot": getattr(discord_message.author, "bot", False),
                 },
-                "guild_id": str(getattr(discord_message.guild, "id", "")) if hasattr(discord_message, "guild") and discord_message.guild else None,
-                "channel_id": str(getattr(discord_message.channel, "id", "")) if hasattr(discord_message, "channel") else None,
+                "guild_id": str(getattr(discord_message.guild, "id", ""))
+                if hasattr(discord_message, "guild") and discord_message.guild
+                else None,
+                "channel_id": str(getattr(discord_message.channel, "id", ""))
+                if hasattr(discord_message, "channel")
+                else None,
                 "created_at": getattr(discord_message, "created_at", None),
                 "mentions": [str(m.id) for m in getattr(discord_message, "mentions", [])],
             }
@@ -198,7 +195,11 @@ class DiscordPipelineService:
                 return StepResult.ok(data={"action": "skipped", "reason": "bot_message"})
 
             # Resolve tenant context from guild
-            guild_id = getattr(discord_message.guild, "id", None) if hasattr(discord_message, "guild") and discord_message.guild else None
+            guild_id = (
+                getattr(discord_message.guild, "id", None)
+                if hasattr(discord_message, "guild") and discord_message.guild
+                else None
+            )
             tenant_ctx = self._resolve_tenant_context(guild_id)
 
             # Convert Discord message to pipeline format
@@ -233,4 +234,3 @@ def get_pipeline_service() -> DiscordPipelineService:
     if _pipeline_service is None:
         _pipeline_service = DiscordPipelineService()
     return _pipeline_service
-
