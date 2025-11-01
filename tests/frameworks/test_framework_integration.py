@@ -7,9 +7,9 @@ frameworks can be used interchangeably.
 from __future__ import annotations
 
 import pytest
+
 from ai.frameworks import get_framework_adapter, list_available_frameworks
 from ai.frameworks.protocols import AgentRole, FrameworkFeature
-
 from ultimate_discord_intelligence_bot.crew_core.interfaces import (
     CrewConfig,
     CrewPriority,
@@ -125,45 +125,47 @@ class TestFrameworkInteroperability:
             assert hasattr(execution_result, "execution_time_ms")
 
 
-class TestLangGraphAdapter:
-    """Test LangGraph framework adapter implementation."""
+class TestAutoGenAdapter:
+    """Test AutoGen framework adapter implementation."""
 
     def test_adapter_properties(self) -> None:
-        """Test LangGraph adapter basic properties."""
+        """Test AutoGen adapter basic properties."""
         try:
-            adapter = get_framework_adapter("langgraph")
-            assert adapter.framework_name == "langgraph"
+            adapter = get_framework_adapter("autogen")
+            assert adapter.framework_name == "autogen"
             assert isinstance(adapter.framework_version, str)
         except ValueError:
-            pytest.skip("LangGraph adapter not available")
+            pytest.skip("AutoGen adapter not available")
 
     def test_supported_features(self) -> None:
-        """Test that LangGraph adapter declares supported features."""
+        """Test that AutoGen adapter declares supported features."""
         try:
-            adapter = get_framework_adapter("langgraph")
+            adapter = get_framework_adapter("autogen")
 
-            # LangGraph should support these state-centric features
+            # AutoGen should support these conversation-centric features
             assert adapter.supports_feature(FrameworkFeature.SEQUENTIAL_EXECUTION)
-            assert adapter.supports_feature(FrameworkFeature.PARALLEL_EXECUTION)
-            assert adapter.supports_feature(FrameworkFeature.STATE_PERSISTENCE)
-            assert adapter.supports_feature(FrameworkFeature.STATE_CHECKPOINTING)
-            assert adapter.supports_feature(FrameworkFeature.STATE_BRANCHING)
+            assert adapter.supports_feature(FrameworkFeature.MULTI_AGENT_COLLABORATION)
+            assert adapter.supports_feature(FrameworkFeature.HUMAN_IN_LOOP)
+            assert adapter.supports_feature(FrameworkFeature.ASYNC_EXECUTION)
+
+            # AutoGen does NOT support state persistence
+            assert not adapter.supports_feature(FrameworkFeature.STATE_PERSISTENCE)
         except ValueError:
-            pytest.skip("LangGraph adapter not available")
+            pytest.skip("AutoGen adapter not available")
 
     def test_get_capabilities(self) -> None:
-        """Test getting LangGraph adapter capabilities."""
+        """Test getting AutoGen adapter capabilities."""
         try:
-            adapter = get_framework_adapter("langgraph")
+            adapter = get_framework_adapter("autogen")
             capabilities = adapter.get_capabilities()
 
             assert "supported_features" in capabilities
-            assert "supports_streaming" in capabilities
-            assert "state_backends" in capabilities
-            assert capabilities["supports_streaming"] is True
-            assert "memory" in capabilities["state_backends"]
+            assert "human_in_loop" in capabilities["metadata"]
+            assert "code_execution" in capabilities["metadata"]
+            assert capabilities["metadata"]["human_in_loop"] is True
+            assert len(capabilities["state_backends"]) == 0  # No built-in persistence
         except ValueError:
-            pytest.skip("LangGraph adapter not available")
+            pytest.skip("AutoGen adapter not available")
 
 
 class TestBackwardCompatibility:
