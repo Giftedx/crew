@@ -311,6 +311,16 @@ async def create_specialized_main_results_embed(results: dict[str, Any], depth: 
         stats = summary.get("summary_statistics", {})
         insights = summary.get("specialized_insights", [])
 
+        depth_label = depth.replace("_", " ").title()
+        insight_limit_map = {
+            "quick": 2,
+            "standard": 4,
+            "deep": 6,
+            "comprehensive": 8,
+            "experimental": 10,
+        }
+        insight_limit = insight_limit_map.get(depth.lower(), 4)
+
         threat_score = summary.get("threat_score", 0.0)
         threat_level = summary.get("threat_level", "unknown")
 
@@ -339,6 +349,7 @@ async def create_specialized_main_results_embed(results: dict[str, Any], depth: 
         )
 
         embed.add_field(name="🧠 Analysis Method", value="Specialized Agents", inline=True)
+        embed.add_field(name="🧮 Analysis Depth", value=depth_label, inline=True)
 
         # Verification status
         if stats.get("verification_completed"):
@@ -368,7 +379,7 @@ async def create_specialized_main_results_embed(results: dict[str, Any], depth: 
         if insights:
             embed.add_field(
                 name="🧠 Specialized Intelligence Insights",
-                value="\n".join(insights[:4]),  # Show top 4 insights
+                value="\n".join(insights[:insight_limit]),
                 inline=False,
             )
 

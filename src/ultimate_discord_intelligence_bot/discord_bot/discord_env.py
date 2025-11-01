@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import contextlib
 import importlib
 import os
 import site
@@ -111,10 +112,8 @@ def _import_real_discord_if_needed() -> tuple[Any | None, Any | None, Any | None
 if not LIGHTWEIGHT_IMPORT:
     _d, _c, _a = _import_real_discord_if_needed()
     if _d is not None and _c is not None and _a is not None:
-        try:  # Login failure type (shape may vary per version)
+        with contextlib.suppress(Exception):  # pragma: no cover
             _ = importlib.import_module("discord.errors").LoginFailure
-        except Exception:  # pragma: no cover
-            pass
         discord = cast("Any", _d)
         commands = cast("Any", _c)
         app_commands = cast("Any", _a)

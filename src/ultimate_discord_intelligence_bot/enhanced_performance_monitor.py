@@ -179,9 +179,10 @@ class EnhancedPerformanceMonitor:
             score += 0.3  # Good paragraph breaks
 
         # Appropriate tone for context
-        if context.get("channel_type") == "professional":
-            if not any(phrase in response.lower() for phrase in ["lol", "omg", "wtf"]):
-                score += 0.2
+        if context.get("channel_type") == "professional" and not any(
+            phrase in response.lower() for phrase in ["lol", "omg", "wtf"]
+        ):
+            score += 0.2
 
         # Actionable information
         action_phrases = ["you can", "try", "consider", "recommend", "suggest"]

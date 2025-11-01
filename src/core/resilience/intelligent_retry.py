@@ -15,6 +15,8 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import TYPE_CHECKING, Any
 
+import requests
+
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -122,11 +124,17 @@ class IntelligentRetry:
     and integrate with circuit breakers for optimal resilience.
     """
 
-    def __init__(self, name: str, config: RetryConfig | None = None):
+    def __init__(
+        self,
+        name: str,
+        config: RetryConfig | None = None,
+        condition: RetryCondition = RetryCondition.ON_EXCEPTION,
+    ):
         """Initialize intelligent retry system."""
         self.name = name
         self.config = config or RetryConfig()
         self.metrics = RetryMetrics()
+        self.condition = condition
 
         # Adaptive retry state
         self.current_strategy = RetryStrategy.EXPONENTIAL_BACKOFF
@@ -184,11 +192,15 @@ class IntelligentRetry:
                 last_exception = e
                 if self.config.log_retries:
                     logger.warning(f"Retry system '{self.name}' attempt {attempt} timed out")
+                if not self._should_retry_exception(e):
+                    raise
 
             except Exception as e:
                 last_exception = e
                 if self.config.log_retries:
                     logger.warning(f"Retry system '{self.name}' attempt {attempt} failed: {e}")
+                if not self._should_retry_exception(e):
+                    raise
 
             # Check if we should retry
             if attempt < self.config.max_attempts:
@@ -219,6 +231,40 @@ class IntelligentRetry:
             # Run sync function in thread pool
             loop = asyncio.get_event_loop()
             return await loop.run_in_executor(None, lambda: func(*args, **kwargs))
+
+    def _should_retry_exception(self, exc: Exception) -> bool:
+        """Determine if the given exception qualifies for another retry attempt."""
+        if self.condition is RetryCondition.ALWAYS:
+            return True
+
+        if self.condition is RetryCondition.CUSTOM:
+            custom_handler = getattr(self.config, "should_retry", None)
+            if callable(custom_handler):
+                try:
+                    return bool(custom_handler(exc))
+                except Exception as custom_error:  # pragma: no cover - diagnostic aid
+                    if self.config.log_retries:
+                        logger.warning(
+                            "Retry system '%s' custom retry evaluator errored: %s",
+                            self.name,
+                            custom_error,
+                        )
+                    return False
+            return False
+
+        if isinstance(exc, TimeoutError):
+            return self.condition in {RetryCondition.ON_TIMEOUT, RetryCondition.ON_EXCEPTION}
+
+        if requests is not None and isinstance(exc, requests.HTTPError):
+            return self.condition in {RetryCondition.ON_HTTP_ERROR, RetryCondition.ON_EXCEPTION}
+
+        if self.condition is RetryCondition.ON_HTTP_ERROR and getattr(exc, "response", None) is not None:
+            return True
+
+        if self.condition is RetryCondition.ON_TIMEOUT:
+            return False
+
+        return self.condition is RetryCondition.ON_EXCEPTION
 
     def _calculate_delay(self, attempt: int, last_exception: Exception | None) -> float:
         """Calculate delay for next retry attempt."""
@@ -342,7 +388,7 @@ def retry(
     """
 
     def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
-        retry_system = IntelligentRetry(name, config)
+        retry_system = IntelligentRetry(name, config, condition)
 
         async def wrapper(*args: Any, **kwargs: Any) -> Any:
             return await retry_system.execute(func, *args, **kwargs)
@@ -358,12 +404,17 @@ class RetryManager:
     def __init__(self):
         self._retry_systems: dict[str, IntelligentRetry] = {}
 
-    def create_retry_system(self, name: str, config: RetryConfig | None = None) -> IntelligentRetry:
+    def create_retry_system(
+        self,
+        name: str,
+        config: RetryConfig | None = None,
+        condition: RetryCondition = RetryCondition.ON_EXCEPTION,
+    ) -> IntelligentRetry:
         """Create a new retry system."""
         if name in self._retry_systems:
             raise ValueError(f"Retry system '{name}' already exists")
 
-        retry_system = IntelligentRetry(name, config)
+        retry_system = IntelligentRetry(name, config, condition)
         self._retry_systems[name] = retry_system
         return retry_system
 
@@ -411,6 +462,10 @@ def get_retry_manager() -> RetryManager:
     return _global_retry_manager
 
 
-def create_retry_system(name: str, config: RetryConfig | None = None) -> IntelligentRetry:
+def create_retry_system(
+    name: str,
+    config: RetryConfig | None = None,
+    condition: RetryCondition = RetryCondition.ON_EXCEPTION,
+) -> IntelligentRetry:
     """Create a new retry system using the global manager."""
-    return _global_retry_manager.create_retry_system(name, config)
+    return _global_retry_manager.create_retry_system(name, config, condition)

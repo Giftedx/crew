@@ -19,6 +19,22 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 
+def _extract_job_context(ctx: dict[str, Any] | None) -> dict[str, Any]:
+    """Return a sanitized snapshot of interesting job metadata."""
+
+    if not isinstance(ctx, dict):
+        return {}
+
+    interesting_keys = ("job_id", "job_try", "queue", "enqueue_time", "scheduled")
+    snapshot = {k: ctx.get(k) for k in interesting_keys if ctx.get(k) is not None}
+
+    job = ctx.get("job")
+    if job is not None:
+        snapshot.setdefault("job", getattr(job, "id", str(job)))
+
+    return snapshot
+
+
 async def process_video_async(ctx: dict[str, Any], video_url: str, tenant: str, workspace: str) -> dict[str, Any]:
     """Background job to process video content asynchronously.
 
@@ -32,7 +48,11 @@ async def process_video_async(ctx: dict[str, Any], video_url: str, tenant: str, 
         dict with processing results
     """
     try:
-        logger.info(f"Processing video: {video_url} for tenant: {tenant}")
+        job_context = _extract_job_context(ctx)
+        logger.info(
+            "Processing video",
+            extra={"video_url": video_url, "tenant": tenant, "workspace": workspace, "job_context": job_context},
+        )
 
         # Import here to avoid circular dependencies
         from ultimate_discord_intelligence_bot.tools import MultiPlatformDownloadTool
@@ -47,20 +67,27 @@ async def process_video_async(ctx: dict[str, Any], video_url: str, tenant: str, 
                 "url": video_url,
                 "tenant": tenant,
                 "workspace": workspace,
+                "job_context": job_context,
             }
         else:
             return {
                 "status": "failed",
                 "error": result.error,
                 "url": video_url,
+                "job_context": job_context,
             }
 
     except Exception as e:
-        logger.error(f"Video processing failed: {e}")
+        job_context = _extract_job_context(ctx)
+        logger.error(
+            "Video processing failed",
+            extra={"video_url": video_url, "tenant": tenant, "workspace": workspace, "job_context": job_context},
+        )
         return {
             "status": "error",
             "error": str(e),
             "url": video_url,
+            "job_context": job_context,
         }
 
 
@@ -79,7 +106,16 @@ async def batch_analysis_async(
         dict with batch analysis results
     """
     try:
-        logger.info(f"Batch analyzing {len(content_items)} items for tenant: {tenant}")
+        job_context = _extract_job_context(ctx)
+        logger.info(
+            "Batch analysis",
+            extra={
+                "item_count": len(content_items),
+                "tenant": tenant,
+                "workspace": workspace,
+                "job_context": job_context,
+            },
+        )
 
         results = []
         for item in content_items:
@@ -98,13 +134,19 @@ async def batch_analysis_async(
             "results": results,
             "tenant": tenant,
             "workspace": workspace,
+            "job_context": job_context,
         }
 
     except Exception as e:
-        logger.error(f"Batch analysis failed: {e}")
+        job_context = _extract_job_context(ctx)
+        logger.error(
+            "Batch analysis failed",
+            extra={"tenant": tenant, "workspace": workspace, "job_context": job_context},
+        )
         return {
             "status": "error",
             "error": str(e),
+            "job_context": job_context,
         }
 
 
@@ -118,7 +160,8 @@ async def scheduled_monitoring_async(ctx: dict[str, Any]) -> dict[str, Any]:
         dict with monitoring results
     """
     try:
-        logger.info("Running scheduled monitoring check")
+        job_context = _extract_job_context(ctx)
+        logger.info("Running scheduled monitoring check", extra={"job_context": job_context})
 
         # Simulate monitoring checks
         checks = {
@@ -133,13 +176,16 @@ async def scheduled_monitoring_async(ctx: dict[str, Any]) -> dict[str, Any]:
         return {
             "status": "success",
             "checks": checks,
+            "job_context": job_context,
         }
 
     except Exception as e:
-        logger.error(f"Scheduled monitoring failed: {e}")
+        job_context = _extract_job_context(ctx)
+        logger.error("Scheduled monitoring failed", extra={"job_context": job_context})
         return {
             "status": "error",
             "error": str(e),
+            "job_context": job_context,
         }
 
 

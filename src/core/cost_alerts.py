@@ -429,7 +429,8 @@ class CostAlertManager:
                 AlertSeverity.EMERGENCY: "🚨",
             }
 
-            emoji = emoji_map.get(alert.severity, "ℹ️")
+            # Use ASCII-safe fallback for information emoji to satisfy lint rules
+            emoji = emoji_map.get(alert.severity, "i")
 
             discord_message = (
                 f"{emoji} **Cost Alert: {alert.severity.value.upper()}**\n"

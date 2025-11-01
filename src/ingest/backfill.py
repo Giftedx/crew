@@ -116,10 +116,9 @@ def enumerate_youtube_recent_videos(handle_or_url: str, since_iso: str, *, limit
         if not vid:
             continue
         up_raw = str(e.get("upload_date") or "")
-        if up_raw and len(up_raw) == 8 and up_raw.isdigit():
+        if up_raw and len(up_raw) == 8 and up_raw.isdigit() and up_raw < since_ymd:
             # Compare as YYYYMMDD strings for efficiency
-            if up_raw < since_ymd:
-                continue
+            continue
         # Construct URL when missing
         if not url:
             url = f"https://www.youtube.com/watch?v={vid}"

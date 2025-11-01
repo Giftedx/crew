@@ -19,6 +19,7 @@ Design principles:
 
 from __future__ import annotations
 
+import contextlib
 import json
 import os
 import random
@@ -141,11 +142,9 @@ class ThompsonBanditRouter:
             self._explore_counter = None
             self._reset_counter = None
         if self._persist_enabled:
-            try:
+            with contextlib.suppress(Exception):  # pragma: no cover - defensive
                 os.makedirs(self._state_dir, exist_ok=True)
                 self._load_state()
-            except Exception:  # pragma: no cover - defensive
-                pass
 
     def select(self, arms: Sequence[str], context: dict[str, Any] | None = None) -> str:
         if not arms:
@@ -153,10 +152,8 @@ class ThompsonBanditRouter:
         if not _flag_enabled():  # deterministic fallback: first arm
             chosen = arms[0]
             if self._sel_counter:
-                try:
+                with contextlib.suppress(Exception):  # pragma: no cover
                     self._sel_counter.inc(1)
-                except Exception:  # pragma: no cover
-                    pass
             return chosen
         samples: list[tuple[float, str]] = []
         with self._lock:
@@ -177,16 +174,12 @@ class ThompsonBanditRouter:
             if alt_choices:
                 chosen = random.choice(alt_choices)  # nosec B311 - bandit exploration, not cryptographic
                 if self._explore_counter:
-                    try:
+                    with contextlib.suppress(Exception):  # pragma: no cover
                         self._explore_counter.inc(1)
-                    except Exception:  # pragma: no cover
-                        pass
 
         if self._sel_counter:
-            try:
+            with contextlib.suppress(Exception):  # pragma: no cover
                 self._sel_counter.inc(1)
-            except Exception:  # pragma: no cover
-                pass
         return chosen
 
     def update(self, arm: str, reward: float, context: dict[str, Any] | None = None) -> None:
@@ -198,23 +191,17 @@ class ThompsonBanditRouter:
                 st = ArmState(alpha=_PRIOR_ALPHA, beta=_PRIOR_BETA)
                 self._arms[arm] = st
             st.update(reward)
-        if not _flag_enabled():  # Skip side‑effects when feature disabled
+        if not _flag_enabled():  # Skip side-effects when feature disabled
             return
         if self._reward_counter:
-            try:
+            with contextlib.suppress(Exception):  # pragma: no cover
                 self._reward_counter.inc(float(max(0.0, min(1.0, reward))))
-            except Exception:  # pragma: no cover
-                pass
         if self._update_counter:
-            try:
+            with contextlib.suppress(Exception):  # pragma: no cover
                 self._update_counter.inc(1)
-            except Exception:  # pragma: no cover
-                pass
         if self._persist_enabled:
-            try:
+            with contextlib.suppress(Exception):  # pragma: no cover
                 self._save_state()
-            except Exception:  # pragma: no cover
-                pass
         self._maybe_reset()
 
     # Inspect for tests
@@ -270,15 +257,11 @@ class ThompsonBanditRouter:
                     self._arms[arm] = ArmState(alpha=_PRIOR_ALPHA, beta=_PRIOR_BETA)
                 self._low_entropy_run = 0
             if self._reset_counter:
-                try:
+                with contextlib.suppress(Exception):  # pragma: no cover
                     self._reset_counter.inc(1)
-                except Exception:  # pragma: no cover
-                    pass
             if self._persist_enabled:
-                try:
+                with contextlib.suppress(Exception):  # pragma: no cover
                     self._save_state()
-                except Exception:  # pragma: no cover
-                    pass
 
     # ---------------------- Persistence ----------------------
     def _state_path(self) -> str:

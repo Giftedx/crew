@@ -18,6 +18,7 @@ from core.http_utils import (
 )
 from obs import metrics
 
+from .quality import basic_quality_assessment, quality_assessment
 from .service import get_settings
 
 
@@ -76,7 +77,29 @@ def execute_offline(service: OpenRouterService, state: RouteState) -> dict[str, 
     latency_ms = (time.perf_counter() - state.start_time) * 1000
     tokens_out = service.prompt_engine.count_tokens(response, chosen)
 
-    reward = _compute_reward(service, state, latency_ms)
+    # Compute lightweight quality assessment early so it can influence reward
+    qa_score: float | None = None
+    try:
+        truthy = {"1", "true", "yes", "on"}
+        if (_os.getenv("ENABLE_QUALITY_ASSESSMENT", "1") or "1").lower() in truthy:
+            min_tokens = 80
+            try:
+                overrides = state.provider_overrides or {}
+                mt = overrides.get("quality_min_tokens") if isinstance(overrides, dict) else None
+                if isinstance(mt, int) and mt > 0:
+                    min_tokens = int(mt)
+            except Exception:
+                pass
+            # Prefer advanced assessment with prompt context; fallback to basic if anything goes wrong
+            try:
+                qa = quality_assessment(str(response), prompt=str(state.prompt or ""), min_tokens=min_tokens)
+            except Exception:
+                qa = basic_quality_assessment(str(response), min_tokens=min_tokens)
+            qa_score = float(qa.get("score", 0.0))
+    except Exception:  # pragma: no cover - best effort only
+        qa_score = None
+
+    reward = _compute_reward(service, state, latency_ms, quality_score=qa_score)
     service.learning.update(state.task_type, chosen, reward=reward)
     service._adaptive_record_outcome(
         state,
@@ -116,6 +139,25 @@ def execute_offline(service: OpenRouterService, state: RouteState) -> dict[str, 
         result.setdefault("cache_info", state.cache_metadata)
     if state.compression_metadata:
         result.setdefault("compression_info", state.compression_metadata)
+    # Attach quality if computed
+    try:
+        if qa_score is not None:
+            # Re-run assessment to include full metadata if earlier path fell back
+            min_tokens = 80
+            try:
+                overrides = state.provider_overrides or {}
+                mt = overrides.get("quality_min_tokens") if isinstance(overrides, dict) else None
+                if isinstance(mt, int) and mt > 0:
+                    min_tokens = int(mt)
+            except Exception:
+                pass
+            try:
+                qa_block = quality_assessment(str(response), prompt=str(state.prompt or ""), min_tokens=min_tokens)
+            except Exception:
+                qa_block = basic_quality_assessment(str(response), min_tokens=min_tokens)
+            result["quality_assessment"] = qa_block
+    except Exception:  # pragma: no cover
+        pass
     trace_llm_call(
         name=f"openrouter_{state.task_type}",
         prompt=prompt,
@@ -235,6 +277,113 @@ def execute_online(service: OpenRouterService, state: RouteState) -> dict[str, A
         headers["X-Title"] = str(title)
 
     resp = None
+
+    # Helper: detect context/token overflow style errors from provider
+    def _is_overflow_error(response: Any) -> bool:
+        try:
+            status = getattr(response, "status_code", None)
+            body_txt = None
+            body = None
+            # Try to retrieve body safely
+            try:
+                body = response.json() if hasattr(response, "json") else None  # type: ignore[call-arg]
+            except Exception:
+                body = None
+            try:
+                body_txt = response.text if hasattr(response, "text") else None
+            except Exception:
+                body_txt = None
+
+            # HTTP status hints
+            if status in (400, 413, 422):
+                # Common provider messages indicating token/context overflow
+                markers = (
+                    "maximum context length",
+                    "context length exceeded",
+                    "too many tokens",
+                    "prompt is too long",
+                    "exceeds the maximum allowed",
+                    "token limit",
+                )
+                text = " ".join(
+                    [
+                        str(body) if body is not None else "",
+                        str(body_txt) if body_txt is not None else "",
+                    ]
+                ).lower()
+                return any(m in text for m in markers)
+        except Exception:
+            pass
+        return False
+
+    def _retry_after_compression(reason: str) -> dict[str, Any] | None:
+        """Attempt a single retry with aggressive prompt compression.
+
+        Returns a result dict when retry succeeds; otherwise None to allow normal error handling.
+        """
+        try:
+            # Aggressive compression: aim for ~50% reduction or cap by a safe max token budget
+            target_reduction = 0.5
+            # Choose a conservative max budget if available via provider overrides
+            max_tokens = None
+            try:
+                overrides = state.provider_overrides or {}
+                mt = overrides.get("max_tokens") if isinstance(overrides, dict) else None
+                if isinstance(mt, int) and mt > 0:
+                    # Give some headroom for completions
+                    max_tokens = int(max(256, mt * 2))
+            except Exception:
+                max_tokens = None
+
+            new_text, meta = service.prompt_engine.optimise_with_metadata(
+                state.prompt,
+                target_token_reduction=target_reduction,
+                max_tokens=max_tokens,
+                force_enable=True,
+            )
+            # Guard against no-op
+            if not isinstance(new_text, str) or not new_text.strip():
+                return None
+
+            state.prompt = new_text
+            state.compression_metadata = meta
+            state.tokens_in = service.prompt_engine.count_tokens(new_text, state.chosen_model)
+
+            retry_payload = {
+                "model": state.chosen_model,
+                "messages": [{"role": "user", "content": state.prompt}],
+            }
+            if provider:
+                retry_payload["provider"] = provider
+
+            retry_resp = _call_resilient_post(
+                url,
+                headers=headers,
+                json_payload=retry_payload,
+                timeout_seconds=REQUEST_TIMEOUT_SECONDS,
+            )
+            if retry_resp is None or getattr(retry_resp, "status_code", 200) >= 400:
+                return None
+
+            data2 = retry_resp.json() if retry_resp is not None else {}
+            message2 = data2.get("choices", [{}])[0].get("message", {}).get("content", "")
+            latency_ms2 = (time.perf_counter() - state.start_time) * 1000
+            tokens_out2 = service.prompt_engine.count_tokens(message2, state.chosen_model)
+            result2 = {
+                "status": "success",
+                "model": state.chosen_model,
+                "response": message2,
+                "tokens": state.tokens_in,
+                "provider": provider,
+                "retry_reason": reason,
+            }
+            if state.cache_metadata:
+                result2.setdefault("cache_info", state.cache_metadata)
+            _post_success(service, state, result2, tokens_out2, latency_ms2, provider_family, offline=False)
+            return result2
+        except Exception:  # pragma: no cover - defensive best-effort retry
+            return None
+
     if is_retry_enabled():
         try:
             resp = http_request_with_retry(
@@ -294,6 +443,17 @@ def execute_online(service: OpenRouterService, state: RouteState) -> dict[str, A
         )
 
     if resp is None or getattr(resp, "status_code", 200) >= 400:
+        # Attempt a single compression retry on overflow-like errors. Treat HTTP 413 as overflow by default.
+        overflow_like = False
+        try:
+            status_c = getattr(resp, "status_code", None)
+            overflow_like = bool(status_c in (413,)) or _is_overflow_error(resp)
+        except Exception:
+            overflow_like = False
+        if resp is not None and overflow_like:
+            result_retry = _retry_after_compression("overflow_detected")
+            if result_retry is not None:
+                return result_retry
         code = getattr(resp, "status_code", "unknown")
         raise RuntimeError(f"openrouter_error status={code}")
     data = resp.json() if resp is not None else {}
@@ -364,7 +524,35 @@ def _post_success(
     *,
     offline: bool,
 ) -> None:
-    reward = _compute_reward(service, state, latency_ms)
+    # Compute quality assessment first (if enabled) so reward can account for it
+    qa_score: float | None = None
+    try:
+        truthy = {"1", "true", "yes", "on"}
+        if (_os.getenv("ENABLE_QUALITY_ASSESSMENT", "1") or "1").lower() in truthy:
+            min_tokens = 80
+            try:
+                overrides = state.provider_overrides or {}
+                mt = overrides.get("quality_min_tokens") if isinstance(overrides, dict) else None
+                if isinstance(mt, int) and mt > 0:
+                    min_tokens = int(mt)
+            except Exception:
+                pass
+            # Prefer advanced assessment with prompt context; fallback to basic if anything goes wrong
+            try:
+                qa = quality_assessment(
+                    str(result.get("response") or ""),
+                    prompt=str(state.prompt or ""),
+                    min_tokens=min_tokens,
+                    expect_json=bool(getattr(state, "expects_json", False)),
+                )
+            except Exception:
+                qa = basic_quality_assessment(str(result.get("response") or ""), min_tokens=min_tokens)
+            result["quality_assessment"] = qa
+            qa_score = float(qa.get("score", 0.0))
+    except Exception:  # pragma: no cover - assessment is best-effort only
+        qa_score = None
+
+    reward = _compute_reward(service, state, latency_ms, quality_score=qa_score)
     service.learning.update(state.task_type, state.chosen_model, reward=reward)
     cache_meta = state.cache_metadata or {}
     cache_hit = any(isinstance(meta, dict) and meta.get("status") == "hit" for meta in cache_meta.values())
@@ -466,24 +654,57 @@ def _charge_tracker(state: RouteState) -> None:
             )
 
 
-def _compute_reward(service: OpenRouterService, state: RouteState, latency_ms: float) -> float:
+def _compute_reward(
+    service: OpenRouterService,
+    state: RouteState,
+    latency_ms: float,
+    quality_score: float | None = None,
+) -> float:
     settings = get_settings()
     rl: dict[str, Any] = {}
     if service.tenant_registry:
         ctx_t = state.ctx_effective
         rl = service.tenant_registry.get_rl_overrides(ctx_t) if ctx_t else {}
-    w_cost = float(rl.get("reward_cost_weight", getattr(settings, "reward_cost_weight", 0.5) or 0.5))
-    w_lat = float(
-        rl.get(
-            "reward_latency_weight",
-            getattr(settings, "reward_latency_weight", 0.5) or 0.5,
-        )
+
+    # Resolve weights with overrides and environment fallbacks
+    def _as_float(val: Any, default: float) -> float:
+        try:
+            if val is None:
+                return default
+            return float(val)
+        except Exception:
+            return default
+
+    w_cost = _as_float(rl.get("reward_cost_weight", getattr(settings, "reward_cost_weight", 0.5)), 0.5)
+    w_lat = _as_float(
+        rl.get("reward_latency_weight", getattr(settings, "reward_latency_weight", 0.5)),
+        0.5,
     )
-    if w_cost == 0.0 and w_lat == 0.0:
+    # Quality weight can be provided via tenant overrides, settings attr, or environment
+    w_qual_raw = rl.get("reward_quality_weight", getattr(settings, "reward_quality_weight", None))
+    if w_qual_raw is None:
+        # Environment fallback
+        try:
+            env_v = _os.getenv("REWARD_QUALITY_WEIGHT")
+            w_qual_raw = float(env_v) if env_v is not None and str(env_v).strip() != "" else 0.0
+        except Exception:
+            w_qual_raw = 0.0
+    w_qual = _as_float(w_qual_raw, 0.0)
+
+    # If all zero, default back to cost/latency equally
+    if w_cost == 0.0 and w_lat == 0.0 and (w_qual == 0.0 or quality_score is None):
         w_cost = w_lat = 0.5
-    norm = w_cost + w_lat
+
+    # Normalize weights over the active components
+    active_quality = (quality_score is not None) and (w_qual > 0.0)
+    norm = w_cost + w_lat + (w_qual if active_quality else 0.0)
+    # Avoid division by zero
+    if norm <= 0.0:
+        norm = 1.0
     w_cost /= norm
     w_lat /= norm
+    w_qual = (w_qual / norm) if active_quality else 0.0
+
     cost_norm = 0.0
     if state.projected_cost > 0:
         if rl.get("reward_cost_weight") is not None or rl.get("reward_latency_weight") is not None:
@@ -503,7 +724,12 @@ def _compute_reward(service: OpenRouterService, state: RouteState, latency_ms: f
     )
     lat_window = max(1.0, lat_window)
     lat_norm = min(1.0, latency_ms / lat_window)
-    return max(0.0, 1.0 - w_cost * cost_norm - w_lat * lat_norm)
+    # Components are framed as "higher is better"
+    cost_component = 1.0 - cost_norm
+    lat_component = 1.0 - lat_norm
+    qual_component = float(quality_score) if active_quality else 0.0
+    reward = (w_cost * cost_component) + (w_lat * lat_component) + (w_qual * qual_component)
+    return max(0.0, min(1.0, reward))
 
 
 def _has_vllm() -> bool:

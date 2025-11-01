@@ -8,6 +8,7 @@ Extracted from crew_builders.py to improve maintainability and organization.
 
 import logging
 from typing import Any
+from urllib.parse import urlparse
 
 from crewai import Crew, Process, Task
 from ultimate_discord_intelligence_bot.settings import Settings
@@ -17,7 +18,7 @@ from ultimate_discord_intelligence_bot.settings import Settings
 logger = logging.getLogger(__name__)
 
 
-def create_acquisition_task(agent: Any, callback: Any | None = None) -> Task:
+def create_acquisition_task(agent: Any, callback: Any | None = None, content_url: str | None = None) -> Task:
     """Create the content acquisition task.
 
     Args:
@@ -27,16 +28,20 @@ def create_acquisition_task(agent: Any, callback: Any | None = None) -> Task:
     Returns:
         Configured acquisition task
     """
+    description_template = (
+        "Download and acquire media content from {url}. "
+        "Use the appropriate download tool for the platform (YouTube, TikTok, Twitter, etc.). "
+        "Extract metadata and obtain the raw media file. "
+        "\n\nCRITICAL: Return your results as JSON with these exact keys: "
+        "url, video_id, file_path, title, description, author, duration, platform. "
+        "The url field MUST contain {url}. The video_id can be extracted from the URL or set to the URL itself. "
+        "Wrap the JSON in ```json``` code blocks for easy parsing."
+    )
+
+    formatted_url = content_url or "{url}"
+
     return Task(
-        description=(
-            "Download and acquire media content from {url}. "
-            "Use the appropriate download tool for the platform (YouTube, TikTok, Twitter, etc.). "
-            "Extract metadata and obtain the raw media file. "
-            "\n\nCRITICAL: Return your results as JSON with these exact keys: "
-            "url, video_id, file_path, title, description, author, duration, platform. "
-            "The url field MUST contain {url}. The video_id can be extracted from the URL or set to the URL itself. "
-            "Wrap the JSON in ```json``` code blocks for easy parsing."
-        ),
+        description=description_template.format(url=formatted_url),
         expected_output="JSON with url, video_id, file_path, title, description, author, duration, platform",
         agent=agent,
         callback=callback,
@@ -301,6 +306,12 @@ def build_intelligence_crew(
 
     parallel_config = get_parallel_execution_config()
 
+    parsed_url = urlparse(url)
+    content_domain = parsed_url.netloc or parsed_url.path or "unknown"
+    parallel_config.setdefault("target_domain", content_domain)
+
+    _logger.info(f"🌐 Target content domain: {content_domain}")
+
     # Override with provided settings if specified
     if enable_parallel_analysis is not None:
         parallel_config["enable_parallel_analysis"] = enable_parallel_analysis
@@ -340,7 +351,7 @@ def build_intelligence_crew(
         }
     else:
         # Fallback: create agents directly (not recommended for production)
-        from ..crew import UltimateDiscordIntelligenceBotCrew
+        from ..crew_core import UltimateDiscordIntelligenceBotCrew
 
         crew_instance = UltimateDiscordIntelligenceBotCrew()
         agents = {
@@ -356,7 +367,7 @@ def build_intelligence_crew(
 
     # Stage 1: Content Acquisition (always first)
     acquisition_task = create_acquisition_task(
-        agent=agents["acquisition_specialist"], callback=task_completion_callback
+        agent=agents["acquisition_specialist"], callback=task_completion_callback, content_url=url
     )
     tasks.append(acquisition_task)
 

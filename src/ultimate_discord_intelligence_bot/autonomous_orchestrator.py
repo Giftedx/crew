@@ -23,12 +23,12 @@ except ImportError:
     # Fallback if pydantic not available (shouldn't happen in production)
     BaseModel = object  # type: ignore
 
-    def Field(*a, **k):  # type: ignore
+    def Field(*_args, **_kwargs):  # type: ignore
         return None
 
     ValidationError = Exception  # type: ignore
 
-    def field_validator(*a, **k):  # type: ignore
+    def field_validator(*_args, **_kwargs):  # type: ignore
         def decorator(f):
             return f
 
@@ -70,7 +70,7 @@ except Exception:  # pragma: no cover - tests/environment without crewai
 from ultimate_discord_intelligence_bot.settings import Settings
 
 from .config import prompts as prompt_config
-from .crew import UltimateDiscordIntelligenceBotCrew
+from .crew_core import UltimateDiscordIntelligenceBotCrew
 from .crew_error_handler import CrewErrorHandler
 from .crew_insight_helpers import CrewInsightExtractor
 from .multi_modal_synthesizer import MultiModalSynthesizer
@@ -304,7 +304,7 @@ class AutonomousIntelligenceOrchestrator:
         # CRITICAL FIX (2025-10-04): Ensure crew_instance is initialized before agent creation
         # The agent_getter_callback needs self.crew_instance to be available
         if self.crew_instance is None:
-            from .crew import UltimateDiscordIntelligenceBotCrew
+            from .crew_core import UltimateDiscordIntelligenceBotCrew
 
             self.crew_instance = UltimateDiscordIntelligenceBotCrew()
             self.logger.debug("✨ Initialized crew_instance for agent creation")
@@ -356,7 +356,7 @@ class AutonomousIntelligenceOrchestrator:
         """Build a crew focused on debate analysis."""
         # Initialize crew instance if needed
         if self.crew_instance is None:
-            from .crew import UltimateDiscordIntelligenceBotCrew
+            from .crew_core import UltimateDiscordIntelligenceBotCrew
 
             self.crew_instance = UltimateDiscordIntelligenceBotCrew()
 
@@ -382,7 +382,7 @@ class AutonomousIntelligenceOrchestrator:
     def _build_fact_check_focused_crew(self, url: str, depth: str) -> Crew:
         """Build a crew focused on fact-checking."""
         if self.crew_instance is None:
-            from .crew import UltimateDiscordIntelligenceBotCrew
+            from .crew_core import UltimateDiscordIntelligenceBotCrew
 
             self.crew_instance = UltimateDiscordIntelligenceBotCrew()
 
@@ -406,7 +406,7 @@ class AutonomousIntelligenceOrchestrator:
     def _build_sentiment_focused_crew(self, url: str, depth: str) -> Crew:
         """Build a crew focused on sentiment analysis."""
         if self.crew_instance is None:
-            from .crew import UltimateDiscordIntelligenceBotCrew
+            from .crew_core import UltimateDiscordIntelligenceBotCrew
 
             self.crew_instance = UltimateDiscordIntelligenceBotCrew()
 
@@ -423,7 +423,7 @@ class AutonomousIntelligenceOrchestrator:
     def _build_moderation_focused_crew(self, url: str, depth: str) -> Crew:
         """Build a crew focused on content moderation."""
         if self.crew_instance is None:
-            from .crew import UltimateDiscordIntelligenceBotCrew
+            from .crew_core import UltimateDiscordIntelligenceBotCrew
 
             self.crew_instance = UltimateDiscordIntelligenceBotCrew()
 
@@ -447,7 +447,7 @@ class AutonomousIntelligenceOrchestrator:
     def _build_transcription_focused_crew(self, url: str, depth: str) -> Crew:
         """Build a crew focused on transcription and content extraction."""
         if self.crew_instance is None:
-            from .crew import UltimateDiscordIntelligenceBotCrew
+            from .crew_core import UltimateDiscordIntelligenceBotCrew
 
             self.crew_instance = UltimateDiscordIntelligenceBotCrew()
 
@@ -524,6 +524,7 @@ class AutonomousIntelligenceOrchestrator:
     ):
         """Execute a workflow stage with intelligent error handling and recovery."""
         return await error_handlers.execute_stage_with_recovery(
+            *args,
             stage_function=stage_function,
             stage_name=stage_name,
             agent_name=agent_name,
@@ -531,7 +532,6 @@ class AutonomousIntelligenceOrchestrator:
             error_handler=self.error_handler,
             get_system_health=self._get_system_health,
             logger_instance=self.logger,
-            *args,
             **kwargs,
         )
 
@@ -700,10 +700,8 @@ class AutonomousIntelligenceOrchestrator:
             )
 
             # Initialize cost tracking if not already done
-            try:
+            with contextlib.suppress(Exception):
                 initialize_cost_tracking()
-            except Exception:
-                pass  # Already initialized or not available
 
             # Wrap execution with request budget tracking
             with track_request_budget(
@@ -1065,7 +1063,7 @@ class AutonomousIntelligenceOrchestrator:
                     message="Agent system not initialized (no API key)",
                 )
             # Initialize CrewAI crew instance
-            from .crew import UltimateDiscordIntelligenceBotCrew
+            from .crew_core import UltimateDiscordIntelligenceBotCrew
 
             crew_instance = UltimateDiscordIntelligenceBotCrew()
 
@@ -1231,8 +1229,6 @@ class AutonomousIntelligenceOrchestrator:
 
         except Exception as e:
             return StepResult.fail(f"Mission planning failed: {e}")
-        except Exception as e:
-            return StepResult.fail(f"Mission planning failed: {e}")
 
     async def _execute_specialized_content_acquisition(self, url: str) -> StepResult:
         """Execute specialized content acquisition with enhanced multi-platform support and ContentPipeline integration."""
@@ -1247,18 +1243,20 @@ class AutonomousIntelligenceOrchestrator:
                 error_msg = pipeline_result.error or "Content acquisition failed"
 
                 # Try to identify the content type and provide agent-specific guidance
-                if "youtube.com" in url.lower() or "youtu.be" in url.lower():
-                    if "Requested format is not available" in error_msg or "nsig extraction failed" in error_msg:
-                        return StepResult.fail(
-                            f"YouTube content protection detected - requires specialized agent handling: {error_msg}",
-                            step="content_acquisition",
-                            data={
-                                "url": url,
-                                "error_type": "youtube_protection",
-                                "agent_recommendation": "multi_platform_acquisition_specialist",
-                                "fallback_strategy": "enhanced_youtube_download_tool",
-                            },
-                        )
+                lower_url = url.lower()
+                if ("youtube.com" in lower_url or "youtu.be" in lower_url) and (
+                    "Requested format is not available" in error_msg or "nsig extraction failed" in error_msg
+                ):
+                    return StepResult.fail(
+                        f"YouTube content protection detected - requires specialized agent handling: {error_msg}",
+                        step="content_acquisition",
+                        data={
+                            "url": url,
+                            "error_type": "youtube_protection",
+                            "agent_recommendation": "multi_platform_acquisition_specialist",
+                            "fallback_strategy": "enhanced_youtube_download_tool",
+                        },
+                    )
 
                 return StepResult.fail(
                     f"ContentPipeline acquisition failed - agent coordination required: {error_msg}",
@@ -4247,7 +4245,7 @@ class AutonomousIntelligenceOrchestrator:
                     message="Agent system not initialized (no API key)",
                 )
             # Initialize CrewAI crew instance
-            from .crew import UltimateDiscordIntelligenceBotCrew
+            from .crew_core import UltimateDiscordIntelligenceBotCrew
 
             crew_instance = UltimateDiscordIntelligenceBotCrew()
 
@@ -4413,8 +4411,6 @@ class AutonomousIntelligenceOrchestrator:
 
         except Exception as e:
             return StepResult.fail(f"Mission planning failed: {e}")
-        except Exception as e:
-            return StepResult.fail(f"Mission planning failed: {e}")
 
     async def _execute_specialized_content_acquisition(self, url: str) -> StepResult:
         """Execute specialized content acquisition with enhanced multi-platform support and ContentPipeline integration."""
@@ -4429,18 +4425,20 @@ class AutonomousIntelligenceOrchestrator:
                 error_msg = pipeline_result.error or "Content acquisition failed"
 
                 # Try to identify the content type and provide agent-specific guidance
-                if "youtube.com" in url.lower() or "youtu.be" in url.lower():
-                    if "Requested format is not available" in error_msg or "nsig extraction failed" in error_msg:
-                        return StepResult.fail(
-                            f"YouTube content protection detected - requires specialized agent handling: {error_msg}",
-                            step="content_acquisition",
-                            data={
-                                "url": url,
-                                "error_type": "youtube_protection",
-                                "agent_recommendation": "multi_platform_acquisition_specialist",
-                                "fallback_strategy": "enhanced_youtube_download_tool",
-                            },
-                        )
+                lower_url = url.lower()
+                if ("youtube.com" in lower_url or "youtu.be" in lower_url) and (
+                    "Requested format is not available" in error_msg or "nsig extraction failed" in error_msg
+                ):
+                    return StepResult.fail(
+                        f"YouTube content protection detected - requires specialized agent handling: {error_msg}",
+                        step="content_acquisition",
+                        data={
+                            "url": url,
+                            "error_type": "youtube_protection",
+                            "agent_recommendation": "multi_platform_acquisition_specialist",
+                            "fallback_strategy": "enhanced_youtube_download_tool",
+                        },
+                    )
 
                 return StepResult.fail(
                     f"ContentPipeline acquisition failed - agent coordination required: {error_msg}",

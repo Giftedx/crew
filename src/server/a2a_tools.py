@@ -208,6 +208,10 @@ def load_tools() -> dict[str, ToolFunc]:  # pragma: no cover - resolved dynamica
                 key_findings = [s[:80] for s in sources[: max(0, int(max_items or 5))]]
                 citations = [{"type": "source", "index": i} for i in range(len(key_findings))]
                 risks = ["Limited sources", "Heuristic synthesis"]
+                if enable_alerts:
+                    risks.append("Alert notifications enabled; verify signal routing")
+                if max_time is not None and max_time <= 0:
+                    risks.append("No time budget available for deeper research")
                 counts = {
                     "sources": len(sources),
                     "tokens_estimate": sum(len(s.split()) for s in sources),
@@ -216,6 +220,8 @@ def load_tools() -> dict[str, ToolFunc]:  # pragma: no cover - resolved dynamica
                     "multi_agent": True,
                     "quality_score": None,
                     "execution_time": None,
+                    "max_time_budget": max_time,
+                    "alerts_enabled": enable_alerts,
                 }
                 data = {
                     "outline": outline or ["Overview"],

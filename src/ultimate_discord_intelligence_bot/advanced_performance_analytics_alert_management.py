@@ -30,7 +30,7 @@ from .advanced_performance_analytics_discord_integration import (
 
 
 if TYPE_CHECKING:
-    from .crew import UltimateDiscordIntelligenceBotCrew
+    from .crew_core import UltimateDiscordIntelligenceBotCrew
 
 
 logger = logging.getLogger(__name__)

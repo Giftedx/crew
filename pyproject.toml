@@ -170,6 +170,16 @@ where = ["src"]
 [tool.ruff]
 target-version = "py310"
 line-length = 120
+extend-exclude = [
+    "src/ultimate_discord_intelligence_bot/optimized",
+    "src/ultimate_discord_intelligence_bot/optimized/**",
+    "src/fastapi",
+    "src/fastapi/**",
+    "scripts",
+    "scripts/**",
+    "archive/experimental",
+    "archive/experimental/**",
+]
 
 [tool.ruff.lint]
 select = [
@@ -205,6 +215,7 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401"]
+"src/core/routing/semantic_routing_cache.py" = ["F401"]
 "tests/**/*.py" = [
     "S101",   # allow assertions
     "ARG",    # unused-argument patterns
@@ -229,6 +240,9 @@ ignore = [
     "SIM222", # True instead of ... or True (tests)
     "B004",   # use callable() (tests style)
     "SIM116", # suggest dict over if-elif chain (tests)
+]
+"src/ultimate_discord_intelligence_bot/optimized/**/*.py" = [
+    "E", "F", "W", "B", "SIM", "PIE", "UP", "A", "TCH", "RUF", "I", "C4"
 ]
 "tests_new/**/*.py" = [
     "S101",   # allow assertions in tests

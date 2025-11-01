@@ -7,7 +7,8 @@ import time
 from typing import Any
 
 import redis
-from redis.exceptions import ConnectionError, RedisError
+from redis.exceptions import ConnectionError as RedisConnectionError
+from redis.exceptions import RedisError
 
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
@@ -45,7 +46,7 @@ class DistributedRateLimiter:
             self.redis_client.ping()
             self.redis_available = True
             logger.info("Distributed rate limiter connected to Redis")
-        except (ConnectionError, RedisError) as e:
+        except (RedisConnectionError, RedisError) as e:
             logger.warning(f"Failed to connect to Redis: {e}")
             self.redis_client = None
             self.redis_available = False

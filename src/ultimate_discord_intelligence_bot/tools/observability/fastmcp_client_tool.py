@@ -7,6 +7,7 @@ client libraries, providing seamless integration between CrewAI workflows and MC
 from __future__ import annotations
 
 import asyncio
+import contextlib
 from typing import Any
 
 from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
@@ -61,18 +62,16 @@ class FastMCPClientTool(BaseTool[StepResult]):
         try:
             async with Client(server_url) as client:
                 # First, try to list available tools for validation
-                try:
+                available_tools: list[str] | None = None
+                with contextlib.suppress(Exception):
                     tools = await client.list_tools()
                     available_tools = [tool.name for tool in tools]
-                    if tool_name not in available_tools:
-                        return StepResult.fail(
-                            f"Tool '{tool_name}' not available on server",
-                            step="tool_validation",
-                            metadata={"available_tools": available_tools},
-                        )
-                except Exception:
-                    # Continue anyway if listing fails
-                    pass
+                if available_tools is not None and tool_name not in available_tools:
+                    return StepResult.fail(
+                        f"Tool '{tool_name}' not available on server",
+                        step="tool_validation",
+                        metadata={"available_tools": available_tools},
+                    )
 
                 # Call the tool
                 result = await client.call_tool(tool_name, arguments=arguments)
@@ -136,19 +135,17 @@ class FastMCPClientTool(BaseTool[StepResult]):
             else:
                 result = loop.run_until_complete(self._call_mcp_tool_async(server_url, tool_name, arguments))
 
-            # Record metrics
-            try:
-                outcome = "success" if result.success else "error"
-                self._metrics.counter(
-                    "tool_runs_total",
-                    labels={
-                        "tool": "fastmcp_client",
-                        "server": server_url.split("://")[0] if "://" in server_url else "unknown",
-                        "outcome": outcome,
-                    },
-                ).inc()
-            except Exception:
-                pass  # Don't fail on metrics errors
+                # Record metrics
+                with contextlib.suppress(Exception):
+                    outcome = "success" if result.success else "error"
+                    self._metrics.counter(
+                        "tool_runs_total",
+                        labels={
+                            "tool": "fastmcp_client",
+                            "server": server_url.split("://")[0] if "://" in server_url else "unknown",
+                            "outcome": outcome,
+                        },
+                    ).inc()
 
             return result  # Already a StepResult from async helper
 
@@ -242,7 +239,7 @@ class MCPResourceTool(BaseTool[StepResult]):
                 result = loop.run_until_complete(self._read_mcp_resource_async(server_url, resource_uri))
 
             # Record metrics
-            try:
+            with contextlib.suppress(Exception):
                 outcome = "success" if result.success else "error"
                 self._metrics.counter(
                     "tool_runs_total",
@@ -252,8 +249,6 @@ class MCPResourceTool(BaseTool[StepResult]):
                         "outcome": outcome,
                     },
                 ).inc()
-            except Exception:
-                pass
 
             return result  # Already a StepResult from async helper
 

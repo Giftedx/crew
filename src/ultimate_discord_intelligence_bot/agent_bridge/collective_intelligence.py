@@ -795,7 +795,7 @@ class CollectiveIntelligenceService:
             final_data = {}
             consensus_scores = []
 
-            for agent_type, group_contributions in sorted_groups:
+            for _agent_type, group_contributions in sorted_groups:
                 group_data, group_consensus = await self._consensus_synthesis(group_contributions)
                 final_data.update(group_data)
                 consensus_scores.append(group_consensus)

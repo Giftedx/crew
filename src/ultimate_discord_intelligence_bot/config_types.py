@@ -5,8 +5,8 @@ structures injected by the CrewAI ``@CrewBase`` decorator so static type
 checking can detect drift early. Only the fields *currently used* by the
 project are modelled; additional vendor fields are preserved via ``total=False``.
 
-Runtime code remains permissive—validation logic in ``crew.py`` (flag gated)
-performs structural checks without rejecting unknown forward‑compatible keys.
+Runtime code remains permissive- validation logic in ``crew.py`` (flag gated)
+performs structural checks without rejecting unknown forward-compatible keys.
 """
 
 from __future__ import annotations

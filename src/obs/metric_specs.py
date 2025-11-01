@@ -34,6 +34,37 @@ METRIC_SPECS: list[tuple[Kind, str, str, list[str]]] = [
         "LLM model selections",
         ["tenant", "workspace", "task", "model", "provider"],
     ),
+    # Router adapter instrumentation (provider/model/policy)
+    (
+        "histogram",
+        "router_shortlist_size",
+        "Shortlist size before bandit selection",
+        ["policy"],
+    ),
+    (
+        "counter",
+        "router_selection_total",
+        "Selected provider:model pairs by router",
+        ["provider", "model", "policy"],
+    ),
+    (
+        "histogram",
+        "router_cost_in_per_1k",
+        "Estimated input cost per 1k tokens for selected model",
+        ["provider", "model", "policy"],
+    ),
+    (
+        "histogram",
+        "router_cost_out_per_1k",
+        "Estimated output cost per 1k tokens for selected model",
+        ["provider", "model", "policy"],
+    ),
+    (
+        "histogram",
+        "router_est_latency_ms",
+        "Estimated latency (ms) for selected model",
+        ["provider", "model", "policy"],
+    ),
     (
         "counter",
         "llm_budget_rejections_total",
@@ -242,6 +273,31 @@ METRIC_SPECS: list[tuple[Kind, str, str, list[str]]] = [
         "pipeline_inflight",
         "Current number of inflight pipeline runs",
         ["tenant", "workspace", "orchestrator"],
+    ),
+    # Mission API self-evaluation and backstop signals
+    (
+        "histogram",
+        "mission_eval_overall_score",
+        "Self-evaluation overall score (0.0-1.0)",
+        ["task"],
+    ),
+    (
+        "histogram",
+        "mission_eval_latency_ms",
+        "Self-evaluation latency in milliseconds",
+        ["task"],
+    ),
+    (
+        "histogram",
+        "mission_reward",
+        "Derived reward signal (unitless)",
+        ["task"],
+    ),
+    (
+        "counter",
+        "mission_backstop_needed_total",
+        "Missions flagged for deterministic backstop",
+        ["task"],
     ),
     (
         "counter",
@@ -532,6 +588,42 @@ METRIC_SPECS: list[tuple[Kind, str, str, list[str]]] = [
         "trajectory_evaluations_total",
         "Total trajectory evaluations performed",
         ["tenant", "workspace", "success"],
+    ),
+    (
+        "counter",
+        "trajectory_feedback_emissions_total",
+        "Total trajectory feedback signals emitted to the RL router",
+        ["tenant", "workspace", "model_id", "success"],
+    ),
+    (
+        "counter",
+        "trajectory_feedback_processed_total",
+        "Total trajectory feedback items processed by the RL router",
+        ["tenant", "workspace", "model_id", "result"],
+    ),
+    (
+        "gauge",
+        "rl_feedback_queue_depth",
+        "Depth of the RL feedback queue awaiting processing",
+        ["tenant", "workspace"],
+    ),
+    (
+        "counter",
+        "rl_feedback_processed_total",
+        "Trajectory feedback items processed per batch",
+        ["tenant", "workspace", "result"],
+    ),
+    (
+        "counter",
+        "rl_feedback_failed_total",
+        "Trajectory feedback batches that failed processing",
+        ["tenant", "workspace", "reason"],
+    ),
+    (
+        "histogram",
+        "rl_feedback_processing_latency_ms",
+        "Latency of RL feedback batch processing in milliseconds",
+        ["tenant", "workspace"],
     ),
     # Advanced bandit metrics
     (

@@ -6,7 +6,7 @@ party primitives.
 
 Behaviour:
     * Disabled unless the environment variable ENABLE_RATE_LIMITING is truthy.
-    * Fixed one‑second window with a simple counter that resets every second.
+    * Fixed one-second window with a simple counter that resets every second.
     * Excludes /metrics and /health endpoints from limiting for observability.
 
 Configuration:
@@ -44,7 +44,7 @@ try:  # pragma: no cover - starlette is present in normal test/runtime envs
 except Exception:  # pragma: no cover - minimal environments without starlette
 
     class BaseHTTPMiddleware:  # type: ignore[no-redef]
-        """Minimal stand‑in implementing Starlette's interface enough for tests.
+        """Minimal stand-in implementing Starlette's interface enough for tests.
 
         Provides an ASGI callable that wraps a `dispatch` coroutine method.
         """
@@ -59,7 +59,13 @@ except Exception:  # pragma: no cover - minimal environments without starlette
             request = Request(scope, receive=receive)
 
             async def call_next(req: Request) -> Response:
-                responder = await self.app(scope, receive, send)
+                new_scope = dict(scope)
+                req_scope = getattr(req, "scope", {})
+                if isinstance(req_scope, dict):
+                    new_scope.update({k: v for k, v in req_scope.items() if k in {"path", "raw_path", "query_string"}})
+                    if "method" in req_scope:
+                        new_scope["method"] = req_scope["method"]
+                responder = await self.app(new_scope, receive, send)
                 return responder
 
             response = await self.dispatch(request, call_next)

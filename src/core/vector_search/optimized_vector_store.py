@@ -173,7 +173,7 @@ class OptimizedVectorStore:
                 tasks.append((query_id, future, task))
 
             # Wait for all queries to complete
-            for query_id, future, task in tasks:
+            for _query_id, future, task in tasks:
                 try:
                     result = await task
                     future.set_result(result)
@@ -475,28 +475,25 @@ class OptimizedVectorStore:
 
         # Check latency performance
         avg_latency = self.metrics.get_avg_latency_ms()
-        if avg_latency > self.config.target_latency_ms:
+        if avg_latency > self.config.target_latency_ms and self.config.batch_size < 64:
             # Increase batch size for better throughput
-            if self.config.batch_size < 64:
-                self.config.batch_size = min(64, self.config.batch_size * 2)
-                optimizations_applied.append(f"Increased batch size to {self.config.batch_size}")
+            self.config.batch_size = min(64, self.config.batch_size * 2)
+            optimizations_applied.append(f"Increased batch size to {self.config.batch_size}")
 
         # Check cache hit rate
         hit_rate = self.metrics.get_hit_rate()
-        if hit_rate < 0.8:
+        if hit_rate < 0.8 and self.config.cache_size < 50000:
             # Enable more aggressive caching
-            if self.config.cache_size < 50000:
-                self.config.cache_size = min(50000, self.config.cache_size * 2)
-                optimizations_applied.append(f"Increased cache size to {self.config.cache_size}")
+            self.config.cache_size = min(50000, self.config.cache_size * 2)
+            optimizations_applied.append(f"Increased cache size to {self.config.cache_size}")
 
         # Check throughput
         throughput = self.metrics.get_throughput_qps()
-        if throughput < self.config.target_throughput_qps:
+        if throughput < self.config.target_throughput_qps and not self.config.enable_batch_processing:
             # Enable batch processing if not already enabled
-            if not self.config.enable_batch_processing:
-                self.config.enable_batch_processing = True
-                self._start_batch_processor()
-                optimizations_applied.append("Enabled batch processing")
+            self.config.enable_batch_processing = True
+            self._start_batch_processor()
+            optimizations_applied.append("Enabled batch processing")
 
         return {
             "optimizations_applied": optimizations_applied,

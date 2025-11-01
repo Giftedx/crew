@@ -277,6 +277,8 @@ class TestPerformanceBenchmarks:
 
         # Mock successful operations with realistic timing
         async def mock_process_video(url: str, quality: str = "720p"):
+            del url
+            del quality
             await asyncio.sleep(0.01)  # Simulate processing time
             return {
                 "status": "success",

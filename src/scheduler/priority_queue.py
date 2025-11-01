@@ -31,6 +31,7 @@ class PriorityQueue:
         self._lock = get_lock_for_connection(conn)
         self._bulk_inserter = get_bulk_inserter(conn)
         self._request_batcher = get_request_batcher(conn)
+        self._background_tasks: set[asyncio.Task[Any]] = set()
 
     # --------------------------------------------------------------- enqueue
     def enqueue(self, job: pipeline.IngestJob, priority: int = 0) -> int:
@@ -205,7 +206,9 @@ class PriorityQueue:
 
     def flush_pending_operations(self) -> None:
         """Flush all pending batch operations."""
-        asyncio.create_task(self._flush_async())
+        task = asyncio.create_task(self._flush_async())
+        self._background_tasks.add(task)
+        task.add_done_callback(self._background_tasks.discard)
 
     def get_batching_metrics(self) -> dict[str, Any]:
         """Get batching performance metrics."""

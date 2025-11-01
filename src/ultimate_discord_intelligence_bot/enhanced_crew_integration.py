@@ -13,7 +13,7 @@ import time
 from contextlib import contextmanager, suppress
 from typing import TYPE_CHECKING, Any
 
-from .crew import UltimateDiscordIntelligenceBotCrew
+from .crew_core import UltimateDiscordIntelligenceBotCrew
 from .enhanced_performance_monitor import EnhancedPerformanceMonitor
 from .performance_integration import PerformanceIntegrationManager
 from .services.enterprise_auth_service import get_auth_service
@@ -74,6 +74,29 @@ class EnhancedCrewExecutor:
             logger.info("Enterprise services enabled - multi-tenant operations active")
 
         self._execution_context: dict[str, Any] = {}
+        self._monitoring_overrides: dict[str, Any] = {}
+
+    def apply_monitoring_overrides(self, options: dict[str, Any]) -> None:
+        """Apply monitoring configuration overrides provided by the caller."""
+
+        if not options:
+            return
+
+        self._monitoring_overrides.update(options)
+
+        if "alerts_enabled" in options:
+            self.enhanced_monitor.alerts_enabled = bool(options["alerts_enabled"])
+
+        thresholds = options.get("performance_thresholds")
+        if isinstance(thresholds, dict):
+            sanitized_thresholds: dict[str, float] = {}
+            for key, value in thresholds.items():
+                try:
+                    sanitized_thresholds[key] = float(value)
+                except (TypeError, ValueError):
+                    continue
+            if sanitized_thresholds:
+                self.enhanced_monitor.performance_thresholds.update(sanitized_thresholds)
 
     async def execute_with_comprehensive_monitoring(
         self,
@@ -93,6 +116,16 @@ class EnhancedCrewExecutor:
         Returns:
             Dict containing execution results and comprehensive metrics
         """
+        if self._monitoring_overrides:
+            if "enable_real_time_alerts" in self._monitoring_overrides:
+                enable_real_time_alerts = bool(self._monitoring_overrides["enable_real_time_alerts"])
+            if "quality_threshold" in self._monitoring_overrides:
+                with suppress(TypeError, ValueError):
+                    quality_threshold = float(self._monitoring_overrides["quality_threshold"])
+            if "max_execution_time" in self._monitoring_overrides:
+                with suppress(TypeError, ValueError):
+                    max_execution_time = float(self._monitoring_overrides["max_execution_time"])
+
         execution_id = f"crew_exec_{int(time.time() * 1000)}"
         start_time = time.time()
 
@@ -880,6 +913,7 @@ def enhanced_crew_execution(
             result = await executor.execute_with_comprehensive_monitoring(inputs)
     """
     executor = EnhancedCrewExecutor(crew_instance)
+    executor.apply_monitoring_overrides(monitoring_options)
     try:
         yield executor
     finally:

@@ -6,13 +6,18 @@ allowing the system to skip full analysis for low-quality content.
 
 from __future__ import annotations
 
+import logging
 import os
 import re
 from dataclasses import dataclass
 from typing import Any
 
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 from ultimate_discord_intelligence_bot.step_result import StepResult
 from ultimate_discord_intelligence_bot.tools._base import BaseTool
+
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -52,6 +57,11 @@ class ContentQualityAssessmentTool(BaseTool[dict[str, Any]]):
     MIN_COHERENCE_SCORE = float(os.getenv("QUALITY_MIN_COHERENCE", "0.6"))
     MIN_OVERALL_SCORE = float(os.getenv("QUALITY_MIN_OVERALL", "0.65"))
 
+    def __init__(self):
+        """Initialize the content quality assessment tool."""
+        super().__init__()
+        self._metrics = get_metrics()
+
     def run(self, input_data: dict) -> StepResult:
         """
         Assess transcript quality and return quality metrics.
@@ -89,9 +99,23 @@ class ContentQualityAssessmentTool(BaseTool[dict[str, Any]]):
                 "bypass_reason": None if should_process_fully else self._get_bypass_reason(metrics),
             }
 
+            try:
+                self._metrics.counter(
+                    "tool_runs_total",
+                    labels={"tool": self.name or "content_quality_assessment", "outcome": "success"},
+                ).inc()
+            except Exception as exc:
+                logger.debug("metrics increment failed: %s", exc)
             return StepResult.ok(result=result)
 
         except Exception as e:
+            try:
+                self._metrics.counter(
+                    "tool_runs_total",
+                    labels={"tool": self.name or "content_quality_assessment", "outcome": "error"},
+                ).inc()
+            except Exception as exc:
+                logger.debug("metrics increment failed (error path): %s", exc)
             return StepResult.fail(
                 error=f"Quality assessment failed: {e!s}",
                 error_category="processing_error",

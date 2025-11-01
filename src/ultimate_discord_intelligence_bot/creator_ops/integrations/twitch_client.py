@@ -12,7 +12,7 @@ import json
 import logging
 import time
 from datetime import datetime, timedelta
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, ClassVar
 
 import websockets  # type: ignore[import-not-found]
 
@@ -62,7 +62,7 @@ class TwitchClient:
     EVENTSUB_WS_URL = "wss://eventsub.wss.twitch.tv/ws"
 
     # Rate limits (requests per minute)
-    RATE_LIMITS = {
+    RATE_LIMITS: ClassVar[dict[str, int]] = {
         "default": 800,
         "moderator": 1200,
         "broadcaster": 1200,
@@ -213,7 +213,7 @@ class TwitchClient:
         user_id: str | None = None,
         user_login: str | None = None,
         game_id: str | None = None,
-        type: str | None = None,
+        type: str | None = None,  # noqa: A002
         language: str | None = None,
         first: int = 20,
     ) -> StepResult:
@@ -249,11 +249,11 @@ class TwitchClient:
         self,
         user_id: str | None = None,
         game_id: str | None = None,
-        id: str | None = None,
+        id: str | None = None,  # noqa: A002
         language: str | None = None,
         period: str = "all",
         sort: str = "time",
-        type: str = "all",
+        type: str = "all",  # noqa: A002
         first: int = 20,
     ) -> StepResult:
         """Get videos (VODs)."""
@@ -291,7 +291,7 @@ class TwitchClient:
         self,
         broadcaster_id: str | None = None,
         game_id: str | None = None,
-        id: str | None = None,
+        id: str | None = None,  # noqa: A002
         started_at: datetime | None = None,
         ended_at: datetime | None = None,
         first: int = 20,
@@ -420,7 +420,7 @@ class TwitchClient:
 
     def create_eventsub_subscription(
         self,
-        type: str,
+        type: str,  # noqa: A002
         version: str,
         condition: dict[str, Any],
         transport: dict[str, Any],

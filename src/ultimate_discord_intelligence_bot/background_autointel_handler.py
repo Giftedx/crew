@@ -19,7 +19,7 @@ from __future__ import annotations
 import contextlib
 import logging
 import os
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 
 if TYPE_CHECKING:
@@ -72,6 +72,10 @@ async def handle_autointel_background(
             )
             return
 
+        budget_limits: dict[str, Any] = {}
+        with contextlib.suppress(Exception):
+            budget_limits = orchestrator._get_budget_limits(depth)
+
         # Start background workflow (returns immediately)
         workflow_id = await background_worker.start_background_workflow(
             url=url,
@@ -82,6 +86,7 @@ async def handle_autointel_background(
             metadata={
                 "guild_id": str(interaction.guild_id) if hasattr(interaction, "guild_id") else None,
                 "command": "/autointel",
+                "budget_limits": budget_limits,
             },
         )
 
@@ -108,6 +113,19 @@ async def handle_autointel_background(
             f"- **Standard analysis:** ~5-15 minutes\n"
             f"- **Deep analysis:** ~15-45 minutes\n"
             f"- **Comprehensive/Experimental:** ~45+ minutes (thorough fact-finding)\n\n"
+        )
+
+        if budget_limits:
+            budget_summary = "\n".join(
+                f"• {name.replace('_', ' ').title()}: {value}" for name, value in budget_limits.items()
+            )
+            acknowledgment += (
+                "## Budget Guardrails\n\n"
+                f"{budget_summary}\n\n"
+                "These guardrails are sourced from the orchestrator and help ensure background runs stay within policy.\n\n"
+            )
+
+        acknowledgment += (
             "_Note: Analysis quality is never rushed. The system will take as long as "
             "needed to ensure rigorous validation._"
         )

@@ -1323,8 +1323,7 @@ class EpisodeIntelligencePack:
         for contribution in contributions:
             contribution_lower = contribution.lower()
             for area, keywords in expertise_keywords.items():
-                if any(keyword in contribution_lower for keyword in keywords):
-                    if area not in expertise_areas:
-                        expertise_areas.append(area)
+                if any(keyword in contribution_lower for keyword in keywords) and area not in expertise_areas:
+                    expertise_areas.append(area)
 
         return expertise_areas

@@ -404,7 +404,7 @@ def run_multimodal_server():
         print("🚀 Starting Multi-Modal Analysis MCP Server...")
         mcp.run()
     else:
-        print("ℹ️  Multi-modal server available but not running in standalone mode")
+        print("INFO: Multi-modal server available but not running in standalone mode")
         print("💡 Set RUN_MULTIMODAL_SERVER=1 to run standalone")
 
 

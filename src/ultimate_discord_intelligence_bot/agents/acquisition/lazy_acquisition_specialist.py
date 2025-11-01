@@ -6,6 +6,8 @@ by only loading tools when they are actually needed.
 
 from __future__ import annotations
 
+from typing import Any
+
 from ultimate_discord_intelligence_bot.agents.lazy_base import LazyBaseAgent, create_lazy_tool_specs
 from ultimate_discord_intelligence_bot.agents.registry import register_agent
 

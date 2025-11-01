@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any
 
 from obs import metrics
 
-from ..cache import combine_keys, generate_key_from_params
+from ...cache import combine_keys, generate_key_from_params
 
 
 log = logging.getLogger(__name__)

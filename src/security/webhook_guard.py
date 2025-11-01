@@ -130,9 +130,9 @@ def verify_incoming(
             return True
         try:
             secret = get_secret(secret_ref)
-        except KeyError:
+        except KeyError as exc:
             _log("block", resource="webhook:*", reason="missing_secret", ctx=ctx)
-            raise SecurityError(f"Webhook secret not configured: WEBHOOK_SECRET_{secret_id.upper()}")
+            raise SecurityError(f"Webhook secret not configured: WEBHOOK_SECRET_{secret_id.upper()}") from exc
         if secret in ("CHANGE_ME", "changeme", "default", ""):
             _log("block", resource="webhook:*", reason="default_secret", ctx=ctx)
             raise SecurityError(
@@ -147,17 +147,17 @@ def verify_incoming(
         signature = headers[signature_header]
         ts_raw = headers[timestamp_header]
         headers[nonce_header]  # access to ensure presence only
-    except KeyError:
+    except KeyError as exc:
         _log("block", resource="webhook:*", reason="missing_headers", ctx=ctx)
-        raise SecurityError("missing required signature headers")
+        raise SecurityError("missing required signature headers") from exc
 
     # Attempt verification across candidate secrets.
     # Reuse verify_signature_headers sequentially until one passes.
     try:
         ts_int = int(ts_raw)
-    except ValueError:
+    except ValueError as exc:
         _log("block", resource="webhook:*", reason="bad_timestamp", ctx=ctx)
-        raise SecurityError("invalid timestamp header")
+        raise SecurityError("invalid timestamp header") from exc
 
     verified = False
     for secret in ordered:

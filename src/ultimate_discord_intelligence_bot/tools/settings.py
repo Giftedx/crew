@@ -6,6 +6,7 @@ in the main settings module but are needed by various tools.
 
 from __future__ import annotations
 
+import contextlib
 import os
 import warnings
 from pathlib import Path
@@ -77,10 +78,8 @@ def get_cache_ttl() -> int:
         stacklevel=2,
     )
     if _unified_get_cache_ttl:
-        try:
+        with contextlib.suppress(Exception):
             return int(_unified_get_cache_ttl("tool"))
-        except Exception:
-            pass
     return int(get_tool_setting("CACHE_TTL", "3600"))  # 1 hour
 
 

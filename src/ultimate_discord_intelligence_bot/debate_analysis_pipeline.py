@@ -26,7 +26,7 @@ class DebateAnalysisPipeline:
 
     def __init__(
         self,
-        downloader: YtDlpDownloadTool | None = None,
+        downloader: MultiPlatformDownloadTool | None = None,
         transcriber: AudioTranscriptionTool | None = None,
         index_tool: TranscriptIndexTool | None = None,
         context_tool: ContextVerificationTool | None = None,

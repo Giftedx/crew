@@ -10,13 +10,18 @@ from __future__ import annotations
 import json
 import logging
 from dataclasses import dataclass, field
-from datetime import datetime
 from enum import Enum
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
+from core.time import default_utc_now
+from obs import metrics
 from ultimate_discord_intelligence_bot.step_result import StepResult
+
+
+if TYPE_CHECKING:  # pragma: no cover - typing only
+    from datetime import datetime
 
 
 logger = logging.getLogger(__name__)
@@ -98,8 +103,25 @@ class RoutingReward:
     cost_usd: float
     quality_score: float
     success: bool
-    timestamp: datetime = field(default_factory=datetime.utcnow)
+    timestamp: datetime = field(default_factory=default_utc_now)
     context: dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass
+class TrajectoryFeedback:
+    """Feedback signal derived from full trajectory evaluation."""
+
+    trajectory_id: str
+    model_id: str
+    accuracy_score: float
+    efficiency_score: float
+    error_handling_score: float
+    overall_score: float
+    trajectory_length: int
+    success: bool
+    reasoning: str
+    timestamp: datetime = field(default_factory=default_utc_now)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 class ContextualBandit:
@@ -163,7 +185,13 @@ class ContextualBandit:
 
         return selected_arm, confidence
 
-    def update(self, arm_id: str, context: np.ndarray, reward: float):
+    def update(
+        self,
+        arm_id: str,
+        context: np.ndarray,
+        reward: float,
+        trajectory_feedback: TrajectoryFeedback | None = None,
+    ) -> None:
         """
         Update arm parameters based on observed reward.
 
@@ -179,18 +207,27 @@ class ContextualBandit:
         if len(context) != self.context_dim:
             context = self._normalize_context(context)
 
+        enhanced_reward = reward
+        if trajectory_feedback is not None:
+            trajectory_quality = (
+                0.5 * trajectory_feedback.accuracy_score
+                + 0.3 * trajectory_feedback.efficiency_score
+                + 0.2 * trajectory_feedback.error_handling_score
+            )
+            enhanced_reward = 0.6 * reward + 0.4 * trajectory_quality
+
         # Update arm statistics
         self.arm_counts[arm_id] += 1
-        self.arm_rewards[arm_id].append(reward)
+        self.arm_rewards[arm_id].append(enhanced_reward)
 
         # Store history
         self.context_history.append(context.copy())
-        self.reward_history.append(reward)
+        self.reward_history.append(enhanced_reward)
 
         # Update parameters using online gradient descent
         learning_rate = 1.0 / (1.0 + self.arm_counts[arm_id])
         prediction = np.dot(self.arm_parameters[arm_id], context)
-        error = reward - prediction
+        error = enhanced_reward - prediction
 
         # Gradient update
         self.arm_parameters[arm_id] += learning_rate * error * context
@@ -253,6 +290,8 @@ class RLModelRouter:
             "average_cost": 0.0,
             "average_quality": 0.0,
         }
+        self.trajectory_feedback_queue: list[TrajectoryFeedback] = []
+        self.max_feedback_queue_size = 10000
 
         # Initialize with default models
         self._initialize_default_models()
@@ -359,7 +398,7 @@ class RLModelRouter:
                     "routing_metadata": {
                         "bandit_confidence": confidence,
                         "available_models": len(self.model_capabilities),
-                        "routing_timestamp": datetime.utcnow().isoformat(),
+                        "routing_timestamp": default_utc_now().isoformat(),
                     },
                 }
             )
@@ -367,6 +406,145 @@ class RLModelRouter:
         except Exception as e:
             logger.error(f"Model routing failed: {e!s}")
             return StepResult.fail(f"Model routing failed: {e!s}")
+
+    def process_trajectory_feedback(self, batch_size: int = 10) -> StepResult:
+        """Process queued trajectory feedback and update routing policy."""
+
+        if not self.trajectory_feedback_queue:
+            metrics.RL_FEEDBACK_QUEUE_DEPTH.labels(**metrics.label_ctx()).set(0)
+            return StepResult.skip(reason="No trajectory feedback available")
+
+        if not self.bandit:
+            metrics.RL_FEEDBACK_QUEUE_DEPTH.labels(**metrics.label_ctx()).set(len(self.trajectory_feedback_queue))
+            metrics.RL_FEEDBACK_FAILED.labels(
+                **metrics.label_ctx(),
+                reason="bandit_not_initialized",
+            ).inc()
+            return StepResult.fail("Bandit not initialized")
+
+        processed = 0
+        failed = 0
+        batch_count = min(batch_size, len(self.trajectory_feedback_queue))
+        base_labels = metrics.label_ctx()
+
+        for _ in range(batch_count):
+            feedback = self.trajectory_feedback_queue.pop(0)
+            routing_entry = self._find_routing_entry(feedback)
+
+            if routing_entry is None:
+                failed += 1
+                metrics.TRAJECTORY_FEEDBACK_PROCESSED.labels(
+                    **metrics.label_ctx(),
+                    model_id=feedback.model_id,
+                    result="missing_history",
+                ).inc()
+                metrics.RL_FEEDBACK_PROCESSED.labels(
+                    **base_labels,
+                    result="missing_history",
+                ).inc()
+                metrics.RL_FEEDBACK_FAILED.labels(
+                    **base_labels,
+                    reason="missing_history",
+                ).inc()
+                continue
+
+            try:
+                context_vec = self._extract_context_vector(routing_entry.context)
+                self.bandit.update(
+                    feedback.model_id,
+                    context_vec,
+                    routing_entry.reward,
+                    trajectory_feedback=feedback,
+                )
+                processed += 1
+                metrics.TRAJECTORY_FEEDBACK_PROCESSED.labels(
+                    **metrics.label_ctx(),
+                    model_id=feedback.model_id,
+                    result="success",
+                ).inc()
+                metrics.RL_FEEDBACK_PROCESSED.labels(
+                    **base_labels,
+                    result="success",
+                ).inc()
+            except Exception as exc:  # pragma: no cover - defensive
+                failed += 1
+                logger.error("Failed to process trajectory feedback: %s", exc, exc_info=True)
+                metrics.TRAJECTORY_FEEDBACK_PROCESSED.labels(
+                    **metrics.label_ctx(),
+                    model_id=feedback.model_id,
+                    result="failure",
+                ).inc()
+                metrics.RL_FEEDBACK_PROCESSED.labels(
+                    **base_labels,
+                    result="failure",
+                ).inc()
+                metrics.RL_FEEDBACK_FAILED.labels(
+                    **base_labels,
+                    reason="exception",
+                ).inc()
+
+        metrics.RL_FEEDBACK_QUEUE_DEPTH.labels(**base_labels).set(len(self.trajectory_feedback_queue))
+        return StepResult.ok(
+            processed=processed,
+            failed=failed,
+            remaining_queue_size=len(self.trajectory_feedback_queue),
+        )
+
+    def _find_routing_entry(self, feedback: TrajectoryFeedback) -> RoutingReward | None:
+        """Locate the most recent routing reward entry matching the feedback."""
+
+        for reward in reversed(self.routing_history):
+            if reward.task_id == feedback.trajectory_id and reward.model_id == feedback.model_id:
+                return reward
+        return None
+
+    def _extract_context_vector(self, context: dict[str, Any] | None) -> np.ndarray:
+        """Convert routing context metadata into a fixed-length feature vector."""
+
+        features = np.zeros(10)
+        context = context or {}
+
+        complexity_map: dict[str, float] = {
+            TaskComplexity.SIMPLE.value: 0.25,
+            TaskComplexity.MODERATE.value: 0.5,
+            TaskComplexity.COMPLEX.value: 0.75,
+            TaskComplexity.CRITICAL.value: 1.0,
+        }
+
+        complexity = context.get("complexity")
+        if isinstance(complexity, TaskComplexity):
+            features[0] = complexity_map[complexity.value]
+        elif isinstance(complexity, str):
+            features[0] = complexity_map.get(complexity.lower(), 0.5)
+        else:
+            features[0] = 0.5  # default moderate
+
+        token_estimate = context.get("token_estimate")
+        if isinstance(token_estimate, (int, float)) and token_estimate > 0:
+            features[1] = float(np.log1p(token_estimate) / np.log1p(100_000))
+            features[1] = min(1.0, max(0.0, features[1]))
+        else:
+            features[1] = 0.0
+
+        quality_requirement = context.get("quality_requirement")
+        if isinstance(quality_requirement, (int, float)):
+            features[2] = float(max(0.0, min(1.0, quality_requirement)))
+        else:
+            features[2] = 0.8
+
+        latency_requirement = context.get("latency_requirement_ms")
+        if isinstance(latency_requirement, (int, float)) and latency_requirement > 0:
+            features[3] = 1.0 - min(1.0, float(latency_requirement) / 10_000.0)
+        else:
+            features[3] = 0.5
+
+        cost_budget = context.get("cost_budget_usd")
+        if isinstance(cost_budget, (int, float)) and cost_budget > 0:
+            features[4] = min(1.0, float(cost_budget))
+        else:
+            features[4] = 0.0
+
+        return features
 
     async def update_reward(self, model_id: str, task_id: str, reward_data: dict[str, Any]) -> StepResult:
         """

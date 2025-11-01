@@ -241,9 +241,14 @@ async def batch_processing_example():
 
 async def process_single_request(service: StructuredLLMService, request: StreamingStructuredRequest, request_id: int):
     """Process a single streaming request and return the final response."""
+    print(f"→ Request {request_id}: starting streaming response handling")
     async for response in service.route_structured_streaming(request):
+        if response.partial_result:
+            print(f"   Request {request_id}: partial update received")
         if response.is_complete:
+            print(f"← Request {request_id}: completed")
             return response
+    print(f"⚠️ Request {request_id}: streaming ended without completion")
     return None
 
 

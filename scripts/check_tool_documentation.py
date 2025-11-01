@@ -9,7 +9,7 @@ This script compares the concrete tool Python modules that exist under
     * documented sections without a file reference
     * class naming convention issues (file snake_case -> CamelCase class)
 
-Exit status is non‑zero when there are undocumented tools so it can be used in
+Exit status is non-zero when there are undocumented tools so it can be used in
 CI to enforce coverage.
 """
 

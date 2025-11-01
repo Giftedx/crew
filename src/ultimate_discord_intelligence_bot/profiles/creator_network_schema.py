@@ -6,7 +6,7 @@ from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from typing import Any
 
-from .schema import CreatorProfile, Platforms
+from .schema import CreatorProfile, Platforms, VerificationEvent
 
 
 @dataclass
@@ -350,6 +350,8 @@ def create_enhanced_profile_from_config(creator_id: str, config: dict[str, Any])
         platforms.twitch = config["twitch_channel"]
 
     # Create enhanced profile
+    created_at = datetime.utcnow()
+
     profile = EnhancedCreatorProfile(
         name=config["name"],
         known_as=config.get("known_as"),
@@ -363,8 +365,16 @@ def create_enhanced_profile_from_config(creator_id: str, config: dict[str, Any])
         instagram_stories_enabled=config.get("instagram_stories_enabled", False),
         tiktok_handle=config.get("tiktok_handle"),
         twitter_x_handle=config.get("twitter_x_handle"),
-        discovery_date=datetime.utcnow(),
+        discovery_date=created_at,
         monitoring_priority=config.get("monitoring_priority", 1),
+    )
+
+    profile.verification_log.append(
+        VerificationEvent(
+            timestamp=created_at,
+            status="seeded",
+            details=f"Profile initialized from creator registry entry '{creator_id}'.",
+        )
     )
 
     return profile

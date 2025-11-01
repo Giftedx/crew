@@ -9,7 +9,7 @@ Provides minimal interfaces used by our code/tests:
 - ``from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter``
 """
 
-from . import trace  # re-export submodule for ``from opentelemetry import trace``
+from . import context, propagate, trace  # re-export submodules for compatibility
 
 
 class _BaggageStub:
@@ -25,6 +25,10 @@ class _BaggageStub:
 
     @staticmethod
     def get_all_baggage() -> dict:
+        return {}
+
+    @staticmethod
+    def get_all() -> dict:
         return {}
 
 
@@ -96,4 +100,4 @@ class _InstrumentStub:
 baggage = _BaggageStub()
 metrics = _MetricsStub()
 
-__all__ = ["baggage", "metrics", "trace"]
+__all__ = ["baggage", "context", "metrics", "propagate", "trace"]

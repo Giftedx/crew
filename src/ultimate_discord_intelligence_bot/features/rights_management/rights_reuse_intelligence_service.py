@@ -657,14 +657,12 @@ class RightsReuseIntelligenceService:
             Score for nature of work (0.0 to 1.0)
         """
         # Factual/educational content scores higher than creative
-        if content_type == "educational":
-            return 0.8
-        elif content_type == "news":
-            return 0.7
-        elif content_type == "documentary":
-            return 0.6
-        else:
-            return 0.4
+        mapping = {
+            "educational": 0.8,
+            "news": 0.7,
+            "documentary": 0.6,
+        }
+        return mapping.get(content_type, 0.4)
 
     def _assess_amount_used(self, content_description: str) -> float:
         """Assess amount and substantiality of portion used (fair use factor 3).
@@ -695,14 +693,12 @@ class RightsReuseIntelligenceService:
             Score for market effect (0.0 to 1.0)
         """
         # Smaller audiences have less market impact
-        if audience_size == "small":
-            return 0.8
-        elif audience_size == "medium":
-            return 0.5
-        elif audience_size == "large":
-            return 0.2
-        else:
-            return 0.4
+        mapping = {
+            "small": 0.8,
+            "medium": 0.5,
+            "large": 0.2,
+        }
+        return mapping.get(audience_size, 0.4)
 
     def _generate_fair_use_recommendations(self, factors: dict[str, float]) -> list[str]:
         """Generate fair use recommendations.

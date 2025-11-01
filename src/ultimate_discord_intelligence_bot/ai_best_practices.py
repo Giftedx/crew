@@ -10,6 +10,7 @@ All AI operations in the system should reference these guidelines for optimal pe
 
 from __future__ import annotations
 
+import contextlib
 from dataclasses import dataclass
 from typing import Any
 
@@ -265,7 +266,7 @@ def get_prompt_template(template_name: str, variables: dict[str, Any] | None = N
         try:
             return template.format(**variables)
         except KeyError as e:
-            raise ValueError(f"Missing required variable: {e}")
+            raise ValueError(f"Missing required variable: {e}") from e
 
     return template
 
@@ -343,7 +344,7 @@ def create_optimized_prompt(
         prompt = f"{tags}\n\n{prompt}"
 
     # Format with task description
-    try:
+    with contextlib.suppress(KeyError):
         prompt = prompt.format(
             task=task_description,
             content_url="[Content URL will be provided]",
@@ -354,9 +355,6 @@ def create_optimized_prompt(
             examples="",
             language="Python",
         )
-    except KeyError:
-        # If template doesn't use all variables, return as-is
-        pass
 
     return prompt
 

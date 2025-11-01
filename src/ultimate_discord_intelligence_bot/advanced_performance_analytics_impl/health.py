@@ -16,6 +16,7 @@ def calculate_system_health_score(
     dashboard_data: dict[str, Any],
 ) -> float:
     try:
+        dashboard_snapshot = dashboard_data or {}
         health_factors: list[tuple[str, float, float]] = []
         declining_trends = len([t for t in trends if t.get("trend_direction") == "declining"])
         total_trends = len(trends) if trends else 1
@@ -58,8 +59,23 @@ def calculate_system_health_score(
                 except statistics.StatisticsError:
                     stability_score = 0.8
         health_factors.append(("stability_health", stability_score, 0.2))
+        uptime_pct = dashboard_snapshot.get("uptime_percentage")
+        incident_count = dashboard_snapshot.get("critical_incidents", 0)
+        try:
+            uptime_health = max(0.0, min(1.0, float(uptime_pct) / 100.0)) if uptime_pct is not None else 0.9
+        except (TypeError, ValueError):
+            uptime_health = 0.9
+        try:
+            incident_penalty = max(0.0, 1.0 - (float(incident_count) / 10.0))
+        except (TypeError, ValueError):
+            incident_penalty = 0.8
+        dashboard_health = (uptime_health * 0.6) + (incident_penalty * 0.4)
+        dashboard_weight = float(dashboard_snapshot.get("dashboard_weight", 0.2))
+        health_factors.append(("dashboard_health", dashboard_health, max(0.0, dashboard_weight)))
+        total_weight = sum(weight for _name, _score, weight in health_factors) or 1.0
         total_weighted_score = sum(score * weight for _name, score, weight in health_factors)
-        return max(0.0, min(1.0, total_weighted_score))
+        normalized_score = total_weighted_score / total_weight
+        return max(0.0, min(1.0, normalized_score))
     except Exception as e:
         logger.debug(f"Health score calculation error: {e}")
         return 0.5

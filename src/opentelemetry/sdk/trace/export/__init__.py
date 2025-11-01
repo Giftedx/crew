@@ -38,9 +38,51 @@ class SimpleSpanProcessor:
         with contextlib.suppress(Exception):
             self.exporter.export([span])
 
+    def force_flush(self, timeout_millis: int = 30000) -> bool:  # pragma: no cover - simple
+        return True
+
+    def shutdown(self) -> None:  # pragma: no cover - simple stub
+        with contextlib.suppress(Exception):
+            shutdown = getattr(self.exporter, "shutdown", None)
+            if callable(shutdown):
+                shutdown()
+
 
 class BatchSpanProcessor(SimpleSpanProcessor):
-    """Batch span processor stub - same as SimpleSpanProcessor for testing"""
+    """Batch span processor stub - accumulates spans until flushed."""
+
+    def __init__(self, exporter: SpanExporter) -> None:
+        super().__init__(exporter)
+        self._pending: list[Any] = []
+
+    def on_end(self, span: Any) -> None:
+        self._pending.append(span)
+
+    def _drain(self) -> bool:
+        if not self._pending:
+            return True
+
+        spans = list(self._pending)
+        self._pending.clear()
+        try:
+            result = self.exporter.export(spans)
+        except Exception:
+            # restore pending spans so a later flush still has data
+            self._pending[:0] = spans
+            return False
+
+        if isinstance(result, SpanExportResult):
+            return result.status != SpanExportResult.FAILURE
+        return result is not False
+
+    def force_flush(self, timeout_millis: int = 30000) -> bool:  # pragma: no cover - simple
+        return self._drain()
+
+    def shutdown(self) -> None:  # pragma: no cover - simple stub
+        try:
+            self._drain()
+        finally:
+            super().shutdown()
 
 
 __all__ = [

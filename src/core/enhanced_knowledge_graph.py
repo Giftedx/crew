@@ -514,13 +514,13 @@ class EnhancedKnowledgeGraph:
             logger.error(f"Error getting knowledge graph stats: {e}")
             return {"error": str(e)}
 
-    def export_knowledge_graph(self, tenant: str, format: str = "json") -> dict[str, Any] | str:
+    def export_knowledge_graph(self, tenant: str, fmt: str = "json") -> dict[str, Any] | str:
         """Export knowledge graph in various formats."""
         try:
             nodes = self.store.query_nodes(tenant)
             edges = self.store.query_edges(tenant=tenant)
 
-            if format == "json":
+            if fmt == "json":
                 return {
                     "nodes": [
                         {

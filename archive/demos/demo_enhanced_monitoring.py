@@ -300,6 +300,10 @@ async def generate_sample_performance_data(enhanced_monitor, integration_manager
     """Generate sample performance data for demonstration."""
     print("🔄 Generating sample performance data...")
 
+    if integration_manager is not None:
+        manager_name = getattr(getattr(integration_manager, "__class__", None), "__name__", "manager")
+        print(f"🔗 Integration manager connected: {manager_name}")
+
     sample_agents = ["content_manager", "fact_checker", "truth_scorer", "qa_manager"]
     sample_tools = [
         "FactCheckTool",

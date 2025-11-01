@@ -91,10 +91,11 @@ class TaskDependencyGraph:
         """
         for task_id in task_ids:
             for other_task_id in task_ids:
-                if task_id != other_task_id:
+                if task_id != other_task_id and (
+                    task_id in self.dependencies[other_task_id] or other_task_id in self.dependencies[task_id]
+                ):
                     # Check if tasks have dependencies on each other
-                    if task_id in self.dependencies[other_task_id] or other_task_id in self.dependencies[task_id]:
-                        return False
+                    return False
         return True
 
 

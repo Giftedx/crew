@@ -122,10 +122,9 @@ class DocumentationOrganizer:
         for md_file in self.docs_dir.rglob("*.md"):
             mod_time = datetime.fromtimestamp(md_file.stat().st_mtime)
 
-            if mod_time < cutoff_date:
-                # Check if file has any recent references
-                if not self._has_recent_references(md_file):
-                    stale_files.append(str(md_file))
+            if mod_time < cutoff_date and not self._has_recent_references(md_file):
+                # File is stale with no recent references
+                stale_files.append(str(md_file))
 
         return stale_files
 

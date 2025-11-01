@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
 from ultimate_discord_intelligence_bot.step_result import StepResult
@@ -26,7 +26,7 @@ class FeatureFlag:
     description: str | None = None
     category: str | None = None
     usage_count: int = 0
-    usage_locations: list[str] = []
+    usage_locations: list[str] = field(default_factory=list)
     is_deprecated: bool = False
     deprecation_reason: str | None = None
 
@@ -271,7 +271,7 @@ class FeatureFlagAuditor:
             base_groups[base].append(name)
 
         # Find groups with multiple flags
-        for base, flags in base_groups.items():
+        for _base, flags in base_groups.items():
             if len(flags) > 1:
                 redundant_groups.append(flags)
 

@@ -8,9 +8,48 @@ Extracted from confidence_calculators.py to improve maintainability and organiza
 
 import logging
 import math
+from statistics import NormalDist
 
 
 logger = logging.getLogger(__name__)
+
+
+_NORMAL_DIST = NormalDist()
+_CONFIDENCE_LEVEL_EPSILON = 1e-6
+
+
+def _normalize_confidence_level(confidence_level: float, log: logging.Logger) -> float:
+    """Normalize confidence level to an open interval (0, 1)."""
+
+    default_level = 0.95
+
+    if not 0 < confidence_level < 1:
+        log.warning(
+            "Invalid confidence level %.4f received; defaulting to %.2f.",
+            confidence_level,
+            default_level,
+        )
+        return default_level
+
+    if confidence_level <= _CONFIDENCE_LEVEL_EPSILON:
+        adjusted = _CONFIDENCE_LEVEL_EPSILON
+        log.debug(
+            "Confidence level %.6f too low; clamped to %.6f to avoid infinite z-score.",
+            confidence_level,
+            adjusted,
+        )
+        return adjusted
+
+    if confidence_level >= 1 - _CONFIDENCE_LEVEL_EPSILON:
+        adjusted = 1 - _CONFIDENCE_LEVEL_EPSILON
+        log.debug(
+            "Confidence level %.6f too high; clamped to %.6f to avoid infinite z-score.",
+            confidence_level,
+            adjusted,
+        )
+        return adjusted
+
+    return confidence_level
 
 
 def calculate_confidence_interval(
@@ -33,6 +72,10 @@ def calculate_confidence_interval(
             log = logger
 
         if not data_points or len(data_points) < 2:
+            log.debug(
+                "Insufficient data points for confidence interval calculation. count=%d",
+                len(data_points) if data_points else 0,
+            )
             return (0.0, 1.0)
 
         # Simple confidence interval calculation
@@ -42,12 +85,24 @@ def calculate_confidence_interval(
         variance = sum((x - mean_value) ** 2 for x in data_points) / (len(data_points) - 1)
         std_dev = math.sqrt(variance)
 
-        # Calculate margin of error (simplified approach)
+        # Calculate margin of error using the requested confidence level
         n = len(data_points)
-        margin_of_error = std_dev * math.sqrt(2 / n)  # Approximate for 95% confidence
+
+        normalized_confidence = _normalize_confidence_level(confidence_level, log)
+        alpha = 1.0 - normalized_confidence
+        z_score = _NORMAL_DIST.inv_cdf(1.0 - alpha / 2.0)
+        margin_of_error = z_score * std_dev / math.sqrt(n)
 
         lower_bound = max(0.0, mean_value - margin_of_error)
         upper_bound = min(1.0, mean_value + margin_of_error)
+
+        log.debug(
+            "Calculated confidence interval with confidence_level=%.4f, z_score=%.4f, n=%d, margin=%.4f.",
+            normalized_confidence,
+            z_score,
+            n,
+            margin_of_error,
+        )
 
         return (lower_bound, upper_bound)
 

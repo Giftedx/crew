@@ -371,11 +371,11 @@ class BiasDashboard:
             self.logger.error(f"Mitigation recommendations failed: {e}")
             return StepResult.fail(f"Mitigation recommendations failed: {e}")
 
-    def generate_transparency_report(self, format: str = "json") -> StepResult:
+    def generate_transparency_report(self, fmt: str = "json") -> StepResult:
         """Generate transparency report for users.
 
         Args:
-            format: Report format (json, markdown, html)
+            fmt: Report format (json, markdown, html)
 
         Returns:
             StepResult with transparency report
@@ -426,16 +426,16 @@ class BiasDashboard:
                 ],
             }
 
-            if format == "json":
+            if fmt == "json":
                 return StepResult.ok(data={"transparency_report": report_data})
-            elif format == "markdown":
+            elif fmt == "markdown":
                 markdown_report = self._generate_markdown_report(report_data)
                 return StepResult.ok(data={"transparency_report": markdown_report})
-            elif format == "html":
+            elif fmt == "html":
                 html_report = self._generate_html_report(report_data)
                 return StepResult.ok(data={"transparency_report": html_report})
             else:
-                return StepResult.fail(f"Unsupported format: {format}")
+                return StepResult.fail(f"Unsupported format: {fmt}")
 
         except Exception as e:
             self.logger.error(f"Transparency report generation failed: {e}")

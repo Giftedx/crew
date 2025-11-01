@@ -263,9 +263,8 @@ class HighlightDetectionService:
         """
         if transcript_segments:
             # Use transcript segments to estimate duration
-            if transcript_segments:
-                last_segment = max(transcript_segments, key=lambda s: s.get("end_time", 0))
-                return last_segment.get("end_time", 0) + 30  # Add buffer
+            last_segment = max(transcript_segments, key=lambda s: s.get("end_time", 0))
+            return last_segment.get("end_time", 0) + 30  # Add buffer
 
         # Fallback to audio file duration
         if audio_path and LIBROSA_AVAILABLE:

@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import logging
 import os
 import warnings
@@ -62,10 +63,8 @@ def Field(*args: Any, **kwargs: Any) -> Any:  # unified wrapper adding env->alia
         env = kwargs.pop("env")
         kwargs.setdefault("alias", env)
         if "validation_alias" not in kwargs:
-            try:  # pragma: no cover - defensive
+            with contextlib.suppress(Exception):  # pragma: no cover - defensive
                 kwargs["validation_alias"] = AliasChoices(env, kwargs.get("alias", env))
-            except Exception:
-                pass
     return _PydField(*args, **kwargs)
 
 
@@ -171,6 +170,16 @@ class SecureConfig(BaseSettings):
     enable_instructor: bool = Field(default=True, env="ENABLE_INSTRUCTOR")
     enable_litellm_router: bool = Field(default=False, env="ENABLE_LITELLM_ROUTER")
     enable_logfire: bool = Field(default=False, env="ENABLE_LOGFIRE")
+    enable_langsmith_eval: bool = Field(default=False, env="ENABLE_LANGSMITH_EVAL")
+    enable_langfuse_export: bool = Field(default=False, env="ENABLE_LANGFUSE_EXPORT")
+    enable_agent_ops: bool = Field(
+        default=False,
+        validation_alias=AliasChoices("ENABLE_AGENT_OPS", "ENABLE_AGENTOPS_EXPORT"),
+        alias="ENABLE_AGENT_OPS",
+    )
+    enable_vw_router: bool = Field(default=False, env="ENABLE_VW_ROUTER")
+    enable_llmlingua: bool = Field(default=False, env="ENABLE_LLMLINGUA")
+    enable_letta_memory: bool = Field(default=False, env="ENABLE_LETTA_MEMORY")
 
     # Autonomous AI features
     enable_self_eval_gates: bool = Field(default=False, env="ENABLE_SELF_EVAL_GATES")
@@ -179,6 +188,16 @@ class SecureConfig(BaseSettings):
     enable_cache_promotion: bool = Field(default=False, env="ENABLE_CACHE_PROMOTION")
     enable_prompt_compression: bool = Field(default=False, env="ENABLE_PROMPT_COMPRESSION")
     enable_self_improvement: bool = Field(default=False, env="ENABLE_SELF_IMPROVEMENT")
+
+    # LLM provider routing configuration (new)
+    # Policy: quality_first | cost | latency
+    router_policy: str = Field(default="quality_first", env="ROUTER_POLICY")
+    # Allowlist supports CSV via raw env; parsed list exposed via llm_provider_allowlist
+    llm_provider_allowlist_raw: str | None = Field(default=None, env="LLM_PROVIDER_ALLOWLIST")
+    llm_provider_allowlist: list[str] | None = Field(default=None)
+    # Tasks that should force quality-first
+    quality_first_tasks_raw: str | None = Field(default=None, env="QUALITY_FIRST_TASKS")
+    quality_first_tasks: list[str] | None = Field(default=None)
 
     # HTTP retry (unified flag)
     enable_http_retry: bool = Field(
@@ -257,6 +276,27 @@ class SecureConfig(BaseSettings):
     # LangSmith evaluation
     langsmith_api_key: str | None = Field(default=None, env="LANGSMITH_API_KEY")
     langsmith_project: str = Field(default="discord-intel-evals", env="LANGSMITH_PROJECT")
+    langsmith_evaluation_dataset: str | None = Field(default=None, env="LANGSMITH_EVALUATION_DATASET")
+
+    # Langfuse observability
+    langfuse_public_key: str | None = Field(default=None, env="LANGFUSE_PUBLIC_KEY")
+    langfuse_secret_key: str | None = Field(default=None, env="LANGFUSE_SECRET_KEY")
+    langfuse_base_url: str | None = Field(default=None, env="LANGFUSE_BASE_URL")
+
+    # AgentOps instrumentation
+    agentops_api_key: str | None = Field(default=None, env="AGENTOPS_API_KEY")
+
+    # Vowpal Wabbit router configuration
+    vw_model_repository: str | None = Field(default=None, env="VW_MODEL_REPOSITORY")
+
+    # LLMLingua prompt compression
+    llmlingua_model: str | None = Field(default=None, env="LLMLINGUA_MODEL")
+    llmlingua_target_tokens: int | None = Field(default=None, env="LLMLINGUA_TARGET_TOKENS")
+    llmlingua_compression_ratio: float | None = Field(default=None, env="LLMLINGUA_COMPRESSION_RATIO")
+
+    # Letta memory integration
+    letta_base_url: str | None = Field(default=None, env="LETTA_BASE_URL")
+    letta_api_key: str | None = Field(default=None, env="LETTA_API_KEY")
 
     # Reranker configuration
     reranker_model: str = Field(default="Xenova/ms-marco-MiniLM-L-6-v2", env="RERANKER_MODEL")
@@ -321,6 +361,11 @@ class SecureConfig(BaseSettings):
             "exa": self.exa_api_key,
             "perplexity": self.perplexity_api_key,
             "wolfram": self.wolfram_alpha_app_id,
+            "langsmith": self.langsmith_api_key,
+            "agentops": self.agentops_api_key,
+            "langfuse_public": self.langfuse_public_key,
+            "langfuse_secret": self.langfuse_secret_key,
+            "letta": self.letta_api_key,
         }
 
         api_key = key_mapping.get(service_lower)
@@ -381,6 +426,12 @@ class SecureConfig(BaseSettings):
             "rate_limiting": self.enable_rate_limiting,
             "audit_logging": self.enable_audit_logging,
             "http_retry": self.enable_http_retry,
+            "langsmith_eval": self.enable_langsmith_eval,
+            "langfuse_export": self.enable_langfuse_export,
+            "agent_ops": self.enable_agent_ops,
+            "vw_router": self.enable_vw_router,
+            "llmlingua": self.enable_llmlingua,
+            "letta_memory": self.enable_letta_memory,
         }
         value = feature_mapping.get(feature)
         if value is None:
@@ -438,14 +489,14 @@ class SecureConfig(BaseSettings):
 
             return secret_value
 
-        except KeyError:
+        except KeyError as exc:
             # Fallback to legacy config for backward compatibility
             legacy_value = os.getenv(f"WEBHOOK_SECRET_{webhook_name.upper()}")
             if not legacy_value or legacy_value in ("CHANGE_ME", "changeme", "default"):
                 raise ValueError(
                     f"Webhook secret '{webhook_name}' is not configured or uses default value. "
                     f"Set WEBHOOK_SECRET_{webhook_name.upper()} environment variable."
-                )
+                ) from exc
 
             warnings.warn(
                 "Using legacy webhook secret configuration. Migrate to security.secrets system for rotation support.",
@@ -483,6 +534,31 @@ class SecureConfig(BaseSettings):
                 return False
 
         return env_value
+
+    # --- Validators for derived list settings (pydantic v1/v2 compatible) ---
+    @validator("llm_provider_allowlist", pre=True, always=True)
+    def _parse_provider_allowlist(cls, v: Any, values: dict[str, Any]) -> list[str] | None:
+        if isinstance(v, list):
+            return [str(x).lower() for x in v]
+        raw = values.get("llm_provider_allowlist_raw")
+        if isinstance(raw, list):
+            return [str(x).lower() for x in raw]
+        if isinstance(raw, str):
+            parts = [p.strip() for p in raw.split(",") if p.strip()]
+            return [p.lower() for p in parts] or None
+        return None
+
+    @validator("quality_first_tasks", pre=True, always=True)
+    def _parse_quality_tasks(cls, v: Any, values: dict[str, Any]) -> list[str] | None:
+        if isinstance(v, list):
+            return [str(x) for x in v]
+        raw = values.get("quality_first_tasks_raw")
+        if isinstance(raw, list):
+            return [str(x) for x in raw]
+        if isinstance(raw, str):
+            parts = [p.strip() for p in raw.split(",") if p.strip()]
+            return parts or None
+        return None
 
 
 # Global configuration instance
@@ -591,6 +667,21 @@ if not _HAS_PYDANTIC:
         # Cost management settings
         self.cost_max_per_request = float(_os.getenv("COST_MAX_PER_REQUEST", "1.0"))
         self.cost_budget_daily = float(_os.getenv("COST_BUDGET_DAILY", "100.0"))
+
+        # LLM provider routing (fallback parsing)
+        self.router_policy = _os.getenv("ROUTER_POLICY", "quality_first")
+        self.llm_provider_allowlist_raw = _os.getenv("LLM_PROVIDER_ALLOWLIST")
+        if self.llm_provider_allowlist_raw:
+            self.llm_provider_allowlist = [
+                p.strip().lower() for p in self.llm_provider_allowlist_raw.split(",") if p.strip()
+            ]
+        else:
+            self.llm_provider_allowlist = None
+        self.quality_first_tasks_raw = _os.getenv("QUALITY_FIRST_TASKS")
+        if self.quality_first_tasks_raw:
+            self.quality_first_tasks = [p.strip() for p in self.quality_first_tasks_raw.split(",") if p.strip()]
+        else:
+            self.quality_first_tasks = None
 
         # Database / paths (only those referenced in docs/tests)
         self.archive_db_path = _os.getenv("ARCHIVE_DB_PATH", "./data/archive_manifest.db")

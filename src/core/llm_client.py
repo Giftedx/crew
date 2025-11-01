@@ -129,12 +129,10 @@ class LLMClient:
                     transformed = cached_resp + " (cached)"
             except Exception:  # pragma: no cover
                 transformed = cached_resp
-            try:
+            with contextlib.suppress(Exception):
                 if self._metrics:
                     self._metrics.counter("llm_calls_total", labels={"model": self.model, "cache": "hit"}).inc()
                     self._metrics.counter("llm_tokens_estimated_total", labels={"model": self.model}).add(tokens)
-            except Exception:
-                pass
             return LLMCallResult(
                 response=transformed,
                 cached=True,
@@ -152,20 +150,16 @@ class LLMClient:
             _t0 = _t.monotonic()
             resp = self.provider(messages)
             duration = _t.monotonic() - _t0
-            try:
+            with contextlib.suppress(Exception):
                 if self._metrics:
                     self._metrics.counter("llm_calls_total", labels={"model": self.model, "cache": "miss"}).inc()
                     self._metrics.counter("llm_tokens_estimated_total", labels={"model": self.model}).add(
                         tokens + est_out
                     )
                     self._metrics.histogram("llm_call_seconds", duration, labels={"model": self.model})
-            except Exception:
-                pass
         # Fire-and-forget cache write
-        try:
+        with contextlib.suppress(Exception):  # pragma: no cover - defensive
             self._cache.put(normalized, self.model, resp)
-        except Exception:  # pragma: no cover - defensive
-            pass
         return LLMCallResult(
             response=resp,
             cached=False,

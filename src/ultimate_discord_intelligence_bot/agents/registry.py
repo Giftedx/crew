@@ -47,7 +47,7 @@ def get_agent(name: str) -> type[BaseAgent] | None:
     return AGENT_REGISTRY.get(name)
 
 
-def list_agents() -> List[str]:
+def list_agents() -> list[str]:
     """List all registered agent names.
 
     Returns:

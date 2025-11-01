@@ -54,15 +54,15 @@ async def receive_alert(request: Request) -> dict[str, str]:
             workspace=ctx.workspace_id if ctx else None,
         )
     except SecurityError as e:
-        raise HTTPException(status_code=401, detail=f"Webhook validation failed: {e}")
+        raise HTTPException(status_code=401, detail=f"Webhook validation failed: {e}") from e
 
     # Parse the JSON payload after validation
     import json
 
     try:
         payload = json.loads(body.decode("utf-8")) if body else {}
-    except json.JSONDecodeError:
-        raise HTTPException(status_code=400, detail="Invalid JSON payload")
+    except json.JSONDecodeError as exc:
+        raise HTTPException(status_code=400, detail="Invalid JSON payload") from exc
 
     config = get_config()
     # Try to get the specific alert webhook first, fall back to private, then general
@@ -74,8 +74,14 @@ async def receive_alert(request: Request) -> dict[str, str]:
         except ValueError:
             try:
                 webhook = config.get_webhook("discord")
-            except ValueError:
-                raise HTTPException(status_code=503, detail="Discord alert webhook not configured")
+            except ValueError as final_exc:
+                raise HTTPException(status_code=503, detail="Discord alert webhook not configured") from final_exc
+        else:
+            return await _send_alert_payload(webhook, payload)
+    return await _send_alert_payload(webhook, payload)
+
+
+async def _send_alert_payload(webhook: str, payload: dict[str, Any]) -> dict[str, str]:
     content = _format_alert_text(payload)
     resp = resilient_post(
         webhook,

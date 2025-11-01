@@ -1,3 +1,4 @@
+# ruff: noqa: RUF002
 """Degradation / fallback reporting helper.
 
 This module provides a very small API for recording *structured* degradation
@@ -27,13 +28,45 @@ from threading import RLock
 from time import time
 
 from obs import metrics
-from ultimate_discord_intelligence_bot.settings import Settings
+
+
+try:  # Primary path: use the core settings facade (backed by SecureConfig)
+    from core.settings import get_settings as _core_get_settings
+except Exception:  # pragma: no cover - fallback in limited environments
+    _core_get_settings = None
+
+
+def _load_legacy_settings():
+    """Load legacy Settings as a fallback when the core settings facade is unavailable."""
+    try:
+        from ultimate_discord_intelligence_bot.settings import Settings  # type: ignore
+
+        return Settings()
+    except Exception:  # pragma: no cover - minimal default fallback for tests
+
+        class _DefaultSettings:
+            enable_degradation_reporter = False
+
+        return _DefaultSettings()
+
+
+def get_settings():
+    """
+    Prefer the shared ``core.settings`` facade so feature flags and other configuration
+    stay consistent across the codebase. Fall back to the legacy
+    ``ultimate_discord_intelligence_bot.settings.Settings`` implementation when running
+    in stripped-down test environments that may not have the core facade wired up yet.
+    """
+    if _core_get_settings is not None:
+        return _core_get_settings()
+    return _load_legacy_settings()
 
 
 __all__ = [
     "DegradationEvent",
     "DegradationReporter",
     "get_degradation_reporter",
+    "get_settings",
     "record_degradation",
 ]
 
@@ -73,13 +106,13 @@ class DegradationReporter:
         detail: optional human readable explanation (NOT placed in metric labels)
         added_latency_ms: optional numeric latency impact; feeds a histogram
         """
-        settings = Settings()
+        settings = get_settings()
         if not getattr(settings, "enable_degradation_reporter", False):  # fast path exit
             return
         evt = DegradationEvent(time(), component, event_type, severity, detail, added_latency_ms)
         with self._lock:
             self._events.append(evt)
-        # Metrics – rely on label_ctx for tenant/workspace tagging
+        # Metrics - rely on label_ctx for tenant/workspace tagging
         lbl = metrics.label_ctx()
         metrics.DEGRADATION_EVENTS.labels(lbl["tenant"], lbl["workspace"], component, event_type, severity).inc()
         if added_latency_ms is not None:
@@ -104,7 +137,7 @@ def get_degradation_reporter() -> DegradationReporter:
     global _singleton
     if _singleton is None:
         with _singleton_lock:
-            if _singleton is None:  # double‑checked
+            if _singleton is None:  # double-checked
                 _singleton = DegradationReporter()
     return _singleton
 

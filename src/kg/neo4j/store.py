@@ -73,7 +73,7 @@ class Neo4jKGStore:
     def add_node(
         self,
         tenant: str,
-        type: str,
+        node_type: str,
         name: str,
         attrs: dict[str, Any] | None = None,
         created_at: str = "",
@@ -92,7 +92,7 @@ class Neo4jKGStore:
                 """,
                 tenant=tenant,
                 name=name,
-                type=type,
+                type=node_type,
                 attrs_json=attrs_json,
                 created_at=created_at,
             )
@@ -103,16 +103,16 @@ class Neo4jKGStore:
         self,
         tenant: str,
         *,
-        type: str | None = None,
+        node_type: str | None = None,
         name: str | None = None,
     ) -> list[KGNode]:
         """Query nodes matching criteria."""
         conditions = ["n.tenant = $tenant"]
         params: dict[str, Any] = {"tenant": tenant}
 
-        if type:
+        if node_type:
             conditions.append("n.type = $type")
-            params["type"] = type
+            params["type"] = node_type
         if name:
             conditions.append("n.name = $name")
             params["name"] = name
@@ -167,7 +167,7 @@ class Neo4jKGStore:
         self,
         src_id: int,
         dst_id: int,
-        type: str,
+        edge_type: str,
         *,
         weight: float = 1.0,
         provenance_id: int | None = None,
@@ -186,7 +186,7 @@ class Neo4jKGStore:
                 """,
                 src_id=src_id,
                 dst_id=dst_id,
-                type=type,
+                type=edge_type,
                 weight=weight,
                 provenance_id=provenance_id,
                 created_at=created_at,
@@ -199,7 +199,7 @@ class Neo4jKGStore:
         *,
         src_id: int | None = None,
         dst_id: int | None = None,
-        type: str | None = None,
+        edge_type: str | None = None,
     ) -> list[KGEdge]:
         """Query edges matching criteria."""
         query = "MATCH (src:Node)-[r:RELATES]->(dst:Node)"
@@ -212,9 +212,9 @@ class Neo4jKGStore:
         if dst_id is not None:
             conditions.append("id(dst) = $dst_id")
             params["dst_id"] = dst_id
-        if type is not None:
+        if edge_type is not None:
             conditions.append("r.type = $type")
-            params["type"] = type
+            params["type"] = edge_type
 
         if conditions:
             query += " WHERE " + " AND ".join(conditions)
@@ -247,15 +247,12 @@ class Neo4jKGStore:
             raise ValueError(f"Invalid depth: must be an integer between 1 and 10, got {depth}")
 
         with self.driver.session() as session:
-            result = session.run(
-                """
-                MATCH path = (start:Node)-[*1..%d]->(neighbor:Node)
+            query = f"""
+                MATCH path = (start:Node)-[*1..{depth}]->(neighbor:Node)
                 WHERE id(start) = $node_id
                 RETURN DISTINCT id(neighbor) as neighbor_id
                 """
-                % depth,
-                node_id=node_id,
-            )
+            result = session.run(query, node_id=node_id)
             return [record["neighbor_id"] for record in result]
 
     def cypher_query(self, query: str, **params: Any) -> list[dict[str, Any]]:
@@ -271,16 +268,13 @@ class Neo4jKGStore:
             raise ValueError(f"Invalid max_depth: must be an integer between 1 and 10, got {max_depth}")
 
         with self.driver.session() as session:
-            result = session.run(
-                """
-                MATCH path = (center:Node)-[*1..%d]-(connected:Node)
+            query = f"""
+                MATCH path = (center:Node)-[*1..{max_depth}]-(connected:Node)
                 WHERE id(center) = $node_id
                 RETURN path, nodes(path) as nodes, relationships(path) as edges
                 LIMIT 100
                 """
-                % max_depth,
-                node_id=node_id,
-            )
+            result = session.run(query, node_id=node_id)
 
             nodes = set()
             edges = []

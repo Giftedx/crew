@@ -446,25 +446,20 @@ class CrossModalCorrelator:
 
         try:
             # Perform correlation analysis
-            if CorrelationType.TEXT_AUDIO_EMOTION in analysis_types:
-                if "text" in modalities and "audio" in modalities:
-                    correlations.append(self._correlate_text_audio_emotion(modalities["text"], modalities["audio"]))
+            if CorrelationType.TEXT_AUDIO_EMOTION in analysis_types and "text" in modalities and "audio" in modalities:
+                correlations.append(self._correlate_text_audio_emotion(modalities["text"], modalities["audio"]))
 
-            if CorrelationType.TEXT_IMAGE_CONTENT in analysis_types:
-                if "text" in modalities and "image" in modalities:
-                    correlations.append(self._correlate_text_image_content(modalities["text"], modalities["image"]))
+            if CorrelationType.TEXT_IMAGE_CONTENT in analysis_types and "text" in modalities and "image" in modalities:
+                correlations.append(self._correlate_text_image_content(modalities["text"], modalities["image"]))
 
-            if CorrelationType.AUDIO_VIDEO_SYNC in analysis_types:
-                if "audio" in modalities and "video" in modalities:
-                    correlations.append(self._correlate_audio_video_sync(modalities["audio"], modalities["video"]))
+            if CorrelationType.AUDIO_VIDEO_SYNC in analysis_types and "audio" in modalities and "video" in modalities:
+                correlations.append(self._correlate_audio_video_sync(modalities["audio"], modalities["video"]))
 
-            if CorrelationType.TEXT_VIDEO_ACTIVITY in analysis_types:
-                if "text" in modalities and "video" in modalities:
-                    correlations.append(self._correlate_text_video_activity(modalities["text"], modalities["video"]))
+            if CorrelationType.TEXT_VIDEO_ACTIVITY in analysis_types and "text" in modalities and "video" in modalities:
+                correlations.append(self._correlate_text_video_activity(modalities["text"], modalities["video"]))
 
-            if CorrelationType.IMAGE_VIDEO_SCENE in analysis_types:
-                if "image" in modalities and "video" in modalities:
-                    correlations.append(self._correlate_image_video_scene(modalities["image"], modalities["video"]))
+            if CorrelationType.IMAGE_VIDEO_SCENE in analysis_types and "image" in modalities and "video" in modalities:
+                correlations.append(self._correlate_image_video_scene(modalities["image"], modalities["video"]))
 
             if CorrelationType.MULTIMODAL_SENTIMENT in analysis_types:
                 correlations.append(self._analyze_multimodal_sentiment(modalities))

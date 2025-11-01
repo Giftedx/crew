@@ -27,4 +27,6 @@ official dependency instead: ``pip install discord.py``.
 
 
 def __getattr__(name: str) -> Any:  # pragma: no cover - shim should not be used
-    raise ImportError("Local 'src/discord' shim is disabled. Install 'discord.py' and import the real package.")
+    raise ImportError(
+        f"Local 'src/discord' shim is disabled. Attribute {name!r} is unavailable; install 'discord.py' and import the real package."
+    )

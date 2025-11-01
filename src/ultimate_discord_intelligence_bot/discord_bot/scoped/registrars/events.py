@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import contextlib
 
 try:
     from discord.ext import commands  # type: ignore
@@ -35,6 +36,29 @@ def register_events(bot_owner) -> None:
     async def on_message(message):
         if message.author == bot.user:
             return
+        
+        # Try to process through conversational pipeline (if enabled)
+        try:
+            from discord.bot_integration import get_pipeline_service
+            
+            # Only process if not a command
+            content = getattr(message, "content", "") or ""
+            if not content.startswith(("!", "/", "?")):  # Skip command prefixes
+                pipeline_service = get_pipeline_service()
+                result = await pipeline_service.process_discord_message(message)
+                
+                # If pipeline decided to respond, send the response
+                if result.success and result.data and result.data.should_respond and result.data.response_content:
+                    with contextlib.suppress(Exception):
+                        await message.channel.send(result.data.response_content)
+        except ImportError:
+            # Pipeline service not available, skip
+            pass
+        except Exception as e:
+            # Log error but don't break command processing
+            print(f"⚠️ Conversational pipeline error: {e}")
+        
+        # Always process commands
         await bot.process_commands(message)
 
 

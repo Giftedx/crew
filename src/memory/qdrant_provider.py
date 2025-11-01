@@ -2,7 +2,7 @@
 
 Having a single construction point lets us:
 * Enable / disable gRPC preferentially from config.
-* Re‑use an underlying HTTP connection pool.
+* Re-use an underlying HTTP connection pool.
 * Add future lifecycle hooks (shutdown, telemetry) in one place.
 
 Typing notes:
@@ -52,8 +52,8 @@ else:  # runtime fallback if dependency unavailable (tests may monkeypatch)
 
 
 class _DummyPoint:
-    def __init__(self, id: int | str, vector: Sequence[float], payload: dict[str, Any]):
-        self.id = id
+    def __init__(self, point_id: int | str, vector: Sequence[float], payload: dict[str, Any]):
+        self.id = point_id
         self.vector = list(vector)
         self.payload = payload
         # mimic qdrant point search result attribute
@@ -176,7 +176,7 @@ class _DummyClient:
         limit: int = 100,
         with_payload: bool = True,
         offset: int | None = None,
-        filter: Any | None = None,
+        query_filter: Any | None = None,
     ) -> tuple[list[_DummyPoint], int | None]:  # pragma: no cover - used by tests
         bucket = self._store.get(collection_name, [])
         start = int(offset or 0)
@@ -184,13 +184,13 @@ class _DummyClient:
         chunk = bucket[start:end]
         next_off: int | None = end if end < len(bucket) else None
         # Very basic payload filter support: expect callable or dict equality checks
-        if filter:
+        if query_filter:
 
             def _match(p: _DummyPoint) -> bool:
-                if callable(filter):
-                    return bool(filter(p.payload))
-                if isinstance(filter, dict):
-                    return all(p.payload.get(k) == v for k, v in filter.items())
+                if callable(query_filter):
+                    return bool(query_filter(p.payload))
+                if isinstance(query_filter, dict):
+                    return all(p.payload.get(k) == v for k, v in query_filter.items())
                 return True
 
             chunk = [p for p in chunk if _match(p)]
@@ -203,7 +203,7 @@ class _DummyClient:
         collection_name: str,
         ids: Sequence[int | str] | None = None,
         points: Sequence[int | str] | None = None,
-        filter: Any | None = None,
+        query_filter: Any | None = None,
     ) -> None:  # pragma: no cover - used by tests
         bucket = self._store.get(collection_name, [])
         id_set = set()
@@ -211,13 +211,13 @@ class _DummyClient:
             id_set.update(ids)
         if points is not None:
             id_set.update(points)
-        if filter is not None:
+        if query_filter is not None:
             # filter may be a callable(payload)->bool in our tests
-            if callable(filter):
-                to_delete = {p.id for p in bucket if filter(p.payload)}
+            if callable(query_filter):
+                to_delete = {p.id for p in bucket if query_filter(p.payload)}
                 id_set.update(to_delete)
-            elif isinstance(filter, dict):
-                to_delete = {p.id for p in bucket if all(p.payload.get(k) == v for k, v in filter.items())}
+            elif isinstance(query_filter, dict):
+                to_delete = {p.id for p in bucket if all(p.payload.get(k) == v for k, v in query_filter.items())}
                 id_set.update(to_delete)
         if not id_set:
             return

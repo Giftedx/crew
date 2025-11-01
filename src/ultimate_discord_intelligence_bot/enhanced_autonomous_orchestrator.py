@@ -141,7 +141,7 @@ class EnhancedAutonomousOrchestrator:
 
         try:
             # Import and initialize CrewAI components
-            from .crew import UltimateDiscordIntelligenceBotCrew
+            from .crew_core import UltimateDiscordIntelligenceBotCrew
             from .tenancy import with_tenant
 
             crew_instance = UltimateDiscordIntelligenceBotCrew()

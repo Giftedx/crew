@@ -70,22 +70,38 @@ class ConfigValidator:
         self.warnings.clear()
 
         # Check for conflicting flags
-        if hasattr(flags, "ENABLE_DEBUG_MODE") and hasattr(flags, "ENABLE_TEST_MODE"):
-            if flags.ENABLE_DEBUG_MODE and flags.ENABLE_TEST_MODE:
-                self.warnings.append("Both DEBUG_MODE and TEST_MODE are enabled")
+        if (
+            hasattr(flags, "ENABLE_DEBUG_MODE")
+            and hasattr(flags, "ENABLE_TEST_MODE")
+            and flags.ENABLE_DEBUG_MODE
+            and flags.ENABLE_TEST_MODE
+        ):
+            self.warnings.append("Both DEBUG_MODE and TEST_MODE are enabled")
 
         # Check for missing dependencies
-        if hasattr(flags, "ENABLE_UNIFIED_KNOWLEDGE") and hasattr(flags, "ENABLE_VECTOR_MEMORY"):
-            if flags.ENABLE_UNIFIED_KNOWLEDGE and not flags.ENABLE_VECTOR_MEMORY:
-                self.warnings.append("ENABLE_UNIFIED_KNOWLEDGE requires ENABLE_VECTOR_MEMORY")
+        if (
+            hasattr(flags, "ENABLE_UNIFIED_KNOWLEDGE")
+            and hasattr(flags, "ENABLE_VECTOR_MEMORY")
+            and flags.ENABLE_UNIFIED_KNOWLEDGE
+            and not flags.ENABLE_VECTOR_MEMORY
+        ):
+            self.warnings.append("ENABLE_UNIFIED_KNOWLEDGE requires ENABLE_VECTOR_MEMORY")
 
-        if hasattr(flags, "ENABLE_GRAPH_MEMORY") and hasattr(flags, "ENABLE_VECTOR_MEMORY"):
-            if flags.ENABLE_GRAPH_MEMORY and not flags.ENABLE_VECTOR_MEMORY:
-                self.warnings.append("ENABLE_GRAPH_MEMORY requires ENABLE_VECTOR_MEMORY")
+        if (
+            hasattr(flags, "ENABLE_GRAPH_MEMORY")
+            and hasattr(flags, "ENABLE_VECTOR_MEMORY")
+            and flags.ENABLE_GRAPH_MEMORY
+            and not flags.ENABLE_VECTOR_MEMORY
+        ):
+            self.warnings.append("ENABLE_GRAPH_MEMORY requires ENABLE_VECTOR_MEMORY")
 
-        if hasattr(flags, "ENABLE_ALERTS") and hasattr(flags, "ENABLE_METRICS"):
-            if flags.ENABLE_ALERTS and not flags.ENABLE_METRICS:
-                self.warnings.append("ENABLE_ALERTS requires ENABLE_METRICS")
+        if (
+            hasattr(flags, "ENABLE_ALERTS")
+            and hasattr(flags, "ENABLE_METRICS")
+            and flags.ENABLE_ALERTS
+            and not flags.ENABLE_METRICS
+        ):
+            self.warnings.append("ENABLE_ALERTS requires ENABLE_METRICS")
 
         return len(self.errors) == 0
 

@@ -85,7 +85,7 @@ def record(content_hash: str, meta: dict[str, Any]) -> None:
     """Store ``meta`` under ``content_hash``.
 
     ``meta`` must contain ``attachment_ids`` as a list of strings and may include
-    ``compression`` stats which will be JSON‑encoded for persistence.
+    ``compression`` stats which will be JSON-encoded for persistence.
     """
     conn = _connect()
     with conn:

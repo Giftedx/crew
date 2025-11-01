@@ -121,14 +121,13 @@ class UnifiedConfig:
             if env_value is not None:
                 # Convert to appropriate type
                 field_type = field_info.type
-                if field_type == bool:
+                if field_type is bool:
                     value = env_value.lower() in ("true", "1", "yes", "on")
-                elif field_type == int:
+                elif field_type is int:
                     value = int(env_value)
-                elif field_type == str:
+                elif field_type is str:
                     value = env_value
-                elif hasattr(field_type, "__origin__") and field_type.__origin__ is type(None):
-                    # Optional type
+                elif hasattr(field_type, "__origin__") and field_type.__origin__ is type(None):  # Optional type
                     value = env_value or None
                 else:
                     value = env_value

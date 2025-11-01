@@ -188,6 +188,10 @@ async def run_single_benchmark(
     combo = FLAG_COMBINATIONS[combination_id]
     logger.info(f"Running Combination {combination_id} ({combo['name']}) - Iteration {iteration}")
 
+    run_logs_dir = output_dir / "logs"
+    run_logs_dir.mkdir(parents=True, exist_ok=True)
+    run_log_path = run_logs_dir / f"combination_{combination_id}_iteration_{iteration}.json"
+
     # Set core parallelization environment variables for this combination while preserving originals
     env_backup: dict[str, str | None] = {}
     core_flags = [
@@ -262,6 +266,20 @@ async def run_single_benchmark(
         }
 
         return result
+
+        run_log_path.write_text(
+            json.dumps(
+                {
+                    "logged_at": datetime.now().isoformat(),
+                    "combination_id": combination_id,
+                    "iteration": iteration,
+                    "timing": result["timing"],
+                    "flags": result["flags"],
+                },
+                indent=2,
+            ),
+            encoding="utf-8",
+        )
 
     except Exception as e:
         logger.error(f"  ERROR: {e!s}", exc_info=True)
@@ -379,7 +397,7 @@ def generate_summary_report(all_results: dict[int, list[dict[str, Any]]], output
         # Fallback scan for earliest successful duration
         candidate = None
         earliest_ts = None
-        for combo_id, runs in all_results.items():
+        for _combo_id, runs in all_results.items():
             for r in runs:
                 if r.get("success") and r.get("timing", {}).get("duration_seconds"):
                     # Parse start time if available

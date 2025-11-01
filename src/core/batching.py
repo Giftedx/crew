@@ -7,11 +7,12 @@ and improve overall throughput in the Ultimate Discord Intelligence Bot.
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
 import sqlite3
 import time
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, ClassVar, cast
 
 from .error_handling import log_error
 
@@ -125,6 +126,7 @@ class RequestBatcher:
         self._last_flush_time = time.time()
         self._metrics = BatchMetrics()
         self._flush_lock = asyncio.Lock()
+        self._flush_task: asyncio.Task[None] | None = None
 
     def add_operation(self, config: BatchConfig) -> None:
         """Add an operation to the batch."""
@@ -141,14 +143,10 @@ class RequestBatcher:
 
         # Auto-flush if batch size exceeded
         if len(self._operations) >= self.batch_size:
-            try:
+            with contextlib.suppress(RuntimeError):
                 # Try to create async task if event loop is running
-                asyncio.create_task(self.flush())
-            except RuntimeError:
-                # No event loop running, flush synchronously
-                # Note: This is a simplified sync version for testing
-                # In production, this should be handled differently
-                pass
+                task = asyncio.create_task(self.flush())
+                self._flush_task = task
 
     def add_insert(
         self,
@@ -472,8 +470,8 @@ class BulkInserter:
 class BatchingManager:
     """Manager for batching instances."""
 
-    _batcher_instances: dict[int, RequestBatcher] = {}
-    _bulk_inserter_instances: dict[int, BulkInserter] = {}
+    _batcher_instances: ClassVar[dict[int, RequestBatcher]] = {}
+    _bulk_inserter_instances: ClassVar[dict[int, BulkInserter]] = {}
 
     @classmethod
     def get_batcher(cls, conn: sqlite3.Connection) -> RequestBatcher:

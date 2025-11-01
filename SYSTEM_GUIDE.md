@@ -51,7 +51,7 @@ I've created 4 powerful scripts to help you manage the entire system:
 ./stop-all-services.sh
 ```
 
-**Clean shutdown of all services**
+#### Clean shutdown of all services
 
 ---
 
@@ -66,18 +66,18 @@ I've created 4 powerful scripts to help you manage the entire system:
    - Stores memories in vector DB
    - Posts results to Discord
 
-2. **FastAPI Server** - HTTP API + A2A endpoints
+1. **FastAPI Server** - HTTP API + A2A endpoints
    - REST API for content processing
    - A2A JSON-RPC adapter
    - Prometheus metrics endpoint
    - Health checks
 
-3. **CrewAI** - Autonomous agent orchestration
+1. **CrewAI** - Autonomous agent orchestration
    - Multi-agent task execution
    - Research and analysis workflows
    - Automatic task planning
 
-4. **MCP Server** - Model Context Protocol server
+1. **MCP Server** - Model Context Protocol server
    - Tool access for AI agents
    - Memory management
    - Observability integration
@@ -110,9 +110,9 @@ I've created 4 powerful scripts to help you manage the entire system:
 This will:
 
 1. Create Python virtual environment (`.venv/`)
-2. Install all dependencies
-3. Create `.env` file from template
-4. Run system health check
+1. Install all dependencies
+1. Create `.env` file from template
+1. Run system health check
 
 ### Step 2: Configure API Keys
 
@@ -212,13 +212,13 @@ This enables:
    ./manage-services.sh  # Option 2 or 3
    ```
 
-2. In Discord channel, send:
+1. In Discord channel, send:
 
-   ```
+   ```text
    !analyze https://youtube.com/watch?v=VIDEO_ID
    ```
 
-3. Bot will:
+1. Bot will:
    - Download video
    - Transcribe audio
    - Analyze content
@@ -466,7 +466,7 @@ ENABLE_DEVELOPMENT_MODE=true        # Mock services
 | **Health Check** | `make doctor` |
 | **Discord Bot** | `make run-discord` |
 | **Discord Bot Enhanced** | `make run-discord-enhanced` |
-| **API Server** | `python -m uvicorn server.app:app --reload` |
+| **API Server** | `python -m server.app` |
 | **CrewAI** | `make run-crew` |
 | **View Logs** | `tail -f logs/services/*.log` |
 | **Format Code** | `make format` |
@@ -477,13 +477,13 @@ ENABLE_DEVELOPMENT_MODE=true        # Mock services
 
 ## Project Structure
 
-```
+```text
 crew/
 ├── manage-services.sh           # 🎮 Interactive service manager
 ├── start-all-services.sh        # 🚀 Start services wizard
 ├── check-status.sh              # 📊 Status checker
 ├── stop-all-services.sh         # 🛑 Stop all services
-├── QUICK_START_GUIDE.md         # 📖 This guide
+├── SYSTEM_GUIDE.md              # 📖 This guide
 ├── .env                         # ⚙️ Configuration
 ├── Makefile                     # 🔧 Build automation
 │
@@ -514,28 +514,28 @@ crew/
 ### For First-Time Users
 
 1. ✅ Run `./manage-services.sh` (option 1)
-2. ✅ Configure `.env` with API keys
-3. ✅ Start Discord Bot Enhanced (option 3)
-4. ✅ Test with Discord command: `!analyze URL`
+1. ✅ Configure `.env` with API keys
+1. ✅ Start Discord Bot Enhanced (option 3)
+1. ✅ Test with Discord command: `!analyze URL`
 
 ### For Developers
 
 1. Read: `docs/DEVELOPER_ONBOARDING_GUIDE.md`
-2. Review: `.github/copilot-instructions.md`
-3. Explore: `docs/capability_map.md` (84 tools)
-4. Setup: `make setup-hooks` (git hooks)
+1. Review: `.github/copilot-instructions.md`
+1. Explore: `docs/capability_map.md` (84 tools)
+1. Setup: `make setup-hooks` (git hooks)
 
 ### For Operators
 
 1. Configure: `ops/deployment/k8s/`
-2. Monitor: `ops/monitoring/`
-3. Review: `docs/deployment_guide.md`
+1. Monitor: `ops/monitoring/`
+1. Review: `docs/deployment_guide.md`
 
 ### For AI/ML Engineers
 
 1. Study: `docs/autonomous_video_follow.md`
-2. Configure: `docs/crewai_integration.md`
-3. Tune: `docs/advanced-contextual-bandits.md`
+1. Configure: `docs/crewai_integration.md`
+1. Tune: `docs/advanced-contextual-bandits.md`
 
 ---
 
@@ -563,7 +563,7 @@ crew/
 
 ### Multi-Tenant Pipeline
 
-```
+```text
 download → transcription → analysis → memory → Discord posting
 ```
 

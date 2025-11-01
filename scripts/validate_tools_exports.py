@@ -10,6 +10,7 @@ Checks:
 
 from __future__ import annotations
 
+import argparse
 import ast
 import importlib
 import inspect
@@ -19,12 +20,35 @@ from pathlib import Path
 
 
 def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description="Validate exported tools", add_help=True)
+    parser.add_argument(
+        "--tools-root",
+        default="src/ultimate_discord_intelligence_bot/tools",
+        help="Root directory containing tool modules",
+    )
+    parser.add_argument(
+        "--tool",
+        dest="tools",
+        action="append",
+        default=[],
+        help="Limit validation to specific tool names (may be provided multiple times)",
+    )
+    args = parser.parse_args(argv if argv is not None else sys.argv[1:])
+
     sys.path.insert(0, "src")
     mod = importlib.import_module("ultimate_discord_intelligence_bot.tools")
     ok: list[str] = []
     stubs: list[str] = []
     failures: list[tuple[str, str]] = []
-    for name in getattr(mod, "__all__", []):
+    exported_names = list(getattr(mod, "__all__", []))
+    available_exports = set(exported_names)
+    if args.tools:
+        selected = set(args.tools)
+        exported_names = [name for name in exported_names if name in selected]
+        missing_filters = sorted(selected.difference(available_exports))
+        if missing_filters:
+            print(f"[tools-validate] Warning: requested unknown tools {missing_filters}")
+    for name in exported_names:
         try:
             obj = getattr(mod, name)
             if inspect.isclass(obj) and obj.__module__ == "ultimate_discord_intelligence_bot.tools.__init__":
@@ -41,7 +65,7 @@ def main(argv: list[str] | None = None) -> int:
 
     # Static coverage: ensure every BaseTool subclass is exported via __all__
     missing_exports: list[str] = []
-    tools_root = Path("src/ultimate_discord_intelligence_bot/tools")
+    tools_root = Path(args.tools_root)
     exported = set(getattr(mod, "__all__", []))
 
     # Allowlist for tool-like classes intentionally not exported via tools.__all__

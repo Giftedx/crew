@@ -1,12 +1,22 @@
 from __future__ import annotations
 
 from collections import Counter, defaultdict
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from core.time import default_utc_now  # type: ignore[import-not-found]
 
 from .models import PerformanceMetric, ToolUsagePattern
+
+
+def ensure_utc(dt: datetime) -> datetime:
+    """Ensure a datetime is timezone-aware in UTC.
+
+    If the provided datetime is naive, assume it is UTC and attach UTC tzinfo.
+    """
+    if dt.tzinfo is None or dt.tzinfo.utcoffset(dt) is None:  # naive
+        return dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone(timezone.utc)
 
 
 def recent_interactions(history: dict[str, list[dict[str, Any]]], agent_name: str, days: int) -> list[dict[str, Any]]:

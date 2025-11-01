@@ -181,11 +181,7 @@ class MultiModalSynthesizer:
                 agent_name = agent_stage_mapping[stage_name]
 
                 # Create mock StepResult if data is just a dict
-                if isinstance(stage_data, dict):
-                    # Preserve existing mapping semantics and avoid positional args
-                    mock_result = StepResult.from_dict(stage_data)
-                else:
-                    mock_result = stage_data
+                mock_result = StepResult.from_dict(stage_data) if isinstance(stage_data, dict) else stage_data
 
                 contribution = AgentContribution(
                     agent_name=agent_name,

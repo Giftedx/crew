@@ -63,7 +63,7 @@ class AgentContextualBandit:
         self.agent_parameters = {agent_id: np.random.randn(context_dim) * 0.01 for agent_id in self.agents}
 
         # Performance tracking
-        self.learning_rate = learning_rate
+        self.learning_rate = 0.1
 
         self.agent_counts: defaultdict[str, int] = defaultdict(int)
         self.agent_rewards: defaultdict[str, list[float]] = defaultdict(list)

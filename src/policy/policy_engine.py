@@ -106,6 +106,23 @@ def check_payload(payload: str | bytes, context: dict[str, Any], policy: Policy)
     media_type = context.get("media_type")
     if media_type in policy.forbidden_types:
         reasons.append("forbidden media type")
+
+    text_payload = payload.decode("utf-8", errors="ignore") if isinstance(payload, bytes) else str(payload)
+    lowered = text_payload.lower()
+
+    max_chars = context.get("max_payload_chars")
+    if isinstance(max_chars, int) and max_chars > 0 and len(text_payload) > max_chars:
+        reasons.append("payload exceeds permitted length")
+
+    for pii_key, label in policy.pii_types.items():
+        token = policy.masks.get(pii_key)
+        if token and token in text_payload:
+            continue  # already masked
+        if pii_key in lowered:
+            reasons.append(f"contains potential {label.lower()}")
+
+    if reasons:
+        context.setdefault("payload_preview", text_payload[:128])
     return Decision("allow" if not reasons else "block", reasons)
 
 

@@ -8,6 +8,7 @@ from typing import Any
 from crewai.tools import BaseTool
 from pydantic import BaseModel, Field
 
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
@@ -76,6 +77,7 @@ class ClaimVerifierTool(BaseTool):
     def __init__(self):
         """Initialize the claim verifier tool."""
         super().__init__()
+        self._metrics = get_metrics()
         self.backends = {
             "serply": self._verify_with_serply,
             "exa": self._verify_with_exa,
@@ -163,10 +165,24 @@ class ClaimVerifierTool(BaseTool):
                 backend_performance=backend_performance,
             )
 
+            try:
+                self._metrics.counter(
+                    "tool_runs_total",
+                    labels={"tool": self.name or "claim_verifier", "outcome": "success"},
+                ).inc()
+            except Exception as exc:
+                logger.debug("metrics increment failed: %s", exc)
             return StepResult.ok(data=self._serialize_verification(claim_verification))
 
         except Exception as e:
             logger.error(f"Claim verification failed: {e!s}")
+            try:
+                self._metrics.counter(
+                    "tool_runs_total",
+                    labels={"tool": self.name or "claim_verifier", "outcome": "error"},
+                ).inc()
+            except Exception as exc:
+                logger.debug("metrics increment failed (error path): %s", exc)
             return StepResult.fail(f"Claim verification failed: {e!s}")
 
     def _parse_claim(self, claim_text: str, context: str) -> dict[str, Any]:

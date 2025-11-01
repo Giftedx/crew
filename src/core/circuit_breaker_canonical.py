@@ -251,10 +251,9 @@ class CircuitBreaker(Generic[T]):
             if self.state == CircuitState.HALF_OPEN:
                 # Failure during half-open immediately opens circuit
                 self._open_circuit()
-            elif self.state == CircuitState.CLOSED:
+            elif self.state == CircuitState.CLOSED and self._should_open_circuit():
                 # Check if we should open circuit
-                if self._should_open_circuit():
-                    self._open_circuit()
+                self._open_circuit()
 
     def _open_circuit(self):
         """Transition circuit to open state."""
@@ -325,15 +324,14 @@ class CircuitBreaker(Generic[T]):
                             self.state,
                             self.last_failure,
                         )
-            elif self.state == CircuitState.HALF_OPEN:
+            elif self.state == CircuitState.HALF_OPEN and self.half_open_call_count >= self.config.half_open_max_calls:
                 # Check if we've exceeded half-open call limit
-                if self.half_open_call_count >= self.config.half_open_max_calls:
-                    raise CircuitBreakerOpenError(
-                        f"Circuit breaker '{self.name}' half-open call limit exceeded",
-                        self.name,
-                        self.state,
-                        self.last_failure,
-                    )
+                raise CircuitBreakerOpenError(
+                    f"Circuit breaker '{self.name}' half-open call limit exceeded",
+                    self.name,
+                    self.state,
+                    self.last_failure,
+                )
 
         # Execute with concurrency control and timeout
         async with self._semaphore:

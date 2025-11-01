@@ -167,12 +167,10 @@ class ConnectionPool(Generic[T]):
             if resource in self._active:
                 self._active.remove(resource)
 
-                # Check if resource is still valid
-                if self.factory.is_resource_valid(resource):
-                    # Check if pool is not at max capacity
-                    if len(self._pool) < self.max_size:
-                        self._pool.append(resource)
-                        return
+                # Check if resource is still valid and pool has capacity
+                if self.factory.is_resource_valid(resource) and len(self._pool) < self.max_size:
+                    self._pool.append(resource)
+                    return
 
                 # Resource invalid or pool full, destroy it
                 await self._destroy_resource(resource)

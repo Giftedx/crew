@@ -69,10 +69,13 @@ def populate_agent_tool_context(
         from ..tools.mem0_memory_tool import Mem0MemoryTool
 
         settings = Settings()
-        if settings.enable_enhanced_memory and settings.mem0_api_key:
-            if not any(isinstance(t, Mem0MemoryTool) for t in agent.tools):
-                agent.tools.append(Mem0MemoryTool())
-                _logger.info(f"🧠 Added Mem0MemoryTool to agent: {getattr(agent, 'role', 'unknown')}")
+        if (
+            settings.enable_enhanced_memory
+            and settings.mem0_api_key
+            and not any(isinstance(t, Mem0MemoryTool) for t in agent.tools)
+        ):
+            agent.tools.append(Mem0MemoryTool())
+            _logger.info(f"🧠 Added Mem0MemoryTool to agent: {getattr(agent, 'role', 'unknown')}")
     except ImportError:
         _logger.debug("Mem0MemoryTool not available, skipping.")
     except Exception as e:

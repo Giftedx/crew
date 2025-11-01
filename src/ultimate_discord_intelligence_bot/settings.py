@@ -50,6 +50,16 @@ class Settings:
         # Validate configuration
         self.is_valid = validate_configuration()
 
+    def _resolve_secure_config(self):
+        """Best-effort resolver for ``core.secure_config`` without hard dependency."""
+
+        try:
+            from core.secure_config import get_config  # type: ignore import-not-found
+
+            return get_config()
+        except Exception:
+            return None
+
     # Base configuration properties
     @property
     def environment(self) -> str:
@@ -90,6 +100,20 @@ class Settings:
     def qdrant_api_key(self) -> str | None:
         """Get Qdrant API key."""
         return self.base_config.qdrant_api_key
+
+    @property
+    def discord_webhook(self) -> str | None:
+        """Resolve Discord webhook URL from secure config or environment."""
+
+        secure_config = self._resolve_secure_config()
+        if secure_config is not None:
+            try:
+                webhook = getattr(secure_config, "discord_webhook", None)
+                if webhook:
+                    return webhook
+            except Exception:
+                pass
+        return os.getenv("DISCORD_WEBHOOK")
 
     # Path configuration properties
     @property
@@ -243,10 +267,15 @@ def _export_settings():
             "OPENAI_API_KEY": settings.openai_api_key,
             "OPENROUTER_API_KEY": settings.openrouter_api_key,
             "DISCORD_BOT_TOKEN": settings.discord_bot_token,
+            "DISCORD_WEBHOOK": settings.discord_webhook,
             "QDRANT_URL": settings.qdrant_url,
             "QDRANT_API_KEY": settings.qdrant_api_key,
         }
     )
+
+    # Export webhook URL variants commonly used across legacy modules
+    if "DISCORD_WEBHOOK_URL" not in globals():
+        globals()["DISCORD_WEBHOOK_URL"] = os.getenv("DISCORD_WEBHOOK_URL") or settings.discord_webhook
 
     # Export paths
     globals().update(

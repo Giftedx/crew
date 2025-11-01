@@ -277,7 +277,35 @@ def create_executive_summary(analysis_data: dict[str, Any], threat_data: dict[st
     """
     try:
         threat_level = threat_data.get("threat_level", "unknown")
-        return f"Content analysis completed with {threat_level} threat assessment. Key intelligence indicators processed and verified."
+        summary_parts = [
+            f"Overall threat posture classified as {threat_level}.",
+        ]
+
+        content_metadata = analysis_data.get("content_metadata", {}) if isinstance(analysis_data, dict) else {}
+        title = content_metadata.get("title") or analysis_data.get("title") if isinstance(analysis_data, dict) else None
+        if title:
+            summary_parts.append(f'Focus asset "{title}" underwent full-spectrum analysis.')
+
+        sentiment = analysis_data.get("sentiment") if isinstance(analysis_data, dict) else None
+        if not sentiment and isinstance(analysis_data, dict):
+            sentiment = content_metadata.get("sentiment") or analysis_data.get("sentiment_summary", {}).get("overall")
+        if sentiment:
+            summary_parts.append(f"Prevailing sentiment trend registered as {sentiment}.")
+
+        quality_score = content_metadata.get("quality_score")
+        if isinstance(quality_score, (int, float)):
+            summary_parts.append(f"Pipeline quality score: {quality_score:.2f}.")
+
+        word_count = (
+            content_metadata.get("word_count") or analysis_data.get("word_count")
+            if isinstance(analysis_data, dict)
+            else None
+        )
+        if isinstance(word_count, int) and word_count > 0:
+            summary_parts.append(f"Assessment covered {word_count} words of source material.")
+
+        summary_parts.append("Key intelligence indicators processed, verified, and synchronized with knowledge stores.")
+        return " ".join(summary_parts)
     except Exception:
         return "Intelligence briefing generated with standard analysis parameters."
 

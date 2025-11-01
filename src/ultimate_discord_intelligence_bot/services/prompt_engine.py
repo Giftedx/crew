@@ -9,6 +9,7 @@ whitespace split acts as a final fallback.
 
 from __future__ import annotations
 
+import contextlib
 import logging
 import os
 import re
@@ -17,9 +18,33 @@ from typing import TYPE_CHECKING, Any
 
 from obs import metrics
 from ultimate_discord_intelligence_bot.settings import Settings
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 from .optimization_pipeline import OptimizationConfig, OptimizationPipeline
 from .prompt_compressor import CompressionConfig, PromptCompressor
+
+
+try:
+    from core import settings as core_settings
+except Exception:  # pragma: no cover - minimal fallback when core settings unavailable
+    core_settings = None
+
+
+def get_settings() -> Settings:
+    """Retrieve the active settings instance with fallbacks.
+
+    Returns:
+        Settings: Configured settings object. Falls back to constructing a new
+        ``Settings`` instance if the shared ``core.settings`` facade is
+        unavailable (e.g., in isolated test environments).
+    """
+
+    if core_settings is not None:
+        try:
+            return core_settings.get_settings()
+        except Exception:  # pragma: no cover - defensive fallback to legacy settings
+            return Settings()
+    return Settings()
 
 
 try:  # lightweight tracing shim available in repo
@@ -46,22 +71,6 @@ except Exception:  # pragma: no cover - fallback to local noop-like tracer
             return _NoopTracer()
 
     trace = _NoopTraceAPI()
-
-try:
-    pass
-except Exception:  # pragma: no cover - defensive fallback
-
-    def get_settings() -> StepResult:  # broad return type for fallback stub
-        class _S:
-            enable_prompt_compression = False
-            prompt_compression_max_repeated_blank_lines = 1
-
-        return _S()
-
-
-import contextlib
-
-from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 if TYPE_CHECKING:
@@ -295,7 +304,7 @@ class PromptEngine:
         truthy = {"1", "true", "yes", "on"}
         tracer = trace.get_tracer(__name__)
         metadata: dict[str, Any] = {"stages": []}
-        settings = Settings()
+        settings = get_settings()
 
         with tracer.start_as_current_span("prompt.optimise") as span:
             original = prompt

@@ -7,19 +7,28 @@ but built on the existing StepResult contract and infrastructure.
 from __future__ import annotations
 
 import json
+import logging
 import os
 import time
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
+from core import settings as core_settings
+from eval.langsmith_adapter import LangSmithEvaluationAdapter
 from obs import metrics, tracing
+from ultimate_discord_intelligence_bot.services.rl_model_router import TrajectoryFeedback
 from ultimate_discord_intelligence_bot.step_result import StepResult
 from ultimate_discord_intelligence_bot.tenancy import current_tenant
 
 
+logger = logging.getLogger(__name__)
+
+
 if TYPE_CHECKING:
+    from ai.rl.langsmith_trajectory_evaluator import LangSmithTrajectoryEvaluator
     from core.learning_engine import LearningEngine
     from core.router import Router
+    from ultimate_discord_intelligence_bot.services.rl_model_router import RLModelRouter
 
 
 # Optional AgentEvals integration (Context7 recommendation)
@@ -31,12 +40,24 @@ _agentevals_create_judge = None  # lazy handle to factory
 def _lc_evaluate_trajectory(
     outputs,
 ):  # pragma: no cover - default simple passthrough heuristic
+    summary = {}
+    if isinstance(outputs, dict):
+        summary = {
+            "keys": sorted(outputs.keys()),
+            "total_items": len(outputs),
+        }
+    elif isinstance(outputs, list):
+        summary = {
+            "sample_items": outputs[:3],
+            "total_items": len(outputs),
+        }
     return {
         "score": True,
         "reasoning": "local chain evaluator placeholder",
         "accuracy_score": 0.5,
         "efficiency_score": 0.5,
         "error_handling_score": 0.5,
+        "output_summary": summary,
     }
 
 
@@ -115,11 +136,39 @@ class TrajectoryEvaluator:
         self,
         router: Router | None = None,
         learning_engine: LearningEngine | None = None,
+        rl_model_router: RLModelRouter | None = None,
     ):
         self.router = router
         self.learning_engine = learning_engine
         self.enabled = os.getenv("ENABLE_TRAJECTORY_EVALUATION", "0") == "1"
+        self.rl_model_router = rl_model_router
+        self.enable_feedback_loop = os.getenv("ENABLE_TRAJECTORY_FEEDBACK_LOOP", "0") == "1"
+        self._settings = core_settings.get_settings()
+        self.langsmith_adapter: LangSmithEvaluationAdapter | None = None
+        self.langsmith_feedback: LangSmithTrajectoryEvaluator | None = None
 
+        if getattr(self._settings, "enable_langsmith_eval", False):
+            try:
+                self.langsmith_adapter = LangSmithEvaluationAdapter(self._settings)
+            except Exception as exc:  # pragma: no cover - defensive logging
+                logger.warning("Failed to initialize LangSmith evaluation adapter: %s", exc)
+                self.langsmith_adapter = None
+            if self.langsmith_adapter is not None:
+                try:
+                    from ai.rl.langsmith_trajectory_evaluator import (
+                        LangSmithTrajectoryEvaluator,
+                    )
+
+                    self.langsmith_feedback = LangSmithTrajectoryEvaluator(
+                        settings=self._settings,
+                        adapter=self.langsmith_adapter,
+                    )
+                except Exception as feedback_exc:  # pragma: no cover - defensive logging
+                    logger.warning(
+                        "Failed to initialize unified feedback bridge: %s",
+                        feedback_exc,
+                    )
+                    self.langsmith_feedback = None
         if self.learning_engine and "trajectory_evaluation" not in self.learning_engine.registry:
             self.learning_engine.register_domain("trajectory_evaluation")
 
@@ -203,6 +252,7 @@ class TrajectoryEvaluator:
                         judge_model = os.getenv("AGENTEVALS_MODEL", "openai:o3-mini")
                         evaluator = _agentevals_create_judge(model=judge_model)
                         ae_res = evaluator(outputs=outputs)  # reference optional
+
                         if isinstance(ae_res, dict):
                             score_bool = bool(ae_res.get("score", True))
                             return StepResult.ok(
@@ -229,30 +279,140 @@ class TrajectoryEvaluator:
                         event_type="agent_evals_fallback",
                         severity="warn",
                     ).inc()
-            # Format trajectory for evaluation
-            formatted_trajectory = self._format_trajectory_for_evaluation(trajectory)
+            evaluation_result: dict[str, Any] | None = None
+            evaluator_name = "LLMHeuristic"
+            metadata_updates: dict[str, Any] = {}
 
-            # Use router to select appropriate model for evaluation
-            evaluation_prompt = TRAJECTORY_ACCURACY_PROMPT.format(trajectory=formatted_trajectory)
-
-            if self.router:
-                # Get model for evaluation task
-                _model = self.router.route(
-                    task="trajectory_evaluation",
-                    candidates=["gpt-4o-mini", "gpt-3.5-turbo", "claude-3-haiku"],
-                    context={
-                        "prompt": evaluation_prompt,
-                        "expected_output_tokens": 200,
-                        "estimated_cost_usd": 0.01,
-                    },
+            if self.langsmith_adapter:
+                langsmith_result = self.langsmith_adapter.evaluate(trajectory)
+                metadata_updates["langsmith_adapter_status"] = (
+                    "skipped" if langsmith_result.skipped else ("success" if langsmith_result.success else "error")
                 )
+                if langsmith_result.error:
+                    metadata_updates["langsmith_adapter_error"] = langsmith_result.error
+                if langsmith_result.metadata:
+                    for key, value in langsmith_result.metadata.items():
+                        metadata_updates.setdefault(key, value)
 
-                # This would integrate with the LLM service
-                # For now, we'll simulate the evaluation
-                evaluation_result = self._simulate_llm_evaluation(trajectory)
-            else:
-                evaluation_result = self._simulate_llm_evaluation(trajectory)
+                if langsmith_result.success and not langsmith_result.skipped:
+                    evaluation_result = {
+                        "score": bool(langsmith_result.data.get("score", False)),
+                        "reasoning": str(langsmith_result.data.get("reasoning", "")),
+                        "accuracy_score": float(langsmith_result.data.get("accuracy_score", 0.0)),
+                        "efficiency_score": float(langsmith_result.data.get("efficiency_score", 0.0)),
+                        "error_handling_score": float(langsmith_result.data.get("error_handling_score", 0.0)),
+                    }
+                    evaluator_name = "LangSmith"
+                    evaluation_id = langsmith_result.metadata.get(
+                        "langsmith_evaluation_id"
+                    ) or langsmith_result.data.get("evaluation_id")
+                    if evaluation_id:
+                        metadata_updates["langsmith_evaluation_id"] = evaluation_id
+                    raw_metrics = langsmith_result.data.get("raw_metrics")
+                    if raw_metrics is not None:
+                        metadata_updates["langsmith_raw_metrics"] = raw_metrics
 
+            if evaluation_result is None:
+                # Format trajectory for evaluation
+                formatted_trajectory = self._format_trajectory_for_evaluation(trajectory)
+
+                # Use router to select appropriate model for evaluation
+                evaluation_prompt = TRAJECTORY_ACCURACY_PROMPT.format(trajectory=formatted_trajectory)
+
+                selected_model: str | None = None
+                if self.router:
+                    try:
+                        selected_model = self.router.route(
+                            task="trajectory_evaluation",
+                            candidates=["gpt-4o-mini", "gpt-3.5-turbo", "claude-3-haiku"],
+                            context={
+                                "prompt": evaluation_prompt,
+                                "expected_output_tokens": 200,
+                                "estimated_cost_usd": 0.01,
+                            },
+                        )
+                        if selected_model:
+                            metadata_updates["heuristic_model"] = selected_model
+                    except Exception as routing_exc:
+                        metadata_updates["heuristic_model_error"] = str(routing_exc)
+
+                fallback_start = time.perf_counter()
+                fallback_payload: dict[str, Any] = {
+                    "trajectory_id": trajectory.session_id,
+                    "selected_model": selected_model,
+                    "langsmith_status": metadata_updates.get("langsmith_adapter_status", "unknown"),
+                    "langsmith_error": metadata_updates.get("langsmith_adapter_error"),
+                }
+
+                try:
+                    evaluation_result = self._simulate_llm_evaluation(trajectory)
+                    evaluator_name = "LLMHeuristic"
+
+                    fallback_latency_ms = (time.perf_counter() - fallback_start) * 1000.0
+                    metadata_updates.update(
+                        {
+                            "fallback_evaluator": evaluator_name,
+                            "fallback_latency_ms": round(fallback_latency_ms, 3),
+                            "fallback_model": selected_model or "heuristic_default",
+                            "fallback_reason": metadata_updates.get("langsmith_adapter_error", "langsmith_failure"),
+                        }
+                    )
+
+                    fallback_payload.update(
+                        {
+                            "fallback_latency_ms": fallback_latency_ms,
+                            "fallback_model": metadata_updates["fallback_model"],
+                        }
+                    )
+                    fallback_payload.update(
+                        {
+                            "heuristic_score": evaluation_result.get("accuracy_score"),
+                            "heuristic_efficiency": evaluation_result.get("efficiency_score"),
+                        }
+                    )
+
+                    metrics.DEGRADATION_EVENTS.labels(
+                        **metrics.label_ctx(),
+                        component="trajectory_eval",
+                        event_type="langsmith_fallback",
+                        severity="warn",
+                    ).inc()
+                    metrics.DEGRADATION_IMPACT_LATENCY.labels(
+                        **metrics.label_ctx(),
+                        component="trajectory_eval",
+                        event_type="langsmith_fallback",
+                    ).observe(fallback_latency_ms)
+
+                    logger.warning(
+                        "LangSmith evaluation fallback activated",
+                        extra={"langsmith_fallback": fallback_payload},
+                    )
+                except Exception as fallback_exc:
+                    fallback_latency_ms = (time.perf_counter() - fallback_start) * 1000.0
+                    fallback_payload.update(
+                        {
+                            "fallback_latency_ms": fallback_latency_ms,
+                            "fallback_error": str(fallback_exc),
+                        }
+                    )
+
+                    metrics.DEGRADATION_EVENTS.labels(
+                        **metrics.label_ctx(),
+                        component="trajectory_eval",
+                        event_type="heuristic_failure",
+                        severity="error",
+                    ).inc()
+                    metrics.DEGRADATION_IMPACT_LATENCY.labels(
+                        **metrics.label_ctx(),
+                        component="trajectory_eval",
+                        event_type="heuristic_failure",
+                    ).observe(fallback_latency_ms)
+
+                    logger.error(
+                        "LangSmith fallback heuristic failed",
+                        extra={"langsmith_fallback": fallback_payload},
+                    )
+                    raise RuntimeError(f"Heuristic trajectory evaluation failed: {fallback_exc}") from fallback_exc
             # Record results for learning
             if self.learning_engine:
                 reward = evaluation_result["accuracy_score"]
@@ -268,18 +428,111 @@ class TrajectoryEvaluator:
                 **metrics.label_ctx(), success=str(evaluation_result["score"]).lower()
             ).inc()
 
-            return StepResult.ok(
+            result = StepResult.ok(
                 score=evaluation_result["score"],
                 reasoning=evaluation_result["reasoning"],
                 accuracy_score=evaluation_result["accuracy_score"],
                 efficiency_score=evaluation_result["efficiency_score"],
                 error_handling_score=evaluation_result["error_handling_score"],
                 trajectory_id=trajectory.session_id,
-                evaluator="LLMHeuristic",
+                evaluator=evaluator_name,
             )
+
+            if metadata_updates:
+                result.metadata.update(metadata_updates)
+
+            if self.langsmith_feedback is not None:
+                try:
+                    result = self.langsmith_feedback.submit_feedback(
+                        trajectory,
+                        result,
+                    )
+                except Exception as feedback_exc:  # pragma: no cover - defensive logging
+                    logger.warning(
+                        "LangSmith unified feedback submission failed: %s",
+                        feedback_exc,
+                    )
+
+            if self.enable_feedback_loop and self.rl_model_router:
+                feedback_result = self._emit_routing_feedback(trajectory, evaluation_result)
+                emitted = feedback_result.success and not feedback_result.skipped
+                result.metadata["routing_feedback_emitted"] = emitted
+                if not feedback_result.success and not feedback_result.skipped and feedback_result.error:
+                    result.metadata["routing_feedback_error"] = feedback_result.error
+                if feedback_result.data:
+                    result.metadata.update({f"routing_feedback_{k}": v for k, v in feedback_result.data.items()})
+
+            return result
 
         except Exception as e:
             return StepResult.fail(f"Trajectory evaluation failed: {e}")
+
+    def _emit_routing_feedback(self, trajectory: AgentTrajectory, evaluation_result: dict[str, Any]) -> StepResult:
+        """Emit evaluation scores to the RL model router for learning updates."""
+
+        if not self.rl_model_router:
+            return StepResult.skip(reason="RL model router not configured")
+
+        try:
+            model_id = self._extract_model_id_from_trajectory(trajectory) or evaluation_result.get("model_id")
+            if not model_id:
+                return StepResult.skip(reason="Unable to determine model_id for trajectory feedback")
+
+            accuracy = float(evaluation_result.get("accuracy_score", 0.0))
+            efficiency = float(evaluation_result.get("efficiency_score", 0.0))
+            error_handling = float(evaluation_result.get("error_handling_score", 0.0))
+            overall = 0.5 * accuracy + 0.3 * efficiency + 0.2 * error_handling
+
+            feedback = TrajectoryFeedback(
+                trajectory_id=trajectory.session_id,
+                model_id=str(model_id),
+                accuracy_score=accuracy,
+                efficiency_score=efficiency,
+                error_handling_score=error_handling,
+                overall_score=overall,
+                trajectory_length=len(trajectory.steps),
+                success=trajectory.success,
+                reasoning=str(evaluation_result.get("reasoning", "")),
+                metadata={
+                    "tenant": trajectory.tenant,
+                    "workspace": trajectory.workspace,
+                },
+            )
+
+            queue = self.rl_model_router.trajectory_feedback_queue
+            queue.append(feedback)
+            max_queue = getattr(self.rl_model_router, "max_feedback_queue_size", None)
+            if isinstance(max_queue, int) and max_queue > 0 and len(queue) > max_queue:
+                queue.pop(0)
+
+            metrics.TRAJECTORY_FEEDBACK_EMISSIONS.labels(
+                **metrics.label_ctx(),
+                model_id=str(model_id),
+                success=str(trajectory.success).lower(),
+            ).inc()
+
+            return StepResult.ok(
+                model_id=model_id,
+                overall_score=overall,
+                queue_size=len(queue),
+            )
+
+        except Exception as exc:  # pragma: no cover - defensive logging
+            logger = logging.getLogger(__name__)
+            logger.error("Failed to emit trajectory feedback: %s", exc, exc_info=True)
+            return StepResult.fail(str(exc))
+
+    def _extract_model_id_from_trajectory(self, trajectory: AgentTrajectory) -> str | None:
+        """Best-effort extraction of model identifier from trajectory steps."""
+
+        for step in trajectory.steps:
+            if not step.tool_args:
+                continue
+            if isinstance(step.tool_args, dict):
+                model_id = step.tool_args.get("model_id") or step.tool_args.get("model")
+                if model_id:
+                    return str(model_id)
+        return None
 
     def evaluate_trajectory_match(
         self,
@@ -333,14 +586,15 @@ class TrajectoryEvaluator:
         """Simulate LLM evaluation (replace with actual LLM call)."""
         # Basic heuristic evaluation for demonstration
         accuracy_score = 0.8 if trajectory.success else 0.3
-        efficiency_score = max(0.1, 1.0 - (len(trajectory.steps) / 20))  # Fewer steps = more efficient
+        efficiency_score = max(0.1, 1.0 - (len(trajectory.steps) / 20))  # Fewer steps = higher efficiency
         error_handling_score = 0.9 if not any(step.error for step in trajectory.steps) else 0.6
-
         overall_score = (accuracy_score + efficiency_score + error_handling_score) / 3 > 0.7
 
         return {
             "score": overall_score,
-            "reasoning": f"Trajectory {'succeeded' if trajectory.success else 'failed'} with {len(trajectory.steps)} steps",
+            "reasoning": (
+                f"Trajectory {'succeeded' if trajectory.success else 'failed'} with {len(trajectory.steps)} steps"
+            ),
             "accuracy_score": accuracy_score,
             "efficiency_score": efficiency_score,
             "error_handling_score": error_handling_score,

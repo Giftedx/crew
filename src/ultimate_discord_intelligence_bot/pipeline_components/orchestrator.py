@@ -6,7 +6,7 @@ import asyncio
 import json
 import time
 from contextlib import ExitStack, contextmanager, suppress
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 
@@ -43,6 +43,13 @@ class _PipelineContext:
     span: Any
     start_time: float
     tracker: RequestCostTracker | None
+    langfuse_service: Any | None = None
+    langfuse_trace: Any | None = None
+    langfuse_pipeline_span: Any | None = None
+    langfuse_spans: dict[str, Any] = field(default_factory=dict)
+    langfuse_trace_finalized: bool = False
+    langfuse_trace_output: dict[str, Any] | None = None
+    langfuse_trace_error: str | None = None
 
 
 @dataclass
@@ -75,10 +82,123 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
+        self._active_pipeline_ctx: _PipelineContext | None = None
+
+    # ------------------------------------------------------------------
+    # Langfuse helpers
+    # ------------------------------------------------------------------
+
+    def _langfuse_prepare_payload(self, value: Any) -> Any:
+        if isinstance(value, StepResult):
+            return self._langfuse_prepare_payload(value.to_dict())
+        if isinstance(value, dict):
+            return {str(k): self._langfuse_prepare_payload(v) for k, v in value.items()}
+        if isinstance(value, (list, tuple, set)):
+            return [self._langfuse_prepare_payload(v) for v in value]
+        if isinstance(value, (str, int, float, bool)) or value is None:
+            return value
+        return str(value)
+
+    def _langfuse_start_span(
+        self,
+        ctx: _PipelineContext,
+        name: str,
+        input_data: dict[str, Any],
+        metadata: dict[str, Any] | None = None,
+    ) -> None:
+        service = getattr(ctx, "langfuse_service", None)
+        trace = getattr(ctx, "langfuse_trace", None)
+        if not service or not trace:
+            return
+        result = service.create_span(
+            trace,
+            name,
+            self._langfuse_prepare_payload(input_data),
+            metadata=self._langfuse_prepare_payload(metadata or {}),
+        )
+        if result.success:
+            span = result.data.get("span")
+            if span is not None:
+                ctx.langfuse_spans[name] = span
+
+    def _langfuse_finish_span(
+        self,
+        ctx: _PipelineContext,
+        name: str,
+        output_data: dict[str, Any] | None = None,
+        *,
+        error: str | None = None,
+    ) -> None:
+        service = getattr(ctx, "langfuse_service", None)
+        if not service:
+            return
+        span = ctx.langfuse_spans.pop(name, None)
+        if not span:
+            return
+        payload = self._langfuse_prepare_payload(output_data or {})
+        service.update_span(span, payload, error=error)
+
+    def _langfuse_error_message(self, payload: Any) -> str | None:
+        if isinstance(payload, dict):
+            for key in ("error", "message", "detail", "status_message"):
+                value = payload.get(key)
+                if isinstance(value, str) and value:
+                    return value
+        return None
+
+    def _langfuse_finalize_trace(
+        self,
+        ctx: _PipelineContext | None,
+        status: str,
+        payload: dict[str, Any],
+        duration: float,
+    ) -> None:
+        if ctx is None or not ctx.langfuse_service or not ctx.langfuse_trace:
+            return
+
+        service = ctx.langfuse_service
+        sanitized = self._langfuse_prepare_payload(payload)
+        ctx.langfuse_trace_output = sanitized
+
+        error_message = ctx.langfuse_trace_error
+        if status != "success":
+            error_message = error_message or self._langfuse_error_message(payload)
+
+        metadata = {"duration_seconds": duration, "status": status}
+        if ctx.langfuse_pipeline_span:
+            service.update_span(
+                ctx.langfuse_pipeline_span,
+                sanitized,
+                error=error_message,
+            )
+            ctx.langfuse_pipeline_span = None
+
+        service.finalize_trace(
+            ctx.langfuse_trace,
+            sanitized,
+            error=error_message,
+            metadata=metadata,
+        )
+        ctx.langfuse_trace_finalized = True
+        ctx.langfuse_trace_error = error_message
 
     # ------------------------------------------------------------------
     # Public API
     # ------------------------------------------------------------------
+
+    def _finalize_pipeline(
+        self,
+        start_time: float,
+        status: str,
+        payload: dict[str, Any],
+        *,
+        duration: float | None = None,
+    ) -> dict[str, Any]:
+        ctx = self._active_pipeline_ctx
+        resolved_duration = duration if duration is not None else max(time.monotonic() - start_time, 0.0)
+        if ctx and not ctx.langfuse_trace_finalized:
+            self._langfuse_finalize_trace(ctx, status, payload, resolved_duration)
+        return super()._finalize_pipeline(start_time, status, payload, duration=resolved_duration)
 
     async def process_video(self, url: str, quality: str = "1080p") -> PipelineRunResult:
         observability = getattr(self, "_step_observability", None)
@@ -120,7 +240,76 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
             span.set_attribute("quality", quality)
             self.logger.info("Starting concurrent pipeline for %s (quality: %s)", url, quality)
             self._increment_pipeline_requests()
-            yield _PipelineContext(span=span, start_time=start_time, tracker=tracker)
+            langfuse_service = getattr(self, "langfuse_service", None)
+            langfuse_trace = None
+            langfuse_pipeline_span = None
+            if langfuse_service and getattr(langfuse_service, "enabled", False):
+                tenant_ctx = current_tenant()
+                tenant_id = getattr(tenant_ctx, "tenant_id", None) if tenant_ctx else None
+                workspace_id = getattr(tenant_ctx, "workspace_id", None) if tenant_ctx else None
+                user_id = tenant_id or workspace_id or "global"
+                trace_result = langfuse_service.create_trace(
+                    name="pipeline.process_video",
+                    user_id=user_id,
+                    metadata={"orchestrator": self._orchestrator, "workspace": workspace_id},
+                    input_data={"url": url, "quality": quality},
+                    tags=[self._orchestrator],
+                )
+                if trace_result.success:
+                    langfuse_trace = trace_result.data.get("trace")
+                    span_result = langfuse_service.create_span(
+                        langfuse_trace,
+                        "pipeline_execution",
+                        {"url": url, "quality": quality},
+                        metadata={"phase": "pipeline_start"},
+                    )
+                    if span_result.success:
+                        langfuse_pipeline_span = span_result.data.get("span")
+
+            ctx = _PipelineContext(
+                span=span,
+                start_time=start_time,
+                tracker=tracker,
+                langfuse_service=langfuse_service,
+                langfuse_trace=langfuse_trace,
+                langfuse_pipeline_span=langfuse_pipeline_span,
+            )
+            self._active_pipeline_ctx = ctx
+            try:
+                yield ctx
+            except Exception as exc:
+                ctx.langfuse_trace_error = str(exc)
+                if langfuse_service and langfuse_pipeline_span:
+                    langfuse_service.update_span(
+                        langfuse_pipeline_span,
+                        {"status": "exception", "exception": str(exc)},
+                        error=str(exc),
+                    )
+                    ctx.langfuse_pipeline_span = None
+                if langfuse_service and langfuse_trace and not ctx.langfuse_trace_finalized:
+                    langfuse_service.finalize_trace(
+                        langfuse_trace,
+                        {"status": "exception"},
+                        error=str(exc),
+                    )
+                    ctx.langfuse_trace_finalized = True
+                raise
+            finally:
+                self._active_pipeline_ctx = None
+                if langfuse_service and ctx.langfuse_pipeline_span and not ctx.langfuse_trace_finalized:
+                    langfuse_service.update_span(
+                        ctx.langfuse_pipeline_span,
+                        ctx.langfuse_trace_output or {"status": "unknown"},
+                        error=ctx.langfuse_trace_error,
+                    )
+                    ctx.langfuse_pipeline_span = None
+                if langfuse_service and langfuse_trace and not ctx.langfuse_trace_finalized:
+                    langfuse_service.finalize_trace(
+                        langfuse_trace,
+                        ctx.langfuse_trace_output or {"status": "unknown"},
+                        error=ctx.langfuse_trace_error,
+                    )
+                    ctx.langfuse_trace_finalized = True
 
     async def _run_pipeline(self, ctx: _PipelineContext, url: str, quality: str) -> PipelineRunResult:
         with logfire_span("pipeline.download_phase", url=url, quality=quality):
@@ -235,68 +424,100 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
         """Route content based on type classification (Week 4 Phase 2)."""
         import os
 
+        self._langfuse_start_span(
+            ctx,
+            "content_routing",
+            {
+                "title": download_info.data.get("title"),
+                "video_id": download_info.data.get("video_id"),
+            },
+            metadata={"phase": "content_routing"},
+        )
+
         routing_enabled = os.getenv("ENABLE_CONTENT_ROUTING", "1") == "1"
-        if not routing_enabled:
-            self.logger.debug("Content routing disabled, using default thresholds")
-            return StepResult.ok(result={"routing_enabled": False, "content_type": "general"})
+        result: StepResult
+        error_message: str | None = None
 
         try:
-            from ultimate_discord_intelligence_bot.tools import ContentTypeRoutingTool
+            if not routing_enabled:
+                self.logger.debug("Content routing disabled, using default thresholds")
+                result = StepResult.ok(result={"routing_enabled": False, "content_type": "general"})
+            else:
+                from ultimate_discord_intelligence_bot.tools import ContentTypeRoutingTool
 
-            # Prepare input for routing tool
-            routing_input = {
-                "transcript": transcription_bundle.filtered_transcript,
-                "title": download_info.data.get("title", ""),
-                "description": download_info.data.get("description", ""),
-                "metadata": download_info.data.get("metadata", {}),
-            }
+                routing_input = {
+                    "transcript": transcription_bundle.filtered_transcript,
+                    "title": download_info.data.get("title", ""),
+                    "description": download_info.data.get("description", ""),
+                    "metadata": download_info.data.get("metadata", {}),
+                }
 
-            routing_tool = ContentTypeRoutingTool()
-            routing_result = routing_tool.run(routing_input)
+                routing_tool = ContentTypeRoutingTool()
+                routing_result = routing_tool.run(routing_input)
 
-            if not routing_result.success:
-                self.logger.warning(
-                    "Content routing failed, using default thresholds: %s",
-                    routing_result.error,
-                )
-                return StepResult.ok(result={"routing_enabled": False, "content_type": "general"})
+                if not routing_result.success:
+                    error_message = routing_result.error or "routing_failed"
+                    self.logger.warning(
+                        "Content routing failed, using default thresholds: %s",
+                        routing_result.error,
+                    )
+                    result = StepResult.ok(result={"routing_enabled": False, "content_type": "general"})
+                else:
+                    result = routing_result
+        except Exception as exc:
+            error_message = str(exc)
+            self.logger.warning(
+                "Content routing failed with exception, using default thresholds: %s",
+                error_message,
+            )
+            result = StepResult.ok(
+                result={
+                    "routing_enabled": False,
+                    "content_type": "general",
+                    "error": error_message,
+                }
+            )
 
-            # Extract routing data
-            routing_data = routing_result.data
-            if "result" in routing_data and isinstance(routing_data["result"], dict):
-                routing_data = routing_data["result"]
+        routing_payload: dict[str, Any] = {"routing_enabled": routing_enabled}
+        data = result.data
+        if "result" in data and isinstance(data["result"], dict):
+            data = data["result"]
+        if isinstance(data, dict):
+            classification = data.get("classification", {})
+            routing_payload.update(
+                {
+                    "success": result.success,
+                    "content_type": classification.get("primary_type", "general"),
+                    "confidence": classification.get("confidence"),
+                    "pipeline": data.get("routing", {}).get("pipeline")
+                    if isinstance(data.get("routing"), dict)
+                    else None,
+                }
+            )
 
-            content_type = routing_data.get("classification", {}).get("primary_type", "general")
-            confidence = routing_data.get("classification", {}).get("confidence", 0.0)
-            pipeline = routing_data.get("routing", {}).get("pipeline", "standard_pipeline")
+        self._langfuse_finish_span(ctx, "content_routing", routing_payload, error=error_message)
 
-            # Log routing decision
-            self.logger.info(f"Content routed as '{content_type}' (confidence: {confidence:.2f}, pipeline: {pipeline})")
+        if result.success:
+            content_type = routing_payload.get("content_type", "general")
+            confidence = routing_payload.get("confidence", 0.0) or 0.0
+            pipeline = routing_payload.get("pipeline", "standard_pipeline") or "standard_pipeline"
+            self.logger.info(
+                "Content routed as '%s' (confidence: %.2f, pipeline: %s)",
+                content_type,
+                confidence,
+                pipeline,
+            )
             ctx.span.set_attribute("content_type", content_type)
             ctx.span.set_attribute("routing_confidence", confidence)
             ctx.span.set_attribute("routing_pipeline", pipeline)
 
-            # Best-effort metrics
             try:
                 if hasattr(metrics, "CONTENT_TYPE_ROUTED"):
                     metrics.CONTENT_TYPE_ROUTED.labels(**metrics.label_ctx(), content_type=content_type).inc()
             except Exception:
                 pass
 
-            return routing_result
-
-        except Exception as e:
-            self.logger.warning(
-                "Content routing failed with exception, using default thresholds: %s",
-                str(e),
-            )
-            return StepResult.ok(
-                result={
-                    "routing_enabled": False,
-                    "content_type": "general",
-                    "error": str(e),
-                }
-            )
+        return result
 
     def _load_content_type_thresholds(self, routing_result: StepResult | None) -> dict[str, float]:
         """Load content-type specific quality thresholds from config."""
@@ -380,82 +601,107 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
         # Check if quality filtering is enabled
         import os
 
+        self._langfuse_start_span(
+            ctx,
+            "quality_filtering",
+            {"transcript_length": len(transcript)},
+            metadata={"phase": "quality_filtering"},
+        )
+
         quality_enabled = os.getenv("ENABLE_QUALITY_FILTERING", "1") == "1"
         if not quality_enabled:
-            # Return dummy success result and continue with full processing
-            return StepResult.ok(
+            result = StepResult.ok(
                 result={
                     "should_process": True,
                     "bypass_reason": "quality_filtering_disabled",
                 }
-            ), False
-
-        # Load content-type specific thresholds if routing result available
-        content_type_thresholds = self._load_content_type_thresholds(routing_result)
-
-        try:
-            from ultimate_discord_intelligence_bot.tools import (
-                ContentQualityAssessmentTool,
             )
-
-            # Create quality tool with content-type specific thresholds
-            quality_tool = ContentQualityAssessmentTool()
-
-            # Pass transcript with content-type thresholds
-            quality_input = {
-                "transcript": transcript,
-                "thresholds": content_type_thresholds,
-            }
-            quality_result = quality_tool.run(quality_input)
-
-            if not quality_result.success:
-                # Quality assessment failed - proceed with full analysis (safe fallback)
-                self.logger.warning(
-                    "Quality assessment failed, proceeding with full analysis: %s",
-                    quality_result.error,
+            skip_analysis = False
+        else:
+            content_type_thresholds = self._load_content_type_thresholds(routing_result)
+            try:
+                from ultimate_discord_intelligence_bot.tools import (
+                    ContentQualityAssessmentTool,
                 )
-                metrics.get_metrics().counter("quality_filtering_errors_total").inc()
-                return quality_result, False
 
-            # Support tools returning nested payload under 'result'
-            qr_data = quality_result.data
-            if "result" in qr_data and isinstance(qr_data["result"], dict):
-                qr_data = qr_data["result"]  # unwrap one level
+                quality_tool = ContentQualityAssessmentTool()
+                quality_input = {
+                    "transcript": transcript,
+                    "thresholds": content_type_thresholds,
+                }
+                result = quality_tool.run(quality_input)
 
-            should_process = qr_data.get("should_process", True)
-            bypass_reason = qr_data.get("bypass_reason", "")
-            quality_score = qr_data.get("overall_score", 0.0)
+                if not result.success:
+                    self.logger.warning(
+                        "Quality assessment failed, proceeding with full analysis: %s",
+                        result.error,
+                    )
+                    metrics.get_metrics().counter("quality_filtering_errors_total").inc()
+                    skip_analysis = False
+                else:
+                    qr_data = result.data
+                    if "result" in qr_data and isinstance(qr_data["result"], dict):
+                        qr_data = qr_data["result"]
 
-            if not should_process:
-                self.logger.info(f"Quality filtering bypass: {bypass_reason} (score: {quality_score:.2f})")
-                ctx.span.set_attribute("quality_bypass", True)
-                ctx.span.set_attribute("bypass_reason", bypass_reason)
-                ctx.span.set_attribute("quality_score", quality_score)
-                # Best-effort metrics emission (no new global specs to keep scope minimal)
-                try:  # pragma: no cover - metrics optional
-                    if hasattr(metrics, "PIPELINE_STEPS_SKIPPED"):
-                        metrics.PIPELINE_STEPS_SKIPPED.labels(**metrics.label_ctx(), step="quality_filtering").inc()
-                except Exception:
-                    pass
-            else:
-                ctx.span.set_attribute("quality_bypass", False)
-                ctx.span.set_attribute("quality_score", quality_score)
-                try:  # pragma: no cover - metrics optional
-                    if hasattr(metrics, "PIPELINE_STEPS_COMPLETED"):
-                        metrics.PIPELINE_STEPS_COMPLETED.labels(**metrics.label_ctx(), step="quality_filtering").inc()
-                except Exception:
-                    pass
+                    should_process = qr_data.get("should_process", True)
+                    bypass_reason = qr_data.get("bypass_reason", "")
+                    quality_score = qr_data.get("overall_score", 0.0)
 
-            return quality_result, not should_process
+                    if not should_process:
+                        self.logger.info(
+                            "Quality filtering bypass: %s (score: %.2f)",
+                            bypass_reason,
+                            quality_score,
+                        )
+                        ctx.span.set_attribute("quality_bypass", True)
+                        ctx.span.set_attribute("bypass_reason", bypass_reason)
+                        ctx.span.set_attribute("quality_score", quality_score)
+                        try:  # pragma: no cover - metrics optional
+                            if hasattr(metrics, "PIPELINE_STEPS_SKIPPED"):
+                                metrics.PIPELINE_STEPS_SKIPPED.labels(
+                                    **metrics.label_ctx(), step="quality_filtering"
+                                ).inc()
+                        except Exception:
+                            pass
+                    else:
+                        ctx.span.set_attribute("quality_bypass", False)
+                        ctx.span.set_attribute("quality_score", quality_score)
+                        try:  # pragma: no cover - metrics optional
+                            if hasattr(metrics, "PIPELINE_STEPS_COMPLETED"):
+                                metrics.PIPELINE_STEPS_COMPLETED.labels(
+                                    **metrics.label_ctx(), step="quality_filtering"
+                                ).inc()
+                        except Exception:
+                            pass
 
-        except Exception as e:
-            # Import or execution error - proceed with full analysis (safe fallback)
-            self.logger.warning(
-                "Quality filtering failed with exception, proceeding with full analysis: %s",
-                str(e),
-            )
-            metrics.get_metrics().counter("quality_filtering_exceptions_total").inc()
-            return StepResult.fail(error=str(e)), False
+                    skip_analysis = not should_process
+            except Exception as exc:
+                self.logger.warning(
+                    "Quality filtering failed with exception, proceeding with full analysis: %s",
+                    str(exc),
+                )
+                metrics.get_metrics().counter("quality_filtering_exceptions_total").inc()
+                result = StepResult.fail(error=str(exc))
+                skip_analysis = False
+
+        qr_output: dict[str, Any] = {"quality_filtering_enabled": quality_enabled}
+        if result.success:
+            data = result.data
+            if "result" in data and isinstance(data["result"], dict):
+                data = data["result"]
+            if isinstance(data, dict):
+                qr_output.update(
+                    {
+                        "should_process": data.get("should_process", True),
+                        "overall_score": data.get("overall_score"),
+                        "bypass_reason": data.get("bypass_reason"),
+                    }
+                )
+
+        error_message = result.error if not result.success else None
+        self._langfuse_finish_span(ctx, "quality_filtering", qr_output, error=error_message)
+
+        return result, skip_analysis
 
     def _load_early_exit_config(self) -> dict[str, Any]:
         """Load early exit configuration from config/early_exit.yaml."""
@@ -516,6 +762,9 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
         if not early_exit_enabled:
             return False, "", 0.0
 
+        truthy = {"1", "true", "yes", "on"}
+        quality_filtering_enabled = os.getenv("ENABLE_QUALITY_FILTERING", "0").lower() in truthy
+
         try:
             # Load config
             config = self._load_early_exit_config()
@@ -568,6 +817,15 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
 
                     # Simple condition evaluation (supports basic comparisons)
                     if self._evaluate_condition(condition_expr, eval_context):
+                        if (
+                            checkpoint_name == "post_transcription"
+                            and condition_name == "very_short_transcript"
+                            and quality_filtering_enabled
+                        ):
+                            self.logger.debug(
+                                "Early exit condition '%s' suppressed to allow quality filtering", condition_name
+                            )
+                            continue
                         self.logger.info(
                             f"Early exit triggered at {checkpoint_name}: {condition_name} "
                             f"(confidence: {condition_confidence:.2f})"
@@ -744,98 +1002,130 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
         """Lightweight processing for low-quality content."""
         start_time = time.monotonic()
 
-        # Basic summary from quality assessment
-        qr_data = quality_result.data
-        if "result" in qr_data and isinstance(qr_data["result"], dict):
-            qr_data = qr_data["result"]
+        span_input = {
+            "video_id": download_info.data.get("video_id"),
+            "transcript_length": len(transcription_bundle.filtered_transcript),
+            "quality_result_success": quality_result.success,
+        }
+        self._langfuse_start_span(
+            ctx,
+            "lightweight_processing",
+            span_input,
+            metadata={"phase": "lightweight_processing"},
+        )
 
-        basic_summary = qr_data.get("recommendation_details", "Basic content processed")
-        quality_score = qr_data.get("overall_score", 0.0)
-        bypass_reason = qr_data.get("bypass_reason", "")
-        raw_metrics = {}
-        qm = qr_data.get("quality_metrics")
-        if isinstance(qm, dict):  # Capture raw quality metrics for observability & analytics
-            raw_metrics = {
-                k: v
-                for k, v in qm.items()
-                if k
-                in {
-                    "word_count",
-                    "sentence_count",
-                    "avg_sentence_length",
-                    "coherence_score",
-                    "topic_clarity_score",
-                    "language_quality_score",
-                    "overall_quality_score",
+        span_output: dict[str, Any] = {}
+        try:
+            # Basic summary from quality assessment
+            qr_data = quality_result.data
+            if "result" in qr_data and isinstance(qr_data["result"], dict):
+                qr_data = qr_data["result"]
+
+            basic_summary = qr_data.get("recommendation_details", "Basic content processed")
+            quality_score = qr_data.get("overall_score", 0.0)
+            bypass_reason = qr_data.get("bypass_reason", "")
+            raw_metrics = {}
+            qm = qr_data.get("quality_metrics")
+            if isinstance(qm, dict):  # Capture raw quality metrics for observability & analytics
+                raw_metrics = {
+                    k: v
+                    for k, v in qm.items()
+                    if k
+                    in {
+                        "word_count",
+                        "sentence_count",
+                        "avg_sentence_length",
+                        "coherence_score",
+                        "topic_clarity_score",
+                        "language_quality_score",
+                        "overall_quality_score",
+                    }
                 }
+
+            # Enhanced lightweight analysis
+            title = download_info.data.get("title", "")
+            source_url = download_info.data.get("source_url", "")
+            duration = download_info.data.get("duration", 0)
+
+            # Create lightweight memory payload
+            memory_payload = {
+                "source_url": source_url,
+                "title": title,
+                "summary": basic_summary,
+                "quality_score": quality_score,
+                "processing_type": "lightweight",
+                "bypass_reason": bypass_reason,
+                "duration": duration,
+                "quality_metrics": raw_metrics,
+                "transcript_preview": transcription_bundle.filtered_transcript[:200] + "..."
+                if len(transcription_bundle.filtered_transcript) > 200
+                else transcription_bundle.filtered_transcript,
+                "processed_at": time.time(),
             }
 
-        # Enhanced lightweight analysis
-        title = download_info.data.get("title", "")
-        source_url = download_info.data.get("source_url", "")
-        duration = download_info.data.get("duration", 0)
+            # Optional: Store in memory with lightweight flag
+            memory_task = asyncio.create_task(self._store_lightweight_memory(memory_payload), name="lightweight_memory")
 
-        # Create lightweight memory payload
-        memory_payload = {
-            "source_url": source_url,
-            "title": title,
-            "summary": basic_summary,
-            "quality_score": quality_score,
-            "processing_type": "lightweight",
-            "bypass_reason": bypass_reason,
-            "duration": duration,
-            "quality_metrics": raw_metrics,
-            "transcript_preview": transcription_bundle.filtered_transcript[:200] + "..."
-            if len(transcription_bundle.filtered_transcript) > 200
-            else transcription_bundle.filtered_transcript,
-            "processed_at": time.time(),
-        }
+            # Wait for memory storage (with timeout)
+            memory_result = None
+            try:
+                memory_result = await asyncio.wait_for(memory_task, timeout=10.0)
+            except TimeoutError:
+                self.logger.warning("Lightweight memory storage timed out")
+                memory_task.cancel()
+            except Exception as e:
+                self.logger.warning(f"Lightweight memory storage failed: {e}")
 
-        # Optional: Store in memory with lightweight flag
-        memory_task = asyncio.create_task(self._store_lightweight_memory(memory_payload), name="lightweight_memory")
+            # Record metrics
+            processing_duration = time.monotonic() - start_time
+            try:  # pragma: no cover - metrics optional
+                if hasattr(metrics, "PIPELINE_STEP_DURATION"):
+                    metrics.PIPELINE_STEP_DURATION.labels(**metrics.label_ctx(), step="lightweight_processing").observe(
+                        processing_duration
+                    )
+            except Exception:
+                pass
 
-        # Wait for memory storage (with timeout)
-        memory_result = None
-        try:
-            memory_result = await asyncio.wait_for(memory_task, timeout=10.0)
-        except TimeoutError:
-            self.logger.warning("Lightweight memory storage timed out")
-            memory_task.cancel()
-        except Exception as e:
-            self.logger.warning(f"Lightweight memory storage failed: {e}")
+            # Set span attributes for observability
+            ctx.span.set_attribute("processing_type", "lightweight")
+            ctx.span.set_attribute("quality_score", quality_score)
+            ctx.span.set_attribute("bypass_reason", bypass_reason)
+            ctx.span.set_attribute("processing_duration_seconds", processing_duration)
 
-        # Record metrics
-        processing_duration = time.monotonic() - start_time
-        try:  # pragma: no cover - metrics optional
-            if hasattr(metrics, "PIPELINE_STEP_DURATION"):
-                metrics.PIPELINE_STEP_DURATION.labels(**metrics.label_ctx(), step="lightweight_processing").observe(
-                    processing_duration
-                )
-        except Exception:
-            pass
+            span_output.update(
+                {
+                    "status": "success",
+                    "quality_score": quality_score,
+                    "bypass_reason": bypass_reason,
+                    "memory_stored": bool(memory_result and memory_result.success),
+                    "processing_duration": processing_duration,
+                }
+            )
 
-        # Set span attributes for observability
-        ctx.span.set_attribute("processing_type", "lightweight")
-        ctx.span.set_attribute("quality_score", quality_score)
-        ctx.span.set_attribute("bypass_reason", bypass_reason)
-        ctx.span.set_attribute("processing_duration_seconds", processing_duration)
-
-        return self._finalize_pipeline(
-            ctx.start_time,
-            "success",
-            {
-                "status": "success",
-                "processing_type": "lightweight",
-                "quality_score": quality_score,
-                "summary": basic_summary,
-                "title": title,
-                "bypass_reason": bypass_reason,
-                "memory_stored": memory_result.success if memory_result else False,
-                "processing_duration": processing_duration,
-                "time_saved_estimate": "60-75%",
-                "quality_metrics": raw_metrics,
-            },
-        )
+            result = self._finalize_pipeline(
+                ctx.start_time,
+                "success",
+                {
+                    "status": "success",
+                    "processing_type": "lightweight",
+                    "quality_score": quality_score,
+                    "summary": basic_summary,
+                    "title": title,
+                    "bypass_reason": bypass_reason,
+                    "memory_stored": memory_result.success if memory_result else False,
+                    "processing_duration": processing_duration,
+                    "time_saved_estimate": "60-75%",
+                    "quality_metrics": raw_metrics,
+                },
+            )
+            self._langfuse_finish_span(ctx, "lightweight_processing", span_output)
+            return result
+        except Exception as exc:
+            error_msg = str(exc)
+            span_output.setdefault("status", "error")
+            span_output["error"] = error_msg
+            self._langfuse_finish_span(ctx, "lightweight_processing", span_output, error=error_msg)
+            raise
 
     async def _store_lightweight_memory(self, payload: dict[str, Any]) -> StepResult:
         """Store lightweight content summary in memory."""
@@ -854,6 +1144,12 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
         url: str,
         quality: str,
     ) -> tuple[StepResult | None, PipelineRunResult | None]:
+        self._langfuse_start_span(
+            ctx,
+            "download",
+            {"url": url, "quality": quality},
+            metadata={"phase": "download"},
+        )
         download_info = await self._run_download(url, quality)
         if not download_info.success:
             return None, self._fail(ctx.span, ctx.start_time, "download", download_info.to_dict())
@@ -865,6 +1161,13 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
             if extractor:
                 download_info.data["platform"] = str(extractor).lower()
         ctx.span.set_attribute("local_path", local_path)
+        span_output = {
+            "status": "success",
+            "platform": download_info.data.get("platform"),
+            "video_id": download_info.data.get("video_id"),
+            "duration": download_info.data.get("duration"),
+        }
+        self._langfuse_finish_span(ctx, "download", span_output)
         return download_info, None
 
     async def _transcription_phase(
@@ -874,6 +1177,15 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
     ) -> tuple[_TranscriptionArtifacts | None, PipelineRunResult | None]:
         local_path = download_info.data["local_path"]
         video_id = download_info.data.get("video_id")
+        self._langfuse_start_span(
+            ctx,
+            "transcription",
+            {
+                "video_id": video_id,
+                "local_path": local_path,
+            },
+            metadata={"phase": "transcription"},
+        )
         transcription_task = asyncio.create_task(self._run_transcription(local_path, video_id), name="transcription")
         drive_task, drive_info = self._start_drive_upload(download_info, local_path)
 
@@ -890,10 +1202,14 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
             else:
                 if drive_task and not drive_task.done():
                     drive_task.cancel()
+                error_message = transcription.error or "transcription_failed"
+                self._langfuse_finish_span(ctx, "transcription", transcription.to_dict(), error=error_message)
                 return None, self._fail(ctx.span, ctx.start_time, "transcription", transcription.to_dict())
 
         drive_artifacts = await self._await_drive_result(drive_task, drive_info, ctx.span, ctx.start_time)
         if isinstance(drive_artifacts, dict):
+            error_message = self._langfuse_error_message(drive_artifacts)
+            self._langfuse_finish_span(ctx, "transcription", drive_artifacts, error=error_message)
             return None, drive_artifacts
         drive_artifacts = cast("_DriveArtifacts", drive_artifacts)
 
@@ -905,6 +1221,14 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
         # analysis memory writes occur deterministically before transcript storage
         # in tests expecting specific call ordering.
         transcript_task: asyncio.Task[StepResult] | None = None
+
+        span_output = {
+            "status": "success",
+            "transcription_confidence": transcription.data.get("confidence"),
+            "drive_outcome": drive_artifacts.outcome,
+            "transcript_length": len(filtered_transcript),
+        }
+        self._langfuse_finish_span(ctx, "transcription", span_output)
 
         return (
             _TranscriptionArtifacts(
@@ -923,24 +1247,56 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
         transcription_bundle: _TranscriptionArtifacts,
     ) -> tuple[_AnalysisArtifacts | None, PipelineRunResult | None]:
         filtered_transcript = transcription_bundle.filtered_transcript
-        # Schedule transcript storage after analysis memory task is created to guarantee ordering
         transcript_task = transcription_bundle.transcript_task
         compression_meta: dict[str, Any] | None = None
 
-        analysis = await self._run_analysis(filtered_transcript)
+        analysis_span_output: dict[str, Any] = {
+            "video_id": download_info.data.get("video_id"),
+            "platform": download_info.data.get("platform"),
+            "transcript_length": len(filtered_transcript),
+        }
+        self._langfuse_start_span(
+            ctx,
+            "analysis",
+            analysis_span_output,
+            metadata={"phase": "analysis"},
+        )
+
+        try:
+            analysis = await self._run_analysis(filtered_transcript)
+        except Exception as exc:  # pragma: no cover - defensive
+            if transcript_task is None:
+                transcript_task = self._schedule_transcript_storage(filtered_transcript, download_info)
+            if transcript_task is not None and not transcript_task.done():
+                await self._await_transcript_best_effort(transcript_task)
+            error_msg = str(exc)
+            analysis_span_output.update({"status": "analysis_exception", "error": error_msg})
+            self._langfuse_finish_span(ctx, "analysis", analysis_span_output, error=error_msg)
+            error_payload = {"status": "error", "error": error_msg, "step": "analysis"}
+            return None, self._fail(ctx.span, ctx.start_time, "analysis", error_payload)
+
         if isinstance(analysis, Exception) or not analysis.success:
-            # Ensure transcript storage is attempted even if analysis fails
             if transcript_task is None:
                 transcript_task = self._schedule_transcript_storage(filtered_transcript, download_info)
             if transcript_task is not None and not transcript_task.done():
                 await self._await_transcript_best_effort(transcript_task)
             error_msg = str(analysis) if isinstance(analysis, Exception) else analysis.error or "analysis failed"
+            analysis_span_output.update({"status": "analysis_failed", "error": error_msg})
+            self._langfuse_finish_span(ctx, "analysis", analysis_span_output, error=error_msg)
             error_payload = {"status": "error", "error": error_msg, "step": "analysis"}
             return None, self._fail(ctx.span, ctx.start_time, "analysis", error_payload)
+
+        analysis_span_output.update(
+            {
+                "analysis_keys": list(analysis.data.keys())[:10],
+                "analysis_success": True,
+            }
+        )
 
         compressed_transcript, compression_meta = self._maybe_compress_transcript(filtered_transcript)
         if compression_meta:
             analysis.data.setdefault("transcript_compression", compression_meta)
+            analysis_span_output["compression"] = compression_meta
 
         fallacy_task = asyncio.create_task(self._run_fallacy(compressed_transcript), name="fallacy")
         perspective_task = asyncio.create_task(
@@ -954,26 +1310,35 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
                 perspective_task.cancel()
                 with suppress(Exception):
                     await perspective_task
+            fallacy_error = fallacy.error or "fallacy failed"
+            analysis_span_output.update({"status": "fallacy_failed", "fallacy_error": fallacy_error})
+            self._langfuse_finish_span(ctx, "analysis", analysis_span_output, error=fallacy_error)
             return None, self._fail(
                 ctx.span,
                 ctx.start_time,
                 "fallacy",
-                {"status": "error", "error": fallacy.error, "step": "fallacy"},
+                {"status": "error", "error": fallacy_error, "step": "fallacy"},
             )
 
         try:
             perspective = await perspective_task
-        except Exception as exc:  # pragma: no cover - defensive path
+        except Exception as exc:  # pragma: no cover - defensive
+            error_msg = str(exc)
+            analysis_span_output.update({"status": "perspective_exception", "perspective_error": error_msg})
+            self._langfuse_finish_span(ctx, "analysis", analysis_span_output, error=error_msg)
             return None, self._fail(
                 ctx.span,
                 ctx.start_time,
                 "perspective",
-                {"status": "error", "error": str(exc), "step": "perspective"},
+                {"status": "error", "error": error_msg, "step": "perspective"},
             )
 
         if not perspective.success:
             perspective_payload = perspective.to_dict()
             perspective_payload["step"] = "perspective"
+            perspective_error = perspective.error or "perspective failed"
+            analysis_span_output.update({"status": "perspective_failed", "perspective_error": perspective_error})
+            self._langfuse_finish_span(ctx, "analysis", analysis_span_output, error=perspective_error)
             return None, self._fail(ctx.span, ctx.start_time, "perspective", perspective_payload)
 
         if compression_meta:
@@ -982,6 +1347,13 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
 
         summary = self._apply_pii_filtering(perspective.data.get("summary", ""), "summary")
         perspective.data["summary"] = summary
+        analysis_span_output.update(
+            {
+                "status": "success",
+                "summary_length": len(summary),
+                "sentiment": analysis.data.get("sentiment"),
+            }
+        )
 
         memory_payload = {
             "video_id": download_info.data["video_id"],
@@ -1074,6 +1446,15 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
             fallacy,
             perspective,
         )
+
+        analysis_span_output.update(
+            {
+                "memory_payload_keys": list(memory_payload.keys())[:10],
+                "graph_memory_enabled": graph_task is not None,
+                "hipporag_memory_enabled": hipporag_task is not None,
+            }
+        )
+        self._langfuse_finish_span(ctx, "analysis", analysis_span_output)
 
         return (
             _AnalysisArtifacts(

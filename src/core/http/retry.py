@@ -337,7 +337,7 @@ def retrying_post(
     effective_max = max_attempts if max_attempts is not None else resolve_retry_attempts()
     if _is_retry_enabled():
         if request_callable is None:
-            request_callable = lambda u, **_: resilient_post(  # noqa: E731
+            request_callable = lambda u, **__: resilient_post(  # noqa: E731
                 u,
                 json_payload=json_payload,
                 headers=headers,
@@ -349,6 +349,7 @@ def retrying_post(
             url,
             request_callable=request_callable,
             max_attempts=effective_max,
+            **kwargs,
         )
     return resilient_post(
         url,
@@ -373,7 +374,7 @@ def retrying_get(
     effective_max = max_attempts if max_attempts is not None else resolve_retry_attempts()
     if _is_retry_enabled():
         if request_callable is None:
-            request_callable = lambda u, **_: resilient_get(  # noqa: E731
+            request_callable = lambda u, **__: resilient_get(  # noqa: E731
                 u,
                 params=params,
                 headers=headers,
@@ -385,6 +386,7 @@ def retrying_get(
             url,
             request_callable=request_callable,
             max_attempts=effective_max,
+            **kwargs,
         )
     return resilient_get(
         url,

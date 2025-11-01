@@ -44,6 +44,7 @@ class Scheduler:
         self.connectors = connectors
         self.learner = learner or LearningEngine()
         self._lock = get_lock_for_connection(self.conn)
+        self._background_tasks: set[asyncio.Task[Any]] = set()
         # Register scheduler domain if absent; arms represent poll interval seconds
         if "scheduler" not in self.learner.status():
             self.learner.register_domain("scheduler", priors={30: 0.0, 300: 0.0})
@@ -216,7 +217,9 @@ class Scheduler:
         # Flush operations synchronously for testing
         try:
             # Try async flush first
-            asyncio.create_task(self._state_batcher.flush())
+            task = asyncio.create_task(self._state_batcher.flush())
+            self._background_tasks.add(task)
+            task.add_done_callback(self._background_tasks.discard)
         except RuntimeError:
             # No event loop, flush synchronously
             # Execute operations directly
@@ -304,14 +307,14 @@ class Scheduler:
             for job in jobs_to_enqueue:
                 # Record enqueued metric with error handling
                 handle_error_safely(
-                    lambda: metrics.SCHEDULER_ENQUEUED.labels(**metrics.label_ctx(), source=job.source).inc(),
+                    lambda job=job: metrics.SCHEDULER_ENQUEUED.labels(**metrics.label_ctx(), source=job.source).inc(),
                     error_message=f"Failed to record scheduler enqueued metric for source {job.source}",
                 )
                 # Update queue backlog metric with error handling
                 handle_error_safely(
-                    lambda: metrics.SCHEDULER_QUEUE_BACKLOG.labels(tenant=job.tenant, workspace=job.workspace).set(
-                        self.queue.pending_count_for(job.tenant, job.workspace)
-                    ),
+                    lambda job=job: metrics.SCHEDULER_QUEUE_BACKLOG.labels(
+                        tenant=job.tenant, workspace=job.workspace
+                    ).set(self.queue.pending_count_for(job.tenant, job.workspace)),
                     error_message=f"Failed to update scheduler queue backlog metric for {job.tenant}/{job.workspace}",
                 )
 
@@ -328,22 +331,22 @@ class Scheduler:
             self.queue.mark_done(qjob.id)
             # Record processed metric with error handling
             handle_error_safely(
-                lambda: metrics.SCHEDULER_PROCESSED.labels(**metrics.label_ctx(), source=qjob.job.source).inc(),
+                lambda job=qjob.job: metrics.SCHEDULER_PROCESSED.labels(**metrics.label_ctx(), source=job.source).inc(),
                 error_message=f"Failed to record scheduler processed metric for source {qjob.job.source}",
             )
         except Exception as exc:  # pragma: no cover - defensive
             self.queue.mark_error(qjob.id, str(exc))
             # Record error metric with error handling
             handle_error_safely(
-                lambda: metrics.SCHEDULER_ERRORS.labels(**metrics.label_ctx(), source=qjob.job.source).inc(),
+                lambda job=qjob.job: metrics.SCHEDULER_ERRORS.labels(**metrics.label_ctx(), source=job.source).inc(),
                 error_message=f"Failed to record scheduler error metric for source {qjob.job.source}",
             )
         finally:
             # Update queue backlog metric with error handling
             handle_error_safely(
-                lambda: metrics.SCHEDULER_QUEUE_BACKLOG.labels(
-                    tenant=qjob.job.tenant, workspace=qjob.job.workspace
-                ).set(self.queue.pending_count_for(qjob.job.tenant, qjob.job.workspace)),
+                lambda job=qjob.job: metrics.SCHEDULER_QUEUE_BACKLOG.labels(
+                    tenant=job.tenant, workspace=job.workspace
+                ).set(self.queue.pending_count_for(job.tenant, job.workspace)),
                 error_message=f"Failed to update scheduler queue backlog metric for {qjob.job.tenant}/{qjob.job.workspace}",
             )
         return qjob.job
@@ -358,7 +361,9 @@ class Scheduler:
 
     def flush_pending_operations(self) -> None:
         """Flush all pending batch operations."""
-        asyncio.create_task(self._state_batcher.flush())
+        task = asyncio.create_task(self._state_batcher.flush())
+        self._background_tasks.add(task)
+        task.add_done_callback(self._background_tasks.discard)
         self._bulk_inserter.flush_all()
         self.queue.flush_pending_operations()
 

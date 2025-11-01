@@ -65,11 +65,10 @@ def _extract_content(resp: Any) -> StepResult:
     downstream token counting.
     """
     try:
-        if isinstance(resp, _LiteLLMResponse):  # structural check
-            if resp.choices:
-                msg = resp.choices[0].message
-                if msg and getattr(msg, "content", None) is not None:
-                    return str(msg.content)
+        if isinstance(resp, _LiteLLMResponse) and resp.choices:  # structural check
+            msg = resp.choices[0].message
+            if msg and getattr(msg, "content", None) is not None:
+                return str(msg.content)
         # Fallbacks: streaming wrappers may expose ``content`` directly
         direct = getattr(resp, "content", None)
         if direct is not None:

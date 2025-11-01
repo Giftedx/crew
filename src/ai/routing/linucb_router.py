@@ -17,6 +17,7 @@ Notes:
 
 from __future__ import annotations
 
+import contextlib
 import json
 import math
 import os
@@ -116,11 +117,9 @@ class LinUCBRouter:
         self._cond_threshold = float(os.getenv("LINUCB_COND_THRESHOLD", "0") or 0.0)
         # Load persisted state if enabled
         if self._persist_enabled:
-            try:
+            with contextlib.suppress(Exception):  # pragma: no cover - defensive
                 os.makedirs(self._state_dir, exist_ok=True)
                 self._load_state()
-            except Exception:  # pragma: no cover - defensive
-                pass
 
     # ---------------------- Matrix Helpers ----------------------
     def _identity(self) -> list[list[float]]:
@@ -197,10 +196,8 @@ class LinUCBRouter:
                     best_score = score
                     best_arm = arm
         if self._sel_counter:
-            try:
-                self._sel_counter.inc(1)  # labels already bound
-            except Exception:  # pragma: no cover
-                pass
+            with contextlib.suppress(Exception):  # pragma: no cover
+                self._sel_counter.inc(1)
         return best_arm
 
     def update(self, arm: str, reward: float, features: Sequence[float]) -> None:
@@ -236,43 +233,31 @@ class LinUCBRouter:
             if self._recompute_interval > 0 and ctx.updates % self._recompute_interval == 0:
                 ctx.A_inv = self._mat_inv(ctx.A)
                 if self._recompute_counter:
-                    try:
+                    with contextlib.suppress(Exception):  # pragma: no cover
                         self._recompute_counter.inc(1)
-                    except Exception:  # pragma: no cover
-                        pass
             # Estimate condition number (very rough) using infinity norm * infinity norm of inverse
             if self._cond_gauge:
-                try:
+                with contextlib.suppress(Exception):  # pragma: no cover
                     # ||A||_inf
                     norm_A = max(sum(abs(v) for v in row) for row in ctx.A)
                     # ensure inverse present (may have been updated)
                     inv = ctx.A_inv or self._mat_inv(ctx.A)
                     norm_A_inv = max(sum(abs(v) for v in row) for row in inv)
                     cond_est = norm_A * norm_A_inv
-                    try:
+                    with contextlib.suppress(Exception):  # pragma: no cover
                         self._cond_gauge.set(cond_est)
-                    except Exception:  # pragma: no cover
-                        pass
                     if self._cond_threshold > 0 and cond_est > self._cond_threshold:
                         # Force full recompute to mitigate drift
                         ctx.A_inv = self._mat_inv(ctx.A)
                         if self._recompute_counter:
-                            try:
+                            with contextlib.suppress(Exception):  # pragma: no cover
                                 self._recompute_counter.inc(1)
-                            except Exception:  # pragma: no cover
-                                pass
-                except Exception:  # pragma: no cover
-                    pass
         if self._update_counter:
-            try:
+            with contextlib.suppress(Exception):  # pragma: no cover
                 self._update_counter.inc(1)
-            except Exception:  # pragma: no cover
-                pass
         if self._persist_enabled:
-            try:
+            with contextlib.suppress(Exception):  # pragma: no cover
                 self._save_state()
-            except Exception:  # pragma: no cover
-                pass
 
     # Convenience interface: returns (arm, score)
     def select_with_score(self, arms: Sequence[str], features: Sequence[float]) -> tuple[str, float]:

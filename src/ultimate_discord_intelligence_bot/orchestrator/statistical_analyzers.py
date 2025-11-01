@@ -78,6 +78,7 @@ def calculate_consolidation_metrics_from_crew(crew_result: Any, log: logging.Log
     Returns:
         Dictionary with consolidation metrics (score, depth, coverage, persistence)
     """
+    _logger = log or logger
     try:
         if not crew_result:
             return {}
@@ -101,8 +102,16 @@ def calculate_consolidation_metrics_from_crew(crew_result: Any, log: logging.Log
             "knowledge_persistence": True,
         }
 
+        _logger.debug(
+            "Calculated consolidation metrics",
+            extra={
+                "indicators_detected": consolidation_count,
+                "result_length": len(crew_output),
+            },
+        )
         return metrics
-    except Exception:
+    except Exception as exc:
+        _logger.debug("Consolidation metrics calculation error: %s", exc)
         return {}
 
 

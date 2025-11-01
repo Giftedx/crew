@@ -565,9 +565,8 @@ class ContentDiscovery:
                     continue
 
                 # Hashtag filter
-                if query.hashtag_filters:
-                    if not any(tag in item.hashtags for tag in query.hashtag_filters):
-                        continue
+                if query.hashtag_filters and not any(tag in item.hashtags for tag in query.hashtag_filters):
+                    continue
 
                 # Quality threshold
                 if item.relevance_score < query.quality_threshold:

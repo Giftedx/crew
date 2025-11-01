@@ -100,7 +100,7 @@ class KGStore:
     def add_node(
         self,
         tenant: str,
-        type: str,
+        node_type: str,
         name: str,
         attrs: dict[str, Any] | None = None,
         created_at: str = "",
@@ -108,7 +108,7 @@ class KGStore:
         cur = self.conn.cursor()
         cur.execute(
             "INSERT INTO kg_nodes (tenant, type, name, attrs_json, created_at) VALUES (?, ?, ?, ?, ?)",
-            (tenant, type, name, json.dumps(attrs or {}), created_at),
+            (tenant, node_type, name, json.dumps(attrs or {}), created_at),
         )
         self.conn.commit()
         row_id = cur.lastrowid
@@ -116,13 +116,13 @@ class KGStore:
             raise RuntimeError("Expected lastrowid for inserted kg_node")
         return int(row_id)
 
-    def query_nodes(self, tenant: str, *, type: str | None = None, name: str | None = None) -> list[KGNode]:
+    def query_nodes(self, tenant: str, *, node_type: str | None = None, name: str | None = None) -> list[KGNode]:
         cur = self.conn.cursor()
         conditions = ["tenant = ?"]
         params: list[Any] = [tenant]
-        if type:
+        if node_type:
             conditions.append("type = ?")
-            params.append(type)
+            params.append(node_type)
         if name:
             conditions.append("name = ?")
             params.append(name)
@@ -144,7 +144,7 @@ class KGStore:
         self,
         src_id: int,
         dst_id: int,
-        type: str,
+        edge_type: str,
         *,
         weight: float = 1.0,
         provenance_id: int | None = None,
@@ -152,11 +152,8 @@ class KGStore:
     ) -> int:
         cur = self.conn.cursor()
         cur.execute(
-            """
-            INSERT INTO kg_edges (src_id, dst_id, type, weight, provenance_id, created_at)
-            VALUES (?, ?, ?, ?, ?, ?)
-            """,
-            (src_id, dst_id, type, weight, provenance_id, created_at),
+            "INSERT INTO kg_edges (src_id, dst_id, type, weight, provenance_id, created_at) VALUES (?, ?, ?, ?, ?, ?)",
+            (src_id, dst_id, edge_type, weight, provenance_id, created_at),
         )
         self.conn.commit()
         row_id = cur.lastrowid
@@ -169,7 +166,7 @@ class KGStore:
         *,
         src_id: int | None = None,
         dst_id: int | None = None,
-        type: str | None = None,
+        edge_type: str | None = None,
     ) -> list[KGEdge]:
         cur = self.conn.cursor()
         conditions: list[str] = []
@@ -180,9 +177,9 @@ class KGStore:
         if dst_id is not None:
             conditions.append("dst_id = ?")
             params.append(dst_id)
-        if type is not None:
+        if edge_type is not None:
             conditions.append("type = ?")
-            params.append(type)
+            params.append(edge_type)
         query = "SELECT * FROM kg_edges"
         if conditions:
             query += " WHERE " + " AND ".join(conditions)

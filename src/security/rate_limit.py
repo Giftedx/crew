@@ -9,6 +9,7 @@ for distributed rate limiting.
 
 from __future__ import annotations
 
+import contextlib
 import time
 from dataclasses import dataclass, field
 
@@ -56,10 +57,8 @@ class TokenBucket:
         allowed = tokens_left >= tokens
         if allowed:
             tokens_left -= tokens
-        # Persist back only when underlying storage is a dict; otherwise keep the monkeypatched sentinel
-        try:
-            self._tokens[key] = tokens_left
-        except Exception:  # pragma: no cover - non-dict sentinel
-            pass
+            # Persist back only when underlying storage is a dict; otherwise keep the monkeypatched sentinel
+            with contextlib.suppress(Exception):  # pragma: no cover - non-dict sentinel
+                self._tokens[key] = tokens_left
         self._timestamps[key] = now
         return allowed

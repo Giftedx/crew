@@ -462,11 +462,11 @@ class PersonalityDashboard:
         except Exception as e:
             return StepResult.fail(f"Failed to get dashboard summary: {e!s}")
 
-    async def export_personality_data(self, format: str = "json") -> StepResult:
+    async def export_personality_data(self, fmt: str = "json") -> StepResult:
         """Export personality data for analysis."""
         try:
             async with self._lock:
-                if format.lower() == "json":
+                if fmt.lower() == "json":
                     export_data = {
                         "trait_snapshots": {
                             trait_name: [

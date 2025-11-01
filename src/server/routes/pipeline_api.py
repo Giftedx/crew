@@ -12,6 +12,14 @@ if TYPE_CHECKING:
     from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
+_BACKGROUND_TASKS: set[asyncio.Task[Any]] = set()
+
+
+def _track_task(task: asyncio.Task[Any]) -> None:
+    _BACKGROUND_TASKS.add(task)
+    task.add_done_callback(_BACKGROUND_TASKS.discard)
+
+
 logger = logging.getLogger(__name__)
 
 
@@ -33,8 +41,8 @@ def register_pipeline_routes(app: FastAPI, settings: Any) -> None:
         return
 
     try:
-        from ultimate_discord_intelligence_bot.tenancy import TenantContext, with_tenant
-        from ultimate_discord_intelligence_bot.tools.pipeline_tool import PipelineTool
+        from ultimate_discord_intelligence_bot.mission_api import run_mission
+        from ultimate_discord_intelligence_bot.tenancy import TenantContext
     except Exception as exc:  # pragma: no cover - optional dependency path
         logger.debug("pipeline API wiring skipped: %s", exc)
         return
@@ -62,7 +70,6 @@ def register_pipeline_routes(app: FastAPI, settings: Any) -> None:
 
         resolved_quality = quality.strip() if isinstance(quality, str) else None
 
-        tool = PipelineTool()
         ctx = TenantContext(tenant_id=tenant_id, workspace_id=workspace_id)
 
         try:
@@ -70,8 +77,10 @@ def register_pipeline_routes(app: FastAPI, settings: Any) -> None:
                 "pipeline API request",
                 extra={"tenant_id": tenant_id, "workspace_id": workspace_id},
             )
-            with with_tenant(ctx):
-                result: StepResult = await tool._run_async(url.strip(), resolved_quality or "1080p")
+            result: StepResult = await run_mission(
+                {"url": url.strip(), "quality": (resolved_quality or "1080p")},
+                tenant_ctx=ctx,
+            )
         except HTTPException:
             raise
         except Exception as exc:  # pragma: no cover - pipeline error path
@@ -79,7 +88,7 @@ def register_pipeline_routes(app: FastAPI, settings: Any) -> None:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Pipeline execution failed",
-            )
+            ) from exc
 
         response_payload = result.to_dict()
         data = response_payload.setdefault("data", {})
@@ -126,11 +135,9 @@ def register_pipeline_routes(app: FastAPI, settings: Any) -> None:
             # Update status to running
             await queue.update_status(job_id, JobStatus.RUNNING, started_at=datetime.utcnow())
 
-            # Execute pipeline
-            tool = PipelineTool()
+            # Execute pipeline via mission API
             ctx = TenantContext(tenant_id=job.tenant_id, workspace_id=job.workspace_id)
-            with with_tenant(ctx):
-                result: StepResult = await tool._run_async(job.url, job.quality)
+            result: StepResult = await run_mission({"url": job.url, "quality": job.quality}, tenant_ctx=ctx)
 
             # Update with result
             await queue.update_status(
@@ -188,7 +195,8 @@ def register_pipeline_routes(app: FastAPI, settings: Any) -> None:
         )
 
         # Start background execution
-        asyncio.create_task(_execute_job_background(job_id))
+        task = asyncio.create_task(_execute_job_background(job_id))
+        _track_task(task)
 
         # Return job info
         job = await queue.get_job(job_id)
@@ -229,7 +237,6 @@ def register_pipeline_routes(app: FastAPI, settings: Any) -> None:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Failed to delete job",
             )
-
         return JSONResponse(
             status_code=status.HTTP_200_OK,
             content={
@@ -250,11 +257,11 @@ def register_pipeline_routes(app: FastAPI, settings: Any) -> None:
         if status:
             try:
                 status_filter = JobStatus(status)
-            except ValueError:
+            except ValueError as exc:
                 raise HTTPException(
                     status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                     detail=f"Invalid status: {status}. Must be one of: queued, running, completed, failed, cancelled",
-                )
+                ) from exc
 
         # List jobs
         jobs = await queue.list_jobs(tenant_id=tenant_id, workspace_id=workspace_id, status=status_filter)
@@ -276,7 +283,8 @@ def register_pipeline_routes(app: FastAPI, settings: Any) -> None:
             except Exception as exc:
                 logger.exception("Cleanup task error: %s", exc)
 
-    asyncio.create_task(_cleanup_task())
+    task = asyncio.create_task(_cleanup_task())
+    _track_task(task)
 
 
 __all__ = ["register_pipeline_routes"]

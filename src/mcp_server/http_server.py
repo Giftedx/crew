@@ -4,7 +4,7 @@ Tools:
 - http_get(url, params=None, use_cache=True, ttl_seconds=None, max_bytes=10000)
 
 Resources:
-- httpcfg://allowlist – current allowed hostnames
+- httpcfg://allowlist - current allowed hostnames
 
 Security:
 - Only HTTPS URLs allowed via core.http_utils.validate_public_https_url

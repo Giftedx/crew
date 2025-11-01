@@ -18,6 +18,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any
+from urllib.parse import urlparse
 
 from sqlalchemy import (
     JSON,
@@ -592,13 +593,13 @@ class UnifiedStoreManager:
     # Knowledge Graph Operations
     # ============================================================================
 
-    def add_kg_node(self, tenant: str, type: str, name: str, attrs: dict[str, Any] | None = None) -> StepResult:
+    def add_kg_node(self, tenant: str, node_type: str, name: str, attrs: dict[str, Any] | None = None) -> StepResult:
         """Add a knowledge graph node."""
         try:
             session = self.get_session()
             db_node = KGNodeModel(
                 tenant=tenant,
-                type=type,
+                type=node_type,
                 name=name,
                 attrs_json=json.dumps(attrs or {}),
             )
@@ -611,14 +612,20 @@ class UnifiedStoreManager:
             logger.error(f"Failed to add KG node: {e}")
             return StepResult.fail(f"Failed to add KG node: {e!s}")
 
-    def query_kg_nodes(self, tenant: str, *, type: str | None = None, name: str | None = None) -> StepResult:
+    def query_kg_nodes(
+        self,
+        tenant: str,
+        *,
+        node_type: str | None = None,
+        name: str | None = None,
+    ) -> StepResult:
         """Query knowledge graph nodes."""
         try:
             session = self.get_session()
             query = session.query(KGNodeModel).filter(KGNodeModel.tenant == tenant)
 
-            if type:
-                query = query.filter(KGNodeModel.type == type)
+            if node_type:
+                query = query.filter(KGNodeModel.type == node_type)
             if name:
                 query = query.filter(KGNodeModel.name == name)
 
@@ -699,7 +706,19 @@ def migrate_sqlite_to_postgresql(sqlite_path: str, postgresql_url: str, store_ty
     try:
         # This would contain the actual migration logic
         # For now, return a placeholder
-        logger.info(f"Migration from {sqlite_path} to PostgreSQL for {store_type} would be implemented here")
+        try:
+            parsed = urlparse(postgresql_url)
+            host = parsed.hostname or "unknown"
+            port = f":{parsed.port}" if parsed.port else ""
+            safe_target = f"{parsed.scheme or 'postgresql'}://{host}{port}"
+        except Exception:  # pragma: no cover - defensive fallback
+            safe_target = "postgresql://<unparsed>"
+        logger.info(
+            "Migration from %s to %s for %s would be implemented here",
+            sqlite_path,
+            safe_target,
+            store_type,
+        )
         return StepResult.ok(data={"message": f"Migration placeholder for {store_type}"})
     except Exception as e:
         logger.error(f"Failed to migrate {store_type}: {e}")

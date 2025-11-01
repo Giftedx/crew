@@ -12,7 +12,7 @@ import json
 import logging
 import time
 from datetime import datetime, timedelta
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, ClassVar
 
 from core import http_utils
 from ultimate_discord_intelligence_bot.creator_ops.config import CreatorOpsConfig
@@ -53,7 +53,7 @@ class YouTubeClient:
     BASE_URL = "https://www.googleapis.com/youtube/v3"
 
     # Quota costs for different operations
-    QUOTA_COSTS = {
+    QUOTA_COSTS: ClassVar[dict[str, int]] = {
         "search": 100,
         "videos": 1,
         "channels": 1,
@@ -440,7 +440,7 @@ class YouTubeClient:
             content = response.text
             return StepResult.ok(data={"content": content})
 
-        except requests.exceptions.RequestException as e:
+        except http_utils.requests.exceptions.RequestException as e:
             return StepResult.fail(f"Failed to download caption: {e!s}")
 
     def get_live_chat_messages(

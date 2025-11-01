@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
 import os
 import pathlib
@@ -19,24 +20,25 @@ from ultimate_discord_intelligence_bot.tenancy.registry import TenantRegistry
 from ..cache import TranscriptCache
 from ..settings import DISCORD_WEBHOOK
 from ..step_result import StepResult
-from ..tools.audio_transcription_tool import AudioTranscriptionTool
-from ..tools.discord_post_tool import DiscordPostTool
-from ..tools.graph_memory_tool import GraphMemoryTool
-from ..tools.hipporag_continual_memory_tool import HippoRagContinualMemoryTool
+from ..tools import (
+    AudioTranscriptionTool,
+    DiscordPostTool,
+    GraphMemoryTool,
+    HippoRagContinualMemoryTool,
+    LogicalFallacyTool,
+    MemoryStorageTool,
+    PerspectiveSynthesizerTool,
+    TextAnalysisTool,
+)
 
 
 try:  # pragma: no cover - optional dependency fallback
-    from ..tools.drive_upload_tool import DriveUploadTool
+    from ..tools.integration.drive_upload_tool import DriveUploadTool
 except Exception:  # pragma: no cover - degrade gracefully
-    from ..tools.drive_upload_tool_bypass import (
-        DriveUploadTool,  # type: ignore[assignment]
-    )
+    DriveUploadTool = None  # type: ignore[assignment]
 
+from ..services.langfuse_service import LangfuseService
 from ..services.prompt_engine import PromptEngine
-from ..tools.logical_fallacy_tool import LogicalFallacyTool
-from ..tools.memory_storage_tool import MemoryStorageTool
-from ..tools.perspective_synthesizer_tool import PerspectiveSynthesizerTool
-from ..tools.text_analysis_tool import TextAnalysisTool
 from .log_pattern_middleware import LogPatternMiddleware
 from .middleware import PipelineStepMiddleware, TracingStepMiddleware
 from .tracing import TRACING_AVAILABLE
@@ -62,6 +64,7 @@ class PipelineBase:
     graph_memory: GraphMemoryTool | None
     hipporag_memory: HippoRagContinualMemoryTool | None
     transcript_cache: TranscriptCache
+    langfuse_service: LangfuseService | None
 
     def __init__(
         self,
@@ -131,8 +134,23 @@ class PipelineBase:
             self.analyzer = analyzer
 
         try:
-            drive_tool = drive or DriveUploadTool()
-            if getattr(drive_tool, "service", None) is None:
+            self.langfuse_service = LangfuseService()
+        except Exception as exc:  # pragma: no cover - defensive safeguard
+            self.logger.debug("Langfuse service unavailable: %s", exc)
+            self.langfuse_service = None
+
+        try:
+            if drive is not None:
+                drive_tool = drive
+            elif DriveUploadTool is not None:
+                drive_tool = DriveUploadTool()
+            else:
+                drive_tool = None
+
+            if drive_tool is None:
+                self.logger.warning("Drive upload unavailable: DriveUploadTool not installed")
+                self.drive = None
+            elif getattr(drive_tool, "service", None) is None:
                 self.logger.warning("Drive upload disabled via configuration")
                 self.drive = None
             else:
@@ -452,14 +470,12 @@ class PipelineBase:
             backoff = delay * (2**attempt)
             jitter = random.uniform(0.5, 1.5)
             sleep_for = max(0.0, min(backoff * jitter, 60.0))
-            try:  # pragma: no cover - optional metric
+            with contextlib.suppress(Exception):  # pragma: no cover - optional metric
                 metrics.PIPELINE_RETRIES.labels(
                     **metrics.label_ctx(),
                     step=step,
                     reason=classification,
                 ).inc()
-            except Exception:
-                pass
             await asyncio.sleep(sleep_for)
 
         return result

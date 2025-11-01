@@ -138,17 +138,13 @@ MAPPING = {
 }
 
 __all__ = [
-    # Analysis tools
-    # Observability tools
+    # Combined exports from all domains; kept alphabetically sorted for RUF022 compliance
     "AdvancedPerformanceAnalyticsTool",
     "AgentBridgeTool",
-    # Acquisition tools
     "AudioTranscriptionTool",
     "CharacterProfileTool",
     "CheckpointManagementTool",
-    # Root tools
     "ClaimExtractorTool",
-    # Verification tools
     "ClaimVerifierTool",
     "CollectiveIntelligenceTool",
     "ConfidenceScoringTool",
@@ -158,7 +154,6 @@ __all__ = [
     "ContextVerificationTool",
     "CostTrackingTool",
     "CrossPlatformNarrativeTrackingTool",
-    # Memory tools
     "DSPyOptimizationTool",
     "DashboardIntegrationTool",
     "DebateCommandTool",
@@ -179,7 +174,6 @@ __all__ = [
     "HippoRagContinualMemoryTool",
     "ImageAnalysisTool",
     "InsightSharingTool",
-    # Social media downloaders
     "InstagramDownloadTool",
     "InstagramStoriesArchiverTool",
     "IntelligentAlertingTool",
@@ -204,7 +198,7 @@ __all__ = [
     "OutputValidationTool",
     "PerspectiveSynthesizerTool",
     "PipelineTool",
-    # Resolvers
+    "PlaywrightAutomationTool",
     "PodcastResolverTool",
     "PromptCompressionTool",
     "RagHybridTool",

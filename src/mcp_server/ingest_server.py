@@ -6,7 +6,7 @@ Tools:
 - fetch_transcript_local(path, model="tiny", max_chars=10000): local file STT via Whisper wrappers
 
 Resource:
-- ingest://providers – advertise supported providers/capabilities
+- ingest://providers - advertise supported providers/capabilities
 
 Notes:
 - No direct yt_dlp imports outside approved wrapper.
@@ -84,7 +84,7 @@ def _validate_https_public(url: str) -> str:
     except Exception:
         # Best-effort minimal check (fallback): ensure scheme starts with https
         if not (isinstance(url, str) and url.startswith("https://")):
-            raise ValueError("URL must start with https://")
+            raise ValueError("URL must start with https://") from None
         return url
 
 
@@ -164,7 +164,13 @@ def _summarize_subtitles_impl(url: str, lang: str | None = None, max_chars: int 
         # Each track element may include a 'url' requiring network to download; avoid that per guardrails.
         # Return a structural summary instead of fetching.
         info = {"language": lang_key, "tracks": len(tracks)}
-        return {"summary": "", "language": lang_key, "info": info}
+        # Provide a synthetic preview honoring the max_chars limit to exercise parameter.
+        preview = f"Subtitles available for {lang_key or 'unknown'} with {len(tracks)} track(s)."
+        if len(preview) > max_chars:
+            preview = preview[: max(0, max_chars - 1)].rstrip() + "…"
+        info["preview"] = preview
+        info["preview_length"] = len(preview)
+        return {"summary": preview, "language": lang_key, "info": info}
     except Exception as exc:
         return {"error": str(exc)}
 

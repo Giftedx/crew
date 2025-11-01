@@ -20,10 +20,10 @@ def detect(guild_id: int | None = None, use_bot: bool = True) -> int:
 
     Parameters can override the default via environment variables:
 
-    ``DISCORD_UPLOAD_LIMIT_BYTES`` – global override for bot uploads.
-    ``DISCORD_UPLOAD_LIMIT_WEBHOOK_BYTES`` – global override for webhooks.
-    ``DISCORD_UPLOAD_LIMIT_GUILD_<id>`` – per‑guild override (bot uploads).
-    ``DISCORD_UPLOAD_LIMIT_WEBHOOK_GUILD_<id>`` – per‑guild override for
+    ``DISCORD_UPLOAD_LIMIT_BYTES`` - global override for bot uploads.
+    ``DISCORD_UPLOAD_LIMIT_WEBHOOK_BYTES`` - global override for webhooks.
+    ``DISCORD_UPLOAD_LIMIT_GUILD_<id>`` - per-guild override (bot uploads).
+    ``DISCORD_UPLOAD_LIMIT_WEBHOOK_GUILD_<id>`` - per-guild override for
     webhook uploads.
 
     When no overrides are found the function defaults to 10 MiB per

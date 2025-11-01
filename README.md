@@ -16,6 +16,7 @@ The Ultimate Discord Intelligence Bot is a sophisticated multi-agent system that
 - **Real-Time Processing**: Live stream analysis and real-time content monitoring
 - **Advanced Memory Systems**: Vector storage, graph databases, and traditional storage integration
 - **Quality Assurance**: Comprehensive content quality assessment and validation
+- **Trajectory Evaluation & Feedback**: LangSmith-powered scoring with reinforcement learning feedback loops
 - **Performance Optimization**: Intelligent caching, model routing, and system optimization
 - **OpenAI Integration**: Advanced AI capabilities including structured outputs, function calling, streaming, voice, vision, and multimodal analysis
 
@@ -29,6 +30,7 @@ The Ultimate Discord Intelligence Bot is a sophisticated multi-agent system that
 - **Advanced Memory**: Vector stores, graph databases, and traditional storage
 - **Performance Optimization**: Intelligent caching and model routing
 - **Quality Assurance**: Comprehensive validation and consistency checking
+- **Observability Pipeline**: Langfuse tracing, Prometheus metrics, and StepResult instrumentation
 
 ### Agent Specialists
 
@@ -153,6 +155,25 @@ QDRANT_URL=http://localhost:6333
 QDRANT_API_KEY=your_qdrant_api_key
 ```
 
+#### LLM Provider Routing (new)
+
+Configure the provider-agnostic router that selects the best model per request.
+
+```bash
+# Comma-separated provider allowlist used to build routing candidates
+# Examples: openai,anthropic,google,openrouter,groq,together,cohere,mistral,fireworks,perplexity,xai,deepseek,azure_openai,bedrock
+LLM_PROVIDER_ALLOWLIST=openai,anthropic,google,openrouter
+
+# Router policy: quality_first | cost | latency
+ROUTER_POLICY=quality_first
+
+# Comma-separated task names that should force quality-first routing
+QUALITY_FIRST_TASKS=analysis,reasoning,coding
+```
+
+These values are also available at runtime via `core.secure_config.get_config()`
+as `llm_provider_allowlist` (parsed list) and `router_policy`.
+
 #### Feature Flags
 
 ```bash
@@ -180,6 +201,14 @@ ENABLE_OPENAI_VISION=false
 ENABLE_OPENAI_MULTIMODAL=false
 ENABLE_OPENAI_FUNCTION_CALLING=true
 ENABLE_OPENAI_FALLBACK=true
+
+# Evaluation & Observability
+ENABLE_TRAJECTORY_EVALUATION=1  # Set to 1 to enable runtime scoring
+ENABLE_TRAJECTORY_FEEDBACK_LOOP=0  # Set to 1 to push scores into RL router
+RL_FEEDBACK_BATCH_SIZE=25  # Optional: number of feedback items processed per tick
+RL_FEEDBACK_LOOP_INTERVAL_SECONDS=15  # Optional: delay (seconds) between feedback loop runs
+ENABLE_LANGSMITH_EVAL=false
+ENABLE_LANGFUSE_EXPORT=false
 ```
 
 #### Performance Settings
@@ -238,6 +267,13 @@ result = crew.crew().kickoff(inputs={
 
 ## 📊 Monitoring & Observability
 
+### Langfuse Tracing
+
+- Feature-gated exporter capturing traces and spans for every pipeline step via `LangfuseService`
+- Configure with `ENABLE_LANGFUSE_EXPORT`, `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, and optional `LANGFUSE_BASE_URL`
+- StepResult-aware sanitization ensures payload safety and tenant metadata tagging
+- Validate instrumentation with `python run_observability_tests.py` or enable live export in staging
+
 ### Metrics Dashboard
 
 - Real-time performance metrics
@@ -273,6 +309,12 @@ pytest tests/agents/         # Agent tests
 pytest tests/services/       # Service tests
 pytest tests/integration/    # Integration tests
 ```
+
+### Trajectory Evaluation Suite
+
+- Validates LangSmith adapters and heuristic fallbacks.
+- Execute `pytest tests_new/unit/eval/test_langsmith_adapter.py` for focused coverage.
+- Enable `ENABLE_TRAJECTORY_EVALUATION=1` and `ENABLE_TRAJECTORY_FEEDBACK_LOOP=1` to exercise reinforcement feedback paths in integration environments.
 
 ### Quality Gates
 
@@ -340,7 +382,7 @@ kubectl get pods -l app=discord-intelligence-bot
 
 ### Project Structure
 
-```
+```text
 src/ultimate_discord_intelligence_bot/
 ├── main.py                 # Application entry point
 ├── crew.py                 # CrewAI crew definition
@@ -355,27 +397,27 @@ src/ultimate_discord_intelligence_bot/
 ### Adding New Tools
 
 1. Create tool class inheriting from `BaseTool`
-2. Implement `_run` method returning `StepResult`
-3. Add to `tools/__init__.py` exports
-4. Register in `crew.py` with appropriate agent
-5. Add comprehensive tests
+1. Implement `_run` method returning `StepResult`
+1. Add to `tools/__init__.py` exports
+1. Register in `crew.py` with appropriate agent
+1. Add comprehensive tests
 
 ### Adding New Agents
 
 1. Define agent in `crew.py` with `@agent` decorator
-2. Specify role, goal, backstory, and tools
-3. Add to crew construction in `crew()` method
-4. Update agent documentation
+1. Specify role, goal, backstory, and tools
+1. Add to crew construction in `crew()` method
+1. Update agent documentation
 
 ## 🤝 Contributing
 
 ### Development Workflow
 
 1. Fork the repository
-2. Create feature branch
-3. Implement changes with tests
-4. Run quality gates
-5. Submit pull request
+1. Create feature branch
+1. Implement changes with tests
+1. Run quality gates
+1. Submit pull request
 
 ### Code Standards
 

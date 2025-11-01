@@ -272,10 +272,13 @@ class UnifiedRetrievalEngine:
                     total_fields += 1
                     if result_metadata[key] == value:
                         overlap_score += 1.0
-                    elif isinstance(value, str) and isinstance(result_metadata[key], str):
+                    elif (
+                        isinstance(value, str)
+                        and isinstance(result_metadata[key], str)
+                        and value.lower() in result_metadata[key].lower()
+                    ):
                         # Partial string match
-                        if value.lower() in result_metadata[key].lower():
-                            overlap_score += 0.5
+                        overlap_score += 0.5
 
             return overlap_score / total_fields if total_fields > 0 else 0.0
 

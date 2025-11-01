@@ -167,9 +167,9 @@ class PerformanceProfiler:
         else:
             return "stable"
 
-    def export_profiles(self, format: str = "json") -> str:
+    def export_profiles(self, fmt: str = "json") -> str:
         """Export performance profiles."""
-        if format == "json":
+        if fmt == "json":
             return json.dumps(
                 {
                     "profiles": {
@@ -353,9 +353,9 @@ class SystemDebugger:
 
         return snapshots[:limit]
 
-    def export_snapshots(self, format: str = "json") -> str:
+    def export_snapshots(self, fmt: str = "json") -> str:
         """Export debug snapshots."""
-        if format == "json":
+        if fmt == "json":
             snapshots_data = []
             for snapshot in self.snapshots[-50:]:  # Last 50 snapshots
                 snapshots_data.append(

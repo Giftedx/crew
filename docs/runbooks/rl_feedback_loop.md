@@ -18,6 +18,7 @@ The RL (Reinforcement Learning) feedback loop processes trajectory evaluation fe
 - `rl_feedback_processed_total{tenant,workspace}` - Successfully processed feedback items
 - `rl_feedback_failed_total{tenant,workspace}` - Failed feedback items
 - `rl_feedback_queue_depth{tenant,workspace}` - Current queue size
+- `rl_feedback_processing_latency_ms{tenant,workspace}` - Batch latency distribution (ms)
 
 ### Derived Metrics
 
@@ -35,7 +36,18 @@ export ENABLE_TRAJECTORY_EVALUATION=true
 
 # Required for background processing loop
 export ENABLE_TRAJECTORY_FEEDBACK_LOOP=true
+
+# Optional tuning knobs
+export RL_FEEDBACK_BATCH_SIZE=25
+export RL_FEEDBACK_LOOP_INTERVAL_SECONDS=15
 ```
+
+### Tuning Guidelines
+
+- **Increase `RL_FEEDBACK_BATCH_SIZE`** when queue depth grows faster than it drains.
+- **Decrease `RL_FEEDBACK_BATCH_SIZE`** in low-volume environments to reduce bursty load.
+- **Lower `RL_FEEDBACK_LOOP_INTERVAL_SECONDS`** to achieve faster convergence when feedback is latency-sensitive.
+- **Raise `RL_FEEDBACK_LOOP_INTERVAL_SECONDS`** to reduce background work during quiet periods.
 
 ### Verification
 
@@ -62,12 +74,12 @@ curl -s http://localhost:9090/api/v1/query?query=rl_feedback_queue_depth | jq '.
    kubectl logs -n crew deployment/crew-api --since=30m | grep -i "rl feedback"
    ```
 
-2. Look for common failure patterns:
+1. Look for common failure patterns:
    - Router import failures
    - Malformed feedback payloads
    - Bandit update exceptions
 
-3. Check if router is registered:
+1. Check if router is registered:
 
    ```python
    from ultimate_discord_intelligence_bot.services.rl_router_registry import get_rl_model_router
@@ -94,13 +106,13 @@ curl -s http://localhost:9090/api/v1/query?query=rl_feedback_queue_depth | jq '.
    rate(rl_feedback_processed_total[5m])
    ```
 
-2. Compare to emission rate (from evaluator):
+1. Compare to emission rate (from evaluator):
 
    ```promql
    rate(trajectory_feedback_emissions_total[5m])
    ```
 
-3. Check for processing bottleneck:
+1. Check for processing bottleneck:
    - Slow bandit updates
    - Lock contention
    - Resource exhaustion
@@ -128,13 +140,13 @@ curl -s http://localhost:9090/api/v1/query?query=rl_feedback_queue_depth | jq '.
    kubectl logs -n crew deployment/crew-api --tail=500 | grep "RL feedback"
    ```
 
-2. Check flag status:
+1. Check flag status:
 
    ```bash
    kubectl exec -it deployment/crew-api -- env | grep ENABLE_TRAJECTORY_FEEDBACK_LOOP
    ```
 
-3. Check for deadlock or exception in loop:
+1. Check for deadlock or exception in loop:
 
    ```bash
    kubectl logs -n crew deployment/crew-api --since=1h | grep -i "error\|exception"
@@ -233,13 +245,13 @@ self._rl_feedback_task = asyncio.create_task(self._rl_feedback_loop(interval_sec
 ## Monitoring Best Practices
 
 1. **Dashboard**: Import `docs/grafana/rl_feedback_loop_dashboard.json`
-2. **Alerts**: Load `docs/prometheus/rl_feedback_alerts.yml` into Prometheus
-3. **SLOs**:
+1. **Alerts**: Load `docs/prometheus/rl_feedback_alerts.yml` into Prometheus
+1. **SLOs**:
    - Success rate > 99%
    - Queue depth < 10 (95th percentile)
    - Processing latency < 5s (per batch)
 
-4. **Regular Reviews**:
+1. **Regular Reviews**:
    - Weekly: Check success rate trends
    - Monthly: Tune batch size/interval based on volume
    - Quarterly: Validate bandit convergence metrics
@@ -281,9 +293,9 @@ kubectl rollout restart deployment/crew-api -n crew
    kubectl set env deployment/crew-api ENABLE_TRAJECTORY_EVALUATION=false
    ```
 
-2. Drain existing queue via one-shot processing
+1. Drain existing queue via one-shot processing
 
-3. Re-enable evaluation:
+1. Re-enable evaluation:
 
    ```bash
    kubectl set env deployment/crew-api ENABLE_TRAJECTORY_EVALUATION=true

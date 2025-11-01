@@ -287,7 +287,7 @@ if os.getenv("PYTEST_DISABLE_HEAVY_STUBS", "0").lower() not in {"1", "true", "ye
 
 
 @pytest.hookimpl(tryfirst=True)
-def pytest_ignore_collect(path, config):
+def pytest_ignore_collect(path, _config):
     """Optionally skip root-level tests unless FULL_STACK_TEST=1.
 
     pytest passes a py.path.LocalPath here, not a pathlib.Path. Normalize to
@@ -300,11 +300,15 @@ def pytest_ignore_collect(path, config):
         p = Path(os.fspath(path))
 
     # Only applies to root-level test_*.py files (not in subdirs)
-    if p.parent == ROOT and p.name.startswith("test_") and p.suffix == ".py":
-        if os.environ.get("FULL_STACK_TEST", "0") != "1":
-            # Print a message for developer clarity
-            print(f"[pytest] Skipping root-level {p.name} (set FULL_STACK_TEST=1 to include)")
-            return True
+    if (
+        p.parent == ROOT
+        and p.name.startswith("test_")
+        and p.suffix == ".py"
+        and os.environ.get("FULL_STACK_TEST", "0") != "1"
+    ):
+        # Print a message for developer clarity
+        print(f"[pytest] Skipping root-level {p.name} (set FULL_STACK_TEST=1 to include)")
+        return True
     return False
 
 
@@ -368,12 +372,9 @@ def _global_traceback_dumps():  # pragma: no cover - diagnostic facility
     }:
         return
     delay = _int_from_env("PYTEST_GLOBAL_TRACEBACK_TIMEOUT_SECONDS", 900)
-    try:
+    with contextlib.suppress(Exception):
         faulthandler.enable()  # idempotent
         faulthandler.dump_traceback_later(delay, repeat=True)
-    except Exception:
-        # Non-fatal; continue without global dumps
-        pass
     yield
     with contextlib.suppress(Exception):
         faulthandler.cancel_dump_traceback_later()
@@ -398,11 +399,9 @@ def _per_test_timeout(request):  # pragma: no cover - timing behavior
         test_id = getattr(getattr(request, "node", None), "nodeid", "<unknown test>")
 
         def _on_timeout(*_):
-            try:
+            with contextlib.suppress(Exception):
                 # Dump current stacks to help debugging
                 faulthandler.dump_traceback()
-            except Exception:
-                pass
             # Raise a TimeoutError to fail the test immediately
             raise TimeoutError(f"⏰ Test timed out after {timeout}s: {test_id}")
 
@@ -414,11 +413,9 @@ def _per_test_timeout(request):  # pragma: no cover - timing behavior
         finally:
             with contextlib.suppress(Exception):
                 signal.alarm(0)
-            try:
+            with contextlib.suppress(Exception):
                 if prev_handler is not None:
                     signal.signal(signal.SIGALRM, prev_handler)  # type: ignore[arg-type]
-            except Exception:
-                pass
     else:
         # Fallback: no reliable way to interrupt the test without signals.
         # We still enable faulthandler to provide diagnostics if a hang occurs.

@@ -117,6 +117,7 @@ class LiveClipRadar:
         self.active_monitors = {}
         self.viral_moments = []
         self.clip_candidates = []
+        self._background_tasks: set[asyncio.Task[Any]] = set()
 
     async def start_monitoring(
         self,
@@ -697,9 +698,12 @@ class LiveClipRadar:
             import os
             import tempfile
 
-            temp_file = tempfile.NamedTemporaryFile(suffix=".wav", delete=False)
-            temp_path = temp_file.name
-            temp_file.close()
+            # Calculate duration for the clip
+            duration = max(0.0, float(end_time) - float(start_time))
+
+            # Use a context manager for temp file creation per lint guidance
+            with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as temp_file:
+                temp_path = temp_file.name
 
             # Implemented: FFmpeg audio extraction
             try:
@@ -809,7 +813,9 @@ class LiveClipRadar:
         """Cleanup resources."""
         # Stop all active monitors
         for monitor_id in list(self.active_monitors.keys()):
-            asyncio.create_task(self.stop_monitoring(monitor_id))
+            task = asyncio.create_task(self.stop_monitoring(monitor_id))
+            self._background_tasks.add(task)
+            task.add_done_callback(self._background_tasks.discard)
 
         # Cleanup media processing components
         self.asr.cleanup()

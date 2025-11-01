@@ -11,12 +11,12 @@ import asyncio
 import sys
 from pathlib import Path
 
-
-# Add project root to path
-project_root = Path(__file__).parent
-sys.path.insert(0, str(project_root))
-
 import pytest
+
+
+PROJECT_ROOT = Path(__file__).parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
 
 async def run_observability_tests():

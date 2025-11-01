@@ -35,7 +35,7 @@ class SecretsVault:
         try:
             self.fernet = Fernet(self.encryption_key.encode())
         except Exception as e:
-            raise ValueError(f"Invalid encryption key: {e!s}")
+            raise ValueError(f"Invalid encryption key: {e!s}") from e
 
     def encrypt_secret(self, secret: str) -> str:
         """Encrypt a secret string.

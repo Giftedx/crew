@@ -112,7 +112,7 @@ async def main():
         if os.getenv("ENABLE_INGEST_WORKER", "0") in {"1", "true", "True"}:
             await start_ingest_workers(asyncio.get_running_loop())
         else:
-            print("ℹ️  Ingest workers disabled (ENABLE_INGEST_WORKER=0)")
+            print("INFO: Ingest workers disabled (ENABLE_INGEST_WORKER=0)")
         print("📨 Discord posts will use webhooks if configured; no gateway commands are exposed.")
 
         async def _heartbeat_loop():

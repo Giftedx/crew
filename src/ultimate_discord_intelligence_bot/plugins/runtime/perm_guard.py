@@ -7,7 +7,7 @@ if TYPE_CHECKING:
     from collections.abc import Iterable
 
 
-class PermissionError(Exception):
+class PluginPermissionError(Exception):
     """Raised when a plugin attempts to use a capability without permission."""
 
 
@@ -20,4 +20,4 @@ class PermissionGuard:
     def require(self, scopes: Iterable[str]) -> None:
         missing = set(scopes) - self._granted
         if missing:
-            raise PermissionError(f"Missing permission(s): {', '.join(sorted(missing))}")
+            raise PluginPermissionError(f"Missing permission(s): {', '.join(sorted(missing))}")

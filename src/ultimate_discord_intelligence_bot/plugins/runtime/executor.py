@@ -16,7 +16,7 @@ except Exception:  # pragma: no cover - fallback when jsonschema missing or API 
 
 from core import learn
 
-from .perm_guard import PermissionError, PermissionGuard
+from .perm_guard import PermissionGuard, PluginPermissionError
 
 
 if TYPE_CHECKING:
@@ -83,7 +83,7 @@ class PluginExecutor:
         guard = PermissionGuard(granted_scopes)
         try:
             guard.require(manifest.get("capabilities", []))
-        except PermissionError as exc:
+        except PluginPermissionError as exc:
             return PluginResult(success=False, error=str(exc))
 
         entrypoint = manifest["entrypoint"]

@@ -33,22 +33,28 @@ def check_stepresult_compliance(file_path: Path) -> dict:
                 for item in node.body:
                     if isinstance(item, ast.FunctionDef) and item.name in ["_run", "run"]:
                         # Check return type annotation
-                        if item.returns and hasattr(item.returns, "id"):
-                            if item.returns.id == "StepResult":
-                                has_stepresult_returns = True
+                        if item.returns and hasattr(item.returns, "id") and item.returns.id == "StepResult":
+                            has_stepresult_returns = True
 
                         # Check for StepResult.ok/fail/skip in return statements
                         for stmt in item.body:
-                            if isinstance(stmt, ast.Return) and stmt.value:
-                                if isinstance(stmt.value, ast.Call) and (
-                                    (hasattr(stmt.value.func, "attr") and stmt.value.attr in ["ok", "fail", "skip"])
+                            if (
+                                isinstance(stmt, ast.Return)
+                                and stmt.value
+                                and isinstance(stmt.value, ast.Call)
+                                and (
+                                    (
+                                        hasattr(stmt.value.func, "attr")
+                                        and stmt.value.func.attr in ["ok", "fail", "skip"]
+                                    )
                                     or (
                                         hasattr(stmt.value.func, "value")
                                         and hasattr(stmt.value.func.value, "id")
                                         and stmt.value.func.value.id == "StepResult"
                                     )
-                                ):
-                                    has_stepresult_returns = True
+                                )
+                            ):
+                                has_stepresult_returns = True
 
         return {
             "file": str(file_path),

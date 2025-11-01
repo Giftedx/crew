@@ -62,7 +62,7 @@ def register_system_commands(bot_owner) -> None:
             cap_list = "\n".join([f"• {cap}" for cap in caps])
             embed.add_field(name=f"📋 {domain.title()}", value=cap_list, inline=True)
         embed.add_field(
-            name="ℹ️ Access Model",
+            name="Info: Access Model",
             value=("Analysis occurs off-platform\nResults presented as timelines\nNo direct tool access via Discord"),
             inline=False,
         )

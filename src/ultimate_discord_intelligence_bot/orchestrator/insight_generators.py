@@ -10,7 +10,13 @@ import logging
 from typing import Any
 
 
-logger = logging.getLogger(__name__)
+module_logger = logging.getLogger(__name__)
+
+
+def _resolve_logger(candidate: Any) -> logging.Logger:
+    if candidate is not None and hasattr(candidate, "debug"):
+        return candidate  # type: ignore[return-value]
+    return module_logger
 
 
 def generate_autonomous_insights(results: dict[str, Any], logger: Any | None = None) -> list[str]:
@@ -23,6 +29,7 @@ def generate_autonomous_insights(results: dict[str, Any], logger: Any | None = N
     Returns:
         List of insight strings with emoji indicators
     """
+    log = _resolve_logger(logger)
     insights = []
     try:
         # Deception score insights
@@ -50,8 +57,17 @@ def generate_autonomous_insights(results: dict[str, Any], logger: Any | None = N
         if knowledge_data.get("knowledge_storage"):
             insights.append("💾 Analysis results successfully integrated into knowledge base for future reference")
 
+        log.debug(
+            "Generated autonomous insights",
+            extra={
+                "insight_count": len(insights),
+                "deception_score": deception_score,
+                "fact_fallacies": len(fallacies),
+            },
+        )
         return insights
     except Exception as e:
+        log.exception("Autonomous insight generation failed", exc_info=e)
         return [f"❌ Insight generation failed: {e}"]
 
 
@@ -65,6 +81,7 @@ def generate_specialized_insights(results: dict[str, Any], logger: Any | None = 
     Returns:
         List of specialized insight strings
     """
+    log = _resolve_logger(logger)
     insights = []
     try:
         # Threat assessment insights
@@ -106,8 +123,17 @@ def generate_specialized_insights(results: dict[str, Any], logger: Any | None = 
         if social_data and social_data != {}:
             insights.append("🌐 Social Intelligence Coordinator gathered cross-platform context")
 
+        log.debug(
+            "Generated specialized insights",
+            extra={
+                "insight_count": len(insights),
+                "threat_level": threat_level,
+                "fallacy_count": len(fallacies),
+            },
+        )
         return insights
     except Exception as e:
+        log.exception("Specialized insight generation failed", exc_info=e)
         return [f"❌ Specialized insight generation encountered an error: {e}"]
 
 
@@ -130,6 +156,7 @@ def generate_ai_recommendations(
     Returns:
         List of actionable recommendations
     """
+    log = _resolve_logger(logger)
     recommendations: list[str] = []
     friendly_labels = {
         "content_coherence": "Improve transcript structuring and segmentation.",
@@ -163,8 +190,15 @@ def generate_ai_recommendations(
         if isinstance(verification_data, dict) and verification_data.get("fact_checks"):
             recommendations.append("✅ Verification coverage is comprehensive; keep existing workflow.")
         else:
-            recommendations.append("ℹ️ Add more fact-checking coverage to reinforce confidence.")
+            recommendations.append("Info: Add more fact-checking coverage to reinforce confidence.")
 
+    log.debug(
+        "AI recommendations generated",
+        extra={
+            "recommendation_count": len(recommendations),
+            "ai_quality_score": ai_quality_score,
+        },
+    )
     return recommendations
 
 
@@ -185,6 +219,7 @@ def generate_strategic_recommendations(
     Returns:
         List of strategic recommendations
     """
+    log = _resolve_logger(logger)
     try:
         recommendations = []
         threat_level = threat_data.get("threat_level", "unknown")
@@ -196,6 +231,39 @@ def generate_strategic_recommendations(
         else:
             recommendations.append("Standard content handling protocols apply")
 
+        if isinstance(analysis_data, dict):
+            sentiment_info = analysis_data.get("sentiment_summary") or analysis_data.get("sentiment_analysis", {})
+            if isinstance(sentiment_info, dict):
+                sentiment = sentiment_info.get("overall") or sentiment_info.get("dominant")
+                if sentiment:
+                    recommendations.append(
+                        f"Align remediation messaging with prevailing sentiment signal: {sentiment}."
+                    )
+
+            key_themes = analysis_data.get("themes") or analysis_data.get("key_themes")
+            if isinstance(key_themes, list) and key_themes:
+                surfaced = ", ".join(str(theme) for theme in key_themes[:3])
+                recommendations.append(f"Prioritize monitoring of emerging themes: {surfaced}.")
+
+        if isinstance(verification_data, dict):
+            coverage = verification_data.get("coverage_score")
+            with_coverage = isinstance(coverage, (int, float))
+            if with_coverage and coverage < 0.6:
+                recommendations.append("Increase verification coverage to mitigate residual risk.")
+
+            escalation = verification_data.get("escalation_required")
+            if escalation:
+                recommendations.append("Follow up on verification escalations to close outstanding actions.")
+
+        log.debug(
+            "Strategic recommendations generated",
+            extra={
+                "recommendation_count": len(recommendations),
+                "threat_level": threat_level,
+            },
+        )
+
         return recommendations
     except Exception:
+        log.exception("Strategic recommendation generation failed")
         return ["Strategic recommendation generation encountered an error"]

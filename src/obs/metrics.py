@@ -14,7 +14,7 @@ from typing import Any
 
 
 try:
-    from prometheus_client import Counter, Gauge, generate_latest
+    from prometheus_client import REGISTRY, Counter, Gauge, generate_latest  # type: ignore[import-not-found]
     from prometheus_client import Histogram as PrometheusHistogram
 
     PROMETHEUS_AVAILABLE = True
@@ -22,31 +22,31 @@ except ImportError:
     PROMETHEUS_AVAILABLE = False
 
     # Create dummy classes for when prometheus_client is not available
-    class Counter:
+    class Counter:  # type: ignore[no-redef]
         def __init__(self, *args, **kwargs):
             pass
 
-        def labels(self, **kwargs):
+        def labels(self, *args, **kwargs):
             return self
 
         def inc(self, amount=1):
             pass
 
-    class Gauge:
+    class Gauge:  # type: ignore[no-redef]
         def __init__(self, *args, **kwargs):
             pass
 
-        def labels(self, **kwargs):
+        def labels(self, *args, **kwargs):
             return self
 
         def set(self, value):
             pass
 
-    class PrometheusHistogram:
+    class PrometheusHistogram:  # type: ignore[no-redef]
         def __init__(self, *args, **kwargs):
             pass
 
-        def labels(self, **kwargs):
+        def labels(self, *args, **kwargs):
             return self
 
         def observe(self, value):
@@ -57,6 +57,40 @@ except ImportError:
 
 
 from .slo import SLO, SLOEvaluator
+
+
+def label_ctx(extra_labels: dict[str, str] | None = None) -> dict[str, str]:
+    """Return tenant/workspace labels for metrics emission.
+
+    Args:
+        extra_labels: Optional additional labels to merge into the context.
+
+    Returns:
+        Dictionary containing at minimum ``tenant`` and ``workspace`` keys.
+    """
+
+    labels = {"tenant": "unknown", "workspace": "unknown"}
+
+    try:
+        from ultimate_discord_intelligence_bot.tenancy.context import current_tenant
+
+        ctx = current_tenant()
+    except Exception:  # pragma: no cover - defensive safeguard
+        ctx = None
+
+    if ctx is not None:
+        tenant_id = getattr(ctx, "tenant_id", None) or getattr(ctx, "tenant", None)
+        workspace_id = getattr(ctx, "workspace_id", None) or getattr(ctx, "workspace", None)
+
+        if tenant_id:
+            labels["tenant"] = tenant_id
+        if workspace_id:
+            labels["workspace"] = workspace_id
+
+    if extra_labels:
+        labels.update(extra_labels)
+
+    return labels
 
 
 @dataclass
@@ -295,141 +329,273 @@ def record_vector_search(duration: float, results_count: int) -> None:
         _global_slo_monitor.record_vector_search(duration, results_count)
 
 
+def reset() -> None:
+    """Reset in-memory metrics collectors (primarily for tests)."""
+
+    _global_metrics.reset()
+
+
+def render() -> bytes:
+    """Render metrics output in Prometheus format when available."""
+
+    return get_metrics_data()
+
+
 # Prometheus-style metrics (if available)
 if PROMETHEUS_AVAILABLE:
+    # Helpers to avoid duplicate registration errors when modules are imported under
+    # different names (e.g., "src.obs.metrics" vs "obs.metrics") during tests.
+    def _get_or_create_counter(name: str, documentation: str, labelnames: list[str] | tuple[str, ...]):
+        existing = getattr(REGISTRY, "_names_to_collectors", {}).get(name)  # type: ignore[attr-defined]
+        if isinstance(existing, Counter):  # reuse existing
+            return existing
+        try:
+            return Counter(name, documentation, labelnames)
+        except Exception:
+            # Concurrent creation or prior registration under another import path
+            existing = getattr(REGISTRY, "_names_to_collectors", {}).get(name)  # type: ignore[attr-defined]
+            if existing:
+                return existing
+            raise
+
+    def _get_or_create_gauge(name: str, documentation: str, labelnames: list[str] | tuple[str, ...]):
+        existing = getattr(REGISTRY, "_names_to_collectors", {}).get(name)  # type: ignore[attr-defined]
+        if isinstance(existing, Gauge):
+            return existing
+        try:
+            return Gauge(name, documentation, labelnames)
+        except Exception:
+            existing = getattr(REGISTRY, "_names_to_collectors", {}).get(name)  # type: ignore[attr-defined]
+            if existing:
+                return existing
+            raise
+
+    def _get_or_create_histogram(
+        name: str,
+        documentation: str,
+        labelnames: list[str] | tuple[str, ...],
+        **kwargs: Any,
+    ):
+        existing = getattr(REGISTRY, "_names_to_collectors", {}).get(name)  # type: ignore[attr-defined]
+        if isinstance(existing, PrometheusHistogram):
+            return existing
+        try:
+            return PrometheusHistogram(name, documentation, labelnames, **kwargs)
+        except Exception:
+            existing = getattr(REGISTRY, "_names_to_collectors", {}).get(name)  # type: ignore[attr-defined]
+            if existing:
+                return existing
+            raise
+
     # Request metrics
-    REQUEST_COUNT = Counter("app_request_count_total", "Application Request Count", ["method", "endpoint"])
-    REQUEST_LATENCY = PrometheusHistogram(
+    REQUEST_COUNT = _get_or_create_counter(
+        "app_request_count_total", "Application Request Count", ["method", "endpoint"]
+    )
+    REQUEST_LATENCY = _get_or_create_histogram(
         "app_request_latency_seconds",
         "Request latency in seconds",
         ["method", "endpoint"],
     )
-    IN_PROGRESS_REQUESTS = Gauge("app_in_progress_requests", "In-progress requests", ["method", "endpoint"])
-    ERROR_COUNT = Counter(
+    IN_PROGRESS_REQUESTS = _get_or_create_gauge(
+        "app_in_progress_requests", "In-progress requests", ["method", "endpoint"]
+    )
+    ERROR_COUNT = _get_or_create_counter(
         "app_error_count_total",
         "Application Error Count",
         ["method", "endpoint", "error_type"],
     )
 
     # Cache metrics
-    CACHE_HIT_COUNT = Counter("app_cache_hit_count_total", "Cache Hit Count", ["cache_name"])
-    CACHE_MISS_COUNT = Counter("app_cache_miss_count_total", "Cache Miss Count", ["cache_name"])
+    CACHE_HIT_COUNT = _get_or_create_counter("app_cache_hit_count_total", "Cache Hit Count", ["cache_name"])
+    CACHE_MISS_COUNT = _get_or_create_counter("app_cache_miss_count_total", "Cache Miss Count", ["cache_name"])
 
     # Vector search metrics
-    VECTOR_SEARCH_LATENCY = PrometheusHistogram(
+    VECTOR_SEARCH_LATENCY = _get_or_create_histogram(
         "app_vector_search_latency_seconds",
         "Vector search latency in seconds",
         ["operation"],
     )
-    VECTOR_SEARCH_COUNT = Counter("app_vector_search_count_total", "Vector search count", ["operation"])
-    VECTOR_SEARCH_ERROR_COUNT = Counter(
+    VECTOR_SEARCH_COUNT = _get_or_create_counter("app_vector_search_count_total", "Vector search count", ["operation"])
+    VECTOR_SEARCH_ERROR_COUNT = _get_or_create_counter(
         "app_vector_search_error_count_total",
         "Vector search error count",
         ["operation"],
     )
 
     # Model routing metrics
-    MODEL_ROUTING_COUNT = Counter("app_model_routing_count_total", "Model routing count", ["model", "provider"])
-    MODEL_ROUTING_LATENCY = PrometheusHistogram(
+    MODEL_ROUTING_COUNT = _get_or_create_counter(
+        "app_model_routing_count_total", "Model routing count", ["model", "provider"]
+    )
+    MODEL_ROUTING_LATENCY = _get_or_create_histogram(
         "app_model_routing_latency_seconds",
         "Model routing latency in seconds",
         ["model", "provider"],
     )
-    MODEL_ROUTING_ERROR_COUNT = Counter(
+    MODEL_ROUTING_ERROR_COUNT = _get_or_create_counter(
         "app_model_routing_error_count_total",
         "Model routing error count",
         ["model", "provider"],
     )
 
     # OAuth metrics
-    OAUTH_TOKEN_REFRESH_COUNT = Counter(
+    OAUTH_TOKEN_REFRESH_COUNT = _get_or_create_counter(
         "app_oauth_token_refresh_count_total", "OAuth token refresh count", ["platform"]
     )
-    OAUTH_TOKEN_REFRESH_ERROR_COUNT = Counter(
+    OAUTH_TOKEN_REFRESH_ERROR_COUNT = _get_or_create_counter(
         "app_oauth_token_refresh_error_count_total",
         "OAuth token refresh error count",
         ["platform"],
     )
-    OAUTH_TOKEN_REFRESH_LATENCY = PrometheusHistogram(
+    OAUTH_TOKEN_REFRESH_LATENCY = _get_or_create_histogram(
         "app_oauth_token_refresh_latency_seconds",
         "OAuth token refresh latency in seconds",
         ["platform"],
     )
 
     # Content ingestion metrics
-    CONTENT_INGESTION_COUNT = Counter(
+    CONTENT_INGESTION_COUNT = _get_or_create_counter(
         "app_content_ingestion_count_total",
         "Content ingestion count",
         ["platform", "content_type"],
     )
-    CONTENT_INGESTION_ERROR_COUNT = Counter(
+    CONTENT_INGESTION_ERROR_COUNT = _get_or_create_counter(
         "app_content_ingestion_error_count_total",
         "Content ingestion error count",
         ["platform", "content_type"],
     )
-    CONTENT_INGESTION_LATENCY = PrometheusHistogram(
+    CONTENT_INGESTION_LATENCY = _get_or_create_histogram(
         "app_content_ingestion_latency_seconds",
         "Content ingestion latency in seconds",
         ["platform", "content_type"],
     )
 
     # Content analysis metrics
-    CONTENT_ANALYSIS_COUNT = Counter("app_content_analysis_count_total", "Content analysis count", ["analysis_type"])
-    CONTENT_ANALYSIS_ERROR_COUNT = Counter(
+    CONTENT_ANALYSIS_COUNT = _get_or_create_counter(
+        "app_content_analysis_count_total", "Content analysis count", ["analysis_type"]
+    )
+    CONTENT_ANALYSIS_ERROR_COUNT = _get_or_create_counter(
         "app_content_analysis_error_count_total",
         "Content analysis error count",
         ["analysis_type"],
     )
-    CONTENT_ANALYSIS_LATENCY = PrometheusHistogram(
+    CONTENT_ANALYSIS_LATENCY = _get_or_create_histogram(
         "app_content_analysis_latency_seconds",
         "Content analysis latency in seconds",
         ["analysis_type"],
     )
 
     # Discord metrics
-    DISCORD_MESSAGE_COUNT = Counter("app_discord_message_count_total", "Discord message count", ["message_type"])
-    DISCORD_MESSAGE_ERROR_COUNT = Counter(
+    DISCORD_MESSAGE_COUNT = _get_or_create_counter(
+        "app_discord_message_count_total", "Discord message count", ["message_type"]
+    )
+    DISCORD_MESSAGE_ERROR_COUNT = _get_or_create_counter(
         "app_discord_message_error_count_total",
         "Discord message error count",
         ["message_type"],
     )
-    DISCORD_MESSAGE_LATENCY = PrometheusHistogram(
+    DISCORD_MESSAGE_LATENCY = _get_or_create_histogram(
         "app_discord_message_latency_seconds",
         "Discord message latency in seconds",
         ["message_type"],
     )
 
     # Memory metrics
-    MEMORY_STORE_COUNT = Counter("app_memory_store_count_total", "Memory store count", ["store_type"])
-    MEMORY_STORE_ERROR_COUNT = Counter("app_memory_store_error_count_total", "Memory store error count", ["store_type"])
-    MEMORY_STORE_LATENCY = PrometheusHistogram(
+    MEMORY_STORE_COUNT = _get_or_create_counter("app_memory_store_count_total", "Memory store count", ["store_type"])
+    MEMORY_STORE_ERROR_COUNT = _get_or_create_counter(
+        "app_memory_store_error_count_total", "Memory store error count", ["store_type"]
+    )
+    MEMORY_STORE_LATENCY = _get_or_create_histogram(
         "app_memory_store_latency_seconds",
         "Memory store latency in seconds",
         ["store_type"],
     )
-    MEMORY_RETRIEVAL_COUNT = Counter("app_memory_retrieval_count_total", "Memory retrieval count", ["store_type"])
-    MEMORY_RETRIEVAL_ERROR_COUNT = Counter(
+    MEMORY_RETRIEVAL_COUNT = _get_or_create_counter(
+        "app_memory_retrieval_count_total", "Memory retrieval count", ["store_type"]
+    )
+    MEMORY_RETRIEVAL_ERROR_COUNT = _get_or_create_counter(
         "app_memory_retrieval_error_count_total",
         "Memory retrieval error count",
         ["store_type"],
     )
-    MEMORY_RETRIEVAL_LATENCY = PrometheusHistogram(
+    MEMORY_RETRIEVAL_LATENCY = _get_or_create_histogram(
         "app_memory_retrieval_latency_seconds",
         "Memory retrieval latency in seconds",
         ["store_type"],
     )
 
     # MCP tool metrics
-    MCP_TOOL_CALL_COUNT = Counter("app_mcp_tool_call_count_total", "MCP tool call count", ["tool_name"])
-    MCP_TOOL_CALL_ERROR_COUNT = Counter(
+    MCP_TOOL_CALL_COUNT = _get_or_create_counter("app_mcp_tool_call_count_total", "MCP tool call count", ["tool_name"])
+    MCP_TOOL_CALL_ERROR_COUNT = _get_or_create_counter(
         "app_mcp_tool_call_error_count_total",
         "MCP tool call error count",
         ["tool_name"],
     )
-    MCP_TOOL_CALL_LATENCY = PrometheusHistogram(
+    MCP_TOOL_CALL_LATENCY = _get_or_create_histogram(
         "app_mcp_tool_call_latency_seconds",
         "MCP tool call latency in seconds",
         ["tool_name"],
+    )
+
+    # Degradation & fallbacks metrics
+    DEGRADATION_EVENTS = _get_or_create_counter(
+        "degradation_events_total",
+        "Count of recorded degradation events (fallbacks, timeouts, partial failures)",
+        ["tenant", "workspace", "component", "event_type", "severity"],
+    )
+    DEGRADATION_IMPACT_LATENCY = _get_or_create_histogram(
+        "degradation_impact_latency_ms",
+        "Observed added latency (ms) attributed to degradation events when measurable",
+        ["tenant", "workspace", "component", "event_type"],
+    )
+
+    # Trajectory evaluation metrics
+    TRAJECTORY_EVALUATIONS = _get_or_create_counter(
+        "trajectory_evaluations_total",
+        "Total trajectory evaluations performed",
+        ["tenant", "workspace", "success"],
+    )
+
+    TRAJECTORY_FEEDBACK_EMISSIONS = _get_or_create_counter(
+        "trajectory_feedback_emissions_total",
+        "Trajectory feedback emissions to the RL router",
+        ["tenant", "workspace", "model_id", "success"],
+    )
+    TRAJECTORY_FEEDBACK_PROCESSED = _get_or_create_counter(
+        "trajectory_feedback_processed_total",
+        "Processed trajectory feedback items",
+        ["tenant", "workspace", "model_id", "result"],
+    )
+    RL_FEEDBACK_QUEUE_DEPTH = _get_or_create_gauge(
+        "rl_feedback_queue_depth",
+        "Depth of the RL feedback queue awaiting processing",
+        ["tenant", "workspace"],
+    )
+    RL_FEEDBACK_PROCESSED = _get_or_create_counter(
+        "rl_feedback_processed_total",
+        "Trajectory feedback items processed per batch",
+        ["tenant", "workspace", "result"],
+    )
+    RL_FEEDBACK_FAILED = _get_or_create_counter(
+        "rl_feedback_failed_total",
+        "Trajectory feedback batches that failed processing",
+        ["tenant", "workspace", "reason"],
+    )
+    RL_FEEDBACK_PROCESSING_LATENCY = _get_or_create_histogram(
+        "rl_feedback_processing_latency_ms",
+        "Latency of RL feedback batch processing in milliseconds",
+        ["tenant", "workspace"],
+        buckets=(10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000),
+    )
+
+    LANGFUSE_TRACES = _get_or_create_counter(
+        "langfuse_traces_total",
+        "Langfuse trace operations",
+        ["tenant", "workspace", "status"],
+    )
+    LANGFUSE_SPANS = _get_or_create_counter(
+        "langfuse_spans_total",
+        "Langfuse span operations",
+        ["tenant", "workspace", "status"],
     )
 
     def get_metrics_data() -> bytes:
@@ -470,6 +636,17 @@ else:
     MCP_TOOL_CALL_COUNT = Counter()
     MCP_TOOL_CALL_ERROR_COUNT = Counter()
     MCP_TOOL_CALL_LATENCY = PrometheusHistogram()
+    DEGRADATION_EVENTS = Counter()
+    DEGRADATION_IMPACT_LATENCY = PrometheusHistogram()
+    TRAJECTORY_EVALUATIONS = Counter()
+    TRAJECTORY_FEEDBACK_EMISSIONS = Counter()
+    TRAJECTORY_FEEDBACK_PROCESSED = Counter()
+    RL_FEEDBACK_QUEUE_DEPTH = Gauge()
+    RL_FEEDBACK_PROCESSED = Counter()
+    RL_FEEDBACK_FAILED = Counter()
+    RL_FEEDBACK_PROCESSING_LATENCY = PrometheusHistogram()
+    LANGFUSE_TRACES = Counter()
+    LANGFUSE_SPANS = Counter()
 
     def get_metrics_data() -> bytes:
         """Returns empty metrics data when Prometheus is not available."""
@@ -485,11 +662,15 @@ __all__ = [
     "CONTENT_INGESTION_COUNT",
     "CONTENT_INGESTION_ERROR_COUNT",
     "CONTENT_INGESTION_LATENCY",
+    "DEGRADATION_EVENTS",
+    "DEGRADATION_IMPACT_LATENCY",
     "DISCORD_MESSAGE_COUNT",
     "DISCORD_MESSAGE_ERROR_COUNT",
     "DISCORD_MESSAGE_LATENCY",
     "ERROR_COUNT",
     "IN_PROGRESS_REQUESTS",
+    "LANGFUSE_SPANS",
+    "LANGFUSE_TRACES",
     "MCP_TOOL_CALL_COUNT",
     "MCP_TOOL_CALL_ERROR_COUNT",
     "MCP_TOOL_CALL_LATENCY",
@@ -508,6 +689,13 @@ __all__ = [
     # Prometheus metrics
     "REQUEST_COUNT",
     "REQUEST_LATENCY",
+    "RL_FEEDBACK_FAILED",
+    "RL_FEEDBACK_PROCESSED",
+    "RL_FEEDBACK_PROCESSING_LATENCY",
+    "RL_FEEDBACK_QUEUE_DEPTH",
+    "TRAJECTORY_EVALUATIONS",
+    "TRAJECTORY_FEEDBACK_EMISSIONS",
+    "TRAJECTORY_FEEDBACK_PROCESSED",
     "VECTOR_SEARCH_COUNT",
     "VECTOR_SEARCH_ERROR_COUNT",
     "VECTOR_SEARCH_LATENCY",
@@ -519,16 +707,26 @@ __all__ = [
     "get_metrics_data",
     "get_slo_monitor",
     "initialize_slo_monitoring",
+    "label_ctx",
     "record_cache_operation",
     "record_request",
     "record_vector_search",
+    "render",
+    "reset",
 ]
 
 # Content Moderation Metrics
-MODERATION_CHECKS_COUNT = Counter("moderation_checks_total", "Content Moderation Checks", ["category", "action"])
-MODERATION_BLOCKS_COUNT = Counter("moderation_blocks_total", "Content Blocked by Moderation", ["category"])
-MODERATION_LATENCY = (
-    PrometheusHistogram("moderation_latency_seconds", "Moderation check latency in seconds", ["provider"])
-    if PROMETHEUS_AVAILABLE
-    else None
-)
+if PROMETHEUS_AVAILABLE:
+    MODERATION_CHECKS_COUNT = _get_or_create_counter(
+        "moderation_checks_total", "Content Moderation Checks", ["category", "action"]
+    )
+    MODERATION_BLOCKS_COUNT = _get_or_create_counter(
+        "moderation_blocks_total", "Content Blocked by Moderation", ["category"]
+    )
+    MODERATION_LATENCY = _get_or_create_histogram(
+        "moderation_latency_seconds", "Moderation check latency in seconds", ["provider"]
+    )
+else:
+    MODERATION_CHECKS_COUNT = Counter()
+    MODERATION_BLOCKS_COUNT = Counter()
+    MODERATION_LATENCY = None

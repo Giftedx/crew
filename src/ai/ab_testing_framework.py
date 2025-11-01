@@ -382,33 +382,45 @@ class AIRouterABTester:
 async def performance_based_router(prompt: str, task_type: str, optimization_target: str, **kwargs) -> dict[str, Any]:
     """Mock performance-based routing strategy."""
     await asyncio.sleep(0.1)  # Simulate processing
+    prompt_preview = prompt[:80] + "…" if len(prompt) > 80 else prompt
     return {
         "status": "success",
         "model": "openai/gpt-4o",
         "response": f"Performance-based response for {task_type}",
         "cost": 0.005,
+        "prompt_preview": prompt_preview,
+        "optimization_target": optimization_target,
+        "extra": kwargs,
     }
 
 
 async def adaptive_learning_router(prompt: str, task_type: str, optimization_target: str, **kwargs) -> dict[str, Any]:
     """Mock adaptive learning routing strategy."""
     await asyncio.sleep(0.08)  # Slightly faster
+    prompt_preview = prompt[:80] + "…" if len(prompt) > 80 else prompt
     return {
         "status": "success",
         "model": "anthropic/claude-3-5-sonnet-20241022",
         "response": f"Adaptive learning response for {task_type} with advanced analysis",
         "cost": 0.008,
+        "prompt_preview": prompt_preview,
+        "optimization_target": optimization_target,
+        "extra": kwargs,
     }
 
 
 async def cost_optimized_router(prompt: str, task_type: str, optimization_target: str, **kwargs) -> dict[str, Any]:
     """Mock cost-optimized routing strategy."""
     await asyncio.sleep(0.06)  # Fast
+    prompt_preview = prompt[:80] + "…" if len(prompt) > 80 else prompt
     return {
         "status": "success",
         "model": "google/gemini-1.5-flash",
         "response": f"Cost-optimized response for {task_type}",
         "cost": 0.001,
+        "prompt_preview": prompt_preview,
+        "optimization_target": optimization_target,
+        "extra": kwargs,
     }
 
 
@@ -421,11 +433,15 @@ async def random_baseline_router(prompt: str, task_type: str, optimization_targe
     ]
     selected_model = random.choice(models)  # nosec B311 - test simulation, not cryptographic
     await asyncio.sleep(random.uniform(0.05, 0.15))  # nosec B311 - test latency simulation
+    prompt_preview = prompt[:80] + "…" if len(prompt) > 80 else prompt
     return {
         "status": "success",
         "model": selected_model,
         "response": f"Random baseline response for {task_type}",
         "cost": random.uniform(0.001, 0.010),  # nosec B311 - test cost simulation
+        "prompt_preview": prompt_preview,
+        "optimization_target": optimization_target,
+        "extra": kwargs,
     }
 
 

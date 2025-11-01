@@ -24,7 +24,7 @@ try:
     from .ingest import start_ingest_workers
 except ImportError:
     # Fallback if ingest module is not available
-    async def start_ingest_workers(loop):
+    async def start_ingest_workers(_loop):
         print("⚠️ Ingest workers not available")
 
 
@@ -287,6 +287,12 @@ async def _execute_autointel(interaction: Any, url: str, depth: str = "standard"
                     ephemeral=True,
                 )
             return
+        """Shared autointel execution logic for slash and prefix commands.
+
+        Prefers the unified Mission API for synchronous runs to ensure consistent
+        routing and observability. Falls back to legacy orchestrator paths if the
+        Mission API is unavailable.
+        """
 
         # Normalize depth strings coming from UI labels or free text
         def _normalize_depth(raw: str | None) -> str:
@@ -323,8 +329,59 @@ async def _execute_autointel(interaction: Any, url: str, depth: str = "standard"
                 )
                 return
             except Exception as bg_error:
-                print(f"⚠️ Background worker failed, falling back to synchronous: {bg_error}")
-                # Fall through to synchronous execution
+                print(f"⚠️ Background worker failed, falling back to Mission API sync path: {bg_error}")
+                # Fall through to Mission API synchronous execution
+
+        # Mission API synchronous path (preferred)
+        try:
+            from ..mission_api import run_mission
+
+            # Build inputs for Mission API
+            default_quality = os.getenv("DEFAULT_DOWNLOAD_QUALITY", "1080p")
+            inputs = {
+                "url": url,
+                "quality": default_quality,
+                "origin": "discord",
+                "depth": depth,
+            }
+
+            # Create tenant context for isolation
+            tenant_ctx = None
+            try:
+                from ..tenancy import TenantContext
+
+                guild_id = getattr(interaction, "guild_id", None)
+                channel = getattr(interaction, "channel", None)
+                workspace_name = getattr(channel, "name", "direct_message") if channel else "direct_message"
+                tenant_ctx = TenantContext(
+                    tenant_id=f"guild_{guild_id or 'dm'}",
+                    workspace_id=workspace_name,
+                )
+                print(f"✅ Created tenant context: {tenant_ctx}")
+            except Exception as tenancy_error:
+                print(f"⚠️ Tenancy not available; proceeding without: {tenancy_error}")
+                tenant_ctx = None
+
+            result = await run_mission(inputs, tenant_ctx)
+
+            # Relay outcome to user
+            if result.success:
+                data = result.data or {}
+                summary = str(
+                    data.get("briefing") or data.get("summary") or data.get("analysis") or "✅ Mission completed."
+                )
+                chunks = [summary[i : i + 1900] for i in range(0, len(summary), 1900)] or [summary]
+                for chunk in chunks:
+                    with contextlib.suppress(Exception):
+                        await interaction.followup.send(chunk)
+            else:
+                err = result.error or "Unknown error"
+                with contextlib.suppress(Exception):
+                    await interaction.followup.send(f"❌ Mission failed: {err[:1000]}", ephemeral=True)
+            return
+        except Exception as e:
+            # If Mission API import or execution fails, continue with legacy path
+            print(f"⚠️ Mission API path unavailable: {e}; attempting legacy orchestrator path…")
 
         print("🔄 Attempting to import autonomous orchestrator...")
 
@@ -355,7 +412,7 @@ async def _execute_autointel(interaction: Any, url: str, depth: str = "standard"
                     print("✅ Using AutonomousIntelligenceOrchestrator (direct)")
                     break
                 elif attempt_type == "crew":
-                    from ..crew import UltimateDiscordIntelligenceBotCrew
+                    from ..crew_core import UltimateDiscordIntelligenceBotCrew
 
                     orchestrator = UltimateDiscordIntelligenceBotCrew().autonomous_orchestrator()
                     orchestrator_type = "crew"
@@ -506,7 +563,7 @@ async def _execute_autointel(interaction: Any, url: str, depth: str = "standard"
         import traceback
 
         traceback.print_exc()
-        try:
+        with contextlib.suppress(Exception):
             await interaction.followup.send(
                 (
                     f"❌ Critical system error: {e!s}\n"
@@ -514,9 +571,6 @@ async def _execute_autointel(interaction: Any, url: str, depth: str = "standard"
                 ),
                 ephemeral=True,
             )
-        except Exception:
-            # Last resort - no available channel to notify
-            pass
 
 
 def _register_slash_commands(bot: Any) -> None:

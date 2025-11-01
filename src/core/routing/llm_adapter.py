@@ -93,10 +93,9 @@ class RouterLLMAdapter:
             else:
                 constraints["min_quality"] = 0.6
 
-        if "max_tokens" in kwargs:
+        if "max_tokens" in kwargs and kwargs["max_tokens"] > 1000:
             # Longer responses might benefit from more capable models
-            if kwargs["max_tokens"] > 1000:
-                constraints["min_quality"] = max(constraints.get("min_quality", 0.6), 0.7)
+            constraints["min_quality"] = max(constraints.get("min_quality", 0.6), 0.7)
 
         # Check for explicit routing preferences
         if "minimize_cost" in kwargs:

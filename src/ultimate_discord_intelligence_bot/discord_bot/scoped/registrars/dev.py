@@ -29,7 +29,7 @@ def register_dev_commands(bot_owner) -> None:
                 inline=True,
             )
         embed.add_field(
-            name="ℹ️ Testing",
+            name="Info",
             value=(
                 "Use `!dev-test` commands for individual component testing\nNo direct tool access via Discord interface"
             ),

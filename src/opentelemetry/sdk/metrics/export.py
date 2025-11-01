@@ -1,5 +1,36 @@
 """Stub for OpenTelemetry SDK metrics export."""
 
+from __future__ import annotations
+
+import json
+from dataclasses import dataclass, field
+from typing import Any
+
+
+class AggregationTemporality:
+    """Enumeration placeholder for aggregation temporality."""
+
+    UNSPECIFIED = "unspecified"
+    DELTA = "delta"
+    CUMULATIVE = "cumulative"
+
+
+class MetricExportResult:
+    """Simple export result enumeration."""
+
+    SUCCESS = "success"
+    FAILURE = "failure"
+
+
+@dataclass
+class MetricsData:
+    """Container object representing exported metrics."""
+
+    resource_metrics: list[Any] = field(default_factory=list)
+
+    def to_json(self) -> str:  # pragma: no cover - helper for tests
+        return json.dumps({"resource_metrics": self.resource_metrics})
+
 
 class MetricExporter:
     """Base no-op metric exporter stub."""
@@ -14,6 +45,23 @@ class MetricExporter:
     def force_flush(self, timeout_millis=30000):
         """No-op flush."""
         return True
+
+
+class MetricReader:
+    """Base metric reader stub."""
+
+    def __init__(self, exporter: MetricExporter | None = None):
+        self.exporter = exporter
+        self._metrics: list[MetricsData] = []
+
+    def shutdown(self, timeout_millis=30000):  # pragma: no cover - stub behaviour
+        return True
+
+    def force_flush(self, timeout_millis=30000):  # pragma: no cover - stub behaviour
+        return True
+
+    def _store(self, metrics_data: MetricsData) -> None:
+        self._metrics.append(metrics_data)
 
 
 class ConsoleMetricExporter(MetricExporter):
@@ -41,6 +89,23 @@ class InMemoryMetricExporter(MetricExporter):
         self.metrics_data = []
 
 
+class InMemoryMetricReader(MetricReader):
+    """Metric reader that retains metric data in memory for inspection."""
+
+    def __init__(self, preferred_temporality: dict[str, Any] | None = None):
+        super().__init__(exporter=None)
+        self.preferred_temporality = preferred_temporality or {}
+
+    def get_metrics_data(self) -> MetricsData | None:
+        return self._metrics[-1] if self._metrics else None
+
+    def clear(self) -> None:
+        self._metrics.clear()
+
+    def consume(self, metrics_data: MetricsData) -> None:
+        self._store(metrics_data)
+
+
 class PeriodicExportingMetricReader:
     """No-op periodic exporting metric reader stub."""
 
@@ -63,8 +128,13 @@ class PeriodicExportingMetricReader:
 
 
 __all__ = [
+    "AggregationTemporality",
     "ConsoleMetricExporter",
     "InMemoryMetricExporter",
+    "InMemoryMetricReader",
+    "MetricExportResult",
     "MetricExporter",
+    "MetricReader",
+    "MetricsData",
     "PeriodicExportingMetricReader",
 ]

@@ -82,7 +82,9 @@ class CICacheOptimizer:
                     {
                         "file": "requirements.lock",
                         "line_count": len(lines),
-                        "estimated_packages": len([l for l in lines if l.strip() and not l.startswith("#")]),
+                        "estimated_packages": len(
+                            [line for line in lines if line.strip() and not line.startswith("#")]
+                        ),
                     }
                 )
 

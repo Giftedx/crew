@@ -14,12 +14,21 @@ def register_pilot_route(app: FastAPI, settings: Any) -> None:
     try:
         import os as _os
 
-        if _os.getenv("ENABLE_LANGGRAPH_PILOT_API", "0").lower() not in (
-            "1",
-            "true",
-            "yes",
-            "on",
-        ):
+        truthy = ("1", "true", "yes", "on")
+        flag = getattr(settings, "enable_langgraph_pilot_api", None)
+        if isinstance(flag, str):
+            settings_enabled = flag.lower() in truthy
+        elif flag is not None:
+            settings_enabled = bool(flag)
+        else:
+            settings_enabled = None
+
+        if settings_enabled is None:
+            enabled = _os.getenv("ENABLE_LANGGRAPH_PILOT_API", "0").lower() in truthy
+        else:
+            enabled = settings_enabled
+
+        if not enabled:
             return
 
         try:

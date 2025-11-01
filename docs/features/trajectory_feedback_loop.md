@@ -164,6 +164,20 @@ def process_trajectory_feedback(self, batch_size: int = 10) -> StepResult:
 - **Location**: Set in environment or tenant config
 - **Dependencies**: Requires `ENABLE_TRAJECTORY_EVALUATION=1`
 
+### RL_FEEDBACK_BATCH_SIZE
+
+- **Default**: `25`
+- **Purpose**: Maximum number of trajectory feedback items drained per loop tick
+- **Location**: Environment variable or tenant override
+- **When to adjust**: Increase when backlog grows faster than it drains; decrease for lighter environments
+
+### RL_FEEDBACK_LOOP_INTERVAL_SECONDS
+
+- **Default**: `15`
+- **Purpose**: Interval (seconds) between background loop executions
+- **Location**: Environment variable or tenant override
+- **When to adjust**: Lower for faster responsiveness, raise to reduce load in low-volume environments
+
 ### ENABLE_AGENT_EVALS
 
 - **Default**: `0`
@@ -184,6 +198,30 @@ def process_trajectory_feedback(self, batch_size: int = 10) -> StepResult:
 - **Type**: Counter
 - **Labels**: `tenant`, `workspace`, `model_id`, `success`
 - **Purpose**: Track feedback emissions to routing system
+
+### rl_feedback_queue_depth
+
+- **Type**: Gauge
+- **Labels**: `tenant`, `workspace`
+- **Purpose**: Current queue size awaiting RL processing
+
+### rl_feedback_processed_total
+
+- **Type**: Counter
+- **Labels**: `tenant`, `workspace`, `result`
+- **Purpose**: Counts per-batch processing outcomes (`success`, `missing_history`, `failure`)
+
+### rl_feedback_failed_total
+
+- **Type**: Counter
+- **Labels**: `tenant`, `workspace`, `reason`
+- **Purpose**: Categorizes batches that fell back (e.g., `exception`, `bandit_not_initialized`)
+
+### rl_feedback_processing_latency_ms
+
+- **Type**: Histogram
+- **Labels**: `tenant`, `workspace`
+- **Purpose**: Captures processing latency in milliseconds for observability and SLOs
 
 ## Usage
 

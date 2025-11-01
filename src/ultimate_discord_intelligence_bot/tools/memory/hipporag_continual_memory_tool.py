@@ -114,7 +114,7 @@ class HippoRagContinualMemoryTool(BaseTool[StepResult]):
 
     def _resolve_namespace(self, index: str) -> tuple[str, bool]:
         """Resolve tenant-aware namespace using mem_ns pattern."""
-        try:
+        with contextlib.suppress(Exception):
             from ultimate_discord_intelligence_bot.tenancy.context import (
                 current_tenant,
                 mem_ns,
@@ -123,8 +123,6 @@ class HippoRagContinualMemoryTool(BaseTool[StepResult]):
             ctx = current_tenant()
             if ctx is not None:
                 return mem_ns(ctx, index), True
-        except Exception:
-            pass
         return index, False
 
     def _get_hipporag_instance(self, namespace: str) -> Any | None:
@@ -294,7 +292,7 @@ class HippoRagContinualMemoryTool(BaseTool[StepResult]):
                 json.dump(doc_metadata, f, ensure_ascii=False, indent=2)
 
             # Metrics tracking
-            try:
+            with contextlib.suppress(Exception):
                 self._metrics.counter(
                     "tool_runs_total",
                     labels={
@@ -309,9 +307,6 @@ class HippoRagContinualMemoryTool(BaseTool[StepResult]):
                     "hipporag_memory_operations",
                     labels={"operation": "index", "namespace": namespace},
                 ).inc()
-
-            except Exception:
-                pass
 
             return StepResult.ok(
                 data={

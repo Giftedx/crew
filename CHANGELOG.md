@@ -4,6 +4,15 @@ All notable changes to the Ultimate Discord Intelligence Bot project will be doc
 
 ## [Unreleased] - 2025-01-04
 
+- OpenRouter service enhancements:
+  - Emergency prompt compression retry: Automatically detects token/context overflow errors (HTTP 400/413/422 with provider messages) and performs a one-time retry after aggressive prompt compression. This improves robustness for long prompts without caller changes.
+  - Response quality assessment: Attaches a lightweight `quality_assessment` block to LLM results with a 0–1 score and signals (structure, apologies, length). Toggle via `ENABLE_QUALITY_ASSESSMENT` (default: enabled). No extra API calls are made.
+
+Notes:
+
+- The compression retry uses existing `PromptEngine.optimise_with_metadata` with `force_enable=True` and respects `provider_overrides.max_tokens` when present. If retry still fails, the original error path is preserved.
+- Quality assessment is best-effort and fast; it is meant for routing/observability rather than formal evaluation.
+
 ### Security
 
 - **CRITICAL FIX**: Added input validation to prevent Cypher injection in Neo4j store (`src/kg/neo4j/store.py`)
@@ -12,7 +21,7 @@ All notable changes to the Ultimate Discord Intelligence Bot project will be doc
 
 ### Added
 
-- **Tool Registration**: Added `RedditAPITool` and `TwitterAPITool` to tools MAPPING and __all__
+- **Tool Registration**: Added `RedditAPITool` and `TwitterAPITool` to tools MAPPING and **all**
 - **Environment Configuration**: Added comprehensive environment variable documentation to `.env.example`
   - Reddit API credentials (`REDDIT_CLIENT_ID`, `REDDIT_CLIENT_SECRET`, `REDDIT_USER_AGENT`)
   - Twitter/X API credentials (`TWITTER_BEARER_TOKEN`, etc.)

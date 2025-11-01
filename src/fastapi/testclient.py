@@ -1,209 +1,52 @@
 from __future__ import annotations
 
-import asyncio
-import inspect
-import json
-from collections.abc import Iterable
-from typing import Any
+# Minimal placeholder to satisfy rare imports in tests; not a full implementation.
 
-from . import APIRouter, Request
-
-
-# Prevent pytest from attempting to collect this module/class as tests
-__test__ = False  # type: ignore[var-annotated]
-
-
-class _Resp:
-    def __init__(self, status_code: int, content: bytes | str = b"", json_obj: Any | None = None) -> None:
-        self.status_code = status_code
-        self._content = content if isinstance(content, bytes) else str(content).encode("utf-8")
-        self._json = json_obj
-
-    def json(self) -> Any:
-        if self._json is not None:
-            return self._json
-        try:
-            return json.loads(self._content.decode("utf-8"))
-        except Exception:
-            return None
-
-    @property
-    def text(self) -> str:  # pragma: no cover - simple accessor used in tests
-        try:
-            return self._content.decode("utf-8")
-        except Exception:
-            return ""
-
-
-class FastAPITestClient:
-    """Custom test client for FastAPI applications.
-
-    Note: This class is not a pytest test class despite the name.
-    """
-
-    __test__ = False  # Explicitly tell pytest not to collect this as a test class
-
-    def __init__(self, app: Any) -> None:
+class TestClient:  # pragma: no cover - placeholder
+    def __init__(self, app) -> None:
         self.app = app
-        # Provide public 'request' callable for compatibility with starlette TestClient
-        self.request = self._request
-        # Simple fixed window limiter state (shim only). Real FastAPI uses middleware.
-        self._rl_reset = 0.0
-        self._rl_remaining = None
-        try:
-            import os as _os
+from __future__ import annotations
 
-            if _os.getenv("ENABLE_RATE_LIMITING", "0").lower() in (
-                "1",
-                "true",
-                "yes",
-                "on",
-            ):
-                burst = int(_os.getenv("RATE_LIMIT_BURST", _os.getenv("RATE_LIMIT_RPS", "10")))
-                self._rl_remaining = burst
-                self._rl_burst = burst
-        except Exception:  # pragma: no cover - defensive
-            pass
+"""
+Proxy submodule for fastapi.testclient that forwards to the real FastAPI package.
+"""
 
-    # Internal unified request executor to minimise duplication
-    def _request(
-        self,
-        method: str,
-        path: str,
-        *,
-        json: Any | None = None,
-        headers: dict[str, str] | None = None,
-        multipart: dict[str, Any] | None = None,
-    ) -> _Resp:
-        # Split query from path if present
-        raw_path, _, raw_query = path.partition("?")
-        handler = None
-        # Try shim routes mapping first
-        if hasattr(self.app, "_routes"):
-            try:
-                handler = getattr(self.app, "_routes", {}).get((method.upper(), raw_path))
-            except Exception:
-                handler = None
-        # Fallback: resolve against real FastAPI/Starlette router if present
-        if handler is None:
-            try:
-                routes = getattr(self.app, "routes", None) or getattr(getattr(self.app, "router", None), "routes", None)
-                if routes:
-                    for route in routes:
-                        r_path = getattr(route, "path", getattr(route, "path_format", None))
-                        methods = set(getattr(route, "methods", set()) or set())
-                        if r_path == raw_path and (not methods or method.upper() in methods):
-                            handler = getattr(route, "endpoint", None) or getattr(route, "app", None)
-                            if handler is not None:
-                                break
-            except Exception:
-                handler = None
-        path_params: dict[str, str] = {}
-        if handler is None:
-            # naive dynamic path support: match single-segment parameters {name}
-            for (m, pattern), fn in getattr(self.app, "_routes", {}).items():
-                if m != method.upper():
-                    continue
-                # Guard: only process string patterns (avoid FieldInfo / descriptor objects)
-                if not isinstance(pattern, str):
-                    continue
-                if "{" not in pattern:
-                    continue
-                pattern_parts = pattern.strip("/").split("/")
-                path_parts = raw_path.strip("/").split("/")
-                if len(pattern_parts) != len(path_parts):
-                    continue
-                candidate: dict[str, str] = {}
-                matched = True
-                for pp, pv in zip(pattern_parts, path_parts, strict=False):
-                    if pp.startswith("{") and pp.endswith("}"):
-                        name = pp[1:-1]
-                        candidate[name] = pv
-                    elif pp != pv:
-                        matched = False
-                        break
-                if matched:
-                    handler = fn
-                    path_params = candidate
-                    break
-        if handler is None:
-            return _Resp(404, b"not found")
-        body: bytes
-        form_files: dict[str, tuple[str, bytes]] = {}
-        form_data: dict[str, Any] = {}
-        if multipart and ("files" in multipart or "data" in multipart):
-            # Snapshot original structures for later injection
-            raw_files = multipart.get("files") or {}
-            raw_data = multipart.get("data") or {}
-            # Normalize file tuples: (filename, fileobj, content_type?) -> (filename, bytes)
-            norm_files: dict[str, tuple[str, bytes]] = {}
-            for field, val in raw_files.items():
-                filename = field
-                content: bytes = b""
-                if isinstance(val, (bytes, bytearray)):
-                    filename = field
-                    content = bytes(val)
-                elif isinstance(val, tuple) and len(val) >= 2:
-                    filename = val[0]
-                    second = val[1]
-                    if hasattr(second, "read"):
-                        # Read file-like object without assuming rewind later
-                        try:
-                            content = second.read()
-                        except Exception:
-                            content = b""
-                    else:
-                        content = second if isinstance(second, (bytes, bytearray)) else str(second).encode()
-                else:
-                    # Fallback stringify
-                    content = str(val).encode()
-                norm_files[field] = (filename, content)
-            form_files = norm_files
-            form_data = dict(raw_data.items())
-            # Replace multipart files with pure bytes tuples for builder
-            build_files = {k: (v[0], v[1]) for k, v in norm_files.items()}
-            body, headers = self._build_multipart({"files": build_files, "data": raw_data}, headers)
         else:
-            body = b"" if json is None else (json if isinstance(json, bytes | bytearray) else json_to_bytes(json))
+            __all__ = []
+                    query_items[k] = v if eq else ""
+from pathlib import Path
 
-        req = Request(
-            body=body,
-            headers=headers or {},
-            method=method.upper(),
-            path=raw_path,
-            query=raw_query,
-        )
 
-        # Shim-level rate limiting (only if middleware chain absent and enabled)
-        if getattr(self, "_rl_remaining", None) is not None:
-            import os as _os
-            import time as _t
+def _import_real_fastapi_testclient():
+    src_dir = str(Path(__file__).resolve().parents[1])  # /home/crew/src
+    removed = []
+    for p in list(sys.path):
+        try:
+            if os.path.abspath(p) == src_dir:
+                removed.append(p)
+                sys.path.remove(p)
+        except Exception:
+            continue
+    try:
+        return importlib.import_module("fastapi.testclient")
+    finally:
+        for p in removed:
+            sys.path.insert(0, p)
 
-            metrics_path = _os.getenv("PROMETHEUS_ENDPOINT_PATH", "/metrics")
-            if raw_path not in (metrics_path, "/health"):
-                now = _t.monotonic()
-                if now >= getattr(self, "_rl_reset", 0.0):
-                    self._rl_reset = now + 1.0
-                    self._rl_remaining = self._rl_burst
-                if self._rl_remaining <= 0:  # type: ignore[operator]
-                    return _Resp(429, b"Rate limit exceeded")
-                self._rl_remaining = (self._rl_remaining or 0) - 1
-        # Populate query params mapping for middleware tests if query exists
-        if raw_query:
-            query_items: dict[str, str] = {}
-            for part in raw_query.split("&"):
-                if not part:
-                    continue
-                k, eq, v = part.partition("=")
-                if k:
+
+try:
+    _real = _import_real_fastapi_testclient()
+except Exception:
+    try:
+        import fastapi_shim as _shim
+  else:
+      __all__ = []
                     query_items[k] = v if eq else ""
             req.query_params = query_items
         # Determine whether to pass request object based on handler signature
         sig = None
-        try:
+        with contextlib.suppress(TypeError, ValueError):  # builtins or C funcs
             sig = inspect.signature(handler)
-        except (TypeError, ValueError):  # builtins or C funcs
-            pass
         wants_arg = bool(sig and len(sig.parameters) >= 1)
 
         def _invoke():
@@ -243,9 +86,10 @@ class FastAPITestClient:
                             class _UploadStub:
                                 def __init__(self, filename: str, content: bytes) -> None:
                                     self.filename = filename
+                                    self._content = content
 
                                 async def read(self):
-                                    return fbytes
+                                    return self._content
 
                             injected_args.append(_UploadStub(fname, fbytes))
                             continue

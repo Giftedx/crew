@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Dict, Optional, Protocol
+from typing import TYPE_CHECKING, Any, Optional, Protocol
 
 from ..step_result import StepResult
 from .vector_store import VectorRecord, VectorStore

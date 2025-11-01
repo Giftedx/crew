@@ -1,46 +1,62 @@
 """Enhanced Metrics API with Web Dashboard Support.
 
 This module provides an enhanced metrics API with web dashboard capabilities,
-including HTML templates, real-time updates, and interactive charts.
+and exposes JSON endpoints consumed by dashboards and automation. It also
+implements short-lived caching for LangSmith evaluation metrics to reduce load
+on the Prometheus bridge while keeping data fresh.
 """
 
 from __future__ import annotations
 
+import copy
+import importlib
+import time
 from datetime import datetime, timezone
+from threading import Lock
+from typing import Any
 
 
 try:
     from flask import Flask, jsonify, render_template_string, request  # type: ignore
 
     FLASK_AVAILABLE = True
-except ImportError:
+except ImportError:  # pragma: no cover - optional dependency
+    Flask = None  # type: ignore[assignment]
+    jsonify = render_template_string = request = None  # type: ignore[assignment]
     FLASK_AVAILABLE = False
     print("⚠️  Flask not available - enhanced metrics API will not be available")
 
-from ultimate_discord_intelligence_bot.observability.dashboard_templates import get_base_template, get_simple_dashboard
+from ultimate_discord_intelligence_bot.observability.dashboard_templates import (
+    get_base_template,
+    get_simple_dashboard,
+)
+
+
+EVALUATION_METRICS_CACHE_TTL_SECONDS = 10
 
 
 class EnhancedMetricsAPI:
     """Enhanced metrics API with web dashboard support."""
 
     def __init__(self, app: Flask | None = None):
-        """Initialize the enhanced metrics API."""
         if not FLASK_AVAILABLE:
             raise ImportError("Flask is required for enhanced metrics API")
 
         self.app = app or Flask(__name__)
-        self.setup_routes()
+        self._evaluation_metrics_cache: dict[str, Any] | None = None
+        self._evaluation_metrics_cache_timestamp: float | None = None
+        self._evaluation_metrics_cache_lock = Lock()
 
-    def setup_routes(self):
-        """Setup enhanced API routes with dashboard support."""
+        self._setup_routes()
 
+    def _setup_routes(self) -> None:
         @self.app.route("/")
-        def dashboard():
+        def dashboard() -> str:
             """Main dashboard page."""
             return render_template_string(get_base_template())
 
         @self.app.route("/simple")
-        def simple_dashboard():
+        def simple_dashboard() -> str:
             """Simple dashboard page."""
             return render_template_string(get_simple_dashboard())
 
@@ -60,7 +76,9 @@ class EnhancedMetricsAPI:
         def get_system_metrics():
             """Get system-wide metrics."""
             try:
-                from ultimate_discord_intelligence_bot.observability.metrics_collector import get_system_metrics
+                from ultimate_discord_intelligence_bot.observability.metrics_collector import (
+                    get_system_metrics,
+                )
 
                 metrics = get_system_metrics()
                 return jsonify(
@@ -78,39 +96,42 @@ class EnhancedMetricsAPI:
                         },
                     }
                 )
-            except Exception as e:
-                return jsonify({"status": "error", "error": str(e)}), 500
+            except Exception as exc:  # pragma: no cover - defensive
+                return jsonify({"status": "error", "error": str(exc)}), 500
 
         @self.app.route("/api/metrics/tools")
         def get_all_tool_metrics():
             """Get metrics for all tools."""
             try:
-                from ultimate_discord_intelligence_bot.observability.metrics_collector import get_metrics_collector
+                from ultimate_discord_intelligence_bot.observability.metrics_collector import (
+                    get_metrics_collector,
+                )
 
                 collector = get_metrics_collector()
                 metrics = collector.get_all_tool_metrics()
 
-                # Add health status to each tool
-                enhanced_metrics = {}
-                for name, tool_metrics in metrics.items():
-                    enhanced_metrics[name] = {
+                enhanced_metrics = {
+                    name: {
                         **tool_metrics.__dict__,
                         "health_status": self._get_tool_health_status(tool_metrics),
                         "performance_tier": self._get_performance_tier(tool_metrics),
                     }
+                    for name, tool_metrics in metrics.items()
+                }
 
                 return jsonify({"status": "success", "data": {"tool_count": len(metrics), "tools": enhanced_metrics}})
-            except Exception as e:
-                return jsonify({"status": "error", "error": str(e)}), 500
+            except Exception as exc:  # pragma: no cover - defensive
+                return jsonify({"status": "error", "error": str(exc)}), 500
 
         @self.app.route("/api/metrics/tools/<tool_name>")
         def get_tool_metrics(tool_name: str):
             """Get metrics for a specific tool."""
             try:
-                from ultimate_discord_intelligence_bot.observability.metrics_collector import get_tool_metrics
+                from ultimate_discord_intelligence_bot.observability.metrics_collector import (
+                    get_tool_metrics,
+                )
 
                 metrics = get_tool_metrics(tool_name)
-
                 if not metrics:
                     return jsonify({"status": "error", "error": f"Tool '{tool_name}' not found"}), 404
 
@@ -125,38 +146,51 @@ class EnhancedMetricsAPI:
                         },
                     }
                 )
-            except Exception as e:
-                return jsonify({"status": "error", "error": str(e)}), 500
+            except Exception as exc:  # pragma: no cover - defensive
+                return jsonify({"status": "error", "error": str(exc)}), 500
 
         @self.app.route("/api/metrics/analytics")
         def get_analytics():
             """Get advanced analytics and insights."""
             try:
-                from ultimate_discord_intelligence_bot.observability.metrics_collector import get_metrics_collector
+                from ultimate_discord_intelligence_bot.observability.metrics_collector import (
+                    get_metrics_collector,
+                )
 
                 collector = get_metrics_collector()
                 all_metrics = collector.get_all_tool_metrics()
-
                 analytics = {
                     "performance_insights": self._analyze_performance(all_metrics),
                     "trend_analysis": self._analyze_trends(all_metrics),
                     "bottleneck_analysis": self._analyze_bottlenecks(all_metrics),
                     "optimization_recommendations": self._get_optimization_recommendations(all_metrics),
                 }
-
                 return jsonify({"status": "success", "data": analytics})
-            except Exception as e:
-                return jsonify({"status": "error", "error": str(e)}), 500
+            except Exception as exc:  # pragma: no cover - defensive
+                return jsonify({"status": "error", "error": str(exc)}), 500
+
+        @self.app.route("/api/metrics/evaluations")
+        def get_evaluation_metrics():
+            """Get aggregated LangSmith evaluation metrics."""
+            try:
+                refresh_arg = request.args.get("refresh", "").lower() if request else ""
+                force_refresh = refresh_arg in {"1", "true", "yes", "force"}
+
+                evaluation_metrics = self._get_trajectory_evaluation_metrics(force_refresh=force_refresh)
+                return jsonify({"status": "success", "data": evaluation_metrics})
+            except Exception as exc:  # pragma: no cover - defensive
+                return jsonify({"status": "error", "error": str(exc)}), 500
 
         @self.app.route("/api/metrics/export")
         def export_metrics():
             """Export metrics with enhanced formatting."""
             try:
-                from ultimate_discord_intelligence_bot.observability.metrics_collector import get_metrics_collector
+                from ultimate_discord_intelligence_bot.observability.metrics_collector import (
+                    get_metrics_collector,
+                )
 
                 collector = get_metrics_collector()
                 export_file = f"enhanced_metrics_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-
                 if collector.export_metrics(export_file):
                     return jsonify(
                         {
@@ -166,11 +200,9 @@ class EnhancedMetricsAPI:
                             "export_timestamp": datetime.now(timezone.utc).isoformat(),
                         }
                     )
-                else:
-                    return jsonify({"status": "error", "error": "Failed to export metrics"}), 500
-
-            except Exception as e:
-                return jsonify({"status": "error", "error": str(e)}), 500
+                return jsonify({"status": "error", "error": "Failed to export metrics"}), 500
+            except Exception as exc:  # pragma: no cover - defensive
+                return jsonify({"status": "error", "error": str(exc)}), 500
 
     def _calculate_health_score(self) -> float:
         """Calculate overall system health score."""
@@ -225,18 +257,17 @@ class EnhancedMetricsAPI:
         """Get performance tier for a tool."""
         if tool_metrics.total_calls == 0:
             return "unused"
-        elif tool_metrics.average_execution_time <= 0.5:
+        if tool_metrics.average_execution_time <= 0.5:
             return "fast"
-        elif tool_metrics.average_execution_time <= 2.0:
+        if tool_metrics.average_execution_time <= 2.0:
             return "normal"
-        elif tool_metrics.average_execution_time <= 5.0:
+        if tool_metrics.average_execution_time <= 5.0:
             return "slow"
-        else:
-            return "very_slow"
+        return "very_slow"
 
     def _get_tool_recommendations(self, tool_metrics) -> list[str]:
         """Get recommendations for a specific tool."""
-        recommendations = []
+        recommendations: list[str] = []
 
         if tool_metrics.total_calls == 0:
             recommendations.append("Tool is unused - consider removing or investigating usage patterns")
@@ -327,6 +358,168 @@ class EnhancedMetricsAPI:
 
         return recommendations
 
+    def _ensure_evaluation_metrics_cache_state(self) -> None:
+        if not hasattr(self, "_evaluation_metrics_cache_lock"):
+            self._evaluation_metrics_cache_lock = Lock()
+        if not hasattr(self, "_evaluation_metrics_cache"):
+            self._evaluation_metrics_cache = None
+        if not hasattr(self, "_evaluation_metrics_cache_timestamp"):
+            self._evaluation_metrics_cache_timestamp = None
+
+    def _get_trajectory_evaluation_metrics(
+        self,
+        *,
+        force_refresh: bool = False,
+    ) -> dict[str, Any]:
+        """Aggregate LangSmith trajectory evaluation metrics with caching."""
+
+        self._ensure_evaluation_metrics_cache_state()
+
+        cache_lock: Lock = self._evaluation_metrics_cache_lock  # type: ignore[assignment]
+        now = time.monotonic()
+
+        with cache_lock:
+            cached_payload = self._evaluation_metrics_cache
+            cache_timestamp = self._evaluation_metrics_cache_timestamp
+            if (
+                not force_refresh
+                and cached_payload is not None
+                and cache_timestamp is not None
+                and now - cache_timestamp < EVALUATION_METRICS_CACHE_TTL_SECONDS
+            ):
+                return copy.deepcopy(cached_payload)
+
+        result = self._compute_trajectory_evaluation_metrics()
+
+        with cache_lock:
+            self._evaluation_metrics_cache = copy.deepcopy(result)
+            self._evaluation_metrics_cache_timestamp = now
+
+        return result
+
+    def _compute_trajectory_evaluation_metrics(self) -> dict[str, Any]:
+        timestamp_iso = datetime.now(timezone.utc).isoformat()
+
+        try:
+            obs_metrics = importlib.import_module("obs.metrics")
+        except Exception:
+            return self._evaluation_metrics_disabled("metrics_module_unavailable", timestamp_iso)
+
+        counter = getattr(obs_metrics, "TRAJECTORY_EVALUATIONS", None)
+        if counter is None or not hasattr(counter, "collect"):
+            return self._evaluation_metrics_disabled("prometheus_unavailable", timestamp_iso)
+
+        try:
+            collected = counter.collect()  # type: ignore[call-arg]
+        except Exception:
+            return self._evaluation_metrics_disabled("collection_failed", timestamp_iso)
+
+        if collected is None:
+            families: list[Any] = []
+        else:
+            try:
+                families = list(collected)
+            except TypeError:
+                families = []
+
+        per_scope: dict[tuple[str, str], dict[str, float]] = {}
+        total_success = 0.0
+        total_failure = 0.0
+
+        for family in families:
+            samples = getattr(family, "samples", None)
+            if not samples:
+                continue
+
+            for sample in samples:
+                if getattr(sample, "name", "") != "trajectory_evaluations_total":
+                    continue
+
+                value_raw = getattr(sample, "value", 0)
+                try:
+                    value = float(value_raw)
+                except (TypeError, ValueError):
+                    continue
+
+                labels = getattr(sample, "labels", {}) or {}
+                tenant = str(labels.get("tenant", "unknown"))
+                workspace = str(labels.get("workspace", "unknown"))
+
+                entry = per_scope.setdefault(
+                    (tenant, workspace),
+                    {
+                        "tenant": tenant,
+                        "workspace": workspace,
+                        "total": 0.0,
+                        "success": 0.0,
+                        "failure": 0.0,
+                    },
+                )
+                entry["total"] += value
+
+                if self._is_success_label(labels.get("success")):
+                    entry["success"] += value
+                    total_success += value
+                else:
+                    entry["failure"] += value
+                    total_failure += value
+
+        per_tenant: list[dict[str, Any]] = []
+        for entry in per_scope.values():
+            total = entry["total"]
+            success = entry["success"]
+            failure = entry["failure"]
+            per_tenant.append(
+                {
+                    "tenant": entry["tenant"],
+                    "workspace": entry["workspace"],
+                    "total": self._coerce_metric(total),
+                    "success": self._coerce_metric(success),
+                    "failure": self._coerce_metric(failure),
+                    "success_rate": success / total if total else 0.0,
+                }
+            )
+
+        per_tenant.sort(key=lambda item: item["total"], reverse=True)
+
+        total = total_success + total_failure
+        success_rate = total_success / total if total else 0.0
+
+        return {
+            "enabled": True,
+            "total": self._coerce_metric(total),
+            "success_count": self._coerce_metric(total_success),
+            "failure_count": self._coerce_metric(total_failure),
+            "success_rate": success_rate,
+            "per_tenant": per_tenant,
+            "last_updated": timestamp_iso,
+        }
+
+    @staticmethod
+    def _is_success_label(value: Any) -> bool:
+        if value is None:
+            return False
+
+        normalized = str(value).strip().lower()
+        return normalized in {"1", "true", "yes", "success", "pass", "passed"}
+
+    @staticmethod
+    def _coerce_metric(value: float) -> float | int:
+        as_float = float(value)
+        return int(as_float) if as_float.is_integer() else as_float
+
+    def _evaluation_metrics_disabled(self, reason: str, timestamp_iso: str) -> dict[str, Any]:
+        return {
+            "enabled": False,
+            "reason": reason,
+            "total": 0,
+            "success_count": 0,
+            "failure_count": 0,
+            "success_rate": 0.0,
+            "per_tenant": [],
+            "last_updated": timestamp_iso,
+        }
+
     def run(self, host: str = "127.0.0.1", port: int = 5002, debug: bool = False):
         """Run the enhanced metrics API server."""
         if not FLASK_AVAILABLE:
@@ -341,6 +534,7 @@ class EnhancedMetricsAPI:
         print("  • GET  /api/metrics/tools - All tool metrics")
         print("  • GET  /api/metrics/tools/<name> - Specific tool metrics")
         print("  • GET  /api/metrics/analytics - Advanced analytics")
+        print("  • GET  /api/metrics/evaluations - LangSmith evaluations")
         print("  • GET  /api/metrics/export - Export metrics")
 
         self.app.run(host=host, port=port, debug=debug)

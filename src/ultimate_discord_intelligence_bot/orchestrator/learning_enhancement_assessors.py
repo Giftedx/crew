@@ -77,7 +77,7 @@ def generate_enhancement_suggestions(
             watch_items.append(f"{label}: monitor for drift (score {value:.2f}).")
 
     if not priority_actions and not watch_items and quality_dimensions:
-        priority_actions.append("All quality metrics above targets – maintain current strategy.")
+        priority_actions.append("All quality metrics above targets - maintain current strategy.")
 
     metadata = analysis_data.get("content_metadata", {}) if isinstance(analysis_data, dict) else {}
     source_validation = verification_data.get("source_validation", {}) if isinstance(verification_data, dict) else {}

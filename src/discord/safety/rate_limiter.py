@@ -330,9 +330,9 @@ class RateLimiter:
             "user_id": user_id,
             "guild_id": guild_id,
             "channel_id": channel_id,
-            "rule": rule.name,
-            "duration": action.duration_seconds,
-            "reason": f"Rate limit exceeded: {action.action_type.value}",
+            "action_type": action.value,
+            "duration": cooldown_duration,
+            "reason": f"Rate limit exceeded: {action.value}",
             "timestamp": time.time(),
         }
         # Logging point for external integration

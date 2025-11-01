@@ -27,6 +27,14 @@ class FeatureFlags:
     ENABLE_UNIFIED_ORCHESTRATION: bool = False
     ENABLE_UNIFIED_ROUTER: bool = False
 
+    # Observability & evaluation enhancements
+    ENABLE_LANGSMITH_EVAL: bool = False
+    ENABLE_LANGFUSE_EXPORT: bool = False
+    ENABLE_AGENTOPS_EXPORT: bool = False
+    ENABLE_VW_ROUTER: bool = False
+    ENABLE_LLMLINGUA: bool = False
+    ENABLE_LETTA_MEMORY: bool = False
+
     # Analysis features
     ENABLE_DEBATE_ANALYSIS: bool = True
     ENABLE_FACT_CHECKING: bool = True
@@ -234,6 +242,13 @@ class FeatureFlags:
             ENABLE_UNIFIED_METRICS=get_bool_env("ENABLE_UNIFIED_METRICS", False),
             ENABLE_UNIFIED_ORCHESTRATION=get_bool_env("ENABLE_UNIFIED_ORCHESTRATION", False),
             ENABLE_UNIFIED_ROUTER=get_bool_env("ENABLE_UNIFIED_ROUTER", False),
+            # Observability & evaluation enhancements
+            ENABLE_LANGSMITH_EVAL=get_bool_env("ENABLE_LANGSMITH_EVAL", False),
+            ENABLE_LANGFUSE_EXPORT=get_bool_env("ENABLE_LANGFUSE_EXPORT", False),
+            ENABLE_AGENTOPS_EXPORT=get_bool_env("ENABLE_AGENTOPS_EXPORT", False),
+            ENABLE_VW_ROUTER=get_bool_env("ENABLE_VW_ROUTER", False),
+            ENABLE_LLMLINGUA=get_bool_env("ENABLE_LLMLINGUA", False),
+            ENABLE_LETTA_MEMORY=get_bool_env("ENABLE_LETTA_MEMORY", False),
             # Analysis features
             ENABLE_DEBATE_ANALYSIS=get_bool_env("ENABLE_DEBATE_ANALYSIS", True),
             ENABLE_FACT_CHECKING=get_bool_env("ENABLE_FACT_CHECKING", True),

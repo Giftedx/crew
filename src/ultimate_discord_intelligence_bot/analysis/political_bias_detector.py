@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
+from typing import ClassVar
 
 from ultimate_discord_intelligence_bot.step_result import StepResult
 from ultimate_discord_intelligence_bot.tools._base import BaseTool
@@ -118,7 +119,7 @@ class PoliticalBiasDetector(BaseTool[StepResult]):
 
     name: str = "Political Bias Detector"
     description: str = "Detect political bias indicators in content using multi-dimensional analysis"
-    model_config = {"extra": "allow"}
+    model_config: ClassVar[dict[str, str]] = {"extra": "allow"}
 
     def __init__(self) -> None:
         """Initialize the political bias detector."""

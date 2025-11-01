@@ -3,7 +3,9 @@
 
 
 import asyncio
+import hashlib
 import time
+from functools import wraps
 from typing import Any
 
 import aiohttp
@@ -46,10 +48,7 @@ class ParallelDownloadManager:
                 else:
                     raise Exception(f"HTTP {response.status}")
         except Exception as e:
-            raise Exception(f"Download failed for {url}: {e!s}")
-
-
-from typing import Any
+            raise Exception(f"Download failed for {url}: {e!s}") from e
 
 
 class ContentProcessingPipeline:
@@ -79,11 +78,6 @@ class ContentProcessingPipeline:
         """Process multiple contents in parallel."""
         tasks = [self.process_content(content) for content in contents]
         return await asyncio.gather(*tasks)
-
-
-import hashlib
-from functools import wraps
-from typing import Any
 
 
 class ContentCache:

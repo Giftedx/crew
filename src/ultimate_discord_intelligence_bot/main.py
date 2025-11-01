@@ -1,7 +1,7 @@
 import asyncio
 import sys
 
-from ultimate_discord_intelligence_bot.crew_consolidation import get_crew  # type: ignore[import-not-found]
+from ultimate_discord_intelligence_bot.crew_core import get_crew  # type: ignore[import-not-found]
 from ultimate_discord_intelligence_bot.enhanced_crew_integration import (  # type: ignore[import-not-found]
     execute_crew_with_quality_monitoring,
 )

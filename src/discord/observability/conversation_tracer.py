@@ -208,10 +208,10 @@ class ConversationTracer:
                             step.metadata["error"] = error_message
 
                         # Record performance metrics
-                        if step_type in self._performance_metrics:
-                            self._performance_metrics[step_type].append(step.duration_ms)
+                        if step.step_type in self._performance_metrics:
+                            self._performance_metrics[step.step_type].append(step.duration_ms)
                         else:
-                            self._performance_metrics[step_type] = [step.duration_ms]
+                            self._performance_metrics[step.step_type] = [step.duration_ms]
 
                         return StepResult.ok(data={"step_ended": True, "duration_ms": step.duration_ms})
 
@@ -508,7 +508,7 @@ class ConversationTracer:
         except Exception as e:
             return StepResult.fail(f"Failed to get tracer stats: {e!s}")
 
-    async def export_trace(self, trace_id: str, format: str = "json") -> StepResult:
+    async def export_trace(self, trace_id: str, fmt: str = "json") -> StepResult:
         """Export a trace in the specified format."""
         try:
             trace_result = await self.get_trace(trace_id)
@@ -517,7 +517,7 @@ class ConversationTracer:
 
             trace = trace_result.data["trace"]
 
-            if format.lower() == "json":
+            if fmt.lower() == "json":
                 # Convert to JSON-serializable format
                 export_data = {
                     "trace_id": trace.trace_id,

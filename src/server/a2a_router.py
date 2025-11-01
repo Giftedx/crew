@@ -202,8 +202,8 @@ async def jsonrpc_endpoint(
 
     try:
         body = await request.json()
-    except Exception:
-        raise HTTPException(status_code=400, detail="Invalid JSON body")
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail="Invalid JSON body") from exc
 
     # Batch mode
     if isinstance(body, list):
@@ -230,8 +230,12 @@ async def jsonrpc_endpoint(
                 str(workspace_id) if workspace_id else None,
             )
 
-            def _execute_one() -> dict[str, Any] | None:
-                tool_name = _tool_label(method, params)
+            def _execute_one(
+                method_name: str = method,
+                method_params: dict[str, Any] | None = params,
+                request_id: Any = id_val,
+            ) -> dict[str, Any] | None:
+                tool_name = _tool_label(method_name, method_params)
                 t0 = time.perf_counter()
                 with tracing.start_span("a2a.jsonrpc.tool") as span:  # type: ignore[attr-defined]
                     try:
@@ -239,7 +243,7 @@ async def jsonrpc_endpoint(
                         span.set_attribute("mode", "batch")
                     except Exception:
                         pass
-                    sr = _dispatch(method, params)
+                    sr = _dispatch(method_name, method_params)
                     with contextlib.suppress(Exception):
                         span.set_attribute("outcome", "success" if sr.success else "error")
                 dt = max(0.0, time.perf_counter() - t0)
@@ -247,7 +251,7 @@ async def jsonrpc_endpoint(
                 _inc_tool_runs(tool_name, "success" if sr.success else "error")
 
                 if sr.success:
-                    return _jsonrpc_result(id_val, _sr_to_result(sr)) if id_val is not None else None
+                    return _jsonrpc_result(request_id, _sr_to_result(sr)) if request_id is not None else None
                 msg = sr.error or "error"
                 code = -32603
                 if isinstance(msg, str):
@@ -255,7 +259,7 @@ async def jsonrpc_endpoint(
                         code = -32601
                     elif msg.startswith("Invalid params"):
                         code = -32602
-                return _jsonrpc_error(id_val, code, msg, data=sr.data) if id_val is not None else None
+                return _jsonrpc_error(request_id, code, msg, data=sr.data) if request_id is not None else None
 
             if ctx is not None:
                 with with_tenant(ctx):
@@ -285,8 +289,8 @@ async def jsonrpc_endpoint(
 
     req_start = time.perf_counter()
 
-    def _execute() -> StepResult:
-        tool_name = _tool_label(method, params)
+    def _execute(method_name: str = method, method_params: dict[str, Any] | None = params) -> StepResult:
+        tool_name = _tool_label(method_name, method_params)
         t0 = time.perf_counter()
         with tracing.start_span("a2a.jsonrpc.tool") as span:  # type: ignore[attr-defined]
             try:
@@ -294,7 +298,7 @@ async def jsonrpc_endpoint(
                 span.set_attribute("mode", "single")
             except Exception:
                 pass
-            sr = _dispatch(method, params)
+            sr = _dispatch(method_name, method_params)
             with contextlib.suppress(Exception):
                 span.set_attribute("outcome", "success" if sr.success else "error")
         dt = max(0.0, time.perf_counter() - t0)

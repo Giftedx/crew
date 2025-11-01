@@ -8,6 +8,7 @@ Includes enhanced error handling, progress tracking, and conversation flows.
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import logging
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
@@ -103,10 +104,17 @@ def context_query(store: Any, namespace: str, query_text: str) -> list[dict[str,
     """
 
     try:
-        # naive embedding: vector of zeros; dummy client ignores similarity
+        # naive embedding: derive deterministic pseudo-embedding from query text
+        vector_dims = 8
+        if query_text:
+            digest = hashlib.blake2s(query_text.encode("utf-8"), digest_size=vector_dims).digest()
+            query_vector = [byte / 255.0 for byte in digest]
+        else:
+            query_vector = [0.0] * vector_dims
+
         res = store.client.query_points(
             collection_name=namespace.replace(":", "__"),
-            query=[0.0] * 8,
+            query=query_vector,
             limit=3,
             with_payload=True,
         )
@@ -288,6 +296,7 @@ class AnalysisDepthSelect(View):
         self.url = url
         self.user_id = user_id
         self.selected_depth = None
+        self._background_tasks: set[asyncio.Task[Any]] = set()
 
     @discord.ui.select(
         placeholder="Choose analysis depth...",
@@ -322,7 +331,9 @@ class AnalysisDepthSelect(View):
         )
 
         # Start analysis in background
-        asyncio.create_task(self._run_analysis(interaction.channel, interaction.user))
+        task = asyncio.create_task(self._run_analysis(interaction.channel, interaction.user))
+        self._background_tasks.add(task)
+        task.add_done_callback(self._background_tasks.discard)
 
     async def _run_analysis(self, channel, user):
         """Run the analysis in background and send results."""

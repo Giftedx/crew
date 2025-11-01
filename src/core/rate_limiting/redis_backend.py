@@ -6,7 +6,8 @@ import logging
 from typing import Any
 
 import redis
-from redis.exceptions import ConnectionError, RedisError
+from redis.exceptions import ConnectionError as RedisConnectionError
+from redis.exceptions import RedisError
 
 
 logger = logging.getLogger(__name__)
@@ -31,7 +32,7 @@ class RedisBackend:
             self.client.ping()
             self.available = True
             logger.info("Redis backend connected successfully")
-        except (ConnectionError, RedisError) as e:
+        except (RedisConnectionError, RedisError) as e:
             logger.warning(f"Failed to connect to Redis: {e}")
             self.client = None
             self.available = False

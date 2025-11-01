@@ -365,14 +365,14 @@ class ObservabilityManager:
         except Exception as e:
             return StepResult.fail(f"Failed to get system insights: {e!s}")
 
-    async def export_observability_data(self, format: str = "json") -> StepResult:
+    async def export_observability_data(self, fmt: str = "json") -> StepResult:
         """Export all observability data."""
         try:
             if not self._initialized:
                 return StepResult.fail("Observability system not initialized")
 
             # Export data from all components
-            personality_export = await self.personality_dashboard.export_personality_data(format)
+            personality_export = await self.personality_dashboard.export_personality_data(fmt)
 
             # Get comprehensive system data
             system_insights = await self.get_system_insights()
@@ -381,7 +381,7 @@ class ObservabilityManager:
                 "export_timestamp": time.time(),
                 "personality_data": personality_export.data if personality_export.success else {},
                 "system_insights": system_insights.data if system_insights.success else {},
-                "format": format,
+                "format": fmt,
             }
 
             return StepResult.ok(data={"export_data": export_data})

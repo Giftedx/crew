@@ -857,24 +857,25 @@ class CrossAgentLearningService:
 
             # Find patterns that match this experience
             for pattern_id, pattern in self._patterns.items():
-                if pattern.agent_type == experience_record["agent_type"]:
-                    if self._experience_matches_pattern(experience_record, pattern):
-                        # Update pattern statistics
-                        pattern.validation_count += 1
-                        if experience_record["success"]:
-                            pattern.success_rate = (
-                                pattern.success_rate * (pattern.validation_count - 1) + 1.0
-                            ) / pattern.validation_count
-                        else:
-                            pattern.success_rate = (
-                                pattern.success_rate * (pattern.validation_count - 1) + 0.0
-                            ) / pattern.validation_count
+                if pattern.agent_type == experience_record["agent_type"] and self._experience_matches_pattern(
+                    experience_record, pattern
+                ):
+                    # Update pattern statistics
+                    pattern.validation_count += 1
+                    if experience_record["success"]:
+                        pattern.success_rate = (
+                            pattern.success_rate * (pattern.validation_count - 1) + 1.0
+                        ) / pattern.validation_count
+                    else:
+                        pattern.success_rate = (
+                            pattern.success_rate * (pattern.validation_count - 1) + 0.0
+                        ) / pattern.validation_count
 
-                        pattern.confidence = (pattern.confidence + pattern.success_rate) / 2
-                        pattern.last_updated = datetime.now(timezone.utc)
+                    pattern.confidence = (pattern.confidence + pattern.success_rate) / 2
+                    pattern.last_updated = datetime.now(timezone.utc)
 
-                        self._patterns[pattern_id] = pattern
-                        updated_count += 1
+                    self._patterns[pattern_id] = pattern
+                    updated_count += 1
 
             return updated_count
 

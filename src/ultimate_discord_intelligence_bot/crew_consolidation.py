@@ -1,3 +1,31 @@
+from __future__ import annotations
+"""
+DEPRECATED: This file is deprecated and will be removed in a future version.
+Please use ultimate_discord_intelligence_bot.crew_core instead.
+
+Migration guide:
+- Import from crew_core instead of this module
+- Use UnifiedCrewExecutor for crew execution
+- Use CrewErrorHandler for error handling
+- Use CrewInsightGenerator for insight generation
+
+Example:
+    from ultimate_discord_intelligence_bot.crew_core import (
+        UnifiedCrewExecutor,
+        CrewConfig,
+        CrewTask,
+    )
+"""
+
+import warnings
+
+warnings.warn(
+    "This module is deprecated. Use ultimate_discord_intelligence_bot.crew_core instead.",
+    DeprecationWarning,
+    stacklevel=2,
+)
+
+
 """Crew consolidation shim for unified crew entry points.
 
 This module provides a unified interface for accessing different crew implementations
@@ -5,8 +33,8 @@ while maintaining backward compatibility and allowing gradual migration through
 feature flags.
 """
 
-from __future__ import annotations
 
+import importlib.util
 import logging
 from typing import TYPE_CHECKING, Any
 
@@ -14,7 +42,7 @@ from .settings import Settings
 
 
 if TYPE_CHECKING:
-    from .crew import UltimateDiscordIntelligenceBotCrew
+    from .crew_core import UltimateDiscordIntelligenceBotCrew
 
 
 logger = logging.getLogger(__name__)
@@ -50,25 +78,25 @@ class CrewConsolidationShim:
         # Route to appropriate crew based on feature flags
         if self.feature_flags.ENABLE_CREW_REFACTORED:
             logger.info("Using refactored crew implementation")
-            from .crew_refactored import UltimateDiscordIntelligenceBotCrew
+            from .crew_core import UltimateDiscordIntelligenceBotCrew
         elif self.feature_flags.ENABLE_CREW_MODULAR:
             logger.info("Using modular crew implementation")
-            from .crew_modular import UltimateDiscordIntelligenceBotCrew
+            from .crew_core import UltimateDiscordIntelligenceBotCrew
         elif self.feature_flags.ENABLE_CREW_NEW:
             logger.info("Using new crew implementation")
-            from .crew_new import UltimateDiscordIntelligenceBotCrew
+            from .crew_core import UltimateDiscordIntelligenceBotCrew
         elif self.feature_flags.ENABLE_LEGACY_CREW:
             logger.info("Using legacy crew implementation")
             # Import legacy crew if it exists
             try:
-                from .crew_legacy import UltimateDiscordIntelligenceBotCrew
+                from .crew_core import UltimateDiscordIntelligenceBotCrew
             except ImportError:
                 logger.warning("Legacy crew not found, falling back to default")
-                from .crew import UltimateDiscordIntelligenceBotCrew
+                from .crew_core import UltimateDiscordIntelligenceBotCrew
         else:
             # Default to canonical crew
             logger.info("Using canonical crew implementation")
-            from .crew import UltimateDiscordIntelligenceBotCrew
+            from .crew_core import UltimateDiscordIntelligenceBotCrew
 
         self._crew_instance = UltimateDiscordIntelligenceBotCrew()
         return self._crew_instance
@@ -128,31 +156,28 @@ class CrewConsolidationShim:
         available = ["canonical"]  # Always available
 
         try:
-            from .crew_refactored import UltimateDiscordIntelligenceBotCrew
-
-            available.append("refactored")
-        except ImportError:
+            if importlib.util.find_spec(f"{__package__}.crew_refactored") is not None:
+                available.append("refactored")
+        except Exception:
             pass
 
         try:
-            from .crew_modular import UltimateDiscordIntelligenceBotCrew
-
-            available.append("modular")
-        except ImportError:
+            if importlib.util.find_spec(f"{__package__}.crew_modular") is not None:
+                available.append("modular")
+        except Exception:
             pass
 
         try:
-            from .crew_new import UltimateDiscordIntelligenceBotCrew
-
-            available.append("new")
-        except ImportError:
+            if importlib.util.find_spec(f"{__package__}.crew_new") is not None:
+                available.append("new")
+        except Exception:
             pass
 
         try:
-            from .crew_legacy import UltimateDiscordIntelligenceBotCrew
-
-            available.append("legacy")
-        except ImportError:
+            # Check module availability without importing the class
+            if importlib.util.find_spec(f"{__package__}.crew_legacy") is not None:
+                available.append("legacy")
+        except Exception:
             pass
 
         return available

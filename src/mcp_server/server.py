@@ -197,6 +197,11 @@ def main(argv: list[str] | None = None) -> int:
     Use environment variables FASTMCP_HOST/PORT and transport args for HTTP/SSE if desired.
     """
 
+    argv = argv or []
+    if any(arg in {"-h", "--help"} for arg in argv):
+        print("Usage: python -m mcp_server.server [--transport stdio|http]")
+        return 0
+
     # In most dev flows, stdio is the simplest transport and works with Claude Desktop.
     try:
         _m = globals().get("mcp")

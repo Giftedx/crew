@@ -284,8 +284,12 @@ def get_base_template() -> str:
                 const analyticsResponse = await fetch('/api/metrics/analytics');
                 const analyticsData = await analyticsResponse.json();
 
+                // Load evaluation metrics
+                const evaluationsResponse = await fetch('/api/metrics/evaluations');
+                const evaluationsData = await evaluationsResponse.json();
+
                 // Render dashboard
-                renderDashboard(systemData, toolsData, analyticsData);
+                renderDashboard(systemData, toolsData, analyticsData, evaluationsData);
 
             } catch (error) {
                 content.innerHTML = `
@@ -298,7 +302,7 @@ def get_base_template() -> str:
             }
         }
 
-        function renderDashboard(systemData, toolsData, analyticsData) {
+        function renderDashboard(systemData, toolsData, analyticsData, evaluationData) {
             const content = document.getElementById('dashboard-content');
 
             if (systemData.status !== 'success' || toolsData.status !== 'success') {
@@ -314,6 +318,16 @@ def get_base_template() -> str:
             const system = systemData.data;
             const tools = toolsData.data.tools;
             const analytics = analyticsData.data;
+            const evaluations = evaluationData.status === 'success'
+                ? {
+                    enabled: evaluationData.data.enabled !== false,
+                    total: evaluationData.data.total || 0,
+                    success_count: evaluationData.data.success_count || 0,
+                    failure_count: evaluationData.data.failure_count || 0,
+                    success_rate: evaluationData.data.success_rate || 0,
+                    per_tenant: evaluationData.data.per_tenant || [],
+                }
+                : { enabled: false, total: 0, success_count: 0, failure_count: 0, success_rate: 0, per_tenant: [] };
 
             content.innerHTML = `
                 <div class="dashboard-grid">
@@ -375,6 +389,39 @@ def get_base_template() -> str:
                             <span class="metric-label">Total Issues</span>
                             <span class="metric-value">${analytics.bottleneck_analysis?.total_issues || 0}</span>
                         </div>
+                    </div>
+
+                    <div class="card">
+                        <h3>🧪 LangSmith Evaluations</h3>
+                        ${evaluations.enabled ? `
+                        <div class="metric">
+                            <span class="metric-label">Total Evaluations</span>
+                            <span class="metric-value">${evaluations.total}</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Success Rate</span>
+                            <span class="metric-value">${(evaluations.success_rate * 100).toFixed(1)}%</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Successful Runs</span>
+                            <span class="metric-value">${evaluations.success_count}</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Failed Runs</span>
+                            <span class="metric-value">${evaluations.failure_count}</span>
+                        </div>
+                        ${evaluations.per_tenant.slice(0, 3).map(segment => `
+                            <div class="metric">
+                                <span class="metric-label">${segment.tenant}/${segment.workspace}</span>
+                                <span class="metric-value">${segment.total} (${(segment.success_rate * 100).toFixed(1)}%)</span>
+                            </div>
+                        `).join('')}
+                        ` : `
+                        <div class="metric">
+                            <span class="metric-label">Status</span>
+                            <span class="metric-value">Prometheus metrics unavailable</span>
+                        </div>
+                        `}
                     </div>
                 </div>
 
@@ -632,15 +679,17 @@ def get_simple_dashboard() -> str:
             content.innerHTML = '<div class="loading"><h3>🔄 Loading metrics...</h3><p>Fetching system data...</p></div>';
 
             try {
-                const [systemResponse, toolsResponse] = await Promise.all([
+                const [systemResponse, toolsResponse, evaluationsResponse] = await Promise.all([
                     fetch('/api/metrics/system'),
-                    fetch('/api/metrics/tools')
+                    fetch('/api/metrics/tools'),
+                    fetch('/api/metrics/evaluations')
                 ]);
 
                 const systemData = await systemResponse.json();
                 const toolsData = await toolsResponse.json();
+                const evaluationData = await evaluationsResponse.json();
 
-                renderSimpleDashboard(systemData, toolsData);
+                renderSimpleDashboard(systemData, toolsData, evaluationData);
 
             } catch (error) {
                 content.innerHTML = `
@@ -652,7 +701,7 @@ def get_simple_dashboard() -> str:
             }
         }
 
-        function renderSimpleDashboard(systemData, toolsData) {
+        function renderSimpleDashboard(systemData, toolsData, evaluationData) {
             const content = document.getElementById('content');
 
             if (systemData.status !== 'success' || toolsData.status !== 'success') {
@@ -667,6 +716,15 @@ def get_simple_dashboard() -> str:
 
             const system = systemData.data;
             const tools = toolsData.data.tools;
+            const evaluations = evaluationData.status === 'success'
+                ? {
+                    enabled: evaluationData.data.enabled !== false,
+                    total: evaluationData.data.total || 0,
+                    success_count: evaluationData.data.success_count || 0,
+                    failure_count: evaluationData.data.failure_count || 0,
+                    success_rate: evaluationData.data.success_rate || 0,
+                }
+                : { enabled: false, total: 0, success_count: 0, failure_count: 0, success_rate: 0 };
 
             content.innerHTML = `
                 <div class="metrics-grid">
@@ -700,6 +758,33 @@ def get_simple_dashboard() -> str:
                             <span class="metric-label">CPU</span>
                             <span class="metric-value">${(system.cpu_usage_percent || 0).toFixed(1)}%</span>
                         </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <h3>🧪 Evaluations</h3>
+                        ${evaluations.enabled ? `
+                        <div class="metric">
+                            <span class="metric-label">Total</span>
+                            <span class="metric-value">${evaluations.total}</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Success Rate</span>
+                            <span class="metric-value">${(evaluations.success_rate * 100).toFixed(1)}%</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Successful</span>
+                            <span class="metric-value">${evaluations.success_count}</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Failed</span>
+                            <span class="metric-value">${evaluations.failure_count}</span>
+                        </div>
+                        ` : `
+                        <div class="metric">
+                            <span class="metric-label">Status</span>
+                            <span class="metric-value">Prometheus metrics unavailable</span>
+                        </div>
+                        `}
                     </div>
                 </div>
 

@@ -95,9 +95,11 @@ class DependencyManager:
             self._checked_deps.add(name)
             logger.debug(f"Dependency '{name}' is available")
             return True
-        except ImportError:
+        except Exception as exc:
+            # Catch broad exceptions to avoid hard failures from transitive import errors
+            # (e.g., incompatible numpy version used by optional clients like qdrant_client).
             self._checked_deps.add(name)
-            logger.debug(f"Dependency '{name}' is not available")
+            logger.debug(f"Dependency '{name}' is not available: {exc!s}")
             return False
 
     def check_dependency_group(self, group_name: str) -> dict[str, bool]:

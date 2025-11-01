@@ -36,9 +36,9 @@ async def main() -> None:
 def run() -> NoReturn:
     try:
         asyncio.run(main())
-    except KeyboardInterrupt:
+    except KeyboardInterrupt as exc:
         print("\n👋 Scoped bot stopped")
-        raise SystemExit(0)
+        raise SystemExit(0) from exc
 
 
 __all__ = ["main", "run"]

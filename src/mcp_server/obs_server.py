@@ -5,7 +5,7 @@ Tools:
 - get_counters(): safe snapshot including whether Prometheus is available and a small sample of exposition text
 
 Resource (optional):
-- metrics://prom – returns full Prometheus exposition text (feature-flag gated)
+- metrics://prom - returns full Prometheus exposition text (feature-flag gated)
 
 Notes:
 - Low-cardinality only; avoids enumerating dynamic labels.

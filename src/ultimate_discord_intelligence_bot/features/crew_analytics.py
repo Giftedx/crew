@@ -459,8 +459,8 @@ class CrewAnalytics:
             # Count active executions
             active_count = sum(
                 1
-                for exec in self.executions.values()
-                if exec.status in [ExecutionStatus.PENDING, ExecutionStatus.RUNNING]
+                for exec_ in self.executions.values()
+                if exec_.status in [ExecutionStatus.PENDING, ExecutionStatus.RUNNING]
             )
             dashboard_data["summary"]["active_executions"] = active_count
             dashboard_data["summary"]["best_performing_crew"] = best_performing_crew

@@ -205,10 +205,9 @@ class CircuitBreaker(Generic[T]):
         if self.state == CircuitState.HALF_OPEN:
             # Failure during half-open immediately opens circuit
             self._open_circuit()
-        elif self.state == CircuitState.CLOSED:
+        elif self.state == CircuitState.CLOSED and self._should_open_circuit():
             # Check if we should open circuit
-            if self._should_open_circuit():
-                self._open_circuit()
+            self._open_circuit()
 
         # Update metrics
         try:

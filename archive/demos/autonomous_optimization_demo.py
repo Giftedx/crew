@@ -311,7 +311,8 @@ async def demonstrate_hyperparameter_optimization(optimizer):
 
 async def demonstrate_autonomous_cycle(optimizer, orchestrator):
     """Demonstrate a complete autonomous optimization cycle"""
-    print("   Executing autonomous optimization cycle...")
+    orchestrator_name = getattr(getattr(orchestrator, "__class__", None), "__name__", "orchestrator")
+    print(f"   Executing autonomous optimization cycle with {orchestrator_name}...")
 
     # Collect current performance
     print("     Collecting performance data...")

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 from collections import defaultdict
 from collections.abc import Iterable, Mapping, Sequence
 from typing import Any
@@ -108,7 +109,7 @@ class VowpalWabbitBandit:
         except Exception as exc:  # pragma: no cover - defensive fallback
             # If VW prediction fails, fall back to uniform random selection
             self._last_decision = None
-            raise RuntimeError(f"Vowpal Wabbit prediction failed: {exc}")
+            raise RuntimeError(f"Vowpal Wabbit prediction failed: {exc}") from exc
 
         if len(probs) != len(candidates):
             raise RuntimeError(
@@ -190,10 +191,8 @@ class VowpalWabbitBandit:
 
     # ------------------------------------------------------------------ lifecycle
     def close(self) -> None:
-        try:
+        with contextlib.suppress(Exception):  # pragma: no cover - defensive
             self._workspace.finish()
-        except Exception:  # pragma: no cover - defensive
-            pass
 
     def __del__(self) -> None:  # pragma: no cover - defensive
         self.close()

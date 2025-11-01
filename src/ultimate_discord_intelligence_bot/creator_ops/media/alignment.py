@@ -87,7 +87,7 @@ class TranscriptAlignment:
             "extra_spaces": re.compile(r"\s+"),
             "punctuation_spacing": re.compile(r"\s+([,.!?;:])"),
             "quotes": re.compile(r'["""]'),
-            "dashes": re.compile(r"[—–-]+"),
+            "dashes": re.compile(r"[\u2014\u2013-]+"),
         }
 
     def align_transcripts(

@@ -36,6 +36,7 @@ class ArqWorker:
         self.settings = get_arq_settings()
         self.worker: Worker | None = None
         self.shutdown_event = asyncio.Event()
+        self._background_tasks: set[asyncio.Task[Any]] = set()
 
     async def start(self):
         """Start the Arq worker."""
@@ -71,7 +72,9 @@ class ArqWorker:
         self.shutdown_event.set()
         if self.worker:
             # Trigger worker shutdown
-            asyncio.create_task(self.worker.close())
+            task = asyncio.create_task(self.worker.close())
+            self._background_tasks.add(task)
+            task.add_done_callback(self._background_tasks.discard)
 
     async def stop(self):
         """Stop the Arq worker gracefully."""

@@ -139,6 +139,7 @@ class UnifiedOrchestrationService:
         self._metrics: dict[str, OrchestrationMetrics] = {}
         self._task_dependencies: dict[str, set[str]] = {}
         self._task_dependents: dict[str, set[str]] = {}
+        self._background_tasks: set[asyncio.Task[Any]] = set()
 
         # Initialize orchestration components
         self._initialize_orchestration_components()
@@ -432,15 +433,19 @@ class UnifiedOrchestrationService:
             tasks_to_execute = []
 
             for task_id, task_request in list(self._task_queue.items()):
-                if await self._check_dependencies(task_request):
-                    if len(self._running_tasks) < self.config.max_concurrent_tasks:
-                        tasks_to_execute.append(task_id)
+                if (
+                    await self._check_dependencies(task_request)
+                    and len(self._running_tasks) < self.config.max_concurrent_tasks
+                ):
+                    tasks_to_execute.append(task_id)
 
             # Execute ready tasks
             for task_id in tasks_to_execute:
                 task_request = self._task_queue.pop(task_id)
                 # Execute asynchronously
-                asyncio.create_task(self._execute_task_internal(task_request))
+                task = asyncio.create_task(self._execute_task_internal(task_request))
+                self._background_tasks.add(task)
+                task.add_done_callback(self._background_tasks.discard)
 
         except Exception as e:
             logger.error(f"Error processing queued tasks: {e}")

@@ -190,18 +190,21 @@ class Experiment:
             except Exception as e:
                 logger.debug("Failed to record experiment reward metrics: %s", e)
 
-        if self.phase == "shadow" and self.auto_activate_after is not None:
-            if self.stats[self.control].pulls >= self.auto_activate_after:
-                old_phase = self.phase
-                self.phase = "active"
-                logger.info(
-                    "Experiment auto-activated: experiment_id=%s, phase=%s->%s, control_pulls=%d, threshold=%d",
-                    self.experiment_id,
-                    old_phase,
-                    self.phase,
-                    self.stats[self.control].pulls,
-                    self.auto_activate_after,
-                )
+        if (
+            self.phase == "shadow"
+            and self.auto_activate_after is not None
+            and self.stats[self.control].pulls >= self.auto_activate_after
+        ):
+            old_phase = self.phase
+            self.phase = "active"
+            logger.info(
+                "Experiment auto-activated: experiment_id=%s, phase=%s->%s, control_pulls=%d, threshold=%d",
+                self.experiment_id,
+                old_phase,
+                self.phase,
+                self.stats[self.control].pulls,
+                self.auto_activate_after,
+            )
 
     def snapshot(self) -> dict[str, Any]:
         return {

@@ -271,13 +271,14 @@ class ModelSpecEnforcer:
         instruction_lower = instruction.lower()
 
         # Check for obvious violations
-        if rule.level == "root":
-            if any(term in instruction_lower for term in ["harm", "violence", "illegal", "dangerous"]):
-                return {
-                    "violation": True,
-                    "warning": False,
-                    "reason": f"Potential violation of root principle: {rule.principle}",
-                }
+        if rule.level == "root" and any(
+            term in instruction_lower for term in ["harm", "violence", "illegal", "dangerous"]
+        ):
+            return {
+                "violation": True,
+                "warning": False,
+                "reason": f"Potential violation of root principle: {rule.principle}",
+            }
 
         # Check for warnings
         if any(term in instruction_lower for term in ["personal", "private", "confidential"]):

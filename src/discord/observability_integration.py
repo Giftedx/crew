@@ -224,12 +224,12 @@ class DiscordObservabilityIntegration:
 
         return await self.observability_manager.get_system_insights()
 
-    async def export_analytics_data(self, format: str = "json") -> StepResult:
+    async def export_analytics_data(self, fmt: str = "json") -> StepResult:
         """Export all analytics data."""
         if not self._initialized:
             return StepResult.fail("Observability integration not initialized")
 
-        return await self.observability_manager.export_observability_data(format)
+        return await self.observability_manager.export_observability_data(fmt)
 
     async def cleanup_analytics_data(self, max_age_hours: int = 168) -> StepResult:
         """Clean up old analytics data."""

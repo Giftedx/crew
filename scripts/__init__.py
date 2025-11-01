@@ -6,6 +6,7 @@ so imports remain fast and safe in environments without optional deps.
 
 from __future__ import annotations
 
+import contextlib
 import sys
 import types
 
@@ -96,8 +97,5 @@ def _register_start_full_bot_shim() -> None:
 
 
 # Register shim on package import
-try:
+with contextlib.suppress(Exception):
     _register_start_full_bot_shim()
-except Exception:
-    # Non-fatal; fall back to on-disk module if present
-    pass

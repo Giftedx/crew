@@ -11,6 +11,7 @@ Contract guarantee:
     logic consistent and prevents type errors during autonomous workflows.
 """
 
+import contextlib
 import inspect
 import logging
 import re
@@ -89,6 +90,7 @@ except Exception:  # pragma: no cover - minimal shim
         pass
 
     def Field(default=None, description: str | None = None):  # type: ignore
+        _ = description
         return default
 
 
@@ -268,7 +270,7 @@ class CrewAIToolWrapper(BaseTool):
         )
 
         # Track context updates for debugging and monitoring
-        try:
+        with contextlib.suppress(Exception):
             from obs.metrics import get_metrics
 
             metrics = get_metrics()
@@ -282,8 +284,6 @@ class CrewAIToolWrapper(BaseTool):
                     "context_keys": len(context),
                 },
             ).inc()
-        except Exception:
-            pass  # Don't fail on metrics errors
 
     def get_last_result(self) -> Any:
         """Get the last execution result for tool chaining."""
@@ -302,7 +302,7 @@ class CrewAIToolWrapper(BaseTool):
         _TOOL_CALL_COUNTS[tool_cls] = call_count
 
         # Emit metric for tool call tracking
-        try:
+        with contextlib.suppress(Exception):
             from obs.metrics import get_metrics
 
             get_metrics().counter(
@@ -313,14 +313,12 @@ class CrewAIToolWrapper(BaseTool):
                     "limit_reached": "false",
                 },
             )
-        except Exception:
-            pass  # Metrics are optional
 
         if call_count > MAX_TOOL_CALLS_PER_SESSION:
             from ultimate_discord_intelligence_bot.step_result import StepResult
 
             # Emit rate limit metric
-            try:
+            with contextlib.suppress(Exception):
                 from obs.metrics import get_metrics
 
                 get_metrics().counter(
@@ -332,8 +330,6 @@ class CrewAIToolWrapper(BaseTool):
                     },
                 )
                 get_metrics().counter("autointel_rate_limit_triggered", labels={"tool": tool_cls})
-            except Exception:
-                pass  # Metrics are optional
 
             error_msg = (
                 f"⛔ {tool_cls} exceeded maximum calls ({MAX_TOOL_CALLS_PER_SESSION}). "
@@ -774,7 +770,9 @@ class CrewAIToolWrapper(BaseTool):
                     if truly_removed:
                         print(f"⚠️  Filtered out parameters: {truly_removed}")
                     if preserved_in_context:
-                        print(f"ℹ️  Context data preserved ({len(preserved_in_context)} keys): {preserved_in_context}")
+                        print(
+                            f"[INFO] Context data preserved ({len(preserved_in_context)} keys): {preserved_in_context}"
+                        )
                     print(f"✅ Kept parameters: {list(filtered_kwargs.keys())}")
 
                     # CRITICAL VALIDATION: Fail fast if data-dependent tools get empty parameters
@@ -1088,7 +1086,7 @@ class CrewAIToolWrapper(BaseTool):
             print(f"  Tool class: {self._wrapped_tool.__class__.__name__}")
 
             # Try to get tool signature for better error messages
-            try:
+            with contextlib.suppress(Exception):
                 import inspect
 
                 if hasattr(self._wrapped_tool, "run"):
@@ -1098,8 +1096,6 @@ class CrewAIToolWrapper(BaseTool):
                 else:
                     sig = inspect.signature(self._wrapped_tool)
                 print(f"  Expected signature: {sig}")
-            except Exception:
-                pass
 
             from .step_result import StepResult
 
@@ -1547,11 +1543,14 @@ class DiscordPostToolWrapper(BaseTool):
             # Debounce identical messages within cooldown window
             msg_hash = hashlib.sha256(msg_clean.encode("utf-8")).hexdigest()
             now = time.time()
-            if self._last_post_hash == msg_hash and self._last_post_time is not None:
-                if (now - self._last_post_time) < max(0.0, cooldown):
-                    from ultimate_discord_intelligence_bot.step_result import StepResult
+            if (
+                self._last_post_hash == msg_hash
+                and self._last_post_time is not None
+                and (now - self._last_post_time) < max(0.0, cooldown)
+            ):
+                from ultimate_discord_intelligence_bot.step_result import StepResult
 
-                    return StepResult.skip(reason="duplicate_message_debounced")
+                return StepResult.skip(reason="duplicate_message_debounced")
 
             # Do not attempt to post if webhook is disabled/placeholder; return skipped
             if not self._can_post:
@@ -1692,8 +1691,8 @@ class TimelineToolWrapper(BaseTool):
             event: dict | None = Field(None)
 
         args_schema: type[BaseModel] = _TimelineArgs  # type: ignore
-    except Exception:
-        pass
+    except Exception:  # pragma: no cover - pydantic unavailable
+        args_schema = None  # type: ignore[assignment]
 
     def _run(
         self,
@@ -1848,8 +1847,8 @@ class GraphMemoryToolWrapper(BaseTool):
             tags: list | None = Field(None)
 
         args_schema: type[BaseModel] = _GraphMemoryArgs  # type: ignore
-    except Exception:
-        pass
+    except Exception:  # pragma: no cover - pydantic unavailable
+        args_schema = None  # type: ignore[assignment]
 
     def _run(
         self,

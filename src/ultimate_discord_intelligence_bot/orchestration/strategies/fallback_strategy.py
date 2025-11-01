@@ -7,11 +7,11 @@ ensuring the /autointel command can still function with reduced capabilities.
 from __future__ import annotations
 
 import logging
+import uuid
 from typing import Any
 
-from ultimate_discord_intelligence_bot.fallback_orchestrator import (
-    FallbackAutonomousOrchestrator,
-)
+from core.orchestration import OrchestrationContext, get_orchestration_facade
+from core.orchestration.domain import FallbackAutonomousOrchestrator
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
@@ -30,8 +30,12 @@ class FallbackStrategy:
 
     def __init__(self):
         """Initialize fallback strategy."""
+        # Register fallback orchestrator with the global facade
         self._orchestrator = FallbackAutonomousOrchestrator()
-        logger.info("FallbackStrategy initialized")
+        facade = get_orchestration_facade()
+        facade.register(self._orchestrator)
+
+        logger.info("FallbackStrategy initialized with orchestration facade")
 
     async def execute_workflow(
         self,
@@ -68,22 +72,39 @@ class FallbackStrategy:
             interaction = kwargs.get("interaction")
 
             if interaction:
-                # Execute with Discord progress updates
-                await self._orchestrator.execute_autonomous_intelligence_workflow(
-                    interaction=interaction, url=url, depth=depth
+                # Create orchestration context
+                context = OrchestrationContext(
+                    tenant_id=tenant,
+                    request_id=str(uuid.uuid4()),
+                    metadata={"url": url, "depth": depth, "workspace": workspace},
                 )
-                # FallbackOrchestrator sends direct Discord messages, return success
+
+                # Execute via orchestration facade
+                facade = get_orchestration_facade()
+                result = await facade.orchestrate(
+                    "fallback_autonomous",
+                    context,
+                    interaction=interaction,
+                    url=url,
+                    depth=depth,
+                )
+
+                # The orchestrator sends Discord messages directly
                 metrics.counter(
                     "orchestration_strategy_executions_total",
-                    labels={"strategy": self.name, "outcome": "success"},
+                    labels={"strategy": self.name, "outcome": "success" if result.success else "failure"},
                 )
-                return StepResult.ok(
-                    message="Fallback workflow completed",
-                    mode="fallback",
-                    url=url,
-                    tenant=tenant,
-                    workspace=workspace,
-                )
+
+                if result.success:
+                    return StepResult.ok(
+                        message="Fallback workflow completed",
+                        mode="fallback",
+                        url=url,
+                        tenant=tenant,
+                        workspace=workspace,
+                    )
+                else:
+                    return result
             else:
                 # Execute without Discord interaction (testing/API mode)
                 result = await self._execute_pipeline_only(url)

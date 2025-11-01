@@ -106,24 +106,26 @@ def migrate_file(file_path: Path) -> bool:
         content = re.sub(old_manager, new_manager, content)
 
     # Add necessary imports if we made changes
-    if content != original_content:
-        if "from ultimate_discord_intelligence_bot.core.circuit_breaker_canonical import" not in content:
-            # Add import at the top
-            lines = content.split("\n")
-            import_line = "from ultimate_discord_intelligence_bot.core.circuit_breaker_canonical import CircuitBreaker, CircuitState, get_circuit_breaker_registry"
+    if (
+        content != original_content
+        and "from ultimate_discord_intelligence_bot.core.circuit_breaker_canonical import" not in content
+    ):
+        # Add import at the top
+        lines = content.split("\n")
+        import_line = "from ultimate_discord_intelligence_bot.core.circuit_breaker_canonical import CircuitBreaker, CircuitState, get_circuit_breaker_registry"
 
-            # Find the right place to insert the import
-            insert_index = 0
-            for i, line in enumerate(lines):
-                if line.startswith(("import ", "from ")):
-                    insert_index = i + 1
-                elif line.strip() == "":
-                    continue
-                else:
-                    break
+        # Find the right place to insert the import
+        insert_index = 0
+        for i, line in enumerate(lines):
+            if line.startswith(("import ", "from ")):
+                insert_index = i + 1
+            elif line.strip() == "":
+                continue
+            else:
+                break
 
-            lines.insert(insert_index, import_line)
-            content = "\n".join(lines)
+        lines.insert(insert_index, import_line)
+        content = "\n".join(lines)
 
     # Write back if changed
     if content != original_content:

@@ -470,11 +470,11 @@ class EnhancedLLMObservability:
             "cost_per_request": total_cost / len(recent_traces) if recent_traces else 0,
         }
 
-    def export_traces(self, format: str = "json") -> str:
+    def export_traces(self, fmt: str = "json") -> str:
         """Export traces in specified format for external analysis."""
-        if format == "json":
+        if fmt == "json":
             return json.dumps([asdict(trace) for trace in self.local_traces], indent=2)
-        elif format == "csv":
+        elif fmt == "csv":
             # Simple CSV export
             import csv
             import io
@@ -488,7 +488,7 @@ class EnhancedLLMObservability:
 
             return output.getvalue()
         else:
-            raise ValueError(f"Unsupported export format: {format}")
+            raise ValueError(f"Unsupported export format: {fmt}")
 
 
 # Global observability instance

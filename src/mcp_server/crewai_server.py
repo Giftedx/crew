@@ -70,7 +70,7 @@ _active_executions: dict[str, dict[str, Any]] = {}
 def _get_crew_instance():
     """Get a CrewAI crew instance safely."""
     try:
-        from ultimate_discord_intelligence_bot.crew import (
+        from ultimate_discord_intelligence_bot.crew_core import (
             UltimateDiscordIntelligenceBotCrew,
         )  # type: ignore
 

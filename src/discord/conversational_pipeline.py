@@ -104,6 +104,7 @@ class ConversationalPipeline:
 
         # Load personality for each guild
         self._guild_personalities: dict[str, PersonalityStateManager] = {}
+        self._background_tasks: set[asyncio.Task[Any]] = set()
 
     async def process_message(
         self, message_data: dict[str, Any], recent_messages: list[dict[str, Any]]
@@ -208,7 +209,9 @@ class ConversationalPipeline:
             await self._store_interaction(pipeline_context, evaluation, final_response)
 
             # Step 11: Start monitoring for reward signals
-            asyncio.create_task(self._monitor_interaction_rewards(pipeline_context, evaluation, final_response))
+            task = asyncio.create_task(self._monitor_interaction_rewards(pipeline_context, evaluation, final_response))
+            self._background_tasks.add(task)
+            task.add_done_callback(self._background_tasks.discard)
 
             processing_time = time.time() - start_time
 

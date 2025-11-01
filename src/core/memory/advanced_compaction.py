@@ -349,7 +349,7 @@ class AdvancedMemoryCompactor:
 
         # Select entries to remove (keep one from each similar pair)
         removed_ids = set()
-        for similarity, i, j in similar_pairs:
+        for _similarity, i, j in similar_pairs:
             if len(removed_ids) >= count:
                 break
 

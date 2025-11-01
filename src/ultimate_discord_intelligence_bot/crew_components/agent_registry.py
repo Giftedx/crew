@@ -225,8 +225,15 @@ class AgentRegistry:
 
         def embedding_function(text: str) -> list[float]:
             """Simple embedding function for knowledge integration."""
-            # This would be replaced with actual embedding logic
-            return [0.0] * 384  # Placeholder embedding
+            import hashlib
+
+            # Deterministic pseudo-embedding derived from text content
+            digest = hashlib.sha256(text.encode("utf-8")).digest() if text else b"\x00"
+            vector: list[float] = []
+            for idx in range(384):
+                byte = digest[idx % len(digest)]
+                vector.append(byte / 255.0)
+            return vector
 
         return Agent(
             role="Knowledge Integrator",

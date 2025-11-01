@@ -9,6 +9,7 @@ import asyncio
 import logging
 import sys
 from pathlib import Path
+from typing import ClassVar
 
 
 # Add src to path
@@ -71,7 +72,7 @@ async def test_context_population():
 
         class MockAgent:
             role = "test_agent"
-            tools = [MockTool()]
+            tools: ClassVar[list[MockTool]] = [MockTool()]
 
         mock_agent = MockAgent()
         test_context = {

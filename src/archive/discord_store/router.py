@@ -63,7 +63,13 @@ def pick_channel(
         Optional tenant slug for overrides.
     """
     cfg = _CONFIG
+    payload_meta = meta or {}
     kind = kind_from_path(Path(path))
+    # Allow metadata to influence routing. If meta specifies an explicit kind or
+    # custom visibility (e.g., "sensitive"), apply those overrides before
+    # falling back to standard extension-based routing.
+    kind = payload_meta.get("kind_override", kind)
+    visibility = payload_meta.get("visibility", visibility)
     if tenant:
         overrides = cfg.get("per_tenant_overrides", {}).get(tenant, {})
         if kind in overrides and visibility in overrides[kind]:

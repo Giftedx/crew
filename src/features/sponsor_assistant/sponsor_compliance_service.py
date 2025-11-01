@@ -426,7 +426,7 @@ class SponsorComplianceAssistant:
         current_time = 0.0
         accumulated_duration = 0.0
 
-        for i, segment in enumerate(content_segments):
+        for _i, segment in enumerate(content_segments):
             segment_duration = segment.get("end_time", 0) - segment.get("start_time", 0)
 
             # Find compliance analysis for this segment
@@ -732,14 +732,12 @@ class SponsorComplianceAssistant:
         """
         tone = brand_guidelines.tone_requirements[0] if brand_guidelines.tone_requirements else "professional"
 
-        if tone == "casual":
-            return f"Hey everyone, I wanted to quickly mention {sponsor_product}. {sponsor_message}"
-        elif tone == "professional":
-            return f"As a {brand_guidelines.target_audience} content creator, I recommend {sponsor_product}. {sponsor_message}"
-        elif tone == "educational":
-            return f"Today I want to share information about {sponsor_product}, which {sponsor_message}"
-        else:
-            return f"I recommend {sponsor_product} because {sponsor_message}"
+        templates = {
+            "casual": f"Hey everyone, I wanted to quickly mention {sponsor_product}. {sponsor_message}",
+            "professional": f"As a {brand_guidelines.target_audience} content creator, I recommend {sponsor_product}. {sponsor_message}",
+            "educational": f"Today I want to share information about {sponsor_product}, which {sponsor_message}",
+        }
+        return templates.get(tone, f"I recommend {sponsor_product} because {sponsor_message}")
 
     def _check_cache(
         self,

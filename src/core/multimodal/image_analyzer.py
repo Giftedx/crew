@@ -338,11 +338,7 @@ class ImageAnalyzer:
         self._load_models()
 
         # Parse image data
-        if isinstance(image_data, str):
-            # Assume base64 encoded
-            image_bytes = base64.b64decode(image_data)
-        else:
-            image_bytes = image_data
+        image_bytes = base64.b64decode(image_data) if isinstance(image_data, str) else image_data
 
         # Load and preprocess image
         try:
@@ -350,7 +346,7 @@ class ImageAnalyzer:
             image = self._preprocess_image(image_file)
         except Exception as e:
             logger.error(f"Failed to load image: {e}")
-            raise ValueError(f"Invalid image data: {e}")
+            raise ValueError(f"Invalid image data: {e}") from e
 
         # Default analysis types
         if analysis_types is None:

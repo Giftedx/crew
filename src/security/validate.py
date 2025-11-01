@@ -41,8 +41,8 @@ def validate_path(path: str | Path, base: str | Path) -> Path:
     resolved = (base_path / Path(path)).resolve()
     try:
         resolved.relative_to(base_path)
-    except ValueError:
-        raise ValueError("path traversal detected")
+    except ValueError as exc:
+        raise ValueError("path traversal detected") from exc
     return resolved
 
 

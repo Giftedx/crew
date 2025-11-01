@@ -51,6 +51,10 @@ def check_file_references(doc_content: str, doc_path: Path, repo_root: Path, doc
             if not ok and any(raw.startswith(p) for p in known_src_prefixes):
                 candidate = repo_root / "src" / raw
                 ok = candidate.exists()
+            # If still not found, resolve relative to the document itself
+            if not ok:
+                candidate = (doc_path.parent / raw).resolve()
+                ok = candidate.exists()
             # If still not, and no directory components present, search under src recursively
             if not ok and "/" not in raw:
                 found = list((repo_root / "src").rglob(raw))
@@ -67,6 +71,8 @@ def check_file_references(doc_content: str, doc_path: Path, repo_root: Path, doc
             continue
         # Resolve relative to docs dir
         candidate = (docs_dir / link).resolve()
+        if not candidate.exists():
+            candidate = (doc_path.parent / link).resolve()
         if not candidate.exists():
             issues.append(f"Missing file/directory: {link}")
 

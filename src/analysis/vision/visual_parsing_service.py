@@ -441,20 +441,19 @@ class VisualParsingService:
                 diff_score = np.mean(diff)
 
                 # Scene change threshold (adjust based on testing)
-                if diff_score > 15:  # Threshold for scene change
-                    if frame_num - current_start > fps * 5:  # Minimum 5 seconds per scene
-                        # End previous scene
-                        scene_segments.append(
-                            SceneSegment(
-                                start_frame=current_start,
-                                end_frame=frame_num,
-                                scene_type=self._classify_scene_type(current_start / fps),
-                                keyframes=[],  # Will be populated later
-                                text_overlays=[],
-                                confidence=0.7,
-                            )
+                if diff_score > 15 and frame_num - current_start > fps * 5:  # Threshold and duration
+                    # End previous scene
+                    scene_segments.append(
+                        SceneSegment(
+                            start_frame=current_start,
+                            end_frame=frame_num,
+                            scene_type=self._classify_scene_type(current_start / fps),
+                            keyframes=[],  # Will be populated later
+                            text_overlays=[],
+                            confidence=0.7,
                         )
-                        current_start = frame_num
+                    )
+                    current_start = frame_num
 
             prev_frame = gray
 

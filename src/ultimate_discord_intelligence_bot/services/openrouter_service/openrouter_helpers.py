@@ -6,6 +6,7 @@ and its components.
 
 from __future__ import annotations
 
+import contextlib
 import copy
 from typing import TYPE_CHECKING, Any
 
@@ -67,10 +68,8 @@ def choose_model_from_map(task_type: str, models_map: dict[str, list[str]], lear
 
 def update_shadow_hit_ratio(labels: dict[str, str], is_hit: bool) -> None:
     """Update shadow hit ratio metrics."""
-    try:
+    with contextlib.suppress(Exception):
         if is_hit:
             metrics.SEMANTIC_CACHE_SHADOW_HITS.labels(**labels).inc()
         else:
             metrics.SEMANTIC_CACHE_SHADOW_MISSES.labels(**labels).inc()
-    except Exception:
-        pass

@@ -251,6 +251,8 @@ def smart_cache_tool_result(ttl: int | None = None, adaptive: bool = True, prior
             # Get usage pattern and strategy
             pattern = smart_cache.get_usage_pattern(tool_name)
             strategy = smart_cache.get_caching_strategy(tool_name)
+            if strategy.adaptive_ttl != adaptive:
+                strategy.adaptive_ttl = adaptive
 
             # Record call start
             start_time = time.time()
@@ -280,9 +282,20 @@ def smart_cache_tool_result(ttl: int | None = None, adaptive: bool = True, prior
 
             # Cache successful results
             if isinstance(result, StepResult) and result.success:
-                effective_ttl = ttl or strategy.ttl
+                if adaptive and strategy.adaptive_ttl:
+                    effective_ttl = ttl or smart_cache._calculate_optimal_ttl(pattern)
+                else:
+                    effective_ttl = ttl or strategy.ttl
                 smart_cache.base_cache.set(
-                    cache_key, result, ttl=effective_ttl, metadata={"tool_name": tool_name, "priority": priority}
+                    cache_key,
+                    result,
+                    ttl=effective_ttl,
+                    metadata={
+                        "tool_name": tool_name,
+                        "priority": priority,
+                        "adaptive": adaptive,
+                        "strategy_ttl": strategy.ttl,
+                    },
                 )
 
             return result

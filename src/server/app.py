@@ -7,8 +7,8 @@ in settings. The factory wires:
 
 * Settings injection
 * Tracing initialisation (OTLP or console)
-* Metrics middleware (histogram + counter) – guarded by flag
-* Prometheus exposition endpoint (``/metrics`` by default) – guarded by flag
+* Metrics middleware (histogram + counter) - guarded by flag
+* Prometheus exposition endpoint (``/metrics`` by default) - guarded by flag
 * Existing archive router
 """
 

@@ -1,3 +1,30 @@
+"""
+DEPRECATED: This file is deprecated and will be removed in a future version.
+Please use ultimate_discord_intelligence_bot.crew_core instead.
+
+Migration guide:
+- Import from crew_core instead of this module
+- Use UnifiedCrewExecutor for crew execution
+- Use CrewErrorHandler for error handling
+- Use CrewInsightGenerator for insight generation
+
+Example:
+    from ultimate_discord_intelligence_bot.crew_core import (
+        UnifiedCrewExecutor,
+        CrewConfig,
+        CrewTask,
+    )
+"""
+
+import warnings
+
+warnings.warn(
+    "This module is deprecated. Use ultimate_discord_intelligence_bot.crew_core instead.",
+    DeprecationWarning,
+    stacklevel=2,
+)
+
+
 """Advanced error handling and recovery system for autonomous intelligence workflows.
 
 This module provides context-aware error handling, crew-level failure recovery,

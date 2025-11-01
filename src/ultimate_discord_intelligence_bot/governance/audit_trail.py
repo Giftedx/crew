@@ -181,7 +181,7 @@ class AuditTrail:
 
     def export_audit_trail(
         self,
-        format: str = "json",
+        fmt: str = "json",
         start_time: float | None = None,
         end_time: float | None = None,
     ) -> StepResult:
@@ -195,12 +195,12 @@ class AuditTrail:
         # Filter decisions by time range
         filtered_decisions = [d for d in self.decisions if start_time <= d.timestamp <= end_time]
 
-        if format == "json":
+        if fmt == "json":
             return self._export_json(filtered_decisions)
-        elif format == "csv":
+        elif fmt == "csv":
             return self._export_csv(filtered_decisions)
         else:
-            return StepResult.fail(f"Unsupported export format: {format}")
+            return StepResult.fail(f"Unsupported export format: {fmt}")
 
     def _export_json(self, decisions: list[GovernanceDecision]) -> StepResult:
         """Export decisions as JSON."""

@@ -22,14 +22,38 @@ except ImportError:
 
     # Create a no-op GAUGE for fallback
     def GAUGE(*args, **kwargs):
+        metric_name = kwargs.get("name")
+        if not metric_name and args:
+            metric_name = args[0]
+        label_names: tuple[str, ...] | list[str] | None = None
+        if "labelnames" in kwargs:
+            label_names = kwargs["labelnames"]
+        elif len(args) > 2:
+            label_names = args[2]
+
         class NoOpGauge:
-            def labels(self, *args, **kwargs):
+            def __init__(self, name: str | None, labels: tuple[str, ...] | list[str] | None):
+                self.name = name or "noop_metric"
+                self.label_names = tuple(labels or ())
+                self._last_labels: tuple[Any, ...] = ()
+                self._last_kwargs: dict[str, Any] = {}
+                self._last_value: Any | None = None
+
+            def labels(self, *label_values, **label_kwargs):
+                self._last_labels = tuple(label_values)
+                self._last_kwargs = dict(label_kwargs)
                 return self
 
-            def set(self, *args, **kwargs):
-                pass
+            def set(self, value: Any, *extra_args, **extra_kwargs):
+                self._last_value = value
+                if extra_args or extra_kwargs:
+                    # Capture any supplemental context provided by callers
+                    self._last_extra = {
+                        "args": tuple(extra_args),
+                        "kwargs": dict(extra_kwargs),
+                    }
 
-        return NoOpGauge()
+        return NoOpGauge(metric_name, label_names)
 
 
 logger = logging.getLogger(__name__)
@@ -284,6 +308,10 @@ def get_resource_monitor() -> ResourceMonitor:
 def start_resource_monitoring(interval_seconds: int = 60) -> None:
     """Start global resource monitoring."""
     monitor = get_resource_monitor()
+    normalized_interval = max(1, int(interval_seconds))
+    if monitor.interval_seconds != normalized_interval:
+        logger.info("Resource monitor interval updated from %ss to %ss", monitor.interval_seconds, normalized_interval)
+        monitor.interval_seconds = normalized_interval
     monitor.start()
 
 

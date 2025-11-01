@@ -30,11 +30,8 @@ class Executor:
 
         # Before hooks
         for m in self._middleware:
-            try:
+            with contextlib.suppress(Exception):
                 m.before(context)
-            except Exception:
-                # Middleware must not break execution; continue
-                pass
 
         # Execute step
         try:

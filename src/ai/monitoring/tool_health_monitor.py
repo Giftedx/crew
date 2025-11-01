@@ -217,15 +217,15 @@ class ToolHealthMonitor:
         elif not metrics.is_enabled and metrics.auto_disabled_at:
             time_disabled = time.time() - metrics.auto_disabled_at
 
-            if time_disabled >= self.recovery_period_s:
-                # Check if health improved
-                if health_score >= (self.health_threshold + 0.1):  # Add hysteresis
-                    metrics.is_enabled = True
-                    metrics.auto_disabled_at = None
-                    logger.info(
-                        f"Tool {metrics.tool_name} AUTO-ENABLED "
-                        f"(health_score={health_score:.2f}, recovered after {time_disabled:.0f}s)"
-                    )
+            if time_disabled >= self.recovery_period_s and health_score >= (
+                self.health_threshold + 0.1
+            ):  # Add hysteresis
+                metrics.is_enabled = True
+                metrics.auto_disabled_at = None
+                logger.info(
+                    f"Tool {metrics.tool_name} AUTO-ENABLED "
+                    f"(health_score={health_score:.2f}, recovered after {time_disabled:.0f}s)"
+                )
 
     def is_tool_enabled(self, tool_name: str) -> bool:
         """

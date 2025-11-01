@@ -125,10 +125,9 @@ class TaskDependencyResolver:
             ready_tasks = []
 
             for task_id, dependencies in self._dependency_graph.items():
-                if task_id not in completed_tasks:
-                    # Check if all dependencies are completed
-                    if dependencies.issubset(completed_tasks):
-                        ready_tasks.append(task_id)
+                if task_id not in completed_tasks and dependencies.issubset(completed_tasks):
+                    # Dependencies satisfied; task ready for execution
+                    ready_tasks.append(task_id)
 
             return ready_tasks
 

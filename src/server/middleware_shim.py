@@ -101,8 +101,22 @@ def install_middleware_support() -> None:
             return original_request(self, method, path, **kw)
 
         async def terminal(req: Request):
-            # Call the original TestClient request which returns a Response
-            return original_request(self, method, path, **kw)
+            # Propagate potential alterations performed by middleware before delegating
+            overridden_method = getattr(req, "method", method).upper()
+            overridden_path = getattr(req, "url", None)
+            if overridden_path is not None:
+                overridden_path = getattr(req.url, "path", path)
+            else:
+                overridden_path = getattr(getattr(req, "scope", {}), "get", lambda *_: path)("path")
+            request_kwargs = dict(kw)
+            try:
+                request_kwargs["headers"] = dict(req.headers)
+            except Exception:
+                request_kwargs["headers"] = kw.get("headers", {})
+            query_bytes = getattr(getattr(req, "scope", {}), "get", lambda *_: b"")("query_string")
+            if query_bytes:
+                request_kwargs["params"] = query_bytes.decode("latin-1")
+            return original_request(self, overridden_method, overridden_path or path, **request_kwargs)
 
         async def invoke(i: int, req: Request):
             if i >= len(chain):

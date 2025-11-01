@@ -145,7 +145,7 @@ class AIMLRLIntegration:
         """Initialize all AI/ML/RL components"""
         # Unified Feedback Orchestrator
         if self.config.enable_unified_feedback:
-            from ai.rl.unified_feedback_orchestrator import get_orchestrator
+            from core.orchestration.application import get_orchestrator
 
             self._orchestrator = get_orchestrator(auto_create=True)
 

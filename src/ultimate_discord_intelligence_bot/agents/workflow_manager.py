@@ -246,11 +246,11 @@ class TaskRoutingTool(BaseTool):
         suitable_agents = []
 
         for agent in agents:
-            # Check if agent can handle this task type
-            if task.agent_type in agent.capabilities or "general" in agent.capabilities or task.agent_type == "general":
-                # Check if agent has capacity
-                if agent_loads.get(agent.agent_id, 0) < 0.9:  # 90% load threshold
-                    suitable_agents.append(agent)
+            # Check if agent can handle this task type and has capacity
+            if (
+                task.agent_type in agent.capabilities or "general" in agent.capabilities or task.agent_type == "general"
+            ) and agent_loads.get(agent.agent_id, 0) < 0.9:  # 90% load threshold
+                suitable_agents.append(agent)
 
         if not suitable_agents:
             return None
@@ -397,7 +397,7 @@ class DependencyResolverTool(BaseTool):
         dependencies = {task["id"]: set(task.get("dependencies", [])) for task in tasks}
 
         # Calculate in-degrees
-        for task_id, deps in dependencies.items():
+        for _task_id, deps in dependencies.items():
             for dep in deps:
                 if dep in in_degree:
                     in_degree[dep] += 1

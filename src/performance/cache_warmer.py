@@ -6,6 +6,8 @@ Implements predictive cache warming to improve cache hit rates and reduce latenc
 This optimization preloads frequently accessed content into cache during idle periods.
 """
 
+from __future__ import annotations
+
 import asyncio
 import logging
 import time
@@ -16,6 +18,18 @@ from typing import Any
 
 from core.cache.semantic_cache import create_semantic_cache
 from core.time import default_utc_now, ensure_utc
+
+
+try:
+    from core.settings import Settings  # type: ignore[attr-defined]
+except Exception:  # pragma: no cover - fallback stub for optional dependency
+
+    @dataclass
+    class Settings:
+        """Lightweight fallback settings container for cache warmer demos."""
+
+        def __init__(self, **overrides: Any) -> None:
+            self.__dict__.update(overrides)
 
 
 logger = logging.getLogger(__name__)
@@ -187,22 +201,38 @@ async def optimize_cache_performance(pipeline) -> dict[str, Any]:
     """Integrate cache warming with pipeline performance optimization."""
     warmer = PredictiveCacheWarmer()
 
-    # Mock recent requests (in production, this would come from request logs)
-    recent_requests = [
-        {
-            "prompt": "Analyze this video content for key claims",
-            "timestamp": time.time(),
-        },
-        {"prompt": "Summarize the main arguments presented", "timestamp": time.time()},
-        {
-            "prompt": "Fact check the claims made in this content",
-            "timestamp": time.time(),
-        },
-        {
-            "prompt": "Identify logical fallacies in the reasoning",
-            "timestamp": time.time(),
-        },
-    ]
+    recent_requests: list[dict[str, Any]] = []
+    source = "synthetic"
+    if pipeline is not None:
+        extractor = getattr(pipeline, "get_recent_requests", None)
+        try:
+            if callable(extractor):
+                candidate = extractor()
+                if asyncio.iscoroutine(candidate):
+                    candidate = await candidate
+                if isinstance(candidate, list):
+                    recent_requests = candidate
+                    source = getattr(pipeline, "name", "pipeline")
+        except Exception as exc:
+            logger.debug("Failed to obtain recent requests from pipeline: %s", exc)
+
+    if not recent_requests:
+        # Mock recent requests (in production, this would come from request logs)
+        recent_requests = [
+            {
+                "prompt": "Analyze this video content for key claims",
+                "timestamp": time.time(),
+            },
+            {"prompt": "Summarize the main arguments presented", "timestamp": time.time()},
+            {
+                "prompt": "Fact check the claims made in this content",
+                "timestamp": time.time(),
+            },
+            {
+                "prompt": "Identify logical fallacies in the reasoning",
+                "timestamp": time.time(),
+            },
+        ]
 
     # Perform cache warming
     stats = await warmer.auto_warm_cache(recent_requests)
@@ -216,6 +246,7 @@ async def optimize_cache_performance(pipeline) -> dict[str, Any]:
             "warming_time_ms": stats.warming_time_ms,
         },
         "expected_improvement": "15-20% cache hit rate increase",
+        "request_source": source,
         "status": "active",
     }
 

@@ -7,6 +7,7 @@ reducing parsing errors by 15x through automatic validation and retries.
 from __future__ import annotations
 
 from enum import Enum
+from typing import Any, ClassVar
 
 from pydantic import BaseModel, Field, validator
 
@@ -44,7 +45,7 @@ class TextAnalysisResult(BaseModel):
     readability_score: float | None = Field(None, ge=0.0, le=100.0, description="Flesch reading ease score")
 
     class Config:
-        json_schema_extra = {
+        json_schema_extra: ClassVar[dict[str, Any]] = {
             "example": {
                 "status": "success",
                 "sentiment": {"label": "positive", "score": 0.85},
@@ -87,7 +88,7 @@ class ClaimExtractionResult(BaseModel):
     total_sentences: int = Field(ge=0, description="Total sentences processed")
 
     class Config:
-        json_schema_extra = {
+        json_schema_extra: ClassVar[dict[str, Any]] = {
             "example": {
                 "status": "success",
                 "claims": [
@@ -135,7 +136,7 @@ class LogicalFallacyResult(BaseModel):
     overall_score: float = Field(ge=0.0, le=1.0, description="Overall logical consistency score")
 
     class Config:
-        json_schema_extra = {
+        json_schema_extra: ClassVar[dict[str, Any]] = {
             "example": {
                 "status": "success",
                 "fallacies": [
@@ -181,7 +182,7 @@ class PerspectiveSynthesisResult(BaseModel):
     synthesis: str = Field(description="Balanced synthesis of different viewpoints")
 
     class Config:
-        json_schema_extra = {
+        json_schema_extra: ClassVar[dict[str, Any]] = {
             "example": {
                 "status": "success",
                 "original_summary": "The article argues for increased AI regulation",
@@ -220,7 +221,7 @@ class MemoryStorageResult(BaseModel):
     namespace: str = Field(description="Storage namespace used")
 
     class Config:
-        json_schema_extra = {
+        json_schema_extra: ClassVar[dict[str, Any]] = {
             "example": {
                 "status": "success",
                 "entry_id": "mem_12345",
@@ -260,7 +261,7 @@ class FactCheckResult(BaseModel):
     sources: list[FactCheckSource] = Field(default_factory=list, max_length=5, description="Sources consulted")
 
     class Config:
-        json_schema_extra = {
+        json_schema_extra: ClassVar[dict[str, Any]] = {
             "example": {
                 "status": "success",
                 "claim": "The Earth is round",
@@ -307,7 +308,7 @@ class TrustworthinessResult(BaseModel):
     red_flags: list[str] = Field(default_factory=list, max_length=10, description="Identified concerns")
 
     class Config:
-        json_schema_extra = {
+        json_schema_extra: ClassVar[dict[str, Any]] = {
             "example": {
                 "status": "success",
                 "overall_trust_level": "medium",

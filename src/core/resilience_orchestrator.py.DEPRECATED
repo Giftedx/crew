@@ -1,0 +1,432 @@
+"""
+Advanced Resilience Orchestrator for Ultimate Discord Intelligence Bot.
+
+This module provides enterprise-grade resilience patterns including:
+- Multi-tier circuit breakers with cascading fallbacks
+- Adaptive retry strategies with jitter and backoff
+- Health-aware load balancing and routing
+- Automatic degradation and recovery management
+- Real-time resilience analytics and alerting
+"""
+
+from __future__ import annotations
+
+import asyncio
+import logging
+import random
+import time
+from collections import defaultdict, deque
+from dataclasses import dataclass, field
+from enum import Enum
+from typing import TYPE_CHECKING, Any, TypeVar
+
+from obs import metrics
+
+from .circuit_breaker import CircuitBreaker, CircuitConfig
+from .error_handling import log_error
+
+
+if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable
+
+
+logger = logging.getLogger(__name__)
+
+T = TypeVar("T")
+
+
+class ResilienceStrategy(Enum):
+    """Resilience strategies for different failure modes."""
+
+    FAIL_FAST = "fail_fast"
+    GRACEFUL_DEGRADE = "graceful_degrade"
+    RETRY_WITH_BACKOFF = "retry_with_backoff"
+    CIRCUIT_BREAK = "circuit_break"
+    ADAPTIVE_ROUTING = "adaptive_routing"
+
+
+@dataclass
+class ResilienceConfig:
+    """Configuration for resilience orchestrator."""
+
+    # Circuit breaker settings
+    circuit_failure_threshold: int = 5
+    circuit_recovery_timeout: int = 60
+    circuit_half_open_max_calls: int = 3
+
+    # Retry settings
+    max_retry_attempts: int = 3
+    base_retry_delay: float = 1.0
+    max_retry_delay: float = 30.0
+    retry_jitter_factor: float = 0.1
+
+    # Health monitoring
+    health_check_interval: float = 30.0
+    failure_rate_threshold: float = 0.1
+    latency_threshold_ms: float = 5000.0
+
+    # Adaptive routing
+    enable_adaptive_routing: bool = True
+    routing_window_size: int = 100
+    minimum_samples_for_routing: int = 10
+
+
+@dataclass
+class ServiceHealth:
+    """Service health metrics and status."""
+
+    service_name: str
+    is_healthy: bool = True
+    response_times: deque[float] = field(default_factory=lambda: deque(maxlen=100))
+    error_count: int = 0
+    success_count: int = 0
+    last_health_check: float = field(default_factory=time.time)
+
+    @property
+    def success_rate(self) -> float:
+        """Calculate success rate."""
+        total = self.error_count + self.success_count
+        return self.success_count / total if total > 0 else 1.0
+
+    @property
+    def avg_response_time(self) -> float:
+        """Calculate average response time."""
+        return sum(self.response_times) / len(self.response_times) if self.response_times else 0.0
+
+
+class ResilienceOrchestrator:
+    """
+    Advanced resilience orchestrator with multi-tier protection patterns.
+
+    Provides comprehensive resilience strategies including circuit breakers,
+    adaptive retries, health-aware routing, and automatic degradation.
+    """
+
+    def __init__(self, config: ResilienceConfig | None = None):
+        """Initialize resilience orchestrator."""
+        self.config = config or ResilienceConfig()
+        self.circuit_breakers: dict[str, CircuitBreaker] = {}
+        self.service_health: dict[str, ServiceHealth] = {}
+        self.routing_weights: dict[str, float] = defaultdict(lambda: 1.0)
+        self.degradation_mode = False
+        self._background_tasks: set[asyncio.Task[Any]] = set()
+
+        # Start background health monitoring
+        task = asyncio.create_task(self._health_monitor_loop())
+        self._background_tasks.add(task)
+        task.add_done_callback(self._background_tasks.discard)
+
+        logger.info("Resilience orchestrator initialized with advanced patterns")
+
+    async def execute_with_resilience(
+        self,
+        service_name: str,
+        primary_func: Callable[[], Awaitable[T]],
+        fallback_func: Callable[[], Awaitable[T]] | None = None,
+        strategy: ResilienceStrategy = ResilienceStrategy.CIRCUIT_BREAK,
+        **kwargs: Any,
+    ) -> T:
+        """
+        Execute function with comprehensive resilience patterns.
+
+        Args:
+            service_name: Unique service identifier
+            primary_func: Primary function to execute
+            fallback_func: Optional fallback function
+            strategy: Resilience strategy to apply
+            **kwargs: Additional configuration parameters
+
+        Returns:
+            Function result
+
+        Raises:
+            Exception: When all resilience strategies are exhausted
+        """
+        start_time = time.time()
+
+        try:
+            # Apply resilience strategy
+            if strategy == ResilienceStrategy.FAIL_FAST:
+                result = await self._execute_fail_fast(service_name, primary_func)
+            elif strategy == ResilienceStrategy.GRACEFUL_DEGRADE:
+                result = await self._execute_graceful_degrade(service_name, primary_func, fallback_func)
+            elif strategy == ResilienceStrategy.RETRY_WITH_BACKOFF:
+                result = await self._execute_with_retry(service_name, primary_func)
+            elif strategy == ResilienceStrategy.CIRCUIT_BREAK:
+                result = await self._execute_with_circuit_breaker(service_name, primary_func, fallback_func)
+            elif strategy == ResilienceStrategy.ADAPTIVE_ROUTING:
+                result = await self._execute_with_adaptive_routing(service_name, primary_func, **kwargs)
+            else:
+                result = await primary_func()
+
+            # Record success metrics
+            execution_time = time.time() - start_time
+            self._record_success(service_name, execution_time)
+
+            return result
+
+        except Exception as e:
+            # Record failure metrics
+            execution_time = time.time() - start_time
+            self._record_failure(service_name, execution_time, e)
+
+            # Try fallback if available and not already tried
+            if fallback_func and strategy != ResilienceStrategy.GRACEFUL_DEGRADE:
+                logger.warning(f"Primary function failed for {service_name}, trying fallback")
+                try:
+                    return await fallback_func()
+                except Exception as fallback_error:
+                    log_error(
+                        fallback_error,
+                        message=f"Fallback also failed for {service_name}",
+                    )
+
+            raise
+
+    async def _execute_fail_fast(self, service_name: str, func: Callable[[], Awaitable[T]]) -> T:
+        """Execute with fail-fast strategy."""
+        return await func()
+
+    async def _execute_graceful_degrade(
+        self,
+        service_name: str,
+        primary_func: Callable[[], Awaitable[T]],
+        fallback_func: Callable[[], Awaitable[T]] | None,
+    ) -> T:
+        """Execute with graceful degradation."""
+        try:
+            return await primary_func()
+        except Exception:
+            if fallback_func:
+                logger.info(f"Gracefully degrading {service_name} to fallback")
+                return await fallback_func()
+            raise
+
+    async def _execute_with_retry(self, service_name: str, func: Callable[[], Awaitable[T]]) -> T:
+        """Execute with adaptive retry strategy."""
+        for attempt in range(self.config.max_retry_attempts):
+            try:
+                return await func()
+            except Exception:
+                if attempt == self.config.max_retry_attempts - 1:
+                    raise
+
+                delay = min(
+                    self.config.base_retry_delay * (2**attempt),
+                    self.config.max_retry_delay,
+                )
+                jitter = delay * self.config.retry_jitter_factor * random.random()
+                total_delay = delay + jitter
+
+                logger.warning(
+                    f"Retry {attempt + 1}/{self.config.max_retry_attempts} for {service_name} in {total_delay:.2f}s"
+                )
+                await asyncio.sleep(total_delay)
+
+        raise RuntimeError("All retry attempts exhausted")
+
+    async def _execute_with_circuit_breaker(
+        self,
+        service_name: str,
+        primary_func: Callable[[], Awaitable[T]],
+        fallback_func: Callable[[], Awaitable[T]] | None,
+    ) -> T:
+        """Execute with circuit breaker protection."""
+        circuit = self._get_or_create_circuit_breaker(service_name, fallback_func)
+        return await circuit.call(primary_func)
+
+    async def _execute_with_adaptive_routing(
+        self,
+        service_name: str,
+        func: Callable[[], Awaitable[T]],
+        **kwargs: Any,
+    ) -> T:
+        """Execute with adaptive routing based on health metrics."""
+        # For adaptive routing, we'd route between multiple service instances
+        # This is a simplified implementation
+        if not self._is_service_healthy(service_name):
+            logger.warning(f"Service {service_name} is unhealthy, attempting degraded execution")
+            # Could route to a secondary instance or enable degraded mode
+
+        return await func()
+
+    def _get_or_create_circuit_breaker(
+        self,
+        service_name: str,
+        fallback_func: Callable[[], Awaitable[T]] | None,
+    ) -> CircuitBreaker:
+        """Get or create circuit breaker for service."""
+        if service_name not in self.circuit_breakers:
+            config = CircuitConfig(
+                failure_threshold=self.config.circuit_failure_threshold,
+                recovery_timeout=self.config.circuit_recovery_timeout,
+                success_threshold=self.config.circuit_half_open_max_calls,
+            )
+            self.circuit_breakers[service_name] = CircuitBreaker(
+                name=service_name,
+                config=config,
+                fallback=fallback_func,
+            )
+
+        return self.circuit_breakers[service_name]
+
+    def _record_success(self, service_name: str, execution_time: float) -> None:
+        """Record successful execution."""
+        health = self._get_or_create_service_health(service_name)
+        health.success_count += 1
+        health.response_times.append(execution_time * 1000)  # Convert to ms
+
+        # Update routing weights based on performance
+        if self.config.enable_adaptive_routing:
+            self._update_routing_weight(service_name, success=True, latency=execution_time)
+
+        # Update metrics
+        try:
+            metrics.RESILIENCE_REQUESTS.labels(**metrics.label_ctx(), service=service_name, result="success").inc()
+            metrics.RESILIENCE_LATENCY.labels(**metrics.label_ctx(), service=service_name).observe(execution_time)
+        except Exception as e:
+            log_error(e, message="Failed to update resilience success metrics")
+
+    def _record_failure(self, service_name: str, execution_time: float, error: Exception) -> None:
+        """Record failed execution."""
+        health = self._get_or_create_service_health(service_name)
+        health.error_count += 1
+        health.response_times.append(execution_time * 1000)  # Convert to ms
+
+        # Update routing weights based on failure
+        if self.config.enable_adaptive_routing:
+            self._update_routing_weight(service_name, success=False, latency=execution_time)
+
+        # Update metrics
+        try:
+            metrics.RESILIENCE_REQUESTS.labels(**metrics.label_ctx(), service=service_name, result="failure").inc()
+            metrics.RESILIENCE_ERRORS.labels(
+                **metrics.label_ctx(),
+                service=service_name,
+                error_type=type(error).__name__,
+            ).inc()
+        except Exception as e:
+            log_error(e, message="Failed to update resilience failure metrics")
+
+    def _get_or_create_service_health(self, service_name: str) -> ServiceHealth:
+        """Get or create service health tracker."""
+        if service_name not in self.service_health:
+            self.service_health[service_name] = ServiceHealth(service_name=service_name)
+        return self.service_health[service_name]
+
+    def _is_service_healthy(self, service_name: str) -> bool:
+        """Check if service is healthy based on metrics."""
+        health = self.service_health.get(service_name)
+        if not health:
+            return True  # Assume healthy if no data
+
+        # Check success rate
+        if health.success_rate < (1.0 - self.config.failure_rate_threshold):
+            return False
+
+        # Check average response time
+        if health.avg_response_time > self.config.latency_threshold_ms:
+            return False
+
+        return health.is_healthy
+
+    def _update_routing_weight(self, service_name: str, success: bool, latency: float) -> None:
+        """Update routing weights based on performance."""
+        current_weight = self.routing_weights[service_name]
+
+        if success:
+            # Increase weight for successful requests with good latency
+            if latency < self.config.latency_threshold_ms / 1000:  # Convert to seconds
+                self.routing_weights[service_name] = min(current_weight * 1.1, 2.0)
+        else:
+            # Decrease weight for failures
+            self.routing_weights[service_name] = max(current_weight * 0.9, 0.1)
+
+    async def _health_monitor_loop(self) -> None:
+        """Background health monitoring loop."""
+        while True:
+            try:
+                await asyncio.sleep(self.config.health_check_interval)
+                await self._perform_health_checks()
+            except Exception as e:
+                log_error(e, message="Error in health monitoring loop")
+
+    async def _perform_health_checks(self) -> None:
+        """Perform health checks for all services."""
+        for service_name, health in self.service_health.items():
+            # Update health status based on recent metrics
+            health.is_healthy = self._is_service_healthy(service_name)
+            health.last_health_check = time.time()
+
+            # Log health status changes
+            if not health.is_healthy and health.success_rate > 0:
+                logger.warning(
+                    f"Service {service_name} marked unhealthy - "
+                    f"success_rate: {health.success_rate:.2f}, "
+                    f"avg_latency: {health.avg_response_time:.2f}ms"
+                )
+
+    def get_health_summary(self) -> dict[str, Any]:
+        """Get comprehensive health summary."""
+        return {
+            "degradation_mode": self.degradation_mode,
+            "circuit_breakers": {
+                name: {
+                    "state": cb.get_state().value,
+                    "failure_count": cb.stats.failed_requests,
+                    "success_rate": cb.stats.success_rate,
+                }
+                for name, cb in self.circuit_breakers.items()
+            },
+            "service_health": {
+                name: {
+                    "is_healthy": health.is_healthy,
+                    "success_rate": health.success_rate,
+                    "avg_response_time_ms": health.avg_response_time,
+                    "routing_weight": self.routing_weights.get(name, 1.0),
+                }
+                for name, health in self.service_health.items()
+            },
+        }
+
+
+# Global resilience orchestrator instance
+_resilience_orchestrator: ResilienceOrchestrator | None = None
+
+
+def get_resilience_orchestrator() -> ResilienceOrchestrator:
+    """Get global resilience orchestrator instance."""
+    global _resilience_orchestrator
+    if _resilience_orchestrator is None:
+        _resilience_orchestrator = ResilienceOrchestrator()
+    return _resilience_orchestrator
+
+
+def resilient_execute(
+    service_name: str,
+    strategy: ResilienceStrategy = ResilienceStrategy.CIRCUIT_BREAK,
+):
+    """Decorator for adding resilience patterns to functions."""
+
+    def decorator(func: Callable[[], Awaitable[T]]) -> Callable[[], Awaitable[T]]:
+        async def wrapper(*args, **kwargs):
+            orchestrator = get_resilience_orchestrator()
+            return await orchestrator.execute_with_resilience(
+                service_name=service_name,
+                primary_func=lambda: func(*args, **kwargs),
+                strategy=strategy,
+            )
+
+        return wrapper
+
+    return decorator
+
+
+__all__ = [
+    "ResilienceConfig",
+    "ResilienceOrchestrator",
+    "ResilienceStrategy",
+    "ServiceHealth",
+    "get_resilience_orchestrator",
+    "resilient_execute",
+]

@@ -2,15 +2,22 @@
 # Generated: 2025-10-21 21:19:38
 
 
+import pickle
 import threading
+import zlib
+from collections.abc import Callable
+from contextlib import suppress
 from queue import Empty, Queue
 from typing import Any
+
+import faiss
+import numpy as np
 
 
 class MemoryPool:
     """Memory pooling system for efficient memory management."""
 
-    def __init__(self, pool_size: int = 10, object_factory: Callable = None):
+    def __init__(self, pool_size: int = 10, object_factory: Callable[[], Any] | None = None):
         self.pool_size = pool_size
         self.object_factory = object_factory
         self.pool = Queue(maxsize=pool_size)
@@ -33,11 +40,8 @@ class MemoryPool:
 
     def return_object(self, obj: Any):
         """Return object to pool."""
-        try:
+        with suppress(Exception):
             self.pool.put_nowait(obj)
-        except:
-            # Pool is full, discard object
-            pass
 
     def __enter__(self):
         return self.get_object()
@@ -45,13 +49,6 @@ class MemoryPool:
     def __exit__(self, exc_type, exc_val, exc_tb):
         if exc_type is None:
             self.return_object(self)
-
-
-import pickle
-from typing import Any
-
-import faiss
-import numpy as np
 
 
 class VectorIndex:
@@ -95,20 +92,14 @@ class VectorIndex:
     def save(self, filepath: str):
         """Save index to file."""
         faiss.write_index(self.index, filepath)
-        with open("{filepath}.metadata", "wb") as f:
+        with open(f"{filepath}.metadata", "wb") as f:
             pickle.dump(self.metadata, f)
 
     def load(self, filepath: str):
         """Load index from file."""
         self.index = faiss.read_index(filepath)
-        with open("{filepath}.metadata", "rb") as f:
+        with open(f"{filepath}.metadata", "rb") as f:
             self.metadata = pickle.load(f)
-
-
-import zlib
-from typing import Any
-
-import numpy as np
 
 
 class MemoryCompression:
@@ -183,7 +174,7 @@ class OptimizedMemoryOperations:
         """Search vectors efficiently."""
         return self.vector_index.search(query_vector, k)
 
-    def get_memory_usage(self) -> Dict[str, float]:
+    def get_memory_usage(self) -> dict[str, float]:
         """Get current memory usage."""
         import psutil
 

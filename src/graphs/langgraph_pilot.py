@@ -46,7 +46,7 @@ def _resolve_tenancy():
 
 TenantContext, current_tenant, with_tenant = _resolve_tenancy()
 
-try:  # optional import – keep lightweight if library absent
+try:  # optional import - keep lightweight if library absent
     # Placeholder imports to illustrate structure without enforcing dependency
     # from langgraph.graph import StateGraph
     LANGGRAPH_AVAILABLE = True
@@ -350,78 +350,79 @@ def run_ingest_analysis_pilot(
                 raise
 
     with (
-        with_tenant(_tenant_ctx_obj) if (_has_tenant_ctx and with_tenant) else nullcontext()
-    ):  # ensure parent span and all nested metrics use the tenant context
-        with tracing.start_span("langgraph_pilot.run") as span:
-            # Attach static attributes early for visibility
-            if hasattr(span, "set_attribute"):
-                span.set_attribute("orchestrator", orchestrator)
-                span.set_attribute("segment_enabled", str(segment_fn is not None))
-                span.set_attribute("embed_enabled", str(embed_fn is not None))
-            try:
-                if orchestrator == "langgraph_stub":
-                    # Build linear graph: ingest -> (segment?) -> (embed?) -> analyze
-                    n_ingest = _Node("ingest", _ingest_node)
-                    current = n_ingest
-                    if segment_fn is not None:
-                        n_segment = _Node("segment", _segment_node)
-                        current = current.then(n_segment)
-                    if embed_fn is not None:
-                        n_embed = _Node("embed", _embed_node)
-                        current = current.then(n_embed)
-                    n_analyze = _Node("analysis", _analyze_node)
-                    current.then(n_analyze)
+        with_tenant(_tenant_ctx_obj) if (_has_tenant_ctx and with_tenant) else nullcontext(),
+        tracing.start_span("langgraph_pilot.run") as span,
+    ):
+        # ensure parent span and all nested metrics use the tenant context
+        # Attach static attributes early for visibility
+        if hasattr(span, "set_attribute"):
+            span.set_attribute("orchestrator", orchestrator)
+            span.set_attribute("segment_enabled", str(segment_fn is not None))
+            span.set_attribute("embed_enabled", str(embed_fn is not None))
+        try:
+            if orchestrator == "langgraph_stub":
+                # Build linear graph: ingest -> (segment?) -> (embed?) -> analyze
+                n_ingest = _Node("ingest", _ingest_node)
+                current = n_ingest
+                if segment_fn is not None:
+                    n_segment = _Node("segment", _segment_node)
+                    current = current.then(n_segment)
+                if embed_fn is not None:
+                    n_embed = _Node("embed", _embed_node)
+                    current = current.then(n_embed)
+                n_analyze = _Node("analysis", _analyze_node)
+                current.then(n_analyze)
 
-                    _Graph(n_ingest).run(job, outputs)
+                _Graph(n_ingest).run(job, outputs)
+            else:
+                # Sequential fallback mirrors the same order and metrics
+                ingest_res = _ingest_node(job)
+                outputs["ingest"] = ingest_res
+
+                base_ctx = {**job, **ingest_res}
+                if segment_fn is not None:
+                    seg = _segment_node(base_ctx)
+                    outputs["segment"] = seg
+                    base_ctx.update(seg)
                 else:
-                    # Sequential fallback mirrors the same order and metrics
-                    ingest_res = _ingest_node(job)
-                    outputs["ingest"] = ingest_res
-
-                    base_ctx = {**job, **ingest_res}
-                    if segment_fn is not None:
-                        seg = _segment_node(base_ctx)
-                        outputs["segment"] = seg
-                        base_ctx.update(seg)
-                    else:
-                        with suppress(Exception):
-                            metrics.PIPELINE_STEPS_SKIPPED.labels(**metrics.label_ctx(), step="segment").inc()
-                    if embed_fn is not None:
-                        emb = _embed_node(base_ctx)
-                        outputs["embed"] = emb
-                        base_ctx.update(emb)
-                    else:
-                        with suppress(Exception):
-                            metrics.PIPELINE_STEPS_SKIPPED.labels(**metrics.label_ctx(), step="embed").inc()
-                    analysis_res = _analyze_node(base_ctx)
-                    outputs["analysis"] = analysis_res
-            except Exception:
-                _status = "error"
+                    with suppress(Exception):
+                        metrics.PIPELINE_STEPS_SKIPPED.labels(**metrics.label_ctx(), step="segment").inc()
+                if embed_fn is not None:
+                    emb = _embed_node(base_ctx)
+                    outputs["embed"] = emb
+                    base_ctx.update(emb)
+                else:
+                    with suppress(Exception):
+                        metrics.PIPELINE_STEPS_SKIPPED.labels(**metrics.label_ctx(), step="embed").inc()
+                analysis_res = _analyze_node(base_ctx)
+                outputs["analysis"] = analysis_res
+        except Exception:
+            _status = "error"
+            if hasattr(span, "set_attribute"):
+                span.set_attribute("outcome", "error")
+            raise
+        finally:
+            # Observe total pilot duration
+            try:
+                elapsed = time.monotonic() - start_time
+                metrics.PIPELINE_DURATION.labels(**metrics.label_ctx(), status=_status).observe(elapsed)
+                with suppress(Exception):
+                    metrics.PIPELINE_TOTAL_DURATION.labels(
+                        **metrics.label_ctx(),
+                        orchestrator=orchestrator,
+                        status=_status,
+                    ).observe(elapsed)
+                # Decrement inflight gauge
+                with suppress(Exception):
+                    metrics.PIPELINE_INFLIGHT.labels(**metrics.label_ctx(), orchestrator=orchestrator).dec()
+                # Attach elapsed duration to outputs for caller ergonomics
+                with suppress(Exception):
+                    outputs["duration_seconds"] = elapsed
                 if hasattr(span, "set_attribute"):
-                    span.set_attribute("outcome", "error")
-                raise
-            finally:
-                # Observe total pilot duration
-                try:
-                    elapsed = time.monotonic() - start_time
-                    metrics.PIPELINE_DURATION.labels(**metrics.label_ctx(), status=_status).observe(elapsed)
-                    with suppress(Exception):
-                        metrics.PIPELINE_TOTAL_DURATION.labels(
-                            **metrics.label_ctx(),
-                            orchestrator=orchestrator,
-                            status=_status,
-                        ).observe(elapsed)
-                    # Decrement inflight gauge
-                    with suppress(Exception):
-                        metrics.PIPELINE_INFLIGHT.labels(**metrics.label_ctx(), orchestrator=orchestrator).dec()
-                    # Attach elapsed duration to outputs for caller ergonomics
-                    with suppress(Exception):
-                        outputs["duration_seconds"] = elapsed
-                    if hasattr(span, "set_attribute"):
-                        span.set_attribute("pipeline_duration_seconds", elapsed)
-                        span.set_attribute("outcome", _status)
-                except Exception:
-                    pass
+                    span.set_attribute("pipeline_duration_seconds", elapsed)
+                    span.set_attribute("outcome", _status)
+            except Exception:
+                pass
 
     with with_tenant(_tenant_ctx_obj) if (_has_tenant_ctx and with_tenant) else nullcontext(), suppress(Exception):
         metrics.PIPELINE_STEPS_COMPLETED.labels(**metrics.label_ctx(), step="langgraph_pilot").inc()

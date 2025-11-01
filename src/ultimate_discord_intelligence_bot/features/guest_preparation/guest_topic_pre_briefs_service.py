@@ -433,10 +433,7 @@ class GuestTopicPreBriefsService:
 
         # Calculate base strength
         total_indicators = strong_indicators + weak_indicators
-        if total_indicators == 0:
-            base_strength = 0.5  # Neutral if no indicators
-        else:
-            base_strength = strong_indicators / total_indicators
+        base_strength = 0.5 if total_indicators == 0 else strong_indicators / total_indicators
 
         # Adjust based on length and specificity
         length_factor = min(len(argument_text) / 100, 1.0)  # Longer = potentially stronger

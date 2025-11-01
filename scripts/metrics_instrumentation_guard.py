@@ -43,10 +43,8 @@ ALLOWED_UNINSTRUMENTED = {
     "verification_base.py",  # Base verification tool
     # TODO: Add metrics instrumentation to these tools in future phase
     "checkpoint_management_tool.py",  # not currently used in crew configuration
-    "claim_verifier_tool.py",  # not currently used in crew configuration
     "confidence_scoring_tool.py",  # not currently used in crew configuration
     "consistency_check_tool.py",  # not currently used in crew configuration
-    "content_quality_assessment_tool.py",  # not currently used in crew configuration
     "content_type_routing_tool.py",  # not currently used in crew configuration
     "cross_platform_narrative_tool.py",  # not currently used in crew configuration
     "early_exit_conditions_tool.py",  # not currently used in crew configuration
@@ -62,19 +60,7 @@ ALLOWED_UNINSTRUMENTED = {
     "tiktok_enhanced_download_tool.py",  # not currently used in crew configuration
     "twitter_thread_reconstructor_tool.py",  # not currently used in crew configuration
     "unified_cache_tool.py",  # not currently used in crew configuration
-    # Tools currently used in crew configuration - TODO: add metrics instrumentation
-    "agent_bridge_tool.py",  # used in crew configuration
-    "dependency_resolver_tool.py",  # used in crew configuration
-    "escalation_management_tool.py",  # used in crew configuration
-    "mem0_memory_tool.py",  # used in crew configuration
-    "multimodal_analysis_tool.py",  # used in crew configuration
-    "observability_tool.py",  # used in crew configuration
-    "resource_allocation_tool.py",  # used in crew configuration
-    "strategic_planning_tool.py",  # used in crew configuration
-    "task_routing_tool.py",  # used in crew configuration
-    "unified_orchestration_tool.py",  # used in crew configuration
-    "unified_router_tool.py",  # used in crew configuration
-    "workflow_optimization_tool.py",  # used in crew configuration
+    # Tools currently used in crew configuration - all have metrics instrumentation now
 }
 
 

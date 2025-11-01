@@ -342,15 +342,12 @@ class OptimizationImplementation:
             status = "✅ SUCCESS" if result.success else "❌ FAILED"
             print(f"{name.replace('_', ' ').title():.<30} {status}")
 
-            if result.data:
+            if result.data and isinstance(result.data.get("metrics"), dict):
                 # Print key metrics if available
-                if "metrics" in result.data:
-                    metrics = result.data["metrics"]
-                    if isinstance(metrics, dict):
-                        # Print some key metrics
-                        for key in ["hit_rate", "redis_available", "registered_checks"]:
-                            if key in metrics:
-                                print(f"  └─ {key}: {metrics[key]}")
+                metrics = result.data["metrics"]
+                for key in ["hit_rate", "redis_available", "registered_checks"]:
+                    if key in metrics:
+                        print(f"  └─ {key}: {metrics[key]}")
 
         print("\n" + "=" * 60)
         overall_status = "✅ ALL OPTIMIZATIONS SUCCESSFUL" if self.overall_success else "❌ SOME OPTIMIZATIONS FAILED"

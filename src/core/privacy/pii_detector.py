@@ -42,7 +42,15 @@ def detect(text: str, lang: str = "en") -> list[Span]:
         "address_like": ADDRESS_RE,
         "geo_exact": GEO_RE,
     }
-    for typ, regex in patterns.items():
+    language = (lang or "en").lower()
+    if language not in {"en", "english"}:
+        # For non-English locales fall back to universal identifiers and skip
+        # region-specific patterns like SSNs or US-style addresses.
+        allowed = {"email", "phone", "ip", "ipv6", "geo_exact"}
+        active_patterns = {key: regex for key, regex in patterns.items() if key in allowed}
+    else:
+        active_patterns = patterns
+    for typ, regex in active_patterns.items():
         # Extend list in batches for performance (PERF401)
         spans.extend(Span(typ, m.start(), m.end(), m.group()) for m in regex.finditer(text))
     return spans

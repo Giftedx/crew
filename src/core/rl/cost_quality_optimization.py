@@ -419,15 +419,15 @@ class CostQualityOptimizer:
         for i, (model, cost, quality) in enumerate(model_scores):
             is_pareto = True
             for j, (_other_model, other_cost, other_quality) in enumerate(model_scores):
-                if i != j:
+                if (
+                    i != j
+                    and other_cost <= cost
+                    and other_quality >= quality
+                    and (other_cost < cost or other_quality > quality)
+                ):
                     # Check if other solution dominates this one
-                    if (
-                        other_cost <= cost
-                        and other_quality >= quality
-                        and (other_cost < cost or other_quality > quality)
-                    ):
-                        is_pareto = False
-                        break
+                    is_pareto = False
+                    break
 
             if is_pareto:
                 pareto_optimal.append((model, cost, quality))
@@ -518,7 +518,7 @@ class CostQualityOptimizer:
         best_model = None
         best_score = float("-inf")
 
-        for iteration in range(self.config.max_iterations):
+        for _iteration in range(self.config.max_iterations):
             # Evaluate fitness
             fitness_scores = []
             for model in population:
@@ -534,7 +534,7 @@ class CostQualityOptimizer:
                     best_model = model
 
             # Check convergence
-            if iteration > 0:
+            if _iteration > 0:
                 prev_best_score = best_score
                 if abs(best_score - prev_best_score) < self.config.convergence_threshold:
                     break
@@ -556,7 +556,7 @@ class CostQualityOptimizer:
                 predicted_quality=quality,
                 predicted_response_time=best_model.expected_response_time,
                 algorithm_used=OptimizationAlgorithm.GENETIC_ALGORITHM,
-                iterations_performed=iteration + 1,
+                iterations_performed=_iteration + 1,
                 convergence_achieved=True,
             )
 
@@ -584,7 +584,7 @@ class CostQualityOptimizer:
 
         temperature = self.config.initial_temperature
 
-        for iteration in range(self.config.max_iterations):
+        for _iteration in range(self.config.max_iterations):
             # Generate neighbor (random model)
             neighbor = feasible_models[np.random.randint(len(feasible_models))]
             neighbor_cost = neighbor.calculate_cost(tokens, requests)
@@ -626,7 +626,7 @@ class CostQualityOptimizer:
                 predicted_quality=quality,
                 predicted_response_time=best_model.expected_response_time,
                 algorithm_used=OptimizationAlgorithm.SIMULATED_ANNEALING,
-                iterations_performed=iteration + 1,
+                iterations_performed=self.config.max_iterations,
                 convergence_achieved=True,
             )
 

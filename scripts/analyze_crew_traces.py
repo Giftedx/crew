@@ -175,8 +175,8 @@ def analyze_performance(steps: list[dict[str, Any]]) -> None:
             print(f"   {format_duration(duration):>8s} - {agent} using {tool}")
 
         # Tool usage statistics
-        tool_usage = {}
-        for agent, tool, duration in step_durations:
+        tool_usage: dict[str, list[float]] = {}
+        for _agent, tool, duration in step_durations:
             if tool not in tool_usage:
                 tool_usage[tool] = []
             tool_usage[tool].append(duration)
@@ -212,6 +212,11 @@ def main(traces_dir: str, show_output: bool, latest: bool, trace_file: str | Non
             trace_data = json.load(f)
     else:
         # Load latest trace
+        if not latest:
+            click.echo("❌ --latest flag disabled but no --trace-file provided", err=True)
+            click.echo("   Please specify a trace file to analyze with --trace-file", err=True)
+            sys.exit(1)
+
         trace_data = load_latest_trace(traces_dir)
         if not trace_data:
             click.echo(f"❌ No trace files found in {traces_dir}", err=True)

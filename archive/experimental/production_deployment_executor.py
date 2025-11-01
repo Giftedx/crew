@@ -422,7 +422,7 @@ class ProductionDeploymentExecutor:
                     logger.warning(f"⚠️ AI routing enhancement score low: {ai_enhancement_score:.3f}")
                     return False
             else:
-                logger.info("ℹ️ AI routing disabled - running in basic mode (acceptable)")
+                logger.info("AI routing disabled - running in basic mode (acceptable)")
                 return True
 
         except Exception as e:

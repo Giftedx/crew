@@ -22,6 +22,7 @@ _patched_resilient_get = globals().get("resilient_get")
 # Standard module alias so tests can patch http_utils.time.sleep
 import time as time  # re-exported below via __all__
 import requests as requests  # tests expect http_utils.requests.ConnectionError
+import random as random
 from pathlib import Path
 
 # Import underlying modular implementations
@@ -193,7 +194,7 @@ def http_request_with_retry(
     while True:
         attempts += 1
         try:
-            request_callable(url, **call_kwargs)
+            return request_callable(url, **call_kwargs)
         except requests.RequestException as exc:
             if attempts >= max_attempts or not is_retry_enabled():
                 if on_give_up:
@@ -204,9 +205,8 @@ def http_request_with_retry(
             sleep_for = base_backoff * (2 ** (attempts - 1))
             if isinstance(exc, requests.ConnectionError):
                 sleep_for *= 0.3
-            sleep_fn(wait_time)
-        except requests.RequestException:
-            attempts += 1
+            jitter_delta = random.uniform(0, jitter) if jitter else 0.0
+            time.sleep(sleep_for + jitter_delta)
 
 
 def resolve_retry_attempts(call_arg: int | None = None) -> int:
@@ -344,7 +344,7 @@ def retrying_post(
     if is_retry_enabled():
         # default request fn uses facade resilient_post so tests can patch here
         if request_callable is None:
-            request_callable = lambda u, **_: resilient_post(  # noqa: E731
+            request_callable = lambda u, **__: resilient_post(  # noqa: E731
                 u,
                 json_payload=json_payload,
                 headers=headers,
@@ -356,6 +356,7 @@ def retrying_post(
             url,
             request_callable=request_callable,
             max_attempts=effective_max,
+            **kwargs,
         )
     return resilient_post(
         url,
@@ -381,7 +382,7 @@ def retrying_get(
     effective_max = max_attempts if max_attempts is not None else resolve_retry_attempts()
     if is_retry_enabled():
         if request_callable is None:
-            request_callable = lambda u, **_: resilient_get(  # noqa: E731
+            request_callable = lambda u, **__: resilient_get(  # noqa: E731
                 u,
                 params=params,
                 headers=headers,
@@ -393,6 +394,7 @@ def retrying_get(
             url,
             request_callable=request_callable,
             max_attempts=effective_max,
+            **kwargs,
         )
     return resilient_get(
         url,
@@ -417,7 +419,7 @@ def retrying_delete(
     effective_max = max_attempts if max_attempts is not None else resolve_retry_attempts()
     if is_retry_enabled():
         if request_callable is None:
-            request_callable = lambda u, **_: resilient_delete(  # noqa: E731
+            request_callable = lambda u, **__: resilient_delete(  # noqa: E731
                 u,
                 params=params,
                 headers=headers,
@@ -428,6 +430,7 @@ def retrying_delete(
             url,
             request_callable=request_callable,
             max_attempts=effective_max,
+            **kwargs,
         )
     return resilient_delete(
         url,

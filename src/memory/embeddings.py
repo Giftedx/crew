@@ -31,6 +31,7 @@ def embed(texts: Iterable[str], model_hint: str | None = None) -> list[list[floa
     use_cache = bool(
         getattr(cfg, "enable_cache_vector", True) and getattr(cfg, "rate_limit_redis_url", None) and RedisCache
     )
+    selected_model = model_hint or getattr(cfg, "default_embedding_model", "memory:sha256")
     rc = None
     if use_cache and callable(RedisCache):
         try:
@@ -51,10 +52,10 @@ def embed(texts: Iterable[str], model_hint: str | None = None) -> list[list[floa
     vectors: list[list[float]] = []
     for text in texts:
         vec: list[float] | None = None
-        key = None
+        cache_key = None
         if rc is not None:
-            key = hashlib.sha256(text.encode("utf-8")).hexdigest()
-            data = rc.get_str(key)
+            cache_key = hashlib.sha256(f"{selected_model}:{text}".encode()).hexdigest()
+            data = rc.get_str(cache_key)
             if data:
                 try:
                     vec = [float(x) for x in json.loads(data)]
@@ -63,8 +64,9 @@ def embed(texts: Iterable[str], model_hint: str | None = None) -> list[list[floa
         if vec is None:
             h = hashlib.sha256(text.encode("utf-8")).digest()
             vec = [int.from_bytes(h[i : i + 4], "big") / 2**32 for i in range(0, 32, 4)]
-            if rc is not None and key is not None:
+            vec.append(hashlib.sha256(selected_model.encode("utf-8")).digest()[0] / 255.0)
+            if rc is not None and cache_key is not None:
                 with contextlib.suppress(Exception):
-                    rc.set_str(key, json.dumps(vec))
+                    rc.set_str(cache_key, json.dumps(vec))
         vectors.append(vec)
     return vectors

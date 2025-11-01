@@ -395,6 +395,28 @@ class MessageEvaluator:
         self.context_builder = MessageContextBuilder(memory_service)
         self.decision_agent = ResponseDecisionAgent(routing_manager, prompt_engine, memory_service)
         self.memory_service = memory_service
+        
+        # Initialize hierarchical reasoning engine
+        try:
+            from discord.reasoning.hierarchical_reasoner import HierarchicalReasoningEngine
+            from ultimate_discord_intelligence_bot.knowledge.context_builder import UnifiedContextBuilder
+            from ultimate_discord_intelligence_bot.knowledge.retrieval_engine import UnifiedRetrievalEngine
+            
+            retrieval_engine = UnifiedRetrievalEngine()
+            context_builder = UnifiedContextBuilder()
+            
+            self.hierarchical_reasoner = HierarchicalReasoningEngine(
+                routing_manager=routing_manager,
+                prompt_engine=prompt_engine,
+                memory_service=memory_service,
+                retrieval_engine=retrieval_engine,
+                context_builder=context_builder,
+            )
+            self._use_hierarchical_reasoning = True
+        except Exception as e:
+            logger.warning(f"Hierarchical reasoning engine not available: {e}, using basic evaluation")
+            self.hierarchical_reasoner = None
+            self._use_hierarchical_reasoning = False
 
     async def evaluate_discord_message(
         self, message_data: dict[str, Any], recent_messages: list[dict[str, Any]], user_opt_in_status: bool
@@ -402,6 +424,67 @@ class MessageEvaluator:
         """Evaluate whether bot should respond to Discord message."""
 
         try:
+            # Use hierarchical reasoning if available
+            if self._use_hierarchical_reasoning and self.hierarchical_reasoner:
+                reasoning_result = await self.hierarchical_reasoner.reason(
+                    message_data=message_data,
+                    recent_messages=recent_messages,
+                    user_opt_in_status=user_opt_in_status,
+                )
+                
+                if reasoning_result.success:
+                    reasoning = reasoning_result.data
+                    
+                    # Convert ReasoningResult to EvaluationResult
+                    from discord.reasoning.hierarchical_reasoner import ReasoningResult as HRReasoningResult
+                    
+                    # Build personality traits from reasoning context
+                    personality_traits = {
+                        "humor": 0.5,
+                        "formality": 0.5,
+                        "enthusiasm": 0.7,
+                        "knowledge_confidence": min(0.9, reasoning.confidence + 0.2),
+                        "debate_tolerance": 0.6,
+                    }
+                    
+                    # Estimate cost (simplified)
+                    estimated_cost = 0.001 if reasoning.requires_crewmai else 0.0005
+                    
+                    evaluation_result = EvaluationResult(
+                        should_respond=reasoning.should_respond,
+                        confidence=reasoning.confidence,
+                        reasoning=reasoning.context_summary,
+                        priority="high" if reasoning.priority >= 7 else ("medium" if reasoning.priority >= 4 else "low"),
+                        suggested_personality_traits=personality_traits,
+                        context_relevance_score=reasoning.confidence,
+                        estimated_cost=estimated_cost,
+                    )
+                    
+                    # Store evaluation
+                    from discord.message_evaluator import MessageContext
+                    context = MessageContext(
+                        message_id=str(message_data.get("id", "")),
+                        channel_id=str(message_data.get("channel_id", "")),
+                        guild_id=str(message_data.get("guild_id", "")),
+                        user_id=str(message_data.get("author", {}).get("id", "")),
+                        username=message_data.get("author", {}).get("username", "unknown"),
+                        content=message_data.get("content", ""),
+                        timestamp=float(message_data.get("timestamp", 0)),
+                        is_direct_mention=bool(message_data.get("mentions")),
+                        is_reply_to_bot=False,
+                        channel_type="text",
+                        user_opt_in_status=user_opt_in_status,
+                        recent_messages=recent_messages,
+                        user_interaction_history=[],
+                    )
+                    await self._store_evaluation(context, evaluation_result)
+                    
+                    return StepResult.ok(data=evaluation_result)
+                else:
+                    # Fall back to basic evaluation if hierarchical reasoning fails
+                    logger.warning(f"Hierarchical reasoning failed: {reasoning_result.error}, falling back to basic evaluation")
+            
+            # Fallback to basic evaluation
             # Build comprehensive context
             context = await self.context_builder.build_context(message_data, recent_messages, user_opt_in_status)
 

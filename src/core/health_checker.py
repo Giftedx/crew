@@ -417,7 +417,7 @@ class ComponentHealthChecker:
     def _check_agent_coordination(self) -> HealthCheckResult:
         """Check agent coordination system."""
         try:
-            from ultimate_discord_intelligence_bot.crew import (
+            from ultimate_discord_intelligence_bot.crew_core import (
                 UltimateDiscordIntelligenceBotCrew,
             )
 

@@ -4,8 +4,8 @@ Tools:
 - a2a_call(method, params): invoke selected A2A tools (names must start with 'tools.')
 
 Resources:
-- a2a://skills – list of tool names currently available via A2A
-- a2a://skills_full – detailed skills entries (schemas) when available
+- a2a://skills - list of tool names currently available via A2A
+- a2a://skills_full - detailed skills entries (schemas) when available
 
 Guards:
 - Only methods with prefix 'tools.' are allowed

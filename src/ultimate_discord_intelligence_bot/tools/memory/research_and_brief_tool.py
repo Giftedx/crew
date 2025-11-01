@@ -37,7 +37,17 @@ try:  # optional prompt compression
 except Exception:  # pragma: no cover - fallback when module unavailable
 
     def maybe_compress_prompt(prompt: str, *, target_tokens: int | None = None) -> str:  # type: ignore
-        return prompt
+        """Coarsely approximate prompt compression when optional dependency missing."""
+
+        if target_tokens is None or target_tokens <= 0:
+            return prompt
+
+        words = prompt.split()
+        if len(words) <= target_tokens:
+            return prompt
+
+        truncated = " ".join(words[:target_tokens])
+        return f"{truncated} …" if truncated else prompt
 
 
 def _split_sentences(text: str) -> list[str]:

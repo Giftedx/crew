@@ -17,12 +17,13 @@ from core.time import default_utc_now
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
 from .code_intelligence import CodeIntelligenceEngine
+from .orchestration import get_orchestration_facade
+from .orchestration.infrastructure import get_resilience_orchestrator
 from .predictive_operations import (
     PerformanceMetric,
     PredictiveOperationsEngine,
     ResourceType,
 )
-from .resilience_orchestrator import get_resilience_orchestrator
 from .security_fortification import SecurityOrchestrator
 
 
@@ -42,6 +43,11 @@ class NextGenIntelligenceHub:
 
         # Initialize core engines
         self.resilience_orchestrator = get_resilience_orchestrator()
+
+        # Register with orchestration facade
+        facade = get_orchestration_facade()
+        facade.register(self.resilience_orchestrator)
+
         self.code_intelligence = CodeIntelligenceEngine(project_root)
         self.security_orchestrator = SecurityOrchestrator(project_root)
         self.predictive_operations = PredictiveOperationsEngine()

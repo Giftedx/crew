@@ -133,19 +133,22 @@ class AdvancedBanditExperimentManager(ExperimentManager):
                 vs.regret_sum += max(0.0, base_mean - reward)
 
             # Handle auto-activation
-            if exp.phase == "shadow" and exp.auto_activate_after is not None:
-                if exp.stats[exp.control].pulls >= exp.auto_activate_after:
-                    old_phase = exp.phase
-                    exp.phase = "active"
-                    logger.info(
-                        "Advanced experiment auto-activated: experiment_id=%s, phase=%s->%s, "
-                        "control_pulls=%d, threshold=%d",
-                        experiment_id,
-                        old_phase,
-                        exp.phase,
-                        exp.stats[exp.control].pulls,
-                        exp.auto_activate_after,
-                    )
+            if (
+                exp.phase == "shadow"
+                and exp.auto_activate_after is not None
+                and exp.stats[exp.control].pulls >= exp.auto_activate_after
+            ):
+                old_phase = exp.phase
+                exp.phase = "active"
+                logger.info(
+                    "Advanced experiment auto-activated: experiment_id=%s, phase=%s->%s, "
+                    "control_pulls=%d, threshold=%d",
+                    experiment_id,
+                    old_phase,
+                    exp.phase,
+                    exp.stats[exp.control].pulls,
+                    exp.auto_activate_after,
+                )
         else:
             # Use parent implementation for regular experiments
             super().record(experiment_id, arm, reward)

@@ -9,7 +9,9 @@ quality assurance checks.
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
+import os
 import time
 from abc import ABC, abstractmethod
 from dataclasses import asdict, dataclass, field
@@ -423,6 +425,7 @@ class EnhancedMonitoringSystem:
 
         # Monitoring loop control
         self._monitoring_task: asyncio.Task | None = None
+        self._rl_feedback_task: asyncio.Task | None = None
         self._shutdown_event = asyncio.Event()
 
         self._setup_quality_gates()
@@ -436,6 +439,39 @@ class EnhancedMonitoringSystem:
             DatabaseQualityGate("db_query_latency_p95", 500.0),  # 500ms max DB latency
             QueueQualityGate("queue_depth", 50),  # 50 items max queue depth
         ]
+
+    def _feedback_loop_enabled(self) -> bool:
+        """Determine if the RL feedback loop is enabled."""
+
+        return os.getenv("ENABLE_TRAJECTORY_FEEDBACK_LOOP", "0") == "1"
+
+    def _get_feedback_batch_size(self) -> int:
+        """Read the configured RL feedback batch size with validation."""
+
+        raw_value = os.getenv("RL_FEEDBACK_BATCH_SIZE", "25")
+        try:
+            batch_size = int(raw_value)
+            return max(1, batch_size)
+        except ValueError:
+            logger.warning(
+                "Invalid RL_FEEDBACK_BATCH_SIZE=%s, defaulting to 25",
+                raw_value,
+            )
+            return 25
+
+    def _get_feedback_interval_seconds(self) -> float:
+        """Read the configured RL feedback loop interval in seconds."""
+
+        raw_value = os.getenv("RL_FEEDBACK_LOOP_INTERVAL_SECONDS", "15")
+        try:
+            interval = float(raw_value)
+            return max(1.0, interval)
+        except ValueError:
+            logger.warning(
+                "Invalid RL_FEEDBACK_LOOP_INTERVAL_SECONDS=%s, defaulting to 15s",
+                raw_value,
+            )
+            return 15.0
 
     async def collect_metrics(self) -> SystemHealthMetrics:
         """Collect comprehensive system metrics from real data sources."""
@@ -561,6 +597,137 @@ class EnhancedMonitoringSystem:
             # Return basic metrics with current timestamp
             return SystemHealthMetrics(timestamp=time.time())
 
+    def process_rl_feedback_once(
+        self,
+        batch_size: int | None = None,
+        labels: dict[str, str] | None = None,
+    ) -> dict[str, Any]:
+        """Process the RL feedback queue once and emit observability metrics."""
+
+        enabled = self._feedback_loop_enabled()
+        resolved_batch_size = batch_size or self._get_feedback_batch_size()
+        label_context = metrics.label_ctx()
+        if labels:
+            label_context = {**label_context, **labels}
+
+        summary: dict[str, Any] = {
+            "enabled": enabled,
+            "batch_size": resolved_batch_size,
+            "processed": 0,
+            "failed": 0,
+            "queue_depth": 0,
+            "status": "disabled" if not enabled else "idle",
+        }
+
+        try:
+            from ultimate_discord_intelligence_bot.services import rl_router_registry
+
+            router = rl_router_registry.get_rl_model_router(create_if_missing=False)
+        except Exception as exc:  # pragma: no cover - defensive
+            logger.error("Unable to import RL router registry: %s", exc, exc_info=True)
+            metrics.RL_FEEDBACK_FAILED.labels(
+                **label_context,
+                reason="registry_import",
+            ).inc()
+            metrics.RL_FEEDBACK_QUEUE_DEPTH.labels(**label_context).set(0)
+            summary.update({"status": "error", "error": str(exc)})
+            return summary
+
+        queue_depth = 0
+        if router is not None:
+            try:
+                queue_depth = len(getattr(router, "trajectory_feedback_queue", []))
+            except Exception:  # pragma: no cover - defensive
+                queue_depth = 0
+
+        summary["queue_depth"] = queue_depth
+        metrics.RL_FEEDBACK_QUEUE_DEPTH.labels(**label_context).set(queue_depth)
+
+        if not enabled:
+            logger.debug("RL feedback loop disabled; queue depth=%s", queue_depth)
+            return summary
+
+        if router is None:
+            summary["status"] = "no_router"
+            metrics.RL_FEEDBACK_FAILED.labels(
+                **label_context,
+                reason="no_router",
+            ).inc()
+            logger.warning("RL feedback loop enabled but no router registered")
+            return summary
+
+        start_time = time.perf_counter()
+        try:
+            result = router.process_trajectory_feedback(batch_size=resolved_batch_size)
+        except Exception as exc:  # pragma: no cover - defensive
+            logger.error("RL feedback processing failed: %s", exc, exc_info=True)
+            metrics.RL_FEEDBACK_FAILED.labels(
+                **label_context,
+                reason="exception",
+            ).inc()
+            try:
+                remaining = len(getattr(router, "trajectory_feedback_queue", []))
+            except Exception:
+                remaining = queue_depth
+            metrics.RL_FEEDBACK_QUEUE_DEPTH.labels(**label_context).set(remaining)
+            summary.update(
+                {
+                    "status": "error",
+                    "error": str(exc),
+                    "queue_depth": remaining,
+                }
+            )
+            return summary
+
+        latency_ms = (time.perf_counter() - start_time) * 1000.0
+        summary["latency_ms"] = round(latency_ms, 3)
+        metrics.RL_FEEDBACK_PROCESSING_LATENCY.labels(**label_context).observe(latency_ms)
+
+        processed = int(result.data.get("processed", 0))
+        failed = int(result.data.get("failed", 0))
+        remaining_queue = int(result.data.get("remaining_queue_size", queue_depth))
+
+        summary.update(
+            {
+                "processed": processed,
+                "failed": failed,
+                "queue_depth": remaining_queue,
+            }
+        )
+        metrics.RL_FEEDBACK_QUEUE_DEPTH.labels(**label_context).set(remaining_queue)
+
+        if result.metadata:
+            summary["metadata"] = dict(result.metadata)
+
+        if result.skipped:
+            summary["status"] = "skipped"
+            return summary
+
+        if result.success:
+            summary["status"] = "success"
+        else:
+            summary["status"] = "error"
+            summary["error"] = result.error or "unknown_error"
+            metrics.RL_FEEDBACK_FAILED.labels(
+                **label_context,
+                reason="step_failure",
+            ).inc()
+
+        logger.debug(
+            "RL feedback batch processed",
+            extra={
+                "rl_feedback": {
+                    "processed": processed,
+                    "failed": failed,
+                    "queue_depth": remaining_queue,
+                    "latency_ms": summary.get("latency_ms"),
+                    "status": summary["status"],
+                }
+            },
+        )
+
+        return summary
+
     async def evaluate_quality_gates(self, metrics: SystemHealthMetrics) -> dict[str, dict[str, Any]]:
         """Evaluate all quality gates against current metrics."""
         results = {}
@@ -617,6 +784,33 @@ class EnhancedMonitoringSystem:
             return MonitoringStatus.DEGRADED
 
         return MonitoringStatus.HEALTHY
+
+    async def _rl_feedback_loop(self, interval_seconds: float) -> None:
+        """Background loop that regularly drains the RL feedback queue."""
+
+        logger.info("Starting RL feedback loop with %.1fs interval", interval_seconds)
+        try:
+            while not self._shutdown_event.is_set():
+                try:
+                    batch_size = self._get_feedback_batch_size()
+                    summary = await asyncio.to_thread(
+                        self.process_rl_feedback_once,
+                        batch_size,
+                        None,
+                    )
+                    if summary.get("status") not in {"disabled", "idle", "skipped", "no_router"}:
+                        logger.debug("RL feedback loop tick: %s", summary)
+                except asyncio.CancelledError:
+                    raise
+                except Exception as exc:  # pragma: no cover - defensive
+                    logger.error("RL feedback loop iteration failed: %s", exc, exc_info=True)
+
+                await asyncio.sleep(interval_seconds)
+        except asyncio.CancelledError:
+            logger.info("RL feedback loop cancelled")
+            raise
+        finally:
+            logger.info("RL feedback loop stopped")
 
     async def monitoring_loop(self, interval_seconds: int = 30):
         """Main monitoring loop that collects metrics and evaluates system health."""
@@ -696,6 +890,9 @@ class EnhancedMonitoringSystem:
 
         self._shutdown_event.clear()
         self._monitoring_task = asyncio.create_task(self.monitoring_loop(interval_seconds))
+        if self._rl_feedback_task is None:
+            loop_interval = self._get_feedback_interval_seconds()
+            self._rl_feedback_task = asyncio.create_task(self._rl_feedback_loop(loop_interval))
         logger.info("Monitoring system started")
 
     async def stop_monitoring(self):
@@ -706,6 +903,11 @@ class EnhancedMonitoringSystem:
         self._shutdown_event.set()
         await self._monitoring_task
         self._monitoring_task = None
+        if self._rl_feedback_task is not None:
+            self._rl_feedback_task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await self._rl_feedback_task
+            self._rl_feedback_task = None
         logger.info("Monitoring system stopped")
 
     def get_current_status(self) -> dict[str, Any]:

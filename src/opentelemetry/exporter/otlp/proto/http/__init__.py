@@ -1,20 +1,17 @@
 """OpenTelemetry OTLP HTTP exporter stubs."""
 
-from typing import Any
+from enum import Enum
+
+from ._log_exporter import OTLPLogExporter
+from .metric_exporter import OTLPMetricExporter
+from .trace_exporter import OTLPSpanExporter
 
 
-class OTLPSpanExporter:
-    """Stub OTLP HTTP span exporter for testing."""
+class Compression(str, Enum):
+    """Compression strategies supported by OTLP exporters."""
 
-    def __init__(self, *args, **kwargs):
-        pass
-
-    def export(self, spans: Any) -> Any:
-        """No-op export method."""
-        return None
-
-    def shutdown(self) -> None:
-        """No-op shutdown method."""
+    NONE = "none"
+    GZIP = "gzip"
 
 
-__all__ = ["OTLPSpanExporter"]
+__all__ = ["Compression", "OTLPLogExporter", "OTLPMetricExporter", "OTLPSpanExporter"]

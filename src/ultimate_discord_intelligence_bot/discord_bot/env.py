@@ -55,7 +55,7 @@ def check_environment() -> bool:
             if "Google Drive uploads" not in optional_services:
                 optional_services.append("Google Drive uploads")
             print(
-                "ℹ️  Google Drive disabled (service account requires GOOGLE_DRIVE_FOLDER_ID pointing to a Shared Drive folder)"
+                "INFO: Google Drive disabled (service account requires GOOGLE_DRIVE_FOLDER_ID pointing to a Shared Drive folder)"
             )
     except Exception:
         pass
@@ -69,7 +69,7 @@ def check_environment() -> bool:
         optional_services.append("Private Discord alerts")
 
     if optional_services:
-        print(f"ℹ️  Optional services disabled: {', '.join(optional_services)}")
+        print(f"INFO: Optional services disabled: {', '.join(optional_services)}")
         print("💡 Add API keys to .env for full functionality")
 
     gateway_enabled = os.getenv("ENABLE_DISCORD_GATEWAY", "1").lower() in {
@@ -96,7 +96,7 @@ def check_environment() -> bool:
                 "   The agent will still ingest/process and post via webhooks if configured."
             )
             os.environ["ENABLE_DISCORD_GATEWAY"] = "0"
-            print("↩️  ENABLE_DISCORD_GATEWAY=0 (auto) — proceeding in headless agent mode")
+            print("↩️  ENABLE_DISCORD_GATEWAY=0 (auto) - proceeding in headless agent mode")
             return True
         return False
 

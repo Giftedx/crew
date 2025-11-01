@@ -469,7 +469,7 @@ class AuditLogger:
         self,
         tenant: str,
         workspace: str,
-        format: str = "json",
+        fmt: str = "json",
         start_time: datetime | None = None,
         end_time: datetime | None = None,
     ) -> StepResult:
@@ -478,7 +478,7 @@ class AuditLogger:
         Args:
             tenant: Tenant identifier
             workspace: Workspace identifier
-            format: Export format (json, csv)
+            fmt: Export format (json, csv)
             start_time: Start time filter
             end_time: End time filter
 
@@ -500,9 +500,9 @@ class AuditLogger:
 
             events = events_result.data["events"]
 
-            if format == "json":
+            if fmt == "json":
                 export_data = json.dumps(events, indent=2)
-            elif format == "csv":
+            elif fmt == "csv":
                 # Simple CSV export (would be more sophisticated in production)
                 if events:
                     headers = list(events[0].keys())
@@ -514,7 +514,7 @@ class AuditLogger:
                 else:
                     export_data = ""
             else:
-                return StepResult.fail(f"Unsupported export format: {format}")
+                return StepResult.fail(f"Unsupported export format: {fmt}")
 
             return StepResult.ok(
                 data={

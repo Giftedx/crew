@@ -41,6 +41,7 @@ except Exception:
                 reward_cost_weight = 0.5
                 reward_latency_weight = 0.5
                 reward_latency_ms_window = 2000
+                reward_quality_weight = 0.0
                 openrouter_referer = None
                 openrouter_title = None
                 enable_vllm_local = False

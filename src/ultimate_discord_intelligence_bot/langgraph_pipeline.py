@@ -179,7 +179,10 @@ def verification_node(state: MissionState) -> dict:
 
     verified_claims = []
     for claim in claims_result.data.get("claims", []):
-        fact_check_result = _run_with_retries(lambda: fact_checker.run(claim=claim), step_name="fact_check")
+        fact_check_result = _run_with_retries(
+            lambda claim_text=claim: fact_checker.run(claim=claim_text),
+            step_name="fact_check",
+        )
         if fact_check_result.success:
             verified_claims.append(fact_check_result.data)
 

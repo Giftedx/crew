@@ -80,7 +80,13 @@ except ImportError:
             return {"recent_avg_confidence": 0.8, "performance_data_points": 15}
 
     def create_performance_router(monitor=None):
-        return MockRouter()
+        router = MockRouter()
+        if monitor is not None:
+            monitor_attr = getattr(monitor, "__class__", None)
+            monitor_name = getattr(monitor_attr, "__name__", "monitor")
+            logging.getLogger(__name__).debug("Attaching monitor %s to demo router", monitor_name)
+            router.monitor = monitor
+        return router
 
 
 logger = logging.getLogger(__name__)

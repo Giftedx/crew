@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import logging
 import re
 from collections import Counter, defaultdict
@@ -115,10 +116,8 @@ class LogPatternMiddleware(BasePipelineStepMiddleware):
         logger = context.metadata.pop(self._LOGGER_KEY, None)
         if handler is None or logger is None:
             return None
-        try:
-            logger.removeHandler(handler)
-        except Exception:  # pragma: no cover - defensive cleanup
-            pass
+            with contextlib.suppress(Exception):  # pragma: no cover - defensive cleanup
+                logger.removeHandler(handler)
         return handler
 
     def _attach_summary(self, result: StepResult, summary: dict[str, Any]) -> None:

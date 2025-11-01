@@ -76,7 +76,8 @@ class TaskScheduler:
             # Start new tasks if under limit
             while len(self.running_tasks) < self.max_concurrent and self.task_queue:
                 _priority, task = heapq.heappop(self.task_queue)
-                asyncio.create_task(self._execute_task(task))
+                task_handle = asyncio.create_task(self._execute_task(task))
+                self.running_tasks.add(task_handle)
 
             # Wait for any task to complete
             if self.running_tasks:
@@ -88,8 +89,6 @@ class TaskScheduler:
 
     async def _execute_task(self, task: dict[str, Any]):
         """Execute individual task."""
-        self.running_tasks.add(asyncio.current_task())
-
         try:
             # Simulate task execution
             await asyncio.sleep(task.get("duration", 1.0))
@@ -98,8 +97,9 @@ class TaskScheduler:
             task["status"] = "failed"
             task["error"] = str(e)
         finally:
-            if asyncio.current_task() in self.running_tasks:
-                self.running_tasks.discard(asyncio.current_task())
+            current = asyncio.current_task()
+            if current in self.running_tasks:
+                self.running_tasks.discard(current)
 
 
 from typing import Any

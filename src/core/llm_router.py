@@ -793,10 +793,8 @@ class LLMRouter:
 
         # Update metrics and performance tracking
         if self._chat_counter:
-            try:
+            with contextlib.suppress(Exception):  # pragma: no cover
                 self._chat_counter.inc(1)
-            except Exception:  # pragma: no cover
-                pass
 
         if self._tenant_mode:
             record_selection(selected)
@@ -1038,10 +1036,8 @@ class LLMRouter:
         if use_contextual:
             fq = self._feature_quality(features)
             if self._feature_quality_gauge:
-                try:
+                with contextlib.suppress(Exception):  # pragma: no cover
                     self._feature_quality_gauge.set(fq)
-                except Exception:  # pragma: no cover
-                    pass
             below = fq < self._feature_quality_min and self._hybrid_enabled
             effective_contextual = not below
         if effective_contextual:
@@ -1054,15 +1050,11 @@ class LLMRouter:
             selected = self._bandit.select(model_names)
             result = self._clients[selected].chat(messages)
             if self._fallback_counter:
-                try:
+                with contextlib.suppress(Exception):  # pragma: no cover
                     self._fallback_counter.inc(1)
-                except Exception:  # pragma: no cover
-                    pass
         if self._chat_counter:
-            try:
+            with contextlib.suppress(Exception):  # pragma: no cover
                 self._chat_counter.inc(1)
-            except Exception:  # pragma: no cover
-                pass
         if self._tenant_mode:
             record_selection(selected)
         return selected, result
@@ -1084,10 +1076,8 @@ class LLMRouter:
             if use_contextual:
                 fq = self._feature_quality(features)
                 if self._feature_quality_gauge:
-                    try:
+                    with contextlib.suppress(Exception):  # pragma: no cover
                         self._feature_quality_gauge.set(fq)
-                    except Exception:  # pragma: no cover
-                        pass
                 if fq < self._feature_quality_min:
                     use_contextual = False
             if use_contextual:
@@ -1096,10 +1086,8 @@ class LLMRouter:
             else:
                 self._bandit.update(model_name, reward)
                 if self._fallback_counter:
-                    try:
+                    with contextlib.suppress(Exception):  # pragma: no cover
                         self._fallback_counter.inc(1)
-                    except Exception:  # pragma: no cover
-                        pass
         else:
             assert self._ctx_router is not None
             self._ctx_router.update(model_name, reward, features)

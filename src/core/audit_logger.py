@@ -532,7 +532,7 @@ class AuditLogger:
         self,
         start_time: float | None = None,
         end_time: float | None = None,
-        format: str = "json",
+        fmt: str = "json",
     ) -> str:
         """Export audit events in various formats."""
         events = self.query_audit_events(
@@ -541,7 +541,7 @@ class AuditLogger:
             limit=10000,  # Reasonable limit for export
         )
 
-        if format == "json":
+        if fmt == "json":
             return json.dumps(
                 {
                     "audit_events": [event.to_dict() for event in events],
@@ -558,7 +558,7 @@ class AuditLogger:
                 default=str,
             )
 
-        elif format == "csv":
+        elif fmt == "csv":
             # CSV format for analysis tools
             if not events:
                 return "No events to export"
@@ -576,7 +576,7 @@ class AuditLogger:
             return "\n".join(csv_lines)
 
         else:
-            return f"Unsupported export format: {format}"
+            return f"Unsupported export format: {fmt}"
 
 
 # Global audit logger instance
@@ -727,10 +727,10 @@ def get_security_summary(hours: int = 24) -> dict[str, Any]:
     return logger.get_security_summary(hours)
 
 
-def export_audit_log(start_time: float | None = None, end_time: float | None = None, format: str = "json") -> str:
+def export_audit_log(start_time: float | None = None, end_time: float | None = None, fmt: str = "json") -> str:
     """Export audit events."""
     logger = get_audit_logger()
-    return logger.export_audit_log(start_time, end_time, format)
+    return logger.export_audit_log(start_time, end_time, fmt)
 
 
 def initialize_audit_logging() -> None:

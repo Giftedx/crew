@@ -534,7 +534,7 @@ class UCBBandit:
         total_bonus = 0.0
         bonus_count = 0
 
-        for arm_id, bonuses in self.metrics.exploration_bonus_evolution.items():
+        for _arm_id, bonuses in self.metrics.exploration_bonus_evolution.items():
             if bonuses:
                 total_bonus += sum(bonuses)
                 bonus_count += len(bonuses)

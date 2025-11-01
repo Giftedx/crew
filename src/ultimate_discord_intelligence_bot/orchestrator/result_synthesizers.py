@@ -2,16 +2,31 @@
 
 This module provides functions for synthesizing intelligence analysis results from CrewAI
 workflow execution. It handles both normal synthesis, specialized synthesis, enhanced multi-modal
-synthesis, and fallback scenarios when advanced synthesis fails.
+analysis, and fallback scenarios when advanced synthesis fails.
 
 **Delegation Pattern:**
 These functions delegate to `analytics_calculators` for complex computations like
 summary statistics and insight generation, maintaining the Phase 1 delegation architecture.
 """
 
+import logging
 from typing import Any
 
 from ultimate_discord_intelligence_bot.step_result import StepResult
+
+
+module_logger = logging.getLogger(__name__)
+
+
+def _emit_log(logger_obj: Any, level: str, message: str, **extra: Any) -> None:
+    target = logger_obj if logger_obj and hasattr(logger_obj, level) else module_logger
+    log_method = getattr(target, level, None)
+    if log_method is None:
+        return
+    if extra:
+        log_method(message, extra=extra)
+    else:
+        log_method(message)
 
 
 def fallback_basic_synthesis(
@@ -48,6 +63,13 @@ def fallback_basic_synthesis(
         >>> assert result.data["fallback_synthesis"] is True
     """
     try:
+        _emit_log(
+            logger,
+            "warning",
+            "Invoking fallback synthesis path",
+            fallback_reason=error_context,
+            available_keys=list(all_results.keys()),
+        )
         # Extract basic components
         metadata = all_results.get("workflow_metadata", {})
 
@@ -76,6 +98,13 @@ def fallback_basic_synthesis(
         )
 
     except Exception as fallback_error:
+        _emit_log(
+            logger,
+            "error",
+            "Fallback synthesis also failed",
+            fallback_reason=error_context,
+            fallback_error=str(fallback_error),
+        )
         return StepResult.fail(
             f"Both advanced and basic synthesis failed. Advanced: {error_context}, Basic: {fallback_error}"
         )
@@ -182,8 +211,17 @@ def synthesize_autonomous_results(
 
         return synthesis
 
+        _emit_log(
+            logger,
+            "info",
+            "Autonomous synthesis completed",
+            insight_count=len(insights),
+            deception_score=synthesis["autonomous_analysis_summary"].get("deception_score"),
+        )
+        return synthesis
+
     except Exception as e:
-        logger.error(f"Result synthesis failed: {e}", exc_info=True)
+        _emit_log(logger, "error", f"Result synthesis failed: {e}", raw_keys=list(all_results.keys()))
         return {"error": f"Result synthesis failed: {e}", "raw_results": all_results}
 
 
@@ -291,10 +329,22 @@ def synthesize_specialized_intelligence_results(
             "workflow_metadata": metadata,
         }
 
+        _emit_log(
+            logger,
+            "info",
+            "Specialized synthesis completed",
+            insight_count=len(specialized_insights),
+            threat_level=synthesis["specialized_analysis_summary"].get("threat_level"),
+        )
         return synthesis
 
     except Exception as e:
-        logger.error(f"Specialized result synthesis failed: {e}", exc_info=True)
+        _emit_log(
+            logger,
+            "error",
+            f"Specialized result synthesis failed: {e}",
+            raw_keys=list(all_results.keys()),
+        )
         return {
             "error": f"Specialized synthesis failed: {e}",
             "raw_results": all_results,
