@@ -168,6 +168,50 @@ class TestAutoGenAdapter:
             pytest.skip("AutoGen adapter not available")
 
 
+class TestLlamaIndexAdapter:
+    """Test LlamaIndex framework adapter."""
+
+    def test_adapter_properties(self) -> None:
+        """Test basic adapter properties."""
+        try:
+            adapter = get_framework_adapter("llamaindex")
+            assert adapter.framework_name == "llamaindex"
+            assert isinstance(adapter.framework_version, str)
+        except ValueError:
+            pytest.skip("LlamaIndex adapter not available")
+
+    def test_supported_features(self) -> None:
+        """Test feature support declarations."""
+        try:
+            adapter = get_framework_adapter("llamaindex")
+
+            # LlamaIndex should support these RAG-focused features
+            assert adapter.supports_feature(FrameworkFeature.SEQUENTIAL_EXECUTION)
+            assert adapter.supports_feature(FrameworkFeature.ASYNC_EXECUTION)
+            assert adapter.supports_feature(FrameworkFeature.CUSTOM_TOOLS)
+            assert adapter.supports_feature(FrameworkFeature.STREAMING)
+
+            # LlamaIndex does NOT support state persistence
+            assert not adapter.supports_feature(FrameworkFeature.STATE_PERSISTENCE)
+        except ValueError:
+            pytest.skip("LlamaIndex adapter not available")
+
+    def test_get_capabilities(self) -> None:
+        """Test getting LlamaIndex adapter capabilities."""
+        try:
+            adapter = get_framework_adapter("llamaindex")
+            capabilities = adapter.get_capabilities()
+
+            assert "supported_features" in capabilities
+            assert "metadata" in capabilities
+            assert capabilities["metadata"]["framework"] == "llamaindex"
+            assert capabilities["metadata"]["rag_support"] is True
+            assert capabilities["metadata"]["data_connectors"] is True
+            assert len(capabilities["state_backends"]) == 0  # No built-in persistence
+        except ValueError:
+            pytest.skip("LlamaIndex adapter not available")
+
+
 class TestBackwardCompatibility:
     """Test that existing crew_core code still works."""
 

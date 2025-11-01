@@ -23,7 +23,7 @@ from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 if TYPE_CHECKING:
-    from autogen import AssistantAgent, ConversableAgent
+    from autogen import ConversableAgent
 
 
 logger = structlog.get_logger(__name__)
