@@ -17,10 +17,13 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Protocol
+from typing import TYPE_CHECKING, Any, Protocol
 
-from ultimate_discord_intelligence_bot.crew_core.interfaces import CrewConfig, CrewTask
 from ultimate_discord_intelligence_bot.step_result import StepResult
+
+
+if TYPE_CHECKING:
+    from ultimate_discord_intelligence_bot.crew_core.interfaces import CrewConfig, CrewTask
 
 
 class FrameworkFeature(Enum):

@@ -101,7 +101,7 @@ class BaseUniversalTool:
             return await self.run(**kwargs)
 
         # Build parameter description
-        param_descriptions = {name: schema.description for name, schema in self.parameters.items()}
+        {name: schema.description for name, schema in self.parameters.items()}
 
         return StructuredTool.from_function(
             coroutine=async_func,

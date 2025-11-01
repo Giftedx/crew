@@ -7,7 +7,7 @@ a FrameworkAdapter-compliant interface for CrewAI-based workflow execution.
 from __future__ import annotations
 
 import time
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import structlog
 
@@ -18,8 +18,11 @@ from ai.frameworks.protocols import (
     FrameworkFeature,
 )
 from ultimate_discord_intelligence_bot.crew_core.executor import UnifiedCrewExecutor
-from ultimate_discord_intelligence_bot.crew_core.interfaces import CrewConfig, CrewTask
 from ultimate_discord_intelligence_bot.step_result import StepResult
+
+
+if TYPE_CHECKING:
+    from ultimate_discord_intelligence_bot.crew_core.interfaces import CrewConfig, CrewTask
 
 
 logger = structlog.get_logger(__name__)

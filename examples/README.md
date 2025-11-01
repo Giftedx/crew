@@ -7,7 +7,7 @@ This example demonstrates how UnifiedWorkflowState enables seamless framework sw
 The demo simulates a customer support refund workflow that transitions through four different AI frameworks:
 
 1. **LangGraph** → Query analysis & intent detection
-2. **CrewAI** → Multi-agent team collaboration  
+2. **CrewAI** → Multi-agent team collaboration
 3. **AutoGen** → Conversational refund processing
 4. **LlamaIndex** → Knowledge-enhanced follow-up
 
@@ -94,11 +94,11 @@ Final Summary
 
 ## Key Achievements
 
-✅ **State Preserved**: 8 messages + 21 context keys maintained across all transitions  
-✅ **Lossless Conversion**: Framework-specific formats preserve all data  
-✅ **Checkpoint System**: 4 checkpoints enable workflow resumption  
-✅ **Persistence**: State survives process restarts (SQLite demo)  
-✅ **Multi-Backend**: Works with Memory, SQLite, Redis, PostgreSQL  
+✅ **State Preserved**: 8 messages + 21 context keys maintained across all transitions
+✅ **Lossless Conversion**: Framework-specific formats preserve all data
+✅ **Checkpoint System**: 4 checkpoints enable workflow resumption
+✅ **Persistence**: State survives process restarts (SQLite demo)
+✅ **Multi-Backend**: Works with Memory, SQLite, Redis, PostgreSQL
 
 ## Output Sample
 

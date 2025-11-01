@@ -260,7 +260,7 @@ def process_data(data):
     if result > 0:
         if result > 10:
             if result > 20:
-                print("High complexity here with a very long line that exceeds normal limits")  
+                print("High complexity here with a very long line that exceeds normal limits")
     return result
 """
         result = await analyzer.run(code=code, language="python", checks=["syntax", "style", "complexity", "security"])
@@ -280,7 +280,7 @@ def process_data(data):
     async def test_severity_filter(self, analyzer):
         """Test severity filtering."""
         code = """
-x=1  
+x=1
 eval(user_input)
 """
         # Get all issues

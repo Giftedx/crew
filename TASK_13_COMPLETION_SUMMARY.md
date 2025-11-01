@@ -20,7 +20,7 @@
 
 ### 1. Tool Compatibility Matrix (`docs/frameworks/tool_compatibility.md`)
 
-**Size:** 1,014 lines, 27KB  
+**Size:** 1,014 lines, 27KB
 **Sections:** 54 major sections, 42 subsections
 
 **Comprehensive Coverage:**
@@ -222,7 +222,7 @@ Each section includes:
 
 ### 2. Framework Documentation Index (`docs/frameworks/README.md`)
 
-**Size:** 352 lines, 12KB  
+**Size:** 352 lines, 12KB
 **Purpose:** Navigation hub and quick reference
 
 **Contents:**

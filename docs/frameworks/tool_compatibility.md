@@ -785,7 +785,7 @@ try:
     if not valid:
         logger.error("validation_failed", error=error)
         return
-    
+
     result = await tool.run(**params)
 except ValueError as e:
     logger.error("invalid_value", error=str(e), params=params)
@@ -918,10 +918,10 @@ from ai.frameworks.tools.protocols import ParameterSchema, ToolMetadata
 
 class CustomTool(BaseUniversalTool):
     """Your custom tool that works across all frameworks."""
-    
+
     name = "custom-tool"
     description = "Description for LLMs"
-    
+
     parameters = {
         "input": ParameterSchema(
             type="string",
@@ -929,7 +929,7 @@ class CustomTool(BaseUniversalTool):
             required=True,
         ),
     }
-    
+
     metadata = ToolMetadata(
         category="custom",
         return_type="dict",
@@ -937,7 +937,7 @@ class CustomTool(BaseUniversalTool):
         version="1.0.0",
         tags=["custom", "example"],
     )
-    
+
     async def run(self, input: str) -> dict:
         """Implement your tool logic here."""
         return {"result": f"Processed: {input}"}

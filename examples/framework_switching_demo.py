@@ -232,12 +232,6 @@ def simulate_llamaindex_processing(state: UnifiedWorkflowState) -> UnifiedWorkfl
     print("  Retrieved documents: 3 relevant articles")
 
     # Simulate retrieved knowledge
-    knowledge_summary = (
-        "Best practices for customer retention after refunds: "
-        "(1) Offer 15% discount on next purchase, "
-        "(2) Provide extended warranty on replacement items, "
-        "(3) Assign dedicated customer success manager for 90 days."
-    )
 
     # Add knowledge-enhanced response to chat history
     llamaindex_chat_history.append(

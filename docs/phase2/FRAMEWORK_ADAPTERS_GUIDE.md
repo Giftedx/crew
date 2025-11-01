@@ -1,7 +1,7 @@
 # Framework Adapters Guide
 
-**Last Updated**: November 1, 2025  
-**Version**: 1.0  
+**Last Updated**: November 1, 2025
+**Version**: 1.0
 **Status**: Production Ready
 
 ## Overview
@@ -47,32 +47,32 @@ All adapters inherit from `BaseFrameworkAdapter` and implement:
 ```python
 class BaseFrameworkAdapter(ABC):
     """Base class for all framework adapters."""
-    
+
     @abstractmethod
     def initialize(self, config: Dict[str, Any]) -> None:
         """Initialize the framework with configuration."""
         pass
-    
+
     @abstractmethod
     def execute(self, workflow: Any, state: Dict[str, Any]) -> Dict[str, Any]:
         """Execute a workflow with the given state."""
         pass
-    
+
     @abstractmethod
     def convert_to_framework_state(self, unified_state: UnifiedWorkflowState) -> Any:
         """Convert unified state to framework-specific format."""
         pass
-    
+
     @abstractmethod
     def convert_from_framework_state(self, framework_state: Any) -> UnifiedWorkflowState:
         """Convert framework-specific state back to unified format."""
         pass
-    
+
     @abstractmethod
     def register_tool(self, tool: UniversalTool) -> None:
         """Register a universal tool with the framework."""
         pass
-    
+
     def health_check(self) -> bool:
         """Check if framework is properly initialized."""
         pass
@@ -785,7 +785,7 @@ def get_adapter(framework: str):
 # Load frameworks only when needed
 class AdapterFactory:
     _adapters = {}
-    
+
     @classmethod
     def get_adapter(cls, framework: str):
         if framework not in cls._adapters:
@@ -818,6 +818,6 @@ pytest tests/frameworks/adapters/ --cov=src/ai/frameworks/adapters
 
 ---
 
-**Status**: ✅ Production Ready  
-**Test Coverage**: 100% (46 tests across all adapters)  
+**Status**: ✅ Production Ready
+**Test Coverage**: 100% (46 tests across all adapters)
 **Supported Frameworks**: 4 (LangGraph, CrewAI, AutoGen, LlamaIndex)

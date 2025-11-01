@@ -113,7 +113,7 @@ def main() -> int:
         print("-" * 80)
 
         for i, thread in enumerate(narrative_threads[:3]):  # Show first 3 threads
-            thread_id = thread["thread_id"]
+            thread["thread_id"]
             title = thread.get("title", "Untitled Thread")
             summary = thread.get("summary", "No summary")
             platforms = thread.get("platforms_involved", [])

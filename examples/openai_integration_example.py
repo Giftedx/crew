@@ -16,9 +16,9 @@ async def main():
     # Example 1: Basic content analysis with structured outputs
     print("=== Example 1: Basic Content Analysis ===")
     content = """
-    This is a debate about climate change. The speaker argues that human activity 
-    is the primary cause of global warming, citing scientific studies and data 
-    from the IPCC. They present evidence showing rising temperatures, melting ice caps, 
+    This is a debate about climate change. The speaker argues that human activity
+    is the primary cause of global warming, citing scientific studies and data
+    from the IPCC. They present evidence showing rising temperatures, melting ice caps,
     and increased carbon dioxide levels in the atmosphere.
     """
 

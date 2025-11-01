@@ -18,12 +18,13 @@ from ai.frameworks.protocols import (
     ExecutionResult,
     FrameworkFeature,
 )
-from ultimate_discord_intelligence_bot.crew_core.interfaces import CrewConfig, CrewTask
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 if TYPE_CHECKING:
     from autogen import ConversableAgent
+
+    from ultimate_discord_intelligence_bot.crew_core.interfaces import CrewConfig, CrewTask
 
 
 logger = structlog.get_logger(__name__)
