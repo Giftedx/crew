@@ -1,0 +1,35 @@
+---
+alwaysApply: false
+description: Playwright Python quickstart patterns for browser automation
+---
+### Playwright Integration
+
+- Quickstart reference: [quickstart-playwright-python](https://github.com/browserbase/quickstart-playwright-python)
+- Computer Use demo: [browserbase-computer-use](https://github.com/browserbase/browserbase-computer-use)
+
+### Setup and Configuration
+
+- Install Playwright with Browserbase integration
+- Configure browser contexts and pages
+- Set up proper timeouts and retry logic
+
+### Automation Patterns
+
+- Implement page navigation and interaction
+- Handle dynamic content loading
+- Use proper selectors and waiting strategies
+- Implement screenshot and video recording
+
+### Integration with CrewAI
+
+- Create Playwright-based tools for agents
+- Return StepResult with operation outcomes
+- Implement proper error handling and logging
+- Follow tenant-aware design patterns
+
+### Performance Optimization
+
+- Use headless mode for production
+- Implement connection pooling
+- Cache frequently accessed pages
+- Monitor resource usage and performance

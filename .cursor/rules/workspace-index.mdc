@@ -1,0 +1,16 @@
+---
+alwaysApply: true
+description: "Workspace index: control files for CI, agents, prompts, and dependencies"
+---
+### Control Files Index
+
+- **Top-level**: [README.md](mdc:README.md), [pyproject.toml](mdc:pyproject.toml), [requirements.lock](mdc:requirements.lock)
+- **Cursor Rules**: `.cursor/rules/` (this directory)
+- **CI Workflows**: `.github/workflows/` (quality gates: ci, style, fast, nightly, deprecations, eval, markdownlint, docker)
+- **Prompting & Modes**: `.github/prompts/`, `.github/chatmodes/`
+- **Claude Agents**: `.claude/agents/`, settings in `.claude/settings*.json`
+
+### Expectations
+
+- Follow CI gates in workflows; keep docs and deprecations in sync (see badges in README).
+- Keep rules consistent with docs under `docs/` and code under `src/`.

@@ -1,0 +1,37 @@
+---
+alwaysApply: false
+description: Feature flags registry and deprecations policy
+---
+### Feature Flags Pattern
+
+- Env var pattern: `ENABLE_<AREA>_<FEATURE>=true`
+- Access via settings in [settings.py](mdc:src/ultimate_discord_intelligence_bot/settings.py)
+
+```python
+from ultimate_discord_intelligence_bot.settings import get_settings
+
+def should_enable_feature(feature_name: str) -> bool:
+    settings = get_settings()
+    flag = f"ENABLE_{feature_name.upper()}"
+    return getattr(settings, flag, False)
+```
+
+- Document new flags in [docs/configuration.md](mdc:docs/configuration.md)
+- Pair with deprecation policy when sunsetting features
+
+---
+
+description: "Feature flags registry and deprecations policy"
+---
+
+### Feature Flags
+
+- See auto-generated [feature_flags.md](mdc:docs/feature_flags.md). Do not edit by hand.
+- Prefer environment toggles over hard-coded constants.
+- Use hierarchical precedence: env > tenant overrides > defaults.
+
+### Deprecated Flags
+
+- Migrate `ENABLE_ANALYSIS_HTTP_RETRY` → `ENABLE_HTTP_RETRY` (grace thru 2025-12-31).
+- Replace `services.learning_engine.LearningEngine` → `core.learning_engine.LearningEngine`.
+- CI scripts enforce timelines; remove usages before deadlines.

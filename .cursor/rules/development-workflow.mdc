@@ -1,0 +1,220 @@
+---
+alwaysApply: true
+description: Development lifecycle and mandatory quality gates
+---
+### Development Lifecycle
+
+1. Plan: clarify requirements, identify components, define tests upfront
+2. Implement: follow StepResult, type hints, tenancy; add tests
+3. QA: run all gates; update docs; ensure tenant isolation
+
+### Quality Gates (must pass)
+
+```bash
+make format
+make lint
+make type
+make test
+make docs
+```
+
+### Testing Standards
+
+- Unit tests for tools/services; mock external dependencies
+- Integration tests for pipeline paths
+- Validate tenant isolation and error handling
+
+### Documentation & Config
+
+- Keep [docs/configuration.md](mdc:docs/configuration.md) in sync with env/flags
+- Document public APIs and usage in docstrings
+
+---
+
+alwaysApply: false
+description: Development workflow standards and quality requirements
+---
+
+# Development Workflow Standards
+
+## Quality Gates (MANDATORY)
+
+All changes must pass these quality gates before merge:
+
+### 1. Linting and Formatting
+
+```bash
+make format     # Auto-fix style & imports  
+make lint       # Lint check (CI style)
+```
+
+### 2. Type Checking
+
+```bash
+make type                          # Static type check
+./scripts/dev.sh type-changed      # Check only changed files
+./scripts/dev.sh type-baseline     # Check against baseline
+```
+
+### 3. Testing
+
+```bash
+make test       # Run full test suite
+pytest -q       # Quick test run
+pytest -m "not integration"  # Skip slow tests
+```
+
+### 4. Documentation
+
+```bash
+make docs       # Validate docs & config sync
+```
+
+## MyPy Baseline Management
+
+The project uses incremental typing improvement tracked in [mypy_baseline.json](mdc:mypy_baseline.json):
+
+- **Current baseline**: 120 errors
+- **Rule**: Cannot increase error count
+- **Improvement**: Update baseline only when count decreases
+
+```bash
+./scripts/dev.sh type-baseline-update    # Update when improved
+```
+
+## Pre-commit Hooks
+
+Install development hooks for automatic quality checks:
+
+```bash
+pre-commit install --install-hooks
+```
+
+This enforces:
+
+- Code formatting with ruff
+- Type checking
+- Deprecation warnings
+- Documentation sync
+
+## Feature Development Workflow
+
+### 1. Feature Flags (REQUIRED)
+
+All new features must use feature flags:
+
+```python
+# Environment variable pattern
+ENABLE_<AREA>_<FEATURE>=true
+
+# Code pattern
+from core.flags import enabled
+
+if enabled("NEW_FEATURE"):
+    new_feature_code()
+else:
+    fallback_code()
+```
+
+### 2. Documentation Requirements
+
+- Update [docs/configuration.md](mdc:docs/configuration.md) for new config
+- Update [docs/tools_reference.md](mdc:docs/tools_reference.md) for new tools
+- Add examples to relevant documentation
+- Run `make docs` to validate
+
+### 3. Testing Requirements
+
+- Unit tests for all new functions
+- Integration tests for new workflows
+- Error path testing
+- Performance impact assessment
+
+## Contribution Checklist
+
+Follow [docs/operations/CONTRIBUTING.md](mdc:docs/operations/CONTRIBUTING.md) guidelines:
+
+- [ ] **Tests added/updated & passing**
+- [ ] **Lint clean for changed files**
+- [ ] **No increase in mypy error count** (baseline check passes)
+- [ ] **Feature flags documented** (if applicable)
+- [ ] **Docs updated** (if behavior or config changed)
+- [ ] **No stray debug prints** / large commented blocks
+
+## Commit Standards
+
+Follow [Conventional Commits](https://www.conventionalcommits.org/):
+
+```bash
+feat: add new vector search optimization
+fix: resolve memory leak in content pipeline  
+docs: update tool development guide
+refactor: simplify error handling in tools
+test: add integration tests for debate analysis
+chore: update dependencies to latest versions
+```
+
+## Security & Privacy Guidelines
+
+### Input Validation
+
+```python
+# Always validate external inputs
+def process_url(url: str) -> StepResult:
+    if not url or not isinstance(url, str):
+        return StepResult.fail("Invalid URL")
+    
+    if not is_valid_url(url):
+        return StepResult.fail("URL validation failed")
+```
+
+### Privacy Filtering
+
+```python
+# Use privacy filter for user content
+from ultimate_discord_intelligence_bot.privacy import privacy_filter
+
+clean_text, report = privacy_filter.filter_text(user_input, metadata)
+```
+
+### Tenant Isolation
+
+```python
+# Always pass tenant context
+from ultimate_discord_intelligence_bot.tenancy import TenantContext
+
+def process_content(content: str, tenant: TenantContext) -> StepResult:
+    # Process with tenant isolation
+    pass
+```
+
+## Deprecation Management
+
+### Adding Deprecations
+
+1. **Clear documentation** with removal timeline
+2. **DeprecationWarning** emission
+3. **Update deprecation registry**
+4. **Grace period** of at least one minor version
+
+```python
+import warnings
+
+def deprecated_function():
+    warnings.warn(
+        "deprecated_function will be removed in v2.0.0, use new_function instead",
+        DeprecationWarning,
+        stacklevel=2
+    )
+    return new_function()
+```
+
+### Deprecation Tracking
+
+Run deprecation checks regularly:
+
+```bash
+make deprecations                    # Check current deprecations
+make deprecations-strict            # Fail on upcoming deadlines
+./scripts/check_deprecations.py     # Manual check
+```

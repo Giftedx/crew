@@ -1,0 +1,32 @@
+---
+alwaysApply: false
+description: Configuration management and environment setup patterns
+---
+### Configuration Management
+
+- Source of truth: [settings.py](mdc:src/ultimate_discord_intelligence_bot/settings.py)
+- Document env vars in [docs/configuration.md](mdc:docs/configuration.md)
+- Validate at startup; fail fast on missing critical settings
+
+---
+
+description: "Configuration management and environment setup patterns"
+---
+
+### Configuration & Environment
+
+- Central settings: [settings.py](mdc:src/ultimate_discord_intelligence_bot/settings.py)
+- Feature flags: `ENABLE_<AREA>_<FEATURE>`
+- Document env changes: [docs/configuration.md](mdc:docs/configuration.md)
+- Validate startup configuration using existing validation utilities and fail fast.
+
+### Environment Variables
+
+- Prefer explicit, required variables; provide safe defaults only where appropriate.
+- Keep secrets out of code. Use environment or secret managers.
+- Ensure tenant-aware values are namespaced by `(tenant, workspace)`.
+
+### Patterns
+
+- Read configuration once, inject into components; avoid ad-hoc `os.getenv` calls deep in code.
+- Use typed accessors and validation; raise clear errors with remediation hints.

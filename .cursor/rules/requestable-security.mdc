@@ -1,0 +1,21 @@
+---
+alwaysApply: false
+description: Security and privacy patterns for data protection and moderation
+---
+### Security & Privacy
+
+- Validate and sanitize inputs; avoid logging sensitive data
+- Respect tenant isolation and retention policies
+- Apply least-privilege for credentials and tokens
+
+---
+
+description: "Security and privacy patterns for data protection and moderation"
+---
+
+### Security & Privacy
+
+- Avoid logging secrets or raw user content; redact where needed.
+- Enforce least privilege for services and tokens.
+- Respect tenant/workspace isolation in storage and memory.
+- Apply content moderation where required before Discord posting.

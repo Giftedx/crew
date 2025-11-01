@@ -1,0 +1,474 @@
+---
+alwaysApply: true
+description: "Comprehensive Development Workflow - Standards, patterns, and best practices for Ultimate Discord Intelligence Bot"
+---
+# Ultimate Discord Intelligence Bot - Comprehensive Development Workflow
+
+## Development Lifecycle
+
+### 1. Planning Phase
+
+- **Understand requirements** thoroughly before coding
+- **Identify affected components** and dependencies
+- **Plan testing strategy** upfront
+- **Consider tenant isolation** requirements
+
+### 2. Implementation Phase
+
+- **Follow StepResult pattern** for all tools
+- **Implement comprehensive type hints**
+- **Ensure tenant-aware design**
+- **Add input validation and error handling**
+- **Write tests alongside implementation**
+
+### 3. Quality Assurance Phase
+
+- **Run all quality gates** before submission
+- **Code review** for adherence to patterns
+- **Test coverage** validation
+- **Documentation** updates
+
+## Quality Gates (MANDATORY)
+
+All gates must pass before code submission:
+
+```bash
+make format     # Auto-fix style & imports
+make lint       # Lint check (CI style)
+make type       # Static type check
+make test       # Run full test suite
+make docs       # Validate docs & config sync
+```
+
+## Code Development Patterns
+
+### Tool Implementation Pattern
+
+```python
+from __future__ import annotations
+from ultimate_discord_intelligence_bot.tools._base import BaseTool
+from ultimate_discord_intelligence_bot.step_result import StepResult
+
+class MyAnalysisTool(BaseTool):
+    """Comprehensive analysis tool for content processing."""
+
+    def _run(self, content: str, tenant: str, workspace: str) -> StepResult:
+        try:
+            # Input validation
+            if not content or not tenant or not workspace:
+                return StepResult.fail("Missing required parameters")
+
+            # Process content with tenant isolation
+            result = self._analyze_content(content, tenant, workspace)
+
+            # Return structured result
+            return StepResult.ok(data=result)
+
+        except Exception as e:
+            return StepResult.fail(f"Analysis failed: {str(e)}")
+
+    def _analyze_content(self, content: str, tenant: str, workspace: str) -> dict:
+        """Content analysis with tenant isolation."""
+        # Implementation here
+        pass
+```
+
+### Service Integration Pattern
+
+```python
+from __future__ import annotations
+from ultimate_discord_intelligence_bot.services.memory_service import MemoryService
+from ultimate_discord_intelligence_bot.step_result import StepResult
+
+class ContentProcessor:
+    """Service for processing content with memory integration."""
+
+    def __init__(self, memory_service: MemoryService):
+        self.memory_service = memory_service
+
+    def process_and_store(self, content: str, tenant: str, workspace: str) -> StepResult:
+        try:
+            # Process content
+            processed = self._process_content(content)
+
+            # Store with tenant isolation
+            store_result = self.memory_service.store_content(
+                content=processed,
+                tenant=tenant,
+                workspace=workspace
+            )
+
+            if not store_result.success:
+                return StepResult.fail("Failed to store processed content")
+
+            return StepResult.ok(data=processed)
+
+        except Exception as e:
+            return StepResult.fail(f"Processing failed: {str(e)}")
+```
+
+## Testing Standards
+
+### Unit Test Pattern
+
+```python
+import pytest
+from unittest.mock import Mock, patch
+from ultimate_discord_intelligence_bot.step_result import StepResult
+
+class TestMyTool:
+    """Comprehensive test suite for MyTool."""
+
+    def setup_method(self):
+        """Set up test fixtures."""
+        self.tool = MyTool()
+        self.tenant = "test_tenant"
+        self.workspace = "test_workspace"
+
+    def test_successful_processing(self):
+        """Test successful content processing."""
+        # Arrange
+        content = "test content"
+
+        # Act
+        result = self.tool._run(content, self.tenant, self.workspace)
+
+        # Assert
+        assert result.success
+        assert result.data is not None
+
+    def test_missing_parameters(self):
+        """Test handling of missing parameters."""
+        # Act
+        result = self.tool._run("", self.tenant, self.workspace)
+
+        # Assert
+        assert not result.success
+        assert "Missing required parameters" in result.error
+
+    @patch('my_module.external_service')
+    def test_external_service_failure(self, mock_service):
+        """Test handling of external service failures."""
+        # Arrange
+        mock_service.call.side_effect = Exception("Service unavailable")
+
+        # Act
+        result = self.tool._run("content", self.tenant, self.workspace)
+
+        # Assert
+        assert not result.success
+```
+
+### Integration Test Pattern
+
+```python
+import pytest
+from ultimate_discord_intelligence_bot.main import create_app
+from ultimate_discord_intelligence_bot.services import MemoryService, PromptEngine
+
+class TestContentPipeline:
+    """Integration tests for content processing pipeline."""
+
+    @pytest.fixture
+    def app(self):
+        """Create test application."""
+        return create_app()
+
+    @pytest.fixture
+    def memory_service(self, app):
+        """Create memory service for testing."""
+        return MemoryService(app.config)
+
+    def test_end_to_end_processing(self, app, memory_service):
+        """Test complete content processing workflow."""
+        # Arrange
+        content = "test content"
+        tenant = "integration_test"
+        workspace = "test_workspace"
+
+        # Act
+        with app.app_context():
+            result = memory_service.store_content(content, tenant, workspace)
+
+        # Assert
+        assert result.success
+        assert result.data is not None
+```
+
+## Error Handling Standards
+
+### Comprehensive Error Handling
+
+```python
+def robust_tool_function(input_data: str, tenant: str, workspace: str) -> StepResult:
+    """Tool function with comprehensive error handling."""
+    try:
+        # Input validation
+        if not input_data:
+            return StepResult.fail("Input data cannot be empty")
+
+        if not tenant or not workspace:
+            return StepResult.fail("Tenant and workspace are required")
+
+        # Business logic with error handling
+        try:
+            result = self._process_data(input_data, tenant, workspace)
+        except ValueError as e:
+            return StepResult.fail(f"Invalid input data: {str(e)}")
+        except ConnectionError as e:
+            return StepResult.fail(f"Service unavailable: {str(e)}")
+        except Exception as e:
+            return StepResult.fail(f"Unexpected error: {str(e)}")
+
+        # Validate output
+        if not result:
+            return StepResult.fail("Processing returned empty result")
+
+        return StepResult.ok(data=result)
+
+    except Exception as e:
+        # Catch-all for unexpected errors
+        return StepResult.fail(f"Critical error in tool execution: {str(e)}")
+```
+
+## Documentation Standards
+
+### Function Documentation
+
+```python
+def process_content(
+    content: str,
+    tenant: str,
+    workspace: str,
+    options: dict[str, Any] | None = None
+) -> StepResult:
+    """
+    Process content with comprehensive analysis and storage.
+
+    Args:
+        content: The content to process
+        tenant: Tenant identifier for data isolation
+        workspace: Workspace identifier for organization
+        options: Optional processing parameters
+
+    Returns:
+        StepResult with processed content data
+
+    Raises:
+        StepResult.fail: If processing fails for any reason
+
+    Example:
+        >>> result = process_content("input", "tenant", "workspace")
+        >>> if result.success:
+        ...     print(f"Processed: {result.data}")
+    """
+```
+
+### Module Documentation
+
+```python
+"""
+Content Processing Module
+
+This module provides comprehensive content processing capabilities including:
+- Multi-format content ingestion
+- Advanced analysis and scoring
+- Memory storage with tenant isolation
+- Integration with Discord bot
+
+Classes:
+    ContentProcessor: Main content processing service
+    AnalysisEngine: Content analysis and scoring
+    StorageManager: Memory storage with tenant isolation
+
+Functions:
+    process_content: High-level content processing function
+    validate_input: Input validation utilities
+"""
+```
+
+## Configuration Management
+
+### Environment Variables Pattern
+
+```python
+import os
+from ultimate_discord_intelligence_bot.settings import get_settings
+
+def get_configured_service():
+    """Get service configured from environment."""
+    settings = get_settings()
+
+    return MyService(
+        api_key=settings.OPENAI_API_KEY,
+        base_url=settings.OPENAI_BASE_URL,
+        timeout=settings.REQUEST_TIMEOUT,
+        retries=settings.MAX_RETRIES
+    )
+```
+
+### Feature Flags Pattern
+
+```python
+from ultimate_discord_intelligence_bot.settings import get_settings
+
+def should_enable_feature(feature_name: str) -> bool:
+    """Check if feature should be enabled based on configuration."""
+    settings = get_settings()
+
+    # Feature flag pattern: ENABLE_<AREA>_<FEATURE>
+    flag_name = f"ENABLE_{feature_name.upper()}"
+    return getattr(settings, flag_name, False)
+```
+
+## Performance Optimization
+
+### Caching Pattern
+
+```python
+from functools import lru_cache
+from ultimate_discord_intelligence_bot.step_result import StepResult
+
+class CachedProcessor:
+    """Processor with caching for expensive operations."""
+
+    @lru_cache(maxsize=1000)
+    def _expensive_computation(self, content_hash: str) -> dict:
+        """Cached expensive computation."""
+        # Expensive computation here
+        return {"result": "computed_value"}
+
+    def process_with_cache(self, content: str, tenant: str, workspace: str) -> StepResult:
+        """Process content with caching."""
+        try:
+            content_hash = hash(content)
+
+            # Use cached result if available
+            result = self._expensive_computation(content_hash)
+
+            return StepResult.ok(data=result)
+        except Exception as e:
+            return StepResult.fail(f"Processing failed: {str(e)}")
+```
+
+### Batch Processing Pattern
+
+```python
+from typing import List
+from ultimate_discord_intelligence_bot.step_result import StepResult
+
+class BatchProcessor:
+    """Processor for batch operations."""
+
+    def process_batch(self, items: List[str], tenant: str, workspace: str) -> StepResult:
+        """Process multiple items in batch."""
+        results = []
+
+        # Process in batches for efficiency
+        batch_size = 10
+        for i in range(0, len(items), batch_size):
+            batch = items[i:i + batch_size]
+
+            batch_results = self._process_batch_items(batch, tenant, workspace)
+            results.extend(batch_results)
+
+        return StepResult.ok(data=results)
+
+    def _process_batch_items(self, batch: List[str], tenant: str, workspace: str) -> List[dict]:
+        """Process a batch of items efficiently."""
+        # Batch processing implementation
+        return []
+```
+
+## Security Considerations
+
+### Input Validation
+
+```python
+import re
+from ultimate_discord_intelligence_bot.step_result import StepResult
+
+def validate_and_process(input_text: str, tenant: str, workspace: str) -> StepResult:
+    """Validate input and process securely."""
+    # Comprehensive input validation
+    if not input_text or len(input_text) > 10000:
+        return StepResult.fail("Invalid input length")
+
+    # Sanitize input
+    sanitized = self._sanitize_input(input_text)
+    if not sanitized:
+        return StepResult.fail("Input failed sanitization")
+
+    # Validate tenant format
+    if not re.match(r'^[a-zA-Z0-9_-]+$', tenant):
+        return StepResult.fail("Invalid tenant format")
+
+    # Process with validated inputs
+    return self._process_validated(sanitized, tenant, workspace)
+
+def _sanitize_input(self, text: str) -> str:
+    """Sanitize input text."""
+    # Remove potentially harmful content
+    sanitized = re.sub(r'<script.*?>.*?</script>', '', text, flags=re.DOTALL | re.IGNORECASE)
+    return sanitized.strip()
+```
+
+## Deployment Standards
+
+### Health Check Pattern
+
+```python
+from flask import Flask
+from ultimate_discord_intelligence_bot.step_result import StepResult
+
+def create_app() -> Flask:
+    """Create Flask application with health checks."""
+    app = Flask(__name__)
+
+    @app.route('/health')
+    def health_check():
+        """Health check endpoint."""
+        try:
+            # Check critical dependencies
+            db_status = check_database()
+            memory_status = check_memory_service()
+
+            if db_status and memory_status:
+                return {"status": "healthy", "timestamp": get_utc_now()}
+            else:
+                return {"status": "unhealthy", "issues": [db_status, memory_status]}, 503
+
+        except Exception as e:
+            return {"status": "error", "error": str(e)}, 500
+
+    return app
+```
+
+### Configuration Validation
+
+```python
+def validate_configuration() -> StepResult:
+    """Validate application configuration at startup."""
+    settings = get_settings()
+
+    # Validate required settings
+    required_settings = [
+        'DISCORD_BOT_TOKEN',
+        'OPENAI_API_KEY',
+        'QDRANT_URL'
+    ]
+
+    missing = []
+    for setting in required_settings:
+        if not hasattr(settings, setting) or not getattr(settings, setting):
+            missing.append(setting)
+
+    if missing:
+        return StepResult.fail(f"Missing required configuration: {', '.join(missing)}")
+
+    # Validate setting formats
+    if settings.DISCORD_BOT_TOKEN and not settings.DISCORD_BOT_TOKEN.startswith('Bot '):
+        return StepResult.fail("DISCORD_BOT_TOKEN must start with 'Bot '")
+
+    return StepResult.ok(data={"status": "configuration_valid"})
+```

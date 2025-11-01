@@ -1,0 +1,20 @@
+---
+alwaysApply: false
+description: Vector storage and memory management with Qdrant
+---
+### Vector Memory
+
+- Use Qdrant; configure URL via settings
+- Namespace per tenant/workspace; embed with consistent model
+- Provide search, upsert, and delete operations with StepResult
+
+---
+
+description: "Vector storage and memory management with Qdrant"
+---
+
+### Vector Memory
+
+- Use Qdrant with tenant/workspace namespacing for collections.
+- Normalize and deduplicate embeddings; control dimensions consistently.
+- Retain provenance metadata for auditability.

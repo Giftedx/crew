@@ -1,0 +1,251 @@
+---
+alwaysApply: false
+description: Quick reference guide for common development patterns and commands
+---
+# Quick Development Reference
+
+## ⚡ IMMEDIATE REQUIREMENTS
+
+### 1. StepResult Pattern (MANDATORY)
+
+```python
+from ultimate_discord_intelligence_bot.step_result import StepResult
+
+def my_function() -> StepResult:
+    try:
+        result = process_data()
+        return StepResult.ok(data=result)
+    except Exception as e:
+        return StepResult.fail(str(e))
+```
+
+### 2. Type Hints (REQUIRED)
+
+```python
+from __future__ import annotations
+
+def process_content(url: str, tenant: str, workspace: str) -> StepResult:
+    # All functions need complete type annotations
+    pass
+```
+
+### 3. Quality Gates (BEFORE COMMIT)
+
+```bash
+make format && make lint && make type && make test
+```
+
+### 4. Tenant-Aware Functions
+
+```python
+def my_tool(content: str, tenant: str, workspace: str) -> StepResult:
+    # Always accept tenant context for multi-tenancy
+    pass
+```
+
+## 🛠️ CrewAI Tool Template
+
+```python
+from crewai_tools import BaseTool
+from pydantic import BaseModel, Field
+from ultimate_discord_intelligence_bot.step_result import StepResult
+
+class MyToolInput(BaseModel):
+    content: str = Field(..., description="Content to process")
+    tenant: str = Field(..., description="Tenant identifier")
+    workspace: str = Field(..., description="Workspace identifier")
+
+class MyTool(BaseTool):
+    name: str = "my_tool"
+    description: str = "What this tool does"
+    args_schema: Type[BaseModel] = MyToolInput
+
+    def _run(self, content: str, tenant: str, workspace: str) -> StepResult:
+        try:
+            # Tool logic here
+            result = process_content(content)
+            return StepResult.ok(data=result)
+        except Exception as e:
+            return StepResult.fail(str(e))
+```
+
+## 🧪 Test Template
+
+```python
+def test_my_function():
+    """Test function with proper error handling."""
+    result = my_function("test_input", "tenant", "workspace")
+    
+    assert result.status == "success"
+    assert result.data is not None
+
+def test_my_function_error():
+    """Test error handling."""
+    result = my_function("", "tenant", "workspace")
+    
+    assert result.status == "bad_request"
+    assert "error" in result.error
+```
+
+## 📁 Key Files Reference
+
+- Entry: [main.py](mdc:src/ultimate_discord_intelligence_bot/main.py)
+- Crew: [crew.py](mdc:src/ultimate_discord_intelligence_bot/crew.py)
+- Settings: [settings.py](mdc:src/ultimate_discord_intelligence_bot/settings.py)
+- Agents: [config/agents.yaml](mdc:src/ultimate_discord_intelligence_bot/config/agents.yaml)
+- Tasks: [config/tasks.yaml](mdc:src/ultimate_discord_intelligence_bot/config/tasks.yaml)
+- StepResult: [step_result.py](mdc:src/ultimate_discord_intelligence_bot/step_result.py)
+
+## 🚀 Common Commands
+
+### Development
+
+```bash
+# Setup environment
+python -m venv .venv && source .venv/bin/activate
+pip install -e .[dev]
+
+# Run quality checks
+make format     # Fix formatting
+make lint       # Check style
+make type       # Type check
+make test       # Run tests
+make docs       # Validate docs
+
+# Quick testing
+pytest -q                    # Quick test
+pytest -v                    # Verbose test
+pytest -m "not integration"  # Skip slow tests
+
+# Type checking
+./scripts/dev.sh type-changed     # Check changed files
+./scripts/dev.sh type-baseline    # Check baseline
+```
+
+### Services
+
+```bash
+# Start Qdrant
+docker-compose up -d qdrant
+
+# Full stack
+docker-compose --profile full up -d
+
+# Check logs
+docker-compose logs -f bot
+```
+
+### Debugging
+
+```bash
+# Enable debug logging
+export LOG_LEVEL=DEBUG
+
+# Full stack testing
+export FULL_STACK_TEST=1
+
+# Run specific test
+pytest tests/test_specific.py::test_function -v
+
+# Check deprecations
+make deprecations
+```
+
+## 🔧 Environment Variables
+
+Essential variables:
+
+```bash
+DISCORD_BOT_TOKEN=your_token_here
+OPENAI_API_KEY=your_key_here     # or OPENROUTER_API_KEY
+QDRANT_URL=http://localhost:6333  # or :memory: for testing
+```
+
+Feature flags:
+
+```bash
+ENABLE_<AREA>_<FEATURE>=true  # Enable specific features
+```
+
+## 📝 File Templates
+
+### New Tool File
+
+```python
+"""Tool for [description]."""
+from __future__ import annotations
+
+from typing import Type
+
+from crewai_tools import BaseTool
+from pydantic import BaseModel, Field
+
+from ultimate_discord_intelligence_bot.step_result import StepResult
+
+
+class ToolNameInput(BaseModel):
+    """Input schema for ToolName."""
+    
+    # Define inputs with descriptions
+
+
+class ToolName(BaseTool):
+    """Tool description."""
+    
+    name: str = "tool_name"
+    description: str = "Detailed description"
+    args_schema: Type[BaseModel] = ToolNameInput
+
+    def _run(self, **kwargs) -> StepResult:
+        """Execute tool logic."""
+        try:
+            # Implementation
+            return StepResult.ok(data=result)
+        except Exception as e:
+            return StepResult.fail(str(e))
+```
+
+### New Test File
+
+```python
+"""Tests for [component]."""
+import pytest
+
+from ultimate_discord_intelligence_bot.step_result import StepResult
+
+
+def test_component_success():
+    """Test successful execution."""
+    # Test implementation
+
+
+def test_component_error():
+    """Test error handling."""
+    # Test implementation
+```
+
+## ❌ Common Mistakes
+
+- **DON'T:** Skip StepResult returns
+- **DON'T:** Omit type hints
+- **DON'T:** Ignore tenant parameters
+- **DON'T:** Skip error handling
+- **DON'T:** Commit without running quality gates
+
+## ✅ Development Checklist
+
+- [ ] Function returns StepResult
+- [ ] Complete type annotations
+- [ ] Tenant-aware design
+- [ ] Tests written (success + error paths)
+- [ ] Quality gates pass: `make format lint type test`
+- [ ] Documentation updated if needed
+
+## 🔍 Where to Find Things
+
+- **Tools**: `src/ultimate_discord_intelligence_bot/tools/`
+- **Services**: `src/ultimate_discord_intelligence_bot/services/`
+- **Tests**: `tests/`
+- **Config**: `config/` and `src/ultimate_discord_intelligence_bot/config/`
+- **Docs**: `docs/`
+- **Scripts**: `scripts/`

@@ -1,0 +1,48 @@
+{
+  "tool_instance_profiling": {
+    "baseline_mb": 851.83984375,
+    "after_creation_mb": 860.96484375,
+    "final_mb": 860.96484375,
+    "memory_per_instance_mb": 1.0138888888888888,
+    "total_instances": 9,
+    "tool_classes": [
+      "AudioTranscriptionTool",
+      "MultiPlatformDownloadTool",
+      "UnifiedMemoryTool"
+    ]
+  },
+  "consolidated_vs_legacy": {
+    "consolidated_results": {
+      "baseline_mb": 860.96484375,
+      "after_creation_mb": 861.08984375,
+      "final_mb": 861.08984375,
+      "memory_per_instance_mb": 0.005,
+      "total_instances": 25,
+      "tool_classes": [
+        "AudioTranscriptionTool",
+        "MultiPlatformDownloadTool",
+        "UnifiedMemoryTool",
+        "ContentQualityAssessmentTool",
+        "FactCheckTool"
+      ]
+    },
+    "estimated_legacy_tools": 20,
+    "current_tools": 5,
+    "estimated_legacy_memory_mb": 0.1,
+    "current_memory_mb": 0.025,
+    "memory_savings_mb": 0.07500000000000001,
+    "savings_percentage": 75.00000000000001
+  },
+  "import_profiling": {
+    "baseline_mb": 861.08984375,
+    "after_imports_mb": 861.08984375,
+    "import_memory_mb": 0.0,
+    "modules_imported": 5
+  },
+  "summary": {
+    "memory_per_instance_mb": 1.0138888888888888,
+    "estimated_savings_mb": 0.07500000000000001,
+    "savings_percentage": 75.00000000000001,
+    "import_overhead_mb": 0.0
+  }
+}

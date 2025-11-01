@@ -1,0 +1,18 @@
+---
+alwaysApply: false
+description: Python coding standards and conventions (alias)
+---
+See [python-standards.mdc](mdc:.cursor/rules/python-standards.mdc).
+
+---
+
+description: "Python coding standards and conventions"
+globs: "*.py"
+---
+
+### Python Standards
+
+- Use type hints everywhere; avoid `Any` unless necessary.
+- Guard clauses over deep nesting; handle errors meaningfully.
+- Multi-line formatting; keep line length ≤ 120.
+- Docstrings for public APIs explaining intent and parameters.

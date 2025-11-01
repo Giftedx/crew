@@ -1,0 +1,75 @@
+---
+alwaysApply: true
+description: Quality gates, CI workflows, and developer checklist
+---
+### Quality Gates (MANDATORY)
+
+All changes must pass these gates before merge:
+
+```bash
+make format     # Auto-fix style & imports  
+make lint       # Lint check (CI style)
+make type       # Static type check
+make test       # Run full test suite
+make docs       # Validate docs & config sync
+```
+
+### CI & Pre-commit
+
+- Install hooks to enforce formatting and checks locally:
+
+```bash
+pre-commit install --install-hooks
+```
+
+### Type Checking Baseline
+
+- MyPy baseline tracked in [mypy_baseline.json](mdc:mypy_baseline.json)
+- Rule: Do not increase baseline error count
+- Improve baseline only when errors decrease:
+
+```bash
+./scripts/dev.sh type-baseline-update
+```
+
+Related commands:
+
+```bash
+./scripts/dev.sh type-changed      # Check only changed files
+./scripts/dev.sh type-baseline     # Check against baseline
+```
+
+### Testing Workflow
+
+```bash
+pytest -q                     # Quick run
+pytest -m "not integration"   # Skip slow/integration
+```
+
+### Documentation
+
+- Keep [docs/configuration.md](mdc:docs/configuration.md) in sync with env/flags
+- Update [docs/tools_reference.md](mdc:docs/tools_reference.md) for new tools
+- Validate with `make docs`
+
+### Developer Checklist
+
+- [ ] Tests added/updated & passing
+- [ ] Lint clean for changed files
+- [ ] No increase in mypy error baseline
+- [ ] Feature flags documented (if applicable)
+- [ ] Docs updated (behavior/config changes)
+- [ ] No stray debug prints or large commented blocks
+
+### Commit Standards
+
+- Follow Conventional Commits:
+
+```text
+feat: add new vector search optimization
+fix: resolve memory leak in content pipeline
+docs: update tool development guide
+refactor: simplify error handling in tools
+test: add integration tests for debate analysis
+chore: update dependencies to latest versions
+```

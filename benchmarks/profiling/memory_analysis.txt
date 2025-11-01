@@ -1,0 +1,114 @@
+=== Vector Store Performance Analysis ===
+
+Top 30 Functions by Cumulative Time:
+==================================================
+         2775 function calls (2773 primitive calls) in 0.660 seconds
+
+   Ordered by: cumulative time
+   List reduced from 190 to 30 due to restriction <30>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.000    0.000    0.660    0.660 runners.py:160(run)
+        3    0.000    0.000    0.659    0.220 base_events.py:618(run_until_complete)
+        3    0.000    0.000    0.659    0.220 base_events.py:594(run_forever)
+        1    0.000    0.000    0.659    0.659 runners.py:86(run)
+       14    0.000    0.000    0.659    0.047 base_events.py:1859(_run_once)
+       14    0.000    0.000    0.555    0.040 selectors.py:451(select)
+       14    0.555    0.040    0.555    0.040 {method 'poll' of 'select.epoll' objects}
+       14    0.000    0.000    0.103    0.007 events.py:82(_run)
+       14    0.000    0.000    0.103    0.007 {method 'run' of '_contextvars.Context' objects}
+        5    0.000    0.000    0.103    0.021 profile_memory.py:182(profile_vector_operations)
+        2    0.102    0.051    0.102    0.051 {built-in method time.sleep}
+        2    0.000    0.000    0.100    0.050 profile_memory.py:50(store_vectors)
+        1    0.000    0.000    0.002    0.002 profile_memory.py:27(_generate_embedding)
+        2    0.001    0.000    0.001    0.000 profile_memory.py:108(batch_upsert)
+        1    0.000    0.000    0.000    0.000 runners.py:62(__exit__)
+        1    0.000    0.000    0.000    0.000 runners.py:65(close)
+        1    0.000    0.000    0.000    0.000 runners.py:58(__enter__)
+        2    0.000    0.000    0.000    0.000 runners.py:131(_lazy_init)
+        1    0.000    0.000    0.000    0.000 events.py:808(new_event_loop)
+        1    0.000    0.000    0.000    0.000 profile_memory.py:34(<listcomp>)
+        2    0.000    0.000    0.000    0.000 profile_memory.py:146(compact_and_deduplicate)
+        1    0.000    0.000    0.000    0.000 events.py:693(new_event_loop)
+        1    0.000    0.000    0.000    0.000 unix_events.py:63(__init__)
+        1    0.000    0.000    0.000    0.000 selector_events.py:49(__init__)
+        8    0.000    0.000    0.000    0.000 tasks.py:637(sleep)
+        1    0.000    0.000    0.000    0.000 profile_memory.py:156(<listcomp>)
+        1    0.000    0.000    0.000    0.000 unix_events.py:67(close)
+        2    0.000    0.000    0.000    0.000 profile_memory.py:75(search_similar)
+        1    0.000    0.000    0.000    0.000 selector_events.py:86(close)
+        1    0.000    0.000    0.000    0.000 selector_events.py:105(_make_self_pipe)
+
+
+
+
+=== Top 20 by Total Time ===
+==================================================
+         2775 function calls (2773 primitive calls) in 0.660 seconds
+
+   Ordered by: internal time
+   List reduced from 190 to 20 due to restriction <20>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+       14    0.555    0.040    0.555    0.040 {method 'poll' of 'select.epoll' objects}
+        2    0.102    0.051    0.102    0.051 {built-in method time.sleep}
+        2    0.001    0.000    0.001    0.000 profile_memory.py:108(batch_upsert)
+       14    0.000    0.000    0.659    0.047 base_events.py:1859(_run_once)
+        1    0.000    0.000    0.000    0.000 profile_memory.py:34(<listcomp>)
+        1    0.000    0.000    0.000    0.000 profile_memory.py:156(<listcomp>)
+        2    0.000    0.000    0.100    0.050 profile_memory.py:50(store_vectors)
+      768    0.000    0.000    0.000    0.000 {method 'random' of '_random.Random' objects}
+       14    0.000    0.000    0.103    0.007 {method 'run' of '_contextvars.Context' objects}
+      600    0.000    0.000    0.000    0.000 {built-in method time.time}
+        1    0.000    0.000    0.000    0.000 events.py:667(__init__)
+        5    0.000    0.000    0.103    0.021 profile_memory.py:182(profile_vector_operations)
+       14    0.000    0.000    0.555    0.040 selectors.py:451(select)
+        2    0.000    0.000    0.000    0.000 profile_memory.py:75(search_similar)
+      700    0.000    0.000    0.000    0.000 {method 'get' of 'dict' objects}
+        3    0.000    0.000    0.659    0.220 base_events.py:594(run_forever)
+        8    0.000    0.000    0.000    0.000 tasks.py:637(sleep)
+       15    0.000    0.000    0.000    0.000 events.py:35(__init__)
+        3    0.000    0.000    0.659    0.220 base_events.py:618(run_until_complete)
+        2    0.000    0.000    0.000    0.000 {function socket.close at 0x7e9085adb1a0}
+
+
+
+
+=== Most Called Functions ===
+==================================================
+         2775 function calls (2773 primitive calls) in 0.660 seconds
+
+   Ordered by: call count
+   List reduced from 190 to 20 due to restriction <20>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+      768    0.000    0.000    0.000    0.000 {method 'random' of '_random.Random' objects}
+      700    0.000    0.000    0.000    0.000 {method 'get' of 'dict' objects}
+      600    0.000    0.000    0.000    0.000 {built-in method time.time}
+    55/53    0.000    0.000    0.000    0.000 {built-in method builtins.len}
+       27    0.000    0.000    0.000    0.000 base_events.py:1954(get_debug)
+       24    0.000    0.000    0.000    0.000 base_events.py:518(_check_closed)
+       22    0.000    0.000    0.000    0.000 base_events.py:701(time)
+       22    0.000    0.000    0.000    0.000 {built-in method time.monotonic}
+       18    0.000    0.000    0.000    0.000 {built-in method builtins.max}
+       17    0.000    0.000    0.000    0.000 {built-in method builtins.isinstance}
+       15    0.000    0.000    0.000    0.000 events.py:35(__init__)
+       14    0.000    0.000    0.659    0.047 base_events.py:1859(_run_once)
+       14    0.000    0.000    0.555    0.040 selectors.py:451(select)
+       14    0.000    0.000    0.103    0.007 events.py:82(_run)
+       14    0.000    0.000    0.000    0.000 selector_events.py:737(_process_events)
+       14    0.000    0.000    0.103    0.007 {method 'run' of '_contextvars.Context' objects}
+       14    0.555    0.040    0.555    0.040 {method 'poll' of 'select.epoll' objects}
+       14    0.000    0.000    0.000    0.000 {method 'append' of 'collections.deque' objects}
+       14    0.000    0.000    0.000    0.000 {method 'popleft' of 'collections.deque' objects}
+       10    0.000    0.000    0.000    0.000 base_events.py:781(_call_soon)
+
+
+
+
+=== Analysis Summary ===
+==================================================
+- Total functions called: 2775
+- Total execution time: 0.6596s
+- Profile data saved to: memory.prof
+- Use 'snakeviz profiling/memory.prof' for visualization

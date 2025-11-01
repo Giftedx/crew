@@ -1,0 +1,24 @@
+---
+alwaysApply: false
+description: HTTP retry policy, precedence, and observability
+---
+### Retries
+
+- Exponential backoff with jitter; cap max retries
+- Differentiate retryable vs non-retryable errors; log with context
+- Emit metrics for attempts, success after retry, and give-up
+
+---
+
+description: "HTTP retry policy, precedence, and observability"
+---
+
+### Retries
+
+- Enable with `ENABLE_HTTP_RETRY=1` (legacy `ENABLE_ANALYSIS_HTTP_RETRY` deprecated).
+- Precedence for attempts: call arg > `config/retry.yaml` > `RETRY_MAX_ATTEMPTS` > library default (3).
+- Valid range 1..20; invalid values fall back.
+
+### Metrics
+
+- Emit attempts/give-ups counters; annotate spans with `retry.attempt`.

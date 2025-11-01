@@ -1,0 +1,47 @@
+---
+alwaysApply: false
+description: CI workflows mapping to quality gates and guards
+---
+### CI Workflows and Quality Gates
+
+- Gates to pass before merge:
+
+```bash
+make format
+make lint
+make type
+make test
+make docs
+```
+
+- Install pre-commit hooks locally:
+
+```bash
+pre-commit install --install-hooks
+```
+
+- Type baseline (do not increase errors): [mypy_baseline.json](mdc:mypy_baseline.json)
+
+```bash
+./scripts/dev.sh type-changed
+./scripts/dev.sh type-baseline
+./scripts/dev.sh type-baseline-update
+```
+
+- Workflows live in `.github/workflows/` (CI, style, fast, nightly, deprecations, eval, markdownlint, docker).
+
+---
+
+description: "CI workflows mapping to quality gates and guards"
+---
+
+### CI Gates
+
+- `ci.yml`: matrix Python (3.10–3.12) → `make ci-all` + docs contract check.
+- `ci-style.yml`: format-check, lint, guards.
+- `ci-fast.yml`: `make ci-fast`; optional strict docs import.
+- `ci-nightly.yml`: full `make ci-all` with ffmpeg & yt-dlp.
+- `markdownlint.yml`: markdown style for `*.md`.
+- `deprecations.yml`: scans and enforces upcoming deadlines.
+- `eval.yml` / `golden.yml`: regression/eval harness.
+- `docker.yml`: build/push image (tags and main/master).

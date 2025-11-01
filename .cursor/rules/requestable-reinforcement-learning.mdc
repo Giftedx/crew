@@ -1,0 +1,19 @@
+---
+alwaysApply: false
+description: Reinforcement learning patterns and bandit policies for model routing
+---
+### RL & Bandits
+
+- Use bandit policies (e.g., UCB/Thompson) for model routing
+- Track reward signals (latency, quality) per tenant/workspace
+- Persist exploration state; respect feature flags
+
+---
+
+description: "Reinforcement learning patterns and bandit policies for model routing"
+---
+
+### RL & Routing
+
+- Use bandit policies for model selection when applicable.
+- Log rewards/feedback with tenant context for offline analysis.

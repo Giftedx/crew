@@ -1,0 +1,20 @@
+---
+alwaysApply: false
+description: Pipeline architecture—Multi-Platform → Download → Transcription → Analysis → Discord
+---
+### Pipeline Overview
+
+- Orchestrator: [pipeline.py](mdc:src/ultimate_discord_intelligence_bot/pipeline.py)
+- Flow: Multi-Platform → Download → Transcription → Analysis → Memory → Discord
+- Ensure StepResult return types and tenant-aware processing throughout
+
+---
+
+description: "Pipeline architecture: Multi-Platform → Download → Transcription → Analysis → Discord"
+---
+
+### Pipeline Flow
+
+- Respect the stage boundaries defined in [pipeline.py](mdc:src/ultimate_discord_intelligence_bot/pipeline.py).
+- Each stage returns `StepResult`; failures short-circuit with clear diagnostics.
+- Track tenant/workspace across all stages; include in logs and metrics.

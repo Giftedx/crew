@@ -1,0 +1,29 @@
+---
+alwaysApply: false
+description: Caching standards for StructuredLLMService and global cache
+---
+### Caching Standards
+
+- Use deterministic cache keys including tenant/workspace
+- Set explicit TTLs; avoid unbounded caches
+- Invalidate on config/model changes
+
+---
+
+description: "Caching standards for StructuredLLMService and global cache"
+---
+
+### Cache Keys & TTLs
+
+- Deterministic SHA256-based keys; avoid timestamps/randomness in prompts.
+- TTLs by task type; prefer longer for stable factual data.
+
+### Metrics & Maintenance
+
+- Track hit/miss/evictions; expose size and entries count.
+- Background cleanup; configurable interval.
+
+### Semantic Cache Isolation
+
+- Namespaces composed as `tenant:workspace`; apply in all modes (full, degraded, fallback).
+- Enter a `TenantContext` before cache-dependent paths.

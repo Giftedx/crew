@@ -1,0 +1,290 @@
+---
+globs: "config/*.yaml,src/ultimate_discord_intelligence_bot/crew.py,src/ultimate_discord_intelligence_bot/tools/*.py"
+description: "CrewAI agent, task, and tool development patterns"
+---
+
+# CrewAI Development Guide
+
+## Agent Configuration
+
+Agents are defined in [config/agents.yaml](mdc:src/ultimate_discord_intelligence_bot/config/agents.yaml):
+
+```yaml
+content_moderator:
+  role: "Content Moderator"
+  goal: "Review and moderate all content for safety and privacy compliance"
+  backstory: "You are a safety-first content moderator..."
+  verbose: true
+  allow_delegation: false
+  max_retry_limit: 2
+  system_template: |
+    You are {role}.
+    Your goal is: {goal}
+    
+    Context: {context}
+```
+
+## Task Configuration
+
+Tasks defined in [config/tasks.yaml](mdc:src/ultimate_discord_intelligence_bot/config/tasks.yaml):
+
+```yaml
+content_moderation:
+  description: |
+    Review the provided content for safety violations:
+    1. Check for prohibited content patterns
+    2. Apply privacy filtering
+    3. Rate content safety level
+  expected_output: |
+    A moderation report including:
+    - Safety rating (1-10)
+    - Any content violations found
+    - Recommended actions
+```
+
+## Tool Development (REQUIRED PATTERNS)
+
+### Base Tool Structure
+
+ALL tools must inherit from [BaseTool](mdc:src/ultimate_discord_intelligence_bot/tools/_base.py):
+
+```python
+from crewai_tools import BaseTool
+from typing import Type
+from pydantic import BaseModel, Field
+from ultimate_discord_intelligence_bot.step_result import StepResult
+
+class MyToolInput(BaseModel):
+    """Input schema for MyTool."""
+    content: str = Field(..., description="Content to process")
+    tenant: str = Field(..., description="Tenant identifier")
+    workspace: str = Field(..., description="Workspace identifier")
+
+class MyTool(BaseTool):
+    name: str = "my_tool"
+    description: str = "Detailed description of what this tool does"
+    args_schema: Type[BaseModel] = MyToolInput
+
+    def _run(
+        self, 
+        content: str, 
+        tenant: str, 
+        workspace: str
+    ) -> StepResult:
+        """Execute the tool logic."""
+        try:
+            # Tool implementation
+            result = process_content(content)
+            return StepResult.ok(data=result)
+        except Exception as e:
+            return StepResult.fail(str(e))
+```
+
+### Tool Registration
+
+Tools must be explicitly registered in [crew.py](mdc:src/ultimate_discord_intelligence_bot/crew.py):
+
+```python
+from ultimate_discord_intelligence_bot.tools.my_tool import MyTool
+
+@CrewBase
+class UltimateDiscordIntelligenceBotCrew:
+    """CrewAI crew for Discord Intelligence Bot."""
+
+    agents_config = 'config/agents.yaml'
+    tasks_config = 'config/tasks.yaml'
+
+    def content_moderator_agent(self) -> Agent:
+        return Agent(
+            config=self.agents_config['content_moderator'],
+            tools=[MyTool()],  # Register tool here
+        )
+```
+
+## Modern CrewAI Features
+
+Use these performance optimizations:
+
+```python
+crew = Crew(
+    agents=[...],
+    tasks=[...],
+    planning=True,        # Enable planning phase
+    memory=True,         # Enable crew memory
+    cache=True,          # Enable response caching
+    max_rpm=10,          # Rate limiting
+    verbose=True
+)
+```
+
+## Agent-Tool Assignment
+
+### Specialized Agent Tools
+
+Assign tools based on agent expertise:
+
+```python
+# Content analysis agent gets content-specific tools
+def content_analyst_agent(self) -> Agent:
+    return Agent(
+        config=self.agents_config['content_analyst'],
+        tools=[
+            ContentDownloaderTool(),
+            TranscriptionTool(),
+            AnalysisTool()
+        ]
+    )
+
+# Fact checker gets verification tools
+def fact_checker_agent(self) -> Agent:
+    return Agent(
+        config=self.agents_config['fact_checker'],
+        tools=[
+            FactCheckTool(),
+            SourceVerificationTool(),
+            ClaimAnalysisTool()
+        ]
+    )
+```
+
+### Tool Communication Patterns
+
+Tools can pass data via StepResult metadata:
+
+```python
+def _run(self, input_data: str) -> StepResult:
+    result = process_data(input_data)
+    return StepResult.ok(
+        data=result,
+        metadata={
+            "processing_time": 1.5,
+            "source": "primary_api",
+            "confidence": 0.95
+        }
+    )
+```
+
+## Task Dependencies
+
+Define task execution order:
+
+```yaml
+# In tasks.yaml
+content_analysis:
+  description: "Analyze content for key points"
+  expected_output: "Analysis report with key findings"
+
+fact_checking:
+  description: "Verify claims from content analysis"
+  expected_output: "Fact-check report with verification results"
+  context: [content_analysis]  # Depends on content_analysis
+
+final_report:
+  description: "Generate comprehensive report"
+  expected_output: "Final analysis with fact-check integration"
+  context: [content_analysis, fact_checking]  # Depends on both
+```
+
+## Error Handling in Agents
+
+### Agent-Level Error Handling
+
+```yaml
+# In agents.yaml
+content_moderator:
+  role: "Content Moderator"
+  max_retry_limit: 3
+  step_callback: log_agent_steps  # Custom callback for debugging
+```
+
+### Tool Error Propagation
+
+```python
+def _run(self, content: str) -> StepResult:
+    if not content:
+        return StepResult.fail("missing_content")  # Agent will see this error
+    
+    # Tool processing...
+    return StepResult.ok(data=result)
+```
+
+## Testing Agents and Tasks
+
+### Agent Testing
+
+```python
+def test_content_moderator():
+    crew = UltimateDiscordIntelligenceBotCrew()
+    agent = crew.content_moderator_agent()
+    
+    # Test agent configuration
+    assert agent.role == "Content Moderator"
+    assert len(agent.tools) > 0
+```
+
+### Integration Testing
+
+```python
+@pytest.mark.integration
+async def test_crew_execution():
+    crew = UltimateDiscordIntelligenceBotCrew()
+    inputs = {"content": "test content"}
+    
+    result = crew.crew().kickoff(inputs=inputs)
+    assert result is not None
+```
+
+## Performance Considerations
+
+### Memory Management
+
+```python
+# Enable memory for agents that need context
+memory = True  # Stores conversation history
+
+# Disable for stateless operations
+memory = False  # Better performance for simple tasks
+```
+
+### Rate Limiting
+
+```python
+# Crew-level rate limiting
+max_rpm = 10  # 10 requests per minute
+
+# Tool-level rate limiting
+@rate_limit(calls=5, period=60)  # 5 calls per minute
+def _run(self, input_data: str) -> StepResult:
+    # Tool implementation
+    pass
+```
+
+## Debugging and Monitoring
+
+### Verbose Output
+
+```yaml
+# Enable detailed logging in config
+agents:
+  content_analyst:
+    verbose: true  # Shows agent thinking process
+```
+
+### Tool Execution Logging
+
+```python
+import logging
+
+logger = logging.getLogger(__name__)
+
+def _run(self, input_data: str) -> StepResult:
+    logger.info(f"Executing {self.name} with input length: {len(input_data)}")
+    
+    try:
+        result = process_data(input_data)
+        logger.info(f"Tool {self.name} completed successfully")
+        return StepResult.ok(data=result)
+    except Exception as e:
+        logger.error(f"Tool {self.name} failed: {e}")
+        return StepResult.fail(str(e))
+```

@@ -1,0 +1,31 @@
+---
+alwaysApply: false
+description: Error handling patterns and StepResult usage standards (alias)
+---
+See [error-handling.mdc](mdc:.cursor/rules/error-handling.mdc).
+
+---
+
+description: "Error handling patterns and StepResult usage standards"
+---
+
+### StepResult Usage (required)
+
+All tool functions must return [StepResult](mdc:src/ultimate_discord_intelligence_bot/step_result.py).
+
+```python
+from ultimate_discord_intelligence_bot.step_result import StepResult
+
+def my_tool(content: str, tenant: str, workspace: str) -> StepResult:
+    try:
+        # ... do work ...
+        return StepResult.ok(data={"status": "done"})
+    except Exception as e:
+        return StepResult.fail(str(e))
+```
+
+### Error Handling
+
+- Fail fast with actionable messages, never swallow exceptions.
+- Include context: operation, identifiers, tenant/workspace.
+- Use consistent logging levels and structures.

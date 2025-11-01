@@ -1,0 +1,130 @@
+---
+alwaysApply: true
+description: "Development Essentials - Quality gates, standards, and required patterns"
+---
+### Quality Gates (must pass before submission)
+
+```bash
+make format
+make lint
+make type
+make test
+make docs
+```
+
+### Required Patterns
+
+- **StepResult everywhere**: Use [step_result.py](mdc:src/ultimate_discord_intelligence_bot/step_result.py) and never return raw data.
+- **Type hints (mandatory)**: Use full annotations, including return types, e.g. `def f(x: str) -> StepResult:`
+- **Tenant-aware design**: All operations accept `(tenant: str, workspace: str)` and respect isolation.
+
+### Code Standards
+
+- Python 3.10+
+- Line length 120
+- Double quotes for strings
+- Import order: stdlib → third-party → local
+- Public APIs have concise docstrings
+- Use UTC timestamps only
+
+### File References
+
+- Entry: [main.py](mdc:src/ultimate_discord_intelligence_bot/main.py)
+- Crew config: [crew.py](mdc:src/ultimate_discord_intelligence_bot/crew.py)
+- Settings: [settings.py](mdc:src/ultimate_discord_intelligence_bot/settings.py)
+- Agents: [config/agents.yaml](mdc:src/ultimate_discord_intelligence_bot/config/agents.yaml)
+- Tasks: [config/tasks.yaml](mdc:src/ultimate_discord_intelligence_bot/config/tasks.yaml)
+
+### Common Mistakes
+
+- Don’t return raw data → return `StepResult`
+- Don’t skip type hints → fully annotate APIs
+- Don’t ignore tenancy → pass `(tenant, workspace)`
+- Don’t skip tests → add coverage for new functionality
+
+---
+
+alwaysApply: true
+---
+
+# Development Essentials - Ultimate Discord Intelligence Bot
+
+## MANDATORY Quality Gates
+
+Before any code submission, ALL of these must pass:
+
+```bash
+make format     # Auto-fix style & imports  
+make lint       # Lint check (CI style)
+make type       # Static type check
+make test       # Run full test suite
+make docs       # Validate docs & config sync
+```
+
+## Core Architecture Patterns (REQUIRED)
+
+### 1. StepResult Pattern
+
+**ALL** tool functions must return [StepResult](mdc:src/ultimate_discord_intelligence_bot/step_result.py):
+
+```python
+from ultimate_discord_intelligence_bot.step_result import StepResult
+
+def my_function() -> StepResult:
+    try:
+        result = process_data()
+        return StepResult.ok(data=result)
+    except Exception as e:
+        return StepResult.fail(str(e))
+```
+
+### 2. Type Hints (MANDATORY)
+
+```python
+from __future__ import annotations
+
+def process_content(url: str, tenant: str, workspace: str) -> StepResult:
+    # All functions must have complete type annotations
+    pass
+```
+
+### 3. Tenant-Aware Design
+
+All operations must accept tenant context:
+
+```python
+def my_tool(content: str, tenant: str, workspace: str) -> StepResult:
+    # Use tenant isolation for data storage
+    pass
+```
+
+## Code Standards
+
+- **Python 3.10+** with modern features
+- **Line length: 120 characters**
+- **Double quotes for strings**
+- **Import organization**: stdlib → third-party → local
+- **Comprehensive docstrings** for public APIs
+- **UTC timestamps** only
+
+## File References
+
+- Main entry: [main.py](mdc:src/ultimate_discord_intelligence_bot/main.py)
+- Crew config: [crew.py](mdc:src/ultimate_discord_intelligence_bot/crew.py)
+- Settings: [settings.py](mdc:src/ultimate_discord_intelligence_bot/settings.py)
+- Agents: [config/agents.yaml](mdc:src/ultimate_discord_intelligence_bot/config/agents.yaml)
+- Tasks: [config/tasks.yaml](mdc:src/ultimate_discord_intelligence_bot/config/tasks.yaml)
+
+## Common Mistakes to Avoid
+
+❌ **DON'T:** Return raw data from tools
+✅ **DO:** Always return StepResult objects
+
+❌ **DON'T:** Skip type hints
+✅ **DO:** Include complete type annotations
+
+❌ **DON'T:** Ignore tenant context
+✅ **DO:** Thread tenant parameters through all operations
+
+❌ **DON'T:** Skip tests
+✅ **DO:** Write comprehensive test coverage

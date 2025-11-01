@@ -1,0 +1,405 @@
+---
+globs: "*.env*,config/*.yaml,src/ultimate_discord_intelligence_bot/settings.py,**/*config*.py"
+description: "Configuration management and environment setup patterns"
+---
+
+# Configuration and Environment Management
+
+## Environment Variables (REQUIRED)
+
+### Core Environment Variables
+
+Must be set in [.env](mdc:.env) file:
+
+```bash
+# Discord Bot
+DISCORD_BOT_TOKEN=your_discord_bot_token
+
+# AI Services (one required)
+OPENAI_API_KEY=your_openai_key
+# OR
+OPENROUTER_API_KEY=your_openrouter_key
+
+# Vector Database
+QDRANT_URL=http://localhost:6333
+# OR for in-memory testing
+QDRANT_URL=:memory:
+
+# Optional: Advanced Configuration
+LOG_LEVEL=INFO
+ENABLE_DEBUG_LOGGING=false
+MAX_WORKERS=4
+```
+
+### Feature Flags Pattern
+
+Use `ENABLE_<AREA>_<FEATURE>` pattern:
+
+```bash
+# Content ingestion features
+ENABLE_CONTENT_YOUTUBE=true
+ENABLE_CONTENT_TWITCH=true
+ENABLE_CONTENT_TIKTOK=false
+
+# Analysis features  
+ENABLE_ANALYSIS_SENTIMENT=true
+ENABLE_ANALYSIS_FACTCHECK=true
+ENABLE_ANALYSIS_CLUSTERING=false
+
+# Discord features
+ENABLE_DISCORD_SLASH_COMMANDS=true
+ENABLE_DISCORD_VOICE=false
+```
+
+### Multi-Environment Configuration
+
+```bash
+# Development
+ENV=development
+DEBUG=true
+QDRANT_URL=:memory:
+
+# Production
+ENV=production
+DEBUG=false
+QDRANT_URL=https://your-qdrant-cluster.com
+SENTRY_DSN=your_sentry_dsn
+```
+
+## Settings Management
+
+Central configuration in [settings.py](mdc:src/ultimate_discord_intelligence_bot/settings.py):
+
+```python
+from pydantic import BaseSettings, Field
+from typing import Optional
+
+class Settings(BaseSettings):
+    """Application settings with validation."""
+    
+    # Discord Configuration
+    discord_bot_token: str = Field(..., env="DISCORD_BOT_TOKEN")
+    discord_command_prefix: str = Field("!", env="DISCORD_COMMAND_PREFIX")
+    
+    # AI Service Configuration
+    openai_api_key: Optional[str] = Field(None, env="OPENAI_API_KEY")
+    openrouter_api_key: Optional[str] = Field(None, env="OPENROUTER_API_KEY")
+    
+    # Vector Database
+    qdrant_url: str = Field("http://localhost:6333", env="QDRANT_URL")
+    qdrant_collection_name: str = Field("content_vectors", env="QDRANT_COLLECTION")
+    
+    # Feature Flags
+    enable_content_youtube: bool = Field(True, env="ENABLE_CONTENT_YOUTUBE")
+    enable_analysis_factcheck: bool = Field(True, env="ENABLE_ANALYSIS_FACTCHECK")
+    
+    # Performance
+    max_workers: int = Field(4, env="MAX_WORKERS")
+    rate_limit_rpm: int = Field(60, env="RATE_LIMIT_RPM")
+    
+    class Config:
+        env_file = ".env"
+        env_file_encoding = 'utf-8'
+        case_sensitive = False
+    
+    def validate_api_keys(self) -> bool:
+        """Validate at least one AI service API key is provided."""
+        return bool(self.openai_api_key or self.openrouter_api_key)
+
+# Global settings instance
+settings = Settings()
+```
+
+## YAML Configuration Files
+
+### Agent Configuration
+
+[config/agents.yaml](mdc:src/ultimate_discord_intelligence_bot/config/agents.yaml):
+
+```yaml
+content_analyst:
+  role: "Content Analyst"
+  goal: "Analyze video content for key insights and debate points"
+  backstory: |
+    You are an expert content analyst with deep expertise in debate analysis,
+    political discourse, and fact-checking. You excel at identifying key arguments,
+    logical fallacies, and extracting actionable insights from multimedia content.
+  verbose: true
+  allow_delegation: false
+  max_retry_limit: 3
+  system_template: |
+    You are {role}.
+    Your goal is: {goal}
+    
+    Guidelines:
+    - Always maintain objectivity and neutrality
+    - Cite sources when making factual claims
+    - Identify potential biases in content
+    
+    Context: {context}
+```
+
+### Task Configuration  
+
+[config/tasks.yaml](mdc:src/ultimate_discord_intelligence_bot/config/tasks.yaml):
+
+```yaml
+content_analysis:
+  description: |
+    Analyze the downloaded content and extract:
+    1. Key debate points and arguments presented
+    2. Factual claims that need verification
+    3. Logical structure and reasoning patterns
+    4. Emotional appeals and rhetorical devices used
+    
+    Focus on objectivity and comprehensive coverage.
+  
+  expected_output: |
+    A comprehensive analysis report containing:
+    - Executive summary of main arguments
+    - List of factual claims for verification
+    - Assessment of argument strength and logic
+    - Identification of potential biases
+    - Key quotes and timestamps
+    
+    Format: Structured markdown with clear sections
+```
+
+## Configuration Validation
+
+### Startup Validation
+
+Implement comprehensive validation in startup scripts:
+
+```python
+def validate_configuration() -> bool:
+    """Validate all configuration before startup."""
+    
+    # Environment validation
+    if not check_environment_variables():
+        return False
+    
+    # Service connectivity validation
+    if not validate_external_services():
+        return False
+    
+    # Configuration file validation
+    if not validate_yaml_configs():
+        return False
+    
+    return True
+
+def check_environment_variables() -> bool:
+    """Check required environment variables."""
+    required_vars = {
+        "DISCORD_BOT_TOKEN": "Discord bot token",
+        "QDRANT_URL": "Qdrant vector database URL",
+    }
+    
+    # Check for at least one AI service key
+    ai_keys = ["OPENAI_API_KEY", "OPENROUTER_API_KEY"]
+    if not any(os.getenv(key) for key in ai_keys):
+        print(f"❌ Missing AI service key. Required: {' or '.join(ai_keys)}")
+        return False
+    
+    missing = []
+    for var, description in required_vars.items():
+        if not os.getenv(var):
+            missing.append(f"{var}: {description}")
+    
+    if missing:
+        print("❌ Missing required environment variables:")
+        for var in missing:
+            print(f"   - {var}")
+        return False
+    
+    return True
+```
+
+### Configuration Loading Patterns
+
+```python
+from pathlib import Path
+import yaml
+
+def load_config(config_path: str) -> dict:
+    """Load and validate YAML configuration."""
+    try:
+        with open(config_path, 'r') as f:
+            config = yaml.safe_load(f)
+        
+        # Validate required sections
+        if 'agents' not in config and config_path.endswith('agents.yaml'):
+            raise ValueError("agents.yaml must contain 'agents' section")
+        
+        return config
+        
+    except FileNotFoundError:
+        raise FileNotFoundError(f"Configuration file not found: {config_path}")
+    except yaml.YAMLError as e:
+        raise ValueError(f"Invalid YAML in {config_path}: {e}")
+
+# Usage in crew.py
+agents_config = load_config('config/agents.yaml')
+tasks_config = load_config('config/tasks.yaml')
+```
+
+## Docker Configuration
+
+### Environment File Handling
+
+```dockerfile
+# Copy environment file
+COPY .env.example .env
+
+# Validate configuration during build
+RUN python -c "from src.ultimate_discord_intelligence_bot.settings import settings; settings.validate_api_keys()"
+
+# Set runtime environment
+ENV PYTHONPATH=/app/src
+ENV LOG_LEVEL=INFO
+```
+
+### Docker Compose Configuration
+
+```yaml
+# docker-compose.yml
+version: '3.8'
+
+services:
+  discord-bot:
+    build: .
+    env_file:
+      - .env
+    environment:
+      - QDRANT_URL=http://qdrant:6333
+    depends_on:
+      - qdrant
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    ports:
+      - "6333:6333"
+    volumes:
+      - qdrant_data:/qdrant/storage
+
+volumes:
+  qdrant_data:
+```
+
+## Configuration Testing
+
+### Configuration Validation Tests
+
+```python
+def test_settings_validation():
+    """Test settings validation logic."""
+    # Test valid configuration
+    settings = Settings(
+        discord_bot_token="valid_token",
+        openai_api_key="valid_key",
+        qdrant_url="http://localhost:6333"
+    )
+    assert settings.validate_api_keys()
+
+def test_missing_api_key():
+    """Test validation with missing API key."""
+    with pytest.raises(ValueError):
+        Settings(
+            discord_bot_token="valid_token",
+            qdrant_url="http://localhost:6333"
+            # Missing AI service keys
+        )
+
+def test_yaml_config_loading():
+    """Test YAML configuration loading."""
+    config = load_config('config/agents.yaml')
+    assert 'content_analyst' in config
+    assert config['content_analyst']['role'] is not None
+```
+
+## Configuration Documentation
+
+### Environment Variables Documentation
+
+Update [docs/configuration.md](mdc:docs/configuration.md) whenever adding new configuration:
+
+```markdown
+## New Feature Configuration
+
+### Environment Variables
+
+- `ENABLE_NEW_FEATURE`: Enable the new feature (default: false)
+- `NEW_FEATURE_API_KEY`: API key for new feature service
+- `NEW_FEATURE_TIMEOUT`: Request timeout in seconds (default: 30)
+
+### YAML Configuration
+
+Add to `config/agents.yaml`:
+```yaml
+new_feature_agent:
+  role: "New Feature Agent"
+  # ... configuration
+```
+
+```
+
+## Security Considerations
+
+### Sensitive Data Handling
+```python
+# DON'T log sensitive configuration
+logger.info(f"API key: {api_key}")  # ❌
+
+# DO log safe configuration info
+logger.info(f"API key configured: {bool(api_key)}")  # ✅
+logger.info(f"Using endpoint: {endpoint}")  # ✅
+```
+
+### Environment File Security
+
+```bash
+# .env should never be committed
+echo ".env" >> .gitignore
+
+# Provide example file
+cp .env .env.example
+# Remove sensitive values from .env.example
+```
+
+## Configuration Migration
+
+### Version Migration Pattern
+
+```python
+def migrate_config(config: dict, from_version: str, to_version: str) -> dict:
+    """Migrate configuration between versions."""
+    
+    if from_version == "1.0" and to_version == "1.1":
+        # Migrate deprecated settings
+        if 'old_setting' in config:
+            config['new_setting'] = config.pop('old_setting')
+    
+    return config
+```
+
+### Deprecation Handling
+
+```python
+import warnings
+
+def load_deprecated_setting(config: dict) -> str:
+    """Handle deprecated configuration with warning."""
+    if 'deprecated_setting' in config:
+        warnings.warn(
+            "deprecated_setting will be removed in v2.0.0, use new_setting instead",
+            DeprecationWarning,
+            stacklevel=2
+        )
+        return config['deprecated_setting']
+    
+    return config.get('new_setting', 'default_value')
+```

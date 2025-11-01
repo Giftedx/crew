@@ -1,0 +1,9 @@
+---
+alwaysApply: false
+description: Comprehensive testing patterns and validation requirements
+---
+### Testing Validation
+
+- Ensure coverage for success and failure paths
+- Mock external services; avoid network in unit tests
+- Validate tenant isolation, StepResult usage, and error messages

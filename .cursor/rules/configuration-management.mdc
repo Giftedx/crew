@@ -1,0 +1,379 @@
+---
+alwaysApply: false
+description: Configuration management patterns and environment variable standards
+---
+# Configuration Management Standards
+
+## Environment Variables
+
+### Required Variables
+
+All applications must validate these core variables:
+
+```python
+REQUIRED_ENV_VARS = {
+    "DISCORD_BOT_TOKEN": "Discord bot authentication token",
+    "OPENAI_API_KEY": "OpenAI API key (or use OPENROUTER_API_KEY)",
+    "QDRANT_URL": "Qdrant vector database URL (use :memory: for testing)",
+}
+
+# Optional but recommended
+OPTIONAL_ENV_VARS = {
+    "LOG_LEVEL": "Logging level (DEBUG, INFO, WARNING, ERROR)",
+    "CREW_MAX_ITERATIONS": "Maximum crew execution iterations",
+    "ENABLE_TELEMETRY": "Enable observability telemetry",
+    "DISCORD_COMMAND_PREFIX": "Bot command prefix (default: !)",
+}
+```
+
+### Feature Flag Pattern
+
+All feature flags follow the `ENABLE_<AREA>_<FEATURE>` pattern:
+
+```python
+# Examples
+ENABLE_DEBATE_ANALYSIS=true      # Enable debate analysis features
+ENABLE_FACT_CHECKING=true        # Enable fact checking
+ENABLE_MEMORY_STORAGE=true       # Enable vector memory storage
+ENABLE_DISCORD_SLASH_COMMANDS=true  # Enable slash commands
+ENABLE_CONTENT_MODERATION=true   # Enable content filtering
+```
+
+Usage in code:
+
+```python
+from ultimate_discord_intelligence_bot.core.flags import enabled
+
+if enabled("DEBATE_ANALYSIS"):
+    # Feature-specific code
+    result = analyze_debate(content)
+else:
+    # Fallback behavior
+    result = basic_analysis(content)
+```
+
+## Settings Management
+
+### Central Settings Class
+
+Use [settings.py](mdc:src/ultimate_discord_intelligence_bot/settings.py) pattern:
+
+```python
+from pydantic import BaseSettings, Field, validator
+from typing import Optional
+
+class Settings(BaseSettings):
+    """Application settings with validation and defaults."""
+    
+    # Discord Configuration
+    discord_bot_token: str = Field(..., env="DISCORD_BOT_TOKEN")
+    discord_command_prefix: str = Field("!", env="DISCORD_COMMAND_PREFIX")
+    
+    # API Keys (at least one required)
+    openai_api_key: Optional[str] = Field(None, env="OPENAI_API_KEY")
+    openrouter_api_key: Optional[str] = Field(None, env="OPENROUTER_API_KEY")
+    
+    # Service URLs
+    qdrant_url: str = Field(":memory:", env="QDRANT_URL")
+    qdrant_api_key: Optional[str] = Field(None, env="QDRANT_API_KEY")
+    
+    # Feature Flags
+    enable_debate_analysis: bool = Field(True, env="ENABLE_DEBATE_ANALYSIS")
+    enable_fact_checking: bool = Field(True, env="ENABLE_FACT_CHECKING")
+    enable_memory_storage: bool = Field(True, env="ENABLE_MEMORY_STORAGE")
+    
+    # Performance Settings
+    crew_max_iterations: int = Field(10, env="CREW_MAX_ITERATIONS")
+    crew_max_rpm: int = Field(100, env="CREW_MAX_RPM")
+    
+    # Logging
+    log_level: str = Field("INFO", env="LOG_LEVEL")
+    
+    @validator("openrouter_api_key", always=True)
+    def validate_api_keys(cls, v, values):
+        """Ensure at least one LLM API key is provided."""
+        if not v and not values.get("openai_api_key"):
+            raise ValueError("Either OPENAI_API_KEY or OPENROUTER_API_KEY must be set")
+        return v
+    
+    @validator("log_level")
+    def validate_log_level(cls, v):
+        """Validate log level is valid."""
+        valid_levels = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
+        if v.upper() not in valid_levels:
+            raise ValueError(f"Invalid log level: {v}")
+        return v.upper()
+    
+    class Config:
+        env_file = ".env"
+        env_file_encoding = "utf-8"
+        case_sensitive = False
+
+# Global settings instance
+settings = Settings()
+```
+
+### Environment-Specific Configs
+
+Support multiple environments:
+
+```bash
+# Development
+.env.development
+
+# Testing
+.env.test
+
+# Production
+.env.production
+```
+
+Load based on environment:
+
+```python
+import os
+from dotenv import load_dotenv
+
+env = os.getenv("ENVIRONMENT", "development")
+load_dotenv(f".env.{env}")
+```
+
+## Configuration Documentation
+
+### Auto-generate Documentation
+
+Keep [docs/configuration.md](mdc:docs/configuration.md) in sync:
+
+```python
+def generate_config_docs():
+    """Generate configuration documentation from settings."""
+    docs = ["# Configuration Reference\n"]
+    
+    for field_name, field in Settings.__fields__.items():
+        env_var = field.field_info.extra.get("env", field_name.upper())
+        default = field.default
+        required = field.required
+        description = field.field_info.description or ""
+        
+        docs.append(f"## {env_var}")
+        docs.append(f"- **Required**: {'Yes' if required else 'No'}")
+        docs.append(f"- **Default**: `{default}`")
+        docs.append(f"- **Description**: {description}")
+        docs.append("")
+    
+    return "\n".join(docs)
+```
+
+## YAML Configuration
+
+### Agent Configuration
+
+Structure for [config/agents.yaml](mdc:src/ultimate_discord_intelligence_bot/config/agents.yaml):
+
+```yaml
+debate_analyst:
+  role: "Expert Debate Analyst"
+  goal: "Analyze debates for key arguments and rhetorical strategies"
+  backstory: "You are an expert in debate analysis..."
+  verbose: true
+  allow_delegation: false
+  tools:
+    - content_ingestion
+    - debate_analysis
+    - memory_search
+```
+
+### Task Configuration
+
+Structure for [config/tasks.yaml](mdc:src/ultimate_discord_intelligence_bot/config/tasks.yaml):
+
+```yaml
+analyze_debate:
+  description: "Analyze the debate content..."
+  expected_output: "Comprehensive debate analysis"
+  agent: debate_analyst
+  dependencies:
+    - ingest_content
+  context:
+    - "{debate_url}"
+    - "{analysis_depth}"
+```
+
+## Secret Management
+
+### Development Secrets
+
+```bash
+# .env file (never commit)
+DISCORD_BOT_TOKEN=MTk...
+OPENAI_API_KEY=sk-...
+DATABASE_PASSWORD=secret123
+```
+
+### Production Secrets
+
+Use environment variables or secret management services:
+
+```python
+import os
+from aws_secretsmanager import get_secret
+
+def get_production_secret(key: str) -> str:
+    """Get secret from AWS Secrets Manager in production."""
+    if os.getenv("ENVIRONMENT") == "production":
+        return get_secret(f"udib/{key}")
+    return os.getenv(key)
+```
+
+## Configuration Validation
+
+### Startup Validation
+
+```python
+def validate_configuration():
+    """Validate all configuration on startup."""
+    errors = []
+    
+    # Check required variables
+    for var, description in REQUIRED_ENV_VARS.items():
+        if not os.getenv(var):
+            errors.append(f"Missing {var}: {description}")
+    
+    # Validate feature flag format
+    for key, value in os.environ.items():
+        if key.startswith("ENABLE_"):
+            if value.lower() not in ["true", "false", "1", "0"]:
+                errors.append(f"Invalid feature flag {key}={value}")
+    
+    # Validate URLs
+    qdrant_url = os.getenv("QDRANT_URL", "")
+    if qdrant_url and qdrant_url != ":memory:":
+        if not qdrant_url.startswith(("http://", "https://")):
+            errors.append(f"Invalid Qdrant URL format: {qdrant_url}")
+    
+    if errors:
+        print("❌ Configuration errors:")
+        for error in errors:
+            print(f"   - {error}")
+        return False
+    
+    return True
+```
+
+### Runtime Configuration Updates
+
+```python
+class DynamicConfig:
+    """Support runtime configuration updates."""
+    
+    def __init__(self):
+        self._config = {}
+        self._callbacks = {}
+    
+    def set(self, key: str, value: Any):
+        """Update configuration value."""
+        old_value = self._config.get(key)
+        self._config[key] = value
+        
+        # Notify callbacks
+        if key in self._callbacks:
+            for callback in self._callbacks[key]:
+                callback(old_value, value)
+    
+    def on_change(self, key: str, callback: Callable):
+        """Register callback for configuration changes."""
+        if key not in self._callbacks:
+            self._callbacks[key] = []
+        self._callbacks[key].append(callback)
+```
+
+## Configuration Best Practices
+
+### 1. Use Descriptive Names
+
+```bash
+# BAD
+KEY=sk-abc123
+URL=http://localhost:6333
+
+# GOOD
+OPENAI_API_KEY=sk-abc123
+QDRANT_URL=http://localhost:6333
+```
+
+### 2. Group Related Settings
+
+```bash
+# Discord settings
+DISCORD_BOT_TOKEN=...
+DISCORD_COMMAND_PREFIX=!
+DISCORD_MAX_MESSAGE_LENGTH=2000
+
+# Qdrant settings
+QDRANT_URL=http://localhost:6333
+QDRANT_API_KEY=...
+QDRANT_COLLECTION_NAME=debates
+```
+
+### 3. Document Defaults
+
+```python
+class Settings(BaseSettings):
+    # Maximum time to wait for LLM response (seconds)
+    llm_timeout: int = Field(30, env="LLM_TIMEOUT")
+    
+    # Number of retry attempts for failed requests
+    max_retries: int = Field(3, env="MAX_RETRIES")
+```
+
+### 4. Validate Early
+
+```python
+def main():
+    """Application entry point."""
+    try:
+        # Validate configuration first
+        settings = Settings()
+    except ValidationError as e:
+        print(f"❌ Configuration error: {e}")
+        sys.exit(1)
+    
+    # Continue with validated settings
+    run_application(settings)
+```
+
+## Testing Configuration
+
+### Mock Configuration for Tests
+
+```python
+import pytest
+from unittest.mock import patch
+
+@pytest.fixture
+def test_settings():
+    """Provide test configuration."""
+    with patch.dict(os.environ, {
+        "DISCORD_BOT_TOKEN": "test-token",
+        "OPENAI_API_KEY": "test-key",
+        "QDRANT_URL": ":memory:",
+        "LOG_LEVEL": "DEBUG",
+    }):
+        yield Settings()
+```
+
+### Configuration Test Cases
+
+```python
+def test_required_variables():
+    """Test that required variables are validated."""
+    with patch.dict(os.environ, {}, clear=True):
+        with pytest.raises(ValidationError):
+            Settings()
+
+def test_feature_flags():
+    """Test feature flag parsing."""
+    with patch.dict(os.environ, {"ENABLE_DEBATE_ANALYSIS": "true"}):
+        settings = Settings()
+        assert settings.enable_debate_analysis is True
+```

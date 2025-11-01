@@ -1,0 +1,29 @@
+---
+alwaysApply: false
+description: Quick reference for common development patterns and commands
+---
+### Quick Reference
+
+Commands:
+
+```bash
+make format && make lint && make type && make test && make docs
+pytest -q
+pre-commit install --install-hooks
+```
+
+---
+
+description: "Quick reference for common development patterns and commands"
+---
+
+### Commands
+
+```bash
+make format && make lint && make type && make test && make docs
+```
+
+### Tips
+
+- Return `StepResult` from tools; include tenant/workspace.
+- Prefer services under `services/` and follow `tools/_base.py` for tools.

@@ -1,0 +1,25 @@
+---
+alwaysApply: false
+description: Tenant-aware design and namespace isolation
+---
+### Tenancy Requirements
+
+- Use [tenancy/context.py](mdc:src/ultimate_discord_intelligence_bot/tenancy/context.py)
+- All operations accept `(tenant: str, workspace: str)`
+- Enforce namespace isolation in services and storage
+
+---
+
+description: "Tenant-aware design and namespace isolation"
+---
+
+### Tenancy Requirements
+
+- Always accept `(tenant: str, workspace: str)` in tools/services.
+- Use [tenancy/context.py](mdc:src/ultimate_discord_intelligence_bot/tenancy/context.py) for context and namespacing.
+- Separate data storage by tenant/workspace to prevent leakage.
+
+### Good Practices
+
+- Thread tenant context through async tasks and background jobs.
+- Include tenant/workspace in cache keys, metrics, and logs.

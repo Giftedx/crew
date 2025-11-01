@@ -1,0 +1,25 @@
+---
+alwaysApply: false
+description: Observability patterns—tracing decorators, metrics labels, and tool instrumentation
+---
+### Instrumentation
+
+- Wrap tools/services with tracing decorators
+- Use consistent metric names and labels (tenant, workspace)
+- Record retries, backoff, and rate-limit events
+
+---
+
+description: "Observability patterns: tracing decorators, metrics labels, and tool instrumentation"
+---
+
+### Tracing & Metrics
+
+- Use `obs.tracing.trace_call("span")` decorator for spans.
+- Use `obs.metrics` with `tenant`/`workspace` labels via `label_ctx()`.
+
+### Tool Instrumentation (required)
+
+- All StepResult-returning tools must increment `tool_runs_total{outcome=success|error|skipped}`.
+- Add `tool_run_seconds` histogram only for heavy tools (network/CPU >250ms).
+- Express skips as `StepResult.ok(skipped=True, reason=...)` (legacy `skip()` deprecated).

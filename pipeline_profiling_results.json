@@ -1,0 +1,51 @@
+{
+  "import_profiling": {
+    "individual_imports": {
+      "AudioTranscriptionTool": 1.7040750719897915,
+      "MultiPlatformDownloadTool": 0.03295946802245453,
+      "UnifiedMemoryTool": 5.177855260000797,
+      "ContentQualityAssessmentTool": 0.0021127639920450747,
+      "FactCheckTool": 0.0012100610183551908
+    },
+    "total_import_time": 6.918212625023443,
+    "successful_imports": 5
+  },
+  "instantiation_profiling": {
+    "individual_instantiations": {
+      "AudioTranscriptionTool": 0.04171857199980877,
+      "MultiPlatformDownloadTool": 0.0007104279939085245,
+      "UnifiedMemoryTool": 0.0001706930052023381,
+      "ContentQualityAssessmentTool": 1.7700076568871737e-06,
+      "FactCheckTool": 2.007000148296356e-06
+    },
+    "total_instantiation_time": 0.04260347000672482,
+    "successful_instantiations": 5
+  },
+  "crew_profiling": {
+    "error": "cannot import name 'create_crew' from 'ultimate_discord_intelligence_bot.crew' (/home/crew/src/ultimate_discord_intelligence_bot/crew.py)"
+  },
+  "pipeline_simulation": {
+    "pipeline_steps": {
+      "Content Acquisition": 0.07754261397994627,
+      "Audio Transcription": 0.5156054884791268,
+      "Content Analysis": 0.3345030200295297,
+      "Fact Checking": 0.17596465892897148,
+      "Memory Storage": 0.061210226722008744,
+      "Discord Publishing": 0.06677147964277527
+    },
+    "total_pipeline_time": 1.2315974877823581,
+    "step_count": 6
+  },
+  "consolidation_benefits": {
+    "legacy_tools": 20,
+    "current_tools": 5,
+    "tool_reduction_percentage": 75.0,
+    "estimated_legacy_import_time": 0.2,
+    "estimated_current_import_time": 0.05,
+    "import_time_savings": 0.15000000000000002,
+    "estimated_legacy_instantiation_time": 1.0,
+    "estimated_current_instantiation_time": 0.25,
+    "instantiation_time_savings": 0.75,
+    "total_time_savings": 0.9
+  }
+}

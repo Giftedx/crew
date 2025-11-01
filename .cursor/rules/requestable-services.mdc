@@ -1,0 +1,27 @@
+---
+alwaysApply: false
+description: Core services and utilities patterns
+---
+### Core Services
+
+- Prompting: [services/prompt_engine.py](mdc:src/ultimate_discord_intelligence_bot/services/prompt_engine.py)
+- Memory: [services/memory_service.py](mdc:src/ultimate_discord_intelligence_bot/services/memory_service.py)
+- LLM routing: [services/openrouter_service.py](mdc:src/ultimate_discord_intelligence_bot/services/openrouter_service.py)
+
+- Prefer existing services over new ones; inject dependencies for testability
+
+---
+
+description: "Core services and utilities patterns"
+---
+
+### Services
+
+- Prompting: [services/prompt_engine.py](mdc:src/ultimate_discord_intelligence_bot/services/prompt_engine.py)
+- Memory: [services/memory_service.py](mdc:src/ultimate_discord_intelligence_bot/services/memory_service.py)
+- OpenRouter/LLM: [services/openrouter_service.py](mdc:src/ultimate_discord_intelligence_bot/services/openrouter_service.py)
+
+### Patterns
+
+- Prefer composition over new service creation; extend via adapters.
+- Keep service interfaces typed and narrow; inject dependencies explicitly.

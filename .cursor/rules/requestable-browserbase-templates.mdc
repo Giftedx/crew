@@ -1,0 +1,37 @@
+---
+alwaysApply: false
+description: Browserbase templates and quickstart patterns for common use cases
+---
+### Browserbase Templates
+
+- Templates reference: [templates](https://github.com/browserbase/templates)
+- CrewAI integration: [crewai-tutorial](https://github.com/browserbase/crewai-tutorial)
+
+### Template Usage
+
+- Leverage existing templates for common patterns
+- Customize templates for specific use cases
+- Implement proper error handling and logging
+- Follow StepResult pattern for all operations
+
+### Common Patterns
+
+- Web scraping and data extraction
+- Form filling and submission
+- E-commerce and shopping automation
+- Social media interaction
+- Content management and publishing
+
+### Customization Guidelines
+
+- Adapt templates to fit CrewAI agent requirements
+- Implement tenant-aware modifications
+- Add proper error handling and retry logic
+- Include comprehensive logging and monitoring
+
+### Best Practices
+
+- Test templates thoroughly before deployment
+- Implement proper resource cleanup
+- Monitor performance and resource usage
+- Document customizations and modifications

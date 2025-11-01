@@ -1,0 +1,20 @@
+---
+alwaysApply: false
+description: Deployment and production configuration patterns
+---
+### Deployment Patterns
+
+- Use environment-based configuration; no secrets in code
+- Provide health checks and graceful shutdown
+- Monitor with logs/metrics/traces in production
+
+---
+
+description: "Deployment and production configuration patterns"
+---
+
+### Deployment
+
+- Validate startup configuration before serving traffic.
+- Externalize secrets; rotate regularly.
+- Enable observability and feature flags per environment.

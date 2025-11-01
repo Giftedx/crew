@@ -1,0 +1,35 @@
+---
+alwaysApply: false
+description: Browserbase SDK Python integration patterns and best practices
+---
+### Browserbase SDK
+
+- SDK reference: [sdk-python](https://github.com/browserbase/sdk-python)
+- Computer Use demo: [browserbase-computer-use](https://github.com/browserbase/browserbase-computer-use)
+
+### Authentication and Setup
+
+- Configure API keys and project IDs
+- Implement proper credential management
+- Handle authentication errors gracefully
+
+### Session Lifecycle
+
+- Create and manage browser sessions
+- Implement session pooling and reuse
+- Handle session cleanup and resource management
+- Monitor session health and performance
+
+### Error Handling
+
+- Implement comprehensive error handling
+- Use StepResult pattern for all SDK operations
+- Log errors with appropriate context
+- Provide fallback strategies for failures
+
+### Integration Patterns
+
+- Wrap SDK calls in service classes
+- Implement retry logic with exponential backoff
+- Use dependency injection for testability
+- Follow tenant-aware design principles

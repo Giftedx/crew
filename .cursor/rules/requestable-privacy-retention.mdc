@@ -1,0 +1,24 @@
+---
+alwaysApply: false
+description: Privacy filters, PII flags, retention sweeps
+---
+### Privacy & Retention
+
+- Filter PII before storage/output
+- Tag content with PII flags and tenant context
+- Schedule retention sweeps per policy
+
+---
+
+description: "Privacy filters, PII flags, retention sweeps"
+---
+
+### Privacy Flags
+
+- `enable_pii_detection` and `enable_pii_redaction` control detection/masking; RL `strict` arm forces both on.
+- Pass per-call overrides via `context` when needed.
+
+### Retention
+
+- Respect `max_retention_days_by_ns` from `config/policy.yaml`.
+- Sweeper deletes outdated provenance entries; support dry runs.

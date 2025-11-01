@@ -1,0 +1,20 @@
+---
+alwaysApply: false
+description: Deprecations registry, dashboard, and CI enforcement
+---
+### Deprecations Policy
+
+- Announce with timeline and alternatives
+- Emit `DeprecationWarning` with removal version
+- Track in docs and ensure CI checks deadlines
+
+---
+
+description: "Deprecations registry, dashboard, and CI enforcement"
+---
+
+### Policy
+
+- Track deprecated flags/surfaces in `config/deprecations.yaml` with `remove_after` dates.
+- Run `scripts/deprecation_dashboard.py` to monitor health; fail CI below threshold.
+- Use migration scripts (e.g., migrate_http_retry_flag.py) before deadlines.

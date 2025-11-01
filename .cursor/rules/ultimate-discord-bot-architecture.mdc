@@ -1,0 +1,71 @@
+---
+alwaysApply: true
+description: "Ultimate Discord Intelligence Bot core architecture patterns and conventions"
+---
+
+# Ultimate Discord Intelligence Bot - Core Architecture
+
+## Project Structure
+
+The main entry point is [main.py](mdc:src/ultimate_discord_intelligence_bot/main.py), which orchestrates the CrewAI-based system. The core crew configuration is in [crew.py](mdc:src/ultimate_discord_intelligence_bot/crew.py) with agent/task definitions in [config/agents.yaml](mdc:src/ultimate_discord_intelligence_bot/config/agents.yaml) and [config/tasks.yaml](mdc:src/ultimate_discord_intelligence_bot/config/tasks.yaml).
+
+## Key Architecture Patterns
+
+### StepResult Pattern (REQUIRED)
+All tools must return [StepResult](mdc:src/ultimate_discord_intelligence_bot/step_result.py) objects for consistent error handling:
+
+```python
+from ultimate_discord_intelligence_bot.step_result import StepResult
+
+def my_tool_function() -> StepResult:
+    try:
+        result = process_data()
+        return StepResult.ok(data=result)
+    except Exception as e:
+        return StepResult.fail(str(e))
+```
+
+### Tool Development
+- Inherit from [BaseTool](mdc:src/ultimate_discord_intelligence_bot/tools/_base.py) with proper typing
+- Use type hints with Generic[R_co] for return types
+- Follow the established tool patterns in [tools/](mdc:src/ultimate_discord_intelligence_bot/tools/)
+
+### Pipeline Architecture
+Content flows through [pipeline.py](mdc:src/ultimate_discord_intelligence_bot/pipeline.py):
+```
+Multi-Platform → Download → Transcription → Analysis → Discord
+```
+
+### Services Integration
+- **PromptEngine**: [services/prompt_engine.py](mdc:src/ultimate_discord_intelligence_bot/services/prompt_engine.py)
+- **MemoryService**: [services/memory_service.py](mdc:src/ultimate_discord_intelligence_bot/services/memory_service.py) 
+- **OpenRouterService**: [services/openrouter_service.py](mdc:src/ultimate_discord_intelligence_bot/services/openrouter_service.py)
+
+### Tenancy Requirements
+- All operations must be tenant-aware using [tenancy/context.py](mdc:src/ultimate_discord_intelligence_bot/tenancy/context.py)
+- Pass `(tenant, workspace)` parameters explicitly
+- Use namespace isolation for data storage
+
+### Configuration Management
+- Global settings in [settings.py](mdc:src/ultimate_discord_intelligence_bot/settings.py)
+- Feature flags use `ENABLE_<AREA>_<FEATURE>` pattern
+- Environment variables documented in startup validation
+
+## CrewAI Integration
+
+### Agent Definition
+- Agents defined in [config/agents.yaml](mdc:src/ultimate_discord_intelligence_bot/config/agents.yaml)
+- Tasks defined in [config/tasks.yaml](mdc:src/ultimate_discord_intelligence_bot/config/tasks.yaml)
+- Tools explicitly registered to agents in [crew.py](mdc:src/ultimate_discord_intelligence_bot/crew.py)
+
+### Modern CrewAI Features
+The crew uses: planning=True, memory=True, cache=True, max_rpm=10 for optimal performance.
+
+## Mandatory Patterns
+
+1. **Use StepResult for all tool returns**
+2. **Include type hints on all new functions**
+3. **Follow tenant-aware design patterns**
+4. **Use existing services rather than creating new ones**
+5. **Add tests for all new functionality**
+6. **Document configuration changes in [docs/configuration.md](mdc:docs/configuration.md)**

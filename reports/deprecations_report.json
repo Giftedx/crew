@@ -1,0 +1,51 @@
+{
+  "base_exit_code": 0,
+  "date": "2025-09-21",
+  "fail_on_upcoming": null,
+  "results": [
+    {
+      "days_until_removal": 101,
+      "name": "ENABLE_ANALYSIS_HTTP_RETRY",
+      "occurrence_count": 1,
+      "past_deadline": false,
+      "remove_after": "2025-12-31",
+      "replacement": "ENABLE_HTTP_RETRY",
+      "stage": "deprecated",
+      "violation": false
+    },
+    {
+      "days_until_removal": 101,
+      "name": "services.learning_engine.LearningEngine",
+      "occurrence_count": 28,
+      "past_deadline": false,
+      "remove_after": "2025-12-31",
+      "replacement": "core.learning_engine.LearningEngine",
+      "stage": "deprecated",
+      "violation": false
+    }
+  ],
+  "upcoming": [
+    {
+      "days_until_removal": 101,
+      "name": "ENABLE_ANALYSIS_HTTP_RETRY",
+      "occurrence_count": 1,
+      "past_deadline": false,
+      "remove_after": "2025-12-31",
+      "replacement": "ENABLE_HTTP_RETRY",
+      "stage": "deprecated",
+      "violation": false
+    },
+    {
+      "days_until_removal": 101,
+      "name": "services.learning_engine.LearningEngine",
+      "occurrence_count": 28,
+      "past_deadline": false,
+      "remove_after": "2025-12-31",
+      "replacement": "core.learning_engine.LearningEngine",
+      "stage": "deprecated",
+      "violation": false
+    }
+  ],
+  "upcoming_triggered": false,
+  "upcoming_window_days": 120
+}
