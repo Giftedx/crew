@@ -1,0 +1,336 @@
+---
+description: "API design patterns for REST endpoints, response formats, and HTTP handling"
+alwaysApply: false
+---
+
+# API Design Patterns - Ultimate Discord Intelligence Bot
+
+## REST API Standards
+
+### Endpoint Design
+
+- Use `/api/v1/` prefix for all API endpoints
+- Follow RESTful resource naming: `/api/v1/resources/{id}`
+- Use kebab-case for multi-word resources: `/api/v1/content-items/`
+- Include tenant/workspace in path: `/api/v1/{tenant}/{workspace}/resources/`
+
+### HTTP Methods
+
+```python
+# GET - Retrieve resources
+@app.route('/api/v1/<tenant>/<workspace>/content', methods=['GET'])
+def get_content(tenant, workspace):
+
+# POST - Create new resources
+@app.route('/api/v1/<tenant>/<workspace>/content', methods=['POST'])
+def create_content(tenant, workspace):
+
+# PUT - Update existing resources (full update)
+@app.route('/api/v1/<tenant>/<workspace>/content/<content_id>', methods=['PUT'])
+def update_content(tenant, workspace, content_id):
+
+# PATCH - Partial updates
+@app.route('/api/v1/<tenant>/<workspace>/content/<content_id>', methods=['PATCH'])
+def patch_content(tenant, workspace, content_id):
+
+# DELETE - Remove resources
+@app.route('/api/v1/<tenant>/<workspace>/content/<content_id>', methods=['DELETE'])
+def delete_content(tenant, workspace, content_id):
+```
+
+## Response Patterns
+
+### Standard Response Format
+
+```python
+from flask import jsonify
+from ultimate_discord_intelligence_bot.step_result import StepResult
+
+def api_response(step_result: StepResult, http_status: int = 200):
+    """Convert StepResult to HTTP response."""
+    response_data = {
+        "success": step_result.success,
+        "timestamp": get_utc_now(),
+        "tenant": step_result.metadata.get("tenant", ""),
+        "workspace": step_result.metadata.get("workspace", "")
+    }
+
+    if step_result.success:
+        response_data["data"] = step_result.data
+        if step_result.skipped:
+            response_data["skipped"] = True
+            response_data["reason"] = step_result.reason
+            return jsonify(response_data), 202  # Accepted
+    else:
+        response_data["error"] = step_result.error
+        response_data["error_code"] = step_result.error_code or "UNKNOWN_ERROR"
+        # Map error types to HTTP status codes
+        status_map = {
+            "VALIDATION_ERROR": 400,
+            "NOT_FOUND": 404,
+            "UNAUTHORIZED": 401,
+            "FORBIDDEN": 403,
+            "RATE_LIMITED": 429,
+            "SERVICE_UNAVAILABLE": 503
+        }
+        http_status = status_map.get(step_result.error_code, 500)
+
+    return jsonify(response_data), http_status
+
+@app.route('/api/v1/<tenant>/<workspace>/analyze')
+def analyze_content(tenant, workspace):
+    """Example API endpoint with proper response handling."""
+    try:
+        # Business logic here
+        result = analyze_service.process(content, tenant, workspace)
+
+        if not result.success:
+            return api_response(result, 400)
+
+        return api_response(result)
+
+    except Exception as e:
+        error_result = StepResult.fail(f"Analysis failed: {str(e)}")
+        return api_response(error_result, 500)
+```
+
+### Pagination Pattern
+
+```python
+def paginated_response(items: List[dict], page: int, per_page: int, total: int):
+    """Standard pagination response format."""
+    return {
+        "data": items,
+        "pagination": {
+            "page": page,
+            "per_page": per_page,
+            "total": total,
+            "pages": (total + per_page - 1) // per_page,
+            "has_next": page * per_page < total,
+            "has_prev": page > 1
+        }
+    }
+```
+
+## Error Handling
+
+### Error Response Structure
+
+```python
+{
+    "success": false,
+    "error": "Human-readable error message",
+    "error_code": "MACHINE_READABLE_CODE",
+    "timestamp": "2025-01-01T12:00:00Z",
+    "tenant": "tenant_id",
+    "workspace": "workspace_id",
+    "details": {
+        "field": "validation_error_details"  # Optional
+    }
+}
+```
+
+### Common Error Codes
+
+- `VALIDATION_ERROR` - Invalid input parameters
+- `NOT_FOUND` - Resource doesn't exist
+- `UNAUTHORIZED` - Missing/invalid authentication
+- `FORBIDDEN` - Access denied for this resource
+- `RATE_LIMITED` - Too many requests
+- `SERVICE_UNAVAILABLE` - Service temporarily down
+- `INVALID_FORMAT` - Request format is incorrect
+
+## Request Validation
+
+### Input Validation Pattern
+
+```python
+from marshmallow import Schema, fields, validate, ValidationError
+
+class ContentAnalysisRequest(Schema):
+    """Request schema for content analysis."""
+    content = fields.Str(required=True, validate=validate.Length(min=1, max=10000))
+    analysis_type = fields.Str(required=True, validate=validate.OneOf(["sentiment", "topics", "summary"]))
+    options = fields.Dict(keys=fields.Str(), values=fields.Raw(), missing=dict)
+
+def validate_request(request_data: dict, schema_class: type) -> dict:
+    """Validate request data against schema."""
+    try:
+        schema = schema_class()
+        return schema.load(request_data)
+    except ValidationError as e:
+        error_result = StepResult.fail("Validation failed")
+        error_result.error_code = "VALIDATION_ERROR"
+        # Add field-specific errors to metadata
+        error_result.metadata["validation_errors"] = e.messages
+        raise error_result
+
+@app.route('/api/v1/<tenant>/<workspace>/analyze', methods=['POST'])
+def analyze_content_endpoint(tenant, workspace):
+    """Content analysis API endpoint."""
+    try:
+        # Validate request
+        request_data = validate_request(request.json, ContentAnalysisRequest)
+
+        # Process request
+        result = analyze_service.process(
+            content=request_data["content"],
+            analysis_type=request_data["analysis_type"],
+            options=request_data["options"],
+            tenant=tenant,
+            workspace=workspace
+        )
+
+        return api_response(result)
+
+    except StepResult as e:
+        return api_response(e, 400)
+    except Exception as e:
+        error_result = StepResult.fail(f"Unexpected error: {str(e)}")
+        return api_response(error_result, 500)
+```
+
+## Authentication & Authorization
+
+### Discord Bot Authentication
+
+```python
+from functools import wraps
+from flask import request
+import os
+
+def require_discord_auth(f):
+    """Decorator for Discord bot authentication."""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        auth_header = request.headers.get('Authorization', '')
+
+        if not auth_header.startswith('Bot '):
+            error_result = StepResult.fail("Missing or invalid authorization header")
+            error_result.error_code = "UNAUTHORIZED"
+            return api_response(error_result, 401)
+
+        token = auth_header.split('Bot ', 1)[1]
+        expected_token = os.getenv('DISCORD_BOT_TOKEN', '')
+
+        if not expected_token or token != expected_token:
+            error_result = StepResult.fail("Invalid bot token")
+            error_result.error_code = "UNAUTHORIZED"
+            return api_response(error_result, 401)
+
+        return f(*args, **kwargs)
+    return decorated_function
+
+@app.route('/api/v1/webhook/discord', methods=['POST'])
+@require_discord_auth
+def discord_webhook():
+    """Handle Discord webhooks (bot authentication required)."""
+    # Process webhook with authenticated bot context
+    pass
+```
+
+### Tenant Authorization
+
+```python
+def require_tenant_access(f):
+    """Decorator for tenant/workspace authorization."""
+    @wraps(f)
+    def decorated_function(tenant, workspace, *args, **kwargs):
+        # Validate tenant/workspace format and permissions
+        if not validate_tenant_workspace(tenant, workspace):
+            error_result = StepResult.fail("Invalid tenant or workspace")
+            error_result.error_code = "FORBIDDEN"
+            return api_response(error_result, 403)
+
+        # Check if user/bot has access to this tenant/workspace
+        if not has_tenant_access(tenant, workspace):
+            error_result = StepResult.fail("Access denied to tenant/workspace")
+            error_result.error_code = "FORBIDDEN"
+            return api_response(error_result, 403)
+
+        return f(tenant, workspace, *args, **kwargs)
+    return decorated_function
+```
+
+## Rate Limiting
+
+### API Rate Limiting Pattern
+
+```python
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+
+# Configure rate limiting
+limiter = Limiter(
+    key_func=get_remote_address,
+    default_limits=["200 per day", "50 per hour"]
+)
+
+@app.route('/api/v1/<tenant>/<workspace>/analyze')
+@limiter.limit("10 per minute")
+@require_tenant_access
+def analyze_content(tenant, workspace):
+    """Rate-limited analysis endpoint."""
+    pass
+```
+
+## Health Check Endpoints
+
+### Standard Health Check
+
+```python
+@app.route('/health')
+def health_check():
+    """Application health check endpoint."""
+    try:
+        # Check critical dependencies
+        db_status = check_database_health()
+        memory_status = check_memory_service_health()
+        discord_status = check_discord_connection()
+
+        health_data = {
+            "status": "healthy" if all([db_status, memory_status, discord_status]) else "unhealthy",
+            "timestamp": get_utc_now(),
+            "services": {
+                "database": db_status,
+                "memory": memory_status,
+                "discord": discord_status
+            }
+        }
+
+        status_code = 200 if health_data["status"] == "healthy" else 503
+        return jsonify(health_data), status_code
+
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "error": str(e),
+            "timestamp": get_utc_now()
+        }), 500
+
+@app.route('/api/v1/health/detailed')
+def detailed_health_check():
+    """Detailed health check for monitoring systems."""
+    # Include more detailed metrics for monitoring dashboards
+    pass
+```
+
+## CORS Configuration
+
+### Cross-Origin Resource Sharing
+
+```python
+from flask_cors import CORS
+
+def configure_cors(app):
+    """Configure CORS for API endpoints."""
+    CORS(app, resources={
+        r"/api/*": {
+            "origins": app.config.get("ALLOWED_ORIGINS", ["https://yourdomain.com"]),
+            "methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+            "allow_headers": ["Content-Type", "Authorization"],
+            "expose_headers": ["X-RateLimit-Limit", "X-RateLimit-Remaining"],
+            "max_age": 86400  # Cache preflight for 24 hours
+        }
+    })
+```

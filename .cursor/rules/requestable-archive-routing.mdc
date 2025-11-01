@@ -1,0 +1,20 @@
+---
+alwaysApply: false
+description: Discord CDN archiver routing and defaults
+---
+### Archive Routing
+
+- Define default routing for CDN/archives with tenant isolation
+- Prefer immutable storage paths with content hashes
+- Document defaults alongside environment config
+
+---
+
+description: "Discord CDN archiver routing and defaults"
+---
+
+### Archive Routes
+
+- Configure `config/archive_routes.yaml` with defaults and per-type visibility routes.
+- Support per-tenant overrides for channel IDs.
+- Apply retries and chunking per defaults.

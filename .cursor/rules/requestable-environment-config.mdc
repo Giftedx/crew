@@ -1,0 +1,5 @@
+---
+alwaysApply: false
+description: Environment configuration patterns and validation (alias)
+---
+See [requestable-configuration.mdc](mdc:.cursor/rules/requestable-configuration.mdc) and [settings.py](mdc:src/ultimate_discord_intelligence_bot/settings.py).

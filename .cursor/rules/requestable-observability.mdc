@@ -1,0 +1,20 @@
+---
+alwaysApply: false
+description: Monitoring, observability, and logging patterns
+---
+### Observability
+
+- Emit structured logs; avoid PII
+- Add metrics for key operations (success/failure, latency)
+- Add tracing for cross-service flows
+
+---
+
+description: "Monitoring, observability, and logging patterns"
+---
+
+### Observability
+
+- Use structured logs with tenant/workspace context.
+- Emit metrics around pipeline stages and tool invocations.
+- Include StepResult states in spans/annotations for quick triage.

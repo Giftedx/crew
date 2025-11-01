@@ -1,0 +1,26 @@
+---
+alwaysApply: false
+description: Prompt compression pipeline and metrics
+---
+### Prompt Compression
+
+- Compress context with deterministic heuristics; measure token savings
+- Log compression ratio and impact on quality
+- Fall back safely on failure
+
+---
+
+description: "Prompt compression pipeline and metrics"
+---
+
+### Enablement
+
+- Controlled by `ENABLE_PROMPT_COMPRESSION` env presence (truthy values). Env presence overrides cached settings.
+
+### Stages
+
+- Collapse blank lines, deduplicate consecutive lines, squeeze intra-line spaces (preserve code blocks), optional long-section summarisation.
+
+### Metrics
+
+- Emit `prompt_compression_ratio` histogram labeled with tenant/workspace and method.

@@ -1,0 +1,517 @@
+---
+globs: "**/privacy/**,**/security/**,**/policy/**"
+description: "Security and privacy patterns for data protection and content moderation"
+---
+
+## Security and Privacy Patterns
+
+### Privacy Protection
+
+### PII Detection and Filtering
+
+```python
+from core.privacy import PrivacyFilter, PIIDetector
+
+privacy_filter = PrivacyFilter()
+pii_detector = PIIDetector()
+
+# Detect PII in user content
+pii_scan = pii_detector.scan_text(
+    text="My email is user@example.com and phone is 555-1234",
+    context={"source": "discord", "user_id": "12345"}
+)
+
+if pii_scan.has_pii:
+    # Filter out PII
+    clean_text, report = privacy_filter.filter_text(
+        text=original_text,
+        metadata={"user_id": "12345", "channel_id": "67890"}
+    )
+```
+
+### Data Anonymization
+
+```python
+from core.privacy import DataAnonymizer
+
+anonymizer = DataAnonymizer()
+
+# Anonymize user data before storage
+anonymized_data = anonymizer.anonymize(
+    data={
+        "user_id": "12345",
+        "email": "user@example.com",
+        "discord_username": "user#1234"
+    },
+    fields_to_anonymize=["user_id", "email"],
+    preserve_fields=["discord_username"]  # Keep for display
+)
+
+# Generate consistent anonymized IDs
+anon_id = anonymizer.generate_consistent_id("user@example.com")
+```
+
+### Content Sanitization
+
+```python
+from core.privacy import ContentSanitizer
+
+sanitizer = ContentSanitizer()
+
+# Sanitize user-generated content
+sanitized_content = sanitizer.sanitize(
+    content=user_input,
+    remove_patterns=["phone_numbers", "emails", "ssn"],
+    replace_with="[REDACTED]"
+)
+
+# Validate content safety
+safety_report = sanitizer.validate_safety(
+    content=user_input,
+    check_for=["malicious_links", "spam_patterns"]
+)
+```
+
+## Security Policies
+
+### Content Moderation
+
+```python
+from core.security import ContentModerator
+
+moderator = ContentModerator()
+
+# Moderate user content
+moderation_result = moderator.moderate(
+    content="User message content",
+    context={
+        "user_id": "12345",
+        "channel_id": "67890",
+        "guild_id": "11111"
+    }
+)
+
+if moderation_result.action == "block":
+    return StepResult.fail("Content violates community guidelines")
+elif moderation_result.action == "flag":
+    # Log for review
+    await log_for_review(moderation_result)
+```
+
+### Rate Limiting
+
+```python
+from core.security import RateLimiter
+
+# Per-user rate limiting
+user_rate_limiter = RateLimiter(
+    calls_per_minute=10,
+    calls_per_hour=100,
+    identifier_func=lambda ctx: ctx.user_id
+)
+
+# Per-guild rate limiting
+guild_rate_limiter = RateLimiter(
+    calls_per_minute=50,
+    calls_per_hour=500,
+    identifier_func=lambda ctx: ctx.guild_id
+)
+
+# Check rate limits
+if not user_rate_limiter.can_proceed(context):
+    return StepResult.fail("Rate limit exceeded")
+```
+
+### Access Control
+
+```python
+from core.security import AccessController
+
+access_controller = AccessController()
+
+# Check user permissions
+if not access_controller.has_permission(
+    user_id="12345",
+    permission="analyze_content",
+    resource="guild:67890"
+):
+    return StepResult.fail("Insufficient permissions")
+
+# Check feature access
+if not access_controller.can_access_feature(
+    user_id="12345",
+    feature="premium_analysis",
+    tenant="default"
+):
+    return fallback_analysis()
+```
+
+## Input Validation
+
+### URL Validation
+
+```python
+from core.security import URLValidator
+
+url_validator = URLValidator()
+
+# Validate and sanitize URLs
+validation_result = url_validator.validate(
+    url=user_provided_url,
+    allowed_domains=["youtube.com", "tiktok.com", "twitter.com"],
+    blocked_domains=["malicious-site.com"]
+)
+
+if not validation_result.is_valid:
+    return StepResult.fail(f"Invalid URL: {validation_result.reason}")
+
+safe_url = validation_result.sanitized_url
+```
+
+### Content Type Validation
+
+```python
+from core.security import ContentTypeValidator
+
+content_validator = ContentTypeValidator()
+
+# Validate content types
+if not content_validator.is_allowed_content_type(
+    content_type="video/mp4",
+    allowed_types=["video/mp4", "video/webm", "audio/mp3"]
+):
+    return StepResult.fail("Unsupported content type")
+```
+
+### Size Limits
+
+```python
+from core.security import SizeLimiter
+
+size_limiter = SizeLimiter()
+
+# Check content size limits
+if not size_limiter.is_within_limits(
+    content_size=file_size,
+    max_size_mb=100,
+    user_tier="free"
+):
+    return StepResult.fail("Content too large for your tier")
+```
+
+## Authentication and Authorization
+
+### Token Validation
+
+```python
+from core.security import TokenValidator
+
+token_validator = TokenValidator()
+
+# Validate API tokens
+validation_result = token_validator.validate(
+    token=api_token,
+    required_scopes=["read", "write"],
+    check_expiry=True
+)
+
+if not validation_result.is_valid:
+    return StepResult.fail("Invalid or expired token")
+```
+
+### User Context Validation
+
+```python
+from core.security import UserContextValidator
+
+context_validator = UserContextValidator()
+
+# Validate user context
+if not context_validator.is_valid_context(
+    user_id=user_id,
+    guild_id=guild_id,
+    channel_id=channel_id
+):
+    return StepResult.fail("Invalid user context")
+```
+
+## Data Encryption
+
+### Sensitive Data Encryption
+
+```python
+from core.security import DataEncryptor
+
+encryptor = DataEncryptor()
+
+# Encrypt sensitive data before storage
+encrypted_data = encryptor.encrypt(
+    data={"api_key": "secret_key"},
+    key_id="user_12345"
+)
+
+# Decrypt when needed
+decrypted_data = encryptor.decrypt(
+    encrypted_data=encrypted_data,
+    key_id="user_12345"
+)
+```
+
+### Field-Level Encryption
+
+```python
+# Encrypt specific fields
+encrypted_record = {
+    "id": record["id"],
+    "name": record["name"],
+    "email": encryptor.encrypt_field(record["email"]),
+    "phone": encryptor.encrypt_field(record["phone"])
+}
+```
+
+## Audit Logging
+
+### Security Event Logging
+
+```python
+from core.security import SecurityAuditLogger
+
+audit_logger = SecurityAuditLogger()
+
+# Log security events
+await audit_logger.log_event(
+    event_type="authentication_failure",
+    user_id="12345",
+    details={
+        "ip_address": "192.168.1.1",
+        "user_agent": "DiscordBot/1.0",
+        "reason": "invalid_token"
+    }
+)
+
+# Log data access
+await audit_logger.log_data_access(
+    user_id="12345",
+    resource_type="analysis_result",
+    resource_id="analysis_67890",
+    action="read"
+)
+```
+
+### Privacy Event Logging
+
+```python
+from core.privacy import PrivacyAuditLogger
+
+privacy_logger = PrivacyAuditLogger()
+
+# Log PII detection
+await privacy_logger.log_pii_detection(
+    user_id="12345",
+    pii_types=["email", "phone"],
+    content_length=1000,
+    action_taken="filtered"
+)
+
+# Log data anonymization
+await privacy_logger.log_anonymization(
+    original_id="user@example.com",
+    anonymized_id="anon_abc123",
+    fields_anonymized=["email", "user_id"]
+)
+```
+
+## Content Security
+
+### Malicious Content Detection
+
+```python
+from core.security import MaliciousContentDetector
+
+malware_detector = MaliciousContentDetector()
+
+# Scan for malicious content
+scan_result = malware_detector.scan(
+    content=user_content,
+    scan_types=["malware", "phishing", "spam"]
+)
+
+if scan_result.is_malicious:
+    return StepResult.fail("Malicious content detected")
+```
+
+### Link Safety Validation
+
+```python
+from core.security import LinkSafetyValidator
+
+link_validator = LinkSafetyValidator()
+
+# Validate link safety
+safety_result = link_validator.validate(
+    url="https://example.com/link",
+    check_reputation=True,
+    check_malware=True
+)
+
+if not safety_result.is_safe:
+    return StepResult.fail("Unsafe link detected")
+```
+
+## Compliance and Governance
+
+### Data Retention Policies
+
+```python
+from core.privacy import DataRetentionManager
+
+retention_manager = DataRetentionManager()
+
+# Apply retention policies
+await retention_manager.apply_retention_policy(
+    data_type="user_analysis",
+    retention_days=90,
+    tenant="default"
+)
+
+# Check if data should be deleted
+if retention_manager.should_delete(
+    data_id="analysis_123",
+    created_date=datetime.now() - timedelta(days=100)
+):
+    await delete_analysis_data("analysis_123")
+```
+
+### GDPR Compliance
+
+```python
+from core.privacy import GDPRCompliance
+
+gdpr = GDPRCompliance()
+
+# Handle data deletion requests
+async def handle_data_deletion_request(user_id: str):
+    # Delete all user data
+    await gdpr.delete_user_data(user_id)
+    
+    # Log deletion
+    await audit_logger.log_event(
+        event_type="gdpr_deletion",
+        user_id=user_id,
+        details={"deletion_date": datetime.utcnow()}
+    )
+
+# Handle data export requests
+async def handle_data_export_request(user_id: str):
+    user_data = await gdpr.export_user_data(user_id)
+    return StepResult.ok(data=user_data)
+```
+
+## Security Monitoring
+
+### Threat Detection
+
+```python
+from core.security import ThreatDetector
+
+threat_detector = ThreatDetector()
+
+# Monitor for suspicious activity
+threat_analysis = threat_detector.analyze_activity(
+    user_id="12345",
+    activity_log=recent_activities,
+    time_window=timedelta(hours=1)
+)
+
+if threat_analysis.risk_level == "high":
+    await alert_manager.send_alert(
+        level="CRITICAL",
+        message="High-risk activity detected",
+        context=threat_analysis.details
+    )
+```
+
+### Anomaly Detection
+
+```python
+from core.security import AnomalyDetector
+
+anomaly_detector = AnomalyDetector()
+
+# Detect anomalous patterns
+anomaly_score = anomaly_detector.detect_anomaly(
+    current_behavior=user_behavior,
+    historical_baseline=baseline_behavior
+)
+
+if anomaly_score > 0.8:
+    await trigger_security_review(user_id)
+```
+
+## Testing Security
+
+### Security Test Patterns
+
+```python
+import pytest
+from core.security import SecurityTestHelper
+
+@pytest.fixture
+def security_helper():
+    return SecurityTestHelper()
+
+def test_pii_detection(security_helper):
+    # Test PII detection
+    result = security_helper.detect_pii("My email is test@example.com")
+    assert result.has_pii
+    assert "email" in result.pii_types
+
+def test_rate_limiting(security_helper):
+    # Test rate limiting
+    for _ in range(15):  # Exceed limit
+        result = security_helper.check_rate_limit("user123")
+    
+    assert not result.can_proceed
+```
+
+### Privacy Test Patterns
+
+```python
+def test_data_anonymization(security_helper):
+    # Test data anonymization
+    original = {"email": "test@example.com", "name": "John Doe"}
+    anonymized = security_helper.anonymize_data(original)
+    
+    assert anonymized["email"] != original["email"]
+    assert anonymized["name"] == original["name"]  # Preserved field
+```
+
+## Best Practices
+
+### Security by Design
+
+- Validate all inputs at boundaries
+- Use principle of least privilege
+- Encrypt sensitive data at rest and in transit
+- Implement defense in depth
+
+### Privacy by Design
+
+- Minimize data collection
+- Use data anonymization when possible
+- Implement data retention policies
+- Provide user control over their data
+
+### Monitoring and Response
+
+- Log all security events
+- Monitor for anomalies
+- Have incident response procedures
+- Regular security audits
+
+### Compliance
+
+- Follow GDPR requirements
+- Implement data subject rights
+- Maintain audit trails
+- Regular compliance reviews

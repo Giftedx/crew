@@ -1,0 +1,9 @@
+---
+alwaysApply: false
+description: Startup and validation patterns for application initialization and deployment
+---
+### Startup Validation
+
+- Validate required settings; fail fast with clear errors
+- Health checks for critical dependencies
+- Emit startup logs with safe context

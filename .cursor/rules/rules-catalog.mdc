@@ -1,0 +1,112 @@
+---
+alwaysApply: true
+description: Catalog of available Cursor rules in this workspace
+---
+## Rules Catalog
+
+Use these rules to navigate and develop within this workspace. Core rules below are always applied. Requestable rules can be fetched on demand.
+
+### Core Always-Applied Rules
+
+- **Core Architecture**: [core-architecture.mdc](mdc:.cursor/rules/core-architecture.mdc)
+- **Development Workflow**: [development-workflow.mdc](mdc:.cursor/rules/development-workflow.mdc)
+- **Project Structure**: [project-structure.mdc](mdc:.cursor/rules/project-structure.mdc)
+- **Quality Gates**: [quality-gates.mdc](mdc:.cursor/rules/quality-gates.mdc)
+- **Python Standards**: [python-standards.mdc](mdc:.cursor/rules/python-standards.mdc)
+- **Error Handling**: [error-handling.mdc](mdc:.cursor/rules/error-handling.mdc)
+- **Tenancy**: [tenancy.mdc](mdc:.cursor/rules/tenancy.mdc)
+- **Configuration Management**: [configuration-management.mdc](mdc:.cursor/rules/configuration-management.mdc)
+
+### Requestable Rules Index
+
+Fetch these rule details on demand via your tooling by name. Descriptions are provided to guide selection.
+
+- **api-design-patterns**: API design patterns for REST endpoints, response formats, and HTTP handling
+- **async-concurrency-patterns**: Async programming, concurrency patterns, and parallel processing for the Discord bot
+- **configuration-env**: Configuration management and environment setup patterns
+- **configuration-management**: Configuration management patterns and environment variable standards
+- **content-ingestion**: Multi-platform content ingestion patterns and downloaders
+- **core-services**: Core services and utilities patterns for the Ultimate Discord Intelligence Bot
+- **crewai-agents**: CrewAI agent and task configuration patterns
+- **crewai-development**: CrewAI agent, task, and tool development patterns
+- **database-schema-migration-patterns**: Database schema design, migration patterns, and data access patterns
+- **deployment-production**: Deployment and production configuration patterns for the Ultimate Discord Intelligence Bot
+- **development-workflow**: Development workflow standards and quality requirements
+- **discord-integration**: Discord bot integration patterns and command handling
+- **environment-config**: Environment configuration patterns and validation for the Ultimate Discord Intelligence Bot
+- **error-handling**: Error handling patterns and StepResult usage standards
+- **monitoring-observability**: Monitoring, observability, and logging patterns for production deployments
+- **observability-monitoring**: Observability, monitoring, and logging patterns for production deployments
+- **performance-optimization**: Performance optimization patterns and best practices for the Ultimate Discord Intelligence Bot
+- **project-structure**: Project structure and organization overview for the Ultimate Discord Intelligence Bot
+- **python-standards**: Python coding standards and conventions for the Ultimate Discord Intelligence Bot
+- **quick-reference**: Quick reference guide for common development patterns and commands
+- **reinforcement-learning**: Reinforcement learning patterns and bandit policies for model routing and optimization
+- **requestable-agents-prompts**: Agents and prompts: Claude agents, chat modes, and prompts
+- **requestable-archive-routing**: Discord CDN archiver routing and defaults
+- **requestable-browserbase-integration**: Browserbase integration patterns for CrewAI agents and CLI workflows
+- **requestable-browserbase-sdk**: Browserbase SDK Python integration patterns and best practices
+- **requestable-browserbase-templates**: Browserbase templates and quickstart patterns for common use cases
+- **requestable-crewai-browserbase**: CrewAI and Browserbase integration patterns for agent workflows
+- **requestable-caching**: Caching standards for StructuredLLMService and global cache
+- **requestable-playwright-python**: Playwright Python quickstart patterns for browser automation
+- **requestable-ci-workflows**: CI workflows mapping to quality gates and guards
+- **requestable-configuration**: Configuration management and environment setup patterns
+- **requestable-dependencies**: Dependencies & extras: pyproject and requirements.lock guidance
+- **requestable-deployment**: Deployment and production configuration patterns
+- **requestable-deprecations**: Deprecations registry, dashboard, and CI enforcement
+- **requestable-discord-integration**: Discord bot integration patterns and command handling
+- **requestable-discord-testing**: Discord bot manual test commands and troubleshooting
+- **requestable-docs-conventions**: Documentation conventions, front-matter, taxonomy, and migration index policy
+- **requestable-feature-flags**: Feature flags registry and deprecations policy
+- **requestable-getting-started**: Setup CLI and quick start commands
+- **requestable-observability**: Monitoring, observability, and logging patterns
+- **requestable-observability-instrumentation**: Observability patterns: tracing decorators, metrics labels, and tool instrumentation
+- **requestable-pipeline**: Pipeline architecture: Multi-Platform → Download → Transcription → Analysis → Discord
+- **requestable-privacy-retention**: Privacy filters, PII flags, retention sweeps
+- **requestable-prompt-compression**: Prompt compression pipeline and metrics
+- **requestable-python-standards**: Python coding standards and conventions
+- **requestable-quick-reference**: Quick reference for common development patterns and commands
+- **requestable-rate-limiting**: Rate limiting shim, metrics endpoint fallback, and testing guidance
+- **requestable-reinforcement-learning**: Reinforcement learning patterns and bandit policies for model routing
+- **requestable-retries**: HTTP retry policy, precedence, and observability
+- **requestable-scheduler-poller**: Scheduler/poller intervals, priorities, and limits
+- **requestable-security**: Security and privacy patterns for data protection and moderation
+- **requestable-semantic-cache**: Semantic cache prefetch flow, metrics, and configuration
+- **requestable-stagehand**: Stagehand Python integration for browser automation and element interaction
+- **requestable-services**: Core services and utilities patterns
+- **requestable-tenancy**: Tenant-aware design and namespace isolation
+- **requestable-testing**: Testing standards and workflow
+- **requestable-tools-and-errors**: Error handling patterns and StepResult usage standards
+- **requestable-vector-memory**: Vector storage and memory management with Qdrant
+- **requestable-workflow**: Development workflow standards and quality requirements
+- **rules-catalog**: Catalog of available Cursor rules in this workspace
+- **security-privacy**: Security and privacy patterns for data protection and content moderation
+- **startup-validation**: Startup and validation patterns for application initialization and deployment
+- **testing-validation**: Comprehensive testing patterns and validation requirements
+- **testing-workflow**: Testing standards and workflow requirements
+- **vector-memory**: Vector storage and memory management patterns with Qdrant
+
+Tip: Core rules link directly to their files. Requestable rules can be expanded into dedicated files as needed.
+
+---
+
+description: "Catalog of available Cursor rules in this workspace"
+---
+
+### Rules Catalog
+
+- **Master Guides (always)**: `master-architecture-guide.mdc`, `comprehensive-development-workflow.mdc`
+- **Core (always)**: `core-architecture.mdc`, `development-essentials.mdc`, `workspace-index.mdc`
+- **CI**: `requestable-ci-workflows.mdc`
+- **Dependencies**: `requestable-dependencies.mdc`
+- **Docs**: `requestable-docs-conventions.mdc`, `requestable-quick-reference.mdc`
+- **Flags & Deprecations**: `requestable-feature-flags.mdc`, `requestable-deprecations.mdc`
+- **Pipeline & Services**: `requestable-pipeline.mdc`, `requestable-services.mdc`
+- **Tenancy & Security**: `requestable-tenancy.mdc`, `requestable-security.mdc`, `requestable-privacy-retention.mdc`
+- **Observability**: `requestable-observability.mdc`, `requestable-observability-instrumentation.mdc`, `requestable-rate-limiting.mdc`, `requestable-retries.mdc`
+- **Caching & Memory**: `requestable-caching.mdc`, `requestable-semantic-cache.mdc`, `requestable-vector-memory.mdc`
+- **Prompting**: `requestable-prompt-compression.mdc`
+- **Discord**: `requestable-discord-integration.mdc`, `requestable-discord-testing.mdc`, `requestable-archive-routing.mdc`
+- **Testing & Workflow**: `requestable-testing.mdc`, `requestable-workflow.mdc`, `requestable-deployment.mdc`, `requestable-getting-started.mdc`, `requestable-python-standards.mdc`, `requestable-configuration.mdc`
+- **Agents & Prompts**: `requestable-agents-prompts.mdc`

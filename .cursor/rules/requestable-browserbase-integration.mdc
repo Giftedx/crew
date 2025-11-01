@@ -1,0 +1,36 @@
+---
+alwaysApply: false
+description: Browserbase integration patterns for CrewAI agents and CLI workflows
+---
+### Browserbase Integration Patterns
+
+- End-to-end integration: [crewai-tutorial](https://github.com/browserbase/crewai-tutorial)
+- Computer Use demo: [browserbase-computer-use](https://github.com/browserbase/browserbase-computer-use)
+- Playwright quickstart: [quickstart-playwright-python](https://github.com/browserbase/quickstart-playwright-python)
+- SDK reference: [sdk-python](https://github.com/browserbase/sdk-python)
+- Templates: [templates](https://github.com/browserbase/templates)
+- Stagehand Python: [stagehand-python](https://github.com/browserbase/stagehand-python)
+
+### Integration Guidelines
+
+- Use Browserbase for browser automation within CrewAI agents
+- Follow StepResult pattern for all browser operations
+- Implement tenant-aware session management
+- Handle errors gracefully with retry logic
+- Respect rate limits and resource constraints
+
+### Environment Setup
+
+```bash
+BROWSERBASE_API_KEY=your-browserbase-api-key
+BROWSERBASE_PROJECT_ID=your-browserbase-project-id
+OPENAI_API_KEY=your-openai-api-key
+OPENAI_MODEL_NAME=gpt-4-turbo
+```
+
+### Agent Integration
+
+- Create browser tools that inherit from [BaseTool](mdc:src/ultimate_discord_intelligence_bot/tools/_base.py)
+- Return StepResult with browser operation outcomes
+- Include session management and cleanup
+- Log browser actions for debugging and monitoring

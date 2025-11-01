@@ -1,0 +1,36 @@
+---
+alwaysApply: false
+description: CrewAI and Browserbase integration patterns for agent workflows
+---
+### CrewAI + Browserbase Integration
+
+- Tutorial reference: [crewai-tutorial](https://github.com/browserbase/crewai-tutorial)
+- Computer Use demo: [browserbase-computer-use](https://github.com/browserbase/browserbase-computer-use)
+
+### Agent Design Patterns
+
+- Create browser automation agents with specific roles
+- Implement agent collaboration for complex workflows
+- Use proper task delegation and result aggregation
+- Follow StepResult pattern for all agent operations
+
+### Tool Integration
+
+- Develop browser tools that inherit from [BaseTool](mdc:src/ultimate_discord_intelligence_bot/tools/_base.py)
+- Implement proper error handling and logging
+- Use tenant-aware design for multi-tenant support
+- Include comprehensive input validation
+
+### Workflow Orchestration
+
+- Design agent workflows for browser automation tasks
+- Implement proper error recovery and retry logic
+- Use agent memory for context preservation
+- Monitor agent performance and resource usage
+
+### Best Practices
+
+- Keep agents focused on specific tasks
+- Implement proper resource cleanup
+- Use appropriate timeouts and delays
+- Monitor and log all browser operations

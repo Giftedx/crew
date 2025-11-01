@@ -1,0 +1,40 @@
+---
+alwaysApply: false
+description: Documentation conventions, front-matter, taxonomy, and migration index policy
+---
+### Docs Conventions
+
+- Use concise, skimmable sections; add examples where helpful
+- Keep [docs/configuration.md](mdc:docs/configuration.md) and tools reference updated
+- Use internal links with `mdc:` paths; avoid bare URLs
+- Maintain front-matter in rules with `alwaysApply` or `description`
+
+---
+
+description: "Documentation conventions, front-matter, taxonomy, and migration index policy"
+globs: "*.md"
+---
+
+### Docs Conventions (required)
+
+- All docs live under `docs/` in approved categories (strategy, architecture, operations, testing, security, agents, history).
+- Every doc MUST include front-matter:
+
+```yaml
+---
+title: Title Case
+origin: <source_or_reason>
+status: draft|migrated|canonical|deprecated|archived
+last_moved: YYYY-MM-DD
+---
+```
+
+- Single H1 that matches `title`. Lint: MD025, MD022/MD031, MD010, MD029, MD036, MD040, MD047.
+
+### Migration & Index
+
+- When moving/renaming: update `last_moved`, amend `docs/ROOT_DOCS_INDEX.md`, fix inbound links, and deprecate or tombstone old paths.
+
+### Naming
+
+- UPPER_SNAKE_CASE for conceptual/specs; lower-kebab-case for procedural guides.

@@ -1,0 +1,23 @@
+---
+alwaysApply: false
+description: Scheduler/poller intervals, priorities, and limits
+---
+### Scheduler & Poller
+
+- Configure intervals and jitter to avoid thundering herds
+- Prioritize tasks per tenant/workspace and queue depth
+- Enforce global and per-tenant limits
+
+---
+
+description: "Scheduler/poller intervals, priorities, and limits"
+---
+
+### Poller
+
+- Configure `config/poller.yaml` intervals per source; backoff and priority lists.
+- Respect resource limits: concurrency, queue size, timeouts.
+
+### Metrics
+
+- Expose scheduler counters for enqueued/processed/errors; use for pacing validation.

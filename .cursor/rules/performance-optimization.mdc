@@ -1,0 +1,160 @@
+---
+description: "Performance optimization patterns and best practices for the Ultimate Discord Intelligence Bot"
+---
+# Performance Optimization Patterns
+
+## Async/Await Patterns
+
+### Required Async Patterns
+
+```python
+# Always use async for I/O operations
+async def fetch_content(url: str, tenant: str, workspace: str) -> StepResult:
+    async with httpx.AsyncClient() as client:
+        response = await client.get(url)
+        return StepResult.ok(data=response.json())
+
+# Use asyncio.gather() for concurrent operations
+async def process_multiple_items(items: list[str]) -> StepResult:
+    tasks = [process_item(item) for item in items]
+    results = await asyncio.gather(*tasks, return_exceptions=True)
+    return StepResult.ok(data=results)
+```
+
+## Memory Management
+
+### Efficient Data Processing
+
+```python
+# Use generators for large datasets
+def process_large_dataset(data: Iterator[dict]) -> Iterator[dict]:
+    for item in data:
+        yield transform_item(item)
+
+# Implement proper cleanup for resources
+class ResourceManager:
+    async def __aenter__(self):
+        self.resource = await acquire_resource()
+        return self.resource
+    
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        await self.resource.cleanup()
+```
+
+## Caching Strategies
+
+### Multi-Level Caching
+
+- **L1 Cache**: In-memory LRU cache for hot data (use `@lru_cache` decorator)
+- **L2 Cache**: Redis for shared cache across instances
+- **L3 Cache**: Semantic cache for LLM responses via [SemanticCacheService](mdc:src/ultimate_discord_intelligence_bot/services/semantic_cache_service.py)
+
+```python
+from functools import lru_cache
+from ultimate_discord_intelligence_bot.services.semantic_cache_service import SemanticCacheService
+
+@lru_cache(maxsize=256)
+def expensive_computation(input_data: str) -> str:
+    # Cached computation
+    return process_data(input_data)
+```
+
+## Database Optimization
+
+### Query Optimization
+
+```python
+# Use connection pooling
+async def optimized_query(tenant: str, workspace: str) -> StepResult:
+    async with get_db_pool().acquire() as conn:
+        # Use prepared statements
+        result = await conn.fetch(
+            "SELECT * FROM content WHERE tenant = $1 AND workspace = $2", 
+            tenant, workspace
+        )
+        return StepResult.ok(data=result)
+
+# Batch operations where possible
+async def batch_insert(items: list[dict]) -> StepResult:
+    async with get_db_pool().acquire() as conn:
+        await conn.executemany(
+            "INSERT INTO items (tenant, data) VALUES ($1, $2)",
+            [(item['tenant'], item['data']) for item in items]
+        )
+        return StepResult.ok()
+```
+
+## LLM Request Optimization
+
+### Request Batching and Routing
+
+```python
+# Use OpenRouter service with request batching
+from ultimate_discord_intelligence_bot.services.openrouter_service import OpenRouterService
+
+async def batch_llm_requests(prompts: list[str]) -> StepResult:
+    service = OpenRouterService()
+    
+    # Group by model and batch
+    batched_requests = group_by_model(prompts)
+    results = await asyncio.gather(*[
+        service.batch_complete(batch) for batch in batched_requests
+    ])
+    
+    return StepResult.ok(data=flatten_results(results))
+```
+
+## Monitoring Performance
+
+### Required Metrics
+
+- **Response times**: Use `tool_run_seconds` histogram for operations >250ms
+- **Memory usage**: Monitor peak memory per operation
+- **Cache hit rates**: Track L1/L2/semantic cache effectiveness
+- **Concurrent operations**: Monitor async task queue depths
+
+### Performance Thresholds
+
+- Tool execution: < 2 seconds for interactive commands
+- LLM requests: < 10 seconds with proper timeout handling  
+- Database queries: < 500ms with connection pooling
+- Memory usage: < 1GB per worker process
+
+## File I/O Optimization
+
+### Streaming and Chunked Processing
+
+```python
+import aiofiles
+
+async def process_large_file(filepath: Path) -> StepResult:
+    async with aiofiles.open(filepath, 'r') as file:
+        async for chunk in read_chunks(file, chunk_size=8192):
+            await process_chunk(chunk)
+    return StepResult.ok()
+
+# Use temporary files for large intermediate data
+async def process_with_temp_file(data: bytes) -> StepResult:
+    async with aiofiles.tempfile.NamedTemporaryFile() as temp_file:
+        await temp_file.write(data)
+        result = await process_file(temp_file.name)
+        return StepResult.ok(data=result)
+```
+
+## Common Performance Anti-Patterns
+
+❌ **DON'T:**
+
+- Block async operations with synchronous I/O
+- Load entire large files into memory
+- Make sequential API calls that could be parallel
+- Skip connection pooling for databases
+- Ignore caching for repeated computations
+
+✅ **DO:**
+
+- Use async/await for all I/O operations
+- Stream large data processing
+- Batch and parallelize API calls
+- Implement proper connection management
+- Cache at appropriate levels with TTL

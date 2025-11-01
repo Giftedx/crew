@@ -1,0 +1,20 @@
+---
+alwaysApply: false
+description: Discord bot integration patterns and command handling
+---
+### Discord Integration
+
+- Validate inputs and handle errors gracefully in commands
+- Rate-limit and provide user feedback; avoid blocking operations
+- Keep messages privacy-safe; redact PII
+
+---
+
+description: "Discord bot integration patterns and command handling"
+---
+
+### Discord Integration
+
+- Follow command handling patterns defined in the bot's command router.
+- Ensure tenant context is available when dispatching commands.
+- Rate-limit and handle retries gracefully; return `StepResult` to the pipeline.

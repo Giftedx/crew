@@ -1,0 +1,393 @@
+---
+globs: "tests/**/*.py,**/test_*.py,**/*_test.py"
+description: "Comprehensive testing patterns and validation requirements"
+---
+
+# Testing and Validation Standards
+
+## Test Requirements (MANDATORY)
+
+ALL new code must include:
+
+- ✅ Unit tests for each function
+- ✅ Integration tests for workflows
+- ✅ Error path testing
+- ✅ Performance validation
+
+## Test Structure
+
+Follow the patterns in [conftest.py](mdc:tests/conftest.py):
+
+```python
+import pytest
+from unittest.mock import Mock, patch
+from ultimate_discord_intelligence_bot.step_result import StepResult
+
+@pytest.fixture
+def sample_content():
+    """Provide sample content for testing."""
+    return "Sample video content for testing"
+
+@pytest.fixture
+def mock_openai_client():
+    """Mock OpenAI client for testing."""
+    mock_client = Mock()
+    mock_client.chat.completions.create.return_value = Mock(
+        choices=[Mock(message=Mock(content="Test response"))]
+    )
+    return mock_client
+
+class TestMyTool:
+    """Test suite for MyTool."""
+
+    def test_successful_execution(self, sample_content):
+        """Test successful tool execution."""
+        tool = MyTool()
+        result = tool._run(sample_content, "test_tenant", "test_workspace")
+        
+        assert result.status == "success"
+        assert result.data is not None
+
+    def test_error_handling_missing_input(self):
+        """Test error handling for missing input."""
+        tool = MyTool()
+        result = tool._run("", "test_tenant", "test_workspace")
+        
+        assert result.status == "bad_request"
+        assert "missing" in result.error
+
+    @patch('requests.get')
+    def test_network_error_handling(self, mock_get, sample_content):
+        """Test network error handling."""
+        mock_get.side_effect = ConnectionError("Network unreachable")
+        
+        tool = MyTool()
+        result = tool._run(sample_content, "test_tenant", "test_workspace")
+        
+        assert result.status == "retryable"
+        assert "connection" in result.error.lower()
+```
+
+## Test Categories
+
+### 1. Unit Tests
+
+Test individual functions in isolation:
+
+```python
+def test_url_validator():
+    """Test URL validation logic."""
+    from ultimate_discord_intelligence_bot.utils.validators import is_valid_url
+    
+    # Valid URLs
+    assert is_valid_url("https://youtube.com/watch?v=123")
+    assert is_valid_url("https://www.twitch.tv/videos/123")
+    
+    # Invalid URLs
+    assert not is_valid_url("")
+    assert not is_valid_url("not-a-url")
+    assert not is_valid_url("ftp://example.com")
+```
+
+### 2. Integration Tests
+
+Test component interactions:
+
+```python
+@pytest.mark.integration
+class TestContentPipeline:
+    """Integration tests for content processing pipeline."""
+    
+    @pytest.fixture(autouse=True)
+    def setup_services(self):
+        """Setup required services for integration tests."""
+        # Mock external services
+        with patch('qdrant_client.QdrantClient') as mock_qdrant:
+            mock_qdrant.return_value.search.return_value = []
+            yield
+
+    async def test_full_pipeline_execution(self):
+        """Test complete content processing pipeline."""
+        from ultimate_discord_intelligence_bot.pipeline import ContentPipeline
+        
+        pipeline = ContentPipeline()
+        result = await pipeline.process(
+            url="https://youtube.com/watch?v=test123",
+            tenant="test_tenant",
+            workspace="test_workspace"
+        )
+        
+        assert result.status == "success"
+        assert "analysis" in result.data
+```
+
+### 3. Error Path Testing
+
+Test all failure scenarios:
+
+```python
+class TestErrorPaths:
+    """Test error handling scenarios."""
+
+    def test_invalid_api_key(self):
+        """Test behavior with invalid API key."""
+        with patch.dict(os.environ, {'OPENAI_API_KEY': 'invalid_key'}):
+            tool = MyTool()
+            result = tool._run("test input", "tenant", "workspace")
+            
+            assert result.status == "unauthorized"
+
+    def test_rate_limit_handling(self):
+        """Test rate limit error handling."""
+        with patch('openai.ChatCompletion.create') as mock_create:
+            mock_create.side_effect = openai.error.RateLimitError("Rate limit exceeded")
+            
+            tool = MyTool()
+            result = tool._run("test input", "tenant", "workspace")
+            
+            assert result.status == "rate_limited"
+
+    def test_timeout_handling(self):
+        """Test timeout error handling."""
+        with patch('requests.get') as mock_get:
+            mock_get.side_effect = requests.exceptions.Timeout("Request timeout")
+            
+            tool = MyTool()
+            result = tool._run("test input", "tenant", "workspace")
+            
+            assert result.status == "retryable"
+```
+
+## Async Testing
+
+For async functions, use pytest-asyncio:
+
+```python
+@pytest.mark.asyncio
+async def test_async_content_processing():
+    """Test async content processing."""
+    processor = AsyncContentProcessor()
+    
+    result = await processor.process_content(
+        content="test content",
+        tenant="test_tenant"
+    )
+    
+    assert result.status == "success"
+
+@pytest.mark.asyncio
+async def test_concurrent_processing():
+    """Test concurrent content processing."""
+    processor = AsyncContentProcessor()
+    
+    tasks = [
+        processor.process_content(f"content_{i}", "tenant", "workspace")
+        for i in range(5)
+    ]
+    
+    results = await asyncio.gather(*tasks)
+    assert all(r.status == "success" for r in results)
+```
+
+## CrewAI Testing
+
+### Agent Testing
+
+```python
+def test_agent_configuration():
+    """Test agent is properly configured."""
+    from ultimate_discord_intelligence_bot.crew import UltimateDiscordIntelligenceBotCrew
+    
+    crew = UltimateDiscordIntelligenceBotCrew()
+    agent = crew.content_moderator_agent()
+    
+    assert agent.role == "Content Moderator"
+    assert agent.verbose is True
+    assert len(agent.tools) > 0
+
+def test_agent_tool_assignment():
+    """Test tools are properly assigned to agents."""
+    crew = UltimateDiscordIntelligenceBotCrew()
+    agent = crew.fact_checker_agent()
+    
+    tool_names = [tool.name for tool in agent.tools]
+    assert "fact_check_tool" in tool_names
+```
+
+### Task Testing
+
+```python
+def test_task_configuration():
+    """Test task is properly configured."""
+    crew = UltimateDiscordIntelligenceBotCrew()
+    task = crew.content_analysis_task()
+    
+    assert task.description is not None
+    assert task.expected_output is not None
+    assert task.agent is not None
+```
+
+## Mock Patterns
+
+### API Mocking
+
+```python
+@pytest.fixture
+def mock_openrouter_service():
+    """Mock OpenRouter service."""
+    with patch('ultimate_discord_intelligence_bot.services.openrouter_service.OpenRouterService') as mock:
+        mock_instance = mock.return_value
+        mock_instance.chat_completion.return_value = StepResult.ok(
+            data={"content": "Mock response"}
+        )
+        yield mock_instance
+
+@pytest.fixture
+def mock_qdrant_client():
+    """Mock Qdrant client."""
+    with patch('qdrant_client.QdrantClient') as mock:
+        mock_instance = mock.return_value
+        mock_instance.search.return_value = []
+        mock_instance.upsert.return_value = Mock(status="success")
+        yield mock_instance
+```
+
+### External Service Mocking
+
+```python
+@pytest.fixture
+def mock_youtube_api():
+    """Mock YouTube API responses."""
+    mock_response = {
+        "items": [{
+            "id": {"videoId": "test123"},
+            "snippet": {
+                "title": "Test Video",
+                "description": "Test Description",
+                "publishedAt": "2023-01-01T00:00:00Z"
+            }
+        }]
+    }
+    
+    with patch('googleapiclient.discovery.build') as mock_build:
+        mock_service = Mock()
+        mock_service.search().list().execute.return_value = mock_response
+        mock_build.return_value = mock_service
+        yield mock_service
+```
+
+## Performance Testing
+
+### Timing Tests
+
+```python
+import time
+
+def test_processing_performance():
+    """Test processing stays within performance bounds."""
+    tool = MyTool()
+    
+    start_time = time.time()
+    result = tool._run("test content", "tenant", "workspace")
+    execution_time = time.time() - start_time
+    
+    assert execution_time < 5.0  # Should complete within 5 seconds
+    assert result.status == "success"
+
+def test_memory_usage():
+    """Test memory usage stays reasonable."""
+    import psutil
+    
+    process = psutil.Process()
+    initial_memory = process.memory_info().rss
+    
+    # Execute memory-intensive operation
+    tool = MemoryIntensiveTool()
+    result = tool._run("large dataset", "tenant", "workspace")
+    
+    final_memory = process.memory_info().rss
+    memory_increase = final_memory - initial_memory
+    
+    # Should not increase memory by more than 100MB
+    assert memory_increase < 100 * 1024 * 1024
+```
+
+## Test Data Management
+
+### Fixtures for Common Data
+
+```python
+@pytest.fixture
+def sample_video_metadata():
+    """Provide sample video metadata."""
+    return {
+        "url": "https://youtube.com/watch?v=test123",
+        "title": "Test Video",
+        "duration": 300,
+        "transcript": "This is a test transcript..."
+    }
+
+@pytest.fixture
+def sample_analysis_result():
+    """Provide sample analysis result."""
+    return {
+        "key_points": ["Point 1", "Point 2"],
+        "sentiment": "neutral",
+        "fact_checks": [
+            {"claim": "Test claim", "verdict": "true", "confidence": 0.95}
+        ]
+    }
+```
+
+## Test Execution
+
+### Running Tests
+
+```bash
+# All tests
+pytest
+
+# Specific test file
+pytest tests/test_content_tools.py
+
+# Specific test function
+pytest tests/test_content_tools.py::test_download_tool
+
+# Integration tests only
+pytest -m integration
+
+# Skip slow tests
+pytest -m "not slow"
+
+# With coverage
+pytest --cov=src/ultimate_discord_intelligence_bot --cov-report=html
+```
+
+### Test Configuration
+
+Create [pytest.ini](mdc:pytest.ini) for consistent test configuration:
+
+```ini
+[tool:pytest]
+testpaths = tests
+python_files = test_*.py *_test.py
+python_functions = test_*
+markers =
+    integration: marks tests as integration tests
+    slow: marks tests as slow running
+    unit: marks tests as unit tests
+addopts = 
+    -v
+    --tb=short
+    --strict-markers
+```
+
+## Continuous Integration
+
+Tests must pass in CI/CD:
+
+- ✅ Unit tests: `pytest -m "not integration"`
+- ✅ Integration tests: `pytest -m integration`
+- ✅ Type checking: `make type`
+- ✅ Linting: `make lint`
+- ✅ Coverage: minimum 80% for new code

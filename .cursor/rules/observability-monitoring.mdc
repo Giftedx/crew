@@ -1,0 +1,549 @@
+---
+globs: "**/obs/**,**/monitoring/**,**/metrics/**"
+description: "Observability, monitoring, and logging patterns for production deployments"
+---
+
+## Observability and Monitoring
+
+### Observability Stack
+
+The system uses structured logging, metrics, and distributed tracing for comprehensive observability. Core components are in [src/obs/](mdc:src/obs/).
+
+### Initialization
+
+```python
+from obs import tracing, metrics, logging_config
+
+# Initialize observability (call once per entrypoint)
+tracing.init_tracing("ultimate-discord-bot")
+metrics.init_metrics()
+logging_config.setup_structured_logging()
+```
+
+## Structured Logging
+
+### Log Schema
+
+```python
+from core.log_schema import CallLog, RewardLog, ErrorLog
+
+# Structured call logging
+call_log = CallLog(
+    call_id="uuid-123",
+    domain="model_routing",
+    arm="gpt-4",
+    input_tokens=100,
+    output_tokens=50,
+    cost_usd=0.02,
+    latency_ms=150,
+    tenant="default",
+    workspace="main"
+)
+
+logger.info("Model call completed", extra=call_log.to_dict())
+```
+
+### Log Levels and Context
+
+```python
+import logging
+
+logger = logging.getLogger(__name__)
+
+# Info level for normal operations
+logger.info(
+    "Content analysis started",
+    extra={
+        "content_id": "analysis_123",
+        "platform": "youtube",
+        "tenant": "default"
+    }
+)
+
+# Warning level for recoverable issues
+logger.warning(
+    "Rate limit approaching",
+    extra={
+        "current_usage": 45,
+        "limit": 50,
+        "time_window": "1h"
+    }
+)
+
+# Error level for failures
+logger.error(
+    "Analysis failed",
+    extra={
+        "content_id": "analysis_123",
+        "error_type": "TimeoutError",
+        "error_message": "Request timed out",
+        "retry_count": 3
+    },
+    exc_info=True
+)
+```
+
+### Tenant-Aware Logging
+
+```python
+from ultimate_discord_intelligence_bot.tenancy import with_tenant, TenantContext
+
+# Log with tenant context
+with with_tenant(TenantContext("tenant_id", "workspace_id")):
+    logger.info(
+        "Processing content",
+        extra={
+            "content_url": url,
+            "analysis_type": "debate"
+        }
+    )
+```
+
+## Metrics Collection
+
+### Counter Metrics
+
+```python
+from obs import metrics
+
+# Increment counters
+metrics.TOOL_EXECUTIONS.labels(
+    tool="analysis_tool",
+    tenant="default"
+).inc()
+
+metrics.API_CALLS.labels(
+    provider="openai",
+    model="gpt-4",
+    status="success"
+).inc()
+
+# Increment by specific amount
+metrics.TOKENS_PROCESSED.labels(
+    type="input",
+    model="gpt-4"
+).inc(amount=150)
+```
+
+### Histogram Metrics
+
+```python
+# Record timing metrics
+metrics.RESPONSE_TIME.labels(
+    endpoint="/analyze",
+    method="POST"
+).observe(1.5)  # seconds
+
+# Record size metrics
+metrics.CONTENT_SIZE.labels(
+    platform="youtube",
+    type="video"
+).observe(1024 * 1024)  # bytes
+```
+
+### Gauge Metrics
+
+```python
+# Set current values
+metrics.ACTIVE_CONNECTIONS.set(42)
+metrics.QUEUE_SIZE.labels(queue="analysis").set(15)
+metrics.MEMORY_USAGE.labels(type="heap").set(512)  # MB
+```
+
+### Custom Metrics
+
+```python
+from prometheus_client import Counter, Histogram, Gauge
+
+# Define custom metrics
+CUSTOM_ANALYSIS_COUNTER = Counter(
+    'custom_analysis_total',
+    'Total custom analyses',
+    ['analysis_type', 'tenant']
+)
+
+CUSTOM_PROCESSING_TIME = Histogram(
+    'custom_processing_seconds',
+    'Custom processing time',
+    ['processor', 'tenant']
+)
+
+# Use custom metrics
+CUSTOM_ANALYSIS_COUNTER.labels(
+    analysis_type="sentiment",
+    tenant="default"
+).inc()
+```
+
+## Distributed Tracing
+
+### Trace Spans
+
+```python
+from obs import tracing
+
+# Create spans for operations
+with tracing.span("content_analysis") as span:
+    span.set_attribute("content_id", "analysis_123")
+    span.set_attribute("platform", "youtube")
+    
+    # Nested span
+    with tracing.span("download_content") as download_span:
+        download_span.set_attribute("url", content_url)
+        result = await download_content(content_url)
+    
+    # Another nested span
+    with tracing.span("transcribe_content") as transcribe_span:
+        transcribe_span.set_attribute("file_path", result.file_path)
+        transcript = await transcribe_content(result.file_path)
+```
+
+### Trace Context Propagation
+
+```python
+# Propagate trace context across services
+trace_context = tracing.get_current_context()
+
+# Pass context to external service
+headers = tracing.inject_headers(trace_context)
+response = await http_client.get(url, headers=headers)
+
+# Extract context from incoming request
+trace_context = tracing.extract_headers(request.headers)
+tracing.set_current_context(trace_context)
+```
+
+### Error Tracking in Traces
+
+```python
+with tracing.span("risky_operation") as span:
+    try:
+        result = await risky_operation()
+        span.set_status(tracing.Status.OK)
+    except Exception as e:
+        span.set_status(tracing.Status.ERROR, str(e))
+        span.record_exception(e)
+        raise
+```
+
+## Performance Monitoring
+
+### Latency Tracking
+
+```python
+import time
+from obs import metrics
+
+# Track operation latency
+start_time = time.time()
+try:
+    result = await expensive_operation()
+    metrics.OPERATION_LATENCY.labels(
+        operation="expensive_operation",
+        status="success"
+    ).observe(time.time() - start_time)
+except Exception as e:
+    metrics.OPERATION_LATENCY.labels(
+        operation="expensive_operation",
+        status="error"
+    ).observe(time.time() - start_time)
+    raise
+```
+
+### Resource Usage Monitoring
+
+```python
+import psutil
+from obs import metrics
+
+# Monitor system resources
+def collect_system_metrics():
+    cpu_percent = psutil.cpu_percent()
+    memory = psutil.virtual_memory()
+    disk = psutil.disk_usage('/')
+    
+    metrics.SYSTEM_CPU_PERCENT.set(cpu_percent)
+    metrics.SYSTEM_MEMORY_USAGE.set(memory.percent)
+    metrics.SYSTEM_DISK_USAGE.set(disk.percent)
+
+# Call periodically
+collect_system_metrics()
+```
+
+### Business Metrics
+
+```python
+# Track business KPIs
+metrics.ANALYSES_COMPLETED.labels(
+    platform="youtube",
+    tenant="default"
+).inc()
+
+metrics.FACT_CHECKS_PERFORMED.labels(
+    accuracy="high",
+    tenant="default"
+).inc()
+
+metrics.USER_ENGAGEMENT.labels(
+    action="command_executed",
+    command="analyze"
+).inc()
+```
+
+## Alerting and Notifications
+
+### Alert Conditions
+
+```python
+from obs import alerts
+
+# Define alert conditions
+alerts.define_alert(
+    name="high_error_rate",
+    condition=lambda: metrics.ERROR_RATE.value() > 0.05,
+    severity="warning",
+    description="Error rate exceeds 5%"
+)
+
+alerts.define_alert(
+    name="high_latency",
+    condition=lambda: metrics.P95_LATENCY.value() > 5000,
+    severity="critical",
+    description="P95 latency exceeds 5 seconds"
+)
+```
+
+### Alert Handlers
+
+```python
+# Discord alert handler
+@alerts.alert_handler("discord")
+async def discord_alert_handler(alert):
+    await discord_client.send_message(
+        channel_id=ALERT_CHANNEL_ID,
+        content=f"🚨 {alert.severity.upper()}: {alert.description}"
+    )
+
+# Email alert handler
+@alerts.alert_handler("email")
+async def email_alert_handler(alert):
+    await email_client.send_alert(
+        to="admin@example.com",
+        subject=f"Alert: {alert.name}",
+        body=alert.description
+    )
+```
+
+## Health Checks
+
+### Service Health
+
+```python
+from obs import health
+
+# Define health checks
+@health.check("database")
+async def check_database():
+    try:
+        await database.ping()
+        return health.Status.HEALTHY
+    except Exception as e:
+        return health.Status.UNHEALTHY(str(e))
+
+@health.check("qdrant")
+async def check_qdrant():
+    try:
+        collections = await qdrant_client.get_collections()
+        return health.Status.HEALTHY
+    except Exception as e:
+        return health.Status.UNHEALTHY(str(e))
+
+# Register health checks
+health.register_check("database", check_database)
+health.register_check("qdrant", check_qdrant)
+```
+
+### Health Endpoint
+
+```python
+from fastapi import FastAPI
+
+app = FastAPI()
+
+@app.get("/health")
+async def health_endpoint():
+    return await health.get_status()
+
+@app.get("/health/ready")
+async def readiness_endpoint():
+    return await health.get_readiness()
+
+@app.get("/health/live")
+async def liveness_endpoint():
+    return await health.get_liveness()
+```
+
+## Log Aggregation
+
+### Structured Log Format
+
+```python
+import json
+import logging
+
+class StructuredFormatter(logging.Formatter):
+    def format(self, record):
+        log_entry = {
+            "timestamp": self.formatTime(record),
+            "level": record.levelname,
+            "logger": record.name,
+            "message": record.getMessage(),
+            "tenant": getattr(record, "tenant", None),
+            "workspace": getattr(record, "workspace", None),
+        }
+        
+        # Add extra fields
+        if hasattr(record, "__dict__"):
+            for key, value in record.__dict__.items():
+                if key not in ["name", "msg", "args", "levelname", "levelno", "pathname", "filename", "module", "lineno", "funcName", "created", "msecs", "relativeCreated", "thread", "threadName", "processName", "process", "getMessage"]:
+                    log_entry[key] = value
+        
+        return json.dumps(log_entry)
+```
+
+### Log Sampling
+
+```python
+from obs import sampling
+
+# Sample high-volume logs
+@sampling.sample(rate=0.1)  # 10% sampling
+def log_high_volume_event(event_data):
+    logger.info("High volume event", extra=event_data)
+
+# Conditional sampling
+@sampling.sample_if(lambda: metrics.ERROR_RATE.value() > 0.01)
+def log_error_event(error_data):
+    logger.error("Error event", extra=error_data)
+```
+
+## Monitoring Dashboards
+
+### Grafana Dashboard Configuration
+
+```yaml
+# dashboard.json
+{
+  "dashboard": {
+    "title": "Ultimate Discord Bot",
+    "panels": [
+      {
+        "title": "Request Rate",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(http_requests_total[5m])",
+            "legendFormat": "{{method}} {{endpoint}}"
+          }
+        ]
+      },
+      {
+        "title": "Error Rate",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(http_requests_total{status=~\"5..\"}[5m]) / rate(http_requests_total[5m])",
+            "legendFormat": "Error Rate"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+### Custom Dashboard Metrics
+
+```python
+# Define dashboard-specific metrics
+DASHBOARD_METRICS = {
+    "active_users": Gauge("active_users_total", "Currently active users"),
+    "content_processed": Counter("content_processed_total", "Total content processed"),
+    "analysis_accuracy": Histogram("analysis_accuracy", "Analysis accuracy scores")
+}
+```
+
+## Testing Observability
+
+### Mock Metrics
+
+```python
+from unittest.mock import Mock, patch
+
+@patch('obs.metrics.TOOL_EXECUTIONS')
+def test_tool_execution_metrics(mock_metric):
+    # Test that metrics are recorded
+    tool = MyTool()
+    tool._run("test_input")
+    
+    mock_metric.labels.assert_called_with(
+        tool="my_tool",
+        tenant="test"
+    )
+    mock_metric.labels.return_value.inc.assert_called_once()
+```
+
+### Test Logging
+
+```python
+import logging
+from unittest.mock import Mock
+
+def test_structured_logging():
+    with patch('logging.getLogger') as mock_logger:
+        logger = Mock()
+        mock_logger.return_value = logger
+        
+        # Call function that logs
+        my_function()
+        
+        # Verify structured logging
+        logger.info.assert_called_once()
+        call_args = logger.info.call_args
+        assert "extra" in call_args.kwargs
+        assert "tenant" in call_args.kwargs["extra"]
+```
+
+## Best Practices
+
+### Logging Guidelines
+
+- Use structured logging with consistent fields
+- Include correlation IDs for request tracing
+- Log at appropriate levels (DEBUG, INFO, WARNING, ERROR)
+- Avoid logging sensitive information
+- Use sampling for high-volume events
+
+### Metrics Guidelines
+
+- Use meaningful metric names and labels
+- Avoid high-cardinality labels
+- Prefer counters and histograms over gauges
+- Document metric definitions
+- Monitor metric cardinality
+
+### Tracing Guidelines
+
+- Create spans for significant operations
+- Propagate trace context across services
+- Include relevant attributes in spans
+- Handle errors properly in spans
+- Use consistent span naming
+
+### Alerting Guidelines
+
+- Set appropriate thresholds for alerts
+- Use different severity levels
+- Include context in alert messages
+- Test alerting systems regularly
+- Avoid alert fatigue

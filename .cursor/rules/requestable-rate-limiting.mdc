@@ -1,0 +1,28 @@
+---
+alwaysApply: false
+description: Rate limiting shim, metrics endpoint fallback, and testing guidance
+---
+### Rate Limiting
+
+- Centralize rate limiting via a shim; expose metrics for hits and backoff
+- Handle 429 with exponential backoff and jitter; record events
+- Provide fallback to metrics endpoint if primary rate limiter unavailable
+
+---
+
+description: "Rate limiting shim, metrics endpoint fallback, and testing guidance"
+---
+
+### Rate Limiting
+
+- Use fixed-window limiter with `RATE_LIMIT_RPS` and `RATE_LIMIT_BURST`.
+- Never limit `/metrics` and `/health`.
+
+### Metrics Endpoint
+
+- `ENABLE_PROMETHEUS_ENDPOINT=1` forces `/metrics` registration; normalize FieldInfo defaults.
+- If `prometheus_client` missing, return empty body gracefully.
+
+### Tests
+
+- Cover 429 behavior and metrics exposure conditionally.

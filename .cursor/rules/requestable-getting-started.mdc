@@ -1,0 +1,33 @@
+---
+alwaysApply: false
+description: Setup CLI and quick start commands
+---
+### Getting Started
+
+- Install dev hooks:
+
+```bash
+pre-commit install --install-hooks
+```
+
+- Run quality gates:
+
+```bash
+make format && make lint && make type && make test && make docs
+```
+
+- Configure env via [settings.py](mdc:src/ultimate_discord_intelligence_bot/settings.py) and [docs/configuration.md](mdc:docs/configuration.md)
+
+---
+
+description: "Setup CLI and quick start commands"
+---
+
+### Setup & Run
+
+- Setup: `python -m ultimate_discord_intelligence_bot.setup_cli`
+- Doctor: `python -m ultimate_discord_intelligence_bot.setup_cli doctor`
+- Run bot: `python -m ultimate_discord_intelligence_bot.setup_cli run discord`
+- Run crew: `python -m ultimate_discord_intelligence_bot.setup_cli run crew`
+
+Shortcuts: `make setup`, `make doctor`, `make run-discord`, `make run-crew`.

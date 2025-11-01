@@ -1,0 +1,35 @@
+---
+alwaysApply: false
+description: Stagehand Python integration for browser automation and element interaction
+---
+### Stagehand Integration
+
+- Reference: [stagehand-python](https://github.com/browserbase/stagehand-python)
+- Computer Use demo: [browserbase-computer-use](https://github.com/browserbase/browserbase-computer-use)
+
+### Session Management
+
+- Create and manage browser sessions with proper cleanup
+- Handle session timeouts and reconnection
+- Implement tenant-aware session isolation
+
+### Element Interaction
+
+- Use Stagehand for precise element targeting
+- Implement robust click, type, and navigation actions
+- Handle dynamic content and loading states
+- Provide fallback strategies for element not found scenarios
+
+### Data Extraction
+
+- Extract structured data from web pages
+- Handle pagination and infinite scroll
+- Implement data validation and sanitization
+- Return StepResult with extracted content
+
+### Safety and Best Practices
+
+- Implement proper error handling and logging
+- Respect website rate limits and robots.txt
+- Use appropriate delays and timeouts
+- Validate extracted data before processing

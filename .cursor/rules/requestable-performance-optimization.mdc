@@ -1,0 +1,9 @@
+---
+alwaysApply: false
+description: Performance optimization patterns and best practices
+---
+### Performance Optimization
+
+- Use caching and batch processing for hot paths
+- Profile and measure before/after; avoid premature optimization
+- Respect rate limits; parallelize safely with backpressure

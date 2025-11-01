@@ -1,0 +1,24 @@
+---
+alwaysApply: false
+description: Semantic cache prefetch flow, metrics, and configuration
+---
+### Semantic Cache
+
+- Prefetch embeddings for hot content; cache by tenant/workspace
+- Track hit ratio, staleness, and eviction
+- Provide configuration toggles via settings and docs
+
+---
+
+description: "Semantic cache prefetch flow, metrics, and configuration"
+---
+
+### Flow
+
+- With `ENABLE_SEMANTIC_CACHE`, prefetch before LLM call; hit returns immediately with `cache_type="semantic"`.
+- Record `semantic_cache_prefetch_{issued,used}_total` and `semantic_cache_similarity` histogram.
+
+### Config
+
+- Threshold via settings; TTL defaults to 3600s; env toggle authoritative.
+- Wrap operations in try/except and fall back silently on errors.

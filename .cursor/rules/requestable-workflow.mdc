@@ -1,0 +1,16 @@
+---
+alwaysApply: false
+description: Development workflow standards and quality requirements (alias)
+---
+See [development-workflow.mdc](mdc:.cursor/rules/development-workflow.mdc) and [quality-gates.mdc](mdc:.cursor/rules/quality-gates.mdc).
+
+---
+
+description: "Development workflow standards and quality requirements"
+---
+
+### Workflow
+
+- Small, focused edits; keep changes legible and tested.
+- Use the make targets for format/lint/type/test/docs.
+- Prefer semantic, typed services over ad-hoc utilities.

@@ -1,0 +1,27 @@
+---
+alwaysApply: false
+description: Agents and prompts—Claude agents, chat modes, and prompts
+---
+### Agents & Prompts
+
+- Agents: [config/agents.yaml](mdc:src/ultimate_discord_intelligence_bot/config/agents.yaml)
+- Tasks: [config/tasks.yaml](mdc:src/ultimate_discord_intelligence_bot/config/tasks.yaml)
+- Crew registration: [crew.py](mdc:src/ultimate_discord_intelligence_bot/crew.py)
+
+- Keep prompts concise and tenant-aware; avoid leaking sensitive data in system prompts.
+
+---
+
+description: "Agents and prompts: Claude agents, chat modes, and prompts"
+---
+
+### Agents & Modes
+
+- Claude agents under `.claude/agents/` define operating principles for review/refactor/execution.
+- Chat modes under `.github/chatmodes/` (e.g., polish mode) guide structured analysis flows.
+- Prompts under `.github/prompts/` configure review/invoke behaviors.
+
+### Guidance
+
+- Keep rules in `.cursor/rules/` aligned with agent guidance and CI.
+- Avoid duplicating abstractions—reuse core seams and patterns.

@@ -1,0 +1,25 @@
+---
+alwaysApply: false
+description: Discord bot manual test commands and troubleshooting
+---
+### Discord Testing
+
+- Provide manual test commands for core flows
+- Include troubleshooting tips for auth, permissions, and intents
+- Log command errors with safe context
+
+---
+
+description: "Discord bot manual test commands and troubleshooting"
+---
+
+### Quick Tests
+
+- `!status`, `!help_full`
+- `!factcheck <claim>`
+- `!fallacy <text>`
+- `!analyze <url>`
+
+### Troubleshooting
+
+- Use `!status` first, verify permissions, restart via setup CLI if needed.

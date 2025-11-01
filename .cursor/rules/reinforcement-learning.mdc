@@ -1,0 +1,337 @@
+---
+globs: "**/rl/**,**/core/learn.py,**/core/reward_*.py,**/core/learning_engine.py"
+description: "Reinforcement learning patterns and bandit policies for model routing and optimization"
+---
+
+## Reinforcement Learning Patterns
+
+### Learning Engine Architecture
+
+The system uses reinforcement learning to optimize model routing, prompting, and retrieval. Core components are in [src/core/rl/](mdc:src/core/rl/).
+
+### Learning Engine Setup
+
+```python
+from core.rl.learning_engine import LearningEngine
+from core.rl.policies.bandit_base import EpsilonGreedyPolicy
+
+# Initialize learning engine with policies
+learning_engine = LearningEngine()
+learning_engine.register_policy(
+    domain="model_routing",
+    policy=EpsilonGreedyPolicy(arms=["gpt-4", "claude-3", "llama-2"])
+)
+```
+
+### Policy Registration Pattern
+
+```python
+# Register policies for different domains
+learning_engine.register_policy("model_routing", model_policy)
+learning_engine.register_policy("prompt_selection", prompt_policy)
+learning_engine.register_policy("retrieval_scoring", retrieval_policy)
+learning_engine.register_policy("tool_planning", tool_policy)
+```
+
+## Bandit Policies
+
+### Epsilon-Greedy Policy
+
+```python
+from core.rl.policies.epsilon_greedy import EpsilonGreedyPolicy
+
+policy = EpsilonGreedyPolicy(
+    arms=["option1", "option2", "option3"],
+    epsilon=0.1,  # 10% exploration
+    rng=random.Random(42)  # For deterministic testing
+)
+```
+
+### Upper Confidence Bound (UCB1)
+
+```python
+from core.rl.policies.ucb1 import UCB1Policy
+
+policy = UCB1Policy(
+    arms=["model1", "model2", "model3"],
+    confidence_level=0.95
+)
+```
+
+### Thompson Sampling
+
+```python
+from core.rl.policies.thompson_sampling import ThompsonSamplingPolicy
+
+policy = ThompsonSamplingPolicy(
+    arms=["prompt1", "prompt2", "prompt3"],
+    alpha_prior=1.0,
+    beta_prior=1.0
+)
+```
+
+## Reward Pipeline
+
+### Reward Calculation
+
+```python
+from core.reward_pipe import RewardPipe, RewardResult
+
+# Define reward components
+reward_pipe = RewardPipe()
+reward_pipe.add_component("quality", weight=0.4)
+reward_pipe.add_component("cost", weight=0.2)
+reward_pipe.add_component("latency", weight=0.2)
+reward_pipe.add_component("safety", weight=0.2)
+
+# Calculate composite reward
+reward_result = reward_pipe.calculate(
+    quality_score=0.85,
+    cost_usd=0.02,
+    latency_ms=150,
+    safety_score=0.95
+)
+```
+
+### Feature Store Integration
+
+```python
+from core.rl.feature_store import FeatureStore
+
+feature_store = FeatureStore()
+
+# Track context features
+features = feature_store.extract_features(
+    query="user question",
+    context={"tenant": "default", "workspace": "main"}
+)
+
+# Update sliding averages
+feature_store.update_averages(
+    domain="model_routing",
+    arm="gpt-4",
+    cost=0.05,
+    latency=200
+)
+```
+
+## Learn Helper Pattern
+
+### Decision Loop
+
+```python
+from core.learn import learn_helper
+
+# Recommend → Act → Reward loop
+result = learn_helper(
+    domain="model_routing",
+    context=features,
+    action_func=lambda arm: call_model(arm, query),
+    reward_func=lambda result: calculate_reward(result)
+)
+```
+
+### Shadow Mode
+
+Policies start in shadow mode for safe learning:
+
+```python
+# Enable shadow mode for new policies
+policy.set_shadow_mode(True)
+
+# Only switch to active after sufficient data
+if policy.get_total_pulls() > 100:
+    policy.set_shadow_mode(False)
+```
+
+## State Management
+
+### Snapshots and Restore
+
+```python
+# Save current state
+snapshot = learning_engine.snapshot()
+with open("rl_checkpoint.json", "w") as f:
+    json.dump(snapshot, f)
+
+# Restore from checkpoint
+with open("rl_checkpoint.json", "r") as f:
+    snapshot = json.load(f)
+learning_engine.restore(snapshot)
+```
+
+### Policy State Access
+
+```python
+# Get policy statistics
+status = learning_engine.status()
+print(f"Model routing stats: {status['model_routing']}")
+
+# Access individual policy state
+policy_state = learning_engine.get_policy("model_routing").state_dict()
+```
+
+## Shields and Constraints
+
+### Budget Shields
+
+```python
+from core.rl.shields import BudgetShield
+
+budget_shield = BudgetShield(
+    daily_budget_usd=10.0,
+    per_request_limit_usd=0.50
+)
+
+# Check before expensive operations
+if budget_shield.can_proceed(estimated_cost=0.30):
+    result = expensive_operation()
+else:
+    result = fallback_operation()
+```
+
+### Latency Shields
+
+```python
+from core.rl.shields import LatencyShield
+
+latency_shield = LatencyShield(
+    max_latency_ms=5000,
+    timeout_ms=10000
+)
+
+# Enforce latency constraints
+with latency_shield.timeout():
+    result = potentially_slow_operation()
+```
+
+## Evaluation and Testing
+
+### A/B Testing Harness
+
+```python
+from core.eval_harness import bakeoff
+
+# Run A/B test between two approaches
+results = bakeoff(
+    control_func=lambda: approach_a(query),
+    treatment_func=lambda: approach_b(query),
+    test_cases=test_queries,
+    reward_func=calculate_reward
+)
+```
+
+### Deterministic Testing
+
+```python
+import random
+
+# Use fixed RNG for reproducible tests
+rng = random.Random(42)
+policy = EpsilonGreedyPolicy(arms=["a", "b"], rng=rng)
+
+# Test policy behavior
+for _ in range(100):
+    arm = policy.select_arm(context={})
+    # Verify expected behavior
+```
+
+## Integration Patterns
+
+### Model Routing Integration
+
+```python
+def route_model(query: str, context: dict) -> str:
+    """Route query to optimal model using RL"""
+    features = feature_store.extract_features(query, context)
+    
+    result = learn_helper(
+        domain="model_routing",
+        context=features,
+        action_func=lambda arm: call_model(arm, query),
+        reward_func=lambda result: calculate_model_reward(result)
+    )
+    
+    return result.arm
+```
+
+### Tool Planning Integration
+
+```python
+def plan_tool_execution(task: str, available_tools: list) -> list:
+    """Plan tool execution sequence using RL"""
+    features = extract_task_features(task)
+    
+    result = learn_helper(
+        domain="tool_planning",
+        context=features,
+        action_func=lambda plan: execute_tool_plan(plan, available_tools),
+        reward_func=lambda result: calculate_plan_reward(result)
+    )
+    
+    return result.arm
+```
+
+## Monitoring and Observability
+
+### Metrics Collection
+
+```python
+from obs import metrics
+
+# Track RL metrics
+metrics.RL_DECISIONS.labels(
+    domain="model_routing",
+    arm="gpt-4"
+).inc()
+
+metrics.RL_REWARDS.labels(
+    domain="model_routing"
+).observe(reward_value)
+```
+
+### Logging RL Events
+
+```python
+import logging
+
+logger = logging.getLogger(__name__)
+
+def log_decision(domain: str, arm: str, context: dict, reward: float):
+    logger.info(
+        "RL decision made",
+        extra={
+            "domain": domain,
+            "arm": arm,
+            "context_hash": hash(str(context)),
+            "reward": reward,
+            "timestamp": time.time()
+        }
+    )
+```
+
+## Best Practices
+
+### Policy Initialization
+
+- Start with conservative priors
+- Use shadow mode for new policies
+- Gradually increase exploration as confidence grows
+
+### Reward Design
+
+- Balance multiple objectives (quality, cost, latency, safety)
+- Use normalized scores for different metrics
+- Consider temporal aspects (recent performance vs. historical)
+
+### State Persistence
+
+- Regular snapshots for disaster recovery
+- Version control for policy configurations
+- A/B testing before production deployment
+
+### Performance Considerations
+
+- Cache policy decisions when appropriate
+- Use async operations for non-blocking learning
+- Monitor learning convergence and adjust parameters

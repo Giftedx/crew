@@ -1,0 +1,214 @@
+---
+alwaysApply: true
+description: "Master Architecture Guide - Comprehensive patterns for Ultimate Discord Intelligence Bot development"
+---
+# Ultimate Discord Intelligence Bot - Master Architecture Guide
+
+## Core Architecture Patterns (MANDATORY)
+
+### 1. StepResult Pattern (REQUIRED)
+
+**ALL** tools/functions must return [StepResult](mdc:src/ultimate_discord_intelligence_bot/step_result.py):
+
+```python
+from ultimate_discord_intelligence_bot.step_result import StepResult
+
+def my_tool_function() -> StepResult:
+    try:
+        result = process_data()
+        return StepResult.ok(data=result)
+    except Exception as e:
+        return StepResult.fail(str(e))
+```
+
+### 2. Type Hints (MANDATORY)
+
+```python
+from __future__ import annotations
+
+def process_content(url: str, tenant: str, workspace: str) -> StepResult:
+    # Complete type annotations required
+    pass
+```
+
+### 3. Tenant-Aware Design (REQUIRED)
+
+All operations must accept tenant context:
+
+```python
+def my_tool(content: str, tenant: str, workspace: str) -> StepResult:
+    # Use tenant isolation for data storage
+    pass
+```
+
+## Quality Gates (MUST PASS)
+
+```bash
+make format     # Auto-fix style & imports
+make lint       # Lint check (CI style)
+make type       # Static type check
+make test       # Run full test suite
+make docs       # Validate docs & config sync
+```
+
+## Project Structure
+
+### Main Entry Points
+
+- **[main.py](mdc:src/ultimate_discord_intelligence_bot/main.py)**: Application orchestrator
+- **[crew.py](mdc:src/ultimate_discord_intelligence_bot/crew.py)**: CrewAI crew definition
+- **[settings.py](mdc:src/ultimate_discord_intelligence_bot/settings.py)**: Global configuration
+
+### CrewAI Configuration
+
+- **[config/agents.yaml](mdc:src/ultimate_discord_intelligence_bot/config/agents.yaml)**: Agent definitions
+- **[config/tasks.yaml](mdc:src/ultimate_discord_intelligence_bot/config/tasks.yaml)**: Task definitions
+
+### Core Services
+
+- **PromptEngine**: [services/prompt_engine.py](mdc:src/ultimate_discord_intelligence_bot/services/prompt_engine.py)
+- **MemoryService**: [services/memory_service.py](mdc:src/ultimate_discord_intelligence_bot/services/memory_service.py)
+- **OpenRouterService**: [services/openrouter_service.py](mdc:src/ultimate_discord_intelligence_bot/services/openrouter_service.py)
+
+## Tool Development Standards
+
+### Base Tool Requirements
+
+- Inherit from [BaseTool](mdc:src/ultimate_discord_intelligence_bot/tools/_base.py)
+- Return StepResult objects
+- Include comprehensive input validation
+- Use complete type hints
+
+### Tool Structure
+
+```python
+from ultimate_discord_intelligence_bot.tools._base import BaseTool
+from ultimate_discord_intelligence_bot.step_result import StepResult
+
+class MyTool(BaseTool):
+    def _run(self, input: str, tenant: str, workspace: str) -> StepResult:
+        # Tool implementation here
+        pass
+```
+
+## Pipeline Architecture
+
+```
+Multi-Platform → Ingestion → Transcription → Analysis → Memory → Discord
+```
+
+## Code Standards
+
+- **Python 3.10+** with modern features
+- **Line length: 120 characters**
+- **Double quotes for strings**
+- **Import order**: stdlib → third-party → local
+- **Comprehensive docstrings** for public APIs
+- **UTC timestamps** only
+
+## Import Organization
+
+```python
+# Standard library
+import os
+import sys
+from typing import Optional
+
+# Third-party
+import discord
+from crewai import Agent, Task
+
+# Local application
+from ultimate_discord_intelligence_bot.step_result import StepResult
+from ultimate_discord_intelligence_bot.tools import MyTool
+```
+
+## Error Handling
+
+- **Never return raw data** → Always use StepResult
+- **Catch all exceptions** → Convert to StepResult.fail()
+- **Include context** → Meaningful error messages
+- **Log appropriately** → Use structured logging
+
+## Configuration Management
+
+- Feature flags use `ENABLE_<AREA>_<FEATURE>` pattern
+- Environment variables documented in [docs/configuration.md](mdc:docs/configuration.md)
+- Global settings in [settings.py](mdc:src/ultimate_discord_intelligence_bot/settings.py)
+- Validate config at startup
+
+## Testing Requirements
+
+- **Unit tests** for all new functionality
+- **Integration tests** for workflow validation
+- **Test fixtures** in [tests/conftest.py](mdc:tests/conftest.py)
+- **Mock external services** appropriately
+- **Test tenant isolation** thoroughly
+
+## Documentation Standards
+
+- **Update docs/** when adding features
+- **Sync configuration.md** with env changes
+- **Document tool interfaces** clearly
+- **Include usage examples** in docstrings
+
+## Common Mistakes to Avoid
+
+❌ **DON'T:** Return raw data from tools
+✅ **DO:** Always return StepResult objects
+
+❌ **DON'T:** Skip type hints
+✅ **DO:** Include complete type annotations
+
+❌ **DON'T:** Ignore tenant context
+✅ **DO:** Thread tenant parameters through all operations
+
+❌ **DON'T:** Skip tests
+✅ **DO:** Write comprehensive test coverage
+
+❌ **DON'T:** Create new services unnecessarily
+✅ **DO:** Use existing services when possible
+
+## File Organization
+
+### Tools (`tools/`)
+
+- One tool per file
+- Implement CrewAI BaseTool
+- Handle specific operations
+- Include input validation
+
+### Services (`services/`)
+
+- Provide shared functionality
+- Manage external integrations
+- Handle caching and optimization
+- Abstract complex operations
+
+### Content Processing Pipeline
+
+- **Ingestion**: Platform-specific downloaders
+- **Analysis**: Debate scoring and fact-checking
+- **Memory**: Vector storage and embeddings
+- **Discord**: Bot integration and messaging
+
+## Performance Considerations
+
+- **Use caching** for expensive operations
+- **Batch processing** where appropriate
+- **Rate limiting** for external APIs
+- **Monitor resource usage** in production
+
+## Security & Privacy
+
+- **Validate all inputs** thoroughly
+- **Sanitize outputs** before Discord posting
+- **Respect tenant isolation** always
+- **Follow privacy policies** for data retention
+
+## Deployment Patterns
+
+- **Docker containers** for services
+- **Environment-based configuration**
+- **Health checks** for monitoring
+- **Graceful shutdown** handling

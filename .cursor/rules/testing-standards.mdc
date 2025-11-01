@@ -1,0 +1,201 @@
+---
+globs: test_*.py,*_test.py,tests/*.py
+---
+# Testing Standards - Ultimate Discord Intelligence Bot
+
+## Test Structure Requirements
+
+### Test File Organization
+
+```python
+"""Test module for [component name]."""
+import pytest
+from unittest.mock import Mock, patch
+
+from ultimate_discord_intelligence_bot.step_result import StepResult
+from ultimate_discord_intelligence_bot.tools.your_tool import YourTool
+```
+
+### Standard Test Pattern
+
+```python
+def test_function_success(mock_dependencies):
+    """Test successful execution path."""
+    # Arrange
+    tool = YourTool()
+    input_data = "test input"
+    
+    # Act
+    result = tool._run(input_data, tenant="test", workspace="ws1")
+    
+    # Assert
+    assert result.status == "success"
+    assert result.data is not None
+    assert "expected_key" in result.data
+
+def test_function_error_handling(mock_dependencies):
+    """Test error handling path."""
+    # Arrange
+    tool = YourTool()
+    mock_dependencies.side_effect = Exception("Test error")
+    
+    # Act
+    result = tool._run("", tenant="test", workspace="ws1")
+    
+    # Assert
+    assert result.status in ["error", "bad_request"]
+    assert "error" in result.error.lower()
+```
+
+## Testing Patterns
+
+### 1. StepResult Validation
+
+All tool tests must verify StepResult returns:
+
+```python
+def test_tool_returns_step_result():
+    """Ensure tool returns StepResult."""
+    result = tool._run(content="test", tenant="t1", workspace="w1")
+    
+    assert isinstance(result, StepResult)
+    assert hasattr(result, "status")
+    assert hasattr(result, "data") or hasattr(result, "error")
+```
+
+### 2. Tenant Context Testing
+
+Always test tenant isolation:
+
+```python
+def test_tenant_isolation():
+    """Test tenant context is properly handled."""
+    result1 = tool._run("data", tenant="tenant1", workspace="ws1")
+    result2 = tool._run("data", tenant="tenant2", workspace="ws1")
+    
+    # Verify data isolation
+    assert result1.data["namespace"] == "tenant1:ws1"
+    assert result2.data["namespace"] == "tenant2:ws1"
+```
+
+### 3. Mock External Dependencies
+
+Use fixtures from [conftest.py](mdc:tests/conftest.py):
+
+```python
+@pytest.fixture
+def mock_qdrant_client():
+    """Mock Qdrant client for testing."""
+    with patch("qdrant_client.QdrantClient") as mock:
+        yield mock
+
+def test_with_mock_qdrant(mock_qdrant_client):
+    """Test with mocked Qdrant."""
+    mock_qdrant_client.return_value.search.return_value = []
+    # Test implementation
+```
+
+### 4. Async Testing
+
+For async functions:
+
+```python
+@pytest.mark.asyncio
+async def test_async_function():
+    """Test async functionality."""
+    result = await async_tool.process(data="test")
+    assert result.status == "success"
+```
+
+## Test Categories
+
+### Unit Tests
+
+- Test individual functions in isolation
+- Mock all external dependencies
+- Focus on logic and error handling
+
+### Integration Tests
+
+- Test component interactions
+- Use real services when possible
+- Mark with `@pytest.mark.integration`
+
+### Performance Tests
+
+```python
+@pytest.mark.performance
+def test_processing_speed(benchmark):
+    """Test processing performance."""
+    result = benchmark(tool._run, large_dataset, "t1", "w1")
+    assert result.status == "success"
+```
+
+## Test Data Management
+
+### Use Fixtures for Test Data
+
+```python
+@pytest.fixture
+def sample_debate_data():
+    """Sample debate data for testing."""
+    return {
+        "url": "https://example.com/debate",
+        "transcript": "Sample debate transcript...",
+        "metadata": {"duration": 3600}
+    }
+```
+
+### Parameterized Tests
+
+```python
+@pytest.mark.parametrize("input_url,expected_status", [
+    ("https://youtube.com/watch?v=123", "success"),
+    ("invalid-url", "bad_request"),
+    ("", "bad_request"),
+])
+def test_url_validation(input_url, expected_status):
+    """Test URL validation with various inputs."""
+    result = tool._run(input_url, "t1", "w1")
+    assert result.status == expected_status
+```
+
+## Coverage Requirements
+
+- Minimum 80% code coverage
+- 100% coverage for critical paths
+- Test both success and error cases
+- Include edge cases
+
+Run coverage:
+
+```bash
+pytest --cov=ultimate_discord_intelligence_bot --cov-report=html
+```
+
+## Test Documentation
+
+Each test should have:
+
+1. Clear docstring explaining what is tested
+2. Arrange-Act-Assert structure
+3. Comments for complex setup
+4. Meaningful assertion messages
+
+```python
+def test_complex_scenario():
+    """Test handling of edge case X when Y occurs.
+    
+    This tests the specific scenario where multiple
+    debate segments overlap and require merging.
+    """
+    # Arrange: Create overlapping segments
+    segments = create_overlapping_segments()
+    
+    # Act: Process with merge logic
+    result = merge_tool._run(segments, "t1", "w1")
+    
+    # Assert: Verify correct merge
+    assert result.status == "success", "Merge should succeed"
+    assert len(result.data["merged"]) == 2, "Should merge to 2 segments"
+```

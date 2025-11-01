@@ -1,0 +1,31 @@
+---
+alwaysApply: false
+description: Dependencies & extras—pyproject and requirements.lock guidance
+---
+### Dependencies Guidance
+
+- Manage dependencies in [pyproject.toml](mdc:pyproject.toml); lock file: [requirements.lock](mdc:requirements.lock)
+- Prefer pinned versions for deterministic builds
+- Separate optional extras for tools (e.g., dev, test, docs)
+- Keep runtime lean; move heavy libs to optional extras where possible
+- After updates, validate quality gates and docs sync
+
+---
+
+description: "Dependencies & extras: pyproject and requirements.lock guidance"
+---
+
+### Python & Extras
+
+- Python `>=3.10,<3.14` (CI tests 3.10–3.12).
+- Editable install with extras: dev, metrics, whisper, vllm (quote extras in zsh).
+
+### Key Runtime Deps
+
+- CrewAI stack, FastAPI, Discord, Qdrant, pydantic/settings, uvicorn, Redis, faster-whisper, litellm, langsmith, structlog, nltk.
+- OTEL SDK + OTLP exporters.
+
+### Notes
+
+- `openai-whisper` is optional via `whisper` extra (build issues on 3.12).
+- Use `requirements.lock` for pinned CI runs when necessary.

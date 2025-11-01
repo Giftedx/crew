@@ -1,0 +1,34 @@
+---
+alwaysApply: false
+description: Testing standards and workflow
+---
+### Testing Standards
+
+- Unit tests for tools/services; mock external calls
+- Integration tests for pipeline and Discord paths
+- Validate tenant isolation and error paths
+
+```bash
+pytest -q
+pytest -m "not integration"
+```
+
+---
+
+description: "Testing standards and workflow"
+globs: "*.py,*.yaml"
+---
+
+### Testing Workflow
+
+- Add tests for all new functionality.
+- Mock external services; prefer fast, deterministic tests.
+- Validate StepResult success/failure paths and tenant isolation.
+
+### Commands
+
+```bash
+make test
+make type
+make lint
+```

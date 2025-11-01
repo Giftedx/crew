@@ -1,0 +1,471 @@
+---
+globs: "**/core/**,**/src/core/**"
+description: "Core services and utilities patterns for the Ultimate Discord Intelligence Bot"
+---
+
+## Core Services and Utilities
+
+### Core Module Architecture
+
+The `core/` directory provides foundational services and utilities used throughout the application. These are designed to be small, composable, and reusable.
+
+### Essential Services
+
+#### Prompt Engine
+
+```python
+from core.prompt_engine import build_prompt
+
+# Build deterministic prompts with safety preamble
+prompt = build_prompt(
+    base_prompt="Analyze this content: {content}",
+    context={"content": user_input},
+    safety_preamble=True,
+    tool_manifest=available_tools
+)
+```
+
+#### Token Meter
+
+```python
+from core.token_meter import measure
+
+# Estimate tokens and cost for different models
+token_info = measure(
+    text="Your input text here",
+    model="gpt-4",
+    include_prompt=True
+)
+
+print(f"Tokens: {token_info.tokens}")
+print(f"Estimated cost: ${token_info.cost_usd}")
+```
+
+#### Router
+
+```python
+from core.router import Router
+
+router = Router()
+router.register_provider("openai", openai_client)
+router.register_provider("anthropic", anthropic_client)
+
+# Route request to optimal provider
+response = await router.route(
+    query="user question",
+    context={"tenant": "default"},
+    constraints={"max_cost": 0.10, "max_latency": 5000}
+)
+```
+
+## Feature Flags
+
+### Flag Management
+
+```python
+from core.flags import enabled
+
+# Check feature flags
+if enabled("ENABLE_NEW_ANALYSIS_FEATURE"):
+    result = new_analysis_method()
+else:
+    result = legacy_analysis_method()
+
+# Nested feature flags
+if enabled("ENABLE_ANALYSIS") and enabled("ENABLE_FACT_CHECKING"):
+    result = enhanced_analysis_with_fact_check()
+```
+
+### Flag Configuration
+
+```python
+# Environment variable pattern
+ENABLE_<AREA>_<FEATURE>=true
+
+# Examples:
+ENABLE_ANALYSIS_FACT_CHECKING=true
+ENABLE_INGESTION_TIKTOK=true
+ENABLE_DISCORD_SLASH_COMMANDS=true
+```
+
+## HTTP Utilities
+
+### Resilient HTTP Calls
+
+```python
+from core.http_utils import resilient_get, resilient_post
+
+# GET with automatic retries and backoff
+response = resilient_get(
+    url="https://api.example.com/data",
+    timeout=30,
+    max_retries=3,
+    backoff_factor=1.0
+)
+
+# POST with error handling
+response = resilient_post(
+    url="https://api.example.com/submit",
+    data={"key": "value"},
+    headers={"Authorization": "Bearer token"}
+)
+```
+
+### Retry Patterns
+
+```python
+from core.http_utils import http_request_with_retry
+
+# Custom retry configuration
+response = http_request_with_retry(
+    method="GET",
+    url=url,
+    max_retries=5,
+    backoff_factor=2.0,
+    retry_on_status=[500, 502, 503, 504],
+    timeout=60
+)
+```
+
+## Caching System
+
+### LRU Cache
+
+```python
+from core.cache.lru import LRUCache
+
+cache = LRUCache(max_size=1000, ttl=3600)
+
+# Cache expensive operations
+@cache.memoize
+def expensive_computation(input_data: str) -> dict:
+    # Expensive operation here
+    return result
+
+# Manual cache operations
+cache.set("key", value, ttl=1800)
+cached_value = cache.get("key")
+cache.delete("key")
+```
+
+### Distributed Cache
+
+```python
+from core.cache.distributed import DistributedCache
+
+# Redis-based distributed cache
+cache = DistributedCache(
+    redis_url="redis://localhost:6379",
+    namespace="ultimate_discord_bot"
+)
+
+# Cross-instance cache sharing
+await cache.set("shared_key", data, ttl=3600)
+shared_data = await cache.get("shared_key")
+```
+
+## Reliability Patterns
+
+### Circuit Breakers
+
+```python
+from core.reliability import CircuitBreaker
+
+# Circuit breaker for external services
+breaker = CircuitBreaker(
+    failure_threshold=5,
+    recovery_timeout=60,
+    expected_exception=ConnectionError
+)
+
+@breaker
+def call_external_api():
+    # API call that might fail
+    return external_api_call()
+
+# Check circuit state
+if breaker.state == "OPEN":
+    return fallback_response()
+```
+
+### Retry with Exponential Backoff
+
+```python
+from core.reliability import retry_with_backoff
+
+@retry_with_backoff(
+    max_retries=3,
+    backoff_factor=2.0,
+    jitter=True
+)
+def unreliable_operation():
+    # Operation that might fail
+    return process_data()
+```
+
+## Alerting System
+
+### System Alerts
+
+```python
+from core.alerts import AlertManager
+
+alert_manager = AlertManager()
+
+# Send different types of alerts
+await alert_manager.send_alert(
+    level="ERROR",
+    message="Database connection failed",
+    context={"service": "qdrant", "error": str(e)}
+)
+
+await alert_manager.send_alert(
+    level="WARNING",
+    message="High memory usage detected",
+    context={"usage_percent": 85, "threshold": 80}
+)
+```
+
+### Alert Routing
+
+```python
+# Configure alert destinations
+alert_manager.add_destination("discord", discord_webhook_url)
+alert_manager.add_destination("email", email_config)
+alert_manager.add_destination("slack", slack_webhook_url)
+
+# Route alerts based on severity
+await alert_manager.route_alert(alert)
+```
+
+## Rollout Management
+
+### Feature Rollouts
+
+```python
+from core.rollout import RolloutManager
+
+rollout_manager = RolloutManager()
+
+# Gradual feature rollout
+if rollout_manager.should_rollout(
+    feature="new_analysis_engine",
+    tenant="tenant_id",
+    percentage=25  # 25% of tenants
+):
+    result = new_analysis_engine()
+else:
+    result = legacy_analysis_engine()
+```
+
+### Canary Deployments
+
+```python
+# Canary deployment for new features
+if rollout_manager.is_canary(
+    feature="experimental_fact_checker",
+    tenant="tenant_id"
+):
+    result = experimental_fact_checker()
+else:
+    result = stable_fact_checker()
+```
+
+## Tool Planning
+
+### Intelligent Tool Selection
+
+```python
+from core.tool_planner import ToolPlanner
+
+planner = ToolPlanner()
+
+# Plan tool execution sequence
+tool_plan = planner.plan_execution(
+    task="Analyze political content and fact-check claims",
+    available_tools=["download_tool", "transcribe_tool", "analyze_tool", "fact_check_tool"],
+    constraints={"max_cost": 0.50, "max_latency": 30000}
+)
+
+# Execute planned sequence
+for tool in tool_plan:
+    result = await tool.execute()
+    if result.status != "success":
+        break
+```
+
+### Tool Budget Management
+
+```python
+# Allocate budget across tools
+budget_allocator = ToolBudgetAllocator(total_budget=1.0)
+
+allocation = budget_allocator.allocate(
+    tools=["expensive_analysis", "cheap_analysis"],
+    context={"content_length": 1000}
+)
+
+# Use allocated budget
+for tool, budget in allocation.items():
+    result = await tool.execute(budget_limit=budget)
+```
+
+## Privacy and Security
+
+### Privacy Filtering
+
+```python
+from core.privacy import PrivacyFilter
+
+privacy_filter = PrivacyFilter()
+
+# Filter sensitive information
+clean_text, report = privacy_filter.filter_text(
+    text=user_input,
+    metadata={"source": "discord", "user_id": "12345"}
+)
+
+# Check for PII
+if privacy_filter.contains_pii(text):
+    return StepResult.fail("PII detected")
+```
+
+### Data Anonymization
+
+```python
+from core.privacy import DataAnonymizer
+
+anonymizer = DataAnonymizer()
+
+# Anonymize user data
+anonymized_data = anonymizer.anonymize(
+    data={"user_id": "12345", "email": "user@example.com"},
+    fields_to_anonymize=["user_id", "email"]
+)
+```
+
+## Time Utilities
+
+### Timezone Handling
+
+```python
+from core.time_utils import utc_now, to_utc, format_timestamp
+
+# Always use UTC for timestamps
+now = utc_now()
+
+# Convert to UTC from any timezone
+utc_time = to_utc(datetime.now(), timezone="America/New_York")
+
+# Format for logging/storage
+formatted = format_timestamp(now, format="iso")
+```
+
+### Rate Limiting
+
+```python
+from core.time_utils import RateLimiter
+
+# Rate limit API calls
+rate_limiter = RateLimiter(
+    calls_per_minute=60,
+    calls_per_hour=1000
+)
+
+if rate_limiter.can_proceed("api_key_123"):
+    response = await api_call()
+else:
+    await asyncio.sleep(rate_limiter.get_wait_time())
+```
+
+## Logging and Observability
+
+### Structured Logging
+
+```python
+from core.log_schema import LogSchema, CallLog, RewardLog
+
+# Structured call logging
+call_log = CallLog(
+    call_id="uuid-123",
+    domain="model_routing",
+    arm="gpt-4",
+    input_tokens=100,
+    output_tokens=50,
+    cost_usd=0.02,
+    latency_ms=150
+)
+
+# Log the call
+logger.info("Model call completed", extra=call_log.to_dict())
+```
+
+### Metrics Collection
+
+```python
+from core.metrics import MetricsCollector
+
+metrics = MetricsCollector()
+
+# Track custom metrics
+metrics.increment_counter("tool_executions", {"tool": "analysis_tool"})
+metrics.record_histogram("response_time", 150, {"endpoint": "/analyze"})
+metrics.set_gauge("active_connections", 42)
+```
+
+## Testing Core Services
+
+### Mock External Dependencies
+
+```python
+from unittest.mock import patch, MagicMock
+
+@patch('core.http_utils.resilient_get')
+def test_with_mocked_http(mock_get):
+    mock_get.return_value = {"status": "success"}
+    result = my_function_that_calls_http()
+    assert result["status"] == "success"
+```
+
+### Test Feature Flags
+
+```python
+import os
+from core.flags import enabled
+
+def test_feature_flag():
+    # Set environment variable
+    os.environ["ENABLE_TEST_FEATURE"] = "true"
+    
+    # Test flag behavior
+    assert enabled("ENABLE_TEST_FEATURE")
+    
+    # Clean up
+    del os.environ["ENABLE_TEST_FEATURE"]
+```
+
+## Best Practices
+
+### Service Initialization
+
+- Initialize services once and reuse instances
+- Use dependency injection for testability
+- Handle service failures gracefully
+
+### Error Handling
+
+- Always use StepResult for service operations
+- Log errors with sufficient context
+- Implement proper fallback mechanisms
+
+### Performance
+
+- Cache expensive operations
+- Use async operations for I/O
+- Monitor service performance metrics
+
+### Security
+
+- Validate all inputs
+- Use secure defaults
+- Implement proper access controls

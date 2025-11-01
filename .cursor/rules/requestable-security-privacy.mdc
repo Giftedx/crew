@@ -1,0 +1,5 @@
+---
+alwaysApply: false
+description: Security and privacy patterns (alias)
+---
+See [requestable-security.mdc](mdc:.cursor/rules/requestable-security.mdc).

@@ -1,0 +1,875 @@
+---
+description: "Async programming, concurrency patterns, and parallel processing for the Discord bot"
+alwaysApply: false
+---
+
+# Async & Concurrency Patterns - Ultimate Discord Intelligence Bot
+
+## Async Programming Fundamentals
+
+### Async Function Patterns
+
+```python
+import asyncio
+from typing import List, Dict, Any
+from ultimate_discord_intelligence_bot.step_result import StepResult
+
+async def process_content_async(content: str, tenant: str, workspace: str) -> StepResult:
+    """Async content processing with proper error handling."""
+    try:
+        # Use async context managers
+        async with get_database_session() as session:
+            # Async database operations
+            content_result = await content_repo.create_async(
+                content_data=content,
+                tenant=tenant,
+                workspace=workspace,
+                session=session
+            )
+
+            if not content_result.success:
+                return content_result
+
+            # Async analysis processing
+            analysis_result = await analyze_service.process_async(
+                content=content,
+                tenant=tenant,
+                workspace=workspace
+            )
+
+            if not analysis_result.success:
+                return analysis_result
+
+            # Store analysis asynchronously
+            await analysis_repo.store_async(
+                content_id=content_result.data['id'],
+                analysis_data=analysis_result.data,
+                tenant=tenant,
+                workspace=workspace,
+                session=session
+            )
+
+        return StepResult.ok(data={'processed': True})
+
+    except Exception as e:
+        return StepResult.fail(f"Async processing failed: {str(e)}")
+
+# Running async functions
+async def main():
+    result = await process_content_async("test content", "tenant", "workspace")
+    print(result)
+
+# Use asyncio.run() for standalone scripts
+# asyncio.run(main())
+```
+
+### Async Context Managers
+
+```python
+from contextlib import asynccontextmanager
+import aiohttp
+
+@asynccontextmanager
+async def get_http_session():
+    """Async HTTP session context manager."""
+    async with aiohttp.ClientSession() as session:
+        yield session
+
+@asynccontextmanager
+async def get_database_session():
+    """Async database session context manager."""
+    session = AsyncSessionLocal()
+    try:
+        yield session
+        await session.commit()
+    except Exception:
+        await session.rollback()
+        raise
+    finally:
+        await session.close()
+
+async def fetch_with_context():
+    """Example using async context managers."""
+    async with get_http_session() as http_session:
+        async with get_database_session() as db_session:
+            # Both sessions available in same context
+            async with http_session.get("https://api.example.com/data") as response:
+                data = await response.json()
+
+            await store_data_async(data, db_session)
+```
+
+## Concurrent Processing Patterns
+
+### Task Groups for Parallel Processing
+
+```python
+import asyncio
+from asyncio import TaskGroup
+
+async def process_multiple_contents(contents: List[str], tenant: str, workspace: str) -> StepResult:
+    """Process multiple contents concurrently using TaskGroup."""
+    results = []
+
+    async def process_single(content: str):
+        result = await process_content_async(content, tenant, workspace)
+        return content, result
+
+    try:
+        # TaskGroup ensures all tasks complete or all fail
+        async with TaskGroup() as tg:
+            tasks = []
+            for content in contents:
+                task = tg.create_task(process_single(content))
+                tasks.append(task)
+
+        # Collect results after all tasks complete
+        results = [task.result() for task in tasks]
+
+        # Check for failures
+        failed = [result for _, result in results if not result.success]
+        if failed:
+            return StepResult.fail(f"{len(failed)} processing tasks failed")
+
+        return StepResult.ok(data={
+            'processed_count': len(results),
+            'results': results
+        })
+
+    except Exception as e:
+        return StepResult.fail(f"Batch processing failed: {str(e)}")
+```
+
+### Semaphore for Rate Limiting
+
+```python
+async def process_with_rate_limit(contents: List[str], tenant: str, workspace: str,
+                                 max_concurrent: int = 5) -> StepResult:
+    """Process contents with concurrency limit using Semaphore."""
+    semaphore = asyncio.Semaphore(max_concurrent)
+    results = []
+
+    async def process_with_semaphore(content: str):
+        async with semaphore:  # Limits concurrent operations
+            result = await process_content_async(content, tenant, workspace)
+            return result
+
+    # Create tasks for all contents
+    tasks = [process_with_semaphore(content) for content in contents]
+
+    try:
+        # Wait for all tasks to complete
+        completed_results = await asyncio.gather(*tasks, return_exceptions=True)
+
+        # Handle any exceptions
+        for i, result in enumerate(completed_results):
+            if isinstance(result, Exception):
+                return StepResult.fail(f"Task {i} failed: {str(result)}")
+
+            results.append(result)
+
+        successful = [r for r in results if r.success]
+        return StepResult.ok(data={
+            'total': len(results),
+            'successful': len(successful),
+            'failed': len(results) - len(successful)
+        })
+
+    except Exception as e:
+        return StepResult.fail(f"Rate-limited processing failed: {str(e)}")
+```
+
+## Async Discord Bot Patterns
+
+### Async Event Handling
+
+```python
+import discord
+from discord.ext import commands
+import asyncio
+
+class AsyncDiscordBot(commands.Bot):
+    """Async Discord bot with proper concurrency handling."""
+
+    def __init__(self):
+        super().__init__(command_prefix='!', intents=discord.Intents.all())
+        self.processing_tasks = set()
+
+    async def on_ready(self):
+        """Bot startup handler."""
+        print(f'{self.user} has connected to Discord!')
+        # Start background tasks
+        self.loop.create_task(self.background_health_check())
+
+    async def on_message(self, message):
+        """Message event handler with async processing."""
+        if message.author == self.user:
+            return
+
+        # Process message asynchronously without blocking
+        task = asyncio.create_task(self.process_message_async(message))
+        self.processing_tasks.add(task)
+        task.add_done_callback(self.processing_tasks.discard)
+
+    async def process_message_async(self, message) -> StepResult:
+        """Process Discord message asynchronously."""
+        try:
+            # Extract content from Discord message
+            content_data = await extract_message_content(message)
+
+            # Process with async pipeline
+            result = await self.process_content_pipeline(
+                content_data,
+                tenant=get_tenant_from_guild(message.guild.id),
+                workspace=get_workspace_from_channel(message.channel.id)
+            )
+
+            if result.success:
+                # Send response asynchronously
+                await message.channel.send(f"✅ Processed: {result.data}")
+            else:
+                await message.channel.send(f"❌ Error: {result.error}")
+
+            return result
+
+        except Exception as e:
+            error_msg = f"Message processing failed: {str(e)}"
+            await message.channel.send(f"❌ Error: {error_msg}")
+            return StepResult.fail(error_msg)
+
+    async def background_health_check(self):
+        """Background health check task."""
+        while not self.is_closed():
+            try:
+                # Perform health checks every 5 minutes
+                await asyncio.sleep(300)
+                health = await self.perform_health_check()
+
+                if not health.success:
+                    print(f"Health check failed: {health.error}")
+
+            except asyncio.CancelledError:
+                break
+            except Exception as e:
+                print(f"Health check task error: {e}")
+
+    async def close(self):
+        """Clean shutdown with task cancellation."""
+        # Cancel all background tasks
+        for task in self.processing_tasks:
+            task.cancel()
+
+        # Wait for tasks to complete cancellation
+        if self.processing_tasks:
+            await asyncio.gather(*self.processing_tasks, return_exceptions=True)
+
+        await super().close()
+```
+
+### Async Command Processing
+
+```python
+@commands.command(name='analyze')
+async def analyze_command(self, ctx, *, content: str):
+    """Async command for content analysis."""
+    try:
+        # Show typing indicator
+        async with ctx.typing():
+            # Process command asynchronously
+            result = await self.analyze_content_async(
+                content,
+                tenant=get_tenant_from_guild(ctx.guild.id),
+                workspace=get_workspace_from_channel(ctx.channel.id)
+            )
+
+        if result.success:
+            # Send paginated response for long results
+            await self.send_paginated_response(ctx, result.data)
+        else:
+            await ctx.send(f"❌ Analysis failed: {result.error}")
+
+    except Exception as e:
+        await ctx.send(f"❌ Command error: {str(e)}")
+
+async def send_paginated_response(self, ctx, data: Dict[str, Any]):
+    """Send long responses with pagination."""
+    # Implementation for handling long responses
+    pass
+```
+
+## Async Database Operations
+
+### Async Repository Pattern
+
+```python
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.orm import sessionmaker
+
+class AsyncContentRepository:
+    """Async repository for database operations."""
+
+    def __init__(self, session: AsyncSession):
+        self.session = session
+
+    async def create_async(self, content_data: Dict[str, Any],
+                          tenant: str, workspace: str, session: AsyncSession) -> StepResult:
+        """Create content record asynchronously."""
+        try:
+            content = Content(
+                tenant=tenant,
+                workspace=workspace,
+                **content_data
+            )
+
+            session.add(content)
+            await session.flush()  # Get the ID without committing
+
+            return StepResult.ok(data=content.to_dict())
+
+        except Exception as e:
+            return StepResult.fail(f"Failed to create content: {str(e)}")
+
+    async def get_by_id_async(self, content_id: str, tenant: str, workspace: str) -> StepResult:
+        """Get content by ID asynchronously."""
+        try:
+            stmt = select(Content).where(
+                Content.id == content_id,
+                Content.tenant == tenant,
+                Content.workspace == workspace
+            )
+
+            result = await self.session.execute(stmt)
+            content = result.scalar_one_or_none()
+
+            if not content:
+                return StepResult.fail("Content not found")
+
+            return StepResult.ok(data=content.to_dict())
+
+        except Exception as e:
+            return StepResult.fail(f"Database query failed: {str(e)}")
+
+    async def search_async(self, tenant: str, workspace: str,
+                          filters: Dict[str, Any] = None,
+                          limit: int = 50, offset: int = 0) -> StepResult:
+        """Search content asynchronously."""
+        try:
+            stmt = select(Content).where(
+                Content.tenant == tenant,
+                Content.workspace == workspace
+            )
+
+            # Apply filters
+            if filters:
+                if filters.get('content_type'):
+                    stmt = stmt.where(Content.content_type == filters['content_type'])
+
+            # Apply pagination
+            stmt = stmt.order_by(Content.created_at.desc()).limit(limit).offset(offset)
+
+            result = await self.session.execute(stmt)
+            contents = result.scalars().all()
+
+            # Get total count separately for performance
+            count_stmt = select(func.count()).select_from(Content).where(
+                Content.tenant == tenant,
+                Content.workspace == workspace
+            )
+            if filters and filters.get('content_type'):
+                count_stmt = count_stmt.where(Content.content_type == filters['content_type'])
+
+            count_result = await self.session.execute(count_stmt)
+            total = count_result.scalar()
+
+            return StepResult.ok(data={
+                'items': [c.to_dict() for c in contents],
+                'pagination': {
+                    'total': total,
+                    'limit': limit,
+                    'offset': offset,
+                    'has_more': offset + limit < total
+                }
+            })
+
+        except Exception as e:
+            return StepResult.fail(f"Async search failed: {str(e)}")
+```
+
+### Async Database Manager
+
+```python
+class AsyncDatabaseManager:
+    """Async database connection management."""
+
+    def __init__(self):
+        database_url = os.getenv('DATABASE_URL', 'postgresql+asyncpg://localhost/ultimate_bot')
+        self.engine = create_async_engine(
+            database_url,
+            pool_size=10,
+            max_overflow=20,
+            pool_pre_ping=True,
+            pool_recycle=3600
+        )
+        self.AsyncSessionLocal = sessionmaker(
+            bind=self.engine,
+            class_=AsyncSession,
+            expire_on_commit=False
+        )
+
+    async def get_session(self) -> AsyncSession:
+        """Get async database session."""
+        async with self.AsyncSessionLocal() as session:
+            try:
+                yield session
+                await session.commit()
+            except Exception:
+                await session.rollback()
+                raise
+            finally:
+                await session.close()
+
+    async def health_check(self) -> bool:
+        """Async health check."""
+        try:
+            async with self.AsyncSessionLocal() as session:
+                await session.execute(text("SELECT 1"))
+            return True
+        except Exception:
+            return False
+
+# Global async database manager
+async_db_manager = AsyncDatabaseManager()
+```
+
+## Async HTTP Client Patterns
+
+### Async HTTP Client with Retry
+
+```python
+import aiohttp
+from aiohttp import ClientTimeout, ClientError
+import asyncio
+from typing import Dict, Any, Optional
+
+class AsyncHTTPClient:
+    """Async HTTP client with retry logic."""
+
+    def __init__(self):
+        self.timeout = ClientTimeout(total=30)
+        self.max_retries = 3
+        self.backoff_factor = 0.3
+
+    async def request_with_retry(self, method: str, url: str,
+                                headers: Dict[str, str] = None,
+                                json: Dict[str, Any] = None,
+                                **kwargs) -> StepResult:
+        """Make HTTP request with retry logic."""
+        for attempt in range(self.max_retries + 1):
+            try:
+                async with aiohttp.ClientSession(timeout=self.timeout) as session:
+                    async with session.request(
+                        method, url,
+                        headers=headers,
+                        json=json,
+                        **kwargs
+                    ) as response:
+                        if response.status >= 400:
+                            return StepResult.fail(f"HTTP {response.status}: {await response.text()}")
+
+                        return StepResult.ok(data=await response.json())
+
+            except (ClientError, asyncio.TimeoutError) as e:
+                if attempt == self.max_retries:
+                    return StepResult.fail(f"Request failed after {self.max_retries} attempts: {str(e)}")
+
+                # Exponential backoff
+                wait_time = self.backoff_factor * (2 ** attempt)
+                await asyncio.sleep(wait_time)
+
+        return StepResult.fail("Unexpected error in HTTP client")
+
+    async def get_json(self, url: str, headers: Dict[str, str] = None) -> StepResult:
+        """GET JSON with retry logic."""
+        return await self.request_with_retry('GET', url, headers=headers)
+
+    async def post_json(self, url: str, data: Dict[str, Any],
+                       headers: Dict[str, str] = None) -> StepResult:
+        """POST JSON with retry logic."""
+        return await self.request_with_retry('POST', url, headers=headers, json=data)
+```
+
+## Async Background Tasks
+
+### Background Task Manager
+
+```python
+class AsyncTaskManager:
+    """Manage async background tasks."""
+
+    def __init__(self):
+        self.tasks: Dict[str, asyncio.Task] = {}
+        self.running = False
+
+    async def start_background_tasks(self):
+        """Start all background tasks."""
+        if self.running:
+            return
+
+        self.running = True
+
+        # Content processing queue
+        self.tasks['content_processor'] = asyncio.create_task(
+            self.content_processing_loop()
+        )
+
+        # Health monitoring
+        self.tasks['health_monitor'] = asyncio.create_task(
+            self.health_monitoring_loop()
+        )
+
+        # Cleanup tasks
+        self.tasks['cleanup'] = asyncio.create_task(
+            self.cleanup_loop()
+        )
+
+    async def stop_background_tasks(self):
+        """Stop all background tasks."""
+        self.running = False
+
+        # Cancel all tasks
+        for task in self.tasks.values():
+            task.cancel()
+
+        # Wait for cancellation
+        if self.tasks:
+            await asyncio.gather(*self.tasks.values(), return_exceptions=True)
+
+        self.tasks.clear()
+
+    async def content_processing_loop(self):
+        """Background content processing loop."""
+        while self.running:
+            try:
+                # Process queued content
+                await process_content_queue()
+                await asyncio.sleep(1)  # Small delay to prevent busy waiting
+            except asyncio.CancelledError:
+                break
+            except Exception as e:
+                print(f"Content processing error: {e}")
+                await asyncio.sleep(5)  # Back off on errors
+
+    async def health_monitoring_loop(self):
+        """Background health monitoring loop."""
+        while self.running:
+            try:
+                await asyncio.sleep(300)  # Check every 5 minutes
+                health = await perform_comprehensive_health_check()
+
+                if not health.success:
+                    await send_health_alert(health.error)
+
+            except asyncio.CancelledError:
+                break
+            except Exception as e:
+                print(f"Health monitoring error: {e}")
+
+    async def cleanup_loop(self):
+        """Background cleanup loop."""
+        while self.running:
+            try:
+                await asyncio.sleep(3600)  # Clean every hour
+                await perform_data_cleanup()
+            except asyncio.CancelledError:
+                break
+            except Exception as e:
+                print(f"Cleanup error: {e}")
+```
+
+## Error Handling in Async Code
+
+### Async Exception Handling
+
+```python
+async def safe_async_operation(operation_name: str):
+    """Wrapper for safe async operations with comprehensive error handling."""
+    try:
+        # Your async operation here
+        result = await some_async_operation()
+
+        # Validate result
+        if not result:
+            return StepResult.fail(f"{operation_name} returned empty result")
+
+        return StepResult.ok(data=result)
+
+    except asyncio.CancelledError:
+        return StepResult.fail(f"{operation_name} was cancelled")
+
+    except asyncio.TimeoutError:
+        return StepResult.fail(f"{operation_name} timed out")
+
+    except Exception as e:
+        # Log the full exception for debugging
+        logger.exception(f"Unexpected error in {operation_name}")
+        return StepResult.fail(f"{operation_name} failed: {str(e)}")
+
+async def batch_process_with_error_handling(items: List[Any]) -> StepResult:
+    """Process batch with individual error handling."""
+    results = []
+    errors = []
+
+    for i, item in enumerate(items):
+        try:
+            result = await safe_async_operation(f"item_{i}")
+            if result.success:
+                results.append(result.data)
+            else:
+                errors.append(f"Item {i}: {result.error}")
+
+        except Exception as e:
+            errors.append(f"Item {i}: Unexpected error {str(e)}")
+
+    if errors:
+        return StepResult.fail(f"Batch processing completed with {len(errors)} errors: {'; '.join(errors[:5])}")
+
+    return StepResult.ok(data={'processed': len(results), 'results': results})
+```
+
+## Async Testing Patterns
+
+### Async Test Fixtures
+
+```python
+import pytest
+import asyncio
+from unittest.mock import AsyncMock
+
+@pytest.fixture
+async def async_db_session():
+    """Async database session fixture for testing."""
+    session = AsyncSessionLocal()
+    try:
+        yield session
+    finally:
+        await session.close()
+
+@pytest.fixture
+async def mock_async_service():
+    """Mock async service for testing."""
+    service = AsyncMock()
+    service.process_async.return_value = StepResult.ok(data={'processed': True})
+    return service
+
+class TestAsyncContentProcessor:
+    """Test class for async content processing."""
+
+    @pytest.mark.asyncio
+    async def test_async_processing_success(self, async_db_session, mock_async_service):
+        """Test successful async processing."""
+        processor = AsyncContentProcessor(async_db_session, mock_async_service)
+
+        result = await processor.process_async("test content", "tenant", "workspace")
+
+        assert result.success
+        assert result.data['processed'] is True
+
+    @pytest.mark.asyncio
+    async def test_async_processing_failure(self, async_db_session, mock_async_service):
+        """Test async processing failure handling."""
+        mock_async_service.process_async.return_value = StepResult.fail("Processing failed")
+
+        processor = AsyncContentProcessor(async_db_session, mock_async_service)
+
+        result = await processor.process_async("test content", "tenant", "workspace")
+
+        assert not result.success
+        assert "Processing failed" in result.error
+
+    @pytest.mark.asyncio
+    async def test_concurrent_processing(self, async_db_session):
+        """Test concurrent processing with multiple items."""
+        processor = AsyncContentProcessor(async_db_session, Mock())
+
+        contents = ["content1", "content2", "content3"]
+        result = await processor.process_batch_async(contents, "tenant", "workspace")
+
+        assert result.success
+        assert result.data['processed_count'] == 3
+```
+
+## Async Performance Optimization
+
+### Async Batch Processing
+
+```python
+async def process_batch_optimized(items: List[Dict[str, Any]],
+                                 tenant: str, workspace: str,
+                                 batch_size: int = 10) -> StepResult:
+    """Optimized batch processing with controlled concurrency."""
+    semaphore = asyncio.Semaphore(batch_size)
+    results = []
+
+    async def process_batch_item(item: Dict[str, Any]):
+        async with semaphore:
+            return await process_content_async(
+                item['content'],
+                tenant,
+                workspace
+            )
+
+    # Process in batches to control memory usage
+    for i in range(0, len(items), batch_size):
+        batch = items[i:i + batch_size]
+
+        # Process batch concurrently
+        batch_tasks = [process_batch_item(item) for item in batch]
+        batch_results = await asyncio.gather(*batch_tasks, return_exceptions=True)
+
+        # Handle results and exceptions
+        for result in batch_results:
+            if isinstance(result, Exception):
+                return StepResult.fail(f"Batch processing failed: {str(result)}")
+            results.append(result)
+
+    return StepResult.ok(data={'results': results, 'total_processed': len(results)})
+
+async def process_with_progress_callback(items: List[Dict[str, Any]],
+                                        progress_callback=None) -> StepResult:
+    """Process items with progress reporting."""
+    total = len(items)
+    completed = 0
+
+    async def process_with_progress(item: Dict[str, Any]):
+        nonlocal completed
+        result = await process_content_async(item['content'], item['tenant'], item['workspace'])
+
+        completed += 1
+        if progress_callback:
+            await progress_callback(completed, total)
+
+        return result
+
+    # Process all items
+    tasks = [process_with_progress(item) for item in items]
+    results = await asyncio.gather(*tasks, return_exceptions=True)
+
+    # Check for failures
+    failed = [r for r in results if isinstance(r, Exception)]
+    if failed:
+        return StepResult.fail(f"Processing failed for {len(failed)} items")
+
+    return StepResult.ok(data={
+        'results': results,
+        'total_processed': len(results),
+        'completed': completed
+    })
+```
+
+## Async Resource Management
+
+### Async Resource Pool
+
+```python
+class AsyncResourcePool:
+    """Pool for managing async resources like HTTP sessions."""
+
+    def __init__(self, factory, max_size: int = 10):
+        self.factory = factory
+        self.max_size = max_size
+        self.pool = asyncio.Queue(maxsize=max_size)
+        self.created = 0
+
+    async def get_resource(self):
+        """Get resource from pool or create new one."""
+        try:
+            return self.pool.get_nowait()
+        except asyncio.QueueEmpty:
+            if self.created < self.max_size:
+                self.created += 1
+                return await self.factory()
+            else:
+                return await self.pool.get()  # Wait for available resource
+
+    async def return_resource(self, resource):
+        """Return resource to pool."""
+        try:
+            self.pool.put_nowait(resource)
+        except asyncio.QueueFull:
+            # Pool is full, close the resource
+            await resource.close()
+
+    async with get_resource() as resource:
+        # Use resource
+        data = await resource.fetch_data()
+```
+
+### Async Context Manager for Cleanup
+
+```python
+@asynccontextmanager
+async def managed_async_resource(resource_factory, cleanup_func):
+    """Async context manager with automatic cleanup."""
+    resource = None
+    try:
+        resource = await resource_factory()
+        yield resource
+    finally:
+        if resource:
+            await cleanup_func(resource)
+
+async def use_managed_resource():
+    """Example usage of managed async resource."""
+    async def create_http_session():
+        return aiohttp.ClientSession()
+
+    async def cleanup_session(session):
+        await session.close()
+
+    async with managed_async_resource(create_http_session, cleanup_session) as session:
+        async with session.get("https://api.example.com") as response:
+            data = await response.json()
+            return data
+```
+
+## Async Configuration
+
+### Async Startup and Shutdown
+
+```python
+async def async_startup():
+    """Async application startup."""
+    # Initialize async database
+    await async_db_manager.initialize()
+
+    # Start background tasks
+    await task_manager.start_background_tasks()
+
+    # Warm up caches
+    await cache_service.warmup()
+
+    # Health check
+    health = await perform_startup_health_check()
+    if not health.success:
+        raise RuntimeError(f"Startup health check failed: {health.error}")
+
+async def async_shutdown():
+    """Async application shutdown."""
+    # Stop background tasks
+    await task_manager.stop_background_tasks()
+
+    # Close async database connections
+    await async_db_manager.close()
+
+    # Cleanup resources
+    await cleanup_async_resources()
+
+# Use with FastAPI or similar frameworks
+# @app.on_event("startup")
+# async def startup_event():
+#     await async_startup()
+
+# @app.on_event("shutdown")
+# async def shutdown_event():
+#     await async_shutdown()
+```
