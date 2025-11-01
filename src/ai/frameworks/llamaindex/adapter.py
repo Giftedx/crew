@@ -23,7 +23,6 @@ from ultimate_discord_intelligence_bot.step_result import StepResult
 
 if TYPE_CHECKING:
     from llama_index.core.agent import AgentRunner
-    from llama_index.core.base.base_query_engine import BaseQueryEngine
 
 
 logger = structlog.get_logger(__name__)

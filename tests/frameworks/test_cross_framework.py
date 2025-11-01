@@ -20,7 +20,7 @@ class TestCrossFrameworkCompatibility:
     def test_all_frameworks_registered(self) -> None:
         """Test that all 4 framework adapters are registered."""
         frameworks = list_available_frameworks()
-        
+
         # All 4 frameworks should be available
         assert "crewai" in frameworks
         assert "langgraph" in frameworks
@@ -32,7 +32,7 @@ class TestCrossFrameworkCompatibility:
         """Test that get_framework_adapter returns valid adapters for all frameworks."""
         for framework_name in ["crewai", "langgraph", "autogen", "llamaindex"]:
             adapter = get_framework_adapter(framework_name)
-            
+
             # All adapters should have required properties
             assert adapter.framework_name == framework_name
             assert isinstance(adapter.framework_version, str)
@@ -41,7 +41,7 @@ class TestCrossFrameworkCompatibility:
     def test_feature_support_matrix(self) -> None:
         """Test feature support across all frameworks and build comparison matrix."""
         frameworks = ["crewai", "langgraph", "autogen", "llamaindex"]
-        
+
         # Key features to compare
         features_to_check = [
             FrameworkFeature.SEQUENTIAL_EXECUTION,
@@ -52,35 +52,28 @@ class TestCrossFrameworkCompatibility:
             FrameworkFeature.CUSTOM_TOOLS,
             FrameworkFeature.STREAMING,
         ]
-        
+
         feature_matrix = {}
-        
+
         for framework_name in frameworks:
             adapter = get_framework_adapter(framework_name)
             feature_matrix[framework_name] = {
-                feature: adapter.supports_feature(feature)
-                for feature in features_to_check
+                feature: adapter.supports_feature(feature) for feature in features_to_check
             }
-        
+
         # Verify expected feature support patterns
         # All frameworks should support sequential execution
-        assert all(
-            feature_matrix[fw][FrameworkFeature.SEQUENTIAL_EXECUTION]
-            for fw in frameworks
-        )
-        
+        assert all(feature_matrix[fw][FrameworkFeature.SEQUENTIAL_EXECUTION] for fw in frameworks)
+
         # All frameworks should support custom tools
-        assert all(
-            feature_matrix[fw][FrameworkFeature.CUSTOM_TOOLS]
-            for fw in frameworks
-        )
-        
+        assert all(feature_matrix[fw][FrameworkFeature.CUSTOM_TOOLS] for fw in frameworks)
+
         # Only LangGraph should support state persistence
         assert feature_matrix["langgraph"][FrameworkFeature.STATE_PERSISTENCE]
         assert not feature_matrix["crewai"][FrameworkFeature.STATE_PERSISTENCE]
         assert not feature_matrix["autogen"][FrameworkFeature.STATE_PERSISTENCE]
         assert not feature_matrix["llamaindex"][FrameworkFeature.STATE_PERSISTENCE]
-        
+
         # Only CrewAI and LangGraph should support parallel execution
         assert feature_matrix["crewai"][FrameworkFeature.PARALLEL_EXECUTION]
         assert feature_matrix["langgraph"][FrameworkFeature.PARALLEL_EXECUTION]
@@ -90,17 +83,17 @@ class TestCrossFrameworkCompatibility:
     def test_capabilities_structure_consistency(self) -> None:
         """Test that all frameworks return consistent capabilities structure."""
         frameworks = ["crewai", "langgraph", "autogen", "llamaindex"]
-        
+
         for framework_name in frameworks:
             adapter = get_framework_adapter(framework_name)
             caps = adapter.get_capabilities()
-            
+
             # All capabilities should have these required fields
             assert "supported_features" in caps
             assert "metadata" in caps
             assert isinstance(caps["supported_features"], list)
             assert isinstance(caps["metadata"], dict)
-            
+
             # Metadata should contain framework name
             assert caps["metadata"]["framework"] == framework_name
 
@@ -115,21 +108,21 @@ class TestCrossFrameworkCompatibility:
             inputs={"message": "hello world"},
         )
         config = CrewConfig(tenant_id="test")
-        
+
         # Each framework should accept the task and return a StepResult
         frameworks_to_test = ["crewai"]  # Start with CrewAI only for basic validation
-        
+
         for framework_name in frameworks_to_test:
             adapter = get_framework_adapter(framework_name)
             result = await adapter.execute_task(task, config)
-            
+
             # Result should be a StepResult
             assert isinstance(result, StepResult)
-            
+
             # StepResult should have required fields
             assert hasattr(result, "success")
             assert hasattr(result, "data")
-            
+
             # If successful, data should contain ExecutionResult
             if result.success:
                 execution_result = result.data
@@ -143,18 +136,18 @@ class TestCrossFrameworkCompatibility:
         crewai = get_framework_adapter("crewai")
         assert crewai.supports_feature(FrameworkFeature.HIERARCHICAL_EXECUTION)
         assert crewai.supports_feature(FrameworkFeature.DYNAMIC_AGENT_CREATION)
-        
+
         # LangGraph: State management
         langgraph = get_framework_adapter("langgraph")
         assert langgraph.supports_feature(FrameworkFeature.STATE_PERSISTENCE)
         assert langgraph.supports_feature(FrameworkFeature.STATE_CHECKPOINTING)
         assert langgraph.supports_feature(FrameworkFeature.STATE_BRANCHING)
-        
+
         # AutoGen: Conversation and human-in-the-loop
         autogen = get_framework_adapter("autogen")
         assert autogen.supports_feature(FrameworkFeature.MULTI_AGENT_COLLABORATION)
         assert autogen.supports_feature(FrameworkFeature.HUMAN_IN_LOOP)
-        
+
         # LlamaIndex: RAG and streaming
         llamaindex = get_framework_adapter("llamaindex")
         assert llamaindex.supports_feature(FrameworkFeature.STREAMING)
@@ -166,10 +159,10 @@ class TestCrossFrameworkCompatibility:
         crewai_1 = get_framework_adapter("crewai")
         crewai_2 = get_framework_adapter("crewai")
         langgraph = get_framework_adapter("langgraph")
-        
+
         # Same framework should return same adapter class (singleton pattern)
         assert type(crewai_1) is type(crewai_2)
-        
+
         # Different frameworks should return different adapter classes
         assert type(crewai_1) is not type(langgraph)
 
@@ -178,7 +171,7 @@ class TestCrossFrameworkCompatibility:
         # Invalid framework name should raise ValueError
         with pytest.raises(ValueError, match="Unknown framework"):
             get_framework_adapter("invalid_framework")
-        
+
         # Empty framework name should raise ValueError
         with pytest.raises(ValueError):
             get_framework_adapter("")
@@ -190,38 +183,38 @@ class TestFrameworkPerformanceBaseline:
     def test_adapter_initialization_performance(self) -> None:
         """Test that adapter initialization is fast."""
         import time
-        
+
         frameworks = ["crewai", "langgraph", "autogen", "llamaindex"]
-        
+
         for framework_name in frameworks:
             start = time.time()
             adapter = get_framework_adapter(framework_name)
             end = time.time()
-            
+
             # Adapter initialization should be < 100ms
             init_time_ms = (end - start) * 1000
             assert init_time_ms < 100, f"{framework_name} initialization took {init_time_ms:.2f}ms"
-            
+
             # Adapter should be usable immediately
             assert adapter.framework_name == framework_name
 
     def test_capabilities_query_performance(self) -> None:
         """Test that capabilities queries are fast."""
         import time
-        
+
         frameworks = ["crewai", "langgraph", "autogen", "llamaindex"]
-        
+
         for framework_name in frameworks:
             adapter = get_framework_adapter(framework_name)
-            
+
             start = time.time()
             caps = adapter.get_capabilities()
             end = time.time()
-            
+
             # Capabilities query should be < 10ms
             query_time_ms = (end - start) * 1000
             assert query_time_ms < 10, f"{framework_name} capabilities query took {query_time_ms:.2f}ms"
-            
+
             # Capabilities should be complete
             assert len(caps["supported_features"]) > 0
 
@@ -232,15 +225,15 @@ class TestFrameworkDocumentation:
     def test_all_frameworks_have_metadata(self) -> None:
         """Test that all frameworks provide comprehensive metadata."""
         frameworks = ["crewai", "langgraph", "autogen", "llamaindex"]
-        
+
         for framework_name in frameworks:
             adapter = get_framework_adapter(framework_name)
             caps = adapter.get_capabilities()
-            
+
             # All frameworks should document their limitations
             assert "limitations" in caps
             assert isinstance(caps["limitations"], list)
-            
+
             # All frameworks should declare their state backends
             assert "state_backends" in caps
             assert isinstance(caps["state_backends"], list)
@@ -248,10 +241,10 @@ class TestFrameworkDocumentation:
     def test_framework_version_availability(self) -> None:
         """Test that all frameworks report version information."""
         frameworks = ["crewai", "langgraph", "autogen", "llamaindex"]
-        
+
         for framework_name in frameworks:
             adapter = get_framework_adapter(framework_name)
-            
+
             # Version should be available (even if "unknown")
             assert adapter.framework_version is not None
             assert isinstance(adapter.framework_version, str)
