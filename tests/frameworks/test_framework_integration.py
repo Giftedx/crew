@@ -125,6 +125,47 @@ class TestFrameworkInteroperability:
             assert hasattr(execution_result, "execution_time_ms")
 
 
+class TestLangGraphAdapter:
+    """Test LangGraph framework adapter implementation."""
+
+    def test_adapter_properties(self) -> None:
+        """Test LangGraph adapter basic properties."""
+        try:
+            adapter = get_framework_adapter("langgraph")
+            assert adapter.framework_name == "langgraph"
+            assert isinstance(adapter.framework_version, str)
+        except ValueError:
+            pytest.skip("LangGraph adapter not available")
+
+    def test_supported_features(self) -> None:
+        """Test that LangGraph adapter declares supported features."""
+        try:
+            adapter = get_framework_adapter("langgraph")
+
+            # LangGraph should support these state-centric features
+            assert adapter.supports_feature(FrameworkFeature.SEQUENTIAL_EXECUTION)
+            assert adapter.supports_feature(FrameworkFeature.PARALLEL_EXECUTION)
+            assert adapter.supports_feature(FrameworkFeature.STATE_PERSISTENCE)
+            assert adapter.supports_feature(FrameworkFeature.STATE_CHECKPOINTING)
+            assert adapter.supports_feature(FrameworkFeature.STATE_BRANCHING)
+        except ValueError:
+            pytest.skip("LangGraph adapter not available")
+
+    def test_get_capabilities(self) -> None:
+        """Test getting LangGraph adapter capabilities."""
+        try:
+            adapter = get_framework_adapter("langgraph")
+            capabilities = adapter.get_capabilities()
+
+            assert "supported_features" in capabilities
+            assert "supports_streaming" in capabilities
+            assert "state_backends" in capabilities
+            assert capabilities["supports_streaming"] is True
+            assert "memory" in capabilities["state_backends"]
+        except ValueError:
+            pytest.skip("LangGraph adapter not available")
+
+
 class TestBackwardCompatibility:
     """Test that existing crew_core code still works."""
 

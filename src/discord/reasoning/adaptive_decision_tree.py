@@ -270,8 +270,8 @@ ACTION TYPE: {tokens.action.action_type}
 PRIORITY: {tokens.action.priority}
 URGENCY: {tokens.context.urgency}
 SENTIMENT: {tokens.context.sentiment}
-IS DIRECT MENTION: {bool(metadata.get('mentions'))}
-USER OPTED IN: {metadata.get('user_opt_in_status', False)}
+IS DIRECT MENTION: {bool(metadata.get("mentions"))}
+USER OPTED IN: {metadata.get("user_opt_in_status", False)}
 
 Analyze this message and provide a JSON response with:
 - should_respond: boolean
