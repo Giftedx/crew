@@ -3,15 +3,16 @@ from mem0 import Memory
 from platform.core.step_result import StepResult
 from ..settings import _get_setting
 
+
 class Mem0MemoryService:
     """Service wrapper for Mem0 to manage user preferences and learned patterns."""
 
     def __init__(self):
         """Initializes the Mem0MemoryService."""
-        qdrant_url = _get_setting('QDRANT_URL', 'http://localhost:6333')
-        self.memory = Memory(config={'vector_store': {'provider': 'qdrant', 'config': {'url': qdrant_url}}})
+        qdrant_url = _get_setting("QDRANT_URL", "http://localhost:6333")
+        self.memory = Memory(config={"vector_store": {"provider": "qdrant", "config": {"url": qdrant_url}}})
 
-    def remember(self, content: str, user_id: str, metadata: dict | None=None) -> StepResult:
+    def remember(self, content: str, user_id: str, metadata: dict | None = None) -> StepResult:
         """
         Stores a memory or preference for a user.
 
@@ -27,9 +28,9 @@ class Mem0MemoryService:
             result = self.memory.add(content, user_id=user_id, metadata=metadata or {})
             return StepResult.ok(data=result)
         except Exception as e:
-            return StepResult.fail(f'Mem0 remember failed: {e}')
+            return StepResult.fail(f"Mem0 remember failed: {e}")
 
-    def recall(self, query: str, user_id: str, limit: int=10) -> StepResult:
+    def recall(self, query: str, user_id: str, limit: int = 10) -> StepResult:
         """
         Recalls memories or preferences for a user based on a query.
 
@@ -45,9 +46,9 @@ class Mem0MemoryService:
             results = self.memory.search(query, user_id=user_id, limit=limit)
             return StepResult.ok(data=results)
         except Exception as e:
-            return StepResult.fail(f'Mem0 recall failed: {e}')
+            return StepResult.fail(f"Mem0 recall failed: {e}")
 
-    def update_memory(self, memory_id: str, content: str, user_id: str, metadata: dict | None=None) -> StepResult:
+    def update_memory(self, memory_id: str, content: str, user_id: str, metadata: dict | None = None) -> StepResult:
         """
         Updates an existing memory.
 
@@ -64,7 +65,7 @@ class Mem0MemoryService:
             result = self.memory.update(memory_id=memory_id, data=content, user_id=user_id, metadata=metadata or {})
             return StepResult.ok(data=result)
         except Exception as e:
-            return StepResult.fail(f'Mem0 update failed: {e}')
+            return StepResult.fail(f"Mem0 update failed: {e}")
 
     def delete_memory(self, memory_id: str, user_id: str) -> StepResult:
         """
@@ -79,9 +80,9 @@ class Mem0MemoryService:
         """
         try:
             self.memory.delete(memory_id=memory_id, user_id=user_id)
-            return StepResult.ok(data={'deleted': memory_id})
+            return StepResult.ok(data={"deleted": memory_id})
         except Exception as e:
-            return StepResult.fail(f'Mem0 delete failed: {e}')
+            return StepResult.fail(f"Mem0 delete failed: {e}")
 
     def get_all_memories(self, user_id: str) -> StepResult:
         """
@@ -97,7 +98,7 @@ class Mem0MemoryService:
             results = self.memory.get_all(user_id=user_id)
             return StepResult.ok(data=results)
         except Exception as e:
-            return StepResult.fail(f'Mem0 get_all failed: {e}')
+            return StepResult.fail(f"Mem0 get_all failed: {e}")
 
     def get_memory_history(self, memory_id: str, user_id: str) -> StepResult:
         """
@@ -114,4 +115,4 @@ class Mem0MemoryService:
             history = self.memory.history(memory_id=memory_id, user_id=user_id)
             return StepResult.ok(data=history)
         except Exception as e:
-            return StepResult.fail(f'Mem0 history retrieval failed: {e}')
+            return StepResult.fail(f"Mem0 history retrieval failed: {e}")

@@ -4,12 +4,14 @@ Automatic Speech Recognition (ASR) using Whisper.
 This module provides comprehensive ASR capabilities with GPU support,
 language detection, and batch processing for creator content.
 """
+
 from __future__ import annotations
 import logging
 import os
 from dataclasses import dataclass
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
+
 try:
     import torch
     import whisper
@@ -20,13 +22,16 @@ except ImportError:
     WhisperModel = None
 from ultimate_discord_intelligence_bot.creator_ops.config import CreatorOpsConfig
 from platform.core.step_result import StepResult
+
 if TYPE_CHECKING:
     from pathlib import Path
 logger = logging.getLogger(__name__)
 
+
 @dataclass
 class ASRSegment:
     """ASR segment with timing and confidence information."""
+
     start_time: float
     end_time: float
     text: str
@@ -35,9 +40,11 @@ class ASRSegment:
     language_probability: float | None = None
     no_speech_prob: float | None = None
 
+
 @dataclass
 class ASRResult:
     """Complete ASR result with metadata."""
+
     text: str
     language: str
     language_probability: float
@@ -47,6 +54,7 @@ class ASRResult:
     processing_time: float
     device: str
     created_at: datetime
+
 
 class WhisperASR:
     """
@@ -61,7 +69,9 @@ class WhisperASR:
     - Confidence scoring
     """
 
-    def __init__(self, model_name: str='large-v3', device: str | None=None, config: CreatorOpsConfig | None=None) -> None:
+    def __init__(
+        self, model_name: str = "large-v3", device: str | None = None, config: CreatorOpsConfig | None = None
+    ) -> None:
         """Initialize Whisper ASR."""
         self.config = config or CreatorOpsConfig()
         self.model_name = model_name
@@ -73,27 +83,36 @@ class WhisperASR:
     def _get_optimal_device(self) -> str:
         """Get optimal device for ASR processing."""
         if torch is not None and self.config.use_gpu and torch.cuda.is_available():
-            return 'cuda'
-        return 'cpu'
+            return "cuda"
+        return "cpu"
 
     def _initialize_models(self) -> None:
         """Initialize Whisper models."""
         if whisper is None and WhisperModel is None:
-            raise ImportError('whisper or faster-whisper not available. Install ML dependencies: pip install openai-whisper faster-whisper torch')
+            raise ImportError(
+                "whisper or faster-whisper not available. Install ML dependencies: pip install openai-whisper faster-whisper torch"
+            )
         try:
-            if self.device == 'cuda' and whisper is not None:
+            if self.device == "cuda" and whisper is not None:
                 self.model = whisper.load_model(self.model_name, device=self.device)
-                logger.info(f'Loaded Whisper model {self.model_name} on {self.device}')
+                logger.info(f"Loaded Whisper model {self.model_name} on {self.device}")
             elif WhisperModel is not None:
-                self.faster_model = WhisperModel(self.model_name, device='cpu', compute_type='int8')
-                logger.info(f'Loaded faster-whisper model {self.model_name} on CPU')
+                self.faster_model = WhisperModel(self.model_name, device="cpu", compute_type="int8")
+                logger.info(f"Loaded faster-whisper model {self.model_name} on CPU")
             else:
-                raise ImportError('Neither whisper nor faster-whisper is available')
+                raise ImportError("Neither whisper nor faster-whisper is available")
         except Exception as e:
-            logger.error(f'Failed to initialize Whisper model: {e!s}')
+            logger.error(f"Failed to initialize Whisper model: {e!s}")
             raise
 
-    def transcribe_audio(self, audio_path: str | Path, language: str | None=None, word_timestamps: bool=True, temperature: float=0.0, beam_size: int=5) -> StepResult:
+    def transcribe_audio(
+        self,
+        audio_path: str | Path,
+        language: str | None = None,
+        word_timestamps: bool = True,
+        temperature: float = 0.0,
+        beam_size: int = 5,
+    ) -> StepResult:
         """
         Transcribe audio file to text with timestamps.
 
@@ -110,11 +129,13 @@ class WhisperASR:
         start_time = datetime.utcnow()
         try:
             if not os.path.exists(audio_path):
-                return StepResult.fail(f'Audio file not found: {audio_path}')
-            if self.device == 'cuda' and self.model:
+                return StepResult.fail(f"Audio file not found: {audio_path}")
+            if self.device == "cuda" and self.model:
                 result = self._transcribe_with_whisper(audio_path, language, word_timestamps, temperature, beam_size)
             else:
-                result = self._transcribe_with_faster_whisper(audio_path, language, word_timestamps, temperature, beam_size)
+                result = self._transcribe_with_faster_whisper(
+                    audio_path, language, word_timestamps, temperature, beam_size
+                )
             if not result.success:
                 return result
             processing_time = (datetime.utcnow() - start_time).total_seconds()
@@ -124,42 +145,94 @@ class WhisperASR:
             asr_result.created_at = start_time
             return StepResult.ok(data=asr_result)
         except Exception as e:
-            logger.error(f'ASR transcription failed: {e!s}')
-            return StepResult.fail(f'ASR transcription failed: {e!s}')
+            logger.error(f"ASR transcription failed: {e!s}")
+            return StepResult.fail(f"ASR transcription failed: {e!s}")
 
-    def _transcribe_with_whisper(self, audio_path: str | Path, language: str | None, word_timestamps: bool, temperature: float, beam_size: int) -> StepResult:
+    def _transcribe_with_whisper(
+        self, audio_path: str | Path, language: str | None, word_timestamps: bool, temperature: float, beam_size: int
+    ) -> StepResult:
         """Transcribe using standard Whisper (GPU)."""
         try:
-            options = {'language': language, 'temperature': temperature, 'beam_size': beam_size, 'word_timestamps': word_timestamps}
+            options = {
+                "language": language,
+                "temperature": temperature,
+                "beam_size": beam_size,
+                "word_timestamps": word_timestamps,
+            }
             options = {k: v for k, v in options.items() if v is not None}
             result = self.model.transcribe(str(audio_path), **options)
             segments = []
-            for segment in result['segments']:
-                asr_segment = ASRSegment(start_time=segment['start'], end_time=segment['end'], text=segment['text'].strip(), confidence=segment.get('avg_logprob', 0.0), language=result.get('language'), language_probability=result.get('language_probability'), no_speech_prob=segment.get('no_speech_prob'))
+            for segment in result["segments"]:
+                asr_segment = ASRSegment(
+                    start_time=segment["start"],
+                    end_time=segment["end"],
+                    text=segment["text"].strip(),
+                    confidence=segment.get("avg_logprob", 0.0),
+                    language=result.get("language"),
+                    language_probability=result.get("language_probability"),
+                    no_speech_prob=segment.get("no_speech_prob"),
+                )
                 segments.append(asr_segment)
-            asr_result = ASRResult(text=result['text'].strip(), language=result['language'], language_probability=result.get('language_probability', 0.0), segments=segments, duration=result.get('duration', 0.0), model_name=self.model_name, processing_time=0.0, device=self.device, created_at=datetime.utcnow())
+            asr_result = ASRResult(
+                text=result["text"].strip(),
+                language=result["language"],
+                language_probability=result.get("language_probability", 0.0),
+                segments=segments,
+                duration=result.get("duration", 0.0),
+                model_name=self.model_name,
+                processing_time=0.0,
+                device=self.device,
+                created_at=datetime.utcnow(),
+            )
             return StepResult.ok(data=asr_result)
         except Exception as e:
-            return StepResult.fail(f'Whisper transcription failed: {e!s}')
+            return StepResult.fail(f"Whisper transcription failed: {e!s}")
 
-    def _transcribe_with_faster_whisper(self, audio_path: str | Path, language: str | None, word_timestamps: bool, temperature: float, beam_size: int) -> StepResult:
+    def _transcribe_with_faster_whisper(
+        self, audio_path: str | Path, language: str | None, word_timestamps: bool, temperature: float, beam_size: int
+    ) -> StepResult:
         """Transcribe using faster-whisper (CPU)."""
         try:
-            options = {'language': language, 'temperature': temperature, 'beam_size': beam_size, 'word_timestamps': word_timestamps}
+            options = {
+                "language": language,
+                "temperature": temperature,
+                "beam_size": beam_size,
+                "word_timestamps": word_timestamps,
+            }
             options = {k: v for k, v in options.items() if v is not None}
             segments, info = self.faster_model.transcribe(str(audio_path), **options)
             segment_list = list(segments)
             asr_segments = []
             for segment in segment_list:
-                asr_segment = ASRSegment(start_time=segment.start, end_time=segment.end, text=segment.text.strip(), confidence=segment.avg_logprob, language=info.language, language_probability=info.language_probability, no_speech_prob=segment.no_speech_prob)
+                asr_segment = ASRSegment(
+                    start_time=segment.start,
+                    end_time=segment.end,
+                    text=segment.text.strip(),
+                    confidence=segment.avg_logprob,
+                    language=info.language,
+                    language_probability=info.language_probability,
+                    no_speech_prob=segment.no_speech_prob,
+                )
                 asr_segments.append(asr_segment)
-            full_text = ' '.join((segment.text for segment in segment_list))
-            asr_result = ASRResult(text=full_text.strip(), language=info.language, language_probability=info.language_probability, segments=asr_segments, duration=info.duration, model_name=self.model_name, processing_time=0.0, device=self.device, created_at=datetime.utcnow())
+            full_text = " ".join((segment.text for segment in segment_list))
+            asr_result = ASRResult(
+                text=full_text.strip(),
+                language=info.language,
+                language_probability=info.language_probability,
+                segments=asr_segments,
+                duration=info.duration,
+                model_name=self.model_name,
+                processing_time=0.0,
+                device=self.device,
+                created_at=datetime.utcnow(),
+            )
             return StepResult.ok(data=asr_result)
         except Exception as e:
-            return StepResult.fail(f'Faster-whisper transcription failed: {e!s}')
+            return StepResult.fail(f"Faster-whisper transcription failed: {e!s}")
 
-    def batch_transcribe(self, audio_paths: list[str | Path], language: str | None=None, max_workers: int=4) -> StepResult:
+    def batch_transcribe(
+        self, audio_paths: list[str | Path], language: str | None = None, max_workers: int = 4
+    ) -> StepResult:
         """
         Transcribe multiple audio files in batch.
 
@@ -178,10 +251,10 @@ class WhisperASR:
                 if result.success:
                     results.append(result.data)
                 else:
-                    logger.error(f'Failed to transcribe {audio_path}: {result.error}')
+                    logger.error(f"Failed to transcribe {audio_path}: {result.error}")
             return StepResult.ok(data=results)
         except Exception as e:
-            return StepResult.fail(f'Batch transcription failed: {e!s}')
+            return StepResult.fail(f"Batch transcription failed: {e!s}")
 
     def get_supported_languages(self) -> list[str]:
         """Get list of supported languages."""
@@ -191,7 +264,13 @@ class WhisperASR:
 
     def get_model_info(self) -> dict[str, Any]:
         """Get model information."""
-        return {'model_name': self.model_name, 'device': self.device, 'has_gpu': torch.cuda.is_available() if torch is not None else False, 'cuda_device_count': torch.cuda.device_count() if torch is not None and torch.cuda.is_available() else 0, 'supported_languages': len(self.get_supported_languages())}
+        return {
+            "model_name": self.model_name,
+            "device": self.device,
+            "has_gpu": torch.cuda.is_available() if torch is not None else False,
+            "cuda_device_count": torch.cuda.device_count() if torch is not None and torch.cuda.is_available() else 0,
+            "supported_languages": len(self.get_supported_languages()),
+        }
 
     def cleanup(self) -> None:
         """Cleanup resources."""
@@ -201,5 +280,5 @@ class WhisperASR:
         if self.faster_model:
             del self.faster_model
             self.faster_model = None
-        if torch is not None and self.device == 'cuda' and torch.cuda.is_available():
+        if torch is not None and self.device == "cuda" and torch.cuda.is_available():
             torch.cuda.empty_cache()

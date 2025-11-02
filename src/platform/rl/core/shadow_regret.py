@@ -3,6 +3,7 @@
 This module provides regret tracking capabilities for evaluating LinTS
 performance in shadow mode without affecting live traffic routing.
 """
+
 from __future__ import annotations
 
 import os
@@ -16,19 +17,20 @@ try:
 except ImportError:
     METRICS_AVAILABLE = False
 
+
 @runtime_checkable
 class _PolicyLike(Protocol):
     """Protocol for bandit policies."""
 
-    def recommend(self, context: dict[str, Any], candidates: list[Any]) -> Any:
-        ...
+    def recommend(self, context: dict[str, Any], candidates: list[Any]) -> Any: ...
 
-    def update(self, action: Any, reward: float, context: dict[str, Any]) -> None:
-        ...
+    def update(self, action: Any, reward: float, context: dict[str, Any]) -> None: ...
+
 
 @dataclass
 class ShadowRegretTracker:
     """Track regret for shadow policies compared to active policy."""
+
     cumulative_regret: defaultdict[str, float] = field(default_factory=lambda: defaultdict(float))
     total_pulls: defaultdict[str, int] = field(default_factory=lambda: defaultdict(int))
     total_rewards: defaultdict[str, float] = field(default_factory=lambda: defaultdict(float))
@@ -53,9 +55,15 @@ class ShadowRegretTracker:
                     from platform.observability import metrics
 
                     from ultimate_discord_intelligence_bot.tenancy import current_tenant
+
                     ctx = current_tenant()
                     if ctx:
-                        regret_labels = {'tenant': ctx.tenant_id, 'workspace': ctx.workspace_id, 'policy': policy_name, 'shadow': 'true'}
+                        regret_labels = {
+                            "tenant": ctx.tenant_id,
+                            "workspace": ctx.workspace_id,
+                            "policy": policy_name,
+                            "shadow": "true",
+                        }
                         metrics.RL_REWARD_LATENCY_GAP.labels(**regret_labels).observe(instantaneous_regret)
                 except Exception:
                     pass
@@ -76,31 +84,53 @@ class ShadowRegretTracker:
 
     def get_summary(self) -> dict[str, Any]:
         """Get summary statistics for all tracked policies."""
-        summary: dict[str, Any] = {'baseline': {'avg_reward': self.baseline_reward, 'count': self.baseline_count}, 'policies': {}}
+        summary: dict[str, Any] = {
+            "baseline": {"avg_reward": self.baseline_reward, "count": self.baseline_count},
+            "policies": {},
+        }
         for policy_name in self.cumulative_regret:
             if self.total_pulls[policy_name] > 0:
                 avg_reward = self.total_rewards[policy_name] / self.total_pulls[policy_name]
                 avg_regret = self.cumulative_regret[policy_name] / self.total_pulls[policy_name]
-                summary['policies'][policy_name] = {'pulls': self.total_pulls[policy_name], 'avg_reward': avg_reward, 'cumulative_regret': self.cumulative_regret[policy_name], 'avg_regret': avg_regret, 'regret_percentage': self.get_regret_percentage(policy_name), 'performance_ratio': self.get_performance_ratio(policy_name)}
+                summary["policies"][policy_name] = {
+                    "pulls": self.total_pulls[policy_name],
+                    "avg_reward": avg_reward,
+                    "cumulative_regret": self.cumulative_regret[policy_name],
+                    "avg_regret": avg_regret,
+                    "regret_percentage": self.get_regret_percentage(policy_name),
+                    "performance_ratio": self.get_performance_ratio(policy_name),
+                }
         return summary
+
+
 _shadow_tracker = ShadowRegretTracker()
+
 
 def get_shadow_tracker() -> ShadowRegretTracker:
     """Get the global shadow regret tracker."""
     return _shadow_tracker
 
+
 def is_lints_shadow_enabled() -> bool:
     """Check if LinTS shadow mode is enabled."""
-    return os.getenv('ENABLE_RL_LINTS', '').lower() in {'1', 'true', 'yes', 'on'}
+    return os.getenv("ENABLE_RL_LINTS", "").lower() in {"1", "true", "yes", "on"}
 
-def record_shadow_evaluation(policy_name: str, policy: _PolicyLike, context: dict[str, Any], candidates: list[Any], active_choice: Any, active_reward: float) -> None:
+
+def record_shadow_evaluation(
+    policy_name: str,
+    policy: _PolicyLike,
+    context: dict[str, Any],
+    candidates: list[Any],
+    active_choice: Any,
+    active_reward: float,
+) -> None:
     """Record a shadow evaluation for regret tracking."""
     if not is_lints_shadow_enabled():
         return
     try:
         shadow_choice = policy.recommend(context, candidates)
         choice_matched = shadow_choice == active_choice
-        if policy_name == 'lints':
+        if policy_name == "lints":
             estimated_reward = active_reward * (0.95 + 0.1 * (1 if choice_matched else 0))
         else:
             estimated_reward = active_reward * (0.9 + 0.2 * (1 if choice_matched else 0))
@@ -108,4 +138,6 @@ def record_shadow_evaluation(policy_name: str, policy: _PolicyLike, context: dic
         tracker.record_shadow_result(policy_name, estimated_reward, choice_matched)
     except Exception:
         pass
-__all__ = ['ShadowRegretTracker', 'get_shadow_tracker', 'is_lints_shadow_enabled', 'record_shadow_evaluation']
+
+
+__all__ = ["ShadowRegretTracker", "get_shadow_tracker", "is_lints_shadow_enabled", "record_shadow_evaluation"]

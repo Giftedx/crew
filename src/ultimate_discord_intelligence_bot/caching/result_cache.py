@@ -3,6 +3,7 @@
 This module provides a comprehensive caching system for tool results,
 enabling performance optimization through intelligent result caching.
 """
+
 from __future__ import annotations
 import hashlib
 import json
@@ -12,12 +13,15 @@ from datetime import datetime, timedelta, timezone
 from functools import wraps
 from typing import TYPE_CHECKING, Any
 from platform.core.step_result import StepResult
+
 if TYPE_CHECKING:
     from collections.abc import Callable
+
 
 @dataclass
 class CacheEntry:
     """A cache entry with metadata."""
+
     key: str
     value: Any
     created_at: datetime
@@ -39,17 +43,36 @@ class CacheEntry:
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""
-        return {'key': self.key, 'value': self.value, 'created_at': self.created_at.isoformat(), 'expires_at': self.expires_at.isoformat() if self.expires_at else None, 'access_count': self.access_count, 'last_accessed': self.last_accessed.isoformat() if self.last_accessed else None, 'metadata': self.metadata}
+        return {
+            "key": self.key,
+            "value": self.value,
+            "created_at": self.created_at.isoformat(),
+            "expires_at": self.expires_at.isoformat() if self.expires_at else None,
+            "access_count": self.access_count,
+            "last_accessed": self.last_accessed.isoformat() if self.last_accessed else None,
+            "metadata": self.metadata,
+        }
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> CacheEntry:
         """Create from dictionary."""
-        return cls(key=data['key'], value=data['value'], created_at=datetime.fromisoformat(data['created_at']), expires_at=datetime.fromisoformat(data['expires_at']) if data.get('expires_at') else None, access_count=data.get('access_count', 0), last_accessed=datetime.fromisoformat(data['last_accessed']) if data.get('last_accessed') else None, metadata=data.get('metadata', {}))
+        return cls(
+            key=data["key"],
+            value=data["value"],
+            created_at=datetime.fromisoformat(data["created_at"]),
+            expires_at=datetime.fromisoformat(data["expires_at"]) if data.get("expires_at") else None,
+            access_count=data.get("access_count", 0),
+            last_accessed=datetime.fromisoformat(data["last_accessed"]) if data.get("last_accessed") else None,
+            metadata=data.get("metadata", {}),
+        )
+
 
 class ResultCache:
     """Intelligent result cache with TTL, LRU eviction, and metadata tracking."""
 
-    def __init__(self, max_size: int=1000, default_ttl: int=3600, cleanup_interval: int=300, enable_metrics: bool=True):
+    def __init__(
+        self, max_size: int = 1000, default_ttl: int = 3600, cleanup_interval: int = 300, enable_metrics: bool = True
+    ):
         """Initialize the result cache."""
         self.max_size = max_size
         self.default_ttl = default_ttl
@@ -65,7 +88,7 @@ class ResultCache:
 
     def _generate_key(self, func_name: str, args: tuple, kwargs: dict) -> str:
         """Generate a cache key from function name and arguments."""
-        key_data = {'func': func_name, 'args': args, 'kwargs': sorted(kwargs.items()) if kwargs else {}}
+        key_data = {"func": func_name, "args": args, "kwargs": sorted(kwargs.items()) if kwargs else {}}
         key_str = json.dumps(key_data, sort_keys=True, default=str)
         return hashlib.sha256(key_str.encode()).hexdigest()[:16]
 
@@ -89,11 +112,13 @@ class ResultCache:
         self._access_order.append(key)
         return entry.value
 
-    def set(self, key: str, value: Any, ttl: int | None=None, metadata: dict[str, Any] | None=None) -> None:
+    def set(self, key: str, value: Any, ttl: int | None = None, metadata: dict[str, Any] | None = None) -> None:
         """Set a value in the cache."""
         ttl = ttl or self.default_ttl
         expires_at = datetime.now(timezone.utc) + timedelta(seconds=ttl)
-        entry = CacheEntry(key=key, value=value, created_at=datetime.now(timezone.utc), expires_at=expires_at, metadata=metadata or {})
+        entry = CacheEntry(
+            key=key, value=value, created_at=datetime.now(timezone.utc), expires_at=expires_at, metadata=metadata or {}
+        )
         if len(self._cache) >= self.max_size and key not in self._cache:
             self._evict_lru()
         self._cache[key] = entry
@@ -160,7 +185,16 @@ class ResultCache:
         """Get cache statistics."""
         total_requests = self._hits + self._misses
         hit_rate = self._hits / total_requests * 100 if total_requests > 0 else 0
-        return {'size': len(self._cache), 'max_size': self.max_size, 'hits': self._hits, 'misses': self._misses, 'hit_rate': hit_rate, 'evictions': self._evictions, 'expired_cleanups': self._expired_cleanups, 'utilization': len(self._cache) / self.max_size * 100}
+        return {
+            "size": len(self._cache),
+            "max_size": self.max_size,
+            "hits": self._hits,
+            "misses": self._misses,
+            "hit_rate": hit_rate,
+            "evictions": self._evictions,
+            "expired_cleanups": self._expired_cleanups,
+            "utilization": len(self._cache) / self.max_size * 100,
+        }
 
     def get_entries(self) -> list[dict[str, Any]]:
         """Get all cache entries as dictionaries."""
@@ -168,22 +202,29 @@ class ResultCache:
 
     def export_cache(self) -> dict[str, Any]:
         """Export cache data for persistence."""
-        return {'entries': self.get_entries(), 'stats': self.get_stats(), 'exported_at': datetime.now(timezone.utc).isoformat()}
+        return {
+            "entries": self.get_entries(),
+            "stats": self.get_stats(),
+            "exported_at": datetime.now(timezone.utc).isoformat(),
+        }
+
+
 _global_cache = ResultCache()
+
 
 def get_result_cache() -> ResultCache:
     """Get the global result cache instance."""
     return _global_cache
 
-def cache_result(ttl: int | None=None, key_prefix: str='', metadata: dict[str, Any] | None=None):
+
+def cache_result(ttl: int | None = None, key_prefix: str = "", metadata: dict[str, Any] | None = None):
     """Decorator for caching function results."""
 
     def decorator(func: Callable) -> Callable:
-
         @wraps(func)
         def wrapper(*args, **kwargs):
             cache = get_result_cache()
-            func_name = f'{key_prefix}{func.__name__}' if key_prefix else func.__name__
+            func_name = f"{key_prefix}{func.__name__}" if key_prefix else func.__name__
             cache_key = cache._generate_key(func_name, args, kwargs)
             cached_result = cache.get(cache_key)
             if cached_result is not None:
@@ -194,19 +235,21 @@ def cache_result(ttl: int | None=None, key_prefix: str='', metadata: dict[str, A
             elif not isinstance(result, StepResult):
                 cache.set(cache_key, result, ttl=ttl, metadata=metadata)
             return result
+
         return wrapper
+
     return decorator
 
-def cache_tool_result(ttl: int | None=None, key_prefix: str='', metadata: dict[str, Any] | None=None):
+
+def cache_tool_result(ttl: int | None = None, key_prefix: str = "", metadata: dict[str, Any] | None = None):
     """Decorator specifically for caching tool results."""
 
     def decorator(func: Callable) -> Callable:
-
         @wraps(func)
         def wrapper(self, *args, **kwargs):
             cache = get_result_cache()
-            tool_name = getattr(self, 'name', self.__class__.__name__)
-            func_name = f'{key_prefix}{tool_name}_{func.__name__}' if key_prefix else f'{tool_name}_{func.__name__}'
+            tool_name = getattr(self, "name", self.__class__.__name__)
+            func_name = f"{key_prefix}{tool_name}_{func.__name__}" if key_prefix else f"{tool_name}_{func.__name__}"
             cache_key = cache._generate_key(func_name, args, kwargs)
             cached_result = cache.get(cache_key)
             if cached_result is not None:
@@ -215,18 +258,23 @@ def cache_tool_result(ttl: int | None=None, key_prefix: str='', metadata: dict[s
             if isinstance(result, StepResult) and result.success:
                 cache.set(cache_key, result, ttl=ttl, metadata=metadata)
             return result
+
         return wrapper
+
     return decorator
+
 
 def invalidate_cache_pattern(pattern: str) -> int:
     """Invalidate cache entries matching a pattern."""
     cache = get_result_cache()
     return cache.invalidate_pattern(pattern)
 
+
 def clear_result_cache():
     """Clear all cached results."""
     cache = get_result_cache()
     cache.clear()
+
 
 def get_cache_stats() -> dict[str, Any]:
     """Get cache statistics."""

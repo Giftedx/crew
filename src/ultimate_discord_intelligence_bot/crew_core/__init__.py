@@ -19,12 +19,18 @@ Migration from legacy:
 - crew_error_handler.py -> error_handling.py
 - crew_insight_helpers.py -> insights.py
 """
-from domains.orchestration.crew.compat import CrewAdapter, UltimateDiscordIntelligenceBotCrew, UltimateDiscordIntelligenceBotCrewAdapter
+
+from domains.orchestration.crew.compat import (
+    CrewAdapter,
+    UltimateDiscordIntelligenceBotCrew,
+    UltimateDiscordIntelligenceBotCrewAdapter,
+)
 from domains.orchestration.crew.error_handling import CrewErrorHandler
 from domains.orchestration.crew.executor import UnifiedCrewExecutor
 from domains.orchestration.crew.factory import DefaultCrewFactory, get_crew_factory
 from domains.orchestration.crew.insights import CrewInsightGenerator
 from domains.orchestration.crew.interfaces import CrewConfig, CrewExecutionResult, CrewExecutor, CrewFactory, CrewTask
+
 
 def get_crew() -> UltimateDiscordIntelligenceBotCrewAdapter:
     """Get the default crew instance for backward compatibility.
@@ -42,5 +48,22 @@ def get_crew() -> UltimateDiscordIntelligenceBotCrewAdapter:
         >>> result = crew_obj.kickoff(inputs={"url": "..."})
     """
     return UltimateDiscordIntelligenceBotCrewAdapter()
-__all__ = ['CrewAdapter', 'CrewConfig', 'CrewErrorHandler', 'CrewExecutionResult', 'CrewExecutor', 'CrewFactory', 'CrewInsightGenerator', 'CrewTask', 'DefaultCrewFactory', 'UltimateDiscordIntelligenceBotCrew', 'UltimateDiscordIntelligenceBotCrewAdapter', 'UnifiedCrewExecutor', 'get_crew', 'get_crew_factory']
-__version__ = '1.0.0'
+
+
+__all__ = [
+    "CrewAdapter",
+    "CrewConfig",
+    "CrewErrorHandler",
+    "CrewExecutionResult",
+    "CrewExecutor",
+    "CrewFactory",
+    "CrewInsightGenerator",
+    "CrewTask",
+    "DefaultCrewFactory",
+    "UltimateDiscordIntelligenceBotCrew",
+    "UltimateDiscordIntelligenceBotCrewAdapter",
+    "UnifiedCrewExecutor",
+    "get_crew",
+    "get_crew_factory",
+]
+__version__ = "1.0.0"

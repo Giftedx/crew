@@ -21,40 +21,44 @@ Outputs:
 Notes:
 - Designed so we can later swap internals to CrewAI/AutoGen orchestration with strict limits.
 """
+
 from __future__ import annotations
 import contextlib
 from platform.observability.metrics import get_metrics
 from platform.core.step_result import StepResult
 from ._base import BaseTool
+
 try:
     from prompt_engine.llmlingua_adapter import maybe_compress_prompt
 except Exception:
 
-    def maybe_compress_prompt(prompt: str, *, target_tokens: int | None=None) -> str:
+    def maybe_compress_prompt(prompt: str, *, target_tokens: int | None = None) -> str:
         """Coarsely approximate prompt compression when optional dependency missing."""
         if target_tokens is None or target_tokens <= 0:
             return prompt
         words = prompt.split()
         if len(words) <= target_tokens:
             return prompt
-        truncated = ' '.join(words[:target_tokens])
-        return f'{truncated} …' if truncated else prompt
+        truncated = " ".join(words[:target_tokens])
+        return f"{truncated} …" if truncated else prompt
+
 
 def _split_sentences(text: str) -> list[str]:
     parts = []
     buf = []
     for ch in text:
         buf.append(ch)
-        if ch in '.!?':
-            s = ''.join(buf).strip()
+        if ch in ".!?":
+            s = "".join(buf).strip()
             if s:
                 parts.append(s)
             buf = []
     if buf:
-        s = ''.join(buf).strip()
+        s = "".join(buf).strip()
         if s:
             parts.append(s)
-    return [p.replace('\n', ' ').strip() for p in parts if p.strip()]
+    return [p.replace("\n", " ").strip() for p in parts if p.strip()]
+
 
 def _score_sentences(sentences: list[str], query: str) -> list[tuple[float, str]]:
     q_terms = {t for t in query.lower().split() if t.isalpha()}
@@ -67,17 +71,20 @@ def _score_sentences(sentences: list[str], query: str) -> list[tuple[float, str]
     scored.sort(key=lambda x: x[0], reverse=True)
     return scored
 
+
 class ResearchAndBriefTool(BaseTool[StepResult]):
-    name: str = 'Research and Brief Tool'
-    description: str = 'Synthesize an outline and key findings from provided text sources (offline-safe).'
+    name: str = "Research and Brief Tool"
+    description: str = "Synthesize an outline and key findings from provided text sources (offline-safe)."
 
     def __init__(self) -> None:
         super().__init__()
         self._metrics = get_metrics()
 
-    def run(self, *, query: str, sources_text: list[str] | None=None, max_items: int=5) -> StepResult:
-        if sources_text is not None and (not isinstance(sources_text, list) or any((not isinstance(t, str) for t in sources_text))):
-            return StepResult.fail('Invalid params: sources_text must be a list of strings or null')
+    def run(self, *, query: str, sources_text: list[str] | None = None, max_items: int = 5) -> StepResult:
+        if sources_text is not None and (
+            not isinstance(sources_text, list) or any((not isinstance(t, str) for t in sources_text))
+        ):
+            return StepResult.fail("Invalid params: sources_text must be a list of strings or null")
         try:
             max_items = int(max_items)
             if max_items <= 0 or max_items > 10:
@@ -87,14 +94,20 @@ class ResearchAndBriefTool(BaseTool[StepResult]):
         texts = [t for t in sources_text or [] if isinstance(t, str) and t.strip()]
         if texts:
             try:
-                joined = '\n\n'.join(texts)
+                joined = "\n\n".join(texts)
                 compressed = maybe_compress_prompt(joined, target_tokens=1200)
                 if isinstance(compressed, str) and compressed:
-                    texts = [s for s in compressed.split('\n\n') if s.strip()]
+                    texts = [s for s in compressed.split("\n\n") if s.strip()]
             except Exception:
                 pass
         if not texts:
-            data = {'outline': [], 'key_findings': [], 'citations': [], 'risks': ['Insufficient sources provided; findings may be incomplete.'], 'counts': {'sources': 0, 'tokens_estimate': 0}}
+            data = {
+                "outline": [],
+                "key_findings": [],
+                "citations": [],
+                "risks": ["Insufficient sources provided; findings may be incomplete."],
+                "counts": {"sources": 0, "tokens_estimate": 0},
+            }
             return StepResult.uncertain(data=data)
         sentences: list[tuple[int, str]] = []
         token_count = 0
@@ -109,7 +122,7 @@ class ResearchAndBriefTool(BaseTool[StepResult]):
         for s in key_findings:
             o = s
             if len(o) > 200:
-                o = o[:197] + '...'
+                o = o[:197] + "..."
             outline.append(o)
         text_to_index: dict[str, int] = {}
         for idx, s in sentences:
@@ -118,14 +131,22 @@ class ResearchAndBriefTool(BaseTool[StepResult]):
         citations = []
         for s in key_findings:
             src_idx = text_to_index.get(s, 0)
-            citations.append({'type': 'text', 'index': int(src_idx)})
+            citations.append({"type": "text", "index": int(src_idx)})
         risks = []
         if len(texts) < 2:
-            risks.append('Single source used; low diversity of evidence.')
+            risks.append("Single source used; low diversity of evidence.")
         if token_count < 50:
-            risks.append('Very small corpus; conclusions may be brittle.')
-        data = {'outline': outline, 'key_findings': key_findings, 'citations': citations, 'risks': risks, 'counts': {'sources': len(texts), 'tokens_estimate': token_count}}
+            risks.append("Very small corpus; conclusions may be brittle.")
+        data = {
+            "outline": outline,
+            "key_findings": key_findings,
+            "citations": citations,
+            "risks": risks,
+            "counts": {"sources": len(texts), "tokens_estimate": token_count},
+        }
         with contextlib.suppress(Exception):
-            self._metrics.counter('tool_runs_total', labels={'tool': 'research_and_brief', 'outcome': 'success'}).inc()
+            self._metrics.counter("tool_runs_total", labels={"tool": "research_and_brief", "outcome": "success"}).inc()
         return StepResult.ok(data=data)
-__all__ = ['ResearchAndBriefTool']
+
+
+__all__ = ["ResearchAndBriefTool"]

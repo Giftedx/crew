@@ -2,15 +2,29 @@
 
 This agent captures pristine source media and metadata from every supported platform.
 """
+
 from __future__ import annotations
 from typing import TYPE_CHECKING
 from domains.orchestration.agents.base import BaseAgent
 from domains.orchestration.agents.registry import register_agent
-from ultimate_discord_intelligence_bot.tools import DiscordDownloadTool, DriveUploadTool, DriveUploadToolBypass, InstagramDownloadTool, KickDownloadTool, MultiPlatformDownloadTool, RedditDownloadTool, TikTokDownloadTool, TwitchDownloadTool, TwitterDownloadTool
+from ultimate_discord_intelligence_bot.tools import (
+    DiscordDownloadTool,
+    DriveUploadTool,
+    DriveUploadToolBypass,
+    InstagramDownloadTool,
+    KickDownloadTool,
+    MultiPlatformDownloadTool,
+    RedditDownloadTool,
+    TikTokDownloadTool,
+    TwitchDownloadTool,
+    TwitterDownloadTool,
+)
+
 if TYPE_CHECKING:
     from ultimate_discord_intelligence_bot.tools._base import BaseTool
 
-@register_agent('acquisition_specialist')
+
+@register_agent("acquisition_specialist")
 class AcquisitionSpecialistAgent(BaseAgent):
     """Acquisition Specialist Agent for multi-platform content capture."""
 
@@ -22,17 +36,17 @@ class AcquisitionSpecialistAgent(BaseAgent):
     @property
     def role(self) -> str:
         """Agent role."""
-        return 'Acquisition Specialist'
+        return "Acquisition Specialist"
 
     @property
     def goal(self) -> str:
         """Agent goal."""
-        return 'Capture pristine source media and metadata from every supported platform.'
+        return "Capture pristine source media and metadata from every supported platform."
 
     @property
     def backstory(self) -> str:
         """Agent backstory."""
-        return 'Multi-platform capture expert.'
+        return "Multi-platform capture expert."
 
     @property
     def allow_delegation(self) -> bool:
@@ -41,4 +55,15 @@ class AcquisitionSpecialistAgent(BaseAgent):
 
     def _get_acquisition_tools(self) -> list[BaseTool]:
         """Get acquisition tools for content capture."""
-        return [MultiPlatformDownloadTool(), TwitchDownloadTool(), KickDownloadTool(), TwitterDownloadTool(), InstagramDownloadTool(), TikTokDownloadTool(), RedditDownloadTool(), DiscordDownloadTool(), DriveUploadTool(), DriveUploadToolBypass()]
+        return [
+            MultiPlatformDownloadTool(),
+            TwitchDownloadTool(),
+            KickDownloadTool(),
+            TwitterDownloadTool(),
+            InstagramDownloadTool(),
+            TikTokDownloadTool(),
+            RedditDownloadTool(),
+            DiscordDownloadTool(),
+            DriveUploadTool(),
+            DriveUploadToolBypass(),
+        ]

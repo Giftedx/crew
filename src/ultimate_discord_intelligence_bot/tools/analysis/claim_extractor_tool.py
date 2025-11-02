@@ -1,10 +1,13 @@
 """Extract factual claims from text using NLP patterns."""
+
 from __future__ import annotations
 from kg.extract import extract
 from platform.observability.metrics import get_metrics
 from platform.core.step_result import StepResult
 from ._base import BaseTool
+
 MIN_CLAIM_LEN = 5
+
 
 class ClaimExtractorTool(BaseTool[StepResult]):
     """Extract factual claims from text using regex patterns and NLP.
@@ -15,14 +18,15 @@ class ClaimExtractorTool(BaseTool[StepResult]):
       count: int (present on success)
       error: str (present on error)
     """
-    name: str = 'Claim Extractor Tool'
-    description: str = 'Extract potential factual claims from text using linguistic patterns.'
+
+    name: str = "Claim Extractor Tool"
+    description: str = "Extract potential factual claims from text using linguistic patterns."
 
     def __init__(self) -> None:
         super().__init__()
         self._metrics = get_metrics()
 
-    def _run(self, text: str, max_claims: int=10) -> StepResult:
+    def _run(self, text: str, max_claims: int = 10) -> StepResult:
         """Extract claims using the KG extraction module returning StepResult.
 
         Args:
@@ -33,11 +37,12 @@ class ClaimExtractorTool(BaseTool[StepResult]):
             StepResult with claims list and count
         """
         import logging
+
         logger = logging.getLogger(__name__)
-        text_preview = text[:500] + '...' if text and len(text) > 500 else text or ''
-        logger.warning(f'🔍 ClaimExtractorTool received {len(text or '')} chars of text. Preview: {text_preview}')
+        text_preview = text[:500] + "..." if text and len(text) > 500 else text or ""
+        logger.warning(f"🔍 ClaimExtractorTool received {len(text or '')} chars of text. Preview: {text_preview}")
         if not text or not text.strip():
-            self._metrics.counter('tool_runs_total', labels={'tool': 'claim_extractor', 'outcome': 'success'}).inc()
+            self._metrics.counter("tool_runs_total", labels={"tool": "claim_extractor", "outcome": "success"}).inc()
             return StepResult.ok(claims=[], count=0)
         try:
             text_stripped = text.strip()
@@ -46,7 +51,7 @@ class ClaimExtractorTool(BaseTool[StepResult]):
                 chunk_size = 300
                 overlap = 50
                 for i in range(0, len(text_stripped), chunk_size - overlap):
-                    chunk = text_stripped[i:i + chunk_size]
+                    chunk = text_stripped[i : i + chunk_size]
                     if chunk.strip():
                         chunks.append(chunk)
             else:
@@ -56,8 +61,10 @@ class ClaimExtractorTool(BaseTool[StepResult]):
             for chunk in chunks:
                 _, chunk_claims = extract(chunk)
                 if chunk_claims is None:
-                    self._metrics.counter('tool_runs_total', labels={'tool': 'claim_extractor', 'outcome': 'error'}).inc()
-                    return StepResult.fail(error='KG extract returned None', claims=[])
+                    self._metrics.counter(
+                        "tool_runs_total", labels={"tool": "claim_extractor", "outcome": "error"}
+                    ).inc()
+                    return StepResult.fail(error="KG extract returned None", claims=[])
                 for claim in chunk_claims:
                     claim_text = claim.text.strip()
                     claim_lower = claim_text.lower()
@@ -68,12 +75,14 @@ class ClaimExtractorTool(BaseTool[StepResult]):
                             break
                 if len(all_claims) >= max_claims:
                     break
-            self._metrics.counter('tool_runs_total', labels={'tool': 'claim_extractor', 'outcome': 'success'}).inc()
+            self._metrics.counter("tool_runs_total", labels={"tool": "claim_extractor", "outcome": "success"}).inc()
             return StepResult.ok(claims=all_claims, count=len(all_claims))
         except Exception as e:
-            self._metrics.counter('tool_runs_total', labels={'tool': 'claim_extractor', 'outcome': 'error'}).inc()
+            self._metrics.counter("tool_runs_total", labels={"tool": "claim_extractor", "outcome": "error"}).inc()
             return StepResult.fail(error=str(e), claims=[])
 
-    def run(self, text: str, max_claims: int=10) -> StepResult:
+    def run(self, text: str, max_claims: int = 10) -> StepResult:
         return self._run(text, max_claims)
-__all__ = ['ClaimExtractorTool']
+
+
+__all__ = ["ClaimExtractorTool"]

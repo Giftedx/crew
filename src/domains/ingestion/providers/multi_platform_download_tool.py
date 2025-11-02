@@ -1,4 +1,5 @@
 """Multi-platform download tool following Copilot instructions."""
+
 from __future__ import annotations
 import logging
 from pathlib import Path
@@ -8,8 +9,18 @@ from platform.observability.metrics import get_metrics
 from platform.core.step_result import ErrorCategory, ErrorContext, StepResult
 from ._base import BaseTool
 from .discord_download_tool import DiscordDownloadTool
-from .yt_dlp_download_tool import InstagramDownloadTool, KickDownloadTool, RedditDownloadTool, TikTokDownloadTool, TwitchDownloadTool, TwitterDownloadTool, YouTubeDownloadTool
+from .yt_dlp_download_tool import (
+    InstagramDownloadTool,
+    KickDownloadTool,
+    RedditDownloadTool,
+    TikTokDownloadTool,
+    TwitchDownloadTool,
+    TwitterDownloadTool,
+    YouTubeDownloadTool,
+)
+
 logger = logging.getLogger(__name__)
+
 
 class MultiPlatformDownloadTool(BaseTool[StepResult]):
     """
@@ -64,51 +75,99 @@ class MultiPlatformDownloadTool(BaseTool[StepResult]):
         - Metadata includes tenant context
         - File paths include tenant namespace
     """
-    name: str = 'Multi-Platform Download Tool'
-    description: str = 'Download media from supported platforms via yt-dlp. Provide url and optional quality.'
-    model_config: ClassVar[dict[str, Any]] = {'extra': 'allow'}
 
-    def __init__(self, download_dir: Path | None=None) -> None:
+    name: str = "Multi-Platform Download Tool"
+    description: str = "Download media from supported platforms via yt-dlp. Provide url and optional quality."
+    model_config: ClassVar[dict[str, Any]] = {"extra": "allow"}
+
+    def __init__(self, download_dir: Path | None = None) -> None:
         super().__init__()
-        self.download_dir = download_dir or Path('/tmp/downloads')
+        self.download_dir = download_dir or Path("/tmp/downloads")
         self.download_dir.mkdir(parents=True, exist_ok=True)
         self.dispatchers = self._init_dispatchers()
         self._metrics = get_metrics()
 
     def _init_dispatchers(self) -> dict[str, BaseTool]:
         """Initialize platform-specific download tools."""
-        return {'youtube.com': YouTubeDownloadTool(), 'youtu.be': YouTubeDownloadTool(), 'twitter.com': TwitterDownloadTool(), 'x.com': TwitterDownloadTool(), 'instagram.com': InstagramDownloadTool(), 'tiktok.com': TikTokDownloadTool(), 'reddit.com': RedditDownloadTool(), 'twitch.tv': TwitchDownloadTool(), 'kick.com': KickDownloadTool(), 'discord.com': DiscordDownloadTool(), 'cdn.discordapp.com': DiscordDownloadTool()}
+        return {
+            "youtube.com": YouTubeDownloadTool(),
+            "youtu.be": YouTubeDownloadTool(),
+            "twitter.com": TwitterDownloadTool(),
+            "x.com": TwitterDownloadTool(),
+            "instagram.com": InstagramDownloadTool(),
+            "tiktok.com": TikTokDownloadTool(),
+            "reddit.com": RedditDownloadTool(),
+            "twitch.tv": TwitchDownloadTool(),
+            "kick.com": KickDownloadTool(),
+            "discord.com": DiscordDownloadTool(),
+            "cdn.discordapp.com": DiscordDownloadTool(),
+        }
 
-    def _run(self, url: str, quality: str='1080p', **kwargs: Any) -> StepResult:
+    def _run(self, url: str, quality: str = "1080p", **kwargs: Any) -> StepResult:
         """Download content from URL and return StepResult per instruction #3."""
         if not url:
-            self._metrics.counter('tool_runs_total', labels={'tool': 'multi_platform_download', 'outcome': 'skipped'}).inc()
-            return StepResult.skip(reason='No URL provided', error_category=ErrorCategory.MISSING_REQUIRED_FIELD, metadata={'tool': 'multi_platform_download', 'parameter': 'url'})
+            self._metrics.counter(
+                "tool_runs_total", labels={"tool": "multi_platform_download", "outcome": "skipped"}
+            ).inc()
+            return StepResult.skip(
+                reason="No URL provided",
+                error_category=ErrorCategory.MISSING_REQUIRED_FIELD,
+                metadata={"tool": "multi_platform_download", "parameter": "url"},
+            )
         try:
             parsed = urlparse(url)
-            domain = parsed.netloc.lower().replace('www.', '')
+            domain = parsed.netloc.lower().replace("www.", "")
             dispatcher = None
             for platform_domain, tool in self.dispatchers.items():
                 if platform_domain in domain:
                     dispatcher = tool
                     break
             if not dispatcher:
-                self._metrics.counter('tool_runs_total', labels={'tool': 'multi_platform_download', 'outcome': 'error'}).inc()
-                return StepResult.fail(error=f'Unsupported platform: {domain}', data={'url': url, 'domain': domain, 'platform': 'unknown'}, error_category=ErrorCategory.VALIDATION, error_context=ErrorContext(operation='platform_detection', component='multi_platform_download_tool', additional_context={'parsed_domain': domain, 'supported_platforms': list(self.dispatchers.keys())}), metadata={'tool': 'multi_platform_download', 'attempted_domain': domain})
-            logger.info(f'Dispatching {domain} download to {dispatcher.name}')
+                self._metrics.counter(
+                    "tool_runs_total", labels={"tool": "multi_platform_download", "outcome": "error"}
+                ).inc()
+                return StepResult.fail(
+                    error=f"Unsupported platform: {domain}",
+                    data={"url": url, "domain": domain, "platform": "unknown"},
+                    error_category=ErrorCategory.VALIDATION,
+                    error_context=ErrorContext(
+                        operation="platform_detection",
+                        component="multi_platform_download_tool",
+                        additional_context={
+                            "parsed_domain": domain,
+                            "supported_platforms": list(self.dispatchers.keys()),
+                        },
+                    ),
+                    metadata={"tool": "multi_platform_download", "attempted_domain": domain},
+                )
+            logger.info(f"Dispatching {domain} download to {dispatcher.name}")
             result = dispatcher.run(url, quality=quality, **kwargs)
             step = StepResult.from_dict(result) if isinstance(result, dict) else result
-            label = 'success' if step.success else 'error'
-            self._metrics.counter('tool_runs_total', labels={'tool': 'multi_platform_download', 'outcome': label}).inc()
+            label = "success" if step.success else "error"
+            self._metrics.counter("tool_runs_total", labels={"tool": "multi_platform_download", "outcome": label}).inc()
             if isinstance(step, StepResult):
-                step.data.setdefault('tool', dispatcher.__class__.__name__)
-                step.data.setdefault('platform', step.data.get('platform', dispatcher.__class__.__name__.replace('DownloadTool', '')))
+                step.data.setdefault("tool", dispatcher.__class__.__name__)
+                step.data.setdefault(
+                    "platform", step.data.get("platform", dispatcher.__class__.__name__.replace("DownloadTool", ""))
+                )
             return step
         except Exception as e:
-            logger.error(f'Download failed for {url}: {e}', exc_info=True)
-            self._metrics.counter('tool_runs_total', labels={'tool': 'multi_platform_download', 'outcome': 'error'}).inc()
-            return StepResult.fail(error=str(e), data={'url': url}, error_category=ErrorCategory.PROCESSING, error_context=ErrorContext(operation='download_dispatch', component='multi_platform_download_tool', additional_context={'exception_type': type(e).__name__, 'url': url}), metadata={'tool': 'multi_platform_download', 'error_type': type(e).__name__})
+            logger.error(f"Download failed for {url}: {e}", exc_info=True)
+            self._metrics.counter(
+                "tool_runs_total", labels={"tool": "multi_platform_download", "outcome": "error"}
+            ).inc()
+            return StepResult.fail(
+                error=str(e),
+                data={"url": url},
+                error_category=ErrorCategory.PROCESSING,
+                error_context=ErrorContext(
+                    operation="download_dispatch",
+                    component="multi_platform_download_tool",
+                    additional_context={"exception_type": type(e).__name__, "url": url},
+                ),
+                metadata={"tool": "multi_platform_download", "error_type": type(e).__name__},
+            )
 
-    def run(self, url: str, quality: str='1080p', **kwargs: Any) -> StepResult:
+    def run(self, url: str, quality: str = "1080p", **kwargs: Any) -> StepResult:
         """Public interface following StepResult pattern."""
         return self._run(url=url, quality=quality, **kwargs)

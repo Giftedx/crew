@@ -1,7 +1,9 @@
 from __future__ import annotations
 import logging
 from platform.core.step_result import StepResult
+
 log = logging.getLogger(__name__)
+
 
 class MultimodalUnderstandingService:
     """
@@ -29,23 +31,35 @@ class MultimodalUnderstandingService:
             correlation_result = self._correlate_audio_visual(vision_analysis_result.data, transcript)
             if not correlation_result.success:
                 return correlation_result
-            combined_analysis = {'vision_summary': vision_analysis_result.data.get('summary'), 'key_visual_elements': vision_analysis_result.data.get('elements'), 'audio_visual_correlation': correlation_result.data, 'transcript': transcript}
+            combined_analysis = {
+                "vision_summary": vision_analysis_result.data.get("summary"),
+                "key_visual_elements": vision_analysis_result.data.get("elements"),
+                "audio_visual_correlation": correlation_result.data,
+                "transcript": transcript,
+            }
             return StepResult.ok(data=combined_analysis)
         except Exception as e:
-            return StepResult.fail(f'Multimodal analysis failed: {e}')
+            return StepResult.fail(f"Multimodal analysis failed: {e}")
 
     def _analyze_vision(self, video_path: str) -> StepResult:
         """
         Placeholder for vision analysis using a model like Claude 3.5 Sonnet or GPT-4V.
         """
-        log.debug(f'Analyzing vision for {video_path} (placeholder implementation)')
-        mock_vision_data = {'summary': 'The video contains a debate between two individuals in a studio setting.', 'elements': ['person_a', 'person_b', 'desk', 'microphone'], 'timestamps': [{'element': 'person_a', 'start': 0, 'end': 120}, {'element': 'person_b', 'start': 0, 'end': 120}]}
+        log.debug(f"Analyzing vision for {video_path} (placeholder implementation)")
+        mock_vision_data = {
+            "summary": "The video contains a debate between two individuals in a studio setting.",
+            "elements": ["person_a", "person_b", "desk", "microphone"],
+            "timestamps": [
+                {"element": "person_a", "start": 0, "end": 120},
+                {"element": "person_b", "start": 0, "end": 120},
+            ],
+        }
         return StepResult.ok(data=mock_vision_data)
 
     def _correlate_audio_visual(self, vision_data: dict, transcript: str) -> StepResult:
         """
         Placeholder for correlating audio and visual events.
         """
-        print('--- Correlating audio and visual data (Placeholder) ---')
-        mock_correlation_data = {'alignment_score': 0.95, 'anomalies_detected': []}
+        print("--- Correlating audio and visual data (Placeholder) ---")
+        mock_correlation_data = {"alignment_score": 0.95, "anomalies_detected": []}
         return StepResult.ok(data=mock_correlation_data)

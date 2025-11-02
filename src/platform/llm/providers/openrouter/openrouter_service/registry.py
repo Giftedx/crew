@@ -3,6 +3,7 @@
 This module provides a centralized registry for managing service dependencies
 and enabling dynamic service discovery within the OpenRouter service ecosystem.
 """
+
 from __future__ import annotations
 
 import logging
@@ -18,13 +19,16 @@ if TYPE_CHECKING:
     from .service import OpenRouterService
 log = logging.getLogger(__name__)
 
+
 class ServiceRegistry:
     """Central registry for service dependencies and discovery.
 
     This registry provides a thread-safe way to register, retrieve, and manage
     service instances throughout the application lifecycle.
     """
+
     from typing import ClassVar
+
     _instances: ClassVar[dict[str, Any]] = {}
     _factories: ClassVar[dict[str, Callable[[], Any]]] = {}
     _lock: ClassVar[threading.RLock] = threading.RLock()
@@ -39,7 +43,7 @@ class ServiceRegistry:
         """
         with cls._lock:
             cls._instances[name] = instance
-            log.debug('Registered service: %s', name)
+            log.debug("Registered service: %s", name)
 
     @classmethod
     def register_factory(cls, name: str, factory: Callable[[], Any]) -> None:
@@ -51,7 +55,7 @@ class ServiceRegistry:
         """
         with cls._lock:
             cls._factories[name] = factory
-            log.debug('Registered service factory: %s', name)
+            log.debug("Registered service factory: %s", name)
 
     @classmethod
     def get(cls, name: str) -> Any | None:
@@ -70,12 +74,12 @@ class ServiceRegistry:
                 try:
                     instance = cls._factories[name]()
                     cls._instances[name] = instance
-                    log.debug('Created service from factory: %s', name)
+                    log.debug("Created service from factory: %s", name)
                     return instance
                 except Exception as e:
-                    log.error('Failed to create service from factory %s: %s', name, e)
+                    log.error("Failed to create service from factory %s: %s", name, e)
                     return None
-            log.warning('Service not found: %s', name)
+            log.warning("Service not found: %s", name)
             return None
 
     @classmethod
@@ -95,10 +99,10 @@ class ServiceRegistry:
             try:
                 instance = factory()
                 cls._instances[name] = instance
-                log.debug('Created new service: %s', name)
+                log.debug("Created new service: %s", name)
                 return instance
             except Exception as e:
-                log.error('Failed to create service %s: %s', name, e)
+                log.error("Failed to create service %s: %s", name, e)
                 raise
 
     @classmethod
@@ -114,7 +118,7 @@ class ServiceRegistry:
         with cls._lock:
             if name in cls._instances:
                 del cls._instances[name]
-                log.debug('Unregistered service: %s', name)
+                log.debug("Unregistered service: %s", name)
                 return True
             return False
 
@@ -124,7 +128,7 @@ class ServiceRegistry:
         with cls._lock:
             cls._instances.clear()
             cls._factories.clear()
-            log.debug('Cleared all services from registry')
+            log.debug("Cleared all services from registry")
 
     @classmethod
     def list_services(cls) -> list[str]:
@@ -159,13 +163,15 @@ class ServiceRegistry:
         with cls._lock:
             return name in cls._instances or name in cls._factories
 
+
 class OpenRouterServiceRegistry:
     """Specialized registry for OpenRouter service components."""
-    OPENROUTER_SERVICE = 'openrouter_service'
-    OPENROUTER_FACADE = 'openrouter_facade'
-    CACHE_MANAGER = 'cache_manager'
-    BUDGET_MANAGER = 'budget_manager'
-    METRICS_COLLECTOR = 'metrics_collector'
+
+    OPENROUTER_SERVICE = "openrouter_service"
+    OPENROUTER_FACADE = "openrouter_facade"
+    CACHE_MANAGER = "cache_manager"
+    BUDGET_MANAGER = "budget_manager"
+    METRICS_COLLECTOR = "metrics_collector"
 
     @classmethod
     def register_openrouter_service(cls, service: OpenRouterService, **kwargs: Any) -> None:
@@ -178,6 +184,7 @@ class OpenRouterServiceRegistry:
         ServiceRegistry.register(cls.OPENROUTER_SERVICE, service)
         if not ServiceRegistry.is_registered(cls.OPENROUTER_FACADE):
             from .facade import OpenRouterServiceFacade
+
             facade = OpenRouterServiceFacade(service)
             ServiceRegistry.register(cls.OPENROUTER_FACADE, facade)
 
@@ -210,6 +217,7 @@ class OpenRouterServiceRegistry:
             The created OpenRouter service instance
         """
         from .service import OpenRouterService
+
         service = OpenRouterService(**kwargs)
         cls.register_openrouter_service(service)
         return service
@@ -240,22 +248,22 @@ class OpenRouterServiceRegistry:
             health_status = {}
             service = cls.get_openrouter_service()
             if service:
-                health_status['openrouter_service'] = 'registered'
+                health_status["openrouter_service"] = "registered"
             else:
-                health_status['openrouter_service'] = 'not_registered'
+                health_status["openrouter_service"] = "not_registered"
             facade = cls.get_openrouter_facade()
             if facade:
                 facade_health = facade.health_check()
-                health_status['facade'] = 'healthy' if facade_health.success else 'unhealthy'
+                health_status["facade"] = "healthy" if facade_health.success else "unhealthy"
             else:
-                health_status['facade'] = 'not_registered'
-            all_healthy = all(status in ('registered', 'healthy') for status in health_status.values())
+                health_status["facade"] = "not_registered"
+            all_healthy = all(status in ("registered", "healthy") for status in health_status.values())
             if all_healthy:
-                return StepResult.ok(data={'status': 'healthy', 'services': health_status})
+                return StepResult.ok(data={"status": "healthy", "services": health_status})
             else:
-                return StepResult.fail(f'Service health issues: {health_status}')
+                return StepResult.fail(f"Service health issues: {health_status}")
         except Exception as e:
-            return StepResult.fail(f'Health check failed: {e!s}')
+            return StepResult.fail(f"Health check failed: {e!s}")
 
     @classmethod
     def get_service_stats(cls) -> dict[str, Any]:
@@ -264,4 +272,9 @@ class OpenRouterServiceRegistry:
         Returns:
             Dictionary with service statistics
         """
-        return {'registered_services': ServiceRegistry.list_services(), 'registered_factories': ServiceRegistry.list_factories(), 'openrouter_service_registered': ServiceRegistry.is_registered(cls.OPENROUTER_SERVICE), 'openrouter_facade_registered': ServiceRegistry.is_registered(cls.OPENROUTER_FACADE)}
+        return {
+            "registered_services": ServiceRegistry.list_services(),
+            "registered_factories": ServiceRegistry.list_factories(),
+            "openrouter_service_registered": ServiceRegistry.is_registered(cls.OPENROUTER_SERVICE),
+            "openrouter_facade_registered": ServiceRegistry.is_registered(cls.OPENROUTER_FACADE),
+        }

@@ -1,11 +1,23 @@
 """Dashboard metrics recorder - sends pipeline results to performance dashboard API."""
+
 from __future__ import annotations
 import logging
 from platform.http.http_utils import resilient_post
 from platform.config.configuration import get_config
+
 logger = logging.getLogger(__name__)
 
-async def record_pipeline_metrics(processing_type: str, content_type: str | None=None, quality_score: float | None=None, processing_time: float | None=None, exit_checkpoint: str | None=None, exit_reason: str | None=None, exit_confidence: float | None=None, time_saved_pct: float | None=None) -> None:
+
+async def record_pipeline_metrics(
+    processing_type: str,
+    content_type: str | None = None,
+    quality_score: float | None = None,
+    processing_time: float | None = None,
+    exit_checkpoint: str | None = None,
+    exit_reason: str | None = None,
+    exit_confidence: float | None = None,
+    time_saved_pct: float | None = None,
+) -> None:
     """
     Record pipeline metrics to the performance dashboard.
 
@@ -22,28 +34,28 @@ async def record_pipeline_metrics(processing_type: str, content_type: str | None
         exit_confidence: Confidence of early exit decision
         time_saved_pct: Estimated time savings percentage
     """
-    enable_dashboard = get_config('ENABLE_DASHBOARD_METRICS', '0') == '1'
+    enable_dashboard = get_config("ENABLE_DASHBOARD_METRICS", "0") == "1"
     if not enable_dashboard:
         return
-    dashboard_url = get_config('DASHBOARD_API_URL', 'http://localhost:8000')
-    endpoint = f'{dashboard_url}/api/performance/record'
-    payload = {'processing_type': processing_type}
+    dashboard_url = get_config("DASHBOARD_API_URL", "http://localhost:8000")
+    endpoint = f"{dashboard_url}/api/performance/record"
+    payload = {"processing_type": processing_type}
     if content_type is not None:
-        payload['content_type'] = content_type
+        payload["content_type"] = content_type
     if quality_score is not None:
-        payload['quality_score'] = quality_score
+        payload["quality_score"] = quality_score
     if processing_time is not None:
-        payload['processing_time'] = processing_time
+        payload["processing_time"] = processing_time
     if exit_checkpoint is not None:
-        payload['exit_checkpoint'] = exit_checkpoint
+        payload["exit_checkpoint"] = exit_checkpoint
     if exit_reason is not None:
-        payload['exit_reason'] = exit_reason
+        payload["exit_reason"] = exit_reason
     if exit_confidence is not None:
-        payload['exit_confidence'] = exit_confidence
+        payload["exit_confidence"] = exit_confidence
     if time_saved_pct is not None:
-        payload['time_saved_pct'] = time_saved_pct
+        payload["time_saved_pct"] = time_saved_pct
     try:
         await resilient_post(endpoint, json_payload=payload, timeout_seconds=5)
-        logger.debug(f'Recorded dashboard metrics: {processing_type}')
+        logger.debug(f"Recorded dashboard metrics: {processing_type}")
     except Exception as exc:
-        logger.debug(f'Failed to record dashboard metrics: {exc}')
+        logger.debug(f"Failed to record dashboard metrics: {exc}")

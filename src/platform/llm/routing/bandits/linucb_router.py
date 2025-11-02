@@ -14,6 +14,7 @@ Notes:
   - Reward expected in [0,1].
     - Persistence optional via ENABLE_BANDIT_PERSIST + BANDIT_STATE_DIR.
 """
+
 from __future__ import annotations
 
 import contextlib
@@ -31,9 +32,11 @@ if TYPE_CHECKING:
     from ._metrics_types import MetricLike, MetricsFacade
 try:
     from platform.observability.metrics import get_metrics as _gm
-    _real_get_metrics: Callable[[], MetricsFacade] | None = cast('Callable[[], MetricsFacade]', _gm)
+
+    _real_get_metrics: Callable[[], MetricsFacade] | None = cast("Callable[[], MetricsFacade]", _gm)
 except Exception:
     _real_get_metrics = None
+
 
 def _obtain_metrics() -> MetricsFacade | None:
     func = _real_get_metrics
@@ -44,11 +47,14 @@ def _obtain_metrics() -> MetricsFacade | None:
     except Exception:
         return None
 
+
 def _ctx_flag() -> bool:
-    return os.getenv('ENABLE_CONTEXTUAL_BANDIT', '0').lower() in {'1', 'true', 'yes', 'on'}
+    return os.getenv("ENABLE_CONTEXTUAL_BANDIT", "0").lower() in {"1", "true", "yes", "on"}
+
 
 def _alpha_value() -> float:
-    return float(os.getenv('LINUCB_ALPHA', '0.8') or 0.8)
+    return float(os.getenv("LINUCB_ALPHA", "0.8") or 0.8)
+
 
 @dataclass
 class _ArmCtx:
@@ -57,31 +63,40 @@ class _ArmCtx:
     A_inv: list[list[float]] | None = None
     updates: int = 0
 
-class LinUCBRouter:
 
+class LinUCBRouter:
     def __init__(self, dimension: int) -> None:
         if dimension <= 0:
-            raise ValueError('dimension must be positive')
+            raise ValueError("dimension must be positive")
         self._d = dimension
         self._arms: dict[str, _ArmCtx] = {}
         self._lock = threading.Lock()
         self._metrics: MetricsFacade | None = _obtain_metrics()
-        self._persist_enabled = os.getenv('ENABLE_BANDIT_PERSIST', '0').lower() in {'1', 'true', 'yes', 'on'}
-        self._state_dir = os.getenv('BANDIT_STATE_DIR', './bandit_state')
-        self._recompute_interval = int(os.getenv('LINUCB_RECOMPUTE_INTERVAL', '0') or 0)
+        self._persist_enabled = os.getenv("ENABLE_BANDIT_PERSIST", "0").lower() in {"1", "true", "yes", "on"}
+        self._state_dir = os.getenv("BANDIT_STATE_DIR", "./bandit_state")
+        self._recompute_interval = int(os.getenv("LINUCB_RECOMPUTE_INTERVAL", "0") or 0)
         self._alpha = _alpha_value()
         if self._metrics:
             m = self._metrics
-            self._sel_counter: MetricLike | None = m.counter(name='linucb_selections_total', description='Total LinUCB selections per arm')
-            self._update_counter: MetricLike | None = m.counter(name='linucb_updates_total', description='Total LinUCB updates per arm')
-            self._recompute_counter: MetricLike | None = m.counter(name='linucb_recomputes_total', description='Number of full inverse recomputations')
-            self._cond_gauge: MetricLike | None = m.gauge(name='linucb_condition_number', description='Estimated condition number of A matrix per arm (after update)')
+            self._sel_counter: MetricLike | None = m.counter(
+                name="linucb_selections_total", description="Total LinUCB selections per arm"
+            )
+            self._update_counter: MetricLike | None = m.counter(
+                name="linucb_updates_total", description="Total LinUCB updates per arm"
+            )
+            self._recompute_counter: MetricLike | None = m.counter(
+                name="linucb_recomputes_total", description="Number of full inverse recomputations"
+            )
+            self._cond_gauge: MetricLike | None = m.gauge(
+                name="linucb_condition_number",
+                description="Estimated condition number of A matrix per arm (after update)",
+            )
         else:
             self._sel_counter = None
             self._update_counter = None
             self._recompute_counter = None
             self._cond_gauge = None
-        self._cond_threshold = float(os.getenv('LINUCB_COND_THRESHOLD', '0') or 0.0)
+        self._cond_threshold = float(os.getenv("LINUCB_COND_THRESHOLD", "0") or 0.0)
         if self._persist_enabled:
             with contextlib.suppress(Exception):
                 os.makedirs(self._state_dir, exist_ok=True)
@@ -112,7 +127,7 @@ class LinUCBRouter:
                         pivot = aug[i][i]
                         break
                 if pivot == 0:
-                    raise ValueError('Matrix singular during inversion')
+                    raise ValueError("Matrix singular during inversion")
             inv_p = 1.0 / pivot
             for j in range(2 * n):
                 aug[i][j] *= inv_p
@@ -136,11 +151,11 @@ class LinUCBRouter:
         if not _ctx_flag():
             return arms[0]
         if not arms:
-            raise ValueError('No arms provided')
+            raise ValueError("No arms provided")
         if len(features) != self._d:
-            raise ValueError('Feature dimension mismatch')
+            raise ValueError("Feature dimension mismatch")
         x = list(features)
-        best_score = -float('inf')
+        best_score = -float("inf")
         best_arm = arms[0]
         with self._lock:
             for arm in arms:
@@ -165,7 +180,7 @@ class LinUCBRouter:
         if not _ctx_flag():
             return
         if len(features) != self._d:
-            raise ValueError('Feature dimension mismatch')
+            raise ValueError("Feature dimension mismatch")
         r = max(0.0, min(1.0, float(reward)))
         x = list(features)
         with self._lock:
@@ -230,11 +245,11 @@ class LinUCBRouter:
             return list(self._arms.keys())
 
     def _state_path(self) -> str:
-        return os.path.join(self._state_dir, f'linucb_d{self._d}.json')
+        return os.path.join(self._state_dir, f"linucb_d{self._d}.json")
 
     def _serialize(self) -> dict[str, dict[str, list[list[float]] | list[float]]]:
         with self._lock:
-            return {arm: {'A': ctx.A, 'b': ctx.b} for arm, ctx in self._arms.items()}
+            return {arm: {"A": ctx.A, "b": ctx.b} for arm, ctx in self._arms.items()}
 
     def _apply(self, data: object) -> None:
         if not isinstance(data, dict):
@@ -243,9 +258,15 @@ class LinUCBRouter:
             for arm, payload in data.items():
                 if not isinstance(payload, dict):
                     continue
-                A = payload.get('A')
-                b = payload.get('b')
-                if isinstance(A, list) and isinstance(b, list) and (len(A) == self._d) and all(isinstance(row, list) and len(row) == self._d for row in A) and (len(b) == self._d):
+                A = payload.get("A")
+                b = payload.get("b")
+                if (
+                    isinstance(A, list)
+                    and isinstance(b, list)
+                    and (len(A) == self._d)
+                    and all(isinstance(row, list) and len(row) == self._d for row in A)
+                    and (len(b) == self._d)
+                ):
                     self._arms[arm] = _ArmCtx(A=[row[:] for row in A], b=list(b), A_inv=None)
         with self._lock:
             for ctx in self._arms.values():
@@ -260,7 +281,7 @@ class LinUCBRouter:
         path = self._state_path()
         if not os.path.isfile(path):
             return
-        with open(path, encoding='utf-8') as f:
+        with open(path, encoding="utf-8") as f:
             raw = json.load(f)
         self._apply(raw)
 
@@ -268,9 +289,11 @@ class LinUCBRouter:
         if not self._persist_enabled:
             return
         os.makedirs(self._state_dir, exist_ok=True)
-        tmp = self._state_path() + '.tmp'
+        tmp = self._state_path() + ".tmp"
         data = self._serialize()
-        with open(tmp, 'w', encoding='utf-8') as f:
-            json.dump(data, f, separators=(',', ':'))
+        with open(tmp, "w", encoding="utf-8") as f:
+            json.dump(data, f, separators=(",", ":"))
         os.replace(tmp, self._state_path())
-__all__ = ['LinUCBRouter']
+
+
+__all__ = ["LinUCBRouter"]

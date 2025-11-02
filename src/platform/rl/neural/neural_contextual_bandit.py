@@ -15,16 +15,26 @@ from src.ultimate_discord_intelligence_bot.step_result import ErrorCategory, Ste
 logger = logging.getLogger(__name__)
 metrics = get_metrics()
 
+
 class NeuralContextualBandit(nn.Module):
     """Neural network-based contextual bandit for routing decisions."""
 
-    def __init__(self, context_dim: int, n_arms: int, hidden_dim: int=128):
+    def __init__(self, context_dim: int, n_arms: int, hidden_dim: int = 128):
         super().__init__()
         self.context_dim = context_dim
         self.n_arms = n_arms
-        self.feature_extractor = nn.Sequential(nn.Linear(context_dim, hidden_dim), nn.ReLU(), nn.Dropout(0.2), nn.Linear(hidden_dim, hidden_dim), nn.ReLU(), nn.Dropout(0.2))
+        self.feature_extractor = nn.Sequential(
+            nn.Linear(context_dim, hidden_dim),
+            nn.ReLU(),
+            nn.Dropout(0.2),
+            nn.Linear(hidden_dim, hidden_dim),
+            nn.ReLU(),
+            nn.Dropout(0.2),
+        )
         self.arm_heads = nn.ModuleList([nn.Linear(hidden_dim, 1) for _ in range(n_arms)])
-        self.uncertainty_net = nn.Sequential(nn.Linear(hidden_dim, hidden_dim // 2), nn.ReLU(), nn.Linear(hidden_dim // 2, n_arms), nn.Softplus())
+        self.uncertainty_net = nn.Sequential(
+            nn.Linear(hidden_dim, hidden_dim // 2), nn.ReLU(), nn.Linear(hidden_dim // 2, n_arms), nn.Softplus()
+        )
         self.optimizer = optim.Adam(self.parameters(), lr=0.001)
         self.experience_buffer = deque(maxlen=10000)
 
@@ -35,14 +45,14 @@ class NeuralContextualBandit(nn.Module):
         uncertainties = self.uncertainty_net(features)
         return (rewards, uncertainties)
 
-    def select_arm(self, context: np.ndarray, exploration_rate: float=0.1) -> int:
+    def select_arm(self, context: np.ndarray, exploration_rate: float = 0.1) -> int:
         """Select an arm using Thompson sampling with neural uncertainty."""
         with torch.no_grad():
             context_tensor = torch.FloatTensor(context).unsqueeze(0)
             rewards, uncertainties = self(context_tensor)
             sampled_rewards = rewards + uncertainties * torch.randn_like(rewards) * exploration_rate
             arm = sampled_rewards.argmax().item()
-            metrics.counter('bandit_selections_total', labels={'arm': str(arm)})
+            metrics.counter("bandit_selections_total", labels={"arm": str(arm)})
             return arm
 
     def update(self, context: np.ndarray, arm: int, reward: float):
@@ -51,7 +61,7 @@ class NeuralContextualBandit(nn.Module):
         if len(self.experience_buffer) >= 32:
             self._train_on_batch(batch_size=32)
 
-    def _train_on_batch(self, batch_size: int=32):
+    def _train_on_batch(self, batch_size: int = 32):
         """Train on a random batch from experience buffer."""
         if len(self.experience_buffer) < batch_size:
             return
@@ -67,8 +77,9 @@ class NeuralContextualBandit(nn.Module):
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
-        metrics.counter('bandit_updates_total')
-        metrics.gauge('bandit_loss', loss.item())
+        metrics.counter("bandit_updates_total")
+        metrics.gauge("bandit_loss", loss.item())
+
 
 class NeuralBanditRouter:
     """Router using neural contextual bandits."""
@@ -83,9 +94,11 @@ class NeuralBanditRouter:
             context = self._extract_features(content)
             model_idx = self.bandit.select_arm(context)
             selected_model = self.models[model_idx]
-            return StepResult.ok(result={'model': selected_model}, metadata={'routing_method': 'neural_bandit', 'model_index': model_idx})
+            return StepResult.ok(
+                result={"model": selected_model}, metadata={"routing_method": "neural_bandit", "model_index": model_idx}
+            )
         except Exception as e:
-            logger.error(f'Neural bandit routing failed: {e}')
+            logger.error(f"Neural bandit routing failed: {e}")
             return StepResult.fail(error=str(e), error_category=ErrorCategory.ROUTING_ERROR)
 
     def update_reward(self, content: dict[str, Any], model: str, reward: float) -> StepResult:
@@ -94,7 +107,7 @@ class NeuralBanditRouter:
             context = self._extract_features(content)
             model_idx = self.models.index(model)
             self.bandit.update(context, model_idx, reward)
-            return StepResult.ok(result={'updated': True}, metadata={'model': model, 'reward': reward})
+            return StepResult.ok(result={"updated": True}, metadata={"model": model, "reward": reward})
         except Exception as e:
             return StepResult.fail(error=str(e), error_category=ErrorCategory.ROUTING_ERROR)
 

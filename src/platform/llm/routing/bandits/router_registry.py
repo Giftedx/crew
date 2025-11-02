@@ -15,6 +15,7 @@ State File Naming:
 Note: For multi-process deployments, external synchronization (e.g., Redis) would be needed. This
 in-memory registry is per-process.
 """
+
 from __future__ import annotations
 
 import json
@@ -38,31 +39,41 @@ try:
 
     def _obtain_metrics() -> MetricsFacade | None:
         try:
-            return cast('MetricsFacade', _gm())
+            return cast("MetricsFacade", _gm())
         except Exception:
             return None
 except Exception:
 
     def _obtain_metrics() -> MetricsFacade | None:
         return None
+
+
 _metrics: MetricsFacade | None = _obtain_metrics()
 _selection_entropy_gauge: MetricLike | None = None
 _posterior_entropy_gauge: MetricLike | None = None
 if _metrics:
     try:
-        _selection_entropy_gauge = _metrics.gauge(name='bandit_router_selection_entropy', description='Shannon entropy of model selection distribution (empirical selections)')
-        _posterior_entropy_gauge = _metrics.gauge(name='bandit_router_posterior_mean_entropy', description='Entropy of mean posterior probabilities (informational uncertainty)')
+        _selection_entropy_gauge = _metrics.gauge(
+            name="bandit_router_selection_entropy",
+            description="Shannon entropy of model selection distribution (empirical selections)",
+        )
+        _posterior_entropy_gauge = _metrics.gauge(
+            name="bandit_router_posterior_mean_entropy",
+            description="Entropy of mean posterior probabilities (informational uncertainty)",
+        )
     except Exception:
         _selection_entropy_gauge = None
         _posterior_entropy_gauge = None
 
+
 def _state_filename(tenant_id: str, workspace_id: str) -> str:
-    return f'bandit_state__{tenant_id}__{workspace_id}.json'
+    return f"bandit_state__{tenant_id}__{workspace_id}.json"
+
 
 def get_tenant_router() -> ThompsonBanditRouter:
     ctx = current_tenant()
     if ctx is None:
-        key = ('_global', '_global')
+        key = ("_global", "_global")
         with _registry_lock:
             r = _routers.get(key)
             if r is None:
@@ -77,9 +88,10 @@ def get_tenant_router() -> ThompsonBanditRouter:
             _routers[key] = r
         return r
 
+
 def record_selection(model: str) -> None:
     ctx = current_tenant()
-    key = (ctx.tenant_id, ctx.workspace_id) if ctx else ('_global', '_global')
+    key = (ctx.tenant_id, ctx.workspace_id) if ctx else ("_global", "_global")
     with _registry_lock:
         _selection_counts[key][model] += 1
         if _selection_entropy_gauge:
@@ -93,16 +105,18 @@ def record_selection(model: str) -> None:
                 if pe is not None:
                     _posterior_entropy_gauge.set(pe, {})
 
+
 def compute_selection_entropy() -> float | None:
     """Return Shannon entropy over selection proportions for current tenant.
 
     Returns None if no selections yet. Units: nats.
     """
     ctx = current_tenant()
-    key = (ctx.tenant_id, ctx.workspace_id) if ctx else ('_global', '_global')
+    key = (ctx.tenant_id, ctx.workspace_id) if ctx else ("_global", "_global")
     with _registry_lock:
         counts = _selection_counts.get(key)
         return _compute_entropy_locked(counts)
+
 
 def _compute_entropy_locked(counts: dict[str, int] | None) -> float | None:
     if not counts:
@@ -115,6 +129,7 @@ def _compute_entropy_locked(counts: dict[str, int] | None) -> float | None:
         p = c / total
         entropy -= p * math.log(p)
     return entropy
+
 
 def _compute_posterior_mean_entropy(router: ThompsonBanditRouter) -> float | None:
     arms = router.arms()
@@ -140,25 +155,27 @@ def _compute_posterior_mean_entropy(router: ThompsonBanditRouter) -> float | Non
         entropy -= p_norm * math.log(p_norm)
     return entropy
 
+
 def _counts_state_path() -> str:
-    base_dir = os.getenv('BANDIT_STATE_DIR', './bandit_state')
-    return os.path.join(base_dir, 'selection_counts.json')
+    base_dir = os.getenv("BANDIT_STATE_DIR", "./bandit_state")
+    return os.path.join(base_dir, "selection_counts.json")
+
 
 def load_selection_counts() -> None:
-    if os.getenv('ENABLE_BANDIT_PERSIST', '0').lower() not in {'1', 'true', 'yes', 'on'}:
+    if os.getenv("ENABLE_BANDIT_PERSIST", "0").lower() not in {"1", "true", "yes", "on"}:
         return
     path = _counts_state_path()
     if not os.path.isfile(path):
         return
     try:
-        with open(path, encoding='utf-8') as f:
+        with open(path, encoding="utf-8") as f:
             raw = json.load(f)
         if isinstance(raw, dict):
             with _registry_lock:
                 for key_str, model_counts in raw.items():
                     if not isinstance(model_counts, dict):
                         continue
-                    tenant, workspace = key_str.split('||', 1) if '||' in key_str else (key_str, '')
+                    tenant, workspace = key_str.split("||", 1) if "||" in key_str else (key_str, "")
                     tup = (tenant, workspace)
                     for m, c in model_counts.items():
                         if isinstance(c, int) and c >= 0:
@@ -166,24 +183,28 @@ def load_selection_counts() -> None:
     except Exception:
         pass
 
+
 def save_selection_counts() -> None:
-    if os.getenv('ENABLE_BANDIT_PERSIST', '0').lower() not in {'1', 'true', 'yes', 'on'}:
+    if os.getenv("ENABLE_BANDIT_PERSIST", "0").lower() not in {"1", "true", "yes", "on"}:
         return
     path = _counts_state_path()
     os.makedirs(os.path.dirname(path), exist_ok=True)
     data: dict[str, dict[str, int]] = {}
     with _registry_lock:
         for (tenant, workspace), counts in _selection_counts.items():
-            key_str = f'{tenant}||{workspace}'
+            key_str = f"{tenant}||{workspace}"
             data[key_str] = dict(counts)
-    tmp = path + '.tmp'
+    tmp = path + ".tmp"
     try:
-        with open(tmp, 'w', encoding='utf-8') as f:
-            json.dump(data, f, separators=(',', ':'))
+        with open(tmp, "w", encoding="utf-8") as f:
+            json.dump(data, f, separators=(",", ":"))
         os.replace(tmp, path)
     except Exception:
         pass
+
+
 load_selection_counts()
+
 
 class RewardNormalizer:
     """EMA-based normalizer for latency & cost; direct quality passthrough.
@@ -192,7 +213,7 @@ class RewardNormalizer:
     where lower latency/cost increases reward. Output reward in [0,1].
     """
 
-    def __init__(self, alpha: float=0.2) -> None:
+    def __init__(self, alpha: float = 0.2) -> None:
         self.alpha = alpha
         self._lat_ema: float | None = None
         self._cost_ema: float | None = None
@@ -208,4 +229,6 @@ class RewardNormalizer:
         cost_norm = 0.5 if self._cost_ema is None or self._cost_ema == 0 else min(1.0, cost / (2 * self._cost_ema))
         reward = 0.5 * q + 0.3 * (1 - lat_norm) + 0.2 * (1 - cost_norm)
         return max(0.0, min(1.0, reward))
-__all__ = ['RewardNormalizer', 'compute_selection_entropy', 'get_tenant_router', 'record_selection']
+
+
+__all__ = ["RewardNormalizer", "compute_selection_entropy", "get_tenant_router", "record_selection"]

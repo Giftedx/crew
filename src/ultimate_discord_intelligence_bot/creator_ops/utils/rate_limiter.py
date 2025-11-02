@@ -2,21 +2,25 @@
 Rate limiter implementation for API call throttling.
 Provides token bucket and sliding window rate limiting.
 """
+
 import asyncio
 import logging
 import time
 from collections.abc import Callable
 from typing import Any, TypeVar
 from platform.core.step_result import StepResult
+
 logger = logging.getLogger(__name__)
-T = TypeVar('T')
+T = TypeVar("T")
+
 
 class RateLimitExceededError(Exception):
     """Raised when rate limit is exceeded."""
 
-    def __init__(self, message: str, retry_after: float | None=None):
+    def __init__(self, message: str, retry_after: float | None = None):
         super().__init__(message)
         self.retry_after = retry_after
+
 
 class TokenBucket:
     """
@@ -25,7 +29,7 @@ class TokenBucket:
     Allows bursts up to bucket capacity while maintaining average rate.
     """
 
-    def __init__(self, capacity: int, refill_rate: float, name: str='token_bucket'):
+    def __init__(self, capacity: int, refill_rate: float, name: str = "token_bucket"):
         """
         Initialize token bucket.
 
@@ -41,7 +45,7 @@ class TokenBucket:
         self.last_refill = time.time()
         self._lock = asyncio.Lock()
 
-    async def acquire(self, tokens: int=1) -> bool:
+    async def acquire(self, tokens: int = 1) -> bool:
         """
         Try to acquire tokens from bucket.
 
@@ -55,13 +59,15 @@ class TokenBucket:
             self._refill()
             if self.tokens >= tokens:
                 self.tokens -= tokens
-                logger.debug(f'Token bucket {self.name}: acquired {tokens} tokens, {self.tokens} remaining')
+                logger.debug(f"Token bucket {self.name}: acquired {tokens} tokens, {self.tokens} remaining")
                 return True
             else:
-                logger.debug(f'Token bucket {self.name}: rate limited, {tokens} tokens requested, {self.tokens} available')
+                logger.debug(
+                    f"Token bucket {self.name}: rate limited, {tokens} tokens requested, {self.tokens} available"
+                )
                 return False
 
-    async def wait_for_tokens(self, tokens: int=1, timeout: float | None=None) -> bool:
+    async def wait_for_tokens(self, tokens: int = 1, timeout: float | None = None) -> bool:
         """
         Wait for tokens to become available.
 
@@ -91,7 +97,14 @@ class TokenBucket:
     def get_status(self) -> dict[str, Any]:
         """Get current bucket status."""
         self._refill()
-        return {'name': self.name, 'tokens': self.tokens, 'capacity': self.capacity, 'refill_rate': self.refill_rate, 'utilization': (self.capacity - self.tokens) / self.capacity}
+        return {
+            "name": self.name,
+            "tokens": self.tokens,
+            "capacity": self.capacity,
+            "refill_rate": self.refill_rate,
+            "utilization": (self.capacity - self.tokens) / self.capacity,
+        }
+
 
 class SlidingWindowRateLimiter:
     """
@@ -100,7 +113,7 @@ class SlidingWindowRateLimiter:
     Tracks requests within a sliding time window.
     """
 
-    def __init__(self, max_requests: int, window_seconds: float, name: str='sliding_window'):
+    def __init__(self, max_requests: int, window_seconds: float, name: str = "sliding_window"):
         """
         Initialize sliding window rate limiter.
 
@@ -128,13 +141,17 @@ class SlidingWindowRateLimiter:
             self.requests = [req_time for req_time in self.requests if req_time > window_start]
             if len(self.requests) < self.max_requests:
                 self.requests.append(now)
-                logger.debug(f'Sliding window {self.name}: request allowed, {len(self.requests)}/{self.max_requests} in window')
+                logger.debug(
+                    f"Sliding window {self.name}: request allowed, {len(self.requests)}/{self.max_requests} in window"
+                )
                 return True
             else:
-                logger.debug(f'Sliding window {self.name}: rate limited, {len(self.requests)}/{self.max_requests} in window')
+                logger.debug(
+                    f"Sliding window {self.name}: rate limited, {len(self.requests)}/{self.max_requests} in window"
+                )
                 return False
 
-    async def wait_for_permission(self, timeout: float | None=None) -> bool:
+    async def wait_for_permission(self, timeout: float | None = None) -> bool:
         """
         Wait for permission to make a request.
 
@@ -157,7 +174,14 @@ class SlidingWindowRateLimiter:
         now = time.time()
         window_start = now - self.window_seconds
         self.requests = [req_time for req_time in self.requests if req_time > window_start]
-        return {'name': self.name, 'requests_in_window': len(self.requests), 'max_requests': self.max_requests, 'window_seconds': self.window_seconds, 'utilization': len(self.requests) / self.max_requests}
+        return {
+            "name": self.name,
+            "requests_in_window": len(self.requests),
+            "max_requests": self.max_requests,
+            "window_seconds": self.window_seconds,
+            "utilization": len(self.requests) / self.max_requests,
+        }
+
 
 class RateLimiter:
     """
@@ -166,7 +190,12 @@ class RateLimiter:
     Can use token bucket, sliding window, or both together.
     """
 
-    def __init__(self, token_bucket: TokenBucket | None=None, sliding_window: SlidingWindowRateLimiter | None=None, name: str='rate_limiter'):
+    def __init__(
+        self,
+        token_bucket: TokenBucket | None = None,
+        sliding_window: SlidingWindowRateLimiter | None = None,
+        name: str = "rate_limiter",
+    ):
         """
         Initialize rate limiter.
 
@@ -179,7 +208,7 @@ class RateLimiter:
         self.sliding_window = sliding_window
         self.name = name
 
-    async def acquire(self, tokens: int=1) -> bool:
+    async def acquire(self, tokens: int = 1) -> bool:
         """
         Try to acquire permission for request(s).
 
@@ -193,7 +222,7 @@ class RateLimiter:
             return False
         return not (self.sliding_window and (not await self.sliding_window.acquire()))
 
-    async def wait_for_permission(self, tokens: int=1, timeout: float | None=None) -> bool:
+    async def wait_for_permission(self, tokens: int = 1, timeout: float | None = None) -> bool:
         """
         Wait for permission to make request(s).
 
@@ -214,12 +243,13 @@ class RateLimiter:
 
     def get_status(self) -> dict[str, Any]:
         """Get current rate limiter status."""
-        status = {'name': self.name}
+        status = {"name": self.name}
         if self.token_bucket:
-            status['token_bucket'] = self.token_bucket.get_status()
+            status["token_bucket"] = self.token_bucket.get_status()
         if self.sliding_window:
-            status['sliding_window'] = self.sliding_window.get_status()
+            status["sliding_window"] = self.sliding_window.get_status()
         return status
+
 
 class RateLimiterManager:
     """Manages multiple rate limiters for different services."""
@@ -227,7 +257,9 @@ class RateLimiterManager:
     def __init__(self):
         self.limiters: dict[str, RateLimiter] = {}
 
-    def get_limiter(self, name: str, token_bucket: TokenBucket | None=None, sliding_window: SlidingWindowRateLimiter | None=None) -> RateLimiter:
+    def get_limiter(
+        self, name: str, token_bucket: TokenBucket | None = None, sliding_window: SlidingWindowRateLimiter | None = None
+    ) -> RateLimiter:
         """
         Get or create a rate limiter.
 
@@ -246,9 +278,14 @@ class RateLimiterManager:
     def get_all_status(self) -> dict[str, dict[str, Any]]:
         """Get status of all rate limiters."""
         return {name: limiter.get_status() for name, limiter in self.limiters.items()}
+
+
 rate_limiter_manager = RateLimiterManager()
 
-def with_rate_limit(limiter_name: str, tokens: int=1, timeout: float | None=None, manager: RateLimiterManager | None=None):
+
+def with_rate_limit(
+    limiter_name: str, tokens: int = 1, timeout: float | None = None, manager: RateLimiterManager | None = None
+):
     """
     Decorator to add rate limiting to functions.
 
@@ -262,25 +299,29 @@ def with_rate_limit(limiter_name: str, tokens: int=1, timeout: float | None=None
         manager = rate_limiter_manager
 
     def decorator(func: Callable[..., T]) -> Callable[..., T]:
-
         async def async_wrapper(*args, **kwargs) -> T:
             limiter = manager.get_limiter(limiter_name)
             if not await limiter.wait_for_permission(tokens, timeout):
-                raise RateLimitExceededError(f'Rate limit exceeded for {limiter_name}')
+                raise RateLimitExceededError(f"Rate limit exceeded for {limiter_name}")
             return await func(*args, **kwargs)
 
         def sync_wrapper(*args, **kwargs) -> T:
             limiter = manager.get_limiter(limiter_name)
             if not asyncio.run(limiter.wait_for_permission(tokens, timeout)):
-                raise RateLimitExceededError(f'Rate limit exceeded for {limiter_name}')
+                raise RateLimitExceededError(f"Rate limit exceeded for {limiter_name}")
             return func(*args, **kwargs)
+
         if asyncio.iscoroutinefunction(func):
             return async_wrapper
         else:
             return sync_wrapper
+
     return decorator
 
-def with_result_rate_limit(limiter_name: str, tokens: int=1, timeout: float | None=None, manager: RateLimiterManager | None=None):
+
+def with_result_rate_limit(
+    limiter_name: str, tokens: int = 1, timeout: float | None = None, manager: RateLimiterManager | None = None
+):
     """
     Decorator to add rate limiting to StepResult functions.
 
@@ -294,20 +335,21 @@ def with_result_rate_limit(limiter_name: str, tokens: int=1, timeout: float | No
         manager = rate_limiter_manager
 
     def decorator(func: Callable[..., StepResult]) -> Callable[..., StepResult]:
-
         async def async_wrapper(*args, **kwargs) -> StepResult:
             limiter = manager.get_limiter(limiter_name)
             if not await limiter.wait_for_permission(tokens, timeout):
-                return StepResult.fail(f'Rate limit exceeded for {limiter_name}')
+                return StepResult.fail(f"Rate limit exceeded for {limiter_name}")
             return await func(*args, **kwargs)
 
         def sync_wrapper(*args, **kwargs) -> StepResult:
             limiter = manager.get_limiter(limiter_name)
             if not asyncio.run(limiter.wait_for_permission(tokens, timeout)):
-                return StepResult.fail(f'Rate limit exceeded for {limiter_name}')
+                return StepResult.fail(f"Rate limit exceeded for {limiter_name}")
             return func(*args, **kwargs)
+
         if asyncio.iscoroutinefunction(func):
             return async_wrapper
         else:
             return sync_wrapper
+
     return decorator

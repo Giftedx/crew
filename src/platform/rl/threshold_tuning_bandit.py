@@ -11,6 +11,7 @@ and the unified feedback orchestrator, adding:
 - Unified metrics and observability
 - Multi-objective optimization (cost vs quality)
 """
+
 from __future__ import annotations
 
 import contextlib
@@ -23,9 +24,11 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
+
 @dataclass
 class ThresholdSelection:
     """Result of threshold selection."""
+
     word_count_min: int
     sentence_count_min: int
     coherence_min: float
@@ -34,9 +37,11 @@ class ThresholdSelection:
     confidence: float
     reasoning: str
 
+
 @dataclass
 class ThresholdFeedback:
     """Feedback for threshold decision."""
+
     config_id: str
     content_type: str
     bypass_decision: bool
@@ -44,6 +49,7 @@ class ThresholdFeedback:
     quality_score: float
     processing_time_saved_s: float
     timestamp: float
+
 
 class ThresholdTuningBandit:
     """Contextual bandit for adaptive quality threshold tuning.
@@ -61,20 +67,26 @@ class ThresholdTuningBandit:
         self.total_cost_saved = 0.0
         self.total_time_saved = 0.0
         self.content_type_stats: dict[str, dict[str, Any]] = {}
-        logger.info('ThresholdTuningBandit initialized')
+        logger.info("ThresholdTuningBandit initialized")
 
     def _get_optimizer(self):
         """Lazy load the optimizer."""
         if self.optimizer is None:
             try:
                 from domains.intelligence.analysis.rl_quality_threshold_optimizer import get_quality_threshold_optimizer
+
                 self.optimizer = get_quality_threshold_optimizer()
-                logger.info('Loaded QualityThresholdOptimizer')
+                logger.info("Loaded QualityThresholdOptimizer")
             except ImportError as e:
-                logger.warning(f'Failed to load QualityThresholdOptimizer: {e}')
+                logger.warning(f"Failed to load QualityThresholdOptimizer: {e}")
         return self.optimizer
 
-    async def select_thresholds(self, content_type: str='general', context: dict[str, Any] | None=None, optimization_target: str='balanced') -> StepResult:
+    async def select_thresholds(
+        self,
+        content_type: str = "general",
+        context: dict[str, Any] | None = None,
+        optimization_target: str = "balanced",
+    ) -> StepResult:
         """Select optimal quality thresholds for content type.
 
         Args:
@@ -90,22 +102,49 @@ class ThresholdTuningBandit:
             if optimizer is None:
                 return self._get_default_thresholds(content_type)
             ctx = context or {}
-            estimated_tokens = ctx.get('estimated_tokens', 0)
+            estimated_tokens = ctx.get("estimated_tokens", 0)
             recent_bypass_rate = self._get_recent_bypass_rate(content_type)
             budget_pressure = self._calculate_budget_pressure(ctx)
             from domains.intelligence.analysis.rl_quality_threshold_optimizer import OptimizationContext
-            opt_context = OptimizationContext(content_type=content_type, tenant=ctx.get('tenant', 'default'), estimated_tokens=estimated_tokens, recent_bypass_rate=recent_bypass_rate, budget_pressure=budget_pressure)
-            threshold_config = optimizer.select_thresholds(content_type=content_type, tenant=ctx.get('tenant', 'default'), context=opt_context)
+
+            opt_context = OptimizationContext(
+                content_type=content_type,
+                tenant=ctx.get("tenant", "default"),
+                estimated_tokens=estimated_tokens,
+                recent_bypass_rate=recent_bypass_rate,
+                budget_pressure=budget_pressure,
+            )
+            threshold_config = optimizer.select_thresholds(
+                content_type=content_type, tenant=ctx.get("tenant", "default"), context=opt_context
+            )
             self.selections_count += 1
             confidence = self._calculate_confidence(optimizer, content_type, threshold_config.config_id)
-            reasoning = self._build_reasoning(content_type, threshold_config, optimization_target, recent_bypass_rate, budget_pressure)
-            selection = ThresholdSelection(word_count_min=threshold_config.word_count_min, sentence_count_min=threshold_config.sentence_count_min, coherence_min=threshold_config.coherence_min, overall_quality_min=threshold_config.overall_quality_min, config_id=threshold_config.config_id, confidence=confidence, reasoning=reasoning)
+            reasoning = self._build_reasoning(
+                content_type, threshold_config, optimization_target, recent_bypass_rate, budget_pressure
+            )
+            selection = ThresholdSelection(
+                word_count_min=threshold_config.word_count_min,
+                sentence_count_min=threshold_config.sentence_count_min,
+                coherence_min=threshold_config.coherence_min,
+                overall_quality_min=threshold_config.overall_quality_min,
+                config_id=threshold_config.config_id,
+                confidence=confidence,
+                reasoning=reasoning,
+            )
             return StepResult.ok(data=selection)
         except Exception as e:
-            logger.error(f'Threshold selection failed: {e}')
+            logger.error(f"Threshold selection failed: {e}")
             return self._get_default_thresholds(content_type)
 
-    def submit_threshold_feedback(self, config_id: str, content_type: str, bypass_decision: bool, cost_saved_usd: float, quality_score: float, processing_time_saved_s: float=0.0) -> None:
+    def submit_threshold_feedback(
+        self,
+        config_id: str,
+        content_type: str,
+        bypass_decision: bool,
+        cost_saved_usd: float,
+        quality_score: float,
+        processing_time_saved_s: float = 0.0,
+    ) -> None:
         """Submit feedback for threshold decision.
 
         Args:
@@ -117,25 +156,40 @@ class ThresholdTuningBandit:
             processing_time_saved_s: Time saved in seconds
         """
         import time
-        feedback = ThresholdFeedback(config_id=config_id, content_type=content_type, bypass_decision=bypass_decision, cost_saved_usd=cost_saved_usd, quality_score=quality_score, processing_time_saved_s=processing_time_saved_s, timestamp=time.time())
+
+        feedback = ThresholdFeedback(
+            config_id=config_id,
+            content_type=content_type,
+            bypass_decision=bypass_decision,
+            cost_saved_usd=cost_saved_usd,
+            quality_score=quality_score,
+            processing_time_saved_s=processing_time_saved_s,
+            timestamp=time.time(),
+        )
         self._feedback_queue.append(feedback)
         self.feedback_count += 1
         if bypass_decision:
             self.total_cost_saved += cost_saved_usd
             self.total_time_saved += processing_time_saved_s
         if content_type not in self.content_type_stats:
-            self.content_type_stats[content_type] = {'bypass_count': 0, 'process_count': 0, 'total_cost_saved': 0.0, 'total_time_saved': 0.0, 'avg_quality': 0.0}
+            self.content_type_stats[content_type] = {
+                "bypass_count": 0,
+                "process_count": 0,
+                "total_cost_saved": 0.0,
+                "total_time_saved": 0.0,
+                "avg_quality": 0.0,
+            }
         stats = self.content_type_stats[content_type]
         if bypass_decision:
-            stats['bypass_count'] += 1
-            stats['total_cost_saved'] += cost_saved_usd
-            stats['total_time_saved'] += processing_time_saved_s
+            stats["bypass_count"] += 1
+            stats["total_cost_saved"] += cost_saved_usd
+            stats["total_time_saved"] += processing_time_saved_s
         else:
-            stats['process_count'] += 1
+            stats["process_count"] += 1
         alpha = 0.2
-        stats['avg_quality'] = alpha * quality_score + (1 - alpha) * stats['avg_quality']
+        stats["avg_quality"] = alpha * quality_score + (1 - alpha) * stats["avg_quality"]
 
-    def process_feedback_batch(self, batch_size: int=20) -> None:
+    def process_feedback_batch(self, batch_size: int = 20) -> None:
         """Process batch of feedback to update optimizer.
 
         Args:
@@ -148,12 +202,19 @@ class ThresholdTuningBandit:
         while self._feedback_queue and processed < batch_size:
             feedback = self._feedback_queue.popleft()
             try:
-                optimizer.update_reward(content_type=feedback.content_type, tenant='default', bypass_decision=feedback.bypass_decision, cost_saved_usd=feedback.cost_saved_usd, quality_score=feedback.quality_score, config_id=feedback.config_id)
+                optimizer.update_reward(
+                    content_type=feedback.content_type,
+                    tenant="default",
+                    bypass_decision=feedback.bypass_decision,
+                    cost_saved_usd=feedback.cost_saved_usd,
+                    quality_score=feedback.quality_score,
+                    config_id=feedback.config_id,
+                )
                 processed += 1
             except Exception as e:
-                logger.error(f'Failed to update optimizer with feedback: {e}')
+                logger.error(f"Failed to update optimizer with feedback: {e}")
         if processed > 0:
-            logger.debug(f'Processed {processed} threshold feedback items')
+            logger.debug(f"Processed {processed} threshold feedback items")
 
     def get_metrics(self) -> dict[str, Any]:
         """Get current metrics.
@@ -162,15 +223,35 @@ class ThresholdTuningBandit:
             Dictionary of metrics
         """
         optimizer = self._get_optimizer()
-        metrics = {'selections_count': self.selections_count, 'feedback_count': self.feedback_count, 'total_cost_saved_usd': self.total_cost_saved, 'total_time_saved_s': self.total_time_saved, 'feedback_queue_size': len(self._feedback_queue), 'content_type_stats': self.content_type_stats.copy()}
+        metrics = {
+            "selections_count": self.selections_count,
+            "feedback_count": self.feedback_count,
+            "total_cost_saved_usd": self.total_cost_saved,
+            "total_time_saved_s": self.total_time_saved,
+            "feedback_queue_size": len(self._feedback_queue),
+            "content_type_stats": self.content_type_stats.copy(),
+        }
         if optimizer:
             with contextlib.suppress(Exception):
-                metrics['optimizer_state'] = {'exploration_rate': optimizer.exploration_rate, 'total_pulls': sum(arm.pulls for arms in optimizer.arms_by_context.values() for arm in arms.values())}
+                metrics["optimizer_state"] = {
+                    "exploration_rate": optimizer.exploration_rate,
+                    "total_pulls": sum(
+                        arm.pulls for arms in optimizer.arms_by_context.values() for arm in arms.values()
+                    ),
+                }
         return metrics
 
     def _get_default_thresholds(self, content_type: str) -> StepResult:
         """Get default thresholds as fallback."""
-        selection = ThresholdSelection(word_count_min=500, sentence_count_min=10, coherence_min=0.6, overall_quality_min=0.65, config_id='default', confidence=0.5, reasoning=f'Using default thresholds for {content_type} (optimizer unavailable)')
+        selection = ThresholdSelection(
+            word_count_min=500,
+            sentence_count_min=10,
+            coherence_min=0.6,
+            overall_quality_min=0.65,
+            config_id="default",
+            confidence=0.5,
+            reasoning=f"Using default thresholds for {content_type} (optimizer unavailable)",
+        )
         return StepResult.ok(data=selection)
 
     def _get_recent_bypass_rate(self, content_type: str) -> float:
@@ -178,18 +259,18 @@ class ThresholdTuningBandit:
         if content_type not in self.content_type_stats:
             return 0.5
         stats = self.content_type_stats[content_type]
-        total = stats['bypass_count'] + stats['process_count']
+        total = stats["bypass_count"] + stats["process_count"]
         if total == 0:
             return 0.5
-        return stats['bypass_count'] / total
+        return stats["bypass_count"] / total
 
     def _calculate_budget_pressure(self, context: dict[str, Any]) -> float:
         """Calculate budget pressure from context.
 
         Returns value between 0.0 (no pressure) and 1.0 (high pressure).
         """
-        budget_limit = context.get('budget_limit', 0)
-        budget_used = context.get('budget_used', 0)
+        budget_limit = context.get("budget_limit", 0)
+        budget_used = context.get("budget_used", 0)
         if budget_limit == 0:
             return 0.0
         utilization = budget_used / budget_limit
@@ -205,7 +286,7 @@ class ThresholdTuningBandit:
     def _calculate_confidence(self, optimizer, content_type: str, config_id: str) -> float:
         """Calculate confidence in threshold selection."""
         try:
-            context_key = optimizer._get_context_key(content_type, 'default')
+            context_key = optimizer._get_context_key(content_type, "default")
             if context_key in optimizer.arms_by_context:
                 arms = optimizer.arms_by_context[context_key]
                 if config_id in arms:
@@ -217,32 +298,45 @@ class ThresholdTuningBandit:
         except Exception:
             return 0.5
 
-    def _build_reasoning(self, content_type: str, threshold_config, optimization_target: str, recent_bypass_rate: float, budget_pressure: float) -> str:
+    def _build_reasoning(
+        self,
+        content_type: str,
+        threshold_config,
+        optimization_target: str,
+        recent_bypass_rate: float,
+        budget_pressure: float,
+    ) -> str:
         """Build human-readable reasoning for threshold selection."""
         parts = [f"Selected '{threshold_config.config_id}' config for {content_type}"]
-        if optimization_target == 'cost':
-            parts.append('optimizing for cost savings')
-        elif optimization_target == 'quality':
-            parts.append('optimizing for quality retention')
+        if optimization_target == "cost":
+            parts.append("optimizing for cost savings")
+        elif optimization_target == "quality":
+            parts.append("optimizing for quality retention")
         else:
-            parts.append('balancing cost and quality')
+            parts.append("balancing cost and quality")
         if budget_pressure > 0.6:
-            parts.append(f'(high budget pressure: {budget_pressure:.1%})')
+            parts.append(f"(high budget pressure: {budget_pressure:.1%})")
         if recent_bypass_rate > 0.0:
-            parts.append(f'recent bypass rate: {recent_bypass_rate:.1%}')
-        return ', '.join(parts)
+            parts.append(f"recent bypass rate: {recent_bypass_rate:.1%}")
+        return ", ".join(parts)
+
+
 _threshold_bandit_instance: ThresholdTuningBandit | None = None
 _threshold_bandit_lock = None
+
 
 def get_threshold_bandit() -> ThresholdTuningBandit:
     """Get or create the global threshold bandit instance."""
     global _threshold_bandit_instance, _threshold_bandit_lock
     if _threshold_bandit_lock is None:
         import threading
+
         _threshold_bandit_lock = threading.Lock()
     if _threshold_bandit_instance is None:
         with _threshold_bandit_lock:
             if _threshold_bandit_instance is None:
                 _threshold_bandit_instance = ThresholdTuningBandit()
     return _threshold_bandit_instance
-__all__ = ['ThresholdFeedback', 'ThresholdSelection', 'ThresholdTuningBandit', 'get_threshold_bandit']
+
+
+__all__ = ["ThresholdFeedback", "ThresholdSelection", "ThresholdTuningBandit", "get_threshold_bandit"]

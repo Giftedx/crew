@@ -16,6 +16,7 @@ Usage:
     features = extractor.extract(routing_context)
     # Returns normalized numpy array suitable for LinUCB
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -33,23 +34,27 @@ if TYPE_CHECKING:
     from platform.llm.providers.openrouter.state import RouteState
 logger = logging.getLogger(__name__)
 
+
 @dataclass
 class FeatureImportance:
     """Track feature importance for interpretability."""
+
     feature_name: str
     mean_magnitude: float = 0.0
     variance: float = 0.0
     samples: int = 0
     last_updated: float = field(default_factory=time.time)
 
+
 @dataclass
 class FeatureStats:
     """Running statistics for feature normalization."""
+
     mean: float = 0.0
     m2: float = 0.0
     count: int = 0
-    min_val: float = float('inf')
-    max_val: float = float('-inf')
+    min_val: float = float("inf")
+    max_val: float = float("-inf")
 
     def update(self, value: float) -> None:
         """Update statistics with new value using Welford's algorithm."""
@@ -71,11 +76,13 @@ class FeatureStats:
         """Calculate standard deviation."""
         return math.sqrt(self.variance)
 
+
 class FeatureExtractor:
     """Extract rich context features for contextual bandits."""
+
     FEATURE_DIM = 18
 
-    def __init__(self, enable_adaptive_normalization: bool=True):
+    def __init__(self, enable_adaptive_normalization: bool = True):
         """
         Initialize feature extractor.
 
@@ -88,11 +95,13 @@ class FeatureExtractor:
         self.latency_history: dict[str, deque[float]] = defaultdict(lambda: deque(maxlen=100))
         self.cost_history: dict[str, deque[float]] = defaultdict(lambda: deque(maxlen=100))
         self.request_timestamps: dict[str, deque[float]] = defaultdict(lambda: deque(maxlen=50))
-        self.budget_utilization: dict[str, dict[str, float]] = defaultdict(lambda: {'allocated': 0.0, 'used': 0.0})
+        self.budget_utilization: dict[str, dict[str, float]] = defaultdict(lambda: {"allocated": 0.0, "used": 0.0})
         self.content_type_embeddings: dict[str, np.ndarray] = {}
-        logger.info(f'FeatureExtractor initialized with {self.FEATURE_DIM} dimensions')
+        logger.info(f"FeatureExtractor initialized with {self.FEATURE_DIM} dimensions")
 
-    def extract(self, routing_context: dict[str, Any] | None=None, route_state: RouteState | None=None) -> np.ndarray:
+    def extract(
+        self, routing_context: dict[str, Any] | None = None, route_state: RouteState | None = None
+    ) -> np.ndarray:
         """
         Extract feature vector from routing context.
 
@@ -111,22 +120,22 @@ class FeatureExtractor:
         else:
             return features
         idx = 0
-        token_count = ctx.get('tokens_in', 0)
+        token_count = ctx.get("tokens_in", 0)
         features[idx] = self._normalize_feature(idx, min(1.0, token_count / 4000.0))
         idx += 1
-        prompt = ctx.get('prompt', '')
+        prompt = ctx.get("prompt", "")
         features[idx] = self._normalize_feature(idx, self._calculate_prompt_entropy(prompt))
         idx += 1
-        tenant = ctx.get('tenant', 'default')
+        tenant = ctx.get("tenant", "default")
         features[idx] = self._normalize_feature(idx, self._get_latency_percentile(tenant, 0.9))
         idx += 1
         features[idx] = self._normalize_feature(idx, self._get_budget_utilization(tenant))
         idx += 1
-        sla_tier = ctx.get('sla_tier', 'standard')
-        sla_encoding = {'basic': 0.25, 'standard': 0.5, 'premium': 0.75, 'enterprise': 1.0}
+        sla_tier = ctx.get("sla_tier", "standard")
+        sla_encoding = {"basic": 0.25, "standard": 0.5, "premium": 0.75, "enterprise": 1.0}
         features[idx] = self._normalize_feature(idx, sla_encoding.get(sla_tier, 0.5))
         idx += 1
-        content_type = ctx.get('task_type', 'general')
+        content_type = ctx.get("task_type", "general")
         content_embedding = self._get_content_type_embedding(content_type)
         features[idx] = self._normalize_feature(idx, content_embedding[0])
         idx += 1
@@ -137,31 +146,31 @@ class FeatureExtractor:
         idx += 1
         features[idx] = self._normalize_feature(idx, self._get_request_rate(tenant))
         idx += 1
-        projected_cost = ctx.get('projected_cost', 0.0)
+        projected_cost = ctx.get("projected_cost", 0.0)
         remaining_budget = self._get_remaining_budget(tenant)
         cost_pressure = min(1.0, projected_cost / max(remaining_budget, 0.01))
         features[idx] = self._normalize_feature(idx, cost_pressure)
         idx += 1
-        features[idx] = 1.0 if ctx.get('offline_mode', False) else 0.0
+        features[idx] = 1.0 if ctx.get("offline_mode", False) else 0.0
         idx += 1
-        candidate_count = len(ctx.get('candidate_models', []))
+        candidate_count = len(ctx.get("candidate_models", []))
         features[idx] = self._normalize_feature(idx, min(1.0, candidate_count / 10.0))
         idx += 1
-        features[idx] = 1.0 if ctx.get('requested_model') is not None else 0.0
+        features[idx] = 1.0 if ctx.get("requested_model") is not None else 0.0
         idx += 1
         features[idx] = self._normalize_feature(idx, self._get_cost_variance(tenant))
         idx += 1
         avg_latency = self._get_avg_latency(tenant)
         features[idx] = self._normalize_feature(idx, min(1.0, avg_latency / 5000.0))
         idx += 1
-        workspace = ctx.get('workspace', 'main')
-        workspace_key = f'{tenant}:{workspace}'
+        workspace = ctx.get("workspace", "main")
+        workspace_key = f"{tenant}:{workspace}"
         features[idx] = self._normalize_feature(idx, self._get_request_rate(workspace_key))
         idx += 1
-        has_provider_pref = bool(ctx.get('provider_overrides'))
+        has_provider_pref = bool(ctx.get("provider_overrides"))
         features[idx] = 1.0 if has_provider_pref else 0.0
         idx += 1
-        compression_active = bool(ctx.get('compression_metadata', {}).get('final_tokens'))
+        compression_active = bool(ctx.get("compression_metadata", {}).get("final_tokens"))
         features[idx] = 1.0 if compression_active else 0.0
         idx += 1
         self._update_feature_importance(features)
@@ -170,7 +179,19 @@ class FeatureExtractor:
     def _extract_from_route_state(self, state: RouteState) -> dict[str, Any]:
         """Extract context dictionary from RouteState object."""
         labels = state.labels()
-        return {'prompt': state.prompt, 'tokens_in': state.tokens_in, 'projected_cost': state.projected_cost, 'task_type': state.task_type, 'tenant': labels.get('tenant', 'default'), 'workspace': labels.get('workspace', 'main'), 'offline_mode': state.offline_mode, 'requested_model': state.requested_model, 'candidate_models': state.adaptive_candidates or [], 'provider_overrides': state.provider_overrides, 'compression_metadata': state.compression_metadata or {}}
+        return {
+            "prompt": state.prompt,
+            "tokens_in": state.tokens_in,
+            "projected_cost": state.projected_cost,
+            "task_type": state.task_type,
+            "tenant": labels.get("tenant", "default"),
+            "workspace": labels.get("workspace", "main"),
+            "offline_mode": state.offline_mode,
+            "requested_model": state.requested_model,
+            "candidate_models": state.adaptive_candidates or [],
+            "provider_overrides": state.provider_overrides,
+            "compression_metadata": state.compression_metadata or {},
+        }
 
     def _normalize_feature(self, feature_idx: int, value: float) -> float:
         """
@@ -227,8 +248,8 @@ class FeatureExtractor:
     def _get_budget_utilization(self, tenant: str) -> float:
         """Calculate budget utilization ratio for tenant."""
         budget_info = self.budget_utilization[tenant]
-        allocated = budget_info.get('allocated', 0.0)
-        used = budget_info.get('used', 0.0)
+        allocated = budget_info.get("allocated", 0.0)
+        used = budget_info.get("used", 0.0)
         if allocated <= 0:
             return 0.5
         return min(1.0, used / allocated)
@@ -238,7 +259,7 @@ class FeatureExtractor:
         if content_type in self.content_type_embeddings:
             return self.content_type_embeddings[content_type]
         hash_int = int(hashlib.md5(content_type.encode()).hexdigest(), 16)
-        rng = np.random.RandomState(hash_int % 2 ** 32)
+        rng = np.random.RandomState(hash_int % 2**32)
         embedding = rng.normal(0.5, 0.15, 2)
         embedding = np.clip(embedding, 0.0, 1.0)
         self.content_type_embeddings[content_type] = embedding
@@ -259,8 +280,8 @@ class FeatureExtractor:
     def _get_remaining_budget(self, tenant: str) -> float:
         """Get remaining budget for tenant."""
         budget_info = self.budget_utilization[tenant]
-        allocated = budget_info.get('allocated', 10.0)
-        used = budget_info.get('used', 0.0)
+        allocated = budget_info.get("allocated", 10.0)
+        used = budget_info.get("used", 0.0)
         return max(0.0, allocated - used)
 
     def _get_cost_variance(self, tenant: str) -> float:
@@ -283,7 +304,26 @@ class FeatureExtractor:
 
     def _update_feature_importance(self, features: np.ndarray) -> None:
         """Track feature importance based on magnitude."""
-        feature_names = ['token_count_norm', 'prompt_entropy', 'latency_p90', 'budget_utilization', 'sla_tier', 'content_embed_1', 'content_embed_2', 'time_of_day', 'request_rate', 'cost_pressure', 'offline_mode', 'model_count', 'explicit_model', 'cost_variance', 'avg_latency', 'workspace_activity', 'provider_preference', 'compression_active']
+        feature_names = [
+            "token_count_norm",
+            "prompt_entropy",
+            "latency_p90",
+            "budget_utilization",
+            "sla_tier",
+            "content_embed_1",
+            "content_embed_2",
+            "time_of_day",
+            "request_rate",
+            "cost_pressure",
+            "offline_mode",
+            "model_count",
+            "explicit_model",
+            "cost_variance",
+            "avg_latency",
+            "workspace_activity",
+            "provider_preference",
+            "compression_active",
+        ]
         for _idx, (name, value) in enumerate(zip(feature_names, features, strict=True)):
             if name not in self.feature_importance:
                 self.feature_importance[name] = FeatureImportance(feature_name=name)
@@ -295,7 +335,13 @@ class FeatureExtractor:
             importance.variance += delta * delta2
             importance.last_updated = time.time()
 
-    def update_observation(self, tenant: str, latency_ms: float | None=None, cost_usd: float | None=None, budget_allocated: float | None=None) -> None:
+    def update_observation(
+        self,
+        tenant: str,
+        latency_ms: float | None = None,
+        cost_usd: float | None = None,
+        budget_allocated: float | None = None,
+    ) -> None:
         """
         Update historical observations for feature extraction.
 
@@ -309,9 +355,9 @@ class FeatureExtractor:
             self.latency_history[tenant].append(latency_ms)
         if cost_usd is not None:
             self.cost_history[tenant].append(cost_usd)
-            self.budget_utilization[tenant]['used'] += cost_usd
+            self.budget_utilization[tenant]["used"] += cost_usd
         if budget_allocated is not None:
-            self.budget_utilization[tenant]['allocated'] = budget_allocated
+            self.budget_utilization[tenant]["allocated"] = budget_allocated
 
     def get_feature_importance_report(self) -> dict[str, Any]:
         """
@@ -320,18 +366,31 @@ class FeatureExtractor:
         Returns:
             Dictionary with feature importance metrics
         """
-        report = {'features': [], 'total_samples': sum(f.samples for f in self.feature_importance.values())}
+        report = {"features": [], "total_samples": sum(f.samples for f in self.feature_importance.values())}
         sorted_features = sorted(self.feature_importance.values(), key=lambda f: f.mean_magnitude, reverse=True)
         for feature in sorted_features:
-            report['features'].append({'name': feature.feature_name, 'mean_magnitude': round(feature.mean_magnitude, 4), 'variance': round(feature.variance, 4), 'samples': feature.samples, 'relative_importance': round(feature.mean_magnitude / max(sorted_features[0].mean_magnitude, 0.001), 4)})
+            report["features"].append(
+                {
+                    "name": feature.feature_name,
+                    "mean_magnitude": round(feature.mean_magnitude, 4),
+                    "variance": round(feature.variance, 4),
+                    "samples": feature.samples,
+                    "relative_importance": round(
+                        feature.mean_magnitude / max(sorted_features[0].mean_magnitude, 0.001), 4
+                    ),
+                }
+            )
         return report
 
     def reset_stats(self) -> None:
         """Reset all statistics (useful for A/B testing)."""
         self.feature_stats.clear()
         self.feature_importance.clear()
-        logger.info('FeatureExtractor statistics reset')
+        logger.info("FeatureExtractor statistics reset")
+
+
 _global_extractor: FeatureExtractor | None = None
+
 
 def get_feature_extractor() -> FeatureExtractor:
     """Get or create global feature extractor instance."""

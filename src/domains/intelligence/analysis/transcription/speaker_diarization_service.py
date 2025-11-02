@@ -14,6 +14,7 @@ Dependencies:
 - pyannote.audio: For speaker diarization
 - Optional: Voiceprint models for creator identification
 """
+
 from __future__ import annotations
 import logging
 from dataclasses import dataclass
@@ -21,18 +22,22 @@ from pathlib import Path
 from typing import Any, Literal
 from analysis.transcription.asr_service import ASRService, TranscriptionResult, TranscriptionSegment
 from platform.core.step_result import StepResult
+
 logger = logging.getLogger(__name__)
 try:
     from pyannote.audio import Pipeline
+
     PYANNOTE_AVAILABLE = True
 except ImportError:
     PYANNOTE_AVAILABLE = False
     Pipeline = None
-    logger.warning('pyannote.audio not available, speaker diarization disabled')
+    logger.warning("pyannote.audio not available, speaker diarization disabled")
+
 
 @dataclass
 class SpeakerSegment:
     """A segment of audio attributed to a specific speaker."""
+
     start: float
     end: float
     speaker_id: str
@@ -41,9 +46,11 @@ class SpeakerSegment:
     confidence: float = 1.0
     transcript_text: str | None = None
 
+
 @dataclass
 class DiarizationResult:
     """Result of speaker diarization operation."""
+
     segments: list[SpeakerSegment]
     num_speakers: int
     speaker_map: dict[str, str]
@@ -51,6 +58,7 @@ class DiarizationResult:
     duration: float
     confidence: float = 1.0
     processing_time_ms: float = 0.0
+
 
 class SpeakerDiarizationService:
     """Speaker diarization service with role identification.
@@ -61,7 +69,7 @@ class SpeakerDiarizationService:
         segments = result.data["segments"]
     """
 
-    def __init__(self, cache_size: int=1000):
+    def __init__(self, cache_size: int = 1000):
         """Initialize diarization service.
 
         Args:
@@ -72,7 +80,9 @@ class SpeakerDiarizationService:
         self._diarization_model: Any = None
         self._voiceprints: dict[str, dict[str, Any]] = {}
 
-    def diarize_audio(self, audio_path: str | Path, model: Literal['fast', 'balanced', 'quality']='balanced', use_cache: bool=True) -> StepResult:
+    def diarize_audio(
+        self, audio_path: str | Path, model: Literal["fast", "balanced", "quality"] = "balanced", use_cache: bool = True
+    ) -> StepResult:
         """Diarize audio to identify speakers and their segments.
 
         Args:
@@ -85,29 +95,59 @@ class SpeakerDiarizationService:
         """
         try:
             import time
+
             start_time = time.time()
             audio_path = Path(audio_path)
             if not audio_path.exists():
-                return StepResult.fail(f'Audio file not found: {audio_path}', status='bad_request')
+                return StepResult.fail(f"Audio file not found: {audio_path}", status="bad_request")
             if use_cache:
                 cache_result = self._check_cache(audio_path, model)
                 if cache_result:
-                    logger.info(f'Diarization cache hit for {audio_path}')
-                    return StepResult.ok(data={'segments': [s.__dict__ for s in cache_result.segments], 'num_speakers': cache_result.num_speakers, 'speaker_map': cache_result.speaker_map, 'model': cache_result.model, 'duration': cache_result.duration, 'confidence': cache_result.confidence, 'cache_hit': True, 'processing_time_ms': (time.time() - start_time) * 1000})
+                    logger.info(f"Diarization cache hit for {audio_path}")
+                    return StepResult.ok(
+                        data={
+                            "segments": [s.__dict__ for s in cache_result.segments],
+                            "num_speakers": cache_result.num_speakers,
+                            "speaker_map": cache_result.speaker_map,
+                            "model": cache_result.model,
+                            "duration": cache_result.duration,
+                            "confidence": cache_result.confidence,
+                            "cache_hit": True,
+                            "processing_time_ms": (time.time() - start_time) * 1000,
+                        }
+                    )
             model_name = self._select_model(model)
             diarization_result = self._diarize_audio(audio_path, model_name)
             if diarization_result:
                 if use_cache:
                     self._cache_result(audio_path, model, diarization_result)
                 processing_time = (time.time() - start_time) * 1000
-                return StepResult.ok(data={'segments': [s.__dict__ for s in diarization_result.segments], 'num_speakers': diarization_result.num_speakers, 'speaker_map': diarization_result.speaker_map, 'model': diarization_result.model, 'duration': diarization_result.duration, 'confidence': diarization_result.confidence, 'cache_hit': False, 'processing_time_ms': processing_time})
+                return StepResult.ok(
+                    data={
+                        "segments": [s.__dict__ for s in diarization_result.segments],
+                        "num_speakers": diarization_result.num_speakers,
+                        "speaker_map": diarization_result.speaker_map,
+                        "model": diarization_result.model,
+                        "duration": diarization_result.duration,
+                        "confidence": diarization_result.confidence,
+                        "cache_hit": False,
+                        "processing_time_ms": processing_time,
+                    }
+                )
             else:
-                return StepResult.fail('Diarization failed', status='retryable')
+                return StepResult.fail("Diarization failed", status="retryable")
         except Exception as e:
-            logger.error(f'Audio diarization failed: {e}')
-            return StepResult.fail(f'Diarization failed: {e!s}', status='retryable')
+            logger.error(f"Audio diarization failed: {e}")
+            return StepResult.fail(f"Diarization failed: {e!s}", status="retryable")
 
-    def diarize_with_transcript(self, audio_path: str | Path, transcript_path: str | Path | None=None, asr_service: ASRService | None=None, model: Literal['fast', 'balanced', 'quality']='balanced', use_cache: bool=True) -> StepResult:
+    def diarize_with_transcript(
+        self,
+        audio_path: str | Path,
+        transcript_path: str | Path | None = None,
+        asr_service: ASRService | None = None,
+        model: Literal["fast", "balanced", "quality"] = "balanced",
+        use_cache: bool = True,
+    ) -> StepResult:
         """Diarize audio and align with existing transcript.
 
         Args:
@@ -122,31 +162,60 @@ class SpeakerDiarizationService:
         """
         try:
             if transcript_path and Path(transcript_path).exists():
-                logger.info(f'Using existing transcript: {transcript_path}')
+                logger.info(f"Using existing transcript: {transcript_path}")
                 transcript_text = Path(transcript_path).read_text()
-                transcript_result = TranscriptionResult(text=transcript_text, segments=[], model='external', duration=0.0)
+                transcript_result = TranscriptionResult(
+                    text=transcript_text, segments=[], model="external", duration=0.0
+                )
             elif asr_service:
-                logger.info('Generating transcript with ASR service')
-                asr_result = asr_service.transcribe_audio(audio_path=audio_path, model='balanced', use_cache=use_cache)
+                logger.info("Generating transcript with ASR service")
+                asr_result = asr_service.transcribe_audio(audio_path=audio_path, model="balanced", use_cache=use_cache)
                 if not asr_result.success:
-                    return StepResult.fail(f'ASR transcription failed: {asr_result.error}')
+                    return StepResult.fail(f"ASR transcription failed: {asr_result.error}")
                 transcript_data = asr_result.data
-                transcript_result = TranscriptionResult(text=transcript_data['text'], segments=[TranscriptionSegment(start=seg['start'], end=seg['end'], text=seg['text'], confidence=seg.get('confidence', 1.0)) for seg in transcript_data['segments']], model=transcript_data['model'], duration=transcript_data['duration'], language=transcript_data.get('language'), confidence=transcript_data.get('confidence', 1.0))
+                transcript_result = TranscriptionResult(
+                    text=transcript_data["text"],
+                    segments=[
+                        TranscriptionSegment(
+                            start=seg["start"], end=seg["end"], text=seg["text"], confidence=seg.get("confidence", 1.0)
+                        )
+                        for seg in transcript_data["segments"]
+                    ],
+                    model=transcript_data["model"],
+                    duration=transcript_data["duration"],
+                    language=transcript_data.get("language"),
+                    confidence=transcript_data.get("confidence", 1.0),
+                )
             else:
-                return StepResult.fail('No transcript available and ASR service not provided')
+                return StepResult.fail("No transcript available and ASR service not provided")
             diarization_result = self._diarize_audio(audio_path, self._select_model(model))
             if not diarization_result:
-                return StepResult.fail('Diarization failed')
-            aligned_segments = self._align_transcript_with_diarization(transcript_result.segments, diarization_result.segments)
+                return StepResult.fail("Diarization failed")
+            aligned_segments = self._align_transcript_with_diarization(
+                transcript_result.segments, diarization_result.segments
+            )
             diarization_result.segments = aligned_segments
             if transcript_result.segments:
                 asr_confidence = transcript_result.confidence
                 diarization_confidence = diarization_result.confidence
                 diarization_result.confidence = (asr_confidence + diarization_confidence) / 2
-            return StepResult.ok(data={'segments': [s.__dict__ for s in diarization_result.segments], 'num_speakers': diarization_result.num_speakers, 'speaker_map': diarization_result.speaker_map, 'model': diarization_result.model, 'duration': diarization_result.duration, 'confidence': diarization_result.confidence, 'transcript_text': transcript_result.text, 'transcript_segments': len(transcript_result.segments), 'cache_hit': False, 'processing_time_ms': diarization_result.processing_time_ms})
+            return StepResult.ok(
+                data={
+                    "segments": [s.__dict__ for s in diarization_result.segments],
+                    "num_speakers": diarization_result.num_speakers,
+                    "speaker_map": diarization_result.speaker_map,
+                    "model": diarization_result.model,
+                    "duration": diarization_result.duration,
+                    "confidence": diarization_result.confidence,
+                    "transcript_text": transcript_result.text,
+                    "transcript_segments": len(transcript_result.segments),
+                    "cache_hit": False,
+                    "processing_time_ms": diarization_result.processing_time_ms,
+                }
+            )
         except Exception as e:
-            logger.error(f'Combined diarization+transcript failed: {e}')
-            return StepResult.fail(f'Combined processing failed: {e!s}')
+            logger.error(f"Combined diarization+transcript failed: {e}")
+            return StepResult.fail(f"Combined processing failed: {e!s}")
 
     def _select_model(self, model_alias: str) -> str:
         """Select actual model name from alias.
@@ -157,8 +226,12 @@ class SpeakerDiarizationService:
         Returns:
             Actual model identifier
         """
-        model_map = {'fast': 'pyannote/speaker-diarization-mini', 'balanced': 'pyannote/speaker-diarization', 'quality': 'pyannote/speaker-diarization'}
-        return model_map.get(model_alias, 'pyannote/speaker-diarization')
+        model_map = {
+            "fast": "pyannote/speaker-diarization-mini",
+            "balanced": "pyannote/speaker-diarization",
+            "quality": "pyannote/speaker-diarization",
+        }
+        return model_map.get(model_alias, "pyannote/speaker-diarization")
 
     def _diarize_audio(self, audio_path: Path, model_name: str) -> DiarizationResult | None:
         """Diarize audio using specified model.
@@ -172,10 +245,10 @@ class SpeakerDiarizationService:
         """
         try:
             if not PYANNOTE_AVAILABLE:
-                logger.warning('pyannote.audio not available, using fallback diarization')
+                logger.warning("pyannote.audio not available, using fallback diarization")
                 return self._diarize_fallback(audio_path, model_name)
             if self._diarization_model is None:
-                logger.info(f'Loading pyannote diarization model: {model_name}')
+                logger.info(f"Loading pyannote diarization model: {model_name}")
                 self._diarization_model = Pipeline.from_pretrained(model_name)
             diarization = self._diarization_model(str(audio_path))
             segments = []
@@ -184,12 +257,26 @@ class SpeakerDiarizationService:
                 speaker_id = str(speaker)
                 if speaker_id not in speaker_map:
                     speaker_map[speaker_id] = self._identify_speaker(speaker_id, audio_path)
-                segment = SpeakerSegment(start=turn.start, end=turn.end, speaker_id=speaker_id, speaker_name=speaker_map[speaker_id], speaker_role=self._infer_speaker_role(speaker_id, turn.start, turn.end), confidence=0.8)
+                segment = SpeakerSegment(
+                    start=turn.start,
+                    end=turn.end,
+                    speaker_id=speaker_id,
+                    speaker_name=speaker_map[speaker_id],
+                    speaker_role=self._infer_speaker_role(speaker_id, turn.start, turn.end),
+                    confidence=0.8,
+                )
                 segments.append(segment)
             segments.sort(key=lambda s: s.start)
-            return DiarizationResult(segments=segments, num_speakers=len(speaker_map), speaker_map=speaker_map, model=model_name, duration=diarization.get_timeline().extent.end, confidence=0.8)
+            return DiarizationResult(
+                segments=segments,
+                num_speakers=len(speaker_map),
+                speaker_map=speaker_map,
+                model=model_name,
+                duration=diarization.get_timeline().extent.end,
+                confidence=0.8,
+            )
         except Exception as e:
-            logger.error(f'Diarization failed for model {model_name}: {e}')
+            logger.error(f"Diarization failed for model {model_name}: {e}")
             return None
 
     def _diarize_fallback(self, audio_path: Path, model_name: str) -> DiarizationResult:
@@ -203,8 +290,24 @@ class SpeakerDiarizationService:
             DiarizationResult with fallback segments
         """
         duration = 3600.0
-        segments = [SpeakerSegment(start=0.0, end=duration, speaker_id='SPEAKER_00', speaker_name='Unknown Speaker', speaker_role='host', confidence=0.5)]
-        return DiarizationResult(segments=segments, num_speakers=1, speaker_map={'SPEAKER_00': 'Unknown Speaker'}, model=f'fallback-{model_name}', duration=duration, confidence=0.5)
+        segments = [
+            SpeakerSegment(
+                start=0.0,
+                end=duration,
+                speaker_id="SPEAKER_00",
+                speaker_name="Unknown Speaker",
+                speaker_role="host",
+                confidence=0.5,
+            )
+        ]
+        return DiarizationResult(
+            segments=segments,
+            num_speakers=1,
+            speaker_map={"SPEAKER_00": "Unknown Speaker"},
+            model=f"fallback-{model_name}",
+            duration=duration,
+            confidence=0.5,
+        )
 
     def _identify_speaker(self, speaker_id: str, audio_path: Path) -> str:
         """Identify speaker by voiceprint matching.
@@ -216,12 +319,12 @@ class SpeakerDiarizationService:
         Returns:
             Speaker name or "Unknown Speaker"
         """
-        speaker_names = ['Host', 'Guest 1', 'Guest 2', 'Guest 3', 'Moderator']
+        speaker_names = ["Host", "Guest 1", "Guest 2", "Guest 3", "Moderator"]
         try:
-            speaker_num = int(speaker_id.split('_')[1]) if '_' in speaker_id else 0
+            speaker_num = int(speaker_id.split("_")[1]) if "_" in speaker_id else 0
             return speaker_names[speaker_num % len(speaker_names)]
         except (ValueError, IndexError):
-            return 'Unknown Speaker'
+            return "Unknown Speaker"
 
     def _infer_speaker_role(self, speaker_id: str, start_time: float, end_time: float) -> str:
         """Infer speaker role based on speaking patterns.
@@ -236,15 +339,17 @@ class SpeakerDiarizationService:
         """
         duration = end_time - start_time
         if start_time < 60 and duration > 30:
-            return 'host'
+            return "host"
         elif duration > 300:
-            return 'host'
+            return "host"
         elif start_time > 3600:
-            return 'guest'
+            return "guest"
         else:
-            return 'participant'
+            return "participant"
 
-    def _align_transcript_with_diarization(self, transcript_segments: list[TranscriptionSegment], speaker_segments: list[SpeakerSegment]) -> list[SpeakerSegment]:
+    def _align_transcript_with_diarization(
+        self, transcript_segments: list[TranscriptionSegment], speaker_segments: list[SpeakerSegment]
+    ) -> list[SpeakerSegment]:
         """Align transcript segments with speaker segments.
 
         Args:
@@ -256,12 +361,12 @@ class SpeakerDiarizationService:
         """
         aligned_speaker_segments = []
         for speaker_seg in speaker_segments:
-            speaker_seg.transcript_text = ''
+            speaker_seg.transcript_text = ""
             for transcript_seg in transcript_segments:
                 overlap_start = max(speaker_seg.start, transcript_seg.start)
                 overlap_end = min(speaker_seg.end, transcript_seg.end)
                 if overlap_start < overlap_end:
-                    speaker_seg.transcript_text += transcript_seg.text + ' '
+                    speaker_seg.transcript_text += transcript_seg.text + " "
             speaker_seg.transcript_text = speaker_seg.transcript_text.strip()
             aligned_speaker_segments.append(speaker_seg)
         return aligned_speaker_segments
@@ -292,6 +397,7 @@ class SpeakerDiarizationService:
             result: Diarization result to cache
         """
         import time
+
         cache_key = self._compute_cache_key(audio_path, model)
         result.processing_time_ms = time.time() * 1000
         if len(self._diarization_cache) >= self.cache_size:
@@ -311,8 +417,9 @@ class SpeakerDiarizationService:
             Cache key string
         """
         import hashlib
+
         file_stat = audio_path.stat()
-        combined = f'{audio_path}:{file_stat.st_mtime}:{file_stat.st_size}:{model}'
+        combined = f"{audio_path}:{file_stat.st_mtime}:{file_stat.st_size}:{model}"
         return hashlib.sha256(combined.encode()).hexdigest()
 
     def clear_cache(self) -> StepResult:
@@ -323,8 +430,8 @@ class SpeakerDiarizationService:
         """
         cache_size = len(self._diarization_cache)
         self._diarization_cache.clear()
-        logger.info(f'Cleared {cache_size} cached diarizations')
-        return StepResult.ok(data={'cleared_entries': cache_size})
+        logger.info(f"Cleared {cache_size} cached diarizations")
+        return StepResult.ok(data={"cleared_entries": cache_size})
 
     def get_cache_stats(self) -> StepResult:
         """Get diarization cache statistics.
@@ -333,15 +440,23 @@ class SpeakerDiarizationService:
             StepResult with cache statistics
         """
         try:
-            stats = {'total_cached': len(self._diarization_cache), 'cache_size_limit': self.cache_size, 'utilization': len(self._diarization_cache) / self.cache_size if self.cache_size > 0 else 0.0, 'models_cached': {}}
+            stats = {
+                "total_cached": len(self._diarization_cache),
+                "cache_size_limit": self.cache_size,
+                "utilization": len(self._diarization_cache) / self.cache_size if self.cache_size > 0 else 0.0,
+                "models_cached": {},
+            }
             for result in self._diarization_cache.values():
                 model = result.model
-                stats['models_cached'][model] = stats['models_cached'].get(model, 0) + 1
+                stats["models_cached"][model] = stats["models_cached"].get(model, 0) + 1
             return StepResult.ok(data=stats)
         except Exception as e:
-            logger.error(f'Failed to get cache stats: {e}')
-            return StepResult.fail(f'Failed to get cache stats: {e!s}')
+            logger.error(f"Failed to get cache stats: {e}")
+            return StepResult.fail(f"Failed to get cache stats: {e!s}")
+
+
 _diarization_service: SpeakerDiarizationService | None = None
+
 
 def get_diarization_service() -> SpeakerDiarizationService:
     """Get singleton diarization service instance.

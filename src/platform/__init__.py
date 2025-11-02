@@ -29,4 +29,3 @@ __all__ = [
     # Observability
     "record_metric",
 ]
-

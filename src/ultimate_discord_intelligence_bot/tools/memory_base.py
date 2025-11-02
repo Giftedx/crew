@@ -1,10 +1,13 @@
 """Base class for memory tools."""
+
 from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any
 from ultimate_discord_intelligence_bot.tools._base import BaseTool
+
 if TYPE_CHECKING:
     from platform.core.step_result import StepResult
+
 
 class MemoryBaseTool(BaseTool, ABC):
     """Base class for memory tools."""
@@ -28,4 +31,9 @@ class MemoryBaseTool(BaseTool, ABC):
 
     def get_memory_metadata(self, query: str) -> dict[str, Any]:
         """Get metadata for memory operations."""
-        return {'query_length': len(query), 'memory_types': self.memory_types, 'max_retrieval_count': self.max_retrieval_count, 'similarity_threshold': self.similarity_threshold}
+        return {
+            "query_length": len(query),
+            "memory_types": self.memory_types,
+            "max_retrieval_count": self.max_retrieval_count,
+            "similarity_threshold": self.similarity_threshold,
+        }

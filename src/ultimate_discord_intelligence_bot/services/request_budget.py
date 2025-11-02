@@ -23,15 +23,18 @@ Design Notes
 - Silent no-op when no context is active so callers can unconditionally attempt
   to record spend.
 """
+
 from __future__ import annotations
 import threading
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from platform.core.step_result import StepResult
-__all__ = ['RequestCostTracker', 'current_request_tracker', 'track_request_budget']
+__all__ = ["RequestCostTracker", "current_request_tracker", "track_request_budget"]
 _thread_local = threading.local()
+
 
 @dataclass
 class RequestCostTracker:
@@ -57,9 +60,10 @@ class RequestCostTracker:
         if task:
             self.per_task_spent[task] = self.per_task_spent.get(task, 0.0) + amount
 
+
 @contextmanager
-def track_request_budget(total_limit: float | None, per_task_limits: dict[str, float] | None=None):
-    prev = getattr(_thread_local, 'req_budget', None)
+def track_request_budget(total_limit: float | None, per_task_limits: dict[str, float] | None = None):
+    prev = getattr(_thread_local, "req_budget", None)
     tracker = RequestCostTracker(total_limit=total_limit, per_task_limits=per_task_limits or {})
     _thread_local.req_budget = tracker
     try:
@@ -67,5 +71,6 @@ def track_request_budget(total_limit: float | None, per_task_limits: dict[str, f
     finally:
         _thread_local.req_budget = prev
 
+
 def current_request_tracker() -> StepResult:
-    return getattr(_thread_local, 'req_budget', None)
+    return getattr(_thread_local, "req_budget", None)

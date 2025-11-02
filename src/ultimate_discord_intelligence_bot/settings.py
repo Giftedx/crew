@@ -18,12 +18,15 @@ Usage:
     print(settings.openai_api_key)
     print(settings.feature_flags.enable_debate_analysis)
 """
+
 from __future__ import annotations
 import os
 from typing import TYPE_CHECKING, Any
 from .config import BaseConfig, FeatureFlags, PathConfig, validate_configuration
+
 if TYPE_CHECKING:
     from pathlib import Path
+
 
 class Settings:
     """Unified settings class that provides backward compatibility.
@@ -44,6 +47,7 @@ class Settings:
         """Best-effort resolver for ``core.secure_config`` without hard dependency."""
         try:
             from platform.config.configuration import get_config
+
             return get_config()
         except Exception:
             return None
@@ -94,12 +98,12 @@ class Settings:
         secure_config = self._resolve_secure_config()
         if secure_config is not None:
             try:
-                webhook = getattr(secure_config, 'discord_webhook', None)
+                webhook = getattr(secure_config, "discord_webhook", None)
                 if webhook:
                     return webhook
             except Exception:
                 pass
-        return os.getenv('DISCORD_WEBHOOK')
+        return os.getenv("DISCORD_WEBHOOK")
 
     @property
     def base_dir(self) -> Path:
@@ -153,7 +157,7 @@ class Settings:
         """Get all disabled features."""
         return self.feature_flags.get_disabled_flags()
 
-    def get_setting(self, key: str, default: Any=None) -> Any:
+    def get_setting(self, key: str, default: Any = None) -> Any:
         """Get a setting value with backward compatibility."""
         if hasattr(self.base_config, key):
             return getattr(self.base_config, key)
@@ -179,9 +183,21 @@ class Settings:
         result = {}
         result.update(self.base_config.to_dict())
         result.update(self.feature_flags.__dict__)
-        result.update({'base_dir': str(self.path_config.base_dir), 'downloads_dir': str(self.path_config.downloads_dir), 'config_dir': str(self.path_config.config_dir), 'logs_dir': str(self.path_config.logs_dir), 'processing_dir': str(self.path_config.processing_dir), 'temp_dir': str(self.path_config.temp_dir)})
+        result.update(
+            {
+                "base_dir": str(self.path_config.base_dir),
+                "downloads_dir": str(self.path_config.downloads_dir),
+                "config_dir": str(self.path_config.config_dir),
+                "logs_dir": str(self.path_config.logs_dir),
+                "processing_dir": str(self.path_config.processing_dir),
+                "temp_dir": str(self.path_config.temp_dir),
+            }
+        )
         return result
+
+
 _settings: Settings | None = None
+
 
 def get_settings() -> Settings:
     """Get the global settings instance."""
@@ -190,26 +206,61 @@ def get_settings() -> Settings:
         _settings = Settings()
     return _settings
 
-def _get_setting(key: str, default: str='') -> str:
+
+def _get_setting(key: str, default: str = "") -> str:
     """Get a setting value with backward compatibility."""
     settings = get_settings()
     value = settings.get_setting(key, default)
     return str(value) if value is not None else default
 
+
 def _get_path_setting(key: str, default_path: Path) -> Path:
     """Get a path setting with backward compatibility."""
     settings = get_settings()
-    mapping = {'crewai_base_dir': settings.base_dir, 'crewai_downloads_dir': settings.downloads_dir, 'crewai_config_dir': settings.config_dir, 'crewai_logs_dir': settings.logs_dir, 'crewai_processing_dir': settings.processing_dir, 'crewai_temp_dir': settings.temp_dir}
+    mapping = {
+        "crewai_base_dir": settings.base_dir,
+        "crewai_downloads_dir": settings.downloads_dir,
+        "crewai_config_dir": settings.config_dir,
+        "crewai_logs_dir": settings.logs_dir,
+        "crewai_processing_dir": settings.processing_dir,
+        "crewai_temp_dir": settings.temp_dir,
+    }
     return mapping.get(key, default_path)
+
 
 def _export_settings():
     """Export commonly used settings for backward compatibility."""
     settings = get_settings()
-    globals().update({'ENVIRONMENT': settings.environment, 'DEBUG': settings.debug, 'LOG_LEVEL': settings.log_level, 'OPENAI_API_KEY': settings.openai_api_key, 'OPENROUTER_API_KEY': settings.openrouter_api_key, 'DISCORD_BOT_TOKEN': settings.discord_bot_token, 'DISCORD_WEBHOOK': settings.discord_webhook, 'QDRANT_URL': settings.qdrant_url, 'QDRANT_API_KEY': settings.qdrant_api_key})
-    if 'DISCORD_WEBHOOK_URL' not in globals():
-        globals()['DISCORD_WEBHOOK_URL'] = os.getenv('DISCORD_WEBHOOK_URL') or settings.discord_webhook
-    globals().update({'BASE_DIR': settings.base_dir, 'DOWNLOADS_DIR': settings.downloads_dir, 'CONFIG_DIR': settings.config_dir, 'LOGS_DIR': settings.logs_dir, 'PROCESSING_DIR': settings.processing_dir, 'TEMP_DIR': settings.temp_dir, 'YTDLP_ARCHIVE': settings.ytdlp_archive, 'YTDLP_CONFIG': settings.ytdlp_config})
+    globals().update(
+        {
+            "ENVIRONMENT": settings.environment,
+            "DEBUG": settings.debug,
+            "LOG_LEVEL": settings.log_level,
+            "OPENAI_API_KEY": settings.openai_api_key,
+            "OPENROUTER_API_KEY": settings.openrouter_api_key,
+            "DISCORD_BOT_TOKEN": settings.discord_bot_token,
+            "DISCORD_WEBHOOK": settings.discord_webhook,
+            "QDRANT_URL": settings.qdrant_url,
+            "QDRANT_API_KEY": settings.qdrant_api_key,
+        }
+    )
+    if "DISCORD_WEBHOOK_URL" not in globals():
+        globals()["DISCORD_WEBHOOK_URL"] = os.getenv("DISCORD_WEBHOOK_URL") or settings.discord_webhook
+    globals().update(
+        {
+            "BASE_DIR": settings.base_dir,
+            "DOWNLOADS_DIR": settings.downloads_dir,
+            "CONFIG_DIR": settings.config_dir,
+            "LOGS_DIR": settings.logs_dir,
+            "PROCESSING_DIR": settings.processing_dir,
+            "TEMP_DIR": settings.temp_dir,
+            "YTDLP_ARCHIVE": settings.ytdlp_archive,
+            "YTDLP_CONFIG": settings.ytdlp_config,
+        }
+    )
     for flag_name, flag_value in settings.feature_flags.__dict__.items():
-        if flag_name.startswith('ENABLE_'):
+        if flag_name.startswith("ENABLE_"):
             globals()[flag_name] = flag_value
+
+
 _export_settings()

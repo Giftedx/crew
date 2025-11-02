@@ -10,9 +10,11 @@ Instrumentation:
     * Outcomes: success | error | skipped (missing keyword)
     * No latency histogram (pure in-memory filtering, negligible cost)
 """
+
 from platform.observability.metrics import get_metrics
 from platform.core.step_result import StepResult
 from .._base import BaseTool
+
 
 class SocialMediaMonitorTool(BaseTool[StepResult]):
     """Collect posts mentioning a keyword across platforms.
@@ -20,16 +22,19 @@ class SocialMediaMonitorTool(BaseTool[StepResult]):
     Returns StepResult with data:
       matches: mapping platform -> list[str]
     """
-    name: str = 'Social Media Monitor'
-    description: str = 'Aggregate social media posts and return those containing the keyword'
+
+    name: str = "Social Media Monitor"
+    description: str = "Aggregate social media posts and return those containing the keyword"
 
     def __init__(self) -> None:
         self._metrics = get_metrics()
 
     def _run(self, posts: dict[str, list[str]], keyword: str) -> StepResult:
         if not keyword:
-            self._metrics.counter('tool_runs_total', labels={'tool': 'social_media_monitor', 'outcome': 'skipped'}).inc()
-            return StepResult.skip(reason='No keyword provided')
+            self._metrics.counter(
+                "tool_runs_total", labels={"tool": "social_media_monitor", "outcome": "skipped"}
+            ).inc()
+            return StepResult.skip(reason="No keyword provided")
         try:
             matches: dict[str, list[str]] = {}
             lower = keyword.lower()
@@ -37,10 +42,12 @@ class SocialMediaMonitorTool(BaseTool[StepResult]):
                 platform_matches = [p for p in items if lower in p.lower()]
                 if platform_matches:
                     matches[platform] = platform_matches
-            self._metrics.counter('tool_runs_total', labels={'tool': 'social_media_monitor', 'outcome': 'success'}).inc()
+            self._metrics.counter(
+                "tool_runs_total", labels={"tool": "social_media_monitor", "outcome": "success"}
+            ).inc()
             return StepResult.ok(matches=matches)
         except Exception as e:
-            self._metrics.counter('tool_runs_total', labels={'tool': 'social_media_monitor', 'outcome': 'error'}).inc()
+            self._metrics.counter("tool_runs_total", labels={"tool": "social_media_monitor", "outcome": "error"}).inc()
             return StepResult.fail(error=str(e))
 
     def run(self, posts: dict[str, list[str]], keyword: str) -> StepResult:

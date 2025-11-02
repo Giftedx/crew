@@ -3,6 +3,7 @@
 This module provides a simplified interface for all OpenRouter service operations,
 coordinating caching, budgeting, metrics, and routing through a single facade.
 """
+
 from __future__ import annotations
 
 import logging
@@ -13,6 +14,7 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from .service import OpenRouterService
 log = logging.getLogger(__name__)
+
 
 class FacadeCacheManager:
     """Manages caching operations for the OpenRouter service."""
@@ -29,7 +31,7 @@ class FacadeCacheManager:
                 return self._service.cache.get(cache_key)
             return None
         except Exception as e:
-            log.debug('Cache retrieval failed: %s', e)
+            log.debug("Cache retrieval failed: %s", e)
             return None
 
     def set_cached_response(self, prompt: str, model: str, response: dict[str, Any], **kwargs: Any) -> None:
@@ -39,7 +41,8 @@ class FacadeCacheManager:
                 cache_key = self._service.cache.make_key(prompt, model)
                 self._service.cache.set(cache_key, response)
         except Exception as e:
-            log.debug('Cache storage failed: %s', e)
+            log.debug("Cache storage failed: %s", e)
+
 
 class FacadeBudgetManager:
     """Manages budget enforcement for OpenRouter requests."""
@@ -53,24 +56,29 @@ class FacadeBudgetManager:
         try:
             tokens_in = self._service.prompt_engine.count_tokens(prompt, model)
             projected_cost = self._service.token_meter.estimate_cost(tokens_in, model)
-            if hasattr(self._service, 'request_tracker') and self._service.request_tracker and (not self._service.request_tracker.can_charge(projected_cost, task_type)):
-                return StepResult.fail('Cumulative cost exceeds limit')
-            if hasattr(self._service.token_meter, 'max_cost_per_request'):
+            if (
+                hasattr(self._service, "request_tracker")
+                and self._service.request_tracker
+                and (not self._service.request_tracker.can_charge(projected_cost, task_type))
+            ):
+                return StepResult.fail("Cumulative cost exceeds limit")
+            if hasattr(self._service.token_meter, "max_cost_per_request"):
                 max_cost = self._service.token_meter.max_cost_per_request
                 if max_cost and projected_cost > max_cost:
-                    return StepResult.fail('Projected cost exceeds per-request limit')
+                    return StepResult.fail("Projected cost exceeds per-request limit")
             return None
         except Exception as e:
-            log.debug('Budget check failed: %s', e)
-            return StepResult.fail(f'Budget check failed: {e!s}')
+            log.debug("Budget check failed: %s", e)
+            return StepResult.fail(f"Budget check failed: {e!s}")
 
     def charge_budget(self, cost: float, task_type: str) -> None:
         """Charge the budget for a completed request."""
         try:
-            if hasattr(self._service, 'request_tracker') and self._service.request_tracker:
+            if hasattr(self._service, "request_tracker") and self._service.request_tracker:
                 self._service.request_tracker.charge(cost, task_type)
         except Exception as e:
-            log.debug('Budget charge failed: %s', e)
+            log.debug("Budget charge failed: %s", e)
+
 
 class FacadeMetricsCollector:
     """Collects and reports metrics for OpenRouter operations."""
@@ -86,12 +94,24 @@ class FacadeMetricsCollector:
         self._request_count += 1
         self._total_latency += latency_ms
         self._total_tokens += tokens
-        log.debug('Request metrics: count=%d, latency=%.2fms, tokens=%d, success=%s', self._request_count, latency_ms, tokens, success)
+        log.debug(
+            "Request metrics: count=%d, latency=%.2fms, tokens=%d, success=%s",
+            self._request_count,
+            latency_ms,
+            tokens,
+            success,
+        )
 
     def get_stats(self) -> dict[str, Any]:
         """Get current metrics statistics."""
         avg_latency = self._total_latency / max(self._request_count, 1)
-        return {'request_count': self._request_count, 'total_latency_ms': self._total_latency, 'average_latency_ms': avg_latency, 'total_tokens': self._total_tokens}
+        return {
+            "request_count": self._request_count,
+            "total_latency_ms": self._total_latency,
+            "average_latency_ms": avg_latency,
+            "total_tokens": self._total_tokens,
+        }
+
 
 class OpenRouterServiceFacade:
     """Unified interface for all OpenRouter operations.
@@ -112,7 +132,14 @@ class OpenRouterServiceFacade:
         self._budget_manager = FacadeBudgetManager(service)
         self._metrics_collector = FacadeMetricsCollector()
 
-    def route(self, prompt: str, task_type: str='general', model: str | None=None, provider_opts: dict[str, Any] | None=None, **kwargs: Any) -> StepResult:
+    def route(
+        self,
+        prompt: str,
+        task_type: str = "general",
+        model: str | None = None,
+        provider_opts: dict[str, Any] | None = None,
+        **kwargs: Any,
+    ) -> StepResult:
         """Route a prompt with unified caching, budgeting, and metrics.
 
         Args:
@@ -126,27 +153,30 @@ class OpenRouterServiceFacade:
             StepResult with routing response or error
         """
         import time
+
         start_time = time.perf_counter()
         try:
-            cached_response = self._cache_manager.get_cached_response(prompt, model or 'default', task_type=task_type)
+            cached_response = self._cache_manager.get_cached_response(prompt, model or "default", task_type=task_type)
             if cached_response:
-                log.debug('Cache hit for prompt routing')
+                log.debug("Cache hit for prompt routing")
                 return StepResult.ok(data=cached_response)
-            budget_error = self._budget_manager.check_budget_limits(prompt, model or 'default', task_type)
+            budget_error = self._budget_manager.check_budget_limits(prompt, model or "default", task_type)
             if budget_error:
                 return budget_error
-            result = self._service.route(prompt=prompt, task_type=task_type, model=model, provider_opts=provider_opts, **kwargs)
+            result = self._service.route(
+                prompt=prompt, task_type=task_type, model=model, provider_opts=provider_opts, **kwargs
+            )
             latency_ms = (time.perf_counter() - start_time) * 1000
-            tokens = result.data.get('tokens', 0) if result.success else 0
+            tokens = result.data.get("tokens", 0) if result.success else 0
             self._metrics_collector.record_request(latency_ms, tokens, result.success)
             if result.success and result.data:
-                self._cache_manager.set_cached_response(prompt, model or 'default', result.data, task_type=task_type)
+                self._cache_manager.set_cached_response(prompt, model or "default", result.data, task_type=task_type)
             return result
         except Exception as e:
             latency_ms = (time.perf_counter() - start_time) * 1000
             self._metrics_collector.record_request(latency_ms, 0, False)
-            log.error('Facade routing failed: %s', e)
-            return StepResult.fail(f'Routing failed: {e!s}')
+            log.error("Facade routing failed: %s", e)
+            return StepResult.fail(f"Routing failed: {e!s}")
 
     def get_metrics(self) -> dict[str, Any]:
         """Get current service metrics.
@@ -163,13 +193,13 @@ class OpenRouterServiceFacade:
             StepResult indicating service health status
         """
         try:
-            test_result = self._service.route('health check', task_type='general')
+            test_result = self._service.route("health check", task_type="general")
             if test_result.success:
-                return StepResult.ok(data={'status': 'healthy', 'service': 'openrouter'})
+                return StepResult.ok(data={"status": "healthy", "service": "openrouter"})
             else:
-                return StepResult.fail('Service health check failed')
+                return StepResult.fail("Service health check failed")
         except Exception as e:
-            return StepResult.fail(f'Health check error: {e!s}')
+            return StepResult.fail(f"Health check error: {e!s}")
 
     @property
     def service(self) -> OpenRouterService:

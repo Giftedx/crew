@@ -4,6 +4,7 @@ This module provides specialized experiment configurations and evaluation
 metrics for DoublyRobust and OffsetTree bandit algorithms, enabling
 comprehensive A/B testing against existing policy algorithms.
 """
+
 from __future__ import annotations
 
 import logging
@@ -20,9 +21,11 @@ from .policies.advanced_bandits import DoublyRobustBandit, OffsetTreeBandit
 
 logger = logging.getLogger(__name__)
 
+
 @dataclass
 class AdvancedBanditStats(VariantStats):
     """Extended stats for advanced bandit evaluation."""
+
     reward_model_mse: float = 0.0
     tree_depth_sum: int = 0
     importance_weight_sum: float = 0.0
@@ -31,8 +34,16 @@ class AdvancedBanditStats(VariantStats):
     def as_dict(self) -> dict[str, float]:
         """Return extended stats as dictionary."""
         base_dict = super().as_dict()
-        base_dict.update({'reward_model_mse': float(self.reward_model_mse), 'tree_depth_avg': float(self.tree_depth_sum / self.pulls) if self.pulls else 0.0, 'importance_weight_avg': float(self.importance_weight_sum / self.pulls) if self.pulls else 0.0, 'confidence_interval_avg': float(self.confidence_interval_width / self.pulls) if self.pulls else 0.0})
+        base_dict.update(
+            {
+                "reward_model_mse": float(self.reward_model_mse),
+                "tree_depth_avg": float(self.tree_depth_sum / self.pulls) if self.pulls else 0.0,
+                "importance_weight_avg": float(self.importance_weight_sum / self.pulls) if self.pulls else 0.0,
+                "confidence_interval_avg": float(self.confidence_interval_width / self.pulls) if self.pulls else 0.0,
+            }
+        )
         return base_dict
+
 
 class AdvancedBanditExperimentManager(ExperimentManager):
     """Enhanced experiment manager for advanced bandit evaluation."""
@@ -41,7 +52,14 @@ class AdvancedBanditExperimentManager(ExperimentManager):
         super().__init__()
         self._advanced_experiments: dict[str, str] = {}
 
-    def register_advanced_bandit_experiment(self, domain: str, baseline_policy: str='epsilon_greedy', advanced_policies: dict[str, float] | None=None, shadow_samples: int=1000, description: str | None=None) -> None:
+    def register_advanced_bandit_experiment(
+        self,
+        domain: str,
+        baseline_policy: str = "epsilon_greedy",
+        advanced_policies: dict[str, float] | None = None,
+        shadow_samples: int = 1000,
+        description: str | None = None,
+    ) -> None:
         """Register an experiment comparing advanced bandits against baseline.
 
         Args:
@@ -52,22 +70,39 @@ class AdvancedBanditExperimentManager(ExperimentManager):
             description: Optional experiment description
         """
         if advanced_policies is None:
-            advanced_policies = {'doubly_robust': 0.3, 'offset_tree': 0.3}
-        experiment_id = f'advanced_bandits::{domain}'
-        exp = Experiment(experiment_id=experiment_id, control=baseline_policy, variants=advanced_policies, phase='shadow', auto_activate_after=shadow_samples, baseline_regret_arm=baseline_policy, description=description or f'Advanced bandit evaluation for {domain}')
-        exp.stats = {baseline_policy: AdvancedBanditStats(), **{policy: AdvancedBanditStats() for policy in advanced_policies}}
+            advanced_policies = {"doubly_robust": 0.3, "offset_tree": 0.3}
+        experiment_id = f"advanced_bandits::{domain}"
+        exp = Experiment(
+            experiment_id=experiment_id,
+            control=baseline_policy,
+            variants=advanced_policies,
+            phase="shadow",
+            auto_activate_after=shadow_samples,
+            baseline_regret_arm=baseline_policy,
+            description=description or f"Advanced bandit evaluation for {domain}",
+        )
+        exp.stats = {
+            baseline_policy: AdvancedBanditStats(),
+            **{policy: AdvancedBanditStats() for policy in advanced_policies},
+        }
         self.register(exp)
         self._advanced_experiments[experiment_id] = domain
-        logger.info('Advanced bandit experiment registered: domain=%s, baseline=%s, advanced_policies=%s, shadow_samples=%d', domain, baseline_policy, list(advanced_policies.keys()), shadow_samples)
+        logger.info(
+            "Advanced bandit experiment registered: domain=%s, baseline=%s, advanced_policies=%s, shadow_samples=%d",
+            domain,
+            baseline_policy,
+            list(advanced_policies.keys()),
+            shadow_samples,
+        )
 
     def record(self, experiment_id: str, arm: str, reward: float) -> None:
         """Override to use AdvancedBanditStats for advanced experiments."""
         if experiment_id in self._advanced_experiments:
-            if not self._flag_enabled('ENABLE_EXPERIMENT_HARNESS'):
+            if not self._flag_enabled("ENABLE_EXPERIMENT_HARNESS"):
                 return
             exp = self._experiments.get(experiment_id)
             if not exp:
-                logger.debug('Cannot record reward - experiment not found: experiment_id=%s', experiment_id)
+                logger.debug("Cannot record reward - experiment not found: experiment_id=%s", experiment_id)
                 return
             vs = exp.stats.setdefault(arm, AdvancedBanditStats())
             vs.pulls += 1
@@ -77,20 +112,39 @@ class AdvancedBanditExperimentManager(ExperimentManager):
             if baseline in exp.stats and arm != baseline:
                 base_mean = exp.stats[baseline].reward_mean
                 vs.regret_sum += max(0.0, base_mean - reward)
-            if exp.phase == 'shadow' and exp.auto_activate_after is not None and (exp.stats[exp.control].pulls >= exp.auto_activate_after):
+            if (
+                exp.phase == "shadow"
+                and exp.auto_activate_after is not None
+                and (exp.stats[exp.control].pulls >= exp.auto_activate_after)
+            ):
                 old_phase = exp.phase
-                exp.phase = 'active'
-                logger.info('Advanced experiment auto-activated: experiment_id=%s, phase=%s->%s, control_pulls=%d, threshold=%d', experiment_id, old_phase, exp.phase, exp.stats[exp.control].pulls, exp.auto_activate_after)
+                exp.phase = "active"
+                logger.info(
+                    "Advanced experiment auto-activated: experiment_id=%s, phase=%s->%s, control_pulls=%d, threshold=%d",
+                    experiment_id,
+                    old_phase,
+                    exp.phase,
+                    exp.stats[exp.control].pulls,
+                    exp.auto_activate_after,
+                )
         else:
             super().record(experiment_id, arm, reward)
 
     def _flag_enabled(self, name: str) -> bool:
         """Check if a feature flag is enabled."""
         import os
-        v = os.getenv(name, '').strip().lower()
-        return v in {'1', 'true', 'yes', 'on'}
 
-    def record_advanced_metrics(self, experiment_id: str, arm: str, reward: float, context: dict[str, Any] | None=None, bandit_instance: Any=None) -> None:
+        v = os.getenv(name, "").strip().lower()
+        return v in {"1", "true", "yes", "on"}
+
+    def record_advanced_metrics(
+        self,
+        experiment_id: str,
+        arm: str,
+        reward: float,
+        context: dict[str, Any] | None = None,
+        bandit_instance: Any = None,
+    ) -> None:
         """Record reward and advanced bandit-specific metrics."""
         self.record(experiment_id, arm, reward)
         if experiment_id not in self._experiments:
@@ -103,7 +157,9 @@ class AdvancedBanditExperimentManager(ExperimentManager):
             self._record_bandit_specific_metrics(advanced_stats, arm, bandit_instance, context)
         self._update_advanced_metrics(experiment_id, arm, advanced_stats)
 
-    def _record_bandit_specific_metrics(self, stats: AdvancedBanditStats, arm: str, bandit: Any, context: dict[str, Any]) -> None:
+    def _record_bandit_specific_metrics(
+        self, stats: AdvancedBanditStats, arm: str, bandit: Any, context: dict[str, Any]
+    ) -> None:
         """Record metrics specific to bandit type."""
         try:
             if isinstance(bandit, DoublyRobustBandit):
@@ -115,14 +171,14 @@ class AdvancedBanditExperimentManager(ExperimentManager):
                     recent_weight = bandit.importance_weights[arm][-1]
                     stats.importance_weight_sum += recent_weight
                 model = bandit.reward_models[arm]
-                confidence = bandit.alpha * model['variance'] ** 0.5
+                confidence = bandit.alpha * model["variance"] ** 0.5
                 stats.confidence_interval_width += confidence * 2
             elif isinstance(bandit, OffsetTreeBandit):
                 node_id = bandit._get_node_id(context)
-                depth = bandit.tree_nodes[node_id]['depth'] if node_id in bandit.tree_nodes else 0
+                depth = bandit.tree_nodes[node_id]["depth"] if node_id in bandit.tree_nodes else 0
                 stats.tree_depth_sum += depth
         except Exception as e:
-            logger.debug('Failed to record advanced bandit metrics: %s', e)
+            logger.debug("Failed to record advanced bandit metrics: %s", e)
 
     def _update_advanced_metrics(self, experiment_id: str, arm: str, stats: AdvancedBanditStats) -> None:
         """Update Prometheus metrics for advanced bandits."""
@@ -130,64 +186,101 @@ class AdvancedBanditExperimentManager(ExperimentManager):
             ctx = current_tenant()
             if not ctx:
                 return
-            labels = {'tenant': ctx.tenant_id, 'workspace': ctx.workspace_id, 'experiment_id': experiment_id, 'variant': arm}
-            if hasattr(metrics, 'ADVANCED_BANDIT_REWARD_MODEL_MSE'):
+            labels = {
+                "tenant": ctx.tenant_id,
+                "workspace": ctx.workspace_id,
+                "experiment_id": experiment_id,
+                "variant": arm,
+            }
+            if hasattr(metrics, "ADVANCED_BANDIT_REWARD_MODEL_MSE"):
                 metrics.ADVANCED_BANDIT_REWARD_MODEL_MSE.labels(**labels).set(stats.reward_model_mse)
-            if hasattr(metrics, 'ADVANCED_BANDIT_TREE_DEPTH'):
+            if hasattr(metrics, "ADVANCED_BANDIT_TREE_DEPTH"):
                 avg_depth = stats.tree_depth_sum / stats.pulls if stats.pulls else 0.0
                 metrics.ADVANCED_BANDIT_TREE_DEPTH.labels(**labels).set(avg_depth)
-            if hasattr(metrics, 'ADVANCED_BANDIT_IMPORTANCE_WEIGHT'):
+            if hasattr(metrics, "ADVANCED_BANDIT_IMPORTANCE_WEIGHT"):
                 avg_weight = stats.importance_weight_sum / stats.pulls if stats.pulls else 0.0
                 metrics.ADVANCED_BANDIT_IMPORTANCE_WEIGHT.labels(**labels).set(avg_weight)
-            if hasattr(metrics, 'ADVANCED_BANDIT_CONFIDENCE_INTERVAL'):
+            if hasattr(metrics, "ADVANCED_BANDIT_CONFIDENCE_INTERVAL"):
                 avg_ci = stats.confidence_interval_width / stats.pulls if stats.pulls else 0.0
                 metrics.ADVANCED_BANDIT_CONFIDENCE_INTERVAL.labels(**labels).set(avg_ci)
         except Exception as e:
-            logger.debug('Failed to update advanced bandit metrics: %s', e)
+            logger.debug("Failed to update advanced bandit metrics: %s", e)
 
     def get_advanced_experiment_summary(self, domain: str) -> dict[str, Any]:
         """Get comprehensive summary of advanced bandit experiment."""
-        experiment_id = f'advanced_bandits::{domain}'
+        experiment_id = f"advanced_bandits::{domain}"
         if experiment_id not in self._experiments:
-            return {'error': f'No advanced experiment found for domain: {domain}'}
+            return {"error": f"No advanced experiment found for domain: {domain}"}
         exp = self._experiments[experiment_id]
         summary = exp.snapshot()
-        summary['advanced_analysis'] = self._analyze_advanced_performance(exp)
+        summary["advanced_analysis"] = self._analyze_advanced_performance(exp)
         return summary
 
     def _analyze_advanced_performance(self, exp: Experiment) -> dict[str, Any]:
         """Analyze advanced bandit performance vs baseline."""
         if exp.control not in exp.stats:
-            return {'error': 'No baseline data available'}
+            return {"error": "No baseline data available"}
         baseline_stats = exp.stats[exp.control]
         baseline_reward = baseline_stats.reward_mean
-        analysis = {'baseline_policy': exp.control, 'baseline_reward_mean': baseline_reward, 'variant_comparisons': {}, 'recommendations': []}
+        analysis = {
+            "baseline_policy": exp.control,
+            "baseline_reward_mean": baseline_reward,
+            "variant_comparisons": {},
+            "recommendations": [],
+        }
         for variant, stats in exp.stats.items():
             if variant == exp.control:
                 continue
             if stats.pulls < 10:
-                analysis['variant_comparisons'][variant] = {'status': 'insufficient_data', 'pulls': stats.pulls}
+                analysis["variant_comparisons"][variant] = {"status": "insufficient_data", "pulls": stats.pulls}
                 continue
             reward_improvement = (stats.reward_mean - baseline_reward) / baseline_reward if baseline_reward else 0.0
-            comparison = {'reward_mean': stats.reward_mean, 'reward_improvement_pct': reward_improvement * 100, 'pulls': stats.pulls, 'regret_sum': stats.regret_sum}
+            comparison = {
+                "reward_mean": stats.reward_mean,
+                "reward_improvement_pct": reward_improvement * 100,
+                "pulls": stats.pulls,
+                "regret_sum": stats.regret_sum,
+            }
             if isinstance(stats, AdvancedBanditStats):
-                comparison.update({'reward_model_mse': stats.reward_model_mse, 'tree_depth_avg': stats.tree_depth_sum / stats.pulls if stats.pulls else 0.0, 'importance_weight_avg': stats.importance_weight_sum / stats.pulls if stats.pulls else 0.0, 'confidence_interval_avg': stats.confidence_interval_width / stats.pulls if stats.pulls else 0.0})
-            analysis['variant_comparisons'][variant] = comparison
+                comparison.update(
+                    {
+                        "reward_model_mse": stats.reward_model_mse,
+                        "tree_depth_avg": stats.tree_depth_sum / stats.pulls if stats.pulls else 0.0,
+                        "importance_weight_avg": stats.importance_weight_sum / stats.pulls if stats.pulls else 0.0,
+                        "confidence_interval_avg": stats.confidence_interval_width / stats.pulls
+                        if stats.pulls
+                        else 0.0,
+                    }
+                )
+            analysis["variant_comparisons"][variant] = comparison
             if reward_improvement > 0.05:
-                analysis['recommendations'].append(f'Consider activating {variant}: {reward_improvement * 100:.1f}% improvement')
+                analysis["recommendations"].append(
+                    f"Consider activating {variant}: {reward_improvement * 100:.1f}% improvement"
+                )
             elif reward_improvement < -0.1:
-                analysis['recommendations'].append(f'Consider removing {variant}: {abs(reward_improvement) * 100:.1f}% degradation')
+                analysis["recommendations"].append(
+                    f"Consider removing {variant}: {abs(reward_improvement) * 100:.1f}% degradation"
+                )
         return analysis
+
 
 def create_default_advanced_bandit_experiments(manager: AdvancedBanditExperimentManager) -> None:
     """Create default advanced bandit experiments for common domains."""
-    if os.getenv('ENABLE_RL_ADVANCED', '').lower() not in {'1', 'true', 'yes', 'on'}:
-        logger.debug('Advanced bandit experiments disabled - ENABLE_RL_ADVANCED not set')
+    if os.getenv("ENABLE_RL_ADVANCED", "").lower() not in {"1", "true", "yes", "on"}:
+        logger.debug("Advanced bandit experiments disabled - ENABLE_RL_ADVANCED not set")
         return
-    domains = ['model_routing', 'content_analysis', 'transcription_service', 'memory_retrieval']
+    domains = ["model_routing", "content_analysis", "transcription_service", "memory_retrieval"]
     for domain in domains:
         try:
-            manager.register_advanced_bandit_experiment(domain=domain, baseline_policy='epsilon_greedy', advanced_policies={'doubly_robust': 0.25, 'offset_tree': 0.25}, shadow_samples=500, description=f'Evaluate advanced bandits for {domain} routing decisions')
+            manager.register_advanced_bandit_experiment(
+                domain=domain,
+                baseline_policy="epsilon_greedy",
+                advanced_policies={"doubly_robust": 0.25, "offset_tree": 0.25},
+                shadow_samples=500,
+                description=f"Evaluate advanced bandits for {domain} routing decisions",
+            )
         except Exception as e:
-            logger.warning('Failed to create advanced experiment for domain %s: %s', domain, e)
-__all__ = ['AdvancedBanditExperimentManager', 'AdvancedBanditStats', 'create_default_advanced_bandit_experiments']
+            logger.warning("Failed to create advanced experiment for domain %s: %s", domain, e)
+
+
+__all__ = ["AdvancedBanditExperimentManager", "AdvancedBanditStats", "create_default_advanced_bandit_experiments"]

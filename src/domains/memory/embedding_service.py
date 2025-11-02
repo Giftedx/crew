@@ -14,6 +14,7 @@ Features:
 - Batch processing for efficiency
 - Cost tracking for API-based models
 """
+
 from __future__ import annotations
 import hashlib
 import logging
@@ -21,25 +22,30 @@ import os
 from dataclasses import dataclass
 from typing import Any, Literal
 from platform.core.step_result import StepResult
+
 logger = logging.getLogger(__name__)
 try:
     from sentence_transformers import SentenceTransformer
+
     SENTENCE_TRANSFORMERS_AVAILABLE = True
 except ImportError:
     SENTENCE_TRANSFORMERS_AVAILABLE = False
     SentenceTransformer = None
-    logger.warning('sentence-transformers not available, using fallback embeddings')
-MODEL_DIMENSIONS = {'all-MiniLM-L6-v2': 384, 'all-mpnet-base-v2': 768, 'openai-small': 1536, 'openai-large': 3072}
+    logger.warning("sentence-transformers not available, using fallback embeddings")
+MODEL_DIMENSIONS = {"all-MiniLM-L6-v2": 384, "all-mpnet-base-v2": 768, "openai-small": 1536, "openai-large": 3072}
+
 
 @dataclass
 class EmbeddingResult:
     """Result of embedding generation."""
+
     embedding: list[float]
     model: str
     dimension: int
     tokens_used: int = 0
     cache_hit: bool = False
     generation_time_ms: float = 0.0
+
 
 class EmbeddingService:
     """Unified embedding service with model selection and caching.
@@ -50,7 +56,7 @@ class EmbeddingService:
         embedding = result.data["embedding"]
     """
 
-    def __init__(self, cache_size: int=10000):
+    def __init__(self, cache_size: int = 10000):
         """Initialize embedding service.
 
         Args:
@@ -60,7 +66,9 @@ class EmbeddingService:
         self._embedding_cache: dict[str, EmbeddingResult] = {}
         self._models: dict[str, Any] = {}
 
-    def embed_text(self, text: str, model: Literal['fast', 'balanced', 'quality']='fast', use_cache: bool=True) -> StepResult:
+    def embed_text(
+        self, text: str, model: Literal["fast", "balanced", "quality"] = "fast", use_cache: bool = True
+    ) -> StepResult:
         """Generate embedding for text.
 
         Args:
@@ -73,28 +81,47 @@ class EmbeddingService:
         """
         try:
             import time
+
             start_time = time.time()
             if not text or not text.strip():
-                return StepResult.fail('Input text cannot be empty', status='bad_request')
+                return StepResult.fail("Input text cannot be empty", status="bad_request")
             if use_cache:
                 cache_result = self._check_cache(text, model)
                 if cache_result:
-                    logger.info(f'Embedding cache hit for text (len={len(text)})')
-                    return StepResult.ok(data={'embedding': cache_result.embedding, 'model': cache_result.model, 'dimension': cache_result.dimension, 'cache_hit': True, 'generation_time_ms': (time.time() - start_time) * 1000})
+                    logger.info(f"Embedding cache hit for text (len={len(text)})")
+                    return StepResult.ok(
+                        data={
+                            "embedding": cache_result.embedding,
+                            "model": cache_result.model,
+                            "dimension": cache_result.dimension,
+                            "cache_hit": True,
+                            "generation_time_ms": (time.time() - start_time) * 1000,
+                        }
+                    )
             model_name = self._select_model(model)
             embedding_result = self._generate_embedding(text, model_name)
             if embedding_result:
                 if use_cache:
                     self._cache_embedding(text, model, embedding_result)
                 generation_time = (time.time() - start_time) * 1000
-                return StepResult.ok(data={'embedding': embedding_result.embedding, 'model': embedding_result.model, 'dimension': embedding_result.dimension, 'cache_hit': False, 'generation_time_ms': generation_time})
+                return StepResult.ok(
+                    data={
+                        "embedding": embedding_result.embedding,
+                        "model": embedding_result.model,
+                        "dimension": embedding_result.dimension,
+                        "cache_hit": False,
+                        "generation_time_ms": generation_time,
+                    }
+                )
             else:
-                return StepResult.fail('Failed to generate embedding', status='retryable')
+                return StepResult.fail("Failed to generate embedding", status="retryable")
         except Exception as e:
-            logger.error(f'Embedding generation failed: {e}')
-            return StepResult.fail(f'Embedding failed: {e!s}', status='retryable')
+            logger.error(f"Embedding generation failed: {e}")
+            return StepResult.fail(f"Embedding failed: {e!s}", status="retryable")
 
-    def embed_batch(self, texts: list[str], model: Literal['fast', 'balanced', 'quality']='fast', use_cache: bool=True) -> StepResult:
+    def embed_batch(
+        self, texts: list[str], model: Literal["fast", "balanced", "quality"] = "fast", use_cache: bool = True
+    ) -> StepResult:
         """Generate embeddings for multiple texts in batch.
 
         Args:
@@ -107,21 +134,31 @@ class EmbeddingService:
         """
         try:
             if not texts:
-                return StepResult.fail('Input texts list cannot be empty', status='bad_request')
+                return StepResult.fail("Input texts list cannot be empty", status="bad_request")
             embeddings = []
             cache_hits = 0
             for text in texts:
                 result = self.embed_text(text, model=model, use_cache=use_cache)
                 if result.success:
-                    embeddings.append(result.data['embedding'])
-                    if result.data.get('cache_hit'):
+                    embeddings.append(result.data["embedding"])
+                    if result.data.get("cache_hit"):
                         cache_hits += 1
                 else:
-                    return StepResult.fail(f'Batch embedding failed at text {len(embeddings)}: {result.error}', metadata={'partial_embeddings': embeddings})
-            return StepResult.ok(data={'embeddings': embeddings, 'count': len(embeddings), 'cache_hits': cache_hits, 'cache_hit_rate': cache_hits / len(embeddings) if embeddings else 0.0})
+                    return StepResult.fail(
+                        f"Batch embedding failed at text {len(embeddings)}: {result.error}",
+                        metadata={"partial_embeddings": embeddings},
+                    )
+            return StepResult.ok(
+                data={
+                    "embeddings": embeddings,
+                    "count": len(embeddings),
+                    "cache_hits": cache_hits,
+                    "cache_hit_rate": cache_hits / len(embeddings) if embeddings else 0.0,
+                }
+            )
         except Exception as e:
-            logger.error(f'Batch embedding failed: {e}')
-            return StepResult.fail(f'Batch embedding failed: {e!s}')
+            logger.error(f"Batch embedding failed: {e}")
+            return StepResult.fail(f"Batch embedding failed: {e!s}")
 
     def _select_model(self, model_alias: str) -> str:
         """Select actual model name from alias.
@@ -132,8 +169,8 @@ class EmbeddingService:
         Returns:
             Actual model identifier
         """
-        model_map = {'fast': 'all-MiniLM-L6-v2', 'balanced': 'all-mpnet-base-v2', 'quality': 'openai-small'}
-        return model_map.get(model_alias, 'all-MiniLM-L6-v2')
+        model_map = {"fast": "all-MiniLM-L6-v2", "balanced": "all-mpnet-base-v2", "quality": "openai-small"}
+        return model_map.get(model_alias, "all-MiniLM-L6-v2")
 
     def _generate_embedding(self, text: str, model_name: str) -> EmbeddingResult | None:
         """Generate embedding using specified model.
@@ -146,14 +183,14 @@ class EmbeddingService:
             EmbeddingResult or None if generation fails
         """
         try:
-            if model_name.startswith('openai'):
+            if model_name.startswith("openai"):
                 return self._generate_openai_embedding(text, model_name)
             if SENTENCE_TRANSFORMERS_AVAILABLE:
                 return self._generate_local_embedding(text, model_name)
-            logger.warning(f'Using fallback embedding for model {model_name}')
+            logger.warning(f"Using fallback embedding for model {model_name}")
             return self._generate_fallback_embedding(text, model_name)
         except Exception as e:
-            logger.error(f'Embedding generation failed for model {model_name}: {e}')
+            logger.error(f"Embedding generation failed for model {model_name}: {e}")
             return None
 
     def _generate_local_embedding(self, text: str, model_name: str) -> EmbeddingResult:
@@ -168,14 +205,16 @@ class EmbeddingService:
         """
         if model_name not in self._models:
             if SentenceTransformer is None:
-                raise RuntimeError('sentence-transformers not available')
-            logger.info(f'Loading sentence-transformers model: {model_name}')
-            self._models[model_name] = SentenceTransformer(f'sentence-transformers/{model_name}')
+                raise RuntimeError("sentence-transformers not available")
+            logger.info(f"Loading sentence-transformers model: {model_name}")
+            self._models[model_name] = SentenceTransformer(f"sentence-transformers/{model_name}")
         model_obj = self._models[model_name]
         embedding = model_obj.encode(text, convert_to_numpy=False)
-        if hasattr(embedding, 'tolist'):
+        if hasattr(embedding, "tolist"):
             embedding = embedding.tolist()
-        return EmbeddingResult(embedding=list(embedding), model=model_name, dimension=len(embedding), tokens_used=0, cache_hit=False)
+        return EmbeddingResult(
+            embedding=list(embedding), model=model_name, dimension=len(embedding), tokens_used=0, cache_hit=False
+        )
 
     def _generate_openai_embedding(self, text: str, model_name: str) -> EmbeddingResult:
         """Generate embedding using OpenAI API.
@@ -189,20 +228,27 @@ class EmbeddingService:
         """
         try:
             import openai
-            api_key = os.getenv('OPENAI_API_KEY')
+
+            api_key = os.getenv("OPENAI_API_KEY")
             if not api_key:
-                raise ValueError('OPENAI_API_KEY not set')
-            openai_model_map = {'openai-small': 'text-embedding-3-small', 'openai-large': 'text-embedding-3-large'}
-            actual_model = openai_model_map.get(model_name, 'text-embedding-3-small')
+                raise ValueError("OPENAI_API_KEY not set")
+            openai_model_map = {"openai-small": "text-embedding-3-small", "openai-large": "text-embedding-3-large"}
+            actual_model = openai_model_map.get(model_name, "text-embedding-3-small")
             client = openai.OpenAI(api_key=api_key)
             response = client.embeddings.create(input=text, model=actual_model)
             embedding = response.data[0].embedding
             tokens_used = response.usage.total_tokens
-            return EmbeddingResult(embedding=embedding, model=model_name, dimension=len(embedding), tokens_used=tokens_used, cache_hit=False)
+            return EmbeddingResult(
+                embedding=embedding,
+                model=model_name,
+                dimension=len(embedding),
+                tokens_used=tokens_used,
+                cache_hit=False,
+            )
         except Exception as e:
-            logger.error(f'OpenAI embedding generation failed: {e}')
-            logger.info('Falling back to local model')
-            return self._generate_local_embedding(text, 'all-mpnet-base-v2')
+            logger.error(f"OpenAI embedding generation failed: {e}")
+            logger.info("Falling back to local model")
+            return self._generate_local_embedding(text, "all-mpnet-base-v2")
 
     def _generate_fallback_embedding(self, text: str, model_name: str) -> EmbeddingResult:
         """Generate deterministic fallback embedding when models unavailable.
@@ -219,8 +265,10 @@ class EmbeddingService:
         num_repeats = dimension // 32 + 1
         full_bytes = (text_hash * num_repeats)[:dimension]
         embedding = [b / 127.5 - 1.0 for b in full_bytes]
-        logger.warning(f'Generated fallback embedding (dim={dimension}) - not suitable for production')
-        return EmbeddingResult(embedding=embedding, model=f'fallback-{model_name}', dimension=dimension, cache_hit=False)
+        logger.warning(f"Generated fallback embedding (dim={dimension}) - not suitable for production")
+        return EmbeddingResult(
+            embedding=embedding, model=f"fallback-{model_name}", dimension=dimension, cache_hit=False
+        )
 
     def _check_cache(self, text: str, model: str) -> EmbeddingResult | None:
         """Check if embedding exists in cache.
@@ -262,7 +310,7 @@ class EmbeddingService:
         Returns:
             Cache key string
         """
-        combined = f'{model}:{text}'
+        combined = f"{model}:{text}"
         return hashlib.sha256(combined.encode()).hexdigest()
 
     def clear_cache(self) -> StepResult:
@@ -273,8 +321,8 @@ class EmbeddingService:
         """
         cache_size = len(self._embedding_cache)
         self._embedding_cache.clear()
-        logger.info(f'Cleared {cache_size} cached embeddings')
-        return StepResult.ok(data={'cleared_entries': cache_size})
+        logger.info(f"Cleared {cache_size} cached embeddings")
+        return StepResult.ok(data={"cleared_entries": cache_size})
 
     def get_cache_stats(self) -> StepResult:
         """Get embedding cache statistics.
@@ -287,12 +335,20 @@ class EmbeddingService:
             for result in self._embedding_cache.values():
                 model = result.model
                 models_cached[model] = models_cached.get(model, 0) + 1
-            stats = {'total_cached': len(self._embedding_cache), 'cache_size_limit': self.cache_size, 'utilization': len(self._embedding_cache) / self.cache_size if self.cache_size > 0 else 0.0, 'models_cached': models_cached}
+            stats = {
+                "total_cached": len(self._embedding_cache),
+                "cache_size_limit": self.cache_size,
+                "utilization": len(self._embedding_cache) / self.cache_size if self.cache_size > 0 else 0.0,
+                "models_cached": models_cached,
+            }
             return StepResult.ok(data=stats)
         except Exception as e:
-            logger.error(f'Failed to get cache stats: {e}')
-            return StepResult.fail(f'Failed to get cache stats: {e!s}')
+            logger.error(f"Failed to get cache stats: {e}")
+            return StepResult.fail(f"Failed to get cache stats: {e!s}")
+
+
 _embedding_service: EmbeddingService | None = None
+
 
 def get_embedding_service() -> EmbeddingService:
     """Get singleton embedding service instance.

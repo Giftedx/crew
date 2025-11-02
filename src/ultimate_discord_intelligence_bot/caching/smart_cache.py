@@ -3,6 +3,7 @@
 This module provides intelligent caching that adapts to usage patterns
 and automatically determines optimal caching strategies for different tools.
 """
+
 from __future__ import annotations
 import time
 from dataclasses import dataclass
@@ -11,12 +12,15 @@ from functools import wraps
 from typing import TYPE_CHECKING, Any
 from ultimate_discord_intelligence_bot.caching.result_cache import ResultCache
 from platform.core.step_result import StepResult
+
 if TYPE_CHECKING:
     from collections.abc import Callable
+
 
 @dataclass
 class ToolUsagePattern:
     """Track usage patterns for a tool."""
+
     tool_name: str
     call_count: int = 0
     total_execution_time: float = 0.0
@@ -26,7 +30,7 @@ class ToolUsagePattern:
     avg_execution_time: float = 0.0
     hit_rate: float = 0.0
 
-    def update_call(self, execution_time: float, cache_hit: bool=False):
+    def update_call(self, execution_time: float, cache_hit: bool = False):
         """Update usage statistics."""
         self.call_count += 1
         self.total_execution_time += execution_time
@@ -39,9 +43,11 @@ class ToolUsagePattern:
         total_cache_attempts = self.cache_hits + self.cache_misses
         self.hit_rate = self.cache_hits / total_cache_attempts * 100 if total_cache_attempts > 0 else 0
 
+
 @dataclass
 class CachingStrategy:
     """Caching strategy for a tool."""
+
     tool_name: str
     enabled: bool = True
     ttl: int = 3600
@@ -54,10 +60,11 @@ class CachingStrategy:
         if self.metadata is None:
             self.metadata = {}
 
+
 class SmartCache:
     """Intelligent caching system with adaptive strategies."""
 
-    def __init__(self, base_cache: ResultCache | None=None):
+    def __init__(self, base_cache: ResultCache | None = None):
         """Initialize the smart cache."""
         self.base_cache = base_cache or ResultCache()
         self.usage_patterns: dict[str, ToolUsagePattern] = {}
@@ -86,7 +93,20 @@ class SmartCache:
         should_cache = pattern.call_count > 5 and pattern.avg_execution_time > 0.1 and (pattern.hit_rate < 80)
         optimal_ttl = self._calculate_optimal_ttl(pattern)
         priority = self._calculate_priority(pattern)
-        return {'tool_name': tool_name, 'should_cache': should_cache, 'current_ttl': strategy.ttl, 'optimal_ttl': optimal_ttl, 'priority': priority, 'usage_stats': {'call_count': pattern.call_count, 'avg_execution_time': pattern.avg_execution_time, 'hit_rate': pattern.hit_rate, 'last_called': pattern.last_called.isoformat() if pattern.last_called else None}, 'recommendations': self._generate_recommendations(pattern, strategy)}
+        return {
+            "tool_name": tool_name,
+            "should_cache": should_cache,
+            "current_ttl": strategy.ttl,
+            "optimal_ttl": optimal_ttl,
+            "priority": priority,
+            "usage_stats": {
+                "call_count": pattern.call_count,
+                "avg_execution_time": pattern.avg_execution_time,
+                "hit_rate": pattern.hit_rate,
+                "last_called": pattern.last_called.isoformat() if pattern.last_called else None,
+            },
+            "recommendations": self._generate_recommendations(pattern, strategy),
+        }
 
     def _calculate_optimal_ttl(self, pattern: ToolUsagePattern) -> int:
         """Calculate optimal TTL based on usage patterns."""
@@ -111,18 +131,18 @@ class SmartCache:
         """Generate caching recommendations."""
         recommendations = []
         if pattern.call_count < 5:
-            recommendations.append('Tool called infrequently - consider disabling cache')
+            recommendations.append("Tool called infrequently - consider disabling cache")
         elif pattern.avg_execution_time < 0.1:
-            recommendations.append('Tool executes quickly - cache may not be beneficial')
+            recommendations.append("Tool executes quickly - cache may not be beneficial")
         elif pattern.hit_rate > 80:
-            recommendations.append('Tool already well cached - current strategy is good')
+            recommendations.append("Tool already well cached - current strategy is good")
         else:
             if strategy.ttl < 1800:
-                recommendations.append('Consider increasing TTL for better cache efficiency')
+                recommendations.append("Consider increasing TTL for better cache efficiency")
             if pattern.avg_execution_time > 1.0:
-                recommendations.append('High execution time - prioritize caching this tool')
+                recommendations.append("High execution time - prioritize caching this tool")
             if pattern.call_count > 50:
-                recommendations.append('Frequently called tool - ensure cache is enabled')
+                recommendations.append("Frequently called tool - ensure cache is enabled")
         return recommendations
 
     def update_strategy(self, tool_name: str, **updates):
@@ -137,8 +157,10 @@ class SmartCache:
         for tool_name, pattern in self.usage_patterns.items():
             if pattern.call_count >= self.learning_period:
                 analysis = self.analyze_tool_performance(tool_name)
-                if analysis['should_cache']:
-                    self.update_strategy(tool_name, enabled=True, ttl=analysis['optimal_ttl'], priority=analysis['priority'])
+                if analysis["should_cache"]:
+                    self.update_strategy(
+                        tool_name, enabled=True, ttl=analysis["optimal_ttl"], priority=analysis["priority"]
+                    )
                 else:
                     self.update_strategy(tool_name, enabled=False)
 
@@ -150,23 +172,47 @@ class SmartCache:
             tool_analyses[tool_name] = self.analyze_tool_performance(tool_name)
         total_tools = len(self.usage_patterns)
         cached_tools = sum((1 for strategy in self.caching_strategies.values() if strategy.enabled))
-        avg_hit_rate = sum((pattern.hit_rate for pattern in self.usage_patterns.values())) / total_tools if total_tools > 0 else 0
-        return {'base_cache': base_stats, 'smart_cache': {'total_tools': total_tools, 'cached_tools': cached_tools, 'cache_coverage': cached_tools / total_tools * 100 if total_tools > 0 else 0, 'avg_hit_rate': avg_hit_rate, 'adaptive_ttl_enabled': self.adaptive_ttl_enabled}, 'tool_analyses': tool_analyses, 'strategies': {name: {'enabled': strategy.enabled, 'ttl': strategy.ttl, 'priority': strategy.priority, 'adaptive_ttl': strategy.adaptive_ttl} for name, strategy in self.caching_strategies.items()}}
+        avg_hit_rate = (
+            sum((pattern.hit_rate for pattern in self.usage_patterns.values())) / total_tools if total_tools > 0 else 0
+        )
+        return {
+            "base_cache": base_stats,
+            "smart_cache": {
+                "total_tools": total_tools,
+                "cached_tools": cached_tools,
+                "cache_coverage": cached_tools / total_tools * 100 if total_tools > 0 else 0,
+                "avg_hit_rate": avg_hit_rate,
+                "adaptive_ttl_enabled": self.adaptive_ttl_enabled,
+            },
+            "tool_analyses": tool_analyses,
+            "strategies": {
+                name: {
+                    "enabled": strategy.enabled,
+                    "ttl": strategy.ttl,
+                    "priority": strategy.priority,
+                    "adaptive_ttl": strategy.adaptive_ttl,
+                }
+                for name, strategy in self.caching_strategies.items()
+            },
+        }
+
+
 _global_smart_cache = SmartCache()
+
 
 def get_smart_cache() -> SmartCache:
     """Get the global smart cache instance."""
     return _global_smart_cache
 
-def smart_cache_tool_result(ttl: int | None=None, adaptive: bool=True, priority: int=5):
+
+def smart_cache_tool_result(ttl: int | None = None, adaptive: bool = True, priority: int = 5):
     """Smart caching decorator that adapts to tool usage patterns."""
 
     def decorator(func: Callable) -> Callable:
-
         @wraps(func)
         def wrapper(self, *args, **kwargs):
             smart_cache = get_smart_cache()
-            tool_name = getattr(self, 'name', self.__class__.__name__)
+            tool_name = getattr(self, "name", self.__class__.__name__)
             pattern = smart_cache.get_usage_pattern(tool_name)
             strategy = smart_cache.get_caching_strategy(tool_name)
             if strategy.adaptive_ttl != adaptive:
@@ -177,7 +223,7 @@ def smart_cache_tool_result(ttl: int | None=None, adaptive: bool=True, priority:
                 execution_time = time.time() - start_time
                 pattern.update_call(execution_time, cache_hit=False)
                 return result
-            cache_key = smart_cache.base_cache._generate_key(f'{tool_name}_{func.__name__}', args, kwargs)
+            cache_key = smart_cache.base_cache._generate_key(f"{tool_name}_{func.__name__}", args, kwargs)
             cached_result = smart_cache.base_cache.get(cache_key)
             if cached_result is not None:
                 execution_time = time.time() - start_time
@@ -191,20 +237,35 @@ def smart_cache_tool_result(ttl: int | None=None, adaptive: bool=True, priority:
                     effective_ttl = ttl or smart_cache._calculate_optimal_ttl(pattern)
                 else:
                     effective_ttl = ttl or strategy.ttl
-                smart_cache.base_cache.set(cache_key, result, ttl=effective_ttl, metadata={'tool_name': tool_name, 'priority': priority, 'adaptive': adaptive, 'strategy_ttl': strategy.ttl})
+                smart_cache.base_cache.set(
+                    cache_key,
+                    result,
+                    ttl=effective_ttl,
+                    metadata={
+                        "tool_name": tool_name,
+                        "priority": priority,
+                        "adaptive": adaptive,
+                        "strategy_ttl": strategy.ttl,
+                    },
+                )
             return result
+
         return wrapper
+
     return decorator
+
 
 def analyze_cache_performance() -> dict[str, Any]:
     """Analyze overall cache performance and provide recommendations."""
     smart_cache = get_smart_cache()
     return smart_cache.get_smart_cache_stats()
 
+
 def auto_optimize_cache():
     """Automatically optimize cache strategies based on usage patterns."""
     smart_cache = get_smart_cache()
     smart_cache.auto_optimize()
+
 
 def get_cache_recommendations() -> dict[str, Any]:
     """Get caching recommendations for all tools."""
@@ -212,5 +273,10 @@ def get_cache_recommendations() -> dict[str, Any]:
     recommendations = {}
     for tool_name in smart_cache.usage_patterns:
         analysis = smart_cache.analyze_tool_performance(tool_name)
-        recommendations[tool_name] = {'should_cache': analysis['should_cache'], 'optimal_ttl': analysis['optimal_ttl'], 'priority': analysis['priority'], 'recommendations': analysis['recommendations']}
+        recommendations[tool_name] = {
+            "should_cache": analysis["should_cache"],
+            "optimal_ttl": analysis["optimal_ttl"],
+            "priority": analysis["priority"],
+            "recommendations": analysis["recommendations"],
+        }
     return recommendations

@@ -9,6 +9,7 @@ The tool lazy-loads the model on first use to reduce initial application startup
 time and memory overhead. It's designed to be a drop-in replacement for the
 previous Whisper tool.
 """
+
 from __future__ import annotations
 import importlib
 import logging
@@ -21,23 +22,32 @@ from ultimate_discord_intelligence_bot.cache import EnhancedTranscriptionCache
 from platform.observability.metrics import get_metrics
 from platform.core.step_result import StepResult
 from ._base import TranscriptionTool
+
 transformers: Any | None
 try:
-    transformers = importlib.import_module('transformers')
+    transformers = importlib.import_module("transformers")
 except ImportError:
     transformers = None
 
-class AudioTranscriptionTool(TranscriptionTool):
-    name: str = 'Enhanced Whisper Audio Transcription'
-    description: str = 'Transcribes audio from a file using the high-performance Distil-Whisper model.'
 
-    def __init__(self, model_id: str | None=None, device: str | None=None, chunk_length_s: int=30, torch_dtype: torch.dtype | None=None, enable_caching: bool=True):
+class AudioTranscriptionTool(TranscriptionTool):
+    name: str = "Enhanced Whisper Audio Transcription"
+    description: str = "Transcribes audio from a file using the high-performance Distil-Whisper model."
+
+    def __init__(
+        self,
+        model_id: str | None = None,
+        device: str | None = None,
+        chunk_length_s: int = 30,
+        torch_dtype: torch.dtype | None = None,
+        enable_caching: bool = True,
+    ):
         super().__init__()
-        self._model_id = model_id or os.getenv('DISTIL_WHISPER_MODEL_ID', 'distil-whisper/distil-large-v3')
+        self._model_id = model_id or os.getenv("DISTIL_WHISPER_MODEL_ID", "distil-whisper/distil-large-v3")
         if device:
             self._device = device
         else:
-            self._device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
+            self._device = "cuda:0" if torch.cuda.is_available() else "cpu"
         self._chunk_length_s = chunk_length_s
         self._torch_dtype = torch_dtype or torch.float16
         self._metrics = get_metrics()
@@ -50,11 +60,15 @@ class AudioTranscriptionTool(TranscriptionTool):
         This property is cached, so the model is only loaded once per tool instance.
         """
         if transformers is None:
-            raise RuntimeError("The 'transformers' package is not installed. Please install it with `pip install '.[distil_whisper]'`.")
+            raise RuntimeError(
+                "The 'transformers' package is not installed. Please install it with `pip install '.[distil_whisper]'`."
+            )
         logging.info(f"Loading Distil-Whisper model '{self._model_id}' on device '{self._device}'")
-        return transformers.pipeline('automatic-speech-recognition', model=self._model_id, torch_dtype=self._torch_dtype, device=self._device)
+        return transformers.pipeline(
+            "automatic-speech-recognition", model=self._model_id, torch_dtype=self._torch_dtype, device=self._device
+        )
 
-    def _run(self, audio_path: str, video_id: str | None=None, **metadata: Any) -> StepResult:
+    def _run(self, audio_path: str, video_id: str | None = None, **metadata: Any) -> StepResult:
         """
         Performs transcription on the given audio file with caching support.
 
@@ -69,28 +83,49 @@ class AudioTranscriptionTool(TranscriptionTool):
         start_time = time.monotonic()
         try:
             if not os.path.exists(audio_path):
-                self._metrics.counter('tool_runs_total', labels={'tool': self.name, 'outcome': 'error'}).inc()
-                return StepResult.fail(error=f'Audio file not found at path: {audio_path}')
+                self._metrics.counter("tool_runs_total", labels={"tool": self.name, "outcome": "error"}).inc()
+                return StepResult.fail(error=f"Audio file not found at path: {audio_path}")
             if self._cache and video_id:
-                cached_result = self._cache.get_transcription(video_id=video_id, model_name=self._model_id or 'distil-whisper/distil-large-v3', file_path=audio_path, **metadata)
+                cached_result = self._cache.get_transcription(
+                    video_id=video_id,
+                    model_name=self._model_id or "distil-whisper/distil-large-v3",
+                    file_path=audio_path,
+                    **metadata,
+                )
                 if cached_result:
-                    self._metrics.counter('tool_runs_total', labels={'tool': self.name, 'outcome': 'cache_hit'}).inc()
-                    return StepResult.ok(transcript=cached_result['transcript'], segments=cached_result.get('segments', []), cached=True)
-            result = self.transcriber(audio_path, chunk_length_s=self._chunk_length_s, batch_size=8, return_timestamps=True)
-            text = result.get('text', '').strip()
-            segments = [{'start': chunk['timestamp'][0], 'end': chunk['timestamp'][1], 'text': chunk['text'].strip()} for chunk in result.get('chunks', []) if chunk.get('timestamp') and chunk.get('text')]
+                    self._metrics.counter("tool_runs_total", labels={"tool": self.name, "outcome": "cache_hit"}).inc()
+                    return StepResult.ok(
+                        transcript=cached_result["transcript"], segments=cached_result.get("segments", []), cached=True
+                    )
+            result = self.transcriber(
+                audio_path, chunk_length_s=self._chunk_length_s, batch_size=8, return_timestamps=True
+            )
+            text = result.get("text", "").strip()
+            segments = [
+                {"start": chunk["timestamp"][0], "end": chunk["timestamp"][1], "text": chunk["text"].strip()}
+                for chunk in result.get("chunks", [])
+                if chunk.get("timestamp") and chunk.get("text")
+            ]
             if self._cache and video_id:
                 quality_score = self._calculate_transcript_quality(text, segments)
-                self._cache.store_transcription(video_id=video_id, model_name=self._model_id or 'distil-whisper/distil-large-v3', transcript=text, segments=segments, quality_score=quality_score, file_path=audio_path, **metadata)
-            self._metrics.counter('tool_runs_total', labels={'tool': self.name, 'outcome': 'success'}).inc()
+                self._cache.store_transcription(
+                    video_id=video_id,
+                    model_name=self._model_id or "distil-whisper/distil-large-v3",
+                    transcript=text,
+                    segments=segments,
+                    quality_score=quality_score,
+                    file_path=audio_path,
+                    **metadata,
+                )
+            self._metrics.counter("tool_runs_total", labels={"tool": self.name, "outcome": "success"}).inc()
             return StepResult.ok(transcript=text, segments=segments)
         except Exception as e:
-            logging.exception(f'Enhanced Whisper transcription failed for {audio_path}')
-            self._metrics.counter('tool_runs_total', labels={'tool': self.name, 'outcome': 'error'}).inc()
+            logging.exception(f"Enhanced Whisper transcription failed for {audio_path}")
+            self._metrics.counter("tool_runs_total", labels={"tool": self.name, "outcome": "error"}).inc()
             return StepResult.fail(error=str(e))
         finally:
             duration = time.monotonic() - start_time
-            self._metrics.histogram('tool_run_seconds', duration, labels={'tool': self.name})
+            self._metrics.histogram("tool_run_seconds", duration, labels={"tool": self.name})
 
     def _calculate_transcript_quality(self, text: str, segments: list[dict[str, Any]]) -> float:
         """Calculate a simple quality score for the transcript.
@@ -116,6 +151,6 @@ class AudioTranscriptionTool(TranscriptionTool):
             quality_score += 0.1
         return min(1.0, quality_score)
 
-    def run(self, audio_path: str, video_id: str | None=None, **metadata: Any) -> StepResult:
+    def run(self, audio_path: str, video_id: str | None = None, **metadata: Any) -> StepResult:
         """Public run method for pipeline compatibility."""
         return self._run(audio_path, video_id, **metadata)

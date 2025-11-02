@@ -1,10 +1,13 @@
 """Base class for content analysis tools."""
+
 from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any
 from ultimate_discord_intelligence_bot.tools._base import BaseTool
+
 if TYPE_CHECKING:
     from platform.core.step_result import StepResult
+
 
 class AnalysisBaseTool(BaseTool, ABC):
     """Base class for content analysis tools."""
@@ -28,4 +31,9 @@ class AnalysisBaseTool(BaseTool, ABC):
 
     def get_analysis_metadata(self, content: str) -> dict[str, Any]:
         """Get metadata for analysis."""
-        return {'content_length': len(content), 'word_count': len(content.split()), 'analysis_types': self.analysis_types, 'confidence_threshold': self.confidence_threshold}
+        return {
+            "content_length": len(content),
+            "word_count": len(content.split()),
+            "analysis_types": self.analysis_types,
+            "confidence_threshold": self.confidence_threshold,
+        }

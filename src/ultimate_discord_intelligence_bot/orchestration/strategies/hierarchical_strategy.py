@@ -3,12 +3,17 @@
 Implements multi-tier agent coordination with dynamic load balancing,
 task dependency resolution, and hierarchical failure recovery.
 """
+
 from __future__ import annotations
 import logging
 from typing import Any
-from ultimate_discord_intelligence_bot.services.hierarchical_orchestrator import HierarchicalOrchestrator as HierarchicalOrchestratorImpl
+from ultimate_discord_intelligence_bot.services.hierarchical_orchestrator import (
+    HierarchicalOrchestrator as HierarchicalOrchestratorImpl,
+)
 from platform.core.step_result import StepResult
+
 logger = logging.getLogger(__name__)
+
 
 class HierarchicalStrategy:
     """Hierarchical orchestration strategy.
@@ -20,15 +25,18 @@ class HierarchicalStrategy:
     - Dynamic load balancing
     - Hierarchical failure recovery
     """
-    name: str = 'hierarchical'
-    description: str = 'Supervisor-worker coordination with dynamic load balancing'
+
+    name: str = "hierarchical"
+    description: str = "Supervisor-worker coordination with dynamic load balancing"
 
     def __init__(self):
         """Initialize hierarchical strategy."""
         self._orchestrator = HierarchicalOrchestratorImpl()
-        logger.info('HierarchicalStrategy initialized')
+        logger.info("HierarchicalStrategy initialized")
 
-    async def execute_workflow(self, url: str, depth: str='standard', tenant: str='default', workspace: str='main', **kwargs: Any) -> StepResult:
+    async def execute_workflow(
+        self, url: str, depth: str = "standard", tenant: str = "default", workspace: str = "main", **kwargs: Any
+    ) -> StepResult:
         """Execute hierarchical intelligence workflow.
 
         Args:
@@ -42,29 +50,66 @@ class HierarchicalStrategy:
             StepResult with workflow execution outcome
         """
         from platform.observability.metrics import get_metrics
+
         metrics = get_metrics()
-        metrics.counter('orchestration_strategy_executions_total', labels={'strategy': self.name, 'outcome': 'started'})
+        metrics.counter("orchestration_strategy_executions_total", labels={"strategy": self.name, "outcome": "started"})
         try:
-            logger.info(f'Executing hierarchical workflow: url={url}, depth={depth}, tenant={tenant}, workspace={workspace}')
-            session_name = kwargs.get('session_name', f'intelligence_{url[:50]}')
-            session = await self._orchestrator.create_orchestration_session(name=session_name, tenant=tenant, workspace=workspace, metadata={'url': url, 'depth': depth, 'strategy': 'hierarchical'})
-            task_id = await self._orchestrator.create_orchestration_task(session_id=session.id, task_id=f'workflow_{session.id}', description=f'Process content from {url} with {depth} analysis', priority=1, estimated_duration=300, dependencies=[])
-            result = await self._orchestrator.execute_orchestration_session(session_id=session.id, max_parallel=kwargs.get('max_parallel', 4))
+            logger.info(
+                f"Executing hierarchical workflow: url={url}, depth={depth}, tenant={tenant}, workspace={workspace}"
+            )
+            session_name = kwargs.get("session_name", f"intelligence_{url[:50]}")
+            session = await self._orchestrator.create_orchestration_session(
+                name=session_name,
+                tenant=tenant,
+                workspace=workspace,
+                metadata={"url": url, "depth": depth, "strategy": "hierarchical"},
+            )
+            task_id = await self._orchestrator.create_orchestration_task(
+                session_id=session.id,
+                task_id=f"workflow_{session.id}",
+                description=f"Process content from {url} with {depth} analysis",
+                priority=1,
+                estimated_duration=300,
+                dependencies=[],
+            )
+            result = await self._orchestrator.execute_orchestration_session(
+                session_id=session.id, max_parallel=kwargs.get("max_parallel", 4)
+            )
             if result.success:
-                metrics.counter('orchestration_strategy_executions_total', labels={'strategy': self.name, 'outcome': 'success'})
-                return StepResult.ok(session_id=session.id, task_id=task_id, url=url, depth=depth, tenant=tenant, workspace=workspace, mode='hierarchical', message='Hierarchical workflow completed successfully', result_data=result.data)
+                metrics.counter(
+                    "orchestration_strategy_executions_total", labels={"strategy": self.name, "outcome": "success"}
+                )
+                return StepResult.ok(
+                    session_id=session.id,
+                    task_id=task_id,
+                    url=url,
+                    depth=depth,
+                    tenant=tenant,
+                    workspace=workspace,
+                    mode="hierarchical",
+                    message="Hierarchical workflow completed successfully",
+                    result_data=result.data,
+                )
             else:
-                return StepResult.fail(f'Hierarchical workflow failed: {result.error}', session_id=session.id, step='hierarchical_execution')
+                return StepResult.fail(
+                    f"Hierarchical workflow failed: {result.error}",
+                    session_id=session.id,
+                    step="hierarchical_execution",
+                )
         except Exception as exc:
-            logger.error(f'Hierarchical workflow failed: {exc}', exc_info=True)
-            metrics.counter('orchestration_strategy_executions_total', labels={'strategy': self.name, 'outcome': 'failure'})
-            return StepResult.fail(f'Hierarchical orchestration failed: {exc}', step='hierarchical_workflow')
+            logger.error(f"Hierarchical workflow failed: {exc}", exc_info=True)
+            metrics.counter(
+                "orchestration_strategy_executions_total", labels={"strategy": self.name, "outcome": "failure"}
+            )
+            return StepResult.fail(f"Hierarchical orchestration failed: {exc}", step="hierarchical_workflow")
 
     async def initialize(self) -> None:
         """Initialize strategy resources."""
-        logger.info('HierarchicalStrategy resources initialized')
+        logger.info("HierarchicalStrategy resources initialized")
 
     async def cleanup(self) -> None:
         """Cleanup strategy resources."""
-        logger.info('HierarchicalStrategy resources cleaned up')
-__all__ = ['HierarchicalStrategy']
+        logger.info("HierarchicalStrategy resources cleaned up")
+
+
+__all__ = ["HierarchicalStrategy"]

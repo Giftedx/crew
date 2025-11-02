@@ -4,6 +4,7 @@ Provides a unified interface for graph operations across Neo4j (persistent,
 production-ready queries), NetworkX (in-memory, fast testing), and Qdrant
 (hybrid vector+graph retrieval via payload storage).
 """
+
 from __future__ import annotations
 import contextlib
 import logging
@@ -11,15 +12,19 @@ from enum import Enum
 from typing import TYPE_CHECKING, Any
 from platform.observability.metrics import get_metrics
 from platform.core.step_result import StepResult
+
 if TYPE_CHECKING:
     from collections.abc import Sequence
 logger = logging.getLogger(__name__)
 
+
 class GraphBackend(str, Enum):
     """Supported graph storage backends."""
-    NEO4J = 'neo4j'
-    NETWORKX = 'networkx'
-    QDRANT = 'qdrant'
+
+    NEO4J = "neo4j"
+    NETWORKX = "networkx"
+    QDRANT = "qdrant"
+
 
 class UnifiedGraphStore:
     """Multi-backend graph storage with automatic routing.
@@ -29,7 +34,16 @@ class UnifiedGraphStore:
     in-memory operations, Qdrant for hybrid vector+graph retrieval.
     """
 
-    def __init__(self, *, default_backend: GraphBackend | str | None=None, neo4j_uri: str | None=None, neo4j_user: str | None=None, neo4j_password: str | None=None, qdrant_client: Any=None, enable_multi_backend: bool=True):
+    def __init__(
+        self,
+        *,
+        default_backend: GraphBackend | str | None = None,
+        neo4j_uri: str | None = None,
+        neo4j_user: str | None = None,
+        neo4j_password: str | None = None,
+        qdrant_client: Any = None,
+        enable_multi_backend: bool = True,
+    ):
         """Initialize unified graph store.
 
         Args:
@@ -41,9 +55,10 @@ class UnifiedGraphStore:
             enable_multi_backend: If True, syncs writes across all backends.
         """
         from platform.config.configuration import get_config
+
         config = get_config()
         if default_backend is None:
-            default_backend = getattr(config, 'graph_backend', 'neo4j')
+            default_backend = getattr(config, "graph_backend", "neo4j")
         if isinstance(default_backend, str):
             default_backend = GraphBackend(default_backend.lower())
         self.default_backend = default_backend
@@ -55,24 +70,34 @@ class UnifiedGraphStore:
         if default_backend == GraphBackend.NEO4J or enable_multi_backend:
             try:
                 from neo4j import GraphDatabase
-                uri = neo4j_uri or getattr(config, 'neo4j_uri', 'bolt://neo4j:7687')
-                user = neo4j_user or getattr(config, 'neo4j_user', 'neo4j')
-                password = neo4j_password or getattr(config, 'neo4j_password', 'neo4j')
+
+                uri = neo4j_uri or getattr(config, "neo4j_uri", "bolt://neo4j:7687")
+                user = neo4j_user or getattr(config, "neo4j_user", "neo4j")
+                password = neo4j_password or getattr(config, "neo4j_password", "neo4j")
                 self._neo4j_driver = GraphDatabase.driver(uri, auth=(user, password))
-                logger.info(f'Connected to Neo4j at {uri}')
+                logger.info(f"Connected to Neo4j at {uri}")
             except Exception as e:
-                logger.warning(f'Failed to initialize Neo4j: {e}')
+                logger.warning(f"Failed to initialize Neo4j: {e}")
                 if default_backend == GraphBackend.NEO4J:
-                    logger.warning('Falling back to NetworkX backend')
+                    logger.warning("Falling back to NetworkX backend")
                     self.default_backend = GraphBackend.NETWORKX
         if (default_backend == GraphBackend.QDRANT or enable_multi_backend) and self._qdrant_client is None:
             try:
                 from memory.qdrant_provider import get_qdrant_client
+
                 self._qdrant_client = get_qdrant_client()
             except Exception as e:
-                logger.warning(f'Failed to initialize Qdrant client: {e}')
+                logger.warning(f"Failed to initialize Qdrant client: {e}")
 
-    def add_node(self, node_id: str, *, labels: Sequence[str] | None=None, properties: dict[str, Any] | None=None, namespace: str='default', backend: GraphBackend | str | None=None) -> StepResult:
+    def add_node(
+        self,
+        node_id: str,
+        *,
+        labels: Sequence[str] | None = None,
+        properties: dict[str, Any] | None = None,
+        namespace: str = "default",
+        backend: GraphBackend | str | None = None,
+    ) -> StepResult:
         """Add a node to the graph.
 
         Args:
@@ -96,12 +121,21 @@ class UnifiedGraphStore:
             elif backend == GraphBackend.QDRANT:
                 return self._qdrant_add_node(node_id, labels, properties, namespace)
             else:
-                return StepResult.fail(f'Unsupported backend: {backend}')
+                return StepResult.fail(f"Unsupported backend: {backend}")
         except Exception as exc:
-            logger.exception(f'Failed to add node {node_id} to {backend}')
+            logger.exception(f"Failed to add node {node_id} to {backend}")
             return StepResult.fail(str(exc), node_id=node_id, backend=str(backend))
 
-    def add_edge(self, source_id: str, target_id: str, *, relation: str, properties: dict[str, Any] | None=None, namespace: str='default', backend: GraphBackend | str | None=None) -> StepResult:
+    def add_edge(
+        self,
+        source_id: str,
+        target_id: str,
+        *,
+        relation: str,
+        properties: dict[str, Any] | None = None,
+        namespace: str = "default",
+        backend: GraphBackend | str | None = None,
+    ) -> StepResult:
         """Add an edge (relationship) between two nodes.
 
         Args:
@@ -125,12 +159,20 @@ class UnifiedGraphStore:
             elif backend == GraphBackend.QDRANT:
                 return self._qdrant_add_edge(source_id, target_id, relation, properties, namespace)
             else:
-                return StepResult.fail(f'Unsupported backend: {backend}')
+                return StepResult.fail(f"Unsupported backend: {backend}")
         except Exception as exc:
-            logger.exception(f'Failed to add edge {source_id}->{target_id} to {backend}')
+            logger.exception(f"Failed to add edge {source_id}->{target_id} to {backend}")
             return StepResult.fail(str(exc), source_id=source_id, target_id=target_id, backend=str(backend))
 
-    def query_subgraph(self, *, start_node: str, max_depth: int=3, relation_filter: list[str] | None=None, namespace: str='default', backend: GraphBackend | str | None=None) -> StepResult:
+    def query_subgraph(
+        self,
+        *,
+        start_node: str,
+        max_depth: int = 3,
+        relation_filter: list[str] | None = None,
+        namespace: str = "default",
+        backend: GraphBackend | str | None = None,
+    ) -> StepResult:
         """Query a subgraph starting from a node using BFS.
 
         Args:
@@ -152,9 +194,9 @@ class UnifiedGraphStore:
             elif backend == GraphBackend.QDRANT:
                 return self._qdrant_query_subgraph(start_node, max_depth, relation_filter, namespace)
             else:
-                return StepResult.fail(f'Unsupported backend: {backend}')
+                return StepResult.fail(f"Unsupported backend: {backend}")
         except Exception as exc:
-            logger.exception(f'Failed to query subgraph from {start_node} in {backend}')
+            logger.exception(f"Failed to query subgraph from {start_node} in {backend}")
             return StepResult.fail(str(exc), start_node=start_node, backend=str(backend))
 
     def _resolve_backend(self, backend: GraphBackend | str | None) -> GraphBackend:
@@ -170,67 +212,90 @@ class UnifiedGraphStore:
         if namespace not in self._networkx_graphs:
             try:
                 import importlib
-                nx_mod = importlib.import_module('networkx')
+
+                nx_mod = importlib.import_module("networkx")
                 self._networkx_graphs[namespace] = nx_mod.DiGraph()
             except ImportError:
-                raise RuntimeError('NetworkX not available - install with: pip install networkx') from None
+                raise RuntimeError("NetworkX not available - install with: pip install networkx") from None
         return self._networkx_graphs[namespace]
 
-    def _neo4j_add_node(self, node_id: str, labels: list[str], properties: dict[str, Any], namespace: str) -> StepResult:
+    def _neo4j_add_node(
+        self, node_id: str, labels: list[str], properties: dict[str, Any], namespace: str
+    ) -> StepResult:
         """Add node to Neo4j."""
         if self._neo4j_driver is None:
-            return StepResult.fail('Neo4j driver not initialized')
-        properties['_namespace'] = namespace
-        properties['_node_id'] = node_id
-        label_str = ':'.join(labels) if labels else 'Node'
-        cypher = f'MERGE (n:{label_str} {{_node_id: $node_id, _namespace: $namespace}}) SET n += $props RETURN n'
+            return StepResult.fail("Neo4j driver not initialized")
+        properties["_namespace"] = namespace
+        properties["_node_id"] = node_id
+        label_str = ":".join(labels) if labels else "Node"
+        cypher = f"MERGE (n:{label_str} {{_node_id: $node_id, _namespace: $namespace}}) SET n += $props RETURN n"
         with self._neo4j_driver.session() as session:
             result = session.run(cypher, node_id=node_id, namespace=namespace, props=properties)
             _ = result.single()
-        self._metrics.counter('graph_store_operations_total', labels={'backend': 'neo4j', 'operation': 'add_node'}).inc()
-        return StepResult.ok(node_id=node_id, backend='neo4j', namespace=namespace)
+        self._metrics.counter(
+            "graph_store_operations_total", labels={"backend": "neo4j", "operation": "add_node"}
+        ).inc()
+        return StepResult.ok(node_id=node_id, backend="neo4j", namespace=namespace)
 
-    def _neo4j_add_edge(self, source_id: str, target_id: str, relation: str, properties: dict[str, Any], namespace: str) -> StepResult:
+    def _neo4j_add_edge(
+        self, source_id: str, target_id: str, relation: str, properties: dict[str, Any], namespace: str
+    ) -> StepResult:
         """Add edge to Neo4j."""
         if self._neo4j_driver is None:
-            return StepResult.fail('Neo4j driver not initialized')
-        properties['_namespace'] = namespace
-        cypher = f'\n        MATCH (a {{_node_id: $source_id, _namespace: $namespace}})\n        MATCH (b {{_node_id: $target_id, _namespace: $namespace}})\n        MERGE (a)-[r:{relation}]->(b)\n        SET r += $props\n        RETURN r\n        '
+            return StepResult.fail("Neo4j driver not initialized")
+        properties["_namespace"] = namespace
+        cypher = f"\n        MATCH (a {{_node_id: $source_id, _namespace: $namespace}})\n        MATCH (b {{_node_id: $target_id, _namespace: $namespace}})\n        MERGE (a)-[r:{relation}]->(b)\n        SET r += $props\n        RETURN r\n        "
         with self._neo4j_driver.session() as session:
-            result = session.run(cypher, source_id=source_id, target_id=target_id, namespace=namespace, props=properties)
+            result = session.run(
+                cypher, source_id=source_id, target_id=target_id, namespace=namespace, props=properties
+            )
             _ = result.single()
-        self._metrics.counter('graph_store_operations_total', labels={'backend': 'neo4j', 'operation': 'add_edge'}).inc()
-        return StepResult.ok(source_id=source_id, target_id=target_id, relation=relation, backend='neo4j')
+        self._metrics.counter(
+            "graph_store_operations_total", labels={"backend": "neo4j", "operation": "add_edge"}
+        ).inc()
+        return StepResult.ok(source_id=source_id, target_id=target_id, relation=relation, backend="neo4j")
 
-    def _neo4j_query_subgraph(self, start_node: str, max_depth: int, relation_filter: list[str] | None, namespace: str) -> StepResult:
+    def _neo4j_query_subgraph(
+        self, start_node: str, max_depth: int, relation_filter: list[str] | None, namespace: str
+    ) -> StepResult:
         """Query subgraph from Neo4j using Cypher path queries."""
         if self._neo4j_driver is None:
-            return StepResult.fail('Neo4j driver not initialized')
-        rel_filter = '|'.join(relation_filter) if relation_filter else ''
-        rel_pattern = f'[r:{rel_filter}]' if rel_filter else '[r]'
-        cypher = f'\n        MATCH path = (start {{_node_id: $start_node, _namespace: $namespace}})\n                     -{rel_pattern}*1..{max_depth}->\n                     (end)\n        WHERE start._namespace = $namespace AND end._namespace = $namespace\n        RETURN nodes(path) as nodes, relationships(path) as edges\n        '
+            return StepResult.fail("Neo4j driver not initialized")
+        rel_filter = "|".join(relation_filter) if relation_filter else ""
+        rel_pattern = f"[r:{rel_filter}]" if rel_filter else "[r]"
+        cypher = f"\n        MATCH path = (start {{_node_id: $start_node, _namespace: $namespace}})\n                     -{rel_pattern}*1..{max_depth}->\n                     (end)\n        WHERE start._namespace = $namespace AND end._namespace = $namespace\n        RETURN nodes(path) as nodes, relationships(path) as edges\n        "
         with self._neo4j_driver.session() as session:
             result = session.run(cypher, start_node=start_node, namespace=namespace)
             all_nodes: dict[str, dict] = {}
             all_edges: list[dict] = []
             for record in result:
-                for node in record['nodes']:
+                for node in record["nodes"]:
                     node_dict = dict(node)
-                    all_nodes[node_dict['_node_id']] = node_dict
-                for edge in record['edges']:
+                    all_nodes[node_dict["_node_id"]] = node_dict
+                for edge in record["edges"]:
                     edge_dict = dict(edge)
                     all_edges.append(edge_dict)
-        self._metrics.counter('graph_store_operations_total', labels={'backend': 'neo4j', 'operation': 'query'}).inc()
-        return StepResult.ok(nodes=list(all_nodes.values()), edges=all_edges, node_count=len(all_nodes), edge_count=len(all_edges), backend='neo4j')
+        self._metrics.counter("graph_store_operations_total", labels={"backend": "neo4j", "operation": "query"}).inc()
+        return StepResult.ok(
+            nodes=list(all_nodes.values()),
+            edges=all_edges,
+            node_count=len(all_nodes),
+            edge_count=len(all_edges),
+            backend="neo4j",
+        )
 
     def _nx_add_node(self, node_id: str, labels: list[str], properties: dict[str, Any], namespace: str) -> StepResult:
         """Add node to NetworkX graph."""
         graph = self._get_nx_graph(namespace)
         graph.add_node(node_id, labels=labels, **properties)
-        self._metrics.counter('graph_store_operations_total', labels={'backend': 'networkx', 'operation': 'add_node'}).inc()
-        return StepResult.ok(node_id=node_id, backend='networkx', namespace=namespace)
+        self._metrics.counter(
+            "graph_store_operations_total", labels={"backend": "networkx", "operation": "add_node"}
+        ).inc()
+        return StepResult.ok(node_id=node_id, backend="networkx", namespace=namespace)
 
-    def _nx_add_edge(self, source_id: str, target_id: str, relation: str, properties: dict[str, Any], namespace: str) -> StepResult:
+    def _nx_add_edge(
+        self, source_id: str, target_id: str, relation: str, properties: dict[str, Any], namespace: str
+    ) -> StepResult:
         """Add edge to NetworkX graph."""
         graph = self._get_nx_graph(namespace)
         if source_id not in graph:
@@ -238,15 +303,20 @@ class UnifiedGraphStore:
         if target_id not in graph:
             graph.add_node(target_id)
         graph.add_edge(source_id, target_id, relation=relation, **properties)
-        self._metrics.counter('graph_store_operations_total', labels={'backend': 'networkx', 'operation': 'add_edge'}).inc()
-        return StepResult.ok(source_id=source_id, target_id=target_id, relation=relation, backend='networkx')
+        self._metrics.counter(
+            "graph_store_operations_total", labels={"backend": "networkx", "operation": "add_edge"}
+        ).inc()
+        return StepResult.ok(source_id=source_id, target_id=target_id, relation=relation, backend="networkx")
 
-    def _nx_query_subgraph(self, start_node: str, max_depth: int, relation_filter: list[str] | None, namespace: str) -> StepResult:
+    def _nx_query_subgraph(
+        self, start_node: str, max_depth: int, relation_filter: list[str] | None, namespace: str
+    ) -> StepResult:
         """Query subgraph from NetworkX using BFS."""
         graph = self._get_nx_graph(namespace)
         if start_node not in graph:
-            return StepResult.fail(f'Start node {start_node} not found in graph', start_node=start_node)
+            return StepResult.fail(f"Start node {start_node} not found in graph", start_node=start_node)
         from collections import deque
+
         visited: set[str] = {start_node}
         queue: deque[tuple[str, int]] = deque([(start_node, 0)])
         while queue:
@@ -256,60 +326,83 @@ class UnifiedGraphStore:
             for neighbor in graph.successors(current):
                 edge_data = graph.edges[current, neighbor]
                 if relation_filter:
-                    rel = edge_data.get('relation')
+                    rel = edge_data.get("relation")
                     if rel not in relation_filter:
                         continue
                 if neighbor not in visited:
                     visited.add(neighbor)
                     queue.append((neighbor, depth + 1))
         subgraph = graph.subgraph(visited).copy()
-        nodes = [{'id': n, **(subgraph.nodes[n] or {})} for n in subgraph.nodes]
-        edges = [{'source': s, 'target': t, **(subgraph.edges[s, t] or {})} for s, t in subgraph.edges]
-        self._metrics.counter('graph_store_operations_total', labels={'backend': 'networkx', 'operation': 'query'}).inc()
-        return StepResult.ok(nodes=nodes, edges=edges, node_count=len(nodes), edge_count=len(edges), backend='networkx')
+        nodes = [{"id": n, **(subgraph.nodes[n] or {})} for n in subgraph.nodes]
+        edges = [{"source": s, "target": t, **(subgraph.edges[s, t] or {})} for s, t in subgraph.edges]
+        self._metrics.counter(
+            "graph_store_operations_total", labels={"backend": "networkx", "operation": "query"}
+        ).inc()
+        return StepResult.ok(nodes=nodes, edges=edges, node_count=len(nodes), edge_count=len(edges), backend="networkx")
 
-    def _qdrant_add_node(self, node_id: str, labels: list[str], properties: dict[str, Any], namespace: str) -> StepResult:
+    def _qdrant_add_node(
+        self, node_id: str, labels: list[str], properties: dict[str, Any], namespace: str
+    ) -> StepResult:
         """Add node to Qdrant as a point with graph metadata in payload."""
         if self._qdrant_client is None:
-            return StepResult.fail('Qdrant client not initialized')
-        payload = {'_graph_type': 'node', '_node_id': node_id, '_namespace': namespace, '_labels': labels, **properties}
+            return StepResult.fail("Qdrant client not initialized")
+        payload = {"_graph_type": "node", "_node_id": node_id, "_namespace": namespace, "_labels": labels, **properties}
         from qdrant_client.models import PointStruct
-        point = PointStruct(id=hash(f'{namespace}:{node_id}') & 2147483647, vector=[0.0] * 384, payload=payload)
-        collection_name = f'graph_memory_{namespace}'
+
+        point = PointStruct(id=hash(f"{namespace}:{node_id}") & 2147483647, vector=[0.0] * 384, payload=payload)
+        collection_name = f"graph_memory_{namespace}"
         with contextlib.suppress(Exception):
             from qdrant_client.models import Distance, VectorParams
-            self._qdrant_client.create_collection(collection_name=collection_name, vectors_config=VectorParams(size=384, distance=Distance.COSINE))
-        self._qdrant_client.upsert(collection_name=collection_name, points=[point])
-        self._metrics.counter('graph_store_operations_total', labels={'backend': 'qdrant', 'operation': 'add_node'}).inc()
-        return StepResult.ok(node_id=node_id, backend='qdrant', namespace=namespace)
 
-    def _qdrant_add_edge(self, source_id: str, target_id: str, relation: str, properties: dict[str, Any], namespace: str) -> StepResult:
+            self._qdrant_client.create_collection(
+                collection_name=collection_name, vectors_config=VectorParams(size=384, distance=Distance.COSINE)
+            )
+        self._qdrant_client.upsert(collection_name=collection_name, points=[point])
+        self._metrics.counter(
+            "graph_store_operations_total", labels={"backend": "qdrant", "operation": "add_node"}
+        ).inc()
+        return StepResult.ok(node_id=node_id, backend="qdrant", namespace=namespace)
+
+    def _qdrant_add_edge(
+        self, source_id: str, target_id: str, relation: str, properties: dict[str, Any], namespace: str
+    ) -> StepResult:
         """Add edge to Qdrant by updating source node's payload."""
         if self._qdrant_client is None:
-            return StepResult.fail('Qdrant client not initialized')
-        collection_name = f'graph_memory_{namespace}'
+            return StepResult.fail("Qdrant client not initialized")
+        collection_name = f"graph_memory_{namespace}"
         from qdrant_client.models import FieldCondition, Filter, MatchValue
-        search_result = self._qdrant_client.scroll(collection_name=collection_name, scroll_filter=Filter(must=[FieldCondition(key='_node_id', match=MatchValue(value=source_id))]), limit=1)
+
+        search_result = self._qdrant_client.scroll(
+            collection_name=collection_name,
+            scroll_filter=Filter(must=[FieldCondition(key="_node_id", match=MatchValue(value=source_id))]),
+            limit=1,
+        )
         if not search_result[0]:
-            return StepResult.fail(f'Source node {source_id} not found')
+            return StepResult.fail(f"Source node {source_id} not found")
         point = search_result[0][0]
         payload = dict(point.payload)
-        if '_edges' not in payload:
-            payload['_edges'] = []
-        payload['_edges'].append({'target': target_id, 'relation': relation, **properties})
+        if "_edges" not in payload:
+            payload["_edges"] = []
+        payload["_edges"].append({"target": target_id, "relation": relation, **properties})
         from qdrant_client.models import PointStruct
+
         updated_point = PointStruct(id=point.id, vector=point.vector, payload=payload)
         self._qdrant_client.upsert(collection_name=collection_name, points=[updated_point])
-        self._metrics.counter('graph_store_operations_total', labels={'backend': 'qdrant', 'operation': 'add_edge'}).inc()
-        return StepResult.ok(source_id=source_id, target_id=target_id, relation=relation, backend='qdrant')
+        self._metrics.counter(
+            "graph_store_operations_total", labels={"backend": "qdrant", "operation": "add_edge"}
+        ).inc()
+        return StepResult.ok(source_id=source_id, target_id=target_id, relation=relation, backend="qdrant")
 
-    def _qdrant_query_subgraph(self, start_node: str, max_depth: int, relation_filter: list[str] | None, namespace: str) -> StepResult:
+    def _qdrant_query_subgraph(
+        self, start_node: str, max_depth: int, relation_filter: list[str] | None, namespace: str
+    ) -> StepResult:
         """Query subgraph from Qdrant by traversing edge payloads."""
         if self._qdrant_client is None:
-            return StepResult.fail('Qdrant client not initialized')
-        collection_name = f'graph_memory_{namespace}'
+            return StepResult.fail("Qdrant client not initialized")
+        collection_name = f"graph_memory_{namespace}"
         from collections import deque
         from qdrant_client.models import FieldCondition, Filter, MatchValue
+
         visited: set[str] = {start_node}
         queue: deque[tuple[str, int]] = deque([(start_node, 0)])
         all_nodes: list[dict] = []
@@ -318,28 +411,36 @@ class UnifiedGraphStore:
             current_id, depth = queue.popleft()
             if depth >= max_depth:
                 continue
-            result = self._qdrant_client.scroll(collection_name=collection_name, scroll_filter=Filter(must=[FieldCondition(key='_node_id', match=MatchValue(value=current_id))]), limit=1)
+            result = self._qdrant_client.scroll(
+                collection_name=collection_name,
+                scroll_filter=Filter(must=[FieldCondition(key="_node_id", match=MatchValue(value=current_id))]),
+                limit=1,
+            )
             if not result[0]:
                 continue
             point = result[0][0]
             payload = point.payload
             all_nodes.append(dict(payload))
-            for edge in payload.get('_edges', []):
-                target_id = edge['target']
-                relation = edge.get('relation')
+            for edge in payload.get("_edges", []):
+                target_id = edge["target"]
+                relation = edge.get("relation")
                 if relation_filter and relation not in relation_filter:
                     continue
-                all_edges.append({'source': current_id, 'target': target_id, 'relation': relation})
+                all_edges.append({"source": current_id, "target": target_id, "relation": relation})
                 if target_id not in visited:
                     visited.add(target_id)
                     queue.append((target_id, depth + 1))
-        self._metrics.counter('graph_store_operations_total', labels={'backend': 'qdrant', 'operation': 'query'}).inc()
-        return StepResult.ok(nodes=all_nodes, edges=all_edges, node_count=len(all_nodes), edge_count=len(all_edges), backend='qdrant')
+        self._metrics.counter("graph_store_operations_total", labels={"backend": "qdrant", "operation": "query"}).inc()
+        return StepResult.ok(
+            nodes=all_nodes, edges=all_edges, node_count=len(all_nodes), edge_count=len(all_edges), backend="qdrant"
+        )
 
     def close(self) -> None:
         """Close all backend connections."""
         if self._neo4j_driver is not None:
             with contextlib.suppress(Exception):
                 self._neo4j_driver.close()
-                logger.info('Closed Neo4j driver')
-__all__ = ['GraphBackend', 'UnifiedGraphStore']
+                logger.info("Closed Neo4j driver")
+
+
+__all__ = ["GraphBackend", "UnifiedGraphStore"]

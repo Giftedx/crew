@@ -15,53 +15,66 @@ Dependencies:
 - torch: For model inference
 - Optional: Custom fine-tuned models for domain-specific analysis
 """
+
 from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from typing import Any, Literal
 from platform.core.step_result import StepResult
+
 logger = logging.getLogger(__name__)
 try:
     from transformers import pipeline
+
     TRANSFORMERS_AVAILABLE = True
 except ImportError:
     TRANSFORMERS_AVAILABLE = False
     pipeline = None
-    logger.warning('transformers not available, using rule-based sentiment analysis')
+    logger.warning("transformers not available, using rule-based sentiment analysis")
+
 
 @dataclass
 class SentimentAnalysis:
     """Sentiment analysis result for a text segment."""
+
     sentiment: str
     confidence: float
     intensity: float
 
+
 @dataclass
 class EmotionAnalysis:
     """Emotion analysis result for a text segment."""
+
     primary_emotion: str
     confidence: float
     emotion_scores: dict[str, float]
 
+
 @dataclass
 class StanceAnalysis:
     """Stance analysis result for a text segment."""
+
     stance: str
     confidence: float
     stance_type: str
 
+
 @dataclass
 class RhetoricalAnalysis:
     """Rhetorical device analysis for a text segment."""
+
     has_question: bool
     has_exclamation: bool
     has_emphasis: bool
     rhetorical_questions: list[str]
     emphasis_words: list[str]
 
+
 @dataclass
 class SentimentStanceAnalysisResult:
     """Result of sentiment and stance analysis operation."""
+
     sentiment: SentimentAnalysis
     emotion: EmotionAnalysis
     stance: StanceAnalysis
@@ -70,6 +83,7 @@ class SentimentStanceAnalysisResult:
     speaker: str | None = None
     timestamp: float | None = None
     analysis_confidence: float = 1.0
+
 
 class SentimentStanceAnalysisService:
     """Service for sentiment, stance, and rhetorical analysis.
@@ -80,7 +94,7 @@ class SentimentStanceAnalysisService:
         sentiment = result.data["sentiment"]
     """
 
-    def __init__(self, cache_size: int=1000):
+    def __init__(self, cache_size: int = 1000):
         """Initialize sentiment analysis service.
 
         Args:
@@ -92,7 +106,14 @@ class SentimentStanceAnalysisService:
         self._emotion_pipeline: Any = None
         self._stance_pipeline: Any = None
 
-    def analyze_text(self, text: str, speaker: str | None=None, timestamp: float | None=None, model: Literal['fast', 'balanced', 'quality']='balanced', use_cache: bool=True) -> StepResult:
+    def analyze_text(
+        self,
+        text: str,
+        speaker: str | None = None,
+        timestamp: float | None = None,
+        model: Literal["fast", "balanced", "quality"] = "balanced",
+        use_cache: bool = True,
+    ) -> StepResult:
         """Analyze text for sentiment, emotion, stance, and rhetorical devices.
 
         Args:
@@ -107,28 +128,60 @@ class SentimentStanceAnalysisService:
         """
         try:
             import time
+
             start_time = time.time()
             if not text or not text.strip():
-                return StepResult.fail('Input text cannot be empty', status='bad_request')
+                return StepResult.fail("Input text cannot be empty", status="bad_request")
             if use_cache:
                 cache_result = self._check_cache(text, speaker, model)
                 if cache_result:
-                    logger.info('Sentiment analysis cache hit')
-                    return StepResult.ok(data={'sentiment': cache_result.sentiment.__dict__, 'emotion': cache_result.emotion.__dict__, 'stance': cache_result.stance.__dict__, 'rhetorical': cache_result.rhetorical.__dict__, 'text_segment': cache_result.text_segment, 'speaker': cache_result.speaker, 'timestamp': cache_result.timestamp, 'analysis_confidence': cache_result.analysis_confidence, 'cache_hit': True, 'processing_time_ms': (time.time() - start_time) * 1000})
+                    logger.info("Sentiment analysis cache hit")
+                    return StepResult.ok(
+                        data={
+                            "sentiment": cache_result.sentiment.__dict__,
+                            "emotion": cache_result.emotion.__dict__,
+                            "stance": cache_result.stance.__dict__,
+                            "rhetorical": cache_result.rhetorical.__dict__,
+                            "text_segment": cache_result.text_segment,
+                            "speaker": cache_result.speaker,
+                            "timestamp": cache_result.timestamp,
+                            "analysis_confidence": cache_result.analysis_confidence,
+                            "cache_hit": True,
+                            "processing_time_ms": (time.time() - start_time) * 1000,
+                        }
+                    )
             model_name = self._select_model(model)
             analysis_result = self._analyze_text(text, speaker, timestamp, model_name)
             if analysis_result:
                 if use_cache:
                     self._cache_result(text, speaker, model, analysis_result)
                 processing_time = (time.time() - start_time) * 1000
-                return StepResult.ok(data={'sentiment': analysis_result.sentiment.__dict__, 'emotion': analysis_result.emotion.__dict__, 'stance': analysis_result.stance.__dict__, 'rhetorical': analysis_result.rhetorical.__dict__, 'text_segment': analysis_result.text_segment, 'speaker': analysis_result.speaker, 'timestamp': analysis_result.timestamp, 'analysis_confidence': analysis_result.analysis_confidence, 'cache_hit': False, 'processing_time_ms': processing_time})
+                return StepResult.ok(
+                    data={
+                        "sentiment": analysis_result.sentiment.__dict__,
+                        "emotion": analysis_result.emotion.__dict__,
+                        "stance": analysis_result.stance.__dict__,
+                        "rhetorical": analysis_result.rhetorical.__dict__,
+                        "text_segment": analysis_result.text_segment,
+                        "speaker": analysis_result.speaker,
+                        "timestamp": analysis_result.timestamp,
+                        "analysis_confidence": analysis_result.analysis_confidence,
+                        "cache_hit": False,
+                        "processing_time_ms": processing_time,
+                    }
+                )
             else:
-                return StepResult.fail('Analysis failed', status='retryable')
+                return StepResult.fail("Analysis failed", status="retryable")
         except Exception as e:
-            logger.error(f'Sentiment analysis failed: {e}')
-            return StepResult.fail(f'Analysis failed: {e!s}', status='retryable')
+            logger.error(f"Sentiment analysis failed: {e}")
+            return StepResult.fail(f"Analysis failed: {e!s}", status="retryable")
 
-    def analyze_segments(self, segments: list[dict[str, Any]], model: Literal['fast', 'balanced', 'quality']='balanced', use_cache: bool=True) -> StepResult:
+    def analyze_segments(
+        self,
+        segments: list[dict[str, Any]],
+        model: Literal["fast", "balanced", "quality"] = "balanced",
+        use_cache: bool = True,
+    ) -> StepResult:
         """Analyze multiple text segments for sentiment and stance.
 
         Args:
@@ -142,26 +195,36 @@ class SentimentStanceAnalysisService:
         try:
             results = []
             for segment in segments:
-                segment_text = segment.get('text', '')
-                speaker = segment.get('speaker')
-                timestamp = segment.get('timestamp')
+                segment_text = segment.get("text", "")
+                speaker = segment.get("speaker")
+                timestamp = segment.get("timestamp")
                 if not segment_text:
                     continue
-                segment_result = self.analyze_text(text=segment_text, speaker=speaker, timestamp=timestamp, model=model, use_cache=False)
+                segment_result = self.analyze_text(
+                    text=segment_text, speaker=speaker, timestamp=timestamp, model=model, use_cache=False
+                )
                 if segment_result.success:
                     segment_data = segment_result.data
-                    segment_data['segment_index'] = len(results)
-                    segment_data['original_text'] = segment_text
+                    segment_data["segment_index"] = len(results)
+                    segment_data["original_text"] = segment_text
                     results.append(segment_data)
             if results:
-                confidences = [r['analysis_confidence'] for r in results]
+                confidences = [r["analysis_confidence"] for r in results]
                 avg_confidence = sum(confidences) / len(confidences)
             else:
                 avg_confidence = 0.0
-            return StepResult.ok(data={'results': results, 'total_segments': len(segments), 'analyzed_segments': len(results), 'average_confidence': avg_confidence, 'model': model})
+            return StepResult.ok(
+                data={
+                    "results": results,
+                    "total_segments": len(segments),
+                    "analyzed_segments": len(results),
+                    "average_confidence": avg_confidence,
+                    "model": model,
+                }
+            )
         except Exception as e:
-            logger.error(f'Segment analysis failed: {e}')
-            return StepResult.fail(f'Segment analysis failed: {e!s}')
+            logger.error(f"Segment analysis failed: {e}")
+            return StepResult.fail(f"Segment analysis failed: {e!s}")
 
     def _select_model(self, model_alias: str) -> str:
         """Select actual model configuration from alias.
@@ -172,10 +235,12 @@ class SentimentStanceAnalysisService:
         Returns:
             Model configuration string
         """
-        model_configs = {'fast': 'fast_analysis', 'balanced': 'balanced_analysis', 'quality': 'quality_analysis'}
-        return model_configs.get(model_alias, 'balanced_analysis')
+        model_configs = {"fast": "fast_analysis", "balanced": "balanced_analysis", "quality": "quality_analysis"}
+        return model_configs.get(model_alias, "balanced_analysis")
 
-    def _analyze_text(self, text: str, speaker: str | None, timestamp: float | None, model_name: str) -> SentimentStanceAnalysisResult | None:
+    def _analyze_text(
+        self, text: str, speaker: str | None, timestamp: float | None, model_name: str
+    ) -> SentimentStanceAnalysisResult | None:
         """Analyze text using sentiment models or fallback.
 
         Args:
@@ -190,13 +255,15 @@ class SentimentStanceAnalysisService:
         try:
             if TRANSFORMERS_AVAILABLE:
                 return self._analyze_with_transformers(text, speaker, timestamp, model_name)
-            logger.warning('Transformers not available, using rule-based analysis')
+            logger.warning("Transformers not available, using rule-based analysis")
             return self._analyze_with_rules(text, speaker, timestamp, model_name)
         except Exception as e:
-            logger.error(f'Text analysis failed for model {model_name}: {e}')
+            logger.error(f"Text analysis failed for model {model_name}: {e}")
             return None
 
-    def _analyze_with_transformers(self, text: str, speaker: str | None, timestamp: float | None, model_name: str) -> SentimentStanceAnalysisResult:
+    def _analyze_with_transformers(
+        self, text: str, speaker: str | None, timestamp: float | None, model_name: str
+    ) -> SentimentStanceAnalysisResult:
         """Analyze text using transformer models.
 
         Args:
@@ -209,15 +276,21 @@ class SentimentStanceAnalysisService:
             SentimentStanceAnalysisResult with analysis
         """
         if self._sentiment_pipeline is None:
-            logger.info('Loading sentiment analysis pipeline')
+            logger.info("Loading sentiment analysis pipeline")
             try:
-                self._sentiment_pipeline = pipeline('sentiment-analysis', model='cardiffnlp/twitter-roberta-base-sentiment-latest', return_all_scores=True)
+                self._sentiment_pipeline = pipeline(
+                    "sentiment-analysis",
+                    model="cardiffnlp/twitter-roberta-base-sentiment-latest",
+                    return_all_scores=True,
+                )
             except Exception:
                 self._sentiment_pipeline = None
         if self._emotion_pipeline is None:
-            logger.info('Loading emotion analysis pipeline')
+            logger.info("Loading emotion analysis pipeline")
             try:
-                self._emotion_pipeline = pipeline('text-classification', model='j-hartmann/emotion-english-distilroberta-base', return_all_scores=True)
+                self._emotion_pipeline = pipeline(
+                    "text-classification", model="j-hartmann/emotion-english-distilroberta-base", return_all_scores=True
+                )
             except Exception:
                 self._emotion_pipeline = None
         sentiment = self._analyze_sentiment(text)
@@ -226,7 +299,16 @@ class SentimentStanceAnalysisService:
         rhetorical = self._analyze_rhetorical(text)
         confidences = [sentiment.confidence, emotion.confidence, stance.confidence]
         avg_confidence = sum(confidences) / len(confidences)
-        return SentimentStanceAnalysisResult(sentiment=sentiment, emotion=emotion, stance=stance, rhetorical=rhetorical, text_segment=text, speaker=speaker, timestamp=timestamp, analysis_confidence=avg_confidence)
+        return SentimentStanceAnalysisResult(
+            sentiment=sentiment,
+            emotion=emotion,
+            stance=stance,
+            rhetorical=rhetorical,
+            text_segment=text,
+            speaker=speaker,
+            timestamp=timestamp,
+            analysis_confidence=avg_confidence,
+        )
 
     def _analyze_sentiment(self, text: str) -> SentimentAnalysis:
         """Analyze sentiment of text.
@@ -242,15 +324,15 @@ class SentimentStanceAnalysisService:
                 results = self._sentiment_pipeline(text)
                 if results and isinstance(results[0], list):
                     scores = results[0]
-                    dominant = max(scores, key=lambda x: x['score'])
-                    sentiment_label = dominant['label'].lower()
-                    sentiment_map = {'positive': 'positive', 'negative': 'negative', 'neutral': 'neutral'}
-                    sentiment = sentiment_map.get(sentiment_label, 'neutral')
-                    neutral_score = next((item['score'] for item in scores if item['label'].lower() == 'neutral'), 0)
-                    intensity = abs(dominant['score'] - neutral_score)
-                    return SentimentAnalysis(sentiment=sentiment, confidence=dominant['score'], intensity=intensity)
+                    dominant = max(scores, key=lambda x: x["score"])
+                    sentiment_label = dominant["label"].lower()
+                    sentiment_map = {"positive": "positive", "negative": "negative", "neutral": "neutral"}
+                    sentiment = sentiment_map.get(sentiment_label, "neutral")
+                    neutral_score = next((item["score"] for item in scores if item["label"].lower() == "neutral"), 0)
+                    intensity = abs(dominant["score"] - neutral_score)
+                    return SentimentAnalysis(sentiment=sentiment, confidence=dominant["score"], intensity=intensity)
             except Exception as e:
-                logger.warning(f'Transformer sentiment analysis failed: {e}')
+                logger.warning(f"Transformer sentiment analysis failed: {e}")
         return self._analyze_sentiment_rules(text)
 
     def _analyze_emotion(self, text: str) -> EmotionAnalysis:
@@ -267,12 +349,14 @@ class SentimentStanceAnalysisService:
                 results = self._emotion_pipeline(text)
                 if results and isinstance(results[0], list):
                     scores = results[0]
-                    primary = max(scores, key=lambda x: x['score'])
-                    primary_emotion = primary['label'].lower()
-                    emotion_scores = {item['label'].lower(): item['score'] for item in scores}
-                    return EmotionAnalysis(primary_emotion=primary_emotion, confidence=primary['score'], emotion_scores=emotion_scores)
+                    primary = max(scores, key=lambda x: x["score"])
+                    primary_emotion = primary["label"].lower()
+                    emotion_scores = {item["label"].lower(): item["score"] for item in scores}
+                    return EmotionAnalysis(
+                        primary_emotion=primary_emotion, confidence=primary["score"], emotion_scores=emotion_scores
+                    )
             except Exception as e:
-                logger.warning(f'Transformer emotion analysis failed: {e}')
+                logger.warning(f"Transformer emotion analysis failed: {e}")
         return self._analyze_emotion_rules(text)
 
     def _analyze_stance(self, text: str) -> StanceAnalysis:
@@ -285,15 +369,15 @@ class SentimentStanceAnalysisService:
             StanceAnalysis result
         """
         text_lower = text.lower()
-        agreement_words = ['agree', 'yes', 'right', 'correct', 'exactly', 'absolutely', 'definitely']
+        agreement_words = ["agree", "yes", "right", "correct", "exactly", "absolutely", "definitely"]
         if any((word in text_lower for word in agreement_words)):
-            return StanceAnalysis(stance='agree', confidence=0.7, stance_type='explicit')
-        disagreement_words = ['disagree', 'no', 'wrong', 'incorrect', 'not true', 'false', 'dispute']
+            return StanceAnalysis(stance="agree", confidence=0.7, stance_type="explicit")
+        disagreement_words = ["disagree", "no", "wrong", "incorrect", "not true", "false", "dispute"]
         if any((word in text_lower for word in disagreement_words)):
-            return StanceAnalysis(stance='disagree', confidence=0.7, stance_type='explicit')
-        if text.endswith('?') or 'what about' in text_lower or 'how about' in text_lower:
-            return StanceAnalysis(stance='questioning', confidence=0.8, stance_type='rhetorical')
-        return StanceAnalysis(stance='neutral', confidence=0.5, stance_type='implicit')
+            return StanceAnalysis(stance="disagree", confidence=0.7, stance_type="explicit")
+        if text.endswith("?") or "what about" in text_lower or "how about" in text_lower:
+            return StanceAnalysis(stance="questioning", confidence=0.8, stance_type="rhetorical")
+        return StanceAnalysis(stance="neutral", confidence=0.5, stance_type="implicit")
 
     def _analyze_rhetorical(self, text: str) -> RhetoricalAnalysis:
         """Analyze rhetorical devices in text.
@@ -304,16 +388,22 @@ class SentimentStanceAnalysisService:
         Returns:
             RhetoricalAnalysis result
         """
-        has_question = text.endswith('?')
-        has_exclamation = text.endswith('!')
+        has_question = text.endswith("?")
+        has_exclamation = text.endswith("!")
         emphasis_words = []
         for word in text.split():
             if word.isupper() and len(word) > 2:
                 emphasis_words.append(word)
         rhetorical_questions = []
-        if has_question and (not text.lower().startswith(('what', 'who', 'when', 'where', 'why', 'how'))):
+        if has_question and (not text.lower().startswith(("what", "who", "when", "where", "why", "how"))):
             rhetorical_questions.append(text)
-        return RhetoricalAnalysis(has_question=has_question, has_exclamation=has_exclamation, has_emphasis=len(emphasis_words) > 0, rhetorical_questions=rhetorical_questions, emphasis_words=emphasis_words)
+        return RhetoricalAnalysis(
+            has_question=has_question,
+            has_exclamation=has_exclamation,
+            has_emphasis=len(emphasis_words) > 0,
+            rhetorical_questions=rhetorical_questions,
+            emphasis_words=emphasis_words,
+        )
 
     def _analyze_sentiment_rules(self, text: str) -> SentimentAnalysis:
         """Rule-based sentiment analysis fallback.
@@ -325,18 +415,30 @@ class SentimentStanceAnalysisService:
             SentimentAnalysis result
         """
         text_lower = text.lower()
-        positive_words = ['amazing', 'great', 'excellent', 'wonderful', 'awesome', 'fantastic', 'love', 'like', 'good', 'best', 'perfect']
+        positive_words = [
+            "amazing",
+            "great",
+            "excellent",
+            "wonderful",
+            "awesome",
+            "fantastic",
+            "love",
+            "like",
+            "good",
+            "best",
+            "perfect",
+        ]
         positive_count = sum((1 for word in positive_words if word in text_lower))
-        negative_words = ['terrible', 'awful', 'horrible', 'hate', 'worst', 'bad', 'stupid', 'wrong', 'disappointing']
+        negative_words = ["terrible", "awful", "horrible", "hate", "worst", "bad", "stupid", "wrong", "disappointing"]
         negative_count = sum((1 for word in negative_words if word in text_lower))
         if positive_count > negative_count:
-            sentiment = 'positive'
+            sentiment = "positive"
             confidence = min(0.6 + positive_count * 0.1, 0.9)
         elif negative_count > positive_count:
-            sentiment = 'negative'
+            sentiment = "negative"
             confidence = min(0.6 + negative_count * 0.1, 0.9)
         else:
-            sentiment = 'neutral'
+            sentiment = "neutral"
             confidence = 0.5
         total_indicators = positive_count + negative_count
         intensity = min(total_indicators * 0.2, 1.0)
@@ -352,7 +454,14 @@ class SentimentStanceAnalysisService:
             EmotionAnalysis result
         """
         text_lower = text.lower()
-        emotion_indicators = {'joy': ['amazing', 'great', 'love', 'awesome', 'fantastic', 'wonderful', 'happy'], 'anger': ['hate', 'angry', 'mad', 'furious', 'annoying', 'terrible'], 'fear': ['scared', 'afraid', 'worried', 'anxious', 'nervous', 'terrified'], 'sadness': ['sad', 'depressed', 'disappointed', 'unhappy', 'miserable', 'heartbroken'], 'surprise': ['wow', 'amazing', 'incredible', 'unbelievable', 'shocking'], 'disgust': ['gross', 'disgusting', 'revolting', 'nauseating', 'awful']}
+        emotion_indicators = {
+            "joy": ["amazing", "great", "love", "awesome", "fantastic", "wonderful", "happy"],
+            "anger": ["hate", "angry", "mad", "furious", "annoying", "terrible"],
+            "fear": ["scared", "afraid", "worried", "anxious", "nervous", "terrified"],
+            "sadness": ["sad", "depressed", "disappointed", "unhappy", "miserable", "heartbroken"],
+            "surprise": ["wow", "amazing", "incredible", "unbelievable", "shocking"],
+            "disgust": ["gross", "disgusting", "revolting", "nauseating", "awful"],
+        }
         emotion_scores = {}
         for emotion, words in emotion_indicators.items():
             count = sum((1 for word in words if word in text_lower))
@@ -361,9 +470,11 @@ class SentimentStanceAnalysisService:
             primary_emotion = max(emotion_scores.keys(), key=lambda k: emotion_scores[k])
             primary_confidence = emotion_scores[primary_emotion]
         else:
-            primary_emotion = 'neutral'
+            primary_emotion = "neutral"
             primary_confidence = 0.5
-        return EmotionAnalysis(primary_emotion=primary_emotion, confidence=primary_confidence, emotion_scores=emotion_scores)
+        return EmotionAnalysis(
+            primary_emotion=primary_emotion, confidence=primary_confidence, emotion_scores=emotion_scores
+        )
 
     def _check_cache(self, text: str, speaker: str | None, model: str) -> SentimentStanceAnalysisResult | None:
         """Check if analysis exists in cache.
@@ -377,8 +488,9 @@ class SentimentStanceAnalysisService:
             Cached SentimentStanceAnalysisResult or None
         """
         import hashlib
-        context = f'{speaker or 'unknown'}:{model}'
-        combined = f'{text}:{context}'
+
+        context = f"{speaker or 'unknown'}:{model}"
+        combined = f"{text}:{context}"
         cache_key = hashlib.sha256(combined.encode()).hexdigest()
         if cache_key in self._analysis_cache:
             return self._analysis_cache[cache_key]
@@ -395,8 +507,9 @@ class SentimentStanceAnalysisService:
         """
         import hashlib
         import time
-        context = f'{speaker or 'unknown'}:{model}'
-        combined = f'{text}:{context}'
+
+        context = f"{speaker or 'unknown'}:{model}"
+        combined = f"{text}:{context}"
         cache_key = hashlib.sha256(combined.encode()).hexdigest()
         result.analysis_confidence = time.time() * 1000
         if len(self._analysis_cache) >= self.cache_size:
@@ -412,8 +525,8 @@ class SentimentStanceAnalysisService:
         """
         cache_size = len(self._analysis_cache)
         self._analysis_cache.clear()
-        logger.info(f'Cleared {cache_size} cached analyses')
-        return StepResult.ok(data={'cleared_entries': cache_size})
+        logger.info(f"Cleared {cache_size} cached analyses")
+        return StepResult.ok(data={"cleared_entries": cache_size})
 
     def get_cache_stats(self) -> StepResult:
         """Get analysis cache statistics.
@@ -422,15 +535,23 @@ class SentimentStanceAnalysisService:
             StepResult with cache statistics
         """
         try:
-            stats = {'total_cached': len(self._analysis_cache), 'cache_size_limit': self.cache_size, 'utilization': len(self._analysis_cache) / self.cache_size if self.cache_size > 0 else 0.0, 'models_cached': {}}
+            stats = {
+                "total_cached": len(self._analysis_cache),
+                "cache_size_limit": self.cache_size,
+                "utilization": len(self._analysis_cache) / self.cache_size if self.cache_size > 0 else 0.0,
+                "models_cached": {},
+            }
             for result in self._analysis_cache.values():
-                model = 'transformer' if hasattr(result, 'sentiment') else 'rule_based'
-                stats['models_cached'][model] = stats['models_cached'].get(model, 0) + 1
+                model = "transformer" if hasattr(result, "sentiment") else "rule_based"
+                stats["models_cached"][model] = stats["models_cached"].get(model, 0) + 1
             return StepResult.ok(data=stats)
         except Exception as e:
-            logger.error(f'Failed to get cache stats: {e}')
-            return StepResult.fail(f'Failed to get cache stats: {e!s}')
+            logger.error(f"Failed to get cache stats: {e}")
+            return StepResult.fail(f"Failed to get cache stats: {e!s}")
+
+
 _analysis_service: SentimentStanceAnalysisService | None = None
+
 
 def get_sentiment_stance_analysis_service() -> SentimentStanceAnalysisService:
     """Get singleton sentiment analysis service instance.

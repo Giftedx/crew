@@ -4,6 +4,7 @@ Reinforcement Learning Cache Optimizer - Adaptive TTL and Strategy Optimization
 This service implements RL-based cache optimization using contextual bandits
 for TTL optimization, predictive cache warming, and usage pattern recognition.
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -20,25 +21,31 @@ import numpy as np
 
 logger = logging.getLogger(__name__)
 
+
 class CacheStrategy(Enum):
     """Cache strategy enumeration."""
-    LRU = 'lru'
-    LFU = 'lfu'
-    TTL = 'ttl'
-    ADAPTIVE = 'adaptive'
-    PREDICTIVE = 'predictive'
+
+    LRU = "lru"
+    LFU = "lfu"
+    TTL = "ttl"
+    ADAPTIVE = "adaptive"
+    PREDICTIVE = "predictive"
+
 
 class AccessPattern(Enum):
     """Access pattern enumeration."""
-    RANDOM = 'random'
-    SEQUENTIAL = 'sequential'
-    TEMPORAL = 'temporal'
-    FREQUENCY_BASED = 'frequency_based'
-    SEASONAL = 'seasonal'
+
+    RANDOM = "random"
+    SEQUENTIAL = "sequential"
+    TEMPORAL = "temporal"
+    FREQUENCY_BASED = "frequency_based"
+    SEASONAL = "seasonal"
+
 
 @dataclass
 class CacheEntry:
     """Cache entry with metadata."""
+
     key: str
     value: Any
     created_at: datetime
@@ -49,22 +56,26 @@ class CacheEntry:
     priority: float = 1.0
     metadata: dict[str, Any] = field(default_factory=dict)
 
+
 @dataclass
 class CacheContext:
     """Context for cache optimization decisions."""
+
     key_pattern: str
     access_frequency: float
     data_size: int
     time_since_last_access: float
     time_of_day: int
     day_of_week: int
-    tenant: str = ''
-    workspace: str = ''
+    tenant: str = ""
+    workspace: str = ""
     metadata: dict[str, Any] = field(default_factory=dict)
+
 
 @dataclass
 class CacheAction:
     """Cache action with parameters."""
+
     action_type: str
     key: str
     ttl_seconds: int = 3600
@@ -72,9 +83,11 @@ class CacheAction:
     strategy: CacheStrategy = CacheStrategy.ADAPTIVE
     metadata: dict[str, Any] = field(default_factory=dict)
 
+
 @dataclass
 class CacheReward:
     """Reward signal for cache optimization."""
+
     action: CacheAction
     hit: bool
     latency_ms: float
@@ -83,10 +96,11 @@ class CacheReward:
     timestamp: datetime = field(default_factory=datetime.utcnow)
     context: CacheContext = None
 
+
 class CacheOptimizationBandit:
     """Contextual bandit for cache optimization."""
 
-    def __init__(self, action_space: list[CacheAction], context_dim: int=12, exploration_rate: float=0.15):
+    def __init__(self, action_space: list[CacheAction], context_dim: int = 12, exploration_rate: float = 0.15):
         """
         Initialize cache optimization bandit.
 
@@ -156,10 +170,10 @@ class CacheOptimizationBandit:
     def _normalize_context(self, context: np.ndarray) -> StepResult:
         """Normalize context to required dimension."""
         if len(context) > self.context_dim:
-            return context[:self.context_dim]
+            return context[: self.context_dim]
         elif len(context) < self.context_dim:
             padded = np.zeros(self.context_dim)
-            padded[:len(context)] = context
+            padded[: len(context)] = context
             return padded
         return context
 
@@ -168,7 +182,9 @@ class CacheOptimizationBandit:
         if selected_action not in expected_rewards:
             return 0.5
         selected_reward = expected_rewards[selected_action]
-        max_other_reward = max((reward for action_idx, reward in expected_rewards.items() if action_idx != selected_action))
+        max_other_reward = max(
+            (reward for action_idx, reward in expected_rewards.items() if action_idx != selected_action)
+        )
         margin = selected_reward - max_other_reward
         confidence = min(0.95, max(0.1, 0.5 + margin * 3))
         return confidence
@@ -178,13 +194,20 @@ class CacheOptimizationBandit:
         stats = {}
         for action_idx in self.action_space:
             rewards = self.action_rewards[action_idx]
-            stats[action_idx] = {'action': self.action_space[action_idx], 'count': self.action_counts[action_idx], 'average_reward': np.mean(rewards) if rewards else 0.0, 'reward_std': np.std(rewards) if rewards else 0.0, 'total_rewards': len(rewards)}
+            stats[action_idx] = {
+                "action": self.action_space[action_idx],
+                "count": self.action_counts[action_idx],
+                "average_reward": np.mean(rewards) if rewards else 0.0,
+                "reward_std": np.std(rewards) if rewards else 0.0,
+                "total_rewards": len(rewards),
+            }
         return stats
+
 
 class RLCacheOptimizer:
     """Reinforcement learning-based cache optimizer."""
 
-    def __init__(self, max_cache_size: int=10000):
+    def __init__(self, max_cache_size: int = 10000):
         """
         Initialize the RL cache optimizer.
 
@@ -196,18 +219,28 @@ class RLCacheOptimizer:
         self.access_patterns: dict[str, list[datetime]] = {}
         self.bandit = None
         self.optimization_history: list[CacheReward] = []
-        self.metrics = {'total_requests': 0, 'cache_hits': 0, 'cache_misses': 0, 'total_latency_ms': 0.0, 'total_cost_savings': 0.0, 'evictions': 0, 'predictive_warmings': 0}
+        self.metrics = {
+            "total_requests": 0,
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "total_latency_ms": 0.0,
+            "total_cost_savings": 0.0,
+            "evictions": 0,
+            "predictive_warmings": 0,
+        }
         self._initialize_action_space()
 
     def _initialize_action_space(self):
         """Initialize the action space for the bandit."""
         action_space = []
         for ttl in [300, 600, 1800, 3600, 7200, 14400]:
-            action_space.append(CacheAction(action_type='store', key='', ttl_seconds=ttl, strategy=CacheStrategy.TTL))
+            action_space.append(CacheAction(action_type="store", key="", ttl_seconds=ttl, strategy=CacheStrategy.TTL))
         for priority in [0.5, 1.0, 1.5, 2.0]:
-            action_space.append(CacheAction(action_type='store', key='', priority=priority, strategy=CacheStrategy.ADAPTIVE))
-        action_space.append(CacheAction(action_type='warm', key='', strategy=CacheStrategy.PREDICTIVE))
-        action_space.append(CacheAction(action_type='evict', key='', strategy=CacheStrategy.LRU))
+            action_space.append(
+                CacheAction(action_type="store", key="", priority=priority, strategy=CacheStrategy.ADAPTIVE)
+            )
+        action_space.append(CacheAction(action_type="warm", key="", strategy=CacheStrategy.PREDICTIVE))
+        action_space.append(CacheAction(action_type="evict", key="", strategy=CacheStrategy.LRU))
         self.bandit = CacheOptimizationBandit(action_space)
 
     async def optimize_cache_operation(self, context: CacheContext, operation: str) -> StepResult:
@@ -226,10 +259,22 @@ class RLCacheOptimizer:
             action_idx, confidence = self.bandit.select_action(context_features)
             selected_action = self.bandit.action_space[action_idx]
             optimized_action = self._customize_action(selected_action, context, operation)
-            return StepResult.ok(data={'optimized_action': optimized_action, 'confidence': confidence, 'context': context, 'operation': operation, 'optimization_metadata': {'action_index': action_idx, 'bandit_confidence': confidence, 'optimization_timestamp': datetime.utcnow().isoformat()}})
+            return StepResult.ok(
+                data={
+                    "optimized_action": optimized_action,
+                    "confidence": confidence,
+                    "context": context,
+                    "operation": operation,
+                    "optimization_metadata": {
+                        "action_index": action_idx,
+                        "bandit_confidence": confidence,
+                        "optimization_timestamp": datetime.utcnow().isoformat(),
+                    },
+                }
+            )
         except Exception as e:
-            logger.error(f'Cache optimization failed: {e!s}')
-            return StepResult.fail(f'Cache optimization failed: {e!s}')
+            logger.error(f"Cache optimization failed: {e!s}")
+            return StepResult.fail(f"Cache optimization failed: {e!s}")
 
     async def update_cache_performance(self, action: CacheAction, reward_data: dict[str, Any]) -> StepResult:
         """
@@ -243,19 +288,33 @@ class RLCacheOptimizer:
             StepResult with update status
         """
         try:
-            reward = CacheReward(action=action, hit=reward_data.get('hit', False), latency_ms=reward_data.get('latency_ms', 0.0), cost_savings=reward_data.get('cost_savings', 0.0), quality_impact=reward_data.get('quality_impact', 0.0), context=reward_data.get('context'))
+            reward = CacheReward(
+                action=action,
+                hit=reward_data.get("hit", False),
+                latency_ms=reward_data.get("latency_ms", 0.0),
+                cost_savings=reward_data.get("cost_savings", 0.0),
+                quality_impact=reward_data.get("quality_impact", 0.0),
+                context=reward_data.get("context"),
+            )
             composite_reward = self._calculate_composite_reward(reward)
-            if reward.context and 'context_features' in reward_data:
-                context_features = np.array(reward_data['context_features'])
+            if reward.context and "context_features" in reward_data:
+                context_features = np.array(reward_data["context_features"])
                 action_idx = self._find_action_index(action)
                 if action_idx is not None:
                     self.bandit.update(action_idx, context_features, composite_reward)
             self.optimization_history.append(reward)
             self._update_metrics(reward)
-            return StepResult.ok(data={'action': action, 'composite_reward': composite_reward, 'updated_metrics': self.metrics, 'bandit_statistics': self.bandit.get_action_statistics()})
+            return StepResult.ok(
+                data={
+                    "action": action,
+                    "composite_reward": composite_reward,
+                    "updated_metrics": self.metrics,
+                    "bandit_statistics": self.bandit.get_action_statistics(),
+                }
+            )
         except Exception as e:
-            logger.error(f'Cache performance update failed: {e!s}')
-            return StepResult.fail(f'Cache performance update failed: {e!s}')
+            logger.error(f"Cache performance update failed: {e!s}")
+            return StepResult.fail(f"Cache performance update failed: {e!s}")
 
     async def predict_cache_warming(self, access_patterns: dict[str, list[datetime]]) -> StepResult:
         """
@@ -275,12 +334,29 @@ class RLCacheOptimizer:
                 pattern_analysis = self._analyze_access_pattern(accesses)
                 predicted_access = self._predict_next_access(accesses, pattern_analysis)
                 if predicted_access:
-                    warming_predictions.append({'key': key, 'predicted_access_time': predicted_access.isoformat(), 'confidence': pattern_analysis.get('confidence', 0.5), 'pattern_type': pattern_analysis.get('pattern_type', 'unknown'), 'recommended_action': self._get_warming_recommendation(pattern_analysis)})
-            warming_predictions.sort(key=lambda x: (x['confidence'], x['predicted_access_time']), reverse=True)
-            return StepResult.ok(data={'warming_predictions': warming_predictions[:10], 'total_predictions': len(warming_predictions), 'prediction_metadata': {'analysis_timestamp': datetime.utcnow().isoformat(), 'patterns_analyzed': len(access_patterns)}})
+                    warming_predictions.append(
+                        {
+                            "key": key,
+                            "predicted_access_time": predicted_access.isoformat(),
+                            "confidence": pattern_analysis.get("confidence", 0.5),
+                            "pattern_type": pattern_analysis.get("pattern_type", "unknown"),
+                            "recommended_action": self._get_warming_recommendation(pattern_analysis),
+                        }
+                    )
+            warming_predictions.sort(key=lambda x: (x["confidence"], x["predicted_access_time"]), reverse=True)
+            return StepResult.ok(
+                data={
+                    "warming_predictions": warming_predictions[:10],
+                    "total_predictions": len(warming_predictions),
+                    "prediction_metadata": {
+                        "analysis_timestamp": datetime.utcnow().isoformat(),
+                        "patterns_analyzed": len(access_patterns),
+                    },
+                }
+            )
         except Exception as e:
-            logger.error(f'Cache warming prediction failed: {e!s}')
-            return StepResult.fail(f'Cache warming prediction failed: {e!s}')
+            logger.error(f"Cache warming prediction failed: {e!s}")
+            return StepResult.fail(f"Cache warming prediction failed: {e!s}")
 
     def get_cache_statistics(self) -> StepResult:
         """
@@ -290,13 +366,27 @@ class RLCacheOptimizer:
             StepResult with cache statistics
         """
         try:
-            hit_rate = self.metrics['cache_hits'] / max(1, self.metrics['total_requests'])
-            average_latency = self.metrics['total_latency_ms'] / max(1, self.metrics['total_requests'])
-            stats = {'cache_metrics': {'hit_rate': hit_rate, 'miss_rate': 1 - hit_rate, 'average_latency_ms': average_latency, 'total_cost_savings': self.metrics['total_cost_savings'], 'cache_size': len(self.cache), 'max_cache_size': self.max_cache_size, 'utilization': len(self.cache) / self.max_cache_size}, 'performance_metrics': self.metrics, 'bandit_statistics': self.bandit.get_action_statistics() if self.bandit else {}, 'optimization_history_size': len(self.optimization_history), 'recent_performance': self._get_recent_performance()}
+            hit_rate = self.metrics["cache_hits"] / max(1, self.metrics["total_requests"])
+            average_latency = self.metrics["total_latency_ms"] / max(1, self.metrics["total_requests"])
+            stats = {
+                "cache_metrics": {
+                    "hit_rate": hit_rate,
+                    "miss_rate": 1 - hit_rate,
+                    "average_latency_ms": average_latency,
+                    "total_cost_savings": self.metrics["total_cost_savings"],
+                    "cache_size": len(self.cache),
+                    "max_cache_size": self.max_cache_size,
+                    "utilization": len(self.cache) / self.max_cache_size,
+                },
+                "performance_metrics": self.metrics,
+                "bandit_statistics": self.bandit.get_action_statistics() if self.bandit else {},
+                "optimization_history_size": len(self.optimization_history),
+                "recent_performance": self._get_recent_performance(),
+            }
             return StepResult.ok(data=stats)
         except Exception as e:
-            logger.error(f'Failed to get cache statistics: {e!s}')
-            return StepResult.fail(f'Failed to get cache statistics: {e!s}')
+            logger.error(f"Failed to get cache statistics: {e!s}")
+            return StepResult.fail(f"Failed to get cache statistics: {e!s}")
 
     def _context_to_features(self, context: CacheContext) -> StepResult:
         """Convert cache context to feature vector."""
@@ -315,12 +405,19 @@ class RLCacheOptimizer:
         workspace_hash = int(hashlib.md5(context.workspace.encode(), usedforsecurity=False).hexdigest()[:8], 16)
         features[9] = workspace_hash % 100 / 100.0
         features[10] = len(context.metadata) / 10.0
-        features[11] = 1.0 if context.metadata.get('high_priority', False) else 0.0
+        features[11] = 1.0 if context.metadata.get("high_priority", False) else 0.0
         return features
 
     def _customize_action(self, base_action: CacheAction, context: CacheContext, operation: str) -> StepResult:
         """Customize base action for specific context and operation."""
-        customized = CacheAction(action_type=operation, key=context.key_pattern, ttl_seconds=base_action.ttl_seconds, priority=base_action.priority, strategy=base_action.strategy, metadata=base_action.metadata.copy())
+        customized = CacheAction(
+            action_type=operation,
+            key=context.key_pattern,
+            ttl_seconds=base_action.ttl_seconds,
+            priority=base_action.priority,
+            strategy=base_action.strategy,
+            metadata=base_action.metadata.copy(),
+        )
         if context.access_frequency > 10:
             customized.ttl_seconds = min(customized.ttl_seconds * 2, 14400)
         elif context.access_frequency < 1:
@@ -348,55 +445,66 @@ class RLCacheOptimizer:
     def _find_action_index(self, action: CacheAction) -> StepResult:
         """Find action index in the bandit's action space."""
         for idx, bandit_action in self.bandit.action_space.items():
-            if bandit_action.action_type == action.action_type and bandit_action.strategy == action.strategy and (abs(bandit_action.ttl_seconds - action.ttl_seconds) < 60) and (abs(bandit_action.priority - action.priority) < 0.1):
+            if (
+                bandit_action.action_type == action.action_type
+                and bandit_action.strategy == action.strategy
+                and (abs(bandit_action.ttl_seconds - action.ttl_seconds) < 60)
+                and (abs(bandit_action.priority - action.priority) < 0.1)
+            ):
                 return idx
         return None
 
     def _update_metrics(self, reward: CacheReward):
         """Update performance metrics with new reward."""
-        self.metrics['total_requests'] += 1
+        self.metrics["total_requests"] += 1
         if reward.hit:
-            self.metrics['cache_hits'] += 1
+            self.metrics["cache_hits"] += 1
         else:
-            self.metrics['cache_misses'] += 1
-        self.metrics['total_latency_ms'] += reward.latency_ms
-        self.metrics['total_cost_savings'] += reward.cost_savings
-        if reward.action.action_type == 'evict':
-            self.metrics['evictions'] += 1
-        elif reward.action.action_type == 'warm':
-            self.metrics['predictive_warmings'] += 1
+            self.metrics["cache_misses"] += 1
+        self.metrics["total_latency_ms"] += reward.latency_ms
+        self.metrics["total_cost_savings"] += reward.cost_savings
+        if reward.action.action_type == "evict":
+            self.metrics["evictions"] += 1
+        elif reward.action.action_type == "warm":
+            self.metrics["predictive_warmings"] += 1
 
     def _analyze_access_pattern(self, accesses: list[datetime]) -> StepResult:
         """Analyze access pattern to determine type and confidence."""
         if len(accesses) < 3:
-            return {'pattern_type': 'insufficient_data', 'confidence': 0.0}
+            return {"pattern_type": "insufficient_data", "confidence": 0.0}
         intervals = []
         for i in range(1, len(accesses)):
             interval = (accesses[i] - accesses[i - 1]).total_seconds()
             intervals.append(interval)
         avg_interval = np.mean(intervals)
         interval_std = np.std(intervals)
-        cv = interval_std / avg_interval if avg_interval > 0 else float('inf')
+        cv = interval_std / avg_interval if avg_interval > 0 else float("inf")
         if cv < 0.1:
-            pattern_type = 'regular'
+            pattern_type = "regular"
             confidence = 0.9
         elif cv < 0.3:
-            pattern_type = 'semi_regular'
+            pattern_type = "semi_regular"
             confidence = 0.7
         elif avg_interval < 300:
-            pattern_type = 'frequent'
+            pattern_type = "frequent"
             confidence = 0.6
         else:
-            pattern_type = 'sporadic'
+            pattern_type = "sporadic"
             confidence = 0.3
-        return {'pattern_type': pattern_type, 'confidence': confidence, 'average_interval': avg_interval, 'interval_std': interval_std, 'coefficient_of_variation': cv}
+        return {
+            "pattern_type": pattern_type,
+            "confidence": confidence,
+            "average_interval": avg_interval,
+            "interval_std": interval_std,
+            "coefficient_of_variation": cv,
+        }
 
     def _predict_next_access(self, accesses: list[datetime], pattern_analysis: dict[str, Any]) -> StepResult:
         """Predict next access time based on pattern analysis."""
-        if pattern_analysis['confidence'] < 0.5:
+        if pattern_analysis["confidence"] < 0.5:
             return None
         last_access = accesses[-1]
-        avg_interval = pattern_analysis['average_interval']
+        avg_interval = pattern_analysis["average_interval"]
         predicted_time = last_access + timedelta(seconds=avg_interval)
         max_prediction = datetime.utcnow() + timedelta(hours=24)
         if predicted_time > max_prediction:
@@ -405,14 +513,24 @@ class RLCacheOptimizer:
 
     def _get_warming_recommendation(self, pattern_analysis: dict[str, Any]) -> StepResult:
         """Get cache warming recommendation based on pattern analysis."""
-        pattern_type = pattern_analysis['pattern_type']
-        confidence = pattern_analysis['confidence']
-        if pattern_type == 'regular' and confidence > 0.8:
-            return {'action': 'preemptive_warming', 'ttl_seconds': 3600, 'priority': 2.0, 'reasoning': 'High confidence regular pattern'}
-        elif pattern_type == 'frequent' and confidence > 0.6:
-            return {'action': 'aggressive_caching', 'ttl_seconds': 1800, 'priority': 1.5, 'reasoning': 'Frequent access pattern'}
+        pattern_type = pattern_analysis["pattern_type"]
+        confidence = pattern_analysis["confidence"]
+        if pattern_type == "regular" and confidence > 0.8:
+            return {
+                "action": "preemptive_warming",
+                "ttl_seconds": 3600,
+                "priority": 2.0,
+                "reasoning": "High confidence regular pattern",
+            }
+        elif pattern_type == "frequent" and confidence > 0.6:
+            return {
+                "action": "aggressive_caching",
+                "ttl_seconds": 1800,
+                "priority": 1.5,
+                "reasoning": "Frequent access pattern",
+            }
         else:
-            return {'action': 'standard_caching', 'ttl_seconds': 600, 'priority': 1.0, 'reasoning': 'Uncertain pattern'}
+            return {"action": "standard_caching", "ttl_seconds": 600, "priority": 1.0, "reasoning": "Uncertain pattern"}
 
     def _get_recent_performance(self) -> StepResult:
         """Get recent performance metrics."""
@@ -421,18 +539,40 @@ class RLCacheOptimizer:
         recent_rewards = self.optimization_history[-100:]
         recent_hits = sum(1 for r in recent_rewards if r.hit)
         recent_requests = len(recent_rewards)
-        return {'recent_hit_rate': recent_hits / recent_requests if recent_requests > 0 else 0.0, 'recent_average_latency': np.mean([r.latency_ms for r in recent_rewards]), 'recent_average_cost_savings': np.mean([r.cost_savings for r in recent_rewards]), 'recent_reward_count': recent_requests}
+        return {
+            "recent_hit_rate": recent_hits / recent_requests if recent_requests > 0 else 0.0,
+            "recent_average_latency": np.mean([r.latency_ms for r in recent_rewards]),
+            "recent_average_cost_savings": np.mean([r.cost_savings for r in recent_rewards]),
+            "recent_reward_count": recent_requests,
+        }
 
     def save_state(self, filepath: str) -> StepResult:
         """Save optimizer state to file."""
         try:
-            state = {'cache': self.cache, 'access_patterns': self.access_patterns, 'optimization_history': self.optimization_history, 'metrics': self.metrics, 'bandit_parameters': {k: v.tolist() if hasattr(v, 'tolist') else v for k, v in (self.bandit.action_parameters if self.bandit else {}).items()}, 'bandit_counts': {k: v.tolist() if hasattr(v, 'tolist') else v for k, v in (self.bandit.action_counts if self.bandit else {}).items()}, 'bandit_rewards': {k: v.tolist() if hasattr(v, 'tolist') else v for k, v in (self.bandit.action_rewards if self.bandit else {}).items()}}
-            with open(filepath, 'w') as f:
+            state = {
+                "cache": self.cache,
+                "access_patterns": self.access_patterns,
+                "optimization_history": self.optimization_history,
+                "metrics": self.metrics,
+                "bandit_parameters": {
+                    k: v.tolist() if hasattr(v, "tolist") else v
+                    for k, v in (self.bandit.action_parameters if self.bandit else {}).items()
+                },
+                "bandit_counts": {
+                    k: v.tolist() if hasattr(v, "tolist") else v
+                    for k, v in (self.bandit.action_counts if self.bandit else {}).items()
+                },
+                "bandit_rewards": {
+                    k: v.tolist() if hasattr(v, "tolist") else v
+                    for k, v in (self.bandit.action_rewards if self.bandit else {}).items()
+                },
+            }
+            with open(filepath, "w") as f:
                 json.dump(state, f, indent=2)
-            return StepResult.ok(data={'saved_to': filepath})
+            return StepResult.ok(data={"saved_to": filepath})
         except Exception as e:
-            logger.error(f'Failed to save optimizer state: {e!s}')
-            return StepResult.fail(f'Failed to save optimizer state: {e!s}')
+            logger.error(f"Failed to save optimizer state: {e!s}")
+            return StepResult.fail(f"Failed to save optimizer state: {e!s}")
 
     def load_state(self, filepath: str) -> StepResult:
         """Load optimizer state from file.
@@ -443,16 +583,16 @@ class RLCacheOptimizer:
         try:
             with open(filepath) as f:
                 state = json.load(f)
-            self.cache = state.get('cache', {})
-            self.access_patterns = state.get('access_patterns', {})
-            self.optimization_history = state.get('optimization_history', [])
-            self.metrics = state.get('metrics', self.metrics)
-            if state.get('bandit_parameters'):
+            self.cache = state.get("cache", {})
+            self.access_patterns = state.get("access_patterns", {})
+            self.optimization_history = state.get("optimization_history", [])
+            self.metrics = state.get("metrics", self.metrics)
+            if state.get("bandit_parameters"):
                 self._initialize_action_space()
-                self.bandit.action_parameters = state['bandit_parameters']
-                self.bandit.action_counts = state['bandit_counts']
-                self.bandit.action_rewards = state['bandit_rewards']
-            return StepResult.ok(data={'loaded_from': filepath})
+                self.bandit.action_parameters = state["bandit_parameters"]
+                self.bandit.action_counts = state["bandit_counts"]
+                self.bandit.action_rewards = state["bandit_rewards"]
+            return StepResult.ok(data={"loaded_from": filepath})
         except Exception as e:
-            logger.error(f'Failed to load optimizer state: {e!s}')
-            return StepResult.fail(f'Failed to load optimizer state: {e!s}')
+            logger.error(f"Failed to load optimizer state: {e!s}")
+            return StepResult.fail(f"Failed to load optimizer state: {e!s}")
