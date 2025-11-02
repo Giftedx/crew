@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
 import yaml
-from datetime import datetime, UTC
+
 def default_utc_now() -> datetime:
     """Get current UTC datetime."""
     return datetime.now(UTC)
