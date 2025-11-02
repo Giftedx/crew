@@ -178,7 +178,7 @@ class ConsciousnessLevelDecisionMaking:
         steps.append(f"Ethical analysis: {top_ethical[0]} (score: {top_ethical[1]:.2f})")
         top_consc = max(consciousness_scores.items(), key=lambda x: x[1])
         steps.append(f"Consciousness factor: {top_consc[0]} (score: {top_consc[1]:.2f})")
-        steps.append(f"Context consideration: {context.get('type', 'general')} decision scenario"
+        steps.append(f"Context consideration: {context.get('type', 'general')} decision scenario")
         steps.append("Ethical constraints validated and satisfied")
         return steps
 

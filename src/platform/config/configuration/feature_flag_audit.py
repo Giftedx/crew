@@ -181,7 +181,7 @@ class FeatureFlagAuditor:
         flag_names = [flag.name for flag in self.flags]
         redundant_groups = self._find_redundant_flag_groups(flag_names)
         for group in redundant_groups:
-            recommendations.append(f"Consider consolidating redundant flags: {', '.join(group)}"
+            recommendations.append(f"Consider consolidating redundant flags: {', '.join(group)}")
         overly_specific = [flag for flag in self.flags if len(flag.name.split("_")) > 4]
         if overly_specific:
             recommendations.append(f"Consider simplifying overly specific flags: {[f.name for f in overly_specific]}")

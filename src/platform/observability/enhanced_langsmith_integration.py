@@ -197,7 +197,7 @@ class LangSmithObservabilityManager:
                 self.client.create_run(
                     id=step_run_id,
                     parent_run_id=parent_run_id,
-                    name=f"step_{i}_{step.get('name', 'unknown')}"
+                    name=f"step_{i}_{step.get('name', 'unknown')}",
                     project_name=self.project_name,
                     run_type="chain",
                     inputs=step.get("inputs", {}),

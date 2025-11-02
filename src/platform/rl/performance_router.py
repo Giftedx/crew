@@ -265,8 +265,8 @@ if __name__ == "__main__":
             print(f"  ⚡ Expected: {decision.expected_latency_ms:.0f}ms, ${decision.expected_cost:.4f}")
         stats = router.get_routing_stats()
         print("\n📈 ROUTING STATISTICS:")
-        print(f"  • Total decisions: {stats['total_decisions']}"
-        print(f"  • Average confidence: {stats['recent_avg_confidence']:.2f}"
-        print(f"  • Available models: {stats['available_models']}"
+        print(f"  • Total decisions: {stats['total_decisions']}")
+        print(f"  • Average confidence: {stats['recent_avg_confidence']:.2f}")
+        print(f"  • Available models: {stats['available_models']}")
 
     asyncio.run(demo_performance_routing())

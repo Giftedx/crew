@@ -226,16 +226,16 @@ if __name__ == "__main__":
             print(f"\n📝 Prompt: {prompt[:40]}...")
             print(f"🎯 Task: {task_type} | Target: {target}")
             result = await router.intelligent_route(prompt=prompt, task_type=task_type, optimization_target=target)
-            print(f"✅ Model: {result.get('model', 'unknown')}"
-            print(f"📊 Reasoning: {result.get('routing_decision', 'N/A')}"
-            print(f"⚡ Latency: {result.get('actual_latency_ms', 0):.1f}ms"
-            print(f"💰 Cost: ${result.get('cost', 0):.4f}"
+            print(f"✅ Model: {result.get('model', 'unknown')}")
+            print(f"📊 Reasoning: {result.get('routing_decision', 'N/A')}")
+            print(f"⚡ Latency: {result.get('actual_latency_ms', 0):.1f}ms")
+            print(f"💰 Cost: ${result.get('cost', 0):.4f}")
         analytics = router.get_routing_analytics()
         print("\n📈 ROUTING ANALYTICS:")
-        print(f"  • Total routes: {analytics['total_routes']}"
-        print(f"  • Success rate: {analytics['success_rate']:.1%}"
-        print(f"  • Average latency: {analytics['avg_latency_ms']:.1f}ms"
-        print(f"  • Average cost: ${analytics['avg_cost']:.4f}"
-        print(f"  • Router confidence: {analytics['router_confidence']:.2f}"
+        print(f"  • Total routes: {analytics['total_routes']}")
+        print(f"  • Success rate: {analytics['success_rate']:.1%}")
+        print(f"  • Average latency: {analytics['avg_latency_ms']:.1f}ms")
+        print(f"  • Average cost: ${analytics['avg_cost']:.4f}")
+        print(f"  • Router confidence: {analytics['router_confidence']:.2f}")
 
     asyncio.run(demo_enhanced_ai_routing())

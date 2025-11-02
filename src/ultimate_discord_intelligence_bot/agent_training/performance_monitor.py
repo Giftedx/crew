@@ -180,10 +180,10 @@ class AgentPerformanceMonitor:
         """Record an AI routing interaction with enhanced performance tracking."""
         quality_score = actual_performance.get("quality", 0.0)
         response_time = actual_performance.get("latency_ms", 0.0) / 1000.0
-        tools_used = [f"ai_router_{routing_strategy}", f"model_{selected_model.split('/')[-1]}"
+        tools_used = [f"ai_router_{routing_strategy}", f"model_{selected_model.split('/')[-1]}"]
         tool_sequence = [
             {"tool": f"ai_router_{routing_strategy}", "action": "model_selection"},
-            {"tool": f"model_{selected_model.split('/')[-1]}', "action": "generate_response"},
+            {"tool": f"model_{selected_model.split('/')[-1]}", "action": "generate_response"},
         ]
         self.record_agent_interaction(
             agent_name=agent_name,

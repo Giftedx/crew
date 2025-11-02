@@ -163,7 +163,7 @@ class MultimodalContentPipeline:
             result.total_duration = time.time() - start_time
             result.errors.append(f"Pipeline exception: {e!s}")
             logger.exception("Pipeline processing failed")
-            return StepResult.fail(f"Pipeline failed: {', '.join(result.errors)}"
+            return StepResult.fail(f"Pipeline failed: {', '.join(result.errors)}")
 
     async def _validate_inputs(self, url: str, tenant: str, workspace: str) -> StepResult:
         """Validate pipeline inputs."""
