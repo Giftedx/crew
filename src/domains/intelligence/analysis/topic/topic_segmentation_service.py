@@ -21,11 +21,14 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from platform.core.step_result import StepResult
 from typing import Any, Literal
+
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 logger = logging.getLogger(__name__)
+
+# Try to import BERTopic (optional dependency)
 try:
     from bertopic import BERTopic
     from bertopic.representation import KeyBERTInspired, MaximalMarginalRelevance
@@ -33,15 +36,17 @@ try:
     BERTOPIC_AVAILABLE = True
 except ImportError:
     BERTOPIC_AVAILABLE = False
-    BERTopic = None
+    BERTopic = None  # type: ignore
     logger.warning("bertopic not available, topic segmentation disabled")
+
+# Try to import sentence-transformers (optional dependency)
 try:
     from sentence_transformers import SentenceTransformer
 
     SENTENCE_TRANSFORMERS_AVAILABLE = True
 except ImportError:
     SENTENCE_TRANSFORMERS_AVAILABLE = False
-    SentenceTransformer = None
+    SentenceTransformer = None  # type: ignore
     logger.warning("sentence-transformers not available, using fallback embeddings")
 
 
@@ -52,10 +57,10 @@ class TopicSegment:
     start_time: float
     end_time: float
     text: str
-    topics: list[str]
-    topic_names: list[str]
+    topics: list[str]  # List of topic IDs
+    topic_names: list[str]  # Human-readable topic names
     coherence_score: float
-    dominant_topic: str | None = None
+    dominant_topic: str | None = None  # Most prominent topic ID
 
 
 @dataclass
@@ -65,9 +70,9 @@ class TopicModel:
     model_id: str
     num_topics: int
     coherence_score: float
-    topics: list[str]
+    topics: list[str]  # Topic names
     topic_embeddings: list[list[float]]
-    model_type: str
+    model_type: str  # bertopic, custom, etc.
     created_at: str
     training_data_size: int
 
@@ -79,7 +84,7 @@ class TopicSegmentationResult:
     segments: list[TopicSegment]
     topic_model: TopicModel | None
     overall_coherence: float
-    topic_distribution: dict[str, float]
+    topic_distribution: dict[str, float]  # topic_id -> frequency
     model: str
     processing_time_ms: float = 0.0
 
@@ -101,6 +106,8 @@ class TopicSegmentationService:
         """
         self.cache_size = cache_size
         self._segmentation_cache: dict[str, TopicSegmentationResult] = {}
+
+        # Load topic models lazily
         self._topic_models: dict[str, BERTopic] = {}
         self._embedding_models: dict[str, Any] = {}
 
@@ -128,10 +135,18 @@ class TopicSegmentationService:
             import time
 
             start_time = time.time()
+
+            # Validate input
             if not text or not text.strip():
                 return StepResult.fail("Input text cannot be empty", status="bad_request")
+
             if len(text) < 100:
-                return StepResult.fail("Input text too short for meaningful topic analysis", status="bad_request")
+                return StepResult.fail(
+                    "Input text too short for meaningful topic analysis",
+                    status="bad_request",
+                )
+
+            # Check cache first
             if use_cache:
                 cache_result = self._check_cache(text, model, min_topic_size, max_topics)
                 if cache_result:
@@ -147,12 +162,18 @@ class TopicSegmentationService:
                             "processing_time_ms": (time.time() - start_time) * 1000,
                         }
                     )
+
+            # Perform topic segmentation
             model_name = self._select_model(model)
             segmentation_result = self._segment_text(text, model_name, min_topic_size, max_topics)
+
             if segmentation_result:
+                # Cache result
                 if use_cache:
                     self._cache_result(text, model, min_topic_size, max_topics, segmentation_result)
+
                 processing_time = (time.time() - start_time) * 1000
+
                 return StepResult.ok(
                     data={
                         "segments": [s.__dict__ for s in segmentation_result.segments],
@@ -168,6 +189,7 @@ class TopicSegmentationService:
                 )
             else:
                 return StepResult.fail("Topic segmentation failed", status="retryable")
+
         except Exception as e:
             logger.error(f"Text segmentation failed: {e}")
             return StepResult.fail(f"Segmentation failed: {e!s}", status="retryable")
@@ -189,12 +211,16 @@ class TopicSegmentationService:
             StepResult with temporally-aligned topic segments
         """
         try:
+            # Combine transcript segments into full text with timing markers
             full_text = ""
             segment_texts = []
+
             for i, segment in enumerate(transcript_segments):
                 segment_text = segment.get("text", "")
                 start_time = segment.get("start", 0.0)
                 end_time = segment.get("end", 0.0)
+
+                # Add timing marker to text for alignment
                 timed_text = f"[T{i}@{start_time:.1f}-{end_time:.1f}] {segment_text}"
                 segment_texts.append(
                     {
@@ -206,12 +232,18 @@ class TopicSegmentationService:
                     }
                 )
                 full_text += timed_text + " "
+
+            # Segment the combined text
             segmentation_result = self._segment_text(
                 full_text, self._select_model(model), min_topic_size=3, max_topics=30
             )
+
             if not segmentation_result:
                 return StepResult.fail("Transcript segmentation failed")
+
+            # Align topics back to original segments
             aligned_segments = self._align_topics_to_segments(segmentation_result.segments, segment_texts)
+
             return StepResult.ok(
                 data={
                     "segments": [s.__dict__ for s in aligned_segments],
@@ -224,6 +256,7 @@ class TopicSegmentationService:
                     "cache_hit": False,
                 }
             )
+
         except Exception as e:
             logger.error(f"Transcript segmentation failed: {e}")
             return StepResult.fail(f"Transcript segmentation failed: {e!s}")
@@ -242,10 +275,15 @@ class TopicSegmentationService:
             "balanced": "balanced_topic_model",
             "quality": "quality_topic_model",
         }
+
         return model_configs.get(model_alias, "balanced_topic_model")
 
     def _segment_text(
-        self, text: str, model_name: str, min_topic_size: int, max_topics: int
+        self,
+        text: str,
+        model_name: str,
+        min_topic_size: int,
+        max_topics: int,
     ) -> TopicSegmentationResult | None:
         """Segment text using BERTopic or fallback method.
 
@@ -262,46 +300,70 @@ class TopicSegmentationService:
             if not BERTOPIC_AVAILABLE:
                 logger.warning("BERTopic not available, using fallback segmentation")
                 return self._segment_fallback(text, model_name)
+
+            # Load or create topic model
             if model_name not in self._topic_models:
                 logger.info(f"Loading/creating BERTopic model: {model_name}")
                 self._topic_models[model_name] = self._create_topic_model(model_name)
+
             topic_model = self._topic_models[model_name]
+
+            # Split text into chunks for processing (BERTopic works better with chunks)
             text_chunks = self._split_text_into_chunks(text, max_chunk_size=512)
+
+            # Fit model and get topics
             topics, _probs = topic_model.fit_transform(text_chunks)
+
+            # Extract topic information
             topic_info = topic_model.get_topic_info()
             topic_names = topic_info["Name"].tolist()
+
+            # Create segments based on topic assignments
             segments = []
             topic_distribution = {}
+
             for i, (chunk, topic_id) in enumerate(zip(text_chunks, topics, strict=False)):
-                if topic_id == -1:
+                if topic_id == -1:  # Outlier topic
                     continue
+
+                # Get topic name and coherence
                 topic_name = topic_names[topic_id] if topic_id < len(topic_names) else f"Topic_{topic_id}"
-                chunk_start = i * 30.0
+
+                # Calculate segment timing (approximate)
+                chunk_start = i * 30.0  # Assume 30 seconds per chunk
                 chunk_end = chunk_start + 30.0
+
                 segment = TopicSegment(
                     start_time=chunk_start,
                     end_time=chunk_end,
                     text=chunk,
                     topics=[str(topic_id)],
                     topic_names=[topic_name],
-                    coherence_score=0.8,
+                    coherence_score=0.8,  # Placeholder coherence score
                     dominant_topic=str(topic_id),
                 )
                 segments.append(segment)
+
+                # Update topic distribution
                 topic_distribution[str(topic_id)] = topic_distribution.get(str(topic_id), 0) + 1
+
+            # Create topic model metadata
             model_metadata = TopicModel(
                 model_id=model_name,
                 num_topics=len(set(topics)) if topics else 0,
                 coherence_score=self._calculate_coherence(topic_model, text_chunks),
                 topics=topic_names,
-                topic_embeddings=[],
+                topic_embeddings=[],  # Would need to extract from model
                 model_type="bertopic",
-                created_at="",
+                created_at="",  # Would need timestamp
                 training_data_size=len(text_chunks),
             )
+
+            # Normalize topic distribution
             total_segments = sum(topic_distribution.values())
             if total_segments > 0:
                 topic_distribution = {k: v / total_segments for k, v in topic_distribution.items()}
+
             return TopicSegmentationResult(
                 segments=segments,
                 topic_model=model_metadata,
@@ -309,6 +371,7 @@ class TopicSegmentationService:
                 topic_distribution=topic_distribution,
                 model=model_name,
             )
+
         except Exception as e:
             logger.error(f"Text segmentation failed: {e}")
             return None
@@ -322,26 +385,38 @@ class TopicSegmentationService:
         Returns:
             Configured BERTopic model
         """
+        # Configure based on model type
         if model_name == "fast_topic_model":
+            # Fast model - fewer topics, simpler representation
             embedding_model = "sentence-transformers/all-MiniLM-L6-v2"
             nr_topics = "auto"
             min_topic_size = 3
         elif model_name == "quality_topic_model":
+            # Quality model - more topics, better representation
             embedding_model = "sentence-transformers/all-mpnet-base-v2"
             nr_topics = 50
             min_topic_size = 5
         else:
+            # Balanced model - default settings
             embedding_model = "sentence-transformers/all-MiniLM-L6-v2"
             nr_topics = 30
             min_topic_size = 4
-        representation_model = [KeyBERTInspired(), MaximalMarginalRelevance(diversity=0.3)]
+
+        # Create representation models for better topic names
+        representation_model = [
+            KeyBERTInspired(),
+            MaximalMarginalRelevance(diversity=0.3),
+        ]
+
+        # Initialize BERTopic model
         topic_model = BERTopic(
             embedding_model=embedding_model,
             nr_topics=nr_topics,
             min_topic_size=min_topic_size,
             representation_model=representation_model,
-            verbose=False,
+            verbose=False,  # Reduce logging noise
         )
+
         return topic_model
 
     def _split_text_into_chunks(self, text: str, max_chunk_size: int = 512) -> list[str]:
@@ -357,13 +432,18 @@ class TopicSegmentationService:
         words = text.split()
         chunks = []
         current_chunk = []
+
         for word in words:
             current_chunk.append(word)
+
             if len(" ".join(current_chunk)) >= max_chunk_size:
                 chunks.append(" ".join(current_chunk))
                 current_chunk = []
+
+        # Add remaining words
         if current_chunk:
             chunks.append(" ".join(current_chunk))
+
         return chunks
 
     def _calculate_coherence(self, topic_model: BERTopic, documents: list[str]) -> float:
@@ -377,16 +457,23 @@ class TopicSegmentationService:
             Coherence score (0.0 to 1.0)
         """
         try:
+            # Simple coherence approximation based on topic assignments
             topics, _ = topic_model.transform(documents)
+
+            # Calculate coherence as the ratio of non-outlier topics
             valid_topics = [t for t in topics if t != -1]
             coherence = len(valid_topics) / len(topics) if topics else 0.0
+
             return min(coherence, 1.0)
+
         except Exception as e:
             logger.warning(f"Coherence calculation failed: {e}")
-            return 0.5
+            return 0.5  # Default coherence
 
     def _align_topics_to_segments(
-        self, topic_segments: list[TopicSegment], transcript_segments: list[dict[str, Any]]
+        self,
+        topic_segments: list[TopicSegment],
+        transcript_segments: list[dict[str, Any]],
     ) -> list[TopicSegment]:
         """Align topic segments back to original transcript timing.
 
@@ -398,22 +485,35 @@ class TopicSegmentationService:
             Topic segments with corrected timing
         """
         aligned_segments = []
+
         for topic_seg in topic_segments:
+            # Extract timing information from text if available
             timed_text = topic_seg.text
+
+            # Look for timing markers in the text
             import re
 
-            timing_pattern = "\\[T(\\d+)@([\\d.]+)-([\\d.]+)\\]"
+            timing_pattern = r"\[T(\d+)@([\d.]+)-([\d.]+)\]"
             match = re.search(timing_pattern, timed_text)
+
             if match:
                 segment_index = int(match.group(1))
                 start_time = float(match.group(2))
                 end_time = float(match.group(3))
+
+                # Update segment timing
                 topic_seg.start_time = start_time
                 topic_seg.end_time = end_time
+
+                # Clean text by removing timing markers
                 topic_seg.text = re.sub(timing_pattern, "", timed_text).strip()
+
+                # Add transcript text if available
                 if segment_index < len(transcript_segments):
                     topic_seg.text = transcript_segments[segment_index].get("text", topic_seg.text)
+
             aligned_segments.append(topic_seg)
+
         return aligned_segments
 
     def _segment_fallback(self, text: str, model_name: str) -> TopicSegmentationResult:
@@ -426,14 +526,17 @@ class TopicSegmentationService:
         Returns:
             TopicSegmentationResult with fallback segmentation
         """
+        # Simple fallback: split by sentences and assign generic topics
         import re
 
-        sentences = re.split("[.!?]+", text)
+        sentences = re.split(r"[.!?]+", text)
         sentences = [s.strip() for s in sentences if s.strip()]
+
         segments = []
         for i, sentence in enumerate(sentences):
-            start_time = i * 10.0
+            start_time = i * 10.0  # Assume 10 seconds per sentence
             end_time = start_time + 10.0
+
             segment = TopicSegment(
                 start_time=start_time,
                 end_time=end_time,
@@ -444,7 +547,9 @@ class TopicSegmentationService:
                 dominant_topic="general",
             )
             segments.append(segment)
+
         topic_distribution = {"general": 1.0}
+
         fallback_model = TopicModel(
             model_id=f"fallback-{model_name}",
             num_topics=1,
@@ -455,6 +560,7 @@ class TopicSegmentationService:
             created_at="",
             training_data_size=len(sentences),
         )
+
         return TopicSegmentationResult(
             segments=segments,
             topic_model=fallback_model,
@@ -479,14 +585,22 @@ class TopicSegmentationService:
         """
         import hashlib
 
+        # Create cache key from text hash and parameters
         text_hash = hashlib.sha256(text.encode()).hexdigest()[:16]
         cache_key = f"{text_hash}:{model}:{min_topic_size}:{max_topics}"
+
         if cache_key in self._segmentation_cache:
             return self._segmentation_cache[cache_key]
+
         return None
 
     def _cache_result(
-        self, text: str, model: str, min_topic_size: int, max_topics: int, result: TopicSegmentationResult
+        self,
+        text: str,
+        model: str,
+        min_topic_size: int,
+        max_topics: int,
+        result: TopicSegmentationResult,
     ) -> None:
         """Cache topic segmentation result.
 
@@ -500,12 +614,19 @@ class TopicSegmentationService:
         import hashlib
         import time
 
+        # Create cache key
         text_hash = hashlib.sha256(text.encode()).hexdigest()[:16]
         cache_key = f"{text_hash}:{model}:{min_topic_size}:{max_topics}"
+
+        # Add processing timestamp
         result.processing_time_ms = time.time() * 1000
+
+        # Evict old entries if cache is full
         if len(self._segmentation_cache) >= self.cache_size:
+            # Simple FIFO eviction - remove first key
             first_key = next(iter(self._segmentation_cache))
             del self._segmentation_cache[first_key]
+
         self._segmentation_cache[cache_key] = result
 
     def clear_cache(self) -> StepResult:
@@ -516,7 +637,9 @@ class TopicSegmentationService:
         """
         cache_size = len(self._segmentation_cache)
         self._segmentation_cache.clear()
+
         logger.info(f"Cleared {cache_size} cached topic segmentations")
+
         return StepResult.ok(data={"cleared_entries": cache_size})
 
     def get_cache_stats(self) -> StepResult:
@@ -532,15 +655,20 @@ class TopicSegmentationService:
                 "utilization": len(self._segmentation_cache) / self.cache_size if self.cache_size > 0 else 0.0,
                 "models_cached": {},
             }
+
+            # Count entries per model
             for result in self._segmentation_cache.values():
                 model = result.model
                 stats["models_cached"][model] = stats["models_cached"].get(model, 0) + 1
+
             return StepResult.ok(data=stats)
+
         except Exception as e:
             logger.error(f"Failed to get cache stats: {e}")
             return StepResult.fail(f"Failed to get cache stats: {e!s}")
 
 
+# Singleton instance
 _topic_service: TopicSegmentationService | None = None
 
 
@@ -551,6 +679,8 @@ def get_topic_segmentation_service() -> TopicSegmentationService:
         Initialized TopicSegmentationService instance
     """
     global _topic_service
+
     if _topic_service is None:
         _topic_service = TopicSegmentationService()
+
     return _topic_service

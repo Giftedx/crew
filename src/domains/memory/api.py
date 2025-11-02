@@ -5,12 +5,12 @@ from __future__ import annotations
 import json
 import tempfile
 from dataclasses import dataclass
-from platform.config.configuration import get_config
 from typing import TYPE_CHECKING
 
 from analysis.rerank import rerank
 from archive import archive_file
 from core.privacy import privacy_filter
+from core.secure_config import get_config
 from core.time import default_utc_now
 from memory import embeddings, vector_store
 from memory.store import MemoryItem, MemoryStore
@@ -46,6 +46,7 @@ def store(
     classification, retention policy). Consolidating into a dict would remove
     static typing benefits and shift validation burden downstream.
     """
+
     clean, _ = privacy_filter.filter_text(text, {"tenant": tenant})
     vec = embeddings.embed([clean])[0]
     now = default_utc_now().isoformat()
@@ -65,7 +66,10 @@ def store(
     )
     item_id = store.add_item(item)
     namespace = vector_store.VectorStore.namespace(tenant, workspace, "memory")
-    vstore.upsert(namespace, [vector_store.VectorRecord(vector=vec, payload={"id": item_id, "text": clean})])
+    vstore.upsert(
+        namespace,
+        [vector_store.VectorRecord(vector=vec, payload={"id": item_id, "text": clean})],
+    )
     return item_id
 
 
@@ -83,7 +87,9 @@ def retrieve(
     strategies = list(strategies or ["vector", "symbolic"])
     if engine:
         order = engine.recommend("retrieval_scoring", {"len": len(query)}, strategies)
+        # ensure returned arm appears first
         strategies.sort(key=lambda s: 0 if s == order else 1)
+
     hits: list[MemoryHit] = []
     if "vector" in strategies:
         vec = embeddings.embed([query])[0]
@@ -92,12 +98,25 @@ def retrieve(
         for r in res:
             payload = r.payload or {}
             hits.append(
-                MemoryHit(id=payload.get("id", 0), score=float(r.score), text=payload.get("text", ""), meta=payload)
+                MemoryHit(
+                    id=payload.get("id", 0),
+                    score=float(r.score),
+                    text=payload.get("text", ""),
+                    meta=payload,
+                )
             )
     if "symbolic" in strategies:
         for item in store.search_keyword(tenant, workspace, query, limit=k):
             payload = json.loads(item.content_json)
-            hits.append(MemoryHit(id=item.id or 0, score=0.5, text=payload.get("text", ""), meta=payload))
+            hits.append(
+                MemoryHit(
+                    id=item.id or 0,
+                    score=0.5,
+                    text=payload.get("text", ""),
+                    meta=payload,
+                )
+            )
+    # Optional reranker stage
     cfg = get_config()
     if getattr(cfg, "enable_reranker", False) and hits:
         provider = (getattr(cfg, "rerank_provider", None) or "").strip().lower()
@@ -105,9 +124,11 @@ def retrieve(
             texts = [h.text for h in hits]
             try:
                 rr = rerank(query, texts, provider=provider, top_n=min(k, len(texts)))
+                # Reorder hits by reranked indexes (limit to top_n)
                 ordered = [hits[i] for i in rr.indexes if 0 <= i < len(hits)]
                 hits = ordered + [h for h in hits if h not in ordered]
             except Exception:
+                # Fall back silently on provider errors
                 ...
     hits.sort(key=lambda h: h.score, reverse=True)
     return hits[:k]
@@ -115,6 +136,7 @@ def retrieve(
 
 def prune(store: MemoryStore, *, tenant: str) -> int:
     """Prune expired items for ``tenant`` based on retention policies."""
+
     return store.prune(tenant)
 
 
@@ -130,7 +152,15 @@ def archive(store: MemoryStore, item_id: int, *, tenant: str, workspace: str) ->
     with tempfile.NamedTemporaryFile("w", delete=False) as tmp:
         tmp.write(data)
         tmp.flush()
-        archive_file(tmp.name, {"kind": "memory", "tenant": tenant, "workspace": workspace, "visibility": "private"})
+        archive_file(
+            tmp.name,
+            {
+                "kind": "memory",
+                "tenant": tenant,
+                "workspace": workspace,
+                "visibility": "private",
+            },
+        )
     store.mark_archived(item_id)
 
 

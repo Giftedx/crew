@@ -23,30 +23,36 @@ import hashlib
 import logging
 import time
 from dataclasses import dataclass, field
-from platform.core.step_result import StepResult
 from typing import TYPE_CHECKING, Any, Literal
 
 from memory.enhanced_vector_store import EnhancedVectorStore, SearchResult
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from qdrant_client.http import models as _qmodels
 else:
     _qmodels = Any
+
 logger = logging.getLogger(__name__)
+
+# Collection dimensions for different embedding models
 EMBEDDING_DIMENSIONS = {
-    "sentence-transformers/all-MiniLM-L6-v2": 384,
-    "sentence-transformers/all-mpnet-base-v2": 768,
-    "openai/text-embedding-3-small": 1536,
-    "openai/text-embedding-3-large": 3072,
+    "sentence-transformers/all-MiniLM-L6-v2": 384,  # Fast, good for caching
+    "sentence-transformers/all-mpnet-base-v2": 768,  # Balanced
+    "openai/text-embedding-3-small": 1536,  # High quality
+    "openai/text-embedding-3-large": 3072,  # Maximum quality
 }
+
+# Semantic cache hit threshold
 CACHE_SIMILARITY_THRESHOLD = 0.95
+# Resolve cache TTL from unified configuration (analysis domain) with safe fallback
 try:
-    from platform.cache.unified_config import get_unified_cache_config
+    from core.cache.unified_config import get_unified_cache_config
 
     CACHE_TTL_SECONDS = int(get_unified_cache_config().get_ttl_for_domain("analysis"))
 except Exception:
-    CACHE_TTL_SECONDS = 3600
+    CACHE_TTL_SECONDS = 3600  # 1 hour fallback
 
 
 @dataclass
@@ -67,6 +73,7 @@ class CollectionConfig:
         return EMBEDDING_DIMENSIONS.get(self.embedding_model, 384)
 
 
+# Predefined collection configurations
 COLLECTION_CONFIGS = {
     "episodes": CollectionConfig(
         name="creator_episodes",
@@ -75,8 +82,8 @@ COLLECTION_CONFIGS = {
         enable_quantization=True,
         enable_sparse_vectors=True,
         payload_schema={
-            "content_type": "string",
-            "platform": "string",
+            "content_type": "string",  # "episode"
+            "platform": "string",  # youtube, twitch, tiktok
             "creator_id": "string",
             "episode_id": "string",
             "title": "string",
@@ -92,18 +99,18 @@ COLLECTION_CONFIGS = {
     "segments": CollectionConfig(
         name="creator_segments",
         description="Timestamped segments within episodes",
-        embedding_model="sentence-transformers/all-MiniLM-L6-v2",
+        embedding_model="sentence-transformers/all-MiniLM-L6-v2",  # Fast for many segments
         enable_quantization=True,
         payload_schema={
-            "content_type": "string",
+            "content_type": "string",  # "segment"
             "episode_id": "string",
             "segment_id": "string",
             "start_time_seconds": "integer",
             "end_time_seconds": "integer",
             "title": "string",
-            "segment_type": "string",
+            "segment_type": "string",  # intro, discussion, debate, outro
             "speaker": "string",
-            "text": "string",
+            "text": "string",  # Transcript text
             "tenant": "string",
             "workspace": "string",
         },
@@ -112,18 +119,18 @@ COLLECTION_CONFIGS = {
         name="creator_claims",
         description="Factual claims with verification status",
         embedding_model="sentence-transformers/all-mpnet-base-v2",
-        enable_quantization=False,
+        enable_quantization=False,  # High precision for fact-checking
         enable_sparse_vectors=True,
         payload_schema={
-            "content_type": "string",
+            "content_type": "string",  # "claim"
             "claim_id": "string",
             "text": "string",
             "speaker": "string",
             "episode_id": "string",
             "timestamp_seconds": "integer",
-            "verification_status": "string",
-            "confidence_score": "float",
-            "sources": "json",
+            "verification_status": "string",  # verified, disputed, false, unverified
+            "confidence_score": "float",  # 0.0 to 1.0
+            "sources": "json",  # List of verification sources
             "tenant": "string",
             "workspace": "string",
         },
@@ -134,7 +141,7 @@ COLLECTION_CONFIGS = {
         embedding_model="sentence-transformers/all-MiniLM-L6-v2",
         enable_quantization=True,
         payload_schema={
-            "content_type": "string",
+            "content_type": "string",  # "quote"
             "quote_id": "string",
             "text": "string",
             "speaker": "string",
@@ -152,14 +159,14 @@ COLLECTION_CONFIGS = {
         enable_quantization=True,
         enable_sparse_vectors=True,
         payload_schema={
-            "content_type": "string",
+            "content_type": "string",  # "topic"
             "topic_id": "string",
             "name": "string",
-            "category": "string",
+            "category": "string",  # politics, entertainment, technology
             "first_mention": "datetime",
             "last_mention": "datetime",
             "mention_count": "integer",
-            "episodes": "json",
+            "episodes": "json",  # List of episode IDs
             "tenant": "string",
             "workspace": "string",
         },
@@ -193,7 +200,11 @@ class CreatorIntelligenceCollectionManager:
     - Durable agent memory persistence
     """
 
-    def __init__(self, vector_store: EnhancedVectorStore | None = None, enable_semantic_cache: bool = True):
+    def __init__(
+        self,
+        vector_store: EnhancedVectorStore | None = None,
+        enable_semantic_cache: bool = True,
+    ):
         """Initialize the collection manager.
 
         Args:
@@ -202,7 +213,11 @@ class CreatorIntelligenceCollectionManager:
         """
         self.vector_store = vector_store or EnhancedVectorStore()
         self.enable_semantic_cache = enable_semantic_cache
+
+        # Semantic cache: query_hash -> CachedQuery
         self._query_cache: dict[str, CachedQuery] = {}
+
+        # Track initialized collections
         self._initialized_collections: set[str] = set()
 
     def initialize_collections(self, tenant: str, workspace: str) -> StepResult:
@@ -218,17 +233,23 @@ class CreatorIntelligenceCollectionManager:
         try:
             initialized = []
             failed = []
+
             for _collection_type, config in COLLECTION_CONFIGS.items():
                 namespace = self._get_namespace(tenant, workspace, config.name)
+
+                # Check if already initialized
                 if namespace in self._initialized_collections:
                     logger.info(f"Collection {namespace} already initialized")
                     continue
+
+                # Create collection with enhanced configuration
                 success = self.vector_store.create_collection_with_hybrid_config(
                     namespace=namespace,
                     dimension=config.dimension,
                     enable_sparse=config.enable_sparse_vectors,
                     quantization=config.enable_quantization,
                 )
+
                 if success:
                     initialized.append(namespace)
                     self._initialized_collections.add(namespace)
@@ -236,11 +257,13 @@ class CreatorIntelligenceCollectionManager:
                 else:
                     failed.append(namespace)
                     logger.warning(f"❌ Failed to initialize collection: {namespace}")
+
             if failed:
                 return StepResult.fail(
                     f"Some collections failed to initialize: {', '.join(failed)}",
                     metadata={"initialized": initialized, "failed": failed},
                 )
+
             return StepResult.ok(
                 data={
                     "initialized": initialized,
@@ -248,6 +271,7 @@ class CreatorIntelligenceCollectionManager:
                     "collections": list(COLLECTION_CONFIGS.keys()),
                 }
             )
+
         except Exception as e:
             logger.error(f"Collection initialization failed: {e}")
             return StepResult.fail(f"Collection initialization failed: {e!s}")
@@ -281,10 +305,17 @@ class CreatorIntelligenceCollectionManager:
             StepResult with search results and cache metadata
         """
         try:
+            # Validate collection type
             if collection_type not in COLLECTION_CONFIGS:
-                return StepResult.fail(f"Invalid collection type: {collection_type}", status="bad_request")
+                return StepResult.fail(
+                    f"Invalid collection type: {collection_type}",
+                    status="bad_request",
+                )
+
             config = COLLECTION_CONFIGS[collection_type]
             namespace = self._get_namespace(tenant, workspace, config.name)
+
+            # Check semantic cache
             if not bypass_cache and self.enable_semantic_cache:
                 cache_result = self._check_semantic_cache(query_embedding, namespace, limit)
                 if cache_result:
@@ -296,6 +327,8 @@ class CreatorIntelligenceCollectionManager:
                             "cache_age_seconds": time.time() - cache_result.cache_time,
                         }
                     )
+
+            # Perform hybrid search
             results = self.vector_store.hybrid_search(
                 namespace=namespace,
                 query_vector=query_embedding,
@@ -304,11 +337,19 @@ class CreatorIntelligenceCollectionManager:
                 score_threshold=score_threshold,
                 filter_conditions=filter_conditions,
             )
+
+            # Cache results if enabled
             if self.enable_semantic_cache and results:
                 self._cache_query_results(query_embedding, namespace, results, limit)
+
             return StepResult.ok(
-                data={"results": [r.__dict__ for r in results], "cache_hit": False, "result_count": len(results)}
+                data={
+                    "results": [r.__dict__ for r in results],
+                    "cache_hit": False,
+                    "result_count": len(results),
+                }
             )
+
         except Exception as e:
             logger.error(f"Query failed for {collection_type}: {e}")
             return StepResult.fail(f"Query failed: {e!s}", status="retryable")
@@ -325,23 +366,35 @@ class CreatorIntelligenceCollectionManager:
             Cached query if similarity > threshold and not expired, else None
         """
         query_hash = self._compute_query_hash(query_embedding, namespace, limit)
+
+        # Direct hash lookup first
         if query_hash in self._query_cache:
             cached = self._query_cache[query_hash]
             if not cached.is_expired():
                 return cached
             else:
                 del self._query_cache[query_hash]
+
+        # Semantic similarity check against cached queries
         for cached in self._query_cache.values():
             if cached.is_expired():
                 continue
+
+            # Compute cosine similarity
             similarity = self._cosine_similarity(query_embedding, cached.query_embedding)
+
             if similarity >= CACHE_SIMILARITY_THRESHOLD:
                 logger.info(f"Semantic cache hit with similarity {similarity:.3f}")
                 return cached
+
         return None
 
     def _cache_query_results(
-        self, query_embedding: list[float], namespace: str, results: list[SearchResult], limit: int
+        self,
+        query_embedding: list[float],
+        namespace: str,
+        results: list[SearchResult],
+        limit: int,
     ) -> None:
         """Cache query results for future semantic lookups.
 
@@ -352,18 +405,27 @@ class CreatorIntelligenceCollectionManager:
             limit: Result limit
         """
         query_hash = self._compute_query_hash(query_embedding, namespace, limit)
+
         cached_query = CachedQuery(
-            query_hash=query_hash, query_embedding=query_embedding, results=results, cache_time=time.time()
+            query_hash=query_hash,
+            query_embedding=query_embedding,
+            results=results,
+            cache_time=time.time(),
         )
+
         self._query_cache[query_hash] = cached_query
+
+        # Evict expired entries periodically
         if len(self._query_cache) > 1000:
             self._evict_expired_cache()
 
     def _evict_expired_cache(self) -> None:
         """Remove expired entries from query cache."""
         expired_keys = [k for k, v in self._query_cache.items() if v.is_expired()]
+
         for key in expired_keys:
             del self._query_cache[key]
+
         logger.info(f"Evicted {len(expired_keys)} expired cache entries")
 
     def get_collection_stats(
@@ -385,12 +447,20 @@ class CreatorIntelligenceCollectionManager:
         try:
             if collection_type not in COLLECTION_CONFIGS:
                 return StepResult.fail(f"Invalid collection type: {collection_type}", status="bad_request")
+
             config = COLLECTION_CONFIGS[collection_type]
             namespace = self._get_namespace(tenant, workspace, config.name)
+
             stats = self.vector_store.get_collection_stats(namespace)
+
             if not stats:
-                return StepResult.fail(f"Collection {namespace} not found or not initialized", status="bad_request")
+                return StepResult.fail(
+                    f"Collection {namespace} not found or not initialized",
+                    status="bad_request",
+                )
+
             return StepResult.ok(data=stats)
+
         except Exception as e:
             logger.error(f"Failed to get collection stats: {e}")
             return StepResult.fail(f"Failed to get stats: {e!s}", status="retryable")
@@ -405,8 +475,11 @@ class CreatorIntelligenceCollectionManager:
             cache_size = len(self._query_cache)
             self._query_cache.clear()
             self.vector_store.clear_similarity_cache()
+
             logger.info(f"Cleared {cache_size} cached queries")
+
             return StepResult.ok(data={"cleared_entries": cache_size})
+
         except Exception as e:
             logger.error(f"Failed to clear cache: {e}")
             return StepResult.fail(f"Failed to clear cache: {e!s}")
@@ -436,7 +509,8 @@ class CreatorIntelligenceCollectionManager:
         Returns:
             SHA256 hash string
         """
-        query_str = f"{namespace}:{limit}:{','.join(f'{v:.6f}' for v in query_embedding[:10])}"
+        # Create deterministic string representation
+        query_str = f"{namespace}:{limit}:{','.join(f'{v:.6f}' for v in query_embedding[:10])}"  # First 10 dims
         return hashlib.sha256(query_str.encode()).hexdigest()
 
     @staticmethod
@@ -454,15 +528,20 @@ class CreatorIntelligenceCollectionManager:
 
         if len(vec1) != len(vec2):
             return 0.0
-        dot_product = sum((a * b for a, b in zip(vec1, vec2, strict=False)))
+
+        dot_product = sum(a * b for a, b in zip(vec1, vec2, strict=False))
         norm1 = math.sqrt(sum(a * a for a in vec1))
         norm2 = math.sqrt(sum(b * b for b in vec2))
+
         if norm1 == 0.0 or norm2 == 0.0:
             return 0.0
+
         return float(dot_product / (norm1 * norm2))
 
 
-def get_collection_manager(enable_semantic_cache: bool = True) -> CreatorIntelligenceCollectionManager:
+def get_collection_manager(
+    enable_semantic_cache: bool = True,
+) -> CreatorIntelligenceCollectionManager:
     """Factory function to create collection manager.
 
     Args:

@@ -21,11 +21,14 @@ from __future__ import annotations
 import logging
 import re
 from dataclasses import dataclass
-from platform.core.step_result import StepResult
 from typing import Any, Literal
+
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 logger = logging.getLogger(__name__)
+
+# Try to import spacy (optional dependency)
 try:
     import spacy
 
@@ -33,6 +36,8 @@ try:
 except ImportError:
     SPACY_AVAILABLE = False
     logger.warning("spacy not available, using rule-based extraction")
+
+# Try to import transformers (optional dependency)
 try:
     from transformers import pipeline
 
@@ -50,9 +55,9 @@ class ExtractedClaim:
     speaker: str | None = None
     timestamp_seconds: float | None = None
     confidence: float = 1.0
-    claim_type: str = "statement"
-    verification_status: str = "unverified"
-    sources: list[str] = None
+    claim_type: str = "statement"  # statement, opinion, fact, prediction
+    verification_status: str = "unverified"  # unverified, verified, disputed, false
+    sources: list[str] = None  # type: ignore[assignment]
 
     def __post_init__(self) -> None:
         if self.sources is None:
@@ -67,9 +72,9 @@ class ExtractedQuote:
     speaker: str | None = None
     timestamp_seconds: float | None = None
     confidence: float = 1.0
-    quote_type: str = "notable"
-    context: str | None = None
-    significance_score: float = 0.5
+    quote_type: str = "notable"  # notable, humorous, controversial, insightful
+    context: str | None = None  # Surrounding context
+    significance_score: float = 0.5  # 0.0 to 1.0
 
 
 @dataclass
@@ -101,6 +106,8 @@ class ClaimQuoteExtractionService:
         """
         self.cache_size = cache_size
         self._extraction_cache: dict[str, ClaimQuoteExtractionResult] = {}
+
+        # Load NLP models lazily
         self._nlp_model: Any = None
         self._claim_classifier: Any = None
 
@@ -126,8 +133,12 @@ class ClaimQuoteExtractionService:
             import time
 
             start_time = time.time()
+
+            # Validate input
             if not text or not text.strip():
                 return StepResult.fail("Input text cannot be empty", status="bad_request")
+
+            # Check cache first
             if use_cache:
                 cache_result = self._check_cache(text, speakers, model)
                 if cache_result:
@@ -143,12 +154,18 @@ class ClaimQuoteExtractionService:
                             "processing_time_ms": (time.time() - start_time) * 1000,
                         }
                     )
+
+            # Perform extraction
             model_name = self._select_model(model)
             extraction_result = self._extract_claims_and_quotes(text, speakers, model_name)
+
             if extraction_result:
+                # Cache result
                 if use_cache:
                     self._cache_result(text, speakers, model, extraction_result)
+
                 processing_time = (time.time() - start_time) * 1000
+
                 return StepResult.ok(
                     data={
                         "claims": [c.__dict__ for c in extraction_result.claims],
@@ -162,6 +179,7 @@ class ClaimQuoteExtractionService:
                 )
             else:
                 return StepResult.fail("Extraction failed", status="retryable")
+
         except Exception as e:
             logger.error(f"Claim/quote extraction failed: {e}")
             return StepResult.fail(f"Extraction failed: {e!s}", status="retryable")
@@ -185,34 +203,51 @@ class ClaimQuoteExtractionService:
         try:
             all_claims = []
             all_quotes = []
+
             for segment in segments:
                 segment_text = segment.get("text", "")
                 speaker = segment.get("speaker")
                 start_time = segment.get("start_time")
+
                 if not segment_text:
                     continue
+
+                # Extract from this segment
                 segment_result = self.extract_claims_and_quotes(
                     text=segment_text,
-                    speakers=[{"speaker": speaker, "start": start_time, "end": start_time + 30}],
+                    speakers=[
+                        {
+                            "speaker": speaker,
+                            "start": start_time,
+                            "end": start_time + 30,
+                        }
+                    ],
                     model=model,
-                    use_cache=False,
+                    use_cache=False,  # Don't cache individual segments
                 )
+
                 if segment_result.success:
                     segment_data = segment_result.data
+
+                    # Add segment context to extracted items
                     for claim in segment_data["claims"]:
                         claim["segment_start"] = start_time
                         claim["segment_speaker"] = speaker
                         all_claims.append(claim)
+
                     for quote in segment_data["quotes"]:
                         quote["segment_start"] = start_time
                         quote["segment_speaker"] = speaker
                         all_quotes.append(quote)
+
+            # Calculate overall confidence
             total_items = len(all_claims) + len(all_quotes)
             avg_confidence = (
-                (sum((c["confidence"] for c in all_claims)) + sum((q["confidence"] for q in all_quotes))) / total_items
+                (sum(c["confidence"] for c in all_claims) + sum(q["confidence"] for q in all_quotes)) / total_items
                 if total_items > 0
                 else 0.0
             )
+
             return StepResult.ok(
                 data={
                     "claims": all_claims,
@@ -222,6 +257,7 @@ class ClaimQuoteExtractionService:
                     "model": model,
                 }
             )
+
         except Exception as e:
             logger.error(f"Segment extraction failed: {e}")
             return StepResult.fail(f"Segment extraction failed: {e!s}")
@@ -235,7 +271,12 @@ class ClaimQuoteExtractionService:
         Returns:
             Model configuration string
         """
-        model_configs = {"fast": "fast_extraction", "balanced": "balanced_extraction", "quality": "quality_extraction"}
+        model_configs = {
+            "fast": "fast_extraction",
+            "balanced": "balanced_extraction",
+            "quality": "quality_extraction",
+        }
+
         return model_configs.get(model_alias, "balanced_extraction")
 
     def _extract_claims_and_quotes(
@@ -252,10 +293,14 @@ class ClaimQuoteExtractionService:
             ClaimQuoteExtractionResult or None if extraction fails
         """
         try:
+            # Try advanced NLP extraction first
             if SPACY_AVAILABLE and TRANSFORMERS_AVAILABLE:
                 return self._extract_with_nlp(text, speakers, model_name)
+
+            # Fallback to rule-based extraction
             logger.warning("NLP models not available, using rule-based extraction")
             return self._extract_with_rules(text, speakers, model_name)
+
         except Exception as e:
             logger.error(f"Extraction failed for model {model_name}: {e}")
             return None
@@ -273,42 +318,60 @@ class ClaimQuoteExtractionService:
         Returns:
             ClaimQuoteExtractionResult with extracted items
         """
+        # Load models lazily
         if self._nlp_model is None and SPACY_AVAILABLE:
             logger.info("Loading spaCy model")
             try:
                 self._nlp_model = spacy.load("en_core_web_sm")
             except OSError:
-                self._nlp_model = spacy.load("en_core_web_sm")
+                # Fallback to basic English if full model not available
+                self._nlp_model = spacy.load("en_core_web_sm")  # Will fail gracefully
+
         if self._claim_classifier is None and TRANSFORMERS_AVAILABLE:
             logger.info("Loading claim classification model")
             try:
                 self._claim_classifier = pipeline(
-                    "text-classification", model="microsoft/DialoGPT-medium", return_all_scores=True
+                    "text-classification",
+                    model="microsoft/DialoGPT-medium",
+                    return_all_scores=True,
                 )
             except Exception:
                 self._claim_classifier = None
+
         claims = []
         quotes = []
+
+        # Split text into sentences for analysis
         if self._nlp_model:
             doc = self._nlp_model(text)
             sentences = [sent.text.strip() for sent in doc.sents]
         else:
-            sentences = re.split("[.!?]+", text)
+            # Fallback sentence splitting
+            sentences = re.split(r"[.!?]+", text)
             sentences = [s.strip() for s in sentences if s.strip()]
+
+        # Extract claims and quotes from each sentence
         for i, sentence in enumerate(sentences):
             timestamp = self._estimate_timestamp(i, len(sentences), speakers)
+
+            # Extract claims
             claim = self._extract_claim(sentence, timestamp, model_name)
             if claim:
                 claims.append(claim)
+
+            # Extract quotes
             quote = self._extract_quote(sentence, timestamp, model_name)
             if quote:
                 quotes.append(quote)
+
+        # Calculate overall confidence
         total_items = len(claims) + len(quotes)
         avg_confidence = (
-            (sum((c.confidence for c in claims)) + sum((q.confidence for q in quotes))) / total_items
+            (sum(c.confidence for c in claims) + sum(q.confidence for q in quotes)) / total_items
             if total_items > 0
             else 0.0
         )
+
         return ClaimQuoteExtractionResult(
             claims=claims,
             quotes=quotes,
@@ -332,37 +395,49 @@ class ClaimQuoteExtractionService:
         """
         claims = []
         quotes = []
-        sentences = re.split("[.!?]+", text)
+
+        # Split text into sentences
+        sentences = re.split(r"[.!?]+", text)
         sentences = [s.strip() for s in sentences if s.strip()]
+
+        # Pattern-based extraction
         for i, sentence in enumerate(sentences):
             timestamp = self._estimate_timestamp(i, len(sentences), speakers)
+
+            # Claim patterns
             claim_patterns = [
-                "\\b(claim|state|assert|believe|think)\\b.*\\b(that|because|since)\\b",
-                "\\b(according to|research shows|studies indicate)\\b",
-                "\\b(in fact|actually|clearly|obviously)\\b",
-                "\\b(statistics|data|evidence)\\b.*\\b(show|prove|demonstrate)\\b",
+                r"\b(claim|state|assert|believe|think)\b.*\b(that|because|since)\b",  # Assertions
+                r"\b(according to|research shows|studies indicate)\b",  # Citations
+                r"\b(in fact|actually|clearly|obviously)\b",  # Strong statements
+                r"\b(statistics|data|evidence)\b.*\b(show|prove|demonstrate)\b",  # Evidence-based
             ]
+
+            # Quote patterns
             quote_patterns = [
-                '"([^"]*)"',
-                "'([^']*)'",
-                "\\b(said|stated|mentioned|explained)\\b.*[\"\\']([^\"\\']*)[\"\\']",
+                r'"([^"]*)"',  # Quoted text
+                r"'([^']*)'",  # Single-quoted text
+                r'\b(said|stated|mentioned|explained)\b.*["\']([^"\']*)["\']',  # Reported speech
             ]
+
+            # Check for claims
             for pattern in claim_patterns:
                 if re.search(pattern, sentence, re.IGNORECASE):
                     claim = ExtractedClaim(
                         text=sentence,
                         speaker=self._find_speaker_at_time(timestamp, speakers),
                         timestamp_seconds=timestamp,
-                        confidence=0.7,
+                        confidence=0.7,  # Lower confidence for rule-based
                         claim_type="statement",
                     )
                     claims.append(claim)
                     break
+
+            # Check for quotes
             for pattern in quote_patterns:
                 match = re.search(pattern, sentence, re.IGNORECASE)
                 if match:
                     quote_text = match.group(1) or match.group(2)
-                    if quote_text and len(quote_text) > 10:
+                    if quote_text and len(quote_text) > 10:  # Minimum quote length
                         quote = ExtractedQuote(
                             text=quote_text,
                             speaker=self._find_speaker_at_time(timestamp, speakers),
@@ -374,12 +449,15 @@ class ClaimQuoteExtractionService:
                         )
                         quotes.append(quote)
                         break
+
+        # Calculate confidence
         total_items = len(claims) + len(quotes)
         avg_confidence = (
-            (sum((c.confidence for c in claims)) + sum((q.confidence for q in quotes))) / total_items
+            (sum(c.confidence for c in claims) + sum(q.confidence for q in quotes)) / total_items
             if total_items > 0
             else 0.0
         )
+
         return ClaimQuoteExtractionResult(
             claims=claims,
             quotes=quotes,
@@ -399,6 +477,7 @@ class ClaimQuoteExtractionService:
         Returns:
             ExtractedClaim or None if no claim found
         """
+        # Simple heuristic: sentences with factual indicators
         factual_indicators = [
             "according to",
             "research shows",
@@ -411,9 +490,16 @@ class ClaimQuoteExtractionService:
             "clearly",
             "obviously",
         ]
+
         sentence_lower = sentence.lower()
         if any(indicator in sentence_lower for indicator in factual_indicators):
-            return ExtractedClaim(text=sentence, timestamp_seconds=timestamp, confidence=0.7, claim_type="statement")
+            return ExtractedClaim(
+                text=sentence,
+                timestamp_seconds=timestamp,
+                confidence=0.7,
+                claim_type="statement",
+            )
+
         return None
 
     def _extract_quote(self, sentence: str, timestamp: float | None, model_name: str) -> ExtractedQuote | None:
@@ -427,12 +513,17 @@ class ClaimQuoteExtractionService:
         Returns:
             ExtractedQuote or None if no quote found
         """
-        quote_patterns = ['"([^"]*)"', "'([^']*)'"]
+        # Look for quoted text
+        quote_patterns = [
+            r'"([^"]*)"',  # Double quotes
+            r"'([^']*)'",  # Single quotes
+        ]
+
         for pattern in quote_patterns:
             match = re.search(pattern, sentence)
             if match:
                 quote_text = match.group(1)
-                if len(quote_text) > 10:
+                if len(quote_text) > 10:  # Minimum meaningful quote length
                     return ExtractedQuote(
                         text=quote_text,
                         timestamp_seconds=timestamp,
@@ -441,10 +532,14 @@ class ClaimQuoteExtractionService:
                         context=sentence,
                         significance_score=0.6,
                     )
+
         return None
 
     def _estimate_timestamp(
-        self, sentence_index: int, total_sentences: int, speakers: list[dict[str, Any]] | None
+        self,
+        sentence_index: int,
+        total_sentences: int,
+        speakers: list[dict[str, Any]] | None,
     ) -> float | None:
         """Estimate timestamp for a sentence based on position and speaker context.
 
@@ -457,13 +552,20 @@ class ClaimQuoteExtractionService:
             Estimated timestamp in seconds
         """
         if not speakers:
+            # Simple estimation: assume 10 seconds per sentence
             return sentence_index * 10.0
-        estimated_time = sentence_index * 10.0
+
+        # Find appropriate speaker segment
+        estimated_time = sentence_index * 10.0  # Base estimate
+
         for speaker_segment in speakers:
             speaker_start = speaker_segment.get("start", 0)
-            speaker_end = speaker_segment.get("end", speaker_start + 30)
+            speaker_end = speaker_segment.get("end", speaker_start + 30)  # Assume 30s segments
+
             if speaker_start <= estimated_time <= speaker_end:
+                # Use speaker segment midpoint
                 return (speaker_start + speaker_end) / 2
+
         return estimated_time
 
     def _find_speaker_at_time(self, timestamp: float | None, speakers: list[dict[str, Any]] | None) -> str | None:
@@ -478,11 +580,14 @@ class ClaimQuoteExtractionService:
         """
         if not timestamp or not speakers:
             return None
+
         for speaker_segment in speakers:
             speaker_start = speaker_segment.get("start", 0)
             speaker_end = speaker_segment.get("end", speaker_start + 30)
+
             if speaker_start <= timestamp <= speaker_end:
                 return speaker_segment.get("speaker")
+
         return None
 
     def _check_cache(
@@ -500,15 +605,22 @@ class ClaimQuoteExtractionService:
         """
         import hashlib
 
+        # Create cache key from text and speaker context
         speaker_context = str(speakers) if speakers else ""
         combined = f"{text}:{speaker_context}:{model}"
         cache_key = hashlib.sha256(combined.encode()).hexdigest()
+
         if cache_key in self._extraction_cache:
             return self._extraction_cache[cache_key]
+
         return None
 
     def _cache_result(
-        self, text: str, speakers: list[dict[str, Any]] | None, model: str, result: ClaimQuoteExtractionResult
+        self,
+        text: str,
+        speakers: list[dict[str, Any]] | None,
+        model: str,
+        result: ClaimQuoteExtractionResult,
     ) -> None:
         """Cache extraction result.
 
@@ -521,13 +633,20 @@ class ClaimQuoteExtractionService:
         import hashlib
         import time
 
+        # Create cache key
         speaker_context = str(speakers) if speakers else ""
         combined = f"{text}:{speaker_context}:{model}"
         cache_key = hashlib.sha256(combined.encode()).hexdigest()
+
+        # Add processing timestamp
         result.processing_time_ms = time.time() * 1000
+
+        # Evict old entries if cache is full
         if len(self._extraction_cache) >= self.cache_size:
+            # Simple FIFO eviction - remove first key
             first_key = next(iter(self._extraction_cache))
             del self._extraction_cache[first_key]
+
         self._extraction_cache[cache_key] = result
 
     def clear_cache(self) -> StepResult:
@@ -538,7 +657,9 @@ class ClaimQuoteExtractionService:
         """
         cache_size = len(self._extraction_cache)
         self._extraction_cache.clear()
+
         logger.info(f"Cleared {cache_size} cached extractions")
+
         return StepResult.ok(data={"cleared_entries": cache_size})
 
     def get_cache_stats(self) -> StepResult:
@@ -554,15 +675,20 @@ class ClaimQuoteExtractionService:
                 "utilization": len(self._extraction_cache) / self.cache_size if self.cache_size > 0 else 0.0,
                 "models_cached": {},
             }
+
+            # Count entries per model
             for result in self._extraction_cache.values():
                 model = result.model
                 stats["models_cached"][model] = stats["models_cached"].get(model, 0) + 1
+
             return StepResult.ok(data=stats)
+
         except Exception as e:
             logger.error(f"Failed to get cache stats: {e}")
             return StepResult.fail(f"Failed to get cache stats: {e!s}")
 
 
+# Singleton instance
 _extraction_service: ClaimQuoteExtractionService | None = None
 
 
@@ -573,6 +699,8 @@ def get_claim_quote_extraction_service() -> ClaimQuoteExtractionService:
         Initialized ClaimQuoteExtractionService instance
     """
     global _extraction_service
+
     if _extraction_service is None:
         _extraction_service = ClaimQuoteExtractionService()
+
     return _extraction_service

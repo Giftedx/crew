@@ -15,8 +15,8 @@ from core.degradation_reporter import record_degradation
 
 
 try:
-    from platform.config.configuration import get_config
-except Exception:
+    from core.secure_config import get_config
+except Exception:  # pragma: no cover - fallback when secure_config deps unavailable
 
     class _FallbackConfig:
         """Fallback configuration when secure_config is unavailable."""
@@ -27,6 +27,7 @@ except Exception:
     def _get_fallback_config() -> _FallbackConfig:
         return _FallbackConfig()
 
+    # Alias for compatibility
     get_config = _get_fallback_config
 
 
@@ -55,9 +56,11 @@ def run_whisper(path: str, model: str = "tiny") -> Transcript:
     one-second segment.  The behaviour is sufficient for tests which
     operate on tiny fixtures.
     """
+
     cfg = get_config()
+    # Prefer Faster-Whisper when enabled and available
     if getattr(cfg, "enable_faster_whisper", False):
-        try:
+        try:  # pragma: no cover - heavy dependency path
             from faster_whisper import WhisperModel
 
             model_name = getattr(cfg, "whisper_model", model) or model
@@ -68,12 +71,14 @@ def run_whisper(path: str, model: str = "tiny") -> Transcript:
                 segments=[Segment(start=float(s.start), end=float(s.end), text=str(s.text).strip()) for s in segs]
             )
         except Exception:
+            # Record degradation (faster-whisper failed -> fallback path)
             record_degradation(
                 component="transcribe",
                 event_type="faster_whisper_fallback",
                 severity="warn",
                 detail="faster-whisper path failed; falling back to whisper/text",
             )
+            # fall back to standard whisper or text path
     try:
         import whisper
 
@@ -82,6 +87,7 @@ def run_whisper(path: str, model: str = "tiny") -> Transcript:
         segments = [Segment(start=s["start"], end=s["end"], text=s["text"].strip()) for s in result["segments"]]
         return Transcript(segments=segments)
     except Exception:
+        # If whisper also fails we fallback to plain-text mode (record degradation once)
         record_degradation(
             component="transcribe",
             event_type="whisper_fallback_text",

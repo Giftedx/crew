@@ -18,18 +18,21 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from platform.core.step_result import StepResult
 from typing import Any, Literal
+
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 logger = logging.getLogger(__name__)
+
+# Try to import transformers (optional dependency)
 try:
     from transformers import pipeline
 
     TRANSFORMERS_AVAILABLE = True
 except ImportError:
     TRANSFORMERS_AVAILABLE = False
-    pipeline = None
+    pipeline = None  # type: ignore
     logger.warning("transformers not available, using rule-based safety analysis")
 
 
@@ -37,31 +40,31 @@ except ImportError:
 class SafetyClassification:
     """Safety classification result for content."""
 
-    safety_level: str
-    confidence: float
-    risk_factors: list[str]
-    compliance_score: float
+    safety_level: str  # safe, sensitive, unsafe, explicit
+    confidence: float  # 0.0 to 1.0
+    risk_factors: list[str]  # List of identified risk factors
+    compliance_score: float  # 0.0 to 1.0 (higher = more compliant)
 
 
 @dataclass
 class BrandSuitability:
     """Brand suitability assessment for content."""
 
-    suitability_score: float
-    brand_alignment: str
-    target_audience: str
-    content_warnings: list[str]
-    sponsorship_readiness: bool
+    suitability_score: float  # 0.0 to 1.0 (higher = more suitable)
+    brand_alignment: str  # excellent, good, fair, poor
+    target_audience: str  # family, adult, professional, etc.
+    content_warnings: list[str]  # Required content warnings
+    sponsorship_readiness: bool  # Whether content is suitable for sponsorship
 
 
 @dataclass
 class PolicyCompliance:
     """Policy compliance assessment result."""
 
-    compliance_score: float
-    violated_policies: list[str]
-    compliance_flags: list[str]
-    recommendations: list[str]
+    compliance_score: float  # 0.0 to 1.0
+    violated_policies: list[str]  # List of violated policy categories
+    compliance_flags: list[str]  # Specific compliance issues
+    recommendations: list[str]  # Suggestions for compliance improvement
 
 
 @dataclass
@@ -94,7 +97,11 @@ class SafetyBrandSuitabilityService:
         """
         self.cache_size = cache_size
         self._analysis_cache: dict[str, SafetyBrandSuitabilityResult] = {}
+
+        # Load models lazily
         self._safety_classifier: Any = None
+
+        # Default policy categories
         self._policy_categories = {
             "hate_speech": "Content that promotes hatred or discrimination",
             "violence": "Content depicting or promoting violence",
@@ -132,8 +139,12 @@ class SafetyBrandSuitabilityService:
             import time
 
             start_time = time.time()
+
+            # Validate input
             if not content or not content.strip():
                 return StepResult.fail("Content cannot be empty", status="bad_request")
+
+            # Check cache first
             if use_cache:
                 cache_result = self._check_cache(content, brand_guidelines, model)
                 if cache_result:
@@ -151,12 +162,18 @@ class SafetyBrandSuitabilityService:
                             "processing_time_ms": (time.time() - start_time) * 1000,
                         }
                     )
+
+            # Perform analysis
             model_name = self._select_model(model)
             analysis_result = self._analyze_content(content, brand_guidelines, speaker, timestamp, model_name)
+
             if analysis_result:
+                # Cache result
                 if use_cache:
                     self._cache_result(content, brand_guidelines, model, analysis_result)
+
                 processing_time = (time.time() - start_time) * 1000
+
                 return StepResult.ok(
                     data={
                         "safety": analysis_result.safety.__dict__,
@@ -172,6 +189,7 @@ class SafetyBrandSuitabilityService:
                 )
             else:
                 return StepResult.fail("Analysis failed", status="retryable")
+
         except Exception as e:
             logger.error(f"Safety analysis failed: {e}")
             return StepResult.fail(f"Analysis failed: {e!s}", status="retryable")
@@ -196,34 +214,46 @@ class SafetyBrandSuitabilityService:
         """
         try:
             results = []
+
             for segment in segments:
                 segment_content = segment.get("text", "")
                 speaker = segment.get("speaker")
                 timestamp = segment.get("timestamp")
+
                 if not segment_content:
                     continue
+
+                # Analyze this segment
                 segment_result = self.analyze_content(
                     content=segment_content,
                     brand_guidelines=brand_guidelines,
                     speaker=speaker,
                     timestamp=timestamp,
                     model=model,
-                    use_cache=False,
+                    use_cache=False,  # Don't cache individual segments
                 )
+
                 if segment_result.success:
                     segment_data = segment_result.data
+
+                    # Add segment context
                     segment_data["segment_index"] = len(results)
                     segment_data["original_content"] = segment_content
+
                     results.append(segment_data)
+
+            # Calculate overall compliance scores
             if results:
                 safety_scores = [r["safety"]["compliance_score"] for r in results]
                 suitability_scores = [r["brand_suitability"]["suitability_score"] for r in results]
                 compliance_scores = [r["policy_compliance"]["compliance_score"] for r in results]
+
                 avg_safety = sum(safety_scores) / len(safety_scores)
                 avg_suitability = sum(suitability_scores) / len(suitability_scores)
                 avg_compliance = sum(compliance_scores) / len(compliance_scores)
             else:
                 avg_safety = avg_suitability = avg_compliance = 0.0
+
             return StepResult.ok(
                 data={
                     "results": results,
@@ -236,6 +266,7 @@ class SafetyBrandSuitabilityService:
                     "model": model,
                 }
             )
+
         except Exception as e:
             logger.error(f"Segment analysis failed: {e}")
             return StepResult.fail(f"Segment analysis failed: {e!s}")
@@ -249,7 +280,12 @@ class SafetyBrandSuitabilityService:
         Returns:
             Model configuration string
         """
-        model_configs = {"fast": "fast_analysis", "balanced": "balanced_analysis", "quality": "quality_analysis"}
+        model_configs = {
+            "fast": "fast_analysis",
+            "balanced": "balanced_analysis",
+            "quality": "quality_analysis",
+        }
+
         return model_configs.get(model_alias, "balanced_analysis")
 
     def _analyze_content(
@@ -273,10 +309,14 @@ class SafetyBrandSuitabilityService:
             SafetyBrandSuitabilityResult or None if analysis fails
         """
         try:
+            # Try advanced transformer-based analysis
             if TRANSFORMERS_AVAILABLE:
                 return self._analyze_with_transformers(content, brand_guidelines, speaker, timestamp, model_name)
+
+            # Fallback to rule-based analysis
             logger.warning("Transformers not available, using rule-based analysis")
             return self._analyze_with_rules(content, brand_guidelines, speaker, timestamp, model_name)
+
         except Exception as e:
             logger.error(f"Content analysis failed for model {model_name}: {e}")
             return None
@@ -301,19 +341,36 @@ class SafetyBrandSuitabilityService:
         Returns:
             SafetyBrandSuitabilityResult with analysis
         """
+        # Load model lazily
         if self._safety_classifier is None:
             logger.info("Loading safety classification model")
             try:
+                # Use a multi-label classification model for content safety
                 self._safety_classifier = pipeline(
-                    "text-classification", model="unitary/toxic-bert", return_all_scores=True
+                    "text-classification",
+                    model="unitary/toxic-bert",
+                    return_all_scores=True,
                 )
             except Exception:
                 self._safety_classifier = None
+
+        # Perform safety analysis
         safety = self._analyze_safety(content)
+
+        # Perform brand suitability analysis
         brand_suitability = self._analyze_brand_suitability(content, brand_guidelines)
+
+        # Perform policy compliance analysis
         policy_compliance = self._analyze_policy_compliance(content)
-        confidences = [safety.confidence, brand_suitability.suitability_score, policy_compliance.compliance_score]
+
+        # Calculate overall confidence
+        confidences = [
+            safety.confidence,
+            brand_suitability.suitability_score,
+            policy_compliance.compliance_score,
+        ]
         avg_confidence = sum(confidences) / len(confidences)
+
         return SafetyBrandSuitabilityResult(
             safety=safety,
             brand_suitability=brand_suitability,
@@ -336,10 +393,21 @@ class SafetyBrandSuitabilityService:
         if self._safety_classifier:
             try:
                 results = self._safety_classifier(content)
+
                 if results and isinstance(results[0], list):
                     scores = results[0]
-                    toxic_score = next((item["score"] for item in scores if item["label"].lower() == "toxic"), 0)
-                    safe_score = next((item["score"] for item in scores if item["label"].lower() == "safe"), 0)
+
+                    # Find highest scoring category
+                    toxic_score = next(
+                        (item["score"] for item in scores if item["label"].lower() == "toxic"),
+                        0,
+                    )
+                    safe_score = next(
+                        (item["score"] for item in scores if item["label"].lower() == "safe"),
+                        0,
+                    )
+
+                    # Determine safety level
                     if toxic_score > 0.7:
                         safety_level = "unsafe"
                         confidence = toxic_score
@@ -349,6 +417,8 @@ class SafetyBrandSuitabilityService:
                     else:
                         safety_level = "safe"
                         confidence = safe_score
+
+                    # Identify risk factors
                     risk_factors = []
                     if toxic_score > 0.5:
                         risk_factors.append("toxicity")
@@ -356,15 +426,21 @@ class SafetyBrandSuitabilityService:
                         risk_factors.append("hate_speech")
                     if "violence" in content.lower() or "kill" in content.lower():
                         risk_factors.append("violence")
+
+                    # Calculate compliance score (inverse of risk)
                     compliance_score = 1.0 - toxic_score
+
                     return SafetyClassification(
                         safety_level=safety_level,
                         confidence=confidence,
                         risk_factors=risk_factors,
                         compliance_score=compliance_score,
                     )
+
             except Exception as e:
                 logger.warning(f"Transformer safety analysis failed: {e}")
+
+        # Fallback to rule-based analysis
         return self._analyze_safety_rules(content)
 
     def _analyze_brand_suitability(self, content: str, brand_guidelines: dict[str, Any] | None) -> BrandSuitability:
@@ -377,14 +453,35 @@ class SafetyBrandSuitabilityService:
         Returns:
             BrandSuitability result
         """
+        # Rule-based brand suitability analysis
         content_lower = content.lower()
-        brand_friendly_words = ["professional", "educational", "informative", "helpful", "positive"]
+
+        # Check for brand-friendly indicators
+        brand_friendly_words = [
+            "professional",
+            "educational",
+            "informative",
+            "helpful",
+            "positive",
+        ]
         brand_friendly_score = sum(1 for word in brand_friendly_words if word in content_lower) / len(
             brand_friendly_words
         )
-        brand_risky_words = ["controversial", "political", "religious", "adult", "violent"]
+
+        # Check for brand-risky indicators
+        brand_risky_words = [
+            "controversial",
+            "political",
+            "religious",
+            "adult",
+            "violent",
+        ]
         brand_risky_score = sum(1 for word in brand_risky_words if word in content_lower) / len(brand_risky_words)
+
+        # Calculate suitability score
         suitability_score = max(0.0, brand_friendly_score - brand_risky_score)
+
+        # Determine brand alignment
         if suitability_score > 0.7:
             brand_alignment = "excellent"
         elif suitability_score > 0.5:
@@ -393,18 +490,25 @@ class SafetyBrandSuitabilityService:
             brand_alignment = "fair"
         else:
             brand_alignment = "poor"
+
+        # Determine target audience
         if any(word in content_lower for word in ["family", "kids", "children"]):
             target_audience = "family"
         elif any(word in content_lower for word in ["adult", "mature"]):
             target_audience = "adult"
         else:
             target_audience = "general"
+
+        # Content warnings
         content_warnings = []
         if brand_risky_score > 0.5:
             content_warnings.append("Contains potentially sensitive topics")
         if "political" in content_lower:
             content_warnings.append("Contains political content")
+
+        # Sponsorship readiness
         sponsorship_readiness = suitability_score > 0.6
+
         return BrandSuitability(
             suitability_score=suitability_score,
             brand_alignment=brand_alignment,
@@ -425,19 +529,27 @@ class SafetyBrandSuitabilityService:
         content_lower = content.lower()
         violated_policies = []
         compliance_flags = []
+
+        # Check each policy category
         for policy, description in self._policy_categories.items():
             if self._check_policy_violation(content_lower, policy):
                 violated_policies.append(policy)
                 compliance_flags.append(description)
+
+        # Calculate compliance score
         total_policies = len(self._policy_categories)
         violated_count = len(violated_policies)
         compliance_score = (total_policies - violated_count) / total_policies
+
+        # Generate recommendations
         recommendations = []
         if violated_policies:
             recommendations.append("Review content for policy violations")
             recommendations.append("Consider content warnings for sensitive topics")
+
         if compliance_score < 0.8:
             recommendations.append("Content may require moderation before publication")
+
         return PolicyCompliance(
             compliance_score=compliance_score,
             violated_policies=violated_policies,
@@ -465,6 +577,7 @@ class SafetyBrandSuitabilityService:
             "harassment": ["bully", "harass", "threaten", "intimidate"],
             "illegal_activity": ["drugs", "steal", "illegal", "crime"],
         }
+
         indicators = policy_indicators.get(policy, [])
         return any(indicator in content_lower for indicator in indicators)
 
@@ -478,24 +591,31 @@ class SafetyBrandSuitabilityService:
             SafetyClassification result
         """
         content_lower = content.lower()
+
+        # Check for unsafe indicators
         unsafe_indicators = {
             "hate_speech": ["hate", "racist", "sexist", "homophobic"],
             "violence": ["kill", "murder", "assault", "attack"],
             "profanity": ["fuck", "shit", "damn", "hell"],
         }
+
         risk_factors = []
         max_risk_score = 0.0
+
         for category, indicators in unsafe_indicators.items():
             category_score = sum(1 for indicator in indicators if indicator in content_lower)
             if category_score > 0:
                 risk_factors.append(category)
                 max_risk_score = max(max_risk_score, category_score * 0.2)
+
+        # Determine safety level
         if max_risk_score > 0.6:
             safety_level = "unsafe"
         elif max_risk_score > 0.3:
             safety_level = "sensitive"
         else:
             safety_level = "safe"
+
         return SafetyClassification(
             safety_level=safety_level,
             confidence=min(max_risk_score + 0.5, 1.0),
@@ -518,15 +638,22 @@ class SafetyBrandSuitabilityService:
         """
         import hashlib
 
+        # Create cache key from content and guidelines
         guidelines_str = str(brand_guidelines) if brand_guidelines else ""
         combined = f"{content}:{guidelines_str}:{model}"
         cache_key = hashlib.sha256(combined.encode()).hexdigest()
+
         if cache_key in self._analysis_cache:
             return self._analysis_cache[cache_key]
+
         return None
 
     def _cache_result(
-        self, content: str, brand_guidelines: dict[str, Any] | None, model: str, result: SafetyBrandSuitabilityResult
+        self,
+        content: str,
+        brand_guidelines: dict[str, Any] | None,
+        model: str,
+        result: SafetyBrandSuitabilityResult,
     ) -> None:
         """Cache analysis result.
 
@@ -539,13 +666,20 @@ class SafetyBrandSuitabilityService:
         import hashlib
         import time
 
+        # Create cache key
         guidelines_str = str(brand_guidelines) if brand_guidelines else ""
         combined = f"{content}:{guidelines_str}:{model}"
         cache_key = hashlib.sha256(combined.encode()).hexdigest()
-        result.analysis_confidence = time.time() * 1000
+
+        # Add processing timestamp
+        result.analysis_confidence = time.time() * 1000  # Simplified timestamp
+
+        # Evict old entries if cache is full
         if len(self._analysis_cache) >= self.cache_size:
+            # Simple FIFO eviction - remove first key
             first_key = next(iter(self._analysis_cache))
             del self._analysis_cache[first_key]
+
         self._analysis_cache[cache_key] = result
 
     def clear_cache(self) -> StepResult:
@@ -556,7 +690,9 @@ class SafetyBrandSuitabilityService:
         """
         cache_size = len(self._analysis_cache)
         self._analysis_cache.clear()
+
         logger.info(f"Cleared {cache_size} cached analyses")
+
         return StepResult.ok(data={"cleared_entries": cache_size})
 
     def get_cache_stats(self) -> StepResult:
@@ -572,15 +708,21 @@ class SafetyBrandSuitabilityService:
                 "utilization": len(self._analysis_cache) / self.cache_size if self.cache_size > 0 else 0.0,
                 "models_cached": {},
             }
+
+            # Count entries per model
             for result in self._analysis_cache.values():
+                # Use a simplified model identifier
                 model = "transformer" if hasattr(result, "safety") else "rule_based"
                 stats["models_cached"][model] = stats["models_cached"].get(model, 0) + 1
+
             return StepResult.ok(data=stats)
+
         except Exception as e:
             logger.error(f"Failed to get cache stats: {e}")
             return StepResult.fail(f"Failed to get cache stats: {e!s}")
 
 
+# Singleton instance
 _safety_service: SafetyBrandSuitabilityService | None = None
 
 
@@ -591,6 +733,8 @@ def get_safety_brand_suitability_service() -> SafetyBrandSuitabilityService:
         Initialized SafetyBrandSuitabilityService instance
     """
     global _safety_service
+
     if _safety_service is None:
         _safety_service = SafetyBrandSuitabilityService()
+
     return _safety_service

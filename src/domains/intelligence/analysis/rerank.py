@@ -9,11 +9,11 @@ same interface without leaking vendor SDKs into the codebase.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from platform.config.configuration import get_config
-from platform.http.http_utils import REQUEST_TIMEOUT_SECONDS, resilient_post
 from typing import Any
 
 from core.degradation_reporter import record_degradation
+from core.http_utils import REQUEST_TIMEOUT_SECONDS, resilient_post
+from core.secure_config import get_config
 
 
 @dataclass
@@ -33,13 +33,17 @@ def _cohere_rerank(query: str, docs: list[str], top_n: int) -> RerankResult:
         "top_n": min(max(1, top_n), len(docs)),
         "model": "rerank-english-v3.0",
     }
-    headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+    }
     resp = resilient_post(
         "https://api.cohere.ai/v1/rerank",
         json_payload=payload,
         headers=headers,
         timeout_seconds=REQUEST_TIMEOUT_SECONDS,
     )
+    # minimal parse; tolerate unexpected shapes
     data_any: Any
     try:
         data_any = resp.json()
@@ -48,6 +52,7 @@ def _cohere_rerank(query: str, docs: list[str], top_n: int) -> RerankResult:
     data: dict[str, Any] = data_any if isinstance(data_any, dict) else {}
     results = data.get("results") if isinstance(data, dict) else None
     if not isinstance(results, list):
+        # graceful fallback to identity order
         record_degradation(
             component="rerank",
             event_type="cohere_identity_fallback",
@@ -55,6 +60,7 @@ def _cohere_rerank(query: str, docs: list[str], top_n: int) -> RerankResult:
             detail="cohere response missing results; using identity order",
         )
         return RerankResult(indexes=list(range(len(docs))), scores=[0.0] * len(docs))
+    # sort by provided index order (API returns already sorted)
     idxs: list[int] = []
     scores: list[float] = []
     for r in results:
@@ -90,7 +96,10 @@ def rerank(query: str, docs: list[str], *, provider: str, top_n: int) -> RerankR
             "documents": docs,
             "top_n": min(max(1, top_n), len(docs)),
         }
-        headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+        }
         resp = resilient_post(
             "https://api.jina.ai/v1/rerank",
             json_payload=payload,
