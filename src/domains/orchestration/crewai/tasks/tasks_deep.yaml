@@ -1,0 +1,59 @@
+# Deep Depth Tasks - Enhanced Verification
+#
+# Use case: Content requiring fact-checking and validation
+# Tasks: Download → Transcribe → Analyze → Verify (4 tasks)
+# Processing time: ~5-10 minutes
+
+plan_autonomy_mission:
+  description: >-
+    Launch deep intelligence mission for {request}. Coordinate acquisition,
+    transcription, analysis, and verification stages with enhanced budget tracking.
+  expected_output: Comprehensive mission plan with verification protocols.
+  agent: mission_orchestrator
+  human_input: false
+  async_execution: false
+  output_file: output/deep_mission_{timestamp}.md
+
+capture_source_media:
+  description: >-
+    Resolve and download highest-quality media for {url} with extended metadata capture.
+  expected_output: Detailed download manifest with formats, durations, and platform notes.
+  agent: acquisition_specialist
+  human_input: false
+  async_execution: true
+  output_file: output/download_manifest_{url_hash}.json
+
+transcribe_and_index_media:
+  description: >-
+    Produce accurate transcripts with timestamps, searchable indices, and quality metrics.
+  expected_output: Enhanced transcript bundle with alignment data and confidence scores.
+  agent: transcription_engineer
+  context:
+    - capture_source_media
+  human_input: false
+  async_execution: false
+  output_file: output/transcript_{url_hash}.json
+
+map_transcript_insights:
+  description: >-
+    Deeply analyze transcripts for sentiment shifts, topical clusters, argumentative structure,
+    and noteworthy excerpts requiring verification.
+  expected_output: Detailed insight report with themes, sentiment timeline, and verification targets.
+  agent: analysis_cartographer
+  context:
+    - transcribe_and_index_media
+  human_input: false
+  async_execution: false
+  output_file: output/insight_map_{url_hash}.json
+
+verify_priority_claims:
+  description: >-
+    Extract and rigorously fact-check consequential claims from analyzed content,
+    using multiple verification backends and fallacy detection.
+  expected_output: Verification dossier with claim list, verdicts, confidence scores, fallacy notes, and citations.
+  agent: verification_director
+  context:
+    - map_transcript_insights
+  human_input: false
+  async_execution: false
+  output_file: output/verification_{url_hash}.json
