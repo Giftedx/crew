@@ -11,20 +11,41 @@ Tests cover:
 """
 
 import time
+from typing import TYPE_CHECKING
 from unittest.mock import Mock, patch
 
 import pytest
 from requests.exceptions import ConnectionError, Timeout
 
-from ultimate_discord_intelligence_bot.creator_ops.features.clip_radar import ClipRadar
-from ultimate_discord_intelligence_bot.creator_ops.integrations.twitch_client import (
-    TwitchClient,
-)
-from ultimate_discord_intelligence_bot.creator_ops.integrations.youtube_client import (
-    YouTubeClient,
-)
-from ultimate_discord_intelligence_bot.creator_ops.media.asr import ASRProcessor
 from ultimate_discord_intelligence_bot.step_result import StepResult
+
+
+# Conditional imports for optional ML dependencies
+if TYPE_CHECKING:
+    from ultimate_discord_intelligence_bot.creator_ops.features.clip_radar import ClipRadar
+    from ultimate_discord_intelligence_bot.creator_ops.integrations.twitch_client import (
+        TwitchClient,
+    )
+    from ultimate_discord_intelligence_bot.creator_ops.integrations.youtube_client import (
+        YouTubeClient,
+    )
+    from ultimate_discord_intelligence_bot.creator_ops.media.asr import ASRProcessor
+
+try:
+    from ultimate_discord_intelligence_bot.creator_ops.features.clip_radar import ClipRadar
+    from ultimate_discord_intelligence_bot.creator_ops.integrations.twitch_client import (
+        TwitchClient,
+    )
+    from ultimate_discord_intelligence_bot.creator_ops.integrations.youtube_client import (
+        YouTubeClient,
+    )
+    from ultimate_discord_intelligence_bot.creator_ops.media.asr import ASRProcessor
+except ImportError:
+    # Mock classes for when ML dependencies are not available
+    ClipRadar = None  # type: ignore[assignment,misc]
+    TwitchClient = None  # type: ignore[assignment,misc]
+    YouTubeClient = None  # type: ignore[assignment,misc]
+    ASRProcessor = None  # type: ignore[assignment,misc]
 
 
 class TestCreatorOpsChaos:
@@ -133,7 +154,7 @@ class TestCreatorOpsChaos:
 
     def test_circuit_breaker_behavior(self):
         """Test circuit breaker behavior under failure conditions."""
-        from ultimate_discord_intelligence_bot.core.circuit_breaker_canonical import (
+        from core.circuit_breaker_canonical import (
             CircuitBreaker,
             CircuitConfig,
         )
@@ -142,23 +163,27 @@ class TestCreatorOpsChaos:
         config = CircuitConfig(failure_threshold=2, recovery_timeout=1.0, success_threshold=1)
         circuit = CircuitBreaker("test_circuit", config)
 
-        # Mock failing function
-        def failing_func():
+        # Mock failing async function
+        async def failing_func():
             raise Exception("Service unavailable")
 
-        # First failure
+        # First failure (circuit.call is async)
+        import asyncio
+
         with pytest.raises(Exception):
-            circuit.call(failing_func)
-        assert circuit.state.value == "closed"
+            asyncio.run(circuit.call(failing_func))
+        assert circuit.get_state().value == "closed"
 
         # Second failure should open circuit
+        import asyncio
+
         with pytest.raises(Exception):
-            circuit.call(failing_func)
-        assert circuit.state.value == "open"
+            asyncio.run(circuit.call(failing_func))
+        assert circuit.get_state().value == "open"
 
         # Third call should fail immediately (circuit open)
         with pytest.raises(Exception):
-            circuit.call(failing_func)
+            asyncio.run(circuit.call(failing_func))
 
         # Wait for recovery timeout
         time.sleep(1.1)

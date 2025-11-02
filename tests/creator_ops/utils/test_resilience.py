@@ -7,17 +7,15 @@ import time
 from unittest.mock import patch
 
 import pytest
-
-from ultimate_discord_intelligence_bot.core.circuit_breaker_canonical import (
+from core.circuit_breaker_canonical import (
     CircuitBreaker,
-    CircuitBreakerError,
-    CircuitBreakerManager,
+    CircuitBreakerOpenError,
+    CircuitBreakerRegistry,
     CircuitState,
+    get_circuit_breaker_registry,
     with_circuit_breaker,
 )
-from ultimate_discord_intelligence_bot.core.circuit_breaker_registry import (
-    get_circuit_breaker_registry,
-)
+
 from ultimate_discord_intelligence_bot.creator_ops.utils.backpressure import (
     BackpressureHandler,
     BackpressureManager,
@@ -90,7 +88,7 @@ class TestCircuitBreaker:
         async def any_operation():
             return "should not execute"
 
-        with pytest.raises(CircuitBreakerError):
+        with pytest.raises(CircuitBreakerOpenError):
             await self.breaker.call(any_operation)
 
     @pytest.mark.asyncio
@@ -180,36 +178,36 @@ class TestCircuitBreakerManager:
 
     def setup_method(self):
         """Set up test fixtures."""
-        self.manager = CircuitBreakerManager()
+        self.registry = CircuitBreakerRegistry()
 
     def test_get_breaker(self):
         """Test getting or creating circuit breakers."""
-        breaker1 = self.manager.get_breaker("test_service")
-        breaker2 = self.manager.get_breaker("test_service")
+        breaker1 = self.registry.get_circuit_breaker_sync("test_service")
+        breaker2 = self.registry.get_circuit_breaker_sync("test_service")
 
         assert breaker1 is breaker2
-        assert "test_service" in self.manager.breakers
+        assert "test_service" in self.registry.circuit_breakers
 
     def test_get_all_states(self):
         """Test getting all breaker states."""
-        self.manager.get_breaker("service1")
-        self.manager.get_breaker("service2")
+        self.registry.get_circuit_breaker_sync("service1")
+        self.registry.get_circuit_breaker_sync("service2")
 
-        states = self.manager.get_all_states()
-        assert "service1" in states
-        assert "service2" in states
+        stats = self.registry.get_all_stats()
+        assert "service1" in stats
+        assert "service2" in stats
 
     def test_reset_all(self):
         """Test resetting all breakers."""
-        breaker1 = self.manager.get_breaker("service1")
-        breaker2 = self.manager.get_breaker("service2")
+        breaker1 = self.registry.get_circuit_breaker_sync("service1")
+        breaker2 = self.registry.get_circuit_breaker_sync("service2")
 
         breaker1.force_open()
         breaker2.force_open()
 
-        self.manager.reset_all()
-        assert breaker1.state == CircuitState.CLOSED
-        assert breaker2.state == CircuitState.CLOSED
+        self.registry.reset_all()
+        assert breaker1.get_state() == CircuitState.CLOSED
+        assert breaker2.get_state() == CircuitState.CLOSED
 
 
 class TestIdempotencyManager:
@@ -217,7 +215,7 @@ class TestIdempotencyManager:
 
     def setup_method(self):
         """Set up test fixtures."""
-        self.manager = IdempotencyManager(default_ttl=1.0)
+        self.registry = IdempotencyManager(default_ttl=1.0)
 
     @pytest.mark.asyncio
     async def test_execute_with_idempotency_success(self):
@@ -227,11 +225,11 @@ class TestIdempotencyManager:
             return "result"
 
         # First execution
-        result1 = await self.manager.execute_with_idempotency(test_operation, "test_key")
+        result1 = await self.registry.execute_with_idempotency(test_operation, "test_key")
         assert result1 == "result"
 
         # Second execution with same key should return cached result
-        result2 = await self.manager.execute_with_idempotency(test_operation, "test_key")
+        result2 = await self.registry.execute_with_idempotency(test_operation, "test_key")
         assert result2 == "result"
 
     @pytest.mark.asyncio
@@ -245,8 +243,8 @@ class TestIdempotencyManager:
             return f"result_{execution_count}"
 
         # Execute with different keys
-        result1 = await self.manager.execute_with_idempotency(counting_operation, "key1")
-        result2 = await self.manager.execute_with_idempotency(counting_operation, "key2")
+        result1 = await self.registry.execute_with_idempotency(counting_operation, "key1")
+        result2 = await self.registry.execute_with_idempotency(counting_operation, "key2")
 
         assert result1 == "result_1"
         assert result2 == "result_2"
@@ -263,14 +261,14 @@ class TestIdempotencyManager:
             return f"result_{execution_count}"
 
         # Execute with short TTL
-        result1 = await self.manager.execute_with_idempotency(counting_operation, "test_key", ttl=0.1)
+        result1 = await self.registry.execute_with_idempotency(counting_operation, "test_key", ttl=0.1)
         assert result1 == "result_1"
 
         # Wait for expiration
         await asyncio.sleep(0.2)
 
         # Execute again - should run again
-        result2 = await self.manager.execute_with_idempotency(counting_operation, "test_key")
+        result2 = await self.registry.execute_with_idempotency(counting_operation, "test_key")
         assert result2 == "result_2"
         assert execution_count == 2
 
@@ -282,12 +280,12 @@ class TestIdempotencyManager:
             return StepResult.ok(data={"test": "data"})
 
         # First execution
-        result1 = await self.manager.execute_with_result_idempotency(test_operation, "test_key")
+        result1 = await self.registry.execute_with_result_idempotency(test_operation, "test_key")
         assert result1.success
         assert result1.data == {"test": "data"}
 
         # Second execution should return cached result
-        result2 = await self.manager.execute_with_result_idempotency(test_operation, "test_key")
+        result2 = await self.registry.execute_with_result_idempotency(test_operation, "test_key")
         assert result2.success
         assert result2.data == {"test": "data"}
 
@@ -295,16 +293,16 @@ class TestIdempotencyManager:
     async def test_cleanup_expired(self):
         """Test cleanup of expired keys."""
         # Create expired key
-        await self.manager.execute_with_idempotency(lambda: "test", "expired_key", ttl=0.1)
+        await self.registry.execute_with_idempotency(lambda: "test", "expired_key", ttl=0.1)
         await asyncio.sleep(0.2)
 
         # Cleanup
-        cleaned = await self.manager.cleanup_expired()
+        cleaned = await self.registry.cleanup_expired()
         assert cleaned == 1
 
     def test_get_stats(self):
         """Test getting manager statistics."""
-        stats = self.manager.get_stats()
+        stats = self.registry.get_stats()
         assert "total_keys" in stats
         assert "expired_keys" in stats
         assert "active_keys" in stats
@@ -312,12 +310,12 @@ class TestIdempotencyManager:
     @pytest.mark.asyncio
     async def test_clear_all(self):
         """Test clearing all keys."""
-        await self.manager.execute_with_idempotency(lambda: "test", "key1")
-        await self.manager.execute_with_idempotency(lambda: "test", "key2")
+        await self.registry.execute_with_idempotency(lambda: "test", "key1")
+        await self.registry.execute_with_idempotency(lambda: "test", "key2")
 
-        assert len(self.manager._store) == 2
-        await self.manager.clear_all()
-        assert len(self.manager._store) == 0
+        assert len(self.registry._store) == 2
+        await self.registry.clear_all()
+        assert len(self.registry._store) == 0
 
 
 class TestTokenBucket:
@@ -581,35 +579,35 @@ class TestBackpressureManager:
 
     def setup_method(self):
         """Set up test fixtures."""
-        self.manager = BackpressureManager()
+        self.registry = BackpressureManager()
 
     def test_get_handler(self):
         """Test getting or creating handlers."""
-        handler1 = self.manager.get_handler("test_service")
-        handler2 = self.manager.get_handler("test_service")
+        handler1 = self.registry.get_handler("test_service")
+        handler2 = self.registry.get_handler("test_service")
 
         assert handler1 is handler2
-        assert "test_service" in self.manager.handlers
+        assert "test_service" in self.registry.handlers
 
     def test_get_all_status(self):
         """Test getting all handler statuses."""
-        self.manager.get_handler("service1")
-        self.manager.get_handler("service2")
+        self.registry.get_handler("service1")
+        self.registry.get_handler("service2")
 
-        statuses = self.manager.get_all_status()
+        statuses = self.registry.get_all_status()
         assert "service1" in statuses
         assert "service2" in statuses
 
     @pytest.mark.asyncio
     async def test_cleanup(self):
         """Test cleanup of old depth history."""
-        handler = self.manager.get_handler("test_service")
+        handler = self.registry.get_handler("test_service")
 
         # Add some depth history
         handler.depth_history.append((time.time() - 400, 5))  # Old entry
         handler.depth_history.append((time.time(), 3))  # Recent entry
 
-        await self.manager.cleanup()
+        await self.registry.cleanup()
 
         # Should only have recent entry
         assert len(handler.depth_history) == 1
@@ -631,7 +629,7 @@ class TestDecorators:
             await failing_operation()
 
         # Second failure should open circuit
-        with pytest.raises(CircuitBreakerError):
+        with pytest.raises(CircuitBreakerOpenError):
             await failing_operation()
 
     @pytest.mark.asyncio

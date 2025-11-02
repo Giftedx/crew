@@ -1,3 +1,0 @@
-allowed_models:
-  - openai/gpt-4
-  - anthropic/claude-3-sonnet

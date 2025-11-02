@@ -1,4 +1,0 @@
-# Tenant-specific HTTP retry configuration
-# See src/core/http_utils.py resolve_retry_attempts() for precedence details.
-# This file overrides config/retry.yaml for tenant "example" when a TenantContext is active.
-max_attempts: 4

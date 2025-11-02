@@ -147,3 +147,4 @@ core.*
 /*_test.py
 /*_util.py
 /*_script.py
+.local/

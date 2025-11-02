@@ -1,0 +1,113 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["name", "version", "entrypoint", "capabilities"],
+  "properties": {
+    "name": {"type": "string", "minLength": 1},
+    "version": {"type": "string", "minLength": 1},
+    "author": {"type": "string"},
+    "description": {"type": "string"},
+    "capabilities": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "rag.read",
+          "rag.write",
+          "llm.call",
+          "web.fetch",
+          "discord.reply",
+          "scheduler.task",
+          "mcp.use",
+          "tool.exec"
+        ]
+      },
+      "minItems": 1
+    },
+    "permissions": {
+      "type": "object",
+      "properties": {
+        "required": {
+          "type": "array",
+          "items": {"type": "string"}
+        },
+        "optional": {
+          "type": "array",
+          "items": {"type": "string"}
+        }
+      },
+      "additionalProperties": false
+    },
+    "resources": {
+      "type": "object",
+      "properties": {
+        "cpu_ms": {"type": "integer", "minimum": 1},
+        "memory_mb": {"type": "integer", "minimum": 1},
+        "max_concurrency": {"type": "integer", "minimum": 1}
+      },
+      "additionalProperties": false
+    },
+    "routing_profile_overrides": {"type": "object"},
+    "cost_ceiling_usd": {"type": "number", "minimum": 0},
+    "policy_bindings": {"type": "object"},
+    "config_schema": {"type": "object"},
+    "entrypoint": {"type": "string", "minLength": 1},
+    "tests": {
+      "type": "object",
+      "required": [
+        "selftest_entrypoint",
+        "capability_matrix",
+        "performance_budgets",
+        "determinism"
+      ],
+      "properties": {
+        "selftest_entrypoint": {"type": "string", "minLength": 1},
+        "capability_matrix": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["capability", "scenarios"],
+            "properties": {
+              "capability": {"type": "string"},
+              "scenarios": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["name", "inputs", "expected"],
+                  "properties": {
+                    "name": {"type": "string"},
+                    "inputs": {"type": "object"},
+                    "expected": {"type": "object"},
+                    "perms_required": {
+                      "type": "array",
+                      "items": {"type": "string"}
+                    },
+                    "quotas_required": {"type": "object"},
+                    "policy_context": {"type": "object"},
+                    "golden_refs": {
+                      "type": "array",
+                      "items": {"type": "string"}
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "minItems": 1
+              }
+            },
+            "additionalProperties": false
+          },
+          "minItems": 1
+        },
+        "performance_budgets": {"type": "object"},
+        "determinism": {"type": "object"},
+        "golden_suites": {
+          "type": "array",
+          "items": {"type": "string"}
+        },
+        "publish_policy": {"type": "object"}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

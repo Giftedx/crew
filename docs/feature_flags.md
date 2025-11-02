@@ -21,8 +21,8 @@
 | `ENABLE_ACTIVITIES_ECHO` | server/routes/activities.py, ultimate_discord_intelligence_bot/setup_cli.py |
 | `ENABLE_AUTOINTEL_API` | core/settings.py, server/routes/autointel.py |
 | `ENABLE_CORS` | server/middleware.py, ultimate_discord_intelligence_bot/setup_cli.py |
-| `ENABLE_CREW_CONFIG_VALIDATION` | mcp_server/crewai_server.py, ultimate_discord_intelligence_bot/crew.py |
-| `ENABLE_CREW_STEP_VERBOSE` | mcp_server/crewai_server.py, ultimate_discord_intelligence_bot/crew.py |
+| `ENABLE_CREW_CONFIG_VALIDATION` | mcp_server/crewai_server.py, ultimate_discord_intelligence_bot/crew_core |
+| `ENABLE_CREW_STEP_VERBOSE` | mcp_server/crewai_server.py, ultimate_discord_intelligence_bot/crew_core |
 | `ENABLE_LANGGRAPH_PILOT` | graphs/langgraph_pilot.py, server/routes/pilot.py |
 | `ENABLE_LANGGRAPH_PILOT_API` | server/routes/pilot.py |
 | `ENABLE_MCP_A2A` | mcp_server/server.py, validation/mcp_tools_validator.py |
@@ -73,7 +73,7 @@
 |------|------------------------|
 | `ENABLE_ADAPTIVE_QUALITY` | core/llm_router.py |
 | `ENABLE_ADVANCED_CACHE` | core/settings.py |
-| `ENABLE_AGENT_BRIDGE` | ultimate_discord_intelligence_bot/crew.py, ultimate_discord_intelligence_bot/settings.py |
+| `ENABLE_AGENT_BRIDGE` | ultimate_discord_intelligence_bot/crew_core, ultimate_discord_intelligence_bot/settings.py |
 | `ENABLE_AGENT_EVALS` | eval/trajectory_evaluator.py |
 | `ENABLE_AGENT_OPS` | core/settings.py |
 | `ENABLE_AI_ROUTING` | ultimate_discord_intelligence_bot/agent_training/performance_monitor.py, ultimate_discord_intelligence_bot/agent_training/performance_monitor_final.py |
@@ -106,10 +106,10 @@
 | `ENABLE_COST_AWARE_ROUTING` | core/cost_aware_routing.py, core/llm_router.py |
 | `ENABLE_COST_AWARE_ROUTING_SHADOW` | core/cost_aware_routing.py |
 | `ENABLE_CREATOR_OPS` | ultimate_discord_intelligence_bot/creator_ops/__init__.py, ultimate_discord_intelligence_bot/creator_ops/config.py |
-| `ENABLE_CREW_YAML_VALIDATION` | ultimate_discord_intelligence_bot/crew.py |
+| `ENABLE_CREW_YAML_VALIDATION` | ultimate_discord_intelligence_bot/crew_core |
 | `ENABLE_CROSS_AGENT_LEARNING` | ultimate_discord_intelligence_bot/settings.py |
-| `ENABLE_DASHBOARD` | core/configuration/config_schema.py, ultimate_discord_intelligence_bot/crew.py |
-| `ENABLE_DASHBOARD_INTEGRATION` | ultimate_discord_intelligence_bot/crew.py, ultimate_discord_intelligence_bot/settings.py |
+| `ENABLE_DASHBOARD` | core/configuration/config_schema.py, ultimate_discord_intelligence_bot/crew_core |
+| `ENABLE_DASHBOARD_INTEGRATION` | ultimate_discord_intelligence_bot/crew_core, ultimate_discord_intelligence_bot/settings.py |
 | `ENABLE_DASHBOARD_METRICS` | ultimate_discord_intelligence_bot/pipeline_components/dashboard_metrics.py |
 | `ENABLE_DB_OPTIMIZATIONS` | core/db_optimizer.py |
 | `ENABLE_DEBATE_ANALYSIS` | ultimate_discord_intelligence_bot/config/feature_flags.py |
@@ -146,9 +146,9 @@
 | `ENABLE_INGEST_WORKER` | ultimate_discord_intelligence_bot/discord_bot/registrations.py, ultimate_discord_intelligence_bot/discord_bot/runner.py |
 | `ENABLE_INGEST_YOUTUBE` | ultimate_discord_intelligence_bot/setup_cli.py |
 | `ENABLE_INSTAGRAM` | ultimate_discord_intelligence_bot/creator_ops/config.py |
-| `ENABLE_INTELLIGENT_ALERTING` | ultimate_discord_intelligence_bot/crew.py, ultimate_discord_intelligence_bot/settings.py |
+| `ENABLE_INTELLIGENT_ALERTING` | ultimate_discord_intelligence_bot/crew_core, ultimate_discord_intelligence_bot/settings.py |
 | `ENABLE_KNOWLEDGE_SHARING` | ultimate_discord_intelligence_bot/settings.py |
-| `ENABLE_LANGGRAPH_PIPELINE` | ultimate_discord_intelligence_bot/config/feature_flags.py, ultimate_discord_intelligence_bot/crew.py |
+| `ENABLE_LANGGRAPH_PIPELINE` | ultimate_discord_intelligence_bot/config/feature_flags.py, ultimate_discord_intelligence_bot/crew_core |
 | `ENABLE_LAZY_LOADING` | ultimate_discord_intelligence_bot/config/feature_flags.py |
 | `ENABLE_LLMLINGUA` | core/settings.py, ultimate_discord_intelligence_bot/services/prompt_engine.py |
 | `ENABLE_LLMLINGUA_SHADOW` | core/settings.py, ultimate_discord_intelligence_bot/services/prompt_engine.py |
@@ -206,12 +206,12 @@
 | `ENABLE_TRANSCRIPT_COMPRESSION` | core/settings.py, ultimate_discord_intelligence_bot/pipeline_components/base.py |
 | `ENABLE_TWITCH` | ultimate_discord_intelligence_bot/config/feature_flags.py, ultimate_discord_intelligence_bot/creator_ops/config.py |
 | `ENABLE_TWITCH_INTEGRATION` | ultimate_discord_intelligence_bot/config/feature_flags.py |
-| `ENABLE_UNIFIED_CACHE` | ultimate_discord_intelligence_bot/crew.py, ultimate_discord_intelligence_bot/crew_modular.py |
+| `ENABLE_UNIFIED_CACHE` | ultimate_discord_intelligence_bot/crew_core, ultimate_discord_intelligence_bot/crew_modular.py |
 | `ENABLE_UNIFIED_COST_TRACKING` | ultimate_discord_intelligence_bot/settings.py |
 | `ENABLE_UNIFIED_KNOWLEDGE` | ultimate_discord_intelligence_bot/config/feature_flags.py, ultimate_discord_intelligence_bot/config/validation.py |
-| `ENABLE_UNIFIED_METRICS` | ultimate_discord_intelligence_bot/crew.py, ultimate_discord_intelligence_bot/settings.py |
-| `ENABLE_UNIFIED_ORCHESTRATION` | ultimate_discord_intelligence_bot/crew.py, ultimate_discord_intelligence_bot/settings.py |
-| `ENABLE_UNIFIED_ROUTER` | ultimate_discord_intelligence_bot/crew.py, ultimate_discord_intelligence_bot/crew_modular.py |
+| `ENABLE_UNIFIED_METRICS` | ultimate_discord_intelligence_bot/crew_core, ultimate_discord_intelligence_bot/settings.py |
+| `ENABLE_UNIFIED_ORCHESTRATION` | ultimate_discord_intelligence_bot/crew_core, ultimate_discord_intelligence_bot/settings.py |
+| `ENABLE_UNIFIED_ROUTER` | ultimate_discord_intelligence_bot/crew_core, ultimate_discord_intelligence_bot/crew_modular.py |
 | `ENABLE_VECTOR_MEMORY` | ultimate_discord_intelligence_bot/config/feature_flags.py, ultimate_discord_intelligence_bot/config/validation.py |
 | `ENABLE_VECTOR_SEARCH` | core/settings.py, ultimate_discord_intelligence_bot/setup_cli.py |
 | `ENABLE_VOWPAL_WABBIT_BANDIT` | ai/routing/vw_bandit_router.py, core/llm_router.py |

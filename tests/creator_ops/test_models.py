@@ -11,7 +11,7 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from ultimate_discord_intelligence_bot.creator_ops.models.schema import (
+from ultimate_discord_intelligence_bot.creator_ops.models import (
     Account,
     BaseModel,
     Claim,
@@ -19,8 +19,6 @@ from ultimate_discord_intelligence_bot.creator_ops.models.schema import (
     Media,
     Topic,
     Unit,
-    create_database_engine,
-    create_tables,
 )
 
 

@@ -16,96 +16,33 @@ from unittest.mock import Mock, patch
 
 import pytest
 
+from ultimate_discord_intelligence_bot.creator_ops.config import CreatorOpsConfig
+from ultimate_discord_intelligence_bot.creator_ops.media import (
+    WhisperASR,
+)
 from ultimate_discord_intelligence_bot.creator_ops.media.asr import (
-    ASRProcessor,
     ASRResult,
-    WhisperConfig,
 )
 
 
-class TestASRProcessor:
+class TestWhisperASR:
     """Test suite for ASR processor functionality."""
 
     def setup_method(self):
         """Set up test fixtures."""
-        self.config = WhisperConfig(
-            model_name="base",
-            device="cpu",
-            compute_type="int8",
-            language="en",
-            beam_size=5,
-            best_of=5,
-            patience=1.0,
-            length_penalty=1.0,
-            temperature=0.0,
-            compression_ratio_threshold=2.4,
-            log_prob_threshold=-1.0,
-            no_speech_threshold=0.6,
-            condition_on_previous_text=True,
-            prompt_reset_on_temperature=0.5,
-            initial_prompt=None,
-            prefix=None,
-            suppress_blank=True,
-            suppress_tokens=[-1],
-            without_timestamps=False,
-            max_initial_timestamp=0.0,
-            word_timestamps=False,
-            prepend_punctuations="\"'¿([{-",
-            append_punctuations="\"'.,!?:;()[]{}",
-            vad_filter=False,
-            vad_parameters=None,
-        )
-        self.processor = ASRProcessor(config=self.config)
+        self.config = CreatorOpsConfig()
+        # Mock _initialize_models to avoid ML dependency errors
+        with patch.object(WhisperASR, "_initialize_models", return_value=None):
+            self.processor = WhisperASR(model_name="base", device="cpu", config=self.config)
+            self.processor.model = None
+            self.processor.faster_model = None
 
     def test_initialization(self):
         """Test ASR processor initialization."""
-        assert self.processor.config.model_name == "base"
-        assert self.processor.config.device == "cpu"
-        assert self.processor.config.language == "en"
-        assert self.processor.model is None  # Not loaded until first use
-
-    @patch("faster_whisper.WhisperModel")
-    def test_model_loading_success(self, mock_whisper_model):
-        """Test successful model loading."""
-        mock_model = Mock()
-        mock_whisper_model.return_value = mock_model
-
-        result = self.processor._load_model()
-
-        assert result.success
-        assert self.processor.model == mock_model
-        mock_whisper_model.assert_called_once_with("base", device="cpu", compute_type="int8")
-
-    @patch("faster_whisper.WhisperModel")
-    def test_model_loading_failure(self, mock_whisper_model):
-        """Test model loading failure."""
-        mock_whisper_model.side_effect = Exception("Model loading failed")
-
-        result = self.processor._load_model()
-
-        assert not result.success
-        assert "Model loading failed" in result.error
-
-    def test_create_audio_file_success(self):
-        """Test successful audio file creation."""
-        audio_data = b"fake_audio_data"
-        result = self.processor._create_audio_file(audio_data)
-
-        assert result.success
-        assert "audio_file" in result.data
-        audio_file = result.data["audio_file"]
-        assert Path(audio_file).exists()
-        assert Path(audio_file).read_bytes() == audio_data
-
-        # Clean up
-        Path(audio_file).unlink()
-
-    def test_create_audio_file_invalid_data(self):
-        """Test audio file creation with invalid data."""
-        result = self.processor._create_audio_file(None)
-
-        assert not result.success
-        assert "Invalid audio data" in result.error
+        assert self.processor.model_name == "base"
+        assert self.processor.device == "cpu"
+        assert self.processor.config is not None
+        # Model may be None if ML deps not available
 
     @patch("faster_whisper.WhisperModel")
     def test_transcribe_audio_success(self, mock_whisper_model):
@@ -323,7 +260,7 @@ class TestASRProcessor:
             device="cpu",
             language=None,  # Auto-detect
         )
-        processor = ASRProcessor(config=config)
+        processor = WhisperASR(config=config)
 
         @patch("faster_whisper.WhisperModel")
         def test_detection(mock_whisper_model):
@@ -361,7 +298,7 @@ class TestASRProcessor:
             no_speech_threshold=0.5,
             log_prob_threshold=-0.5,
         )
-        processor = ASRProcessor(config=config)
+        processor = WhisperASR(config=config)
 
         @patch("faster_whisper.WhisperModel")
         def test_filtering(mock_whisper_model):

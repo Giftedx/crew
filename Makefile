@@ -39,7 +39,7 @@ setup:
 
 # Validate configuration and system requirements
 config-validate:
-	$(PYTHON) -m ultimate_discord_intelligence_bot.startup_validation
+	$(PYTHON) -m ultimate_discord_intelligence_bot.setup_cli doctor
 
 # Initialize local environment file from template (idempotent)
 .PHONY: init-env

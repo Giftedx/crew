@@ -1,0 +1,31 @@
+{
+  "name": "example_summarizer",
+  "version": "0.1.0",
+  "author": "CrewAI",
+  "description": "Summarise text using an LLM.",
+  "capabilities": ["llm.call"],
+  "entrypoint": "ultimate_discord_intelligence_bot.plugins.example_summarizer:run",
+  "tests": {
+    "selftest_entrypoint": "ultimate_discord_intelligence_bot.plugins.example_summarizer:self_test",
+    "capability_matrix": [
+      {
+        "capability": "llm.call",
+        "scenarios": [
+          {
+            "name": "summarises text",
+            "inputs": {"text": "hello world"},
+            "expected": {
+              "must_include": ["stubbed"],
+              "forbidden": ["error"]
+            },
+            "perms_required": [],
+            "quotas_required": {},
+            "policy_context": {}
+          }
+        ]
+      }
+    ],
+    "performance_budgets": {"max_cost_usd": 0.05, "p95_latency_ms": 1500, "mem_mb": 256},
+    "determinism": {"seed": 42, "temperature": 0.0, "retries": 0}
+  }
+}

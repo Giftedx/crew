@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Performance Dashboard - Week 4 Phase 2</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+        }
+
+        .metric-value {
+            font-size: 36px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 8px;
+        }
+
+        .metric-label {
+            font-size: 13px;
+            color: #999;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #f0f0f0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 12px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s ease;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        .stat-item {
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .stat-number {
+            font-size: 24px;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        .content-type-list {
+            list-style: none;
+        }
+
+        .content-type-item {
+            padding: 16px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .content-type-item:last-child {
+            border-bottom: none;
+        }
+
+        .content-type-name {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .content-type-stats {
+            text-align: right;
+        }
+
+        .content-type-count {
+            font-size: 18px;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .content-type-rate {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .checkpoint-list {
+            list-style: none;
+        }
+
+        .checkpoint-item {
+            padding: 16px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+
+        .checkpoint-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .checkpoint-stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            color: #666;
+        }
+
+        .refresh-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .refresh-button:hover {
+            transform: translateY(-2px);
+        }
+
+        .refresh-button:active {
+            transform: translateY(0);
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 16px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .auto-refresh {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .auto-refresh label {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 50px;
+            height: 26px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: 0.4s;
+            border-radius: 26px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: 0.4s;
+            border-radius: 50%;
+        }
+
+        input:checked+.slider {
+            background-color: #667eea;
+        }
+
+        input:checked+.slider:before {
+            transform: translateX(24px);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>🚀 Performance Dashboard</h1>
+            <p class="subtitle">Week 4 Phase 2 - Real-time Pipeline Optimization Metrics</p>
+            <div class="auto-refresh">
+                <button class="refresh-button" onclick="loadDashboard()">🔄 Refresh Now</button>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="auto-refresh-toggle" onchange="toggleAutoRefresh()">
+                    <span class="slider"></span>
+                </label>
+                <label for="auto-refresh-toggle">Auto-refresh (30s)</label>
+                <span class="status-badge status-info" id="last-update">Never</span>
+            </div>
+        </header>
+
+        <div id="error-container"></div>
+        <div id="loading" class="loading">Loading dashboard data...</div>
+        <div id="dashboard" style="display: none;">
+            <!-- Overall Metrics -->
+            <div class="grid">
+                <div class="card">
+                    <div class="card-title">Total Processed</div>
+                    <div class="metric-value" id="total-processed">0</div>
+                    <div class="metric-label">Content items</div>
+                </div>
+                <div class="card">
+                    <div class="card-title">Bypass Rate</div>
+                    <div class="metric-value" id="bypass-rate">0%</div>
+                    <div class="metric-label">Quality + Early Exit</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="bypass-progress" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-title">Time Savings</div>
+                    <div class="metric-value" id="time-savings">0%</div>
+                    <div class="metric-label">Average reduction</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="savings-progress" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-title">Total Time Saved</div>
+                    <div class="metric-value" id="time-saved-hours">0h</div>
+                    <div class="metric-label">Cumulative savings</div>
+                </div>
+            </div>
+
+            <!-- Processing Breakdown -->
+            <div class="card">
+                <div class="card-title">Processing Breakdown</div>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-number" id="quality-bypassed">0</div>
+                        <div class="stat-label">Quality Bypassed</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="early-exits">0</div>
+                        <div class="stat-label">Early Exits</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="full-processing">0</div>
+                        <div class="stat-label">Full Processing</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="early-exit-rate">0%</div>
+                        <div class="stat-label">Early Exit Rate</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content Types -->
+            <div class="card">
+                <div class="card-title">Content Type Performance</div>
+                <ul class="content-type-list" id="content-types">
+                    <li class="loading">No data yet</li>
+                </ul>
+            </div>
+
+            <!-- Checkpoints -->
+            <div class="card">
+                <div class="card-title">Early Exit Checkpoints</div>
+                <ul class="checkpoint-list" id="checkpoints">
+                    <li class="loading">No data yet</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let autoRefreshInterval = null;
+
+        async function loadDashboard() {
+            const errorContainer = document.getElementById('error-container');
+            const loading = document.getElementById('loading');
+            const dashboard = document.getElementById('dashboard');
+
+            try {
+                errorContainer.innerHTML = '';
+                loading.style.display = 'block';
+
+                const response = await fetch('/api/performance/?hours=24');
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+
+                // Update overall metrics
+                document.getElementById('total-processed').textContent = data.overall_metrics.total_processed.toLocaleString();
+
+                const bypassRate = (data.overall_metrics.bypass_rate * 100).toFixed(1);
+                document.getElementById('bypass-rate').textContent = `${bypassRate}%`;
+                document.getElementById('bypass-progress').style.width = `${bypassRate}%`;
+
+                const timeSavings = (data.overall_metrics.avg_time_savings * 100).toFixed(1);
+                document.getElementById('time-savings').textContent = `${timeSavings}%`;
+                document.getElementById('savings-progress').style.width = `${timeSavings}%`;
+
+                const hoursaved = data.overall_metrics.total_time_saved_hours.toFixed(1);
+                document.getElementById('time-saved-hours').textContent = `${hoursSaved}h`;
+
+                // Update breakdown
+                document.getElementById('quality-bypassed').textContent = data.overall_metrics.quality_bypassed.toLocaleString();
+                document.getElementById('early-exits').textContent = data.overall_metrics.early_exits.toLocaleString();
+                document.getElementById('full-processing').textContent = data.overall_metrics.full_processing.toLocaleString();
+
+                const exitRate = (data.overall_metrics.early_exit_rate * 100).toFixed(1);
+                document.getElementById('early-exit-rate').textContent = `${exitRate}%`;
+
+                // Update content types
+                const contentTypesList = document.getElementById('content-types');
+                if (data.content_type_breakdown.length > 0) {
+                    contentTypesList.innerHTML = data.content_type_breakdown.map(ct => `
+                        <li class="content-type-item">
+                            <div>
+                                <div class="content-type-name">${ct.content_type}</div>
+                                <div class="content-type-rate">Bypass: ${(ct.bypass_rate * 100).toFixed(1)}% | Quality: ${ct.avg_quality_score.toFixed(2)}</div>
+                            </div>
+                            <div class="content-type-stats">
+                                <div class="content-type-count">${ct.count}</div>
+                                <div class="content-type-rate">${ct.avg_processing_time.toFixed(1)}s avg</div>
+                            </div>
+                        </li>
+                    `).join('');
+                } else {
+                    contentTypesList.innerHTML = '<li class="loading">No content type data yet</li>';
+                }
+
+                // Update checkpoints
+                const checkpointsList = document.getElementById('checkpoints');
+                if (data.checkpoint_analytics.length > 0) {
+                    checkpointsList.innerHTML = data.checkpoint_analytics.map(cp => {
+                        const topReason = cp.top_exit_reasons.length > 0 ? cp.top_exit_reasons[0].reason : 'N/A';
+                        return `
+                            <li class="checkpoint-item">
+                                <div class="checkpoint-name">${cp.checkpoint_name}</div>
+                                <div class="checkpoint-stats">
+                                    <span>Exits: ${cp.exit_count} (${(cp.exit_rate * 100).toFixed(1)}%)</span>
+                                    <span>Confidence: ${cp.avg_confidence.toFixed(2)}</span>
+                                    <span>Top: ${topReason}</span>
+                                </div>
+                            </li>
+                        `;
+                    }).join('');
+                } else {
+                    checkpointsList.innerHTML = '<li class="loading">No checkpoint data yet</li>';
+                }
+
+                // Update last update time
+                const now = new Date();
+                document.getElementById('last-update').textContent = `Updated: ${now.toLocaleTimeString()}`;
+                document.getElementById('last-update').className = 'status-badge status-success';
+
+                loading.style.display = 'none';
+                dashboard.style.display = 'block';
+
+            } catch (error) {
+                console.error('Dashboard load error:', error);
+                errorContainer.innerHTML = `
+                    <div class="error">
+                        <strong>Error loading dashboard:</strong> ${error.message}
+                        <br><small>Make sure the API server is running and accessible.</small>
+                    </div>
+                `;
+                loading.style.display = 'none';
+            }
+        }
+
+        function toggleAutoRefresh() {
+            const toggle = document.getElementById('auto-refresh-toggle');
+
+            if (toggle.checked) {
+                // Start auto-refresh every 30 seconds
+                autoRefreshInterval = setInterval(loadDashboard, 30000);
+                console.log('Auto-refresh enabled');
+            } else {
+                // Stop auto-refresh
+                if (autoRefreshInterval) {
+                    clearInterval(autoRefreshInterval);
+                    autoRefreshInterval = null;
+                }
+                console.log('Auto-refresh disabled');
+            }
+        }
+
+        // Load dashboard on page load
+        window.addEventListener('DOMContentLoaded', loadDashboard);
+    </script>
+</body>
+
+</html>

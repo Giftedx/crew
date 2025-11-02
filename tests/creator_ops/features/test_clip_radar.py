@@ -14,11 +14,6 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from ultimate_discord_intelligence_bot.creator_ops.features.clip_radar import ClipRadar
-from ultimate_discord_intelligence_bot.creator_ops.features.clip_radar_models import (
-    ClipMoment,
-    ClipRadarConfig,
-)
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
 

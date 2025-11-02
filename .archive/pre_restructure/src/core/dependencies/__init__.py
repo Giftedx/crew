@@ -1,0 +1,196 @@
+"""Dependency management system with optional dependencies and graceful fallbacks.
+
+This module provides a unified system for managing optional dependencies,
+feature flags, and graceful fallbacks when dependencies are unavailable.
+
+Usage:
+    from src.core.dependencies import (
+        check_dependency,
+        require_dependency,
+        get_with_fallback,
+        is_feature_enabled,
+        redis,
+        qdrant_client,
+    )
+
+    # Check if a dependency is available
+    if check_dependency("redis"):
+        # Use Redis
+        pass
+    else:
+        # Use fallback
+        pass
+
+    # Use optional imports with fallbacks
+    cache = get_with_fallback("redis", fallback_func=get_fallback_cache)
+
+    # Check feature flags
+    if is_feature_enabled("redis_cache"):
+        # Enable Redis caching
+        pass
+"""
+
+from __future__ import annotations
+
+from .dependency_checker import (
+    check_module_available,
+    check_version_requirement,
+    generate_dependency_report,
+    get_dependency_checker,
+    get_module_version,
+    validate_requirements_file,
+)
+from .dependency_manager import (
+    DependencyError,
+    check_dependency,
+    get_dependency_manager,
+    get_with_fallback,
+    is_feature_available,
+    register_fallback,
+    require_dependency,
+    require_dependency_group,
+)
+from .fallback_handlers import (
+    FallbackCache,
+    FallbackDatabase,
+    FallbackHistogram,
+    FallbackMetrics,
+    FallbackVectorStore,
+    get_fallback_cache,
+    get_fallback_database,
+    get_fallback_metrics,
+    get_fallback_vector_store,
+)
+from .feature_flags import (
+    FeatureFlag,
+    FeatureFlagManager,
+    create_feature_flag,
+    disable_feature,
+    enable_feature,
+    get_feature_flag,
+    get_feature_flag_manager,
+    get_feature_status,
+    is_feature_enabled,
+    require_feature,
+    with_feature_flag,
+)
+from .optional_deps import (
+    FeatureGate,
+    OptionalClass,
+    OptionalImport,
+    advanced_monitoring_gate,
+    ai_models_gate,
+    check_dependencies,
+    create_feature_gate,
+    get_optional_class,
+    get_optional_module,
+    numpy,
+    pandas,
+    postgres_database_gate,
+    prometheus_client,
+    prometheus_metrics_gate,
+    psycopg2,
+    qdrant_client,
+    qdrant_vector_gate,
+    redis,
+    redis_cache_gate,
+    require_dependencies,
+    torch,
+    transformers,
+    with_fallback,
+)
+
+
+# Public API
+__all__ = [
+    # Core dependency management
+    "DependencyError",
+    # Fallback handlers
+    "FallbackCache",
+    "FallbackDatabase",
+    "FallbackHistogram",
+    "FallbackMetrics",
+    "FallbackVectorStore",
+    # Feature flags
+    "FeatureFlag",
+    "FeatureFlagManager",
+    "FeatureGate",
+    "OptionalClass",
+    # Optional imports
+    "OptionalImport",
+    "advanced_monitoring_gate",
+    "ai_models_gate",
+    "check_dependencies",
+    "check_dependency",
+    # Dependency checking
+    "check_module_available",
+    "check_version_requirement",
+    "create_feature_flag",
+    "create_feature_gate",
+    "disable_feature",
+    "enable_feature",
+    "generate_dependency_report",
+    "get_dependency_checker",
+    "get_dependency_manager",
+    "get_fallback_cache",
+    "get_fallback_database",
+    "get_fallback_metrics",
+    "get_fallback_vector_store",
+    "get_feature_flag",
+    "get_feature_flag_manager",
+    "get_feature_status",
+    "get_module_version",
+    "get_optional_class",
+    "get_optional_module",
+    "get_with_fallback",
+    "is_feature_available",
+    "is_feature_enabled",
+    "numpy",
+    "pandas",
+    "postgres_database_gate",
+    "prometheus_client",
+    "prometheus_metrics_gate",
+    "psycopg2",
+    "qdrant_client",
+    "qdrant_vector_gate",
+    # Common optional imports
+    "redis",
+    # Feature gates
+    "redis_cache_gate",
+    "register_fallback",
+    "require_dependencies",
+    "require_dependency",
+    "require_dependency_group",
+    "require_feature",
+    "torch",
+    "transformers",
+    "validate_requirements_file",
+    # Utility functions
+    "with_fallback",
+    "with_feature_flag",
+]
+
+
+# Initialize the dependency system
+def _initialize_dependency_system() -> None:
+    """Initialize the dependency management system."""
+    import logging
+
+    logger = logging.getLogger(__name__)
+
+    # Register fallback handlers
+    from .fallback_handlers import register_fallback_handlers
+
+    register_fallback_handlers()
+
+    # Log initialization
+    logger.info("Dependency management system initialized")
+
+    # Generate initial dependency report in debug mode
+    if logger.isEnabledFor(logging.DEBUG):
+        report = generate_dependency_report()
+        logger.debug(f"Dependency system status: {report}")
+
+
+# Auto-initialize when module is imported
+_initialize_dependency_system()
