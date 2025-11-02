@@ -44,7 +44,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     store = vector_store.VectorStore()
     result = pipeline.run(job, store)
-    print(f"Ingest complete: namespace={result['namespace']} chunks={result['chunks']}"
+    print(f"Ingest complete: namespace={result['namespace']} chunks={result['chunks']}")
     return 0
 
 

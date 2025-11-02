@@ -182,7 +182,7 @@ def run(job: IngestJob, store: vector_store.VectorStore) -> dict:
                 missing.append("creator")
             if is_missing_id:
                 missing.append("episode_id")
-            raise ValueError(f"ingest strict mode violation: missing {', '.join(missing)}"
+            raise ValueError(f"ingest strict mode violation: missing {', '.join(missing)}")
         records = [
             vector_store.VectorRecord(
                 vector=v,

@@ -366,7 +366,7 @@ class ConversationalPipeline:
         username = context.message_data.get("author", {}).get("username", "User")
         memory_text = ""
         if memory_context:
-            memory_text = "\n".join([f"- {mem.get('content', '')}"
+            memory_text = "\n".join([f"- {mem.get('content', '')}" for mem in memory_context])
         recent_text = ""
         if context.recent_messages:
             recent_text = "\n".join(

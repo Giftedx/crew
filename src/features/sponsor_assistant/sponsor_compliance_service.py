@@ -302,7 +302,7 @@ class SponsorComplianceAssistant:
             policy_violations = []
             for analysis in segment_analyses:
                 if not analysis["is_compliant"]:
-                    policy_violations.append(f"Non-compliant segment at {analysis['segment'].get('start_time', 0)}s"
+                    policy_violations.append(f"Non-compliant segment at {analysis['segment'].get('start_time', 0)}s")
             recommendations = self._generate_overall_recommendations(
                 segment_analyses, safe_content_percentage, policy_config
             )

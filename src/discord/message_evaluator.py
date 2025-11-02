@@ -165,7 +165,7 @@ class ResponseDecisionAgent:
             )
             if result.success and result.data.get("memories"):
                 memories = result.data["memories"]
-                context_text = "\n".join([f"- {mem.get('content', '')}"
+                context_text = "\n".join([f"- {mem.get('content', '')}" for mem in memories])
                 return f"Relevant knowledge:\n{context_text}"
             else:
                 return "No relevant knowledge found."

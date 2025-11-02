@@ -233,7 +233,7 @@ class CacheOptimizer:
             if cache_recommendation:
                 logger.info(f"Cache optimization applied: {cache_recommendation.action}")
             if vector_optimization.get("optimizations_applied"):
-                logger.info(f"Vector store optimizations: {vector_optimization['optimizations_applied']}"
+                logger.info(f"Vector store optimizations: {vector_optimization['optimizations_applied']}")
         except Exception as e:
             logger.error(f"Error during optimization: {e}")
 

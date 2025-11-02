@@ -238,7 +238,7 @@ class CreatorIntelligenceCollectionManager:
                     logger.warning(f"❌ Failed to initialize collection: {namespace}")
             if failed:
                 return StepResult.fail(
-                    f"Some collections failed to initialize: {', '.join(failed)}"
+                    f"Some collections failed to initialize: {', '.join(failed)}",
                     metadata={"initialized": initialized, "failed": failed},
                 )
             return StepResult.ok(

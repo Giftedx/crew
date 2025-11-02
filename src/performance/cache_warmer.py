@@ -204,7 +204,7 @@ if __name__ == "__main__":
         print("📊 Cache Warming Results:")
         for key, value in result["stats"].items():
             print(f"  • {key}: {value}")
-        print(f"\n🎯 Expected Impact: {result['expected_improvement']}"
-        print(f"Status: {result['status']}"
+        print(f"\n🎯 Expected Impact: {result['expected_improvement']}")
+        print(f"Status: {result['status']}")
 
     asyncio.run(demo_cache_warming())

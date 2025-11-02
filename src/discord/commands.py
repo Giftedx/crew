@@ -426,7 +426,7 @@ class EnhancedAnalysisCommands(commands.Cog):
         embed.add_field(name="🎯 Confidence", value=f"{confidence:.1%}", inline=True)
         sources = answer_data.get("sources", [])
         if sources:
-            sources_text = "\n".join([f"• {src.get('title', 'Unknown')}"
+            sources_text = "\n".join([f"• {src.get('title', 'Unknown')}" for src in sources])
             embed.add_field(name="📚 Sources", value=sources_text[:1024], inline=True)
         citations = answer_data.get("citations", [])
         if citations:

@@ -505,7 +505,7 @@ class ScenarioGenerationMixin:
                             "priority": "high",
                             "category": "capacity",
                             "title": f"Scale {forecast.resource_type.title()} Resources",
-                            "description": f"Capacity threshold will be breached by {forecast.projected_breach_time.strftime('%Y-%m-%d')}"
+                            "description": f"Capacity threshold will be breached by {forecast.projected_breach_time.strftime('%Y-%m-%d')}",
                             "actions": forecast.scaling_recommendations,
                             "timeline": "within_week",
                             "confidence": "high",

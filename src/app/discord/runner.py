@@ -42,7 +42,7 @@ def create_full_bot():
     user_cmds_enabled = os.getenv("ENABLE_DISCORD_USER_COMMANDS", "0").lower() in {"1", "true", "yes"}
     admin_cmds_enabled = os.getenv("ENABLE_DISCORD_ADMIN_COMMANDS", "0").lower() in {"1", "true", "yes"}
     mode = "agent-only" if not user_cmds_enabled else "user-commands"
-    print(f"🧭 Startup mode: {mode} (admin={('on' if admin_cmds_enabled else 'off')})"
+    print(f"🧭 Startup mode: {mode} (admin={('on' if admin_cmds_enabled else 'off')})")
     _register_prefix_commands(bot)
     _register_slash_commands(bot)
     return bot
