@@ -53,6 +53,7 @@ MAPPING = {
     "ContextVerificationTool": "domains.intelligence.verification.context_verification_tool",
     "DeceptionScoringTool": "domains.intelligence.verification.deception_scoring_tool",
     "FactCheckTool": "domains.intelligence.verification.fact_check_tool",
+    "GovernancePolicyTool": "domains.intelligence.verification.governance_policy_tool",
     "OutputValidationTool": "domains.intelligence.verification.output_validation_tool",
     "SponsorComplianceTool": "domains.intelligence.verification.sponsor_compliance_tool",
     "TrustworthinessTrackerTool": "domains.intelligence.verification.trustworthiness_tracker_tool",
@@ -261,7 +262,7 @@ def __getattr__(name: str):  # PEP 562: lazy attribute loading
 
     try:
         # Handle both relative (starting with '.') and absolute imports
-        if mod.startswith("."):
+        if mod.startswith('.'):
             module_path = f"{__name__}{mod}"
         else:
             # Absolute import (e.g., 'domains.intelligence.analysis.social_graph_analysis_tool')

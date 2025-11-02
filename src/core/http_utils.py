@@ -25,8 +25,9 @@ import requests as requests  # tests expect http_utils.requests.ConnectionError
 import random as random
 from pathlib import Path
 
-# Import underlying modular implementations
-from .http import (
+# Import underlying modular implementations from platform
+# Forwarding to platform.http.* for compatibility
+from platform.http import (
     DEFAULT_HTTP_RETRY_ATTEMPTS,
     DEFAULT_RATE_LIMIT_RETRY,
     HTTP_RATE_LIMITED,
@@ -37,9 +38,9 @@ from .http import (
     is_retry_enabled,
     validate_public_https_url,
 )
-from .http import requests_wrappers as _rq
-from .http import retry_config as _retry_cfg
-from .http.retry import _is_retry_enabled as _is_retry_enabled
+from platform.http import requests_wrappers as _rq
+from platform.http import retry_config as _retry_cfg
+from platform.http.retry import _is_retry_enabled as _is_retry_enabled
 import contextlib
 
 # Back-compat seams expected by tests
@@ -166,7 +167,7 @@ def http_request_with_retry(
 ):
     """Facade retry with backoff compatible with legacy tests.
 
-    Differences from core.http.retry.http_request_with_retry:
+    Differences from platform.http.retry.http_request_with_retry:
     - When encountering requests.ConnectionError we apply a 0.3 scaling factor
       to the computed backoff (historical behavior relied upon by tests).
     - Sleeps via this module's ``time.sleep`` to allow test monkeypatching.
@@ -176,7 +177,7 @@ def http_request_with_retry(
     """
     # Delegate entirely to modular implementation when circuit breaker is enabled
     if is_circuit_breaker_enabled():
-        from .http.retry import http_request_with_retry as _cb_retry
+        from platform.http.retry import http_request_with_retry as _cb_retry
 
         return _cb_retry(
             method,

@@ -1,0 +1,69 @@
+{
+  "source_directory": "src/core/http",
+  "target_directory": "src/platform/http",
+  "total_matching_names": 6,
+  "identical_files": 2,
+  "different_implementations": 4,
+  "duplicates": [
+    {
+      "filename": "retry.py",
+      "source_path": "core/http/retry.py",
+      "target_path": "platform/http/retry.py",
+      "md5_hash": "710ad2e5643fb6ab41f6cfd912bdc628",
+      "target_hash": "cc55ec232bd831e29d7ec5e2b15beb17",
+      "file_size": 15761,
+      "target_size": 14090,
+      "verified_identical": false
+    },
+    {
+      "filename": "retry_config.py",
+      "source_path": "core/http/retry_config.py",
+      "target_path": "platform/http/retry_config.py",
+      "md5_hash": "6069e9be64a3175b88093ed63e32d723",
+      "target_hash": "1fe032a084c3b09eb901b9ef45e09f66",
+      "file_size": 4240,
+      "target_size": 3920,
+      "verified_identical": false
+    },
+    {
+      "filename": "requests_wrappers.py",
+      "source_path": "core/http/requests_wrappers.py",
+      "target_path": "platform/http/requests_wrappers.py",
+      "md5_hash": "da24f2e100f3eb8c6f831b3f9a9db5fa",
+      "target_hash": "da24f2e100f3eb8c6f831b3f9a9db5fa",
+      "file_size": 6687,
+      "target_size": 6687,
+      "verified_identical": true
+    },
+    {
+      "filename": "validators.py",
+      "source_path": "core/http/validators.py",
+      "target_path": "platform/http/validators.py",
+      "md5_hash": "bbef6962e0ac079799d73be76f34ae8f",
+      "target_hash": "bbef6962e0ac079799d73be76f34ae8f",
+      "file_size": 920,
+      "target_size": 920,
+      "verified_identical": true
+    },
+    {
+      "filename": "config.py",
+      "source_path": "core/http/config.py",
+      "target_path": "platform/http/config.py",
+      "md5_hash": "bffd6cd930f9a82e6ac514ac693d2dfb",
+      "target_hash": "ef01b93aa98c8633b3aa252e98abf96c",
+      "file_size": 1397,
+      "target_size": 1281,
+      "verified_identical": false
+    },
+    {
+      "filename": "cache.py",
+      "source_path": "core/http/cache.py",
+      "target_path": "platform/http/cache.py",
+      "md5_hash": "eee5fbecc1c53b3fb5d7c29c2cc4e000",
+      "target_hash": "4257f9257a1781bc1803c92a31004e10",
+      "file_size": 6440,
+      "target_size": 5780,
+      "verified_identical": false
+    }
+  ]
+}
