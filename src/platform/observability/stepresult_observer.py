@@ -7,7 +7,7 @@ from functools import wraps
 from typing import TYPE_CHECKING, Any, ParamSpec, TypeVar, cast
 
 from ..settings import ENABLE_OBSERVABILITY_WRAPPER, ENABLE_OTEL_EXPORT
-from ..step_result import StepResult
+from platform.core.step_result import StepResult
 from ..tenancy.context import current_tenant
 
 
