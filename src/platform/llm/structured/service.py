@@ -4,23 +4,35 @@ import json
 import logging
 import time
 from dataclasses import dataclass
-from platform.observability import metrics
 from typing import TYPE_CHECKING, Any, TypeVar, get_args, get_origin
 
 from pydantic import BaseModel, ValidationError
 from pydantic_core import PydanticUndefined
 
-from ultimate_discord_intelligence_bot.services.request_budget import current_request_tracker
+from obs import metrics
+from ultimate_discord_intelligence_bot.services.request_budget import (
+    current_request_tracker,
+)
 
 from .cache import CacheKeyGenerator, ResponseCache
 from .recovery import EnhancedErrorRecovery
-from .streaming import ProgressTracker, StreamingResponse, StreamingStructuredRequest
+from .streaming import (
+    ProgressTracker,
+    StreamingResponse,
+    StreamingStructuredRequest,
+)
 
 
 if TYPE_CHECKING:
     from collections.abc import AsyncGenerator
-    from platform.llm.providers.openrouter import OpenRouterService
+
+    from ultimate_discord_intelligence_bot.services.openrouter_service import (
+        OpenRouterService,
+    )
+
+
 logger = logging.getLogger(__name__)
+
 T = TypeVar("T", bound=BaseModel)
 
 
@@ -29,7 +41,7 @@ class StructuredRequest:
     """Data class for structured LLM request parameters."""
 
     prompt: str
-    response_model: Any
+    response_model: Any  # Will be type[T] but avoiding TypeVar in dataclass
     task_type: str = "general"
     model: str | None = None
     provider_opts: dict[str, Any] | None = None
@@ -65,10 +77,13 @@ class StructuredLLMService:
         self._last_cleanup = time.time()
         self._cleanup_interval = 300
         self.instructor_client = None
+
+        # Try to import Instructor lazily; keep fully optional
         self._instructor_available = False
         try:
-            import instructor
-            from openai import OpenAI as _OpenAI
+            # Avoid type import; runtime only
+            import instructor  # type: ignore
+            from openai import OpenAI as _OpenAI  # type: ignore
 
             base_client = _OpenAI(base_url="https://openrouter.ai/api/v1", api_key=self.openrouter.api_key)
             self.instructor_client = instructor.from_openai(base_client)
@@ -90,45 +105,62 @@ class StructuredLLMService:
     def route_structured(self, request: StructuredRequest) -> BaseModel | dict[str, Any]:
         start_time = time.time()
         self._perform_cache_maintenance()
+
         cache_key = CacheKeyGenerator.generate_key(request)
         cached_result = self.cache.get(cache_key)
         if cached_result is not None:
-            cache_labels = {**metrics.label_ctx(), "task": request.task_type, "method": "cache"}
+            cache_labels = {
+                **metrics.label_ctx(),
+                "task": request.task_type,
+                "method": "cache",
+            }
             metrics.STRUCTURED_LLM_REQUESTS.labels(**cache_labels).inc()
             metrics.STRUCTURED_LLM_CACHE_HITS.labels(**cache_labels).inc()
             return cached_result
-        cache_labels = {**metrics.label_ctx(), "task": request.task_type, "method": "cache"}
+
+        cache_labels = {
+            **metrics.label_ctx(),
+            "task": request.task_type,
+            "method": "cache",
+        }
         metrics.STRUCTURED_LLM_CACHE_MISSES.labels(**cache_labels).inc()
+
         if not self.error_recovery.should_attempt_request(request.model, None):
             return {
                 "status": "error",
                 "error": "Service temporarily unavailable due to repeated failures",
                 "circuit_breaker": "open",
             }
+
         use_instructor = self.instructor_client is not None and self._is_structured_model_compatible(request.model)
         method = "instructor" if use_instructor else "fallback"
         labels = {**metrics.label_ctx(), "task": request.task_type, "method": method}
         metrics.STRUCTURED_LLM_REQUESTS.labels(**labels).inc()
+
         try:
             if use_instructor:
                 result = self._route_with_instructor(request)
             else:
                 result = self._route_with_fallback_parsing(request)
+
             if isinstance(result, dict) and result.get("status") == "error":
                 self.error_recovery.record_failure(request.model, None)
                 error_type = result.get("error", "unknown").split(":")[0].strip().lower()
                 metrics.STRUCTURED_LLM_ERRORS.labels(**labels, error_type=error_type).inc()
                 metrics.STRUCTURED_LLM_LATENCY.labels(**labels).observe((time.time() - start_time) * 1000)
                 return result
+
             if isinstance(result, BaseModel):
                 ttl = self.cache.get_ttl_for_request(request)
                 self.cache.set(cache_key, result, ttl)
             self.error_recovery.record_success(request.model, None)
+
             selected_model = request.model or "auto-selected"
             success_labels = {**labels, "model": selected_model}
             metrics.STRUCTURED_LLM_SUCCESS.labels(**success_labels).inc()
             metrics.STRUCTURED_LLM_LATENCY.labels(**labels).observe((time.time() - start_time) * 1000)
             return result
+
         except Exception as e:
             self.error_recovery.record_failure(request.model, None)
             error_type = type(e).__name__.lower()
@@ -142,18 +174,32 @@ class StructuredLLMService:
         progress_tracker = ProgressTracker(request.progress_callback)
         progress_tracker.start_operation("Structured LLM streaming request")
         self._perform_cache_maintenance()
+
         cache_key = CacheKeyGenerator.generate_key(request)
         cached_result = self.cache.get(cache_key)
         if cached_result is not None:
-            cache_labels = {**metrics.label_ctx(), "task": request.task_type, "method": "cache"}
+            cache_labels = {
+                **metrics.label_ctx(),
+                "task": request.task_type,
+                "method": "cache",
+            }
             metrics.STRUCTURED_LLM_CACHE_HITS.labels(**cache_labels).inc()
             progress_tracker.complete_operation("Retrieved from cache")
             yield StreamingResponse(
-                partial_result=cached_result, is_complete=True, progress_percent=100.0, raw_chunks=[]
+                partial_result=cached_result,
+                is_complete=True,
+                progress_percent=100.0,
+                raw_chunks=[],
             )
             return
-        cache_labels = {**metrics.label_ctx(), "task": request.task_type, "method": "cache"}
+
+        cache_labels = {
+            **metrics.label_ctx(),
+            "task": request.task_type,
+            "method": "cache",
+        }
         metrics.STRUCTURED_LLM_CACHE_MISSES.labels(**cache_labels).inc()
+
         if not self.error_recovery.should_attempt_request(request.model, None):
             progress_tracker.error_operation("Service temporarily unavailable due to repeated failures")
             yield StreamingResponse(
@@ -163,10 +209,12 @@ class StructuredLLMService:
                 error="Service temporarily unavailable due to repeated failures",
             )
             return
+
         use_instructor = self.instructor_client is not None and self._is_structured_model_compatible(request.model)
         method = "instructor_streaming" if use_instructor else "fallback_streaming"
         labels = {**metrics.label_ctx(), "task": request.task_type, "method": method}
         metrics.STRUCTURED_LLM_REQUESTS.labels(**labels).inc()
+
         try:
             if use_instructor:
                 async for response in self._route_with_instructor_streaming(request, progress_tracker):
@@ -179,7 +227,12 @@ class StructuredLLMService:
             error_type = type(e).__name__.lower()
             metrics.STRUCTURED_LLM_ERRORS.labels(**labels, error_type=error_type).inc()
             progress_tracker.error_operation(f"Unexpected error: {e!s}")
-            yield StreamingResponse(partial_result=None, is_complete=True, progress_percent=100.0, error=str(e))
+            yield StreamingResponse(
+                partial_result=None,
+                is_complete=True,
+                progress_percent=100.0,
+                error=str(e),
+            )
 
     def _is_structured_model_compatible(self, model: str | None) -> bool:
         if not model:
@@ -203,7 +256,11 @@ class StructuredLLMService:
             selected_model = request.model or self.openrouter._choose_model_from_map(
                 request.task_type, self.openrouter.models_map
             )
-            usage_labels = {**metrics.label_ctx(), "task": request.task_type, "model": selected_model}
+            usage_labels = {
+                **metrics.label_ctx(),
+                "task": request.task_type,
+                "model": selected_model,
+            }
             metrics.STRUCTURED_LLM_INSTRUCTOR_USAGE.labels(**usage_labels).inc()
             response = self.instructor_client.chat.completions.create(
                 model=selected_model,
@@ -219,7 +276,9 @@ class StructuredLLMService:
                     try:
                         tracker.charge(cost, f"structured_{request.task_type}")
                         metrics.LLM_ESTIMATED_COST.labels(
-                            **metrics.label_ctx(), model=selected_model, provider="instructor"
+                            **metrics.label_ctx(),
+                            model=selected_model,
+                            provider="instructor",
                         ).observe(cost)
                     except Exception:
                         pass
@@ -313,11 +372,20 @@ class StructuredLLMService:
                 )
         except Exception as e:
             progress_tracker.error_operation(f"Streaming failed: {e!s}")
-            yield StreamingResponse(partial_result=None, is_complete=True, progress_percent=100.0, error=str(e))
+            yield StreamingResponse(
+                partial_result=None,
+                is_complete=True,
+                progress_percent=100.0,
+                error=str(e),
+            )
 
     def _route_with_fallback_parsing(self, request: StructuredRequest) -> BaseModel | dict[str, Any]:
         selected_model = request.model or "auto-selected"
-        fallback_labels = {**metrics.label_ctx(), "task": request.task_type, "model": selected_model}
+        fallback_labels = {
+            **metrics.label_ctx(),
+            "task": request.task_type,
+            "model": selected_model,
+        }
         metrics.STRUCTURED_LLM_FALLBACK_USAGE.labels(**fallback_labels).inc()
         structured_prompt = self._enhance_prompt_for_json(request.prompt, request.response_model)
         for attempt in range(request.max_retries):
@@ -349,10 +417,15 @@ class StructuredLLMService:
                         tracker = current_request_tracker()
                         if tracker:
                             try:
-                                tracker.charge(estimated_structured_cost, f"structured_{request.task_type}")
+                                tracker.charge(
+                                    estimated_structured_cost,
+                                    f"structured_{request.task_type}",
+                                )
                                 provider_family = self._extract_provider_family(response)
                                 metrics.LLM_ESTIMATED_COST.labels(
-                                    **metrics.label_ctx(), model=selected_model, provider=provider_family
+                                    **metrics.label_ctx(),
+                                    model=selected_model,
+                                    provider=provider_family,
                                 ).observe(estimated_structured_cost)
                             except Exception:
                                 pass
@@ -366,7 +439,11 @@ class StructuredLLMService:
                 if error_response is None:
                     continue
                 return error_response
-        return {"status": "error", "error": "Failed to generate structured output", "attempts": request.max_retries}
+        return {
+            "status": "error",
+            "error": "Failed to generate structured output",
+            "attempts": request.max_retries,
+        }
 
     def _handle_response_error(
         self, response: dict[str, Any], request: StructuredRequest, attempt: int
@@ -387,11 +464,19 @@ class StructuredLLMService:
         return self._enhance_prompt_with_example(structured_prompt, request.response_model)
 
     def _handle_exception_error(
-        self, e: Exception, request: StructuredRequest, attempt: int, response: dict[str, Any] | None
+        self,
+        e: Exception,
+        request: StructuredRequest,
+        attempt: int,
+        response: dict[str, Any] | None,
     ) -> dict[str, Any] | None:
         error_category = self.error_recovery.categorize_error(e)
         self.error_recovery.record_failure(request.model, None)
-        if attempt < request.max_retries - 1 and error_category in ["rate_limit", "timeout", "parsing"]:
+        if attempt < request.max_retries - 1 and error_category in [
+            "rate_limit",
+            "timeout",
+            "parsing",
+        ]:
             backoff_delay = self.error_recovery.get_backoff_delay(attempt)
             time.sleep(backoff_delay)
             return None
@@ -407,14 +492,29 @@ class StructuredLLMService:
 
     def _enhance_prompt_for_json(self, prompt: str, response_model: type[BaseModel]) -> str:
         schema = response_model.model_json_schema()
-        json_prompt = f"\n{prompt}\n\nIMPORTANT: Respond with valid JSON that matches this exact schema:\n\n{json.dumps(schema, indent=2)}\n\nYour response must be valid JSON only - no additional text or explanation.\n"
+        json_prompt = f"""
+{prompt}
+
+IMPORTANT: Respond with valid JSON that matches this exact schema:
+
+{json.dumps(schema, indent=2)}
+
+Your response must be valid JSON only - no additional text or explanation.
+"""
         return json_prompt
 
     def _enhance_prompt_with_example(self, prompt: str, response_model: type[BaseModel]) -> str:
         try:
             example = self._generate_example_instance(response_model)
             example_json = example.model_dump_json(indent=2)
-            enhanced_prompt = f"\n{prompt}\n\nExample of the expected JSON format:\n{example_json}\n\nRespond with valid JSON in this exact format.\n"
+            enhanced_prompt = f"""
+{prompt}
+
+Example of the expected JSON format:
+{example_json}
+
+Respond with valid JSON in this exact format.
+"""
             return enhanced_prompt
         except Exception:
             return prompt
@@ -487,7 +587,7 @@ class StructuredLLMService:
             estimated_output_tokens = len(response_text.split()) * 1.3
             base_cost_per_1k = 0.002
             total_tokens = tokens_in + estimated_output_tokens
-            estimated_cost = total_tokens / 1000 * base_cost_per_1k
+            estimated_cost = (total_tokens / 1000) * base_cost_per_1k
             return max(estimated_cost, 0.001)
         except Exception:
             return 0.001
