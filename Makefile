@@ -123,7 +123,7 @@ format-check:
 	$(PYTHON) -m ruff format --check .
 
 type:
-	$(PYTHON) -m mypy src/core/llm_router.py src/ai/routing src/eval/config.py src/ai/performance_router.py src/ai/enhanced_ai_router.py src/ai/adaptive_ai_router.py src/ai/ai_enhanced_performance_monitor.py src/ultimate_discord_intelligence_bot/agent_training/performance_monitor.py || true  # incremental adoption, non-zero tolerated locally
+	$(PYTHON) -m mypy src/platform src/domains src/app || true  # incremental adoption, non-zero tolerated locally
 
 # Install missing type stubs for optional dependencies
 types-install:
