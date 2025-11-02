@@ -153,7 +153,7 @@ def main():
         "src/ultimate_discord_intelligence_bot/creator_ops/integrations/tiktok.py",
         "src/ultimate_discord_intelligence_bot/creator_ops/integrations/instagram.py",
         "src/ultimate_discord_intelligence_bot/creator_ops/integrations/x.py",
-        "src/core/http_utils.py",
+        "src/ultimate_discord_intelligence_bot/core/http_utils.py",  # Compatibility shim
         "src/core/structured_llm/service.py",
         "src/ultimate_discord_intelligence_bot/tools/pipeline_tool.py",
         "src/ultimate_discord_intelligence_bot/health_check.py",
