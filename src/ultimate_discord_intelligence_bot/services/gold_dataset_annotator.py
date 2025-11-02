@@ -1,11 +1,13 @@
 from __future__ import annotations
+
 import json
 import logging
 import random
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any
 from platform.core.step_result import StepResult
+from typing import Any
+
 
 logger = logging.getLogger(__name__)
 
@@ -329,19 +331,19 @@ class GoldDatasetAnnotator:
         """Calculate confidence scores for annotation components."""
         scores = {}
         if annotation.transcript_segments:
-            scores["transcript"] = sum((s["confidence"] for s in annotation.transcript_segments)) / len(
+            scores["transcript"] = sum(s["confidence"] for s in annotation.transcript_segments) / len(
                 annotation.transcript_segments
             )
         if annotation.speaker_segments:
-            scores["speakers"] = sum((s["confidence"] for s in annotation.speaker_segments)) / len(
+            scores["speakers"] = sum(s["confidence"] for s in annotation.speaker_segments) / len(
                 annotation.speaker_segments
             )
         if annotation.topics:
-            scores["topics"] = sum((t["confidence"] for t in annotation.topics)) / len(annotation.topics)
+            scores["topics"] = sum(t["confidence"] for t in annotation.topics) / len(annotation.topics)
         if annotation.claims:
-            scores["claims"] = sum((c["confidence"] for c in annotation.claims)) / len(annotation.claims)
+            scores["claims"] = sum(c["confidence"] for c in annotation.claims) / len(annotation.claims)
         if annotation.highlights:
-            scores["highlights"] = sum((h["confidence"] for h in annotation.highlights)) / len(annotation.highlights)
+            scores["highlights"] = sum(h["confidence"] for h in annotation.highlights) / len(annotation.highlights)
         return scores
 
     def _calculate_inter_annotator_agreement(self, annotations: list[GoldEpisodeAnnotation]) -> StepResult:
@@ -405,10 +407,10 @@ class GoldDatasetAnnotator:
                 data={
                     "episodes_annotated": len(annotations),
                     "output_path": output_path,
-                    "total_segments": sum((len(a.transcript_segments) for a in annotations)),
-                    "total_topics": sum((len(a.topics) for a in annotations)),
-                    "total_claims": sum((len(a.claims) for a in annotations)),
-                    "total_highlights": sum((len(a.highlights) for a in annotations)),
+                    "total_segments": sum(len(a.transcript_segments) for a in annotations),
+                    "total_topics": sum(len(a.topics) for a in annotations),
+                    "total_claims": sum(len(a.claims) for a in annotations),
+                    "total_highlights": sum(len(a.highlights) for a in annotations),
                 }
             )
         except Exception as e:
@@ -477,11 +479,11 @@ class GoldDatasetAnnotator:
                     "total_episodes": len(annotations),
                     "validation_passed": True,
                     "annotations_summary": {
-                        "total_segments": sum((len(a.transcript_segments) for a in annotations)),
-                        "total_speakers": sum((len(a.speaker_segments) for a in annotations)),
-                        "total_topics": sum((len(a.topics) for a in annotations)),
-                        "total_claims": sum((len(a.claims) for a in annotations)),
-                        "total_highlights": sum((len(a.highlights) for a in annotations)),
+                        "total_segments": sum(len(a.transcript_segments) for a in annotations),
+                        "total_speakers": sum(len(a.speaker_segments) for a in annotations),
+                        "total_topics": sum(len(a.topics) for a in annotations),
+                        "total_claims": sum(len(a.claims) for a in annotations),
+                        "total_highlights": sum(len(a.highlights) for a in annotations),
                     },
                 }
             )

@@ -5,11 +5,13 @@ learning, and collective intelligence capabilities.
 """
 
 from __future__ import annotations
+
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Any
 from platform.core.step_result import StepResult
+from typing import Any
+
 from .collective_intelligence import (
     CollectiveIntelligenceConfig,
     CollectiveIntelligenceService,
@@ -19,6 +21,7 @@ from .collective_intelligence import (
 )
 from .cross_agent_learning import CrossAgentLearningConfig, CrossAgentLearningService, LearningType
 from .knowledge_bridge import AgentKnowledgeBridge, InsightPriority, InsightType, KnowledgeBridgeConfig
+
 
 logger = logging.getLogger(__name__)
 

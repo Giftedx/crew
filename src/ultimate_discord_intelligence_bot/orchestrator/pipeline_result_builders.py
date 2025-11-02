@@ -6,9 +6,10 @@ and graceful degradation when inputs are incomplete.
 """
 
 from __future__ import annotations
+
 import time
-from typing import Any
 from platform.core.step_result import StepResult
+from typing import Any
 
 
 def merge_threat_payload(

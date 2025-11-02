@@ -6,12 +6,15 @@ de-duplication and context building.
 """
 
 from __future__ import annotations
+
 import logging
 import re
 from dataclasses import dataclass, field
-from typing import Any
 from platform.core.step_result import StepResult
+from typing import Any
+
 from ultimate_discord_intelligence_bot.tenancy.context import current_tenant
+
 
 logger = logging.getLogger(__name__)
 
@@ -117,10 +120,10 @@ class UnifiedRetrievalEngine:
                 "query": {"text": query.text, "intent": query.intent, "filters": query.filters},
                 "metadata": {
                     "total_sources": len({r.source for r in final_results}),
-                    "avg_confidence": sum((r.confidence for r in final_results)) / len(final_results)
+                    "avg_confidence": sum(r.confidence for r in final_results) / len(final_results)
                     if final_results
                     else 0,
-                    "avg_relevance": sum((r.relevance_score for r in final_results)) / len(final_results)
+                    "avg_relevance": sum(r.relevance_score for r in final_results) / len(final_results)
                     if final_results
                     else 0,
                     "tenant_id": tenant_id,

@@ -7,14 +7,10 @@ All functionality has been migrated to the canonical implementation.
 
 from core.circuit_breaker_canonical import (
     CircuitBreaker,
+    CircuitBreakerOpenError,
+    CircuitConfig,
     CircuitState,
     circuit_breaker,
-)
-from core.circuit_breaker_canonical import (
-    CircuitBreakerConfig as CircuitConfig,
-)
-from core.circuit_breaker_canonical import (
-    CircuitBreakerError as CircuitBreakerOpenError,
 )
 from core.circuit_breaker_canonical import (
     CircuitBreakerManager as CircuitBreakerRegistry,

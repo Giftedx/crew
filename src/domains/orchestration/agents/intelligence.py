@@ -5,10 +5,13 @@ and intelligence gathering across multiple sources.
 """
 
 from __future__ import annotations
+
 from typing import TYPE_CHECKING
+
 
 if TYPE_CHECKING:
     from crewai import Agent
+from domains.intelligence.analysis import EnhancedAnalysisTool, TextAnalysisTool
 from ultimate_discord_intelligence_bot.config.feature_flags import FeatureFlags
 from ultimate_discord_intelligence_bot.tools import (
     CrossPlatformNarrativeTrackingTool,
@@ -28,8 +31,8 @@ from ultimate_discord_intelligence_bot.tools import (
     UnifiedMemoryTool,
     VectorSearchTool,
 )
-from domains.intelligence.analysis import EnhancedAnalysisTool, TextAnalysisTool
 from ultimate_discord_intelligence_bot.tools.memory import OfflineRagTool
+
 
 _flags = FeatureFlags.from_env()
 

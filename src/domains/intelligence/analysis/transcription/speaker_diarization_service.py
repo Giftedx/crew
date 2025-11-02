@@ -16,12 +16,15 @@ Dependencies:
 """
 
 from __future__ import annotations
+
 import logging
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Literal
-from analysis.transcription.asr_service import ASRService, TranscriptionResult, TranscriptionSegment
 from platform.core.step_result import StepResult
+from typing import Any, Literal
+
+from analysis.transcription.asr_service import ASRService, TranscriptionResult, TranscriptionSegment
+
 
 logger = logging.getLogger(__name__)
 try:
@@ -338,9 +341,7 @@ class SpeakerDiarizationService:
             Inferred role (host, guest, moderator, etc.)
         """
         duration = end_time - start_time
-        if start_time < 60 and duration > 30:
-            return "host"
-        elif duration > 300:
+        if (start_time < 60 and duration > 30) or duration > 300:
             return "host"
         elif start_time > 3600:
             return "guest"

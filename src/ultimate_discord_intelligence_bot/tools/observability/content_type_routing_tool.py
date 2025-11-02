@@ -7,13 +7,16 @@ Supports both LLM-based classification (via Instructor) and pattern-matching fal
 """
 
 from __future__ import annotations
+
 import logging
 import re
 from dataclasses import dataclass
 from platform.config.configuration import get_config
-from platform.observability.metrics import get_metrics
 from platform.core.step_result import ErrorCategory, StepResult
+from platform.observability.metrics import get_metrics
+
 from ultimate_discord_intelligence_bot.tools._base import BaseTool
+
 
 try:
     from ai.response_models import ContentTypeClassification
@@ -188,15 +191,15 @@ class ContentTypeRoutingTool(BaseTool[dict]):
         ]
         combined_text = f"{title} {description} {transcript[:2000]}".lower()
         scores = {}
-        edu_score = sum((len(re.findall(pattern, combined_text)) for pattern in educational_indicators))
+        edu_score = sum(len(re.findall(pattern, combined_text)) for pattern in educational_indicators)
         scores["educational"] = edu_score / len(combined_text.split()) * 1000
-        ent_score = sum((len(re.findall(pattern, combined_text)) for pattern in entertainment_indicators))
+        ent_score = sum(len(re.findall(pattern, combined_text)) for pattern in entertainment_indicators)
         scores["entertainment"] = ent_score / len(combined_text.split()) * 1000
-        news_score = sum((len(re.findall(pattern, combined_text)) for pattern in news_indicators))
+        news_score = sum(len(re.findall(pattern, combined_text)) for pattern in news_indicators)
         scores["news"] = news_score / len(combined_text.split()) * 1000
-        tech_score = sum((len(re.findall(pattern, combined_text)) for pattern in tech_indicators))
+        tech_score = sum(len(re.findall(pattern, combined_text)) for pattern in tech_indicators)
         scores["technology"] = tech_score / len(combined_text.split()) * 1000
-        disc_score = sum((len(re.findall(pattern, combined_text)) for pattern in discussion_indicators))
+        disc_score = sum(len(re.findall(pattern, combined_text)) for pattern in discussion_indicators)
         scores["discussion"] = disc_score / len(combined_text.split()) * 1000
         primary_type = max(scores.keys(), key=lambda k: scores[k])
         confidence = min(scores[primary_type] / 10, 1.0)

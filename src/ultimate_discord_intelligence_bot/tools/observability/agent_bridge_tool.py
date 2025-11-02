@@ -5,11 +5,16 @@ the agent bridge system for knowledge sharing, learning, and collective intellig
 """
 
 from __future__ import annotations
+
 import logging
 import time
+from platform.core.step_result import StepResult
+from platform.observability.metrics import get_metrics
 from typing import Any
+
 from crewai.tools import BaseTool
 from pydantic import Field
+
 from ultimate_discord_intelligence_bot.agent_bridge import (
     AgentBridge,
     AgentBridgeConfig,
@@ -19,8 +24,7 @@ from ultimate_discord_intelligence_bot.agent_bridge import (
     LearningType,
     SynthesisType,
 )
-from platform.observability.metrics import get_metrics
-from platform.core.step_result import StepResult
+
 
 logger = logging.getLogger(__name__)
 

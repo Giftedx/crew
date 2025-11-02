@@ -6,17 +6,20 @@ that complement the existing GraphMemoryTool with hippocampal-inspired dynamics.
 """
 
 from __future__ import annotations
+
 import contextlib
 import json
 import os
 import time
 from pathlib import Path
+from platform.config.configuration import get_config
+from platform.core.step_result import StepResult
+from platform.observability.metrics import get_metrics
 from typing import Any
 from uuid import uuid4
-from platform.config.configuration import get_config
-from platform.observability.metrics import get_metrics
-from platform.core.step_result import StepResult
+
 from ._base import BaseTool
+
 
 try:
     from hipporag import HippoRAG
@@ -30,9 +33,7 @@ except ImportError:
 def _is_feature_enabled() -> bool:
     """Check if HippoRAG continual memory is enabled via feature flag."""
     config = get_config()
-    env_enabled = any(
-        (bool(os.getenv(flag)) for flag in ("ENABLE_HIPPORAG_MEMORY", "ENABLE_HIPPORAG_CONTINUAL_MEMORY"))
-    )
+    env_enabled = any(bool(os.getenv(flag)) for flag in ("ENABLE_HIPPORAG_MEMORY", "ENABLE_HIPPORAG_CONTINUAL_MEMORY"))
     cfg_enabled = bool(
         getattr(config, "enable_hipporag_memory", False) or getattr(config, "enable_hipporag_continual_memory", False)
     )

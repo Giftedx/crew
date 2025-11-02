@@ -14,6 +14,7 @@ Enhanced Features:
 """
 
 from __future__ import annotations
+
 import logging
 import os
 import statistics
@@ -21,6 +22,7 @@ import time
 from collections import defaultdict, deque
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, TypedDict
+
 
 try:
     from ultimate_discord_intelligence_bot.settings import Settings
@@ -33,12 +35,15 @@ except Exception:
         return _S()
 
 
-from core.dependencies import FallbackVectorStore, check_dependency, get_fallback_vector_store, is_feature_enabled
 from platform.core.step_result import StepResult
+
+from core.dependencies import FallbackVectorStore, check_dependency, get_fallback_vector_store, is_feature_enabled
+
 
 if is_feature_enabled("qdrant_vector") and check_dependency("qdrant_client"):
     try:
         from memory.qdrant_provider import get_qdrant_client
+
         from .qdrant_provider import _DummyClient as _DC
     except Exception:
 
@@ -67,6 +72,7 @@ class _MultiModalEmbedding(TypedDict, total=False):
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
+
     from qdrant_client import QdrantClient as _QdrantClient
     from qdrant_client.http import models as _qmodels
 else:
@@ -232,8 +238,8 @@ class MemoryAnalytics:
         """Get average throughput across recent operations."""
         if not self.performance_metrics:
             return 0.0
-        total_vectors = sum((m.vectors_processed for m in self.performance_metrics))
-        total_time = sum((m.duration_ms for m in self.performance_metrics))
+        total_vectors = sum(m.vectors_processed for m in self.performance_metrics)
+        total_time = sum(m.duration_ms for m in self.performance_metrics)
         return total_vectors / (total_time / 1000) if total_time > 0 else 0
 
     def get_performance_summary(self) -> dict[str, Any]:
@@ -361,7 +367,7 @@ class VectorStore:
             physical = name.replace(":", "__")
             self._physical_names[name] = physical
         cols = self.client.get_collections().collections
-        if not any((c.name == physical for c in cols)):
+        if not any(c.name == physical for c in cols):
             if QDRANT_AVAILABLE:
                 from qdrant_client.http import models as qmodels
 
@@ -436,7 +442,7 @@ class VectorStore:
             batch_size = base_batch_size
         if len(self._performance_history) > 10:
             recent_avg_duration = statistics.mean(
-                (m.duration_ms for m in list(self._performance_history)[-10:] if m.operation in {"upsert", "query"})
+                m.duration_ms for m in list(self._performance_history)[-10:] if m.operation in {"upsert", "query"}
             )
             if recent_avg_duration < 100:
                 batch_size = int(batch_size * ADAPTIVE_BATCH_FACTOR)
@@ -657,9 +663,9 @@ class VectorStore:
                     success=True,
                     data={"namespace": namespace, "message": "No batch operations recorded yet", "total_operations": 0},
                 )
-            avg_duration = statistics.mean((op.duration_ms for op in batch_operations))
-            avg_vectors_per_op = statistics.mean((op.vectors_processed for op in batch_operations))
-            total_vectors = sum((op.vectors_processed for op in batch_operations))
+            avg_duration = statistics.mean(op.duration_ms for op in batch_operations)
+            avg_vectors_per_op = statistics.mean(op.vectors_processed for op in batch_operations)
+            total_vectors = sum(op.vectors_processed for op in batch_operations)
             operation_types: dict[str, int] = {}
             for op in batch_operations:
                 operation_types[op.operation] = operation_types.get(op.operation, 0) + 1
@@ -853,8 +859,8 @@ class VectorStore:
             return 0.0
         try:
             dot_product = sum((a * b for a, b in zip(vec1, vec2, strict=False)))
-            magnitude1 = sum((a * a for a in vec1)) ** 0.5
-            magnitude2 = sum((b * b for b in vec2)) ** 0.5
+            magnitude1 = sum(a * a for a in vec1) ** 0.5
+            magnitude2 = sum(b * b for b in vec2) ** 0.5
             if magnitude1 == 0 or magnitude2 == 0:
                 return 0.0
             similarity = dot_product / (magnitude1 * magnitude2)
@@ -889,9 +895,9 @@ class VectorStore:
                         "total_operations": 0,
                     },
                 )
-            total_vectors_processed = sum((op.vectors_processed for op in compaction_operations))
+            total_vectors_processed = sum(op.vectors_processed for op in compaction_operations)
             avg_vectors_per_compaction = total_vectors_processed / len(compaction_operations)
-            avg_duration = statistics.mean((op.duration_ms for op in compaction_operations))
+            avg_duration = statistics.mean(op.duration_ms for op in compaction_operations)
             physical = self._physical_names.get(namespace, namespace)
             collection_info = await self._get_collection_info(physical)
             return StepResult(
@@ -1117,7 +1123,7 @@ class VectorStore:
                     collections_info[collection_name] = {"error": str(e), "status": "error"}
         except Exception as e:
             logger.warning(f"Failed to get collection info: {e}")
-        total_vectors = sum((info.get("points_count", 0) for info in collections_info.values()))
+        total_vectors = sum(info.get("points_count", 0) for info in collections_info.values())
         estimated_memory_mb = total_vectors * 0.001
         similarity_analysis = self._analyze_similarity_patterns()
         return {

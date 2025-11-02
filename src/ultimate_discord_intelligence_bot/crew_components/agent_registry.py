@@ -1,7 +1,9 @@
 """Agent registry for modular crew organization."""
 
 from __future__ import annotations
+
 from typing import TYPE_CHECKING
+
 from ultimate_discord_intelligence_bot.settings import get_settings
 from ultimate_discord_intelligence_bot.tools import (
     AdvancedPerformanceAnalyticsTool,
@@ -17,6 +19,7 @@ from ultimate_discord_intelligence_bot.tools import (
     TimelineTool,
 )
 from ultimate_discord_intelligence_bot.tools.crewai_tool_wrappers import wrap_tool_for_crewai
+
 
 if TYPE_CHECKING:
     from crewai import Agent

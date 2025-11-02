@@ -7,11 +7,13 @@ same interface without leaking vendor SDKs into the codebase.
 """
 
 from __future__ import annotations
+
 from dataclasses import dataclass
-from typing import Any
-from core.degradation_reporter import record_degradation
-from platform.http.http_utils import REQUEST_TIMEOUT_SECONDS, resilient_post
 from platform.config.configuration import get_config
+from platform.http.http_utils import REQUEST_TIMEOUT_SECONDS, resilient_post
+from typing import Any
+
+from core.degradation_reporter import record_degradation
 
 
 @dataclass

@@ -1,10 +1,12 @@
 """Crew monitor for modular crew organization."""
 
 from __future__ import annotations
+
 import logging
 import time
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
+
 
 if TYPE_CHECKING:
     from platform.core.step_result import StepResult
@@ -85,7 +87,7 @@ class CrewMonitor:
         """Calculate the success rate of executions."""
         if not self.execution_history:
             return 0.0
-        successful_executions = sum((1 for record in self.execution_history if record.get("success", False)))
+        successful_executions = sum(1 for record in self.execution_history if record.get("success", False))
         return successful_executions / len(self.execution_history)
 
     def _calculate_average_execution_time(self) -> float:

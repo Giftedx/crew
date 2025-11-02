@@ -36,11 +36,14 @@ Usage:
 """
 
 from __future__ import annotations
+
 import logging
+from platform.core.step_result import StepResult
 from typing import TYPE_CHECKING, Any
+
 from ultimate_discord_intelligence_bot.config.base import BaseConfig
 from ultimate_discord_intelligence_bot.config.feature_flags import FeatureFlags
-from platform.core.step_result import StepResult
+
 from .openai_cost_monitoring import OpenAICostMonitoringService
 from .openai_function_calling import OpenAIFunctionCallingService
 from .openai_multimodal import MultimodalAnalysisService
@@ -49,6 +52,7 @@ from .openai_streaming import OpenAIStreamingService
 from .openai_structured_outputs import OpenAIStructuredOutputsService
 from .openai_vision import OpenAIVisionService
 from .openai_voice import OpenAIVoiceService
+
 
 if TYPE_CHECKING:
     from collections.abc import AsyncGenerator

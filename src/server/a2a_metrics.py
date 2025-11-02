@@ -5,7 +5,9 @@ without importing the whole metrics surface into the router module.
 """
 
 from __future__ import annotations
+
 import contextlib
+
 
 try:
     from platform.observability.metrics import get_metrics

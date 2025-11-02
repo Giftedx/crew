@@ -1,9 +1,11 @@
 """Simple in-memory caches for LLM calls and retrieval results."""
 
 from __future__ import annotations
+
 import hashlib
-from typing import TYPE_CHECKING, Any
 from platform.cache.bounded_cache import DEFAULT_MAX_SIZE, BoundedLRUCache, create_llm_cache
+from typing import TYPE_CHECKING, Any
+
 
 if TYPE_CHECKING:
     from platform.core.step_result import StepResult

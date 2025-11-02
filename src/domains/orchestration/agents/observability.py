@@ -5,10 +5,13 @@ performance analytics, and alerting.
 """
 
 from __future__ import annotations
+
 from typing import TYPE_CHECKING
+
 
 if TYPE_CHECKING:
     from crewai import Agent
+from domains.intelligence.verification import ConsistencyCheckTool, OutputValidationTool
 from ultimate_discord_intelligence_bot.config.feature_flags import FeatureFlags
 from ultimate_discord_intelligence_bot.tools import (
     AdvancedPerformanceAnalyticsTool,
@@ -26,7 +29,7 @@ from ultimate_discord_intelligence_bot.tools.observability import (
     RouterStatusTool,
     UnifiedMetricsTool,
 )
-from domains.intelligence.verification import ConsistencyCheckTool, OutputValidationTool
+
 
 _flags = FeatureFlags.from_env()
 

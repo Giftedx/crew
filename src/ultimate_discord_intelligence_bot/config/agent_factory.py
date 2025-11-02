@@ -5,9 +5,12 @@ structured definitions, making it easier to test and maintain agent configuratio
 """
 
 from __future__ import annotations
+
 from typing import TYPE_CHECKING, Any
+
 from ultimate_discord_intelligence_bot.config.agent_definitions import AgentDefinition, get_agent_definition
 from ultimate_discord_intelligence_bot.crewai_tool_wrappers import get_tool_wrapper
+
 
 if TYPE_CHECKING:
     from crewai import Agent

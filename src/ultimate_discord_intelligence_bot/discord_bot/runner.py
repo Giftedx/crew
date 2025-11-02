@@ -1,12 +1,15 @@
 from __future__ import annotations
+
 import asyncio
 import contextlib
 import os
 import sys
 import traceback
-from platform.http.http_utils import REQUEST_TIMEOUT_SECONDS, retrying_post
 from platform.config.configuration import get_config as _get_secure_config
+from platform.http.http_utils import REQUEST_TIMEOUT_SECONDS, retrying_post
+
 from core.time import default_utc_now
+
 from .discord_env import _DISCORD_AVAILABLE, LIGHTWEIGHT_IMPORT, build_intents, commands
 from .env import check_environment, enable_autonomous_defaults
 from .ingest import start_ingest_workers

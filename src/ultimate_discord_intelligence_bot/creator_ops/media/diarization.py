@@ -6,10 +6,12 @@ speaker count estimation, and integration with ASR timestamps.
 """
 
 from __future__ import annotations
+
 import logging
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
+
 
 try:
     import torch
@@ -20,8 +22,10 @@ except ImportError:
     Pipeline = None
     Annotation = None
     Segment = None
-from ultimate_discord_intelligence_bot.creator_ops.config import CreatorOpsConfig
 from platform.core.step_result import StepResult
+
+from ultimate_discord_intelligence_bot.creator_ops.config import CreatorOpsConfig
+
 
 logger = logging.getLogger(__name__)
 
@@ -138,7 +142,7 @@ class SpeakerDiarization:
                 segments.append(diarization_segment)
                 speakers.add(speaker)
             segments.sort(key=lambda x: x.start_time)
-            duration = max((segment.end_time for segment in segments)) if segments else 0.0
+            duration = max(segment.end_time for segment in segments) if segments else 0.0
             processing_time = (datetime.utcnow() - start_time).total_seconds()
             result = DiarizationResult(
                 segments=segments,
@@ -216,8 +220,8 @@ class SpeakerDiarization:
                 data={
                     "overlaps": overlaps,
                     "total_overlaps": len(overlaps),
-                    "total_overlap_duration": sum((overlap["duration"] for overlap in overlaps)),
-                    "overlap_percentage": sum((overlap["duration"] for overlap in overlaps))
+                    "total_overlap_duration": sum(overlap["duration"] for overlap in overlaps),
+                    "overlap_percentage": sum(overlap["duration"] for overlap in overlaps)
                     / diarization_result.duration
                     * 100
                     if diarization_result.duration > 0

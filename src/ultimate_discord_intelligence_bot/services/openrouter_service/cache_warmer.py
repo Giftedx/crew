@@ -5,14 +5,17 @@ used prompts and optimize cache performance.
 """
 
 from __future__ import annotations
+
 import asyncio
 import gzip
 import json
 import logging
 import time
-from typing import TYPE_CHECKING, Any
-from ultimate_discord_intelligence_bot.config.feature_flags import FeatureFlags
 from platform.core.step_result import StepResult
+from typing import TYPE_CHECKING, Any
+
+from ultimate_discord_intelligence_bot.config.feature_flags import FeatureFlags
+
 
 if TYPE_CHECKING:
     from .service import OpenRouterService

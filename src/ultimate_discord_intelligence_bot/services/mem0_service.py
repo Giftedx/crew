@@ -1,6 +1,9 @@
 from __future__ import annotations
-from mem0 import Memory
+
 from platform.core.step_result import StepResult
+
+from mem0 import Memory
+
 from ..settings import _get_setting
 
 

@@ -6,11 +6,14 @@ watch X feeds.
 """
 
 from __future__ import annotations
-from typing import TYPE_CHECKING
-from platform.observability.metrics import get_metrics
+
 from platform.core.step_result import StepResult
+from platform.observability.metrics import get_metrics
+from typing import TYPE_CHECKING
+
 from .._base import BaseTool
 from .multi_platform_monitor_tool import MultiPlatformMonitorTool
+
 
 if TYPE_CHECKING:
     from collections.abc import Iterable

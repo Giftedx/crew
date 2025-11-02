@@ -1,11 +1,13 @@
 """Verify whether a clip aligns with its transcript context."""
 
 from __future__ import annotations
-from typing import ClassVar, TypedDict
-from platform.observability.metrics import get_metrics
+
 from platform.core.step_result import StepResult
-from ultimate_discord_intelligence_bot.tools._base import BaseTool
+from platform.observability.metrics import get_metrics
+from typing import ClassVar, TypedDict
+
 from domains.ingestion.providers.transcript_index_tool import TranscriptIndexTool
+from ultimate_discord_intelligence_bot.tools._base import BaseTool
 
 
 class _ContextVerificationResult(TypedDict):

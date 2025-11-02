@@ -1,10 +1,13 @@
 """Pipeline step middleware primitives."""
 
 from __future__ import annotations
+
 import time
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Protocol
+
 from .tracing import tracing_module
+
 
 if TYPE_CHECKING:
     from platform.core.step_result import StepResult

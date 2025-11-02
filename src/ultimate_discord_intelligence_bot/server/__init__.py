@@ -5,6 +5,8 @@ This module re-exports create_app from the canonical server.app module.
 """
 
 from __future__ import annotations
+
 from server.app import create_app
+
 
 __all__ = ["create_app"]

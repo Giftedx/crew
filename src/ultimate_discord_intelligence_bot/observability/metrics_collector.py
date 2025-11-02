@@ -5,12 +5,14 @@ performance monitoring, and observability across the system.
 """
 
 from __future__ import annotations
+
 import json
 import time
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
+
 
 if TYPE_CHECKING:
     from platform.core.step_result import StepResult
@@ -122,8 +124,8 @@ class MetricsCollector:
 
     def _update_system_metrics(self):
         """Update system-wide metrics."""
-        total_calls = sum((metrics.total_calls for metrics in self.tool_metrics.values()))
-        total_time = sum((metrics.total_execution_time for metrics in self.tool_metrics.values()))
+        total_calls = sum(metrics.total_calls for metrics in self.tool_metrics.values())
+        total_time = sum(metrics.total_execution_time for metrics in self.tool_metrics.values())
         active_tools = len([m for m in self.tool_metrics.values() if m.total_calls > 0])
         self.system_metrics.update(total_calls, total_time, active_tools)
         self.system_metrics.system_uptime = time.time() - self.start_time
@@ -177,8 +179,8 @@ class MetricsCollector:
             "system_metrics": asdict(self.system_metrics),
             "tool_count": len(self.tool_metrics),
             "active_tools": len([m for m in self.tool_metrics.values() if m.total_calls > 0]),
-            "total_tool_calls": sum((m.total_calls for m in self.tool_metrics.values())),
-            "average_execution_time": sum((m.average_execution_time for m in self.tool_metrics.values()))
+            "total_tool_calls": sum(m.total_calls for m in self.tool_metrics.values()),
+            "average_execution_time": sum(m.average_execution_time for m in self.tool_metrics.values())
             / len(self.tool_metrics)
             if self.tool_metrics
             else 0,

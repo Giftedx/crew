@@ -5,11 +5,14 @@ and alerting capabilities for the OpenRouter service.
 """
 
 from __future__ import annotations
+
 import logging
 import time
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
+
 from ultimate_discord_intelligence_bot.config.feature_flags import FeatureFlags
+
 
 if TYPE_CHECKING:
     from .service import OpenRouterService
@@ -226,8 +229,7 @@ class AlertManager:
                 continue
             triggered = False
             if (
-                threshold.comparison == "gt"
-                and metric_value > threshold.threshold_value
+                (threshold.comparison == "gt" and metric_value > threshold.threshold_value)
                 or (threshold.comparison == "lt" and metric_value < threshold.threshold_value)
                 or (threshold.comparison == "eq" and metric_value == threshold.threshold_value)
                 or (threshold.comparison == "gte" and metric_value >= threshold.threshold_value)

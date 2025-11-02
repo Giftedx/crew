@@ -5,17 +5,21 @@ jitter, and configurable retry policies.
 """
 
 from __future__ import annotations
+
 import asyncio
 import logging
 import random
 import time
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
-from ultimate_discord_intelligence_bot.config.feature_flags import FeatureFlags
 from platform.core.step_result import StepResult
+from typing import TYPE_CHECKING, Any
+
+from ultimate_discord_intelligence_bot.config.feature_flags import FeatureFlags
+
 
 if TYPE_CHECKING:
     from collections.abc import Callable
+
     from .service import OpenRouterService
 log = logging.getLogger(__name__)
 

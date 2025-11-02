@@ -8,8 +8,11 @@ tests without requiring heavy models.
 """
 
 from __future__ import annotations
+
 from dataclasses import dataclass
+
 from core.degradation_reporter import record_degradation
+
 
 try:
     from platform.config.configuration import get_config

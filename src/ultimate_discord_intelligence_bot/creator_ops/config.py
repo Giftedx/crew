@@ -6,10 +6,11 @@ and other settings for the Creator Operations system.
 """
 
 from __future__ import annotations
+
 import os
 from dataclasses import dataclass, field
-from typing import Any
 from platform.core.step_result import StepResult
+from typing import Any
 
 
 @dataclass

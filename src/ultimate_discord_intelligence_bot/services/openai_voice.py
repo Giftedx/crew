@@ -1,9 +1,11 @@
 """OpenAI voice service for speech-to-speech capabilities."""
 
 from __future__ import annotations
+
 import io
-from ultimate_discord_intelligence_bot.services.openai_service import OpenAIService
 from platform.core.step_result import StepResult
+
+from ultimate_discord_intelligence_bot.services.openai_service import OpenAIService
 
 
 class OpenAIVoiceService(OpenAIService):

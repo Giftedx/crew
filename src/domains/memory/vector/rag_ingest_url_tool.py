@@ -10,12 +10,14 @@ Contract:
 """
 
 from __future__ import annotations
+
 import contextlib
 import html
 import re
+from platform.core.step_result import StepResult
 from platform.http.http_utils import REQUEST_TIMEOUT_SECONDS, cached_get, validate_public_https_url
 from platform.observability.metrics import get_metrics
-from platform.core.step_result import StepResult
+
 from ._base import BaseTool
 
 
@@ -73,7 +75,7 @@ class RagIngestUrlTool(BaseTool[StepResult]):
         overlap: int = 50,
         max_bytes: int = 500000,
     ) -> StepResult:
-        if not isinstance(urls, list) or any((not isinstance(u, str) for u in urls)):
+        if not isinstance(urls, list) or any(not isinstance(u, str) for u in urls):
             return StepResult.fail("Invalid params: urls must be a list of strings")
         fetched = 0
         inserted = 0

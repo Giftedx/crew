@@ -1,0 +1,66 @@
+Makefile:280: warning: overriding recipe for target 'types-install'
+Makefile:130: warning: ignoring old recipe for target 'types-install'
+PYTHONPATH=src python3 -m pytest -q -c .config/pytest.ini
+Traceback (most recent call last):
+  File "<frozen runpy>", line 189, in _run_module_as_main
+  File "<frozen runpy>", line 148, in _get_module_details
+  File "<frozen runpy>", line 112, in _get_module_details
+  File "/usr/lib/python3/dist-packages/pytest/__init__.py", line 5, in <module>
+    from _pytest._code import ExceptionInfo
+  File "/usr/lib/python3/dist-packages/_pytest/_code/__init__.py", line 2, in <module>
+    from .code import Code
+  File "/usr/lib/python3/dist-packages/_pytest/_code/code.py", line 42, in <module>
+    from _pytest._io import TerminalWriter
+  File "/usr/lib/python3/dist-packages/_pytest/_io/__init__.py", line 1, in <module>
+    from .terminalwriter import get_terminal_width
+  File "/usr/lib/python3/dist-packages/_pytest/_io/terminalwriter.py", line 10, in <module>
+    from _pytest.compat import final
+  File "/usr/lib/python3/dist-packages/_pytest/compat.py", line 20, in <module>
+    import py
+  File "/usr/lib/python3/dist-packages/py.py", line 7, in <module>
+    import _pytest._py.path as path
+  File "/usr/lib/python3/dist-packages/_pytest/_py/path.py", line 11, in <module>
+    import uuid
+  File "/usr/lib/python3.12/uuid.py", line 59, in <module>
+    import platform
+  File "/root/.cursor/worktrees/crew__WSL__ubuntu_/kgkoW/src/platform/__init__.py", line 18, in <module>
+    from platform.http.http_utils import resilient_get, resilient_post
+  File "/root/.cursor/worktrees/crew__WSL__ubuntu_/kgkoW/src/platform/http/__init__.py", line 19, in <module>
+    from .circuit_breaker import (
+  File "/root/.cursor/worktrees/crew__WSL__ubuntu_/kgkoW/src/platform/http/circuit_breaker.py", line 13, in <module>
+    from core.circuit_breaker_canonical import (
+ImportError: cannot import name 'CircuitBreakerConfig' from 'core.circuit_breaker_canonical' (/root/.cursor/worktrees/crew__WSL__ubuntu_/kgkoW/src/core/circuit_breaker_canonical.py). Did you mean: 'CircuitBreaker'?
+make: *** [Makefile:150: test] Error 1
+Makefile:280: warning: overriding recipe for target 'types-install'
+Makefile:130: warning: ignoring old recipe for target 'types-install'
+PYTHONPATH=src python3 -m pytest -q -c .config/pytest.ini
+Traceback (most recent call last):
+  File "<frozen runpy>", line 189, in _run_module_as_main
+  File "<frozen runpy>", line 148, in _get_module_details
+  File "<frozen runpy>", line 112, in _get_module_details
+  File "/usr/lib/python3/dist-packages/pytest/__init__.py", line 5, in <module>
+    from _pytest._code import ExceptionInfo
+  File "/usr/lib/python3/dist-packages/_pytest/_code/__init__.py", line 2, in <module>
+    from .code import Code
+  File "/usr/lib/python3/dist-packages/_pytest/_code/code.py", line 42, in <module>
+    from _pytest._io import TerminalWriter
+  File "/usr/lib/python3/dist-packages/_pytest/_io/__init__.py", line 1, in <module>
+    from .terminalwriter import get_terminal_width
+  File "/usr/lib/python3/dist-packages/_pytest/_io/terminalwriter.py", line 10, in <module>
+    from _pytest.compat import final
+  File "/usr/lib/python3/dist-packages/_pytest/compat.py", line 20, in <module>
+    import py
+  File "/usr/lib/python3/dist-packages/py.py", line 7, in <module>
+    import _pytest._py.path as path
+  File "/usr/lib/python3/dist-packages/_pytest/_py/path.py", line 11, in <module>
+    import uuid
+  File "/usr/lib/python3.12/uuid.py", line 59, in <module>
+    import platform
+  File "/root/.cursor/worktrees/crew__WSL__ubuntu_/kgkoW/src/platform/__init__.py", line 18, in <module>
+    from platform.http.http_utils import resilient_get, resilient_post
+  File "/root/.cursor/worktrees/crew__WSL__ubuntu_/kgkoW/src/platform/http/__init__.py", line 19, in <module>
+    from .circuit_breaker import (
+  File "/root/.cursor/worktrees/crew__WSL__ubuntu_/kgkoW/src/platform/http/circuit_breaker.py", line 16, in <module>
+    from core.circuit_breaker_canonical import (
+ImportError: cannot import name 'CircuitBreakerError' from 'core.circuit_breaker_canonical' (/root/.cursor/worktrees/crew__WSL__ubuntu_/kgkoW/src/core/circuit_breaker_canonical.py). Did you mean: 'CircuitBreakerOpenError'?
+make: *** [Makefile:150: test] Error 1

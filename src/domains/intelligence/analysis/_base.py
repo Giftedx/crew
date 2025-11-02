@@ -5,8 +5,10 @@ that process, analyze, and extract insights from various types of content.
 """
 
 from __future__ import annotations
-from typing import Any
+
 from platform.core.step_result import StepResult
+from typing import Any
+
 from ultimate_discord_intelligence_bot.tools._base import BaseTool
 
 
@@ -50,7 +52,7 @@ class AnalysisTool(BaseTool):
             "length": len(content),
             "word_count": len(content.split()),
             "line_count": len(content.splitlines()),
-            "has_unicode": any((ord(char) > 127 for char in content)),
+            "has_unicode": any(ord(char) > 127 for char in content),
             "language_hint": self._detect_language_hint(content),
         }
 
@@ -64,11 +66,11 @@ class AnalysisTool(BaseTool):
             Language hint (e.g., 'english', 'spanish', 'unknown')
         """
         content_lower = content.lower()
-        if any((word in content_lower for word in ["the", "and", "or", "but", "in", "on", "at"])):
+        if any(word in content_lower for word in ["the", "and", "or", "but", "in", "on", "at"]):
             return "english"
-        if any((word in content_lower for word in ["el", "la", "de", "que", "y", "en", "un"])):
+        if any(word in content_lower for word in ["el", "la", "de", "que", "y", "en", "un"]):
             return "spanish"
-        if any((word in content_lower for word in ["le", "la", "de", "et", "du", "des", "les"])):
+        if any(word in content_lower for word in ["le", "la", "de", "et", "du", "des", "les"]):
             return "french"
         return "unknown"
 

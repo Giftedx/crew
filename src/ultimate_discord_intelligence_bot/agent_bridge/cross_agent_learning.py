@@ -5,13 +5,16 @@ building collective intelligence that improves over time.
 """
 
 from __future__ import annotations
+
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from enum import Enum
-from typing import Any
 from platform.core.step_result import StepResult
+from typing import Any
+
 from ultimate_discord_intelligence_bot.tenancy.context import current_tenant
+
 
 logger = logging.getLogger(__name__)
 
@@ -333,7 +336,7 @@ class CrossAgentLearningService:
                         "experience_types": experience_types,
                         "learning_trends": learning_trends,
                         "relevant_patterns": len(agent_patterns),
-                        "pattern_confidence_avg": sum((p.confidence for p in agent_patterns))
+                        "pattern_confidence_avg": sum(p.confidence for p in agent_patterns)
                         / max(len(agent_patterns), 1),
                     },
                 }
@@ -562,7 +565,7 @@ class CrossAgentLearningService:
         """Check if two agent types are compatible for learning"""
         try:
             common_prefixes = ["mission", "executive", "workflow", "analysis"]
-            return any((prefix in type1.lower() and prefix in type2.lower() for prefix in common_prefixes))
+            return any(prefix in type1.lower() and prefix in type2.lower() for prefix in common_prefixes)
         except Exception:
             return False
 
@@ -710,9 +713,9 @@ class CrossAgentLearningService:
             "initialized": self._initialized,
             "total_patterns": len(self._patterns),
             "total_agents": len(self._agent_patterns),
-            "total_experiences": sum((len(exp_list) for exp_list in self._learning_history.values())),
-            "success_tracker_entries": sum((len(exp_list) for exp_list in self._success_tracker.values())),
-            "failure_tracker_entries": sum((len(exp_list) for exp_list in self._failure_tracker.values())),
+            "total_experiences": sum(len(exp_list) for exp_list in self._learning_history.values()),
+            "success_tracker_entries": sum(len(exp_list) for exp_list in self._success_tracker.values()),
+            "failure_tracker_entries": sum(len(exp_list) for exp_list in self._failure_tracker.values()),
             "config": {
                 "enable_learning": self.config.enable_learning,
                 "enable_pattern_extraction": self.config.enable_pattern_extraction,

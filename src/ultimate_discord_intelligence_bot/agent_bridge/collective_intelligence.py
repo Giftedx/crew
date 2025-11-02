@@ -5,13 +5,16 @@ synthesizing insights from multiple agents for enhanced decision-making.
 """
 
 from __future__ import annotations
+
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from enum import Enum
-from typing import Any
 from platform.core.step_result import StepResult
+from typing import Any
+
 from ultimate_discord_intelligence_bot.tenancy.context import current_tenant
+
 
 logger = logging.getLogger(__name__)
 
@@ -361,8 +364,8 @@ class CollectiveIntelligenceService:
             for insight in filtered_insights:
                 level_name = insight.intelligence_level.value
                 intelligence_level_counts[level_name] = intelligence_level_counts.get(level_name, 0) + 1
-            avg_consensus_score = sum((insight.consensus_score for insight in filtered_insights)) / total_insights
-            avg_confidence = sum((insight.confidence for insight in filtered_insights)) / total_insights
+            avg_consensus_score = sum(insight.consensus_score for insight in filtered_insights) / total_insights
+            avg_confidence = sum(insight.confidence for insight in filtered_insights) / total_insights
             validation_status_counts = {}
             for insight in filtered_insights:
                 status = insight.validation_status
@@ -628,11 +631,9 @@ class CollectiveIntelligenceService:
     async def _adaptive_synthesis(self, contributions: list[AgentContribution]) -> tuple[dict[str, Any], float]:
         """Perform adaptive synthesis based on context"""
         try:
-            avg_confidence = sum((c.confidence for c in contributions)) / len(contributions)
-            avg_expertise = sum((c.expertise_level for c in contributions)) / len(contributions)
-            confidence_variance = sum(((c.confidence - avg_confidence) ** 2 for c in contributions)) / len(
-                contributions
-            )
+            avg_confidence = sum(c.confidence for c in contributions) / len(contributions)
+            avg_expertise = sum(c.expertise_level for c in contributions) / len(contributions)
+            confidence_variance = sum((c.confidence - avg_confidence) ** 2 for c in contributions) / len(contributions)
             if confidence_variance < 0.1 and avg_confidence > 0.8:
                 return await self._consensus_synthesis(contributions)
             elif avg_expertise > 0.7:
@@ -669,8 +670,8 @@ class CollectiveIntelligenceService:
             return {
                 "contribution_count": len(contributions),
                 "agent_diversity": len({c.agent_type for c in contributions}),
-                "average_confidence": sum((c.confidence for c in contributions)) / len(contributions),
-                "average_expertise": sum((c.expertise_level for c in contributions)) / len(contributions),
+                "average_confidence": sum(c.confidence for c in contributions) / len(contributions),
+                "average_expertise": sum(c.expertise_level for c in contributions) / len(contributions),
                 "consensus_score": collective_insight.consensus_score,
                 "synthesis_confidence": collective_insight.confidence,
                 "synthesis_type": collective_insight.synthesis_type.value,
@@ -786,9 +787,9 @@ class CollectiveIntelligenceService:
         return {
             "initialized": self._initialized,
             "total_insights": len(self._collective_insights),
-            "total_contributions": sum((len(contributions) for contributions in self._agent_contributions.values())),
+            "total_contributions": sum(len(contributions) for contributions in self._agent_contributions.values()),
             "total_agents": len(self._agent_contributions),
-            "total_validations": sum((len(validations) for validations in self._consensus_tracker.values())),
+            "total_validations": sum(len(validations) for validations in self._consensus_tracker.values()),
             "cache_entries": len(self._synthesis_cache),
             "expert_weights": len(self._expert_weights),
             "config": {

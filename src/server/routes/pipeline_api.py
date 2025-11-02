@@ -1,9 +1,12 @@
 from __future__ import annotations
+
 import asyncio
 import logging
 from typing import TYPE_CHECKING, Any
+
 from fastapi import Body, FastAPI, HTTPException, status
 from fastapi.responses import JSONResponse
+
 
 if TYPE_CHECKING:
     from platform.core.step_result import StepResult

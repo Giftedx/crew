@@ -1,9 +1,12 @@
 """Base class for content acquisition tools."""
 
 from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any
+
 from ultimate_discord_intelligence_bot.tools._base import BaseTool
+
 
 if TYPE_CHECKING:
     from platform.core.step_result import StepResult
@@ -27,7 +30,7 @@ class AcquisitionBaseTool(BaseTool, ABC):
         """Validate URL format and platform support."""
         if not url or not isinstance(url, str):
             return False
-        return any((platform in url.lower() for platform in self.supported_platforms))
+        return any(platform in url.lower() for platform in self.supported_platforms)
 
     def get_metadata(self, url: str) -> dict[str, Any]:
         """Extract metadata from URL."""

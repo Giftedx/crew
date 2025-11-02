@@ -1,23 +1,29 @@
 """High-level orchestration for the content pipeline."""
 
 from __future__ import annotations
+
 import asyncio
 import json
 import time
 from contextlib import ExitStack, contextmanager, suppress
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, cast
 from platform.config.configuration import get_config
-from platform.observability import metrics
 from platform.core.step_result import StepResult
+from platform.observability import metrics
+from typing import TYPE_CHECKING, Any, cast
+
 from ultimate_discord_intelligence_bot.tenancy import current_tenant
+
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
+
     from ultimate_discord_intelligence_bot.services.request_budget import RequestCostTracker
+
     from .types import PipelineRunResult
 from platform.observability.logfire_spans import span as logfire_span
+
 from .base import PipelineBase
 from .mixins import PipelineExecutionMixin
 from .tracing import tracing_module
@@ -392,6 +398,7 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
         """Load content-type specific quality thresholds from config."""
         import os
         from pathlib import Path
+
         import yaml
 
         default_thresholds = {
@@ -1269,7 +1276,7 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
             'no module named "whisper"',
             "failed to load whisper",
         )
-        if not any((marker in error_text for marker in degrade_markers)):
+        if not any(marker in error_text for marker in degrade_markers):
             return None
         source_url = download_info.data.get("source_url")
         provider_text, provider_source = await self._fetch_provider_transcript(download_info, source_url)
@@ -1337,7 +1344,7 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
             lines.append(summary.strip())
         if not lines and source_url:
             lines.append(f"Transcript unavailable automatically. Review manually: {source_url}")
-        transcript_text = "\n".join((line for line in lines if line))
+        transcript_text = "\n".join(line for line in lines if line)
         return transcript_text.strip() or None
 
     def _load_download_metadata(self, download_info: StepResult) -> dict[str, Any]:
@@ -1533,7 +1540,7 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
             "tap here",
             "download now",
         ]
-        spam_count = sum((1 for indicator in spam_indicators if indicator in title_lower))
+        spam_count = sum(1 for indicator in spam_indicators if indicator in title_lower)
         score = 0.0
         if title.count("!") > 2:
             score += 0.2
@@ -1568,7 +1575,7 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
             return 1.0
         error_indicators = 0
         for word in words:
-            if len(word) > 3 and any((word.count(char) > 2 for char in set(word))):
+            if len(word) > 3 and any(word.count(char) > 2 for char in set(word)):
                 error_indicators += 1
             if len(word) == 1 and word.isalpha():
                 error_indicators += 1
@@ -1596,7 +1603,7 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
             word_counts[word] = word_counts.get(word, 0) + 1
         total_words = len(words)
         len(word_counts)
-        repeated_words = sum((count - 1 for count in word_counts.values() if count > 1))
+        repeated_words = sum(count - 1 for count in word_counts.values() if count > 1)
         if total_words == 0:
             return 0.0
         repetition_ratio = repeated_words / total_words
@@ -1621,9 +1628,9 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
         if total_words == 0:
             return 0.0
         diversity_ratio = unique_words / total_words
-        avg_word_length = sum((len(word) for word in words)) / total_words
+        avg_word_length = sum(len(word) for word in words) / total_words
         length_bonus = min(0.2, (avg_word_length - 4) * 0.05)
-        complex_words = sum((1 for word in words if len(word) > 6))
+        complex_words = sum(1 for word in words if len(word) > 6)
         complexity_bonus = min(0.1, complex_words / total_words)
         final_diversity = min(1.0, diversity_ratio + length_bonus + complexity_bonus)
         return final_diversity

@@ -5,10 +5,12 @@ improving system efficiency, reducing latency, and optimizing resource usage.
 """
 
 from __future__ import annotations
+
 import logging
 import time
-from typing import TYPE_CHECKING, Any
 from platform.core.step_result import StepResult
+from typing import TYPE_CHECKING, Any
+
 
 if TYPE_CHECKING:
     from ..tenancy.context import TenantContext
@@ -187,7 +189,7 @@ class PerformanceOptimizer:
                 selected_strategies.append(strategy)
             if (
                 target_metrics
-                and any((metric in strategy["target_metrics"] for metric in target_metrics))
+                and any(metric in strategy["target_metrics"] for metric in target_metrics)
                 and (strategy not in selected_strategies)
             ):
                 selected_strategies.append(strategy)

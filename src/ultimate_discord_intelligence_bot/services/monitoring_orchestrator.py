@@ -1,9 +1,11 @@
 from __future__ import annotations
+
 import asyncio
 import time
-from typing import Any, TypedDict
-from ultimate_discord_intelligence_bot.profiles.creator_network_schema import ALL_CREATOR_NETWORKS
 from platform.core.step_result import StepResult
+from typing import Any, TypedDict
+
+from ultimate_discord_intelligence_bot.profiles.creator_network_schema import ALL_CREATOR_NETWORKS
 
 
 class MonitoringSchedule(TypedDict, total=False):
@@ -94,7 +96,7 @@ class RealTimeMonitoringOrchestrator:
                 data={
                     "status": "monitoring_started",
                     "platforms": list(self._schedules.keys()),
-                    "total_creators": sum((len(s["creators"]) for s in self._schedules.values())),
+                    "total_creators": sum(len(s["creators"]) for s in self._schedules.values()),
                 }
             )
         except Exception as e:

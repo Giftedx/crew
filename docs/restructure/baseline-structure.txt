@@ -1,0 +1,1204 @@
+src/
+├── ai
+│   ├── __init__.py
+│   ├── ab_testing_framework.py
+│   ├── adaptive_ai_router.py
+│   ├── advanced_bandits_router.py
+│   ├── advanced_contextual_bandits.py
+│   ├── agent_messaging
+│   │   ├── __init__.py
+│   │   └── redis_bus.py
+│   ├── ai_enhanced_performance_monitor.py
+│   ├── compression
+│   │   └── llmlingua_compressor.py
+│   ├── enhanced_ai_router.py
+│   ├── evaluation
+│   │   ├── __init__.py
+│   │   └── langsmith_evaluator.py
+│   ├── frameworks
+│   │   ├── __init__.py
+│   │   ├── autogen
+│   │   ├── crewai
+│   │   ├── langgraph
+│   │   ├── llamaindex
+│   │   ├── protocols.py
+│   │   ├── state
+│   │   └── tools
+│   ├── integration
+│   │   └── ai_ml_rl_integration.py
+│   ├── litellm_router.py
+│   ├── memory
+│   │   └── continual_consolidation.py
+│   ├── monitoring
+│   │   └── tool_health_monitor.py
+│   ├── performance_router.py
+│   ├── prompts
+│   │   └── prompt_library_ab.py
+│   ├── rag
+│   │   └── rag_quality_feedback.py
+│   ├── reasoning
+│   │   ├── __init__.py
+│   │   ├── consensus_protocol.py
+│   │   └── deliberation_coordinator.py
+│   ├── response_models.py
+│   ├── rl
+│   │   ├── agent_routing_bandit.py
+│   │   ├── langsmith_trajectory_evaluator.py
+│   │   ├── meta_learning_aggregator.py
+│   │   ├── threshold_tuning_bandit.py
+│   │   └── tool_routing_bandit.py
+│   ├── routing
+│   │   ├── _metrics_types.py
+│   │   ├── bandit_router.py
+│   │   ├── cold_start_priors.py
+│   │   ├── feature_engineering.py
+│   │   ├── linucb_router.py
+│   │   ├── router_registry.py
+│   │   ├── thompson_sampling_router.py
+│   │   └── vw_bandit_router.py
+│   ├── self_improvement
+│   │   ├── mutation_generator.py
+│   │   └── sandbox_executor.py
+│   └── structured_outputs.py
+├── analysis
+│   ├── __init__.py
+│   ├── deduplication
+│   │   └── cross_platform_deduplication_service.py
+│   ├── highlight
+│   │   └── highlight_detection_service.py
+│   ├── nlp
+│   │   └── claim_quote_extraction_service.py
+│   ├── rerank.py
+│   ├── safety
+│   │   └── safety_brand_suitability_service.py
+│   ├── segmenter.py
+│   ├── sentiment
+│   │   └── sentiment_stance_analysis_service.py
+│   ├── topic
+│   │   └── topic_segmentation_service.py
+│   ├── topics.py
+│   ├── transcribe.py
+│   ├── transcription
+│   │   ├── asr_service.py
+│   │   └── speaker_diarization_service.py
+│   └── vision
+│       └── visual_parsing_service.py
+├── app
+│   └── __init__.py
+├── archive
+│   ├── __init__.py
+│   └── discord_store
+│       ├── __init__.py
+│       ├── api.py
+│       ├── cleanup.py
+│       ├── compress.py
+│       ├── limits.py
+│       ├── manifest.py
+│       ├── policy.py
+│       ├── rehydrate.py
+│       ├── router.py
+│       └── uploader.py
+├── client
+│   ├── __init__.py
+│   └── a2a_client.py
+├── core
+│   ├── __init__.py
+│   ├── __pycache__
+│   │   ├── __init__.cpython-312.pyc
+│   │   └── circuit_breaker_canonical.cpython-312.pyc
+│   ├── advanced_cache.py
+│   ├── advanced_telemetry.py
+│   ├── ai
+│   │   ├── __init__.py
+│   │   ├── agent_planner.py
+│   │   ├── ai_integration.py
+│   │   └── dspy_optimizer.py
+│   ├── alerts.py
+│   ├── audit_logger.py
+│   ├── autonomous_intelligence.py
+│   ├── batching.py
+│   ├── cache
+│   │   ├── __init__.py
+│   │   ├── llm_cache.py
+│   │   └── retrieval_cache.py
+│   ├── circuit_breaker.py
+│   ├── circuit_breaker_canonical.py
+│   ├── code_intelligence.py
+│   ├── configuration
+│   │   ├── __init__.py
+│   │   ├── config_cache.py
+│   │   ├── config_factory.py
+│   │   ├── config_loader.py
+│   │   ├── config_manager.py
+│   │   ├── config_schema.py
+│   │   ├── config_validator.py
+│   │   └── feature_flag_audit.py
+│   ├── connection_pool.py
+│   ├── cost_alerts.py
+│   ├── cost_aware_routing.py
+│   ├── cost_integration.py
+│   ├── cost_optimizer.py
+│   ├── cost_tracker.py
+│   ├── database_schema_migration_patterns.mdc
+│   ├── db_locks.py
+│   ├── db_optimizer.py
+│   ├── degradation_reporter.py
+│   ├── dependencies
+│   │   ├── __init__.py
+│   │   ├── dependency_checker.py
+│   │   ├── dependency_manager.py
+│   │   ├── fallback_handlers.py
+│   │   ├── feature_flags.py
+│   │   ├── groups
+│   │   └── optional_deps.py
+│   ├── deployment_automation.py
+│   ├── development_tools.py
+│   ├── distributed_rate_limiter.py
+│   ├── enhanced_knowledge_graph.py
+│   ├── error_handling.py
+│   ├── eval_harness.py
+│   ├── flags.py
+│   ├── health_checker.py
+│   ├── http
+│   │   ├── __init__.py
+│   │   ├── cache.py
+│   │   ├── config.py
+│   │   ├── requests_wrappers.py
+│   │   ├── retry.py
+│   │   ├── retry_config.py
+│   │   └── validators.py
+│   ├── http_utils.py
+│   ├── learn.py
+│   ├── learning_engine.py
+│   ├── llm_cache.py
+│   ├── llm_client.py
+│   ├── llm_router.py
+│   ├── log_schema.py
+│   ├── memory
+│   │   ├── __init__.py
+│   │   ├── advanced_compaction.py
+│   │   ├── cross_tenant_similarity.py
+│   │   └── multimodal_embeddings.py
+│   ├── multimodal
+│   │   ├── __init__.py
+│   │   ├── audio_analyzer.py
+│   │   ├── cross_modal_correlator.py
+│   │   ├── image_analyzer.py
+│   │   └── video_analyzer.py
+│   ├── nextgen_innovation
+│   │   ├── __init__.py
+│   │   ├── adaptive.py
+│   │   ├── consciousness.py
+│   │   ├── enums.py
+│   │   ├── knowledge.py
+│   │   ├── multimodel.py
+│   │   ├── orchestration.py
+│   │   ├── quantum.py
+│   │   └── types.py
+│   ├── nextgen_innovation_platform.py
+│   ├── nextgen_intelligence_hub.py
+│   ├── observability
+│   │   ├── __init__.py
+│   │   ├── distributed_tracing.py
+│   │   ├── metrics_collector.py
+│   │   └── performance_profiler.py
+│   ├── omniscient_reality
+│   │   ├── __init__.py
+│   │   ├── consciousness.py
+│   │   ├── enums.py
+│   │   ├── orchestration.py
+│   │   ├── patterns.py
+│   │   ├── temporal.py
+│   │   ├── types.py
+│   │   └── universal_knowledge.py
+│   ├── omniscient_reality_engine.py
+│   ├── optional_dependencies.py
+│   ├── orchestration
+│   │   ├── __init__.py
+│   │   ├── application
+│   │   ├── domain
+│   │   ├── facade.py
+│   │   ├── infrastructure
+│   │   └── protocols.py
+│   ├── performance_validator.py
+│   ├── platform
+│   │   ├── __init__.py
+│   │   ├── content_discovery.py
+│   │   ├── cross_platform_analytics.py
+│   │   ├── platform_integration.py
+│   │   └── social_monitor.py
+│   ├── platform_api_wrappers.py
+│   ├── predictive_operations.py
+│   ├── privacy
+│   │   ├── __init__.py
+│   │   ├── enhanced_pii_detector.py
+│   │   ├── enhanced_redactor.py
+│   │   ├── pii_detector.py
+│   │   ├── privacy_filter.py
+│   │   ├── redactor.py
+│   │   └── retention.py
+│   ├── production_operations.py
+│   ├── prompt_compression.py
+│   ├── prompt_engine.py
+│   ├── py.typed
+│   ├── rate_limiting
+│   │   ├── __init__.py
+│   │   ├── distributed_limiter.py
+│   │   └── redis_backend.py
+│   ├── realtime
+│   │   ├── __init__.py
+│   │   ├── fact_checker.py
+│   │   ├── live_monitor.py
+│   │   └── stream_processor.py
+│   ├── reliability.py
+│   ├── resilience
+│   │   ├── __init__.py
+│   │   ├── adaptive_batching.py
+│   │   ├── backpressure_coordinator.py
+│   │   ├── circuit_breaker.py
+│   │   └── intelligent_retry.py
+│   ├── resource_pool.py
+│   ├── reward_pipe.py
+│   ├── rl
+│   │   ├── __init__.py
+│   │   ├── advanced_config.py
+│   │   ├── advanced_experiments.py
+│   │   ├── cost_quality_optimization.py
+│   │   ├── experiment.py
+│   │   ├── feature_store.py
+│   │   ├── policies
+│   │   ├── provider_preference_learning.py
+│   │   ├── registry.py
+│   │   ├── reward_engine.py
+│   │   ├── shadow_regret.py
+│   │   ├── shields.py
+│   │   ├── thompson_sampling.py
+│   │   └── ucb_bandit.py
+│   ├── rollout.py
+│   ├── router.py
+│   ├── routing
+│   │   ├── __init__.py
+│   │   ├── base_router.py
+│   │   ├── llm_adapter.py
+│   │   ├── migration_utils.py
+│   │   ├── router_factory.py
+│   │   ├── semantic_routing_cache.py
+│   │   └── strategies
+│   ├── secure_config.py
+│   ├── security
+│   │   └── tenant_isolation_audit.py
+│   ├── security_fortification.py
+│   ├── settings.py
+│   ├── store_adapter.py
+│   ├── structured_llm
+│   │   ├── __init__.py
+│   │   ├── cache.py
+│   │   ├── recovery.py
+│   │   ├── service.py
+│   │   └── streaming.py
+│   ├── structured_llm_service.py
+│   ├── time.py
+│   ├── token_meter.py
+│   ├── tool_planner.py
+│   ├── typing_utils.py
+│   ├── vector_search
+│   │   ├── __init__.py
+│   │   └── optimized_vector_store.py
+│   └── vllm_service.py
+├── creator_ops
+│   ├── __init__.py
+│   ├── auth
+│   │   ├── __init__.py
+│   │   └── oauth_manager.py
+│   └── integrations
+│       ├── __init__.py
+│       ├── instagram_client.py
+│       ├── tiktok_client.py
+│       ├── twitch_client.py
+│       ├── x_client.py
+│       └── youtube_client.py
+├── crewai
+│   ├── __init__.py
+│   └── project.py
+├── data
+│   └── trustworthiness.json
+├── debate
+│   ├── __init__.py
+│   ├── panel.py
+│   └── store.py
+├── discord
+│   ├── __init__.py
+│   ├── bot_integration.py
+│   ├── commands.py
+│   ├── content_filter.py
+│   ├── conversational_pipeline.py
+│   ├── mcp_integration.py
+│   ├── message_evaluator.py
+│   ├── observability
+│   │   ├── __init__.py
+│   │   ├── conversation_tracer.py
+│   │   ├── metrics_collector.py
+│   │   ├── observability_manager.py
+│   │   └── personality_dashboard.py
+│   ├── observability_integration.py
+│   ├── opt_in_manager.py
+│   ├── personality
+│   │   ├── personality_manager.py
+│   │   └── reward_computer.py
+│   ├── reasoning
+│   │   ├── __init__.py
+│   │   ├── adaptive_decision_tree.py
+│   │   ├── hierarchical_reasoner.py
+│   │   └── token_interpreter.py
+│   ├── routing_adapter.py
+│   ├── safety
+│   │   ├── __init__.py
+│   │   ├── content_filter.py
+│   │   ├── moderation_alerts.py
+│   │   ├── rate_limiter.py
+│   │   └── safety_manager.py
+│   └── safety_integration.py
+├── domains
+│   ├── __init__.py
+│   ├── features
+│   │   └── __init__.py
+│   ├── ingestion
+│   │   ├── __init__.py
+│   │   ├── extractors
+│   │   ├── models.py
+│   │   ├── pipeline.py
+│   │   └── providers
+│   ├── intelligence
+│   │   ├── __init__.py
+│   │   ├── analysis
+│   │   └── verification
+│   ├── memory
+│   │   ├── __init__.py
+│   │   ├── api.py
+│   │   ├── creator_intelligence_collections.py
+│   │   ├── embedding_service.py
+│   │   ├── embeddings.py
+│   │   ├── enhanced_vector_store.py
+│   │   ├── hybrid_retriever.py
+│   │   ├── qdrant_provider.py
+│   │   ├── store.py
+│   │   ├── unified_graph_store.py
+│   │   ├── vector
+│   │   └── vector_store.py
+│   └── orchestration
+│       ├── __init__.py
+│       ├── agents
+│       ├── agents.yaml
+│       ├── crew
+│       └── tasks.yaml
+├── enhancements
+│   ├── dspy_prompt_optimizer.py
+│   ├── graphrag_integration.py
+│   ├── neural_contextual_bandit.py
+│   └── semantic_cache_enhanced.py
+├── eval
+│   ├── __init__.py
+│   ├── config.py
+│   ├── gates.py
+│   ├── langsmith_adapter.py
+│   ├── loader.py
+│   ├── report.py
+│   ├── runner.py
+│   ├── scorers.py
+│   └── trajectory_evaluator.py
+├── fastapi
+│   ├── __init__.py
+│   ├── responses.py
+│   └── testclient.py
+├── fastapi_shim
+│   ├── __init__.py
+│   ├── responses.py
+│   └── testclient.py
+├── features
+│   ├── community_pulse
+│   │   └── community_pulse_analyzer_service.py
+│   ├── guest_preparation
+│   │   └── guest_topic_pre_briefs_service.py
+│   ├── narrative_tracker
+│   │   └── cross_platform_narrative_tracker.py
+│   ├── rights_management
+│   │   └── rights_reuse_intelligence_service.py
+│   ├── smart_clip_composer
+│   │   └── smart_clip_composer_service.py
+│   └── sponsor_assistant
+│       └── sponsor_compliance_service.py
+├── graphs
+│   ├── __init__.py
+│   └── langgraph_pilot.py
+├── grounding
+│   ├── __init__.py
+│   ├── citation_utils.py
+│   ├── consistency.py
+│   ├── contracts.py
+│   ├── retriever.py
+│   ├── schema.py
+│   └── verifier.py
+├── ingest
+│   ├── __init__.py
+│   ├── __main__.py
+│   ├── backfill.py
+│   ├── models.py
+│   ├── pipeline.py
+│   ├── providers
+│   │   ├── __init__.py
+│   │   ├── twitch.py
+│   │   └── youtube.py
+│   └── sources
+│       ├── __init__.py
+│       ├── base.py
+│       ├── twitch.py
+│       ├── youtube.py
+│       └── youtube_channel.py
+├── kg
+│   ├── __init__.py
+│   ├── creator_kg_store.py
+│   ├── creator_schema.py
+│   ├── extract.py
+│   ├── migration.py
+│   ├── neo4j
+│   │   ├── __init__.py
+│   │   └── store.py
+│   ├── reasoner.py
+│   ├── store.py
+│   └── viz.py
+├── mcp_server
+│   ├── a2a_bridge_server.py
+│   ├── creator_intelligence_server.py
+│   ├── crewai_server.py
+│   ├── http_server.py
+│   ├── ingest_server.py
+│   ├── kg_server.py
+│   ├── memory_server.py
+│   ├── multimodal_server.py
+│   ├── obs_server.py
+│   ├── routing_server.py
+│   ├── server.py
+│   └── tools
+│       └── creator_intelligence_ingestion.py
+├── memory
+│   ├── __init__.py
+│   ├── api.py
+│   ├── creator_intelligence_collections.py
+│   ├── embedding_service.py
+│   ├── embeddings.py
+│   ├── enhanced_vector_store.py
+│   ├── hybrid_retriever.py
+│   ├── qdrant_provider.py
+│   ├── store.py
+│   ├── unified_graph_store.py
+│   └── vector_store.py
+├── obs
+│   ├── __init__.py
+│   ├── business_metrics.py
+│   ├── cache_monitor.py
+│   ├── enhanced_langsmith_integration.py
+│   ├── enhanced_monitoring.py
+│   ├── incident.py
+│   ├── langsmith_integration.py
+│   ├── logfire_config.py
+│   ├── logfire_spans.py
+│   ├── logging.py
+│   ├── metric_specs.py
+│   ├── metrics.py
+│   ├── metrics_endpoint.py
+│   ├── performance_baselines.py
+│   ├── performance_monitor.py
+│   ├── resource_monitor.py
+│   ├── slo.py
+│   └── tracing.py
+├── opentelemetry
+│   ├── __init__.py
+│   ├── _logs
+│   │   └── __init__.py
+│   ├── attributes.py
+│   ├── context.py
+│   ├── environment_variables.py
+│   ├── exporter
+│   │   ├── __init__.py
+│   │   └── otlp
+│   ├── metrics
+│   │   └── __init__.py
+│   ├── propagate.py
+│   ├── propagators
+│   │   ├── __init__.py
+│   │   └── textmap.py
+│   ├── sdk
+│   │   ├── __init__.py
+│   │   ├── _logs
+│   │   ├── environment_variables.py
+│   │   ├── metrics
+│   │   ├── resources.py
+│   │   ├── trace
+│   │   └── util
+│   ├── trace
+│   │   ├── __init__.py
+│   │   ├── propagation.py
+│   │   └── status.py
+│   ├── trace.py
+│   └── util
+│       └── types.py
+├── ops
+│   ├── __init__.py
+│   └── alert_adapter.py
+├── performance
+│   ├── cache_optimizer.py
+│   └── cache_warmer.py
+├── pipeline
+│   ├── core
+│   │   ├── __init__.py
+│   │   ├── executor.py
+│   │   ├── middleware.py
+│   │   └── step.py
+│   ├── evaluation_harness.py
+│   ├── multimodal_analysis_pipeline.py
+│   └── multimodal_pipeline.py
+├── platform
+│   ├── __init__.py
+│   ├── __pycache__
+│   │   └── __init__.cpython-312.pyc
+│   ├── config
+│   │   ├── __init__.py
+│   │   ├── configuration
+│   │   ├── flags.py
+│   │   └── settings.py
+│   ├── core
+│   │   ├── __init__.py
+│   │   ├── __pycache__
+│   │   └── step_result.py
+│   ├── database
+│   │   ├── __init__.py
+│   │   ├── connection_pool.py
+│   │   └── db_optimizer.py
+│   ├── experimentation
+│   │   ├── __init__.py
+│   │   ├── ab_testing_framework.py
+│   │   ├── eval_harness.py
+│   │   └── evaluation_harness.py
+│   ├── http
+│   │   ├── __init__.py
+│   │   ├── __pycache__
+│   │   ├── adaptive_batching.py
+│   │   ├── backpressure_coordinator.py
+│   │   ├── cache.py
+│   │   ├── circuit_breaker.py
+│   │   ├── circuit_breaker_canonical.py
+│   │   ├── config.py
+│   │   ├── http_utils.py
+│   │   ├── intelligent_retry.py
+│   │   ├── llm_cache.py
+│   │   ├── requests_wrappers.py
+│   │   ├── retry.py
+│   │   ├── retry_config.py
+│   │   └── validators.py
+│   ├── llm
+│   │   ├── __init__.py
+│   │   ├── llm_client.py
+│   │   ├── llm_router.py
+│   │   ├── providers
+│   │   ├── routing
+│   │   ├── structured
+│   │   └── token_meter.py
+│   ├── messaging
+│   │   └── __init__.py
+│   ├── observability
+│   │   ├── __init__.py
+│   │   ├── analytics_service.py
+│   │   ├── business_metrics.py
+│   │   ├── cache_monitor.py
+│   │   ├── dashboard_integration.py
+│   │   ├── dashboard_templates.py
+│   │   ├── enhanced_langsmith_integration.py
+│   │   ├── enhanced_metrics_api.py
+│   │   ├── enhanced_monitoring.py
+│   │   ├── hipporag_alerts.py
+│   │   ├── incident.py
+│   │   ├── intelligent_alerts.py
+│   │   ├── langsmith
+│   │   ├── langsmith_integration.py
+│   │   ├── logfire
+│   │   ├── logfire_config.py
+│   │   ├── logfire_spans.py
+│   │   ├── logging.py
+│   │   ├── metric_specs.py
+│   │   ├── metrics.py
+│   │   ├── metrics_api.py
+│   │   ├── metrics_collector.py
+│   │   ├── metrics_decorator.py
+│   │   ├── metrics_endpoint.py
+│   │   ├── opentelemetry
+│   │   ├── performance_baselines.py
+│   │   ├── performance_monitor.py
+│   │   ├── production_monitor.py
+│   │   ├── resource_monitor.py
+│   │   ├── slo.py
+│   │   ├── stepresult_observer.py
+│   │   ├── tracing.py
+│   │   └── unified_metrics.py
+│   ├── optimization
+│   │   ├── __init__.py
+│   │   ├── bandit_policy.py
+│   │   ├── performance_learning_engine.py
+│   │   ├── performance_optimizer.py
+│   │   └── rl_cache_optimizer.py
+│   ├── prompts
+│   │   ├── __init__.py
+│   │   ├── compression
+│   │   ├── dspy
+│   │   └── engine
+│   ├── rag
+│   │   ├── __init__.py
+│   │   ├── graphrag
+│   │   ├── hybrid
+│   │   └── quality
+│   ├── realtime
+│   │   ├── __init__.py
+│   │   ├── websocket_integration.py
+│   │   └── websocket_service.py
+│   ├── rl
+│   │   ├── __init__.py
+│   │   ├── agent_routing_bandit.py
+│   │   ├── core
+│   │   ├── langsmith_trajectory_evaluator.py
+│   │   ├── meta_learning_aggregator.py
+│   │   ├── neural
+│   │   ├── threshold_tuning_bandit.py
+│   │   └── tool_routing_bandit.py
+│   ├── security
+│   │   ├── __init__.py
+│   │   ├── auth
+│   │   ├── events.py
+│   │   ├── moderation
+│   │   ├── moderation.py
+│   │   ├── multiscope_rate_limit.py
+│   │   ├── net_guard.py
+│   │   ├── openai_moderation.py
+│   │   ├── policy
+│   │   ├── rate_limit.py
+│   │   ├── rbac.py
+│   │   ├── redis_rate_limit.py
+│   │   ├── secret_rotation.py
+│   │   ├── secrets.py
+│   │   ├── signing.py
+│   │   ├── validate.py
+│   │   └── webhook_guard.py
+│   └── web
+│       ├── __init__.py
+│       └── automation
+├── policy
+│   ├── __init__.py
+│   └── policy_engine.py
+├── prompt_engine
+│   ├── __init__.py
+│   ├── guards.py
+│   └── llmlingua_adapter.py
+├── publishing
+│   └── artifact_publishing_service.py
+├── scheduler
+│   ├── __init__.py
+│   ├── priority_queue.py
+│   └── scheduler.py
+├── security
+│   ├── __init__.py
+│   ├── events.py
+│   ├── moderation.py
+│   ├── multiscope_rate_limit.py
+│   ├── net_guard.py
+│   ├── openai_moderation.py
+│   ├── rate_limit.py
+│   ├── rbac.py
+│   ├── redis_rate_limit.py
+│   ├── secret_rotation.py
+│   ├── secrets.py
+│   ├── signing.py
+│   ├── validate.py
+│   └── webhook_guard.py
+├── server
+│   ├── __init__.py
+│   ├── a2a_discovery.py
+│   ├── a2a_metrics.py
+│   ├── a2a_router.py
+│   ├── a2a_schemas.py
+│   ├── a2a_streaming.py
+│   ├── a2a_tools.py
+│   ├── app.py
+│   ├── backpressure_middleware.py
+│   ├── job_queue.py
+│   ├── middleware.py
+│   ├── middleware_shim.py
+│   ├── rate_limit.py
+│   ├── routers
+│   │   └── performance_dashboard.py
+│   ├── routes
+│   │   ├── __init__.py
+│   │   ├── a2a.py
+│   │   ├── activities.py
+│   │   ├── alerts.py
+│   │   ├── archive.py
+│   │   ├── autointel.py
+│   │   ├── health.py
+│   │   ├── metrics.py
+│   │   ├── performance_dashboard.py
+│   │   ├── pilot.py
+│   │   └── pipeline_api.py
+│   └── static
+│       └── performance_dashboard.html
+├── services
+│   └── rag
+│       ├── __init__.py
+│       └── llamaindex_service.py
+├── tasks
+│   ├── arq_config.py
+│   ├── jobs.py
+│   ├── pipeline_integration.py
+│   ├── queue_service.py
+│   └── worker.py
+├── ultimate_discord_intelligence_bot
+│   ├── __init__.py
+│   ├── __pycache__
+│   │   ├── __init__.cpython-312.pyc
+│   │   └── step_result.cpython-312.pyc
+│   ├── advanced_performance_analytics.py
+│   ├── advanced_performance_analytics_alert_engine.py
+│   ├── advanced_performance_analytics_alert_management.py
+│   ├── advanced_performance_analytics_discord_integration.py
+│   ├── advanced_performance_analytics_impl
+│   │   ├── __init__.py
+│   │   ├── anomalies.py
+│   │   ├── engine.py
+│   │   ├── forecast.py
+│   │   ├── health.py
+│   │   ├── models.py
+│   │   ├── recommendations.py
+│   │   ├── reports.py
+│   │   └── trends.py
+│   ├── advanced_performance_analytics_integration.py
+│   ├── agent_bridge
+│   │   ├── __init__.py
+│   │   ├── agent_bridge.py
+│   │   ├── collective_intelligence.py
+│   │   ├── cross_agent_learning.py
+│   │   └── knowledge_bridge.py
+│   ├── agent_training
+│   │   ├── __init__.py
+│   │   ├── coordinator.py
+│   │   ├── orchestrator.py
+│   │   ├── perf
+│   │   ├── performance_monitor.py
+│   │   ├── performance_monitor_final.py
+│   │   └── synthetic_data_generator.py
+│   ├── agents
+│   │   ├── __init__.py
+│   │   ├── acquisition
+│   │   ├── acquisition.py
+│   │   ├── analysis
+│   │   ├── analysis.py
+│   │   ├── base.py
+│   │   ├── controversy_tracking_agent.py
+│   │   ├── deep_content_analysis_agent.py
+│   │   ├── executive_supervisor.py
+│   │   ├── guest_intelligence_agent.py
+│   │   ├── intelligence.py
+│   │   ├── lazy_base.py
+│   │   ├── live_monitoring_agent.py
+│   │   ├── memory
+│   │   ├── network_discovery_agent.py
+│   │   ├── observability.py
+│   │   ├── operations
+│   │   ├── registry.py
+│   │   ├── verification
+│   │   ├── verification.py
+│   │   └── workflow_manager.py
+│   ├── ai_best_practices.py
+│   ├── analysis
+│   │   ├── __init__.py
+│   │   ├── bias_metrics.py
+│   │   └── political_bias_detector.py
+│   ├── app_config.py
+│   ├── auto_follow.py
+│   ├── autonomous_orchestrator.py
+│   ├── background_autointel_handler.py
+│   ├── background_intelligence_worker.py
+│   ├── caching
+│   │   ├── __init__.py
+│   │   ├── cache_optimizer.py
+│   │   ├── result_cache.py
+│   │   ├── smart_cache.py
+│   │   └── unified_cache.py
+│   ├── config
+│   │   ├── __init__.py
+│   │   ├── agent_definitions.py
+│   │   ├── agent_factory.py
+│   │   ├── agents.backup.yaml
+│   │   ├── agents.yaml
+│   │   ├── base.py
+│   │   ├── feature_flags.py
+│   │   ├── future_tasks.yaml
+│   │   ├── lazy_loading.py
+│   │   ├── paths.py
+│   │   ├── prompts.py
+│   │   ├── tasks.yaml
+│   │   ├── tasks_comprehensive.yaml
+│   │   ├── tasks_deep.yaml
+│   │   ├── tasks_quick.yaml
+│   │   ├── tasks_standard.yaml
+│   │   ├── unified.py
+│   │   └── validation.py
+│   ├── config_schema.py
+│   ├── config_types.py
+│   ├── constants
+│   │   └── ui_limits.py
+│   ├── core
+│   │   ├── config_loader.py
+│   │   ├── http_compliance_audit.py
+│   │   └── http_utils.py
+│   ├── creator_ops
+│   │   ├── __init__.py
+│   │   ├── auth
+│   │   ├── config.py
+│   │   ├── features
+│   │   ├── integrations
+│   │   ├── knowledge
+│   │   ├── media
+│   │   ├── models
+│   │   └── utils
+│   ├── crew.py
+│   ├── crew_components
+│   │   ├── __init__.py
+│   │   ├── agent_registry.py
+│   │   ├── crew_executor.py
+│   │   ├── crew_monitor.py
+│   │   ├── task_registry.py
+│   │   └── tool_registry.py
+│   ├── crew_consolidation.py
+│   ├── crew_core
+│   │   ├── __init__.py
+│   │   ├── compat.py
+│   │   ├── error_handling.py
+│   │   ├── executor.py
+│   │   ├── factory.py
+│   │   ├── insights.py
+│   │   └── interfaces.py
+│   ├── crew_error_handler.py
+│   ├── crew_insight_helpers.py
+│   ├── crewai_tool_wrappers.py
+│   ├── debate_analysis_pipeline.py
+│   ├── discord
+│   │   ├── __init__.py
+│   │   └── artifact_handler.py
+│   ├── discord_bot
+│   │   ├── __init__.py
+│   │   ├── discord_env.py
+│   │   ├── env.py
+│   │   ├── helpers
+│   │   ├── ingest.py
+│   │   ├── registrations.py
+│   │   ├── runner.py
+│   │   ├── scoped
+│   │   └── tools_bootstrap.py
+│   ├── dspy_components
+│   │   ├── __init__.py
+│   │   └── optimized_analysis_tool.py
+│   ├── enhanced_autonomous_orchestrator.py
+│   ├── enhanced_crew_integration.py
+│   ├── enhanced_performance_monitor.py
+│   ├── features
+│   │   ├── __init__.py
+│   │   ├── agent_collaboration.py
+│   │   ├── bias_dashboard.py
+│   │   ├── community_pulse
+│   │   ├── crew_analytics.py
+│   │   ├── crew_dashboard.py
+│   │   ├── guest_preparation
+│   │   ├── memory_coordinator.py
+│   │   └── rights_management
+│   ├── governance
+│   │   ├── __init__.py
+│   │   ├── agent_instructions.py
+│   │   ├── audit_trail.py
+│   │   ├── communication_style.py
+│   │   ├── content_safety.py
+│   │   ├── model_spec.py
+│   │   ├── red_lines.py
+│   │   └── refusal_handler.py
+│   ├── health_check.py
+│   ├── knowledge
+│   │   ├── __init__.py
+│   │   ├── context_builder.py
+│   │   ├── retrieval_engine.py
+│   │   └── unified_memory.py
+│   ├── langgraph_pipeline.py
+│   ├── lazy_loading
+│   │   ├── __init__.py
+│   │   ├── dependency_manager.py
+│   │   ├── import_cache.py
+│   │   └── tool_loader.py
+│   ├── main.py
+│   ├── marketplace
+│   │   ├── __init__.py
+│   │   ├── models.py
+│   │   ├── signing.py
+│   │   ├── store.py
+│   │   └── trust.py
+│   ├── memory
+│   │   ├── __init__.py
+│   │   ├── plugins
+│   │   └── vector_store.py
+│   ├── memory_integrators.py
+│   ├── mission_api.py
+│   ├── models
+│   │   └── structured_responses.py
+│   ├── monitoring
+│   │   ├── __init__.py
+│   │   ├── hipporag_alerts.py
+│   │   └── production_monitor.py
+│   ├── multi_modal_synthesizer.py
+│   ├── obs
+│   │   └── metrics.py
+│   ├── observability
+│   │   ├── __init__.py
+│   │   ├── analytics_service.py
+│   │   ├── dashboard_integration.py
+│   │   ├── dashboard_templates.py
+│   │   ├── enhanced_metrics_api.py
+│   │   ├── intelligent_alerts.py
+│   │   ├── metrics_api.py
+│   │   ├── metrics_collector.py
+│   │   ├── metrics_decorator.py
+│   │   ├── stepresult_observer.py
+│   │   └── unified_metrics.py
+│   ├── optimization
+│   │   ├── __init__.py
+│   │   ├── memory_optimizer.py
+│   │   └── memory_pool.py
+│   ├── optimized
+│   │   ├── content_analysis.py
+│   │   ├── content_ingestion.py
+│   │   ├── crew_execution.py
+│   │   ├── discord_integration.py
+│   │   └── memory_operations.py
+│   ├── orchestration
+│   │   ├── __init__.py
+│   │   ├── facade.py
+│   │   ├── strategies
+│   │   ├── task_manager.py
+│   │   └── unified_orchestrator.py
+│   ├── orchestrator
+│   │   ├── __init__.py
+│   │   ├── accuracy_assessors.py
+│   │   ├── agent_managers.py
+│   │   ├── ai_quality_calculators.py
+│   │   ├── analytics_calculators.py
+│   │   ├── bias_manipulation_assessors.py
+│   │   ├── bias_manipulation_extractors.py
+│   │   ├── budget_estimators.py
+│   │   ├── confidence_calculators.py
+│   │   ├── content_confidence_calculators.py
+│   │   ├── content_extractors.py
+│   │   ├── content_quality_assessors.py
+│   │   ├── crew_builders.py
+│   │   ├── crew_builders_focused.py
+│   │   ├── data_transformers.py
+│   │   ├── discord_embed_builders.py
+│   │   ├── discord_error_handlers.py
+│   │   ├── discord_helpers.py
+│   │   ├── discord_progress_updates.py
+│   │   ├── discord_result_delivery.py
+│   │   ├── discord_result_persistence.py
+│   │   ├── discord_session_validators.py
+│   │   ├── error_handlers.py
+│   │   ├── extractors.py
+│   │   ├── fact_checking_extractors.py
+│   │   ├── insight_generators.py
+│   │   ├── learning_enhancement_assessors.py
+│   │   ├── orchestrator_utilities.py
+│   │   ├── parallel_config.py
+│   │   ├── parallel_execution_engine.py
+│   │   ├── persona_confidence_calculators.py
+│   │   ├── pipeline_result_builders.py
+│   │   ├── quality_assessors.py
+│   │   ├── quality_calculators.py
+│   │   ├── quality_validators.py
+│   │   ├── result_synthesizers.py
+│   │   ├── statistical_analyzers.py
+│   │   ├── statistical_confidence_calculators.py
+│   │   ├── system_validators.py
+│   │   ├── task_callbacks.py
+│   │   ├── threat_risk_analyzers.py
+│   │   ├── validators.py
+│   │   └── workflow_planners.py
+│   ├── performance_dashboard.py
+│   ├── performance_integration.py
+│   ├── performance_optimization_engine.py
+│   ├── pipeline.py
+│   ├── pipeline_components
+│   │   ├── __init__.py
+│   │   ├── base.py
+│   │   ├── dashboard_metrics.py
+│   │   ├── log_pattern_middleware.py
+│   │   ├── middleware.py
+│   │   ├── mixins.py
+│   │   ├── observability.py
+│   │   ├── orchestrator.py
+│   │   ├── tracing.py
+│   │   └── types.py
+│   ├── pipeline_optimization.py
+│   ├── plugins
+│   │   ├── __init__.py
+│   │   ├── example_summarizer
+│   │   ├── manifest.schema.json
+│   │   ├── runtime
+│   │   └── testkit
+│   ├── policy
+│   │   ├── __init__.py
+│   │   ├── policy.yaml
+│   │   └── policy_engine.py
+│   ├── predictive_performance
+│   │   ├── __init__.py
+│   │   ├── engine.py
+│   │   ├── mixins
+│   │   ├── mixins.py
+│   │   └── models.py
+│   ├── predictive_performance_insights.py
+│   ├── privacy
+│   │   ├── __init__.py
+│   │   ├── pii_detector.py
+│   │   ├── privacy_filter.py
+│   │   └── redactor.py
+│   ├── profiles
+│   │   ├── creator_network_schema.py
+│   │   ├── schema.py
+│   │   └── store.py
+│   ├── result_processors.py
+│   ├── routing
+│   │   ├── __init__.py
+│   │   ├── cost_tracker.py
+│   │   └── unified_router.py
+│   ├── schemas
+│   │   ├── __init__.py
+│   │   └── task_outputs.py
+│   ├── scripts
+│   │   └── google_oauth_setup.py
+│   ├── server
+│   │   ├── __init__.py
+│   │   └── app.py
+│   ├── services
+│   │   ├── __init__.py
+│   │   ├── artifact_publisher.py
+│   │   ├── autogen_service.py
+│   │   ├── bandit_policy.py
+│   │   ├── cache.py
+│   │   ├── cache_optimizer.py
+│   │   ├── cache_shadow_harness.py
+│   │   ├── caching_service.py
+│   │   ├── context_service.py
+│   │   ├── creator_evaluation_harness.py
+│   │   ├── dspy_components
+│   │   ├── dspy_optimization_service.py
+│   │   ├── embedding_service.py
+│   │   ├── enhanced_openrouter_service.py
+│   │   ├── enterprise_auth_service.py
+│   │   ├── enterprise_tenant_manager.py
+│   │   ├── eval_harness.py
+│   │   ├── evaluation_harness.py
+│   │   ├── gold_dataset_annotator.py
+│   │   ├── hierarchical_orchestrator.py
+│   │   ├── ingest_queue.py
+│   │   ├── langfuse_service.py
+│   │   ├── learning_engine.py
+│   │   ├── llm_provider_registry.py
+│   │   ├── llm_router_adapter.py
+│   │   ├── logging_utils.py
+│   │   ├── maintenance.py
+│   │   ├── mcp_client.py
+│   │   ├── mem0_service.py
+│   │   ├── memory_service.py
+│   │   ├── model_router.py
+│   │   ├── monitoring_orchestrator.py
+│   │   ├── multimodal_understanding_service.py
+│   │   ├── observability_service.py
+│   │   ├── openai_cost_monitoring.py
+│   │   ├── openai_function_calling.py
+│   │   ├── openai_integration_service.py
+│   │   ├── openai_multimodal.py
+│   │   ├── openai_service.py
+│   │   ├── openai_service_facade.py
+│   │   ├── openai_streaming.py
+│   │   ├── openai_structured_outputs.py
+│   │   ├── openai_vision.py
+│   │   ├── openai_voice.py
+│   │   ├── openrouter_helpers.py
+│   │   ├── openrouter_service
+│   │   ├── openrouter_service.py
+│   │   ├── optimization_pipeline.py
+│   │   ├── performance_learning_engine.py
+│   │   ├── performance_optimizer.py
+│   │   ├── poller.py
+│   │   ├── prompt_compressor.py
+│   │   ├── prompt_engine.py
+│   │   ├── rate_limiting_service.py
+│   │   ├── request_budget.py
+│   │   ├── rl_cache_optimizer.py
+│   │   ├── rl_model_router.py
+│   │   ├── rl_router_registry.py
+│   │   ├── routing_service.py
+│   │   ├── semantic_router_service.py
+│   │   ├── token_meter.py
+│   │   ├── unified_cache_service.py
+│   │   ├── unified_pipeline.py
+│   │   ├── websocket_integration.py
+│   │   └── websocket_service.py
+│   ├── settings.py
+│   ├── setup_cli.py
+│   ├── startup_validation.py
+│   ├── step_result.py
+│   ├── stubs
+│   │   ├── crewai.pyi
+│   │   ├── crewai_tool_wrappers.pyi
+│   │   └── discord.pyi
+│   ├── tasks
+│   │   ├── __init__.py
+│   │   ├── content_processing.py
+│   │   └── quality_assurance.py
+│   ├── tenancy
+│   │   ├── __init__.py
+│   │   ├── context.py
+│   │   ├── helpers.py
+│   │   ├── models.py
+│   │   ├── registry.py
+│   │   └── shared_context.py
+│   ├── tools
+│   │   ├── __init__.py
+│   │   ├── _base.py
+│   │   ├── acquisition
+│   │   ├── acquisition_base.py
+│   │   ├── analysis
+│   │   ├── analysis_base.py
+│   │   ├── discord
+│   │   ├── integration
+│   │   ├── lazy_loader.py
+│   │   ├── lazy_tools.py
+│   │   ├── mcp_tool_wrapper.py
+│   │   ├── memory
+│   │   ├── memory_base.py
+│   │   ├── observability
+│   │   ├── platform_resolver
+│   │   ├── settings.py
+│   │   ├── social
+│   │   ├── standard_tool.py
+│   │   ├── step_result_auditor.py
+│   │   ├── template_tool.py
+│   │   ├── tenancy.py
+│   │   ├── verification
+│   │   ├── verification_base.py
+│   │   └── web
+│   └── workflow_state.py
+└── validation
+    ├── __init__.py
+    └── mcp_tools_validator.py
+
+259 directories, 943 files

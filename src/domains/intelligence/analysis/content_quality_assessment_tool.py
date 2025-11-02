@@ -5,14 +5,17 @@ allowing the system to skip full analysis for low-quality content.
 """
 
 from __future__ import annotations
+
 import logging
 import os
 import re
 from dataclasses import dataclass
-from typing import Any
-from platform.observability.metrics import get_metrics
 from platform.core.step_result import StepResult
+from platform.observability.metrics import get_metrics
+from typing import Any
+
 from ultimate_discord_intelligence_bot.tools._base import BaseTool
+
 
 logger = logging.getLogger(__name__)
 
@@ -167,7 +170,7 @@ class ContentQualityAssessmentTool(BaseTool[dict[str, Any]]):
         sentence_lengths = [len(s.split()) for s in sentences]
         if len(sentence_lengths) > 1:
             avg_length = sum(sentence_lengths) / len(sentence_lengths)
-            variance = sum(((length - avg_length) ** 2 for length in sentence_lengths)) / len(sentence_lengths)
+            variance = sum((length - avg_length) ** 2 for length in sentence_lengths) / len(sentence_lengths)
             length_consistency = max(0, 1 - variance / avg_length**2)
         else:
             length_consistency = 0.5

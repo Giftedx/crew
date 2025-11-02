@@ -8,11 +8,13 @@ comprehensive real-time intelligence.
 """
 
 from __future__ import annotations
+
 import time
 import uuid
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
+
 
 try:
     from loguru import logger
@@ -20,6 +22,8 @@ except ImportError:
     import logging
 
     logger = logging.getLogger(__name__)
+from platform.core.step_result import StepResult
+
 from core.realtime.live_monitor import (
     AlertLevel,
     LiveContentMetrics,
@@ -36,7 +40,6 @@ from core.realtime.stream_processor import (
     StreamProcessor,
     StreamType,
 )
-from platform.core.step_result import StepResult
 from domains.intelligence.analysis.live_stream_analysis_tool import LiveStreamAnalysisTool
 
 
@@ -454,9 +457,9 @@ class LiveMonitoringAgent:
             "fact_checks_triggered": len([a for a in self.fact_check_alerts if a.stream_id == session.stream_id]),
             "monitoring_mode": session.monitoring_mode.value,
             "performance_summary": {
-                "average_engagement": sum((m.engagement_rate for m in session.metrics)) / max(1, len(session.metrics)),
-                "average_sentiment": sum((m.sentiment_score for m in session.metrics)) / max(1, len(session.metrics)),
-                "average_quality": sum((m.content_quality for m in session.metrics)) / max(1, len(session.metrics)),
+                "average_engagement": sum(m.engagement_rate for m in session.metrics) / max(1, len(session.metrics)),
+                "average_sentiment": sum(m.sentiment_score for m in session.metrics) / max(1, len(session.metrics)),
+                "average_quality": sum(m.content_quality for m in session.metrics) / max(1, len(session.metrics)),
             },
         }
 

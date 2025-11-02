@@ -1,20 +1,24 @@
 """Unified memory facade tying storage, vector search, and retention."""
 
 from __future__ import annotations
+
 import json
 import tempfile
 from dataclasses import dataclass
+from platform.config.configuration import get_config
 from typing import TYPE_CHECKING
+
 from analysis.rerank import rerank
 from archive import archive_file
 from core.privacy import privacy_filter
-from platform.config.configuration import get_config
 from core.time import default_utc_now
 from memory import embeddings, vector_store
 from memory.store import MemoryItem, MemoryStore
 
+
 if TYPE_CHECKING:
     from collections.abc import Sequence
+
     from core.learning_engine import LearningEngine
 
 

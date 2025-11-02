@@ -1,11 +1,13 @@
 from __future__ import annotations
+
 import json
 import logging
 import os
-from typing import Any
 from platform.config.settings import SecureConfig, get_settings
-from platform.observability import metrics
 from platform.core.step_result import ErrorCategory, ErrorContext, StepResult
+from platform.observability import metrics
+from typing import Any
+
 
 logger = logging.getLogger(__name__)
 try:

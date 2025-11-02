@@ -5,10 +5,12 @@ LLM usage based on task requirements, performance metrics, and cost consideratio
 """
 
 from __future__ import annotations
+
 import logging
 import time
-from typing import TYPE_CHECKING, Any
 from platform.core.step_result import StepResult
+from typing import TYPE_CHECKING, Any
+
 
 if TYPE_CHECKING:
     from ..tenancy.context import TenantContext
@@ -134,7 +136,7 @@ class ModelRouter:
         description_lower = task_description.lower()
         word_count = len(task_description.split())
         for complexity, indicators in complexity_indicators.items():
-            if any((indicator in description_lower for indicator in indicators)):
+            if any(indicator in description_lower for indicator in indicators):
                 return complexity
         if word_count < 20 and task_type in ["extraction", "classification"]:
             return "simple"

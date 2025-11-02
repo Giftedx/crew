@@ -1,6 +1,8 @@
 from __future__ import annotations
+
 import logging
 from platform.core.step_result import StepResult
+
 
 log = logging.getLogger(__name__)
 

@@ -5,16 +5,20 @@ failures and improve service reliability.
 """
 
 from __future__ import annotations
+
 import logging
 import time
 from dataclasses import dataclass
 from enum import Enum
-from typing import TYPE_CHECKING, Any
-from ultimate_discord_intelligence_bot.config.feature_flags import FeatureFlags
 from platform.core.step_result import StepResult
+from typing import TYPE_CHECKING, Any
+
+from ultimate_discord_intelligence_bot.config.feature_flags import FeatureFlags
+
 
 if TYPE_CHECKING:
     from collections.abc import Callable
+
     from .service import OpenRouterService
 log = logging.getLogger(__name__)
 

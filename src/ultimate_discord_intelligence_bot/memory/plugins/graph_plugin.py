@@ -5,10 +5,13 @@ storage, and relationship-based retrieval.
 """
 
 from __future__ import annotations
+
 import logging
-from typing import TYPE_CHECKING, Any
 from platform.core.step_result import StepResult
+from typing import TYPE_CHECKING, Any
+
 from ultimate_discord_intelligence_bot.tools.graph_memory_tool import GraphMemoryTool
+
 
 if TYPE_CHECKING:
     from collections.abc import Sequence

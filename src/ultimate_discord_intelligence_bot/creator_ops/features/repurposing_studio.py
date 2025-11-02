@@ -8,6 +8,8 @@ import logging
 import tempfile
 from datetime import datetime
 from pathlib import Path
+from platform.core.step_result import StepResult
+
 from ultimate_discord_intelligence_bot.creator_ops.config import CreatorOpsConfig
 from ultimate_discord_intelligence_bot.creator_ops.features.repurposing_models import (
     CaptionStyle,
@@ -24,7 +26,7 @@ from ultimate_discord_intelligence_bot.creator_ops.features.repurposing_models i
 from ultimate_discord_intelligence_bot.creator_ops.knowledge.api import KnowledgeAPI
 from ultimate_discord_intelligence_bot.creator_ops.media import NLPPipeline
 from ultimate_discord_intelligence_bot.creator_ops.media.alignment import AlignedTranscript, TranscriptAlignment
-from platform.core.step_result import StepResult
+
 
 logger = logging.getLogger(__name__)
 
@@ -99,7 +101,7 @@ class RepurposingStudio:
                 job_id=job.job_id,
                 success=len(clips) > 0,
                 clips_created=len(clips),
-                total_duration=sum((clip.duration for clip in clips)),
+                total_duration=sum(clip.duration for clip in clips),
                 platforms_targeted=target_platforms,
                 output_files=[clip.file_path for clip in clips],
                 metadata={
@@ -156,7 +158,7 @@ class RepurposingStudio:
         if len(segment.speakers) > 1:
             return True
         engaging_words = ["amazing", "incredible", "unbelievable", "shocking", "controversial", "breaking"]
-        if any((word in segment.text.lower() for word in engaging_words)):
+        if any(word in segment.text.lower() for word in engaging_words):
             return True
         return True
 
@@ -171,7 +173,7 @@ class RepurposingStudio:
             score += 0.1
         if "!" in segment.text:
             score += 0.1
-        if any((char.isdigit() for char in segment.text)):
+        if any(char.isdigit() for char in segment.text):
             score += 0.1
         if segment.topics and len(segment.topics) > 0:
             score += 0.1
@@ -183,17 +185,17 @@ class RepurposingStudio:
         controversial_topics = ["politics", "religion", "controversy", "scandal", "breaking news"]
         if segment.topics:
             for topic in segment.topics:
-                if any((controversial in topic.lower() for controversial in controversial_topics)):
+                if any(controversial in topic.lower() for controversial in controversial_topics):
                     score += 0.3
                     break
         emotional_words = ["love", "hate", "angry", "excited", "shocked", "amazed"]
-        if any((word in segment.text.lower() for word in emotional_words)):
+        if any(word in segment.text.lower() for word in emotional_words):
             score += 0.2
         trending_keywords = ["viral", "trending", "popular", "famous", "celebrity"]
-        if any((keyword in segment.text.lower() for keyword in trending_keywords)):
+        if any(keyword in segment.text.lower() for keyword in trending_keywords):
             score += 0.2
         cta_phrases = ["share", "subscribe", "like", "comment", "follow"]
-        if any((phrase in segment.text.lower() for phrase in cta_phrases)):
+        if any(phrase in segment.text.lower() for phrase in cta_phrases):
             score += 0.1
         return min(score, 1.0)
 

@@ -6,11 +6,14 @@ overridden via INGEST_DB_PATH; defaults to data/ingest.db.
 """
 
 from __future__ import annotations
+
 import os
 import pathlib
 from typing import TYPE_CHECKING
+
 from ingest.models import connect as connect_models
 from scheduler.priority_queue import PriorityQueue
+
 
 if TYPE_CHECKING:
     from platform.core.step_result import StepResult

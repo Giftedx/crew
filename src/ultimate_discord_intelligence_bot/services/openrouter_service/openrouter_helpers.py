@@ -5,11 +5,14 @@ and its components.
 """
 
 from __future__ import annotations
+
 import contextlib
 import copy
-from typing import TYPE_CHECKING, Any
 from platform.observability import metrics
+from typing import TYPE_CHECKING, Any
+
 from ultimate_discord_intelligence_bot.tenancy.context import TenantContext
+
 
 if TYPE_CHECKING:
     from core.learning_engine import LearningEngine

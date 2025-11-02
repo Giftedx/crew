@@ -1,17 +1,21 @@
 """Pipeline mixins providing metrics and execution helpers."""
 
 from __future__ import annotations
+
 import contextlib
 import time
 from copy import deepcopy
-from typing import TYPE_CHECKING, Any
-from platform.observability.metrics import get_metrics
 from platform.core.step_result import StepResult
+from platform.observability.metrics import get_metrics
+from typing import TYPE_CHECKING, Any
+
 from .middleware import PipelineStepMiddleware, StepContext
 from .observability import merge_log_pattern_summaries
 
+
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterable
+
     from .types import PipelineRunResult
 
 
@@ -112,6 +116,7 @@ class PipelineMetricsMixin:
         Failures are logged but don't affect the pipeline result.
         """
         import asyncio
+
         from ultimate_discord_intelligence_bot.pipeline_components.dashboard_metrics import record_pipeline_metrics
 
         processing_type = str(payload.get("processing_type", "full"))

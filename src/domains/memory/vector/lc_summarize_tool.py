@@ -10,13 +10,16 @@ No external network calls; safe in offline CI.
 """
 
 from __future__ import annotations
+
+import contextlib
 import math
 from dataclasses import dataclass
-from platform.observability.metrics import get_metrics
 from platform.core.step_result import StepResult
-from ._base import BaseTool
+from platform.observability.metrics import get_metrics
 from typing import TYPE_CHECKING
-import contextlib
+
+from ._base import BaseTool
+
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -92,7 +95,7 @@ def _score_sentence(sentence: str, freq: dict[str, int]) -> float:
     words = [w for w in _tokenize_words(sentence) if w.isalpha()]
     if not words:
         return 0.0
-    score = sum((freq.get(w, 0) for w in words)) / math.sqrt(len(words))
+    score = sum(freq.get(w, 0) for w in words) / math.sqrt(len(words))
     return float(score)
 
 

@@ -1,9 +1,11 @@
 """OpenAI vision service for image and video analysis."""
 
 from __future__ import annotations
+
 import base64
-from ultimate_discord_intelligence_bot.services.openai_service import OpenAIService
 from platform.core.step_result import StepResult
+
+from ultimate_discord_intelligence_bot.services.openai_service import OpenAIService
 
 
 class OpenAIVisionService(OpenAIService):

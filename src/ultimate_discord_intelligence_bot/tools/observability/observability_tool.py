@@ -5,12 +5,16 @@ the observability system for metrics collection, alerting, and dashboard managem
 """
 
 from __future__ import annotations
+
 import logging
 import time
+from platform.core.step_result import StepResult
+from platform.observability.metrics import get_metrics
 from typing import Any
+
 from crewai.tools import BaseTool
 from pydantic import Field
-from platform.observability.metrics import get_metrics
+
 from ultimate_discord_intelligence_bot.observability import (
     AlertingConfig,
     AlertLevel,
@@ -25,7 +29,7 @@ from ultimate_discord_intelligence_bot.observability import (
     UnifiedMetricsConfig,
     WidgetType,
 )
-from platform.core.step_result import StepResult
+
 
 logger = logging.getLogger(__name__)
 

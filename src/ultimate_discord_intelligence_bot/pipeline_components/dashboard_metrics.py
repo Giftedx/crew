@@ -1,9 +1,11 @@
 """Dashboard metrics recorder - sends pipeline results to performance dashboard API."""
 
 from __future__ import annotations
+
 import logging
-from platform.http.http_utils import resilient_post
 from platform.config.configuration import get_config
+from platform.http.http_utils import resilient_post
+
 
 logger = logging.getLogger(__name__)
 

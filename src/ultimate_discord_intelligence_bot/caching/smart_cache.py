@@ -5,13 +5,16 @@ and automatically determines optimal caching strategies for different tools.
 """
 
 from __future__ import annotations
+
 import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from functools import wraps
-from typing import TYPE_CHECKING, Any
-from ultimate_discord_intelligence_bot.caching.result_cache import ResultCache
 from platform.core.step_result import StepResult
+from typing import TYPE_CHECKING, Any
+
+from ultimate_discord_intelligence_bot.caching.result_cache import ResultCache
+
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -171,9 +174,9 @@ class SmartCache:
         for tool_name in self.usage_patterns:
             tool_analyses[tool_name] = self.analyze_tool_performance(tool_name)
         total_tools = len(self.usage_patterns)
-        cached_tools = sum((1 for strategy in self.caching_strategies.values() if strategy.enabled))
+        cached_tools = sum(1 for strategy in self.caching_strategies.values() if strategy.enabled)
         avg_hit_rate = (
-            sum((pattern.hit_rate for pattern in self.usage_patterns.values())) / total_tools if total_tools > 0 else 0
+            sum(pattern.hit_rate for pattern in self.usage_patterns.values()) / total_tools if total_tools > 0 else 0
         )
         return {
             "base_cache": base_stats,

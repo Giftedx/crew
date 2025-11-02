@@ -5,13 +5,15 @@ cross-agent memory access patterns for the crew system.
 """
 
 from __future__ import annotations
+
 import logging
 import threading
 import time
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import TYPE_CHECKING, Any
 from platform.core.step_result import StepResult
+from typing import TYPE_CHECKING, Any
+
 
 if TYPE_CHECKING:
     from ultimate_discord_intelligence_bot.config.feature_flags import FeatureFlags
@@ -354,8 +356,8 @@ class MemoryCoordinator:
                 total_memories = len(self.memory_pool)
                 total_accesses = len(self.access_log)
                 if agent_id:
-                    agent_memories = sum((1 for entry in self.memory_pool.values() if entry.agent_id == agent_id))
-                    agent_accesses = sum((1 for access in self.access_log if access.agent_id == agent_id))
+                    agent_memories = sum(1 for entry in self.memory_pool.values() if entry.agent_id == agent_id)
+                    agent_accesses = sum(1 for access in self.access_log if access.agent_id == agent_id)
                 else:
                     agent_memories = total_memories
                     agent_accesses = total_accesses
@@ -387,7 +389,7 @@ class MemoryCoordinator:
         Returns:
             bool: True if agent has quota
         """
-        agent_memory_count = sum((1 for entry in self.memory_pool.values() if entry.agent_id == agent_id))
+        agent_memory_count = sum(1 for entry in self.memory_pool.values() if entry.agent_id == agent_id)
         max_quota = self.agent_memory_quotas.get(agent_id, 1000)
         return agent_memory_count < max_quota
 

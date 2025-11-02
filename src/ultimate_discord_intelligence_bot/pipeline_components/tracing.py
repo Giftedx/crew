@@ -1,7 +1,9 @@
 """Tracing utilities with graceful degradation when `obs.tracing` is unavailable."""
 
 from __future__ import annotations
+
 from typing import Any
+
 
 try:
     from platform.observability import tracing as _obs_tracing

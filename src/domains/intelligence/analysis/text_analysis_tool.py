@@ -18,10 +18,12 @@ Future extensions planned:
 import logging
 import os
 from collections import Counter
-from typing import Any, TypedDict
-from platform.observability.metrics import get_metrics
 from platform.core.step_result import StepResult
+from platform.observability.metrics import get_metrics
+from typing import Any, TypedDict
+
 from ._base import BaseTool
+
 
 nltk: Any | None = None
 stopwords: Any | None = None
@@ -256,8 +258,8 @@ class TextAnalysisTool(BaseTool[StepResult]):
                 toks = word_tokenize(text.lower())
             except Exception:
                 toks = text.lower().split()
-            pos_hits = sum((1 for t in toks if t.isalpha() and t in pos_words))
-            neg_hits = sum((1 for t in toks if t.isalpha() and t in neg_words))
+            pos_hits = sum(1 for t in toks if t.isalpha() and t in pos_words)
+            neg_hits = sum(1 for t in toks if t.isalpha() and t in neg_words)
             total = max(1, pos_hits + neg_hits)
             compound = (pos_hits - neg_hits) / total
             return {
@@ -449,7 +451,7 @@ class TextAnalysisTool(BaseTool[StepResult]):
         emotion_scores: dict[str, float] = {}
         total_emotion_words = 0
         for emotion, lexicon in emotion_lexicons.items():
-            score = float(sum((1 for word in words if word in lexicon)))
+            score = float(sum(1 for word in words if word in lexicon))
             emotion_scores[emotion] = score
             total_emotion_words += int(score)
         if total_emotion_words > 0:
@@ -629,7 +631,7 @@ class TextAnalysisTool(BaseTool[StepResult]):
         topic_scores = {}
         topic_word_counts = {}
         for topic, keywords in topic_categories.items():
-            count = sum((1 for word in words if word in keywords))
+            count = sum(1 for word in words if word in keywords)
             if count > 0:
                 topic_scores[topic] = count / len(words)
                 topic_word_counts[topic] = count
@@ -637,7 +639,7 @@ class TextAnalysisTool(BaseTool[StepResult]):
         primary_topics = [topic for topic, _ in sorted_topics[:3]]
         topic_confidence = dict(sorted_topics)
         content_themes = []
-        if any((score > 0.01 for score in topic_scores.values())) and sorted_topics:
+        if any(score > 0.01 for score in topic_scores.values()) and sorted_topics:
             dominant_topic = sorted_topics[0][0]
             content_themes.append(dominant_topic)
             for topic, score in sorted_topics[1:3]:

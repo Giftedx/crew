@@ -1,12 +1,14 @@
 """Multi-platform download tool following Copilot instructions."""
 
 from __future__ import annotations
+
 import logging
 from pathlib import Path
+from platform.core.step_result import ErrorCategory, ErrorContext, StepResult
+from platform.observability.metrics import get_metrics
 from typing import Any, ClassVar
 from urllib.parse import urlparse
-from platform.observability.metrics import get_metrics
-from platform.core.step_result import ErrorCategory, ErrorContext, StepResult
+
 from ._base import BaseTool
 from .discord_download_tool import DiscordDownloadTool
 from .yt_dlp_download_tool import (
@@ -18,6 +20,7 @@ from .yt_dlp_download_tool import (
     TwitterDownloadTool,
     YouTubeDownloadTool,
 )
+
 
 logger = logging.getLogger(__name__)
 

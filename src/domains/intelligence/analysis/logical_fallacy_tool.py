@@ -8,13 +8,16 @@ With ENABLE_INSTRUCTOR=True, uses LLM-based analysis for more accurate detection
 
 import logging
 import re
+from platform.config.configuration import get_config
+from platform.core.step_result import StepResult
+from platform.observability.metrics import get_metrics
 from typing import ClassVar
+
 from ai.response_models import FallacyAnalysisResult
 from ai.structured_outputs import InstructorClientFactory
-from platform.config.configuration import get_config
-from platform.observability.metrics import get_metrics
-from platform.core.step_result import StepResult
+
 from ._base import BaseTool
+
 
 logger = logging.getLogger(__name__)
 ABSOLUTE_WORD_THRESHOLD = 3
@@ -201,18 +204,18 @@ class LogicalFallacyTool(BaseTool[StepResult]):
         fallacies = []
         text_lower = text.lower()
         absolute_words = ["all", "every", "always", "never", "everyone", "nobody", "everything", "nothing"]
-        absolute_count = sum((1 for word in absolute_words if word in text_lower))
+        absolute_count = sum(1 for word in absolute_words if word in text_lower)
         if absolute_count >= ABSOLUTE_WORD_THRESHOLD:
             fallacies.append(("hasty generalization", HASTY_GENERALIZATION_CONFIDENCE))
         emotional_words = ["terrible", "horrible", "wonderful", "amazing", "disgusting", "outrageous"]
-        emotional_count = sum((1 for word in emotional_words if word in text_lower))
+        emotional_count = sum(1 for word in emotional_words if word in text_lower)
         if emotional_count >= EMOTIONAL_WORD_THRESHOLD:
             fallacies.append(("appeal to emotion", APPEAL_TO_EMOTION_CONFIDENCE))
         if "?" in text:
             loaded_question_patterns = ["why do you", "how can you", "when will you stop"]
-            if any((pattern in text_lower for pattern in loaded_question_patterns)):
+            if any(pattern in text_lower for pattern in loaded_question_patterns):
                 fallacies.append(("loaded question", LOADED_QUESTION_CONFIDENCE))
-        if any((phrase in text_lower for phrase in ["like comparing", "apples to oranges", "different as"])):
+        if any(phrase in text_lower for phrase in ["like comparing", "apples to oranges", "different as"]):
             fallacies.append(("false analogy", FALSE_ANALOGY_CONFIDENCE))
         return fallacies
 

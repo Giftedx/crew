@@ -13,8 +13,10 @@ Notes:
 """
 
 from __future__ import annotations
+
 import contextlib
 from typing import TYPE_CHECKING
+
 
 if TYPE_CHECKING:
     from collections.abc import Callable

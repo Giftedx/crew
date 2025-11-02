@@ -1,10 +1,12 @@
 from __future__ import annotations
+
 import json
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any
 from platform.core.step_result import StepResult
+from typing import Any
+
 
 logger = logging.getLogger(__name__)
 
@@ -305,25 +307,25 @@ class CreatorEvaluationHarness:
                 avg_latency_seconds=0.0,
                 throughput_per_hour=0.0,
             )
-        wer_avg = sum((r.wer for r in successful_results)) / len(successful_results)
-        cer_avg = sum((r.cer for r in successful_results)) / len(successful_results)
-        der_avg = sum((r.der for r in successful_results)) / len(successful_results)
-        jer_avg = sum((r.jer for r in successful_results)) / len(successful_results)
-        topic_seg_rouge_avg = sum((r.topic_seg_rouge for r in successful_results)) / len(successful_results)
-        topic_seg_nmi_avg = sum((r.topic_seg_nmi for r in successful_results)) / len(successful_results)
-        claim_f1_avg = sum((r.claim_extraction_f1 for r in successful_results)) / len(successful_results)
-        claim_precision_avg = sum((r.claim_extraction_precision for r in successful_results)) / len(successful_results)
-        claim_recall_avg = sum((r.claim_extraction_recall for r in successful_results)) / len(successful_results)
-        source_r3_avg = sum((r.source_retrieval_r3 for r in successful_results)) / len(successful_results)
-        source_ndcg_avg = sum((r.source_retrieval_ndcg for r in successful_results)) / len(successful_results)
-        highlight_tau_avg = sum((r.highlight_kendall_tau for r in successful_results)) / len(successful_results)
-        highlight_precision_avg = sum((r.highlight_precision for r in successful_results)) / len(successful_results)
-        safety_f1_avg = sum((r.safety_classification_f1 for r in successful_results)) / len(successful_results)
-        dedup_precision_avg = sum((r.dedup_precision for r in successful_results)) / len(successful_results)
-        dedup_recall_avg = sum((r.dedup_recall for r in successful_results)) / len(successful_results)
-        cost_avg = sum((r.cost_usd for r in successful_results)) / len(successful_results)
-        latency_avg = sum((r.latency_seconds for r in successful_results)) / len(successful_results)
-        total_duration = sum((r.duration_seconds for r in successful_results))
+        wer_avg = sum(r.wer for r in successful_results) / len(successful_results)
+        cer_avg = sum(r.cer for r in successful_results) / len(successful_results)
+        der_avg = sum(r.der for r in successful_results) / len(successful_results)
+        jer_avg = sum(r.jer for r in successful_results) / len(successful_results)
+        topic_seg_rouge_avg = sum(r.topic_seg_rouge for r in successful_results) / len(successful_results)
+        topic_seg_nmi_avg = sum(r.topic_seg_nmi for r in successful_results) / len(successful_results)
+        claim_f1_avg = sum(r.claim_extraction_f1 for r in successful_results) / len(successful_results)
+        claim_precision_avg = sum(r.claim_extraction_precision for r in successful_results) / len(successful_results)
+        claim_recall_avg = sum(r.claim_extraction_recall for r in successful_results) / len(successful_results)
+        source_r3_avg = sum(r.source_retrieval_r3 for r in successful_results) / len(successful_results)
+        source_ndcg_avg = sum(r.source_retrieval_ndcg for r in successful_results) / len(successful_results)
+        highlight_tau_avg = sum(r.highlight_kendall_tau for r in successful_results) / len(successful_results)
+        highlight_precision_avg = sum(r.highlight_precision for r in successful_results) / len(successful_results)
+        safety_f1_avg = sum(r.safety_classification_f1 for r in successful_results) / len(successful_results)
+        dedup_precision_avg = sum(r.dedup_precision for r in successful_results) / len(successful_results)
+        dedup_recall_avg = sum(r.dedup_recall for r in successful_results) / len(successful_results)
+        cost_avg = sum(r.cost_usd for r in successful_results) / len(successful_results)
+        latency_avg = sum(r.latency_seconds for r in successful_results) / len(successful_results)
+        total_duration = sum(r.duration_seconds for r in successful_results)
         throughput = total_duration / 3600 / (latency_avg / 3600) if latency_avg > 0 else 0
         return EvaluationMetrics(
             wer=wer_avg,
@@ -361,8 +363,8 @@ class CreatorEvaluationHarness:
         if len(successful_results) >= 3:
             first_half = successful_results[: len(successful_results) // 2]
             second_half = successful_results[len(successful_results) // 2 :]
-            wer_first = sum((r.wer for r in first_half)) / len(first_half)
-            wer_second = sum((r.wer for r in second_half)) / len(second_half)
+            wer_first = sum(r.wer for r in first_half) / len(first_half)
+            wer_second = sum(r.wer for r in second_half) / len(second_half)
             if wer_second < wer_first * 0.95:
                 trends["wer_trend"] = "improving"
             elif wer_second > wer_first * 1.05:

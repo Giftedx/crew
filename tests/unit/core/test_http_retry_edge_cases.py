@@ -1,27 +1,35 @@
 """Additional tests for migrated HTTP retry functionality edge cases."""
-import pytest
+
 from platform.http.http_utils import is_retry_enabled, resilient_get
+
+import pytest
+
 
 def test_retry_enabled_flag():
     """Test that retry functionality respects the enable flag."""
     result = is_retry_enabled()
     assert isinstance(result, bool)
 
+
 def test_resilient_get_invalid_url():
     """Test resilient_get with invalid URL."""
     with pytest.raises(Exception):
-        resilient_get('not-a-valid-url', max_attempts=1)
+        resilient_get("not-a-valid-url", max_attempts=1)
+
 
 def test_resilient_get_connection_error():
     """Test resilient_get with connection error."""
     with pytest.raises(Exception):
-        resilient_get('http://nonexistent-domain-12345.invalid', max_attempts=1, base_delay=0.1)
+        resilient_get("http://nonexistent-domain-12345.invalid", max_attempts=1, base_delay=0.1)
+
 
 def test_resilient_get_basic_parameters():
     """Test resilient_get accepts basic parameters."""
     try:
-        resilient_get('http://127.0.0.1:99999', max_attempts=1, base_delay=0.01, max_delay=0.1, timeout=0.1)
+        resilient_get("http://127.0.0.1:99999", max_attempts=1, base_delay=0.01, max_delay=0.1, timeout=0.1)
     except Exception:
         pass
-if __name__ == '__main__':
+
+
+if __name__ == "__main__":
     pytest.main([__file__])

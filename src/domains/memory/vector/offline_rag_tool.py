@@ -11,13 +11,16 @@ Contract:
 """
 
 from __future__ import annotations
+
+import contextlib
 import math
 from dataclasses import dataclass
-from platform.observability.metrics import get_metrics
 from platform.core.step_result import StepResult
-from .._base import BaseTool
+from platform.observability.metrics import get_metrics
 from typing import TYPE_CHECKING
-import contextlib
+
+from .._base import BaseTool
+
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
@@ -95,9 +98,9 @@ def _tfidf(tf: dict[str, float], idf: dict[str, float]) -> dict[str, float]:
 
 def _cosine(a: dict[str, float], b: dict[str, float]) -> float:
     common = set(a.keys()) & set(b.keys())
-    num = sum((a[k] * b[k] for k in common))
-    den_a = math.sqrt(sum((v * v for v in a.values()))) or 1e-12
-    den_b = math.sqrt(sum((v * v for v in b.values()))) or 1e-12
+    num = sum(a[k] * b[k] for k in common)
+    den_a = math.sqrt(sum(v * v for v in a.values())) or 1e-12
+    den_b = math.sqrt(sum(v * v for v in b.values())) or 1e-12
     return float(num / (den_a * den_b))
 
 
@@ -132,7 +135,7 @@ class OfflineRAGTool(BaseTool[StepResult]):
         self._metrics = get_metrics()
 
     def run(self, query: str, documents: list[str], top_k: int = 3) -> StepResult:
-        if not isinstance(documents, list) or any((not isinstance(d, str) for d in documents)):
+        if not isinstance(documents, list) or any(not isinstance(d, str) for d in documents):
             return StepResult.fail("Invalid params: documents must be a list of strings")
         try:
             top_k = int(top_k)

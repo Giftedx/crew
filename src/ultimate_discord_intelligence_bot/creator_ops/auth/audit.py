@@ -6,11 +6,13 @@ scope changes, token operations, and security-related activities.
 """
 
 from __future__ import annotations
+
 import json
 import logging
 from datetime import UTC, datetime
-from typing import Any
 from platform.core.step_result import StepResult
+from typing import Any
+
 
 logger = logging.getLogger(__name__)
 

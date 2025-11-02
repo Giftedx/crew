@@ -1,7 +1,8 @@
 from __future__ import annotations
+
 import time
-from typing import Any, TypedDict
 from platform.core.step_result import StepResult
+from typing import Any, TypedDict
 
 
 class ControversyEvent(TypedDict, total=False):
@@ -285,7 +286,7 @@ class ControversyTrackingAgent:
                 risk_score = 0.0
                 risk_factors = []
                 if creator_controversies:
-                    recent_severity = max((c["severity_level"] for c in creator_controversies))
+                    recent_severity = max(c["severity_level"] for c in creator_controversies)
                     risk_score += recent_severity * 0.2
                     risk_factors.append(f"Recent controversy with severity {recent_severity}")
                 controversy_count = len(creator_controversies)
@@ -299,7 +300,7 @@ class ControversyTrackingAgent:
                     risk_score += 0.2
                     risk_factors.append("Controversies across multiple platforms")
                 if creator_controversies:
-                    avg_sentiment = sum((c["sentiment_scores"]["overall"] for c in creator_controversies)) / len(
+                    avg_sentiment = sum(c["sentiment_scores"]["overall"] for c in creator_controversies) / len(
                         creator_controversies
                     )
                     if avg_sentiment < -0.5:
@@ -399,7 +400,7 @@ class ControversyTrackingAgent:
                 creator_controversies = [c for c in detected_controversies if creator_id in c["involved_creators"]]
                 if creator_controversies:
                     avg_engagement = sum(
-                        (c["engagement_metrics"].get("engagement_rate", 0) for c in creator_controversies)
+                        c["engagement_metrics"].get("engagement_rate", 0) for c in creator_controversies
                     ) / len(creator_controversies)
                     cross_analysis["influence_patterns"][creator_id] = {
                         "controversy_engagement": avg_engagement,

@@ -27,12 +27,14 @@ Outputs: StepResult.ok with data matching the offline tool, plus meta field:
 """
 
 from __future__ import annotations
+
 import contextlib
 import threading
+from platform.core.step_result import StepResult
+from platform.observability.metrics import get_metrics
 from queue import Queue
 from typing import Any
-from platform.observability.metrics import get_metrics
-from platform.core.step_result import StepResult
+
 from ._base import BaseTool
 from .research_and_brief_tool import ResearchAndBriefTool
 

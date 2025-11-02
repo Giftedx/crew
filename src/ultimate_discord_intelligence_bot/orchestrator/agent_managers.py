@@ -9,7 +9,9 @@ Extracted from crew_builders.py to improve maintainability and organization.
 import contextlib
 import logging
 from typing import Any
+
 from ultimate_discord_intelligence_bot.settings import Settings
+
 
 logger = logging.getLogger(__name__)
 
@@ -59,7 +61,7 @@ def populate_agent_tool_context(
         if (
             settings.enable_enhanced_memory
             and settings.mem0_api_key
-            and (not any((isinstance(t, Mem0MemoryTool) for t in agent.tools)))
+            and (not any(isinstance(t, Mem0MemoryTool) for t in agent.tools))
         ):
             agent.tools.append(Mem0MemoryTool())
             _logger.info(f"🧠 Added Mem0MemoryTool to agent: {getattr(agent, 'role', 'unknown')}")

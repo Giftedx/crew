@@ -15,13 +15,15 @@ Usage:
 """
 
 from __future__ import annotations
+
 import argparse
 import os
 import subprocess
 import sys
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
 from platform.config.configuration import get_config
+from typing import TYPE_CHECKING, Any
+
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -400,7 +402,7 @@ def _run_discord() -> int:
     target = next((p for p in candidates if p.exists()), None)
     if target is None:
         print("❌ start_full_bot.py not found in repo root or scripts/. Ensure repository is intact.")
-        print(f"   Looked in: {', '.join((str(p) for p in candidates))}")
+        print(f"   Looked in: {', '.join(str(p) for p in candidates)}")
         return 2
     print(f"🚀 Launching: {sys.executable} {target}")
     return subprocess.call([sys.executable, str(target)])

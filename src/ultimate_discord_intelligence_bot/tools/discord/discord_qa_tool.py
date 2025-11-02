@@ -7,9 +7,11 @@ reasoning happens in higher-level agents.
 """
 
 from __future__ import annotations
-from typing import TypedDict
-from platform.observability.metrics import get_metrics
+
 from platform.core.step_result import StepResult
+from platform.observability.metrics import get_metrics
+from typing import TypedDict
+
 from .._base import BaseTool
 from ..memory.vector_search_tool import VectorSearchTool
 

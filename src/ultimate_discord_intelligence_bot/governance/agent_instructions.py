@@ -6,10 +6,11 @@ and guideline-level suggestions.
 """
 
 from __future__ import annotations
+
 import logging
 from dataclasses import dataclass
-from typing import Any
 from platform.core.step_result import StepResult
+from typing import Any
 
 
 @dataclass
@@ -296,7 +297,7 @@ class AgentInstructions:
         unclear = []
         for instruction in instructions:
             vague_terms = ["appropriate", "reasonable", "when necessary", "as needed"]
-            if any((term in instruction.lower() for term in vague_terms)):
+            if any(term in instruction.lower() for term in vague_terms):
                 unclear.append(f"Vague instruction: {instruction}")
             if len(instruction.split()) > 20:
                 unclear.append(f"Complex instruction: {instruction}")

@@ -5,10 +5,13 @@ footprint and improve startup performance.
 """
 
 from __future__ import annotations
+
 import logging
-from typing import Any
-from ultimate_discord_intelligence_bot.lazy_loading import get_lazy_loader
 from platform.core.step_result import StepResult
+from typing import Any
+
+from ultimate_discord_intelligence_bot.lazy_loading import get_lazy_loader
+
 
 logger = logging.getLogger(__name__)
 LAZY_TOOL_MAPPING = {

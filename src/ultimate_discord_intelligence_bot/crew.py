@@ -13,8 +13,11 @@ Migration:
 """
 
 from __future__ import annotations
+
 import warnings
+
 from domains.orchestration.crew import UltimateDiscordIntelligenceBotCrew, get_crew
+
 
 warnings.warn(
     "ultimate_discord_intelligence_bot.crew is deprecated. Import from ultimate_discord_intelligence_bot.crew_core instead.",

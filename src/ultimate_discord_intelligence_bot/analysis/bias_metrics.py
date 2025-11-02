@@ -6,10 +6,11 @@ framing neutrality, source diversity, and temporal consistency.
 """
 
 from __future__ import annotations
+
 import logging
 from dataclasses import dataclass
-from typing import Any
 from platform.core.step_result import StepResult
+from typing import Any
 
 
 @dataclass
@@ -182,8 +183,8 @@ class BiasAnalyzer:
 
     def _analyze_political_leaning(self, content: str) -> float:
         """Analyze political leaning of content."""
-        left_count = sum((1 for indicator in self.left_indicators if indicator in content))
-        right_count = sum((1 for indicator in self.right_indicators if indicator in content))
+        left_count = sum(1 for indicator in self.left_indicators if indicator in content)
+        right_count = sum(1 for indicator in self.right_indicators if indicator in content)
         total_indicators = left_count + right_count
         if total_indicators == 0:
             return 0.0
@@ -196,8 +197,8 @@ class BiasAnalyzer:
 
     def _analyze_partisan_intensity(self, content: str) -> float:
         """Analyze partisan intensity of content."""
-        extreme_count = sum((1 for indicator in self.extreme_indicators if indicator in content))
-        emotional_count = sum((1 for indicator in self.emotional_indicators if indicator in content))
+        extreme_count = sum(1 for indicator in self.extreme_indicators if indicator in content)
+        emotional_count = sum(1 for indicator in self.emotional_indicators if indicator in content)
         total_words = len(content.split())
         if total_words == 0:
             return 0.0
@@ -218,7 +219,7 @@ class BiasAnalyzer:
             "on the other hand",
             "different perspectives",
         ]
-        perspective_count = sum((1 for indicator in perspective_indicators if indicator in content))
+        perspective_count = sum(1 for indicator in perspective_indicators if indicator in content)
         balanced_indicators = [
             "both sides",
             "different views",
@@ -226,7 +227,7 @@ class BiasAnalyzer:
             "multiple perspectives",
             "diverse viewpoints",
         ]
-        balanced_count = sum((1 for indicator in balanced_indicators if indicator in content))
+        balanced_count = sum(1 for indicator in balanced_indicators if indicator in content)
         total_sentences = len([s for s in content.split(".") if s.strip()])
         if total_sentences == 0:
             return 0.0
@@ -259,8 +260,8 @@ class BiasAnalyzer:
             "denies",
             "opposes",
         ]
-        supporting_count = sum((1 for indicator in supporting_indicators if indicator in content))
-        opposing_count = sum((1 for indicator in opposing_indicators if indicator in content))
+        supporting_count = sum(1 for indicator in supporting_indicators if indicator in content)
+        opposing_count = sum(1 for indicator in opposing_indicators if indicator in content)
         total_evidence = supporting_count + opposing_count
         if total_evidence == 0:
             return 1.0
@@ -285,7 +286,7 @@ class BiasAnalyzer:
             "terrifying",
             "appalling",
         ]
-        loaded_count = sum((1 for indicator in loaded_indicators if indicator in content))
+        loaded_count = sum(1 for indicator in loaded_indicators if indicator in content)
         neutral_indicators = [
             "according to",
             "research shows",
@@ -294,7 +295,7 @@ class BiasAnalyzer:
             "evidence points to",
             "findings reveal",
         ]
-        neutral_count = sum((1 for indicator in neutral_indicators if indicator in content))
+        neutral_count = sum(1 for indicator in neutral_indicators if indicator in content)
         total_words = len(content.split())
         if total_words == 0:
             return 1.0
@@ -305,7 +306,7 @@ class BiasAnalyzer:
 
     def _analyze_source_diversity(self, content: str) -> float:
         """Analyze source diversity in content."""
-        source_count = sum((1 for indicator in self.source_indicators if indicator in content))
+        source_count = sum(1 for indicator in self.source_indicators if indicator in content)
         source_types = [
             "study",
             "research",
@@ -317,7 +318,7 @@ class BiasAnalyzer:
             "interview",
             "testimony",
         ]
-        type_count = sum((1 for source_type in source_types if source_type in content))
+        type_count = sum(1 for source_type in source_types if source_type in content)
         if source_count == 0:
             return 0.0
         diversity = min(type_count / source_count, 1.0)

@@ -1,10 +1,13 @@
 """Enhanced analysis tool with OpenAI capabilities."""
 
 from __future__ import annotations
-from typing import TYPE_CHECKING
-from ultimate_discord_intelligence_bot.services.openai_integration_service import OpenAIIntegrationService
+
 from platform.core.step_result import StepResult
+from typing import TYPE_CHECKING
+
+from ultimate_discord_intelligence_bot.services.openai_integration_service import OpenAIIntegrationService
 from ultimate_discord_intelligence_bot.tools._base import BaseTool
+
 
 if TYPE_CHECKING:
     from collections.abc import AsyncGenerator

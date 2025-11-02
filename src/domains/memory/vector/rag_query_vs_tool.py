@@ -13,10 +13,12 @@ Contract:
 """
 
 from __future__ import annotations
+
 import contextlib
-from typing import Any
-from platform.observability.metrics import get_metrics
 from platform.core.step_result import StepResult
+from platform.observability.metrics import get_metrics
+from typing import Any
+
 from ._base import BaseTool
 
 

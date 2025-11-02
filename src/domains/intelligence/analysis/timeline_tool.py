@@ -1,12 +1,15 @@
 """Persist and retrieve chronological events with references."""
 
 from __future__ import annotations
+
 import json
-from typing import TYPE_CHECKING, Any, ClassVar, TypedDict, cast
-from platform.observability.metrics import get_metrics
 from platform.core.step_result import StepResult
+from platform.observability.metrics import get_metrics
+from typing import TYPE_CHECKING, Any, ClassVar, TypedDict, cast
+
 from .. import settings
 from ._base import BaseTool
+
 
 if TYPE_CHECKING:
     from pathlib import Path

@@ -1,10 +1,13 @@
 """Base OpenAI service with common functionality."""
 
 from __future__ import annotations
+
 import asyncio
 import logging
 from typing import Any
+
 from openai import AsyncOpenAI
+
 
 try:
     import jsonschema
@@ -13,8 +16,10 @@ try:
 except ImportError:
     jsonschema = None
     HAS_JSONSCHEMA = False
-from ultimate_discord_intelligence_bot.settings import Settings
 from platform.core.step_result import StepResult
+
+from ultimate_discord_intelligence_bot.settings import Settings
+
 
 logger = logging.getLogger(__name__)
 

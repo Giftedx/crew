@@ -1,11 +1,14 @@
 from __future__ import annotations
+
 import logging
 import time
 from dataclasses import dataclass, field
-from typing import Any
-from crewai.tools import BaseTool
-from platform.observability.metrics import get_metrics
 from platform.core.step_result import StepResult
+from platform.observability.metrics import get_metrics
+from typing import Any
+
+from crewai.tools import BaseTool
+
 
 logger = logging.getLogger(__name__)
 
@@ -120,16 +123,16 @@ class StrategicPlanningTool(BaseTool):
         completed_deps: set[str] = set()
         sorted_objectives = sorted(objectives, key=lambda x: x.priority)
         for objective in sorted_objectives:
-            if all((dep in completed_deps for dep in objective.dependencies)):
+            if all(dep in completed_deps for dep in objective.dependencies):
                 current_phase.append(objective)
             else:
                 if current_phase:
                     execution_phases.append(current_phase)
-                    completed_deps.update((obj.id for obj in current_phase))
+                    completed_deps.update(obj.id for obj in current_phase)
                 current_phase = [objective]
         if current_phase:
             execution_phases.append(current_phase)
-            completed_deps.update((obj.id for obj in current_phase))
+            completed_deps.update(obj.id for obj in current_phase)
         return {
             "phases": [[obj.__dict__ for obj in phase] for phase in execution_phases],
             "total_phases": len(execution_phases),

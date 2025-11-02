@@ -1,7 +1,9 @@
 """Reddit API integration tool for enhanced Reddit content acquisition."""
 
 from __future__ import annotations
+
 import logging
+
 
 try:
     import praw
@@ -11,7 +13,9 @@ except ImportError:
     PRAW_AVAILABLE = False
     praw = None
 from platform.core.step_result import ErrorCategory, StepResult
+
 from ultimate_discord_intelligence_bot.tools._base import BaseTool
+
 
 _logger = logging.getLogger(__name__)
 

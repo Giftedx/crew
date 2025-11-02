@@ -6,13 +6,16 @@ arms and select a provider:model according to a high-level policy.
 """
 
 from __future__ import annotations
+
 import contextlib
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any
-from core.rl.thompson_sampling import ThompsonSamplingBandit
-from platform.observability.metrics import get_metrics
 from platform.core.step_result import StepResult
+from platform.observability.metrics import get_metrics
+from typing import Any
+
+from core.rl.thompson_sampling import ThompsonSamplingBandit
+
 from .llm_provider_registry import ModelInfo, get_provider_allowlist_from_config, list_models
 
 
@@ -156,7 +159,7 @@ class LLMRouterAdapter:
                 if ":" in val:
                     forced_arm_id = val
         arm_id = None
-        if forced_arm_id and any((a["arm_id"] == forced_arm_id for a in arms)):
+        if forced_arm_id and any(a["arm_id"] == forced_arm_id for a in arms):
             arm_id = forced_arm_id
         else:
             arm_id = self._bandit.select_arm()

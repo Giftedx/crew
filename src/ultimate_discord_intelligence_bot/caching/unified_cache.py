@@ -6,15 +6,18 @@ L1 (memory), L2 (Redis), and L3 (Semantic) caching with RL-based optimization.
 """
 
 from __future__ import annotations
+
 import logging
 import pickle
 import time
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any
 from platform.cache.unified_config import get_unified_cache_config
 from platform.core.step_result import StepResult
+from typing import Any
+
 from ultimate_discord_intelligence_bot.tenancy.context import current_tenant
+
 
 try:
     import redis
@@ -389,11 +392,8 @@ class UnifiedCacheService:
             if metrics.total_requests > 0:
                 metrics.avg_latency_ms = (
                     sum(
-                        (
-                            getattr(metrics, f"{level}_hits", 0)
-                            * (1.0 if level == "l1" else 2.0 if level == "l2" else 5.0)
-                            for level in ["l1", "l2", "l3"]
-                        )
+                        getattr(metrics, f"{level}_hits", 0) * (1.0 if level == "l1" else 2.0 if level == "l2" else 5.0)
+                        for level in ["l1", "l2", "l3"]
                     )
                     / metrics.total_requests
                 )

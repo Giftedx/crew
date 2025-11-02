@@ -11,6 +11,8 @@ import uuid
 from collections import defaultdict, deque
 from collections.abc import Callable
 from datetime import datetime, timedelta
+from platform.core.step_result import StepResult
+
 from ultimate_discord_intelligence_bot.creator_ops.config import CreatorOpsConfig
 from ultimate_discord_intelligence_bot.creator_ops.features.clip_radar_models import (
     ChatMessage,
@@ -28,7 +30,7 @@ from ultimate_discord_intelligence_bot.creator_ops.integrations.twitch_client im
 from ultimate_discord_intelligence_bot.creator_ops.integrations.youtube_client import YouTubeClient
 from ultimate_discord_intelligence_bot.creator_ops.media import NLPPipeline, SpeakerDiarization, WhisperASR
 from ultimate_discord_intelligence_bot.creator_ops.media.alignment import TranscriptAlignment
-from platform.core.step_result import StepResult
+
 
 logger = logging.getLogger(__name__)
 
@@ -509,8 +511,8 @@ class LiveClipRadar:
             positive_keywords = ["good", "great", "awesome", "amazing", "love", "best", "excellent"]
             negative_keywords = ["bad", "terrible", "awful", "hate", "worst", "horrible", "disgusting"]
             text_lower = text.lower()
-            positive_count = sum((1 for word in positive_keywords if word in text_lower))
-            negative_count = sum((1 for word in negative_keywords if word in text_lower))
+            positive_count = sum(1 for word in positive_keywords if word in text_lower)
+            negative_count = sum(1 for word in negative_keywords if word in text_lower)
             if positive_count > negative_count:
                 score = min(1.0, positive_count / 5.0)
                 label = "positive"

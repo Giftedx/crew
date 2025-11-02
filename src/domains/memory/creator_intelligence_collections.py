@@ -18,13 +18,16 @@ All collections support:
 """
 
 from __future__ import annotations
+
 import hashlib
 import logging
 import time
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any, Literal
-from memory.enhanced_vector_store import EnhancedVectorStore, SearchResult
 from platform.core.step_result import StepResult
+from typing import TYPE_CHECKING, Any, Literal
+
+from memory.enhanced_vector_store import EnhancedVectorStore, SearchResult
+
 
 if TYPE_CHECKING:
     from qdrant_client.http import models as _qmodels
@@ -433,7 +436,7 @@ class CreatorIntelligenceCollectionManager:
         Returns:
             SHA256 hash string
         """
-        query_str = f"{namespace}:{limit}:{','.join((f'{v:.6f}' for v in query_embedding[:10]))}"
+        query_str = f"{namespace}:{limit}:{','.join(f'{v:.6f}' for v in query_embedding[:10])}"
         return hashlib.sha256(query_str.encode()).hexdigest()
 
     @staticmethod
@@ -452,8 +455,8 @@ class CreatorIntelligenceCollectionManager:
         if len(vec1) != len(vec2):
             return 0.0
         dot_product = sum((a * b for a, b in zip(vec1, vec2, strict=False)))
-        norm1 = math.sqrt(sum((a * a for a in vec1)))
-        norm2 = math.sqrt(sum((b * b for b in vec2)))
+        norm1 = math.sqrt(sum(a * a for a in vec1))
+        norm2 = math.sqrt(sum(b * b for b in vec2))
         if norm1 == 0.0 or norm2 == 0.0:
             return 0.0
         return float(dot_product / (norm1 * norm2))

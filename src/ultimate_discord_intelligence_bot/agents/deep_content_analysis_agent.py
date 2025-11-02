@@ -1,7 +1,8 @@
 from __future__ import annotations
+
 import time
-from typing import Any, TypedDict
 from platform.core.step_result import StepResult
+from typing import Any, TypedDict
 
 
 class ContentAnalysisResult(TypedDict, total=False):

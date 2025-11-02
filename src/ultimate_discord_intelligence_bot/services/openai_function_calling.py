@@ -1,10 +1,13 @@
 """OpenAI function calling service with tool integration."""
 
 from __future__ import annotations
+
 import json
-from typing import TYPE_CHECKING, Any
-from ultimate_discord_intelligence_bot.services.openai_service import OpenAIService
 from platform.core.step_result import StepResult
+from typing import TYPE_CHECKING, Any
+
+from ultimate_discord_intelligence_bot.services.openai_service import OpenAIService
+
 
 if TYPE_CHECKING:
     from collections.abc import Callable

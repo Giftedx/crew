@@ -5,9 +5,12 @@ providing utilities to handle and report errors with user-friendly messages.
 """
 
 from __future__ import annotations
+
 import logging
 from typing import TYPE_CHECKING, Any
+
 from .discord_session_validators import is_session_valid
+
 
 if TYPE_CHECKING:
     from platform.core.step_result import StepResult

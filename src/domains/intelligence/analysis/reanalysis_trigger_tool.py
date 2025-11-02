@@ -1,5 +1,7 @@
 from __future__ import annotations
+
 from platform.core.step_result import StepResult
+
 from ._base import BaseTool
 
 

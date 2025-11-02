@@ -13,10 +13,13 @@ project's tenancy and feature flag conventions. It will only be active if the
 """
 
 from __future__ import annotations
+
 import time
-from typing import Literal
-from pydantic import BaseModel, Field
 from platform.core.step_result import StepResult
+from typing import Literal
+
+from pydantic import BaseModel, Field
+
 from ..platform.observability.metrics import get_metrics
 from ..services.mem0_service import Mem0MemoryService
 from ._base import BaseTool

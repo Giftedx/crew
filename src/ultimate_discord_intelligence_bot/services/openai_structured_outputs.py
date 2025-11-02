@@ -1,10 +1,12 @@
 """OpenAI structured outputs service with JSON schema validation."""
 
 from __future__ import annotations
+
 import json
-from typing import Any
-from ultimate_discord_intelligence_bot.services.openai_service import OpenAIService
 from platform.core.step_result import StepResult
+from typing import Any
+
+from ultimate_discord_intelligence_bot.services.openai_service import OpenAIService
 
 
 class OpenAIStructuredOutputsService(OpenAIService):

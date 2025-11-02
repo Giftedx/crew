@@ -8,17 +8,21 @@ whitespace split acts as a final fallback.
 """
 
 from __future__ import annotations
+
 import contextlib
 import logging
 import os
 import re
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any
-from platform.observability import metrics
-from ultimate_discord_intelligence_bot.settings import Settings
 from platform.core.step_result import StepResult
+from platform.observability import metrics
+from typing import TYPE_CHECKING, Any
+
+from ultimate_discord_intelligence_bot.settings import Settings
+
 from .optimization_pipeline import OptimizationConfig, OptimizationPipeline
 from .prompt_compressor import CompressionConfig, PromptCompressor
+
 
 try:
     from core import settings as core_settings
@@ -519,7 +523,7 @@ class PromptEngine:
                 return line
             return re.sub("\\s{2,}", " ", line)
 
-        text = "\n".join((_squeeze_spaces(line) for line in text.splitlines()))
+        text = "\n".join(_squeeze_spaces(line) for line in text.splitlines())
         MAX_SECTION_LINES = 40
         HEAD_TAIL_KEEP = 5
         compressed_sections: list[str] = []
@@ -561,22 +565,20 @@ class PromptEngine:
             if len(stripped) > 50:
                 value_score += 1
             if any(
-                (
-                    marker in stripped.lower()
-                    for marker in [
-                        "error",
-                        "warning",
-                        "important",
-                        "note:",
-                        "question:",
-                        "answer:",
-                        "context:",
-                        "summary:",
-                        "conclusion:",
-                        "result:",
-                        "output:",
-                    ]
-                )
+                marker in stripped.lower()
+                for marker in [
+                    "error",
+                    "warning",
+                    "important",
+                    "note:",
+                    "question:",
+                    "answer:",
+                    "context:",
+                    "summary:",
+                    "conclusion:",
+                    "result:",
+                    "output:",
+                ]
             ):
                 value_score += 2
             if len(stripped) < 5:

@@ -13,6 +13,7 @@ This tool provides extensive image analysis including:
 """
 
 from __future__ import annotations
+
 import base64
 import importlib
 import io
@@ -20,10 +21,12 @@ import logging
 import os
 import time
 from functools import cached_property
-from typing import Any, TypedDict
-from platform.observability.metrics import get_metrics
 from platform.core.step_result import StepResult
+from platform.observability.metrics import get_metrics
+from typing import Any, TypedDict
+
 from ._base import BaseTool
+
 
 PIL: Any | None = None
 openai: Any | None = None
@@ -371,7 +374,7 @@ class ImageAnalysisTool(BaseTool[StepResult]):
                 for obj in objects:
                     if isinstance(obj, dict):
                         obj_name = obj.get("name", "").lower()
-                        if any((brand_word in obj_name for brand_word in brand_objects)):
+                        if any(brand_word in obj_name for brand_word in brand_objects):
                             brands_detected.append(
                                 {
                                     "name": obj_name,

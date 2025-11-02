@@ -8,11 +8,13 @@ This module provides comprehensive startup validation including:
 """
 
 from __future__ import annotations
+
 import os
 import sys
 import time
-from ultimate_discord_intelligence_bot.config_schema import validate_config
 from platform.core.step_result import StepResult
+
+from ultimate_discord_intelligence_bot.config_schema import validate_config
 
 
 class StartupValidator:

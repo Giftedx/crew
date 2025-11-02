@@ -8,14 +8,19 @@ Actions:
 """
 
 from __future__ import annotations
+
 import json
 from pathlib import Path
-from typing import Any, Literal
-from pydantic import BaseModel, Field
-from platform.observability.metrics import get_metrics
-from ultimate_discord_intelligence_bot.settings import Settings
 from platform.core.step_result import StepResult
+from platform.observability.metrics import get_metrics
+from typing import Any, Literal
+
+from pydantic import BaseModel, Field
+
+from ultimate_discord_intelligence_bot.settings import Settings
+
 from ._base import BaseTool
+
 
 SignatureName = Literal[
     "DebateAnalysisSignature",

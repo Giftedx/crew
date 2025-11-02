@@ -5,13 +5,15 @@ including input change detection, operation batching, and processing shortcuts.
 """
 
 from __future__ import annotations
+
 import hashlib
 import json
 import logging
 import time
 from dataclasses import dataclass, field
-from typing import Any
 from platform.core.step_result import StepResult
+from typing import Any
+
 
 logger = logging.getLogger(__name__)
 
@@ -143,9 +145,7 @@ class PipelineOptimizer:
     def get_cache_stats(self) -> dict[str, Any]:
         """Get cache performance statistics."""
         total_entries = len(self.processing_cache)
-        expired_entries = sum(
-            (1 for entry in self.processing_cache.values() if entry.is_expired(self.cache_ttl_seconds))
-        )
+        expired_entries = sum(1 for entry in self.processing_cache.values() if entry.is_expired(self.cache_ttl_seconds))
         return {
             "cache_size": total_entries,
             "expired_entries": expired_entries,
@@ -318,7 +318,7 @@ class ProcessingShortcutDetector:
         """Check if content quality is too low for processing."""
         transcript = content_data.get("transcript", "")
         non_speech_indicators = ["music", "instrumental", "no speech", "silence", "background noise", "unclear audio"]
-        if any((indicator in transcript.lower() for indicator in non_speech_indicators)):
+        if any(indicator in transcript.lower() for indicator in non_speech_indicators):
             return (
                 True,
                 {
@@ -340,7 +340,7 @@ class ProcessingShortcutDetector:
     ) -> tuple[bool, dict[str, Any]]:
         """Check if content is from a known safe source."""
         safe_domains = ["youtube.com", "youtu.be", "ted.com", "educational sites"]
-        if any((domain in url for domain in safe_domains)):
+        if any(domain in url for domain in safe_domains):
             return (
                 True,
                 {

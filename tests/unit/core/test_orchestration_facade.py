@@ -1,19 +1,25 @@
 """Tests for unified orchestration facade (ADR-0004)."""
+
 from __future__ import annotations
-import pytest
-from ultimate_discord_intelligence_bot.orchestration import OrchestrationFacade, OrchestrationStrategy, get_orchestrator
+
 from platform.core.step_result import StepResult
+
+import pytest
+
+from ultimate_discord_intelligence_bot.orchestration import OrchestrationFacade, OrchestrationStrategy, get_orchestrator
+
 
 class TestOrchestrationStrategy:
     """Test orchestration strategy enum."""
 
     def test_strategies_defined(self):
         """Test all orchestration strategies are defined."""
-        assert OrchestrationStrategy.AUTONOMOUS == 'autonomous'
-        assert OrchestrationStrategy.FALLBACK == 'fallback'
-        assert OrchestrationStrategy.HIERARCHICAL == 'hierarchical'
-        assert OrchestrationStrategy.MONITORING == 'monitoring'
-        assert OrchestrationStrategy.TRAINING == 'training'
+        assert OrchestrationStrategy.AUTONOMOUS == "autonomous"
+        assert OrchestrationStrategy.FALLBACK == "fallback"
+        assert OrchestrationStrategy.HIERARCHICAL == "hierarchical"
+        assert OrchestrationStrategy.MONITORING == "monitoring"
+        assert OrchestrationStrategy.TRAINING == "training"
+
 
 class TestOrchestrationFacade:
     """Test orchestration facade."""
@@ -33,10 +39,13 @@ class TestOrchestrationFacade:
         """Test execute_workflow accepts expected parameters."""
         facade = OrchestrationFacade(strategy=OrchestrationStrategy.AUTONOMOUS)
         try:
-            result = await facade.execute_workflow(url='https://example.com/test', depth='standard', tenant='test', workspace='test')
+            result = await facade.execute_workflow(
+                url="https://example.com/test", depth="standard", tenant="test", workspace="test"
+            )
             assert isinstance(result, StepResult)
         except Exception:
             pass
+
 
 class TestOrchestrationSingleton:
     """Test global orchestrator singleton."""
@@ -57,6 +66,7 @@ class TestOrchestrationSingleton:
         orch2 = get_orchestrator(OrchestrationStrategy.FALLBACK)
         assert orch1.strategy != orch2.strategy
 
+
 class TestOrchestrationIntegration:
     """Integration tests for orchestration facade."""
 
@@ -72,6 +82,6 @@ class TestOrchestrationIntegration:
     def test_invalid_strategy_raises(self):
         """Test invalid strategy raises ValueError."""
         facade = OrchestrationFacade()
-        facade.strategy = 'invalid_strategy'
-        with pytest.raises(ValueError, match='Unknown orchestration strategy'):
+        facade.strategy = "invalid_strategy"
+        with pytest.raises(ValueError, match="Unknown orchestration strategy"):
             facade._get_orchestrator()

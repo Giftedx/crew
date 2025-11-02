@@ -4,7 +4,9 @@ This agent guards pipeline health and visibility.
 """
 
 from __future__ import annotations
+
 from typing import TYPE_CHECKING
+
 from domains.orchestration.agents.base import BaseAgent
 from domains.orchestration.agents.registry import register_agent
 from ultimate_discord_intelligence_bot.settings import DISCORD_PRIVATE_WEBHOOK, DISCORD_WEBHOOK
@@ -16,6 +18,7 @@ from ultimate_discord_intelligence_bot.tools import (
     SystemStatusTool,
     TimelineTool,
 )
+
 
 if TYPE_CHECKING:
     from ultimate_discord_intelligence_bot.tools._base import BaseTool

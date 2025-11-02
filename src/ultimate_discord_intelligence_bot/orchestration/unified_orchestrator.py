@@ -6,14 +6,17 @@ advanced task management, dependency resolution, and performance optimization.
 """
 
 from __future__ import annotations
+
 import asyncio
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any
 from platform.core.step_result import StepResult
+from typing import Any
+
 from ultimate_discord_intelligence_bot.tenancy.context import current_tenant
+
 
 try:
     from ultimate_discord_intelligence_bot.services.hierarchical_orchestrator import HierarchicalOrchestrator
@@ -456,13 +459,11 @@ class UnifiedOrchestrationService:
                     metrics.active_tasks += key_metrics.active_tasks
                     metrics.queued_tasks += key_metrics.queued_tasks
                 if self._metrics:
-                    total_execution_time = sum(
-                        (m.avg_execution_time_ms * m.total_tasks for m in self._metrics.values())
-                    )
-                    total_tasks = sum((m.total_tasks for m in self._metrics.values()))
+                    total_execution_time = sum(m.avg_execution_time_ms * m.total_tasks for m in self._metrics.values())
+                    total_tasks = sum(m.total_tasks for m in self._metrics.values())
                     metrics.avg_execution_time_ms = total_execution_time / max(total_tasks, 1)
                     if total_tasks > 0:
-                        metrics.success_rate = sum((m.completed_tasks for m in self._metrics.values())) / total_tasks
+                        metrics.success_rate = sum(m.completed_tasks for m in self._metrics.values()) / total_tasks
             return {
                 "total_tasks": metrics.total_tasks,
                 "completed_tasks": metrics.completed_tasks,

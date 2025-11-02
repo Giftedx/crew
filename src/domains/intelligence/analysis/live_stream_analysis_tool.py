@@ -11,11 +11,13 @@ This tool provides comprehensive live stream analysis including:
 """
 
 from __future__ import annotations
+
 import logging
 import time
-from typing import Any, TypedDict
-from platform.observability.metrics import get_metrics
 from platform.core.step_result import StepResult
+from platform.observability.metrics import get_metrics
+from typing import Any, TypedDict
+
 from ._base import BaseTool
 
 
@@ -236,8 +238,8 @@ class LiveStreamAnalysisTool(BaseTool[StepResult]):
         total_messages = len(self._chat_buffer)
         for message in self._chat_buffer:
             msg_text = message.get("message", "").lower()
-            positive_count += sum((1 for keyword in positive_keywords if keyword in msg_text))
-            negative_count += sum((1 for keyword in negative_keywords if keyword in msg_text))
+            positive_count += sum(1 for keyword in positive_keywords if keyword in msg_text)
+            negative_count += sum(1 for keyword in negative_keywords if keyword in msg_text)
         if positive_count > negative_count:
             sentiment = "positive"
             confidence = min(0.9, positive_count / max(1, total_messages))
@@ -389,11 +391,9 @@ class LiveStreamAnalysisTool(BaseTool[StepResult]):
         unique_users = len({msg.get("user_id", "") for msg in recent_messages})
         user_diversity = unique_users / max(1, len(recent_messages))
         special_users = sum(
-            (
-                1
-                for msg in recent_messages
-                if any([msg.get("is_moderator", False), msg.get("is_subscriber", False), msg.get("is_vip", False)])
-            )
+            1
+            for msg in recent_messages
+            if any([msg.get("is_moderator", False), msg.get("is_subscriber", False), msg.get("is_vip", False)])
         )
         special_user_bonus = special_users / max(1, len(recent_messages))
         engagement_score = (base_engagement + user_diversity + special_user_bonus) / 3
@@ -459,8 +459,8 @@ class LiveStreamAnalysisTool(BaseTool[StepResult]):
         negative_count = 0
         for message in messages:
             msg_text = message.get("message", "").lower()
-            positive_count += sum((1 for keyword in positive_keywords if keyword in msg_text))
-            negative_count += sum((1 for keyword in negative_keywords if keyword in msg_text))
+            positive_count += sum(1 for keyword in positive_keywords if keyword in msg_text)
+            negative_count += sum(1 for keyword in negative_keywords if keyword in msg_text)
         total_indicators = positive_count + negative_count
         if total_indicators == 0:
             return 0.5
@@ -535,7 +535,7 @@ class LiveStreamAnalysisTool(BaseTool[StepResult]):
                 for fact_indicator in factual_indicators:
                     if fact_indicator in msg_text.lower():
                         return msg_text
-        if any((char.isdigit() for char in msg_text)) and len(msg_text) > 20:
+        if any(char.isdigit() for char in msg_text) and len(msg_text) > 20:
             return msg_text
         return None
 

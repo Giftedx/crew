@@ -8,13 +8,16 @@ If either field is missing, the point is considered non-expirable by this tool.
 """
 
 from __future__ import annotations
+
 import os
 import time
-from typing import TYPE_CHECKING, Any, Protocol, TypedDict, runtime_checkable
-from platform.observability.metrics import get_metrics
 from platform.core.step_result import StepResult
+from platform.observability.metrics import get_metrics
+from typing import TYPE_CHECKING, Any, Protocol, TypedDict, runtime_checkable
+
 from ...tenancy import current_tenant, mem_ns
 from .._base import BaseTool
+
 
 if TYPE_CHECKING:
     from collections.abc import Sequence

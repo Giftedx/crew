@@ -5,8 +5,10 @@ feature flags, performance settings, and tool preloading strategies.
 """
 
 from __future__ import annotations
+
 from dataclasses import dataclass
 from typing import Any
+
 from ultimate_discord_intelligence_bot.config.feature_flags import FeatureFlags
 
 

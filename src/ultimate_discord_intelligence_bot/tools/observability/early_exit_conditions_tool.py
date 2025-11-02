@@ -6,9 +6,11 @@ computational overhead.
 """
 
 from __future__ import annotations
+
 import re
 from dataclasses import dataclass
 from platform.core.step_result import StepResult
+
 from ultimate_discord_intelligence_bot.tools._base import BaseTool
 
 
@@ -121,7 +123,7 @@ class EarlyExitConditionsTool(BaseTool[dict]):
             clarity_score -= min(matches * 0.05, 0.1)
         sentences = re.split("[.!?]+", transcript)
         if sentences:
-            avg_sentence_length = sum((len(s.split()) for s in sentences)) / len(sentences)
+            avg_sentence_length = sum(len(s.split()) for s in sentences) / len(sentences)
             if 5 <= avg_sentence_length <= 25:
                 clarity_score += 0.1
             elif avg_sentence_length > 40:
@@ -242,7 +244,7 @@ class EarlyExitConditionsTool(BaseTool[dict]):
         if not repeated_words:
             return 0.0
         total_significant_words = sum(word_counts.values())
-        repetition_weight = sum((count - 1 for count in repeated_words.values()))
+        repetition_weight = sum(count - 1 for count in repeated_words.values())
         return min(repetition_weight / total_significant_words, 1.0)
 
     def _assess_completeness(self, transcript: str, partial_analysis: dict, stage: str) -> float:
@@ -263,7 +265,7 @@ class EarlyExitConditionsTool(BaseTool[dict]):
                 completeness_score += 0.1
         elif stage in ["final", "complete"]:
             required_components = ["summary", "topics", "sentiment", "key_points"]
-            available_components = sum((1 for comp in required_components if partial_analysis.get(comp)))
+            available_components = sum(1 for comp in required_components if partial_analysis.get(comp))
             completeness_score += available_components / len(required_components) * 0.4
         completion_patterns = [
             "\\b(in conclusion|to summarize|in summary|finally|lastly)\\b",

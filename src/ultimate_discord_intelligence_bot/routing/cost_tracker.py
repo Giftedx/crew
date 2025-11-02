@@ -6,13 +6,15 @@ budget compliance.
 """
 
 from __future__ import annotations
+
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
-from typing import Any
 from platform.cache.unified_config import get_unified_cache_config
 from platform.core.step_result import StepResult
+from typing import Any
+
 
 logger = logging.getLogger(__name__)
 
@@ -253,7 +255,7 @@ class UnifiedCostTracker:
                 filtered_records.append(record)
             if not filtered_records:
                 return StepResult.ok(data={"total_cost": 0.0, "total_requests": 0, "analytics": {}})
-            total_cost = sum((record.cost for record in filtered_records))
+            total_cost = sum(record.cost for record in filtered_records)
             total_requests = len(filtered_records)
             provider_costs = {}
             for record in filtered_records:

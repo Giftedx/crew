@@ -18,6 +18,7 @@ import re
 from collections.abc import Iterable
 from typing import Any, Optional, Union
 
+
 _GLOBAL_CREW_CONTEXT: dict[str, Any] = {}
 _TOOL_CALL_COUNTS: dict[str, int] = {}
 MAX_TOOL_CALLS_PER_SESSION = 15
@@ -337,7 +338,7 @@ class CrewAIToolWrapper(BaseTool):
                     "tbd",
                     "todo",
                 ]
-                if any((pattern in normalized for pattern in placeholder_patterns)):
+                if any(pattern in normalized for pattern in placeholder_patterns):
                     return True
                 if normalized in {
                     "transcript",
@@ -407,7 +408,7 @@ class CrewAIToolWrapper(BaseTool):
                     for p in params
                     if p.kind in (inspect.Parameter.POSITIONAL_OR_KEYWORD, inspect.Parameter.KEYWORD_ONLY)
                 }
-                has_var_kw = any((p.kind == inspect.Parameter.VAR_KEYWORD for p in params))
+                has_var_kw = any(p.kind == inspect.Parameter.VAR_KEYWORD for p in params)
                 if merged_context:
                     transcript_data = (
                         merged_context.get("transcript")
@@ -623,16 +624,14 @@ class CrewAIToolWrapper(BaseTool):
                                 f"{tool_cls} requires video_path parameter. This comes from acquisition task output. Available context: {(list(merged_context.keys()) if merged_context else 'EMPTY')}"
                             )
                 elif any(
-                    (
-                        x in tool_cls
-                        for x in [
-                            "TextAnalysis",
-                            "LogicalFallacy",
-                            "PerspectiveSynthesizer",
-                            "DeceptionScoring",
-                            "TruthScoring",
-                        ]
-                    )
+                    x in tool_cls
+                    for x in [
+                        "TextAnalysis",
+                        "LogicalFallacy",
+                        "PerspectiveSynthesizer",
+                        "DeceptionScoring",
+                        "TruthScoring",
+                    ]
                 ):
                     text_param = final_kwargs.get("text") or final_kwargs.get("content")
                     if not text_param or (isinstance(text_param, str) and len(text_param.strip()) < 10):

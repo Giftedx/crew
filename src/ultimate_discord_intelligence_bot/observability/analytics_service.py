@@ -9,12 +9,15 @@ See ADR-0005 for architectural rationale.
 """
 
 from __future__ import annotations
+
 import logging
 import time
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any
 from platform.observability.metrics import get_metrics
+from typing import TYPE_CHECKING, Any
+
 from ..step_result import StepResult
+
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -85,7 +88,7 @@ class AnalyticsService:
             router_metrics = self._get_router_health()
             memory_metrics = self._get_memory_health()
             components = [cache_metrics, router_metrics, memory_metrics]
-            healthy_count = sum((1 for c in components if c.get("healthy", False)))
+            healthy_count = sum(1 for c in components if c.get("healthy", False))
             cache_score = cache_metrics.get("score", 0.0) * 0.4
             router_score = router_metrics.get("score", 0.0) * 0.3
             memory_score = memory_metrics.get("score", 0.0) * 0.3

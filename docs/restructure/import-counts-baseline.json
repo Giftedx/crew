@@ -1,0 +1,367 @@
+Analyzing 1550 Python files...
+Warning: Failed to parse src/fastapi/testclient.py: unexpected indent (testclient.py, line 14)
+Warning: Failed to parse src/fastapi/responses.py: unexpected indent (responses.py, line 44)
+  Processed 100/1550 files...
+  Processed 200/1550 files...
+  Processed 300/1550 files...
+  Processed 400/1550 files...
+  Processed 500/1550 files...
+  Processed 600/1550 files...
+  Processed 700/1550 files...
+  Processed 800/1550 files...
+  Processed 900/1550 files...
+  Processed 1000/1550 files...
+  Processed 1100/1550 files...
+  Processed 1200/1550 files...
+  Processed 1300/1550 files...
+  Processed 1400/1550 files...
+  Processed 1500/1550 files...
+
+============================================================
+Import Analysis Results
+============================================================
+Total Python files: 1550
+Total imports: 10591
+Unique imports: 1082
+
+Imports by category:
+  domains: 83
+  legacy: 499
+  platform: 807
+  stdlib: 4582
+  third-party: 4620
+
+Legacy imports by pattern:
+  core.*: 246
+  ai.*: 92
+  memory.*: 54
+  analysis.*: 17
+  ingest.*: 8
+  obs.*: 5
+
+============================================================
+{
+  "total_files": 1550,
+  "total_imports": 10591,
+  "unique_imports": 1082,
+  "imports_by_category": {
+    "third-party": 4620,
+    "stdlib": 4582,
+    "legacy": 499,
+    "platform": 807,
+    "domains": 83
+  },
+  "legacy_by_pattern": {
+    "core.*": 246,
+    "obs.*": 5,
+    "memory.*": 54,
+    "analysis.*": 17,
+    "ai.*": 92,
+    "ingest.*": 8
+  },
+  "top_50_imports": [
+    {
+      "module": "__future__",
+      "count": 1189
+    },
+    {
+      "module": "typing",
+      "count": 1102
+    },
+    {
+      "module": "logging",
+      "count": 617
+    },
+    {
+      "module": "dataclasses",
+      "count": 487
+    },
+    {
+      "module": "platform.core.step_result",
+      "count": 422
+    },
+    {
+      "module": "time",
+      "count": 414
+    },
+    {
+      "module": "collections.abc",
+      "count": 247
+    },
+    {
+      "module": "os",
+      "count": 227
+    },
+    {
+      "module": "asyncio",
+      "count": 196
+    },
+    {
+      "module": "crewai",
+      "count": 191
+    },
+    {
+      "module": "datetime",
+      "count": 175
+    },
+    {
+      "module": "platform.observability.metrics",
+      "count": 166
+    },
+    {
+      "module": "json",
+      "count": 160
+    },
+    {
+      "module": "contextlib",
+      "count": 154
+    },
+    {
+      "module": "pathlib",
+      "count": 138
+    },
+    {
+      "module": "collections",
+      "count": 125
+    },
+    {
+      "module": "enum",
+      "count": 124
+    },
+    {
+      "module": "hashlib",
+      "count": 112
+    },
+    {
+      "module": "_base",
+      "count": 100
+    },
+    {
+      "module": "re",
+      "count": 96
+    },
+    {
+      "module": "ultimate_discord_intelligence_bot.step_result",
+      "count": 92
+    },
+    {
+      "module": "core.time",
+      "count": 78
+    },
+    {
+      "module": "ultimate_discord_intelligence_bot.tools._base",
+      "count": 70
+    },
+    {
+      "module": "step_result",
+      "count": 65
+    },
+    {
+      "module": "numpy",
+      "count": 62
+    },
+    {
+      "module": "ultimate_discord_intelligence_bot.tenancy.context",
+      "count": 60
+    },
+    {
+      "module": "platform.observability",
+      "count": 57
+    },
+    {
+      "module": "pydantic",
+      "count": 56
+    },
+    {
+      "module": "platform.config.configuration",
+      "count": 55
+    },
+    {
+      "module": "ultimate_discord_intelligence_bot.settings",
+      "count": 52
+    },
+    {
+      "module": "threading",
+      "count": 52
+    },
+    {
+      "module": "random",
+      "count": 49
+    },
+    {
+      "module": "ultimate_discord_intelligence_bot.tools",
+      "count": 38
+    },
+    {
+      "module": "service",
+      "count": 38
+    },
+    {
+      "module": "ultimate_discord_intelligence_bot.config.feature_flags",
+      "count": 37
+    },
+    {
+      "module": "math",
+      "count": 36
+    },
+    {
+      "module": "platform.http.http_utils",
+      "count": 35
+    },
+    {
+      "module": "yaml",
+      "count": 35
+    },
+    {
+      "module": "structlog",
+      "count": 35
+    },
+    {
+      "module": "importlib",
+      "count": 32
+    },
+    {
+      "module": "ultimate_discord_intelligence_bot.observability.metrics_collector",
+      "count": 32
+    },
+    {
+      "module": "uuid",
+      "count": 31
+    },
+    {
+      "module": "psutil",
+      "count": 31
+    },
+    {
+      "module": "qdrant_client.http",
+      "count": 29
+    },
+    {
+      "module": "ultimate_discord_intelligence_bot.tenancy",
+      "count": 28
+    },
+    {
+      "module": "functools",
+      "count": 28
+    },
+    {
+      "module": "statistics",
+      "count": 28
+    },
+    {
+      "module": "sys",
+      "count": 27
+    },
+    {
+      "module": "core.secure_config",
+      "count": 24
+    },
+    {
+      "module": "obs",
+      "count": 23
+    }
+  ],
+  "legacy_imports_count": 499,
+  "legacy_imports_sample": [
+    "src/analysis/segmenter.py: obs",
+    "src/analysis/transcribe.py: core.degradation_reporter",
+    "src/analysis/transcribe.py: core.secure_config",
+    "src/analysis/rerank.py: core.degradation_reporter",
+    "src/analysis/rerank.py: core.http_utils",
+    "src/analysis/rerank.py: core.secure_config",
+    "src/performance/cache_optimizer.py: core.cache.adaptive_semantic_cache",
+    "src/performance/cache_optimizer.py: core.vector_search.optimized_vector_store",
+    "src/performance/cache_optimizer.py: obs.metrics",
+    "src/performance/cache_warmer.py: core.cache.semantic_cache",
+    "src/performance/cache_warmer.py: core.time",
+    "src/performance/cache_warmer.py: core.settings",
+    "src/ingest/__main__.py: memory",
+    "src/ingest/backfill.py: core.time",
+    "src/ingest/backfill.py: ingest",
+    "src/ingest/pipeline.py: analysis",
+    "src/ingest/pipeline.py: core.error_handling",
+    "src/ingest/pipeline.py: core.privacy",
+    "src/ingest/pipeline.py: core.time",
+    "src/ingest/pipeline.py: ingest",
+    "src/ingest/pipeline.py: memory",
+    "src/ingest/pipeline.py: obs",
+    "src/ingest/models.py: core.time",
+    "src/publishing/artifact_publishing_service.py: core.http_utils",
+    "src/mcp_server/obs_server.py: core.degradation_reporter",
+    "src/mcp_server/memory_server.py: memory",
+    "src/mcp_server/memory_server.py: memory",
+    "src/mcp_server/memory_server.py: memory",
+    "src/mcp_server/memory_server.py: memory",
+    "src/mcp_server/memory_server.py: memory",
+    "src/mcp_server/creator_intelligence_server.py: memory.embedding_service",
+    "src/mcp_server/creator_intelligence_server.py: memory.creator_intelligence_collections",
+    "src/mcp_server/ingest_server.py: analysis.transcribe",
+    "src/mcp_server/routing_server.py: core",
+    "src/mcp_server/routing_server.py: core",
+    "src/mcp_server/routing_server.py: core",
+    "src/obs/enhanced_langsmith_integration.py: core.secure_config",
+    "src/obs/enhanced_langsmith_integration.py: core.time",
+    "src/obs/logging.py: core.privacy",
+    "src/obs/cache_monitor.py: obs.metrics",
+    "src/obs/langsmith_integration.py: core.secure_config",
+    "src/obs/langsmith_integration.py: obs",
+    "src/obs/enhanced_monitoring.py: core.time",
+    "src/obs/enhanced_monitoring.py: obs",
+    "src/obs/business_metrics.py: obs.metrics",
+    "src/obs/logfire_spans.py: core.secure_config",
+    "src/obs/incident.py: core.time",
+    "src/obs/logfire_config.py: core.secure_config",
+    "src/grounding/retriever.py: memory",
+    "src/grounding/retriever.py: memory",
+    "src/grounding/retriever.py: memory.store",
+    "src/debate/panel.py: obs",
+    "src/debate/panel.py: core.learning_engine",
+    "src/debate/panel.py: core.router",
+    "src/server/backpressure_middleware.py: core.resilience.backpressure_coordinator",
+    "src/server/app.py: memory.qdrant_provider",
+    "src/memory/vector_store.py: core.dependencies",
+    "src/memory/vector_store.py: memory.qdrant_provider",
+    "src/memory/vector_store.py: core.cache.unified_config",
+    "src/memory/unified_graph_store.py: core.secure_config",
+    "src/memory/unified_graph_store.py: memory.qdrant_provider",
+    "src/memory/qdrant_provider.py: core",
+    "src/memory/creator_intelligence_collections.py: memory.enhanced_vector_store",
+    "src/memory/creator_intelligence_collections.py: core.cache.unified_config",
+    "src/memory/embeddings.py: core.secure_config",
+    "src/memory/embeddings.py: core.cache.redis_cache",
+    "src/memory/embeddings.py: core.cache.unified_config",
+    "src/memory/enhanced_vector_store.py: memory.vector_store",
+    "src/memory/api.py: analysis.rerank",
+    "src/memory/api.py: core.privacy",
+    "src/memory/api.py: core.secure_config",
+    "src/memory/api.py: core.time",
+    "src/memory/api.py: memory",
+    "src/memory/api.py: memory.store",
+    "src/memory/api.py: core.learning_engine",
+    "src/memory/store.py: core.time",
+    "src/memory/hybrid_retriever.py: core.secure_config",
+    "src/memory/hybrid_retriever.py: memory.qdrant_provider",
+    "src/memory/hybrid_retriever.py: obs",
+    "src/ai/performance_router.py: core.time",
+    "src/ai/litellm_router.py: core.secure_config",
+    "src/ai/enhanced_ai_router.py: ai.performance_router",
+    "src/ai/enhanced_ai_router.py: core.learning_engine",
+    "src/ai/structured_outputs.py: core.secure_config",
+    "src/ai/ai_enhanced_performance_monitor.py: core.time",
+    "src/ai/ai_enhanced_performance_monitor.py: ai.ab_testing_framework",
+    "src/ai/ai_enhanced_performance_monitor.py: ai.adaptive_ai_router",
+    "src/ai/ai_enhanced_performance_monitor.py: ai.performance_router",
+    "src/ai/ai_enhanced_performance_monitor.py: ai.ab_testing_framework",
+    "src/ai/advanced_bandits_router.py: ai.advanced_contextual_bandits",
+    "src/enhancements/graphrag_integration.py: src.obs.metrics",
+    "src/enhancements/dspy_prompt_optimizer.py: src.core.settings",
+    "src/enhancements/neural_contextual_bandit.py: src.obs.metrics",
+    "src/core/http_utils.py: core.cache.redis_cache",
+    "src/core/http_utils.py: core.secure_config",
+    "src/core/http_utils.py: core.cache.unified_config",
+    "src/core/prompt_engine.py: core.privacy",
+    "src/core/security_fortification.py: core.time",
+    "src/core/security_fortification.py: obs",
+    "src/core/omniscient_reality_engine.py: core.omniscient_reality"
+  ]
+}

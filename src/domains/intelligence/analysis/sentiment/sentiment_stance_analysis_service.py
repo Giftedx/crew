@@ -17,10 +17,12 @@ Dependencies:
 """
 
 from __future__ import annotations
+
 import logging
 from dataclasses import dataclass
-from typing import Any, Literal
 from platform.core.step_result import StepResult
+from typing import Any, Literal
+
 
 logger = logging.getLogger(__name__)
 try:
@@ -370,10 +372,10 @@ class SentimentStanceAnalysisService:
         """
         text_lower = text.lower()
         agreement_words = ["agree", "yes", "right", "correct", "exactly", "absolutely", "definitely"]
-        if any((word in text_lower for word in agreement_words)):
+        if any(word in text_lower for word in agreement_words):
             return StanceAnalysis(stance="agree", confidence=0.7, stance_type="explicit")
         disagreement_words = ["disagree", "no", "wrong", "incorrect", "not true", "false", "dispute"]
-        if any((word in text_lower for word in disagreement_words)):
+        if any(word in text_lower for word in disagreement_words):
             return StanceAnalysis(stance="disagree", confidence=0.7, stance_type="explicit")
         if text.endswith("?") or "what about" in text_lower or "how about" in text_lower:
             return StanceAnalysis(stance="questioning", confidence=0.8, stance_type="rhetorical")
@@ -428,9 +430,9 @@ class SentimentStanceAnalysisService:
             "best",
             "perfect",
         ]
-        positive_count = sum((1 for word in positive_words if word in text_lower))
+        positive_count = sum(1 for word in positive_words if word in text_lower)
         negative_words = ["terrible", "awful", "horrible", "hate", "worst", "bad", "stupid", "wrong", "disappointing"]
-        negative_count = sum((1 for word in negative_words if word in text_lower))
+        negative_count = sum(1 for word in negative_words if word in text_lower)
         if positive_count > negative_count:
             sentiment = "positive"
             confidence = min(0.6 + positive_count * 0.1, 0.9)
@@ -464,7 +466,7 @@ class SentimentStanceAnalysisService:
         }
         emotion_scores = {}
         for emotion, words in emotion_indicators.items():
-            count = sum((1 for word in words if word in text_lower))
+            count = sum(1 for word in words if word in text_lower)
             emotion_scores[emotion] = count * 0.1
         if emotion_scores:
             primary_emotion = max(emotion_scores.keys(), key=lambda k: emotion_scores[k])

@@ -8,14 +8,15 @@ WebSocket stack is unavailable.
 """
 
 from __future__ import annotations
+
 import logging
 import time
-from typing import TYPE_CHECKING, Any
-from ultimate_discord_intelligence_bot.settings import ENABLE_WEBSOCKET_UPDATES
 from platform.core.step_result import StepResult
+from typing import Any
 
-if TYPE_CHECKING:
-    from ultimate_discord_intelligence_bot.services.websocket_service import MessageType
+from ultimate_discord_intelligence_bot.settings import ENABLE_WEBSOCKET_UPDATES
+
+
 log = logging.getLogger(__name__)
 
 

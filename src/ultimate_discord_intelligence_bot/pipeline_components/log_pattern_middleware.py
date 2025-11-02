@@ -1,13 +1,16 @@
 """Pipeline middleware that captures step logs and extracts recurring patterns."""
 
 from __future__ import annotations
+
 import contextlib
 import logging
 import re
 from collections import Counter, defaultdict
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
+
 from .middleware import BasePipelineStepMiddleware, StepContext
+
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -120,7 +123,7 @@ class LogPatternMiddleware(BasePipelineStepMiddleware):
         records_list = list(records)
         if not records_list:
             return {"total_records": 0, "levels": {}, "sources": [], "top_patterns": [], "recent_errors": []}
-        level_counter = Counter((rec.level for rec in records_list))
+        level_counter = Counter(rec.level for rec in records_list)
         unique_sources = sorted({rec.logger_name for rec in records_list})
         pattern_counter: Counter[str] = Counter()
         pattern_examples: dict[str, _CapturedLog] = {}

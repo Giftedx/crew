@@ -1,7 +1,9 @@
 from __future__ import annotations
+
 import time
-from typing import Any, TypedDict
 from platform.core.step_result import StepResult
+from typing import Any, TypedDict
+
 from ultimate_discord_intelligence_bot.tools._base import BaseTool
 
 
@@ -183,7 +185,7 @@ class CrossPlatformNarrativeTrackingTool(BaseTool[StepResult]):
                 description=f"Timeline tracking the narrative: {narrative_query}",
                 involved_creators=list({event["creator_id"] for event in events}),
                 primary_topic=self._extract_primary_topic(narrative_query),
-                start_date=min((event["timestamp"] for event in events)),
+                start_date=min(event["timestamp"] for event in events),
                 last_update=current_time,
                 status="active",
                 platforms=list({event["platform"] for event in events}),
@@ -314,13 +316,13 @@ class CrossPlatformNarrativeTrackingTool(BaseTool[StepResult]):
         """Extract primary topic from narrative query."""
         try:
             query_lower = narrative_query.lower()
-            if any((word in query_lower for word in ["politics", "political", "election"])):
+            if any(word in query_lower for word in ["politics", "political", "election"]):
                 return "Politics"
-            elif any((word in query_lower for word in ["gaming", "game", "stream"])):
+            elif any(word in query_lower for word in ["gaming", "game", "stream"]):
                 return "Gaming"
-            elif any((word in query_lower for word in ["drama", "controversy", "feud"])):
+            elif any(word in query_lower for word in ["drama", "controversy", "feud"]):
                 return "Drama"
-            elif any((word in query_lower for word in ["lawsuit", "legal", "court"])):
+            elif any(word in query_lower for word in ["lawsuit", "legal", "court"]):
                 return "Legal"
             else:
                 return "General"
@@ -597,7 +599,7 @@ class CrossPlatformNarrativeTrackingTool(BaseTool[StepResult]):
                 )
             for creator, contributions in analysis["creator_contributions"].items():
                 total_views = contributions["total_views"]
-                total_views_all = sum((event["engagement_metrics"].get("views", 0) for event in timeline["events"]))
+                total_views_all = sum(event["engagement_metrics"].get("views", 0) for event in timeline["events"])
                 influence_score = total_views / max(total_views_all, 1)
                 analysis["creator_influence"][creator] = influence_score
             return analysis
@@ -671,6 +673,6 @@ class CrossPlatformNarrativeTrackingTool(BaseTool[StepResult]):
         """Get tool statistics."""
         return {
             "active_narratives": len(self._active_narratives),
-            "total_events": sum((len(timeline["events"]) for timeline in self._active_narratives.values())),
+            "total_events": sum(len(timeline["events"]) for timeline in self._active_narratives.values()),
             "monitored_platforms": len(self._cross_platform_mappings),
         }

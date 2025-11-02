@@ -5,10 +5,12 @@ for improving system performance through intelligent caching mechanisms.
 """
 
 from __future__ import annotations
+
 import logging
 import time
-from typing import TYPE_CHECKING, Any
 from platform.core.step_result import StepResult
+from typing import TYPE_CHECKING, Any
+
 
 if TYPE_CHECKING:
     from ..tenancy.context import TenantContext

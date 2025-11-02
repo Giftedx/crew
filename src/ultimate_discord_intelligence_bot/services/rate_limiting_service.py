@@ -1,7 +1,10 @@
 """Rate limiting service for the Ultimate Discord Intelligence Bot."""
 
 from __future__ import annotations
+
 import logging
+from platform.core.step_result import StepResult
+
 from ultimate_discord_intelligence_bot.settings import (
     ENABLE_DISTRIBUTED_RATE_LIMITING,
     RATE_LIMIT_FALLBACK_TO_LOCAL,
@@ -9,7 +12,7 @@ from ultimate_discord_intelligence_bot.settings import (
     RATE_LIMIT_GLOBAL_REFILL_PER_SEC,
     RATE_LIMIT_REDIS_URL,
 )
-from platform.core.step_result import StepResult
+
 
 logger = logging.getLogger(__name__)
 try:

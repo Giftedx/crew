@@ -5,11 +5,14 @@ from tool usage without modifying existing tool code.
 """
 
 from __future__ import annotations
+
 import functools
 import time
-from typing import TYPE_CHECKING, Any
-from ultimate_discord_intelligence_bot.observability.metrics_collector import record_tool_usage
 from platform.core.step_result import StepResult
+from typing import TYPE_CHECKING, Any
+
+from ultimate_discord_intelligence_bot.observability.metrics_collector import record_tool_usage
+
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -118,6 +121,7 @@ def track_memory_usage(tool_name: str | None = None):
             name = tool_name or func.__name__
             try:
                 import os
+
                 import psutil
 
                 process = psutil.Process(os.getpid())

@@ -6,11 +6,13 @@ language detection, and batch processing for creator content.
 """
 
 from __future__ import annotations
+
 import logging
 import os
 from dataclasses import dataclass
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
+
 
 try:
     import torch
@@ -20,8 +22,10 @@ except ImportError:
     torch = None
     whisper = None
     WhisperModel = None
-from ultimate_discord_intelligence_bot.creator_ops.config import CreatorOpsConfig
 from platform.core.step_result import StepResult
+
+from ultimate_discord_intelligence_bot.creator_ops.config import CreatorOpsConfig
+
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -214,7 +218,7 @@ class WhisperASR:
                     no_speech_prob=segment.no_speech_prob,
                 )
                 asr_segments.append(asr_segment)
-            full_text = " ".join((segment.text for segment in segment_list))
+            full_text = " ".join(segment.text for segment in segment_list)
             asr_result = ASRResult(
                 text=full_text.strip(),
                 language=info.language,

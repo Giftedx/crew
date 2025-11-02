@@ -4,9 +4,10 @@ Migrated to StepResult. Returns StepResult.ok with data results.
 Metrics: tool_runs_total{tool="mock_vector_search", outcome}
 """
 
-from typing import Any
-from platform.observability.metrics import get_metrics
 from platform.core.step_result import StepResult
+from platform.observability.metrics import get_metrics
+from typing import Any
+
 from ._base import BaseTool
 
 

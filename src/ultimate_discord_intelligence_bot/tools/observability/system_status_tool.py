@@ -10,9 +10,11 @@ import logging
 import os
 import platform
 import shutil
-from platform.observability.metrics import get_metrics
 from platform.core.step_result import StepResult
+from platform.observability.metrics import get_metrics
+
 from ._base import BaseTool
+
 
 logger = logging.getLogger(__name__)
 

@@ -1,8 +1,10 @@
 """Budget enforcement utilities for OpenRouter routing."""
 
 from __future__ import annotations
-from typing import TYPE_CHECKING, Any
+
 from platform.observability import metrics
+from typing import TYPE_CHECKING, Any
+
 
 if TYPE_CHECKING:
     from .service import OpenRouterService

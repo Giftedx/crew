@@ -20,9 +20,12 @@ Usage:
 """
 
 from __future__ import annotations
+
 import os
 from typing import TYPE_CHECKING, Any
+
 from .config import BaseConfig, FeatureFlags, PathConfig, validate_configuration
+
 
 if TYPE_CHECKING:
     from pathlib import Path

@@ -15,7 +15,9 @@ Notes:
 """
 
 from __future__ import annotations
+
 from typing import TYPE_CHECKING, Any
+
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -188,7 +190,7 @@ def _fetch_transcript_local_impl(path: str, model: str = "tiny", max_chars: int 
                 t = str(getattr(seg, "text", "")).strip()
                 seg_items.append({"start": s, "end": e, "text": t})
                 texts.append(t)
-                if sum((len(x) for x in texts)) >= max(0, int(max_chars)):
+                if sum(len(x) for x in texts) >= max(0, int(max_chars)):
                     break
             except Exception:
                 continue

@@ -5,10 +5,13 @@ for monitoring service status and dependencies.
 """
 
 from __future__ import annotations
+
 import logging
 import time
 from typing import TYPE_CHECKING, Any
+
 from ultimate_discord_intelligence_bot.config.feature_flags import FeatureFlags
+
 
 if TYPE_CHECKING:
     from .service import OpenRouterService
@@ -50,7 +53,7 @@ class HealthChecker:
             }
             checks = await self._run_health_checks()
             health_status["checks"] = checks
-            overall_healthy = all((check.get("healthy", False) for check in checks.values()))
+            overall_healthy = all(check.get("healthy", False) for check in checks.values())
             health_status["overall_healthy"] = overall_healthy
             health_status["status"] = "healthy" if overall_healthy else "unhealthy"
             self._cached_health_status = health_status
@@ -223,7 +226,7 @@ class HealthChecker:
                 "metrics_collection": self._feature_flags.ENABLE_OPENROUTER_METRICS_COLLECTION,
                 "health_checks": self._feature_flags.ENABLE_OPENROUTER_HEALTH_CHECKS,
             }
-            enabled_count = sum((1 for enabled in flags_status.values() if enabled))
+            enabled_count = sum(1 for enabled in flags_status.values() if enabled)
             total_count = len(flags_status)
             return {
                 "healthy": True,

@@ -19,11 +19,13 @@ Dependencies:
 """
 
 from __future__ import annotations
+
 import logging
 import re
 from dataclasses import dataclass
-from typing import Any, Literal
 from platform.core.step_result import StepResult
+from typing import Any, Literal
+
 
 logger = logging.getLogger(__name__)
 
@@ -346,8 +348,8 @@ class GuestTopicPreBriefsService:
             Strength score (0.0 to 1.0)
         """
         text_lower = argument_text.lower()
-        strong_indicators = sum((1 for indicator in self._strength_indicators["strong"] if indicator in text_lower))
-        weak_indicators = sum((1 for indicator in self._strength_indicators["weak"] if indicator in text_lower))
+        strong_indicators = sum(1 for indicator in self._strength_indicators["strong"] if indicator in text_lower)
+        weak_indicators = sum(1 for indicator in self._strength_indicators["weak"] if indicator in text_lower)
         total_indicators = strong_indicators + weak_indicators
         base_strength = 0.5 if total_indicators == 0 else strong_indicators / total_indicators
         length_factor = min(len(argument_text) / 100, 1.0)
@@ -397,9 +399,9 @@ class GuestTopicPreBriefsService:
             "generally accepted",
         ]
         low_quality_evidence = ["I think", "I feel", "in my opinion", "people say", "I heard", "I believe"]
-        high_count = sum((1 for indicator in high_quality_evidence if indicator in text_lower))
-        medium_count = sum((1 for indicator in medium_quality_evidence if indicator in text_lower))
-        low_count = sum((1 for indicator in low_quality_evidence if indicator in text_lower))
+        high_count = sum(1 for indicator in high_quality_evidence if indicator in text_lower)
+        medium_count = sum(1 for indicator in medium_quality_evidence if indicator in text_lower)
+        low_count = sum(1 for indicator in low_quality_evidence if indicator in text_lower)
         total_evidence = high_count + medium_count + low_count
         if total_evidence == 0:
             return 0.5
@@ -427,7 +429,7 @@ class GuestTopicPreBriefsService:
             "due to",
         ]
         text_lower = argument_text.lower()
-        coherence_count = sum((1 for indicator in coherence_indicators if indicator in text_lower))
+        coherence_count = sum(1 for indicator in coherence_indicators if indicator in text_lower)
         base_coherence = min(coherence_count * 0.2, 1.0)
         length_factor = min(len(argument_text) / 50, 1.0)
         return base_coherence * 0.7 + length_factor * 0.3
@@ -616,7 +618,7 @@ class GuestTopicPreBriefsService:
         """
         if not arguments:
             return 0.5
-        avg_argument_strength = sum((arg.strength_score for arg in arguments)) / len(arguments)
+        avg_argument_strength = sum(arg.strength_score for arg in arguments) / len(arguments)
         audience_confidence = audience_prediction.confidence
         overall_confidence = avg_argument_strength * 0.7 + audience_confidence * 0.3
         return min(overall_confidence, 1.0)
@@ -636,7 +638,7 @@ class GuestTopicPreBriefsService:
         for topic in topics:
             topic_lower = topic.lower()
             for level, indicators in self._controversy_indicators.items():
-                if any((indicator in topic_lower for indicator in indicators)):
+                if any(indicator in topic_lower for indicator in indicators):
                     if level == "high":
                         controversy_score = max(controversy_score, 0.8)
                     elif level == "medium":
@@ -686,7 +688,7 @@ class GuestTopicPreBriefsService:
             "clearly wrong",
         ]
         statement_lower = statement.lower()
-        return any((indicator in statement_lower for indicator in controversial_indicators))
+        return any(indicator in statement_lower for indicator in controversial_indicators)
 
     def _calculate_specificity_score(self, text: str) -> float:
         """Calculate specificity score of text.
@@ -710,8 +712,8 @@ class GuestTopicPreBriefsService:
         ]
         abstract_words = ["think", "feel", "believe", "maybe", "possibly", "general", "overall", "concept", "idea"]
         text_lower = text.lower()
-        concrete_count = sum((1 for word in concrete_words if word in text_lower))
-        abstract_count = sum((1 for word in abstract_words if word in text_lower))
+        concrete_count = sum(1 for word in concrete_words if word in text_lower)
+        abstract_count = sum(1 for word in abstract_words if word in text_lower)
         total_indicators = concrete_count + abstract_count
         if total_indicators == 0:
             return 0.5

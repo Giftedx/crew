@@ -5,13 +5,15 @@ including cache performance, cost optimization, error handling, and memory usage
 """
 
 from __future__ import annotations
+
 import json
 import time
+from platform.core.step_result import get_error_analyzer, get_recovery_manager
 from typing import Any
+
 from core.db_optimizer import get_database_optimizer
 from core.llm_cache import get_llm_cache
 from memory.vector_store import VectorStore
-from platform.core.step_result import get_error_analyzer, get_recovery_manager
 
 
 class PerformanceDashboard:
@@ -161,7 +163,7 @@ class PerformanceDashboard:
         return {
             "overall_score": overall_score,
             "health_status": self._get_health_status(overall_score),
-            "components_healthy": sum((1 for m in metrics.values() if m.get("enabled", False))),
+            "components_healthy": sum(1 for m in metrics.values() if m.get("enabled", False)),
             "total_components": len(metrics),
             "last_updated": time.time(),
         }
@@ -256,7 +258,7 @@ class PerformanceDashboard:
                 "overall_health": self._get_health_status(overall_score),
                 "overall_score": overall_score,
                 "active_optimizations": sum(
-                    (1 for m in [cache_metrics, error_metrics, memory_metrics] if m.get("enabled", False))
+                    1 for m in [cache_metrics, error_metrics, memory_metrics] if m.get("enabled", False)
                 ),
                 "total_components": 3,
                 "performance_highlights": {

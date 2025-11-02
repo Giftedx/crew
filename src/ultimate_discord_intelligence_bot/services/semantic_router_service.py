@@ -5,8 +5,10 @@ Install with: pip install -e '.[semantic_router]'
 """
 
 from __future__ import annotations
+
 import os
 from typing import TYPE_CHECKING, Any
+
 
 try:
     from semantic_router import Route
@@ -20,6 +22,7 @@ except ImportError:
     OpenAIEncoder = Any
     RouteLayer = Any
 from ultimate_discord_intelligence_bot.settings import Settings
+
 
 if TYPE_CHECKING:
     from platform.core.step_result import StepResult

@@ -1,13 +1,15 @@
 from __future__ import annotations
+
 import time
 from datetime import datetime
+from platform.core.step_result import StepResult
 from typing import Any, TypedDict
+
 from ultimate_discord_intelligence_bot.profiles.creator_network_schema import (
     ALL_CREATOR_NETWORKS,
     EnhancedCreatorProfile,
     create_enhanced_profile_from_config,
 )
-from platform.core.step_result import StepResult
 
 
 class CollaborationEvent(TypedDict, total=False):
@@ -444,6 +446,6 @@ class GuestIntelligenceAgent:
         return {
             "total_guest_profiles": len(self._guest_profiles),
             "total_collaboration_events": len(self._collaboration_history),
-            "monitoring_recommendations_count": sum((len(recs) for recs in self._monitoring_recommendations.values())),
+            "monitoring_recommendations_count": sum(len(recs) for recs in self._monitoring_recommendations.values()),
             "relationship_insights_count": len(self._relationship_insights),
         }

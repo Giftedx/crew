@@ -32,13 +32,17 @@ Example:
 """
 
 from __future__ import annotations
+
 import asyncio
 import logging
 import os
 from typing import TYPE_CHECKING, Any
+
 import structlog
+
 from domains.orchestration.crew.executor import UnifiedCrewExecutor
 from domains.orchestration.crew.interfaces import CrewConfig, CrewExecutionMode, CrewTask
+
 
 if TYPE_CHECKING:
     from crewai import Agent, Task

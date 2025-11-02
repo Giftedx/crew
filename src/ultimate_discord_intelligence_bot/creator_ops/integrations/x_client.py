@@ -4,9 +4,12 @@ X (Twitter) API v2 client with tier-aware rate limits and OAuth 2.0 PKCE.
 
 import logging
 from datetime import datetime, timedelta
+from platform.core.step_result import StepResult
 from typing import Any
+
 import httpx
 from tenacity import before_sleep_log, retry, stop_after_attempt, wait_exponential
+
 from ultimate_discord_intelligence_bot.creator_ops.auth.oauth_manager import OAuthManager
 from ultimate_discord_intelligence_bot.creator_ops.config import CreatorOpsConfig
 from ultimate_discord_intelligence_bot.creator_ops.integrations.x_models import (
@@ -21,7 +24,7 @@ from ultimate_discord_intelligence_bot.creator_ops.integrations.x_models import 
     XWebhookEvent,
     XWebhookSubscription,
 )
-from platform.core.step_result import StepResult
+
 
 logger = logging.getLogger(__name__)
 

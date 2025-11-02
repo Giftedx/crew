@@ -5,7 +5,9 @@ sentiment analysis, bias detection, claim extraction, and trend analysis.
 """
 
 from __future__ import annotations
+
 from typing import TYPE_CHECKING
+
 
 if TYPE_CHECKING:
     from crewai import Agent
@@ -26,6 +28,7 @@ from ultimate_discord_intelligence_bot.tools import (
     TrendForecastingTool,
     VideoFrameAnalysisTool,
 )
+
 
 _flags = FeatureFlags.from_env()
 

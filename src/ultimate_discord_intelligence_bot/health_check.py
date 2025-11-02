@@ -5,10 +5,11 @@ service availability, and performance indicators.
 """
 
 from __future__ import annotations
+
 import time
-from typing import Any
 from platform.observability.performance_monitor import get_performance_summary
 from platform.observability.resource_monitor import get_current_resource_usage, get_resource_monitor
+from typing import Any
 
 
 class HealthCheckService:

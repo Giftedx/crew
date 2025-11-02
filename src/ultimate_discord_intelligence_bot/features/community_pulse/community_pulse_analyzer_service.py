@@ -7,12 +7,14 @@ Follows StepResult pattern and includes caching.
 """
 
 from __future__ import annotations
+
 import hashlib
 import logging
 import time
 from dataclasses import dataclass
-from typing import Any, Literal
 from platform.core.step_result import StepResult
+from typing import Any, Literal
+
 
 logger = logging.getLogger(__name__)
 
@@ -154,8 +156,8 @@ class CommunityPulseAnalyzerService:
 
     def _sentiment_from_text(self, text: str) -> float:
         t = text.lower()
-        pos = sum((1 for w in self._positive_words if w in t))
-        neg = sum((1 for w in self._negative_words if w in t))
+        pos = sum(1 for w in self._positive_words if w in t)
+        neg = sum(1 for w in self._negative_words if w in t)
         if pos == 0 and neg == 0:
             return 0.0
         score = (pos - neg) / max(pos + neg, 1)

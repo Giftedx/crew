@@ -1,21 +1,24 @@
 from __future__ import annotations
+
+from platform.core.step_result import StepResult
+
 from memory import embeddings as emb
 from memory import vector_store as vs
-from platform.core.step_result import StepResult
+
 
 def test_autointel_vertical_slice_round_trip() -> None:
     store = vs.VectorStore()
-    ns = vs.VectorStore.namespace('test', 'main', 'slice')
-    doc_text = 'Python is a popular programming language created by Guido van Rossum.'
+    ns = vs.VectorStore.namespace("test", "main", "slice")
+    doc_text = "Python is a popular programming language created by Guido van Rossum."
     vec = emb.embed([doc_text])[0]
-    store.upsert(ns, [vs.VectorRecord(vector=vec, payload={'text': doc_text, 'title': 'Python Intro'})])
-    q = emb.embed(['What is Python?'])[0]
+    store.upsert(ns, [vs.VectorRecord(vector=vec, payload={"text": doc_text, "title": "Python Intro"})])
+    q = emb.embed(["What is Python?"])[0]
     hits = store.query(ns, q, top_k=1)
-    assert hits, 'Expected at least one retrieval result'
+    assert hits, "Expected at least one retrieval result"
     top = hits[0]
-    payload = getattr(top, 'payload', {}) or {}
+    payload = getattr(top, "payload", {}) or {}
     answer = f'Python is a programming language. Source: {payload.get('title', 'N/A')}'
-    res = StepResult.ok(answer=answer, citations=[payload.get('text', '')], hits=len(hits))
-    assert res['status'] == 'success'
-    assert res['hits'] == 1
-    assert 'Python is a programming language' in res['answer']
+    res = StepResult.ok(answer=answer, citations=[payload.get("text", "")], hits=len(hits))
+    assert res["status"] == "success"
+    assert res["hits"] == 1
+    assert "Python is a programming language" in res["answer"]

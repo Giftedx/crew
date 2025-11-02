@@ -1,6 +1,7 @@
 """Ingestion orchestration for media sources."""
 
 from __future__ import annotations
+
 import concurrent.futures
 import contextlib
 import hashlib
@@ -8,14 +9,16 @@ import os
 import time
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from platform.observability import metrics
 from typing import Any
+
 from analysis import segmenter, topics, transcribe
 from core.error_handling import handle_error_safely
 from core.privacy import privacy_filter
 from core.time import default_utc_now
 from ingest import models
 from memory import embeddings, vector_store
-from platform.observability import metrics
+
 from .providers import twitch, youtube
 
 

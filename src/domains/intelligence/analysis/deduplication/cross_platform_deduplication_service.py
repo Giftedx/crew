@@ -19,11 +19,13 @@ Dependencies:
 """
 
 from __future__ import annotations
+
 import hashlib
 import logging
 from dataclasses import dataclass
-from typing import Any, Literal
 from platform.core.step_result import StepResult
+from typing import Any, Literal
+
 
 logger = logging.getLogger(__name__)
 try:
@@ -192,7 +194,7 @@ class CrossPlatformDeduplicationService:
                     item["item_hash"] = item_hash
                 processed_items.append(item)
             total_items = len(processed_items)
-            duplicates = sum((1 for item in processed_items if item.get("is_duplicate")))
+            duplicates = sum(1 for item in processed_items if item.get("is_duplicate"))
             unique_items = total_items - duplicates
             return StepResult.ok(
                 data={
@@ -253,7 +255,7 @@ class CrossPlatformDeduplicationService:
                 text_clusters = self._find_text_duplicates(text_items, similarity_threshold)
                 all_clusters.extend(text_clusters)
             total_items = (len(image_paths) if image_paths else 0) + (len(text_items) if text_items else 0)
-            duplicates_found = sum((len(cluster.platform_items) for cluster in all_clusters)) - len(all_clusters)
+            duplicates_found = sum(len(cluster.platform_items) for cluster in all_clusters) - len(all_clusters)
             return DeduplicationResult(
                 duplicate_clusters=all_clusters,
                 total_items_processed=total_items,

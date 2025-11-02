@@ -1,12 +1,15 @@
 """Simple multi-agent debate panel."""
 
 from __future__ import annotations
+
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING
 from platform.observability import tracing
+from typing import TYPE_CHECKING
+
 
 if TYPE_CHECKING:
     from collections.abc import Callable
+
     from core.learning_engine import LearningEngine
     from core.router import Router
 
@@ -76,7 +79,7 @@ def run_panel(
             votes[agent.role] = agent.role
         final = agents[0].output
     else:
-        final = "\n".join((a.output for a in agents))
+        final = "\n".join(a.output for a in agents)
     if engine:
         for agent in agents:
             engine.record("debate", {}, agent.role, agent.confidence)

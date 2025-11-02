@@ -5,13 +5,15 @@ comparison, and monitoring across different crew implementations.
 """
 
 from __future__ import annotations
+
 import logging
 import time
 from dataclasses import dataclass, field
 from enum import Enum
+from platform.core.step_result import StepResult
 from typing import TYPE_CHECKING, Any
 from uuid import uuid4
-from platform.core.step_result import StepResult
+
 
 if TYPE_CHECKING:
     from ultimate_discord_intelligence_bot.config.feature_flags import FeatureFlags
@@ -401,11 +403,9 @@ class CrewAnalytics:
                     best_reliability = metrics.success_rate
                     most_reliable_crew = crew_type.value
             active_count = sum(
-                (
-                    1
-                    for exec_ in self.executions.values()
-                    if exec_.status in [ExecutionStatus.PENDING, ExecutionStatus.RUNNING]
-                )
+                1
+                for exec_ in self.executions.values()
+                if exec_.status in [ExecutionStatus.PENDING, ExecutionStatus.RUNNING]
             )
             dashboard_data["summary"]["active_executions"] = active_count
             dashboard_data["summary"]["best_performing_crew"] = best_performing_crew

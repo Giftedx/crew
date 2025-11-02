@@ -5,10 +5,13 @@ Metrics: tool_runs_total{tool="multi_platform_monitor", outcome=success}
 """
 
 from __future__ import annotations
-from typing import TYPE_CHECKING, TypedDict
-from platform.observability.metrics import get_metrics
+
 from platform.core.step_result import StepResult
+from platform.observability.metrics import get_metrics
+from typing import TYPE_CHECKING, TypedDict
+
 from .._base import BaseTool
+
 
 if TYPE_CHECKING:
     from collections.abc import Iterable

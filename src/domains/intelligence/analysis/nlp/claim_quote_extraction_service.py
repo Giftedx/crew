@@ -17,11 +17,13 @@ Dependencies:
 """
 
 from __future__ import annotations
+
 import logging
 import re
 from dataclasses import dataclass
-from typing import Any, Literal
 from platform.core.step_result import StepResult
+from typing import Any, Literal
+
 
 logger = logging.getLogger(__name__)
 try:
@@ -410,7 +412,7 @@ class ClaimQuoteExtractionService:
             "obviously",
         ]
         sentence_lower = sentence.lower()
-        if any((indicator in sentence_lower for indicator in factual_indicators)):
+        if any(indicator in sentence_lower for indicator in factual_indicators):
             return ExtractedClaim(text=sentence, timestamp_seconds=timestamp, confidence=0.7, claim_type="statement")
         return None
 

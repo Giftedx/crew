@@ -1,10 +1,13 @@
 from __future__ import annotations
+
 import logging
 import time
 from collections import deque
-from typing import Any
-import numpy as np
 from platform.observability import metrics as obs_metrics
+from typing import Any
+
+import numpy as np
+
 
 try:
     from sklearn.ensemble import IsolationForest
@@ -38,8 +41,10 @@ except Exception:
             return 1.0 - ss_res / ss_tot if ss_tot > 0 else 0.0
 
 
-from core.time import default_utc_now
 from platform.observability.metrics import get_metrics
+
+from core.time import default_utc_now
+
 from ..advanced_performance_analytics import AdvancedPerformanceAnalytics
 from ..enhanced_performance_monitor import EnhancedPerformanceMonitor
 from .mixins import (
@@ -50,6 +55,7 @@ from .mixins import (
     WarningDetectionMixin,
 )
 from .models import CapacityForecast, EarlyWarningAlert, ModelDriftAlert, PerformancePrediction, PredictionConfidence
+
 
 try:
     from platform.observability import tracing as _obs_tracing
@@ -142,7 +148,7 @@ class PredictivePerformanceInsights(
                 actionable_recommendations = self._generate_predictive_recommendations(
                     predictions, warnings, capacity_forecasts, drift_alerts
                 )
-                total_predictions = sum((len(preds) for preds in predictions.values()))
+                total_predictions = sum(len(preds) for preds in predictions.values())
                 total_warnings = len(warnings)
                 total_forecasts = len(capacity_forecasts)
                 total_drift_alerts = len(drift_alerts)
@@ -282,7 +288,7 @@ class PredictivePerformanceInsights(
                 span.set_attribute("error", True)
                 span.set_attribute("error.message", str(exc))
                 logger.debug("Performance predictions error: %s", exc)
-            total_predictions = sum((len(p) for p in predictions.values()))
+            total_predictions = sum(len(p) for p in predictions.values())
             duration = time.perf_counter() - start_time
             span.set_attribute("duration_seconds", duration)
             span.set_attribute("status", outcome)
@@ -480,11 +486,11 @@ class PredictivePerformanceInsights(
     def _count_by_confidence(self, predictions: dict, confidence_level: PredictionConfidence) -> int:
         count = 0
         for agent_predictions in predictions.values():
-            count += sum((1 for pred in agent_predictions if pred.confidence_level == confidence_level))
+            count += sum(1 for pred in agent_predictions if pred.confidence_level == confidence_level)
         return count
 
     def _assess_overall_confidence(self, predictions: dict) -> dict[str, Any]:
-        total_predictions = sum((len(preds) for preds in predictions.values()))
+        total_predictions = sum(len(preds) for preds in predictions.values())
         if total_predictions == 0:
             return {"overall_confidence": "insufficient_data", "confidence_score": 0.0}
         confidence_distribution = {

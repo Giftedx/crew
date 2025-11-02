@@ -6,12 +6,14 @@ provenance tracking, and JSON output for creator content.
 """
 
 from __future__ import annotations
+
 import logging
 import re
 from dataclasses import dataclass
 from datetime import datetime
-from typing import TYPE_CHECKING, Any
 from platform.core.step_result import StepResult
+from typing import TYPE_CHECKING, Any
+
 
 if TYPE_CHECKING:
     from ultimate_discord_intelligence_bot.creator_ops.media.asr import ASRResult, ASRSegment
@@ -111,8 +113,8 @@ class TranscriptAlignment:
                 if segment.text != original_text:
                     cleanup_applied.append(f"cleaned_segment_{len(cleanup_applied)}")
             speakers = list({segment.speaker for segment in aligned_segments if segment.speaker})
-            total_duration = max((segment.end_time for segment in aligned_segments)) if aligned_segments else 0.0
-            word_count = sum((len(segment.text.split()) for segment in aligned_segments))
+            total_duration = max(segment.end_time for segment in aligned_segments) if aligned_segments else 0.0
+            word_count = sum(len(segment.text.split()) for segment in aligned_segments)
             speaker_turns = self._count_speaker_turns(aligned_segments)
             overlap_percentage = self._calculate_overlap_percentage(aligned_segments, total_duration)
             provenance = {

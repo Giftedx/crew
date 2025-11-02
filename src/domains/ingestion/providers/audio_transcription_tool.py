@@ -11,17 +11,22 @@ previous Whisper tool.
 """
 
 from __future__ import annotations
+
 import importlib
 import logging
 import os
 import time
 from functools import cached_property
-from typing import Any
-import torch
-from ultimate_discord_intelligence_bot.cache import EnhancedTranscriptionCache
-from platform.observability.metrics import get_metrics
 from platform.core.step_result import StepResult
+from platform.observability.metrics import get_metrics
+from typing import Any
+
+import torch
+
+from ultimate_discord_intelligence_bot.cache import EnhancedTranscriptionCache
+
 from ._base import TranscriptionTool
+
 
 transformers: Any | None
 try:

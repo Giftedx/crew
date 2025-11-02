@@ -1,10 +1,13 @@
 """Lightweight sentiment analysis tool (StepResult version)."""
 
 from __future__ import annotations
+
 import logging
-from platform.observability.metrics import get_metrics
 from platform.core.step_result import StepResult
+from platform.observability.metrics import get_metrics
+
 from ._base import BaseTool
+
 
 POSITIVE_THRESHOLD = 0.05
 NEGATIVE_THRESHOLD = -0.05
@@ -33,7 +36,7 @@ class SentimentTool(BaseTool[StepResult]):
         positive = {"good", "great", "awesome", "love", "excellent"}
         negative = {"bad", "terrible", "awful", "hate", "poor"}
         tokens = text.lower().split()
-        score = sum((tok in positive for tok in tokens)) - sum((tok in negative for tok in tokens))
+        score = sum(tok in positive for tok in tokens) - sum(tok in negative for tok in tokens)
         if score > 0:
             label = "positive"
         elif score < 0:

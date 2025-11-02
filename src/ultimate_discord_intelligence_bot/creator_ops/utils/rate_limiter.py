@@ -7,8 +7,9 @@ import asyncio
 import logging
 import time
 from collections.abc import Callable
-from typing import Any, TypeVar
 from platform.core.step_result import StepResult
+from typing import Any, TypeVar
+
 
 logger = logging.getLogger(__name__)
 T = TypeVar("T")

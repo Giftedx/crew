@@ -1,14 +1,17 @@
 """Store transcripts and analysis in a Qdrant vector database with tenant isolation."""
 
 from __future__ import annotations
+
 import os
 import uuid
-from typing import TYPE_CHECKING, Any, ClassVar, Protocol, TypedDict, cast, runtime_checkable
 from platform.config.configuration import get_config
-from platform.observability.metrics import get_metrics
 from platform.core.step_result import StepResult
+from platform.observability.metrics import get_metrics
+from typing import TYPE_CHECKING, Any, ClassVar, Protocol, TypedDict, cast, runtime_checkable
+
 from ..tenancy import current_tenant, mem_ns
 from ._base import BaseTool
+
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Sequence
@@ -252,7 +255,7 @@ class MemoryStorageTool(BaseTool[StepResult]):
                     context=context,
                     collection=target,
                 )
-            if not all((isinstance(v, (float, int)) for v in vector)):
+            if not all(isinstance(v, (float, int)) for v in vector):
                 return StepResult.validation_error(
                     "embedding vector must contain only numeric values", context=context, collection=target
                 )

@@ -7,11 +7,13 @@ hashed with SHA-256 and the resulting bytes are converted into a fixed
 """
 
 from __future__ import annotations
+
 import contextlib
 import hashlib
 import json
-from typing import TYPE_CHECKING
 from platform.config.configuration import get_config
+from typing import TYPE_CHECKING
+
 
 if TYPE_CHECKING:
     from collections.abc import Iterable

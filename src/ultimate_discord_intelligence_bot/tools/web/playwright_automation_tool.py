@@ -1,11 +1,14 @@
 """Playwright browser automation tool for dynamic content scraping."""
 
 from __future__ import annotations
+
 import base64
+from platform.core.step_result import ErrorCategory, ErrorContext, StepResult
 from typing import Any
 from urllib.parse import urlparse
-from platform.core.step_result import ErrorCategory, ErrorContext, StepResult
+
 from ultimate_discord_intelligence_bot.tools._base import BaseTool
+
 
 try:
     from playwright.sync_api import Page, sync_playwright

@@ -4,10 +4,24 @@ Test suite for the canonical circuit breaker implementation.
 This module tests all aspects of the consolidated circuit breaker functionality,
 including failure detection, recovery, metrics, and platform API integration.
 """
+
 import asyncio
-import pytest
-from platform.core.circuit_breaker_canonical import PLATFORM_CONFIGS, CircuitBreaker, CircuitBreakerOpenError, CircuitBreakerRegistry, CircuitConfig, CircuitState, circuit_breaker, get_circuit_breaker_registry, get_platform_circuit_breaker, with_circuit_breaker
+from platform.core.circuit_breaker_canonical import (
+    PLATFORM_CONFIGS,
+    CircuitBreaker,
+    CircuitBreakerOpenError,
+    CircuitBreakerRegistry,
+    CircuitConfig,
+    CircuitState,
+    circuit_breaker,
+    get_circuit_breaker_registry,
+    get_platform_circuit_breaker,
+    with_circuit_breaker,
+)
 from platform.core.step_result import StepResult
+
+import pytest
+
 
 class TestCircuitConfig:
     """Test circuit breaker configuration."""
@@ -31,7 +45,21 @@ class TestCircuitConfig:
 
     def test_custom_config(self):
         """Test custom configuration values."""
-        config = CircuitConfig(failure_threshold=3, recovery_timeout=30.0, success_threshold=2, call_timeout=15.0, failure_rate_threshold=0.3, minimum_requests=5, sliding_window_size=50, max_concurrent_calls=5, half_open_max_calls=2, enable_metrics=False, log_failures=False, log_state_changes=False, expected_exceptions=(ValueError, RuntimeError))
+        config = CircuitConfig(
+            failure_threshold=3,
+            recovery_timeout=30.0,
+            success_threshold=2,
+            call_timeout=15.0,
+            failure_rate_threshold=0.3,
+            minimum_requests=5,
+            sliding_window_size=50,
+            max_concurrent_calls=5,
+            half_open_max_calls=2,
+            enable_metrics=False,
+            log_failures=False,
+            log_state_changes=False,
+            expected_exceptions=(ValueError, RuntimeError),
+        )
         assert config.failure_threshold == 3
         assert config.recovery_timeout == 30.0
         assert config.success_threshold == 2
@@ -46,12 +74,14 @@ class TestCircuitConfig:
         assert config.log_state_changes is False
         assert config.expected_exceptions == (ValueError, RuntimeError)
 
+
 class TestCircuitStats:
     """Test circuit breaker statistics."""
 
     def test_initial_stats(self):
         """Test initial statistics values."""
         from platform.core.circuit_breaker_canonical import CircuitStats
+
         stats = CircuitStats()
         assert stats.total_requests == 0
         assert stats.successful_requests == 0
@@ -68,6 +98,7 @@ class TestCircuitStats:
     def test_stats_calculation(self):
         """Test statistics calculation."""
         from platform.core.circuit_breaker_canonical import CircuitStats
+
         stats = CircuitStats()
         stats.total_requests = 10
         stats.successful_requests = 7
@@ -75,19 +106,20 @@ class TestCircuitStats:
         assert stats.failure_rate == 0.3
         assert stats.success_rate == 0.7
 
+
 class TestCircuitBreaker:
     """Test circuit breaker functionality."""
 
     def setup_method(self):
         """Set up test fixtures."""
-        self.circuit = CircuitBreaker('test_circuit')
+        self.circuit = CircuitBreaker("test_circuit")
         self.config = CircuitConfig(failure_threshold=2, recovery_timeout=0.1)
 
     @pytest.mark.asyncio
     async def test_initial_state(self):
         """Test initial circuit breaker state."""
         assert self.circuit.state == CircuitState.CLOSED
-        assert self.circuit.name == 'test_circuit'
+        assert self.circuit.name == "test_circuit"
         assert self.circuit.failure_count == 0
         assert self.circuit.success_count == 0
 
@@ -96,9 +128,10 @@ class TestCircuitBreaker:
         """Test successful function call."""
 
         async def success_func():
-            return 'success'
+            return "success"
+
         result = await self.circuit.call(success_func)
-        assert result == 'success'
+        assert result == "success"
         assert self.circuit.state == CircuitState.CLOSED
         assert self.circuit.stats.successful_requests == 1
         assert self.circuit.stats.total_requests == 1
@@ -108,7 +141,8 @@ class TestCircuitBreaker:
         """Test failed function call."""
 
         async def fail_func():
-            raise ValueError('test error')
+            raise ValueError("test error")
+
         with pytest.raises(ValueError):
             await self.circuit.call(fail_func)
         assert self.circuit.state == CircuitState.CLOSED
@@ -118,10 +152,11 @@ class TestCircuitBreaker:
     @pytest.mark.asyncio
     async def test_circuit_opening(self):
         """Test circuit breaker opening after threshold failures."""
-        circuit = CircuitBreaker('test_circuit', CircuitConfig(failure_threshold=2))
+        circuit = CircuitBreaker("test_circuit", CircuitConfig(failure_threshold=2))
 
         async def fail_func():
-            raise ValueError('test error')
+            raise ValueError("test error")
+
         with pytest.raises(ValueError):
             await circuit.call(fail_func)
         assert circuit.state == CircuitState.CLOSED
@@ -132,10 +167,11 @@ class TestCircuitBreaker:
     @pytest.mark.asyncio
     async def test_circuit_open_error(self):
         """Test circuit breaker open error."""
-        circuit = CircuitBreaker('test_circuit', CircuitConfig(failure_threshold=1))
+        circuit = CircuitBreaker("test_circuit", CircuitConfig(failure_threshold=1))
 
         async def fail_func():
-            raise ValueError('test error')
+            raise ValueError("test error")
+
         with pytest.raises(ValueError):
             await circuit.call(fail_func)
         with pytest.raises(CircuitBreakerOpenError):
@@ -146,44 +182,49 @@ class TestCircuitBreaker:
         """Test fallback function when circuit is open."""
 
         async def fail_func():
-            raise ValueError('test error')
+            raise ValueError("test error")
 
         async def fallback_func():
-            return 'fallback'
-        circuit = CircuitBreaker('test_circuit', CircuitConfig(failure_threshold=1), fallback_func)
+            return "fallback"
+
+        circuit = CircuitBreaker("test_circuit", CircuitConfig(failure_threshold=1), fallback_func)
         with pytest.raises(ValueError):
             await circuit.call(fail_func)
         result = await circuit.call(fail_func)
-        assert result == 'fallback'
+        assert result == "fallback"
 
     @pytest.mark.asyncio
     async def test_half_open_recovery(self):
         """Test circuit breaker recovery through half-open state."""
-        circuit = CircuitBreaker('test_circuit', CircuitConfig(failure_threshold=1, recovery_timeout=0.1, success_threshold=2))
+        circuit = CircuitBreaker(
+            "test_circuit", CircuitConfig(failure_threshold=1, recovery_timeout=0.1, success_threshold=2)
+        )
 
         async def fail_func():
-            raise ValueError('test error')
+            raise ValueError("test error")
 
         async def success_func():
-            return 'success'
+            return "success"
+
         with pytest.raises(ValueError):
             await circuit.call(fail_func)
         await asyncio.sleep(0.2)
         result = await circuit.call(success_func)
-        assert result == 'success'
+        assert result == "success"
         assert circuit.state == CircuitState.HALF_OPEN
         result = await circuit.call(success_func)
-        assert result == 'success'
+        assert result == "success"
         assert circuit.state == CircuitState.CLOSED
 
     @pytest.mark.asyncio
     async def test_timeout_handling(self):
         """Test timeout handling."""
-        circuit = CircuitBreaker('test_circuit', CircuitConfig(call_timeout=0.1))
+        circuit = CircuitBreaker("test_circuit", CircuitConfig(call_timeout=0.1))
 
         async def slow_func():
             await asyncio.sleep(0.2)
-            return 'slow'
+            return "slow"
+
         with pytest.raises(TimeoutError):
             await circuit.call(slow_func)
         assert circuit.stats.timeouts == 1
@@ -193,16 +234,17 @@ class TestCircuitBreaker:
         """Test call_with_result method."""
 
         async def success_func():
-            return StepResult.ok(data='success')
+            return StepResult.ok(data="success")
 
         async def fail_func():
-            return StepResult.fail('test error')
+            return StepResult.fail("test error")
+
         result = await self.circuit.call_with_result(success_func)
         assert result.success
-        assert result.data['data'] == 'success'
+        assert result.data["data"] == "success"
         result = await self.circuit.call_with_result(fail_func)
         assert not result.success
-        assert 'test error' in result.error
+        assert "test error" in result.error
 
     def test_force_open_close(self):
         """Test manual circuit control."""
@@ -225,12 +267,13 @@ class TestCircuitBreaker:
     def test_get_health_status(self):
         """Test health status retrieval."""
         status = self.circuit.get_health_status()
-        assert 'name' in status
-        assert 'state' in status
-        assert 'stats' in status
-        assert 'config' in status
-        assert status['name'] == 'test_circuit'
-        assert status['state'] == CircuitState.CLOSED.value
+        assert "name" in status
+        assert "state" in status
+        assert "stats" in status
+        assert "config" in status
+        assert status["name"] == "test_circuit"
+        assert status["state"] == CircuitState.CLOSED.value
+
 
 class TestCircuitBreakerRegistry:
     """Test circuit breaker registry."""
@@ -241,44 +284,44 @@ class TestCircuitBreakerRegistry:
 
     def test_get_circuit_breaker_sync(self):
         """Test synchronous circuit breaker retrieval."""
-        circuit1 = self.registry.get_circuit_breaker_sync('test1')
-        circuit2 = self.registry.get_circuit_breaker_sync('test1')
-        circuit3 = self.registry.get_circuit_breaker_sync('test2')
+        circuit1 = self.registry.get_circuit_breaker_sync("test1")
+        circuit2 = self.registry.get_circuit_breaker_sync("test1")
+        circuit3 = self.registry.get_circuit_breaker_sync("test2")
         assert circuit1 is circuit2
         assert circuit1 is not circuit3
 
     @pytest.mark.asyncio
     async def test_get_circuit_breaker_async(self):
         """Test asynchronous circuit breaker retrieval."""
-        circuit1 = await self.registry.get_circuit_breaker('test1')
-        circuit2 = await self.registry.get_circuit_breaker('test1')
-        circuit3 = await self.registry.get_circuit_breaker('test2')
+        circuit1 = await self.registry.get_circuit_breaker("test1")
+        circuit2 = await self.registry.get_circuit_breaker("test1")
+        circuit3 = await self.registry.get_circuit_breaker("test2")
         assert circuit1 is circuit2
         assert circuit1 is not circuit3
 
     def test_get_all_stats(self):
         """Test getting statistics for all circuit breakers."""
-        self.registry.get_circuit_breaker_sync('test1')
-        self.registry.get_circuit_breaker_sync('test2')
+        self.registry.get_circuit_breaker_sync("test1")
+        self.registry.get_circuit_breaker_sync("test2")
         stats = self.registry.get_all_stats()
         assert len(stats) == 2
-        assert 'test1' in stats
-        assert 'test2' in stats
+        assert "test1" in stats
+        assert "test2" in stats
 
     def test_get_health_status(self):
         """Test getting health status for all circuit breakers."""
-        self.registry.get_circuit_breaker_sync('test1')
-        self.registry.get_circuit_breaker_sync('test2')
+        self.registry.get_circuit_breaker_sync("test1")
+        self.registry.get_circuit_breaker_sync("test2")
         health = self.registry.get_health_status()
-        assert 'total_circuit_breakers' in health
-        assert 'overall_health' in health
-        assert health['total_circuit_breakers'] == 2
-        assert health['overall_health'] == 'healthy'
+        assert "total_circuit_breakers" in health
+        assert "overall_health" in health
+        assert health["total_circuit_breakers"] == 2
+        assert health["overall_health"] == "healthy"
 
     def test_reset_all(self):
         """Test resetting all circuit breakers."""
-        circuit1 = self.registry.get_circuit_breaker_sync('test1')
-        circuit2 = self.registry.get_circuit_breaker_sync('test2')
+        circuit1 = self.registry.get_circuit_breaker_sync("test1")
+        circuit2 = self.registry.get_circuit_breaker_sync("test2")
         circuit1.failure_count = 5
         circuit2.failure_count = 3
         self.registry.reset_all()
@@ -287,11 +330,12 @@ class TestCircuitBreakerRegistry:
 
     def test_force_open_all(self):
         """Test forcing all circuit breakers open."""
-        circuit1 = self.registry.get_circuit_breaker_sync('test1')
-        circuit2 = self.registry.get_circuit_breaker_sync('test2')
+        circuit1 = self.registry.get_circuit_breaker_sync("test1")
+        circuit2 = self.registry.get_circuit_breaker_sync("test2")
         self.registry.force_open_all()
         assert circuit1.state == CircuitState.OPEN
         assert circuit2.state == CircuitState.OPEN
+
 
 class TestDecorators:
     """Test circuit breaker decorators."""
@@ -299,37 +343,41 @@ class TestDecorators:
     def test_circuit_breaker_decorator_sync(self):
         """Test circuit breaker decorator for sync functions."""
 
-        @circuit_breaker('test_sync')
+        @circuit_breaker("test_sync")
         def sync_func():
-            return 'sync_result'
+            return "sync_result"
+
         result = sync_func()
-        assert result == 'sync_result'
+        assert result == "sync_result"
 
     @pytest.mark.asyncio
     async def test_circuit_breaker_decorator_async(self):
         """Test circuit breaker decorator for async functions."""
 
-        @circuit_breaker('test_async')
+        @circuit_breaker("test_async")
         async def async_func():
-            return 'async_result'
+            return "async_result"
+
         result = await async_func()
-        assert result == 'async_result'
+        assert result == "async_result"
 
     def test_with_circuit_breaker_decorator(self):
         """Test with_circuit_breaker decorator."""
 
-        @with_circuit_breaker('test_with', failure_threshold=1)
+        @with_circuit_breaker("test_with", failure_threshold=1)
         def test_func():
-            raise ValueError('test error')
+            raise ValueError("test error")
+
         with pytest.raises(ValueError):
             test_func()
+
 
 class TestPlatformConfigurations:
     """Test platform-specific configurations."""
 
     def test_platform_configs_exist(self):
         """Test that all platform configurations exist."""
-        expected_platforms = ['youtube', 'twitch', 'tiktok', 'instagram', 'x', 'openrouter', 'qdrant']
+        expected_platforms = ["youtube", "twitch", "tiktok", "instagram", "x", "openrouter", "qdrant"]
         for platform in expected_platforms:
             assert platform in PLATFORM_CONFIGS
             config = PLATFORM_CONFIGS[platform]
@@ -337,27 +385,29 @@ class TestPlatformConfigurations:
 
     def test_platform_config_values(self):
         """Test platform configuration values."""
-        youtube_config = PLATFORM_CONFIGS['youtube']
+        youtube_config = PLATFORM_CONFIGS["youtube"]
         assert youtube_config.failure_threshold == 3
         assert youtube_config.recovery_timeout == 30.0
         assert youtube_config.call_timeout == 15.0
 
     def test_get_platform_circuit_breaker(self):
         """Test getting platform-specific circuit breaker."""
-        breaker = get_platform_circuit_breaker('youtube')
-        assert breaker.name == 'youtube_api'
+        breaker = get_platform_circuit_breaker("youtube")
+        assert breaker.name == "youtube_api"
         assert breaker.config.failure_threshold == 3
 
     def test_get_platform_circuit_breaker_with_fallback(self):
         """Test getting platform circuit breaker with fallback."""
 
         def fallback_func():
-            return 'fallback'
+            return "fallback"
+
         registry = get_circuit_breaker_registry()
         registry.circuit_breakers.clear()
-        breaker = get_platform_circuit_breaker('youtube', fallback_func)
-        assert breaker.name == 'youtube_api'
+        breaker = get_platform_circuit_breaker("youtube", fallback_func)
+        assert breaker.name == "youtube_api"
         assert breaker.fallback is not None
+
 
 class TestGlobalRegistry:
     """Test global circuit breaker registry."""
@@ -371,10 +421,11 @@ class TestGlobalRegistry:
     def test_global_registry_persistence(self):
         """Test that global registry persists across calls."""
         registry = get_circuit_breaker_registry()
-        circuit = registry.get_circuit_breaker_sync('global_test')
+        circuit = registry.get_circuit_breaker_sync("global_test")
         registry2 = get_circuit_breaker_registry()
-        circuit2 = registry2.get_circuit_breaker_sync('global_test')
+        circuit2 = registry2.get_circuit_breaker_sync("global_test")
         assert circuit is circuit2
+
 
 class TestIntegration:
     """Integration tests for circuit breaker."""
@@ -382,13 +433,16 @@ class TestIntegration:
     @pytest.mark.asyncio
     async def test_full_circuit_breaker_cycle(self):
         """Test complete circuit breaker cycle: closed -> open -> half-open -> closed."""
-        circuit = CircuitBreaker('integration_test', CircuitConfig(failure_threshold=2, recovery_timeout=0.1, success_threshold=2))
+        circuit = CircuitBreaker(
+            "integration_test", CircuitConfig(failure_threshold=2, recovery_timeout=0.1, success_threshold=2)
+        )
 
         async def fail_func():
-            raise ValueError('integration error')
+            raise ValueError("integration error")
 
         async def success_func():
-            return 'integration success'
+            return "integration success"
+
         assert circuit.state == CircuitState.CLOSED
         with pytest.raises(ValueError):
             await circuit.call(fail_func)
@@ -398,23 +452,26 @@ class TestIntegration:
         assert circuit.state == CircuitState.OPEN
         await asyncio.sleep(0.2)
         result = await circuit.call(success_func)
-        assert result == 'integration success'
+        assert result == "integration success"
         assert circuit.state == CircuitState.HALF_OPEN
         result = await circuit.call(success_func)
-        assert result == 'integration success'
+        assert result == "integration success"
         assert circuit.state == CircuitState.CLOSED
 
     @pytest.mark.asyncio
     async def test_concurrent_calls(self):
         """Test concurrent calls with circuit breaker."""
-        circuit = CircuitBreaker('concurrent_test', CircuitConfig(max_concurrent_calls=2))
+        circuit = CircuitBreaker("concurrent_test", CircuitConfig(max_concurrent_calls=2))
 
         async def slow_func():
             await asyncio.sleep(0.1)
-            return 'slow_result'
+            return "slow_result"
+
         tasks = [circuit.call(slow_func) for _ in range(5)]
         results = await asyncio.gather(*tasks)
-        assert all((result == 'slow_result' for result in results))
+        assert all(result == "slow_result" for result in results)
         assert circuit.stats.successful_requests == 5
-if __name__ == '__main__':
+
+
+if __name__ == "__main__":
     pytest.main([__file__])

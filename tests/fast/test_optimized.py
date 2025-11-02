@@ -3,13 +3,17 @@
 This module contains fast tests that run in <5 seconds with proper mocking
 and in-memory databases for optimal performance.
 """
+
 import time
+from platform.core.step_result import StepResult
 from unittest.mock import patch
+
 import pytest
+
 from ultimate_discord_intelligence_bot.crew_modular import UltimateDiscordIntelligenceBotCrew
 from ultimate_discord_intelligence_bot.main import create_app
-from platform.core.step_result import StepResult
 from ultimate_discord_intelligence_bot.tenancy.context import TenantContext
+
 
 class TestFastOptimized:
     """Optimized fast test cases."""
@@ -27,18 +31,24 @@ class TestFastOptimized:
     @pytest.fixture
     def test_tenant_context(self):
         """Create test tenant context."""
-        return TenantContext(tenant='test_tenant', workspace='test_workspace')
+        return TenantContext(tenant="test_tenant", workspace="test_workspace")
 
     @pytest.fixture
     def mock_services(self):
         """Create mock services for fast testing."""
-        with patch('ultimate_discord_intelligence_bot.services.memory_service.MemoryService') as mock_memory:
-            with patch('ultimate_discord_intelligence_bot.services.prompt_engine.PromptEngine') as mock_prompt:
-                with patch('ultimate_discord_intelligence_bot.services.openrouter_service.OpenRouterService') as mock_openrouter:
-                    mock_memory.return_value.store_content.return_value = StepResult.ok(data={'id': 'test_id'})
-                    mock_prompt.return_value.generate_prompt.return_value = StepResult.ok(data={'prompt': 'Generated prompt'})
-                    mock_openrouter.return_value.generate_response.return_value = StepResult.ok(data={'response': 'Generated response'})
-                    yield {'memory': mock_memory, 'prompt': mock_prompt, 'openrouter': mock_openrouter}
+        with patch("ultimate_discord_intelligence_bot.services.memory_service.MemoryService") as mock_memory:
+            with patch("ultimate_discord_intelligence_bot.services.prompt_engine.PromptEngine") as mock_prompt:
+                with patch(
+                    "ultimate_discord_intelligence_bot.services.openrouter_service.OpenRouterService"
+                ) as mock_openrouter:
+                    mock_memory.return_value.store_content.return_value = StepResult.ok(data={"id": "test_id"})
+                    mock_prompt.return_value.generate_prompt.return_value = StepResult.ok(
+                        data={"prompt": "Generated prompt"}
+                    )
+                    mock_openrouter.return_value.generate_response.return_value = StepResult.ok(
+                        data={"response": "Generated response"}
+                    )
+                    yield {"memory": mock_memory, "prompt": mock_prompt, "openrouter": mock_openrouter}
 
     @pytest.mark.fast
     def test_crew_initialization(self, crew):
@@ -81,9 +91,9 @@ class TestFastOptimized:
     def test_step_result_creation(self):
         """Test StepResult creation is fast."""
         start_time = time.time()
-        success_result = StepResult.ok(data={'test': 'data'})
-        error_result = StepResult.fail(error='test error')
-        skip_result = StepResult.skip(reason='test skip')
+        success_result = StepResult.ok(data={"test": "data"})
+        error_result = StepResult.fail(error="test error")
+        skip_result = StepResult.skip(reason="test skip")
         end_time = time.time()
         assert end_time - start_time < 0.1
         assert success_result.success
@@ -94,19 +104,19 @@ class TestFastOptimized:
     def test_tenant_context_creation(self):
         """Test tenant context creation is fast."""
         start_time = time.time()
-        context = TenantContext(tenant='test_tenant', workspace='test_workspace')
+        context = TenantContext(tenant="test_tenant", workspace="test_workspace")
         end_time = time.time()
         assert end_time - start_time < 0.1
-        assert context.tenant == 'test_tenant'
-        assert context.workspace == 'test_workspace'
+        assert context.tenant == "test_tenant"
+        assert context.workspace == "test_workspace"
 
     @pytest.mark.fast
     def test_mock_services_performance(self, mock_services):
         """Test mock services perform fast."""
         start_time = time.time()
-        memory_result = mock_services['memory'].return_value.store_content('test')
-        prompt_result = mock_services['prompt'].return_value.generate_prompt('test')
-        openrouter_result = mock_services['openrouter'].return_value.generate_response('test')
+        memory_result = mock_services["memory"].return_value.store_content("test")
+        prompt_result = mock_services["prompt"].return_value.generate_prompt("test")
+        openrouter_result = mock_services["openrouter"].return_value.generate_response("test")
         end_time = time.time()
         assert end_time - start_time < 0.1
         assert memory_result.success
@@ -118,6 +128,7 @@ class TestFastOptimized:
         """Test lazy loading performance."""
         start_time = time.time()
         from ultimate_discord_intelligence_bot.lazy_loading import get_lazy_loader
+
         lazy_loader = get_lazy_loader()
         end_time = time.time()
         assert end_time - start_time < 0.1
@@ -128,6 +139,7 @@ class TestFastOptimized:
         """Test configuration loading is fast."""
         start_time = time.time()
         from ultimate_discord_intelligence_bot.config import BaseConfig, FeatureFlags, PathConfig
+
         base_config = BaseConfig.from_env()
         feature_flags = FeatureFlags.from_env()
         path_config = PathConfig.from_env()
@@ -141,7 +153,13 @@ class TestFastOptimized:
     def test_tool_import_performance(self):
         """Test tool import performance."""
         start_time = time.time()
-        from ultimate_discord_intelligence_bot.tools import EnhancedAnalysisTool, FactCheckTool, MemoryStorageTool, SystemStatusTool
+        from ultimate_discord_intelligence_bot.tools import (
+            EnhancedAnalysisTool,
+            FactCheckTool,
+            MemoryStorageTool,
+            SystemStatusTool,
+        )
+
         end_time = time.time()
         assert end_time - start_time < 0.5
         assert SystemStatusTool is not None
@@ -154,18 +172,19 @@ class TestFastOptimized:
         """Test error handling performance."""
         start_time = time.time()
         try:
-            raise ValueError('Test error')
+            raise ValueError("Test error")
         except ValueError as e:
             result = StepResult.fail(error=str(e))
         end_time = time.time()
         assert end_time - start_time < 0.1
         assert not result.success
-        assert 'Test error' in result.error
+        assert "Test error" in result.error
 
     @pytest.mark.fast
     def test_memory_usage_optimization(self):
         """Test memory usage optimization."""
         import sys
+
         start_time = time.time()
         sys.getsizeof([])
         test_data = list(range(1000))
@@ -179,12 +198,14 @@ class TestFastOptimized:
         """Test concurrent operations performance."""
         import threading
         import time
+
         start_time = time.time()
         results = []
 
         def worker():
-            result = StepResult.ok(data={'worker': 'test'})
+            result = StepResult.ok(data={"worker": "test"})
             results.append(result)
+
         threads = []
         for _ in range(10):
             thread = threading.Thread(target=worker)
@@ -195,16 +216,16 @@ class TestFastOptimized:
         end_time = time.time()
         assert end_time - start_time < 1.0
         assert len(results) == 10
-        assert all((result.success for result in results))
+        assert all(result.success for result in results)
 
     @pytest.mark.fast
     def test_fast_test_suite_performance(self):
         """Test that the fast test suite itself runs quickly."""
         start_time = time.time()
-        test_data = {'fast': True, 'optimized': True}
+        test_data = {"fast": True, "optimized": True}
         result = StepResult.ok(data=test_data)
         end_time = time.time()
         assert end_time - start_time < 0.1
         assert result.success
-        assert result.data['fast']
-        assert result.data['optimized']
+        assert result.data["fast"]
+        assert result.data["optimized"]
