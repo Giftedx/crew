@@ -191,3 +191,6 @@ Clean 3-layer architecture with:
 - **Clear separation**: Platform → Domain → App
 - **Each framework in single canonical location**
 - **Logical organization by functionality**
+
+
+

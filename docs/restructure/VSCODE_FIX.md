@@ -34,7 +34,7 @@ The file `src/core/http_utils.py` was deleted during Phase 8 as part of the lega
 
 ## If VS Code Still Shows the Error
 
-1. **Reload VS Code Window**: 
+1. **Reload VS Code Window**:
    - `Ctrl+Shift+P` → "Developer: Reload Window"
    - This clears VS Code's file cache
 
@@ -87,6 +87,3 @@ This should succeed without errors.
 ✅ **VS Code settings updated**  
 ✅ **Documentation updated**  
 ⚠️ **VS Code may need window reload** (normal after file deletions)
-
-
-
