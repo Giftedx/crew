@@ -18,32 +18,21 @@ Typing & Optional Dependency Notes:
     Starlette is absent. This keeps the public surface identical while avoiding
     ``type: ignore`` assignments to imported symbols.
 """
-
 from __future__ import annotations
-
 import logging
 import os
 import time
 from collections.abc import Awaitable, Callable
 from typing import Any
-
 from fastapi import FastAPI, Request, Response
-from obs import metrics
+from platform.observability import metrics
 from server import middleware_shim
-
-
-## Optional Starlette integration ---------------------------------------------------
-# We attempted to hide imports behind TYPE_CHECKING previously which caused the
-# runtime to fall back to a dummy object even when Starlette WAS available.
-# That broke FastAPI's `add_middleware` because the created instance was not an
-# ASGI callable (no `__call__`). We now import at runtime and only provide a
-# lightweight fallback when Starlette truly is absent.
-try:  # pragma: no cover - starlette is present in normal test/runtime envs
+try:
     from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
     from starlette.requests import Request as StarletteRequest
-except Exception:  # pragma: no cover - minimal environments without starlette
+except Exception:
 
-    class BaseHTTPMiddleware:  # type: ignore[no-redef]
+    class BaseHTTPMiddleware:
         """Minimal stand-in implementing Starlette's interface enough for tests.
 
         Provides an ASGI callable that wraps a `dispatch` coroutine method.
@@ -53,32 +42,28 @@ except Exception:  # pragma: no cover - minimal environments without starlette
             self.app = app
 
         async def __call__(self, scope: dict, receive: Callable, send: Callable):
-            if scope.get("type") != "http":  # pass through non-http
+            if scope.get('type') != 'http':
                 await self.app(scope, receive, send)
                 return
             request = Request(scope, receive=receive)
 
             async def call_next(req: Request) -> Response:
                 new_scope = dict(scope)
-                req_scope = getattr(req, "scope", {})
+                req_scope = getattr(req, 'scope', {})
                 if isinstance(req_scope, dict):
-                    new_scope.update({k: v for k, v in req_scope.items() if k in {"path", "raw_path", "query_string"}})
-                    if "method" in req_scope:
-                        new_scope["method"] = req_scope["method"]
+                    new_scope.update({k: v for k, v in req_scope.items() if k in {'path', 'raw_path', 'query_string'}})
+                    if 'method' in req_scope:
+                        new_scope['method'] = req_scope['method']
                 responder = await self.app(new_scope, receive, send)
                 return responder
-
             response = await self.dispatch(request, call_next)
-            # If dispatch returned a Response we need to send it (Starlette would handle this)
             if isinstance(response, Response):
                 await response(scope, receive, send)
 
-        async def dispatch(self, request: Request, call_next: Callable):  # pragma: no cover - overridden
+        async def dispatch(self, request: Request, call_next: Callable):
             return await call_next(request)
-
-    StarletteRequest = Request  # type: ignore
-    RequestResponseEndpoint = Callable[[Request], Awaitable[Response]]  # type: ignore
-
+    StarletteRequest = Request
+    RequestResponseEndpoint = Callable[[Request], Awaitable[Response]]
 
 class FixedWindowRateLimiter(BaseHTTPMiddleware):
     """Simple fixed-window rate limiter middleware.
@@ -88,79 +73,53 @@ class FixedWindowRateLimiter(BaseHTTPMiddleware):
     """
 
     def __init__(self, app: Any, burst: int) -> None:
-        # Always attempt super(); fallback already ensures compat
-        try:  # pragma: no cover - defensive
+        try:
             super().__init__(app)
-        except Exception:  # pragma: no cover
+        except Exception:
             self.app = app
         self._burst = max(1, burst)
         self._remaining = self._burst
         self._reset = time.monotonic() + 1.0
 
-    async def dispatch(
-        self,
-        request: Request,
-        call_next: Callable[[Request], Awaitable[Response]],
-    ) -> Any:
+    async def dispatch(self, request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Any:
         now = time.monotonic()
-        # Use the concrete URL path so metrics labels match tests (e.g., '/rltest')
         raw_path = request.url.path
-        # Determine metrics path: prefer app.state set by router registration
-        _app = getattr(request, "app", None)
-        _state = getattr(_app, "state", None) if _app else None
+        _app = getattr(request, 'app', None)
+        _state = getattr(_app, 'state', None) if _app else None
         metrics_path = None
         try:
-            metrics_path = getattr(_state, "metrics_path", None) if _state else None
+            metrics_path = getattr(_state, 'metrics_path', None) if _state else None
         except Exception:
             metrics_path = None
         if not metrics_path:
-            metrics_path = os.getenv("PROMETHEUS_ENDPOINT_PATH") or "/metrics"
-        # Exclusions (exact or prefix for metrics) — perform BEFORE any window accounting
-        mp_norm = str(metrics_path).rstrip("/") or "/metrics"
-        rp_norm = raw_path.rstrip("/") or raw_path
-        if (
-            request.scope.get("_skip_rate_limit")
-            or rp_norm == mp_norm
-            or rp_norm == "/health"
-            or rp_norm.startswith(mp_norm + "/")
-        ):
+            metrics_path = os.getenv('PROMETHEUS_ENDPOINT_PATH') or '/metrics'
+        mp_norm = str(metrics_path).rstrip('/') or '/metrics'
+        rp_norm = raw_path.rstrip('/') or raw_path
+        if request.scope.get('_skip_rate_limit') or rp_norm == mp_norm or rp_norm == '/health' or rp_norm.startswith(mp_norm + '/'):
             return await call_next(request)
-        # Window reset
         if now >= self._reset:
             self._remaining = self._burst
             self._reset = now + 1.0
-        # Enforce
         if self._remaining <= 0:
             try:
-                # Label strictly with the incoming request method; tests expect GET here
-                meth = getattr(request, "method", "GET")
+                meth = getattr(request, 'method', 'GET')
                 metrics.RATE_LIMIT_REJECTIONS.labels(rp_norm, str(meth).upper()).inc()
-            except Exception as exc:  # pragma: no cover - defensive
-                logging.debug("rate limit metrics error: %s", exc)
-            return Response(status_code=429, content="Rate limit exceeded")
+            except Exception as exc:
+                logging.debug('rate limit metrics error: %s', exc)
+            return Response(status_code=429, content='Rate limit exceeded')
         self._remaining -= 1
         return await call_next(request)
 
-
 def add_rate_limit_middleware(app: FastAPI) -> None:
-    enable = os.getenv("ENABLE_RATE_LIMITING", "0").lower() in (
-        "1",
-        "true",
-        "yes",
-        "on",
-    )
+    enable = os.getenv('ENABLE_RATE_LIMITING', '0').lower() in ('1', 'true', 'yes', 'on')
     if not enable:
         return
     try:
-        burst = int(os.getenv("RATE_LIMIT_BURST", os.getenv("RATE_LIMIT_RPS", "10")))
+        burst = int(os.getenv('RATE_LIMIT_BURST', os.getenv('RATE_LIMIT_RPS', '10')))
     except Exception:
         burst = 10
-    # Ensure add_middleware exists on shim FastAPI
     middleware_shim.install_middleware_support()
     from typing import cast as _cast
-
-    app_any = _cast("Any", app)
+    app_any = _cast('Any', app)
     app_any.add_middleware(FixedWindowRateLimiter, burst=burst)
-
-
-__all__ = ["add_rate_limit_middleware"]
+__all__ = ['add_rate_limit_middleware']

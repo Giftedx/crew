@@ -3,19 +3,12 @@
 Defines the interface that all orchestration strategies must implement,
 enabling dynamic strategy selection and runtime swapping.
 """
-
 from __future__ import annotations
-
 import logging
 from typing import TYPE_CHECKING, Any, Protocol
-
-
 if TYPE_CHECKING:
-    from ultimate_discord_intelligence_bot.step_result import StepResult
-
-
+    from platform.core.step_result import StepResult
 logger = logging.getLogger(__name__)
-
 
 class OrchestrationStrategyProtocol(Protocol):
     """Protocol interface for orchestration strategies.
@@ -23,18 +16,10 @@ class OrchestrationStrategyProtocol(Protocol):
     All orchestration strategies must implement this protocol to enable
     dynamic loading and execution through the OrchestrationFacade.
     """
+    name: str
+    description: str
 
-    name: str  # Strategy identifier
-    description: str  # Human-readable description
-
-    async def execute_workflow(
-        self,
-        url: str,
-        depth: str,
-        tenant: str,
-        workspace: str,
-        **kwargs: Any,
-    ) -> StepResult:
+    async def execute_workflow(self, url: str, depth: str, tenant: str, workspace: str, **kwargs: Any) -> StepResult:
         """Execute intelligence workflow with this strategy.
 
         Args:
@@ -57,16 +42,15 @@ class OrchestrationStrategyProtocol(Protocol):
         """Cleanup strategy resources (optional hook)."""
         ...
 
-
 class StrategyRegistry:
     """Registry for orchestration strategies."""
 
     def __init__(self):
         """Initialize strategy registry."""
         self._strategies: dict[str, OrchestrationStrategyProtocol] = {}
-        logger.info("Strategy registry initialized")
+        logger.info('Strategy registry initialized')
 
-    def register(self, strategy: type | OrchestrationStrategyProtocol, name: str | None = None) -> None:
+    def register(self, strategy: type | OrchestrationStrategyProtocol, name: str | None=None) -> None:
         """Register a strategy.
 
         Args:
@@ -76,15 +60,13 @@ class StrategyRegistry:
         Raises:
             ValueError: If strategy lacks 'name' attribute and no name provided
         """
-        # Extract name from strategy if not provided
         if name is None:
-            if hasattr(strategy, "name"):
+            if hasattr(strategy, 'name'):
                 name = strategy.name
             else:
                 raise ValueError(f"Strategy {strategy} has no 'name' attribute and no name provided")
-
         self._strategies[name] = strategy
-        logger.info(f"Registered orchestration strategy: {name}")
+        logger.info(f'Registered orchestration strategy: {name}')
 
     def get(self, name: str) -> OrchestrationStrategyProtocol | None:
         """Get strategy by name.
@@ -98,11 +80,8 @@ class StrategyRegistry:
         strategy = self._strategies.get(name)
         if strategy is None:
             return None
-
-        # If it's a class, instantiate it
         if isinstance(strategy, type):
             return strategy()
-
         return strategy
 
     def list_strategies(self) -> dict[str, str]:
@@ -113,11 +92,10 @@ class StrategyRegistry:
         """
         result = {}
         for name, strategy in self._strategies.items():
-            # Handle both class and instance
-            if hasattr(strategy, "description"):
+            if hasattr(strategy, 'description'):
                 result[name] = strategy.description
             else:
-                result[name] = "No description available"
+                result[name] = 'No description available'
         return result
 
     def unregister(self, name: str) -> bool:
@@ -131,14 +109,10 @@ class StrategyRegistry:
         """
         if name in self._strategies:
             del self._strategies[name]
-            logger.info(f"Unregistered orchestration strategy: {name}")
+            logger.info(f'Unregistered orchestration strategy: {name}')
             return True
         return False
-
-
-# Global registry instance
 _global_registry: StrategyRegistry | None = None
-
 
 def get_strategy_registry() -> StrategyRegistry:
     """Get global strategy registry.
@@ -150,10 +124,4 @@ def get_strategy_registry() -> StrategyRegistry:
     if _global_registry is None:
         _global_registry = StrategyRegistry()
     return _global_registry
-
-
-__all__ = [
-    "OrchestrationStrategyProtocol",
-    "StrategyRegistry",
-    "get_strategy_registry",
-]
+__all__ = ['OrchestrationStrategyProtocol', 'StrategyRegistry', 'get_strategy_registry']

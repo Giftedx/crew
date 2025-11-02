@@ -1,12 +1,8 @@
 """Index transcripts into timestamped chunks and retrieve context."""
-
 from __future__ import annotations
-
-from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
-from ultimate_discord_intelligence_bot.step_result import StepResult
-
+from platform.observability.metrics import get_metrics
+from platform.core.step_result import StepResult
 from ._base import BaseTool
-
 
 class TranscriptIndexTool(BaseTool[StepResult]):
     """Store transcript chunks for later context lookup.
@@ -18,20 +14,16 @@ class TranscriptIndexTool(BaseTool[StepResult]):
         skip: when provided transcript is empty or whitespace
         fail: unexpected exception while indexing
     """
-
-    name: str = "Transcript Index Tool"
-    description: str = "Index transcripts into timestamped windows and fetch surrounding context."
+    name: str = 'Transcript Index Tool'
+    description: str = 'Index transcripts into timestamped windows and fetch surrounding context.'
     from typing import Any, ClassVar
+    model_config: ClassVar[dict[str, Any]] = {'extra': 'allow'}
 
-    model_config: ClassVar[dict[str, Any]] = {"extra": "allow"}
-
-    def __init__(self, window: float = 30.0):
+    def __init__(self, window: float=30.0):
         super().__init__()
         self.window = window
-        # indices maps video_id -> list of (start_ts, end_ts, text)
         self.indices: dict[str, list[tuple[float, float, str]]] = {}
         self._metrics = get_metrics()
-        # Shared context populated by orchestrator
         self._shared_context: dict[str, any] = {}
 
     def update_context(self, context_data: dict[str, any]) -> None:
@@ -44,12 +36,9 @@ class TranscriptIndexTool(BaseTool[StepResult]):
         Empty/whitespace-only transcripts are treated as a skip (recoverable situation).
         """
         try:
-            if not transcript or not transcript.strip():  # treat empty input as skipped OK
-                result = StepResult.skip(reason="empty transcript")
-                self._metrics.counter(
-                    "tool_runs_total",
-                    labels={"tool": "transcript_index", "outcome": "skipped"},
-                ).inc()
+            if not transcript or not transcript.strip():
+                result = StepResult.skip(reason='empty transcript')
+                self._metrics.counter('tool_runs_total', labels={'tool': 'transcript_index', 'outcome': 'skipped'}).inc()
                 return result
             lines = transcript.splitlines()
             chunks: list[tuple[float, float, str]] = []
@@ -59,19 +48,13 @@ class TranscriptIndexTool(BaseTool[StepResult]):
                 chunks.append((start, end, line))
             self.indices[video_id] = chunks
             result = StepResult.ok(chunks=len(chunks))
-            self._metrics.counter(
-                "tool_runs_total",
-                labels={"tool": "transcript_index", "outcome": "success"},
-            ).inc()
+            self._metrics.counter('tool_runs_total', labels={'tool': 'transcript_index', 'outcome': 'success'}).inc()
             return result
-        except Exception as exc:  # pragma: no cover - defensive catch
-            self._metrics.counter(
-                "tool_runs_total",
-                labels={"tool": "transcript_index", "outcome": "error"},
-            ).inc()
+        except Exception as exc:
+            self._metrics.counter('tool_runs_total', labels={'tool': 'transcript_index', 'outcome': 'error'}).inc()
             return StepResult.fail(error=str(exc))
 
-    def get_context(self, video_id: str, ts: float, window: float = 45.0) -> str:
+    def get_context(self, video_id: str, ts: float, window: float=45.0) -> str:
         """Return transcript text around a timestamp within a window."""
         chunks = self.indices.get(video_id, [])
         context: list[str] = []
@@ -81,16 +64,13 @@ class TranscriptIndexTool(BaseTool[StepResult]):
             if start > ts + window:
                 break
             context.append(text)
-        return " ".join(context)
+        return ' '.join(context)
 
-    # expose indexing via BaseTool run
-    def _run(self, transcript: str, video_id: str | None = None) -> StepResult:
+    def _run(self, transcript: str, video_id: str | None=None) -> StepResult:
         """Run indexing with optional video_id (falls back to shared context)."""
-        # Get video_id from shared context if not provided
         if not video_id:
-            video_id = self._shared_context.get("video_id") or self._shared_context.get("url", "unknown")
-
+            video_id = self._shared_context.get('video_id') or self._shared_context.get('url', 'unknown')
         return self.index_transcript(transcript, video_id)
 
-    def run(self, transcript: str, video_id: str | None = None) -> StepResult:  # pragma: no cover - thin wrapper
+    def run(self, transcript: str, video_id: str | None=None) -> StepResult:
         return self._run(transcript, video_id)

@@ -3,36 +3,27 @@
 This module defines the protocols and data classes that form the foundation
 of the crew execution system. All implementations must conform to these interfaces.
 """
-
 from __future__ import annotations
-
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import TYPE_CHECKING, Any
-
-
 if TYPE_CHECKING:
-    from ultimate_discord_intelligence_bot.step_result import StepResult
-
+    from platform.core.step_result import StepResult
 
 class CrewExecutionMode(Enum):
     """Execution modes for crew tasks."""
-
-    SEQUENTIAL = "sequential"
-    PARALLEL = "parallel"
-    HIERARCHICAL = "hierarchical"
-    ADAPTIVE = "adaptive"
-
+    SEQUENTIAL = 'sequential'
+    PARALLEL = 'parallel'
+    HIERARCHICAL = 'hierarchical'
+    ADAPTIVE = 'adaptive'
 
 class CrewPriority(Enum):
     """Priority levels for crew tasks."""
-
     LOW = 0
     NORMAL = 1
     HIGH = 2
     CRITICAL = 3
-
 
 @dataclass
 class CrewConfig:
@@ -41,37 +32,26 @@ class CrewConfig:
     This dataclass encapsulates all configuration needed for crew execution,
     including tenant context, performance budgets, and feature flags.
     """
-
     tenant_id: str
-    """Tenant identifier for multi-tenant isolation."""
-
+    'Tenant identifier for multi-tenant isolation.'
     enable_cache: bool = True
-    """Whether to enable caching for this execution."""
-
+    'Whether to enable caching for this execution.'
     enable_telemetry: bool = True
-    """Whether to emit telemetry and metrics."""
-
+    'Whether to emit telemetry and metrics.'
     timeout_seconds: int = 300
-    """Maximum execution time in seconds."""
-
+    'Maximum execution time in seconds.'
     max_retries: int = 3
-    """Maximum number of retry attempts on failure."""
-
+    'Maximum number of retry attempts on failure.'
     quality_threshold: float = 0.7
-    """Minimum quality score threshold (0.0-1.0)."""
-
+    'Minimum quality score threshold (0.0-1.0).'
     execution_mode: CrewExecutionMode = CrewExecutionMode.SEQUENTIAL
-    """Execution mode for agent coordination."""
-
+    'Execution mode for agent coordination.'
     enable_early_exit: bool = True
-    """Whether to enable early exit optimizations."""
-
+    'Whether to enable early exit optimizations.'
     enable_fallback: bool = True
-    """Whether to enable fallback strategies on failure."""
-
+    'Whether to enable fallback strategies on failure.'
     metadata: dict[str, Any] = field(default_factory=dict)
-    """Additional metadata for the execution."""
-
+    'Additional metadata for the execution.'
 
 @dataclass
 class CrewTask:
@@ -80,43 +60,33 @@ class CrewTask:
     This dataclass represents a single unit of work that will be
     processed by the crew execution system.
     """
-
     task_id: str
-    """Unique identifier for this task."""
-
+    'Unique identifier for this task.'
     task_type: str
-    """Type/category of the task (e.g., 'content_analysis', 'research')."""
-
+    "Type/category of the task (e.g., 'content_analysis', 'research')."
     description: str
-    """Human-readable description of what the task should accomplish."""
-
+    'Human-readable description of what the task should accomplish.'
     inputs: dict[str, Any]
-    """Input data and parameters for the task."""
-
+    'Input data and parameters for the task.'
     agent_requirements: list[str] = field(default_factory=list)
-    """List of required agent roles/types."""
-
+    'List of required agent roles/types.'
     tool_requirements: list[str] = field(default_factory=list)
-    """List of required tool names."""
-
+    'List of required tool names.'
     priority: CrewPriority = CrewPriority.NORMAL
-    """Priority level for execution ordering."""
-
+    'Priority level for execution ordering.'
     expected_output_schema: dict[str, Any] | None = None
-    """Optional schema for expected output validation."""
-
+    'Optional schema for expected output validation.'
     context: dict[str, Any] = field(default_factory=dict)
-    """Additional context and metadata."""
+    'Additional context and metadata.'
 
     def __post_init__(self) -> None:
         """Validate task after initialization."""
         if not self.task_id:
-            raise ValueError("task_id cannot be empty")
+            raise ValueError('task_id cannot be empty')
         if not self.task_type:
-            raise ValueError("task_type cannot be empty")
+            raise ValueError('task_type cannot be empty')
         if not self.description:
-            raise ValueError("description cannot be empty")
-
+            raise ValueError('description cannot be empty')
 
 @dataclass
 class CrewExecutionResult:
@@ -124,31 +94,22 @@ class CrewExecutionResult:
 
     This wraps StepResult with additional crew-specific metadata.
     """
-
     step_result: StepResult
-    """The underlying StepResult from execution."""
-
+    'The underlying StepResult from execution.'
     task_id: str
-    """ID of the task that was executed."""
-
+    'ID of the task that was executed.'
     execution_time_seconds: float
-    """Total execution time in seconds."""
-
+    'Total execution time in seconds.'
     agents_used: list[str] = field(default_factory=list)
-    """List of agents that participated in execution."""
-
+    'List of agents that participated in execution.'
     tools_used: list[str] = field(default_factory=list)
-    """List of tools that were invoked."""
-
+    'List of tools that were invoked.'
     cache_hits: int = 0
-    """Number of cache hits during execution."""
-
+    'Number of cache hits during execution.'
     retry_count: int = 0
-    """Number of retries that were attempted."""
-
+    'Number of retries that were attempted.'
     metadata: dict[str, Any] = field(default_factory=dict)
-    """Additional execution metadata."""
-
+    'Additional execution metadata.'
 
 class CrewExecutor(ABC):
     """Abstract base for crew executors.
@@ -159,11 +120,7 @@ class CrewExecutor(ABC):
     """
 
     @abstractmethod
-    async def execute(
-        self,
-        task: CrewTask,
-        config: CrewConfig,
-    ) -> CrewExecutionResult:
+    async def execute(self, task: CrewTask, config: CrewConfig) -> CrewExecutionResult:
         """Execute a crew task.
 
         Args:
@@ -195,7 +152,6 @@ class CrewExecutor(ABC):
         """
         ...
 
-
 class CrewFactory(ABC):
     """Abstract factory for creating crews.
 
@@ -204,11 +160,7 @@ class CrewFactory(ABC):
     """
 
     @abstractmethod
-    def create_executor(
-        self,
-        executor_type: str,
-        config: CrewConfig,
-    ) -> CrewExecutor:
+    def create_executor(self, executor_type: str, config: CrewConfig) -> CrewExecutor:
         """Create a crew executor.
 
         Args:

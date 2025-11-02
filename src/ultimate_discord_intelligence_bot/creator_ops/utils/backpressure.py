@@ -2,21 +2,15 @@
 Backpressure handling for managing system load and preventing overload.
 Provides queue depth monitoring and adaptive throttling.
 """
-
 import asyncio
 import logging
 import time
 from collections import deque
 from collections.abc import Callable
 from typing import Any, TypeVar
-
-from ultimate_discord_intelligence_bot.step_result import StepResult
-
-
+from platform.core.step_result import StepResult
 logger = logging.getLogger(__name__)
-
-T = TypeVar("T")
-
+T = TypeVar('T')
 
 class BackpressureError(Exception):
     """Raised when backpressure limits are exceeded."""
@@ -26,7 +20,6 @@ class BackpressureError(Exception):
         self.queue_depth = queue_depth
         self.max_depth = max_depth
 
-
 class BackpressureHandler:
     """
     Handles backpressure by monitoring queue depths and applying throttling.
@@ -35,13 +28,7 @@ class BackpressureHandler:
     and implementing adaptive throttling based on system load.
     """
 
-    def __init__(
-        self,
-        max_queue_depth: int = 100,
-        warning_threshold: float = 0.7,  # 70% of max depth
-        critical_threshold: float = 0.9,  # 90% of max depth
-        name: str = "backpressure_handler",
-    ):
+    def __init__(self, max_queue_depth: int=100, warning_threshold: float=0.7, critical_threshold: float=0.9, name: str='backpressure_handler'):
         """
         Initialize backpressure handler.
 
@@ -55,22 +42,16 @@ class BackpressureHandler:
         self.warning_threshold = warning_threshold
         self.critical_threshold = critical_threshold
         self.name = name
-
         self.warning_depth = int(max_queue_depth * warning_threshold)
         self.critical_depth = int(max_queue_depth * critical_threshold)
-
-        # Queue depth tracking
         self.current_depth = 0
-        self.depth_history: deque[tuple[float, int]] = deque(maxlen=100)  # (timestamp, depth)
-
-        # Throttling state
-        self.throttle_factor = 1.0  # 1.0 = no throttling, 0.5 = 50% throttling
+        self.depth_history: deque[tuple[float, int]] = deque(maxlen=100)
+        self.throttle_factor = 1.0
         self.last_throttle_adjustment = time.time()
-        self.throttle_adjustment_interval = 5.0  # seconds
-
+        self.throttle_adjustment_interval = 5.0
         self._lock = asyncio.Lock()
 
-    async def acquire(self, required_slots: int = 1) -> bool:
+    async def acquire(self, required_slots: int=1) -> bool:
         """
         Try to acquire slots in the queue.
 
@@ -82,20 +63,15 @@ class BackpressureHandler:
         """
         async with self._lock:
             if self.current_depth + required_slots > self.max_queue_depth:
-                logger.warning(
-                    f"Backpressure {self.name}: queue full, rejecting request. "
-                    f"Current depth: {self.current_depth}, required: {required_slots}, max: {self.max_queue_depth}"
-                )
+                logger.warning(f'Backpressure {self.name}: queue full, rejecting request. Current depth: {self.current_depth}, required: {required_slots}, max: {self.max_queue_depth}')
                 return False
-
             self.current_depth += required_slots
             self._record_depth()
             self._adjust_throttling()
-
-            logger.debug(f"Backpressure {self.name}: acquired {required_slots} slots, depth: {self.current_depth}")
+            logger.debug(f'Backpressure {self.name}: acquired {required_slots} slots, depth: {self.current_depth}')
             return True
 
-    async def release(self, released_slots: int = 1) -> None:
+    async def release(self, released_slots: int=1) -> None:
         """
         Release slots from the queue.
 
@@ -106,10 +82,9 @@ class BackpressureHandler:
             self.current_depth = max(0, self.current_depth - released_slots)
             self._record_depth()
             self._adjust_throttling()
+            logger.debug(f'Backpressure {self.name}: released {released_slots} slots, depth: {self.current_depth}')
 
-            logger.debug(f"Backpressure {self.name}: released {released_slots} slots, depth: {self.current_depth}")
-
-    async def wait_for_slots(self, required_slots: int = 1, timeout: float | None = None) -> bool:
+    async def wait_for_slots(self, required_slots: int=1, timeout: float | None=None) -> bool:
         """
         Wait for slots to become available.
 
@@ -121,15 +96,11 @@ class BackpressureHandler:
             True if slots acquired, False if timeout
         """
         start_time = time.time()
-
         while True:
             if await self.acquire(required_slots):
                 return True
-
-            if timeout and (time.time() - start_time) >= timeout:
+            if timeout and time.time() - start_time >= timeout:
                 return False
-
-            # Wait before retry
             await asyncio.sleep(0.1)
 
     def _record_depth(self) -> None:
@@ -140,37 +111,25 @@ class BackpressureHandler:
     def _adjust_throttling(self) -> None:
         """Adjust throttling based on current queue depth."""
         now = time.time()
-
-        # Only adjust throttling periodically
         if now - self.last_throttle_adjustment < self.throttle_adjustment_interval:
             return
-
         self.last_throttle_adjustment = now
-
-        # Calculate average depth over recent history
-        recent_cutoff = now - 30.0  # Last 30 seconds
+        recent_cutoff = now - 30.0
         recent_depths = [depth for timestamp, depth in self.depth_history if timestamp > recent_cutoff]
-
         if not recent_depths:
             return
-
         avg_depth = sum(recent_depths) / len(recent_depths)
-
-        # Adjust throttle factor based on average depth
         if avg_depth > self.critical_depth:
-            # Heavy load - increase throttling
             self.throttle_factor = max(0.1, self.throttle_factor * 0.8)
-            logger.warning(f"Backpressure {self.name}: critical load, throttling to {self.throttle_factor:.2f}")
+            logger.warning(f'Backpressure {self.name}: critical load, throttling to {self.throttle_factor:.2f}')
         elif avg_depth > self.warning_depth:
-            # Moderate load - moderate throttling
             self.throttle_factor = max(0.3, self.throttle_factor * 0.9)
-            logger.info(f"Backpressure {self.name}: high load, throttling to {self.throttle_factor:.2f}")
+            logger.info(f'Backpressure {self.name}: high load, throttling to {self.throttle_factor:.2f}')
         elif avg_depth < self.warning_depth * 0.5:
-            # Light load - reduce throttling
             self.throttle_factor = min(1.0, self.throttle_factor * 1.1)
             if self.throttle_factor > 0.95:
                 self.throttle_factor = 1.0
-                logger.info(f"Backpressure {self.name}: load normal, throttling disabled")
+                logger.info(f'Backpressure {self.name}: load normal, throttling disabled')
 
     async def should_throttle(self) -> bool:
         """
@@ -181,10 +140,7 @@ class BackpressureHandler:
         """
         if self.throttle_factor >= 1.0:
             return False
-
-        # Simple probabilistic throttling
         import random
-
         return random.random() > self.throttle_factor
 
     def get_status(self) -> dict[str, Any]:
@@ -192,28 +148,16 @@ class BackpressureHandler:
         recent_cutoff = time.time() - 30.0
         recent_depths = [depth for timestamp, depth in self.depth_history if timestamp > recent_cutoff]
         avg_depth = sum(recent_depths) / len(recent_depths) if recent_depths else 0
-
-        return {
-            "name": self.name,
-            "current_depth": self.current_depth,
-            "max_depth": self.max_queue_depth,
-            "warning_depth": self.warning_depth,
-            "critical_depth": self.critical_depth,
-            "average_depth_30s": avg_depth,
-            "throttle_factor": self.throttle_factor,
-            "utilization": self.current_depth / self.max_queue_depth,
-            "status": self._get_status_level(),
-        }
+        return {'name': self.name, 'current_depth': self.current_depth, 'max_depth': self.max_queue_depth, 'warning_depth': self.warning_depth, 'critical_depth': self.critical_depth, 'average_depth_30s': avg_depth, 'throttle_factor': self.throttle_factor, 'utilization': self.current_depth / self.max_queue_depth, 'status': self._get_status_level()}
 
     def _get_status_level(self) -> str:
         """Get current status level."""
         if self.current_depth >= self.critical_depth:
-            return "critical"
+            return 'critical'
         elif self.current_depth >= self.warning_depth:
-            return "warning"
+            return 'warning'
         else:
-            return "normal"
-
+            return 'normal'
 
 class BackpressureManager:
     """Manages multiple backpressure handlers for different services."""
@@ -221,13 +165,7 @@ class BackpressureManager:
     def __init__(self):
         self.handlers: dict[str, BackpressureHandler] = {}
 
-    def get_handler(
-        self,
-        name: str,
-        max_queue_depth: int = 100,
-        warning_threshold: float = 0.7,
-        critical_threshold: float = 0.9,
-    ) -> BackpressureHandler:
+    def get_handler(self, name: str, max_queue_depth: int=100, warning_threshold: float=0.7, critical_threshold: float=0.9) -> BackpressureHandler:
         """
         Get or create a backpressure handler.
 
@@ -241,13 +179,7 @@ class BackpressureManager:
             Backpressure handler instance
         """
         if name not in self.handlers:
-            self.handlers[name] = BackpressureHandler(
-                max_queue_depth=max_queue_depth,
-                warning_threshold=warning_threshold,
-                critical_threshold=critical_threshold,
-                name=name,
-            )
-
+            self.handlers[name] = BackpressureHandler(max_queue_depth=max_queue_depth, warning_threshold=warning_threshold, critical_threshold=critical_threshold, name=name)
         return self.handlers[name]
 
     def get_all_status(self) -> dict[str, dict[str, Any]]:
@@ -257,24 +189,11 @@ class BackpressureManager:
     async def cleanup(self) -> None:
         """Clean up expired depth history from all handlers."""
         for handler in self.handlers.values():
-            # Remove old depth records
-            cutoff = time.time() - 300.0  # Keep last 5 minutes
-            handler.depth_history = deque(
-                [(ts, depth) for ts, depth in handler.depth_history if ts > cutoff],
-                maxlen=100,
-            )
-
-
-# Global backpressure manager
+            cutoff = time.time() - 300.0
+            handler.depth_history = deque([(ts, depth) for ts, depth in handler.depth_history if ts > cutoff], maxlen=100)
 backpressure_manager = BackpressureManager()
 
-
-def with_backpressure(
-    handler_name: str,
-    required_slots: int = 1,
-    timeout: float | None = None,
-    manager: BackpressureManager | None = None,
-):
+def with_backpressure(handler_name: str, required_slots: int=1, timeout: float | None=None, manager: BackpressureManager | None=None):
     """
     Decorator to add backpressure handling to functions.
 
@@ -288,71 +207,38 @@ def with_backpressure(
         manager = backpressure_manager
 
     def decorator(func: Callable[..., T]) -> Callable[..., T]:
+
         async def async_wrapper(*args, **kwargs) -> T:
             handler = manager.get_handler(handler_name)
-
-            # Check throttling
             if await handler.should_throttle():
-                raise BackpressureError(
-                    f"Request throttled by backpressure handler {handler_name}",
-                    handler.current_depth,
-                    handler.max_queue_depth,
-                )
-
-            # Acquire slots
+                raise BackpressureError(f'Request throttled by backpressure handler {handler_name}', handler.current_depth, handler.max_queue_depth)
             if not await handler.wait_for_slots(required_slots, timeout):
-                raise BackpressureError(
-                    f"Backpressure limit exceeded for {handler_name}",
-                    handler.current_depth,
-                    handler.max_queue_depth,
-                )
-
+                raise BackpressureError(f'Backpressure limit exceeded for {handler_name}', handler.current_depth, handler.max_queue_depth)
             try:
-                # Execute function
                 if asyncio.iscoroutinefunction(func):
                     result = await func(*args, **kwargs)
                 else:
                     result = func(*args, **kwargs)
-
                 return result
             finally:
-                # Always release slots
                 await handler.release(required_slots)
 
         def sync_wrapper(*args, **kwargs) -> T:
             handler = manager.get_handler(handler_name)
-
-            # For sync functions, we can't do async throttling checks
-            # Just check queue depth
             if handler.current_depth + required_slots > handler.max_queue_depth:
-                raise BackpressureError(
-                    f"Backpressure limit exceeded for {handler_name}",
-                    handler.current_depth,
-                    handler.max_queue_depth,
-                )
-
-            # Acquire slots synchronously (simplified)
+                raise BackpressureError(f'Backpressure limit exceeded for {handler_name}', handler.current_depth, handler.max_queue_depth)
             handler.current_depth += required_slots
-
             try:
                 return func(*args, **kwargs)
             finally:
                 handler.current_depth = max(0, handler.current_depth - required_slots)
-
         if asyncio.iscoroutinefunction(func):
             return async_wrapper
         else:
             return sync_wrapper
-
     return decorator
 
-
-def with_result_backpressure(
-    handler_name: str,
-    required_slots: int = 1,
-    timeout: float | None = None,
-    manager: BackpressureManager | None = None,
-):
+def with_result_backpressure(handler_name: str, required_slots: int=1, timeout: float | None=None, manager: BackpressureManager | None=None):
     """
     Decorator to add backpressure handling to StepResult functions.
 
@@ -366,48 +252,35 @@ def with_result_backpressure(
         manager = backpressure_manager
 
     def decorator(func: Callable[..., StepResult]) -> Callable[..., StepResult]:
+
         async def async_wrapper(*args, **kwargs) -> StepResult:
             handler = manager.get_handler(handler_name)
-
             try:
-                # Check throttling
                 if await handler.should_throttle():
-                    return StepResult.fail(f"Request throttled by backpressure handler {handler_name}")
-
-                # Acquire slots
+                    return StepResult.fail(f'Request throttled by backpressure handler {handler_name}')
                 if not await handler.wait_for_slots(required_slots, timeout):
-                    return StepResult.fail(f"Backpressure limit exceeded for {handler_name}")
-
-                # Execute function
+                    return StepResult.fail(f'Backpressure limit exceeded for {handler_name}')
                 result = await func(*args, **kwargs)
                 return result
-
             except Exception as e:
-                return StepResult.fail(f"Function failed: {e!s}")
+                return StepResult.fail(f'Function failed: {e!s}')
             finally:
-                # Always release slots
                 await handler.release(required_slots)
 
         def sync_wrapper(*args, **kwargs) -> StepResult:
             handler = manager.get_handler(handler_name)
-
-            # For sync functions, simplified backpressure check
             if handler.current_depth + required_slots > handler.max_queue_depth:
-                return StepResult.fail(f"Backpressure limit exceeded for {handler_name}")
-
+                return StepResult.fail(f'Backpressure limit exceeded for {handler_name}')
             handler.current_depth += required_slots
-
             try:
                 result = func(*args, **kwargs)
                 return result
             except Exception as e:
-                return StepResult.fail(f"Function failed: {e!s}")
+                return StepResult.fail(f'Function failed: {e!s}')
             finally:
                 handler.current_depth = max(0, handler.current_depth - required_slots)
-
         if asyncio.iscoroutinefunction(func):
             return async_wrapper
         else:
             return sync_wrapper
-
     return decorator

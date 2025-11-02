@@ -1,16 +1,10 @@
 """Base class for verification tools."""
-
 from __future__ import annotations
-
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any
-
 from ultimate_discord_intelligence_bot.tools._base import BaseTool
-
-
 if TYPE_CHECKING:
-    from ultimate_discord_intelligence_bot.step_result import StepResult
-
+    from platform.core.step_result import StepResult
 
 class VerificationBaseTool(BaseTool, ABC):
     """Base class for verification tools."""
@@ -30,17 +24,10 @@ class VerificationBaseTool(BaseTool, ABC):
         """Validate claims for verification."""
         if not claims or not isinstance(claims, list):
             return False
-
         if len(claims) > self.max_claims:
             return False
-
-        return all(isinstance(claim, str) and claim.strip() for claim in claims)
+        return all((isinstance(claim, str) and claim.strip() for claim in claims))
 
     def get_verification_metadata(self, claims: list[str]) -> dict[str, Any]:
         """Get metadata for verification."""
-        return {
-            "claim_count": len(claims),
-            "verification_types": self.verification_types,
-            "confidence_threshold": self.confidence_threshold,
-            "max_claims": self.max_claims,
-        }
+        return {'claim_count': len(claims), 'verification_types': self.verification_types, 'confidence_threshold': self.confidence_threshold, 'max_claims': self.max_claims}

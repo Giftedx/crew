@@ -11,22 +11,9 @@ Migration:
     # New (recommended):
     from ultimate_discord_intelligence_bot.crew_core import UltimateDiscordIntelligenceBotCrew, get_crew
 """
-
 from __future__ import annotations
-
 import warnings
-
-from ultimate_discord_intelligence_bot.crew_core import UltimateDiscordIntelligenceBotCrew, get_crew
-
-
-warnings.warn(
-    "ultimate_discord_intelligence_bot.crew is deprecated. "
-    "Import from ultimate_discord_intelligence_bot.crew_core instead.",
-    DeprecationWarning,
-    stacklevel=2,
-)
-
-# Backward compatibility: alias get_crew as create_crew
+from domains.orchestration.crew import UltimateDiscordIntelligenceBotCrew, get_crew
+warnings.warn('ultimate_discord_intelligence_bot.crew is deprecated. Import from ultimate_discord_intelligence_bot.crew_core instead.', DeprecationWarning, stacklevel=2)
 create_crew = get_crew
-
-__all__ = ["UltimateDiscordIntelligenceBotCrew", "create_crew"]
+__all__ = ['UltimateDiscordIntelligenceBotCrew', 'create_crew']

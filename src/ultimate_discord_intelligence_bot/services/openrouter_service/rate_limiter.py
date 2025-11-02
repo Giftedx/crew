@@ -3,30 +3,21 @@
 This module provides rate limiting capabilities to control request
 frequency per tenant and prevent abuse.
 """
-
 from __future__ import annotations
-
 import logging
 import time
 from collections import deque
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
-
 from ultimate_discord_intelligence_bot.config.feature_flags import FeatureFlags
-from ultimate_discord_intelligence_bot.step_result import StepResult
-
-
+from platform.core.step_result import StepResult
 if TYPE_CHECKING:
     from .service import OpenRouterService
-
-
 log = logging.getLogger(__name__)
-
 
 @dataclass
 class RateLimitConfig:
     """Configuration for rate limiting."""
-
     requests_per_minute: int = 60
     requests_per_hour: int = 1000
     requests_per_day: int = 10000
@@ -34,16 +25,10 @@ class RateLimitConfig:
     window_size_seconds: int = 60
     enable_rate_limiting: bool = True
 
-
 class TokenBucket:
     """Token bucket implementation for rate limiting."""
 
-    def __init__(
-        self,
-        capacity: int,
-        refill_rate: float,
-        initial_tokens: int | None = None,
-    ) -> None:
+    def __init__(self, capacity: int, refill_rate: float, initial_tokens: int | None=None) -> None:
         """Initialize token bucket.
 
         Args:
@@ -60,13 +45,12 @@ class TokenBucket:
         """Refill tokens based on elapsed time."""
         now = time.time()
         elapsed = now - self._last_refill
-
         if elapsed > 0:
             tokens_to_add = elapsed * self._refill_rate
             self._tokens = min(self._capacity, self._tokens + tokens_to_add)
             self._last_refill = now
 
-    def consume(self, tokens: int = 1) -> bool:
+    def consume(self, tokens: int=1) -> bool:
         """Try to consume tokens from the bucket.
 
         Args:
@@ -76,11 +60,9 @@ class TokenBucket:
             True if tokens were consumed, False if insufficient tokens
         """
         self._refill()
-
         if self._tokens >= tokens:
             self._tokens -= tokens
             return True
-
         return False
 
     def get_tokens(self) -> float:
@@ -100,11 +82,10 @@ class TokenBucket:
         """
         return self._capacity
 
-
 class SlidingWindowRateLimiter:
     """Sliding window rate limiter implementation."""
 
-    def __init__(self, window_size_seconds: int = 60) -> None:
+    def __init__(self, window_size_seconds: int=60) -> None:
         """Initialize sliding window rate limiter.
 
         Args:
@@ -123,7 +104,7 @@ class SlidingWindowRateLimiter:
         while self._requests and self._requests[0] < cutoff:
             self._requests.popleft()
 
-    def is_allowed(self, limit: int, now: float | None = None) -> bool:
+    def is_allowed(self, limit: int, now: float | None=None) -> bool:
         """Check if request is allowed within the rate limit.
 
         Args:
@@ -135,16 +116,13 @@ class SlidingWindowRateLimiter:
         """
         if now is None:
             now = time.time()
-
         self._cleanup_old_requests(now)
-
         if len(self._requests) < limit:
             self._requests.append(now)
             return True
-
         return False
 
-    def get_current_count(self, now: float | None = None) -> int:
+    def get_current_count(self, now: float | None=None) -> int:
         """Get current number of requests in the window.
 
         Args:
@@ -155,10 +133,8 @@ class SlidingWindowRateLimiter:
         """
         if now is None:
             now = time.time()
-
         self._cleanup_old_requests(now)
         return len(self._requests)
-
 
 class TenantRateLimiter:
     """Rate limiter for individual tenants."""
@@ -170,32 +146,11 @@ class TenantRateLimiter:
             config: Rate limiting configuration
         """
         self._config = config
-
-        # Token buckets for different time windows
-        self._minute_bucket = TokenBucket(
-            capacity=config.requests_per_minute,
-            refill_rate=config.requests_per_minute / 60.0,
-        )
-
-        self._hour_bucket = TokenBucket(
-            capacity=config.requests_per_hour,
-            refill_rate=config.requests_per_hour / 3600.0,
-        )
-
-        self._day_bucket = TokenBucket(
-            capacity=config.requests_per_day,
-            refill_rate=config.requests_per_day / 86400.0,
-        )
-
-        # Sliding window for burst protection
+        self._minute_bucket = TokenBucket(capacity=config.requests_per_minute, refill_rate=config.requests_per_minute / 60.0)
+        self._hour_bucket = TokenBucket(capacity=config.requests_per_hour, refill_rate=config.requests_per_hour / 3600.0)
+        self._day_bucket = TokenBucket(capacity=config.requests_per_day, refill_rate=config.requests_per_day / 86400.0)
         self._burst_limiter = SlidingWindowRateLimiter(window_size_seconds=10)
-
-        self._stats = {
-            "total_requests": 0,
-            "allowed_requests": 0,
-            "rate_limited_requests": 0,
-            "burst_limited_requests": 0,
-        }
+        self._stats = {'total_requests': 0, 'allowed_requests': 0, 'rate_limited_requests': 0, 'burst_limited_requests': 0}
 
     def is_allowed(self) -> bool:
         """Check if request is allowed for this tenant.
@@ -205,28 +160,20 @@ class TenantRateLimiter:
         """
         if not self._config.enable_rate_limiting:
             return True
-
-        self._stats["total_requests"] += 1
-
-        # Check burst limit first (most restrictive)
+        self._stats['total_requests'] += 1
         if not self._burst_limiter.is_allowed(self._config.burst_limit):
-            self._stats["burst_limited_requests"] += 1
+            self._stats['burst_limited_requests'] += 1
             return False
-
-        # Check token buckets
         if not self._minute_bucket.consume():
-            self._stats["rate_limited_requests"] += 1
+            self._stats['rate_limited_requests'] += 1
             return False
-
         if not self._hour_bucket.consume():
-            self._stats["rate_limited_requests"] += 1
+            self._stats['rate_limited_requests'] += 1
             return False
-
         if not self._day_bucket.consume():
-            self._stats["rate_limited_requests"] += 1
+            self._stats['rate_limited_requests'] += 1
             return False
-
-        self._stats["allowed_requests"] += 1
+        self._stats['allowed_requests'] += 1
         return True
 
     def get_status(self) -> dict[str, Any]:
@@ -235,31 +182,11 @@ class TenantRateLimiter:
         Returns:
             Dictionary with rate limiter status
         """
-        return {
-            "tokens_available": {
-                "minute": self._minute_bucket.get_tokens(),
-                "hour": self._hour_bucket.get_tokens(),
-                "day": self._day_bucket.get_tokens(),
-            },
-            "bucket_capacity": {
-                "minute": self._minute_bucket.get_capacity(),
-                "hour": self._hour_bucket.get_capacity(),
-                "day": self._day_bucket.get_capacity(),
-            },
-            "burst_window_requests": self._burst_limiter.get_current_count(),
-            "burst_limit": self._config.burst_limit,
-            "stats": self._stats.copy(),
-        }
+        return {'tokens_available': {'minute': self._minute_bucket.get_tokens(), 'hour': self._hour_bucket.get_tokens(), 'day': self._day_bucket.get_tokens()}, 'bucket_capacity': {'minute': self._minute_bucket.get_capacity(), 'hour': self._hour_bucket.get_capacity(), 'day': self._day_bucket.get_capacity()}, 'burst_window_requests': self._burst_limiter.get_current_count(), 'burst_limit': self._config.burst_limit, 'stats': self._stats.copy()}
 
     def reset_stats(self) -> None:
         """Reset rate limiter statistics."""
-        self._stats = {
-            "total_requests": 0,
-            "allowed_requests": 0,
-            "rate_limited_requests": 0,
-            "burst_limited_requests": 0,
-        }
-
+        self._stats = {'total_requests': 0, 'allowed_requests': 0, 'rate_limited_requests': 0, 'burst_limited_requests': 0}
 
 class RateLimitManager:
     """Manages rate limiting for multiple tenants."""
@@ -270,7 +197,7 @@ class RateLimitManager:
         self._default_config = RateLimitConfig()
         self._feature_flags = FeatureFlags()
 
-    def get_tenant_limiter(self, tenant: str, config: RateLimitConfig | None = None) -> TenantRateLimiter:
+    def get_tenant_limiter(self, tenant: str, config: RateLimitConfig | None=None) -> TenantRateLimiter:
         """Get or create rate limiter for a tenant.
 
         Args:
@@ -283,11 +210,10 @@ class RateLimitManager:
         if tenant not in self._tenant_limiters:
             limiter_config = config or self._default_config
             self._tenant_limiters[tenant] = TenantRateLimiter(limiter_config)
-            log.debug("Created rate limiter for tenant: %s", tenant)
-
+            log.debug('Created rate limiter for tenant: %s', tenant)
         return self._tenant_limiters[tenant]
 
-    def is_request_allowed(self, tenant: str, config: RateLimitConfig | None = None) -> bool:
+    def is_request_allowed(self, tenant: str, config: RateLimitConfig | None=None) -> bool:
         """Check if request is allowed for a tenant.
 
         Args:
@@ -299,7 +225,6 @@ class RateLimitManager:
         """
         if not self._feature_flags.ENABLE_RATE_LIMITING:
             return True
-
         limiter = self.get_tenant_limiter(tenant, config)
         return limiter.is_allowed()
 
@@ -313,17 +238,11 @@ class RateLimitManager:
             Dictionary with tenant rate limiting status
         """
         if tenant not in self._tenant_limiters:
-            return {
-                "tenant": tenant,
-                "limiter_exists": False,
-                "message": "No rate limiter found for tenant",
-            }
-
+            return {'tenant': tenant, 'limiter_exists': False, 'message': 'No rate limiter found for tenant'}
         limiter = self._tenant_limiters[tenant]
         status = limiter.get_status()
-        status["tenant"] = tenant
-        status["limiter_exists"] = True
-
+        status['tenant'] = tenant
+        status['limiter_exists'] = True
         return status
 
     def get_all_tenant_status(self) -> dict[str, dict[str, Any]]:
@@ -342,13 +261,13 @@ class RateLimitManager:
         """
         if tenant in self._tenant_limiters:
             self._tenant_limiters[tenant].reset_stats()
-            log.debug("Reset rate limiter stats for tenant: %s", tenant)
+            log.debug('Reset rate limiter stats for tenant: %s', tenant)
 
     def reset_all_stats(self) -> None:
         """Reset statistics for all tenants."""
         for limiter in self._tenant_limiters.values():
             limiter.reset_stats()
-        log.info("Reset rate limiter stats for all tenants")
+        log.info('Reset rate limiter stats for all tenants')
 
     def remove_tenant(self, tenant: str) -> bool:
         """Remove rate limiter for a tenant.
@@ -361,10 +280,9 @@ class RateLimitManager:
         """
         if tenant in self._tenant_limiters:
             del self._tenant_limiters[tenant]
-            log.debug("Removed rate limiter for tenant: %s", tenant)
+            log.debug('Removed rate limiter for tenant: %s', tenant)
             return True
         return False
-
 
 class OpenRouterRateLimiter:
     """Rate limiter wrapper for OpenRouter service operations."""
@@ -379,15 +297,7 @@ class OpenRouterRateLimiter:
         self._rate_limit_manager = RateLimitManager()
         self._feature_flags = FeatureFlags()
 
-    def route_with_rate_limit(
-        self,
-        prompt: str,
-        task_type: str = "general",
-        model: str | None = None,
-        provider_opts: dict[str, Any] | None = None,
-        tenant: str = "default",
-        **kwargs: Any,
-    ) -> StepResult:
+    def route_with_rate_limit(self, prompt: str, task_type: str='general', model: str | None=None, provider_opts: dict[str, Any] | None=None, tenant: str='default', **kwargs: Any) -> StepResult:
         """Route a prompt with rate limiting.
 
         Args:
@@ -401,23 +311,12 @@ class OpenRouterRateLimiter:
         Returns:
             StepResult with routing response or error
         """
-        # Check rate limit
         if not self._rate_limit_manager.is_request_allowed(tenant):
-            log.warning("Rate limit exceeded for tenant: %s", tenant)
-            return StepResult.fail("Rate limit exceeded. Please try again later.", status="rate_limited")
-
-        # Proceed with routing
+            log.warning('Rate limit exceeded for tenant: %s', tenant)
+            return StepResult.fail('Rate limit exceeded. Please try again later.', status='rate_limited')
         return self._service.route(prompt, task_type, model, provider_opts, **kwargs)
 
-    async def route_async_with_rate_limit(
-        self,
-        prompt: str,
-        task_type: str = "general",
-        model: str | None = None,
-        provider_opts: dict[str, Any] | None = None,
-        tenant: str = "default",
-        **kwargs: Any,
-    ) -> dict[str, Any]:
+    async def route_async_with_rate_limit(self, prompt: str, task_type: str='general', model: str | None=None, provider_opts: dict[str, Any] | None=None, tenant: str='default', **kwargs: Any) -> dict[str, Any]:
         """Route a prompt asynchronously with rate limiting.
 
         Args:
@@ -431,21 +330,11 @@ class OpenRouterRateLimiter:
         Returns:
             Response dictionary
         """
-        # Check rate limit
         if not self._rate_limit_manager.is_request_allowed(tenant):
-            log.warning("Rate limit exceeded for tenant: %s", tenant)
-            return {
-                "status": "error",
-                "error": "Rate limit exceeded. Please try again later.",
-                "model": model or "unknown",
-                "tokens": 0,
-                "provider": provider_opts or {},
-                "rate_limited": True,
-            }
-
-        # Proceed with routing
+            log.warning('Rate limit exceeded for tenant: %s', tenant)
+            return {'status': 'error', 'error': 'Rate limit exceeded. Please try again later.', 'model': model or 'unknown', 'tokens': 0, 'provider': provider_opts or {}, 'rate_limited': True}
         result = self._service.route(prompt, task_type, model, provider_opts, **kwargs)
-        return result.data if result.success else {"status": "error", "error": result.error}
+        return result.data if result.success else {'status': 'error', 'error': result.error}
 
     def get_tenant_rate_limit_status(self, tenant: str) -> dict[str, Any]:
         """Get rate limiting status for a tenant.
@@ -466,11 +355,7 @@ class OpenRouterRateLimiter:
         """
         return self._rate_limit_manager.get_all_tenant_status()
 
-    def configure_tenant_rate_limit(
-        self,
-        tenant: str,
-        config: RateLimitConfig,
-    ) -> None:
+    def configure_tenant_rate_limit(self, tenant: str, config: RateLimitConfig) -> None:
         """Configure rate limiting for a specific tenant.
 
         Args:
@@ -478,7 +363,7 @@ class OpenRouterRateLimiter:
             config: Rate limiting configuration
         """
         self._rate_limit_manager.get_tenant_limiter(tenant, config)
-        log.info("Configured rate limiting for tenant: %s", tenant)
+        log.info('Configured rate limiting for tenant: %s', tenant)
 
     def get_stats(self) -> dict[str, Any]:
         """Get rate limiter statistics.
@@ -486,20 +371,12 @@ class OpenRouterRateLimiter:
         Returns:
             Dictionary with rate limiter statistics
         """
-        return {
-            "rate_limiting_enabled": self._feature_flags.ENABLE_RATE_LIMITING,
-            "tenant_count": len(self._rate_limit_manager._tenant_limiters),
-            "tenant_status": self._rate_limit_manager.get_all_tenant_status(),
-        }
+        return {'rate_limiting_enabled': self._feature_flags.ENABLE_RATE_LIMITING, 'tenant_count': len(self._rate_limit_manager._tenant_limiters), 'tenant_status': self._rate_limit_manager.get_all_tenant_status()}
 
     def reset_stats(self) -> None:
         """Reset rate limiter statistics."""
         self._rate_limit_manager.reset_all_stats()
-
-
-# Global rate limit manager instance
 _rate_limit_manager: RateLimitManager | None = None
-
 
 def get_rate_limit_manager() -> RateLimitManager:
     """Get or create global rate limit manager.
@@ -508,12 +385,9 @@ def get_rate_limit_manager() -> RateLimitManager:
         RateLimitManager instance
     """
     global _rate_limit_manager
-
     if _rate_limit_manager is None:
         _rate_limit_manager = RateLimitManager()
-
     return _rate_limit_manager
-
 
 def get_openrouter_rate_limiter(service: OpenRouterService) -> OpenRouterRateLimiter:
     """Get or create OpenRouter rate limiter for the service.

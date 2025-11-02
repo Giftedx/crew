@@ -3,48 +3,35 @@
 This module provides memory pooling, shared context management, and
 cross-agent memory access patterns for the crew system.
 """
-
 from __future__ import annotations
-
 import logging
 import threading
 import time
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import TYPE_CHECKING, Any
-
-from ultimate_discord_intelligence_bot.step_result import StepResult
-
-
+from platform.core.step_result import StepResult
 if TYPE_CHECKING:
     from ultimate_discord_intelligence_bot.config.feature_flags import FeatureFlags
-
-
 logger = logging.getLogger(__name__)
-
 
 class MemoryAccessLevel(Enum):
     """Memory access levels for agent isolation."""
-
-    PRIVATE = "private"  # Agent-specific memory
-    SHARED = "shared"  # Shared across agents
-    GLOBAL = "global"  # System-wide memory
-
+    PRIVATE = 'private'
+    SHARED = 'shared'
+    GLOBAL = 'global'
 
 class MemoryOperation(Enum):
     """Types of memory operations."""
-
-    READ = "read"
-    WRITE = "write"
-    UPDATE = "update"
-    DELETE = "delete"
-    SEARCH = "search"
-
+    READ = 'read'
+    WRITE = 'write'
+    UPDATE = 'update'
+    DELETE = 'delete'
+    SEARCH = 'search'
 
 @dataclass
 class MemoryEntry:
     """Represents a memory entry with metadata."""
-
     key: str
     value: Any
     agent_id: str
@@ -55,11 +42,9 @@ class MemoryEntry:
     tags: set[str] = field(default_factory=set)
     metadata: dict[str, Any] = field(default_factory=dict)
 
-
 @dataclass
 class MemoryAccess:
     """Represents a memory access operation."""
-
     agent_id: str
     operation: MemoryOperation
     key: str
@@ -67,7 +52,6 @@ class MemoryAccess:
     timestamp: float = field(default_factory=time.time)
     success: bool = True
     error: str | None = None
-
 
 class MemoryCoordinator:
     """Coordinates memory access and sharing across agents."""
@@ -89,16 +73,7 @@ class MemoryCoordinator:
         """Check if memory coordination is enabled."""
         return self.feature_flags.ENABLE_MEMORY_COORDINATION
 
-    def store_memory(
-        self,
-        key: str,
-        value: Any,
-        agent_id: str,
-        access_level: MemoryAccessLevel = MemoryAccessLevel.PRIVATE,
-        ttl: float | None = None,
-        tags: set[str] | None = None,
-        metadata: dict[str, Any] | None = None,
-    ) -> StepResult:
+    def store_memory(self, key: str, value: Any, agent_id: str, access_level: MemoryAccessLevel=MemoryAccessLevel.PRIVATE, ttl: float | None=None, tags: set[str] | None=None, metadata: dict[str, Any] | None=None) -> StepResult:
         """Store memory with coordination and isolation.
 
         Args:
@@ -114,52 +89,23 @@ class MemoryCoordinator:
             StepResult: Result of the storage operation
         """
         if not self.is_enabled():
-            return StepResult.fail("Memory coordination disabled")
-
+            return StepResult.fail('Memory coordination disabled')
         try:
             with self._lock:
-                # Check agent quota
                 if not self._check_agent_quota(agent_id):
-                    return StepResult.fail(f"Agent {agent_id} quota exceeded")
-
-                # Create memory entry
-                entry = MemoryEntry(
-                    key=key,
-                    value=value,
-                    agent_id=agent_id,
-                    access_level=access_level,
-                    ttl=ttl,
-                    tags=tags or set(),
-                    metadata=metadata or {},
-                )
-
-                # Store in memory pool
+                    return StepResult.fail(f'Agent {agent_id} quota exceeded')
+                entry = MemoryEntry(key=key, value=value, agent_id=agent_id, access_level=access_level, ttl=ttl, tags=tags or set(), metadata=metadata or {})
                 self.memory_pool[key] = entry
-
-                # Update shared context if appropriate
                 if access_level in [MemoryAccessLevel.SHARED, MemoryAccessLevel.GLOBAL]:
                     self.shared_context[key] = value
-
-                # Log access
                 self._log_access(agent_id, MemoryOperation.WRITE, key, access_level, True)
-
-                return StepResult.ok(
-                    data={
-                        "key": key,
-                        "access_level": access_level.value,
-                        "agent_id": agent_id,
-                        "stored_at": entry.created_at,
-                    }
-                )
-
+                return StepResult.ok(data={'key': key, 'access_level': access_level.value, 'agent_id': agent_id, 'stored_at': entry.created_at})
         except Exception as e:
-            logger.error(f"Memory storage failed for agent {agent_id}: {e}")
+            logger.error(f'Memory storage failed for agent {agent_id}: {e}')
             self._log_access(agent_id, MemoryOperation.WRITE, key, access_level, False, str(e))
-            return StepResult.fail(f"Memory storage failed: {e}")
+            return StepResult.fail(f'Memory storage failed: {e}')
 
-    def retrieve_memory(
-        self, key: str, agent_id: str, access_level: MemoryAccessLevel = MemoryAccessLevel.PRIVATE
-    ) -> StepResult:
+    def retrieve_memory(self, key: str, agent_id: str, access_level: MemoryAccessLevel=MemoryAccessLevel.PRIVATE) -> StepResult:
         """Retrieve memory with access control.
 
         Args:
@@ -171,54 +117,28 @@ class MemoryCoordinator:
             StepResult: Result containing the memory value
         """
         if not self.is_enabled():
-            return StepResult.fail("Memory coordination disabled")
-
+            return StepResult.fail('Memory coordination disabled')
         try:
             with self._lock:
                 if key not in self.memory_pool:
-                    self._log_access(agent_id, MemoryOperation.READ, key, access_level, False, "Key not found")
-                    return StepResult.fail("Memory key not found")
-
+                    self._log_access(agent_id, MemoryOperation.READ, key, access_level, False, 'Key not found')
+                    return StepResult.fail('Memory key not found')
                 entry = self.memory_pool[key]
-
-                # Check access permissions
                 if not self._check_access_permission(entry, agent_id, access_level):
-                    self._log_access(agent_id, MemoryOperation.READ, key, access_level, False, "Access denied")
-                    return StepResult.fail("Access denied to memory key")
-
-                # Check TTL
+                    self._log_access(agent_id, MemoryOperation.READ, key, access_level, False, 'Access denied')
+                    return StepResult.fail('Access denied to memory key')
                 if entry.ttl and time.time() - entry.created_at > entry.ttl:
                     del self.memory_pool[key]
-                    self._log_access(agent_id, MemoryOperation.READ, key, access_level, False, "Memory expired")
-                    return StepResult.fail("Memory expired")
-
-                # Log successful access
+                    self._log_access(agent_id, MemoryOperation.READ, key, access_level, False, 'Memory expired')
+                    return StepResult.fail('Memory expired')
                 self._log_access(agent_id, MemoryOperation.READ, key, access_level, True)
-
-                return StepResult.ok(
-                    data={
-                        "key": key,
-                        "value": entry.value,
-                        "agent_id": entry.agent_id,
-                        "access_level": entry.access_level.value,
-                        "created_at": entry.created_at,
-                        "metadata": entry.metadata,
-                    }
-                )
-
+                return StepResult.ok(data={'key': key, 'value': entry.value, 'agent_id': entry.agent_id, 'access_level': entry.access_level.value, 'created_at': entry.created_at, 'metadata': entry.metadata})
         except Exception as e:
-            logger.error(f"Memory retrieval failed for agent {agent_id}: {e}")
+            logger.error(f'Memory retrieval failed for agent {agent_id}: {e}')
             self._log_access(agent_id, MemoryOperation.READ, key, access_level, False, str(e))
-            return StepResult.fail(f"Memory retrieval failed: {e}")
+            return StepResult.fail(f'Memory retrieval failed: {e}')
 
-    def search_memory(
-        self,
-        query: str,
-        agent_id: str,
-        access_level: MemoryAccessLevel = MemoryAccessLevel.PRIVATE,
-        tags: set[str] | None = None,
-        limit: int = 10,
-    ) -> StepResult:
+    def search_memory(self, query: str, agent_id: str, access_level: MemoryAccessLevel=MemoryAccessLevel.PRIVATE, tags: set[str] | None=None, limit: int=10) -> StepResult:
         """Search memory with filtering and access control.
 
         Args:
@@ -232,56 +152,28 @@ class MemoryCoordinator:
             StepResult: Result containing matching memories
         """
         if not self.is_enabled():
-            return StepResult.fail("Memory coordination disabled")
-
+            return StepResult.fail('Memory coordination disabled')
         try:
             with self._lock:
                 matches = []
                 query_lower = query.lower()
-
                 for key, entry in self.memory_pool.items():
-                    # Check access permissions
                     if not self._check_access_permission(entry, agent_id, access_level):
                         continue
-
-                    # Check TTL
                     if entry.ttl and time.time() - entry.created_at > entry.ttl:
                         continue
-
-                    # Check tags filter
-                    if tags and not tags.intersection(entry.tags):
+                    if tags and (not tags.intersection(entry.tags)):
                         continue
-
-                    # Simple text search in key and value
-                    if query_lower in key.lower() or (
-                        isinstance(entry.value, str) and query_lower in entry.value.lower()
-                    ):
-                        matches.append(
-                            {
-                                "key": key,
-                                "value": entry.value,
-                                "agent_id": entry.agent_id,
-                                "access_level": entry.access_level.value,
-                                "created_at": entry.created_at,
-                                "tags": list(entry.tags),
-                                "metadata": entry.metadata,
-                            }
-                        )
-
-                # Sort by relevance (simple implementation)
-                matches.sort(key=lambda x: x["created_at"], reverse=True)
+                    if query_lower in key.lower() or (isinstance(entry.value, str) and query_lower in entry.value.lower()):
+                        matches.append({'key': key, 'value': entry.value, 'agent_id': entry.agent_id, 'access_level': entry.access_level.value, 'created_at': entry.created_at, 'tags': list(entry.tags), 'metadata': entry.metadata})
+                matches.sort(key=lambda x: x['created_at'], reverse=True)
                 matches = matches[:limit]
-
-                self._log_access(agent_id, MemoryOperation.SEARCH, f"query:{query}", access_level, True)
-
-                return StepResult.ok(
-                    data={"query": query, "matches": matches, "total_found": len(matches), "agent_id": agent_id}
-                )
-
+                self._log_access(agent_id, MemoryOperation.SEARCH, f'query:{query}', access_level, True)
+                return StepResult.ok(data={'query': query, 'matches': matches, 'total_found': len(matches), 'agent_id': agent_id})
         except Exception as e:
-            logger.error(f"Memory search failed for agent {agent_id}: {e}")
-            self._log_access(agent_id, MemoryOperation.SEARCH, f"query:{query}", access_level, False, str(e))
-            return StepResult.fail(f"Memory search failed: {e}")
+            logger.error(f'Memory search failed for agent {agent_id}: {e}')
+            self._log_access(agent_id, MemoryOperation.SEARCH, f'query:{query}', access_level, False, str(e))
+            return StepResult.fail(f'Memory search failed: {e}')
 
     def get_shared_context(self, agent_id: str) -> StepResult:
         """Get shared context available to an agent.
@@ -293,33 +185,21 @@ class MemoryCoordinator:
             StepResult: Result containing shared context
         """
         if not self.is_enabled():
-            return StepResult.fail("Memory coordination disabled")
-
+            return StepResult.fail('Memory coordination disabled')
         try:
             with self._lock:
-                # Filter shared context based on agent access
                 accessible_context = {}
                 for key, value in self.shared_context.items():
                     if key in self.memory_pool:
                         entry = self.memory_pool[key]
                         if self._check_access_permission(entry, agent_id, MemoryAccessLevel.SHARED):
                             accessible_context[key] = value
-
-                return StepResult.ok(
-                    data={
-                        "agent_id": agent_id,
-                        "shared_context": accessible_context,
-                        "context_size": len(accessible_context),
-                    }
-                )
-
+                return StepResult.ok(data={'agent_id': agent_id, 'shared_context': accessible_context, 'context_size': len(accessible_context)})
         except Exception as e:
-            logger.error(f"Shared context retrieval failed for agent {agent_id}: {e}")
-            return StepResult.fail(f"Shared context retrieval failed: {e}")
+            logger.error(f'Shared context retrieval failed for agent {agent_id}: {e}')
+            return StepResult.fail(f'Shared context retrieval failed: {e}')
 
-    def update_memory(
-        self, key: str, value: Any, agent_id: str, access_level: MemoryAccessLevel = MemoryAccessLevel.PRIVATE
-    ) -> StepResult:
+    def update_memory(self, key: str, value: Any, agent_id: str, access_level: MemoryAccessLevel=MemoryAccessLevel.PRIVATE) -> StepResult:
         """Update existing memory with access control.
 
         Args:
@@ -332,39 +212,26 @@ class MemoryCoordinator:
             StepResult: Result of the update operation
         """
         if not self.is_enabled():
-            return StepResult.fail("Memory coordination disabled")
-
+            return StepResult.fail('Memory coordination disabled')
         try:
             with self._lock:
                 if key not in self.memory_pool:
-                    return StepResult.fail("Memory key not found")
-
+                    return StepResult.fail('Memory key not found')
                 entry = self.memory_pool[key]
-
-                # Check access permissions
                 if not self._check_access_permission(entry, agent_id, access_level):
-                    return StepResult.fail("Access denied to memory key")
-
-                # Update entry
+                    return StepResult.fail('Access denied to memory key')
                 entry.value = value
                 entry.updated_at = time.time()
-
-                # Update shared context if appropriate
                 if entry.access_level in [MemoryAccessLevel.SHARED, MemoryAccessLevel.GLOBAL]:
                     self.shared_context[key] = value
-
                 self._log_access(agent_id, MemoryOperation.UPDATE, key, access_level, True)
-
-                return StepResult.ok(data={"key": key, "updated_at": entry.updated_at, "agent_id": agent_id})
-
+                return StepResult.ok(data={'key': key, 'updated_at': entry.updated_at, 'agent_id': agent_id})
         except Exception as e:
-            logger.error(f"Memory update failed for agent {agent_id}: {e}")
+            logger.error(f'Memory update failed for agent {agent_id}: {e}')
             self._log_access(agent_id, MemoryOperation.UPDATE, key, access_level, False, str(e))
-            return StepResult.fail(f"Memory update failed: {e}")
+            return StepResult.fail(f'Memory update failed: {e}')
 
-    def delete_memory(
-        self, key: str, agent_id: str, access_level: MemoryAccessLevel = MemoryAccessLevel.PRIVATE
-    ) -> StepResult:
+    def delete_memory(self, key: str, agent_id: str, access_level: MemoryAccessLevel=MemoryAccessLevel.PRIVATE) -> StepResult:
         """Delete memory with access control.
 
         Args:
@@ -376,36 +243,25 @@ class MemoryCoordinator:
             StepResult: Result of the delete operation
         """
         if not self.is_enabled():
-            return StepResult.fail("Memory coordination disabled")
-
+            return StepResult.fail('Memory coordination disabled')
         try:
             with self._lock:
                 if key not in self.memory_pool:
-                    return StepResult.fail("Memory key not found")
-
+                    return StepResult.fail('Memory key not found')
                 entry = self.memory_pool[key]
-
-                # Check access permissions
                 if not self._check_access_permission(entry, agent_id, access_level):
-                    return StepResult.fail("Access denied to memory key")
-
-                # Remove from memory pool
+                    return StepResult.fail('Access denied to memory key')
                 del self.memory_pool[key]
-
-                # Remove from shared context if present
                 if key in self.shared_context:
                     del self.shared_context[key]
-
                 self._log_access(agent_id, MemoryOperation.DELETE, key, access_level, True)
-
-                return StepResult.ok(data={"key": key, "deleted_at": time.time(), "agent_id": agent_id})
-
+                return StepResult.ok(data={'key': key, 'deleted_at': time.time(), 'agent_id': agent_id})
         except Exception as e:
-            logger.error(f"Memory deletion failed for agent {agent_id}: {e}")
+            logger.error(f'Memory deletion failed for agent {agent_id}: {e}')
             self._log_access(agent_id, MemoryOperation.DELETE, key, access_level, False, str(e))
-            return StepResult.fail(f"Memory deletion failed: {e}")
+            return StepResult.fail(f'Memory deletion failed: {e}')
 
-    def get_memory_stats(self, agent_id: str | None = None) -> StepResult:
+    def get_memory_stats(self, agent_id: str | None=None) -> StepResult:
         """Get memory statistics.
 
         Args:
@@ -415,42 +271,25 @@ class MemoryCoordinator:
             StepResult: Result containing memory statistics
         """
         if not self.is_enabled():
-            return StepResult.fail("Memory coordination disabled")
-
+            return StepResult.fail('Memory coordination disabled')
         try:
             with self._lock:
                 total_memories = len(self.memory_pool)
                 total_accesses = len(self.access_log)
-
-                # Filter by agent if specified
                 if agent_id:
-                    agent_memories = sum(1 for entry in self.memory_pool.values() if entry.agent_id == agent_id)
-                    agent_accesses = sum(1 for access in self.access_log if access.agent_id == agent_id)
+                    agent_memories = sum((1 for entry in self.memory_pool.values() if entry.agent_id == agent_id))
+                    agent_accesses = sum((1 for access in self.access_log if access.agent_id == agent_id))
                 else:
                     agent_memories = total_memories
                     agent_accesses = total_accesses
-
-                # Access level breakdown
                 access_levels = {}
                 for entry in self.memory_pool.values():
                     level = entry.access_level.value
                     access_levels[level] = access_levels.get(level, 0) + 1
-
-                return StepResult.ok(
-                    data={
-                        "total_memories": total_memories,
-                        "agent_memories": agent_memories,
-                        "total_accesses": total_accesses,
-                        "agent_accesses": agent_accesses,
-                        "access_levels": access_levels,
-                        "shared_context_size": len(self.shared_context),
-                        "agent_id": agent_id,
-                    }
-                )
-
+                return StepResult.ok(data={'total_memories': total_memories, 'agent_memories': agent_memories, 'total_accesses': total_accesses, 'agent_accesses': agent_accesses, 'access_levels': access_levels, 'shared_context_size': len(self.shared_context), 'agent_id': agent_id})
         except Exception as e:
-            logger.error(f"Memory stats retrieval failed: {e}")
-            return StepResult.fail(f"Memory stats retrieval failed: {e}")
+            logger.error(f'Memory stats retrieval failed: {e}')
+            return StepResult.fail(f'Memory stats retrieval failed: {e}')
 
     def _check_agent_quota(self, agent_id: str) -> bool:
         """Check if agent has quota for new memory.
@@ -461,10 +300,8 @@ class MemoryCoordinator:
         Returns:
             bool: True if agent has quota
         """
-        # Simple quota check - can be enhanced
-        agent_memory_count = sum(1 for entry in self.memory_pool.values() if entry.agent_id == agent_id)
-        max_quota = self.agent_memory_quotas.get(agent_id, 1000)  # Default quota
-
+        agent_memory_count = sum((1 for entry in self.memory_pool.values() if entry.agent_id == agent_id))
+        max_quota = self.agent_memory_quotas.get(agent_id, 1000)
         return agent_memory_count < max_quota
 
     def _check_access_permission(self, entry: MemoryEntry, agent_id: str, required_level: MemoryAccessLevel) -> bool:
@@ -478,29 +315,17 @@ class MemoryCoordinator:
         Returns:
             bool: True if access is permitted
         """
-        # Owner can always access
         if entry.agent_id == agent_id:
             return True
-
-        # Check access level hierarchy
         if entry.access_level == MemoryAccessLevel.PRIVATE:
             return False
         elif entry.access_level == MemoryAccessLevel.SHARED:
             return required_level in [MemoryAccessLevel.SHARED, MemoryAccessLevel.GLOBAL]
         elif entry.access_level == MemoryAccessLevel.GLOBAL:
             return True
-
         return False
 
-    def _log_access(
-        self,
-        agent_id: str,
-        operation: MemoryOperation,
-        key: str,
-        access_level: MemoryAccessLevel,
-        success: bool,
-        error: str | None = None,
-    ) -> None:
+    def _log_access(self, agent_id: str, operation: MemoryOperation, key: str, access_level: MemoryAccessLevel, success: bool, error: str | None=None) -> None:
         """Log memory access for auditing.
 
         Args:
@@ -511,13 +336,8 @@ class MemoryCoordinator:
             success: Whether operation succeeded
             error: Error message if failed
         """
-        access = MemoryAccess(
-            agent_id=agent_id, operation=operation, key=key, access_level=access_level, success=success, error=error
-        )
-
+        access = MemoryAccess(agent_id=agent_id, operation=operation, key=key, access_level=access_level, success=success, error=error)
         self.access_log.append(access)
-
-        # Keep only recent access log (simple cleanup)
         if len(self.access_log) > 10000:
             self.access_log = self.access_log[-5000:]
 
@@ -529,23 +349,18 @@ class MemoryCoordinator:
         """
         if not self.is_enabled():
             return 0
-
         try:
             with self._lock:
                 current_time = time.time()
                 expired_keys = []
-
                 for key, entry in self.memory_pool.items():
                     if entry.ttl and current_time - entry.created_at > entry.ttl:
                         expired_keys.append(key)
-
                 for key in expired_keys:
                     del self.memory_pool[key]
                     if key in self.shared_context:
                         del self.shared_context[key]
-
                 return len(expired_keys)
-
         except Exception as e:
-            logger.error(f"Memory cleanup failed: {e}")
+            logger.error(f'Memory cleanup failed: {e}')
             return 0

@@ -1,16 +1,10 @@
 """Base class for content acquisition tools."""
-
 from __future__ import annotations
-
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any
-
 from ultimate_discord_intelligence_bot.tools._base import BaseTool
-
-
 if TYPE_CHECKING:
-    from ultimate_discord_intelligence_bot.step_result import StepResult
-
+    from platform.core.step_result import StepResult
 
 class AcquisitionBaseTool(BaseTool, ABC):
     """Base class for content acquisition tools."""
@@ -19,7 +13,7 @@ class AcquisitionBaseTool(BaseTool, ABC):
         """Initialize acquisition tool."""
         super().__init__(**kwargs)
         self.supported_platforms: list[str] = []
-        self.max_file_size: int = 100 * 1024 * 1024  # 100MB
+        self.max_file_size: int = 100 * 1024 * 1024
         self.supported_formats: list[str] = []
 
     @abstractmethod
@@ -30,17 +24,11 @@ class AcquisitionBaseTool(BaseTool, ABC):
         """Validate URL format and platform support."""
         if not url or not isinstance(url, str):
             return False
-
-        # Check if URL is supported by this tool
-        return any(platform in url.lower() for platform in self.supported_platforms)
+        return any((platform in url.lower() for platform in self.supported_platforms))
 
     def get_metadata(self, url: str) -> dict[str, Any]:
         """Extract metadata from URL."""
-        return {
-            "url": url,
-            "platform": self._detect_platform(url),
-            "supported": self.validate_url(url),
-        }
+        return {'url': url, 'platform': self._detect_platform(url), 'supported': self.validate_url(url)}
 
     def _detect_platform(self, url: str) -> str:
         """Detect platform from URL."""
@@ -48,4 +36,4 @@ class AcquisitionBaseTool(BaseTool, ABC):
         for platform in self.supported_platforms:
             if platform in url_lower:
                 return platform
-        return "unknown"
+        return 'unknown'
