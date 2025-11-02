@@ -15,7 +15,6 @@ State File Naming:
 Note: For multi-process deployments, external synchronization (e.g., Redis) would be needed. This
 in-memory registry is per-process.
 """
-
 from __future__ import annotations
 
 import json
@@ -31,53 +30,39 @@ from ultimate_discord_intelligence_bot.tenancy.context import current_tenant
 
 if TYPE_CHECKING:
     from ._metrics_types import MetricLike, MetricsFacade
-
-
 _registry_lock = threading.Lock()
 _routers: dict[tuple[str, str], ThompsonBanditRouter] = {}
 _selection_counts: dict[tuple[str, str], dict[str, int]] = defaultdict(lambda: defaultdict(int))
-
-try:  # optional metrics
-    from ultimate_discord_intelligence_bot.obs.metrics import get_metrics as _gm
+try:
+    from platform.observability.metrics import get_metrics as _gm
 
     def _obtain_metrics() -> MetricsFacade | None:
         try:
-            return cast("MetricsFacade", _gm())
-        except Exception:  # pragma: no cover
+            return cast('MetricsFacade', _gm())
+        except Exception:
             return None
-except Exception:  # pragma: no cover
+except Exception:
 
     def _obtain_metrics() -> MetricsFacade | None:
         return None
-
-
 _metrics: MetricsFacade | None = _obtain_metrics()
 _selection_entropy_gauge: MetricLike | None = None
 _posterior_entropy_gauge: MetricLike | None = None
 if _metrics:
     try:
-        _selection_entropy_gauge = _metrics.gauge(
-            name="bandit_router_selection_entropy",
-            description="Shannon entropy of model selection distribution (empirical selections)",
-        )
-        _posterior_entropy_gauge = _metrics.gauge(
-            name="bandit_router_posterior_mean_entropy",
-            description="Entropy of mean posterior probabilities (informational uncertainty)",
-        )
-    except Exception:  # pragma: no cover
+        _selection_entropy_gauge = _metrics.gauge(name='bandit_router_selection_entropy', description='Shannon entropy of model selection distribution (empirical selections)')
+        _posterior_entropy_gauge = _metrics.gauge(name='bandit_router_posterior_mean_entropy', description='Entropy of mean posterior probabilities (informational uncertainty)')
+    except Exception:
         _selection_entropy_gauge = None
         _posterior_entropy_gauge = None
 
-
 def _state_filename(tenant_id: str, workspace_id: str) -> str:
-    return f"bandit_state__{tenant_id}__{workspace_id}.json"
-
+    return f'bandit_state__{tenant_id}__{workspace_id}.json'
 
 def get_tenant_router() -> ThompsonBanditRouter:
     ctx = current_tenant()
     if ctx is None:
-        # Fall back to a global router (shared) if tenant not set
-        key = ("_global", "_global")
+        key = ('_global', '_global')
         with _registry_lock:
             r = _routers.get(key)
             if r is None:
@@ -92,17 +77,15 @@ def get_tenant_router() -> ThompsonBanditRouter:
             _routers[key] = r
         return r
 
-
 def record_selection(model: str) -> None:
     ctx = current_tenant()
-    key = (ctx.tenant_id, ctx.workspace_id) if ctx else ("_global", "_global")
+    key = (ctx.tenant_id, ctx.workspace_id) if ctx else ('_global', '_global')
     with _registry_lock:
         _selection_counts[key][model] += 1
         if _selection_entropy_gauge:
             ent = _compute_entropy_locked(_selection_counts[key])
             if ent is not None:
                 _selection_entropy_gauge.set(ent, {})
-        # posterior entropy on demand (requires router present)
         if _posterior_entropy_gauge:
             router = _routers.get(key)
             if router is not None:
@@ -110,19 +93,16 @@ def record_selection(model: str) -> None:
                 if pe is not None:
                     _posterior_entropy_gauge.set(pe, {})
 
-
 def compute_selection_entropy() -> float | None:
     """Return Shannon entropy over selection proportions for current tenant.
 
     Returns None if no selections yet. Units: nats.
     """
-
     ctx = current_tenant()
-    key = (ctx.tenant_id, ctx.workspace_id) if ctx else ("_global", "_global")
+    key = (ctx.tenant_id, ctx.workspace_id) if ctx else ('_global', '_global')
     with _registry_lock:
         counts = _selection_counts.get(key)
         return _compute_entropy_locked(counts)
-
 
 def _compute_entropy_locked(counts: dict[str, int] | None) -> float | None:
     if not counts:
@@ -136,12 +116,10 @@ def _compute_entropy_locked(counts: dict[str, int] | None) -> float | None:
         entropy -= p * math.log(p)
     return entropy
 
-
 def _compute_posterior_mean_entropy(router: ThompsonBanditRouter) -> float | None:
     arms = router.arms()
     if not arms:
         return None
-    # Mean probability estimate = alpha / (alpha+beta)
     probs = []
     for a in arms:
         st = router.get_state(a)
@@ -153,7 +131,6 @@ def _compute_posterior_mean_entropy(router: ThompsonBanditRouter) -> float | Non
         probs.append(st.alpha / total)
     if not probs:
         return None
-    # Normalize to a distribution (they are independent expectations, not guaranteed to sum to 1)
     s = sum(probs)
     if s <= 0:
         return None
@@ -163,70 +140,50 @@ def _compute_posterior_mean_entropy(router: ThompsonBanditRouter) -> float | Non
         entropy -= p_norm * math.log(p_norm)
     return entropy
 
-
-# ---------------------- Selection Count Persistence ----------------------
-
-
 def _counts_state_path() -> str:
-    base_dir = os.getenv("BANDIT_STATE_DIR", "./bandit_state")
-    return os.path.join(base_dir, "selection_counts.json")
-
+    base_dir = os.getenv('BANDIT_STATE_DIR', './bandit_state')
+    return os.path.join(base_dir, 'selection_counts.json')
 
 def load_selection_counts() -> None:
-    if os.getenv("ENABLE_BANDIT_PERSIST", "0").lower() not in {
-        "1",
-        "true",
-        "yes",
-        "on",
-    }:
+    if os.getenv('ENABLE_BANDIT_PERSIST', '0').lower() not in {'1', 'true', 'yes', 'on'}:
         return
     path = _counts_state_path()
     if not os.path.isfile(path):
         return
     try:
-        with open(path, encoding="utf-8") as f:
+        with open(path, encoding='utf-8') as f:
             raw = json.load(f)
         if isinstance(raw, dict):
             with _registry_lock:
                 for key_str, model_counts in raw.items():
                     if not isinstance(model_counts, dict):
                         continue
-                    tenant, workspace = key_str.split("||", 1) if "||" in key_str else (key_str, "")
+                    tenant, workspace = key_str.split('||', 1) if '||' in key_str else (key_str, '')
                     tup = (tenant, workspace)
                     for m, c in model_counts.items():
                         if isinstance(c, int) and c >= 0:
                             _selection_counts[tup][m] = c
-    except Exception:  # pragma: no cover
+    except Exception:
         pass
 
-
 def save_selection_counts() -> None:
-    if os.getenv("ENABLE_BANDIT_PERSIST", "0").lower() not in {
-        "1",
-        "true",
-        "yes",
-        "on",
-    }:
+    if os.getenv('ENABLE_BANDIT_PERSIST', '0').lower() not in {'1', 'true', 'yes', 'on'}:
         return
     path = _counts_state_path()
     os.makedirs(os.path.dirname(path), exist_ok=True)
     data: dict[str, dict[str, int]] = {}
     with _registry_lock:
         for (tenant, workspace), counts in _selection_counts.items():
-            key_str = f"{tenant}||{workspace}"
+            key_str = f'{tenant}||{workspace}'
             data[key_str] = dict(counts)
-    tmp = path + ".tmp"
+    tmp = path + '.tmp'
     try:
-        with open(tmp, "w", encoding="utf-8") as f:
-            json.dump(data, f, separators=(",", ":"))
+        with open(tmp, 'w', encoding='utf-8') as f:
+            json.dump(data, f, separators=(',', ':'))
         os.replace(tmp, path)
-    except Exception:  # pragma: no cover
+    except Exception:
         pass
-
-
-# Load counts at import time (best-effort)
 load_selection_counts()
-
 
 class RewardNormalizer:
     """EMA-based normalizer for latency & cost; direct quality passthrough.
@@ -235,16 +192,15 @@ class RewardNormalizer:
     where lower latency/cost increases reward. Output reward in [0,1].
     """
 
-    def __init__(self, alpha: float = 0.2) -> None:
+    def __init__(self, alpha: float=0.2) -> None:
         self.alpha = alpha
         self._lat_ema: float | None = None
         self._cost_ema: float | None = None
 
     def _ema(self, prev: float | None, value: float) -> float:
-        return value if prev is None else (self.alpha * value + (1 - self.alpha) * prev)
+        return value if prev is None else self.alpha * value + (1 - self.alpha) * prev
 
     def compute(self, quality: float, latency_ms: float, cost: float) -> float:
-        # Clamp quality into [0,1]
         q = max(0.0, min(1.0, quality))
         self._lat_ema = self._ema(self._lat_ema, latency_ms)
         self._cost_ema = self._ema(self._cost_ema, cost)
@@ -252,11 +208,4 @@ class RewardNormalizer:
         cost_norm = 0.5 if self._cost_ema is None or self._cost_ema == 0 else min(1.0, cost / (2 * self._cost_ema))
         reward = 0.5 * q + 0.3 * (1 - lat_norm) + 0.2 * (1 - cost_norm)
         return max(0.0, min(1.0, reward))
-
-
-__all__ = [
-    "RewardNormalizer",
-    "compute_selection_entropy",
-    "get_tenant_router",
-    "record_selection",
-]
+__all__ = ['RewardNormalizer', 'compute_selection_entropy', 'get_tenant_router', 'record_selection']
