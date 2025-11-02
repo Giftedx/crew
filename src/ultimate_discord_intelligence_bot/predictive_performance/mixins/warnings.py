@@ -34,7 +34,7 @@ class WarningDetectionMixin:
                 )
                 time_to_impact = timedelta(hours=interactions_to_critical * 0.5)
                 return EarlyWarningAlert(
-                    alert_id=f"quality_degradation_{agent_name}_{default_utc_now().strftime('%Y%m%d_%H%M%S')}"
+                    alert_id=f"quality_degradation_{agent_name}_{default_utc_now().strftime('%Y%m%d_%H%M%S')}",
                     severity=AlertSeverity.WARNING if decline_ratio < 0.25 else AlertSeverity.CRITICAL,
                     alert_type="quality",
                     title=f"Quality Degradation Detected: {agent_name}",

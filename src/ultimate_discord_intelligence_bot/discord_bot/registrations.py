@@ -33,7 +33,7 @@ def _register_events(bot: Any) -> None:
         try:
             user = getattr(bot, "user", None)
             print(f"🤖 Bot logged in as {user}")
-            print(f"📊 Connected to {len(getattr(bot, 'guilds', []))} guilds"
+            print(f"📊 Connected to {len(getattr(bot, 'guilds', []))} guilds")
         except Exception:
             print("🤖 Bot ready")
         try:
@@ -80,7 +80,7 @@ def _register_prefix_commands(bot: Any) -> None:
             embed = discord.Embed(title="🟢 Bot Status", description="Operational overview", color=65280)
             embed.add_field(
                 name="🔧 Core Tools",
-                value="\n".join([f"• {k}: {('✅' if v else '❌')}"
+                value="\n".join([f"• {k}: {'✅' if v else '❌'}" for k, v in tools_status.items()]),
                 inline=False,
             )
             elapsed_ms = (time.time() - start) * 1000
@@ -88,7 +88,7 @@ def _register_prefix_commands(bot: Any) -> None:
             embed.set_footer(text=f"Status generated in {elapsed_ms:.1f}ms")
             await ctx.send(embed=embed)
         except Exception:
-            await ctx.send("Status: " + ", ".join([f"{k}={('on' if v else 'off')}"
+            await ctx.send("Status: " + ", ".join([f"{k}={('on' if v else 'off')}" for k, v in tools_status.items()]))
 
     @bot.command(name="help_full")
     async def help_full(ctx):
@@ -250,7 +250,6 @@ async def _execute_autointel(interaction: Any, url: str, depth: str = "standard"
                     "❌ Invalid URL provided. Please provide a valid HTTP/HTTPS URL.", ephemeral=True
                 )
             return
-        "Shared autointel execution logic for slash and prefix commands.\n\n        Prefers the unified Mission API for synchronous runs to ensure consistent\n        routing and observability. Falls back to legacy orchestrator paths if the\n        Mission API is unavailable.\n        "
 
         def _normalize_depth(raw: str | None) -> str:
             if not raw:
@@ -294,7 +293,7 @@ async def _execute_autointel(interaction: Any, url: str, depth: str = "standard"
                 guild_id = getattr(interaction, "guild_id", None)
                 channel = getattr(interaction, "channel", None)
                 workspace_name = getattr(channel, "name", "direct_message") if channel else "direct_message"
-                tenant_ctx = TenantContext(tenant_id=f"guild_{guild_id or 'dm'}"
+                tenant_ctx = TenantContext(tenant_id=f"guild_{guild_id or 'dm'}", workspace_id=workspace_name)
                 print(f"✅ Created tenant context: {tenant_ctx}")
             except Exception as tenancy_error:
                 print(f"⚠️ Tenancy not available; proceeding without: {tenancy_error}")
@@ -356,7 +355,7 @@ async def _execute_autointel(interaction: Any, url: str, depth: str = "standard"
             guild_id = getattr(interaction, "guild_id", None)
             channel = getattr(interaction, "channel", None)
             workspace_name = getattr(channel, "name", "direct_message") if channel else "direct_message"
-            tenant_ctx = TenantContext(tenant_id=f"guild_{guild_id or 'dm'}"
+            tenant_ctx = TenantContext(tenant_id=f"guild_{guild_id or 'dm'}", workspace_id=workspace_name)
             print(f"✅ Created tenant context: {tenant_ctx}")
         except ImportError as tenancy_error:
             print(f"⚠️ Tenancy system not available: {tenancy_error}. Proceeding without tenant context.")

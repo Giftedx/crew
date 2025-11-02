@@ -47,7 +47,7 @@ class TrendAnalysisMixin:
                 if tool_usage:
                     common_tools = [t for t in set(tool_usage) if tool_usage.count(t) > len(recent_data) * 0.3]
                     if common_tools:
-                        factors.append(f"Frequent use of tools: {', '.join(common_tools)}"
+                        factors.append(f"Frequent use of tools: {', '.join(common_tools)}")
             elif "response_time" in metric_name:
                 avg_complexity = statistics.mean([d["context"].get("complexity", 0) for d in recent_data])
                 if avg_complexity > 3:
@@ -115,7 +115,7 @@ class WarningDetectionMixin:
                 )
                 time_to_impact = timedelta(hours=interactions_to_critical * 0.5)
                 return EarlyWarningAlert(
-                    alert_id=f"quality_degradation_{agent_name}_{default_utc_now().strftime('%Y%m%d_%H%M%S')}"
+                    alert_id=f"",
                     severity=AlertSeverity.WARNING if decline_ratio < 0.25 else AlertSeverity.CRITICAL,
                     alert_type="quality",
                     title=f"Quality Degradation Detected: {agent_name}",
@@ -161,7 +161,7 @@ class WarningDetectionMixin:
                 )
                 time_to_impact = timedelta(hours=interactions_to_critical * 0.5)
                 return EarlyWarningAlert(
-                    alert_id=f"performance_degradation_{agent_name}_{default_utc_now().strftime('%Y%m%d_%H%M%S')}"
+                    alert_id=f"",
                     severity=AlertSeverity.WARNING if increase_ratio < 0.5 else AlertSeverity.CRITICAL,
                     alert_type="performance",
                     title=f"Performance Degradation Detected: {agent_name}",
@@ -204,7 +204,7 @@ class WarningDetectionMixin:
                             overloaded_agent = max(agent_loads.items(), key=lambda x: x[1])[0]
                             warnings.append(
                                 EarlyWarningAlert(
-                                    alert_id=f"capacity_imbalance_{default_utc_now().strftime('%Y%m%d_%H%M%S')}"
+                                    alert_id=f"",
                                     severity=AlertSeverity.WARNING,
                                     alert_type="capacity",
                                     title="Agent Load Imbalance Detected",

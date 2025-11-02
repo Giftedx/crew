@@ -443,7 +443,7 @@ class ConversationalPipeline:
                 "timestamp": time.time(),
             }
             await self.memory_service.store_memory(
-                content=f"Discord interaction: {context.message_data.get('content', '')}"
+                content=f"",
                 metadata=interaction_data,
                 tenant=context.guild_id,
                 workspace="discord_interactions",
