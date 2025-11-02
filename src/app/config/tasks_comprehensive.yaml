@@ -1,0 +1,77 @@
+# Comprehensive Depth Tasks - Full Intelligence Pipeline
+#
+# Use case: Critical content requiring complete analysis and knowledge integration
+# Tasks: Download → Transcribe → Analyze → Verify → Integrate (5 tasks)
+# Processing time: ~10-20 minutes
+# Requires: ENABLE_EXPERIMENTAL_DEPTH=1 environment variable
+
+plan_autonomy_mission:
+  description: >-
+    Launch comprehensive intelligence mission for {request}. Orchestrate full pipeline
+    including acquisition, transcription, analysis, verification, and knowledge integration
+    with advanced budget tracking and memory persistence.
+  expected_output: Complete mission dossier with all stage outputs and knowledge graph updates.
+  agent: mission_orchestrator
+  human_input: false
+  async_execution: false
+  output_file: output/comprehensive_mission_{timestamp}.md
+
+capture_source_media:
+  description: >-
+    Resolve and download highest-quality media for {url} across all supported platforms,
+    capturing complete metadata, thumbnails, and uploading large artifacts to external storage.
+  expected_output: Comprehensive download manifest with all formats, durations, quality metrics, and storage references.
+  agent: acquisition_specialist
+  human_input: false
+  async_execution: true
+  output_file: output/download_manifest_{url_hash}.json
+
+transcribe_and_index_media:
+  description: >-
+    Produce highly accurate transcripts with precise timestamps, searchable indices,
+    speaker diarization, and quality assessments across multiple models.
+  expected_output: Complete transcript bundle with alignment data, confidence scores, speaker labels, and index mappings.
+  agent: transcription_engineer
+  context:
+    - capture_source_media
+  human_input: false
+  async_execution: false
+  output_file: output/transcript_{url_hash}.json
+
+map_transcript_insights:
+  description: >-
+    Comprehensively analyze transcripts for sentiment shifts, topical clusters,
+    argumentative structure, rhetorical patterns, and critical excerpts requiring
+    multi-backend verification.
+  expected_output: Extensive insight report with themes, sentiment timeline, argument map, rhetorical analysis, and verification targets.
+  agent: analysis_cartographer
+  context:
+    - transcribe_and_index_media
+  human_input: false
+  async_execution: false
+  output_file: output/insight_map_{url_hash}.json
+
+verify_priority_claims:
+  description: >-
+    Extract and exhaustively fact-check all consequential claims from analyzed content,
+    using all available verification backends, fallacy detection, trustworthiness scoring,
+    and cross-reference validation.
+  expected_output: Complete verification dossier with claim list, multi-source verdicts, confidence intervals, fallacy annotations, trust scores, and comprehensive citations.
+  agent: verification_director
+  context:
+    - map_transcript_insights
+  human_input: false
+  async_execution: false
+  output_file: output/verification_{url_hash}.json
+
+integrate_knowledge_memory:
+  description: >-
+    Integrate all findings into persistent knowledge graph, vector memory, and HippoRAG
+    continual memory systems for cross-content analysis and future retrieval.
+  expected_output: Knowledge integration report with graph node IDs, vector store references, memory indices, and integration status.
+  agent: memory_specialist
+  context:
+    - verify_priority_claims
+  human_input: false
+  async_execution: false
+  output_file: output/knowledge_integration_{url_hash}.json

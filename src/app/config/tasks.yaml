@@ -1,0 +1,306 @@
+# Active Tasks (Implemented in crew.py)
+#
+# These tasks correspond to @task methods in crew.py and are actively used
+# by the CrewAI system. Additional planned tasks are in future_tasks.yaml.
+#
+# Core workflow tasks for autonomous intelligence processing
+
+plan_autonomy_mission:
+  description: >-
+    Launch or resume the end-to-end intelligence mission for {request}. Sequence
+    acquisition, transcription, analysis, verification, and memory stages using the
+    pipeline tool while tracking budgets and documenting key decisions.
+  expected_output: Mission run log including staged plan, tool usage, and final routing instructions.
+  agent: mission_orchestrator
+  human_input: false
+  async_execution: false
+  output_file: output/mission_plan_{timestamp}.md
+
+capture_source_media:
+  description: >-
+    Use the MultiPlatformDownloadTool to resolve and download the highest-quality media for {url} 
+    across all supported platforms. Call MultiPlatformDownloadTool with the URL to download the video
+    and capture rich metadata including file paths, formats, durations, and resolver notes.
+    The tool will handle platform detection and download the content.
+  expected_output: Download manifest containing file paths, formats, durations, and resolver notes.
+  agent: acquisition_specialist
+  human_input: false
+  async_execution: true # Enable parallel execution - no dependencies
+  output_file: output/download_manifest_{url_hash}.json
+
+transcribe_and_index_media:
+  description: >-
+    Use the AudioTranscriptionTool to produce accurate transcripts from the downloaded media.
+    Call AudioTranscriptionTool with the file path from the previous acquisition task to transcribe
+    the audio content. The tool will generate searchable indices and aligned timelines for the
+    captured media package.
+  expected_output: Transcript bundle with timestamps, quality indicators, and index references.
+  agent: transcription_engineer
+  context:
+    - capture_source_media
+  human_input: false
+  async_execution: false
+  output_file: output/transcript_{url_hash}.json
+
+map_transcript_insights:
+  description: >-
+    Use the EnhancedAnalysisTool and TextAnalysisTool to analyse the transcript from the previous task.
+    Call EnhancedAnalysisTool with the transcript text to identify sentiment shifts, topical clusters, 
+    and noteworthy excerpts. Use TextAnalysisTool to extract themes and perspectives.
+    The transcript should be available from the previous transcription task.
+  expected_output: Structured insight report containing themes, sentiment summary, and highlighted excerpts.
+  agent: analysis_cartographer
+  context:
+    - transcribe_and_index_media
+  human_input: false
+  async_execution: false
+  output_file: output/insight_map_{url_hash}.json
+
+verify_priority_claims:
+  description: >-
+    Use the ClaimExtractorTool to extract factual claims from the transcript, then use FactCheckTool 
+    to verify them. First call ClaimExtractorTool with the transcript text to extract key claims.
+    Then call FactCheckTool for each significant claim to capture verdicts, confidence levels, 
+    and supporting evidence. The transcript should be available from the transcription task.
+  expected_output: Verification dossier with claim list, verdicts, fallacy notes, and citations.
+  agent: verification_director
+  context:
+    - map_transcript_insights
+  human_input: false
+  async_execution: false
+  output_file: output/verification_{url_hash}.json
+
+# ========================================
+# SPECIALIZED AI AGENT TASKS (Phase 3.1)
+# ========================================
+
+visual_analysis_task:
+  description: >-
+    Perform comprehensive visual analysis on media content including frame analysis, scene detection, 
+    object recognition, and visual fact-checking. Use VideoFrameAnalysisTool for video content, 
+    ImageAnalysisTool for images, and VisualSummaryTool for key moment identification.
+  expected_output: Detailed visual analysis report with key findings, visual sentiment, detected objects, and content moderation results.
+  agent: visual_intelligence_specialist
+  context:
+    - capture_source_media
+  human_input: false
+  async_execution: true
+  output_file: output/visual_analysis_{url_hash}.json
+
+audio_analysis_task:
+  description: >-
+    Provide advanced audio analysis including music recognition, speaker identification, emotional tone analysis, 
+    and acoustic scene classification. Use AdvancedAudioAnalysisTool for comprehensive audio analysis and 
+    AudioTranscriptionTool for speech-to-text conversion with speaker identification.
+  expected_output: Comprehensive audio analysis report with music recognition, speaker diarization, emotional analysis, and audio quality assessment.
+  agent: audio_intelligence_specialist
+  context:
+    - transcribe_and_index_media
+  human_input: false
+  async_execution: true
+  output_file: output/audio_analysis_{url_hash}.json
+
+trend_analysis_task:
+  description: >-
+    Monitor, analyze, and predict content trends with real-time analysis and long-term forecasting capabilities. 
+    Use TrendAnalysisTool for cross-platform trend detection, TrendForecastingTool for long-term predictions, 
+    and ViralityPredictionTool for content virality assessment.
+  expected_output: Comprehensive trend analysis report with current trends, viral predictions, and long-term forecasting insights.
+  agent: trend_intelligence_specialist
+  context:
+    - map_transcript_insights
+  human_input: false
+  async_execution: true
+  output_file: output/trend_analysis_{url_hash}.json
+
+content_generation_task:
+  description: >-
+    Create, adapt, and optimize content across platforms using AI-powered generation and multimodal understanding. 
+    Use ContentGenerationTool for AI-powered content creation, ContentRecommendationTool for personalized recommendations, 
+    and EngagementPredictionTool for content performance optimization.
+  expected_output: Generated content recommendations with platform-specific optimizations, engagement predictions, and audience targeting insights.
+  agent: content_generation_specialist
+  context:
+    - map_transcript_insights
+    - visual_analysis_task
+    - audio_analysis_task
+  human_input: false
+  async_execution: true
+  output_file: output/content_generation_{url_hash}.json
+
+cross_platform_analysis_task:
+  description: >-
+    Correlate and analyze content patterns across multiple platforms, identifying cross-platform trends and content propagation. 
+    Use TrendAnalysisTool for cross-platform correlation, MultiPlatformMonitorTool for comprehensive monitoring, 
+    and MultimodalAnalysisTool for cross-platform content understanding.
+  expected_output: Cross-platform intelligence report with content propagation patterns, platform-specific behaviors, and multi-platform trend correlations.
+  agent: cross_platform_intelligence_specialist
+  context:
+    - trend_analysis_task
+    - visual_analysis_task
+    - audio_analysis_task
+  human_input: false
+  async_execution: true
+  output_file: output/cross_platform_analysis_{url_hash}.json
+
+# ========================================
+# CREATOR NETWORK INTELLIGENCE TASKS
+# ========================================
+
+network_discovery_task:
+  description: >-
+    Automatically discover and map social networks of content creators, identifying relationships, collaboration patterns, and influence dynamics.
+    Use SocialGraphAnalysisTool for centrality and community detection, CharacterProfileTool for profile management,
+    and MultiPlatformMonitorTool for cross-platform presence discovery.
+  expected_output: Comprehensive network discovery report with creator relationships, collaboration patterns, and influence dynamics.
+  agent: network_discovery_specialist
+  context:
+    - capture_source_media
+  human_input: false
+  async_execution: true
+  output_file: output/network_discovery_{url_hash}.json
+
+deep_content_analysis_task:
+  description: >-
+    Perform comprehensive multimodal analysis of creator content, extracting topics, debates, controversies, guest information, and narrative arcs.
+    Use MultimodalAnalysisTool for comprehensive content analysis, EnhancedAnalysisTool for deep insights,
+    and CharacterProfileTool for guest identification and relationship mapping.
+  expected_output: Deep content analysis report with topics, debates, controversies, guest information, and narrative arcs.
+  agent: deep_content_analyst
+  context:
+    - transcribe_and_index_media
+    - visual_analysis_task
+    - audio_analysis_task
+  human_input: false
+  async_execution: true
+  output_file: output/deep_content_analysis_{url_hash}.json
+
+guest_intelligence_task:
+  description: >-
+    Track and profile guests, collaborators, and frequent participants in creator content, building comprehensive profiles and identifying monitoring opportunities.
+    Use CharacterProfileTool for comprehensive guest profile building, SocialGraphAnalysisTool for collaboration analysis,
+    and MultiPlatformMonitorTool for cross-platform guest presence discovery.
+  expected_output: Guest intelligence report with comprehensive profiles, collaboration analysis, and monitoring recommendations.
+  agent: guest_intelligence_specialist
+  context:
+    - deep_content_analysis_task
+    - network_discovery_task
+  human_input: false
+  async_execution: true
+  output_file: output/guest_intelligence_{url_hash}.json
+
+controversy_tracking_task:
+  description: >-
+    Track controversies, drama, and conflicts involving tracked creators, providing early warning and comprehensive analysis of developing situations.
+    Use EnhancedAnalysisTool for controversy detection, SocialGraphAnalysisTool for conflict relationship mapping,
+    and MultiPlatformMonitorTool for cross-platform controversy tracking.
+  expected_output: Controversy tracking report with early warnings, conflict analysis, and community reaction monitoring.
+  agent: controversy_tracker_specialist
+  context:
+    - deep_content_analysis_task
+    - network_discovery_task
+  human_input: false
+  async_execution: true
+  output_file: output/controversy_tracking_{url_hash}.json
+
+insight_generation_task:
+  description: >-
+    Generate high-level insights and summaries about creator networks, trends, and content patterns, synthesizing complex data into actionable intelligence.
+    Use TrendAnalysisTool for pattern recognition, SocialGraphAnalysisTool for network insights,
+    and EnhancedAnalysisTool for content pattern synthesis.
+  expected_output: Comprehensive insights report with trend analysis, network insights, and actionable intelligence recommendations.
+  agent: insight_generation_specialist
+  context:
+    - network_discovery_task
+    - deep_content_analysis_task
+    - guest_intelligence_task
+    - controversy_tracking_task
+  human_input: false
+  async_execution: true
+  output_file: output/insight_generation_{url_hash}.json
+
+# ========================================
+# DISCORD AI CONVERSATIONAL TASKS
+# ========================================
+
+evaluate_message_response:
+  description: >-
+    Evaluate whether the bot should respond to a Discord message based on context, relevance, and conversation flow.
+    Analyze the message content, user interaction history, channel context, and opt-in status to make an intelligent
+    decision about response appropriateness. Consider factors like direct mentions, conversation relevance, user preferences,
+    and personality appropriateness for timing.
+  expected_output: Decision (respond/skip) with confidence score and detailed reasoning.
+  agent: conversational_response_agent
+  human_input: false
+  async_execution: false
+  output_file: output/message_evaluation_{message_id}.json
+
+generate_contextual_response:
+  description: >-
+    Generate a personality-appropriate response using conversation history and knowledge base context.
+    Craft a natural Discord message that matches the bot's evolving personality traits, incorporates relevant
+    context from memory and knowledge graphs, and responds appropriately to the user's message while maintaining
+    conversational flow and engagement.
+  expected_output: Natural Discord message with appropriate tone and formatting.
+  agent: conversational_response_agent
+  context:
+    - evaluate_message_response
+  human_input: false
+  async_execution: false
+  output_file: output/discord_response_{message_id}.md
+
+adapt_personality_traits:
+  description: >-
+    Analyze user interaction feedback and adapt personality traits using reinforcement learning.
+    Process reward signals from user engagement, reactions, and conversation outcomes to optimize
+    the bot's personality traits for better user satisfaction and engagement over time.
+  expected_output: Updated personality traits with adaptation rationale and performance metrics.
+  agent: personality_evolution_agent
+  human_input: false
+  async_execution: true
+  output_file: output/personality_adaptation_{timestamp}.json
+
+compute_interaction_rewards:
+  description: >-
+    Compute reward signals from user interactions and engagement metrics for personality optimization.
+    Analyze user reactions, conversation continuation, temporal patterns, and content quality to generate
+    meaningful feedback signals that guide personality adaptation through reinforcement learning.
+  expected_output: Reward signal analysis with engagement metrics and confidence scores.
+  agent: personality_evolution_agent
+  human_input: false
+  async_execution: false
+  output_file: output/reward_analysis_{interaction_id}.json
+
+# Web Automation Tasks (Playwright)
+scrape_dynamic_content:
+  description: >-
+    Use PlaywrightAutomationTool to scrape dynamic JavaScript-rendered content from {url}.
+    Navigate to the URL, wait for content to load, and extract HTML and text content from the page.
+    Handle SPAs, lazy-loaded content, and JavaScript-rendered elements that traditional scrapers cannot access.
+  expected_output: Extracted content including HTML, text, and page metadata (title, URL).
+  agent: acquisition_specialist
+  human_input: false
+  async_execution: true
+  output_file: output/scraped_content_{url_hash}.json
+
+monitor_live_stream:
+  description: >-
+    Use PlaywrightAutomationTool to monitor live stream metadata and status from {url}.
+    Capture screenshots at intervals, extract viewer counts, chat messages, and stream status.
+    Detect when streams go live or end. Useful for real-time monitoring of YouTube, Twitch, or other streaming platforms.
+  expected_output: Stream status report with screenshots, metadata, and monitoring interval data.
+  agent: acquisition_specialist
+  human_input: false
+  async_execution: true
+  output_file: output/stream_monitor_{stream_id}_{timestamp}.json
+
+capture_social_media_post:
+  description: >-
+    Use PlaywrightAutomationTool to capture social media post content from {url}.
+    Extract post text, images, engagement metrics, and metadata from dynamic social media pages.
+    Handle authenticated content and JavaScript-rendered posts that require browser execution.
+  expected_output: Social media post content with images, text, engagement metrics, and metadata.
+  agent: acquisition_specialist
+  human_input: false
+  async_execution: true
+  output_file: output/social_post_{post_id}.json
