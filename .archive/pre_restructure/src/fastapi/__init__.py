@@ -26,9 +26,7 @@ class Response:
         media_type: str | None = None,
     ) -> None:
         self.status_code = status_code
-        self.content = (
-            content if isinstance(content, (bytes, bytearray)) else str(content).encode("utf-8")
-        )
+        self.content = content if isinstance(content, (bytes, bytearray)) else str(content).encode("utf-8")
         self.media_type = media_type
 
 
@@ -120,6 +118,7 @@ class FastAPI:
 
         return dec
 
+
 # Provide minimal submodules fastapi.testclient and fastapi.responses by pre-injecting
 # synthetic modules into sys.modules to avoid importing on-disk corrupted files.
 import json as _json
@@ -130,15 +129,22 @@ import types as _types
 # fastapi.testclient minimal shim
 _tc_mod = _types.ModuleType("fastapi.testclient")
 
+
 class _Resp:
-    def __init__(self, status_code: int = 200, content: bytes | str | None = None, json_obj: object | None = None) -> None:
+    def __init__(
+        self, status_code: int = 200, content: bytes | str | None = None, json_obj: object | None = None
+    ) -> None:
         self.status_code = status_code
         if json_obj is not None:
             self._json = json_obj
             self.content = _json.dumps(json_obj).encode("utf-8")
         else:
             self._json = None
-            self.content = b"" if content is None else (content if isinstance(content, (bytes, bytearray)) else str(content).encode("utf-8"))
+            self.content = (
+                b""
+                if content is None
+                else (content if isinstance(content, (bytes, bytearray)) else str(content).encode("utf-8"))
+            )
 
     def json(self):  # pragma: no cover
         return self._json if self._json is not None else _json.loads(self.content.decode("utf-8"))
@@ -172,6 +178,7 @@ class TestClient:  # pragma: no cover - placeholder
     def post(self, path: str, *, json: Any | None = None, headers: dict[str, str] | None = None) -> _Resp:
         return self._request("POST", path, json=json, headers=headers)
 
+
 _tc_mod.TestClient = TestClient
 _tc_mod.__all__ = ["TestClient"]
 _sys.modules.setdefault("fastapi.testclient", _tc_mod)
@@ -179,9 +186,11 @@ _sys.modules.setdefault("fastapi.testclient", _tc_mod)
 # fastapi.responses minimal shim (JSONResponse only)
 _resp_mod = _types.ModuleType("fastapi.responses")
 
+
 class JSONResponse(Response):  # pragma: no cover
     def __init__(self, content, status_code: int = 200) -> None:
         super().__init__(_json.dumps(content), status_code=status_code, media_type="application/json")
+
 
 _resp_mod.JSONResponse = JSONResponse
 _resp_mod.Response = Response
