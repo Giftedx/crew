@@ -1,0 +1,179 @@
+{
+  "source_directory": "src/core/rl",
+  "target_directory": "src/platform/rl",
+  "total_matching_names": 17,
+  "identical_files": 14,
+  "different_implementations": 3,
+  "duplicates": [
+    {
+      "filename": "thompson_sampling.py",
+      "source_path": "core/rl/thompson_sampling.py",
+      "target_path": "platform/rl/core/thompson_sampling.py",
+      "md5_hash": "a48c2b93ad3b2b36d7482bdf39ee779a",
+      "target_hash": "a48c2b93ad3b2b36d7482bdf39ee779a",
+      "file_size": 17505,
+      "target_size": 17505,
+      "verified_identical": true
+    },
+    {
+      "filename": "advanced_experiments.py",
+      "source_path": "core/rl/advanced_experiments.py",
+      "target_path": "platform/rl/core/advanced_experiments.py",
+      "md5_hash": "ea1cecae9fb1deaeeb82a6633496b24d",
+      "target_hash": "4b78eb3e7f5040feb761febd551df8d2",
+      "file_size": 14591,
+      "target_size": 12950,
+      "verified_identical": false
+    },
+    {
+      "filename": "shields.py",
+      "source_path": "core/rl/shields.py",
+      "target_path": "platform/rl/core/shields.py",
+      "md5_hash": "5a1e70681f7cc432ce3d4b25fd4ae8b2",
+      "target_hash": "5a1e70681f7cc432ce3d4b25fd4ae8b2",
+      "file_size": 848,
+      "target_size": 848,
+      "verified_identical": true
+    },
+    {
+      "filename": "feature_store.py",
+      "source_path": "core/rl/feature_store.py",
+      "target_path": "platform/rl/core/feature_store.py",
+      "md5_hash": "37846e2b471f4b76f9166b29d2cd3a50",
+      "target_hash": "37846e2b471f4b76f9166b29d2cd3a50",
+      "file_size": 1329,
+      "target_size": 1329,
+      "verified_identical": true
+    },
+    {
+      "filename": "cost_quality_optimization.py",
+      "source_path": "core/rl/cost_quality_optimization.py",
+      "target_path": "platform/rl/core/cost_quality_optimization.py",
+      "md5_hash": "992294e1ebab14f98cd58a3f5bfb6b1f",
+      "target_hash": "992294e1ebab14f98cd58a3f5bfb6b1f",
+      "file_size": 26309,
+      "target_size": 26309,
+      "verified_identical": true
+    },
+    {
+      "filename": "provider_preference_learning.py",
+      "source_path": "core/rl/provider_preference_learning.py",
+      "target_path": "platform/rl/core/provider_preference_learning.py",
+      "md5_hash": "d4c4f774937de5e022b3f3f54bc5ce7c",
+      "target_hash": "d4c4f774937de5e022b3f3f54bc5ce7c",
+      "file_size": 21072,
+      "target_size": 21072,
+      "verified_identical": true
+    },
+    {
+      "filename": "ucb_bandit.py",
+      "source_path": "core/rl/ucb_bandit.py",
+      "target_path": "platform/rl/core/ucb_bandit.py",
+      "md5_hash": "1fd3c2f2118bf0eeea614b591799b6ed",
+      "target_hash": "1fd3c2f2118bf0eeea614b591799b6ed",
+      "file_size": 21936,
+      "target_size": 21936,
+      "verified_identical": true
+    },
+    {
+      "filename": "shadow_regret.py",
+      "source_path": "core/rl/shadow_regret.py",
+      "target_path": "platform/rl/core/shadow_regret.py",
+      "md5_hash": "9c26f05870e2c6f3a1dbd6be2b935356",
+      "target_hash": "b0c41a6dc99e95673fd15f96d648dee6",
+      "file_size": 6629,
+      "target_size": 5729,
+      "verified_identical": false
+    },
+    {
+      "filename": "reward_engine.py",
+      "source_path": "core/rl/reward_engine.py",
+      "target_path": "platform/rl/core/reward_engine.py",
+      "md5_hash": "835d8509ff15abca7f6137aeb41128af",
+      "target_hash": "835d8509ff15abca7f6137aeb41128af",
+      "file_size": 2766,
+      "target_size": 2766,
+      "verified_identical": true
+    },
+    {
+      "filename": "experiment.py",
+      "source_path": "core/rl/experiment.py",
+      "target_path": "platform/rl/core/experiment.py",
+      "md5_hash": "f0f5433fb637621017abfef596992704",
+      "target_hash": "13ed52f5c18ad8d6673367a65d1021c7",
+      "file_size": 10758,
+      "target_size": 9988,
+      "verified_identical": false
+    },
+    {
+      "filename": "advanced_config.py",
+      "source_path": "core/rl/advanced_config.py",
+      "target_path": "platform/rl/core/advanced_config.py",
+      "md5_hash": "4ea7861ce545f4c2787f84c15e088f08",
+      "target_hash": "4ea7861ce545f4c2787f84c15e088f08",
+      "file_size": 15747,
+      "target_size": 15747,
+      "verified_identical": true
+    },
+    {
+      "filename": "registry.py",
+      "source_path": "core/rl/registry.py",
+      "target_path": "platform/rl/core/registry.py",
+      "md5_hash": "342e4a0c992951c1b7298eb3505efc83",
+      "target_hash": "342e4a0c992951c1b7298eb3505efc83",
+      "file_size": 924,
+      "target_size": 924,
+      "verified_identical": true
+    },
+    {
+      "filename": "lints.py",
+      "source_path": "core/rl/policies/lints.py",
+      "target_path": "platform/rl/core/policies/lints.py",
+      "md5_hash": "8acf3146903e4332ce454ed45dbe85d8",
+      "target_hash": "8acf3146903e4332ce454ed45dbe85d8",
+      "file_size": 5450,
+      "target_size": 5450,
+      "verified_identical": true
+    },
+    {
+      "filename": "linucb.py",
+      "source_path": "core/rl/policies/linucb.py",
+      "target_path": "platform/rl/core/policies/linucb.py",
+      "md5_hash": "3a504a79c842a1ffcdb275bb5875dc14",
+      "target_hash": "3a504a79c842a1ffcdb275bb5875dc14",
+      "file_size": 5415,
+      "target_size": 5415,
+      "verified_identical": true
+    },
+    {
+      "filename": "vowpal_wabbit.py",
+      "source_path": "core/rl/policies/vowpal_wabbit.py",
+      "target_path": "platform/rl/core/policies/vowpal_wabbit.py",
+      "md5_hash": "b3db45a7082b6edae6fac32fe24a8e33",
+      "target_hash": "b3db45a7082b6edae6fac32fe24a8e33",
+      "file_size": 7838,
+      "target_size": 7838,
+      "verified_identical": true
+    },
+    {
+      "filename": "bandit_base.py",
+      "source_path": "core/rl/policies/bandit_base.py",
+      "target_path": "platform/rl/core/policies/bandit_base.py",
+      "md5_hash": "3443b545b07fcf1c77495c6726b66b0e",
+      "target_hash": "3443b545b07fcf1c77495c6726b66b0e",
+      "file_size": 8099,
+      "target_size": 8099,
+      "verified_identical": true
+    },
+    {
+      "filename": "advanced_bandits.py",
+      "source_path": "core/rl/policies/advanced_bandits.py",
+      "target_path": "platform/rl/core/policies/advanced_bandits.py",
+      "md5_hash": "f805c5d8c3523042984f9ceb86723403",
+      "target_hash": "f805c5d8c3523042984f9ceb86723403",
+      "file_size": 18796,
+      "target_size": 18796,
+      "verified_identical": true
+    }
+  ]
+}
