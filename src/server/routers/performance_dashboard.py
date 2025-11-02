@@ -9,10 +9,14 @@ Provides REST endpoints for performance metrics, including:
 """
 
 from __future__ import annotations
+
 from datetime import datetime, timedelta
 from typing import Any
+
 from pydantic import BaseModel, Field
+
 from fastapi import APIRouter, Query
+
 
 try:
     from platform.observability import metrics

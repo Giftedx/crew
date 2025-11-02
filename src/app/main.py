@@ -1,5 +1,6 @@
 import asyncio
 import sys
+
 from domains.orchestration.crew import get_crew
 from ultimate_discord_intelligence_bot.enhanced_crew_integration import execute_crew_with_quality_monitoring
 

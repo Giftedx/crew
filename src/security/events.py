@@ -3,11 +3,24 @@
 This module provides a tiny wrapper around :mod:`obs.logging` so that
 security relevant actions are recorded in a consistent JSON format.
 """
-from __future__ import annotations
-from typing import Any
-from platform.observability.logging import logger
 
-def log_security_event(*, actor: str, action: str, resource: str, decision: str, reason: str | None=None, tenant: str | None=None, workspace: str | None=None, **extra: Any) -> None:
+from __future__ import annotations
+
+from platform.observability.logging import logger
+from typing import Any
+
+
+def log_security_event(
+    *,
+    actor: str,
+    action: str,
+    resource: str,
+    decision: str,
+    reason: str | None = None,
+    tenant: str | None = None,
+    workspace: str | None = None,
+    **extra: Any,
+) -> None:
     """Emit a structured security event.
 
     Parameters
@@ -27,14 +40,16 @@ def log_security_event(*, actor: str, action: str, resource: str, decision: str,
     extra:
         Additional key-value pairs to include in the log payload.
     """
-    payload: dict[str, Any] = {'actor': actor, 'action': action, 'resource': resource, 'decision': decision}
+    payload: dict[str, Any] = {"actor": actor, "action": action, "resource": resource, "decision": decision}
     if reason is not None:
-        payload['reason'] = reason
+        payload["reason"] = reason
     if tenant is not None:
-        payload['tenant'] = tenant
+        payload["tenant"] = tenant
     if workspace is not None:
-        payload['workspace'] = workspace
+        payload["workspace"] = workspace
     if extra:
         payload.update(extra)
-    logger.info('security_event', **payload)
-__all__ = ['log_security_event']
+    logger.info("security_event", **payload)
+
+
+__all__ = ["log_security_event"]

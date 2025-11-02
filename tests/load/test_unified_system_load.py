@@ -595,7 +595,7 @@ class TestUnifiedSystemLoad:
         if failed_results:
             print("\nFailed Requests:")
             for failed in failed_results[:5]:
-                print(f'  Task {failed['task_id']}: {failed['error']}')
+                print(f"  Task {failed['task_id']}: {failed['error']}")
         assert success_rate >= 95.0, f"Success rate {success_rate:.2f}% is below 95%"
         assert avg_duration <= 5.0, f"Average duration {avg_duration:.3f}s is too high"
         assert avg_tools_count >= 10, f"Average tools count {avg_tools_count:.1f} is too low"

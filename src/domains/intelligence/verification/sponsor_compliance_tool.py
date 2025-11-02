@@ -1,13 +1,17 @@
 from __future__ import annotations
+
 import logging
 import re
 from dataclasses import dataclass
 from datetime import datetime
+from platform.core.step_result import StepResult
 from typing import Any
+
 from crewai_tools import BaseTool
 from pydantic import BaseModel, Field
+
 from kg.creator_kg_store import CreatorKGStore
-from platform.core.step_result import StepResult
+
 
 logger = logging.getLogger(__name__)
 
@@ -249,7 +253,7 @@ class SponsorComplianceTool(BaseTool):
     def _check_disclosure_presence(self, text: str) -> bool:
         """Check if disclosure is present in text."""
         text_lower = text.lower()
-        return any((disclosure in text_lower for disclosure in self.disclosure_keywords))
+        return any(disclosure in text_lower for disclosure in self.disclosure_keywords)
 
     def _determine_disclosure_location(self, text: str, keyword: str) -> str:
         """Determine where disclosure appears relative to sponsor mention."""
@@ -257,7 +261,7 @@ class SponsorComplianceTool(BaseTool):
             text_lower = text.lower()
             keyword_pos = text_lower.find(keyword)
             before_keyword = text_lower[:keyword_pos]
-            if any((disclosure in before_keyword for disclosure in self.disclosure_keywords)):
+            if any(disclosure in before_keyword for disclosure in self.disclosure_keywords):
                 return "beginning"
             else:
                 return "middle"
@@ -315,7 +319,7 @@ class SponsorComplianceTool(BaseTool):
             "doctors hate this",
             "one weird trick",
         ]
-        return any((pattern in content_lower for pattern in deceptive_patterns))
+        return any(pattern in content_lower for pattern in deceptive_patterns)
 
     def _generate_disclosure_recommendations(
         self,
@@ -366,7 +370,7 @@ class SponsorComplianceTool(BaseTool):
                 base_score -= 0.1
             elif violation.severity == "low":
                 base_score -= 0.05
-        disclosed_mentions = sum((1 for mention in sponsor_mentions if mention.is_disclosed))
+        disclosed_mentions = sum(1 for mention in sponsor_mentions if mention.is_disclosed)
         if disclosed_mentions > 0:
             disclosure_bonus = disclosed_mentions / len(sponsor_mentions) * 0.2
             base_score += disclosure_bonus
@@ -374,8 +378,8 @@ class SponsorComplianceTool(BaseTool):
 
     def _determine_risk_level(self, compliance_score: float, violations: list[ComplianceViolation]) -> str:
         """Determine overall risk level."""
-        critical_violations = sum((1 for v in violations if v.severity == "critical"))
-        high_violations = sum((1 for v in violations if v.severity == "high"))
+        critical_violations = sum(1 for v in violations if v.severity == "critical")
+        high_violations = sum(1 for v in violations if v.severity == "high")
         if critical_violations > 0:
             return "critical"
         elif high_violations > 0 or compliance_score < 0.5:
@@ -390,7 +394,7 @@ class SponsorComplianceTool(BaseTool):
     ) -> str:
         """Generate analysis summary."""
         total_mentions = len(sponsor_mentions)
-        disclosed_mentions = sum((1 for mention in sponsor_mentions if mention.is_disclosed))
+        disclosed_mentions = sum(1 for mention in sponsor_mentions if mention.is_disclosed)
         total_violations = len(violations)
         summary = f"Found {total_mentions} sponsor mentions, {disclosed_mentions} properly disclosed. "
         summary += f"Identified {total_violations} compliance violations. "

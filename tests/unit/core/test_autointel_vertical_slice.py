@@ -17,7 +17,7 @@ def test_autointel_vertical_slice_round_trip() -> None:
     assert hits, "Expected at least one retrieval result"
     top = hits[0]
     payload = getattr(top, "payload", {}) or {}
-    answer = f'Python is a programming language. Source: {payload.get('title', 'N/A')}'
+    answer = f"Python is a programming language. Source: {payload.get('title', 'N/A')}"
     res = StepResult.ok(answer=answer, citations=[payload.get("text", "")], hits=len(hits))
     assert res["status"] == "success"
     assert res["hits"] == 1

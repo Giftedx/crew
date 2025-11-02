@@ -179,7 +179,7 @@ class TestMemoryPerformance:
             assert all(result.success for result in results)
         for result in batch_results:
             print(
-                f'Batch size {result['batch_size']}: {result['time']:.3f} seconds, {result['throughput']:.2f} items/second'
+                f"Batch size {result['batch_size']}: {result['time']:.3f} seconds, {result['throughput']:.2f} items/second"
             )
         assert all(result["time"] < 5.0 for result in batch_results)
         assert all(result["throughput"] > 5.0 for result in batch_results)
@@ -202,7 +202,7 @@ class TestMemoryPerformance:
             assert all(len(emb) == 768 for emb in embeddings)
         for result in batch_results:
             print(
-                f'Batch embedding size {result['batch_size']}: {result['time']:.3f} seconds, {result['throughput']:.2f} embeddings/second'
+                f"Batch embedding size {result['batch_size']}: {result['time']:.3f} seconds, {result['throughput']:.2f} embeddings/second"
             )
         assert all(result["time"] < 3.0 for result in batch_results)
         assert all(result["throughput"] > 3.0 for result in batch_results)
@@ -235,7 +235,7 @@ class TestMemoryPerformance:
             assert result.success
         for result in scale_results:
             print(
-                f'Search scale {result['scale']}: {result['time']:.4f} seconds, {result['latency_per_result']:.6f} seconds/result'
+                f"Search scale {result['scale']}: {result['time']:.4f} seconds, {result['latency_per_result']:.6f} seconds/result"
             )
         assert all(result["time"] < 2.0 for result in scale_results)
         assert all(result["latency_per_result"] < 0.01 for result in scale_results)
@@ -301,8 +301,8 @@ class TestMemoryPerformance:
         assert compaction_time < 10.0
         print("Memory compaction performance:")
         print(f"Compaction time: {compaction_time:.3f} seconds")
-        print(f'Compacted items: {result.data['compacted_items']}')
-        print(f'Space saved: {result.data['space_saved']}')
+        print(f"Compacted items: {result.data['compacted_items']}")
+        print(f"Space saved: {result.data['space_saved']}")
 
     @pytest.mark.benchmark
     @pytest.mark.asyncio
@@ -337,7 +337,7 @@ class TestMemoryPerformance:
             assert all(result.success for result in results)
         for result in memory_results:
             print(
-                f'Load scale {result['scale']}: {result['time']:.3f} seconds, {result['estimated_memory']:.1f}MB, {result['throughput']:.2f} ops/second'
+                f"Load scale {result['scale']}: {result['time']:.3f} seconds, {result['estimated_memory']:.1f}MB, {result['throughput']:.2f} ops/second"
             )
         assert all(result["time"] < 5.0 for result in memory_results)
         assert all(result["throughput"] > 10.0 for result in memory_results)

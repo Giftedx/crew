@@ -3,27 +3,35 @@
 This module provides patterns for agent collaboration including sequential,
 parallel, and hierarchical execution patterns.
 """
+
 from __future__ import annotations
+
 import asyncio
 import logging
 from dataclasses import dataclass
 from enum import Enum
 from platform.core.step_result import StepResult
 from typing import TYPE_CHECKING, Any
+
+
 if TYPE_CHECKING:
     from app.config.feature_flags import FeatureFlags
 logger = logging.getLogger(__name__)
 
+
 class CollaborationPattern(Enum):
     """Available collaboration patterns for agent coordination."""
-    SEQUENTIAL = 'sequential'
-    PARALLEL = 'parallel'
-    HIERARCHICAL = 'hierarchical'
-    PIPELINE = 'pipeline'
+
+    SEQUENTIAL = "sequential"
+    PARALLEL = "parallel"
+    HIERARCHICAL = "hierarchical"
+    PIPELINE = "pipeline"
+
 
 @dataclass
 class AgentTask:
     """Represents a task to be executed by an agent."""
+
     agent_id: str
     task_name: str
     inputs: dict[str, Any]
@@ -32,15 +40,18 @@ class AgentTask:
     retry_count: int = 0
     max_retries: int = 3
 
+
 @dataclass
 class CollaborationResult:
     """Result of a collaboration execution."""
+
     pattern: CollaborationPattern
     results: dict[str, StepResult]
     execution_time: float
     success_count: int
     failure_count: int
     metadata: dict[str, Any] = None
+
 
 class AgentCollaboration:
     """Framework for coordinating multiple agents in various collaboration patterns."""
@@ -58,7 +69,9 @@ class AgentCollaboration:
         """Check if agent collaboration is enabled."""
         return self.feature_flags.ENABLE_AGENT_COLLABORATION
 
-    async def execute_sequential(self, tasks: list[AgentTask], collaboration_id: str | None=None) -> CollaborationResult:
+    async def execute_sequential(
+        self, tasks: list[AgentTask], collaboration_id: str | None = None
+    ) -> CollaborationResult:
         """Execute tasks sequentially, passing results between agents.
 
         Args:
@@ -69,7 +82,14 @@ class AgentCollaboration:
             CollaborationResult: Results of the sequential execution
         """
         if not self.is_enabled():
-            return CollaborationResult(pattern=CollaborationPattern.SEQUENTIAL, results={}, execution_time=0.0, success_count=0, failure_count=len(tasks), metadata={'error': 'Agent collaboration disabled'})
+            return CollaborationResult(
+                pattern=CollaborationPattern.SEQUENTIAL,
+                results={},
+                execution_time=0.0,
+                success_count=0,
+                failure_count=len(tasks),
+                metadata={"error": "Agent collaboration disabled"},
+            )
         start_time = asyncio.get_event_loop().time()
         results = {}
         context = {}
@@ -81,17 +101,26 @@ class AgentCollaboration:
                 if result.success and result.data:
                     context.update(result.data)
             except Exception as e:
-                logger.error(f'Sequential task failed for agent {task.agent_id}: {e}')
-                results[task.agent_id] = StepResult.fail(f'Task execution failed: {e}')
+                logger.error(f"Sequential task failed for agent {task.agent_id}: {e}")
+                results[task.agent_id] = StepResult.fail(f"Task execution failed: {e}")
         execution_time = asyncio.get_event_loop().time() - start_time
-        success_count = sum((1 for r in results.values() if r.success))
+        success_count = sum(1 for r in results.values() if r.success)
         failure_count = len(results) - success_count
-        result = CollaborationResult(pattern=CollaborationPattern.SEQUENTIAL, results=results, execution_time=execution_time, success_count=success_count, failure_count=failure_count, metadata={'collaboration_id': collaboration_id})
+        result = CollaborationResult(
+            pattern=CollaborationPattern.SEQUENTIAL,
+            results=results,
+            execution_time=execution_time,
+            success_count=success_count,
+            failure_count=failure_count,
+            metadata={"collaboration_id": collaboration_id},
+        )
         if collaboration_id:
             self.active_collaborations[collaboration_id] = result
         return result
 
-    async def execute_parallel(self, tasks: list[AgentTask], collaboration_id: str | None=None) -> CollaborationResult:
+    async def execute_parallel(
+        self, tasks: list[AgentTask], collaboration_id: str | None = None
+    ) -> CollaborationResult:
         """Execute tasks in parallel with synchronization.
 
         Args:
@@ -102,25 +131,41 @@ class AgentCollaboration:
             CollaborationResult: Results of the parallel execution
         """
         if not self.is_enabled():
-            return CollaborationResult(pattern=CollaborationPattern.PARALLEL, results={}, execution_time=0.0, success_count=0, failure_count=len(tasks), metadata={'error': 'Agent collaboration disabled'})
+            return CollaborationResult(
+                pattern=CollaborationPattern.PARALLEL,
+                results={},
+                execution_time=0.0,
+                success_count=0,
+                failure_count=len(tasks),
+                metadata={"error": "Agent collaboration disabled"},
+            )
         start_time = asyncio.get_event_loop().time()
         task_coroutines = [self._execute_agent_task(task) for task in tasks]
         task_results = await asyncio.gather(*task_coroutines, return_exceptions=True)
         results = {}
         for task, result in zip(tasks, task_results, strict=False):
             if isinstance(result, Exception):
-                results[task.agent_id] = StepResult.fail(f'Parallel execution failed: {result}')
+                results[task.agent_id] = StepResult.fail(f"Parallel execution failed: {result}")
             else:
                 results[task.agent_id] = result
         execution_time = asyncio.get_event_loop().time() - start_time
-        success_count = sum((1 for r in results.values() if r.success))
+        success_count = sum(1 for r in results.values() if r.success)
         failure_count = len(results) - success_count
-        result = CollaborationResult(pattern=CollaborationPattern.PARALLEL, results=results, execution_time=execution_time, success_count=success_count, failure_count=failure_count, metadata={'collaboration_id': collaboration_id})
+        result = CollaborationResult(
+            pattern=CollaborationPattern.PARALLEL,
+            results=results,
+            execution_time=execution_time,
+            success_count=success_count,
+            failure_count=failure_count,
+            metadata={"collaboration_id": collaboration_id},
+        )
         if collaboration_id:
             self.active_collaborations[collaboration_id] = result
         return result
 
-    async def execute_hierarchical(self, coordinator_task: AgentTask, subordinate_tasks: list[AgentTask], collaboration_id: str | None=None) -> CollaborationResult:
+    async def execute_hierarchical(
+        self, coordinator_task: AgentTask, subordinate_tasks: list[AgentTask], collaboration_id: str | None = None
+    ) -> CollaborationResult:
         """Execute hierarchical pattern with coordinator and subordinates.
 
         Args:
@@ -132,7 +177,14 @@ class AgentCollaboration:
             CollaborationResult: Results of the hierarchical execution
         """
         if not self.is_enabled():
-            return CollaborationResult(pattern=CollaborationPattern.HIERARCHICAL, results={}, execution_time=0.0, success_count=0, failure_count=len(subordinate_tasks) + 1, metadata={'error': 'Agent collaboration disabled'})
+            return CollaborationResult(
+                pattern=CollaborationPattern.HIERARCHICAL,
+                results={},
+                execution_time=0.0,
+                success_count=0,
+                failure_count=len(subordinate_tasks) + 1,
+                metadata={"error": "Agent collaboration disabled"},
+            )
         start_time = asyncio.get_event_loop().time()
         results = {}
         try:
@@ -146,26 +198,35 @@ class AgentCollaboration:
                 subordinate_results = await asyncio.gather(*subordinate_coroutines, return_exceptions=True)
                 for task, result in zip(subordinate_tasks, subordinate_results, strict=False):
                     if isinstance(result, Exception):
-                        results[task.agent_id] = StepResult.fail(f'Subordinate execution failed: {result}')
+                        results[task.agent_id] = StepResult.fail(f"Subordinate execution failed: {result}")
                     else:
                         results[task.agent_id] = result
             else:
                 for task in subordinate_tasks:
-                    results[task.agent_id] = StepResult.fail('Coordinator failed, skipping subordinate')
+                    results[task.agent_id] = StepResult.fail("Coordinator failed, skipping subordinate")
         except Exception as e:
-            logger.error(f'Hierarchical execution failed: {e}')
-            results[coordinator_task.agent_id] = StepResult.fail(f'Hierarchical execution failed: {e}')
+            logger.error(f"Hierarchical execution failed: {e}")
+            results[coordinator_task.agent_id] = StepResult.fail(f"Hierarchical execution failed: {e}")
             for task in subordinate_tasks:
-                results[task.agent_id] = StepResult.fail('Execution failed')
+                results[task.agent_id] = StepResult.fail("Execution failed")
         execution_time = asyncio.get_event_loop().time() - start_time
-        success_count = sum((1 for r in results.values() if r.success))
+        success_count = sum(1 for r in results.values() if r.success)
         failure_count = len(results) - success_count
-        result = CollaborationResult(pattern=CollaborationPattern.HIERARCHICAL, results=results, execution_time=execution_time, success_count=success_count, failure_count=failure_count, metadata={'collaboration_id': collaboration_id})
+        result = CollaborationResult(
+            pattern=CollaborationPattern.HIERARCHICAL,
+            results=results,
+            execution_time=execution_time,
+            success_count=success_count,
+            failure_count=failure_count,
+            metadata={"collaboration_id": collaboration_id},
+        )
         if collaboration_id:
             self.active_collaborations[collaboration_id] = result
         return result
 
-    async def execute_pipeline(self, pipeline_stages: list[list[AgentTask]], collaboration_id: str | None=None) -> CollaborationResult:
+    async def execute_pipeline(
+        self, pipeline_stages: list[list[AgentTask]], collaboration_id: str | None = None
+    ) -> CollaborationResult:
         """Execute tasks in pipeline stages with data flow between stages.
 
         Args:
@@ -176,27 +237,41 @@ class AgentCollaboration:
             CollaborationResult: Results of the pipeline execution
         """
         if not self.is_enabled():
-            return CollaborationResult(pattern=CollaborationPattern.PIPELINE, results={}, execution_time=0.0, success_count=0, failure_count=sum((len(stage) for stage in pipeline_stages)), metadata={'error': 'Agent collaboration disabled'})
+            return CollaborationResult(
+                pattern=CollaborationPattern.PIPELINE,
+                results={},
+                execution_time=0.0,
+                success_count=0,
+                failure_count=sum(len(stage) for stage in pipeline_stages),
+                metadata={"error": "Agent collaboration disabled"},
+            )
         start_time = asyncio.get_event_loop().time()
         results = {}
         pipeline_context = {}
         for stage_idx, stage_tasks in enumerate(pipeline_stages):
-            logger.info(f'Executing pipeline stage {stage_idx + 1}/{len(pipeline_stages)}')
+            logger.info(f"Executing pipeline stage {stage_idx + 1}/{len(pipeline_stages)}")
             for task in stage_tasks:
                 task.inputs.update(pipeline_context)
             stage_coroutines = [self._execute_agent_task(task) for task in stage_tasks]
             stage_results = await asyncio.gather(*stage_coroutines, return_exceptions=True)
             for task, result in zip(stage_tasks, stage_results, strict=False):
                 if isinstance(result, Exception):
-                    results[task.agent_id] = StepResult.fail(f'Pipeline stage failed: {result}')
+                    results[task.agent_id] = StepResult.fail(f"Pipeline stage failed: {result}")
                 else:
                     results[task.agent_id] = result
                     if result.success and result.data:
                         pipeline_context.update(result.data)
         execution_time = asyncio.get_event_loop().time() - start_time
-        success_count = sum((1 for r in results.values() if r.success))
+        success_count = sum(1 for r in results.values() if r.success)
         failure_count = len(results) - success_count
-        result = CollaborationResult(pattern=CollaborationPattern.PIPELINE, results=results, execution_time=execution_time, success_count=success_count, failure_count=failure_count, metadata={'collaboration_id': collaboration_id, 'stages': len(pipeline_stages)})
+        result = CollaborationResult(
+            pattern=CollaborationPattern.PIPELINE,
+            results=results,
+            execution_time=execution_time,
+            success_count=success_count,
+            failure_count=failure_count,
+            metadata={"collaboration_id": collaboration_id, "stages": len(pipeline_stages)},
+        )
         if collaboration_id:
             self.active_collaborations[collaboration_id] = result
         return result
@@ -217,9 +292,9 @@ class AgentCollaboration:
                 result = await self._simulate_agent_execution(task)
             return result
         except asyncio.TimeoutError:
-            return StepResult.fail(f'Task timeout for agent {task.agent_id}')
+            return StepResult.fail(f"Task timeout for agent {task.agent_id}")
         except Exception as e:
-            return StepResult.fail(f'Task execution error: {e}')
+            return StepResult.fail(f"Task execution error: {e}")
 
     async def _simulate_agent_execution(self, task: AgentTask) -> StepResult:
         """Simulate agent task execution.
@@ -236,9 +311,16 @@ class AgentCollaboration:
         await asyncio.sleep(0.1)
         success_probability = 0.9 if task.retry_count == 0 else 0.7
         if hash(task.task_name) % 100 < success_probability * 100:
-            return StepResult.ok(data={'agent_id': task.agent_id, 'task': task.task_name, 'result': f'Processed {task.task_name}', 'inputs': task.inputs})
+            return StepResult.ok(
+                data={
+                    "agent_id": task.agent_id,
+                    "task": task.task_name,
+                    "result": f"Processed {task.task_name}",
+                    "inputs": task.inputs,
+                }
+            )
         else:
-            return StepResult.fail(f'Simulated failure for {task.task_name}')
+            return StepResult.fail(f"Simulated failure for {task.task_name}")
 
     def get_collaboration_status(self, collaboration_id: str) -> CollaborationResult | None:
         """Get the status of a specific collaboration.

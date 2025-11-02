@@ -3,17 +3,25 @@
 Rejects HTTP requests when system backpressure is active, preventing
 cascading failures and allowing the system to recover from overload conditions.
 """
+
 from __future__ import annotations
+
 import logging
 from typing import TYPE_CHECKING, ClassVar
+
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
+
+
 if TYPE_CHECKING:
     from collections.abc import Callable
+
     from starlette.requests import Request
     from starlette.responses import Response
+
     from fastapi import FastAPI
 logger = logging.getLogger(__name__)
+
 
 class BackpressureMiddleware(BaseHTTPMiddleware):
     """Middleware that rejects requests when system backpressure is active.
@@ -28,7 +36,8 @@ class BackpressureMiddleware(BaseHTTPMiddleware):
     - /readiness
     - /liveness
     """
-    EXCLUDED_PATHS: ClassVar[set[str]] = {'/health', '/metrics', '/readiness', '/liveness'}
+
+    EXCLUDED_PATHS: ClassVar[set[str]] = {"/health", "/metrics", "/readiness", "/liveness"}
 
     def __init__(self, app: FastAPI) -> None:
         super().__init__(app)
@@ -39,23 +48,24 @@ class BackpressureMiddleware(BaseHTTPMiddleware):
         if self._coordinator is None:
             try:
                 from platform.http.resilience.backpressure_coordinator import get_backpressure_coordinator
+
                 self._coordinator = get_backpressure_coordinator()
             except Exception as e:
-                logger.warning(f'Failed to initialize backpressure coordinator: {e}')
+                logger.warning(f"Failed to initialize backpressure coordinator: {e}")
 
                 class DummyCoordinator:
-
                     def is_backpressure_active(self) -> bool:
                         return False
 
                     def get_backpressure_level(self):
-
                         class Level:
-                            name = 'NORMAL'
+                            name = "NORMAL"
+
                         return Level()
 
                     def record_request_rejected(self) -> None:
                         pass
+
                 self._coordinator = DummyCoordinator()
         return self._coordinator
 
@@ -75,9 +85,21 @@ class BackpressureMiddleware(BaseHTTPMiddleware):
         if coordinator.is_backpressure_active():
             level = coordinator.get_backpressure_level()
             coordinator.record_request_rejected()
-            logger.warning(f'Request rejected due to backpressure (level={level.name}): {request.method} {request.url.path}')
-            return JSONResponse(status_code=503, headers={'Retry-After': '30', 'X-Backpressure-Level': level.name}, content={'error': 'service_unavailable', 'message': 'System is currently overloaded. Please retry after the suggested delay.', 'backpressure_level': level.name, 'retry_after_seconds': 30})
+            logger.warning(
+                f"Request rejected due to backpressure (level={level.name}): {request.method} {request.url.path}"
+            )
+            return JSONResponse(
+                status_code=503,
+                headers={"Retry-After": "30", "X-Backpressure-Level": level.name},
+                content={
+                    "error": "service_unavailable",
+                    "message": "System is currently overloaded. Please retry after the suggested delay.",
+                    "backpressure_level": level.name,
+                    "retry_after_seconds": 30,
+                },
+            )
         return await call_next(request)
+
 
 def add_backpressure_middleware(app: FastAPI) -> None:
     """Add backpressure middleware to FastAPI application.
@@ -90,4 +112,4 @@ def add_backpressure_middleware(app: FastAPI) -> None:
         app: FastAPI application instance
     """
     app.add_middleware(BackpressureMiddleware)
-    logger.info('Backpressure middleware installed')
+    logger.info("Backpressure middleware installed")

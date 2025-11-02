@@ -3,14 +3,19 @@
 This module provides configuration for lazy loading behavior, including
 feature flags, performance settings, and tool preloading strategies.
 """
+
 from __future__ import annotations
+
 from dataclasses import dataclass
 from typing import Any
+
 from app.config.feature_flags import FeatureFlags
+
 
 @dataclass
 class LazyLoadingConfig:
     """Configuration for lazy loading behavior."""
+
     enabled: bool = True
     preload_critical_tools: bool = True
     cache_tools: bool = True
@@ -27,28 +32,51 @@ class LazyLoadingConfig:
     def __post_init__(self):
         """Initialize default tool categories."""
         if self.critical_tools is None:
-            self.critical_tools = ['MultiPlatformDownloadTool', 'AudioTranscriptionTool', 'UnifiedMemoryTool', 'FactCheckTool']
+            self.critical_tools = [
+                "MultiPlatformDownloadTool",
+                "AudioTranscriptionTool",
+                "UnifiedMemoryTool",
+                "FactCheckTool",
+            ]
         if self.optional_tools is None:
-            self.optional_tools = ['InstagramDownloadTool', 'TikTokDownloadTool', 'RedditDownloadTool', 'TwitterDownloadTool']
+            self.optional_tools = [
+                "InstagramDownloadTool",
+                "TikTokDownloadTool",
+                "RedditDownloadTool",
+                "TwitterDownloadTool",
+            ]
         if self.heavy_tools is None:
-            self.heavy_tools = ['AdvancedAudioAnalysisTool', 'VideoFrameAnalysisTool', 'MultimodalAnalysisTool', 'SocialGraphAnalysisTool']
+            self.heavy_tools = [
+                "AdvancedAudioAnalysisTool",
+                "VideoFrameAnalysisTool",
+                "MultimodalAnalysisTool",
+                "SocialGraphAnalysisTool",
+            ]
+
 
 def get_lazy_loading_config() -> LazyLoadingConfig:
     """Get lazy loading configuration from environment and feature flags."""
     feature_flags = FeatureFlags.from_env()
-    return LazyLoadingConfig(enabled=feature_flags.ENABLE_LAZY_LOADING, preload_critical_tools=feature_flags.ENABLE_LAZY_PRELOAD_CRITICAL, cache_tools=feature_flags.ENABLE_LAZY_CACHING, enable_metrics=feature_flags.ENABLE_LAZY_METRICS)
+    return LazyLoadingConfig(
+        enabled=feature_flags.ENABLE_LAZY_LOADING,
+        preload_critical_tools=feature_flags.ENABLE_LAZY_PRELOAD_CRITICAL,
+        cache_tools=feature_flags.ENABLE_LAZY_CACHING,
+        enable_metrics=feature_flags.ENABLE_LAZY_METRICS,
+    )
+
 
 def get_tool_loading_strategy(tool_name: str) -> str:
     """Get loading strategy for a specific tool."""
     config = get_lazy_loading_config()
     if tool_name in config.critical_tools:
-        return 'critical'
+        return "critical"
     elif tool_name in config.optional_tools:
-        return 'optional'
+        return "optional"
     elif tool_name in config.heavy_tools:
-        return 'heavy'
+        return "heavy"
     else:
-        return 'default'
+        return "default"
+
 
 def should_preload_tool(tool_name: str) -> bool:
     """Determine if a tool should be preloaded."""
@@ -58,6 +86,7 @@ def should_preload_tool(tool_name: str) -> bool:
     if not config.preload_critical_tools:
         return False
     return tool_name in config.critical_tools
+
 
 def get_preload_priority(tool_name: str) -> int:
     """Get preload priority for a tool (higher = more important)."""
@@ -70,6 +99,7 @@ def get_preload_priority(tool_name: str) -> int:
         return 1
     else:
         return 3
+
 
 class LazyLoadingManager:
     """Manager for lazy loading operations and configuration."""
@@ -104,19 +134,38 @@ class LazyLoadingManager:
 
     def get_stats(self) -> dict[str, Any]:
         """Get loading statistics."""
-        return {'config': {'enabled': self.config.enabled, 'preload_critical': self.config.preload_critical_tools, 'cache_tools': self.config.cache_tools, 'enable_metrics': self.config.enable_metrics}, 'tool_priorities': self._tool_priorities.copy(), 'loading_stats': self._loading_stats.copy()}
+        return {
+            "config": {
+                "enabled": self.config.enabled,
+                "preload_critical": self.config.preload_critical_tools,
+                "cache_tools": self.config.cache_tools,
+                "enable_metrics": self.config.enable_metrics,
+            },
+            "tool_priorities": self._tool_priorities.copy(),
+            "loading_stats": self._loading_stats.copy(),
+        }
+
+
 _lazy_manager = LazyLoadingManager()
+
 
 def get_lazy_manager() -> LazyLoadingManager:
     """Get the global lazy loading manager."""
     return _lazy_manager
+
 
 def configure_lazy_loading(**kwargs):
     """Configure lazy loading settings."""
     manager = get_lazy_manager()
     manager.update_config(**kwargs)
 
+
 def get_tool_loading_config(tool_name: str) -> dict[str, Any]:
     """Get loading configuration for a specific tool."""
     manager = get_lazy_manager()
-    return {'strategy': get_tool_loading_strategy(tool_name), 'priority': manager.get_tool_priority(tool_name), 'should_preload': manager.should_preload(tool_name), 'timeout': manager.config.lazy_import_timeout}
+    return {
+        "strategy": get_tool_loading_strategy(tool_name),
+        "priority": manager.get_tool_priority(tool_name),
+        "should_preload": manager.should_preload(tool_name),
+        "timeout": manager.config.lazy_import_timeout,
+    }

@@ -5,12 +5,16 @@ local development without external model dependencies.  Each text is
 hashed with SHA-256 and the resulting bytes are converted into a fixed
 -length list of floats in the range [0, 1).
 """
+
 from __future__ import annotations
+
 import contextlib
 import hashlib
 import json
-from typing import TYPE_CHECKING
 from platform.config.configuration import get_config
+from typing import TYPE_CHECKING
+
+
 if TYPE_CHECKING:
     from collections.abc import Iterable
 try:
@@ -18,19 +22,23 @@ try:
 except Exception:
     RedisCache = None
 
-def embed(texts: Iterable[str], model_hint: str | None=None) -> list[list[float]]:
+
+def embed(texts: Iterable[str], model_hint: str | None = None) -> list[list[float]]:
     cfg = get_config()
-    use_cache = bool(getattr(cfg, 'enable_cache_vector', True) and getattr(cfg, 'rate_limit_redis_url', None) and RedisCache)
-    selected_model = model_hint or getattr(cfg, 'default_embedding_model', 'memory:sha256')
+    use_cache = bool(
+        getattr(cfg, "enable_cache_vector", True) and getattr(cfg, "rate_limit_redis_url", None) and RedisCache
+    )
+    selected_model = model_hint or getattr(cfg, "default_embedding_model", "memory:sha256")
     rc = None
     if use_cache and callable(RedisCache):
         try:
             try:
                 from platform.cache.unified_config import get_unified_cache_config
-                _ttl = int(get_unified_cache_config().get_ttl_for_domain('tool'))
+
+                _ttl = int(get_unified_cache_config().get_ttl_for_domain("tool"))
             except Exception:
-                _ttl = int(getattr(cfg, 'cache_ttl_retrieval', 300))
-            rc = RedisCache(url=str(cfg.rate_limit_redis_url), namespace='emb', ttl=_ttl)
+                _ttl = int(getattr(cfg, "cache_ttl_retrieval", 300))
+            rc = RedisCache(url=str(cfg.rate_limit_redis_url), namespace="emb", ttl=_ttl)
         except Exception:
             rc = None
     vectors: list[list[float]] = []
@@ -38,7 +46,7 @@ def embed(texts: Iterable[str], model_hint: str | None=None) -> list[list[float]
         vec: list[float] | None = None
         cache_key = None
         if rc is not None:
-            cache_key = hashlib.sha256(f'{selected_model}:{text}'.encode()).hexdigest()
+            cache_key = hashlib.sha256(f"{selected_model}:{text}".encode()).hexdigest()
             data = rc.get_str(cache_key)
             if data:
                 try:
@@ -46,9 +54,9 @@ def embed(texts: Iterable[str], model_hint: str | None=None) -> list[list[float]
                 except Exception:
                     vec = None
         if vec is None:
-            h = hashlib.sha256(text.encode('utf-8')).digest()
-            vec = [int.from_bytes(h[i:i + 4], 'big') / 2 ** 32 for i in range(0, 32, 4)]
-            vec.append(hashlib.sha256(selected_model.encode('utf-8')).digest()[0] / 255.0)
+            h = hashlib.sha256(text.encode("utf-8")).digest()
+            vec = [int.from_bytes(h[i : i + 4], "big") / 2**32 for i in range(0, 32, 4)]
+            vec.append(hashlib.sha256(selected_model.encode("utf-8")).digest()[0] / 255.0)
             if rc is not None and cache_key is not None:
                 with contextlib.suppress(Exception):
                     rc.set_str(cache_key, json.dumps(vec))

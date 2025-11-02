@@ -4,20 +4,26 @@ This module provides the core Discord bot functionality with interactive
 features, rich embeds, and sophisticated user interaction patterns.
 Includes enhanced error handling, progress tracking, and conversation flows.
 """
+
 from __future__ import annotations
+
 import asyncio
 import hashlib
 import logging
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING, Any
-import discord
+from platform.observability import incident, slo
 from platform.rl.learning_engine import LearningEngine
 from platform.router import Router
+from typing import TYPE_CHECKING, Any
+
 from debate.panel import PanelConfig, run_panel
 from debate.store import Debate, DebateStore
+
+import discord
 from discord.ext import commands
 from discord.ui import Button, Select, View
-from platform.observability import incident, slo
+
+
 if TYPE_CHECKING:
     from grounding import verifier
     from grounding.schema import AnswerContract
@@ -25,42 +31,60 @@ if TYPE_CHECKING:
     from scheduler.scheduler import Scheduler
 logger = logging.getLogger(__name__)
 
+
 def ops_status(cost_usd: float, *, cache_hits: int, breaker_open: bool, alerts: list[str]) -> dict[str, Any]:
     """Return a minimal ops status snapshot for tests.
 
     Parameters mirror tests and return a dict containing the inputs.
     """
-    return {'cost': float(cost_usd), 'cache_hits': int(cache_hits), 'breaker_open': bool(breaker_open), 'alerts': list(alerts)}
+    return {
+        "cost": float(cost_usd),
+        "cache_hits": int(cache_hits),
+        "breaker_open": bool(breaker_open),
+        "alerts": list(alerts),
+    }
+
 
 def ops_grounding_audit(contract: AnswerContract, report: verifier.VerifierReport) -> dict[str, Any]:
     """Return a compact audit view of a grounding verification."""
     citations: list[dict[str, Any]] = []
     try:
-        for idx, ev in enumerate(getattr(contract, 'citations', []) or [], start=1):
-            entry = {'index': idx}
-            loc = getattr(ev, 'locator', None) or {}
+        for idx, ev in enumerate(getattr(contract, "citations", []) or [], start=1):
+            entry = {"index": idx}
+            loc = getattr(ev, "locator", None) or {}
             if isinstance(loc, dict):
-                for key in ('url', 'title', 't_start', 'start'):
+                for key in ("url", "title", "t_start", "start"):
                     if key in loc:
                         entry[key] = loc[key]
             citations.append(entry)
     except Exception:
         citations = []
-    return {'verdict': report.verdict, 'citations': citations, 'contradictions': list(report.contradictions), 'suggested_fixes': list(report.suggested_fixes), 'answer': contract.answer_text}
+    return {
+        "verdict": report.verdict,
+        "citations": citations,
+        "contradictions": list(report.contradictions),
+        "suggested_fixes": list(report.suggested_fixes),
+        "answer": contract.answer_text,
+    }
+
 
 def ops_ingest_watch_add(sched: Scheduler, source: str, handle: str, *, tenant: str, workspace: str) -> dict[str, Any]:
     w = sched.add_watch(tenant=tenant, workspace=workspace, source_type=source, handle=handle)
-    return {'id': w.id, 'source_type': w.source_type, 'handle': w.handle}
+    return {"id": w.id, "source_type": w.source_type, "handle": w.handle}
+
 
 def ops_ingest_watch_list(sched: Scheduler) -> list[dict[str, Any]]:
     return [w.__dict__ for w in sched.list_watches()]
 
+
 def ops_ingest_queue_status(queue: PriorityQueue) -> dict[str, Any]:
-    return {'pending': queue.pending_count()}
+    return {"pending": queue.pending_count()}
+
 
 def ops_ingest_run_once(sched: Scheduler, *, store: Any) -> dict[str, Any]:
     job = sched.worker_run_once(store)
-    return {'ran': job.url if job else None}
+    return {"ran": job.url if job else None}
+
 
 def context_query(store: Any, namespace: str, query_text: str) -> list[dict[str, Any]]:
     """Very small helper used by tests to query a store by embedding.
@@ -71,52 +95,61 @@ def context_query(store: Any, namespace: str, query_text: str) -> list[dict[str,
     try:
         vector_dims = 8
         if query_text:
-            digest = hashlib.blake2s(query_text.encode('utf-8'), digest_size=vector_dims).digest()
+            digest = hashlib.blake2s(query_text.encode("utf-8"), digest_size=vector_dims).digest()
             query_vector = [byte / 255.0 for byte in digest]
         else:
             query_vector = [0.0] * vector_dims
-        res = store.client.query_points(collection_name=namespace.replace(':', '__'), query=query_vector, limit=3, with_payload=True)
+        res = store.client.query_points(
+            collection_name=namespace.replace(":", "__"), query=query_vector, limit=3, with_payload=True
+        )
         return [p.payload for p in res.points]
     except Exception:
         return []
 
+
 def creator(profiles: list[dict[str, Any]], slug: str) -> dict[str, Any]:
     for p in profiles:
-        if p.get('slug') == slug:
+        if p.get("slug") == slug:
             return p
     return {}
 
+
 def latest(episodes: list[dict[str, Any]], creator_slug: str) -> dict[str, Any] | None:
     for e in episodes:
-        if e.get('creator') == creator_slug:
+        if e.get("creator") == creator_slug:
             return e
     return None
 
+
 def collabs(episodes: list[dict[str, Any]], creator_slug: str) -> list[str]:
     for e in episodes:
-        if e.get('creator') == creator_slug:
-            return list(e.get('guests', []))
+        if e.get("creator") == creator_slug:
+            return list(e.get("guests", []))
     return []
+
 
 def verify_profiles(profiles: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return profiles
 
+
 def ops_privacy_status(events: list[dict[str, int]], *, policy_version: str) -> dict[str, Any]:
     counts: dict[str, int] = {}
     for e in events:
-        counts[e['type']] = counts.get(e['type'], 0) + int(e.get('count', 0))
-    return {'events': counts, 'policy_version': policy_version}
+        counts[e["type"]] = counts.get(e["type"], 0) + int(e.get("count", 0))
+    return {"events": counts, "policy_version": policy_version}
+
 
 def ops_privacy_show(report: dict[str, Any]) -> dict[str, Any]:
     return report
 
-def ops_privacy_sweep(conn: Any, *, now: datetime | None=None) -> dict[str, Any]:
+
+def ops_privacy_sweep(conn: Any, *, now: datetime | None = None) -> dict[str, Any]:
     """Delete provenance older than 30 days; return count deleted.
 
     Mirrors logic used in tests: records created with a past timestamp
     should be removed.
     """
-    cursor = conn.execute('SELECT id, retrieved_at FROM provenance')
+    cursor = conn.execute("SELECT id, retrieved_at FROM provenance")
     rows = cursor.fetchall()
     deleted = 0
     now = now or datetime.now(UTC)
@@ -128,38 +161,47 @@ def ops_privacy_sweep(conn: Any, *, now: datetime | None=None) -> dict[str, Any]
         except Exception:
             continue
         if dt.timestamp() < cutoff:
-            conn.execute('DELETE FROM provenance WHERE id=?', (row[0],))
+            conn.execute("DELETE FROM provenance WHERE id=?", (row[0],))
             deleted += 1
     conn.commit()
-    return {'deleted': deleted}
+    return {"deleted": deleted}
 
-def ops_incident_open(title: str, severity: str='minor') -> dict[str, Any]:
+
+def ops_incident_open(title: str, severity: str = "minor") -> dict[str, Any]:
     iid = incident.manager.open(title, severity)
-    return {'id': iid, 'title': title, 'severity': severity}
+    return {"id": iid, "title": title, "severity": severity}
+
 
 def ops_incident_ack(incident_id: int, user: str) -> dict[str, Any]:
     incident.manager.ack(incident_id, user)
     inc = incident.manager.get(incident_id)
-    return {'id': inc.id, 'status': inc.status, 'acknowledged_by': inc.acknowledged_by}
+    return {"id": inc.id, "status": inc.status, "acknowledged_by": inc.acknowledged_by}
+
 
 def ops_incident_resolve(incident_id: int) -> dict[str, Any]:
     incident.manager.resolve(incident_id)
     inc = incident.manager.get(incident_id)
-    return {'id': inc.id, 'status': inc.status}
+    return {"id": inc.id, "status": inc.status}
+
 
 def ops_incident_list() -> list[dict[str, Any]]:
     return [i.__dict__ for i in incident.manager.list()]
 
+
 def ops_slo_status(values: dict[str, float], slos_in: list[slo.SLO]) -> dict[str, bool]:
     evaluator = slo.SLOEvaluator(slos_in)
     return evaluator.evaluate(values)
+
+
 _DEBATE_STORE: DebateStore | None = None
+
 
 def _ensure_store() -> DebateStore:
     global _DEBATE_STORE
     if _DEBATE_STORE is None:
         _DEBATE_STORE = DebateStore()
     return _DEBATE_STORE
+
 
 def ops_debate_run(query: str, roles: list[str]) -> dict[str, Any]:
     """Run a tiny debate and persist minimal details for inspection tests."""
@@ -168,32 +210,47 @@ def ops_debate_run(query: str, roles: list[str]) -> dict[str, Any]:
     panel_cfg = PanelConfig(roles=roles, n_rounds=1)
 
     def call_model(model: str, prompt: str) -> str:
-        return f'{model}:{prompt}'[:50]
+        return f"{model}:{prompt}"[:50]
+
     try:
-        engine.register_domain('debate')
-        engine.record('debate', {}, 'panel', 0.0)
+        engine.register_domain("debate")
+        engine.record("debate", {}, "panel", 0.0)
     except Exception:
         pass
     report = run_panel(query, router, call_model, panel_cfg, engine=engine)
     store = _ensure_store()
-    debate_id = store.add_debate(Debate(id=None, tenant='t', workspace='w', query=query, panel_config_json='{}', n_rounds=1, final_output=report.final, created_at=datetime.now(UTC).isoformat()))
+    debate_id = store.add_debate(
+        Debate(
+            id=None,
+            tenant="t",
+            workspace="w",
+            query=query,
+            panel_config_json="{}",
+            n_rounds=1,
+            final_output=report.final,
+            created_at=datetime.now(UTC).isoformat(),
+        )
+    )
     status = engine.status()
-    if 'debate' not in status:
-        status['debate'] = {'policy': 'EpsilonGreedyBandit', 'arms': {}}
-    arms = status['debate'].setdefault('arms', {})
-    arms.setdefault('panel', {'q': 0.0, 'n': 0})
-    return {'id': debate_id, 'final': report.final, 'status': {'debate': status['debate']}}
+    if "debate" not in status:
+        status["debate"] = {"policy": "EpsilonGreedyBandit", "arms": {}}
+    arms = status["debate"].setdefault("arms", {})
+    arms.setdefault("panel", {"q": 0.0, "n": 0})
+    return {"id": debate_id, "final": report.final, "status": {"debate": status["debate"]}}
+
 
 def ops_debate_inspect(debate_id: int) -> dict[str, Any]:
     store = _ensure_store()
-    rows = store.list_debates('t', 'w')
-    final = next((d.final_output for d in rows if d.id == debate_id), '')
-    return {'id': debate_id, 'final': final}
+    rows = store.list_debates("t", "w")
+    final = next((d.final_output for d in rows if d.id == debate_id), "")
+    return {"id": debate_id, "final": final}
+
 
 def ops_debate_stats() -> dict[str, Any]:
     store = _ensure_store()
-    rows = store.list_debates('t', 'w')
-    return {'count': len(rows), 'avg_rounds': 1.0 if rows else 0.0}
+    rows = store.list_debates("t", "w")
+    return {"count": len(rows), "avg_rounds": 1.0 if rows else 0.0}
+
 
 class AnalysisDepthSelect(View):
     """Interactive dropdown for selecting analysis depth."""
@@ -205,13 +262,23 @@ class AnalysisDepthSelect(View):
         self.selected_depth = None
         self._background_tasks: set[asyncio.Task[Any]] = set()
 
-    @discord.ui.select(placeholder='Choose analysis depth...', options=[discord.SelectOption(label='Quick', description='Fast analysis (2-3 min)', value='quick'), discord.SelectOption(label='Standard', description='Balanced analysis (5-7 min)', value='standard'), discord.SelectOption(label='Comprehensive', description='Deep analysis (10-15 min)', value='comprehensive'), discord.SelectOption(label='Expert', description='Maximum depth analysis (15-30 min)', value='expert')])
+    @discord.ui.select(
+        placeholder="Choose analysis depth...",
+        options=[
+            discord.SelectOption(label="Quick", description="Fast analysis (2-3 min)", value="quick"),
+            discord.SelectOption(label="Standard", description="Balanced analysis (5-7 min)", value="standard"),
+            discord.SelectOption(label="Comprehensive", description="Deep analysis (10-15 min)", value="comprehensive"),
+            discord.SelectOption(label="Expert", description="Maximum depth analysis (15-30 min)", value="expert"),
+        ],
+    )
     async def select_depth(self, interaction: discord.Interaction, select: Select):
         if interaction.user.id != self.user_id:
-            await interaction.response.send_message('❌ This menu is not for you!', ephemeral=True)
+            await interaction.response.send_message("❌ This menu is not for you!", ephemeral=True)
             return
         self.selected_depth = select.values[0]
-        await interaction.response.edit_message(content=f'✅ Selected: **{select.values[0].title()}** analysis\n🚀 Starting analysis...', view=None)
+        await interaction.response.edit_message(
+            content=f"✅ Selected: **{select.values[0].title()}** analysis\n🚀 Starting analysis...", view=None
+        )
         task = asyncio.create_task(self._run_analysis(interaction.channel, interaction.user))
         self._background_tasks.add(task)
         task.add_done_callback(self._background_tasks.discard)
@@ -220,20 +287,26 @@ class AnalysisDepthSelect(View):
         """Run the analysis in background and send results."""
         try:
             from ultimate_discord_intelligence_bot.enhanced_crew_integration import execute_crew_with_quality_monitoring
-            quality_threshold = {'quick': 0.6, 'standard': 0.7, 'comprehensive': 0.8, 'expert': 0.9}[self.selected_depth]
-            progress_msg = await channel.send('🔄 **Analysis in progress...**')
-            result = await execute_crew_with_quality_monitoring(inputs={'url': self.url}, quality_threshold=quality_threshold, enable_alerts=True)
+
+            quality_threshold = {"quick": 0.6, "standard": 0.7, "comprehensive": 0.8, "expert": 0.9}[
+                self.selected_depth
+            ]
+            progress_msg = await channel.send("🔄 **Analysis in progress...**")
+            result = await execute_crew_with_quality_monitoring(
+                inputs={"url": self.url}, quality_threshold=quality_threshold, enable_alerts=True
+            )
             await progress_msg.edit(content=self._format_analysis_result(result))
         except Exception as e:
-            logger.error(f'Analysis failed: {e}')
-            await channel.send(f'❌ Analysis failed: {e!s}')
+            logger.error(f"Analysis failed: {e}")
+            await channel.send(f"❌ Analysis failed: {e!s}")
 
     def _format_analysis_result(self, result) -> str:
         """Format analysis results for Discord."""
-        quality_score = result.get('quality_score', 0.0)
-        execution_time = result.get('execution_time', 0.0)
-        status_emoji = '🟢' if quality_score > 0.8 else '🟡' if quality_score > 0.6 else '🔴'
-        return f'🎯 **Analysis Complete!**\n\n{status_emoji} **Quality Score:** `{quality_score:.2f}/1.0`\n⏱️ **Execution Time:** `{execution_time:.1f}s`\n📊 **Alerts:** `{len(result.get('performance_alerts', []))}`\n\n**Key Findings:**\n• Multi-platform content analysis completed\n• Advanced deception detection applied\n• Fact-checking and credibility assessment done\n• Results stored in vector memory for future queries\n\n*Use `/ask <question>` to query the analyzed content!*'
+        quality_score = result.get("quality_score", 0.0)
+        execution_time = result.get("execution_time", 0.0)
+        status_emoji = "🟢" if quality_score > 0.8 else "🟡" if quality_score > 0.6 else "🔴"
+        return f"🎯 **Analysis Complete!**\n\n{status_emoji} **Quality Score:** `{quality_score:.2f}/1.0`\n⏱️ **Execution Time:** `{execution_time:.1f}s`\n📊 **Alerts:** `{len(result.get('performance_alerts', []))}`\n\n**Key Findings:**\n• Multi-platform content analysis completed\n• Advanced deception detection applied\n• Fact-checking and credibility assessment done\n• Results stored in vector memory for future queries\n\n*Use `/ask <question>` to query the analyzed content!*"
+
 
 class PlatformSelectView(View):
     """Interactive platform selection for content ingestion."""
@@ -243,13 +316,29 @@ class PlatformSelectView(View):
         self.user_id = user_id
         self.selected_platform = None
 
-    @discord.ui.select(placeholder='Select platform to monitor...', options=[discord.SelectOption(label='YouTube', description='Video content analysis', emoji='📺', value='youtube'), discord.SelectOption(label='Twitter/X', description='Social media posts', emoji='🐦', value='twitter'), discord.SelectOption(label='TikTok', description='Short-form videos', emoji='🎵', value='tiktok'), discord.SelectOption(label='Instagram', description='Photo and video content', emoji='📸', value='instagram'), discord.SelectOption(label='Reddit', description='Discussion threads', emoji='💬', value='reddit'), discord.SelectOption(label='Twitch', description='Live streams', emoji='🎮', value='twitch')])
+    @discord.ui.select(
+        placeholder="Select platform to monitor...",
+        options=[
+            discord.SelectOption(label="YouTube", description="Video content analysis", emoji="📺", value="youtube"),
+            discord.SelectOption(label="Twitter/X", description="Social media posts", emoji="🐦", value="twitter"),
+            discord.SelectOption(label="TikTok", description="Short-form videos", emoji="🎵", value="tiktok"),
+            discord.SelectOption(
+                label="Instagram", description="Photo and video content", emoji="📸", value="instagram"
+            ),
+            discord.SelectOption(label="Reddit", description="Discussion threads", emoji="💬", value="reddit"),
+            discord.SelectOption(label="Twitch", description="Live streams", emoji="🎮", value="twitch"),
+        ],
+    )
     async def select_platform(self, interaction: discord.Interaction, select: Select):
         if interaction.user.id != self.user_id:
-            await interaction.response.send_message('❌ This menu is not for you!', ephemeral=True)
+            await interaction.response.send_message("❌ This menu is not for you!", ephemeral=True)
             return
         self.selected_platform = select.values[0]
-        await interaction.response.edit_message(content=f'✅ Selected platform: **{select.values[0].title()}**\n\nPlease provide a creator handle or URL:', view=None)
+        await interaction.response.edit_message(
+            content=f"✅ Selected platform: **{select.values[0].title()}**\n\nPlease provide a creator handle or URL:",
+            view=None,
+        )
+
 
 class EnhancedAnalysisCommands(commands.Cog):
     """Enhanced Discord commands with interactive features."""
@@ -257,68 +346,95 @@ class EnhancedAnalysisCommands(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.slash_command(name='analyze', description='Analyze content with interactive depth selection')
+    @commands.slash_command(name="analyze", description="Analyze content with interactive depth selection")
     async def analyze_interactive(self, ctx, url: str):
         """Interactive content analysis with depth selection."""
         await ctx.defer()
         if not self._is_valid_url(url):
-            await ctx.followup.send('❌ Please provide a valid URL (YouTube, Twitter, TikTok, etc.)')
+            await ctx.followup.send("❌ Please provide a valid URL (YouTube, Twitter, TikTok, etc.)")
             return
         view = AnalysisDepthSelect(url, ctx.user.id)
-        await ctx.followup.send(f'🎯 **Content Analysis Request**\n📎 URL: {url}\n\nChoose your analysis depth:', view=view, ephemeral=True)
+        await ctx.followup.send(
+            f"🎯 **Content Analysis Request**\n📎 URL: {url}\n\nChoose your analysis depth:", view=view, ephemeral=True
+        )
 
-    @commands.slash_command(name='monitor', description='Set up content monitoring with platform selection')
+    @commands.slash_command(name="monitor", description="Set up content monitoring with platform selection")
     async def monitor_setup(self, ctx):
         """Interactive platform monitoring setup."""
         await ctx.defer()
         view = PlatformSelectView(ctx.user.id)
-        await ctx.followup.send('📡 **Content Monitoring Setup**\n\nSelect a platform to monitor:', view=view, ephemeral=True)
+        await ctx.followup.send(
+            "📡 **Content Monitoring Setup**\n\nSelect a platform to monitor:", view=view, ephemeral=True
+        )
 
-    @commands.slash_command(name='ask', description='Query analyzed content with enhanced formatting')
+    @commands.slash_command(name="ask", description="Query analyzed content with enhanced formatting")
     async def ask_enhanced(self, ctx, question: str):
         """Enhanced Q&A with better formatting and context."""
         await ctx.defer()
         try:
             from domains.memory import MemoryService
+
             memory_service = MemoryService()
-            result = await memory_service.query_content(query=question, tenant='discord', workspace=ctx.guild.id if ctx.guild else 'dm')
-            if result.status == 'success':
+            result = await memory_service.query_content(
+                query=question, tenant="discord", workspace=ctx.guild.id if ctx.guild else "dm"
+            )
+            if result.status == "success":
                 embed = self._create_qa_embed(question, result.data)
                 await ctx.followup.send(embed=embed)
             else:
-                await ctx.followup.send(f'❌ Query failed: {result.error}')
+                await ctx.followup.send(f"❌ Query failed: {result.error}")
         except Exception as e:
-            logger.error(f'Q&A failed: {e}')
-            await ctx.followup.send(f'❌ Error processing question: {e!s}')
+            logger.error(f"Q&A failed: {e}")
+            await ctx.followup.send(f"❌ Error processing question: {e!s}")
 
     def _is_valid_url(self, url: str) -> bool:
         """Basic URL validation for supported platforms."""
         import re
-        url_pattern = re.compile('^https?://(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\\.)+[A-Z]{2,6}\\.?|localhost|\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3})(?::\\d+)?(?:/?|[/?]\\S+)$', re.IGNORECASE)
+
+        url_pattern = re.compile(
+            "^https?://(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\\.)+[A-Z]{2,6}\\.?|localhost|\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3})(?::\\d+)?(?:/?|[/?]\\S+)$",
+            re.IGNORECASE,
+        )
         if not url_pattern.match(url):
             return False
-        supported_domains = ['youtube.com', 'youtu.be', 'twitter.com', 'x.com', 'tiktok.com', 'instagram.com', 'reddit.com', 'twitch.tv']
+        supported_domains = [
+            "youtube.com",
+            "youtu.be",
+            "twitter.com",
+            "x.com",
+            "tiktok.com",
+            "instagram.com",
+            "reddit.com",
+            "twitch.tv",
+        ]
         from urllib.parse import urlparse
+
         domain = urlparse(url).netloc.lower()
-        return any((supported_domain in domain for supported_domain in supported_domains))
+        return any(supported_domain in domain for supported_domain in supported_domains)
 
     def _create_qa_embed(self, question: str, answer_data: dict[str, Any]) -> discord.Embed:
         """Create a rich embed for Q&A responses."""
-        embed = discord.Embed(title='🔍 Content Query Results', description=f'**Question:** {question}', color=discord.Color.blue(), timestamp=datetime.now(UTC))
-        answer = answer_data.get('answer', 'No answer found')
-        embed.add_field(name='📝 Answer', value=answer[:1024], inline=False)
-        confidence = answer_data.get('confidence', 0)
-        embed.add_field(name='🎯 Confidence', value=f'{confidence:.1%}', inline=True)
-        sources = answer_data.get('sources', [])
+        embed = discord.Embed(
+            title="🔍 Content Query Results",
+            description=f"**Question:** {question}",
+            color=discord.Color.blue(),
+            timestamp=datetime.now(UTC),
+        )
+        answer = answer_data.get("answer", "No answer found")
+        embed.add_field(name="📝 Answer", value=answer[:1024], inline=False)
+        confidence = answer_data.get("confidence", 0)
+        embed.add_field(name="🎯 Confidence", value=f"{confidence:.1%}", inline=True)
+        sources = answer_data.get("sources", [])
         if sources:
-            sources_text = '\n'.join([f'• {src.get('title', 'Unknown')}' for src in sources[:3]])
-            embed.add_field(name='📚 Sources', value=sources_text[:1024], inline=True)
-        citations = answer_data.get('citations', [])
+            sources_text = "\n".join([f"• {src.get('title', 'Unknown')}"
+            embed.add_field(name="📚 Sources", value=sources_text[:1024], inline=True)
+        citations = answer_data.get("citations", [])
         if citations:
-            citation_text = '\n'.join([f'[{i + 1}] {cit}' for i, cit in enumerate(citations[:3])])
-            embed.add_field(name='🔗 Citations', value=citation_text[:1024], inline=False)
-        embed.set_footer(text='Powered by Ultimate Discord Intelligence Bot')
+            citation_text = "\n".join([f"[{i + 1}] {cit}" for i, cit in enumerate(citations[:3])])
+            embed.add_field(name="🔗 Citations", value=citation_text[:1024], inline=False)
+        embed.set_footer(text="Powered by Ultimate Discord Intelligence Bot")
         return embed
+
 
 class SystemStatusView(View):
     """Interactive system status dashboard."""
@@ -327,72 +443,110 @@ class SystemStatusView(View):
         super().__init__(timeout=None)
         self.bot = bot
 
-    @discord.ui.button(label='🔄 Refresh', style=discord.ButtonStyle.primary)
+    @discord.ui.button(label="🔄 Refresh", style=discord.ButtonStyle.primary)
     async def refresh_status(self, interaction: discord.Interaction, button: Button):
         """Refresh system status."""
         await interaction.response.edit_message(content=self._get_system_status(), view=self)
 
-    @discord.ui.button(label='📊 Performance', style=discord.ButtonStyle.secondary)
+    @discord.ui.button(label="📊 Performance", style=discord.ButtonStyle.secondary)
     async def show_performance(self, interaction: discord.Interaction, button: Button):
         """Show performance metrics."""
         await interaction.response.send_message(self._get_performance_metrics(), ephemeral=True)
 
     def _get_system_status(self) -> str:
         """Get current system status."""
-        return '🟢 **System Status: Healthy**\n\n📊 **Active Components:**\n• Content Ingestion Pipeline: ✅ Running\n• AI Analysis Engine: ✅ Operational\n• Vector Memory: ✅ Connected\n• Discord Integration: ✅ Active\n\n🔍 **Recent Activity:**\n• 24 analyses completed today\n• 156 content items processed\n• 89% average quality score\n\n*Use `/ask` to query analyzed content or `/analyze` for new content!*'
+        return "🟢 **System Status: Healthy**\n\n📊 **Active Components:**\n• Content Ingestion Pipeline: ✅ Running\n• AI Analysis Engine: ✅ Operational\n• Vector Memory: ✅ Connected\n• Discord Integration: ✅ Active\n\n🔍 **Recent Activity:**\n• 24 analyses completed today\n• 156 content items processed\n• 89% average quality score\n\n*Use `/ask` to query analyzed content or `/analyze` for new content!*"
 
     def _get_performance_metrics(self) -> str:
         """Get performance metrics."""
         return "📈 **Performance Metrics**\n\n⏱️ **Average Response Times:**\n• Content Analysis: 4.2s\n• Fact Checking: 2.8s\n• Memory Queries: 0.3s\n\n💰 **Cost Tracking:**\n• Today's Usage: $2.34\n• Monthly Total: $67.89\n• Efficiency Score: 94%\n\n🎯 **Quality Metrics:**\n• Analysis Accuracy: 96%\n• Fact Check Precision: 92%\n• User Satisfaction: 4.8/5\n\n*Performance data updated in real-time*"
+
 
 async def setup_enhanced_discord_bot():
     """Set up the enhanced Discord bot with interactive features."""
     intents = discord.Intents.default()
     intents.message_content = True
     intents.guilds = True
-    bot = commands.Bot(command_prefix='/', intents=intents, description='Ultimate Discord Intelligence Bot - Enhanced Edition')
+    bot = commands.Bot(
+        command_prefix="/", intents=intents, description="Ultimate Discord Intelligence Bot - Enhanced Edition"
+    )
     await bot.add_cog(EnhancedAnalysisCommands(bot))
     bot.add_view(SystemStatusView(bot))
 
     @bot.event
     async def on_ready():
-        logger.info(f'{bot.user} has connected to Discord!')
-        await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name='for /analyze commands'))
+        logger.info(f"{bot.user} has connected to Discord!")
+        await bot.change_presence(
+            activity=discord.Activity(type=discord.ActivityType.watching, name="for /analyze commands")
+        )
 
     @bot.event
     async def on_command_error(ctx, error):
         """Enhanced error handling for commands."""
         if isinstance(error, commands.CommandNotFound):
-            await ctx.send('❓ **Command not found!**\n\nAvailable commands:\n• `/analyze <url>` - Analyze content\n• `/ask <question>` - Query analyzed content\n• `/monitor` - Set up content monitoring\n\n*Use tab completion or check `/help` for more options!*')
+            await ctx.send(
+                "❓ **Command not found!**\n\nAvailable commands:\n• `/analyze <url>` - Analyze content\n• `/ask <question>` - Query analyzed content\n• `/monitor` - Set up content monitoring\n\n*Use tab completion or check `/help` for more options!*"
+            )
         elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send(f'❌ **Missing argument:** `{error.param.name}` is required for this command.')
+            await ctx.send(f"❌ **Missing argument:** `{error.param.name}` is required for this command.")
         else:
-            logger.error(f'Command error: {error}')
-            await ctx.send('❌ **An error occurred.** Please try again or contact support.')
+            logger.error(f"Command error: {error}")
+            await ctx.send("❌ **An error occurred.** Please try again or contact support.")
+
     return bot
+
 
 async def run_enhanced_discord_bot():
     """Run the enhanced Discord bot standalone."""
     import os
-    token = os.getenv('DISCORD_BOT_TOKEN')
+
+    token = os.getenv("DISCORD_BOT_TOKEN")
     if not token:
-        logger.error('DISCORD_BOT_TOKEN environment variable not set!')
-        logger.error('Please set your Discord bot token in the .env file or environment variables.')
+        logger.error("DISCORD_BOT_TOKEN environment variable not set!")
+        logger.error("Please set your Discord bot token in the .env file or environment variables.")
         return
-    logger.info('Starting Enhanced Discord Intelligence Bot...')
+    logger.info("Starting Enhanced Discord Intelligence Bot...")
     bot = await setup_enhanced_discord_bot()
     try:
         await bot.start(token)
     except KeyboardInterrupt:
-        logger.info('Shutting down bot...')
+        logger.info("Shutting down bot...")
     except Exception as e:
-        logger.error(f'Bot error: {e}')
+        logger.error(f"Bot error: {e}")
     finally:
         await bot.close()
+
 
 def run_discord_bot():
     """Synchronous entry point for running the Discord bot."""
     asyncio.run(run_enhanced_discord_bot())
-if __name__ == '__main__':
+
+
+if __name__ == "__main__":
     run_discord_bot()
-__all__ = ['AnalysisDepthSelect', 'EnhancedAnalysisCommands', 'PlatformSelectView', 'SystemStatusView', 'ops_debate_inspect', 'ops_debate_run', 'ops_debate_stats', 'ops_grounding_audit', 'ops_incident_ack', 'ops_incident_list', 'ops_incident_open', 'ops_incident_resolve', 'ops_ingest_queue_status', 'ops_ingest_run_once', 'ops_ingest_watch_add', 'ops_ingest_watch_list', 'ops_privacy_show', 'ops_privacy_status', 'ops_privacy_sweep', 'ops_slo_status', 'ops_status', 'run_discord_bot', 'run_enhanced_discord_bot', 'setup_enhanced_discord_bot']
+__all__ = [
+    "AnalysisDepthSelect",
+    "EnhancedAnalysisCommands",
+    "PlatformSelectView",
+    "SystemStatusView",
+    "ops_debate_inspect",
+    "ops_debate_run",
+    "ops_debate_stats",
+    "ops_grounding_audit",
+    "ops_incident_ack",
+    "ops_incident_list",
+    "ops_incident_open",
+    "ops_incident_resolve",
+    "ops_ingest_queue_status",
+    "ops_ingest_run_once",
+    "ops_ingest_watch_add",
+    "ops_ingest_watch_list",
+    "ops_privacy_show",
+    "ops_privacy_status",
+    "ops_privacy_sweep",
+    "ops_slo_status",
+    "ops_status",
+    "run_discord_bot",
+    "run_enhanced_discord_bot",
+    "setup_enhanced_discord_bot",
+]

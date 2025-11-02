@@ -6,13 +6,17 @@ observability best practices.
 """
 
 from __future__ import annotations
+
 import asyncio
 import time
-from typing import TYPE_CHECKING
-import structlog
-from platform.observability.metrics import get_metrics
-from domains.orchestration.crew.interfaces import CrewConfig, CrewExecutionResult, CrewExecutor, CrewTask
 from platform.core.step_result import ErrorCategory, StepResult
+from platform.observability.metrics import get_metrics
+from typing import TYPE_CHECKING
+
+import structlog
+
+from domains.orchestration.crew.interfaces import CrewConfig, CrewExecutionResult, CrewExecutor, CrewTask
+
 
 if TYPE_CHECKING:
     from crewai import Crew

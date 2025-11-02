@@ -17,44 +17,55 @@ Dependencies:
 - requests: For webhook HTTP requests
 - Optional: Custom formatting libraries
 """
+
 from __future__ import annotations
+
 import logging
 import time
 from dataclasses import dataclass
-from typing import Any
 from platform.core.step_result import StepResult
+from typing import Any
+
+
 logger = logging.getLogger(__name__)
 try:
     from discord.ext import commands
+
     DISCORD_AVAILABLE = True
 except ImportError:
     DISCORD_AVAILABLE = False
     commands = None
-    logger.warning('discord.py not available, Discord publishing disabled')
+    logger.warning("discord.py not available, Discord publishing disabled")
+
 
 @dataclass
 class PublishingArtifact:
     """An artifact to be published."""
+
     artifact_type: str
     title: str
     content: str
     metadata: dict[str, Any]
-    platform: str = 'discord'
+    platform: str = "discord"
     priority: int = 1
     created_at: float = 0.0
+
 
 @dataclass
 class PublishingResult:
     """Result of publishing operation."""
+
     success: bool
     artifact_id: str
     published_at: float
     platform_response: dict[str, Any] | None = None
     error_message: str | None = None
 
+
 @dataclass
 class PublishingQueue:
     """Publishing queue for managing artifact distribution."""
+
     pending_artifacts: list[PublishingArtifact] = None
     published_artifacts: list[PublishingResult] = None
     failed_artifacts: list[PublishingResult] = None
@@ -67,6 +78,7 @@ class PublishingQueue:
         if self.failed_artifacts is None:
             self.failed_artifacts = []
 
+
 class ArtifactPublishingService:
     """Service for publishing analysis artifacts to various platforms.
 
@@ -76,7 +88,7 @@ class ArtifactPublishingService:
         success = result.data["success"]
     """
 
-    def __init__(self, cache_size: int=1000):
+    def __init__(self, cache_size: int = 1000):
         """Initialize publishing service.
 
         Args:
@@ -92,10 +104,13 @@ class ArtifactPublishingService:
     def _load_config(self) -> None:
         """Load publishing configuration from environment."""
         import os
-        self._discord_webhook_url = os.getenv('DISCORD_WEBHOOK_URL')
-        self._discord_bot_token = os.getenv('DISCORD_BOT_TOKEN')
 
-    def publish_artifact(self, artifact: PublishingArtifact, platform: str | None=None, use_cache: bool=True) -> StepResult:
+        self._discord_webhook_url = os.getenv("DISCORD_WEBHOOK_URL")
+        self._discord_bot_token = os.getenv("DISCORD_BOT_TOKEN")
+
+    def publish_artifact(
+        self, artifact: PublishingArtifact, platform: str | None = None, use_cache: bool = True
+    ) -> StepResult:
         """Publish an artifact to specified platform.
 
         Args:
@@ -108,29 +123,56 @@ class ArtifactPublishingService:
         """
         try:
             import time
+
             start_time = time.time()
             if not artifact or not artifact.title or (not artifact.content):
-                return StepResult.fail('Artifact must have title and content', status='bad_request')
+                return StepResult.fail("Artifact must have title and content", status="bad_request")
             if platform is None:
                 platform = artifact.platform
             if use_cache:
                 cache_result = self._check_cache(artifact, platform)
                 if cache_result:
-                    logger.info(f'Publishing cache hit for {artifact.title}')
-                    return StepResult.ok(data={'success': cache_result.success, 'artifact_id': cache_result.artifact_id, 'published_at': cache_result.published_at, 'platform_response': cache_result.platform_response, 'error_message': cache_result.error_message, 'cache_hit': True, 'processing_time_ms': (time.time() - start_time) * 1000})
+                    logger.info(f"Publishing cache hit for {artifact.title}")
+                    return StepResult.ok(
+                        data={
+                            "success": cache_result.success,
+                            "artifact_id": cache_result.artifact_id,
+                            "published_at": cache_result.published_at,
+                            "platform_response": cache_result.platform_response,
+                            "error_message": cache_result.error_message,
+                            "cache_hit": True,
+                            "processing_time_ms": (time.time() - start_time) * 1000,
+                        }
+                    )
             publishing_result = self._publish_artifact(artifact, platform)
             if publishing_result:
                 if use_cache:
                     self._cache_result(artifact, platform, publishing_result)
                 processing_time = (time.time() - start_time) * 1000
-                return StepResult.ok(data={'success': publishing_result.success, 'artifact_id': publishing_result.artifact_id, 'published_at': publishing_result.published_at, 'platform_response': publishing_result.platform_response, 'error_message': publishing_result.error_message, 'cache_hit': False, 'processing_time_ms': processing_time})
+                return StepResult.ok(
+                    data={
+                        "success": publishing_result.success,
+                        "artifact_id": publishing_result.artifact_id,
+                        "published_at": publishing_result.published_at,
+                        "platform_response": publishing_result.platform_response,
+                        "error_message": publishing_result.error_message,
+                        "cache_hit": False,
+                        "processing_time_ms": processing_time,
+                    }
+                )
             else:
-                return StepResult.fail('Publishing failed', status='retryable')
+                return StepResult.fail("Publishing failed", status="retryable")
         except Exception as e:
-            logger.error(f'Artifact publishing failed: {e}')
-            return StepResult.fail(f'Publishing failed: {e!s}', status='retryable')
+            logger.error(f"Artifact publishing failed: {e}")
+            return StepResult.fail(f"Publishing failed: {e!s}", status="retryable")
 
-    def publish_report(self, report_data: dict[str, Any], report_type: str='analysis', title: str | None=None, platform: str='discord') -> StepResult:
+    def publish_report(
+        self,
+        report_data: dict[str, Any],
+        report_type: str = "analysis",
+        title: str | None = None,
+        platform: str = "discord",
+    ) -> StepResult:
         """Publish an analysis report to Discord.
 
         Args:
@@ -146,13 +188,23 @@ class ArtifactPublishingService:
             if title is None:
                 title = self._generate_report_title(report_data, report_type)
             formatted_content = self._format_report_content(report_data, report_type)
-            artifact = PublishingArtifact(artifact_type=report_type, title=title, content=formatted_content, metadata=report_data, platform=platform, priority=5, created_at=time.time())
+            artifact = PublishingArtifact(
+                artifact_type=report_type,
+                title=title,
+                content=formatted_content,
+                metadata=report_data,
+                platform=platform,
+                priority=5,
+                created_at=time.time(),
+            )
             return self.publish_artifact(artifact, platform)
         except Exception as e:
-            logger.error(f'Report publishing failed: {e}')
-            return StepResult.fail(f'Report publishing failed: {e!s}')
+            logger.error(f"Report publishing failed: {e}")
+            return StepResult.fail(f"Report publishing failed: {e!s}")
 
-    def publish_highlight_summary(self, highlights: list[dict[str, Any]], episode_info: dict[str, Any] | None=None, platform: str='discord') -> StepResult:
+    def publish_highlight_summary(
+        self, highlights: list[dict[str, Any]], episode_info: dict[str, Any] | None = None, platform: str = "discord"
+    ) -> StepResult:
         """Publish a highlight summary to Discord.
 
         Args:
@@ -165,15 +217,33 @@ class ArtifactPublishingService:
         """
         try:
             summary_content = self._format_highlight_summary(highlights, episode_info)
-            episode_title = episode_info.get('title', 'Unknown Episode') if episode_info else 'Content'
-            title = f'🎬 Highlight Summary: {episode_title}'
-            artifact = PublishingArtifact(artifact_type='highlight_summary', title=title, content=summary_content, metadata={'highlights': highlights, 'episode_info': episode_info or {}, 'highlight_count': len(highlights)}, platform=platform, priority=7, created_at=time.time())
+            episode_title = episode_info.get("title", "Unknown Episode") if episode_info else "Content"
+            title = f"🎬 Highlight Summary: {episode_title}"
+            artifact = PublishingArtifact(
+                artifact_type="highlight_summary",
+                title=title,
+                content=summary_content,
+                metadata={
+                    "highlights": highlights,
+                    "episode_info": episode_info or {},
+                    "highlight_count": len(highlights),
+                },
+                platform=platform,
+                priority=7,
+                created_at=time.time(),
+            )
             return self.publish_artifact(artifact, platform)
         except Exception as e:
-            logger.error(f'Highlight summary publishing failed: {e}')
-            return StepResult.fail(f'Highlight summary publishing failed: {e!s}')
+            logger.error(f"Highlight summary publishing failed: {e}")
+            return StepResult.fail(f"Highlight summary publishing failed: {e!s}")
 
-    def publish_claim_summary(self, claims: list[dict[str, Any]], quotes: list[dict[str, Any]] | None=None, episode_info: dict[str, Any] | None=None, platform: str='discord') -> StepResult:
+    def publish_claim_summary(
+        self,
+        claims: list[dict[str, Any]],
+        quotes: list[dict[str, Any]] | None = None,
+        episode_info: dict[str, Any] | None = None,
+        platform: str = "discord",
+    ) -> StepResult:
         """Publish a claim and quote summary to Discord.
 
         Args:
@@ -187,13 +257,27 @@ class ArtifactPublishingService:
         """
         try:
             summary_content = self._format_claim_quote_summary(claims, quotes, episode_info)
-            episode_title = episode_info.get('title', 'Unknown Episode') if episode_info else 'Content'
-            title = f'📋 Claims & Quotes: {episode_title}'
-            artifact = PublishingArtifact(artifact_type='claim_quote_summary', title=title, content=summary_content, metadata={'claims': claims, 'quotes': quotes or [], 'episode_info': episode_info or {}, 'claim_count': len(claims), 'quote_count': len(quotes) if quotes else 0}, platform=platform, priority=6, created_at=time.time())
+            episode_title = episode_info.get("title", "Unknown Episode") if episode_info else "Content"
+            title = f"📋 Claims & Quotes: {episode_title}"
+            artifact = PublishingArtifact(
+                artifact_type="claim_quote_summary",
+                title=title,
+                content=summary_content,
+                metadata={
+                    "claims": claims,
+                    "quotes": quotes or [],
+                    "episode_info": episode_info or {},
+                    "claim_count": len(claims),
+                    "quote_count": len(quotes) if quotes else 0,
+                },
+                platform=platform,
+                priority=6,
+                created_at=time.time(),
+            )
             return self.publish_artifact(artifact, platform)
         except Exception as e:
-            logger.error(f'Claim/quote summary publishing failed: {e}')
-            return StepResult.fail(f'Claim/quote summary publishing failed: {e!s}')
+            logger.error(f"Claim/quote summary publishing failed: {e}")
+            return StepResult.fail(f"Claim/quote summary publishing failed: {e!s}")
 
     def _publish_artifact(self, artifact: PublishingArtifact, platform: str) -> PublishingResult | None:
         """Publish artifact to specified platform.
@@ -206,16 +290,26 @@ class ArtifactPublishingService:
             PublishingResult or None if publishing fails
         """
         try:
-            if platform == 'discord':
+            if platform == "discord":
                 return self._publish_to_discord(artifact)
-            elif platform == 'webhook':
+            elif platform == "webhook":
                 return self._publish_to_webhook(artifact)
             else:
-                logger.warning(f'Unsupported platform: {platform}')
-                return PublishingResult(success=False, artifact_id=f'{artifact.artifact_type}_{int(time.time())}', published_at=time.time(), error_message=f'Unsupported platform: {platform}')
+                logger.warning(f"Unsupported platform: {platform}")
+                return PublishingResult(
+                    success=False,
+                    artifact_id=f"{artifact.artifact_type}_{int(time.time())}",
+                    published_at=time.time(),
+                    error_message=f"Unsupported platform: {platform}",
+                )
         except Exception as e:
-            logger.error(f'Artifact publishing failed: {e}')
-            return PublishingResult(success=False, artifact_id=f'{artifact.artifact_type}_{int(time.time())}', published_at=time.time(), error_message=str(e))
+            logger.error(f"Artifact publishing failed: {e}")
+            return PublishingResult(
+                success=False,
+                artifact_id=f"{artifact.artifact_type}_{int(time.time())}",
+                published_at=time.time(),
+                error_message=str(e),
+            )
 
     def _publish_to_discord(self, artifact: PublishingArtifact) -> PublishingResult:
         """Publish artifact to Discord using webhook or bot.
@@ -231,13 +325,23 @@ class ArtifactPublishingService:
                 return self._publish_to_discord_webhook(artifact)
             if self._discord_bot_token and DISCORD_AVAILABLE:
                 return self._publish_to_discord_bot(artifact)
-            logger.warning('Discord bot not configured, trying webhook')
+            logger.warning("Discord bot not configured, trying webhook")
             if self._discord_webhook_url:
                 return self._publish_to_discord_webhook(artifact)
-            return PublishingResult(success=False, artifact_id=f'{artifact.artifact_type}_{int(time.time())}', published_at=time.time(), error_message='Discord publishing not configured')
+            return PublishingResult(
+                success=False,
+                artifact_id=f"{artifact.artifact_type}_{int(time.time())}",
+                published_at=time.time(),
+                error_message="Discord publishing not configured",
+            )
         except Exception as e:
-            logger.error(f'Discord publishing failed: {e}')
-            return PublishingResult(success=False, artifact_id=f'{artifact.artifact_type}_{int(time.time())}', published_at=time.time(), error_message=str(e))
+            logger.error(f"Discord publishing failed: {e}")
+            return PublishingResult(
+                success=False,
+                artifact_id=f"{artifact.artifact_type}_{int(time.time())}",
+                published_at=time.time(),
+                error_message=str(e),
+            )
 
     def _publish_to_discord_webhook(self, artifact: PublishingArtifact) -> PublishingResult:
         """Publish artifact to Discord via webhook.
@@ -250,14 +354,29 @@ class ArtifactPublishingService:
         """
         try:
             embed = self._format_discord_embed(artifact)
-            payload = {'embeds': [embed], 'username': 'Creator Intelligence Bot', 'avatar_url': 'https://cdn.discordapp.com/embed/avatars/0.png'}
+            payload = {
+                "embeds": [embed],
+                "username": "Creator Intelligence Bot",
+                "avatar_url": "https://cdn.discordapp.com/embed/avatars/0.png",
+            }
             from platform.http.http_utils import resilient_post
+
             response = resilient_post(self._discord_webhook_url, json=payload, timeout=10)
             response.raise_for_status()
-            return PublishingResult(success=True, artifact_id=f'{artifact.artifact_type}_{int(time.time())}', published_at=time.time(), platform_response={'status_code': response.status_code, 'response_text': response.text[:200]})
+            return PublishingResult(
+                success=True,
+                artifact_id=f"{artifact.artifact_type}_{int(time.time())}",
+                published_at=time.time(),
+                platform_response={"status_code": response.status_code, "response_text": response.text[:200]},
+            )
         except Exception as e:
-            logger.error(f'Discord webhook publishing failed: {e}')
-            return PublishingResult(success=False, artifact_id=f'{artifact.artifact_type}_{int(time.time())}', published_at=time.time(), error_message=str(e))
+            logger.error(f"Discord webhook publishing failed: {e}")
+            return PublishingResult(
+                success=False,
+                artifact_id=f"{artifact.artifact_type}_{int(time.time())}",
+                published_at=time.time(),
+                error_message=str(e),
+            )
 
     def _publish_to_discord_bot(self, artifact: PublishingArtifact) -> PublishingResult:
         """Publish artifact to Discord via bot client.
@@ -268,8 +387,13 @@ class ArtifactPublishingService:
         Returns:
             PublishingResult with bot response
         """
-        logger.warning('Discord bot publishing not implemented, using webhook fallback')
-        return PublishingResult(success=False, artifact_id=f'{artifact.artifact_type}_{int(time.time())}', published_at=time.time(), error_message='Discord bot publishing not implemented')
+        logger.warning("Discord bot publishing not implemented, using webhook fallback")
+        return PublishingResult(
+            success=False,
+            artifact_id=f"{artifact.artifact_type}_{int(time.time())}",
+            published_at=time.time(),
+            error_message="Discord bot publishing not implemented",
+        )
 
     def _publish_to_webhook(self, artifact: PublishingArtifact) -> PublishingResult:
         """Publish artifact to generic webhook.
@@ -281,11 +405,27 @@ class ArtifactPublishingService:
             PublishingResult with webhook response
         """
         try:
-            {'artifact_type': artifact.artifact_type, 'title': artifact.title, 'content': artifact.content, 'metadata': artifact.metadata, 'timestamp': time.time()}
-            return PublishingResult(success=True, artifact_id=f'{artifact.artifact_type}_{int(time.time())}', published_at=time.time(), platform_response={'status': 'simulated_success'})
+            {
+                "artifact_type": artifact.artifact_type,
+                "title": artifact.title,
+                "content": artifact.content,
+                "metadata": artifact.metadata,
+                "timestamp": time.time(),
+            }
+            return PublishingResult(
+                success=True,
+                artifact_id=f"{artifact.artifact_type}_{int(time.time())}",
+                published_at=time.time(),
+                platform_response={"status": "simulated_success"},
+            )
         except Exception as e:
-            logger.error(f'Webhook publishing failed: {e}')
-            return PublishingResult(success=False, artifact_id=f'{artifact.artifact_type}_{int(time.time())}', published_at=time.time(), error_message=str(e))
+            logger.error(f"Webhook publishing failed: {e}")
+            return PublishingResult(
+                success=False,
+                artifact_id=f"{artifact.artifact_type}_{int(time.time())}",
+                published_at=time.time(),
+                error_message=str(e),
+            )
 
     def _format_discord_embed(self, artifact: PublishingArtifact) -> dict[str, Any]:
         """Format artifact as Discord embed.
@@ -296,16 +436,30 @@ class ArtifactPublishingService:
         Returns:
             Discord embed dictionary
         """
-        color_map = {'highlight_summary': 16766720, 'claim_quote_summary': 3447003, 'analysis': 15158332, 'report': 3066993}
+        color_map = {
+            "highlight_summary": 16766720,
+            "claim_quote_summary": 3447003,
+            "analysis": 15158332,
+            "report": 3066993,
+        }
         embed_color = color_map.get(artifact.artifact_type, 9807270)
-        embed = {'title': artifact.title, 'description': self._truncate_content(artifact.content, 2000), 'color': embed_color, 'timestamp': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()), 'footer': {'text': f'Creator Intelligence • {artifact.artifact_type}'}}
-        if artifact.artifact_type == 'highlight_summary':
-            highlight_count = artifact.metadata.get('highlight_count', 0)
-            embed['fields'] = [{'name': '🎬 Highlights Found', 'value': str(highlight_count), 'inline': True}]
-        elif artifact.artifact_type == 'claim_quote_summary':
-            claim_count = artifact.metadata.get('claim_count', 0)
-            quote_count = artifact.metadata.get('quote_count', 0)
-            embed['fields'] = [{'name': '📋 Claims', 'value': str(claim_count), 'inline': True}, {'name': '💬 Quotes', 'value': str(quote_count), 'inline': True}]
+        embed = {
+            "title": artifact.title,
+            "description": self._truncate_content(artifact.content, 2000),
+            "color": embed_color,
+            "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "footer": {"text": f"Creator Intelligence • {artifact.artifact_type}"},
+        }
+        if artifact.artifact_type == "highlight_summary":
+            highlight_count = artifact.metadata.get("highlight_count", 0)
+            embed["fields"] = [{"name": "🎬 Highlights Found", "value": str(highlight_count), "inline": True}]
+        elif artifact.artifact_type == "claim_quote_summary":
+            claim_count = artifact.metadata.get("claim_count", 0)
+            quote_count = artifact.metadata.get("quote_count", 0)
+            embed["fields"] = [
+                {"name": "📋 Claims", "value": str(claim_count), "inline": True},
+                {"name": "💬 Quotes", "value": str(quote_count), "inline": True},
+            ]
         return embed
 
     def _generate_report_title(self, report_data: dict[str, Any], report_type: str) -> str:
@@ -318,12 +472,12 @@ class ArtifactPublishingService:
         Returns:
             Generated title string
         """
-        episode_title = report_data.get('episode_title') or report_data.get('title')
-        platform = report_data.get('platform', 'Content')
+        episode_title = report_data.get("episode_title") or report_data.get("title")
+        platform = report_data.get("platform", "Content")
         if episode_title:
-            return f'📊 {report_type.title()}: {episode_title}'
+            return f"📊 {report_type.title()}: {episode_title}"
         else:
-            return f'📊 {platform} {report_type.title()} Report'
+            return f"📊 {platform} {report_type.title()} Report"
 
     def _format_report_content(self, report_data: dict[str, Any], report_type: str) -> str:
         """Format report data as readable content.
@@ -336,21 +490,23 @@ class ArtifactPublishingService:
             Formatted content string
         """
         content_lines = []
-        if report_type == 'analysis':
-            content_lines.append('🔍 **Analysis Summary**')
-            if 'sentiment' in report_data:
-                sentiment = report_data['sentiment']
-                content_lines.append(f'• Sentiment: {sentiment.get('sentiment', 'unknown')} ({sentiment.get('confidence', 0):.1%})')
-        elif report_type == 'highlights':
-            content_lines.append('🎬 **Highlight Summary**')
-            highlights = report_data.get('highlights', [])
-            content_lines.append(f'• Found {len(highlights)} highlight moments')
-        if 'duration' in report_data:
-            duration = report_data['duration']
-            content_lines.append(f'• Duration: {duration:.1f}s')
-        if 'platform' in report_data:
-            content_lines.append(f'• Platform: {report_data['platform']}')
-        return '\n'.join(content_lines)
+        if report_type == "analysis":
+            content_lines.append("🔍 **Analysis Summary**")
+            if "sentiment" in report_data:
+                sentiment = report_data["sentiment"]
+                content_lines.append(
+                    f"• Sentiment: {sentiment.get('sentiment', 'unknown')} ({sentiment.get('confidence', 0):.1%})"
+                )
+        elif report_type == "highlights":
+            content_lines.append("🎬 **Highlight Summary**")
+            highlights = report_data.get("highlights", [])
+            content_lines.append(f"• Found {len(highlights)} highlight moments")
+        if "duration" in report_data:
+            duration = report_data["duration"]
+            content_lines.append(f"• Duration: {duration:.1f}s")
+        if "platform" in report_data:
+            content_lines.append(f"• Platform: {report_data['platform']}"
+        return "\n".join(content_lines)
 
     def _format_highlight_summary(self, highlights: list[dict[str, Any]], episode_info: dict[str, Any] | None) -> str:
         """Format highlight summary for publishing.
@@ -363,23 +519,25 @@ class ArtifactPublishingService:
             Formatted summary string
         """
         lines = []
-        episode_title = episode_info.get('title', 'Unknown Episode') if episode_info else 'Content'
-        lines.append(f'🎬 **Highlight Summary: {episode_title}**')
-        lines.append('')
-        sorted_highlights = sorted(highlights, key=lambda h: h.get('highlight_score', 0), reverse=True)
+        episode_title = episode_info.get("title", "Unknown Episode") if episode_info else "Content"
+        lines.append(f"🎬 **Highlight Summary: {episode_title}**")
+        lines.append("")
+        sorted_highlights = sorted(highlights, key=lambda h: h.get("highlight_score", 0), reverse=True)
         for i, highlight in enumerate(sorted_highlights[:5]):
-            start_time = highlight.get('start_time', 0)
-            end_time = highlight.get('end_time', start_time + 30)
-            score = highlight.get('highlight_score', 0)
-            transcript = highlight.get('transcript_text', 'No transcript available')
-            lines.append(f'**{i + 1}.** [{start_time:.1f}s - {end_time:.1f}s] (Score: {score:.2f})')
+            start_time = highlight.get("start_time", 0)
+            end_time = highlight.get("end_time", start_time + 30)
+            score = highlight.get("highlight_score", 0)
+            transcript = highlight.get("transcript_text", "No transcript available")
+            lines.append(f"**{i + 1}.** [{start_time:.1f}s - {end_time:.1f}s] (Score: {score:.2f})")
             lines.append(f'   "{transcript[:100]}{('...' if len(transcript) > 100 else '')}"')
-            lines.append('')
+            lines.append("")
         if len(highlights) > 5:
-            lines.append(f'... and {len(highlights) - 5} more highlights')
-        return '\n'.join(lines)
+            lines.append(f"... and {len(highlights) - 5} more highlights")
+        return "\n".join(lines)
 
-    def _format_claim_quote_summary(self, claims: list[dict[str, Any]], quotes: list[dict[str, Any]] | None, episode_info: dict[str, Any] | None) -> str:
+    def _format_claim_quote_summary(
+        self, claims: list[dict[str, Any]], quotes: list[dict[str, Any]] | None, episode_info: dict[str, Any] | None
+    ) -> str:
         """Format claim and quote summary for publishing.
 
         Args:
@@ -391,27 +549,27 @@ class ArtifactPublishingService:
             Formatted summary string
         """
         lines = []
-        episode_title = episode_info.get('title', 'Unknown Episode') if episode_info else 'Content'
-        lines.append(f'📋 **Claims & Quotes: {episode_title}**')
-        lines.append('')
+        episode_title = episode_info.get("title", "Unknown Episode") if episode_info else "Content"
+        lines.append(f"📋 **Claims & Quotes: {episode_title}**")
+        lines.append("")
         if claims:
-            lines.append(f'**📋 Claims ({len(claims)})**')
+            lines.append(f"**📋 Claims ({len(claims)})**")
             for _i, claim in enumerate(claims[:3]):
-                confidence = claim.get('confidence', 0)
-                speaker = claim.get('speaker', 'Unknown')
+                confidence = claim.get("confidence", 0)
+                speaker = claim.get("speaker", "Unknown")
                 lines.append(f'• **{speaker}:** "{claim.get('text', '')}" ({confidence:.1%})')
             if len(claims) > 3:
-                lines.append(f'... and {len(claims) - 3} more claims')
-            lines.append('')
+                lines.append(f"... and {len(claims) - 3} more claims")
+            lines.append("")
         if quotes:
-            lines.append(f'**💬 Notable Quotes ({len(quotes)})**')
+            lines.append(f"**💬 Notable Quotes ({len(quotes)})**")
             for _i, quote in enumerate(quotes[:3]):
-                confidence = quote.get('confidence', 0)
-                speaker = quote.get('speaker', 'Unknown')
+                confidence = quote.get("confidence", 0)
+                speaker = quote.get("speaker", "Unknown")
                 lines.append(f'• **{speaker}:** "{quote.get('text', '')}" ({confidence:.1%})')
             if len(quotes) > 3:
-                lines.append(f'... and {len(quotes) - 3} more quotes')
-        return '\n'.join(lines)
+                lines.append(f"... and {len(quotes) - 3} more quotes")
+        return "\n".join(lines)
 
     def _truncate_content(self, content: str, max_length: int) -> str:
         """Truncate content to maximum length.
@@ -425,7 +583,7 @@ class ArtifactPublishingService:
         """
         if len(content) <= max_length:
             return content
-        return content[:max_length - 3] + '...'
+        return content[: max_length - 3] + "..."
 
     def _check_cache(self, artifact: PublishingArtifact, platform: str) -> PublishingResult | None:
         """Check if publishing result exists in cache.
@@ -438,8 +596,9 @@ class ArtifactPublishingService:
             Cached PublishingResult or None
         """
         import hashlib
+
         content_hash = hashlib.sha256(artifact.content.encode()).hexdigest()[:16]
-        cache_key = f'{artifact.artifact_type}:{content_hash}:{platform}'
+        cache_key = f"{artifact.artifact_type}:{content_hash}:{platform}"
         if cache_key in self._publishing_cache:
             return self._publishing_cache[cache_key]
         return None
@@ -453,8 +612,9 @@ class ArtifactPublishingService:
             result: PublishingResult to cache
         """
         import hashlib
+
         content_hash = hashlib.sha256(artifact.content.encode()).hexdigest()[:16]
-        cache_key = f'{artifact.artifact_type}:{content_hash}:{platform}'
+        cache_key = f"{artifact.artifact_type}:{content_hash}:{platform}"
         if len(self._publishing_cache) >= self.cache_size:
             first_key = next(iter(self._publishing_cache))
             del self._publishing_cache[first_key]
@@ -468,8 +628,8 @@ class ArtifactPublishingService:
         """
         cache_size = len(self._publishing_cache)
         self._publishing_cache.clear()
-        logger.info(f'Cleared {cache_size} cached publishing results')
-        return StepResult.ok(data={'cleared_entries': cache_size})
+        logger.info(f"Cleared {cache_size} cached publishing results")
+        return StepResult.ok(data={"cleared_entries": cache_size})
 
     def get_cache_stats(self) -> StepResult:
         """Get publishing cache statistics.
@@ -478,17 +638,25 @@ class ArtifactPublishingService:
             StepResult with cache statistics
         """
         try:
-            stats = {'total_cached': len(self._publishing_cache), 'cache_size_limit': self.cache_size, 'utilization': len(self._publishing_cache) / self.cache_size if self.cache_size > 0 else 0.0, 'platforms_cached': {}}
+            stats = {
+                "total_cached": len(self._publishing_cache),
+                "cache_size_limit": self.cache_size,
+                "utilization": len(self._publishing_cache) / self.cache_size if self.cache_size > 0 else 0.0,
+                "platforms_cached": {},
+            }
             for result in self._publishing_cache.values():
-                platform = 'discord'
-                if result.error_message and 'webhook' in result.error_message.lower():
-                    platform = 'webhook'
-                stats['platforms_cached'][platform] = stats['platforms_cached'].get(platform, 0) + 1
+                platform = "discord"
+                if result.error_message and "webhook" in result.error_message.lower():
+                    platform = "webhook"
+                stats["platforms_cached"][platform] = stats["platforms_cached"].get(platform, 0) + 1
             return StepResult.ok(data=stats)
         except Exception as e:
-            logger.error(f'Failed to get cache stats: {e}')
-            return StepResult.fail(f'Failed to get cache stats: {e!s}')
+            logger.error(f"Failed to get cache stats: {e}")
+            return StepResult.fail(f"Failed to get cache stats: {e!s}")
+
+
 _publishing_service: ArtifactPublishingService | None = None
+
 
 def get_artifact_publishing_service() -> ArtifactPublishingService:
     """Get singleton publishing service instance.

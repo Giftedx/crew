@@ -1,23 +1,34 @@
 import logging
-import dspy
 from platform.core.settings import settings
+
+import dspy
+
 from src.ultimate_discord_intelligence_bot.step_result import ErrorCategory, StepResult
+
+
 logger = logging.getLogger(__name__)
+
 
 class ContentAnalysisSignature(dspy.Signature):
     """Signature for content analysis tasks."""
-    content: str = dspy.InputField(desc='The content to analyze')
-    analysis_type: str = dspy.InputField(desc='Type of analysis: summary, sentiment, topics, entities')
-    output: str = dspy.OutputField(desc='The analysis result')
+
+    content: str = dspy.InputField(desc="The content to analyze")
+    analysis_type: str = dspy.InputField(desc="Type of analysis: summary, sentiment, topics, entities")
+    output: str = dspy.OutputField(desc="The analysis result")
+
 
 class DSPyPromptOptimizer:
     """Advanced prompt optimization using DSPy."""
 
     def __init__(self):
         if settings.OPENAI_API_KEY:
-            self.lm = dspy.OpenAI(model='gpt-4-turbo-preview', api_key=settings.OPENAI_API_KEY)
+            self.lm = dspy.OpenAI(model="gpt-4-turbo-preview", api_key=settings.OPENAI_API_KEY)
         else:
-            self.lm = dspy.OpenAI(api_base='https://openrouter.ai/api/v1', api_key=settings.OPENROUTER_API_KEY, model='anthropic/claude-3-opus')
+            self.lm = dspy.OpenAI(
+                api_base="https://openrouter.ai/api/v1",
+                api_key=settings.OPENROUTER_API_KEY,
+                model="anthropic/claude-3-opus",
+            )
         dspy.settings.configure(lm=self.lm)
         self.analyzer = dspy.ChainOfThought(ContentAnalysisSignature)
 
@@ -25,18 +36,21 @@ class DSPyPromptOptimizer:
         """Analyze content using optimized prompts."""
         try:
             result = self.analyzer(content=content, analysis_type=analysis_type)
-            return StepResult.ok(result={'analysis': result.output}, metadata={'optimizer': 'dspy', 'analysis_type': analysis_type})
+            return StepResult.ok(
+                result={"analysis": result.output}, metadata={"optimizer": "dspy", "analysis_type": analysis_type}
+            )
         except Exception as e:
-            logger.error(f'DSPy analysis failed: {e}')
+            logger.error(f"DSPy analysis failed: {e}")
             return StepResult.fail(error=str(e), error_category=ErrorCategory.LLM_ERROR)
 
     def optimize_prompts(self, training_data: list) -> StepResult:
         """Optimize prompts using training examples."""
         try:
             from dspy.teleprompt import BootstrapFewShot
+
             optimizer = BootstrapFewShot(metric=self._quality_metric, max_bootstrapped_demos=4, max_labeled_demos=4)
             self.analyzer = optimizer.compile(self.analyzer, trainset=training_data)
-            return StepResult.ok(result={'status': 'optimized'}, metadata={'training_samples': len(training_data)})
+            return StepResult.ok(result={"status": "optimized"}, metadata={"training_samples": len(training_data)})
         except Exception as e:
             return StepResult.fail(error=str(e), error_category=ErrorCategory.CONFIGURATION_ERROR)
 

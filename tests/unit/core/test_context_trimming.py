@@ -23,7 +23,7 @@ def test_dynamic_context_trimming():
         print(f"Optimized length: {len(optimized)} characters")
         print(f"Optimized tokens: {optimized_tokens}")
         print(f"Actual reduction: {actual_reduction * 100:.1f}%")
-        print(f'Target achieved: {('✅' if actual_reduction >= target_reduction * 0.9 else '❌')}')
+        print(f"Target achieved: {('✅' if actual_reduction >= target_reduction * 0.9 else '❌')}")
         important_markers = ["ERROR:", "WARNING:", "IMPORTANT:", "QUESTION:", "ANSWER:"]
         preserved_markers = sum(1 for marker in important_markers if marker in optimized)
         print(f"Important markers preserved: {preserved_markers}/{len(important_markers)}")
@@ -32,7 +32,7 @@ def test_dynamic_context_trimming():
     max_limited = engine.optimise(verbose_prompt, max_tokens=100)
     max_limited_tokens = engine.count_tokens(max_limited)
     print(f"Max limited tokens: {max_limited_tokens}")
-    print(f'Within limit: {('✅' if max_limited_tokens <= 100 else '❌')}')
+    print(f"Within limit: {('✅' if max_limited_tokens <= 100 else '❌')}")
     print(f"\nMax limited preview:\n{max_limited}")
 
 

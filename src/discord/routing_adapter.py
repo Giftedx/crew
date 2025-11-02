@@ -3,14 +3,19 @@
 This module provides adapter methods that bridge the gap between the pipeline's
 expected interface and the actual AdaptiveRoutingManager/OpenRouterService APIs.
 """
+
 from __future__ import annotations
+
 import logging
-from typing import TYPE_CHECKING, Any
 from platform.core.step_result import StepResult
+from typing import TYPE_CHECKING, Any
+
+
 if TYPE_CHECKING:
     from platform.llm.providers.openrouter import OpenRouterService
     from platform.llm.providers.openrouter.adaptive_routing import AdaptiveRoutingManager
 logger = logging.getLogger(__name__)
+
 
 class RoutingAdapter:
     """Adapter that provides suggest_model() and estimate_cost() for AdaptiveRoutingManager."""
@@ -31,21 +36,28 @@ class RoutingAdapter:
             StepResult with model information in data dict with 'model' key.
         """
         try:
-            models_map = getattr(self.openrouter_service, 'models_map', {})
-            candidates = models_map.get(task_type, models_map.get('general', ['openai/gpt-4o-mini']))
+            models_map = getattr(self.openrouter_service, "models_map", {})
+            candidates = models_map.get(task_type, models_map.get("general", ["openai/gpt-4o-mini"]))
             suggestion = self.routing_manager.suggest(task_type=task_type, candidates=candidates, context=context)
             if suggestion is None:
-                selected_model = candidates[0] if candidates else 'openai/gpt-4o-mini'
-                logger.debug(f'Routing manager returned None, using fallback: {selected_model}')
+                selected_model = candidates[0] if candidates else "openai/gpt-4o-mini"
+                logger.debug(f"Routing manager returned None, using fallback: {selected_model}")
             else:
                 trial_index, selected_model = suggestion
-            return StepResult.ok(data={'model': selected_model, 'task_type': task_type})
+            return StepResult.ok(data={"model": selected_model, "task_type": task_type})
         except Exception as e:
-            logger.error(f'Failed to suggest model: {e}', exc_info=True)
-            default_model = 'openai/gpt-4o-mini'
-            return StepResult.ok(data={'model': default_model, 'task_type': task_type})
+            logger.error(f"Failed to suggest model: {e}", exc_info=True)
+            default_model = "openai/gpt-4o-mini"
+            return StepResult.ok(data={"model": default_model, "task_type": task_type})
 
-    async def estimate_cost(self, model: str | None=None, input_tokens: int | None=None, output_tokens: int | None=None, prompt: str | None=None, max_tokens: int=500) -> StepResult[dict[str, Any]]:
+    async def estimate_cost(
+        self,
+        model: str | None = None,
+        input_tokens: int | None = None,
+        output_tokens: int | None = None,
+        prompt: str | None = None,
+        max_tokens: int = 500,
+    ) -> StepResult[dict[str, Any]]:
         """Estimate the cost of generating a response.
 
         Args:
@@ -61,7 +73,7 @@ class RoutingAdapter:
         try:
             if input_tokens is None:
                 if prompt:
-                    prompt_engine = getattr(self.openrouter_service, 'prompt_engine', None)
+                    prompt_engine = getattr(self.openrouter_service, "prompt_engine", None)
                     if prompt_engine:
                         token_count = prompt_engine.count_tokens(prompt, model)
                         if isinstance(token_count, StepResult):
@@ -79,18 +91,19 @@ class RoutingAdapter:
             else:
                 output_tokens = int(output_tokens)
             if not model:
-                models_map = getattr(self.openrouter_service, 'models_map', {})
-                candidates = models_map.get('general', ['openai/gpt-4o-mini'])
-                model = candidates[0] if candidates else 'openai/gpt-4o-mini'
-            token_meter = getattr(self.openrouter_service, 'token_meter', None)
+                models_map = getattr(self.openrouter_service, "models_map", {})
+                candidates = models_map.get("general", ["openai/gpt-4o-mini"])
+                model = candidates[0] if candidates else "openai/gpt-4o-mini"
+            token_meter = getattr(self.openrouter_service, "token_meter", None)
             if not token_meter:
-                logger.warning('Token meter not available, using simple estimate')
+                logger.warning("Token meter not available, using simple estimate")
                 cost = (input_tokens + output_tokens) / 1000 * 0.001
-                return StepResult.ok(data={'estimated_cost': cost})
+                return StepResult.ok(data={"estimated_cost": cost})
             effective_prices = dict(token_meter.model_prices)
-            tenant_registry = getattr(self.openrouter_service, 'tenant_registry', None)
+            tenant_registry = getattr(self.openrouter_service, "tenant_registry", None)
             if tenant_registry:
                 from ultimate_discord_intelligence_bot.tenancy import current_tenant
+
                 tenant_ctx = current_tenant()
                 if tenant_ctx:
                     effective_prices.update(tenant_registry.get_pricing_map(tenant_ctx))
@@ -101,13 +114,14 @@ class RoutingAdapter:
             if isinstance(output_cost, StepResult):
                 output_cost = output_cost.data if output_cost.success else 0.0
             total_cost = float(input_cost) + float(output_cost)
-            return StepResult.ok(data={'estimated_cost': total_cost})
+            return StepResult.ok(data={"estimated_cost": total_cost})
         except Exception as e:
-            logger.error(f'Failed to estimate cost: {e}', exc_info=True)
+            logger.error(f"Failed to estimate cost: {e}", exc_info=True)
             in_tokens = input_tokens if input_tokens else 100
             out_tokens = output_tokens if output_tokens else max_tokens
             cost = (in_tokens + out_tokens) / 1000 * 0.001
-            return StepResult.ok(data={'estimated_cost': cost})
+            return StepResult.ok(data={"estimated_cost": cost})
+
 
 class PromptEngineAdapter:
     """Adapter that provides generate_response() for PromptEngine while delegating other methods."""
@@ -121,7 +135,9 @@ class PromptEngineAdapter:
         """Delegate all other attributes to the underlying prompt engine."""
         return getattr(self._prompt_engine, name)
 
-    async def generate_response(self, prompt: str, model: str | None=None, max_tokens: int=1000, temperature: float=0.7) -> StepResult[str]:
+    async def generate_response(
+        self, prompt: str, model: str | None = None, max_tokens: int = 1000, temperature: float = 0.7
+    ) -> StepResult[str]:
         """Generate a response using the prompt engine and OpenRouter service.
 
         Args:
@@ -135,21 +151,21 @@ class PromptEngineAdapter:
         """
         try:
             if not model:
-                task_type = 'general'
-                models_map = getattr(self.openrouter_service, 'models_map', {})
-                candidates = models_map.get(task_type, models_map.get('general', ['openai/gpt-4o-mini']))
-                model = candidates[0] if candidates else 'openai/gpt-4o-mini'
-            result = self.openrouter_service.route(prompt=prompt, task_type='response_generation', model=model)
+                task_type = "general"
+                models_map = getattr(self.openrouter_service, "models_map", {})
+                candidates = models_map.get(task_type, models_map.get("general", ["openai/gpt-4o-mini"]))
+                model = candidates[0] if candidates else "openai/gpt-4o-mini"
+            result = self.openrouter_service.route(prompt=prompt, task_type="response_generation", model=model)
             if isinstance(result, dict):
-                if result.get('status') == 'success':
-                    response = result.get('response', '')
+                if result.get("status") == "success":
+                    response = result.get("response", "")
                     return StepResult.ok(data=response)
                 else:
-                    error = result.get('error', 'Unknown error')
-                    return StepResult.fail(f'Generation failed: {error}')
+                    error = result.get("error", "Unknown error")
+                    return StepResult.fail(f"Generation failed: {error}")
             else:
-                logger.warning(f'OpenRouterService.route returned unexpected type: {type(result)}')
-                return StepResult.fail('Unexpected response format')
+                logger.warning(f"OpenRouterService.route returned unexpected type: {type(result)}")
+                return StepResult.fail("Unexpected response format")
         except Exception as e:
-            logger.error(f'Failed to generate response: {e}', exc_info=True)
-            return StepResult.fail(f'Response generation failed: {e!s}')
+            logger.error(f"Failed to generate response: {e}", exc_info=True)
+            return StepResult.fail(f"Response generation failed: {e!s}")

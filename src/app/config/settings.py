@@ -15,7 +15,7 @@ from typing import Any
 from .base import BaseConfig
 from .feature_flags import FeatureFlags
 from .paths import PathConfig
-from .unified import UnifiedConfig, get_config, get_settings as get_unified_settings
+from .unified import UnifiedConfig, get_config
 from .validation import validate_configuration
 
 
@@ -33,7 +33,7 @@ class Settings:
         self.feature_flags = FeatureFlags.from_env()
         self.path_config = PathConfig.from_env()
         self.is_valid = validate_configuration()
-        
+
         # Also provide access to unified config
         self._unified_config = UnifiedConfig.from_env()
 
@@ -195,18 +195,19 @@ class Settings:
         if name.startswith("ENABLE_") or name.startswith("enable_"):
             flag_name = name.replace("ENABLE_", "").replace("enable_", "").upper()
             return self.feature_flags.is_enabled(flag_name)
-        
+
         # Try unified config
         if hasattr(self._unified_config, name):
             return getattr(self._unified_config, name)
-        
+
         # Try environment variable
         env_value = os.getenv(name)
         if env_value is not None:
             return env_value
-        
+
         # Raise AttributeError for missing attributes
         raise AttributeError(f"'{type(self).__name__}' object has no attribute '{name}'")
+
 
 # Global settings instance
 _settings: Settings | None = None
@@ -266,7 +267,7 @@ def _export_settings():
             "YTDLP_CONFIG": settings.ytdlp_config,
         }
     )
-    
+
     # Export feature flags
     for flag_name, flag_value in settings.feature_flags.__dict__.items():
         if flag_name.startswith("enable_") or flag_name.startswith("ENABLE_"):
@@ -285,4 +286,5 @@ def __getattr__(name: str) -> Any:
         # If validation fails or setting doesn't exist, try environment variable
         return os.getenv(name, None)
 
-__all__ = ["Settings", "get_settings", "get_config", "UnifiedConfig"]
+
+__all__ = ["Settings", "UnifiedConfig", "get_config", "get_settings"]

@@ -12,14 +12,18 @@ RICE Score: 60.75 (Highest Priority)
 """
 
 from __future__ import annotations
+
 import logging
 from dataclasses import dataclass
 from datetime import datetime
+from platform.core.step_result import StepResult
 from typing import Any
+
 from crewai_tools import BaseTool
 from pydantic import BaseModel, Field
+
 from kg.creator_kg_store import CreatorKGStore
-from platform.core.step_result import StepResult
+
 
 logger = logging.getLogger(__name__)
 
@@ -278,11 +282,11 @@ class NarrativeTrackerTool(BaseTool):
         negative_words = ["lose", "pessimistic", "concerned", "bad", "failure", "might fail", "too optimistic"]
         claims1_text = " ".join(claims1).lower()
         claims2_text = " ".join(claims2).lower()
-        has_positive1 = any((word in claims1_text for word in positive_words))
-        has_negative1 = any((word in claims1_text for word in negative_words))
-        has_positive2 = any((word in claims2_text for word in positive_words))
-        has_negative2 = any((word in claims2_text for word in negative_words))
-        return has_positive1 and has_negative2 or (has_negative1 and has_positive2)
+        has_positive1 = any(word in claims1_text for word in positive_words)
+        has_negative1 = any(word in claims1_text for word in negative_words)
+        has_positive2 = any(word in claims2_text for word in positive_words)
+        has_negative2 = any(word in claims2_text for word in negative_words)
+        return (has_positive1 and has_negative2) or (has_negative1 and has_positive2)
 
     def _generate_insights(self, timeline: list[NarrativeEvent], contradictions: list[dict[str, Any]]) -> list[str]:
         """Generate key insights from the narrative timeline."""
@@ -303,7 +307,7 @@ class NarrativeTrackerTool(BaseTool):
             insights.append(f"Found {len(contradictions)} potential contradictions between creators")
         else:
             insights.append("No significant contradictions detected")
-        total_quotes = sum((len(event.quotes) for event in timeline))
+        total_quotes = sum(len(event.quotes) for event in timeline)
         if total_quotes > 0:
             insights.append(f"Total quotes extracted: {total_quotes} with speaker attribution")
         return insights
@@ -325,10 +329,10 @@ class NarrativeTrackerTool(BaseTool):
             "date_range": {"first": min(timestamps).isoformat(), "last": max(timestamps).isoformat()},
             "creators": creators,
             "events_per_creator": {
-                creator: sum((1 for event in timeline if event.creator == creator)) for creator in creators
+                creator: sum(1 for event in timeline if event.creator == creator) for creator in creators
             },
             "events_per_platform": {
-                platform: sum((1 for event in timeline if event.platform == platform)) for platform in platforms
+                platform: sum(1 for event in timeline if event.platform == platform) for platform in platforms
             },
         }
 

@@ -5,14 +5,20 @@ hex-encoded SHA256 digests of the payload.  The :class:`MarketplaceStore` is
 consulted to ensure the signer is known, within its validity window and not
 revoked.
 """
+
 from __future__ import annotations
+
 import hashlib
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
 from platform.time import default_utc_now
+from typing import TYPE_CHECKING
+
+
 if TYPE_CHECKING:
     from datetime import datetime
+
     from .store import MarketplaceStore
+
 
 @dataclass(slots=True)
 class VerificationReport:
@@ -21,7 +27,10 @@ class VerificationReport:
     signer_fingerprint: str | None = None
     chain_summary: str | None = None
 
-def verify_manifest(manifest: bytes, signature: str, signer_fingerprint: str, store: MarketplaceStore, now: datetime | None=None) -> VerificationReport:
+
+def verify_manifest(
+    manifest: bytes, signature: str, signer_fingerprint: str, store: MarketplaceStore, now: datetime | None = None
+) -> VerificationReport:
     """Verify a manifest signature using SHA256 digests.
 
     Parameters
@@ -41,13 +50,13 @@ def verify_manifest(manifest: bytes, signature: str, signer_fingerprint: str, st
     now = now or default_utc_now()
     signer = store.get_signer(signer_fingerprint)
     if not signer:
-        errors.append('unknown signer')
+        errors.append("unknown signer")
         return VerificationReport(False, errors)
     if signer.revoked:
-        errors.append('signer revoked')
+        errors.append("signer revoked")
     if not signer.not_before <= now <= signer.not_after:
-        errors.append('signer not valid at this time')
+        errors.append("signer not valid at this time")
     digest = hashlib.sha256(manifest).hexdigest()
     if digest != signature:
-        errors.append('signature mismatch')
+        errors.append("signature mismatch")
     return VerificationReport(len(errors) == 0, errors, signer_fingerprint, None)

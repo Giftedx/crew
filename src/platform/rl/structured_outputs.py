@@ -31,22 +31,29 @@ Threading:
 - Clients are NOT reused (create per-request)
 - For connection pooling, use OpenAI client's built-in pool
 """
+
 from __future__ import annotations
+
 import logging
+from platform.config.configuration import get_config
 from typing import Any, TypeVar
+
 from openai import AsyncOpenAI, OpenAI
 from pydantic import BaseModel
-from platform.config.configuration import get_config
+
+
 try:
     import instructor
     from instructor import Instructor
+
     INSTRUCTOR_AVAILABLE = True
 except ImportError:
     INSTRUCTOR_AVAILABLE = False
     instructor = None
     Instructor = Any
 logger = logging.getLogger(__name__)
-T = TypeVar('T', bound=BaseModel)
+T = TypeVar("T", bound=BaseModel)
+
 
 class InstructorClientFactory:
     """Factory for creating Instructor-wrapped OpenAI clients with validation and retry logic.
@@ -75,12 +82,20 @@ class InstructorClientFactory:
         config = get_config()
         if not INSTRUCTOR_AVAILABLE:
             if config.enable_instructor:
-                logger.warning("ENABLE_INSTRUCTOR=True but 'instructor' package not installed. Install with: pip install instructor>=1.7.0")
+                logger.warning(
+                    "ENABLE_INSTRUCTOR=True but 'instructor' package not installed. Install with: pip install instructor>=1.7.0"
+                )
             return False
         return config.enable_instructor
 
     @staticmethod
-    def create_client(api_key: str | None=None, base_url: str | None=None, max_retries: int | None=None, timeout: int | None=None, **kwargs: Any) -> OpenAI | Instructor:
+    def create_client(
+        api_key: str | None = None,
+        base_url: str | None = None,
+        max_retries: int | None = None,
+        timeout: int | None = None,
+        **kwargs: Any,
+    ) -> OpenAI | Instructor:
         """Create a synchronous OpenAI client, optionally wrapped with Instructor.
 
         If ENABLE_INSTRUCTOR=True, returns an Instructor-wrapped client that supports
@@ -124,14 +139,20 @@ class InstructorClientFactory:
             timeout = config.instructor_timeout
         openai_client = OpenAI(api_key=api_key, base_url=base_url, max_retries=max_retries, timeout=timeout, **kwargs)
         if InstructorClientFactory.is_enabled():
-            logger.debug(f'Creating Instructor client with max_retries={max_retries}, timeout={timeout}')
+            logger.debug(f"Creating Instructor client with max_retries={max_retries}, timeout={timeout}")
             return instructor.from_openai(openai_client)
         else:
-            logger.debug('Instructor disabled, returning standard OpenAI client')
+            logger.debug("Instructor disabled, returning standard OpenAI client")
             return openai_client
 
     @staticmethod
-    def create_async_client(api_key: str | None=None, base_url: str | None=None, max_retries: int | None=None, timeout: int | None=None, **kwargs: Any) -> AsyncOpenAI | Any:
+    def create_async_client(
+        api_key: str | None = None,
+        base_url: str | None = None,
+        max_retries: int | None = None,
+        timeout: int | None = None,
+        **kwargs: Any,
+    ) -> AsyncOpenAI | Any:
         """Create an asynchronous OpenAI client, optionally wrapped with Instructor.
 
         Async variant of create_client(). Use this for async/await workflows.
@@ -172,16 +193,20 @@ class InstructorClientFactory:
             max_retries = config.instructor_max_retries
         if timeout is None:
             timeout = config.instructor_timeout
-        async_openai_client = AsyncOpenAI(api_key=api_key, base_url=base_url, max_retries=max_retries, timeout=timeout, **kwargs)
+        async_openai_client = AsyncOpenAI(
+            api_key=api_key, base_url=base_url, max_retries=max_retries, timeout=timeout, **kwargs
+        )
         if InstructorClientFactory.is_enabled():
-            logger.debug(f'Creating async Instructor client with max_retries={max_retries}, timeout={timeout}')
+            logger.debug(f"Creating async Instructor client with max_retries={max_retries}, timeout={timeout}")
             return instructor.from_openai(async_openai_client)
         else:
-            logger.debug('Instructor disabled, returning standard async OpenAI client')
+            logger.debug("Instructor disabled, returning standard async OpenAI client")
             return async_openai_client
 
     @staticmethod
-    def create_openrouter_client(max_retries: int | None=None, timeout: int | None=None, **kwargs: Any) -> OpenAI | Instructor:
+    def create_openrouter_client(
+        max_retries: int | None = None, timeout: int | None = None, **kwargs: Any
+    ) -> OpenAI | Instructor:
         """Convenience method to create an OpenRouter client with Instructor support.
 
         Automatically configures base_url and api_key for OpenRouter.
@@ -203,10 +228,18 @@ class InstructorClientFactory:
             ... )
         """
         config = get_config()
-        return InstructorClientFactory.create_client(api_key=config.openrouter_api_key, base_url='https://openrouter.ai/api/v1', max_retries=max_retries, timeout=timeout, **kwargs)
+        return InstructorClientFactory.create_client(
+            api_key=config.openrouter_api_key,
+            base_url="https://openrouter.ai/api/v1",
+            max_retries=max_retries,
+            timeout=timeout,
+            **kwargs,
+        )
 
     @staticmethod
-    def create_async_openrouter_client(max_retries: int | None=None, timeout: int | None=None, **kwargs: Any) -> AsyncOpenAI | Any:
+    def create_async_openrouter_client(
+        max_retries: int | None = None, timeout: int | None = None, **kwargs: Any
+    ) -> AsyncOpenAI | Any:
         """Convenience method to create an async OpenRouter client with Instructor support.
 
         Async variant of create_openrouter_client().
@@ -230,5 +263,13 @@ class InstructorClientFactory:
             ...     return result
         """
         config = get_config()
-        return InstructorClientFactory.create_async_client(api_key=config.openrouter_api_key, base_url='https://openrouter.ai/api/v1', max_retries=max_retries, timeout=timeout, **kwargs)
-__all__ = ['INSTRUCTOR_AVAILABLE', 'InstructorClientFactory']
+        return InstructorClientFactory.create_async_client(
+            api_key=config.openrouter_api_key,
+            base_url="https://openrouter.ai/api/v1",
+            max_retries=max_retries,
+            timeout=timeout,
+            **kwargs,
+        )
+
+
+__all__ = ["INSTRUCTOR_AVAILABLE", "InstructorClientFactory"]

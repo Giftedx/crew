@@ -145,7 +145,7 @@ class TestAgentRoutingPerformance:
                 {"model": model, "avg_response_time": avg_response_time, "response_times": response_times}
             )
         for result in model_results:
-            print(f'{result['model']} average response time: {result['avg_response_time']:.3f} seconds')
+            print(f"{result['model']} average response time: {result['avg_response_time']:.3f} seconds")
         assert all(result["avg_response_time"] < 0.5 for result in model_results)
 
     @pytest.mark.benchmark

@@ -7,17 +7,24 @@ the existing PriorityQueue from ``scheduler``.
 
 Network-heavy paths are feature-flagged so tests can run offline safely.
 """
+
 from __future__ import annotations
+
 import logging
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
-from typing import TYPE_CHECKING, Any
 from platform.time import default_utc_now
+from typing import TYPE_CHECKING, Any
+
 from domains.ingestion.pipeline import pipeline as ingest_pipeline
+
+
 if TYPE_CHECKING:
     from collections.abc import Iterable
+
     from scheduler.priority_queue import PriorityQueue
 logger = logging.getLogger(__name__)
+
 
 @dataclass
 class BackfillPlan:
@@ -27,10 +34,13 @@ class BackfillPlan:
     workspace: str
     since_iso: str
     limit: int = 200
+
+
 try:
     from ultimate_discord_intelligence_bot.tools.yt_dlp_download_tool import youtube_list_channel_videos
 except Exception:
     youtube_list_channel_videos = None
+
 
 def _normalize_youtube_handle(handle_or_url: str) -> str:
     """Return a canonical channel videos URL for a given handle or URL.
@@ -40,17 +50,18 @@ def _normalize_youtube_handle(handle_or_url: str) -> str:
     suitable for scraping with yt-dlp.
     """
     h = handle_or_url.strip()
-    if 'youtube.com/' in h:
-        base = h.split('?')[0].rstrip('/')
-    elif h.startswith('@'):
-        base = f'https://www.youtube.com/{h}'
+    if "youtube.com/" in h:
+        base = h.split("?")[0].rstrip("/")
+    elif h.startswith("@"):
+        base = f"https://www.youtube.com/{h}"
     else:
-        base = f'https://www.youtube.com/@{h}'
-    if not base.endswith('/videos'):
-        base = base + '/videos'
+        base = f"https://www.youtube.com/@{h}"
+    if not base.endswith("/videos"):
+        base = base + "/videos"
     return base
 
-def enumerate_youtube_recent_videos(handle_or_url: str, since_iso: str, *, limit: int=200) -> list[dict[str, str]]:
+
+def enumerate_youtube_recent_videos(handle_or_url: str, since_iso: str, *, limit: int = 200) -> list[dict[str, str]]:
     """Enumerate recent YouTube videos for ``handle_or_url`` since ``since_iso``.
 
     Returns list of dicts with ``external_id`` and ``url`` keys. This uses
@@ -58,56 +69,70 @@ def enumerate_youtube_recent_videos(handle_or_url: str, since_iso: str, *, limit
     available or networking is disabled, returns an empty list.
     """
     import os
-    if os.getenv('ENABLE_UPLOADER_BACKFILL', '0') != '1':
-        logger.info('Backfill disabled via ENABLE_UPLOADER_BACKFILL')
+
+    if os.getenv("ENABLE_UPLOADER_BACKFILL", "0") != "1":
+        logger.info("Backfill disabled via ENABLE_UPLOADER_BACKFILL")
         return []
     if youtube_list_channel_videos is None:
-        logger.warning('yt-dlp helper not available; cannot enumerate channel videos')
+        logger.warning("yt-dlp helper not available; cannot enumerate channel videos")
         return []
     channel_videos_url = _normalize_youtube_handle(handle_or_url)
     since_dt_env_fallback = default_utc_now() - timedelta(days=365)
     try:
-        since_dt = datetime.fromisoformat(since_iso.replace('Z', '+00:00')).astimezone(UTC)
+        since_dt = datetime.fromisoformat(since_iso.replace("Z", "+00:00")).astimezone(UTC)
     except Exception:
         since_dt = since_dt_env_fallback
-    since_ymd = since_dt.strftime('%Y%m%d')
+    since_ymd = since_dt.strftime("%Y%m%d")
     try:
         entries: Iterable[dict[str, Any]] = youtube_list_channel_videos(channel_videos_url)
     except Exception as exc:
-        logger.warning('Channel listing failed for %s: %s', channel_videos_url, exc)
+        logger.warning("Channel listing failed for %s: %s", channel_videos_url, exc)
         return []
     out: list[dict[str, str]] = []
     for e in entries:
         if not isinstance(e, dict):
             continue
-        vid = str(e.get('id') or '').strip()
-        url = str(e.get('url') or '').strip()
+        vid = str(e.get("id") or "").strip()
+        url = str(e.get("url") or "").strip()
         if not vid:
             continue
-        up_raw = str(e.get('upload_date') or '')
+        up_raw = str(e.get("upload_date") or "")
         if up_raw and len(up_raw) == 8 and up_raw.isdigit() and (up_raw < since_ymd):
             continue
         if not url:
-            url = f'https://www.youtube.com/watch?v={vid}'
-        out.append({'external_id': vid, 'url': url})
+            url = f"https://www.youtube.com/watch?v={vid}"
+        out.append({"external_id": vid, "url": url})
         if len(out) >= limit:
             break
     return out
+
 
 def enqueue_backfill(plan: BackfillPlan, queue: PriorityQueue) -> int:
     """Enumerate and enqueue ingest jobs per ``plan``.
 
     Returns number of jobs enqueued. Currently supports ``source_type='youtube'``.
     """
-    if plan.source_type.lower() != 'youtube':
-        logger.info('Backfill source %s not supported', plan.source_type)
+    if plan.source_type.lower() != "youtube":
+        logger.info("Backfill source %s not supported", plan.source_type)
         return 0
     items = enumerate_youtube_recent_videos(plan.uploader_handle, plan.since_iso, limit=plan.limit)
     if not items:
         return 0
     jobs: list[ingest_pipeline.IngestJob] = []
     for it in items:
-        jobs.append(ingest_pipeline.IngestJob(source='youtube', external_id=it['external_id'], url=it['url'], tenant=plan.tenant, workspace=plan.workspace, tags=[], visibility='public'))
+        jobs.append(
+            ingest_pipeline.IngestJob(
+                source="youtube",
+                external_id=it["external_id"],
+                url=it["url"],
+                tenant=plan.tenant,
+                workspace=plan.workspace,
+                tags=[],
+                visibility="public",
+            )
+        )
     queue.enqueue_bulk(jobs)
     return len(jobs)
-__all__ = ['BackfillPlan', 'enqueue_backfill', 'enumerate_youtube_recent_videos']
+
+
+__all__ = ["BackfillPlan", "enqueue_backfill", "enumerate_youtube_recent_videos"]

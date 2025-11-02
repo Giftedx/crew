@@ -26,9 +26,9 @@ async def test_enhanced_orchestrator():
         print("✅ Enhanced orchestrator imported successfully")
         orchestrator = EnhancedAutonomousOrchestrator()
         print("✅ Orchestrator initialized")
-        print(f'   System Health: {orchestrator.system_health['healthy']}')
-        print(f'   Available Capabilities: {orchestrator.system_health['available_capabilities']}')
-        print(f'   Issues: {len(orchestrator.system_health['errors'])}')
+        print(f"   System Health: {orchestrator.system_health['healthy']}")
+        print(f"   Available Capabilities: {orchestrator.system_health['available_capabilities']}")
+        print(f"   Issues: {len(orchestrator.system_health['errors'])}")
         if orchestrator.system_health["errors"]:
             print("   Known Issues:")
             for error in orchestrator.system_health["errors"][:3]:
@@ -63,7 +63,7 @@ def test_crewai_tool_wrappers():
         wrapper = CrewAIToolWrapper(mock_tool)
         print("✅ Wrapper created successfully")
         validation = wrapper._validate_tool_dependencies()
-        print(f'✅ Dependency validation works: {validation['dependencies_valid']}')
+        print(f"✅ Dependency validation works: {validation['dependencies_valid']}")
         if not validation["dependencies_valid"]:
             print("   Missing dependencies:")
             for dep in validation["missing_dependencies"]:
@@ -72,7 +72,7 @@ def test_crewai_tool_wrappers():
             for issue in validation["configuration_issues"]:
                 print(f"     - {issue}")
         result = wrapper._run("test input")
-        print(f'✅ Wrapper execution test: {(result.success if hasattr(result, 'success') else 'unknown')}')
+        print(f"✅ Wrapper execution test: {(result.success if hasattr(result, 'success') else 'unknown')}")
     except ImportError as e:
         print(f"❌ Failed to import tool wrapper: {e}")
         pytest.fail(f"Failed to import tool wrapper: {e}")
@@ -165,9 +165,9 @@ async def main():
         fallback_ok = False
     print("\n📋 Test Summary")
     print("=" * 50)
-    print(f'Enhanced Orchestrator: {('✅ Pass' if orchestrator_ok else '❌ Fail')}')
-    print(f'Tool Wrapper Fixes:    {('✅ Pass' if wrapper_ok else '❌ Fail')}')
-    print(f'Fallback Orchestrator: {('✅ Pass' if fallback_ok else '❌ Fail')}')
+    print(f"Enhanced Orchestrator: {('✅ Pass' if orchestrator_ok else '❌ Fail')}")
+    print(f"Tool Wrapper Fixes:    {('✅ Pass' if wrapper_ok else '❌ Fail')}")
+    print(f"Fallback Orchestrator: {('✅ Pass' if fallback_ok else '❌ Fail')}")
     available_deps = sum(1 for status in health_results.values() if status.startswith("✅"))
     print(f"System Dependencies:   {available_deps}/{len(health_results)} available")
     if orchestrator_ok and wrapper_ok and fallback_ok:

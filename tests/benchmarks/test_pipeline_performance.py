@@ -349,5 +349,5 @@ class TestPipelinePerformance:
                 config_results.append({"config": config, "time": processing_time, "success": result.success})
                 assert result.success
         for result in config_results:
-            print(f'Config {result['config']}: {result['time']:.3f} seconds')
+            print(f"Config {result['config']}: {result['time']:.3f} seconds")
         assert all(result["success"] for result in config_results)

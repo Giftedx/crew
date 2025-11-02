@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 
 from ingest.providers.twitch import ClipMetadata
 from ingest.providers.youtube import VideoMetadata
+
 from mcp_server.tools.creator_intelligence_ingestion import (
     CreatorIntelligenceIngestionTools,
     IngestedContent,

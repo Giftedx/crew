@@ -4,16 +4,20 @@ Performance Cache Warmer
 Implements predictive cache warming to improve cache hit rates and reduce latency.
 This optimization preloads frequently accessed content into cache during idle periods.
 """
+
 from __future__ import annotations
+
 import asyncio
 import logging
 import time
 from collections import Counter
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import Any
 from platform.cache.semantic_cache import create_semantic_cache
 from platform.time import default_utc_now, ensure_utc
+from typing import Any
+
+
 try:
     from platform.config.settings import Settings
 except Exception:
@@ -24,16 +28,21 @@ except Exception:
 
         def __init__(self, **overrides: Any) -> None:
             self.__dict__.update(overrides)
+
+
 logger = logging.getLogger(__name__)
+
 
 @dataclass
 class CacheWarmingStats:
     """Cache warming performance statistics."""
+
     requests_analyzed: int = 0
     patterns_identified: int = 0
     cache_entries_warmed: int = 0
     warming_time_ms: float = 0.0
     hit_rate_improvement: float = 0.0
+
 
 class PredictiveCacheWarmer:
     """Predictive cache warming for improved performance."""
@@ -49,7 +58,7 @@ class PredictiveCacheWarmer:
         """Analyze recent requests to identify warming candidates."""
         start_time = time.time()
         for request in recent_requests:
-            prompt = request.get('prompt', '')
+            prompt = request.get("prompt", "")
             if len(prompt) > 20:
                 key_phrases = self._extract_key_phrases(prompt)
                 for phrase in key_phrases:
@@ -62,7 +71,9 @@ class PredictiveCacheWarmer:
         self.warming_stats.requests_analyzed = len(recent_requests)
         self.warming_stats.patterns_identified = len(warming_candidates)
         self.warming_stats.warming_time_ms = (time.time() - start_time) * 1000
-        logger.info(f'Analyzed {len(recent_requests)} requests, identified {len(warming_candidates)} warming candidates')
+        logger.info(
+            f"Analyzed {len(recent_requests)} requests, identified {len(warming_candidates)} warming candidates"
+        )
         return warming_candidates
 
     def _extract_key_phrases(self, prompt: str) -> list[str]:
@@ -71,8 +82,19 @@ class PredictiveCacheWarmer:
         phrases = []
         for i in range(len(words) - 1):
             if len(words[i]) > 3 and len(words[i + 1]) > 3:
-                phrases.append(f'{words[i]} {words[i + 1]}')
-        domain_keywords = ['analyze', 'summarize', 'explain', 'describe', 'compare', 'fact check', 'claims', 'evidence', 'reasoning', 'logic']
+                phrases.append(f"{words[i]} {words[i + 1]}")
+        domain_keywords = [
+            "analyze",
+            "summarize",
+            "explain",
+            "describe",
+            "compare",
+            "fact check",
+            "claims",
+            "evidence",
+            "reasoning",
+            "logic",
+        ]
         for keyword in domain_keywords:
             if keyword in prompt.lower():
                 phrases.append(keyword)
@@ -86,23 +108,35 @@ class PredictiveCacheWarmer:
         warmed_count = 0
         warming_prompts = []
         for candidate in warming_candidates:
-            variations = [f'Please analyze this content about {candidate}', f'Explain the key points regarding {candidate}', f'Summarize information about {candidate}', f'What are the main facts about {candidate}?']
+            variations = [
+                f"Please analyze this content about {candidate}",
+                f"Explain the key points regarding {candidate}",
+                f"Summarize information about {candidate}",
+                f"What are the main facts about {candidate}?",
+            ]
             warming_prompts.extend(variations[:2])
-        model = 'gpt-3.5-turbo'
+        model = "gpt-3.5-turbo"
         for prompt in warming_prompts[:10]:
             try:
                 cached = await self.cache.get(prompt, model)
                 if not cached:
-                    synthetic_response = {'response': f'[Cached analysis for: {prompt}]', 'cost': 0.001, 'cached': True, 'cache_type': 'predictive_warming'}
+                    synthetic_response = {
+                        "response": f"[Cached analysis for: {prompt}]",
+                        "cost": 0.001,
+                        "cached": True,
+                        "cache_type": "predictive_warming",
+                    }
                     await self.cache.set(prompt, model, synthetic_response)
                     warmed_count += 1
                     await asyncio.sleep(0.01)
             except Exception as e:
-                logger.debug(f'Cache warming failed for prompt: {e}')
+                logger.debug(f"Cache warming failed for prompt: {e}")
                 continue
         self.warming_stats.cache_entries_warmed = warmed_count
         self.warming_stats.warming_time_ms = (time.time() - start_time) * 1000
-        logger.info(f'Cache warming completed: {warmed_count} entries warmed in {self.warming_stats.warming_time_ms:.1f}ms')
+        logger.info(
+            f"Cache warming completed: {warmed_count} entries warmed in {self.warming_stats.warming_time_ms:.1f}ms"
+        )
 
     async def auto_warm_cache(self, request_history: list[dict[str, Any]]) -> CacheWarmingStats:
         """Automatically warm cache based on request history."""
@@ -112,22 +146,23 @@ class PredictiveCacheWarmer:
             candidates = await self.analyze_request_patterns(request_history)
             await self.warm_cache_predictively(candidates)
             self.last_warming = default_utc_now()
-            logger.info(f'Auto cache warming: {self.warming_stats.cache_entries_warmed} entries warmed')
+            logger.info(f"Auto cache warming: {self.warming_stats.cache_entries_warmed} entries warmed")
         except Exception as e:
-            logger.error(f'Auto cache warming failed: {e}')
+            logger.error(f"Auto cache warming failed: {e}")
         return self.warming_stats
 
     def get_warming_stats(self) -> CacheWarmingStats:
         """Get current cache warming statistics."""
         return self.warming_stats
 
+
 async def optimize_cache_performance(pipeline) -> dict[str, Any]:
     """Integrate cache warming with pipeline performance optimization."""
     warmer = PredictiveCacheWarmer()
     recent_requests: list[dict[str, Any]] = []
-    source = 'synthetic'
+    source = "synthetic"
     if pipeline is not None:
-        extractor = getattr(pipeline, 'get_recent_requests', None)
+        extractor = getattr(pipeline, "get_recent_requests", None)
         try:
             if callable(extractor):
                 candidate = extractor()
@@ -135,22 +170,41 @@ async def optimize_cache_performance(pipeline) -> dict[str, Any]:
                     candidate = await candidate
                 if isinstance(candidate, list):
                     recent_requests = candidate
-                    source = getattr(pipeline, 'name', 'pipeline')
+                    source = getattr(pipeline, "name", "pipeline")
         except Exception as exc:
-            logger.debug('Failed to obtain recent requests from pipeline: %s', exc)
+            logger.debug("Failed to obtain recent requests from pipeline: %s", exc)
     if not recent_requests:
-        recent_requests = [{'prompt': 'Analyze this video content for key claims', 'timestamp': time.time()}, {'prompt': 'Summarize the main arguments presented', 'timestamp': time.time()}, {'prompt': 'Fact check the claims made in this content', 'timestamp': time.time()}, {'prompt': 'Identify logical fallacies in the reasoning', 'timestamp': time.time()}]
+        recent_requests = [
+            {"prompt": "Analyze this video content for key claims", "timestamp": time.time()},
+            {"prompt": "Summarize the main arguments presented", "timestamp": time.time()},
+            {"prompt": "Fact check the claims made in this content", "timestamp": time.time()},
+            {"prompt": "Identify logical fallacies in the reasoning", "timestamp": time.time()},
+        ]
     stats = await warmer.auto_warm_cache(recent_requests)
-    return {'optimization': 'cache_warming', 'stats': {'requests_analyzed': stats.requests_analyzed, 'patterns_identified': stats.patterns_identified, 'cache_entries_warmed': stats.cache_entries_warmed, 'warming_time_ms': stats.warming_time_ms}, 'expected_improvement': '15-20% cache hit rate increase', 'request_source': source, 'status': 'active'}
-if __name__ == '__main__':
+    return {
+        "optimization": "cache_warming",
+        "stats": {
+            "requests_analyzed": stats.requests_analyzed,
+            "patterns_identified": stats.patterns_identified,
+            "cache_entries_warmed": stats.cache_entries_warmed,
+            "warming_time_ms": stats.warming_time_ms,
+        },
+        "expected_improvement": "15-20% cache hit rate increase",
+        "request_source": source,
+        "status": "active",
+    }
+
+
+if __name__ == "__main__":
 
     async def demo_cache_warming():
-        print('🔥 CACHE WARMING OPTIMIZATION DEMO')
-        print('=' * 50)
+        print("🔥 CACHE WARMING OPTIMIZATION DEMO")
+        print("=" * 50)
         result = await optimize_cache_performance(None)
-        print('📊 Cache Warming Results:')
-        for key, value in result['stats'].items():
-            print(f'  • {key}: {value}')
-        print(f'\n🎯 Expected Impact: {result['expected_improvement']}')
-        print(f'Status: {result['status']}')
+        print("📊 Cache Warming Results:")
+        for key, value in result["stats"].items():
+            print(f"  • {key}: {value}")
+        print(f"\n🎯 Expected Impact: {result['expected_improvement']}"
+        print(f"Status: {result['status']}"
+
     asyncio.run(demo_cache_warming())

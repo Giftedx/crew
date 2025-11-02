@@ -127,7 +127,7 @@ class TestRateLimiting:
         mock_redis_client.incr.return_value = 101
 
         def mock_check_rate_limit(tenant, workspace, endpoint=None):
-            key = f'rate_limit:{tenant}:{workspace}:{endpoint or 'default'}'
+            key = f"rate_limit:{tenant}:{workspace}:{endpoint or 'default'}"
             current_count = int(mock_redis_client.get(key) or "0")
             limit = 100
             if current_count < limit:
@@ -152,7 +152,7 @@ class TestRateLimiting:
         mock_redis_client.incr.return_value = 1
 
         def mock_check_rate_limit(tenant, workspace, endpoint=None):
-            key = f'rate_limit:{tenant}:{workspace}:{endpoint or 'default'}'
+            key = f"rate_limit:{tenant}:{workspace}:{endpoint or 'default'}"
             current_count = int(mock_redis_client.get(key) or "0")
             limit = 100
             if current_count < limit:

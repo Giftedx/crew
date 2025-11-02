@@ -15,41 +15,51 @@ Features:
 - Comprehensive error handling and retry logic
 - Cost tracking for API-based models
 """
+
 from __future__ import annotations
+
 import hashlib
 import logging
 import os
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Literal
 from platform.core.step_result import StepResult
+from typing import Any, Literal
+
+
 logger = logging.getLogger(__name__)
 try:
     import faster_whisper
+
     FASTER_WHISPER_AVAILABLE = True
 except ImportError:
     FASTER_WHISPER_AVAILABLE = False
-    logger.warning('faster-whisper not available, using fallback transcription')
+    logger.warning("faster-whisper not available, using fallback transcription")
 try:
     import openai
+
     OPENAI_AVAILABLE = True
 except ImportError:
     OPENAI_AVAILABLE = False
-    logger.warning('openai not available, using local Whisper models')
+    logger.warning("openai not available, using local Whisper models")
+
 
 @dataclass
 class TranscriptionSegment:
     """A segment of transcribed audio."""
+
     start: float
     end: float
     text: str
     speaker: str | None = None
     confidence: float = 1.0
 
+
 @dataclass
 class TranscriptionResult:
     """Result of transcription operation."""
+
     text: str
     segments: list[TranscriptionSegment]
     model: str
@@ -60,6 +70,7 @@ class TranscriptionResult:
     cache_hit: bool = False
     processing_time_ms: float = 0.0
 
+
 class ASRService:
     """Unified ASR service with model selection and caching.
 
@@ -69,7 +80,7 @@ class ASRService:
         transcript = result.data["text"]
     """
 
-    def __init__(self, cache_size: int=5000):
+    def __init__(self, cache_size: int = 5000):
         """Initialize ASR service.
 
         Args:
@@ -80,7 +91,13 @@ class ASRService:
         self._models: dict[str, Any] = {}
         self._performance_metrics: list[dict[str, Any]] = []
 
-    def transcribe_audio(self, audio_path: str | Path, model: Literal['fast', 'balanced', 'quality']='balanced', language: str | None=None, use_cache: bool=True) -> StepResult:
+    def transcribe_audio(
+        self,
+        audio_path: str | Path,
+        model: Literal["fast", "balanced", "quality"] = "balanced",
+        language: str | None = None,
+        use_cache: bool = True,
+    ) -> StepResult:
         """Transcribe audio file to text.
 
         Args:
@@ -94,31 +111,60 @@ class ASRService:
         """
         try:
             import time
+
             start_time = time.time()
             audio_path = Path(audio_path)
             if not audio_path.exists():
-                return StepResult.fail(f'Audio file not found: {audio_path}', status='bad_request')
+                return StepResult.fail(f"Audio file not found: {audio_path}", status="bad_request")
             if audio_path.stat().st_size == 0:
-                return StepResult.fail('Audio file is empty', status='bad_request')
+                return StepResult.fail("Audio file is empty", status="bad_request")
             if use_cache:
                 cache_result = self._check_cache(audio_path, model)
                 if cache_result:
-                    logger.info(f'Transcription cache hit for {audio_path}')
-                    return StepResult.ok(data={'text': cache_result.text, 'segments': [s.__dict__ for s in cache_result.segments], 'model': cache_result.model, 'duration': cache_result.duration, 'language': cache_result.language, 'confidence': cache_result.confidence, 'cache_hit': True, 'processing_time_ms': (time.time() - start_time) * 1000})
+                    logger.info(f"Transcription cache hit for {audio_path}")
+                    return StepResult.ok(
+                        data={
+                            "text": cache_result.text,
+                            "segments": [s.__dict__ for s in cache_result.segments],
+                            "model": cache_result.model,
+                            "duration": cache_result.duration,
+                            "language": cache_result.language,
+                            "confidence": cache_result.confidence,
+                            "cache_hit": True,
+                            "processing_time_ms": (time.time() - start_time) * 1000,
+                        }
+                    )
             model_name = self._select_model(model)
             transcription_result = self._transcribe_audio(audio_path, model_name, language)
             if transcription_result:
                 if use_cache:
                     self._cache_result(audio_path, model, transcription_result)
                 processing_time = (time.time() - start_time) * 1000
-                return StepResult.ok(data={'text': transcription_result.text, 'segments': [s.__dict__ for s in transcription_result.segments], 'model': transcription_result.model, 'duration': transcription_result.duration, 'language': transcription_result.language, 'confidence': transcription_result.confidence, 'cache_hit': False, 'processing_time_ms': processing_time})
+                return StepResult.ok(
+                    data={
+                        "text": transcription_result.text,
+                        "segments": [s.__dict__ for s in transcription_result.segments],
+                        "model": transcription_result.model,
+                        "duration": transcription_result.duration,
+                        "language": transcription_result.language,
+                        "confidence": transcription_result.confidence,
+                        "cache_hit": False,
+                        "processing_time_ms": processing_time,
+                    }
+                )
             else:
-                return StepResult.fail('Transcription failed', status='retryable')
+                return StepResult.fail("Transcription failed", status="retryable")
         except Exception as e:
-            logger.error(f'Audio transcription failed: {e}')
-            return StepResult.fail(f'Transcription failed: {e!s}', status='retryable')
+            logger.error(f"Audio transcription failed: {e}")
+            return StepResult.fail(f"Transcription failed: {e!s}", status="retryable")
 
-    def transcribe_batch(self, audio_paths: list[str | Path], model: Literal['fast', 'balanced', 'quality']='balanced', language: str | None=None, use_cache: bool=True) -> StepResult:
+    def transcribe_batch(
+        self,
+        audio_paths: list[str | Path],
+        model: Literal["fast", "balanced", "quality"] = "balanced",
+        language: str | None = None,
+        use_cache: bool = True,
+    ) -> StepResult:
         """Transcribe multiple audio files in batch.
 
         Args:
@@ -132,21 +178,31 @@ class ASRService:
         """
         try:
             if not audio_paths:
-                return StepResult.fail('Audio paths list cannot be empty', status='bad_request')
+                return StepResult.fail("Audio paths list cannot be empty", status="bad_request")
             results = []
             cache_hits = 0
             for audio_path in audio_paths:
                 result = self.transcribe_audio(audio_path, model=model, language=language, use_cache=use_cache)
                 if result.success:
                     results.append(result.data)
-                    if result.data.get('cache_hit'):
+                    if result.data.get("cache_hit"):
                         cache_hits += 1
                 else:
-                    return StepResult.fail(f'Batch transcription failed at {audio_path}: {result.error}', metadata={'partial_results': results})
-            return StepResult.ok(data={'results': results, 'count': len(results), 'cache_hits': cache_hits, 'cache_hit_rate': cache_hits / len(results) if results else 0.0})
+                    return StepResult.fail(
+                        f"Batch transcription failed at {audio_path}: {result.error}",
+                        metadata={"partial_results": results},
+                    )
+            return StepResult.ok(
+                data={
+                    "results": results,
+                    "count": len(results),
+                    "cache_hits": cache_hits,
+                    "cache_hit_rate": cache_hits / len(results) if results else 0.0,
+                }
+            )
         except Exception as e:
-            logger.error(f'Batch transcription failed: {e}')
-            return StepResult.fail(f'Batch transcription failed: {e!s}')
+            logger.error(f"Batch transcription failed: {e}")
+            return StepResult.fail(f"Batch transcription failed: {e!s}")
 
     def _select_model(self, model_alias: str) -> str:
         """Select actual model name from alias.
@@ -157,8 +213,12 @@ class ASRService:
         Returns:
             Actual model identifier
         """
-        model_map = {'fast': 'faster-whisper-tiny', 'balanced': 'faster-whisper-base', 'quality': 'openai-whisper-large-v3'}
-        return model_map.get(model_alias, 'faster-whisper-base')
+        model_map = {
+            "fast": "faster-whisper-tiny",
+            "balanced": "faster-whisper-base",
+            "quality": "openai-whisper-large-v3",
+        }
+        return model_map.get(model_alias, "faster-whisper-base")
 
     def _transcribe_audio(self, audio_path: Path, model_name: str, language: str | None) -> TranscriptionResult | None:
         """Transcribe audio using specified model.
@@ -172,14 +232,14 @@ class ASRService:
             TranscriptionResult or None if transcription fails
         """
         try:
-            if model_name.startswith('openai'):
+            if model_name.startswith("openai"):
                 return self._transcribe_openai(audio_path, model_name, language)
             if FASTER_WHISPER_AVAILABLE:
                 return self._transcribe_local(audio_path, model_name, language)
-            logger.warning(f'Using fallback transcription for {audio_path}')
+            logger.warning(f"Using fallback transcription for {audio_path}")
             return self._transcribe_fallback(audio_path, model_name)
         except Exception as e:
-            logger.error(f'Transcription failed for model {model_name}: {e}')
+            logger.error(f"Transcription failed for model {model_name}: {e}")
             return None
 
     def _transcribe_local(self, audio_path: Path, model_name: str, language: str | None) -> TranscriptionResult:
@@ -194,18 +254,31 @@ class ASRService:
             TranscriptionResult with transcribed text
         """
         if model_name not in self._models:
-            logger.info(f'Loading faster-whisper model: {model_name}')
+            logger.info(f"Loading faster-whisper model: {model_name}")
             self._models[model_name] = faster_whisper.WhisperModel(model_name)
         model = self._models[model_name]
         segments, info = model.transcribe(str(audio_path), language=language)
         transcription_segments = []
-        full_text = ''
+        full_text = ""
         for segment in segments:
-            seg = TranscriptionSegment(start=segment.start, end=segment.end, text=segment.text, confidence=getattr(segment, 'probability', 1.0))
+            seg = TranscriptionSegment(
+                start=segment.start, end=segment.end, text=segment.text, confidence=getattr(segment, "probability", 1.0)
+            )
             transcription_segments.append(seg)
-            full_text += segment.text + ' '
-        avg_confidence = sum((s.confidence for s in transcription_segments)) / len(transcription_segments) if transcription_segments else 0.0
-        return TranscriptionResult(text=full_text.strip(), segments=transcription_segments, model=model_name, duration=info.duration, language=info.language, confidence=avg_confidence)
+            full_text += segment.text + " "
+        avg_confidence = (
+            sum(s.confidence for s in transcription_segments) / len(transcription_segments)
+            if transcription_segments
+            else 0.0
+        )
+        return TranscriptionResult(
+            text=full_text.strip(),
+            segments=transcription_segments,
+            model=model_name,
+            duration=info.duration,
+            language=info.language,
+            confidence=avg_confidence,
+        )
 
     def _transcribe_openai(self, audio_path: Path, model_name: str, language: str | None) -> TranscriptionResult:
         """Transcribe using OpenAI Whisper API.
@@ -219,23 +292,38 @@ class ASRService:
             TranscriptionResult with transcribed text
         """
         if not OPENAI_AVAILABLE:
-            raise RuntimeError('OpenAI not available for transcription')
-        api_key = os.getenv('OPENAI_API_KEY')
+            raise RuntimeError("OpenAI not available for transcription")
+        api_key = os.getenv("OPENAI_API_KEY")
         if not api_key:
-            raise ValueError('OPENAI_API_KEY not set')
-        with open(audio_path, 'rb') as audio_file:
+            raise ValueError("OPENAI_API_KEY not set")
+        with open(audio_path, "rb") as audio_file:
             audio_data = audio_file.read()
         client = openai.OpenAI(api_key=api_key)
-        openai_model_map = {'openai-whisper-large-v3': 'whisper-1'}
-        actual_model = openai_model_map.get(model_name, 'whisper-1')
-        response = client.audio.transcriptions.create(file=audio_data, model=actual_model, language=language, response_format='verbose_json')
-        segments_data = getattr(response, 'segments', [])
-        full_text = getattr(response, 'text', '')
+        openai_model_map = {"openai-whisper-large-v3": "whisper-1"}
+        actual_model = openai_model_map.get(model_name, "whisper-1")
+        response = client.audio.transcriptions.create(
+            file=audio_data, model=actual_model, language=language, response_format="verbose_json"
+        )
+        segments_data = getattr(response, "segments", [])
+        full_text = getattr(response, "text", "")
         transcription_segments = []
         for seg_data in segments_data:
-            seg = TranscriptionSegment(start=getattr(seg_data, 'start', 0.0), end=getattr(seg_data, 'end', 0.0), text=getattr(seg_data, 'text', ''), confidence=getattr(seg_data, 'confidence', 1.0))
+            seg = TranscriptionSegment(
+                start=getattr(seg_data, "start", 0.0),
+                end=getattr(seg_data, "end", 0.0),
+                text=getattr(seg_data, "text", ""),
+                confidence=getattr(seg_data, "confidence", 1.0),
+            )
             transcription_segments.append(seg)
-        return TranscriptionResult(text=full_text, segments=transcription_segments, model=model_name, duration=getattr(response, 'duration', 0.0), language=getattr(response, 'language', language), confidence=getattr(response, 'confidence', 1.0), tokens_used=getattr(response, 'usage', {}).get('total_tokens', 0))
+        return TranscriptionResult(
+            text=full_text,
+            segments=transcription_segments,
+            model=model_name,
+            duration=getattr(response, "duration", 0.0),
+            language=getattr(response, "language", language),
+            confidence=getattr(response, "confidence", 1.0),
+            tokens_used=getattr(response, "usage", {}).get("total_tokens", 0),
+        )
 
     def _transcribe_fallback(self, audio_path: Path, model_name: str) -> TranscriptionResult:
         """Fallback transcription using file metadata or summary.
@@ -248,8 +336,14 @@ class ASRService:
             TranscriptionResult with fallback text
         """
         filename = audio_path.stem
-        fallback_text = f'Audio content: {filename}'
-        return TranscriptionResult(text=fallback_text, segments=[TranscriptionSegment(start=0.0, end=0.0, text=fallback_text, confidence=0.5)], model=f'fallback-{model_name}', duration=0.0, confidence=0.5)
+        fallback_text = f"Audio content: {filename}"
+        return TranscriptionResult(
+            text=fallback_text,
+            segments=[TranscriptionSegment(start=0.0, end=0.0, text=fallback_text, confidence=0.5)],
+            model=f"fallback-{model_name}",
+            duration=0.0,
+            confidence=0.5,
+        )
 
     def _check_cache(self, audio_path: Path, model: str) -> TranscriptionResult | None:
         """Check if transcription exists in cache.
@@ -296,7 +390,7 @@ class ASRService:
             Cache key string
         """
         file_stat = audio_path.stat()
-        combined = f'{audio_path}:{file_stat.st_mtime}:{file_stat.st_size}:{model}'
+        combined = f"{audio_path}:{file_stat.st_mtime}:{file_stat.st_size}:{model}"
         return hashlib.sha256(combined.encode()).hexdigest()
 
     def clear_cache(self) -> StepResult:
@@ -307,8 +401,8 @@ class ASRService:
         """
         cache_size = len(self._transcription_cache)
         self._transcription_cache.clear()
-        logger.info(f'Cleared {cache_size} cached transcriptions')
-        return StepResult.ok(data={'cleared_entries': cache_size})
+        logger.info(f"Cleared {cache_size} cached transcriptions")
+        return StepResult.ok(data={"cleared_entries": cache_size})
 
     def get_cache_stats(self) -> StepResult:
         """Get transcription cache statistics.
@@ -317,15 +411,23 @@ class ASRService:
             StepResult with cache statistics
         """
         try:
-            stats = {'total_cached': len(self._transcription_cache), 'cache_size_limit': self.cache_size, 'utilization': len(self._transcription_cache) / self.cache_size if self.cache_size > 0 else 0.0, 'models_cached': {}}
+            stats = {
+                "total_cached": len(self._transcription_cache),
+                "cache_size_limit": self.cache_size,
+                "utilization": len(self._transcription_cache) / self.cache_size if self.cache_size > 0 else 0.0,
+                "models_cached": {},
+            }
             for result in self._transcription_cache.values():
                 model = result.model
-                stats['models_cached'][model] = stats['models_cached'].get(model, 0) + 1
+                stats["models_cached"][model] = stats["models_cached"].get(model, 0) + 1
             return StepResult.ok(data=stats)
         except Exception as e:
-            logger.error(f'Failed to get cache stats: {e}')
-            return StepResult.fail(f'Failed to get cache stats: {e!s}')
+            logger.error(f"Failed to get cache stats: {e}")
+            return StepResult.fail(f"Failed to get cache stats: {e!s}")
+
+
 _asr_service: ASRService | None = None
+
 
 def get_asr_service() -> ASRService:
     """Get singleton ASR service instance.

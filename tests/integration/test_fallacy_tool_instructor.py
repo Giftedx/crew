@@ -18,6 +18,7 @@ try:
 except ImportError:
     INSTRUCTOR_AVAILABLE = False
 from ai.response_models import ContentQuality, FallacyAnalysisResult, FallacyInstance, FallacyType
+
 from domains.intelligence.analysis.logical_fallacy_tool import LogicalFallacyTool
 
 

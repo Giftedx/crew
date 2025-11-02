@@ -3,15 +3,21 @@
 This module defines the core protocols and base classes for the hierarchical
 orchestration system. All orchestrators must conform to these interfaces.
 """
+
 from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import TYPE_CHECKING, Any
+
 import structlog
+
+
 if TYPE_CHECKING:
     from platform.core.step_result import StepResult
 logger = structlog.get_logger(__name__)
+
 
 class OrchestrationLayer(Enum):
     """Orchestration layers in the hierarchy.
@@ -21,19 +27,23 @@ class OrchestrationLayer(Enum):
     - APPLICATION: Application-level coordination (request handling, workflow management)
     - INFRASTRUCTURE: Infrastructure concerns (deployment, monitoring, resilience)
     """
-    DOMAIN = 'domain'
-    APPLICATION = 'application'
-    INFRASTRUCTURE = 'infrastructure'
+
+    DOMAIN = "domain"
+    APPLICATION = "application"
+    INFRASTRUCTURE = "infrastructure"
+
 
 class OrchestrationType(Enum):
     """Types of orchestration operations."""
-    SEQUENTIAL = 'sequential'
-    PARALLEL = 'parallel'
-    HIERARCHICAL = 'hierarchical'
-    ADAPTIVE = 'adaptive'
-    FEEDBACK = 'feedback'
-    MONITORING = 'monitoring'
-    COORDINATION = 'coordination'
+
+    SEQUENTIAL = "sequential"
+    PARALLEL = "parallel"
+    HIERARCHICAL = "hierarchical"
+    ADAPTIVE = "adaptive"
+    FEEDBACK = "feedback"
+    MONITORING = "monitoring"
+    COORDINATION = "coordination"
+
 
 @dataclass
 class OrchestrationContext:
@@ -42,18 +52,19 @@ class OrchestrationContext:
     This context is passed through the orchestration hierarchy and contains
     all necessary information for orchestrators to make decisions.
     """
+
     tenant_id: str
-    'Tenant identifier for multi-tenant isolation.'
+    "Tenant identifier for multi-tenant isolation."
     request_id: str
-    'Unique identifier for this orchestration request.'
+    "Unique identifier for this orchestration request."
     metadata: dict[str, Any] = field(default_factory=dict)
-    'Additional metadata for the orchestration.'
+    "Additional metadata for the orchestration."
     trace_id: str | None = None
-    'Optional distributed trace ID for observability.'
+    "Optional distributed trace ID for observability."
     parent_orchestrator: str | None = None
-    'Name of the parent orchestrator (for hierarchical orchestration).'
+    "Name of the parent orchestrator (for hierarchical orchestration)."
     orchestration_depth: int = 0
-    'Depth in the orchestration hierarchy (0 = top level).'
+    "Depth in the orchestration hierarchy (0 = top level)."
 
     def create_child_context(self, parent_name: str) -> OrchestrationContext:
         """Create a child context for nested orchestration.
@@ -64,7 +75,15 @@ class OrchestrationContext:
         Returns:
             New context with incremented depth and parent reference
         """
-        return OrchestrationContext(tenant_id=self.tenant_id, request_id=self.request_id, metadata=self.metadata.copy(), trace_id=self.trace_id, parent_orchestrator=parent_name, orchestration_depth=self.orchestration_depth + 1)
+        return OrchestrationContext(
+            tenant_id=self.tenant_id,
+            request_id=self.request_id,
+            metadata=self.metadata.copy(),
+            trace_id=self.trace_id,
+            parent_orchestrator=parent_name,
+            orchestration_depth=self.orchestration_depth + 1,
+        )
+
 
 class OrchestratorProtocol(ABC):
     """Base protocol for all orchestrators.
@@ -122,6 +141,7 @@ class OrchestratorProtocol(ABC):
         Default implementation does nothing - override in subclasses if needed.
         """
 
+
 class BaseOrchestrator(OrchestratorProtocol):
     """Base class for orchestrators with common functionality.
 
@@ -129,7 +149,9 @@ class BaseOrchestrator(OrchestratorProtocol):
     handling common concerns like logging and context management.
     """
 
-    def __init__(self, layer: OrchestrationLayer, name: str, orchestration_type: OrchestrationType=OrchestrationType.SEQUENTIAL) -> None:
+    def __init__(
+        self, layer: OrchestrationLayer, name: str, orchestration_type: OrchestrationType = OrchestrationType.SEQUENTIAL
+    ) -> None:
         """Initialize the base orchestrator.
 
         Args:
@@ -140,7 +162,9 @@ class BaseOrchestrator(OrchestratorProtocol):
         self._layer = layer
         self._name = name
         self._orchestration_type = orchestration_type
-        logger.info('orchestrator_initialized', layer=layer.value, name=name, orchestration_type=orchestration_type.value)
+        logger.info(
+            "orchestrator_initialized", layer=layer.value, name=name, orchestration_type=orchestration_type.value
+        )
 
     @property
     def layer(self) -> OrchestrationLayer:
@@ -169,7 +193,7 @@ class BaseOrchestrator(OrchestratorProtocol):
         Returns:
             StepResult indicating success or failure
         """
-        raise NotImplementedError(f'{self.__class__.__name__} must implement orchestrate()')
+        raise NotImplementedError(f"{self.__class__.__name__} must implement orchestrate()")
 
     def _log_orchestration_start(self, context: OrchestrationContext, **kwargs: Any) -> None:
         """Log the start of orchestration.
@@ -178,8 +202,16 @@ class BaseOrchestrator(OrchestratorProtocol):
             context: Orchestration context
             **kwargs: Additional parameters to log (filtered to avoid conflicts)
         """
-        safe_kwargs = {k: v for k, v in kwargs.items() if k not in {'depth', 'event', 'level', 'logger', 'timestamp'}}
-        logger.info('orchestration_started', orchestrator=self.name, layer=self.layer.value, tenant_id=context.tenant_id, request_id=context.request_id, depth=context.orchestration_depth, **safe_kwargs)
+        safe_kwargs = {k: v for k, v in kwargs.items() if k not in {"depth", "event", "level", "logger", "timestamp"}}
+        logger.info(
+            "orchestration_started",
+            orchestrator=self.name,
+            layer=self.layer.value,
+            tenant_id=context.tenant_id,
+            request_id=context.request_id,
+            depth=context.orchestration_depth,
+            **safe_kwargs,
+        )
 
     def _log_orchestration_end(self, context: OrchestrationContext, result: StepResult) -> None:
         """Log the end of orchestration.
@@ -188,4 +220,12 @@ class BaseOrchestrator(OrchestratorProtocol):
             context: Orchestration context
             result: The orchestration result
         """
-        logger.info('orchestration_completed', orchestrator=self.name, layer=self.layer.value, tenant_id=context.tenant_id, request_id=context.request_id, success=result.success, depth=context.orchestration_depth)
+        logger.info(
+            "orchestration_completed",
+            orchestrator=self.name,
+            layer=self.layer.value,
+            tenant_id=context.tenant_id,
+            request_id=context.request_id,
+            success=result.success,
+            depth=context.orchestration_depth,
+        )

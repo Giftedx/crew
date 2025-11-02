@@ -2,8 +2,9 @@ from __future__ import annotations
 
 from platform.observability import metrics
 
-from ingest import models, pipeline
 from ingest.sources.youtube import YouTubeConnector
+
+from ingest import models, pipeline
 from scheduler import PriorityQueue, Scheduler
 
 

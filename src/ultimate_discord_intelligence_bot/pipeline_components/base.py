@@ -1,6 +1,7 @@
 """Core dependency wiring and retry helpers for the content pipeline."""
 
 from __future__ import annotations
+
 import asyncio
 import contextlib
 import logging
@@ -8,12 +9,14 @@ import os
 import pathlib
 import random
 from importlib import import_module
-from typing import TYPE_CHECKING, Any, cast
 from platform.config.settings import get_settings
 from platform.observability import metrics
+from typing import TYPE_CHECKING, Any, cast
+
 from security.rate_limit import TokenBucket
 from ultimate_discord_intelligence_bot.tenancy import current_tenant, with_tenant
 from ultimate_discord_intelligence_bot.tenancy.registry import TenantRegistry
+
 from ..cache import TranscriptCache
 from ..settings import DISCORD_WEBHOOK
 from ..step_result import StepResult
@@ -28,6 +31,7 @@ from ..tools import (
     TextAnalysisTool,
 )
 
+
 try:
     from ..tools.integration.drive_upload_tool import DriveUploadTool
 except Exception:
@@ -38,8 +42,10 @@ from .log_pattern_middleware import LogPatternMiddleware
 from .middleware import PipelineStepMiddleware, TracingStepMiddleware
 from .tracing import TRACING_AVAILABLE
 
+
 if TYPE_CHECKING:
     from collections.abc import Iterable
+
     from ..tools.multi_platform_download_tool import MultiPlatformDownloadTool
 
 
@@ -82,9 +88,9 @@ class PipelineBase:
         self._pipeline_pkg = import_module("ultimate_discord_intelligence_bot.pipeline")
         self._step_middlewares: list[PipelineStepMiddleware] = list(step_middlewares or [])
         self._step_observability: dict[str, dict[str, Any]] = {}
-        if TRACING_AVAILABLE and (not any((isinstance(m, TracingStepMiddleware) for m in self._step_middlewares))):
+        if TRACING_AVAILABLE and (not any(isinstance(m, TracingStepMiddleware) for m in self._step_middlewares)):
             self._step_middlewares.append(TracingStepMiddleware())
-        if not any((isinstance(m, LogPatternMiddleware) for m in self._step_middlewares)):
+        if not any(isinstance(m, LogPatternMiddleware) for m in self._step_middlewares):
             self._step_middlewares.append(LogPatternMiddleware())
         if downloader is None:
             from ..tools.multi_platform_download_tool import MultiPlatformDownloadTool
@@ -379,7 +385,7 @@ class PipelineBase:
             return "permanent"
         err = (result.error or "").lower()
         transient_markers = ["timeout", "temporarily", "temporary", "connection reset", "dns", "unavailable"]
-        if any((marker in err for marker in transient_markers)):
+        if any(marker in err for marker in transient_markers):
             return "transient"
         return "transient"
 

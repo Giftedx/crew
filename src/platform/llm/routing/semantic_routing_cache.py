@@ -28,7 +28,9 @@ Usage:
     if decision:
         print(f"Using cached model: {decision.model} (similarity={decision.similarity:.3f})")
 """
+
 from __future__ import annotations
+
 import contextlib
 import hashlib
 import json
@@ -39,18 +41,24 @@ import time
 from collections import OrderedDict
 from dataclasses import dataclass, field
 from typing import Any
+
 import numpy as np
+
+
 logger = logging.getLogger(__name__)
 try:
     from ultimate_discord_intelligence_bot.services.embedding_service import create_embedding_service
+
     EMBEDDING_AVAILABLE = True
 except ImportError:
     EMBEDDING_AVAILABLE = False
-    logger.warning('EmbeddingService not available; semantic cache will use hash-based fallback')
+    logger.warning("EmbeddingService not available; semantic cache will use hash-based fallback")
+
 
 @dataclass
 class CacheEntry:
     """Cached routing decision with metadata."""
+
     prompt_embedding: np.ndarray
     model: str
     decision: dict[str, Any]
@@ -61,9 +69,11 @@ class CacheEntry:
     last_accessed: float = field(default_factory=time.time)
     similarity_on_hit: float = 0.0
 
+
 @dataclass
 class CacheStats:
     """Cache performance statistics."""
+
     total_queries: int = 0
     hits: int = 0
     misses: int = 0
@@ -83,10 +93,19 @@ class CacheStats:
         """Calculate cache miss rate."""
         return self.misses / max(self.total_queries, 1)
 
+
 class SemanticRoutingCache:
     """Embedding-based semantic similarity cache for routing decisions."""
 
-    def __init__(self, similarity_threshold: float=0.85, max_size: int=1000, ttl_seconds: float=3600.0, enable_shadow_mode: bool=False, use_redis: bool=False, redis_url: str | None=None):
+    def __init__(
+        self,
+        similarity_threshold: float = 0.85,
+        max_size: int = 1000,
+        ttl_seconds: float = 3600.0,
+        enable_shadow_mode: bool = False,
+        use_redis: bool = False,
+        redis_url: str | None = None,
+    ):
         """
         Initialize semantic routing cache.
 
@@ -110,23 +129,35 @@ class SemanticRoutingCache:
         if use_redis:
             try:
                 import redis
-                self.redis_client = redis.from_url(redis_url or 'redis://localhost:6379/0')
-                logger.info(f'SemanticRoutingCache connected to Redis: {redis_url}')
+
+                self.redis_client = redis.from_url(redis_url or "redis://localhost:6379/0")
+                logger.info(f"SemanticRoutingCache connected to Redis: {redis_url}")
             except Exception as e:
-                logger.warning(f'Failed to connect to Redis, falling back to in-memory: {e}')
+                logger.warning(f"Failed to connect to Redis, falling back to in-memory: {e}")
                 self.use_redis = False
         self.metrics: Any | None = None
         try:
             from platform.observability.metrics import get_metrics
+
             self.metrics = get_metrics()
             if self.metrics:
-                self.hit_counter = self.metrics.counter('semantic_routing_cache_hits_total', description='Total semantic cache hits')
-                self.miss_counter = self.metrics.counter('semantic_routing_cache_misses_total', description='Total semantic cache misses')
-                self.similarity_histogram = self.metrics.histogram('semantic_routing_cache_similarity', description='Similarity scores on cache queries')
-                self.latency_saved_histogram = self.metrics.histogram('semantic_routing_cache_latency_saved_ms', description='Estimated latency saved by cache hit')
+                self.hit_counter = self.metrics.counter(
+                    "semantic_routing_cache_hits_total", description="Total semantic cache hits"
+                )
+                self.miss_counter = self.metrics.counter(
+                    "semantic_routing_cache_misses_total", description="Total semantic cache misses"
+                )
+                self.similarity_histogram = self.metrics.histogram(
+                    "semantic_routing_cache_similarity", description="Similarity scores on cache queries"
+                )
+                self.latency_saved_histogram = self.metrics.histogram(
+                    "semantic_routing_cache_latency_saved_ms", description="Estimated latency saved by cache hit"
+                )
         except Exception:
             self.metrics = None
-        logger.info(f'SemanticRoutingCache initialized: threshold={similarity_threshold:.2f}, max_size={max_size}, ttl={ttl_seconds}s, shadow={enable_shadow_mode}')
+        logger.info(
+            f"SemanticRoutingCache initialized: threshold={similarity_threshold:.2f}, max_size={max_size}, ttl={ttl_seconds}s, shadow={enable_shadow_mode}"
+        )
 
     def _generate_embedding(self, prompt: str) -> np.ndarray:
         """
@@ -150,7 +181,7 @@ class SemanticRoutingCache:
     def _hash_context(self, context: dict[str, Any] | None) -> str:
         """Generate stable hash for context dictionary."""
         if not context:
-            return 'no_context'
+            return "no_context"
         sorted_items = sorted(context.items())
         context_str = json.dumps(sorted_items, sort_keys=True)
         return hashlib.md5(context_str.encode()).hexdigest()[:16]
@@ -171,7 +202,7 @@ class SemanticRoutingCache:
             return
         oldest_key, _ = self.cache.popitem(last=False)
         self.stats.evictions += 1
-        logger.debug(f'Evicted oldest cache entry: {oldest_key[:16]}...')
+        logger.debug(f"Evicted oldest cache entry: {oldest_key[:16]}...")
 
     def _clean_expired(self) -> None:
         """Remove expired entries."""
@@ -184,9 +215,11 @@ class SemanticRoutingCache:
             del self.cache[key]
             self.stats.expirations += 1
         if expired_keys:
-            logger.debug(f'Cleaned {len(expired_keys)} expired cache entries')
+            logger.debug(f"Cleaned {len(expired_keys)} expired cache entries")
 
-    def get(self, prompt: str, context: dict[str, Any] | None=None, estimated_routing_latency_ms: float=50.0) -> dict[str, Any] | None:
+    def get(
+        self, prompt: str, context: dict[str, Any] | None = None, estimated_routing_latency_ms: float = 50.0
+    ) -> dict[str, Any] | None:
         """
         Query cache for routing decision.
 
@@ -229,25 +262,46 @@ class SemanticRoutingCache:
                     self.stats.hits += 1
                     self.stats.total_latency_saved_ms += estimated_routing_latency_ms
                     self.stats.avg_latency_saved_ms = self.stats.total_latency_saved_ms / self.stats.hits
-                    self.stats.avg_similarity_on_hit = (self.stats.avg_similarity_on_hit * (self.stats.hits - 1) + best_similarity) / self.stats.hits
+                    self.stats.avg_similarity_on_hit = (
+                        self.stats.avg_similarity_on_hit * (self.stats.hits - 1) + best_similarity
+                    ) / self.stats.hits
                     if self.hit_counter:
                         with contextlib.suppress(Exception):
                             self.hit_counter.inc(1)
                     if self.latency_saved_histogram:
                         with contextlib.suppress(Exception):
                             self.latency_saved_histogram.observe(estimated_routing_latency_ms)
-                    logger.debug(f'Semantic cache HIT: similarity={best_similarity:.3f}, latency_saved={estimated_routing_latency_ms:.1f}ms')
-                    return {'model': best_entry.model, 'decision': best_entry.decision, 'similarity': best_similarity, 'cached': True, 'cache_type': 'semantic'}
+                    logger.debug(
+                        f"Semantic cache HIT: similarity={best_similarity:.3f}, latency_saved={estimated_routing_latency_ms:.1f}ms"
+                    )
+                    return {
+                        "model": best_entry.model,
+                        "decision": best_entry.decision,
+                        "similarity": best_similarity,
+                        "cached": True,
+                        "cache_type": "semantic",
+                    }
                 else:
-                    logger.info(f'Semantic cache SHADOW HIT: similarity={best_similarity:.3f} (would have saved {estimated_routing_latency_ms:.1f}ms)')
+                    logger.info(
+                        f"Semantic cache SHADOW HIT: similarity={best_similarity:.3f} (would have saved {estimated_routing_latency_ms:.1f}ms)"
+                    )
             self.stats.misses += 1
             if self.miss_counter:
                 with contextlib.suppress(Exception):
                     self.miss_counter.inc(1)
-            logger.debug(f'Semantic cache MISS: best_similarity={best_similarity:.3f}, threshold={self.similarity_threshold:.3f}')
+            logger.debug(
+                f"Semantic cache MISS: best_similarity={best_similarity:.3f}, threshold={self.similarity_threshold:.3f}"
+            )
             return None
 
-    def set(self, prompt: str, context: dict[str, Any] | None, model: str, decision: dict[str, Any], ttl: float | None=None) -> None:
+    def set(
+        self,
+        prompt: str,
+        context: dict[str, Any] | None,
+        model: str,
+        decision: dict[str, Any],
+        ttl: float | None = None,
+    ) -> None:
         """
         Store routing decision in cache.
 
@@ -264,23 +318,47 @@ class SemanticRoutingCache:
             embedding = self._generate_embedding(prompt)
             context_hash = self._hash_context(context)
             key_parts = [str(embedding.sum()), context_hash, model]
-            cache_key = hashlib.md5('::'.join(key_parts).encode()).hexdigest()
-            entry = CacheEntry(prompt_embedding=embedding, model=model, decision=decision, context_hash=context_hash, timestamp=time.time(), ttl=ttl or self.ttl_seconds)
+            cache_key = hashlib.md5("::".join(key_parts).encode()).hexdigest()
+            entry = CacheEntry(
+                prompt_embedding=embedding,
+                model=model,
+                decision=decision,
+                context_hash=context_hash,
+                timestamp=time.time(),
+                ttl=ttl or self.ttl_seconds,
+            )
             if len(self.cache) >= self.max_size:
                 self._evict_oldest()
             self.cache[cache_key] = entry
-            logger.debug(f'Semantic cache SET: model={model}, context_hash={context_hash[:8]}, cache_size={len(self.cache)}/{self.max_size}')
+            logger.debug(
+                f"Semantic cache SET: model={model}, context_hash={context_hash[:8]}, cache_size={len(self.cache)}/{self.max_size}"
+            )
 
     def get_stats(self) -> dict[str, Any]:
         """Get cache performance statistics."""
         with self.lock:
-            return {'total_queries': self.stats.total_queries, 'hits': self.stats.hits, 'misses': self.stats.misses, 'hit_rate': round(self.stats.hit_rate, 4), 'miss_rate': round(self.stats.miss_rate, 4), 'evictions': self.stats.evictions, 'expirations': self.stats.expirations, 'avg_similarity_on_hit': round(self.stats.avg_similarity_on_hit, 4), 'avg_latency_saved_ms': round(self.stats.avg_latency_saved_ms, 2), 'total_latency_saved_ms': round(self.stats.total_latency_saved_ms, 2), 'cache_size': len(self.cache), 'max_size': self.max_size, 'similarity_threshold': self.similarity_threshold, 'shadow_mode': self.enable_shadow_mode}
+            return {
+                "total_queries": self.stats.total_queries,
+                "hits": self.stats.hits,
+                "misses": self.stats.misses,
+                "hit_rate": round(self.stats.hit_rate, 4),
+                "miss_rate": round(self.stats.miss_rate, 4),
+                "evictions": self.stats.evictions,
+                "expirations": self.stats.expirations,
+                "avg_similarity_on_hit": round(self.stats.avg_similarity_on_hit, 4),
+                "avg_latency_saved_ms": round(self.stats.avg_latency_saved_ms, 2),
+                "total_latency_saved_ms": round(self.stats.total_latency_saved_ms, 2),
+                "cache_size": len(self.cache),
+                "max_size": self.max_size,
+                "similarity_threshold": self.similarity_threshold,
+                "shadow_mode": self.enable_shadow_mode,
+            }
 
     def clear(self) -> None:
         """Clear all cache entries."""
         with self.lock:
             self.cache.clear()
-            logger.info('Semantic routing cache cleared')
+            logger.info("Semantic routing cache cleared")
 
     def update_threshold(self, new_threshold: float) -> None:
         """
@@ -293,10 +371,15 @@ class SemanticRoutingCache:
         with self.lock:
             old_threshold = self.similarity_threshold
             self.similarity_threshold = new_threshold
-            logger.info(f'Semantic cache threshold updated: {old_threshold:.3f} -> {new_threshold:.3f}')
+            logger.info(f"Semantic cache threshold updated: {old_threshold:.3f} -> {new_threshold:.3f}")
+
+
 _global_semantic_cache: SemanticRoutingCache | None = None
 
-def get_semantic_routing_cache(similarity_threshold: float | None=None, enable_shadow_mode: bool | None=None) -> SemanticRoutingCache:
+
+def get_semantic_routing_cache(
+    similarity_threshold: float | None = None, enable_shadow_mode: bool | None = None
+) -> SemanticRoutingCache:
     """
     Get or create global semantic routing cache instance.
 
@@ -308,11 +391,10 @@ def get_semantic_routing_cache(similarity_threshold: float | None=None, enable_s
         SemanticRoutingCache instance
     """
     global _global_semantic_cache
-    enabled = os.getenv('ENABLE_SEMANTIC_ROUTING_CACHE', '1').lower() in {'1', 'true', 'yes', 'on'}
+    enabled = os.getenv("ENABLE_SEMANTIC_ROUTING_CACHE", "1").lower() in {"1", "true", "yes", "on"}
     if not enabled:
 
         class NoOpCache:
-
             def get(self, *args, **kwargs):
                 return None
 
@@ -320,18 +402,25 @@ def get_semantic_routing_cache(similarity_threshold: float | None=None, enable_s
                 pass
 
             def get_stats(self):
-                return {'enabled': False}
+                return {"enabled": False}
 
             def clear(self):
                 pass
 
             def update_threshold(self, *args):
                 pass
+
         return NoOpCache()
     if _global_semantic_cache is None:
-        threshold = similarity_threshold or float(os.getenv('SEMANTIC_ROUTING_CACHE_THRESHOLD', '0.85'))
-        shadow = enable_shadow_mode if enable_shadow_mode is not None else os.getenv('SEMANTIC_ROUTING_CACHE_SHADOW', '0').lower() in {'1', 'true', 'yes', 'on'}
-        max_size = int(os.getenv('SEMANTIC_ROUTING_CACHE_MAX_SIZE', '1000'))
-        ttl = float(os.getenv('SEMANTIC_ROUTING_CACHE_TTL', '3600'))
-        _global_semantic_cache = SemanticRoutingCache(similarity_threshold=threshold, max_size=max_size, ttl_seconds=ttl, enable_shadow_mode=shadow)
+        threshold = similarity_threshold or float(os.getenv("SEMANTIC_ROUTING_CACHE_THRESHOLD", "0.85"))
+        shadow = (
+            enable_shadow_mode
+            if enable_shadow_mode is not None
+            else os.getenv("SEMANTIC_ROUTING_CACHE_SHADOW", "0").lower() in {"1", "true", "yes", "on"}
+        )
+        max_size = int(os.getenv("SEMANTIC_ROUTING_CACHE_MAX_SIZE", "1000"))
+        ttl = float(os.getenv("SEMANTIC_ROUTING_CACHE_TTL", "3600"))
+        _global_semantic_cache = SemanticRoutingCache(
+            similarity_threshold=threshold, max_size=max_size, ttl_seconds=ttl, enable_shadow_mode=shadow
+        )
     return _global_semantic_cache

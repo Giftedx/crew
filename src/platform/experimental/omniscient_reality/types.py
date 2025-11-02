@@ -1,10 +1,15 @@
 from __future__ import annotations
+
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING
 from platform.time import default_utc_now
+from typing import TYPE_CHECKING
+
+
 if TYPE_CHECKING:
     from datetime import datetime
+
     from .enums import OmniscientLevel, RealityLayer, TemporalDimension
+
 
 @dataclass
 class UniversalKnowledgeNode:
@@ -17,6 +22,7 @@ class UniversalKnowledgeNode:
     universal_patterns: list[str] = field(default_factory=list)
     last_updated: datetime = field(default_factory=default_utc_now)
 
+
 @dataclass
 class OmniscientInsight:
     insight: str
@@ -28,6 +34,7 @@ class OmniscientInsight:
     pattern_scale: str
     solvability_impact: float
     timestamp: datetime = field(default_factory=default_utc_now)
+
 
 @dataclass
 class RealityPattern:

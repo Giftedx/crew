@@ -27,25 +27,33 @@ Migration Instructions:
 
 New code MUST import the core engine directly.
 """
+
 from __future__ import annotations
+
 import json
 import logging
 from datetime import date
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
-from warnings import warn
 from platform.rl.learning_engine import LearningEngine as _CoreLearningEngine
 from platform.rl.policies.bandit_base import EpsilonGreedyBandit
+from typing import TYPE_CHECKING, Any
+from warnings import warn
+
+
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
-__all__ = ['LearningEngine']
-_REMOVAL_DEADLINE = date.fromisoformat('2025-12-31')
+__all__ = ["LearningEngine"]
+_REMOVAL_DEADLINE = date.fromisoformat("2025-12-31")
 _DEPRECATION_LOG_EMITTED = False
+
 
 def _check_deadline() -> None:
     today = date.today()
     if today > _REMOVAL_DEADLINE:
-        raise ImportError(f'services.learning_engine.LearningEngine has passed its removal deadline ({_REMOVAL_DEADLINE}); the shim has been disabled. Import core.learning_engine instead.')
+        raise ImportError(
+            f"services.learning_engine.LearningEngine has passed its removal deadline ({_REMOVAL_DEADLINE}); the shim has been disabled. Import core.learning_engine instead."
+        )
+
 
 class LearningEngine(_CoreLearningEngine):
     """Backward compatible shim for the legacy services learner.
@@ -61,13 +69,32 @@ class LearningEngine(_CoreLearningEngine):
         ``register_domain`` + ``recommend`` / ``record``.
     """
 
-    def __init__(self, db_path: str | None=None, epsilon: float=0.1, store_path: str | None=None, registry: Any | None=None) -> None:
+    def __init__(
+        self,
+        db_path: str | None = None,
+        epsilon: float = 0.1,
+        store_path: str | None = None,
+        registry: Any | None = None,
+    ) -> None:
         _check_deadline()
-        warn('services.learning_engine.LearningEngine is deprecated until 2025-12-31; import core.learning_engine.LearningEngine instead (persistence args are ignored)', DeprecationWarning, stacklevel=2)
+        warn(
+            "services.learning_engine.LearningEngine is deprecated until 2025-12-31; import core.learning_engine.LearningEngine instead (persistence args are ignored)",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         global _DEPRECATION_LOG_EMITTED
         if not _DEPRECATION_LOG_EMITTED:
-            logging.getLogger('deprecations').info('{event}'.replace('{event}', '{'))
-            logging.getLogger('deprecations').info(json.dumps({'event': 'deprecated_class_used', 'symbol': 'services.learning_engine.LearningEngine', 'replacement': 'core.learning_engine.LearningEngine', 'removal_date': str(_REMOVAL_DEADLINE)}))
+            logging.getLogger("deprecations").info("{event}".replace("{event}", "{"))
+            logging.getLogger("deprecations").info(
+                json.dumps(
+                    {
+                        "event": "deprecated_class_used",
+                        "symbol": "services.learning_engine.LearningEngine",
+                        "replacement": "core.learning_engine.LearningEngine",
+                        "removal_date": str(_REMOVAL_DEADLINE),
+                    }
+                )
+            )
             _DEPRECATION_LOG_EMITTED = True
         if registry is not None:
             try:
@@ -85,46 +112,46 @@ class LearningEngine(_CoreLearningEngine):
                 if isinstance(raw, dict):
                     self.stats.update(raw)
             except Exception as exc:
-                logging.getLogger(__name__).debug('Ignoring legacy stats load error: %s', exc)
+                logging.getLogger(__name__).debug("Ignoring legacy stats load error: %s", exc)
 
     def select_model(self, task_type: str, candidates: Sequence[str]) -> str:
-        domain = f'route.model.select::{task_type}'
+        domain = f"route.model.select::{task_type}"
         if domain not in self.registry:
             self.register_domain(domain, policy=EpsilonGreedyBandit(epsilon=self._default_epsilon))
         choice = super().recommend(domain, {}, candidates)
         return str(choice)
 
     def update(self, task_type: str, action: str, reward: float) -> None:
-        domain = f'route.model.select::{task_type}'
+        domain = f"route.model.select::{task_type}"
         if domain not in self.registry:
             self.register_domain(domain, policy=EpsilonGreedyBandit(epsilon=self._default_epsilon))
         super().record(domain, {}, action, reward)
-        task_stats = self.stats.setdefault(task_type, {}).setdefault(action, {'reward': 0.0})
+        task_stats = self.stats.setdefault(task_type, {}).setdefault(action, {"reward": 0.0})
         policy = self.registry.get(domain)
-        q_values = getattr(policy, 'q_values', {})
-        task_stats['reward'] = float(q_values.get(action, task_stats['reward']))
+        q_values = getattr(policy, "q_values", {})
+        task_stats["reward"] = float(q_values.get(action, task_stats["reward"]))
         if self._store_path:
             try:
                 self._store_path.write_text(json.dumps(self.stats))
             except Exception as exc:
-                logging.getLogger(__name__).debug('Ignoring legacy stats write error: %s', exc)
+                logging.getLogger(__name__).debug("Ignoring legacy stats write error: %s", exc)
 
     def register_policy(self, policy_id: str, actions: Iterable[str]) -> None:
         if policy_id not in self.registry:
             self.register_domain(policy_id, policy=EpsilonGreedyBandit(epsilon=self._default_epsilon))
         policy = self.registry.get(policy_id)
-        if hasattr(policy, 'q_values'):
+        if hasattr(policy, "q_values"):
             try:
                 qv = policy.q_values
                 for a in actions:
                     _ = qv[a]
             except Exception as exc:
-                logging.getLogger(__name__).debug('Unable to prime q_values for legacy policy: %s', exc)
+                logging.getLogger(__name__).debug("Unable to prime q_values for legacy policy: %s", exc)
 
-    def recommend_legacy(self, policy_id: str, candidates: Sequence[str] | None=None) -> str:
+    def recommend_legacy(self, policy_id: str, candidates: Sequence[str] | None = None) -> str:
         policy = self.registry.get(policy_id)
         if candidates is None:
-            cand: list[str] = list(getattr(policy, 'q_values', {}).keys()) or list(getattr(policy, 'counts', {}).keys())
+            cand: list[str] = list(getattr(policy, "q_values", {}).keys()) or list(getattr(policy, "counts", {}).keys())
         else:
             cand = list(candidates)
         choice = super().recommend(policy_id, {}, cand)

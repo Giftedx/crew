@@ -4,53 +4,63 @@ LangSmith integration for comprehensive LLM observability and debugging.
 This module provides enhanced observability specifically tailored for LLM applications,
 including prompt tracking, response quality monitoring, and cost optimization analytics.
 """
+
 from __future__ import annotations
+
 import json
 import logging
 import time
 import uuid
 from contextlib import contextmanager
 from dataclasses import asdict, dataclass
-from typing import TYPE_CHECKING, Any
 from platform.config.configuration import get_config
 from platform.observability import metrics
+from typing import TYPE_CHECKING, Any
+
 from ultimate_discord_intelligence_bot.tenancy.context import current_tenant
+
+
 LANGSMITH_AVAILABLE = False
 if TYPE_CHECKING:
     from collections.abc import Generator
+
     from langsmith import Client, RunTree
     from langsmith.run_trees import RunTree as LangSmithRunTree
+
     LANGSMITH_AVAILABLE = True
 else:
     try:
         from langsmith import Client, RunTree
         from langsmith.run_trees import RunTree as LangSmithRunTree
+
         LANGSMITH_AVAILABLE = True
     except Exception:
 
         class _RunTreeStub:
-
             def __init__(self, *_, **__):
                 pass
 
             def end(self, *_, **__):
                 pass
+
         RunTree = _RunTreeStub
         LangSmithRunTree = _RunTreeStub
 
         class _ClientStub:
-
             def __init__(self, *_, **__):
                 pass
 
             def list_runs(self, *_, **__):
                 return []
+
         Client = _ClientStub
 logger = logging.getLogger(__name__)
+
 
 @dataclass
 class LLMTrace:
     """Structured trace data for LLM interactions."""
+
     trace_id: str
     run_id: str
     model: str
@@ -69,9 +79,11 @@ class LLMTrace:
     error_message: str | None = None
     metadata: dict[str, Any] | None = None
 
+
 @dataclass
 class LLMMetrics:
     """Aggregated metrics for LLM performance analysis."""
+
     total_requests: int = 0
     successful_requests: int = 0
     failed_requests: int = 0
@@ -82,10 +94,16 @@ class LLMMetrics:
     cost_per_token: float = 0.0
     success_rate: float = 0.0
 
+
 class EnhancedLLMObservability:
     """Enhanced LLM observability with LangSmith integration."""
 
-    def __init__(self, project_name: str='ultimate-discord-intelligence-bot', enable_langsmith: bool=True, enable_local_tracing: bool=True):
+    def __init__(
+        self,
+        project_name: str = "ultimate-discord-intelligence-bot",
+        enable_langsmith: bool = True,
+        enable_local_tracing: bool = True,
+    ):
         """Initialize enhanced LLM observability.
 
         Args:
@@ -100,9 +118,9 @@ class EnhancedLLMObservability:
         if self.enable_langsmith:
             try:
                 self.langsmith_client = self._initialize_langsmith()
-                logger.info('LangSmith observability initialized')
+                logger.info("LangSmith observability initialized")
             except Exception as e:
-                logger.warning(f'Failed to initialize LangSmith: {e}')
+                logger.warning(f"Failed to initialize LangSmith: {e}")
                 self.enable_langsmith = False
         self.local_traces: list[LLMTrace] = []
         self.metrics = LLMMetrics()
@@ -112,24 +130,28 @@ class EnhancedLLMObservability:
         """Initialize LangSmith client with proper configuration."""
         try:
             config = get_config()
-            api_key = getattr(config, 'langsmith_api_key', None)
+            api_key = getattr(config, "langsmith_api_key", None)
             if not api_key:
-                logger.warning('LangSmith API key not found in configuration')
+                logger.warning("LangSmith API key not found in configuration")
                 return None
-            client = Client(api_key=api_key, api_url=getattr(config, 'langsmith_api_url', 'https://api.smith.langchain.com'))
+            client = Client(
+                api_key=api_key, api_url=getattr(config, "langsmith_api_url", "https://api.smith.langchain.com")
+            )
             try:
                 client.list_runs(project_name=self.project_name, limit=1)
-                logger.info(f'LangSmith client initialized for project: {self.project_name}')
+                logger.info(f"LangSmith client initialized for project: {self.project_name}")
                 return client
             except Exception as e:
-                logger.warning(f'LangSmith connection test failed: {e}')
+                logger.warning(f"LangSmith connection test failed: {e}")
                 return None
         except Exception as e:
-            logger.error(f'Failed to initialize LangSmith client: {e}')
+            logger.error(f"Failed to initialize LangSmith client: {e}")
             return None
 
     @contextmanager
-    def trace_llm_call(self, model: str, provider: str, task_type: str='general', metadata: dict[str, Any] | None=None) -> Generator[dict[str, Any], None, None]:
+    def trace_llm_call(
+        self, model: str, provider: str, task_type: str = "general", metadata: dict[str, Any] | None = None
+    ) -> Generator[dict[str, Any], None, None]:
         """Context manager for tracing LLM calls with comprehensive observability.
 
         Args:
@@ -147,26 +169,48 @@ class EnhancedLLMObservability:
         tenant_ctx = current_tenant()
         tenant_id = tenant_ctx.tenant_id if tenant_ctx else None
         workspace = tenant_ctx.workspace_id if tenant_ctx else None
-        run_context = {'trace_id': trace_id, 'run_id': run_id, 'model': model, 'provider': provider, 'task_type': task_type, 'tenant_id': tenant_id, 'workspace': workspace, 'metadata': metadata or {}, 'start_time': start_time}
+        run_context = {
+            "trace_id": trace_id,
+            "run_id": run_id,
+            "model": model,
+            "provider": provider,
+            "task_type": task_type,
+            "tenant_id": tenant_id,
+            "workspace": workspace,
+            "metadata": metadata or {},
+            "start_time": start_time,
+        }
         langsmith_run = None
         if self.langsmith_client:
             try:
-                langsmith_run = RunTree(name=f'llm_call_{task_type}', run_type='llm', project_name=self.project_name, tags=[provider, model, task_type], extra={'model': model, 'provider': provider, 'tenant_id': tenant_id, 'workspace': workspace, **(metadata or {})})
-                run_context['langsmith_run'] = langsmith_run
+                langsmith_run = RunTree(
+                    name=f"llm_call_{task_type}",
+                    run_type="llm",
+                    project_name=self.project_name,
+                    tags=[provider, model, task_type],
+                    extra={
+                        "model": model,
+                        "provider": provider,
+                        "tenant_id": tenant_id,
+                        "workspace": workspace,
+                        **(metadata or {}),
+                    },
+                )
+                run_context["langsmith_run"] = langsmith_run
             except Exception as e:
-                logger.warning(f'Failed to start LangSmith run: {e}')
+                logger.warning(f"Failed to start LangSmith run: {e}")
         self._active_runs[run_id] = run_context
         try:
             yield run_context
-            run_context['status'] = 'success'
+            run_context["status"] = "success"
         except Exception as e:
-            run_context['status'] = 'error'
-            run_context['error_message'] = str(e)
+            run_context["status"] = "error"
+            run_context["error_message"] = str(e)
             if langsmith_run:
                 try:
                     langsmith_run.end(error=str(e))
                 except Exception as log_err:
-                    logger.warning(f'Failed to log error to LangSmith: {log_err}')
+                    logger.warning(f"Failed to log error to LangSmith: {log_err}")
             raise
         finally:
             end_time = time.perf_counter()
@@ -177,37 +221,62 @@ class EnhancedLLMObservability:
     def _finalize_trace(self, run_context: dict[str, Any], latency_ms: float):
         """Finalize and store trace data."""
         try:
-            prompt = run_context.get('prompt', '')
-            response = run_context.get('response', '')
-            tokens_input = run_context.get('tokens_input', 0)
-            tokens_output = run_context.get('tokens_output', 0)
-            cost = run_context.get('cost', 0.0)
-            trace = LLMTrace(trace_id=run_context['trace_id'], run_id=run_context['run_id'], model=run_context['model'], provider=run_context['provider'], prompt=prompt, response=response, tokens_input=tokens_input, tokens_output=tokens_output, cost=cost, latency_ms=latency_ms, task_type=run_context['task_type'], tenant_id=run_context.get('tenant_id'), workspace=run_context.get('workspace'), timestamp=time.time(), status=run_context.get('status', 'unknown'), error_message=run_context.get('error_message'), metadata=run_context.get('metadata'))
+            prompt = run_context.get("prompt", "")
+            response = run_context.get("response", "")
+            tokens_input = run_context.get("tokens_input", 0)
+            tokens_output = run_context.get("tokens_output", 0)
+            cost = run_context.get("cost", 0.0)
+            trace = LLMTrace(
+                trace_id=run_context["trace_id"],
+                run_id=run_context["run_id"],
+                model=run_context["model"],
+                provider=run_context["provider"],
+                prompt=prompt,
+                response=response,
+                tokens_input=tokens_input,
+                tokens_output=tokens_output,
+                cost=cost,
+                latency_ms=latency_ms,
+                task_type=run_context["task_type"],
+                tenant_id=run_context.get("tenant_id"),
+                workspace=run_context.get("workspace"),
+                timestamp=time.time(),
+                status=run_context.get("status", "unknown"),
+                error_message=run_context.get("error_message"),
+                metadata=run_context.get("metadata"),
+            )
             if self.enable_local_tracing:
                 self.local_traces.append(trace)
                 if len(self.local_traces) > 10000:
                     self.local_traces = self.local_traces[-5000:]
             self._update_metrics(trace)
-            if 'langsmith_run' in run_context:
+            if "langsmith_run" in run_context:
                 try:
-                    langsmith_run = run_context['langsmith_run']
-                    langsmith_run.inputs = {'prompt': prompt}
-                    langsmith_run.outputs = {'response': response}
-                    langsmith_run.extra.update({'tokens_input': tokens_input, 'tokens_output': tokens_output, 'cost': cost, 'latency_ms': latency_ms})
-                    if trace.status == 'success':
+                    langsmith_run = run_context["langsmith_run"]
+                    langsmith_run.inputs = {"prompt": prompt}
+                    langsmith_run.outputs = {"response": response}
+                    langsmith_run.extra.update(
+                        {
+                            "tokens_input": tokens_input,
+                            "tokens_output": tokens_output,
+                            "cost": cost,
+                            "latency_ms": latency_ms,
+                        }
+                    )
+                    if trace.status == "success":
                         langsmith_run.end()
                     else:
                         langsmith_run.end(error=trace.error_message)
                 except Exception as e:
-                    logger.warning(f'Failed to finalize LangSmith run: {e}')
+                    logger.warning(f"Failed to finalize LangSmith run: {e}")
             self._update_otel_metrics(trace)
         except Exception as e:
-            logger.error(f'Failed to finalize trace: {e}')
+            logger.error(f"Failed to finalize trace: {e}")
 
     def _update_metrics(self, trace: LLMTrace):
         """Update aggregate metrics with new trace data."""
         self.metrics.total_requests += 1
-        if trace.status == 'success':
+        if trace.status == "success":
             self.metrics.successful_requests += 1
         else:
             self.metrics.failed_requests += 1
@@ -226,21 +295,43 @@ class EnhancedLLMObservability:
         """Update OpenTelemetry metrics."""
         try:
             metrics.LLM_LATENCY.labels(**metrics.label_ctx()).observe(trace.latency_ms)
-            metrics.LLM_ESTIMATED_COST.labels(**metrics.label_ctx(), model=trace.model, provider=trace.provider).observe(trace.cost)
-            if trace.status == 'success':
-                metrics.LLM_MODEL_SELECTED.labels(**metrics.label_ctx(), task=trace.task_type, model=trace.model, provider=trace.provider).inc()
+            metrics.LLM_ESTIMATED_COST.labels(
+                **metrics.label_ctx(), model=trace.model, provider=trace.provider
+            ).observe(trace.cost)
+            if trace.status == "success":
+                metrics.LLM_MODEL_SELECTED.labels(
+                    **metrics.label_ctx(), task=trace.task_type, model=trace.model, provider=trace.provider
+                ).inc()
         except Exception as e:
-            logger.warning(f'Failed to update OpenTelemetry metrics: {e}')
+            logger.warning(f"Failed to update OpenTelemetry metrics: {e}")
 
-    def log_llm_interaction(self, run_context: dict[str, Any], prompt: str, response: str, tokens_input: int, tokens_output: int, cost: float):
+    def log_llm_interaction(
+        self,
+        run_context: dict[str, Any],
+        prompt: str,
+        response: str,
+        tokens_input: int,
+        tokens_output: int,
+        cost: float,
+    ):
         """Log LLM interaction within an active trace context."""
-        run_context.update({'prompt': prompt, 'response': response, 'tokens_input': tokens_input, 'tokens_output': tokens_output, 'cost': cost})
+        run_context.update(
+            {
+                "prompt": prompt,
+                "response": response,
+                "tokens_input": tokens_input,
+                "tokens_output": tokens_output,
+                "cost": cost,
+            }
+        )
 
     def get_metrics(self) -> LLMMetrics:
         """Get current aggregate metrics."""
         return self.metrics
 
-    def get_traces(self, limit: int=100, task_type: str | None=None, tenant_id: str | None=None, status: str | None=None) -> list[LLMTrace]:
+    def get_traces(
+        self, limit: int = 100, task_type: str | None = None, tenant_id: str | None = None, status: str | None = None
+    ) -> list[LLMTrace]:
         """Get recent traces with optional filtering."""
         traces = self.local_traces
         if task_type:
@@ -251,37 +342,46 @@ class EnhancedLLMObservability:
             traces = [t for t in traces if t.status == status]
         return sorted(traces, key=lambda t: t.timestamp, reverse=True)[:limit]
 
-    def analyze_performance(self, lookback_hours: int=24) -> dict[str, Any]:
+    def analyze_performance(self, lookback_hours: int = 24) -> dict[str, Any]:
         """Analyze LLM performance over specified time window."""
         cutoff_time = time.time() - lookback_hours * 3600
         recent_traces = [t for t in self.local_traces if t.timestamp > cutoff_time]
         if not recent_traces:
-            return {'error': 'No traces found in time window'}
-        total_cost = sum((t.cost for t in recent_traces))
-        avg_latency = sum((t.latency_ms for t in recent_traces)) / len(recent_traces)
-        success_rate = sum((1 for t in recent_traces if t.status == 'success')) / len(recent_traces)
+            return {"error": "No traces found in time window"}
+        total_cost = sum(t.cost for t in recent_traces)
+        avg_latency = sum(t.latency_ms for t in recent_traces) / len(recent_traces)
+        success_rate = sum(1 for t in recent_traces if t.status == "success") / len(recent_traces)
         model_stats = {}
         for trace in recent_traces:
             if trace.model not in model_stats:
-                model_stats[trace.model] = {'requests': 0, 'cost': 0.0, 'avg_latency': 0.0, 'success_rate': 0.0}
+                model_stats[trace.model] = {"requests": 0, "cost": 0.0, "avg_latency": 0.0, "success_rate": 0.0}
             stats = model_stats[trace.model]
-            stats['requests'] += 1
-            stats['cost'] += trace.cost
-            stats['avg_latency'] += trace.latency_ms
-            if trace.status == 'success':
-                stats['success_rate'] += 1
+            stats["requests"] += 1
+            stats["cost"] += trace.cost
+            stats["avg_latency"] += trace.latency_ms
+            if trace.status == "success":
+                stats["success_rate"] += 1
         for stats in model_stats.values():
-            stats['avg_latency'] /= stats['requests']
-            stats['success_rate'] /= stats['requests']
-        return {'time_window_hours': lookback_hours, 'total_requests': len(recent_traces), 'total_cost': total_cost, 'average_latency_ms': avg_latency, 'success_rate': success_rate, 'model_breakdown': model_stats, 'cost_per_request': total_cost / len(recent_traces) if recent_traces else 0}
+            stats["avg_latency"] /= stats["requests"]
+            stats["success_rate"] /= stats["requests"]
+        return {
+            "time_window_hours": lookback_hours,
+            "total_requests": len(recent_traces),
+            "total_cost": total_cost,
+            "average_latency_ms": avg_latency,
+            "success_rate": success_rate,
+            "model_breakdown": model_stats,
+            "cost_per_request": total_cost / len(recent_traces) if recent_traces else 0,
+        }
 
-    def export_traces(self, fmt: str='json') -> str:
+    def export_traces(self, fmt: str = "json") -> str:
         """Export traces in specified format for external analysis."""
-        if fmt == 'json':
+        if fmt == "json":
             return json.dumps([asdict(trace) for trace in self.local_traces], indent=2)
-        elif fmt == 'csv':
+        elif fmt == "csv":
             import csv
             import io
+
             output = io.StringIO()
             if self.local_traces:
                 writer = csv.DictWriter(output, fieldnames=asdict(self.local_traces[0]).keys())
@@ -290,8 +390,11 @@ class EnhancedLLMObservability:
                     writer.writerow(asdict(trace))
             return output.getvalue()
         else:
-            raise ValueError(f'Unsupported export format: {fmt}')
+            raise ValueError(f"Unsupported export format: {fmt}")
+
+
 _enhanced_observability: EnhancedLLMObservability | None = None
+
 
 def get_enhanced_observability() -> EnhancedLLMObservability:
     """Get or create global enhanced observability instance."""
@@ -299,4 +402,6 @@ def get_enhanced_observability() -> EnhancedLLMObservability:
     if _enhanced_observability is None:
         _enhanced_observability = EnhancedLLMObservability()
     return _enhanced_observability
-__all__ = ['EnhancedLLMObservability', 'LLMMetrics', 'LLMTrace', 'get_enhanced_observability']
+
+
+__all__ = ["EnhancedLLMObservability", "LLMMetrics", "LLMTrace", "get_enhanced_observability"]
