@@ -2,18 +2,10 @@ from __future__ import annotations
 
 # Minimal placeholder to satisfy rare imports in tests; not a full implementation.
 
-class TestClient:  # pragma: no cover - placeholder
-    def __init__(self, app) -> None:
-        self.app = app
-from __future__ import annotations
-
 """
 Proxy submodule for fastapi.testclient that forwards to the real FastAPI package.
 """
 
-        else:
-            __all__ = []
-                    query_items[k] = v if eq else ""
 from pathlib import Path
 
 
@@ -36,21 +28,15 @@ def _import_real_fastapi_testclient():
 
 try:
     _real = _import_real_fastapi_testclient()
+    TestClient = _real.TestClient
+    __all__ = ["TestClient"]
 except Exception:
-    try:
-        import fastapi_shim as _shim
-  else:
-      __all__ = []
-                    query_items[k] = v if eq else ""
-            req.query_params = query_items
-        # Determine whether to pass request object based on handler signature
-        sig = None
-        with contextlib.suppress(TypeError, ValueError):  # builtins or C funcs
-            sig = inspect.signature(handler)
-        wants_arg = bool(sig and len(sig.parameters) >= 1)
+    # Fallback: Minimal placeholder to satisfy rare imports in tests
+    class TestClient:  # pragma: no cover - placeholder
+        def __init__(self, app) -> None:
+            self.app = app
 
-        def _invoke():
-            if wants_arg:
+    __all__ = ["TestClient"]
                 # If the handler expects a Pydantic model, attempt to build it from JSON payload
                 try:
                     from pydantic import BaseModel as _BM

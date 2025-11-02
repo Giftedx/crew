@@ -433,7 +433,7 @@ class MultimodalAnalysisPipeline:
                     for segment in segments:
                         text_items.append(
                             {
-                                "id": f"transcript_{segment.get('start_time', 0)}"
+                                "id": f"transcript_{segment.get('start_time', 0)}",
                                 "text": segment.get("text", ""),
                                 "platform": "transcript",
                             }

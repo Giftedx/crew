@@ -35,7 +35,7 @@ def populate_agent_tool_context(
     """
     _logger = logger_instance or logger
     if not hasattr(agent, "tools"):
-        _logger.warning(f"Agent {getattr(agent, 'role', 'unknown')} has no tools attribute"
+        _logger.warning(f"Agent {getattr(agent, 'role', 'unknown')} has no tools attribute")
         return
     context_summary = {}
     for k, v in context_data.items():

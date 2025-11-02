@@ -441,7 +441,7 @@ class ModerationAlertManager:
             AlertSeverity.CRITICAL: 10038562,
         }
         return {
-            "title": f"🚨 Moderation Alert: {alert.alert_type.value.replace('_', ' ').title()}"
+            "title": f"🚨 Moderation Alert: {alert.alert_type.value.replace('_', ' ').title()}",
             "description": alert.content[:1000],
             "color": severity_colors.get(alert.severity, 9807270),
             "fields": [

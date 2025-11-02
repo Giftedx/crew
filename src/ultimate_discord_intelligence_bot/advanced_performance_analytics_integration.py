@@ -156,7 +156,7 @@ class AdvancedPerformanceAnalyticsSystem:
                         {
                             "source": "optimization",
                             "priority": "high",
-                            "title": f"Focus on {area.replace('_', ' ').title()}"
+                            "title": f"Focus on {area.replace('_', ' ').title()}",
                             "description": f"Optimization opportunity identified in {area}",
                             "category": area,
                         }

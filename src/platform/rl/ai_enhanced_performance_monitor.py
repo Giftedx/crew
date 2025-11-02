@@ -442,7 +442,7 @@ class AIEnhancedPerformanceMonitor(AgentPerformanceMonitor):
         print("\n📊 Model Usage Analysis:")
         for model, perf in report.model_usage_distribution.items():
             model_name = model.split("/")[-1] if "/" in model else model
-            print(f"   • {model_name}: {perf['usage_percentage']:.1f}% usage, Q:{perf['avg_quality']:.2f}"
+            print(f"   • {model_name}: {perf['usage_percentage']:.1f}% usage, Q:{perf['avg_quality']:.2f}")
         print("\n💡 Optimization Insights:")
         for category, insight in report.optimization_insights.items():
             print(f"   • {category.title()}: {insight}")

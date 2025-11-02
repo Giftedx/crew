@@ -325,7 +325,7 @@ class AdvancedPerformanceAnalyticsDiscordIntegration:
             batch_content += f"\n\n**Batch ID:** `batch_{timestamp.replace(' ', '_').replace(':', '_')}`"
             result = alert_tool._run(message=batch_content)
             batch_record = {
-                "batch_id": f"batch_{timestamp.replace(' ', '_').replace(':', '_')}"
+                "batch_id": f"batch_{timestamp.replace(' ', '_').replace(':', '_')}",
                 "severity": severity.value,
                 "alert_count": len(alerts),
                 "timestamp": default_utc_now(),

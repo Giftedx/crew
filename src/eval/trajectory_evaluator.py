@@ -458,7 +458,7 @@ class TrajectoryEvaluator:
         overall_score = (accuracy_score + efficiency_score + error_handling_score) / 3 > 0.7
         return {
             "score": overall_score,
-            "reasoning": f"Trajectory {('succeeded' if trajectory.success else 'failed')} with {len(trajectory.steps)} steps"
+            "reasoning": f"Trajectory {('succeeded' if trajectory.success else 'failed')} with {len(trajectory.steps)} steps",
             "accuracy_score": accuracy_score,
             "efficiency_score": efficiency_score,
             "error_handling_score": error_handling_score,
