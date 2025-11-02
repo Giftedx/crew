@@ -4,45 +4,74 @@
 
 The Ultimate Discord Intelligence Bot is a sophisticated AI-powered content analysis system built on CrewAI that processes multi-platform content through a structured pipeline. The system is designed with tenant-aware isolation, comprehensive observability, and modular tool architecture.
 
+## 3-Layer Architecture
+
+The Ultimate Discord Intelligence Bot uses a clean 3-layer architecture:
+
+1. **Platform Layer** (`src/platform/`): Infrastructure and foundational services
+   - Core protocols (`core/step_result.py`)
+   - HTTP utilities, caching, resilience (`http/`, `cache/`)
+   - LLM providers and routing (`llm/`)
+   - Reinforcement learning (`rl/`)
+   - Observability (`observability/`)
+   - Security and privacy (`security/`)
+
+2. **Domain Layer** (`src/domains/`): Business logic and domain-specific functionality
+   - Orchestration: CrewAI agents, tasks, and crew management
+   - Ingestion: Multi-platform content ingestion and providers
+   - Intelligence: Analysis, verification, and content processing
+   - Memory: Vector storage, graph memory, and continual learning
+
+3. **App Layer** (`src/app/`): Application-specific code
+   - Discord bot integration (`discord/`)
+   - Crew execution (`crew_executor.py`)
+   - Application configuration (`config/`)
+   - Entry point (`main.py`)
+
 ## Core Components
 
-### 1. Entry Point (`main.py`)
+### 1. Entry Point (`app/main.py`)
 
 - **Purpose**: CLI orchestrator that routes commands to the crew system
 - **Key Functions**: `run()`, `train()`, `replay()`, `test()`
 - **Integration**: Uses `enhanced_crew_integration` for quality monitoring
 
-### 2. Crew Orchestration (`crew.py`)
+### 2. Crew Orchestration (`app/crew_executor.py`)
 
 - **Purpose**: Defines the autonomous intelligence crew with specialized agents
 - **Architecture**: Modular agent system with dynamic CrewAI imports
 - **Features**: Telemetry disabled, tenant-aware design, quality monitoring
+- **Location**: `domains/orchestration/crewai/` contains CrewAI-specific components
 
-### 3. Content Pipeline (`pipeline.py`)
+### 3. Content Pipeline (`domains/ingestion/pipeline/`)
 
 - **Purpose**: Multi-stage content processing pipeline
 - **Flow**: Acquisition → Transcription → Analysis → Memory → Discord
 - **Components**: Privacy filtering, metrics tracking, budget management
 
-### 4. StepResult System (`step_result.py`)
+### 4. StepResult System (`platform/core/step_result.py`)
 
 - **Purpose**: Standardized error handling and result normalization
 - **Features**: 50+ error categories, intelligent recovery, performance tracking
 - **Integration**: Used by all tools for consistent error handling
 
-### 5. Tools Architecture (`tools/`)
+### 5. Tools Architecture (`domains/*/tools/`)
 
-- **Structure**: Modular tool categories (acquisition, analysis, memory, verification)
-- **Base Classes**: `_base.py`, `acquisition_base.py`, `analysis_base.py`
+- **Structure**: Domain-specific tool categories organized by functionality
+   - Ingestion tools: `domains/ingestion/providers/tools/`
+   - Analysis tools: `domains/intelligence/analysis/tools/`
+   - Verification tools: `domains/intelligence/verification/tools/`
+   - Memory tools: `domains/memory/tools/`
+- **Base Classes**: Specialized base classes per domain
 - **Features**: Lazy loading, tenancy support, observability hooks
 
-### 6. Observability (`obs/`)
+### 6. Observability (`platform/observability/`)
 
 - **Metrics**: Performance tracking, quality scoring, alert generation
 - **Integration**: Prometheus-compatible metrics, structured logging
 - **Monitoring**: Health checks, performance dashboards
 
-### 7. Discord Integration (`discord_bot/`)
+### 7. Discord Integration (`app/discord/`)
 
 - **Purpose**: Bot commands, event handling, content publishing
 - **Features**: Multi-tenant support, rate limiting, webhook integration
@@ -79,7 +108,7 @@ Multi-Platform Sources → Ingestion → Transcription → Analysis → Memory �
 ## Configuration Management
 
 - **Environment**: `.env` file with feature flags (`ENABLE_<AREA>_<FEATURE>`)
-- **Settings**: Centralized in `settings.py` with validation
+- **Settings**: Centralized in `app/config/settings.py` with validation
 - **Flags**: Comprehensive feature flag system for gradual rollouts
 
 ## Performance & Monitoring
