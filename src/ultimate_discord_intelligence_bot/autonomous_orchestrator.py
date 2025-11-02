@@ -537,7 +537,7 @@ class AutonomousIntelligenceOrchestrator:
                 from .tenancy import TenantContext
 
                 tenant_ctx = TenantContext(
-                    tenant_id=f"guild_{getattr(interaction, 'guild_id', 'dm') or 'dm'}"
+                    tenant_id=f"guild_{getattr(interaction, 'guild_id', 'dm') or 'dm'}",
                     workspace_id=getattr(getattr(interaction, "channel", None), "name", "autointel_workspace"),
                 )
                 self.logger.info(f"Created tenant context for workflow: {tenant_ctx}")
@@ -1843,7 +1843,7 @@ class AutonomousIntelligenceOrchestrator:
             self._populate_agent_tool_context(analysis_agent, shared_context)
             self._populate_agent_tool_context(persona_agent, shared_context)
             behavioral_task = Task(
-                description=f"Perform comprehensive behavioral analysis on transcript with threat context (threat_level: {threat_data.get('threat_level', 'unknown')}) using transcript and threat_data from shared context"
+                description=f"Perform comprehensive behavioral analysis on transcript with threat context (threat_level: {threat_data.get('threat_level', 'unknown')}) using transcript and threat_data from shared context",
                 expected_output="Detailed behavioral profile with personality traits, communication patterns, and risk indicators",
                 agent=analysis_agent,
             )
@@ -2046,7 +2046,7 @@ class AutonomousIntelligenceOrchestrator:
                 try:
                     summary = synthesis_result.get("workflow_metadata", {})
                     await interaction.followup.send(
-                        f"✅ **Specialized Autonomous Intelligence Analysis Complete**\n\n**URL:** {summary.get('url', 'N/A')}\n**Threat Score:** {synthesis_result.get('deception', {}).get('threat_score', 0.0):.2f}/1.00\n**Processing Time:** {summary.get('processing_time', 0.0):.1f}s\n**Specialized Agents:** {summary.get('specialized_agents_used', 0)}\n\n*Analysis completed using specialized autonomous intelligence agents.*"
+                        f"✅ **Specialized Autonomous Intelligence Analysis Complete**\n\n**URL:** {summary.get('url', 'N/A')}\n**Threat Score:** {synthesis_result.get('deception', {}).get('threat_score', 0.0):.2f}/1.00\n**Processing Time:** {summary.get('processing_time', 0.0):.1f}s\n**Specialized Agents:** {summary.get('specialized_agents_used', 0)}\n\n*Analysis completed using specialized autonomous intelligence agents.*",
                         ephemeral=False,
                     )
                 except RuntimeError as fallback_error:
