@@ -35,23 +35,18 @@ from .platform_integration import (
     SyncResult,
 )
 from .social_monitor import (
-    AlertRule,
     ContentType,
-    EngagementMetrics,
-    InfluencerProfile,
-    MonitoringConfig,
-    MonitoringResult,
+    MonitoringRule,
     PlatformType,
     SentimentType,
     SocialContent,
     SocialMonitor,
-    TrendAnalysis,
+    TrendData,
 )
 
 
 __all__ = [
     "AggregationMode",
-    "AlertRule",
     "AnalyticsDataPoint",
     "AnalyticsDimension",
     # Cross-platform analytics
@@ -69,13 +64,10 @@ __all__ = [
     "DiscoveryResult",
     # Content discovery
     "DiscoveryStrategy",
-    "EngagementMetrics",
-    "InfluencerProfile",
     "IntegrationMetrics",
     # Platform integration
     "IntegrationStatus",
-    "MonitoringConfig",
-    "MonitoringResult",
+    "MonitoringRule",
     "PlatformConfig",
     "PlatformIntegration",
     "PlatformType",
@@ -86,6 +78,6 @@ __all__ = [
     "SyncMode",
     "SyncResult",
     "TimeGranularity",
-    "TrendAnalysis",
+    "TrendData",
     "VisualizationType",
 ]
