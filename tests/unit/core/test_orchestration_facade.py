@@ -1,28 +1,19 @@
 """Tests for unified orchestration facade (ADR-0004)."""
-
 from __future__ import annotations
-
 import pytest
-
-from ultimate_discord_intelligence_bot.orchestration import (
-    OrchestrationFacade,
-    OrchestrationStrategy,
-    get_orchestrator,
-)
-from ultimate_discord_intelligence_bot.step_result import StepResult
-
+from ultimate_discord_intelligence_bot.orchestration import OrchestrationFacade, OrchestrationStrategy, get_orchestrator
+from platform.core.step_result import StepResult
 
 class TestOrchestrationStrategy:
     """Test orchestration strategy enum."""
 
     def test_strategies_defined(self):
         """Test all orchestration strategies are defined."""
-        assert OrchestrationStrategy.AUTONOMOUS == "autonomous"
-        assert OrchestrationStrategy.FALLBACK == "fallback"
-        assert OrchestrationStrategy.HIERARCHICAL == "hierarchical"
-        assert OrchestrationStrategy.MONITORING == "monitoring"
-        assert OrchestrationStrategy.TRAINING == "training"
-
+        assert OrchestrationStrategy.AUTONOMOUS == 'autonomous'
+        assert OrchestrationStrategy.FALLBACK == 'fallback'
+        assert OrchestrationStrategy.HIERARCHICAL == 'hierarchical'
+        assert OrchestrationStrategy.MONITORING == 'monitoring'
+        assert OrchestrationStrategy.TRAINING == 'training'
 
 class TestOrchestrationFacade:
     """Test orchestration facade."""
@@ -41,22 +32,11 @@ class TestOrchestrationFacade:
     async def test_execute_workflow_signature(self):
         """Test execute_workflow accepts expected parameters."""
         facade = OrchestrationFacade(strategy=OrchestrationStrategy.AUTONOMOUS)
-
-        # Should accept these parameters without error
-        # (actual execution may fail due to missing dependencies in test env)
         try:
-            result = await facade.execute_workflow(
-                url="https://example.com/test",
-                depth="standard",
-                tenant="test",
-                workspace="test",
-            )
-            # If it executes, should return StepResult
+            result = await facade.execute_workflow(url='https://example.com/test', depth='standard', tenant='test', workspace='test')
             assert isinstance(result, StepResult)
         except Exception:
-            # Expected in test environment without full setup
             pass
-
 
 class TestOrchestrationSingleton:
     """Test global orchestrator singleton."""
@@ -75,10 +55,7 @@ class TestOrchestrationSingleton:
         """Test switching strategies creates new instance."""
         orch1 = get_orchestrator(OrchestrationStrategy.AUTONOMOUS)
         orch2 = get_orchestrator(OrchestrationStrategy.FALLBACK)
-
-        # Different strategies should be cached separately
         assert orch1.strategy != orch2.strategy
-
 
 class TestOrchestrationIntegration:
     """Integration tests for orchestration facade."""
@@ -86,20 +63,15 @@ class TestOrchestrationIntegration:
     def test_autonomous_orchestrator_loads(self):
         """Test autonomous orchestrator can be loaded."""
         facade = OrchestrationFacade(strategy=OrchestrationStrategy.AUTONOMOUS)
-
-        # Trigger lazy load
         try:
             orchestrator = facade._get_orchestrator()
             assert orchestrator is not None
         except Exception:
-            # May fail if dependencies missing, but class should load
             pass
 
     def test_invalid_strategy_raises(self):
         """Test invalid strategy raises ValueError."""
-        # Create facade with mock invalid strategy
         facade = OrchestrationFacade()
-        facade.strategy = "invalid_strategy"  # type: ignore
-
-        with pytest.raises(ValueError, match="Unknown orchestration strategy"):
+        facade.strategy = 'invalid_strategy'
+        with pytest.raises(ValueError, match='Unknown orchestration strategy'):
             facade._get_orchestrator()

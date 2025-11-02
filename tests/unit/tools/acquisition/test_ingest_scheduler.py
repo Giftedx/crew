@@ -1,51 +1,42 @@
-from ultimate_discord_intelligence_bot.core.learning_engine import LearningEngine
+from platform.core.learning_engine import LearningEngine
 from ultimate_discord_intelligence_bot.discord import commands
 from ultimate_discord_intelligence_bot.ingest import models, pipeline
 from ultimate_discord_intelligence_bot.ingest.sources.youtube import YouTubeConnector
 from ultimate_discord_intelligence_bot.scheduler import PriorityQueue, Scheduler
 
-
 def test_scheduler_enqueues_and_processes(tmp_path, monkeypatch):
-    conn = models.connect(tmp_path / "sched.db")
+    conn = models.connect(tmp_path / 'sched.db')
     queue = PriorityQueue(conn)
     learner = LearningEngine()
-    learner.register_domain("scheduler")
-    sched = Scheduler(conn, queue, {"youtube": YouTubeConnector()}, learner=learner)
-
-    sched.add_watch(tenant="t", workspace="w", source_type="youtube", handle="vid1")
+    learner.register_domain('scheduler')
+    sched = Scheduler(conn, queue, {'youtube': YouTubeConnector()}, learner=learner)
+    sched.add_watch(tenant='t', workspace='w', source_type='youtube', handle='vid1')
     sched.tick()
     assert queue.pending_count() == 1
-
     ran: list[str] = []
 
     def fake_run(job, store):
         ran.append(job.external_id)
-        return {"chunks": 0}
-
-    monkeypatch.setattr(pipeline, "run", fake_run)
+        return {'chunks': 0}
+    monkeypatch.setattr(pipeline, 'run', fake_run)
     sched.worker_run_once(store=None)
-    assert ran == ["vid1"]
+    assert ran == ['vid1']
     assert queue.pending_count() == 0
-
     sched.tick()
     assert queue.pending_count() == 0
-
-    status = learner.status()["scheduler"]["arms"]
-    assert sum(v["n"] for v in status.values()) == 1
-
+    status = learner.status()['scheduler']['arms']
+    assert sum((v['n'] for v in status.values())) == 1
 
 def test_ops_helpers(tmp_path, monkeypatch):
-    conn = models.connect(tmp_path / "sched.db")
+    conn = models.connect(tmp_path / 'sched.db')
     queue = PriorityQueue(conn)
-    sched = Scheduler(conn, queue, {"youtube": YouTubeConnector()})
-
-    commands.ops_ingest_watch_add(sched, "youtube", "vid1", tenant="t", workspace="w")
+    sched = Scheduler(conn, queue, {'youtube': YouTubeConnector()})
+    commands.ops_ingest_watch_add(sched, 'youtube', 'vid1', tenant='t', workspace='w')
     assert commands.ops_ingest_watch_list(sched)
     sched.tick()
     status = commands.ops_ingest_queue_status(queue)
-    assert status["pending"] == 1
-
-    monkeypatch.setattr(pipeline, "run", lambda job, store: {})
+    assert status['pending'] == 1
+    monkeypatch.setattr(pipeline, 'run', lambda job, store: {})
     commands.ops_ingest_run_once(sched, store=None)
     status = commands.ops_ingest_queue_status(queue)
-    assert status["pending"] == 0
+    assert status['pending'] == 0

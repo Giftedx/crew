@@ -4,62 +4,9 @@ Comprehensive test suite for multi-modal analysis capabilities.
 Tests image analysis, audio analysis, video analysis, and cross-modal correlation
 systems for the Ultimate Discord Intelligence Bot.
 """
-
 from unittest.mock import Mock, patch
-
 import pytest
-
-from ultimate_discord_intelligence_bot.core.multimodal import (
-    AcousticFeatures,
-    AudioAnalysisResult,
-    AudioAnalysisType,
-    # Audio analysis
-    AudioAnalyzer,
-    AudioQuality,
-    AudioQualityMetrics,
-    BackgroundNoiseAnalysis,
-    CameraMovement,
-    ConfidenceLevel,
-    ConsistencyLevel,
-    ContentModerationResult,
-    ContentVerification,
-    CorrelationStrength,
-    CorrelationType,
-    CrossModalAnalysisResult,
-    CrossModalCorrelation,
-    # Cross-modal correlation
-    CrossModalCorrelator,
-    DetectedObject,
-    EmotionAnalysis,
-    EmotionType,
-    ExtractedText,
-    FaceAnalysis,
-    ImageAnalysisResult,
-    ImageAnalysisType,
-    # Image analysis
-    ImageAnalyzer,
-    ModalityData,
-    MotionAnalysis,
-    MotionType,
-    MultimodalInsight,
-    ObjectTrack,
-    SceneClassification,
-    SceneSegment,
-    SceneType,
-    ShotBoundary,
-    SilenceDetection,
-    SpeakerProfile,
-    SpeechRateAnalysis,
-    TemporalFeatures,
-    VideoActivityRecognition,
-    VideoActivityType,
-    VideoAnalysisResult,
-    VideoAnalysisType,
-    # Video analysis
-    VideoAnalyzer,
-    VisualClassification,
-)
-
+from platform.core.multimodal import AcousticFeatures, AudioAnalysisResult, AudioAnalysisType, AudioAnalyzer, AudioQuality, AudioQualityMetrics, BackgroundNoiseAnalysis, CameraMovement, ConfidenceLevel, ConsistencyLevel, ContentModerationResult, ContentVerification, CorrelationStrength, CorrelationType, CrossModalAnalysisResult, CrossModalCorrelation, CrossModalCorrelator, DetectedObject, EmotionAnalysis, EmotionType, ExtractedText, FaceAnalysis, ImageAnalysisResult, ImageAnalysisType, ImageAnalyzer, ModalityData, MotionAnalysis, MotionType, MultimodalInsight, ObjectTrack, SceneClassification, SceneSegment, SceneType, ShotBoundary, SilenceDetection, SpeakerProfile, SpeechRateAnalysis, TemporalFeatures, VideoActivityRecognition, VideoActivityType, VideoAnalysisResult, VideoAnalysisType, VideoAnalyzer, VisualClassification
 
 class TestImageAnalyzer:
     """Test suite for image analysis capabilities."""
@@ -71,41 +18,33 @@ class TestImageAnalyzer:
 
     def _create_sample_image_data(self) -> bytes:
         """Create sample image data for testing."""
-        # Create a simple test image
         import io
-
         from PIL import Image
-
-        img = Image.new("RGB", (100, 100), color="red")
+        img = Image.new('RGB', (100, 100), color='red')
         buffer = io.BytesIO()
-        img.save(buffer, format="PNG")
+        img.save(buffer, format='PNG')
         return buffer.getvalue()
 
     def test_analyzer_initialization(self) -> None:
         """Test image analyzer initialization."""
         assert self.analyzer.config == {}
         assert not self.analyzer.models_loaded
-        assert self.analyzer.processing_stats["total_images_processed"] == 0
+        assert self.analyzer.processing_stats['total_images_processed'] == 0
 
     def test_analyze_image_basic(self) -> None:
         """Test basic image analysis."""
         result = self.analyzer.analyze_image(self.sample_image_data)
-
         assert isinstance(result, ImageAnalysisResult)
         assert result.image_size == (100, 100)
-        assert result.format == "PNG"
-        assert result.color_mode == "RGB"
+        assert result.format == 'PNG'
+        assert result.color_mode == 'RGB'
         assert result.file_size_bytes > 0
         assert result.processing_time > 0
 
     def test_analyze_image_with_types(self) -> None:
         """Test image analysis with specific types."""
-        analysis_types = [
-            ImageAnalysisType.OBJECT_DETECTION,
-            ImageAnalysisType.SCENE_CLASSIFICATION,
-        ]
+        analysis_types = [ImageAnalysisType.OBJECT_DETECTION, ImageAnalysisType.SCENE_CLASSIFICATION]
         result = self.analyzer.analyze_image(self.sample_image_data, analysis_types)
-
         assert result.analysis_types == analysis_types
         assert len(result.detected_objects) > 0
         assert result.scene_classification is not None
@@ -113,84 +52,58 @@ class TestImageAnalyzer:
     def test_detected_object_properties(self) -> None:
         """Test detected object properties."""
         result = self.analyzer.analyze_image(self.sample_image_data)
-
         if result.detected_objects:
             obj = result.detected_objects[0]
             assert isinstance(obj, DetectedObject)
             assert obj.label
             assert 0.0 <= obj.confidence <= 1.0
             assert len(obj.bounding_box) == 4
-            assert obj.confidence_level in [
-                ConfidenceLevel.HIGH,
-                ConfidenceLevel.MEDIUM,
-                ConfidenceLevel.LOW,
-            ]
+            assert obj.confidence_level in [ConfidenceLevel.HIGH, ConfidenceLevel.MEDIUM, ConfidenceLevel.LOW]
 
     def test_scene_classification_properties(self) -> None:
         """Test scene classification properties."""
         result = self.analyzer.analyze_image(self.sample_image_data)
-
         if result.scene_classification:
             scene = result.scene_classification
             assert isinstance(scene, SceneClassification)
             assert scene.scene_type
             assert 0.0 <= scene.confidence <= 1.0
-            assert scene.confidence_level in [
-                ConfidenceLevel.HIGH,
-                ConfidenceLevel.MEDIUM,
-                ConfidenceLevel.LOW,
-            ]
+            assert scene.confidence_level in [ConfidenceLevel.HIGH, ConfidenceLevel.MEDIUM, ConfidenceLevel.LOW]
 
     def test_extracted_text_properties(self) -> None:
         """Test extracted text properties."""
         result = self.analyzer.analyze_image(self.sample_image_data)
-
         if result.extracted_text:
             text = result.extracted_text[0]
             assert isinstance(text, ExtractedText)
             assert text.text
             assert 0.0 <= text.confidence <= 1.0
             assert len(text.bounding_box) == 4
-            assert text.confidence_level in [
-                ConfidenceLevel.HIGH,
-                ConfidenceLevel.MEDIUM,
-                ConfidenceLevel.LOW,
-            ]
+            assert text.confidence_level in [ConfidenceLevel.HIGH, ConfidenceLevel.MEDIUM, ConfidenceLevel.LOW]
 
     def test_face_analysis_properties(self) -> None:
         """Test face analysis properties."""
         result = self.analyzer.analyze_image(self.sample_image_data)
-
         if result.face_analysis:
             face = result.face_analysis[0]
             assert isinstance(face, FaceAnalysis)
             assert 0.0 <= face.confidence <= 1.0
             assert len(face.bounding_box) == 4
-            assert face.confidence_level in [
-                ConfidenceLevel.HIGH,
-                ConfidenceLevel.MEDIUM,
-                ConfidenceLevel.LOW,
-            ]
+            assert face.confidence_level in [ConfidenceLevel.HIGH, ConfidenceLevel.MEDIUM, ConfidenceLevel.LOW]
 
     def test_content_moderation_properties(self) -> None:
         """Test content moderation properties."""
         result = self.analyzer.analyze_image(self.sample_image_data)
-
         if result.content_moderation:
             moderation = result.content_moderation
             assert isinstance(moderation, ContentModerationResult)
             assert isinstance(moderation.is_safe, bool)
             assert 0.0 <= moderation.confidence <= 1.0
-            assert moderation.confidence_level in [
-                ConfidenceLevel.HIGH,
-                ConfidenceLevel.MEDIUM,
-                ConfidenceLevel.LOW,
-            ]
+            assert moderation.confidence_level in [ConfidenceLevel.HIGH, ConfidenceLevel.MEDIUM, ConfidenceLevel.LOW]
 
     def test_analysis_result_properties(self) -> None:
         """Test analysis result properties."""
         result = self.analyzer.analyze_image(self.sample_image_data)
-
         assert isinstance(result.has_text, bool)
         assert isinstance(result.has_faces, bool)
         assert isinstance(result.is_content_safe, bool)
@@ -200,36 +113,32 @@ class TestImageAnalyzer:
         """Test analysis summary generation."""
         result = self.analyzer.analyze_image(self.sample_image_data)
         summary = self.analyzer.get_analysis_summary(result)
-
-        assert "image_info" in summary
-        assert "analysis_summary" in summary
-        assert "processing_info" in summary
-        assert summary["image_info"]["size"] == (100, 100)
+        assert 'image_info' in summary
+        assert 'analysis_summary' in summary
+        assert 'processing_info' in summary
+        assert summary['image_info']['size'] == (100, 100)
 
     def test_processing_stats(self) -> None:
         """Test processing statistics."""
         self.analyzer.analyze_image(self.sample_image_data)
         stats = self.analyzer.get_processing_stats()
-
-        assert stats["total_images_processed"] == 1
-        assert stats["total_processing_time"] > 0
-        assert stats["average_processing_time"] > 0
+        assert stats['total_images_processed'] == 1
+        assert stats['total_processing_time'] > 0
+        assert stats['average_processing_time'] > 0
 
     def test_clear_stats(self) -> None:
         """Test clearing statistics."""
         self.analyzer.analyze_image(self.sample_image_data)
         self.analyzer.clear_stats()
         stats = self.analyzer.get_processing_stats()
-
-        assert stats["total_images_processed"] == 0
-        assert stats["total_processing_time"] == 0.0
-        assert stats["average_processing_time"] == 0.0
+        assert stats['total_images_processed'] == 0
+        assert stats['total_processing_time'] == 0.0
+        assert stats['average_processing_time'] == 0.0
 
     def test_invalid_image_data(self) -> None:
         """Test handling of invalid image data."""
-        with pytest.raises(ValueError, match="Invalid image data"):
-            self.analyzer.analyze_image(b"invalid data")
-
+        with pytest.raises(ValueError, match='Invalid image data'):
+            self.analyzer.analyze_image(b'invalid data')
 
 class TestAudioAnalyzer:
     """Test suite for audio analysis capabilities."""
@@ -241,19 +150,17 @@ class TestAudioAnalyzer:
 
     def _create_sample_audio_data(self) -> bytes:
         """Create sample audio data for testing."""
-        # Create a simple test audio file (simulated)
-        return b"fake_audio_data_for_testing"
+        return b'fake_audio_data_for_testing'
 
     def test_analyzer_initialization(self) -> None:
         """Test audio analyzer initialization."""
         assert self.analyzer.config == {}
         assert not self.analyzer.models_loaded
-        assert self.analyzer.processing_stats["total_audio_processed"] == 0
+        assert self.analyzer.processing_stats['total_audio_processed'] == 0
 
     def test_analyze_audio_basic(self) -> None:
         """Test basic audio analysis."""
         result = self.analyzer.analyze_audio(self.sample_audio_data)
-
         assert isinstance(result, AudioAnalysisResult)
         assert result.duration > 0
         assert result.sample_rate > 0
@@ -264,12 +171,8 @@ class TestAudioAnalyzer:
 
     def test_analyze_audio_with_types(self) -> None:
         """Test audio analysis with specific types."""
-        analysis_types = [
-            AudioAnalysisType.EMOTION_DETECTION,
-            AudioAnalysisType.SPEAKER_IDENTIFICATION,
-        ]
+        analysis_types = [AudioAnalysisType.EMOTION_DETECTION, AudioAnalysisType.SPEAKER_IDENTIFICATION]
         result = self.analyzer.analyze_audio(self.sample_audio_data, analysis_types)
-
         assert result.analysis_types == analysis_types
         assert result.emotion_analysis is not None
         assert len(result.speaker_profiles) > 0
@@ -277,7 +180,6 @@ class TestAudioAnalyzer:
     def test_emotion_analysis_properties(self) -> None:
         """Test emotion analysis properties."""
         result = self.analyzer.analyze_audio(self.sample_audio_data)
-
         if result.emotion_analysis:
             emotion = result.emotion_analysis
             assert isinstance(emotion, EmotionAnalysis)
@@ -292,7 +194,6 @@ class TestAudioAnalyzer:
     def test_speaker_profile_properties(self) -> None:
         """Test speaker profile properties."""
         result = self.analyzer.analyze_audio(self.sample_audio_data)
-
         if result.speaker_profiles:
             speaker = result.speaker_profiles[0]
             assert isinstance(speaker, SpeakerProfile)
@@ -306,7 +207,6 @@ class TestAudioAnalyzer:
     def test_audio_quality_metrics(self) -> None:
         """Test audio quality metrics."""
         result = self.analyzer.analyze_audio(self.sample_audio_data)
-
         if result.audio_quality:
             quality = result.audio_quality
             assert isinstance(quality, AudioQualityMetrics)
@@ -319,7 +219,6 @@ class TestAudioAnalyzer:
     def test_acoustic_features(self) -> None:
         """Test acoustic features."""
         result = self.analyzer.analyze_audio(self.sample_audio_data)
-
         if result.acoustic_features:
             features = result.acoustic_features
             assert isinstance(features, AcousticFeatures)
@@ -335,7 +234,6 @@ class TestAudioAnalyzer:
     def test_background_noise_analysis(self) -> None:
         """Test background noise analysis."""
         result = self.analyzer.analyze_audio(self.sample_audio_data)
-
         if result.background_noise:
             noise = result.background_noise
             assert isinstance(noise, BackgroundNoiseAnalysis)
@@ -346,7 +244,6 @@ class TestAudioAnalyzer:
     def test_speech_rate_analysis(self) -> None:
         """Test speech rate analysis."""
         result = self.analyzer.analyze_audio(self.sample_audio_data)
-
         if result.speech_rate:
             rate = result.speech_rate
             assert isinstance(rate, SpeechRateAnalysis)
@@ -362,7 +259,6 @@ class TestAudioAnalyzer:
     def test_silence_detection(self) -> None:
         """Test silence detection."""
         result = self.analyzer.analyze_audio(self.sample_audio_data)
-
         if result.silence_detection:
             silence = result.silence_detection
             assert isinstance(silence, SilenceDetection)
@@ -375,7 +271,6 @@ class TestAudioAnalyzer:
     def test_analysis_result_properties(self) -> None:
         """Test analysis result properties."""
         result = self.analyzer.analyze_audio(self.sample_audio_data)
-
         assert result.primary_emotion in EmotionType
         assert isinstance(result.is_high_quality_audio, bool)
         assert isinstance(result.has_multiple_speakers, bool)
@@ -385,30 +280,26 @@ class TestAudioAnalyzer:
         """Test analysis summary generation."""
         result = self.analyzer.analyze_audio(self.sample_audio_data)
         summary = self.analyzer.get_analysis_summary(result)
-
-        assert "audio_info" in summary
-        assert "analysis_summary" in summary
-        assert "processing_info" in summary
+        assert 'audio_info' in summary
+        assert 'analysis_summary' in summary
+        assert 'processing_info' in summary
 
     def test_processing_stats(self) -> None:
         """Test processing statistics."""
         self.analyzer.analyze_audio(self.sample_audio_data)
         stats = self.analyzer.get_processing_stats()
-
-        assert stats["total_audio_processed"] == 1
-        assert stats["total_processing_time"] > 0
-        assert stats["average_processing_time"] > 0
+        assert stats['total_audio_processed'] == 1
+        assert stats['total_processing_time'] > 0
+        assert stats['average_processing_time'] > 0
 
     def test_clear_stats(self) -> None:
         """Test clearing statistics."""
         self.analyzer.analyze_audio(self.sample_audio_data)
         self.analyzer.clear_stats()
         stats = self.analyzer.get_processing_stats()
-
-        assert stats["total_audio_processed"] == 0
-        assert stats["total_processing_time"] == 0.0
-        assert stats["average_processing_time"] == 0.0
-
+        assert stats['total_audio_processed'] == 0
+        assert stats['total_processing_time'] == 0.0
+        assert stats['average_processing_time'] == 0.0
 
 class TestVideoAnalyzer:
     """Test suite for video analysis capabilities."""
@@ -420,18 +311,17 @@ class TestVideoAnalyzer:
 
     def _create_sample_video_data(self) -> bytes:
         """Create sample video data for testing."""
-        return b"fake_video_data_for_testing"
+        return b'fake_video_data_for_testing'
 
     def test_analyzer_initialization(self) -> None:
         """Test video analyzer initialization."""
         assert self.analyzer.config == {}
         assert not self.analyzer.models_loaded
-        assert self.analyzer.processing_stats["total_videos_processed"] == 0
+        assert self.analyzer.processing_stats['total_videos_processed'] == 0
 
     def test_analyze_video_basic(self) -> None:
         """Test basic video analysis."""
         result = self.analyzer.analyze_video(self.sample_video_data)
-
         assert isinstance(result, VideoAnalysisResult)
         assert result.duration > 0
         assert result.fps > 0
@@ -443,12 +333,8 @@ class TestVideoAnalyzer:
 
     def test_analyze_video_with_types(self) -> None:
         """Test video analysis with specific types."""
-        analysis_types = [
-            VideoAnalysisType.SCENE_DETECTION,
-            VideoAnalysisType.MOTION_ANALYSIS,
-        ]
+        analysis_types = [VideoAnalysisType.SCENE_DETECTION, VideoAnalysisType.MOTION_ANALYSIS]
         result = self.analyzer.analyze_video(self.sample_video_data, analysis_types)
-
         assert result.analysis_types == analysis_types
         assert len(result.scene_segments) > 0
         assert len(result.motion_analysis) > 0
@@ -456,7 +342,6 @@ class TestVideoAnalyzer:
     def test_scene_segment_properties(self) -> None:
         """Test scene segment properties."""
         result = self.analyzer.analyze_video(self.sample_video_data)
-
         if result.scene_segments:
             segment = result.scene_segments[0]
             assert isinstance(segment, SceneSegment)
@@ -470,7 +355,6 @@ class TestVideoAnalyzer:
     def test_motion_analysis_properties(self) -> None:
         """Test motion analysis properties."""
         result = self.analyzer.analyze_video(self.sample_video_data)
-
         if result.motion_analysis:
             motion = result.motion_analysis[0]
             assert isinstance(motion, MotionAnalysis)
@@ -486,7 +370,6 @@ class TestVideoAnalyzer:
     def test_object_track_properties(self) -> None:
         """Test object track properties."""
         result = self.analyzer.analyze_video(self.sample_video_data)
-
         if result.object_tracks:
             track = result.object_tracks[0]
             assert isinstance(track, ObjectTrack)
@@ -501,7 +384,6 @@ class TestVideoAnalyzer:
     def test_visual_classification_properties(self) -> None:
         """Test visual classification properties."""
         result = self.analyzer.analyze_video(self.sample_video_data)
-
         if result.visual_classification:
             classification = result.visual_classification
             assert isinstance(classification, VisualClassification)
@@ -514,7 +396,6 @@ class TestVideoAnalyzer:
     def test_temporal_features_properties(self) -> None:
         """Test temporal features properties."""
         result = self.analyzer.analyze_video(self.sample_video_data)
-
         if result.temporal_features:
             features = result.temporal_features
             assert isinstance(features, TemporalFeatures)
@@ -533,11 +414,10 @@ class TestVideoAnalyzer:
     def test_activity_recognition_properties(self) -> None:
         """Test activity recognition properties."""
         result = self.analyzer.analyze_video(self.sample_video_data)
-
         if result.activity_recognition:
             activity = result.activity_recognition
             assert isinstance(activity, VideoActivityRecognition)
-            assert all(a in VideoActivityType for a in activity.detected_activities)
+            assert all((a in VideoActivityType for a in activity.detected_activities))
             assert activity.primary_activity is None or activity.primary_activity in VideoActivityType
             assert 0.0 <= activity.activity_confidence <= 1.0
             assert activity.activity_duration >= 0
@@ -548,7 +428,6 @@ class TestVideoAnalyzer:
     def test_shot_boundary_properties(self) -> None:
         """Test shot boundary properties."""
         result = self.analyzer.analyze_video(self.sample_video_data)
-
         if result.shot_boundaries:
             boundary = result.shot_boundaries[0]
             assert isinstance(boundary, ShotBoundary)
@@ -562,7 +441,6 @@ class TestVideoAnalyzer:
     def test_camera_movement_properties(self) -> None:
         """Test camera movement properties."""
         result = self.analyzer.analyze_video(self.sample_video_data)
-
         if result.camera_movements:
             movement = result.camera_movements[0]
             assert isinstance(movement, CameraMovement)
@@ -578,7 +456,6 @@ class TestVideoAnalyzer:
     def test_analysis_result_properties(self) -> None:
         """Test analysis result properties."""
         result = self.analyzer.analyze_video(self.sample_video_data)
-
         assert result.scene_count >= 0
         assert result.average_scene_length >= 0
         assert isinstance(result.is_high_motion_video, bool)
@@ -588,30 +465,26 @@ class TestVideoAnalyzer:
         """Test analysis summary generation."""
         result = self.analyzer.analyze_video(self.sample_video_data)
         summary = self.analyzer.get_analysis_summary(result)
-
-        assert "video_info" in summary
-        assert "analysis_summary" in summary
-        assert "processing_info" in summary
+        assert 'video_info' in summary
+        assert 'analysis_summary' in summary
+        assert 'processing_info' in summary
 
     def test_processing_stats(self) -> None:
         """Test processing statistics."""
         self.analyzer.analyze_video(self.sample_video_data)
         stats = self.analyzer.get_processing_stats()
-
-        assert stats["total_videos_processed"] == 1
-        assert stats["total_processing_time"] > 0
-        assert stats["average_processing_time"] > 0
+        assert stats['total_videos_processed'] == 1
+        assert stats['total_processing_time'] > 0
+        assert stats['average_processing_time'] > 0
 
     def test_clear_stats(self) -> None:
         """Test clearing statistics."""
         self.analyzer.analyze_video(self.sample_video_data)
         self.analyzer.clear_stats()
         stats = self.analyzer.get_processing_stats()
-
-        assert stats["total_videos_processed"] == 0
-        assert stats["total_processing_time"] == 0.0
-        assert stats["average_processing_time"] == 0.0
-
+        assert stats['total_videos_processed'] == 0
+        assert stats['total_processing_time'] == 0.0
+        assert stats['average_processing_time'] == 0.0
 
 class TestCrossModalCorrelator:
     """Test suite for cross-modal correlation capabilities."""
@@ -623,43 +496,17 @@ class TestCrossModalCorrelator:
 
     def _create_sample_modalities(self) -> dict[str, ModalityData]:
         """Create sample modality data for testing."""
-        return {
-            "text": ModalityData(
-                modality_type="text",
-                content="This is a test text about a person talking in a video.",
-                timestamp=0.0,
-                confidence=0.9,
-            ),
-            "audio": ModalityData(
-                modality_type="audio",
-                content=b"fake_audio_data",
-                timestamp=0.0,
-                confidence=0.8,
-            ),
-            "video": ModalityData(
-                modality_type="video",
-                content=b"fake_video_data",
-                timestamp=0.0,
-                confidence=0.85,
-            ),
-            "image": ModalityData(
-                modality_type="image",
-                content=b"fake_image_data",
-                timestamp=0.0,
-                confidence=0.9,
-            ),
-        }
+        return {'text': ModalityData(modality_type='text', content='This is a test text about a person talking in a video.', timestamp=0.0, confidence=0.9), 'audio': ModalityData(modality_type='audio', content=b'fake_audio_data', timestamp=0.0, confidence=0.8), 'video': ModalityData(modality_type='video', content=b'fake_video_data', timestamp=0.0, confidence=0.85), 'image': ModalityData(modality_type='image', content=b'fake_image_data', timestamp=0.0, confidence=0.9)}
 
     def test_correlator_initialization(self) -> None:
         """Test cross-modal correlator initialization."""
         assert self.correlator.config == {}
         assert not self.correlator.models_loaded
-        assert self.correlator.processing_stats["total_analyses"] == 0
+        assert self.correlator.processing_stats['total_analyses'] == 0
 
     def test_analyze_cross_modal_basic(self) -> None:
         """Test basic cross-modal analysis."""
         result = self.correlator.analyze_cross_modal(self.sample_modalities)
-
         assert isinstance(result, CrossModalAnalysisResult)
         assert result.modalities == self.sample_modalities
         assert len(result.correlations) > 0
@@ -668,23 +515,15 @@ class TestCrossModalCorrelator:
 
     def test_analyze_cross_modal_with_types(self) -> None:
         """Test cross-modal analysis with specific types."""
-        analysis_types = [
-            CorrelationType.TEXT_AUDIO_EMOTION,
-            CorrelationType.TEXT_IMAGE_CONTENT,
-        ]
+        analysis_types = [CorrelationType.TEXT_AUDIO_EMOTION, CorrelationType.TEXT_IMAGE_CONTENT]
         result = self.correlator.analyze_cross_modal(self.sample_modalities, analysis_types)
-
         assert result.analysis_types == analysis_types
         correlation_types = [c.correlation_type for c in result.correlations]
-        assert (
-            CorrelationType.TEXT_AUDIO_EMOTION in correlation_types
-            or CorrelationType.TEXT_IMAGE_CONTENT in correlation_types
-        )
+        assert CorrelationType.TEXT_AUDIO_EMOTION in correlation_types or CorrelationType.TEXT_IMAGE_CONTENT in correlation_types
 
     def test_cross_modal_correlation_properties(self) -> None:
         """Test cross-modal correlation properties."""
         result = self.correlator.analyze_cross_modal(self.sample_modalities)
-
         if result.correlations:
             correlation = result.correlations[0]
             assert isinstance(correlation, CrossModalCorrelation)
@@ -700,7 +539,6 @@ class TestCrossModalCorrelator:
     def test_multimodal_insight_properties(self) -> None:
         """Test multimodal insight properties."""
         result = self.correlator.analyze_cross_modal(self.sample_modalities)
-
         if result.insights:
             insight = result.insights[0]
             assert isinstance(insight, MultimodalInsight)
@@ -713,7 +551,6 @@ class TestCrossModalCorrelator:
     def test_content_verification_properties(self) -> None:
         """Test content verification properties."""
         result = self.correlator.analyze_cross_modal(self.sample_modalities)
-
         if result.content_verification:
             verification = result.content_verification
             assert isinstance(verification, ContentVerification)
@@ -727,7 +564,6 @@ class TestCrossModalCorrelator:
     def test_analysis_result_properties(self) -> None:
         """Test analysis result properties."""
         result = self.correlator.analyze_cross_modal(self.sample_modalities)
-
         assert isinstance(result.has_strong_correlations, bool)
         assert isinstance(result.has_inconsistencies, bool)
         assert isinstance(result.is_content_verified, bool)
@@ -737,203 +573,133 @@ class TestCrossModalCorrelator:
         """Test analysis summary generation."""
         result = self.correlator.analyze_cross_modal(self.sample_modalities)
         summary = self.correlator.get_analysis_summary(result)
-
-        assert "modalities_analyzed" in summary
-        assert "correlation_summary" in summary
-        assert "insights_summary" in summary
-        assert "verification_summary" in summary
-        assert "processing_info" in summary
+        assert 'modalities_analyzed' in summary
+        assert 'correlation_summary' in summary
+        assert 'insights_summary' in summary
+        assert 'verification_summary' in summary
+        assert 'processing_info' in summary
 
     def test_processing_stats(self) -> None:
         """Test processing statistics."""
         self.correlator.analyze_cross_modal(self.sample_modalities)
         stats = self.correlator.get_processing_stats()
-
-        assert stats["total_analyses"] == 1
-        assert stats["total_processing_time"] > 0
-        assert stats["average_processing_time"] > 0
+        assert stats['total_analyses'] == 1
+        assert stats['total_processing_time'] > 0
+        assert stats['average_processing_time'] > 0
 
     def test_clear_stats(self) -> None:
         """Test clearing statistics."""
         self.correlator.analyze_cross_modal(self.sample_modalities)
         self.correlator.clear_stats()
         stats = self.correlator.get_processing_stats()
-
-        assert stats["total_analyses"] == 0
-        assert stats["total_processing_time"] == 0.0
-        assert stats["average_processing_time"] == 0.0
-
+        assert stats['total_analyses'] == 0
+        assert stats['total_processing_time'] == 0.0
+        assert stats['average_processing_time'] == 0.0
 
 class TestGlobalInstances:
     """Test suite for global analyzer instances."""
 
     def test_global_image_analyzer(self) -> None:
         """Test global image analyzer functionality."""
-        from ultimate_discord_intelligence_bot.core.multimodal import (
-            get_global_image_analyzer,
-            set_global_image_analyzer,
-        )
-
-        # Test getting global analyzer
+        from platform.core.multimodal import get_global_image_analyzer, set_global_image_analyzer
         analyzer1 = get_global_image_analyzer()
         assert isinstance(analyzer1, ImageAnalyzer)
-
-        # Test setting global analyzer
-        new_analyzer = ImageAnalyzer({"test": "config"})
+        new_analyzer = ImageAnalyzer({'test': 'config'})
         set_global_image_analyzer(new_analyzer)
         analyzer2 = get_global_image_analyzer()
         assert analyzer2 is new_analyzer
-        assert analyzer2.config == {"test": "config"}
+        assert analyzer2.config == {'test': 'config'}
 
     def test_global_audio_analyzer(self) -> None:
         """Test global audio analyzer functionality."""
-        from ultimate_discord_intelligence_bot.core.multimodal import (
-            get_global_audio_analyzer,
-            set_global_audio_analyzer,
-        )
-
-        # Test getting global analyzer
+        from platform.core.multimodal import get_global_audio_analyzer, set_global_audio_analyzer
         analyzer1 = get_global_audio_analyzer()
         assert isinstance(analyzer1, AudioAnalyzer)
-
-        # Test setting global analyzer
-        new_analyzer = AudioAnalyzer({"test": "config"})
+        new_analyzer = AudioAnalyzer({'test': 'config'})
         set_global_audio_analyzer(new_analyzer)
         analyzer2 = get_global_audio_analyzer()
         assert analyzer2 is new_analyzer
-        assert analyzer2.config == {"test": "config"}
+        assert analyzer2.config == {'test': 'config'}
 
     def test_global_video_analyzer(self) -> None:
         """Test global video analyzer functionality."""
-        from ultimate_discord_intelligence_bot.core.multimodal import (
-            get_global_video_analyzer,
-            set_global_video_analyzer,
-        )
-
-        # Test getting global analyzer
+        from platform.core.multimodal import get_global_video_analyzer, set_global_video_analyzer
         analyzer1 = get_global_video_analyzer()
         assert isinstance(analyzer1, VideoAnalyzer)
-
-        # Test setting global analyzer
-        new_analyzer = VideoAnalyzer({"test": "config"})
+        new_analyzer = VideoAnalyzer({'test': 'config'})
         set_global_video_analyzer(new_analyzer)
         analyzer2 = get_global_video_analyzer()
         assert analyzer2 is new_analyzer
-        assert analyzer2.config == {"test": "config"}
+        assert analyzer2.config == {'test': 'config'}
 
     def test_global_cross_modal_correlator(self) -> None:
         """Test global cross-modal correlator functionality."""
-        from ultimate_discord_intelligence_bot.core.multimodal import (
-            get_global_cross_modal_correlator,
-            set_global_cross_modal_correlator,
-        )
-
-        # Test getting global correlator
+        from platform.core.multimodal import get_global_cross_modal_correlator, set_global_cross_modal_correlator
         correlator1 = get_global_cross_modal_correlator()
         assert isinstance(correlator1, CrossModalCorrelator)
-
-        # Test setting global correlator
-        new_correlator = CrossModalCorrelator({"test": "config"})
+        new_correlator = CrossModalCorrelator({'test': 'config'})
         set_global_cross_modal_correlator(new_correlator)
         correlator2 = get_global_cross_modal_correlator()
         assert correlator2 is new_correlator
-        assert correlator2.config == {"test": "config"}
-
+        assert correlator2.config == {'test': 'config'}
 
 class TestConvenienceFunctions:
     """Test suite for convenience functions."""
 
     def test_image_convenience_functions(self) -> None:
         """Test image analysis convenience functions."""
-        from ultimate_discord_intelligence_bot.core.multimodal import (
-            analyze_image,
-            analyze_image_from_file,
-        )
-
-        # Test with sample data
-        sample_data = b"fake_image_data"
-        with patch("src.core.multimodal.get_global_image_analyzer") as mock_get_analyzer:
+        from platform.core.multimodal import analyze_image, analyze_image_from_file
+        sample_data = b'fake_image_data'
+        with patch('src.core.multimodal.get_global_image_analyzer') as mock_get_analyzer:
             mock_analyzer = Mock()
             mock_result = Mock()
             mock_analyzer.analyze_image.return_value = mock_result
             mock_get_analyzer.return_value = mock_analyzer
-
-            # Test analyze_image
             result = analyze_image(sample_data)
             mock_analyzer.analyze_image.assert_called_once_with(sample_data, None)
             assert result is mock_result
-
-            # Test analyze_image_from_file
-            result = analyze_image_from_file("test.jpg")
-            mock_analyzer.analyze_image_from_file.assert_called_once_with("test.jpg", None)
+            result = analyze_image_from_file('test.jpg')
+            mock_analyzer.analyze_image_from_file.assert_called_once_with('test.jpg', None)
 
     def test_audio_convenience_functions(self) -> None:
         """Test audio analysis convenience functions."""
-        from ultimate_discord_intelligence_bot.core.multimodal import (
-            analyze_audio,
-            analyze_audio_from_file,
-        )
-
-        # Test with sample data
-        sample_data = b"fake_audio_data"
-        with patch("src.core.multimodal.get_global_audio_analyzer") as mock_get_analyzer:
+        from platform.core.multimodal import analyze_audio, analyze_audio_from_file
+        sample_data = b'fake_audio_data'
+        with patch('src.core.multimodal.get_global_audio_analyzer') as mock_get_analyzer:
             mock_analyzer = Mock()
             mock_result = Mock()
             mock_analyzer.analyze_audio.return_value = mock_result
             mock_get_analyzer.return_value = mock_analyzer
-
-            # Test analyze_audio
             result = analyze_audio(sample_data)
             mock_analyzer.analyze_audio.assert_called_once_with(sample_data, None, None)
             assert result is mock_result
-
-            # Test analyze_audio_from_file
-            result = analyze_audio_from_file("test.wav")
-            mock_analyzer.analyze_audio_from_file.assert_called_once_with("test.wav", None, None)
+            result = analyze_audio_from_file('test.wav')
+            mock_analyzer.analyze_audio_from_file.assert_called_once_with('test.wav', None, None)
 
     def test_video_convenience_functions(self) -> None:
         """Test video analysis convenience functions."""
-        from ultimate_discord_intelligence_bot.core.multimodal import (
-            analyze_video,
-            analyze_video_from_file,
-        )
-
-        # Test with sample data
-        sample_data = b"fake_video_data"
-        with patch("src.core.multimodal.get_global_video_analyzer") as mock_get_analyzer:
+        from platform.core.multimodal import analyze_video, analyze_video_from_file
+        sample_data = b'fake_video_data'
+        with patch('src.core.multimodal.get_global_video_analyzer') as mock_get_analyzer:
             mock_analyzer = Mock()
             mock_result = Mock()
             mock_analyzer.analyze_video.return_value = mock_result
             mock_get_analyzer.return_value = mock_analyzer
-
-            # Test analyze_video
             result = analyze_video(sample_data)
             mock_analyzer.analyze_video.assert_called_once_with(sample_data, None)
             assert result is mock_result
-
-            # Test analyze_video_from_file
-            result = analyze_video_from_file("test.mp4")
-            mock_analyzer.analyze_video_from_file.assert_called_once_with("test.mp4", None)
+            result = analyze_video_from_file('test.mp4')
+            mock_analyzer.analyze_video_from_file.assert_called_once_with('test.mp4', None)
 
     def test_cross_modal_convenience_function(self) -> None:
         """Test cross-modal analysis convenience function."""
-        from ultimate_discord_intelligence_bot.core.multimodal import (
-            analyze_cross_modal,
-        )
-
-        # Test with sample data
-        sample_modalities = {
-            "text": ModalityData("text", "test content", timestamp=0.0),
-            "audio": ModalityData("audio", b"test audio", timestamp=0.0),
-        }
-
-        with patch("src.core.multimodal.get_global_cross_modal_correlator") as mock_get_correlator:
+        from platform.core.multimodal import analyze_cross_modal
+        sample_modalities = {'text': ModalityData('text', 'test content', timestamp=0.0), 'audio': ModalityData('audio', b'test audio', timestamp=0.0)}
+        with patch('src.core.multimodal.get_global_cross_modal_correlator') as mock_get_correlator:
             mock_correlator = Mock()
             mock_result = Mock()
             mock_correlator.analyze_cross_modal.return_value = mock_result
             mock_get_correlator.return_value = mock_correlator
-
-            # Test analyze_cross_modal
             result = analyze_cross_modal(sample_modalities)
             mock_correlator.analyze_cross_modal.assert_called_once_with(sample_modalities, None)
             assert result is mock_result
