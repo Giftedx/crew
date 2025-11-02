@@ -382,7 +382,7 @@ class CrossPlatformNarrativeTracker:
             events = []
             for i, item in enumerate(sorted_items):
                 event = NarrativeEvent(
-                    event_id=f"event_{topic_cluster['id']}_{i}"
+                    event_id=f"event_{topic_cluster['id']}_{i}",
                     primary_content=item,
                     related_content=[],
                     narrative_type=self._classify_narrative_type(item, i, len(sorted_items)),

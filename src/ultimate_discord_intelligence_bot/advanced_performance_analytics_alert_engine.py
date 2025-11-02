@@ -248,7 +248,7 @@ class AdvancedPerformanceAnalyticsAlertEngine:
                 lookback_hours=lookback_hours, include_optimization=False
             )
             if "error" in analytics_results:
-                logger.error(f"Failed to get analytics results: {analytics_results['error']}"
+                logger.error(f"Failed to get analytics results: {analytics_results['error']}")
                 return []
             alerts: list[PerformanceAlert] = []
             for rule_id, rule in self.alert_rules.items():

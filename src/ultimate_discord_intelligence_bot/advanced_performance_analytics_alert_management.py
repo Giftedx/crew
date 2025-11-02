@@ -390,7 +390,7 @@ class AdvancedPerformanceAnalyticsAlertManager:
                 lookback_hours=24, include_optimization=True
             )
         )
-        logger.info(f"Policy-triggered optimization completed: {optimization_results.get('status', 'unknown')}"
+        logger.info(f"Policy-triggered optimization completed: {optimization_results.get('status', 'unknown')}")
 
     async def get_management_dashboard(self) -> dict[str, Any]:
         """Get comprehensive management dashboard data.

@@ -80,7 +80,7 @@ class ConsciousnessLevelDecisionMaking:
         self, decision_context: dict[str, Any], options: list[dict[str, Any]]
     ) -> dict[str, Any]:
         try:
-            logger.info(f"Making conscious decision: {decision_context.get('type', 'unknown')}"
+            logger.info(f"Making conscious decision: {decision_context.get('type', 'unknown')}")
             decision_result: dict[str, Any] = {
                 "decision_id": "decision",
                 "context": decision_context,

@@ -693,7 +693,7 @@ class PromptEngine:
         if self.memory:
             hits = self.memory.retrieve(query, limit=k, metadata=metadata)
             for idx, hit in enumerate(hits, 1):
-                context_blocks.append(f"[{idx}] {hit['text']}"
+                context_blocks.append(f"[{idx}] {hit['text']}")
                 meta = hit.get("metadata", {})
                 src = meta.get("source")
                 ts = meta.get("ts")

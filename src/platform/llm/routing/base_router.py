@@ -159,7 +159,7 @@ class CostAwareRouter(BaseRouter):
                 estimated_cost=model_info["cost"],
                 estimated_latency=model_info["latency"],
                 confidence=model_info["quality"],
-                reasoning=f"Cost-optimized routing selected {selected_model} (cost: ${model_info['cost']:.4f}, quality: {model_info['quality']:.2f})"
+                reasoning=f"Cost-optimized routing selected {selected_model} (cost: ${model_info['cost']:.4f}, quality: {model_info['quality']:.2f})",
                 request_id=request.request_id or "unknown",
                 strategy_used=self.strategy_name,
                 timestamp=time.time(),

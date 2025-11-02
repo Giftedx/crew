@@ -100,7 +100,7 @@ class SafetyManager:
                     self._stats["messages_filtered"] += 1
                     self._stats["alerts_generated"] += 1
                     return StepResult.fail(
-                        f"Content flagged as {filter_result.severity.value}: {(filter_result.suggestions[0] if filter_result.suggestions else 'Inappropriate content detected')}"
+                        f"Content flagged as {filter_result.severity.value}: {(filter_result.suggestions[0] if filter_result.suggestions else 'Inappropriate content detected')}",
                         data={"safety_check": "failed", "reason": "content_filtered", "filter_result": filter_result},
                     )
             self._stats["total_messages_processed"] += 1

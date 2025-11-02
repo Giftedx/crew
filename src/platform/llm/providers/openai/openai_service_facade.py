@@ -436,7 +436,7 @@ class OpenAIServiceFacade:
                     }
                 )
             else:
-                return StepResult.fail(f"Fallback analysis failed: {result.get('error', 'Unknown error')}"
+                return StepResult.fail(f"Fallback analysis failed: {result.get('error', 'Unknown error')}")
         except Exception as e:
             logger.error(f"Fallback analysis failed: {e}")
             return StepResult.fail(f"Fallback analysis failed: {e}")

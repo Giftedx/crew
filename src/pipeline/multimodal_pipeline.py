@@ -147,7 +147,7 @@ class MultimodalContentPipeline:
             validation_result = await self._validate_inputs(url, tenant, workspace)
             if not validation_result.success:
                 result.errors.append(f"Input validation failed: {validation_result.error}")
-                return StepResult.fail(f"Pipeline failed: {', '.join(result.errors)}"
+                return StepResult.fail(f"Pipeline failed: {', '.join(result.errors)}")
             stage_results = await self._execute_stages(url, tenant, workspace, creator_name, episode_title, result)
             result.stage_results = stage_results
             result.total_duration = time.time() - start_time
@@ -158,7 +158,7 @@ class MultimodalContentPipeline:
                 return StepResult.ok(data=result)
             else:
                 logger.error(f"Pipeline failed after {result.total_duration:.2f}s")
-                return StepResult.fail(f"Pipeline failed: {', '.join(result.errors)}"
+                return StepResult.fail(f"Pipeline failed: {', '.join(result.errors)}")
         except Exception as e:
             result.total_duration = time.time() - start_time
             result.errors.append(f"Pipeline exception: {e!s}")

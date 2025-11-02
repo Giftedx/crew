@@ -2557,7 +2557,7 @@ class AutonomousIntelligenceOrchestrator:
                     text=knowledge_payload.get("analysis_summary", ""),
                     metadata=knowledge_payload,
                     index="autointel_analysis",
-                    tags=[f"platform:{knowledge_payload.get('platform', 'unknown')}"
+                    tags=[f"platform:{knowledge_payload.get('platform', 'unknown')}"]
                 )
             )
             hipporag_task = asyncio.create_task(
@@ -2566,7 +2566,7 @@ class AutonomousIntelligenceOrchestrator:
                     text=knowledge_payload.get("analysis_summary", ""),
                     metadata=knowledge_payload,
                     index="continual_autointel",
-                    tags=[f"deception_score:{deception_data.get('deception_score', 0.0):.1f}"
+                    tags=[f"deception_score:{deception_data.get('deception_score', 0.0):.1f}"],
                     consolidate=True,
                 )
             )

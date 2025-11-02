@@ -505,7 +505,7 @@ class ArtifactPublishingService:
             duration = report_data["duration"]
             content_lines.append(f"• Duration: {duration:.1f}s")
         if "platform" in report_data:
-            content_lines.append(f"• Platform: {report_data['platform']}"
+            content_lines.append(f"• Platform: {report_data['platform']}")
         return "\n".join(content_lines)
 
     def _format_highlight_summary(self, highlights: list[dict[str, Any]], episode_info: dict[str, Any] | None) -> str:
