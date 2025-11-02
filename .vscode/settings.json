@@ -19,7 +19,14 @@
     "files.exclude": {
         "**/__pycache__": true,
         "**/.pytest_cache": true,
-        "**/*.bak": true
+        "**/*.bak": true,
+        "**/src/core/**": true,
+        "**/src/ai/**": true,
+        "**/src/obs/**": true,
+        "**/src/ingest/**": true,
+        "**/src/analysis/**": true,
+        "**/src/memory/**": true,
+        "**/src/services/**": true
     },
     "[python]": {
         "editor.defaultFormatter": "charliermarsh.ruff"

@@ -17,8 +17,9 @@ The file `src/core/http_utils.py` was deleted during Phase 8 as part of the lega
    - Time utilities: Inlined `default_utc_now` in registry.py
 
 2. **Updated VS Code Settings**: Modified `.vscode/settings.json` to:
-   - Exclude deleted legacy directories from file watching
-   - Exclude deleted directories from search
+   - Exclude deleted legacy directories from file watching (`files.watcherExclude`)
+   - Exclude deleted directories from search (`search.exclude`)
+   - Exclude deleted directories from file explorer (`files.exclude`)
    - Add `.bak` files to exclude patterns
 
 3. **Updated Documentation**: Updated all documentation references from `src/core/http_utils.py` → `platform.http.http_utils`
@@ -86,4 +87,6 @@ This should succeed without errors.
 ✅ **VS Code settings updated**  
 ✅ **Documentation updated**  
 ⚠️ **VS Code may need window reload** (normal after file deletions)
+
+
 
