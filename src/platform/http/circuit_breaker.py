@@ -20,4 +20,7 @@ from platform.http.circuit_breaker_canonical import (
 def get_circuit_breaker_sync(name: str, config: CircuitConfig | None = None):
     """Get a circuit breaker synchronously."""
     return get_circuit_breaker_registry().get_circuit_breaker_sync(name, config)
-__all__ = ['CircuitBreaker', 'CircuitBreakerOpenError', 'CircuitBreakerRegistry', 'CircuitConfig', 'CircuitState', 'CircuitStats', 'circuit_breaker', 'get_circuit_breaker_registry', 'get_circuit_breaker_sync']
+# Alias for backward compatibility
+CircuitBreakerConfig = CircuitConfig
+
+__all__ = ['CircuitBreaker', 'CircuitBreakerConfig', 'CircuitBreakerOpenError', 'CircuitBreakerRegistry', 'CircuitConfig', 'CircuitState', 'CircuitStats', 'circuit_breaker', 'get_circuit_breaker_registry', 'get_circuit_breaker_sync']
