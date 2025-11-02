@@ -18,7 +18,8 @@
     "editor.formatOnSave": true,
     "files.exclude": {
         "**/__pycache__": true,
-        "**/.pytest_cache": true
+        "**/.pytest_cache": true,
+        "**/*.bak": true
     },
     "[python]": {
         "editor.defaultFormatter": "charliermarsh.ruff"
@@ -34,5 +35,27 @@
     "editor.semanticHighlighting.enabled": true,
     // Moderate type checking (can elevate to "strict" later)
     "python.analysis.typeCheckingMode": "basic",
-    "python-envs.pythonProjects": []
+    "python-envs.pythonProjects": [],
+    // Python path configuration for new 3-layer architecture
+    "python.analysis.extraPaths": [
+        "${workspaceFolder}/src"
+    ],
+    // Ignore deleted legacy directories in file search
+    "files.watcherExclude": {
+        "**/src/core/**": true,
+        "**/src/ai/**": true,
+        "**/src/obs/**": true,
+        "**/src/ingest/**": true,
+        "**/src/analysis/**": true,
+        "**/src/memory/**": true
+    },
+    // Search exclude patterns for deleted directories
+    "search.exclude": {
+        "**/src/core/**": true,
+        "**/src/ai/**": true,
+        "**/src/obs/**": true,
+        "**/src/ingest/**": true,
+        "**/src/analysis/**": true,
+        "**/src/memory/**": true
+    }
 }
