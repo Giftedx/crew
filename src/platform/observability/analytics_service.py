@@ -16,7 +16,7 @@ from dataclasses import dataclass, field
 from platform.observability.metrics import get_metrics
 from typing import TYPE_CHECKING, Any
 
-from ..step_result import StepResult
+from platform.core.step_result import StepResult
 
 
 if TYPE_CHECKING:
