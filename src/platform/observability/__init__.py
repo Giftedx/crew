@@ -1,6 +1,7 @@
-"""Monitoring and observability package for production deployments."""
+"""Observability package (lightweight).
 
-from .production_monitor import ProductionMonitor, get_production_monitor
+Avoid eager submodule imports to keep ``import obs.metrics`` cheap and free of
+optional dependencies during tests. Import submodules explicitly where needed.
+"""
 
-
-__all__ = ["ProductionMonitor", "get_production_monitor"]
+__all__ = ["incident", "logging", "metrics", "slo", "tracing"]

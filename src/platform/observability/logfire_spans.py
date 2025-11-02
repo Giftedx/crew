@@ -6,18 +6,24 @@ Lightweight wrappers to add Logfire spans when enabled, with no overhead when di
 from __future__ import annotations
 
 import logging
-from platform.config.configuration import get_config
 from typing import TYPE_CHECKING, Any
+
+from core.secure_config import get_config
 
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable
     from contextlib import AbstractContextManager
+
+
 logger = logging.getLogger(__name__)
+
+# Track if logfire is available
 _LOGFIRE_AVAILABLE = False
 _logfire: Any = None
+
 try:
-    import logfire as _logfire_import
+    import logfire as _logfire_import  # type: ignore[import-not-found]
 
     _logfire = _logfire_import
     _LOGFIRE_AVAILABLE = True
@@ -46,12 +52,19 @@ def span(name: str, **attributes: Any) -> AbstractContextManager[Any]:
             return _logfire.span(name, **attributes)
         except Exception as exc:
             logger.debug("Logfire span creation failed: %s", exc)
+
+    # Fallback no-op context manager
     from contextlib import nullcontext
 
     return nullcontext()
 
 
-async def with_span_async(name: str, coro: Callable[..., Awaitable[Any]], *args: Any, **kwargs: Any) -> Any:
+async def with_span_async(
+    name: str,
+    coro: Callable[..., Awaitable[Any]],
+    *args: Any,
+    **kwargs: Any,
+) -> Any:
     """Execute async function with Logfire span if enabled.
 
     Args:
@@ -69,6 +82,8 @@ async def with_span_async(name: str, coro: Callable[..., Awaitable[Any]], *args:
                 return await coro(*args, **kwargs)
         except Exception as exc:
             logger.debug("Logfire span execution failed: %s", exc)
+            # Fall through to execute without span
+
     return await coro(*args, **kwargs)
 
 
@@ -81,6 +96,7 @@ def set_span_attribute(key: str, value: Any) -> None:
     """
     if is_logfire_enabled() and _logfire is not None:
         try:
+            # Logfire uses OpenTelemetry under the hood
             from opentelemetry import trace
 
             current_span = trace.get_current_span()

@@ -1,71 +1,36 @@
 """
-Advanced AI integration module for the Ultimate Discord Intelligence Bot.
+AI Module for Ultimate Discord Intelligence Bot
 
-Provides sophisticated AI capabilities including:
-- DSPy optimization framework for prompt engineering
-- Advanced agent planning patterns for multi-agent coordination
-- Integrated AI workflows with adaptive execution strategies
-- Performance monitoring and optimization
+Advanced AI capabilities including:
+- Contextual bandits with DoublyRobust and OffsetTree algorithms
+- Multi-domain orchestration and optimization
+- A/B testing framework and performance monitoring
+- AI-enhanced routing and performance optimization
 """
 
-from .agent_planner import (
-    Agent,
-    AgentCapability,
-    AgentPlanner,
-    CoordinationPattern,
-    ExecutionPlan,
-    PlanningContext,
-    PlanningStrategy,
-    Task,
-    TaskPriority,
-    TaskStatus,
-)
-from .ai_integration import (
-    AICapability,
-    AIIntegration,
-    AIResource,
-    AIWorkflow,
-    IntegrationMode,
-    WorkflowResult,
-)
-from .dspy_optimizer import (
-    DSPyOptimizer,
-    EvaluationDataset,
-    OptimizationConfig,
-    OptimizationMetric,
-    OptimizationResult,
-    OptimizationStrategy,
-    PromptTemplate,
-    PromptType,
+from .advanced_contextual_bandits import (
+    AdvancedBanditsOrchestrator,
+    BanditAction,
+    BanditContext,
+    BanditFeedback,
+    DoublyRobustBandit,
+    OffsetTreeBandit,
+    create_bandit_context,
+    get_orchestrator,
+    initialize_advanced_bandits,
+    simulate_reward,
 )
 
 
 __all__ = [
-    "AICapability",
-    # AI Integration
-    "AIIntegration",
-    "AIResource",
-    "AIWorkflow",
-    "Agent",
-    "AgentCapability",
-    # Agent Planning
-    "AgentPlanner",
-    "CoordinationPattern",
-    # DSPy Optimization
-    "DSPyOptimizer",
-    "EvaluationDataset",
-    "ExecutionPlan",
-    "IntegrationMode",
-    "OptimizationConfig",
-    "OptimizationMetric",
-    "OptimizationResult",
-    "OptimizationStrategy",
-    "PlanningContext",
-    "PlanningStrategy",
-    "PromptTemplate",
-    "PromptType",
-    "Task",
-    "TaskPriority",
-    "TaskStatus",
-    "WorkflowResult",
+    "AdvancedBanditsOrchestrator",
+    "BanditAction",
+    "BanditContext",
+    "BanditFeedback",
+    "DoublyRobustBandit",
+    "OffsetTreeBandit",
+    "create_bandit_context",
+    "get_orchestrator",
+    "initialize_advanced_bandits",
+    "simulate_reward",
 ]

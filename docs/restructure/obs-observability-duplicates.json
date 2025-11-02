@@ -1,0 +1,179 @@
+{
+  "source_directory": "src/obs",
+  "target_directory": "src/platform/observability",
+  "total_matching_names": 17,
+  "identical_files": 9,
+  "different_implementations": 8,
+  "duplicates": [
+    {
+      "filename": "slo.py",
+      "source_path": "src/obs/slo.py",
+      "target_path": "platform/observability/slo.py",
+      "md5_hash": "d8ef317aa85ee987776e6262f89a6665",
+      "target_hash": "d8ef317aa85ee987776e6262f89a6665",
+      "file_size": 853,
+      "target_size": 853,
+      "verified_identical": true
+    },
+    {
+      "filename": "enhanced_langsmith_integration.py",
+      "source_path": "src/obs/enhanced_langsmith_integration.py",
+      "target_path": "platform/observability/enhanced_langsmith_integration.py",
+      "md5_hash": "10f0626991b957732c83ab6c424f8e60",
+      "target_hash": "b214e5877aa11c9f61fbab4d2ae307cc",
+      "file_size": 14667,
+      "target_size": 13071,
+      "verified_identical": false
+    },
+    {
+      "filename": "logging.py",
+      "source_path": "src/obs/logging.py",
+      "target_path": "platform/observability/logging.py",
+      "md5_hash": "be3737c99b17cfa412c00ad381e4d029",
+      "target_hash": "be3737c99b17cfa412c00ad381e4d029",
+      "file_size": 1173,
+      "target_size": 1173,
+      "verified_identical": true
+    },
+    {
+      "filename": "cache_monitor.py",
+      "source_path": "src/obs/cache_monitor.py",
+      "target_path": "platform/observability/cache_monitor.py",
+      "md5_hash": "816be746c800ee4db4561835e69ca6d1",
+      "target_hash": "d926c40a4e878c4e7e8ca5795a89f775",
+      "file_size": 10854,
+      "target_size": 9867,
+      "verified_identical": false
+    },
+    {
+      "filename": "langsmith_integration.py",
+      "source_path": "src/obs/langsmith_integration.py",
+      "target_path": "platform/observability/langsmith_integration.py",
+      "md5_hash": "0e4ffd2ed128354681e6b553d63345aa",
+      "target_hash": "15fa2d45b9c79aeed65a3c33eb353b07",
+      "file_size": 17883,
+      "target_size": 15690,
+      "verified_identical": false
+    },
+    {
+      "filename": "enhanced_monitoring.py",
+      "source_path": "src/obs/enhanced_monitoring.py",
+      "target_path": "platform/observability/enhanced_monitoring.py",
+      "md5_hash": "a3e5ae88649b55110dbbc5abe00974c1",
+      "target_hash": "dccf4191886ce0976c9088c5256faee6",
+      "file_size": 38651,
+      "target_size": 33140,
+      "verified_identical": false
+    },
+    {
+      "filename": "metric_specs.py",
+      "source_path": "src/obs/metric_specs.py",
+      "target_path": "platform/observability/metric_specs.py",
+      "md5_hash": "b3d5021f7d28783fa2c529dcc4099382",
+      "target_hash": "b3d5021f7d28783fa2c529dcc4099382",
+      "file_size": 19397,
+      "target_size": 19397,
+      "verified_identical": true
+    },
+    {
+      "filename": "performance_baselines.py",
+      "source_path": "src/obs/performance_baselines.py",
+      "target_path": "platform/observability/performance_baselines.py",
+      "md5_hash": "6aa27ea4e54d855ffe4e4907513c5e4e",
+      "target_hash": "6aa27ea4e54d855ffe4e4907513c5e4e",
+      "file_size": 12928,
+      "target_size": 12928,
+      "verified_identical": true
+    },
+    {
+      "filename": "business_metrics.py",
+      "source_path": "src/obs/business_metrics.py",
+      "target_path": "platform/observability/business_metrics.py",
+      "md5_hash": "05a0bee47bc6aeca6b8c31c7e6517966",
+      "target_hash": "e53b34fbcba1439d3015c91a710df9b9",
+      "file_size": 4702,
+      "target_size": 4247,
+      "verified_identical": false
+    },
+    {
+      "filename": "metrics_endpoint.py",
+      "source_path": "src/obs/metrics_endpoint.py",
+      "target_path": "platform/observability/metrics_endpoint.py",
+      "md5_hash": "47c8e1912f850e83ad313f8a06289963",
+      "target_hash": "47c8e1912f850e83ad313f8a06289963",
+      "file_size": 2823,
+      "target_size": 2823,
+      "verified_identical": true
+    },
+    {
+      "filename": "logfire_spans.py",
+      "source_path": "src/obs/logfire_spans.py",
+      "target_path": "platform/observability/logfire_spans.py",
+      "md5_hash": "fe9cb38443ddadbd02c68c0593804b86",
+      "target_hash": "e20e4f1955a4170648760b864121c8d1",
+      "file_size": 2930,
+      "target_size": 2705,
+      "verified_identical": false
+    },
+    {
+      "filename": "metrics.py",
+      "source_path": "src/obs/metrics.py",
+      "target_path": "platform/observability/metrics.py",
+      "md5_hash": "c18dd46d455262eded6a488e2ed78fb7",
+      "target_hash": "35f5a872373dbf5c8692f4a4cb424e0c",
+      "file_size": 25814,
+      "target_size": 4389,
+      "verified_identical": false
+    },
+    {
+      "filename": "resource_monitor.py",
+      "source_path": "src/obs/resource_monitor.py",
+      "target_path": "platform/observability/resource_monitor.py",
+      "md5_hash": "6d73a35415eeaa6f5107b993aa674240",
+      "target_hash": "6d73a35415eeaa6f5107b993aa674240",
+      "file_size": 12015,
+      "target_size": 12015,
+      "verified_identical": true
+    },
+    {
+      "filename": "incident.py",
+      "source_path": "src/obs/incident.py",
+      "target_path": "platform/observability/incident.py",
+      "md5_hash": "639ace0de59f724483b199ed9a86bb1b",
+      "target_hash": "639ace0de59f724483b199ed9a86bb1b",
+      "file_size": 1523,
+      "target_size": 1523,
+      "verified_identical": true
+    },
+    {
+      "filename": "tracing.py",
+      "source_path": "src/obs/tracing.py",
+      "target_path": "platform/observability/tracing.py",
+      "md5_hash": "c64587c66054f5a78ee9e64798d41c79",
+      "target_hash": "c64587c66054f5a78ee9e64798d41c79",
+      "file_size": 7460,
+      "target_size": 7460,
+      "verified_identical": true
+    },
+    {
+      "filename": "performance_monitor.py",
+      "source_path": "src/obs/performance_monitor.py",
+      "target_path": "platform/observability/performance_monitor.py",
+      "md5_hash": "0168c62b6b46e949cfaca9ab6fd78bcb",
+      "target_hash": "0168c62b6b46e949cfaca9ab6fd78bcb",
+      "file_size": 11469,
+      "target_size": 11469,
+      "verified_identical": true
+    },
+    {
+      "filename": "logfire_config.py",
+      "source_path": "src/obs/logfire_config.py",
+      "target_path": "platform/observability/logfire_config.py",
+      "md5_hash": "907322d7dad26153f452f581b417912c",
+      "target_hash": "acb379da0e2805c6ee84eee1736c1f84",
+      "file_size": 2606,
+      "target_size": 2479,
+      "verified_identical": false
+    }
+  ]
+}

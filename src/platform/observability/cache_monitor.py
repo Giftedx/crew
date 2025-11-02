@@ -12,7 +12,9 @@ import asyncio
 import logging
 import time
 from contextlib import asynccontextmanager
-from platform.observability.metrics import (
+from typing import Any
+
+from obs.metrics import (
     CACHE_COMPRESSION_RATIO,
     CACHE_COMPRESSIONS,
     CACHE_DECOMPRESSIONS,
@@ -28,7 +30,6 @@ from platform.observability.metrics import (
     CACHE_SIZE_BYTES,
     label_ctx,
 )
-from typing import Any
 
 
 logger = logging.getLogger(__name__)
@@ -57,8 +58,10 @@ class CacheMonitor:
             async with _null_context():
                 yield
             return
+
         start_time = time.time()
         error_type = None
+
         try:
             async with _null_context():
                 yield
@@ -68,8 +71,13 @@ class CacheMonitor:
         finally:
             if self.enable_latency_tracking:
                 duration_ms = (time.time() - start_time) * 1000
-                labels = {**self._labels, "cache_name": self.cache_name, "operation": operation}
+                labels = {
+                    **self._labels,
+                    "cache_name": self.cache_name,
+                    "operation": operation,
+                }
                 CACHE_OPERATION_LATENCY.labels(**labels).observe(duration_ms)
+
             if error_type:
                 error_labels = {
                     **self._labels,
@@ -83,20 +91,31 @@ class CacheMonitor:
         """Record a cache hit."""
         if not self.enable_monitoring:
             return
-        labels = {**self._labels, "cache_name": self.cache_name, "cache_level": cache_level}
+
+        labels = {
+            **self._labels,
+            "cache_name": self.cache_name,
+            "cache_level": cache_level,
+        }
         CACHE_HITS.labels(**labels).inc()
 
     def record_miss(self, cache_level: str = "l1") -> None:
         """Record a cache miss."""
         if not self.enable_monitoring:
             return
-        labels = {**self._labels, "cache_name": self.cache_name, "cache_level": cache_level}
+
+        labels = {
+            **self._labels,
+            "cache_name": self.cache_name,
+            "cache_level": cache_level,
+        }
         CACHE_MISSES.labels(**labels).inc()
 
     def record_promotion(self) -> None:
         """Record an entry promotion to higher cache level."""
         if not self.enable_monitoring:
             return
+
         labels = {**self._labels, "cache_name": self.cache_name}
         CACHE_PROMOTIONS.labels(**labels).inc()
 
@@ -104,6 +123,7 @@ class CacheMonitor:
         """Record an entry demotion to lower cache level."""
         if not self.enable_monitoring:
             return
+
         labels = {**self._labels, "cache_name": self.cache_name}
         CACHE_DEMOTIONS.labels(**labels).inc()
 
@@ -111,15 +131,24 @@ class CacheMonitor:
         """Record an entry eviction due to capacity limits."""
         if not self.enable_monitoring:
             return
-        labels = {**self._labels, "cache_name": self.cache_name, "cache_level": cache_level}
+
+        labels = {
+            **self._labels,
+            "cache_name": self.cache_name,
+            "cache_level": cache_level,
+        }
         CACHE_EVICTIONS.labels(**labels).inc()
 
     def record_compression(self, original_size: int, compressed_size: int) -> None:
         """Record compression operation and effectiveness."""
         if not self.enable_monitoring:
             return
+
+        # Record compression count
         labels = {**self._labels, "cache_name": self.cache_name}
         CACHE_COMPRESSIONS.labels(**labels).inc()
+
+        # Record compression ratio if original size > 0
         if original_size > 0:
             ratio = compressed_size / original_size
             CACHE_COMPRESSION_RATIO.labels(**labels).observe(ratio)
@@ -128,6 +157,7 @@ class CacheMonitor:
         """Record decompression operation."""
         if not self.enable_monitoring:
             return
+
         labels = {**self._labels, "cache_name": self.cache_name}
         CACHE_DECOMPRESSIONS.labels(**labels).inc()
 
@@ -135,42 +165,72 @@ class CacheMonitor:
         """Update cache size gauge."""
         if not self.enable_monitoring:
             return
-        labels = {**self._labels, "cache_name": self.cache_name, "cache_level": cache_level}
+
+        labels = {
+            **self._labels,
+            "cache_name": self.cache_name,
+            "cache_level": cache_level,
+        }
         CACHE_SIZE_BYTES.labels(**labels).set(size_bytes)
 
     def update_entries_count(self, count: int, cache_level: str = "l1") -> None:
         """Update cache entries count gauge."""
         if not self.enable_monitoring:
             return
-        labels = {**self._labels, "cache_name": self.cache_name, "cache_level": cache_level}
+
+        labels = {
+            **self._labels,
+            "cache_name": self.cache_name,
+            "cache_level": cache_level,
+        }
         CACHE_ENTRIES_COUNT.labels(**labels).set(count)
 
     def update_hit_rate(self, hit_rate: float, cache_level: str = "l1") -> None:
         """Update cache hit rate gauge (0.0-1.0)."""
         if not self.enable_monitoring:
             return
-        labels = {**self._labels, "cache_name": self.cache_name, "cache_level": cache_level}
+
+        labels = {
+            **self._labels,
+            "cache_name": self.cache_name,
+            "cache_level": cache_level,
+        }
         CACHE_HIT_RATE_RATIO.labels(**labels).set(hit_rate)
 
     def record_invalidation(self, keys_invalidated: int, reason: str = "unknown") -> None:
         """Record a cache invalidation operation."""
         if not self.enable_monitoring:
             return
-        labels = {**self._labels, "cache_name": self.cache_name, "operation": f"invalidate_{reason}"}
-        CACHE_OPERATION_LATENCY.labels(**labels).observe(0)
+
+        # Record as a special operation type
+        labels = {
+            **self._labels,
+            "cache_name": self.cache_name,
+            "operation": f"invalidate_{reason}",
+        }
+        CACHE_OPERATION_LATENCY.labels(**labels).observe(0)  # We don't have latency here, so use 0
+
+        # Could add a custom counter here if we extend the metrics
         logger.debug(f"Recorded invalidation: {keys_invalidated} keys, reason: {reason}")
 
     def record_dependency_graph_size(self, size: int) -> None:
         """Record the current size of the dependency graph."""
         if not self.enable_monitoring:
             return
-        labels = {**self._labels, "cache_name": self.cache_name, "cache_level": "dependency_graph"}
+
+        # Use cache_entries_count with a special label for dependency graph
+        labels = {
+            **self._labels,
+            "cache_name": self.cache_name,
+            "cache_level": "dependency_graph",
+        }
         CACHE_ENTRIES_COUNT.labels(**labels).set(size)
 
     def record_circular_ref_detected(self) -> None:
         """Record detection of a circular dependency reference."""
         if not self.enable_monitoring:
             return
+
         labels = {
             **self._labels,
             "cache_name": self.cache_name,
@@ -183,6 +243,7 @@ class CacheMonitor:
         """Record the latency of an invalidation operation."""
         if not self.enable_monitoring or not self.enable_latency_tracking:
             return
+
         operation = "invalidate_cascade" if cascade else "invalidate_single"
         labels = {**self._labels, "cache_name": self.cache_name, "operation": operation}
         CACHE_OPERATION_LATENCY.labels(**labels).observe(latency_ms)
@@ -191,12 +252,15 @@ class CacheMonitor:
         """Get cache health status information."""
         if not self.enable_health_checks:
             return {"status": "monitoring_disabled"}
+
+        # This would typically query recent metrics to determine health
+        # For now, return basic status
         return {
             "cache_name": self.cache_name,
             "monitoring_enabled": self.enable_monitoring,
             "latency_tracking_enabled": self.enable_latency_tracking,
             "health_checks_enabled": self.enable_health_checks,
-            "status": "healthy",
+            "status": "healthy",  # Would be determined by actual health checks
         }
 
 
@@ -234,6 +298,7 @@ class CacheMonitorManager:
         return overview
 
 
+# Global monitor manager instance
 _monitor_manager = CacheMonitorManager()
 
 
@@ -253,4 +318,9 @@ async def _null_context():
     yield
 
 
-__all__ = ["CacheMonitor", "CacheMonitorManager", "get_cache_health_overview", "get_cache_monitor"]
+__all__ = [
+    "CacheMonitor",
+    "CacheMonitorManager",
+    "get_cache_health_overview",
+    "get_cache_monitor",
+]
