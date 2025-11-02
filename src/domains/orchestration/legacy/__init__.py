@@ -25,27 +25,6 @@ Usage:
     # Execute orchestration
     result = await facade.orchestrate("my_orchestrator", context)
 """
-
-from core.orchestration.facade import OrchestrationFacade, get_orchestration_facade
-from core.orchestration.protocols import (
-    BaseOrchestrator,
-    OrchestrationContext,
-    OrchestrationLayer,
-    OrchestrationType,
-    OrchestratorProtocol,
-)
-
-
-__all__ = [
-    # Protocols
-    "OrchestratorProtocol",
-    "BaseOrchestrator",
-    # Enums
-    "OrchestrationLayer",
-    "OrchestrationType",
-    # Context
-    "OrchestrationContext",
-    # Facade
-    "OrchestrationFacade",
-    "get_orchestration_facade",
-]
+from platform.orchestration.facade import OrchestrationFacade, get_orchestration_facade
+from platform.orchestration.protocols import BaseOrchestrator, OrchestrationContext, OrchestrationLayer, OrchestrationType, OrchestratorProtocol
+__all__ = ['OrchestratorProtocol', 'BaseOrchestrator', 'OrchestrationLayer', 'OrchestrationType', 'OrchestrationContext', 'OrchestrationFacade', 'get_orchestration_facade']

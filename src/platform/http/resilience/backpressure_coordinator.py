@@ -32,9 +32,7 @@ Usage:
     # Get health summary
     summary = coordinator.get_health_summary()
 """
-
 from __future__ import annotations
-
 import contextlib
 import logging
 import os
@@ -43,38 +41,30 @@ import time
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
-
-
 logger = logging.getLogger(__name__)
-
 
 class BackpressureLevel(Enum):
     """Backpressure severity levels."""
-
-    NORMAL = "normal"  # System operating normally
-    WARNING = "warning"  # Approaching backpressure threshold
-    ACTIVE = "active"  # Backpressure mode active
-    CRITICAL = "critical"  # Critical system degradation
-
+    NORMAL = 'normal'
+    WARNING = 'warning'
+    ACTIVE = 'active'
+    CRITICAL = 'critical'
 
 @dataclass
 class ServiceHealth:
     """Health status for a registered service."""
-
     service_name: str
     is_healthy: bool
-    circuit_state: str  # "CLOSED", "OPEN", "HALF_OPEN"
+    circuit_state: str
     last_updated: float = field(default_factory=time.time)
     failure_count: int = 0
     success_rate: float = 1.0
-    response_time_p95: float = 0.0  # 95th percentile response time in ms
+    response_time_p95: float = 0.0
     metadata: dict[str, Any] = field(default_factory=dict)
-
 
 @dataclass
 class BackpressureMetrics:
     """Metrics for backpressure coordinator."""
-
     total_services: int = 0
     healthy_services: int = 0
     unhealthy_services: int = 0
@@ -83,11 +73,10 @@ class BackpressureMetrics:
     closed_circuits: int = 0
     system_load: float = 0.0
     backpressure_level: BackpressureLevel = BackpressureLevel.NORMAL
-    backpressure_active_duration: float = 0.0  # Seconds in backpressure mode
+    backpressure_active_duration: float = 0.0
     requests_rejected: int = 0
     degraded_responses_served: int = 0
     last_state_change: float = field(default_factory=time.time)
-
 
 class BackpressureCoordinator:
     """Centralized coordinator for cross-system backpressure management.
@@ -103,12 +92,7 @@ class BackpressureCoordinator:
     - Degraded responses (partial data) are preferred over failures
     """
 
-    def __init__(
-        self,
-        open_circuit_threshold: int | None = None,
-        load_threshold: float | None = None,
-        recovery_delay: float | None = None,
-    ):
+    def __init__(self, open_circuit_threshold: int | None=None, load_threshold: float | None=None, recovery_delay: float | None=None):
         """Initialize backpressure coordinator.
 
         Args:
@@ -116,47 +100,27 @@ class BackpressureCoordinator:
             load_threshold: System load threshold (0.0-1.0)
             recovery_delay: Seconds to wait before exiting backpressure mode
         """
-        self._enabled = os.getenv("ENABLE_BACKPRESSURE_COORDINATOR", "1").lower() in {"1", "true", "yes", "on"}
-
-        self._open_circuit_threshold = (
-            open_circuit_threshold
-            if open_circuit_threshold is not None
-            else int(os.getenv("BACKPRESSURE_OPEN_CIRCUIT_THRESHOLD", "2"))
-        )
-
-        self._load_threshold = (
-            load_threshold if load_threshold is not None else float(os.getenv("BACKPRESSURE_LOAD_THRESHOLD", "0.8"))
-        )
-
-        self._recovery_delay = (
-            recovery_delay if recovery_delay is not None else float(os.getenv("BACKPRESSURE_RECOVERY_DELAY", "30"))
-        )
-
-        # Service health tracking
+        self._enabled = os.getenv('ENABLE_BACKPRESSURE_COORDINATOR', '1').lower() in {'1', 'true', 'yes', 'on'}
+        self._open_circuit_threshold = open_circuit_threshold if open_circuit_threshold is not None else int(os.getenv('BACKPRESSURE_OPEN_CIRCUIT_THRESHOLD', '2'))
+        self._load_threshold = load_threshold if load_threshold is not None else float(os.getenv('BACKPRESSURE_LOAD_THRESHOLD', '0.8'))
+        self._recovery_delay = recovery_delay if recovery_delay is not None else float(os.getenv('BACKPRESSURE_RECOVERY_DELAY', '30'))
         self._services: dict[str, ServiceHealth] = {}
         self._lock = threading.RLock()
-
-        # Backpressure state
         self._backpressure_active = False
         self._backpressure_level = BackpressureLevel.NORMAL
         self._backpressure_start_time: float | None = None
         self._last_backpressure_check = time.time()
-
-        # Metrics
         self._metrics = BackpressureMetrics()
-
-        # Metrics integration
         self._prometheus_metrics: Any | None = None
         try:
-            from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
-
+            from platform.observability.metrics import get_metrics
             metrics = get_metrics()
-            self._backpressure_active_gauge = metrics.gauge("backpressure_active")
-            self._backpressure_level_gauge = metrics.gauge("backpressure_level")
-            self._requests_rejected_counter = metrics.counter("backpressure_requests_rejected_total")
-            self._degraded_responses_counter = metrics.counter("backpressure_degraded_responses_total")
-            self._open_circuits_gauge = metrics.gauge("backpressure_open_circuits_count")
-            self._system_load_gauge = metrics.gauge("backpressure_system_load")
+            self._backpressure_active_gauge = metrics.gauge('backpressure_active')
+            self._backpressure_level_gauge = metrics.gauge('backpressure_level')
+            self._requests_rejected_counter = metrics.counter('backpressure_requests_rejected_total')
+            self._degraded_responses_counter = metrics.counter('backpressure_degraded_responses_total')
+            self._open_circuits_gauge = metrics.gauge('backpressure_open_circuits_count')
+            self._system_load_gauge = metrics.gauge('backpressure_system_load')
             self._prometheus_metrics = metrics
         except Exception:
             self._backpressure_active_gauge = None
@@ -165,23 +129,9 @@ class BackpressureCoordinator:
             self._degraded_responses_counter = None
             self._open_circuits_gauge = None
             self._system_load_gauge = None
+        logger.info(f'BackpressureCoordinator initialized: enabled={self._enabled}, open_circuit_threshold={self._open_circuit_threshold}, load_threshold={self._load_threshold:.2f}')
 
-        logger.info(
-            f"BackpressureCoordinator initialized: enabled={self._enabled}, "
-            f"open_circuit_threshold={self._open_circuit_threshold}, "
-            f"load_threshold={self._load_threshold:.2f}"
-        )
-
-    def register_service_health(
-        self,
-        service_name: str,
-        is_healthy: bool,
-        circuit_state: str = "CLOSED",
-        failure_count: int = 0,
-        success_rate: float = 1.0,
-        response_time_p95: float = 0.0,
-        metadata: dict[str, Any] | None = None,
-    ) -> None:
+    def register_service_health(self, service_name: str, is_healthy: bool, circuit_state: str='CLOSED', failure_count: int=0, success_rate: float=1.0, response_time_p95: float=0.0, metadata: dict[str, Any] | None=None) -> None:
         """Register or update health status for a service.
 
         Args:
@@ -194,18 +144,7 @@ class BackpressureCoordinator:
             metadata: Additional service-specific metadata
         """
         with self._lock:
-            self._services[service_name] = ServiceHealth(
-                service_name=service_name,
-                is_healthy=is_healthy,
-                circuit_state=circuit_state.upper(),
-                last_updated=time.time(),
-                failure_count=failure_count,
-                success_rate=success_rate,
-                response_time_p95=response_time_p95,
-                metadata=metadata or {},
-            )
-
-            # Update metrics
+            self._services[service_name] = ServiceHealth(service_name=service_name, is_healthy=is_healthy, circuit_state=circuit_state.upper(), last_updated=time.time(), failure_count=failure_count, success_rate=success_rate, response_time_p95=response_time_p95, metadata=metadata or {})
             self._update_metrics()
 
     def unregister_service(self, service_name: str) -> None:
@@ -227,13 +166,10 @@ class BackpressureCoordinator:
         """
         if not self._enabled:
             return False
-
-        # Periodically re-evaluate backpressure state
         current_time = time.time()
-        if current_time - self._last_backpressure_check > 5.0:  # Re-check every 5 seconds
+        if current_time - self._last_backpressure_check > 5.0:
             self._evaluate_backpressure()
             self._last_backpressure_check = current_time
-
         return self._backpressure_active
 
     def get_backpressure_level(self) -> BackpressureLevel:
@@ -248,7 +184,6 @@ class BackpressureCoordinator:
         """Record that a request was rejected due to backpressure."""
         with self._lock:
             self._metrics.requests_rejected += 1
-
             if self._requests_rejected_counter:
                 with contextlib.suppress(Exception):
                     self._requests_rejected_counter.inc()
@@ -257,7 +192,6 @@ class BackpressureCoordinator:
         """Record that a degraded response was served."""
         with self._lock:
             self._metrics.degraded_responses_served += 1
-
             if self._degraded_responses_counter:
                 with contextlib.suppress(Exception):
                     self._degraded_responses_counter.inc()
@@ -269,66 +203,23 @@ class BackpressureCoordinator:
             Dictionary with health metrics and service statuses
         """
         with self._lock:
-            services_summary = {
-                name: {
-                    "healthy": svc.is_healthy,
-                    "circuit_state": svc.circuit_state,
-                    "failure_count": svc.failure_count,
-                    "success_rate": svc.success_rate,
-                    "response_time_p95": svc.response_time_p95,
-                    "last_updated": svc.last_updated,
-                }
-                for name, svc in self._services.items()
-            }
-
-            return {
-                "backpressure_active": self._backpressure_active,
-                "backpressure_level": self._backpressure_level.value,
-                "metrics": {
-                    "total_services": self._metrics.total_services,
-                    "healthy_services": self._metrics.healthy_services,
-                    "unhealthy_services": self._metrics.unhealthy_services,
-                    "open_circuits": self._metrics.open_circuits,
-                    "half_open_circuits": self._metrics.half_open_circuits,
-                    "closed_circuits": self._metrics.closed_circuits,
-                    "system_load": self._metrics.system_load,
-                    "requests_rejected": self._metrics.requests_rejected,
-                    "degraded_responses_served": self._metrics.degraded_responses_served,
-                    "backpressure_duration_seconds": self._get_backpressure_duration(),
-                },
-                "services": services_summary,
-                "thresholds": {
-                    "open_circuit_threshold": self._open_circuit_threshold,
-                    "load_threshold": self._load_threshold,
-                    "recovery_delay": self._recovery_delay,
-                },
-            }
+            services_summary = {name: {'healthy': svc.is_healthy, 'circuit_state': svc.circuit_state, 'failure_count': svc.failure_count, 'success_rate': svc.success_rate, 'response_time_p95': svc.response_time_p95, 'last_updated': svc.last_updated} for name, svc in self._services.items()}
+            return {'backpressure_active': self._backpressure_active, 'backpressure_level': self._backpressure_level.value, 'metrics': {'total_services': self._metrics.total_services, 'healthy_services': self._metrics.healthy_services, 'unhealthy_services': self._metrics.unhealthy_services, 'open_circuits': self._metrics.open_circuits, 'half_open_circuits': self._metrics.half_open_circuits, 'closed_circuits': self._metrics.closed_circuits, 'system_load': self._metrics.system_load, 'requests_rejected': self._metrics.requests_rejected, 'degraded_responses_served': self._metrics.degraded_responses_served, 'backpressure_duration_seconds': self._get_backpressure_duration()}, 'services': services_summary, 'thresholds': {'open_circuit_threshold': self._open_circuit_threshold, 'load_threshold': self._load_threshold, 'recovery_delay': self._recovery_delay}}
 
     def _update_metrics(self) -> None:
         """Update aggregated metrics from service health."""
-        # Count service states
         total_services = len(self._services)
-        healthy_services = sum(1 for svc in self._services.values() if svc.is_healthy)
+        healthy_services = sum((1 for svc in self._services.values() if svc.is_healthy))
         unhealthy_services = total_services - healthy_services
-
-        # Count circuit states
-        open_circuits = sum(1 for svc in self._services.values() if svc.circuit_state == "OPEN")
-        half_open_circuits = sum(1 for svc in self._services.values() if svc.circuit_state == "HALF_OPEN")
-        closed_circuits = sum(1 for svc in self._services.values() if svc.circuit_state == "CLOSED")
-
-        # Calculate system load (average of all service metrics)
+        open_circuits = sum((1 for svc in self._services.values() if svc.circuit_state == 'OPEN'))
+        half_open_circuits = sum((1 for svc in self._services.values() if svc.circuit_state == 'HALF_OPEN'))
+        closed_circuits = sum((1 for svc in self._services.values() if svc.circuit_state == 'CLOSED'))
         if self._services:
-            # Use inverse success rate as a proxy for load
-            avg_failure_rate = sum((1.0 - svc.success_rate) for svc in self._services.values()) / len(self._services)
-            # Consider response times
-            avg_response_time_normalized = sum(
-                min(svc.response_time_p95 / 1000.0, 1.0) for svc in self._services.values()
-            ) / len(self._services)
+            avg_failure_rate = sum((1.0 - svc.success_rate for svc in self._services.values())) / len(self._services)
+            avg_response_time_normalized = sum((min(svc.response_time_p95 / 1000.0, 1.0) for svc in self._services.values())) / len(self._services)
             system_load = (avg_failure_rate + avg_response_time_normalized) / 2.0
         else:
             system_load = 0.0
-
-        # Update metrics object
         self._metrics.total_services = total_services
         self._metrics.healthy_services = healthy_services
         self._metrics.unhealthy_services = unhealthy_services
@@ -336,12 +227,9 @@ class BackpressureCoordinator:
         self._metrics.half_open_circuits = half_open_circuits
         self._metrics.closed_circuits = closed_circuits
         self._metrics.system_load = system_load
-
-        # Update Prometheus metrics
         if self._open_circuits_gauge:
             with contextlib.suppress(Exception):
                 self._open_circuits_gauge.set(open_circuits)
-
         if self._system_load_gauge:
             with contextlib.suppress(Exception):
                 self._system_load_gauge.set(system_load)
@@ -350,23 +238,13 @@ class BackpressureCoordinator:
         """Evaluate whether to enter/exit backpressure mode."""
         with self._lock:
             self._update_metrics()
-
             open_circuits = self._metrics.open_circuits
             system_load = self._metrics.system_load
-
-            # Determine if backpressure should be active
             should_activate = open_circuits >= self._open_circuit_threshold or system_load >= self._load_threshold
-
-            # State transition logic
-            if should_activate and not self._backpressure_active:
-                # Enter backpressure mode
+            if should_activate and (not self._backpressure_active):
                 self._enter_backpressure_mode(open_circuits, system_load)
-
             elif not should_activate and self._backpressure_active and self._should_exit_backpressure():
-                # Exit backpressure mode
                 self._exit_backpressure_mode()
-
-            # Update backpressure level
             self._update_backpressure_level(open_circuits, system_load)
 
     def _enter_backpressure_mode(self, open_circuits: int, system_load: float) -> None:
@@ -374,13 +252,7 @@ class BackpressureCoordinator:
         self._backpressure_active = True
         self._backpressure_start_time = time.time()
         self._metrics.last_state_change = time.time()
-
-        logger.warning(
-            f"BACKPRESSURE MODE ACTIVATED: open_circuits={open_circuits}/{self._open_circuit_threshold}, "
-            f"system_load={system_load:.2%}/{self._load_threshold:.2%}"
-        )
-
-        # Update metrics
+        logger.warning(f'BACKPRESSURE MODE ACTIVATED: open_circuits={open_circuits}/{self._open_circuit_threshold}, system_load={system_load:.2%}/{self._load_threshold:.2%}')
         if self._backpressure_active_gauge:
             with contextlib.suppress(Exception):
                 self._backpressure_active_gauge.set(1)
@@ -391,10 +263,7 @@ class BackpressureCoordinator:
         self._backpressure_active = False
         self._backpressure_start_time = None
         self._metrics.last_state_change = time.time()
-
-        logger.info(f"BACKPRESSURE MODE DEACTIVATED after {duration:.1f} seconds")
-
-        # Update metrics
+        logger.info(f'BACKPRESSURE MODE DEACTIVATED after {duration:.1f} seconds')
         if self._backpressure_active_gauge:
             with contextlib.suppress(Exception):
                 self._backpressure_active_gauge.set(0)
@@ -403,21 +272,13 @@ class BackpressureCoordinator:
         """Check if conditions allow exiting backpressure mode."""
         if self._backpressure_start_time is None:
             return True
-
-        # Wait for recovery delay before exiting
         time_in_backpressure = time.time() - self._backpressure_start_time
         if time_in_backpressure < self._recovery_delay:
             return False
-
-        # Ensure conditions have improved
-        return (
-            self._metrics.open_circuits < self._open_circuit_threshold
-            and self._metrics.system_load < self._load_threshold
-        )
+        return self._metrics.open_circuits < self._open_circuit_threshold and self._metrics.system_load < self._load_threshold
 
     def _update_backpressure_level(self, open_circuits: int, system_load: float) -> None:
         """Update backpressure severity level."""
-        # Determine level based on conditions
         if open_circuits >= self._open_circuit_threshold * 2 or system_load >= 0.95:
             level = BackpressureLevel.CRITICAL
         elif open_circuits >= self._open_circuit_threshold or system_load >= self._load_threshold:
@@ -426,16 +287,13 @@ class BackpressureCoordinator:
             level = BackpressureLevel.WARNING
         else:
             level = BackpressureLevel.NORMAL
-
         if level != self._backpressure_level:
-            logger.info(f"Backpressure level changed: {self._backpressure_level.value} -> {level.value}")
+            logger.info(f'Backpressure level changed: {self._backpressure_level.value} -> {level.value}')
             self._backpressure_level = level
             self._metrics.backpressure_level = level
-
-            # Update metrics
             if self._backpressure_level_gauge:
                 try:
-                    level_value = {"normal": 0, "warning": 1, "active": 2, "critical": 3}[level.value]
+                    level_value = {'normal': 0, 'warning': 1, 'active': 2, 'critical': 3}[level.value]
                     self._backpressure_level_gauge.set(level_value)
                 except Exception:
                     pass
@@ -445,12 +303,8 @@ class BackpressureCoordinator:
         if self._backpressure_start_time is None:
             return 0.0
         return time.time() - self._backpressure_start_time
-
-
-# Global singleton instance
 _global_coordinator: BackpressureCoordinator | None = None
 _coordinator_lock = threading.Lock()
-
 
 def get_backpressure_coordinator() -> BackpressureCoordinator:
     """Get global backpressure coordinator singleton.
@@ -459,19 +313,9 @@ def get_backpressure_coordinator() -> BackpressureCoordinator:
         Global BackpressureCoordinator instance
     """
     global _global_coordinator
-
     if _global_coordinator is None:
         with _coordinator_lock:
             if _global_coordinator is None:
                 _global_coordinator = BackpressureCoordinator()
-
     return _global_coordinator
-
-
-__all__ = [
-    "BackpressureCoordinator",
-    "BackpressureLevel",
-    "BackpressureMetrics",
-    "ServiceHealth",
-    "get_backpressure_coordinator",
-]
+__all__ = ['BackpressureCoordinator', 'BackpressureLevel', 'BackpressureMetrics', 'ServiceHealth', 'get_backpressure_coordinator']

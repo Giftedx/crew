@@ -2,70 +2,22 @@
 
 This agent coordinates end-to-end missions, sequencing depth, specialists, and budgets.
 """
-
 from __future__ import annotations
-
 from typing import TYPE_CHECKING
-
 from domains.orchestration.agents.base import BaseAgent
 from domains.orchestration.agents.registry import register_agent
-from ultimate_discord_intelligence_bot.settings import (
-    ENABLE_AGENT_BRIDGE,
-    ENABLE_DASHBOARD_INTEGRATION,
-    ENABLE_INTELLIGENT_ALERTING,
-    ENABLE_UNIFIED_CACHE,
-    ENABLE_UNIFIED_KNOWLEDGE,
-    ENABLE_UNIFIED_METRICS,
-    ENABLE_UNIFIED_ORCHESTRATION,
-    ENABLE_UNIFIED_ROUTER,
-)
-from ultimate_discord_intelligence_bot.tools import (
-    AdvancedPerformanceAnalyticsTool,
-    CheckpointManagementTool,
-    MCPCallTool,
-    Mem0MemoryTool,
-    MultimodalAnalysisTool,
-    PerspectiveSynthesizerTool,
-    PipelineTool,
-    TimelineTool,
-)
-from ultimate_discord_intelligence_bot.tools.memory.unified_memory_tool import (
-    UnifiedContextTool,
-    UnifiedMemoryStoreTool,
-    UnifiedMemoryTool,
-)
-from ultimate_discord_intelligence_bot.tools.observability.agent_bridge_tool import (
-    AgentBridgeTool,
-    InsightSharingTool,
-    LearningTool,
-)
-from ultimate_discord_intelligence_bot.tools.observability.observability_tool import (
-    DashboardIntegrationTool,
-    IntelligentAlertingTool,
-    UnifiedMetricsTool,
-)
-from ultimate_discord_intelligence_bot.tools.observability.unified_cache_tool import (
-    CacheOptimizationTool,
-    CacheStatusTool,
-    UnifiedCacheTool,
-)
-from ultimate_discord_intelligence_bot.tools.observability.unified_orchestration_tool import (
-    OrchestrationStatusTool,
-    TaskManagementTool,
-    UnifiedOrchestrationTool,
-)
-from ultimate_discord_intelligence_bot.tools.observability.unified_router_tool import (
-    CostTrackingTool,
-    RouterStatusTool,
-    UnifiedRouterTool,
-)
-
-
+from app.config.settings import ENABLE_AGENT_BRIDGE, ENABLE_DASHBOARD_INTEGRATION, ENABLE_INTELLIGENT_ALERTING, ENABLE_UNIFIED_CACHE, ENABLE_UNIFIED_KNOWLEDGE, ENABLE_UNIFIED_METRICS, ENABLE_UNIFIED_ORCHESTRATION, ENABLE_UNIFIED_ROUTER
+from ultimate_discord_intelligence_bot.tools import AdvancedPerformanceAnalyticsTool, CheckpointManagementTool, MCPCallTool, Mem0MemoryTool, MultimodalAnalysisTool, PerspectiveSynthesizerTool, PipelineTool, TimelineTool
+from domains.memory.tools.unified_memory_tool import UnifiedContextTool, UnifiedMemoryStoreTool, UnifiedMemoryTool
+from ultimate_discord_intelligence_bot.tools.observability.agent_bridge_tool import AgentBridgeTool, InsightSharingTool, LearningTool
+from ultimate_discord_intelligence_bot.tools.observability.observability_tool import DashboardIntegrationTool, IntelligentAlertingTool, UnifiedMetricsTool
+from ultimate_discord_intelligence_bot.tools.observability.unified_cache_tool import CacheOptimizationTool, CacheStatusTool, UnifiedCacheTool
+from ultimate_discord_intelligence_bot.tools.observability.unified_orchestration_tool import OrchestrationStatusTool, TaskManagementTool, UnifiedOrchestrationTool
+from ultimate_discord_intelligence_bot.tools.observability.unified_router_tool import CostTrackingTool, RouterStatusTool, UnifiedRouterTool
 if TYPE_CHECKING:
     from ultimate_discord_intelligence_bot.tools._base import BaseTool
 
-
-@register_agent("mission_orchestrator")
+@register_agent('mission_orchestrator')
 class MissionOrchestratorAgent(BaseAgent):
     """Mission Orchestrator Agent for autonomous intelligence operations."""
 
@@ -77,17 +29,17 @@ class MissionOrchestratorAgent(BaseAgent):
     @property
     def role(self) -> str:
         """Agent role."""
-        return "Autonomy Mission Orchestrator"
+        return 'Autonomy Mission Orchestrator'
 
     @property
     def goal(self) -> str:
         """Agent goal."""
-        return "Coordinate end-to-end missions, sequencing depth, specialists, and budgets."
+        return 'Coordinate end-to-end missions, sequencing depth, specialists, and budgets.'
 
     @property
     def backstory(self) -> str:
         """Agent backstory."""
-        return "Mission orchestration and strategic control with multimodal planning capabilities."
+        return 'Mission orchestration and strategic control with multimodal planning capabilities.'
 
     @property
     def allow_delegation(self) -> bool:
@@ -96,16 +48,7 @@ class MissionOrchestratorAgent(BaseAgent):
 
     def _get_core_tools(self) -> list[BaseTool]:
         """Get core tools for mission orchestration."""
-        tools = [
-            PipelineTool(),
-            AdvancedPerformanceAnalyticsTool(),
-            TimelineTool(),
-            PerspectiveSynthesizerTool(),
-            MCPCallTool(),
-            MultimodalAnalysisTool(),
-            Mem0MemoryTool(),
-            CheckpointManagementTool(),
-        ]
+        tools = [PipelineTool(), AdvancedPerformanceAnalyticsTool(), TimelineTool(), PerspectiveSynthesizerTool(), MCPCallTool(), MultimodalAnalysisTool(), Mem0MemoryTool(), CheckpointManagementTool()]
         if ENABLE_UNIFIED_KNOWLEDGE:
             tools.extend([UnifiedMemoryTool(), UnifiedMemoryStoreTool(), UnifiedContextTool()])
         if ENABLE_UNIFIED_ROUTER:

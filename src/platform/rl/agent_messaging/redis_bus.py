@@ -3,9 +3,7 @@
 Enables unrestricted cross-agent messaging for collaborative intelligence,
 replacing in-memory SharedContext with persistent pub/sub.
 """
-
 from __future__ import annotations
-
 import asyncio
 import contextlib
 import json
@@ -15,58 +13,40 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import TYPE_CHECKING, Any
 from uuid import uuid4
-
-from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
-
-
+from platform.observability.metrics import get_metrics
 if TYPE_CHECKING:
     from collections.abc import Callable, Coroutine
-
-
 logger = logging.getLogger(__name__)
-
 
 class MessageType(str, Enum):
     """Types of agent messages."""
-
-    # Information sharing
-    INSIGHT = "insight"
-    EVIDENCE = "evidence"
-    NOTE = "note"
-
-    # Collaboration requests
-    REQUEST_INSIGHT = "request_insight"
-    REQUEST_REVIEW = "request_review"
-    PROPOSE_CONSENSUS = "propose_consensus"
-
-    # Deliberation
-    CHALLENGE_CLAIM = "challenge_claim"
-    SUPPORT_CLAIM = "support_claim"
-    VOTE = "vote"
-
-    # Meta-communication
-    ANSWER = "answer"
-    WARNING = "warning"
-    STATUS = "status"
-
+    INSIGHT = 'insight'
+    EVIDENCE = 'evidence'
+    NOTE = 'note'
+    REQUEST_INSIGHT = 'request_insight'
+    REQUEST_REVIEW = 'request_review'
+    PROPOSE_CONSENSUS = 'propose_consensus'
+    CHALLENGE_CLAIM = 'challenge_claim'
+    SUPPORT_CLAIM = 'support_claim'
+    VOTE = 'vote'
+    ANSWER = 'answer'
+    WARNING = 'warning'
+    STATUS = 'status'
 
 class MessagePriority(str, Enum):
     """Priority levels for message delivery."""
-
-    LOW = "low"
-    NORMAL = "normal"
-    HIGH = "high"
-    URGENT = "urgent"
-
+    LOW = 'low'
+    NORMAL = 'normal'
+    HIGH = 'high'
+    URGENT = 'urgent'
 
 @dataclass
 class AgentMessage:
     """Agent-to-agent message."""
-
     type: MessageType
     content: str
     sender_agent_id: str | None = None
-    target_agent_id: str | None = None  # None = broadcast
+    target_agent_id: str | None = None
     priority: MessagePriority = MessagePriority.NORMAL
     metadata: dict[str, Any] = field(default_factory=dict)
     message_id: str = field(default_factory=lambda: uuid4().hex)
@@ -75,23 +55,22 @@ class AgentMessage:
     def to_dict(self) -> dict[str, Any]:
         """Serialize to JSON-compatible dict."""
         data = asdict(self)
-        data["timestamp"] = self.timestamp.isoformat()
-        data["type"] = self.type.value if isinstance(self.type, MessageType) else str(self.type)
-        data["priority"] = self.priority.value if isinstance(self.priority, MessagePriority) else str(self.priority)
+        data['timestamp'] = self.timestamp.isoformat()
+        data['type'] = self.type.value if isinstance(self.type, MessageType) else str(self.type)
+        data['priority'] = self.priority.value if isinstance(self.priority, MessagePriority) else str(self.priority)
         return data
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> AgentMessage:
         """Deserialize from dict."""
-        data = dict(data)  # Copy to avoid mutation
-        if "timestamp" in data and isinstance(data["timestamp"], str):
-            data["timestamp"] = datetime.fromisoformat(data["timestamp"])
-        if "type" in data and isinstance(data["type"], str):
-            data["type"] = MessageType(data["type"])
-        if "priority" in data and isinstance(data["priority"], str):
-            data["priority"] = MessagePriority(data["priority"])
+        data = dict(data)
+        if 'timestamp' in data and isinstance(data['timestamp'], str):
+            data['timestamp'] = datetime.fromisoformat(data['timestamp'])
+        if 'type' in data and isinstance(data['type'], str):
+            data['type'] = MessageType(data['type'])
+        if 'priority' in data and isinstance(data['priority'], str):
+            data['priority'] = MessagePriority(data['priority'])
         return cls(**data)
-
 
 class AgentMessageBus:
     """Redis-backed pub/sub message bus for agent collaboration.
@@ -104,14 +83,7 @@ class AgentMessageBus:
     - Message TTL and persistence
     """
 
-    def __init__(
-        self,
-        *,
-        redis_url: str | None = None,
-        redis_db: int = 2,
-        message_ttl: int = 3600,
-        enable_global_broadcast: bool = True,
-    ):
+    def __init__(self, *, redis_url: str | None=None, redis_db: int=2, message_ttl: int=3600, enable_global_broadcast: bool=True):
         """Initialize Redis message bus.
 
         Args:
@@ -120,15 +92,12 @@ class AgentMessageBus:
             message_ttl: Message time-to-live in seconds (default: 3600 = 1 hour).
             enable_global_broadcast: Allow cross-tenant global broadcasts.
         """
-        from core.secure_config import get_config
-
+        from platform.config.configuration import get_config
         config = get_config()
-
-        self.redis_url = redis_url or getattr(config, "agent_bus_redis_url", "redis://redis:6379")
+        self.redis_url = redis_url or getattr(config, 'agent_bus_redis_url', 'redis://redis:6379')
         self.redis_db = redis_db
         self.message_ttl = message_ttl
         self.enable_global_broadcast = enable_global_broadcast
-
         self._redis_client: Any = None
         self._pubsub: Any = None
         self._subscribers: dict[str, list[Callable[[AgentMessage], Coroutine[Any, Any, None]]]] = {}
@@ -139,34 +108,27 @@ class AgentMessageBus:
         """Initialize Redis connection."""
         try:
             import redis.asyncio as redis
-
             self._redis_client = redis.from_url(self.redis_url, db=self.redis_db, decode_responses=True)
             self._pubsub = self._redis_client.pubsub()
-
-            # Test connection
             await self._redis_client.ping()
-            logger.info(f"Connected to Redis message bus at {self.redis_url} (DB {self.redis_db})")
-
+            logger.info(f'Connected to Redis message bus at {self.redis_url} (DB {self.redis_db})')
         except Exception as e:
-            logger.error(f"Failed to connect to Redis message bus: {e}")
+            logger.error(f'Failed to connect to Redis message bus: {e}')
             raise
 
     async def disconnect(self) -> None:
         """Close Redis connection."""
-        if self._listener_task and not self._listener_task.done():
+        if self._listener_task and (not self._listener_task.done()):
             self._listener_task.cancel()
             with contextlib.suppress(asyncio.CancelledError):
                 await self._listener_task
-
         if self._pubsub:
             await self._pubsub.close()
-
         if self._redis_client:
             await self._redis_client.close()
+        logger.info('Disconnected from Redis message bus')
 
-        logger.info("Disconnected from Redis message bus")
-
-    def _get_channel_name(self, tenant_id: str, agent_id: str | None = None) -> str:
+    def _get_channel_name(self, tenant_id: str, agent_id: str | None=None) -> str:
         """Get Redis channel name for agent or broadcast.
 
         Args:
@@ -177,15 +139,10 @@ class AgentMessageBus:
             Channel name (e.g., "agent_messages:tenant1:agent_xyz" or "agent_messages:tenant1:broadcast").
         """
         if agent_id is None:
-            return f"agent_messages:{tenant_id}:broadcast"
-        return f"agent_messages:{tenant_id}:{agent_id}"
+            return f'agent_messages:{tenant_id}:broadcast'
+        return f'agent_messages:{tenant_id}:{agent_id}'
 
-    async def publish(
-        self,
-        message: AgentMessage,
-        *,
-        tenant_id: str = "default",
-    ) -> bool:
+    async def publish(self, message: AgentMessage, *, tenant_id: str='default') -> bool:
         """Publish a message to the bus.
 
         Args:
@@ -196,62 +153,30 @@ class AgentMessageBus:
             True if message was published successfully.
         """
         if self._redis_client is None:
-            logger.warning("Redis client not connected - message not published")
+            logger.warning('Redis client not connected - message not published')
             return False
-
         try:
-            # Determine channel
             if message.target_agent_id:
-                # Targeted message
                 channel = self._get_channel_name(tenant_id, message.target_agent_id)
             else:
-                # Broadcast to all agents in tenant
                 channel = self._get_channel_name(tenant_id, None)
-
-            # Serialize message
             message_json = json.dumps(message.to_dict())
-
-            # Publish to channel
             await self._redis_client.publish(channel, message_json)
-
-            # Also store in persistent list with TTL
-            list_key = f"{channel}:history"
+            list_key = f'{channel}:history'
             await self._redis_client.lpush(list_key, message_json)
             await self._redis_client.expire(list_key, self.message_ttl)
-
-            # Global broadcast channel (if enabled)
             if self.enable_global_broadcast and message.priority == MessagePriority.URGENT:
-                global_channel = "agent_messages:__global__:broadcast"
+                global_channel = 'agent_messages:__global__:broadcast'
                 await self._redis_client.publish(global_channel, message_json)
-
-            self._metrics.counter(
-                "agent_messages_published_total",
-                labels={
-                    "type": message.type.value,
-                    "priority": message.priority.value,
-                    "targeted": str(message.target_agent_id is not None).lower(),
-                },
-            ).inc()
-
-            logger.debug(
-                f"Published {message.type} message from {message.sender_agent_id} to {channel} (ID: {message.message_id})"
-            )
-
+            self._metrics.counter('agent_messages_published_total', labels={'type': message.type.value, 'priority': message.priority.value, 'targeted': str(message.target_agent_id is not None).lower()}).inc()
+            logger.debug(f'Published {message.type} message from {message.sender_agent_id} to {channel} (ID: {message.message_id})')
             return True
-
         except Exception as e:
-            logger.exception(f"Failed to publish message: {e}")
-            self._metrics.counter("agent_messages_errors_total", labels={"operation": "publish"}).inc()
+            logger.exception(f'Failed to publish message: {e}')
+            self._metrics.counter('agent_messages_errors_total', labels={'operation': 'publish'}).inc()
             return False
 
-    async def subscribe(
-        self,
-        agent_id: str,
-        callback: Callable[[AgentMessage], Coroutine[Any, Any, None]],
-        *,
-        tenant_id: str = "default",
-        subscribe_to_broadcast: bool = True,
-    ) -> None:
+    async def subscribe(self, agent_id: str, callback: Callable[[AgentMessage], Coroutine[Any, Any, None]], *, tenant_id: str='default', subscribe_to_broadcast: bool=True) -> None:
         """Subscribe an agent to receive messages.
 
         Args:
@@ -261,34 +186,23 @@ class AgentMessageBus:
             subscribe_to_broadcast: Also subscribe to broadcast channel.
         """
         if self._redis_client is None or self._pubsub is None:
-            raise RuntimeError("Redis client not connected - call connect() first")
-
-        # Subscribe to targeted messages
+            raise RuntimeError('Redis client not connected - call connect() first')
         agent_channel = self._get_channel_name(tenant_id, agent_id)
         await self._pubsub.subscribe(agent_channel)
-
-        # Subscribe to broadcast if enabled
         if subscribe_to_broadcast:
             broadcast_channel = self._get_channel_name(tenant_id, None)
             await self._pubsub.subscribe(broadcast_channel)
-
-        # Subscribe to global broadcast if enabled
         if self.enable_global_broadcast:
-            global_channel = "agent_messages:__global__:broadcast"
+            global_channel = 'agent_messages:__global__:broadcast'
             await self._pubsub.subscribe(global_channel)
-
-        # Register callback
         if agent_id not in self._subscribers:
             self._subscribers[agent_id] = []
         self._subscribers[agent_id].append(callback)
-
-        # Start listener task if not already running
         if self._listener_task is None or self._listener_task.done():
             self._listener_task = asyncio.create_task(self._message_listener())
+        logger.info(f'Agent {agent_id} subscribed to {agent_channel}')
 
-        logger.info(f"Agent {agent_id} subscribed to {agent_channel}")
-
-    async def unsubscribe(self, agent_id: str, *, tenant_id: str = "default") -> None:
+    async def unsubscribe(self, agent_id: str, *, tenant_id: str='default') -> None:
         """Unsubscribe an agent from the bus.
 
         Args:
@@ -297,81 +211,50 @@ class AgentMessageBus:
         """
         if self._pubsub is None:
             return
-
-        # Unsubscribe from channels
         agent_channel = self._get_channel_name(tenant_id, agent_id)
         await self._pubsub.unsubscribe(agent_channel)
-
         broadcast_channel = self._get_channel_name(tenant_id, None)
         await self._pubsub.unsubscribe(broadcast_channel)
-
-        # Remove callbacks
         if agent_id in self._subscribers:
             del self._subscribers[agent_id]
-
-        logger.info(f"Agent {agent_id} unsubscribed from {agent_channel}")
+        logger.info(f'Agent {agent_id} unsubscribed from {agent_channel}')
 
     async def _message_listener(self) -> None:
         """Background task listening for messages and dispatching to callbacks."""
         if self._pubsub is None:
             return
-
         try:
-            logger.info("Message listener started")
-
+            logger.info('Message listener started')
             async for redis_message in self._pubsub.listen():
-                if redis_message["type"] != "message":
+                if redis_message['type'] != 'message':
                     continue
-
-                channel = redis_message["channel"]
-                data = redis_message["data"]
-
+                channel = redis_message['channel']
+                data = redis_message['data']
                 try:
-                    # Deserialize message
                     message_dict = json.loads(data)
                     message = AgentMessage.from_dict(message_dict)
-
-                    # Dispatch to subscribers
-                    # Extract agent_id from channel (format: agent_messages:{tenant}:{agent_id})
-                    parts = channel.split(":")
+                    parts = channel.split(':')
                     if len(parts) >= 3:
                         target_id = parts[2]
-
-                        # Dispatch to targeted agent or all subscribers (for broadcast)
-                        if target_id == "broadcast" or target_id == "__global__":
-                            # Broadcast to all subscribers
+                        if target_id == 'broadcast' or target_id == '__global__':
                             for callbacks in self._subscribers.values():
                                 for callback in callbacks:
                                     task = asyncio.create_task(callback(message))
-                                    task.add_done_callback(lambda t: None)  # Keep reference until done
-                        else:
-                            # Targeted message
-                            if target_id in self._subscribers:
-                                for callback in self._subscribers[target_id]:
-                                    task = asyncio.create_task(callback(message))
-                                    task.add_done_callback(lambda t: None)  # Keep reference until done
-
-                    self._metrics.counter(
-                        "agent_messages_received_total",
-                        labels={"type": message.type.value},
-                    ).inc()
-
+                                    task.add_done_callback(lambda t: None)
+                        elif target_id in self._subscribers:
+                            for callback in self._subscribers[target_id]:
+                                task = asyncio.create_task(callback(message))
+                                task.add_done_callback(lambda t: None)
+                    self._metrics.counter('agent_messages_received_total', labels={'type': message.type.value}).inc()
                 except Exception as e:
-                    logger.exception(f"Error processing message from {channel}: {e}")
-                    self._metrics.counter("agent_messages_errors_total", labels={"operation": "receive"}).inc()
-
+                    logger.exception(f'Error processing message from {channel}: {e}')
+                    self._metrics.counter('agent_messages_errors_total', labels={'operation': 'receive'}).inc()
         except asyncio.CancelledError:
-            logger.info("Message listener cancelled")
+            logger.info('Message listener cancelled')
         except Exception as e:
-            logger.exception(f"Message listener crashed: {e}")
+            logger.exception(f'Message listener crashed: {e}')
 
-    async def get_message_history(
-        self,
-        agent_id: str | None = None,
-        *,
-        tenant_id: str = "default",
-        limit: int = 100,
-    ) -> list[AgentMessage]:
+    async def get_message_history(self, agent_id: str | None=None, *, tenant_id: str='default', limit: int=100) -> list[AgentMessage]:
         """Retrieve message history for an agent or broadcast.
 
         Args:
@@ -384,27 +267,19 @@ class AgentMessageBus:
         """
         if self._redis_client is None:
             return []
-
         channel = self._get_channel_name(tenant_id, agent_id)
-        list_key = f"{channel}:history"
-
+        list_key = f'{channel}:history'
         try:
-            # Get messages from list (LRANGE gets newest first due to LPUSH)
             messages_json = await self._redis_client.lrange(list_key, 0, limit - 1)
-
             messages = []
             for msg_json in messages_json:
                 try:
                     message_dict = json.loads(msg_json)
                     messages.append(AgentMessage.from_dict(message_dict))
                 except Exception as e:
-                    logger.warning(f"Failed to deserialize message: {e}")
-
+                    logger.warning(f'Failed to deserialize message: {e}')
             return messages
-
         except Exception as e:
-            logger.exception(f"Failed to retrieve message history: {e}")
+            logger.exception(f'Failed to retrieve message history: {e}')
             return []
-
-
-__all__ = ["AgentMessage", "AgentMessageBus", "MessagePriority", "MessageType"]
+__all__ = ['AgentMessage', 'AgentMessageBus', 'MessagePriority', 'MessageType']

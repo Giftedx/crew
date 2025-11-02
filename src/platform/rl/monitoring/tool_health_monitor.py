@@ -3,24 +3,17 @@
 Tracks tool execution health and automatically disables unhealthy tools.
 Integrates with ToolRoutingBandit to prevent routing to failing tools.
 """
-
 from __future__ import annotations
-
 import logging
 import time
 from dataclasses import dataclass, field
 from typing import Any
-
-from ultimate_discord_intelligence_bot.step_result import StepResult
-
-
+from platform.core.step_result import StepResult
 logger = logging.getLogger(__name__)
-
 
 @dataclass
 class ToolHealthMetrics:
     """Health metrics for a single tool"""
-
     tool_name: str
     total_executions: int = 0
     successful_executions: int = 0
@@ -61,31 +54,23 @@ class ToolHealthMetrics:
         - Recent error pattern (20% weight)
         - Latency stability (10% weight)
         """
-        # Success rate component
         success_component = self.success_rate * 0.7
-
-        # Recent error pattern (sliding window of last 100 executions)
         if len(self.error_count_window) > 0:
             recent_error_rate = sum(self.error_count_window) / len(self.error_count_window)
             recent_success_rate = 1.0 - recent_error_rate
             recent_component = recent_success_rate * 0.2
         else:
             recent_component = 0.2
-
-        # Latency stability (penalize high latency)
         if self.avg_latency_ms > 0:
-            latency_score = max(0.0, 1.0 - (self.avg_latency_ms / 30000.0))  # 30s threshold
+            latency_score = max(0.0, 1.0 - self.avg_latency_ms / 30000.0)
             latency_component = latency_score * 0.1
         else:
             latency_component = 0.1
-
         return success_component + recent_component + latency_component
-
 
 @dataclass
 class HealthStatistics:
     """Aggregate health statistics across all tools"""
-
     total_tools: int = 0
     healthy_tools: int = 0
     degraded_tools: int = 0
@@ -94,7 +79,6 @@ class HealthStatistics:
     avg_health_score: float = 0.0
     total_executions: int = 0
     total_failures: int = 0
-
 
 class ToolHealthMonitor:
     """
@@ -109,13 +93,7 @@ class ToolHealthMonitor:
     - Integration with ToolRoutingBandit
     """
 
-    def __init__(
-        self,
-        health_threshold: float = 0.4,
-        window_size: int = 100,
-        recovery_period_s: float = 3600.0,
-        enable_auto_disable: bool = True,
-    ):
+    def __init__(self, health_threshold: float=0.4, window_size: int=100, recovery_period_s: float=3600.0, enable_auto_disable: bool=True):
         """
         Initialize health monitor
 
@@ -129,25 +107,11 @@ class ToolHealthMonitor:
         self.window_size = window_size
         self.recovery_period_s = recovery_period_s
         self.enable_auto_disable = enable_auto_disable
-
-        # Per-tool metrics
         self.tool_metrics: dict[str, ToolHealthMetrics] = {}
-
-        # Global statistics
         self.start_time = time.time()
+        logger.info(f'ToolHealthMonitor initialized (threshold={health_threshold}, window={window_size}, recovery={recovery_period_s}s)')
 
-        logger.info(
-            f"ToolHealthMonitor initialized (threshold={health_threshold}, "
-            f"window={window_size}, recovery={recovery_period_s}s)"
-        )
-
-    def record_execution(
-        self,
-        tool_name: str,
-        success: bool,
-        latency_ms: float = 0.0,
-        error_type: str | None = None,
-    ) -> None:
+    def record_execution(self, tool_name: str, success: bool, latency_ms: float=0.0, error_type: str | None=None) -> None:
         """
         Record tool execution outcome
 
@@ -157,39 +121,23 @@ class ToolHealthMonitor:
             latency_ms: Execution latency in milliseconds
             error_type: Type of error (if failed)
         """
-        # Get or create metrics
         if tool_name not in self.tool_metrics:
             self.tool_metrics[tool_name] = ToolHealthMetrics(tool_name=tool_name)
-
         metrics = self.tool_metrics[tool_name]
         now = time.time()
-
-        # Update counts
         metrics.total_executions += 1
-
         if success:
             metrics.successful_executions += 1
             metrics.total_latency_ms += latency_ms
             metrics.last_success_time = now
-
-            # Add 0 to error window
             metrics.error_count_window.append(0)
         else:
             metrics.failed_executions += 1
             metrics.last_error_time = now
-
-            # Add 1 to error window
             metrics.error_count_window.append(1)
-
-            logger.warning(
-                f"Tool {tool_name} failed (error_type={error_type}, health_score={metrics.health_score:.2f})"
-            )
-
-        # Trim window
+            logger.warning(f'Tool {tool_name} failed (error_type={error_type}, health_score={metrics.health_score:.2f})')
         if len(metrics.error_count_window) > self.window_size:
             metrics.error_count_window.pop(0)
-
-        # Check health and auto-disable if needed
         self._check_and_update_health(metrics)
 
     def _check_and_update_health(self, metrics: ToolHealthMetrics) -> None:
@@ -201,31 +149,17 @@ class ToolHealthMonitor:
         """
         if not self.enable_auto_disable:
             return
-
         health_score = metrics.health_score
-
-        # Auto-disable if unhealthy
         if metrics.is_enabled and health_score < self.health_threshold:
             metrics.is_enabled = False
             metrics.auto_disabled_at = time.time()
-            logger.warning(
-                f"Tool {metrics.tool_name} AUTO-DISABLED "
-                f"(health_score={health_score:.2f} < threshold={self.health_threshold})"
-            )
-
-        # Auto-enable if recovered
+            logger.warning(f'Tool {metrics.tool_name} AUTO-DISABLED (health_score={health_score:.2f} < threshold={self.health_threshold})')
         elif not metrics.is_enabled and metrics.auto_disabled_at:
             time_disabled = time.time() - metrics.auto_disabled_at
-
-            if time_disabled >= self.recovery_period_s and health_score >= (
-                self.health_threshold + 0.1
-            ):  # Add hysteresis
+            if time_disabled >= self.recovery_period_s and health_score >= self.health_threshold + 0.1:
                 metrics.is_enabled = True
                 metrics.auto_disabled_at = None
-                logger.info(
-                    f"Tool {metrics.tool_name} AUTO-ENABLED "
-                    f"(health_score={health_score:.2f}, recovered after {time_disabled:.0f}s)"
-                )
+                logger.info(f'Tool {metrics.tool_name} AUTO-ENABLED (health_score={health_score:.2f}, recovered after {time_disabled:.0f}s)')
 
     def is_tool_enabled(self, tool_name: str) -> bool:
         """
@@ -238,8 +172,7 @@ class ToolHealthMonitor:
             True if tool is healthy and enabled
         """
         if tool_name not in self.tool_metrics:
-            return True  # Unknown tools are enabled by default
-
+            return True
         return self.tool_metrics[tool_name].is_enabled
 
     def get_tool_health(self, tool_name: str) -> ToolHealthMetrics | None:
@@ -254,7 +187,7 @@ class ToolHealthMonitor:
         """
         return self.tool_metrics.get(tool_name)
 
-    def get_healthy_tools(self, min_health: float | None = None) -> list[str]:
+    def get_healthy_tools(self, min_health: float | None=None) -> list[str]:
         """
         Get list of healthy tool names
 
@@ -265,12 +198,7 @@ class ToolHealthMonitor:
             List of tool names meeting health criteria
         """
         threshold = min_health or self.health_threshold
-
-        return [
-            name
-            for name, metrics in self.tool_metrics.items()
-            if metrics.is_enabled and metrics.health_score >= threshold
-        ]
+        return [name for name, metrics in self.tool_metrics.items() if metrics.is_enabled and metrics.health_score >= threshold]
 
     def get_statistics(self) -> HealthStatistics:
         """
@@ -281,15 +209,12 @@ class ToolHealthMonitor:
         """
         stats = HealthStatistics()
         health_scores: list[float] = []
-
         for metrics in self.tool_metrics.values():
             stats.total_tools += 1
             stats.total_executions += metrics.total_executions
             stats.total_failures += metrics.failed_executions
-
             health_score = metrics.health_score
             health_scores.append(health_score)
-
             if not metrics.is_enabled:
                 stats.disabled_tools += 1
             elif health_score >= 0.8:
@@ -298,10 +223,8 @@ class ToolHealthMonitor:
                 stats.degraded_tools += 1
             else:
                 stats.unhealthy_tools += 1
-
         if health_scores:
             stats.avg_health_score = sum(health_scores) / len(health_scores)
-
         return stats
 
     def get_health_report(self) -> dict[str, Any]:
@@ -312,38 +235,7 @@ class ToolHealthMonitor:
             Dictionary with health data for all tools
         """
         stats = self.get_statistics()
-
-        return {
-            "statistics": {
-                "total_tools": stats.total_tools,
-                "healthy_tools": stats.healthy_tools,
-                "degraded_tools": stats.degraded_tools,
-                "unhealthy_tools": stats.unhealthy_tools,
-                "disabled_tools": stats.disabled_tools,
-                "avg_health_score": stats.avg_health_score,
-                "total_executions": stats.total_executions,
-                "total_failures": stats.total_failures,
-            },
-            "tool_health": {
-                name: {
-                    "health_score": metrics.health_score,
-                    "success_rate": metrics.success_rate,
-                    "error_rate": metrics.error_rate,
-                    "avg_latency_ms": metrics.avg_latency_ms,
-                    "total_executions": metrics.total_executions,
-                    "is_enabled": metrics.is_enabled,
-                    "last_success_time": metrics.last_success_time,
-                    "last_error_time": metrics.last_error_time,
-                }
-                for name, metrics in self.tool_metrics.items()
-            },
-            "config": {
-                "health_threshold": self.health_threshold,
-                "window_size": self.window_size,
-                "recovery_period_s": self.recovery_period_s,
-                "enable_auto_disable": self.enable_auto_disable,
-            },
-        }
+        return {'statistics': {'total_tools': stats.total_tools, 'healthy_tools': stats.healthy_tools, 'degraded_tools': stats.degraded_tools, 'unhealthy_tools': stats.unhealthy_tools, 'disabled_tools': stats.disabled_tools, 'avg_health_score': stats.avg_health_score, 'total_executions': stats.total_executions, 'total_failures': stats.total_failures}, 'tool_health': {name: {'health_score': metrics.health_score, 'success_rate': metrics.success_rate, 'error_rate': metrics.error_rate, 'avg_latency_ms': metrics.avg_latency_ms, 'total_executions': metrics.total_executions, 'is_enabled': metrics.is_enabled, 'last_success_time': metrics.last_success_time, 'last_error_time': metrics.last_error_time} for name, metrics in self.tool_metrics.items()}, 'config': {'health_threshold': self.health_threshold, 'window_size': self.window_size, 'recovery_period_s': self.recovery_period_s, 'enable_auto_disable': self.enable_auto_disable}}
 
     def reset_tool(self, tool_name: str) -> StepResult:
         """
@@ -356,39 +248,21 @@ class ToolHealthMonitor:
             StepResult indicating success/failure
         """
         if tool_name not in self.tool_metrics:
-            return StepResult.fail(f"Unknown tool: {tool_name}")
-
-        # Reset metrics
+            return StepResult.fail(f'Unknown tool: {tool_name}')
         self.tool_metrics[tool_name] = ToolHealthMetrics(tool_name=tool_name)
-
-        logger.info(f"Tool {tool_name} health metrics reset")
-        return StepResult.ok(message=f"Tool {tool_name} reset")
-
-
-# Global singleton
+        logger.info(f'Tool {tool_name} health metrics reset')
+        return StepResult.ok(message=f'Tool {tool_name} reset')
 _monitor: ToolHealthMonitor | None = None
 
-
-def get_health_monitor(auto_create: bool = True) -> ToolHealthMonitor | None:
+def get_health_monitor(auto_create: bool=True) -> ToolHealthMonitor | None:
     """Get global health monitor instance"""
     global _monitor
-
     if _monitor is None and auto_create:
         _monitor = ToolHealthMonitor()
-
     return _monitor
-
 
 def set_health_monitor(monitor: ToolHealthMonitor) -> None:
     """Set global health monitor instance"""
     global _monitor
     _monitor = monitor
-
-
-__all__ = [
-    "HealthStatistics",
-    "ToolHealthMetrics",
-    "ToolHealthMonitor",
-    "get_health_monitor",
-    "set_health_monitor",
-]
+__all__ = ['HealthStatistics', 'ToolHealthMetrics', 'ToolHealthMonitor', 'get_health_monitor', 'set_health_monitor']

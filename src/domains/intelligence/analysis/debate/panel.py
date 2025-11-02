@@ -1,28 +1,20 @@
 """Simple multi-agent debate panel."""
-
 from __future__ import annotations
-
 from dataclasses import dataclass, field
 from platform.observability import tracing
 from typing import TYPE_CHECKING
-
-
 if TYPE_CHECKING:
     from collections.abc import Callable
-
-    from core.learning_engine import LearningEngine
-    from core.router import Router
-
+    from platform.rl.learning_engine import LearningEngine
+    from platform.router import Router
 
 @dataclass
 class PanelConfig:
     """Configuration for a debate panel."""
-
     roles: list[str]
     routing_profiles: list[str] | None = None
     n_rounds: int = 1
-    aggregation_strategy: str = "vote"
-
+    aggregation_strategy: str = 'vote'
 
 @dataclass
 class AgentResult:
@@ -31,23 +23,14 @@ class AgentResult:
     output: str
     confidence: float = 0.0
 
-
 @dataclass
 class DebateReport:
     agents: list[AgentResult]
     final: str
     votes: dict[str, str] = field(default_factory=dict)
 
-
-@tracing.trace_call("debate.run_panel")
-def run_panel(
-    query: str,
-    router: Router,
-    call_model: Callable[[str, str], str],
-    config: PanelConfig,
-    engine: LearningEngine | None = None,
-    reward: float = 0.0,
-) -> DebateReport:
+@tracing.trace_call('debate.run_panel')
+def run_panel(query: str, router: Router, call_model: Callable[[str, str], str], config: PanelConfig, engine: LearningEngine | None=None, reward: float=0.0) -> DebateReport:
     """Run a debate panel.
 
     Parameters
@@ -66,25 +49,19 @@ def run_panel(
     """
     agents: list[AgentResult] = []
     for role in config.roles:
-        model = router.route(
-            task="debate",
-            candidates=config.routing_profiles or ["gpt-3.5-turbo"],
-            context={"role": role, "prompt": query},
-        )
-        output = call_model(model, f"{role}: {query}")
+        model = router.route(task='debate', candidates=config.routing_profiles or ['gpt-3.5-turbo'], context={'role': role, 'prompt': query})
+        output = call_model(model, f'{role}: {query}')
         agents.append(AgentResult(role=role, model=model, output=output))
     votes: dict[str, str] = {}
-    if config.aggregation_strategy == "vote":
+    if config.aggregation_strategy == 'vote':
         for agent in agents:
             votes[agent.role] = agent.role
         final = agents[0].output
     else:
-        final = "\n".join(a.output for a in agents)
+        final = '\n'.join((a.output for a in agents))
     if engine:
         for agent in agents:
-            engine.record("debate", {}, agent.role, agent.confidence)
-        engine.record("debate", {}, "panel", reward)
+            engine.record('debate', {}, agent.role, agent.confidence)
+        engine.record('debate', {}, 'panel', reward)
     return DebateReport(agents=agents, final=final, votes=votes)
-
-
-__all__ = ["AgentResult", "DebateReport", "PanelConfig", "run_panel"]
+__all__ = ['AgentResult', 'DebateReport', 'PanelConfig', 'run_panel']

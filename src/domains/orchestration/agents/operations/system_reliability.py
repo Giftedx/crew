@@ -2,29 +2,16 @@
 
 This agent guards pipeline health and visibility.
 """
-
 from __future__ import annotations
-
 from typing import TYPE_CHECKING
-
 from domains.orchestration.agents.base import BaseAgent
 from domains.orchestration.agents.registry import register_agent
-from ultimate_discord_intelligence_bot.settings import DISCORD_PRIVATE_WEBHOOK, DISCORD_WEBHOOK
-from ultimate_discord_intelligence_bot.tools import (
-    AdvancedPerformanceAnalyticsTool,
-    DiscordPrivateAlertTool,
-    MCPCallTool,
-    PipelineTool,
-    SystemStatusTool,
-    TimelineTool,
-)
-
-
+from app.config.settings import DISCORD_PRIVATE_WEBHOOK, DISCORD_WEBHOOK
+from ultimate_discord_intelligence_bot.tools import AdvancedPerformanceAnalyticsTool, DiscordPrivateAlertTool, MCPCallTool, PipelineTool, SystemStatusTool, TimelineTool
 if TYPE_CHECKING:
     from ultimate_discord_intelligence_bot.tools._base import BaseTool
 
-
-@register_agent("system_reliability_officer")
+@register_agent('system_reliability_officer')
 class SystemReliabilityOfficerAgent(BaseAgent):
     """System Reliability Officer Agent for operations and reliability."""
 
@@ -36,17 +23,17 @@ class SystemReliabilityOfficerAgent(BaseAgent):
     @property
     def role(self) -> str:
         """Agent role."""
-        return "System Reliability Officer"
+        return 'System Reliability Officer'
 
     @property
     def goal(self) -> str:
         """Agent goal."""
-        return "Guard pipeline health and visibility."
+        return 'Guard pipeline health and visibility.'
 
     @property
     def backstory(self) -> str:
         """Agent backstory."""
-        return "Operations and reliability."
+        return 'Operations and reliability.'
 
     @property
     def allow_delegation(self) -> bool:
@@ -55,13 +42,4 @@ class SystemReliabilityOfficerAgent(BaseAgent):
 
     def _get_reliability_tools(self) -> list[BaseTool]:
         """Get reliability tools for system monitoring."""
-        return [
-            SystemStatusTool(),
-            AdvancedPerformanceAnalyticsTool(),
-            DiscordPrivateAlertTool(
-                DISCORD_PRIVATE_WEBHOOK or DISCORD_WEBHOOK or "https://discord.com/api/webhooks/placeholder/crew-intel"
-            ),
-            PipelineTool(),
-            TimelineTool(),
-            MCPCallTool(),
-        ]
+        return [SystemStatusTool(), AdvancedPerformanceAnalyticsTool(), DiscordPrivateAlertTool(DISCORD_PRIVATE_WEBHOOK or DISCORD_WEBHOOK or 'https://discord.com/api/webhooks/placeholder/crew-intel'), PipelineTool(), TimelineTool(), MCPCallTool()]

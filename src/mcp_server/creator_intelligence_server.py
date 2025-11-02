@@ -15,45 +15,38 @@ Resources:
 
 Enable with: ENABLE_MCP_CREATOR_INTELLIGENCE=1
 """
-
 from __future__ import annotations
-
 import logging
 from typing import TYPE_CHECKING, Any
-
-
 if TYPE_CHECKING:
     from collections.abc import Callable
 logger = logging.getLogger(__name__)
 try:
     from fastmcp import FastMCP
-
     FASTMCP_AVAILABLE = True
 except ImportError:
     FASTMCP_AVAILABLE = False
     from typing import Any
 
     class FastMCP:
+
         def __init__(self, name: str):
             pass
 
-        def tool(self, fn: Callable[..., Any] | None = None, /, **kwargs: Any) -> Callable[..., Any]:
+        def tool(self, fn: Callable[..., Any] | None=None, /, **kwargs: Any) -> Callable[..., Any]:
+
             def decorator(f: Callable[..., Any]) -> Callable[..., Any]:
                 return f
-
             return decorator if fn is None else fn
 
         def resource(self, uri: str) -> Callable[..., Any]:
+
             def decorator(f: Callable[..., Any]) -> Callable[..., Any]:
                 return f
-
             return decorator
-
-
-creator_intelligence_mcp = FastMCP("Creator Intelligence")
+creator_intelligence_mcp = FastMCP('Creator Intelligence')
 _ingestion_tools = None
 _collection_manager = None
-
 
 def _get_ingestion_tools() -> Any:
     """Lazy-load ingestion tools."""
@@ -61,32 +54,26 @@ def _get_ingestion_tools() -> Any:
     if _ingestion_tools is None:
         try:
             from mcp_server.tools.creator_intelligence_ingestion import get_ingestion_tools
-
             _ingestion_tools = get_ingestion_tools(enable_vector_storage=True)
         except Exception as e:
-            logger.error(f"Failed to load ingestion tools: {e}")
+            logger.error(f'Failed to load ingestion tools: {e}')
             raise
     return _ingestion_tools
-
 
 def _get_collection_manager() -> Any:
     """Lazy-load collection manager."""
     global _collection_manager
     if _collection_manager is None:
         try:
-            from memory.creator_intelligence_collections import get_collection_manager
-
+            from domains.memory.creator_intelligence_collections import get_collection_manager
             _collection_manager = get_collection_manager(enable_semantic_cache=True)
         except Exception as e:
-            logger.error(f"Failed to load collection manager: {e}")
+            logger.error(f'Failed to load collection manager: {e}')
             raise
     return _collection_manager
 
-
 @creator_intelligence_mcp.tool
-def ingest_youtube_video(
-    url: str, tenant: str = "default", workspace: str = "main", fetch_transcript: bool = True
-) -> dict[str, Any]:
+def ingest_youtube_video(url: str, tenant: str='default', workspace: str='main', fetch_transcript: bool=True) -> dict[str, Any]:
     """Ingest a YouTube video with metadata and optional transcript.
 
     This tool fetches public metadata from YouTube, optionally retrieves
@@ -121,11 +108,10 @@ def ingest_youtube_video(
     if result.success:
         return result.data or {}
     else:
-        raise RuntimeError(f"Ingestion failed: {result.error}")
-
+        raise RuntimeError(f'Ingestion failed: {result.error}')
 
 @creator_intelligence_mcp.tool
-def ingest_twitch_clip(url: str, tenant: str = "default", workspace: str = "main") -> dict[str, Any]:
+def ingest_twitch_clip(url: str, tenant: str='default', workspace: str='main') -> dict[str, Any]:
     """Ingest a Twitch clip with metadata.
 
     Args:
@@ -147,18 +133,10 @@ def ingest_twitch_clip(url: str, tenant: str = "default", workspace: str = "main
     if result.success:
         return result.data or {}
     else:
-        raise RuntimeError(f"Ingestion failed: {result.error}")
-
+        raise RuntimeError(f'Ingestion failed: {result.error}')
 
 @creator_intelligence_mcp.tool
-def query_creator_content(
-    query_text: str,
-    collection_type: str = "episodes",
-    tenant: str = "default",
-    workspace: str = "main",
-    limit: int = 10,
-    score_threshold: float = 0.7,
-) -> dict[str, Any]:
+def query_creator_content(query_text: str, collection_type: str='episodes', tenant: str='default', workspace: str='main', limit: int=10, score_threshold: float=0.7) -> dict[str, Any]:
     """Search creator content using semantic similarity.
 
     This tool embeds your query text and searches the Vector DB for similar
@@ -187,38 +165,22 @@ def query_creator_content(
         ... )
     """
     manager = _get_collection_manager()
-    from memory.embedding_service import get_embedding_service
-
+    from domains.memory.embedding_service import get_embedding_service
     embedding_service = get_embedding_service()
-    model_map = {
-        "episodes": "balanced",
-        "segments": "fast",
-        "claims": "balanced",
-        "quotes": "fast",
-        "topics": "balanced",
-    }
-    model_choice = model_map.get(collection_type, "fast")
+    model_map = {'episodes': 'balanced', 'segments': 'fast', 'claims': 'balanced', 'quotes': 'fast', 'topics': 'balanced'}
+    model_choice = model_map.get(collection_type, 'fast')
     embed_result = embedding_service.embed_text(query_text, model=model_choice, use_cache=True)
     if not embed_result.success:
-        raise RuntimeError(f"Failed to generate query embedding: {embed_result.error}")
-    query_embedding = embed_result.data["embedding"]
-    result = manager.query_with_cache(
-        collection_type=collection_type,
-        query_embedding=query_embedding,
-        query_text=query_text,
-        tenant=tenant,
-        workspace=workspace,
-        limit=limit,
-        score_threshold=score_threshold,
-    )
+        raise RuntimeError(f'Failed to generate query embedding: {embed_result.error}')
+    query_embedding = embed_result.data['embedding']
+    result = manager.query_with_cache(collection_type=collection_type, query_embedding=query_embedding, query_text=query_text, tenant=tenant, workspace=workspace, limit=limit, score_threshold=score_threshold)
     if result.success:
         return result.data or {}
     else:
-        raise RuntimeError(f"Query failed: {result.error}")
-
+        raise RuntimeError(f'Query failed: {result.error}')
 
 @creator_intelligence_mcp.tool
-def initialize_collections(tenant: str = "default", workspace: str = "main") -> dict[str, Any]:
+def initialize_collections(tenant: str='default', workspace: str='main') -> dict[str, Any]:
     """Initialize all Creator Intelligence collections for a tenant/workspace.
 
     This tool sets up the specialized Vector DB collections (episodes, segments,
@@ -242,13 +204,10 @@ def initialize_collections(tenant: str = "default", workspace: str = "main") -> 
     if result.success:
         return result.data or {}
     else:
-        raise RuntimeError(f"Collection initialization failed: {result.error}")
-
+        raise RuntimeError(f'Collection initialization failed: {result.error}')
 
 @creator_intelligence_mcp.tool
-def get_collection_stats(
-    collection_type: str = "episodes", tenant: str = "default", workspace: str = "main"
-) -> dict[str, Any]:
+def get_collection_stats(collection_type: str='episodes', tenant: str='default', workspace: str='main') -> dict[str, Any]:
     """Get statistics for a Creator Intelligence collection.
 
     Args:
@@ -271,10 +230,9 @@ def get_collection_stats(
     if result.success:
         return result.data or {}
     else:
-        raise RuntimeError(f"Failed to get stats: {result.error}")
+        raise RuntimeError(f'Failed to get stats: {result.error}')
 
-
-@creator_intelligence_mcp.resource("kg://schema")
+@creator_intelligence_mcp.resource('kg://schema')
 def get_kg_schema() -> str:
     """Get the Knowledge Graph schema definition.
 
@@ -282,36 +240,28 @@ def get_kg_schema() -> str:
         YAML schema definition as string
     """
     from pathlib import Path
-
-    possible_paths = [
-        Path("crew/schema.yaml"),
-        Path("schema.yaml"),
-        Path(__file__).parent.parent.parent.parent / "crew" / "schema.yaml",
-    ]
+    possible_paths = [Path('crew/schema.yaml'), Path('schema.yaml'), Path(__file__).parent.parent.parent.parent / 'crew' / 'schema.yaml']
     for schema_path in possible_paths:
         if schema_path.exists():
             return schema_path.read_text()
-    return "# Schema not found - ensure schema.yaml is in project root"
-
+    return '# Schema not found - ensure schema.yaml is in project root'
 
 def main() -> None:
     """Run the Creator Intelligence MCP server."""
     if not FASTMCP_AVAILABLE:
-        print("❌ FastMCP not available. Install with: pip install .[mcp]")
+        print('❌ FastMCP not available. Install with: pip install .[mcp]')
         return
-    server_name = "Creator Intelligence MCP Server"
-    logger.info("🚀 Starting Creator Intelligence MCP Server")
-    logger.info(f"   Server Name: {server_name}")
-    logger.info("   Available Tools:")
-    logger.info("     - ingest_youtube_video")
-    logger.info("     - ingest_twitch_clip")
-    logger.info("     - query_creator_content")
-    logger.info("     - initialize_collections")
-    logger.info("     - get_collection_stats")
-    logger.info("   Available Resources:")
-    logger.info("     - kg://schema")
+    server_name = 'Creator Intelligence MCP Server'
+    logger.info('🚀 Starting Creator Intelligence MCP Server')
+    logger.info(f'   Server Name: {server_name}')
+    logger.info('   Available Tools:')
+    logger.info('     - ingest_youtube_video')
+    logger.info('     - ingest_twitch_clip')
+    logger.info('     - query_creator_content')
+    logger.info('     - initialize_collections')
+    logger.info('     - get_collection_stats')
+    logger.info('   Available Resources:')
+    logger.info('     - kg://schema')
     creator_intelligence_mcp.run()
-
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

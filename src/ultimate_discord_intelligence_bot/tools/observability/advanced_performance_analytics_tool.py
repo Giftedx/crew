@@ -13,73 +13,46 @@ Key Features:
 - Send executive performance summaries
 - Integration with Discord notification system
 """
-
 from __future__ import annotations
-
 import contextlib
 import logging
 from platform.core.step_result import StepResult
 from typing import Any
-
-from core.time import default_utc_now
-
+from platform.time import default_utc_now
 from ..advanced_performance_analytics_discord_integration import AdvancedPerformanceAnalyticsDiscordIntegration
 from ..advanced_performance_analytics_integration import get_performance_dashboard, run_full_performance_analysis
 from ..platform.observability.metrics import get_metrics
 from ._base import BaseTool
-
-
 logger = logging.getLogger(__name__)
-
 
 class AdvancedPerformanceAnalyticsTool(BaseTool[StepResult]):
     """Tool for running advanced performance analytics within crew workflows."""
-
-    name: str = "Advanced Performance Analytics Tool"
-    description: str = "Execute comprehensive performance analytics, generate alerts, run optimizations, and send reports.\n\n    Capabilities:\n    - Run comprehensive performance analysis with health scoring and recommendations\n    - Generate and send performance alerts based on configurable rules\n    - Execute predictive performance analysis with forecasting\n    - Run automated performance optimizations\n    - Send executive performance summaries to leadership channels\n    - Monitor real-time performance dashboard data\n\n    Use this tool for automated performance management as part of crew workflows."
+    name: str = 'Advanced Performance Analytics Tool'
+    description: str = 'Execute comprehensive performance analytics, generate alerts, run optimizations, and send reports.\n\n    Capabilities:\n    - Run comprehensive performance analysis with health scoring and recommendations\n    - Generate and send performance alerts based on configurable rules\n    - Execute predictive performance analysis with forecasting\n    - Run automated performance optimizations\n    - Send executive performance summaries to leadership channels\n    - Monitor real-time performance dashboard data\n\n    Use this tool for automated performance management as part of crew workflows.'
 
     def __init__(self):
         """Initialize the analytics tool."""
         self.discord_integration = AdvancedPerformanceAnalyticsDiscordIntegration()
         self._metrics = get_metrics()
 
-    def run(
-        self,
-        action: str | None = None,
-        lookback_hours: int = 24,
-        include_optimization: bool = False,
-        send_notifications: bool = True,
-        **kwargs: Any,
-    ) -> StepResult:
+    def run(self, action: str | None=None, lookback_hours: int=24, include_optimization: bool=False, send_notifications: bool=True, **kwargs: Any) -> StepResult:
         """Public wrapper delegating to :meth:`_run`."""
-        if action is None and "args" in kwargs:
-            args_dict = kwargs.get("args", {})
-            action = args_dict.get("action")
-        if action is None and "kwargs" in kwargs:
-            nested_kwargs = kwargs.get("kwargs", {})
-            action = nested_kwargs.get("action")
+        if action is None and 'args' in kwargs:
+            args_dict = kwargs.get('args', {})
+            action = args_dict.get('action')
+        if action is None and 'kwargs' in kwargs:
+            nested_kwargs = kwargs.get('kwargs', {})
+            action = nested_kwargs.get('action')
         if action is None:
-            return StepResult.fail(
-                error="Missing required parameter: action",
-                details="Supported actions: analyze, alerts, optimize, predict, executive_summary, dashboard",
-            )
+            return StepResult.fail(error='Missing required parameter: action', details='Supported actions: analyze, alerts, optimize, predict, executive_summary, dashboard')
         try:
             return self._run(action, lookback_hours, include_optimization, send_notifications, **kwargs)
         except Exception as exc:
             with contextlib.suppress(Exception):
-                self._metrics.counter(
-                    "tool_runs_total", labels={"tool": "advanced_performance_analytics", "outcome": "error"}
-                ).inc()
+                self._metrics.counter('tool_runs_total', labels={'tool': 'advanced_performance_analytics', 'outcome': 'error'}).inc()
             return StepResult.fail(error=str(exc))
 
-    def _run(
-        self,
-        action: str,
-        lookback_hours: int = 24,
-        include_optimization: bool = False,
-        send_notifications: bool = True,
-        **kwargs: Any,
-    ) -> StepResult:
+    def _run(self, action: str, lookback_hours: int=24, include_optimization: bool=False, send_notifications: bool=True, **kwargs: Any) -> StepResult:
         """Execute performance analytics actions.
 
         Args:
@@ -93,43 +66,32 @@ class AdvancedPerformanceAnalyticsTool(BaseTool[StepResult]):
             StepResult with action results
         """
         try:
-            logger.info(f"Executing performance analytics action: {action}")
-            if action == "analyze":
+            logger.info(f'Executing performance analytics action: {action}')
+            if action == 'analyze':
                 return self._run_comprehensive_analysis(lookback_hours, include_optimization, send_notifications)
-            elif action == "alerts":
+            elif action == 'alerts':
                 return self._run_alert_monitoring(lookback_hours, send_notifications)
-            elif action == "optimize":
+            elif action == 'optimize':
                 return self._run_optimization_execution(lookback_hours)
-            elif action == "predict":
+            elif action == 'predict':
                 return self._run_predictive_analysis(lookback_hours, send_notifications)
-            elif action == "executive_summary":
+            elif action == 'executive_summary':
                 return self._send_executive_summary(lookback_hours)
-            elif action == "dashboard":
+            elif action == 'dashboard':
                 return self._get_dashboard_data()
             else:
-                res = StepResult.fail(
-                    error=f"Unknown action: {action}",
-                    details="Supported actions: analyze, alerts, optimize, predict, executive_summary, dashboard",
-                )
+                res = StepResult.fail(error=f'Unknown action: {action}', details='Supported actions: analyze, alerts, optimize, predict, executive_summary, dashboard')
                 with contextlib.suppress(Exception):
-                    self._metrics.counter(
-                        "tool_runs_total", labels={"tool": "advanced_performance_analytics", "outcome": "error"}
-                    ).inc()
+                    self._metrics.counter('tool_runs_total', labels={'tool': 'advanced_performance_analytics', 'outcome': 'error'}).inc()
                 return res
         except Exception as e:
             logger.error(f"Error executing performance analytics action '{action}': {e}")
-            res = StepResult.fail(
-                error=f"Performance analytics execution failed: {e!s}", action=action, lookback_hours=lookback_hours
-            )
+            res = StepResult.fail(error=f'Performance analytics execution failed: {e!s}', action=action, lookback_hours=lookback_hours)
             with contextlib.suppress(Exception):
-                self._metrics.counter(
-                    "tool_runs_total", labels={"tool": "advanced_performance_analytics", "outcome": "error"}
-                ).inc()
+                self._metrics.counter('tool_runs_total', labels={'tool': 'advanced_performance_analytics', 'outcome': 'error'}).inc()
             return res
 
-    def _run_comprehensive_analysis(
-        self, lookback_hours: int, include_optimization: bool, send_notifications: bool
-    ) -> StepResult:
+    def _run_comprehensive_analysis(self, lookback_hours: int, include_optimization: bool, send_notifications: bool) -> StepResult:
         """Run comprehensive performance analysis.
 
         Args:
@@ -142,60 +104,26 @@ class AdvancedPerformanceAnalyticsTool(BaseTool[StepResult]):
         """
         try:
             import asyncio
-
-            analysis_results = asyncio.run(
-                run_full_performance_analysis(lookback_hours=lookback_hours, include_optimization=include_optimization)
-            )
-            if "error" in analysis_results:
-                return StepResult.fail(
-                    error=analysis_results["error"], action="comprehensive_analysis", lookback_hours=lookback_hours
-                )
-            executive_summary = analysis_results.get("executive_summary", {})
-            component_results = analysis_results.get("component_results", {})
+            analysis_results = asyncio.run(run_full_performance_analysis(lookback_hours=lookback_hours, include_optimization=include_optimization))
+            if 'error' in analysis_results:
+                return StepResult.fail(error=analysis_results['error'], action='comprehensive_analysis', lookback_hours=lookback_hours)
+            executive_summary = analysis_results.get('executive_summary', {})
+            component_results = analysis_results.get('component_results', {})
             notification_results = {}
             if send_notifications:
-                alerts = asyncio.run(
-                    self.discord_integration.alert_engine.evaluate_analytics_for_alerts(lookback_hours)
-                )
+                alerts = asyncio.run(self.discord_integration.alert_engine.evaluate_analytics_for_alerts(lookback_hours))
                 if alerts:
                     notification_result = asyncio.run(self.discord_integration.send_batch_notifications(alerts))
-                    notification_results = {
-                        "alerts_generated": len(alerts),
-                        "notification_status": notification_result.get("status", "unknown"),
-                    }
-            res = StepResult.ok(
-                data={
-                    "analysis_type": "comprehensive",
-                    "lookback_hours": lookback_hours,
-                    "optimization_included": include_optimization,
-                    "overall_performance_score": executive_summary.get("overall_performance_score", 0),
-                    "system_status": executive_summary.get("system_status", "unknown"),
-                    "key_insights_count": executive_summary.get("key_insights_count", 0),
-                    "recommendations_count": executive_summary.get("priority_recommendations_count", 0),
-                    "component_health": {
-                        "analytics": component_results.get("analytics", {}).get("health_score", 0),
-                        "predictive": component_results.get("predictive", {}).get("reliability_score", 0),
-                        "optimization": component_results.get("optimization", {}).get("success_rate", 0),
-                    },
-                    "notifications": notification_results,
-                    "analysis_metadata": analysis_results.get("analysis_metadata", {}),
-                    "full_results": analysis_results,
-                },
-                message=f"Comprehensive performance analysis completed for {lookback_hours}h period",
-                timestamp=default_utc_now(),
-            )
+                    notification_results = {'alerts_generated': len(alerts), 'notification_status': notification_result.get('status', 'unknown')}
+            res = StepResult.ok(data={'analysis_type': 'comprehensive', 'lookback_hours': lookback_hours, 'optimization_included': include_optimization, 'overall_performance_score': executive_summary.get('overall_performance_score', 0), 'system_status': executive_summary.get('system_status', 'unknown'), 'key_insights_count': executive_summary.get('key_insights_count', 0), 'recommendations_count': executive_summary.get('priority_recommendations_count', 0), 'component_health': {'analytics': component_results.get('analytics', {}).get('health_score', 0), 'predictive': component_results.get('predictive', {}).get('reliability_score', 0), 'optimization': component_results.get('optimization', {}).get('success_rate', 0)}, 'notifications': notification_results, 'analysis_metadata': analysis_results.get('analysis_metadata', {}), 'full_results': analysis_results}, message=f'Comprehensive performance analysis completed for {lookback_hours}h period', timestamp=default_utc_now())
             with contextlib.suppress(Exception):
-                self._metrics.counter(
-                    "tool_runs_total", labels={"tool": "advanced_performance_analytics", "outcome": "success"}
-                ).inc()
+                self._metrics.counter('tool_runs_total', labels={'tool': 'advanced_performance_analytics', 'outcome': 'success'}).inc()
             return res
         except Exception as e:
-            logger.error(f"Error in comprehensive analysis: {e}")
-            res = StepResult.fail(error=str(e), action="comprehensive_analysis")
+            logger.error(f'Error in comprehensive analysis: {e}')
+            res = StepResult.fail(error=str(e), action='comprehensive_analysis')
             with contextlib.suppress(Exception):
-                self._metrics.counter(
-                    "tool_runs_total", labels={"tool": "advanced_performance_analytics", "outcome": "error"}
-                ).inc()
+                self._metrics.counter('tool_runs_total', labels={'tool': 'advanced_performance_analytics', 'outcome': 'error'}).inc()
             return res
 
     def _run_alert_monitoring(self, lookback_hours: int, send_notifications: bool) -> StepResult:
@@ -210,66 +138,28 @@ class AdvancedPerformanceAnalyticsTool(BaseTool[StepResult]):
         """
         try:
             import asyncio
-
             alerts = asyncio.run(self.discord_integration.alert_engine.evaluate_analytics_for_alerts(lookback_hours))
             if not alerts:
-                res = StepResult.ok(
-                    data={
-                        "alerts_generated": 0,
-                        "lookback_hours": lookback_hours,
-                        "status": "no_alerts",
-                        "message": "No performance alerts generated - system operating within normal parameters",
-                    },
-                    message="Performance monitoring completed - no alerts",
-                )
+                res = StepResult.ok(data={'alerts_generated': 0, 'lookback_hours': lookback_hours, 'status': 'no_alerts', 'message': 'No performance alerts generated - system operating within normal parameters'}, message='Performance monitoring completed - no alerts')
                 with contextlib.suppress(Exception):
-                    self._metrics.counter(
-                        "tool_runs_total", labels={"tool": "advanced_performance_analytics", "outcome": "success"}
-                    ).inc()
+                    self._metrics.counter('tool_runs_total', labels={'tool': 'advanced_performance_analytics', 'outcome': 'success'}).inc()
                 return res
-            alert_summary = {"critical": 0, "warning": 0, "info": 0}
+            alert_summary = {'critical': 0, 'warning': 0, 'info': 0}
             for alert in alerts:
                 alert_summary[alert.severity.value] += 1
             notification_results = {}
             if send_notifications:
                 notification_result = asyncio.run(self.discord_integration.send_batch_notifications(alerts))
-                notification_results = {
-                    "notification_status": notification_result.get("status", "unknown"),
-                    "successful_notifications": notification_result.get("successful", 0),
-                    "failed_notifications": notification_result.get("failed", 0),
-                }
-            res = StepResult.ok(
-                data={
-                    "alerts_generated": len(alerts),
-                    "lookback_hours": lookback_hours,
-                    "alert_breakdown": alert_summary,
-                    "notifications": notification_results,
-                    "alert_details": [
-                        {
-                            "id": alert.alert_id,
-                            "severity": alert.severity.value,
-                            "category": alert.category.value,
-                            "title": alert.title,
-                            "metrics_violated": len(alert.metrics),
-                        }
-                        for alert in alerts
-                    ],
-                },
-                message=f"Generated {len(alerts)} performance alerts ({alert_summary})",
-                timestamp=default_utc_now(),
-            )
+                notification_results = {'notification_status': notification_result.get('status', 'unknown'), 'successful_notifications': notification_result.get('successful', 0), 'failed_notifications': notification_result.get('failed', 0)}
+            res = StepResult.ok(data={'alerts_generated': len(alerts), 'lookback_hours': lookback_hours, 'alert_breakdown': alert_summary, 'notifications': notification_results, 'alert_details': [{'id': alert.alert_id, 'severity': alert.severity.value, 'category': alert.category.value, 'title': alert.title, 'metrics_violated': len(alert.metrics)} for alert in alerts]}, message=f'Generated {len(alerts)} performance alerts ({alert_summary})', timestamp=default_utc_now())
             with contextlib.suppress(Exception):
-                self._metrics.counter(
-                    "tool_runs_total", labels={"tool": "advanced_performance_analytics", "outcome": "success"}
-                ).inc()
+                self._metrics.counter('tool_runs_total', labels={'tool': 'advanced_performance_analytics', 'outcome': 'success'}).inc()
             return res
         except Exception as e:
-            logger.error(f"Error in alert monitoring: {e}")
-            res = StepResult.fail(error=str(e), action="alert_monitoring")
+            logger.error(f'Error in alert monitoring: {e}')
+            res = StepResult.fail(error=str(e), action='alert_monitoring')
             with contextlib.suppress(Exception):
-                self._metrics.counter(
-                    "tool_runs_total", labels={"tool": "advanced_performance_analytics", "outcome": "error"}
-                ).inc()
+                self._metrics.counter('tool_runs_total', labels={'tool': 'advanced_performance_analytics', 'outcome': 'error'}).inc()
             return res
 
     def _run_optimization_execution(self, lookback_hours: int) -> StepResult:
@@ -283,56 +173,25 @@ class AdvancedPerformanceAnalyticsTool(BaseTool[StepResult]):
         """
         try:
             import asyncio
-
-            optimization_results = asyncio.run(
-                run_full_performance_analysis(lookback_hours=lookback_hours, include_optimization=True)
-            )
-            if "error" in optimization_results:
-                return StepResult.fail(
-                    error=optimization_results["error"], action="optimization_execution", lookback_hours=lookback_hours
-                )
-            detailed_results = optimization_results.get("detailed_results", {})
-            optimization_data = detailed_results.get("optimization_results_full", {})
+            optimization_results = asyncio.run(run_full_performance_analysis(lookback_hours=lookback_hours, include_optimization=True))
+            if 'error' in optimization_results:
+                return StepResult.fail(error=optimization_results['error'], action='optimization_execution', lookback_hours=lookback_hours)
+            detailed_results = optimization_results.get('detailed_results', {})
+            optimization_data = detailed_results.get('optimization_results_full', {})
             if not optimization_data:
-                res = StepResult.ok(
-                    data={
-                        "optimization_executed": False,
-                        "message": "No optimization opportunities identified or optimization engine not available",
-                        "lookback_hours": lookback_hours,
-                    },
-                    message="Performance optimization scan completed - no actions needed",
-                )
+                res = StepResult.ok(data={'optimization_executed': False, 'message': 'No optimization opportunities identified or optimization engine not available', 'lookback_hours': lookback_hours}, message='Performance optimization scan completed - no actions needed')
                 with contextlib.suppress(Exception):
-                    self._metrics.counter(
-                        "tool_runs_total", labels={"tool": "advanced_performance_analytics", "outcome": "success"}
-                    ).inc()
+                    self._metrics.counter('tool_runs_total', labels={'tool': 'advanced_performance_analytics', 'outcome': 'success'}).inc()
                 return res
-            res = StepResult.ok(
-                data={
-                    "optimization_executed": True,
-                    "lookback_hours": lookback_hours,
-                    "actions_executed": optimization_data.get("actions_executed", 0),
-                    "successful_optimizations": optimization_data.get("successful_optimizations", 0),
-                    "performance_improvements": optimization_data.get("performance_improvements", {}),
-                    "optimization_strategy": optimization_data.get("strategy_used", "unknown"),
-                    "validation_results": optimization_data.get("validation_results", {}),
-                    "full_optimization_data": optimization_data,
-                },
-                message=f"Executed {optimization_data.get('successful_optimizations', 0)} performance optimizations",
-                timestamp=default_utc_now(),
-            )
+            res = StepResult.ok(data={'optimization_executed': True, 'lookback_hours': lookback_hours, 'actions_executed': optimization_data.get('actions_executed', 0), 'successful_optimizations': optimization_data.get('successful_optimizations', 0), 'performance_improvements': optimization_data.get('performance_improvements', {}), 'optimization_strategy': optimization_data.get('strategy_used', 'unknown'), 'validation_results': optimization_data.get('validation_results', {}), 'full_optimization_data': optimization_data}, message=f'Executed {optimization_data.get('successful_optimizations', 0)} performance optimizations', timestamp=default_utc_now())
             with contextlib.suppress(Exception):
-                self._metrics.counter(
-                    "tool_runs_total", labels={"tool": "advanced_performance_analytics", "outcome": "success"}
-                ).inc()
+                self._metrics.counter('tool_runs_total', labels={'tool': 'advanced_performance_analytics', 'outcome': 'success'}).inc()
             return res
         except Exception as e:
-            logger.error(f"Error in optimization execution: {e}")
-            res = StepResult.fail(error=str(e), action="optimization_execution")
+            logger.error(f'Error in optimization execution: {e}')
+            res = StepResult.fail(error=str(e), action='optimization_execution')
             with contextlib.suppress(Exception):
-                self._metrics.counter(
-                    "tool_runs_total", labels={"tool": "advanced_performance_analytics", "outcome": "error"}
-                ).inc()
+                self._metrics.counter('tool_runs_total', labels={'tool': 'advanced_performance_analytics', 'outcome': 'error'}).inc()
             return res
 
     def _run_predictive_analysis(self, lookback_hours: int, send_notifications: bool) -> StepResult:
@@ -347,67 +206,29 @@ class AdvancedPerformanceAnalyticsTool(BaseTool[StepResult]):
         """
         try:
             import asyncio
-
             analytics_system = self.discord_integration.alert_engine.analytics_system
-            predictive_results = asyncio.run(
-                analytics_system.predictive_engine.generate_comprehensive_predictions(lookback_hours)
-            )
-            if "error" in predictive_results:
-                return StepResult.fail(
-                    error=predictive_results["error"], action="predictive_analysis", lookback_hours=lookback_hours
-                )
-            predictions = predictive_results.get("predictions", [])
-            early_warnings = predictive_results.get("early_warnings", {})
-            capacity_forecast = predictive_results.get("capacity_forecast", {})
+            predictive_results = asyncio.run(analytics_system.predictive_engine.generate_comprehensive_predictions(lookback_hours))
+            if 'error' in predictive_results:
+                return StepResult.fail(error=predictive_results['error'], action='predictive_analysis', lookback_hours=lookback_hours)
+            predictions = predictive_results.get('predictions', [])
+            early_warnings = predictive_results.get('early_warnings', {})
+            capacity_forecast = predictive_results.get('capacity_forecast', {})
             notification_results = {}
-            if send_notifications and early_warnings.get("total_warnings", 0) > 0:
-                alerts = asyncio.run(
-                    self.discord_integration.alert_engine.evaluate_analytics_for_alerts(lookback_hours)
-                )
-                predictive_alerts = [alert for alert in alerts if "predictive" in alert.category.value]
+            if send_notifications and early_warnings.get('total_warnings', 0) > 0:
+                alerts = asyncio.run(self.discord_integration.alert_engine.evaluate_analytics_for_alerts(lookback_hours))
+                predictive_alerts = [alert for alert in alerts if 'predictive' in alert.category.value]
                 if predictive_alerts:
-                    notification_result = asyncio.run(
-                        self.discord_integration.send_batch_notifications(predictive_alerts)
-                    )
-                    notification_results = {
-                        "predictive_alerts_sent": len(predictive_alerts),
-                        "notification_status": notification_result.get("status", "unknown"),
-                    }
-            res = StepResult.ok(
-                data={
-                    "prediction_type": "comprehensive",
-                    "lookback_hours": lookback_hours,
-                    "predictions_generated": len(predictions),
-                    "reliability_score": predictive_results.get("reliability_score", 0),
-                    "early_warnings": {
-                        "total": early_warnings.get("total_warnings", 0),
-                        "critical": early_warnings.get("critical", 0),
-                        "warning": early_warnings.get("warning", 0),
-                        "info": early_warnings.get("info", 0),
-                    },
-                    "capacity_forecast": {
-                        "forecast_horizon": capacity_forecast.get("forecast_horizon", 0),
-                        "predicted_capacity_issues": capacity_forecast.get("predicted_issues", []),
-                        "optimization_recommendations": capacity_forecast.get("recommendations", []),
-                    },
-                    "notifications": notification_results,
-                    "full_predictive_data": predictive_results,
-                },
-                message=f"Predictive analysis completed with {len(predictions)} forecasts and {early_warnings.get('total_warnings', 0)} warnings",
-                timestamp=default_utc_now(),
-            )
+                    notification_result = asyncio.run(self.discord_integration.send_batch_notifications(predictive_alerts))
+                    notification_results = {'predictive_alerts_sent': len(predictive_alerts), 'notification_status': notification_result.get('status', 'unknown')}
+            res = StepResult.ok(data={'prediction_type': 'comprehensive', 'lookback_hours': lookback_hours, 'predictions_generated': len(predictions), 'reliability_score': predictive_results.get('reliability_score', 0), 'early_warnings': {'total': early_warnings.get('total_warnings', 0), 'critical': early_warnings.get('critical', 0), 'warning': early_warnings.get('warning', 0), 'info': early_warnings.get('info', 0)}, 'capacity_forecast': {'forecast_horizon': capacity_forecast.get('forecast_horizon', 0), 'predicted_capacity_issues': capacity_forecast.get('predicted_issues', []), 'optimization_recommendations': capacity_forecast.get('recommendations', [])}, 'notifications': notification_results, 'full_predictive_data': predictive_results}, message=f'Predictive analysis completed with {len(predictions)} forecasts and {early_warnings.get('total_warnings', 0)} warnings', timestamp=default_utc_now())
             with contextlib.suppress(Exception):
-                self._metrics.counter(
-                    "tool_runs_total", labels={"tool": "advanced_performance_analytics", "outcome": "success"}
-                ).inc()
+                self._metrics.counter('tool_runs_total', labels={'tool': 'advanced_performance_analytics', 'outcome': 'success'}).inc()
             return res
         except Exception as e:
-            logger.error(f"Error in predictive analysis: {e}")
-            res = StepResult.fail(error=str(e), action="predictive_analysis")
+            logger.error(f'Error in predictive analysis: {e}')
+            res = StepResult.fail(error=str(e), action='predictive_analysis')
             with contextlib.suppress(Exception):
-                self._metrics.counter(
-                    "tool_runs_total", labels={"tool": "advanced_performance_analytics", "outcome": "error"}
-                ).inc()
+                self._metrics.counter('tool_runs_total', labels={'tool': 'advanced_performance_analytics', 'outcome': 'error'}).inc()
             return res
 
     def _send_executive_summary(self, lookback_hours: int) -> StepResult:
@@ -421,43 +242,22 @@ class AdvancedPerformanceAnalyticsTool(BaseTool[StepResult]):
         """
         try:
             import asyncio
-
             summary_result = asyncio.run(self.discord_integration.send_executive_summary(lookback_hours))
-            if summary_result.get("status") == "success":
-                res = StepResult.ok(
-                    data={
-                        "summary_delivered": True,
-                        "summary_period_hours": lookback_hours,
-                        "alerts_summarized": summary_result.get("total_alerts_summarized", 0),
-                        "message_length": summary_result.get("message_length", 0),
-                        "delivery_status": "success",
-                    },
-                    message=f"Executive performance summary delivered for {lookback_hours}h period",
-                    timestamp=default_utc_now(),
-                )
+            if summary_result.get('status') == 'success':
+                res = StepResult.ok(data={'summary_delivered': True, 'summary_period_hours': lookback_hours, 'alerts_summarized': summary_result.get('total_alerts_summarized', 0), 'message_length': summary_result.get('message_length', 0), 'delivery_status': 'success'}, message=f'Executive performance summary delivered for {lookback_hours}h period', timestamp=default_utc_now())
                 with contextlib.suppress(Exception):
-                    self._metrics.counter(
-                        "tool_runs_total", labels={"tool": "advanced_performance_analytics", "outcome": "success"}
-                    ).inc()
+                    self._metrics.counter('tool_runs_total', labels={'tool': 'advanced_performance_analytics', 'outcome': 'success'}).inc()
                 return res
             else:
-                res = StepResult.fail(
-                    error=summary_result.get("error", "Unknown error"),
-                    action="executive_summary",
-                    summary_period_hours=lookback_hours,
-                )
+                res = StepResult.fail(error=summary_result.get('error', 'Unknown error'), action='executive_summary', summary_period_hours=lookback_hours)
                 with contextlib.suppress(Exception):
-                    self._metrics.counter(
-                        "tool_runs_total", labels={"tool": "advanced_performance_analytics", "outcome": "error"}
-                    ).inc()
+                    self._metrics.counter('tool_runs_total', labels={'tool': 'advanced_performance_analytics', 'outcome': 'error'}).inc()
                 return res
         except Exception as e:
-            logger.error(f"Error sending executive summary: {e}")
-            res = StepResult.fail(error=str(e), action="executive_summary")
+            logger.error(f'Error sending executive summary: {e}')
+            res = StepResult.fail(error=str(e), action='executive_summary')
             with contextlib.suppress(Exception):
-                self._metrics.counter(
-                    "tool_runs_total", labels={"tool": "advanced_performance_analytics", "outcome": "error"}
-                ).inc()
+                self._metrics.counter('tool_runs_total', labels={'tool': 'advanced_performance_analytics', 'outcome': 'error'}).inc()
             return res
 
     def _get_dashboard_data(self) -> StepResult:
@@ -468,41 +268,18 @@ class AdvancedPerformanceAnalyticsTool(BaseTool[StepResult]):
         """
         try:
             import asyncio
-
             dashboard_data = asyncio.run(get_performance_dashboard())
-            if "error" in dashboard_data:
-                return StepResult.fail(error=dashboard_data["error"], action="dashboard_data")
-            system_health = dashboard_data.get("system_health", {})
-            advanced_analytics = dashboard_data.get("advanced_analytics", {})
-            res = StepResult.ok(
-                data={
-                    "dashboard_status": dashboard_data.get("dashboard_status", "unknown"),
-                    "timestamp": dashboard_data.get("timestamp", default_utc_now().isoformat()),
-                    "system_health": {
-                        "overall_status": system_health.get("overall_status", "unknown"),
-                        "performance_score": system_health.get("performance_score", 0),
-                        "active_components": system_health.get("active_components", []),
-                    },
-                    "analytics_status": {
-                        "analytics_engine_active": advanced_analytics.get("analytics_engine_active", False),
-                        "predictive_capabilities": advanced_analytics.get("predictive_capabilities", "disabled"),
-                        "optimization_engine_active": advanced_analytics.get("optimization_engine_active", False),
-                    },
-                    "full_dashboard_data": dashboard_data,
-                },
-                message="Performance dashboard data retrieved successfully",
-                timestamp=default_utc_now(),
-            )
+            if 'error' in dashboard_data:
+                return StepResult.fail(error=dashboard_data['error'], action='dashboard_data')
+            system_health = dashboard_data.get('system_health', {})
+            advanced_analytics = dashboard_data.get('advanced_analytics', {})
+            res = StepResult.ok(data={'dashboard_status': dashboard_data.get('dashboard_status', 'unknown'), 'timestamp': dashboard_data.get('timestamp', default_utc_now().isoformat()), 'system_health': {'overall_status': system_health.get('overall_status', 'unknown'), 'performance_score': system_health.get('performance_score', 0), 'active_components': system_health.get('active_components', [])}, 'analytics_status': {'analytics_engine_active': advanced_analytics.get('analytics_engine_active', False), 'predictive_capabilities': advanced_analytics.get('predictive_capabilities', 'disabled'), 'optimization_engine_active': advanced_analytics.get('optimization_engine_active', False)}, 'full_dashboard_data': dashboard_data}, message='Performance dashboard data retrieved successfully', timestamp=default_utc_now())
             with contextlib.suppress(Exception):
-                self._metrics.counter(
-                    "tool_runs_total", labels={"tool": "advanced_performance_analytics", "outcome": "success"}
-                ).inc()
+                self._metrics.counter('tool_runs_total', labels={'tool': 'advanced_performance_analytics', 'outcome': 'success'}).inc()
             return res
         except Exception as e:
-            logger.error(f"Error getting dashboard data: {e}")
-            res = StepResult.fail(error=str(e), action="dashboard_data")
+            logger.error(f'Error getting dashboard data: {e}')
+            res = StepResult.fail(error=str(e), action='dashboard_data')
             with contextlib.suppress(Exception):
-                self._metrics.counter(
-                    "tool_runs_total", labels={"tool": "advanced_performance_analytics", "outcome": "error"}
-                ).inc()
+                self._metrics.counter('tool_runs_total', labels={'tool': 'advanced_performance_analytics', 'outcome': 'error'}).inc()
             return res
