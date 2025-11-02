@@ -3,10 +3,11 @@
 Contains foundational protocols and utilities with zero domain dependencies.
 """
 
-from platform.core.step_result import (  # noqa: PLC0415
+from .step_result import (
     ErrorCategory,
     StepResult,
 )
+
 
 __all__ = [
     "ErrorCategory",

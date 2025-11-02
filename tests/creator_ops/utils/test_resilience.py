@@ -7,6 +7,7 @@ import time
 from unittest.mock import patch
 
 import pytest
+
 from core.circuit_breaker_canonical import (
     CircuitBreaker,
     CircuitBreakerOpenError,
@@ -15,7 +16,6 @@ from core.circuit_breaker_canonical import (
     get_circuit_breaker_registry,
     with_circuit_breaker,
 )
-
 from ultimate_discord_intelligence_bot.creator_ops.utils.backpressure import (
     BackpressureHandler,
     BackpressureManager,

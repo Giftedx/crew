@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING, Any
 from urllib.parse import urlparse
 
 import requests
+
 from obs import metrics as _metrics
 
 from .config import (
