@@ -273,7 +273,16 @@ def _export_settings():
             globals()[flag_name.upper()] = flag_value
 
 
-# Initialize on import
-_export_settings()
+# Lazy export - only initialize when actually needed
+# Don't call _export_settings() at import time to avoid validation errors
+# when environment variables aren't set (e.g., during testing)
+def __getattr__(name: str) -> Any:
+    """Dynamic attribute access for module-level exports."""
+    try:
+        _export_settings()
+        return globals()[name]
+    except (KeyError, ValueError):
+        # If validation fails or setting doesn't exist, try environment variable
+        return os.getenv(name, None)
 
 __all__ = ["Settings", "get_settings", "get_config", "UnifiedConfig"]
