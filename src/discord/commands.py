@@ -16,10 +16,9 @@ from platform.rl.learning_engine import LearningEngine
 from platform.router import Router
 from typing import TYPE_CHECKING, Any
 
+import discord
 from debate.panel import PanelConfig, run_panel
 from debate.store import Debate, DebateStore
-
-import discord
 from discord.ext import commands
 from discord.ui import Button, Select, View
 

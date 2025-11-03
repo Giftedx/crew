@@ -187,7 +187,7 @@ class FeatureFlagAuditor:
             recommendations.append(f"Consider simplifying overly specific flags: {[f.name for f in overly_specific]}")
         grouped_flags = self._find_groupable_flags(flag_names)
         for group in grouped_flags:
-            recommendations.append(f"Consider grouping related flags: {', '.join(group)}"
+            recommendations.append(f"Consider grouping related flags: {', '.join(group)}")
         inconsistent_naming = self._find_inconsistent_naming(flag_names)
         if inconsistent_naming:
             recommendations.append(f"Standardize flag naming conventions: {inconsistent_naming}")

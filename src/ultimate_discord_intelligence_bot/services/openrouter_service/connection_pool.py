@@ -15,8 +15,9 @@ from platform import http_utils
 from platform.observability.metrics import get_metrics
 from typing import Any
 
-from app.config.feature_flags import FeatureFlags
 from requests import RequestException  # http-compliance: allow-direct-requests (exception type import only)
+
+from app.config.feature_flags import FeatureFlags
 
 
 log = logging.getLogger(__name__)

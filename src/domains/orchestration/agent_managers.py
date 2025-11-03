@@ -45,15 +45,15 @@ def populate_agent_tool_context(
             context_summary[k] = f"{type(v).__name__}({len(v)} items)"
         else:
             context_summary[k] = type(v).__name__
-    _logger.warning(f"🔧 POPULATING CONTEXT for agent {getattr(agent, 'role', 'unknown')}"
+    _logger.warning(f"🔧 POPULATING CONTEXT for agent {getattr(agent, 'role', 'unknown')}")
     _logger.warning(f"   📦 Data summary: {context_summary}")
     if "transcript" in context_data:
         preview = str(context_data["transcript"])[:200]
         _logger.warning(f"   📝 Transcript preview: {preview}...")
     if "file_path" in context_data:
-        _logger.warning(f"   📁 File path: {context_data['file_path']}"
+        _logger.warning(f"   📁 File path: {context_data['file_path']}")
     if "url" in context_data:
-        _logger.warning(f"   🔗 URL: {context_data['url']}"
+        _logger.warning(f"   🔗 URL: {context_data['url']}")
     try:
         from ..tools.mem0_memory_tool import Mem0MemoryTool
 
@@ -64,7 +64,7 @@ def populate_agent_tool_context(
             and (not any(isinstance(t, Mem0MemoryTool) for t in agent.tools))
         ):
             agent.tools.append(Mem0MemoryTool())
-            _logger.info(f"🧠 Added Mem0MemoryTool to agent: {getattr(agent, 'role', 'unknown')}"
+            _logger.info(f"🧠 Added Mem0MemoryTool to agent: {getattr(agent, 'role', 'unknown')}")
     except ImportError:
         _logger.debug("Mem0MemoryTool not available, skipping.")
     except Exception as e:
@@ -92,8 +92,7 @@ def populate_agent_tool_context(
                     },
                 ).inc()
     else:
-        _logger.error(f"❌ CONTEXT POPULATION FAILED: 0 tools updated for agent {getattr(agent, 'role', 'unknown')}"
-
+        _logger.error(f"❌ CONTEXT POPULATION FAILED: 0 tools updated for agent {getattr(agent, 'role', 'unknown')}")
 
 def get_or_create_agent(
     agent_name: str,

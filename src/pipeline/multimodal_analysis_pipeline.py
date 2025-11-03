@@ -461,7 +461,7 @@ class MultimodalAnalysisPipeline:
                         highlights=highlights, episode_info={"platform": platform}
                     )
                     if result.success:
-                        published_reports.append(f"highlight_summary_{result.data['artifact_id']}"
+                        published_reports.append(f"highlight_summary_{result.data['artifact_id']}")
             if "claim_extraction" in analysis_results:
                 claim_data = analysis_results["claim_extraction"]
                 claims = claim_data.get("claims", [])
@@ -471,7 +471,7 @@ class MultimodalAnalysisPipeline:
                         claims=claims, quotes=quotes, episode_info={"platform": platform}
                     )
                     if result.success:
-                        published_reports.append(f"claim_summary_{result.data['artifact_id']}"
+                        published_reports.append(f"claim_summary_{result.data['artifact_id']}")
             result = publishing_service.publish_report(
                 report_data={
                     "platform": platform,
@@ -481,7 +481,7 @@ class MultimodalAnalysisPipeline:
                 report_type="comprehensive",
             )
             if result.success:
-                published_reports.append(f"comprehensive_report_{result.data['artifact_id']}"
+                published_reports.append(f"comprehensive_report_{result.data['artifact_id']}")
             return StepResult.ok(data={"report_ids": published_reports})
         except Exception as e:
             logger.error(f"Publishing failed: {e}")
