@@ -39,6 +39,7 @@ from core.realtime.stream_processor import (  # type: ignore[import-not-found]
     StreamProcessor,
     StreamType,
 )
+
 from ultimate_discord_intelligence_bot.step_result import StepResult  # type: ignore[import-not-found]
 from ultimate_discord_intelligence_bot.tools.analysis.live_stream_analysis_tool import (  # type: ignore[import-not-found]
     LiveStreamAnalysisTool,

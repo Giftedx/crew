@@ -14,12 +14,14 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
 from core.http_utils import REQUEST_TIMEOUT_SECONDS, http_request_with_retry, is_retry_enabled, resilient_post
+
 from obs import metrics
 from ultimate_discord_intelligence_bot.tenancy.context import TenantContext
 
 
 if TYPE_CHECKING:
     from core.learning_engine import LearningEngine
+
     from ultimate_discord_intelligence_bot.tenancy.registry import TenantRegistry
 
 

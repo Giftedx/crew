@@ -2,6 +2,7 @@ import logging
 from typing import Any
 
 from src.obs.metrics import get_metrics
+
 from src.ultimate_discord_intelligence_bot.step_result import ErrorCategory, StepResult
 from src.ultimate_discord_intelligence_bot.tenancy.context import current_tenant, with_tenant
 

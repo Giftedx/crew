@@ -15,9 +15,8 @@ from platform import http_utils
 from platform.observability.metrics import get_metrics
 from typing import Any
 
-import requests
-
 from app.config.feature_flags import FeatureFlags
+from requests import RequestException  # http-compliance: allow-direct-requests (exception type import only)
 
 
 log = logging.getLogger(__name__)
@@ -150,7 +149,7 @@ class ConnectionPool:
                 self._record_request_metric("post", "failed")
                 log.warning("Request failed: %s", getattr(response, "status_code", "No response"))
             return response
-        except requests.exceptions.RequestException as e:
+        except RequestException as e:
             self._stats["failed_requests"] += 1
             self._record_request_metric("post", "exception")
             log.error("Request exception: %s", e)
@@ -158,7 +157,7 @@ class ConnectionPool:
 
     def get(
         self, url: str, headers: dict[str, str] | None = None, timeout: int = 30, **kwargs: Any
-    ) -> requests.Response | None:
+    ) -> http_utils.requests.Response | None:
         """Make a GET request using the connection pool.
 
         Args:
@@ -188,7 +187,7 @@ class ConnectionPool:
                 self._stats["failed_requests"] += 1
                 log.warning("Request failed: %s", getattr(response, "status_code", "No response"))
             return response
-        except requests.exceptions.RequestException as e:
+        except RequestException as e:
             self._stats["failed_requests"] += 1
             log.error("Request exception: %s", e)
             return None
@@ -301,7 +300,7 @@ class MockConnectionPool:
         json_payload: dict[str, Any] | None = None,
         timeout: int = 30,
         **kwargs: Any,
-    ) -> requests.Response | None:
+    ) -> http_utils.requests.Response | None:
         """Make a POST request without connection pooling."""
         try:
             self._stats["total_requests"] += 1
@@ -313,14 +312,14 @@ class MockConnectionPool:
             else:
                 self._stats["failed_requests"] += 1
             return response
-        except requests.exceptions.RequestException as e:
+        except RequestException as e:
             self._stats["failed_requests"] += 1
             log.error("Mock pool request exception: %s", e)
             return None
 
     def get(
         self, url: str, headers: dict[str, str] | None = None, timeout: int = 30, **kwargs: Any
-    ) -> requests.Response | None:
+    ) -> http_utils.requests.Response | None:
         """Make a GET request without connection pooling."""
         try:
             self._stats["total_requests"] += 1
@@ -330,7 +329,7 @@ class MockConnectionPool:
             else:
                 self._stats["failed_requests"] += 1
             return response
-        except requests.exceptions.RequestException as e:
+        except RequestException as e:
             self._stats["failed_requests"] += 1
             log.error("Mock pool request exception: %s", e)
             return None

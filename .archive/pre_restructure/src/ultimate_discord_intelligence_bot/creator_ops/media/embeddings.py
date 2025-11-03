@@ -22,6 +22,7 @@ except ImportError:
     SentenceTransformer = None  # type: ignore[assignment,misc]
 
 from memory.qdrant_provider import get_qdrant_client
+
 from ultimate_discord_intelligence_bot.creator_ops.config import CreatorOpsConfig
 from ultimate_discord_intelligence_bot.step_result import StepResult
 

@@ -11,11 +11,12 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any
 
+from core.secure_config import SecureConfig, get_config
+
 from core.orchestration.application import (
     UnifiedFeedbackOrchestrator,
     get_orchestrator,
 )
-from core.secure_config import SecureConfig, get_config
 from eval.langsmith_adapter import LangSmithEvaluationAdapter
 from obs import metrics
 from ultimate_discord_intelligence_bot.step_result import StepResult

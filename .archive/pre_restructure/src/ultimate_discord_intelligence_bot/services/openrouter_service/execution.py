@@ -16,6 +16,7 @@ from core.http_utils import (
 from core.http_utils import (
     resilient_post as _default_resilient_post,
 )
+
 from obs import metrics
 
 from .quality import basic_quality_assessment, quality_assessment

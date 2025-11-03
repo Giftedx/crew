@@ -15,7 +15,6 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
 import yaml
-
 from core.flags import enabled
 from memory.qdrant_provider import get_qdrant_client
 

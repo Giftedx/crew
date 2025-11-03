@@ -98,7 +98,11 @@ quick_check() {
     fi
 
     log "Running lints..."
-    make lint || { error "Lint failed"; exit 1; }
+    if [ "${SKIP_LINT:-0}" != "0" ]; then
+        warn "Skipping lints (SKIP_LINT=${SKIP_LINT})"
+    else
+        make lint || { error "Lint failed"; exit 1; }
+    fi
 
     log "Running fast tests..."
 

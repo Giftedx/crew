@@ -7,7 +7,6 @@ including metrics collection, conversation tracing, personality dashboard,
 and integration.
 """
 
-import asyncio
 import sys
 from pathlib import Path
 
@@ -19,7 +18,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 
-async def run_observability_tests():
+def run_observability_tests() -> int:
     """Run all observability tests."""
     print("🧪 Running Discord AI Observability Tests")
     print("=" * 50)
@@ -56,13 +55,13 @@ async def run_observability_tests():
         print(f"\n❌ Some tests failed (exit code: {exit_code})")
         print("\n🔍 Check the output above for details on failed tests.")
 
-    return exit_code
+    return int(exit_code)
 
 
-def main():
+def main() -> None:
     """Main entry point."""
     try:
-        exit_code = asyncio.run(run_observability_tests())
+        exit_code = run_observability_tests()
         sys.exit(exit_code)
     except KeyboardInterrupt:
         print("\n⚠️  Tests interrupted by user")

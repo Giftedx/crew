@@ -37,10 +37,9 @@ from __future__ import annotations
 import logging
 from typing import Any, TypeVar
 
+from core.secure_config import get_config
 from openai import AsyncOpenAI, OpenAI
 from pydantic import BaseModel
-
-from core.secure_config import get_config
 
 
 # Conditional import - instructor is an optional dependency

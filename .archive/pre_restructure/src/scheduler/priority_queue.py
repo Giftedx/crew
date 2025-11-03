@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any
 from core.batching import get_batching_metrics, get_bulk_inserter, get_request_batcher
 from core.db_locks import get_lock_for_connection
 from core.time import default_utc_now
+
 from ingest import pipeline
 
 

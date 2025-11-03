@@ -12,8 +12,8 @@ import time
 from typing import TYPE_CHECKING
 
 import structlog
-
 from obs.metrics import get_metrics
+
 from ultimate_discord_intelligence_bot.crew_core.interfaces import (
     CrewConfig,
     CrewExecutionResult,

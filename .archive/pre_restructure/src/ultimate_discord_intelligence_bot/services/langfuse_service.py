@@ -6,6 +6,7 @@ import os
 from typing import Any
 
 from core.settings import SecureConfig, get_settings
+
 from obs import metrics
 from ultimate_discord_intelligence_bot.step_result import ErrorCategory, ErrorContext, StepResult
 

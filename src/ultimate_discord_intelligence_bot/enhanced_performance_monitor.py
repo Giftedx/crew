@@ -468,18 +468,18 @@ async def main():
     }
     real_time_data = await enhanced_monitor.monitor_real_time_performance("enhanced_fact_checker", interaction_data)
     print("Real-time Performance:")
-    print(f"Current Score: {real_time_data['current_performance']['avg_quality']:.2f}"
-    print(f"Alerts: {len(real_time_data['alerts'])}"
-    print(f"Trend: {real_time_data['recent_trend']}"
+    print(f"Current Score: {real_time_data['current_performance']['avg_quality']:.2f}")
+    print(f"Alerts: {len(real_time_data['alerts'])}")
+    print(f"Trend: {real_time_data['recent_trend']}")
     agent_names = ["enhanced_fact_checker", "content_manager", "cross_platform_intelligence_gatherer"]
     comparative_analysis = enhanced_monitor.generate_comparative_analysis(agent_names)
     print("\nComparative Analysis:")
-    print(f"Average System Score: {comparative_analysis['performance_summary']['average_score']:.2f}"
-    print(f"Top Performers: {comparative_analysis['recommendations']['top_performers']}"
+    print(f"Average System Score: {comparative_analysis['performance_summary']['average_score']:.2f}")
+    print(f"Top Performers: {comparative_analysis['recommendations']['top_performers']}")
     dashboard_data = await enhanced_monitor.generate_real_time_dashboard_data()
     print("\nSystem Overview:")
-    print(f"Total Agents: {dashboard_data['system_overview']['total_agents_monitored']}"
-    print(f"Active Alerts: {dashboard_data['system_overview']['alerts_count']}"
+    print(f"Total Agents: {dashboard_data['system_overview']['total_agents_monitored']}")
+    print(f"Active Alerts: {dashboard_data['system_overview']['alerts_count']}")
 
 
 if __name__ == "__main__":

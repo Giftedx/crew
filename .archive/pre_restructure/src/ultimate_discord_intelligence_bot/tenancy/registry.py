@@ -6,7 +6,6 @@ from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
 
 import yaml
-
 from core.time import default_utc_now
 
 from .context import TenantContext

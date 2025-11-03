@@ -23,9 +23,9 @@ class PersonalityTraitSnapshot:
     value: float
     timestamp: float
     confidence: float
-    user_feedback_count: int
-    positive_feedback: int
-    negative_feedback: int
+    user_feedback_count: int = 0
+    positive_feedback: int = 0
+    negative_feedback: int = 0
     context: dict[str, Any] = field(default_factory=dict)
 
 
@@ -58,7 +58,7 @@ class PersonalityAnalytics:
     """Comprehensive personality analytics."""
 
     trait_distributions: dict[str, list[float]] = field(default_factory=dict)
-    user_satisfaction_by_trait: dict[str, list[float]] = field(default_factory=list)
+    user_satisfaction_by_trait: dict[str, list[float]] = field(default_factory=dict)
     trait_correlations: dict[str, dict[str, float]] = field(default_factory=dict)
     evolution_insights: dict[str, str] = field(default_factory=dict)
     recommendations: list[str] = field(default_factory=list)

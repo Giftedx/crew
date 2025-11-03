@@ -20,10 +20,11 @@ from datetime import datetime
 from typing import Any
 
 from ingest.models import Provenance
-from ingest.providers import twitch, youtube
 from memory.creator_intelligence_collections import get_collection_manager
 from memory.embedding_service import get_embedding_service
 from memory.vector_store import VectorRecord
+
+from ingest.providers import twitch, youtube
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
 

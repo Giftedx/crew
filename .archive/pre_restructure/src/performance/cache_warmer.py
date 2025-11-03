@@ -16,8 +16,9 @@ from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any
 
-from core.cache.semantic_cache import create_semantic_cache
 from core.time import default_utc_now, ensure_utc
+
+from core.cache.semantic_cache import create_semantic_cache
 
 
 try:

@@ -46,6 +46,7 @@ except Exception:  # pragma: no cover - fallback path
 
 
 from core.time import default_utc_now
+
 from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 
 from ..advanced_performance_analytics import AdvancedPerformanceAnalytics

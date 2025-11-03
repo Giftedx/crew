@@ -413,18 +413,18 @@ async def main():
         "Claims verified with 95% confidence based on 3 reliable sources.",
         user_feedback={"satisfaction": 0.9},
     )
-    print(f"✅ Interaction completed: Quality {result['performance_data']['response_quality']:.2f}"
+    print(f"✅ Interaction completed: Quality {result['performance_data']['response_quality']:.2f}")
     alerts = await check_alerts()
     if alerts:
         print(f"⚠️  {len(alerts)} performance alerts found")
     else:
         print("✅ No performance alerts")
     dashboard = await get_dashboard_data()
-    print(f"📊 Monitoring {dashboard['system_overview']['total_agents_monitored']} agents"
+    print(f"📊 Monitoring {dashboard['system_overview']['total_agents_monitored']} agents")
     weekly_report = await manager.generate_weekly_report()
     if "summary" in weekly_report:
-        print(f"📈 Weekly Summary: {weekly_report['summary']['agents_analyzed']} agents analyzed"
-        print(f"   Average Performance: {weekly_report['summary']['average_performance']:.2f}"
+        print(f"📈 Weekly Summary: {weekly_report['summary']['agents_analyzed']} agents analyzed")
+        print(f"   Average Performance: {weekly_report['summary']['average_performance']:.2f}")
     print("🎯 Enhanced Agent Performance Monitoring Demonstration Complete")
 
 

@@ -13,6 +13,7 @@ from enum import Enum
 from typing import Any
 
 from core.rl.thompson_sampling import ThompsonSamplingBandit
+
 from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 from ultimate_discord_intelligence_bot.step_result import StepResult
 

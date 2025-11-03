@@ -3,6 +3,7 @@ import os
 from typing import Any, ClassVar
 
 from core.secure_config import get_config
+
 from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 from ultimate_discord_intelligence_bot.step_result import StepResult
 

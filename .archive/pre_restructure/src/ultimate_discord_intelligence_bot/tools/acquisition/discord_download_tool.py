@@ -14,9 +14,9 @@ import os
 import tempfile
 from pathlib import Path
 
+from core.http_utils import resilient_get  # exposed for test monkeypatching
 from pydantic import AnyHttpUrl, BaseModel
 
-from core.http_utils import resilient_get  # exposed for test monkeypatching
 from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 from ultimate_discord_intelligence_bot.step_result import StepResult
 

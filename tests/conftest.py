@@ -1,22 +1,35 @@
 """
 Test configuration and fixtures for Discord AI integration tests.
 """
+# ruff: noqa: E402  # allow path manipulations before imports
 
 import asyncio
 import os
+import sys
 import tempfile
+from pathlib import Path
+
+
+# Make sure the local src/ is importable before stdlib 'platform' module
+_PROJECT_ROOT = Path(__file__).resolve().parents[1]
+_SRC = _PROJECT_ROOT / "src"
+if _SRC.exists():
+    src_path = str(_SRC)
+    if src_path not in sys.path:
+        sys.path.insert(0, src_path)
+
+# If stdlib 'platform' module was imported earlier, purge it so our package can be loaded
+mod = sys.modules.get("platform")
+if mod is not None:
+    mod_file = getattr(mod, "__file__", "") or ""
+    # Heuristic: stdlib module path ends with 'platform.py'
+    if mod_file.endswith("platform.py") and "site-packages" not in mod_file:
+        del sys.modules["platform"]
+
 from platform.core.step_result import StepResult
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-
-
-@pytest.fixture(scope="session")
-def event_loop():
-    """Create an instance of the default event loop for the test session."""
-    loop = asyncio.get_event_loop_policy().new_event_loop()
-    yield loop
-    loop.close()
 
 
 @pytest.fixture

@@ -27,6 +27,7 @@ from analysis.transcription.asr_service import (
     TranscriptionResult,
     TranscriptionSegment,
 )
+
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
 

@@ -37,7 +37,6 @@ from pathlib import Path
 from typing import Any
 
 import yaml
-
 from core.time import default_utc_now
 
 from .events import log_security_event

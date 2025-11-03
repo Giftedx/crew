@@ -22,12 +22,13 @@ import time
 from dataclasses import dataclass
 from typing import Any
 
-from core.cache.multi_level_cache import MultiLevelCache, get_multi_level_cache
 from obs.metrics import (
     CACHE_HITS,
     CACHE_OPERATION_LATENCY,
     label_ctx,
 )
+
+from core.cache.multi_level_cache import MultiLevelCache, get_multi_level_cache
 
 
 logger = logging.getLogger(__name__)

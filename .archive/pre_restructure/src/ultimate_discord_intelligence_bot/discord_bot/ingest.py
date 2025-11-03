@@ -5,11 +5,12 @@ import os
 from pathlib import Path
 from typing import Any
 
-from ingest import models as _ingest_models
 from ingest.sources.youtube_channel import (
     YouTubeChannelConnector as _YouTubeChannelConnector,
 )
 from memory.vector_store import VectorStore as _VectorStore
+
+from ingest import models as _ingest_models
 from scheduler.scheduler import Scheduler as _Scheduler
 from ultimate_discord_intelligence_bot.services.ingest_queue import get_ingest_queue
 

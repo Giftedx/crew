@@ -16,13 +16,14 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
+from core.secure_config import get_config
+
 from core.cache.enhanced_semantic_cache import create_enhanced_semantic_cache
 from core.cache.semantic_cache import (
     CacheStats,
     SemanticCacheInterface,
     create_semantic_cache,
 )
-from core.secure_config import get_config
 
 
 SanitiseNamespaceFn = Callable[[str | None], str]

@@ -7,6 +7,7 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from core.time import default_utc_now  # type: ignore[import-not-found]
+
 from ultimate_discord_intelligence_bot.enhanced_performance_monitor import (  # type: ignore[import-not-found]
     EnhancedPerformanceMonitor,
 )

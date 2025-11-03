@@ -344,7 +344,7 @@ def retrying_post(
     if is_retry_enabled():
         # default request fn uses facade resilient_post so tests can patch here
         if request_callable is None:
-            request_callable = lambda u, **__: resilient_post(  # noqa: E731
+            request_callable = lambda u, **__: resilient_post(
                 u,
                 json_payload=json_payload,
                 headers=headers,
@@ -382,7 +382,7 @@ def retrying_get(
     effective_max = max_attempts if max_attempts is not None else resolve_retry_attempts()
     if is_retry_enabled():
         if request_callable is None:
-            request_callable = lambda u, **__: resilient_get(  # noqa: E731
+            request_callable = lambda u, **__: resilient_get(
                 u,
                 params=params,
                 headers=headers,
@@ -419,7 +419,7 @@ def retrying_delete(
     effective_max = max_attempts if max_attempts is not None else resolve_retry_attempts()
     if is_retry_enabled():
         if request_callable is None:
-            request_callable = lambda u, **__: resilient_delete(  # noqa: E731
+            request_callable = lambda u, **__: resilient_delete(
                 u,
                 params=params,
                 headers=headers,

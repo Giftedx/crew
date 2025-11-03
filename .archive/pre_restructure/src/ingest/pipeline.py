@@ -11,10 +11,11 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Any
 
-from analysis import segmenter, topics, transcribe
 from core.error_handling import handle_error_safely
-from core.privacy import privacy_filter
 from core.time import default_utc_now
+
+from analysis import segmenter, topics, transcribe
+from core.privacy import privacy_filter
 from ingest import models
 from memory import embeddings, vector_store
 from obs import metrics

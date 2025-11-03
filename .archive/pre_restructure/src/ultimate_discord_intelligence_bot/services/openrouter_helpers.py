@@ -7,6 +7,7 @@ from collections.abc import Mapping
 from typing import Any
 
 from core.flags import enabled
+
 from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 from ultimate_discord_intelligence_bot.tenancy.context import (
     TenantContext,

@@ -14,8 +14,8 @@ from enum import Enum
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
-
 from core.time import default_utc_now
+
 from obs import metrics
 from ultimate_discord_intelligence_bot.step_result import StepResult
 

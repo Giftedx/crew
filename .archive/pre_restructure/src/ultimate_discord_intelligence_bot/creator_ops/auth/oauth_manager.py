@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING
 from urllib.parse import urlencode
 
 from core.http_utils import requests, resilient_get, resilient_post  # type: ignore[import-not-found]
+
 from ultimate_discord_intelligence_bot.step_result import StepResult  # type: ignore[import-not-found]
 
 

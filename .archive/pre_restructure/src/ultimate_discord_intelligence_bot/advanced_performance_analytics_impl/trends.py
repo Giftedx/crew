@@ -6,9 +6,8 @@ import statistics
 from datetime import datetime, timedelta
 from typing import Any
 
-from scipy import stats  # type: ignore[import-untyped]
-
 from core.time import default_utc_now  # type: ignore[import-not-found]
+from scipy import stats  # type: ignore[import-untyped]
 
 from .models import PerformanceTrend
 

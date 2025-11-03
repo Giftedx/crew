@@ -58,7 +58,7 @@ class GuildMetrics:
     total_conversations: int = 0
     avg_conversation_length: float = 0.0
     peak_activity_hours: list[int] = field(default_factory=list)
-    popular_channels: dict[str, int] = field(default_factory=list)
+    popular_channels: dict[str, int] = field(default_factory=dict)
     user_retention_rate: float = 0.0
     satisfaction_avg: float = 0.0
 

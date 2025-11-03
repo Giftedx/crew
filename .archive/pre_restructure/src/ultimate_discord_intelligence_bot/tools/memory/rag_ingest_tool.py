@@ -73,8 +73,9 @@ class RagIngestTool(BaseTool[StepResult]):
                 tenant_scoped = False
 
             # Embed and upsert
-            from memory import embeddings
             from memory.vector_store import VectorRecord, VectorStore
+
+            from memory import embeddings
 
             vstore = VectorStore()
             to_upsert: list[VectorRecord] = []

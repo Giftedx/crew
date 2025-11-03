@@ -13,6 +13,7 @@ import re
 from dataclasses import dataclass
 
 from core.secure_config import get_config
+
 from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 from ultimate_discord_intelligence_bot.step_result import ErrorCategory, StepResult
 from ultimate_discord_intelligence_bot.tools._base import BaseTool

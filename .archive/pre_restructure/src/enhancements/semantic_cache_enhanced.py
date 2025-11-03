@@ -4,8 +4,8 @@ from typing import Any
 
 from qdrant_client.models import Distance, PointStruct, VectorParams
 from sentence_transformers import SentenceTransformer
-
 from src.memory.qdrant_provider import get_qdrant_client
+
 from src.ultimate_discord_intelligence_bot.step_result import ErrorCategory, StepResult
 from src.ultimate_discord_intelligence_bot.tenancy.context import current_tenant, with_tenant
 

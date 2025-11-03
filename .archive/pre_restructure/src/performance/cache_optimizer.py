@@ -18,9 +18,10 @@ import time
 from dataclasses import dataclass, field
 from typing import Any
 
-from core.cache.adaptive_semantic_cache import get_adaptive_semantic_cache
 from core.vector_search.optimized_vector_store import get_optimized_vector_store
 from obs.metrics import generate_latest
+
+from core.cache.adaptive_semantic_cache import get_adaptive_semantic_cache
 
 
 logger = logging.getLogger(__name__)

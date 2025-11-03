@@ -33,8 +33,9 @@ class RagQueryVectorStoreTool(BaseTool[StepResult]):
 
     # Separated for testability
     def _vector_search(self, namespace: str, query_text: str, top_k: int) -> list[dict[str, Any]]:
-        from memory import embeddings
         from memory.vector_store import VectorStore
+
+        from memory import embeddings
 
         store = VectorStore()
         vec = embeddings.embed([query_text])[0]

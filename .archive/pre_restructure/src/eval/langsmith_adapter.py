@@ -15,6 +15,7 @@ from collections.abc import Callable
 from typing import TYPE_CHECKING, Any
 
 from core.settings import SecureConfig, get_settings
+
 from obs import metrics
 from ultimate_discord_intelligence_bot.step_result import (
     ErrorCategory,

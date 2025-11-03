@@ -12,6 +12,7 @@ import pathlib
 from typing import TYPE_CHECKING
 
 from ingest.models import connect as connect_models
+
 from scheduler.priority_queue import PriorityQueue
 
 

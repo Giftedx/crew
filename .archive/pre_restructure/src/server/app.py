@@ -18,8 +18,9 @@ from __future__ import annotations
 import logging
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
 from obs.logfire_config import setup_logfire
+
+from fastapi import FastAPI
 from server.middleware_shim import install_middleware_support
 
 
@@ -66,6 +67,7 @@ from obs.enhanced_monitoring import (
     stop_monitoring_system,
 )
 from obs.tracing import init_tracing
+
 from server.rate_limit import add_rate_limit_middleware
 
 from .middleware import (

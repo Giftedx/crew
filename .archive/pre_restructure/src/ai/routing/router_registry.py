@@ -26,6 +26,7 @@ from collections import defaultdict
 from typing import TYPE_CHECKING, cast
 
 from ai.routing.bandit_router import ThompsonBanditRouter
+
 from ultimate_discord_intelligence_bot.tenancy.context import current_tenant
 
 

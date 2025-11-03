@@ -13,9 +13,10 @@ import logging
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
 
-import discord
 from core.learning_engine import LearningEngine
 from core.router import Router
+
+import discord
 from debate.panel import PanelConfig, run_panel
 from debate.store import Debate, DebateStore
 from discord.ext import commands

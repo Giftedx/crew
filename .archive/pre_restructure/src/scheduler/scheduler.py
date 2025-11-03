@@ -12,8 +12,9 @@ from core.db_locks import get_lock_for_connection
 from core.error_handling import handle_error_safely
 from core.learning_engine import LearningEngine
 from core.time import default_utc_now
-from ingest import models, pipeline
 from ingest.sources.base import SourceConnector, Watch
+
+from ingest import models, pipeline
 from obs import metrics
 
 from .priority_queue import PriorityQueue

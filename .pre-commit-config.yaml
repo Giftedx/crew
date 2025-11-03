@@ -36,7 +36,6 @@ repos:
             "src/ultimate_discord_intelligence_bot/pipeline_components/base.py",
             "src/ultimate_discord_intelligence_bot/pipeline_components/types.py",
             "src/ultimate_discord_intelligence_bot/pipeline_components/mixins.py",
-            "src/core/flags.py",
             "src/core/time.py",
             "src/core/typing_utils.py",
             "src/core/error_handling.py",

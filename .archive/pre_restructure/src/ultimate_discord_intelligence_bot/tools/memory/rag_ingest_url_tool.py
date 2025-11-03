@@ -20,6 +20,7 @@ from core.http_utils import (
     cached_get,
     validate_public_https_url,
 )
+
 from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
@@ -107,8 +108,9 @@ class RagIngestUrlTool(BaseTool[StepResult]):
                 tenant_scoped = False
 
             # Embed and upsert
-            from memory import embeddings
             from memory.vector_store import VectorRecord, VectorStore
+
+            from memory import embeddings
 
             vstore = VectorStore()
             to_upsert: list[VectorRecord] = []

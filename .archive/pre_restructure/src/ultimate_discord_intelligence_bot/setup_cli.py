@@ -430,10 +430,11 @@ def _doctor(*, as_json: bool = False, quiet: bool = False) -> int:
         report["binaries"]["yt-dlp"] = "missing"
     # Vector store readiness (optional)
     try:
-        from memory import embeddings as _emb
-        from memory import vector_store as _v
         from memory.qdrant_provider import _DummyClient as _QD
         from memory.qdrant_provider import get_qdrant_client
+
+        from memory import embeddings as _emb
+        from memory import vector_store as _v
 
         url = os.getenv("QDRANT_URL", "")
         if url:

@@ -5,7 +5,6 @@ from datetime import timedelta
 from typing import Any
 
 import numpy as np
-
 from core.time import default_utc_now
 
 

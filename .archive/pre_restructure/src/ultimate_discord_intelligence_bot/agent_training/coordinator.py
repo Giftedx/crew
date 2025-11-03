@@ -13,7 +13,6 @@ from pathlib import Path
 from typing import Any
 
 import yaml
-
 from core.time import default_utc_now  # type: ignore[import-not-found]
 
 from .synthetic_data_generator import SyntheticDataGenerator, ToolUsageExample

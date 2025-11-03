@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING, Any
 
 from core.secure_config import get_config
 from core.time import default_utc_now
+
 from ultimate_discord_intelligence_bot.tenancy.context import current_tenant
 
 

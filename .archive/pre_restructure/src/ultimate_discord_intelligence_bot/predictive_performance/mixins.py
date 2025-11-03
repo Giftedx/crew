@@ -6,9 +6,8 @@ from datetime import timedelta
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
-from scipy import stats
-
 from core.time import default_utc_now
+from scipy import stats
 
 from .models import (
     AlertSeverity,

@@ -42,7 +42,7 @@ OPENAI_API_KEY=sk-your-openai-key-here
 ### Core Services
 
 1. **Discord Bot** - Main intelligence pipeline
-2. **FastAPI Server** - HTTP API + A2A endpoints  
+2. **FastAPI Server** - HTTP API + A2A endpoints
 3. **CrewAI** - Autonomous agent orchestration
 4. **MCP Server** - Model Context Protocol server
 
@@ -138,6 +138,22 @@ make full-check
 make test-fast
 make test
 ```
+
+### Observability Tests
+
+The observability suite can be run standalone:
+
+```bash
+python run_observability_tests.py
+```
+
+Notes:
+
+- The runner is synchronous to play nicely with `pytest-asyncio` (no nested event loops).
+- If you see an import error like "'platform' is not a package", our tests enforce
+  a local `src/`-first import order. This repo ships a `sitecustomize.py` to inject
+  `src/` onto `sys.path`, and `tests/conftest.py` contains a fallback to ensure the
+  local `platform` package is used instead of the stdlib module.
 
 ### Git Hooks (Recommended)
 

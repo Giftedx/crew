@@ -8,10 +8,11 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from analysis.rerank import rerank
-from archive import archive_file
-from core.privacy import privacy_filter
 from core.secure_config import get_config
 from core.time import default_utc_now
+
+from archive import archive_file
+from core.privacy import privacy_filter
 from memory import embeddings, vector_store
 from memory.store import MemoryItem, MemoryStore
 

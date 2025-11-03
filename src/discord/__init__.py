@@ -1,32 +1,14 @@
-"""Local discord shim for ops/testing utilities.
+"""Internal Discord package for test helpers and observability modules.
 
-This lightweight package only exists to satisfy unit tests that import
-``from discord import commands`` and call helper functions like
-``ops_incident_open`` or ``ops_ingest_queue_status``. It is not a
-replacement for the real ``discord.py`` library used by the runtime.
+This shim exposes lightweight, internal modules under ``src/discord`` used by
+our tests (e.g., ``src.discord.observability``). It deliberately avoids importing
+or shadowing the external ``discord.py`` package and does not re-export bot
+command utilities.
 
-At runtime, the bot imports the genuine library via
-``ultimate_discord_intelligence_bot.discord_bot.discord_env`` which
-explicitly avoids this shim. Tests, however, purposefully use this shim
-to avoid bringing in the heavy gateway dependency.
+If you need the real gateway client, install and import ``discord.py``.
 """
 
-from typing import Any
+# Do not import submodules at package import time. Tests will import the
+# desired subpackages directly, e.g. ``src.discord.observability``.
 
-from . import commands as commands  # re-export for ``from discord import commands``
-
-
-__all__ = ["commands"]
-"""Local 'discord' shim disabled.
-
-This repository previously contained a test-only shim at ``src/discord`` that
-shadowed the real ``discord.py`` package. To prevent accidental shadowing and
-restore full gateway functionality, the shim now raises on access. Install the
-official dependency instead: ``pip install discord.py``.
-"""
-
-
-def __getattr__(name: str) -> Any:  # pragma: no cover - shim should not be used
-    raise ImportError(
-        f"Local 'src/discord' shim is disabled. Attribute {name!r} is unavailable; install 'discord.py' and import the real package."
-    )
+__all__: list[str] = []

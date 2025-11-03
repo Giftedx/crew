@@ -115,7 +115,7 @@ class WarningDetectionMixin:
                 )
                 time_to_impact = timedelta(hours=interactions_to_critical * 0.5)
                 return EarlyWarningAlert(
-                    alert_id=f"",
+                    alert_id="",
                     severity=AlertSeverity.WARNING if decline_ratio < 0.25 else AlertSeverity.CRITICAL,
                     alert_type="quality",
                     title=f"Quality Degradation Detected: {agent_name}",
@@ -161,7 +161,7 @@ class WarningDetectionMixin:
                 )
                 time_to_impact = timedelta(hours=interactions_to_critical * 0.5)
                 return EarlyWarningAlert(
-                    alert_id=f"",
+                    alert_id="",
                     severity=AlertSeverity.WARNING if increase_ratio < 0.5 else AlertSeverity.CRITICAL,
                     alert_type="performance",
                     title=f"Performance Degradation Detected: {agent_name}",
@@ -204,7 +204,7 @@ class WarningDetectionMixin:
                             overloaded_agent = max(agent_loads.items(), key=lambda x: x[1])[0]
                             warnings.append(
                                 EarlyWarningAlert(
-                                    alert_id=f"",
+                                    alert_id="",
                                     severity=AlertSeverity.WARNING,
                                     alert_type="capacity",
                                     title="Agent Load Imbalance Detected",

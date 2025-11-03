@@ -13,6 +13,7 @@ from typing import ClassVar
 from ai.response_models import FallacyAnalysisResult
 from ai.structured_outputs import InstructorClientFactory
 from core.secure_config import get_config
+
 from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 from ultimate_discord_intelligence_bot.step_result import StepResult
 

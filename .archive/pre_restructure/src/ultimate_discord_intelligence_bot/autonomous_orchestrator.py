@@ -694,6 +694,7 @@ class AutonomousIntelligenceOrchestrator:
         try:
             # Import cost tracking modules
             from core.cost_tracker import initialize_cost_tracking
+
             from ultimate_discord_intelligence_bot.services.request_budget import (
                 current_request_tracker,
                 track_request_budget,

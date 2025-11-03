@@ -16,6 +16,7 @@ from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING, Any
 
 from core.time import default_utc_now
+
 from ingest import pipeline as ingest_pipeline
 
 

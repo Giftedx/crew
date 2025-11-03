@@ -7,8 +7,8 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
-
 from src.obs.metrics import get_metrics
+
 from src.ultimate_discord_intelligence_bot.step_result import ErrorCategory, StepResult
 
 

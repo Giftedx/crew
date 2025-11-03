@@ -10,8 +10,9 @@ import asyncio
 import logging
 from typing import Any, cast
 
-from ai.performance_router import create_performance_router
 from core.learning_engine import LearningEngine
+
+from ai.performance_router import create_performance_router
 from ultimate_discord_intelligence_bot.agent_training.performance_monitor import (
     AgentPerformanceMonitor,
 )

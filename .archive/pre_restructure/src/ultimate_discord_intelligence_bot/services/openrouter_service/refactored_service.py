@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING, Any
 
 from core.learning_engine import LearningEngine
 from core.secure_config import get_config
+
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
 

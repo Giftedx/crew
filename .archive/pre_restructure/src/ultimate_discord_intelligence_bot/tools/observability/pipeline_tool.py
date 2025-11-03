@@ -8,6 +8,7 @@ import time
 from typing import Any, TypedDict
 
 from core.circuit_breaker_canonical import CircuitBreaker
+
 from ultimate_discord_intelligence_bot.settings import Settings
 from ultimate_discord_intelligence_bot.step_result import StepResult
 

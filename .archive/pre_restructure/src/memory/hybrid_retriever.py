@@ -14,6 +14,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
 from core.secure_config import get_config
+
 from memory.qdrant_provider import get_qdrant_client
 from obs import metrics
 

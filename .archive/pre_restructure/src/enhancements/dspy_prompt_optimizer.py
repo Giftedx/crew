@@ -1,8 +1,8 @@
 import logging
 
 import dspy
-
 from src.core.settings import settings
+
 from src.ultimate_discord_intelligence_bot.step_result import ErrorCategory, StepResult
 
 

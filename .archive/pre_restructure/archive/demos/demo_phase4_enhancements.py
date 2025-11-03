@@ -23,8 +23,6 @@ sys.path.insert(0, str(Path(__file__).parent / "src"))
 
 from datetime import datetime
 
-from core.resilience_orchestrator import ResilienceStrategy, get_resilience_orchestrator
-
 from core.code_intelligence import CodeIntelligenceEngine
 from core.nextgen_intelligence_hub import run_comprehensive_intelligence_analysis
 from core.predictive_operations import (
@@ -32,6 +30,7 @@ from core.predictive_operations import (
     PredictiveOperationsEngine,
     ResourceType,
 )
+from core.resilience_orchestrator import ResilienceStrategy, get_resilience_orchestrator
 from core.security_fortification import SecurityOrchestrator
 
 

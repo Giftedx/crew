@@ -16,10 +16,11 @@ except Exception:  # pragma: no cover
     DistributedLLMCache = None
 
 from ai.litellm_router import LLMRouterSingleton
-from core.cache.bounded_cache import BoundedLRUCache
-from core.cache.unified_config import get_unified_cache_config
 from core.learning_engine import LearningEngine
 from core.secure_config import get_config
+
+from core.cache.bounded_cache import BoundedLRUCache
+from core.cache.unified_config import get_unified_cache_config
 from obs import metrics
 
 from .adaptive_routing import AdaptiveRoutingManager

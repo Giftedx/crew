@@ -1,36 +1,13 @@
 """
-AI Module for Ultimate Discord Intelligence Bot
+Reinforcement learning (RL) utilities for the platform package.
 
-Advanced AI capabilities including:
-- Contextual bandits with DoublyRobust and OffsetTree algorithms
-- Multi-domain orchestration and optimization
-- A/B testing framework and performance monitoring
-- AI-enhanced routing and performance optimization
+This package intentionally avoids importing heavy, optional modules at import
+ time to keep test environments lightweight. Submodules should be imported by
+ fully-qualified name, e.g. ``from platform.rl.learning_engine import LearningEngine``.
 """
 
-from .advanced_contextual_bandits import (
-    AdvancedBanditsOrchestrator,
-    BanditAction,
-    BanditContext,
-    BanditFeedback,
-    DoublyRobustBandit,
-    OffsetTreeBandit,
-    create_bandit_context,
-    get_orchestrator,
-    initialize_advanced_bandits,
-    simulate_reward,
-)
+# Deliberately do not import optional submodules here to prevent ImportErrors
+# in lightweight test environments. Consumers should import submodules
+# explicitly. Keeping __all__ empty is acceptable.
 
-
-__all__ = [
-    "AdvancedBanditsOrchestrator",
-    "BanditAction",
-    "BanditContext",
-    "BanditFeedback",
-    "DoublyRobustBandit",
-    "OffsetTreeBandit",
-    "create_bandit_context",
-    "get_orchestrator",
-    "initialize_advanced_bandits",
-    "simulate_reward",
-]
+__all__: list[str] = []

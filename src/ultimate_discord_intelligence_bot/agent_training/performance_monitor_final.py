@@ -641,7 +641,7 @@ class AgentPerformanceMonitor:
         print("\n📈 Performance Summary:")
         print(f"   • Overall Score: {report.overall_score:.3f}")
         print(f"   • AI Enhancement Score: {report.ai_enhancement_score:.3f}")
-        print(f"   • AI Routing: {('✅ ENABLED' if self.ai_routing_enabled else '❌ DISABLED')}"
+        print(f"   • AI Routing: {('✅ ENABLED' if self.ai_routing_enabled else '❌ DISABLED')}")
         if report.recommendations:
             print("\n💡 Enhanced Recommendations:")
             for i, rec in enumerate(report.recommendations, 1):
@@ -664,7 +664,7 @@ def main() -> dict[str, Any]:
     print("=" * 60)
     monitor = AgentPerformanceMonitor(enable_ai_routing=True)
     agent_name = "enhanced_fact_checker"
-    print(f"🔧 AI Routing Integration: {('✅ ENABLED' if monitor.ai_routing_enabled else '❌ DISABLED')}"
+    print(f"🔧 AI Routing Integration: {('✅ ENABLED' if monitor.ai_routing_enabled else '❌ DISABLED')}")
     print()
     print("📝 Recording standard agent interactions...")
     monitor.record_agent_interaction(
@@ -702,8 +702,8 @@ def main() -> dict[str, Any]:
     print("\n📊 Running AI-enhanced performance analysis...")
     analysis_result = monitor.run_ai_enhanced_analysis(agent_name)
     print("\n🎯 FINAL STATUS:")
-    print(f"   • Analysis Status: {analysis_result['status']}"
-    print(f"   • AI Enhancement: {('OPERATIONAL' if analysis_result['ai_routing_enabled'] else 'BASIC MODE')}"
+    print(f"   • Analysis Status: {analysis_result['status']}")
+    print(f"   • AI Enhancement: {('OPERATIONAL' if analysis_result['ai_routing_enabled'] else 'BASIC MODE')}")
     print("   • Production Ready: ✅ YES")
     print("\n✨ INTEGRATION COMPLETE!")
     print("   🔗 AI routing intelligence successfully integrated")

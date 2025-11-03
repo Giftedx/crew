@@ -150,6 +150,7 @@ async def _maybe_evaluate_and_annotate(
 
         # Local imports grouped for linter friendliness; used for evaluation/backstop paths
         from ai.evaluation.langsmith_evaluator import LangSmithEvaluator
+
         from ultimate_discord_intelligence_bot.pipeline_components.orchestrator import ContentPipeline
         from ultimate_discord_intelligence_bot.services.unified_pipeline import PipelineConfig, UnifiedPipeline
 

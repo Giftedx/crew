@@ -4,8 +4,6 @@ import json
 import os
 from pathlib import Path
 
-from pydantic import Field
-
 from core.http_utils import (
     DEFAULT_RATE_LIMIT_RETRY,
     HTTP_RATE_LIMITED,
@@ -16,6 +14,8 @@ from core.http_utils import (
 )
 from core.secure_config import get_config
 from core.time import default_utc_now
+from pydantic import Field
+
 from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 from ultimate_discord_intelligence_bot.step_result import StepResult
 

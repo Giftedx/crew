@@ -41,7 +41,7 @@ def populate_agent_tool_context(
     for k, v in context_data.items():
         if isinstance(v, str):
             context_summary[k] = f"str({len(v)} chars)"
-        elif isinstance(v, (list, dict)):
+        elif isinstance(v, list | dict):
             context_summary[k] = f"{type(v).__name__}({len(v)} items)"
         else:
             context_summary[k] = type(v).__name__

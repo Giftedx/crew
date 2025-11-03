@@ -62,6 +62,7 @@ class DiscordPipelineService:
 
         # Initialize services for this guild
         from core.learning_engine import LearningEngine
+
         from ultimate_discord_intelligence_bot.services.memory_service import MemoryService
         from ultimate_discord_intelligence_bot.services.openrouter_service import OpenRouterService
         from ultimate_discord_intelligence_bot.services.openrouter_service.adaptive_routing import (
